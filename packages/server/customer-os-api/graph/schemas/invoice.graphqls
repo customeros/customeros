@@ -18,6 +18,7 @@ type InvoicesPage implements Pages {
 type Invoice implements MetadataInterface {
     metadata:           Metadata!
     organization:       Organization! @goField(forceResolver: true)
+    contract:           Contract! @goField(forceResolver: true)
     dryRun:             Boolean!
     postpaid:           Boolean!
     offCycle:           Boolean!

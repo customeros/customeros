@@ -16,7 +16,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
 
@@ -32,6 +32,20 @@ func (r *invoiceResolver) Organization(ctx context.Context, obj *model.Invoice) 
 		return nil, nil
 	}
 	return mapper.MapEntityToOrganization(organizationEntity), nil
+}
+
+// Contract is the resolver for the contract field.
+func (r *invoiceResolver) Contract(ctx context.Context, obj *model.Invoice) (*model.Contract, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	contractEntity, err := dataloader.For(ctx).GetContractForInvoice(ctx, obj.ID)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("error fetching contract for invoice %s: %s", obj.ID, err.Error())
+		graphql.AddErrorf(ctx, "Error fetching contract for invoice %s", obj.ID)
+		return nil, nil
+	}
+	return mapper.MapEntityToContract(contractEntity), nil
 }
 
 // InvoiceLineItems is the resolver for the invoiceLineItems field.

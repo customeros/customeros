@@ -564,6 +564,7 @@ type ComplexityRoot struct {
 		AmountPaid                    func(childComplexity int) int
 		AmountRemaining               func(childComplexity int) int
 		AppSource                     func(childComplexity int) int
+		Contract                      func(childComplexity int) int
 		CreatedAt                     func(childComplexity int) int
 		Currency                      func(childComplexity int) int
 		Customer                      func(childComplexity int) int
@@ -1553,6 +1554,7 @@ type InteractionSessionResolver interface {
 }
 type InvoiceResolver interface {
 	Organization(ctx context.Context, obj *model.Invoice) (*model.Organization, error)
+	Contract(ctx context.Context, obj *model.Invoice) (*model.Contract, error)
 
 	InvoiceLineItems(ctx context.Context, obj *model.Invoice) ([]*model.InvoiceLine, error)
 
@@ -4281,6 +4283,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Invoice.AppSource(childComplexity), true
+
+	case "Invoice.contract":
+		if e.complexity.Invoice.Contract == nil {
+			break
+		}
+
+		return e.complexity.Invoice.Contract(childComplexity), true
 
 	case "Invoice.createdAt":
 		if e.complexity.Invoice.CreatedAt == nil {
@@ -12153,6 +12162,7 @@ type InvoicesPage implements Pages {
 type Invoice implements MetadataInterface {
     metadata:           Metadata!
     organization:       Organization! @goField(forceResolver: true)
+    contract:           Contract! @goField(forceResolver: true)
     dryRun:             Boolean!
     postpaid:           Boolean!
     offCycle:           Boolean!
@@ -34689,6 +34699,112 @@ func (ec *executionContext) fieldContext_Invoice_organization(ctx context.Contex
 	return fc, nil
 }
 
+func (ec *executionContext) _Invoice_contract(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Invoice_contract(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Invoice().Contract(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Contract)
+	fc.Result = res
+	return ec.marshalNContract2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContract(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Invoice_contract(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Invoice",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Contract_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Contract_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Contract_updatedAt(ctx, field)
+			case "serviceStartedAt":
+				return ec.fieldContext_Contract_serviceStartedAt(ctx, field)
+			case "signedAt":
+				return ec.fieldContext_Contract_signedAt(ctx, field)
+			case "endedAt":
+				return ec.fieldContext_Contract_endedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_Contract_name(ctx, field)
+			case "renewalCycle":
+				return ec.fieldContext_Contract_renewalCycle(ctx, field)
+			case "renewalPeriods":
+				return ec.fieldContext_Contract_renewalPeriods(ctx, field)
+			case "status":
+				return ec.fieldContext_Contract_status(ctx, field)
+			case "serviceLineItems":
+				return ec.fieldContext_Contract_serviceLineItems(ctx, field)
+			case "opportunities":
+				return ec.fieldContext_Contract_opportunities(ctx, field)
+			case "owner":
+				return ec.fieldContext_Contract_owner(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_Contract_createdBy(ctx, field)
+			case "source":
+				return ec.fieldContext_Contract_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Contract_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Contract_appSource(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_Contract_externalLinks(ctx, field)
+			case "contractUrl":
+				return ec.fieldContext_Contract_contractUrl(ctx, field)
+			case "currency":
+				return ec.fieldContext_Contract_currency(ctx, field)
+			case "invoicingStartDate":
+				return ec.fieldContext_Contract_invoicingStartDate(ctx, field)
+			case "billingCycle":
+				return ec.fieldContext_Contract_billingCycle(ctx, field)
+			case "addressLine1":
+				return ec.fieldContext_Contract_addressLine1(ctx, field)
+			case "addressLine2":
+				return ec.fieldContext_Contract_addressLine2(ctx, field)
+			case "locality":
+				return ec.fieldContext_Contract_locality(ctx, field)
+			case "country":
+				return ec.fieldContext_Contract_country(ctx, field)
+			case "zip":
+				return ec.fieldContext_Contract_zip(ctx, field)
+			case "organizationLegalName":
+				return ec.fieldContext_Contract_organizationLegalName(ctx, field)
+			case "invoiceEmail":
+				return ec.fieldContext_Contract_invoiceEmail(ctx, field)
+			case "invoiceNote":
+				return ec.fieldContext_Contract_invoiceNote(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Contract", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Invoice_dryRun(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Invoice_dryRun(ctx, field)
 	if err != nil {
@@ -37596,6 +37712,8 @@ func (ec *executionContext) fieldContext_InvoicesPage_content(ctx context.Contex
 				return ec.fieldContext_Invoice_metadata(ctx, field)
 			case "organization":
 				return ec.fieldContext_Invoice_organization(ctx, field)
+			case "contract":
+				return ec.fieldContext_Invoice_contract(ctx, field)
 			case "dryRun":
 				return ec.fieldContext_Invoice_dryRun(ctx, field)
 			case "postpaid":
@@ -49526,6 +49644,8 @@ func (ec *executionContext) fieldContext_Mutation_invoice_Update(ctx context.Con
 				return ec.fieldContext_Invoice_metadata(ctx, field)
 			case "organization":
 				return ec.fieldContext_Invoice_organization(ctx, field)
+			case "contract":
+				return ec.fieldContext_Invoice_contract(ctx, field)
 			case "dryRun":
 				return ec.fieldContext_Invoice_dryRun(ctx, field)
 			case "postpaid":
@@ -71635,6 +71755,8 @@ func (ec *executionContext) fieldContext_Query_invoice(ctx context.Context, fiel
 				return ec.fieldContext_Invoice_metadata(ctx, field)
 			case "organization":
 				return ec.fieldContext_Invoice_organization(ctx, field)
+			case "contract":
+				return ec.fieldContext_Invoice_contract(ctx, field)
 			case "dryRun":
 				return ec.fieldContext_Invoice_dryRun(ctx, field)
 			case "postpaid":
@@ -94410,6 +94532,42 @@ func (ec *executionContext) _Invoice(ctx context.Context, sel ast.SelectionSet, 
 					}
 				}()
 				res = ec._Invoice_organization(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "contract":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Invoice_contract(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}

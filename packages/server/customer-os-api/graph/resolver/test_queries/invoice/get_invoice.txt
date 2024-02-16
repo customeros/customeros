@@ -55,5 +55,8 @@ invoice(id: $id) {
     organization {
       id
     }
+    contract {
+      id
+    }
   }
 }

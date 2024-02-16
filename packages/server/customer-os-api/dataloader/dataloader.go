@@ -93,6 +93,7 @@ type Loaders struct {
 	AssigneeParticipantsForIssue                  *dataloader.Loader
 	FollowerParticipantsForIssue                  *dataloader.Loader
 	ContractsForOrganization                      *dataloader.Loader
+	ContractForInvoice                            *dataloader.Loader
 	ServiceLineItemsForContract                   *dataloader.Loader
 	OpportunitiesForContract                      *dataloader.Loader
 	MasterPlanMilestonesForMasterPlan             *dataloader.Loader
@@ -386,6 +387,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		FollowerParticipantsForIssue:                  dataloader.NewBatchedLoader(issueParticipantBatcher.getFollowerParticipantsForIssues, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		CommentsForIssue:                              dataloader.NewBatchedLoader(commentBatcher.getCommentsForIssues, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		ContractsForOrganization:                      dataloader.NewBatchedLoader(contractBatcher.getContractsForOrganizations, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		ContractForInvoice:                            dataloader.NewBatchedLoader(contractBatcher.getContractsForInvoices, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		ServiceLineItemsForContract:                   dataloader.NewBatchedLoader(serviceLineItemBatcher.getServiceLineItemsForContracts, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		OpportunitiesForContract:                      dataloader.NewBatchedLoader(opportunityBatcher.getOpportunitiesForContracts, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		MasterPlanMilestonesForMasterPlan:             dataloader.NewBatchedLoader(masterPlanBatcher.getMasterPlanMilestonesForMasterPlans, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
