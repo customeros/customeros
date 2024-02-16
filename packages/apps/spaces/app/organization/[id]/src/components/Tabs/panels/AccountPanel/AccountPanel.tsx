@@ -12,10 +12,10 @@ import { Text } from '@ui/typography/Text';
 import { Plus } from '@ui/media/icons/Plus';
 import { Spinner } from '@ui/feedback/Spinner';
 import { IconButton } from '@ui/form/IconButton';
+import { toastError } from '@ui/presentation/Toast';
 import { Skeleton } from '@ui/presentation/Skeleton';
 import { ChevronRight } from '@ui/media/icons/ChevronRight';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { toastError, toastSuccess } from '@ui/presentation/Toast';
 import { useCreateContractMutation } from '@organization/src/graphql/createContract.generated';
 import { useGetInvoicesCountQuery } from '@organization/src/graphql/getInvoicesCount.generated';
 import { Contracts } from '@organization/src/components/Tabs/panels/AccountPanel/Contracts/Contracts';
@@ -96,12 +96,6 @@ const AccountPanelComponent = () => {
       return { previousEntries };
     },
 
-    onSuccess: (_, variables) => {
-      toastSuccess(
-        'Contract created',
-        `${variables?.input?.organizationId}-contract-created`,
-      );
-    },
     onError: (_, __, context) => {
       queryClient.setQueryData(queryKey, context?.previousEntries);
       toastError(
