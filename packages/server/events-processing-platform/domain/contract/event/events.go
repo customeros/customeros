@@ -31,4 +31,5 @@ const (
 	FieldMaskCanPayWithCard         = "canPayWithCard"
 	FieldMaskCanPayWithDirectDebit  = "canPayWithDirectDebit"
 	FieldMaskCanPayWithBankTransfer = "canPayWithBankTransfer"
+	FieldMaskInvoicingEnabled       = "invoicingEnabled"
 )

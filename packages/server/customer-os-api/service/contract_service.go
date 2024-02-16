@@ -94,6 +94,7 @@ func (s *contractService) createContractWithEvents(ctx context.Context, contract
 		SignedAt:           utils.ConvertTimeToTimestampPtr(contractDetails.ContractEntity.SignedAt),
 		ServiceStartedAt:   utils.ConvertTimeToTimestampPtr(contractDetails.ContractEntity.ServiceStartedAt),
 		InvoicingStartDate: utils.ConvertTimeToTimestampPtr(contractDetails.ContractEntity.InvoicingStartDate),
+		InvoicingEnabled:   contractDetails.ContractEntity.InvoicingEnabled,
 		LoggedInUserId:     common.GetUserIdFromContext(ctx),
 		SourceFields: &commonpb.SourceFields{
 			Source:    string(contractDetails.Source),
@@ -203,6 +204,7 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 		CanPayWithCard:         utils.IfNotNilBool(input.CanPayWithCard),
 		CanPayWithDirectDebit:  utils.IfNotNilBool(input.CanPayWithDirectDebit),
 		CanPayWithBankTransfer: utils.IfNotNilBool(input.CanPayWithBankTransfer),
+		InvoicingEnabled:       utils.IfNotNilBool(input.InvoicingEnabled),
 	}
 	if input.Currency != nil {
 		contractUpdateRequest.Currency = mapper.MapCurrencyFromModel(*input.Currency).String()
@@ -333,6 +335,9 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 		}
 		if input.CanPayWithBankTransfer != nil {
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_CAN_PAY_WITH_BANK_TRANSFER)
+		}
+		if input.InvoicingEnabled != nil {
+			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_INVOICING_ENABLED)
 		}
 		contractUpdateRequest.FieldsMask = fieldMask
 		if len(fieldMask) == 0 {

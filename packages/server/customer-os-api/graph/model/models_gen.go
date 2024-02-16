@@ -491,6 +491,7 @@ type ContractInput struct {
 	Currency           *Currency                     `json:"currency,omitempty"`
 	InvoicingStartDate *time.Time                    `json:"invoicingStartDate,omitempty"`
 	BillingCycle       *ContractBillingCycle         `json:"billingCycle,omitempty"`
+	InvoicingEnabled   *bool                         `json:"invoicingEnabled,omitempty"`
 }
 
 type ContractUpdateInput struct {
@@ -518,6 +519,7 @@ type ContractUpdateInput struct {
 	CanPayWithDirectDebit  *bool                 `json:"canPayWithDirectDebit,omitempty"`
 	CanPayWithBankTransfer *bool                 `json:"canPayWithBankTransfer,omitempty"`
 	InvoiceNote            *string               `json:"invoiceNote,omitempty"`
+	InvoicingEnabled       *bool                 `json:"invoicingEnabled,omitempty"`
 }
 
 type Country struct {

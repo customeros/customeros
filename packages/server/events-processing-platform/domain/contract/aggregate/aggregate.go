@@ -80,6 +80,7 @@ func (a *ContractAggregate) onContractCreate(evt eventstore.Event) error {
 	a.Contract.CreatedAt = eventData.CreatedAt
 	a.Contract.UpdatedAt = eventData.UpdatedAt
 	a.Contract.Source = eventData.Source
+	a.Contract.InvoicingEnabled = eventData.InvoicingEnabled
 	if eventData.ExternalSystem.Available() {
 		a.Contract.ExternalSystems = []commonmodel.ExternalSystem{eventData.ExternalSystem}
 	}
@@ -176,6 +177,9 @@ func (a *ContractAggregate) onContractUpdate(evt eventstore.Event) error {
 	}
 	if eventData.UpdateCanPayWithBankTransfer() {
 		a.Contract.CanPayWithBankTransfer = eventData.CanPayWithBankTransfer
+	}
+	if eventData.UpdateInvoicingEnabled() {
+		a.Contract.InvoicingEnabled = eventData.InvoicingEnabled
 	}
 
 	if eventData.ExternalSystem.Available() {

@@ -75,6 +75,7 @@ func (h *ContractEventHandler) OnCreate(ctx context.Context, evt eventstore.Even
 		BillingCycle:       neo4jenum.DecodeBillingCycle(eventData.BillingCycle),
 		Currency:           neo4jenum.DecodeCurrency(eventData.Currency),
 		InvoicingStartDate: eventData.InvoicingStartDate,
+		InvoicingEnabled:   eventData.InvoicingEnabled,
 		SourceFields: neo4jmodel.Source{
 			Source:        helper.GetSource(eventData.Source.Source),
 			AppSource:     helper.GetAppSource(eventData.Source.AppSource),
@@ -168,6 +169,7 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 		InvoiceEmail:                 eventData.InvoiceEmail,
 		InvoiceNote:                  eventData.InvoiceNote,
 		NextInvoiceDate:              eventData.NextInvoiceDate,
+		InvoicingEnabled:             eventData.InvoicingEnabled,
 		UpdateName:                   eventData.UpdateName(),
 		UpdateContractUrl:            eventData.UpdateContractUrl(),
 		UpdateServiceStartedAt:       eventData.UpdateServiceStartedAt(),
@@ -191,6 +193,7 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 		UpdateCanPayWithCard:         eventData.UpdateCanPayWithCard(),
 		UpdateCanPayWithDirectDebit:  eventData.UpdateCanPayWithDirectDebit(),
 		UpdateCanPayWithBankTransfer: eventData.UpdateCanPayWithBankTransfer(),
+		UpdateInvoicingEnabled:       eventData.UpdateInvoicingEnabled(),
 	}
 	updatedContractDbNode, err := h.repositories.Neo4jRepositories.ContractWriteRepository.UpdateAndReturn(ctx, eventData.Tenant, contractId, data)
 	if err != nil {

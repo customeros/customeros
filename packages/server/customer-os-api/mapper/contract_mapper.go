@@ -83,6 +83,7 @@ func MapContractInputToEntity(input model.ContractInput) *neo4jentity.ContractEn
 		SourceOfTruth:      neo4jentity.DataSourceOpenline,
 		AppSource:          utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
 		RenewalPeriods:     input.RenewalPeriods,
+		InvoicingEnabled:   utils.IfNotNilBool(input.InvoicingEnabled),
 	}
 
 	if input.RenewalCycle != nil {

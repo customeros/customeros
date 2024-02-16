@@ -11495,6 +11495,7 @@ input ContractInput {
     currency:           Currency
     invoicingStartDate: Time
     billingCycle:       ContractBillingCycle
+    invoicingEnabled:   Boolean
 }
 
 input ContractUpdateInput {
@@ -11522,6 +11523,7 @@ input ContractUpdateInput {
     canPayWithDirectDebit:     Boolean
     canPayWithBankTransfer: Boolean
     invoiceNote:        String
+    invoicingEnabled:   Boolean
 }
 
 enum ContractRenewalCycle {
@@ -85984,7 +85986,7 @@ func (ec *executionContext) unmarshalInputContractInput(ctx context.Context, obj
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"organizationId", "name", "renewalCycle", "renewalPeriods", "appSource", "contractUrl", "serviceStartedAt", "signedAt", "externalReference", "currency", "invoicingStartDate", "billingCycle"}
+	fieldsInOrder := [...]string{"organizationId", "name", "renewalCycle", "renewalPeriods", "appSource", "contractUrl", "serviceStartedAt", "signedAt", "externalReference", "currency", "invoicingStartDate", "billingCycle", "invoicingEnabled"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -86075,6 +86077,13 @@ func (ec *executionContext) unmarshalInputContractInput(ctx context.Context, obj
 				return it, err
 			}
 			it.BillingCycle = data
+		case "invoicingEnabled":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("invoicingEnabled"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InvoicingEnabled = data
 		}
 	}
 
@@ -86088,7 +86097,7 @@ func (ec *executionContext) unmarshalInputContractUpdateInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"contractId", "patch", "name", "contractUrl", "renewalCycle", "renewalPeriods", "serviceStartedAt", "signedAt", "endedAt", "appSource", "currency", "invoicingStartDate", "billingCycle", "addressLine1", "addressLine2", "locality", "country", "zip", "organizationLegalName", "invoiceEmail", "canPayWithCard", "canPayWithDirectDebit", "canPayWithBankTransfer", "invoiceNote"}
+	fieldsInOrder := [...]string{"contractId", "patch", "name", "contractUrl", "renewalCycle", "renewalPeriods", "serviceStartedAt", "signedAt", "endedAt", "appSource", "currency", "invoicingStartDate", "billingCycle", "addressLine1", "addressLine2", "locality", "country", "zip", "organizationLegalName", "invoiceEmail", "canPayWithCard", "canPayWithDirectDebit", "canPayWithBankTransfer", "invoiceNote", "invoicingEnabled"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -86263,6 +86272,13 @@ func (ec *executionContext) unmarshalInputContractUpdateInput(ctx context.Contex
 				return it, err
 			}
 			it.InvoiceNote = data
+		case "invoicingEnabled":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("invoicingEnabled"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InvoicingEnabled = data
 		}
 	}
 
