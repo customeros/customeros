@@ -24,9 +24,12 @@ export const Currency = ({
     blocks: {
       num: {
         mask: Number,
-        thousandsSeparator: ',', // Thousands separator
-        radix: '.', // Decimal separator
+        thousandsSeparator: ',',
+        radix: '.',
         mapToRadix: ['.'],
+        min: 0.01,
+        normalizeZeros: true,
+        padFractionalZeros: true,
       },
     },
   });
