@@ -46,6 +46,7 @@ export default async function RootLayout({
       process.env.NEXT_PUBLIC_NOTIFICATION_PROD_APP_IDENTIFIER ?? '',
     NOTIFICATION_TEST_APP_IDENTIFIER:
       process.env.NEXT_PUBLIC_NOTIFICATION_TEST_APP_IDENTIFIER ?? '',
+    REALTIME_WS_PATH: process.env.REALTIME_WS_PATH ?? '',
   };
 
   const isProduction = env.PRODUCTION === 'true';

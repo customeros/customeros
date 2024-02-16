@@ -7093,6 +7093,11 @@
     pg-protocol "*"
     pg-types "^2.2.0"
 
+"@types/phoenix@^1.6.4":
+  version "1.6.4"
+  resolved "https://registry.yarnpkg.com/@types/phoenix/-/phoenix-1.6.4.tgz#cceac93a827555473ad38057d1df7d06eef1ed71"
+  integrity sha512-B34A7uot1Cv0XtaHRYDATltAdKx0BvVKNgYNqE4WjtPUa4VQJM7kxeXcVKaH+KS+kCmZ+6w+QaUdcljiheiBJA==
+
 "@types/prismjs@*":
   version "1.26.0"
   resolved "https://registry.yarnpkg.com/@types/prismjs/-/prismjs-1.26.0.tgz#a1c3809b0ad61c62cac6d4e0c56d610c910b7654"
@@ -14531,6 +14536,11 @@ pg-types@^4.0.1:
     postgres-date "~2.0.1"
     postgres-interval "^3.0.0"
     postgres-range "^1.1.1"
+
+phoenix@^1.7.11:
+  version "1.7.11"
+  resolved "https://registry.yarnpkg.com/phoenix/-/phoenix-1.7.11.tgz#5595ea1bc725126bdd7db6cfb179f67bff67263f"
+  integrity sha512-aeikMR/Qh6gAygY45d5p/B7srqH60h0GbCIauEAStAtRUq4hvlkzDTyDj1NJidJEV9IKFhZe7f9L+zosUJdF/g==
 
 picocolors@^1.0.0:
   version "1.0.0"
