@@ -1,4 +1,7 @@
 defmodule CustomerOsRealtime.Util do
+  @moduledoc """
+  Utility functions for CustomerOsRealtime.
+  """
   def generate_user_color(used) do
     colors = [
       "#F97066",
