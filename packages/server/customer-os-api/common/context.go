@@ -55,7 +55,3 @@ func GetUserEmailFromContext(ctx context.Context) string {
 func GetIdentityIdFromContext(ctx context.Context) string {
 	return GetContext(ctx).IdentityId
 }
-
-func GetGraphqlRootOperationNameFromContext(ctx context.Context) string {
-	return GetContext(ctx).GraphqlRootOperationName
-}

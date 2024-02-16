@@ -418,9 +418,7 @@ func (this ContactsPage) GetTotalPages() int { return this.TotalPages }
 func (this ContactsPage) GetTotalElements() int64 { return this.TotalElements }
 
 type Contract struct {
-	ID                    string                `json:"id"`
-	CreatedAt             time.Time             `json:"createdAt"`
-	UpdatedAt             time.Time             `json:"updatedAt"`
+	Metadata              *Metadata             `json:"metadata"`
 	ServiceStartedAt      *time.Time            `json:"serviceStartedAt,omitempty"`
 	SignedAt              *time.Time            `json:"signedAt,omitempty"`
 	EndedAt               *time.Time            `json:"endedAt,omitempty"`
@@ -432,9 +430,6 @@ type Contract struct {
 	Opportunities         []*Opportunity        `json:"opportunities,omitempty"`
 	Owner                 *User                 `json:"owner,omitempty"`
 	CreatedBy             *User                 `json:"createdBy,omitempty"`
-	Source                DataSource            `json:"source"`
-	SourceOfTruth         DataSource            `json:"sourceOfTruth"`
-	AppSource             string                `json:"appSource"`
 	ExternalLinks         []*ExternalSystem     `json:"externalLinks"`
 	ContractURL           *string               `json:"contractUrl,omitempty"`
 	Currency              *Currency             `json:"currency,omitempty"`
@@ -448,10 +443,16 @@ type Contract struct {
 	OrganizationLegalName *string               `json:"organizationLegalName,omitempty"`
 	InvoiceEmail          *string               `json:"invoiceEmail,omitempty"`
 	InvoiceNote           *string               `json:"invoiceNote,omitempty"`
+	ID                    string                `json:"id"`
+	CreatedAt             time.Time             `json:"createdAt"`
+	UpdatedAt             time.Time             `json:"updatedAt"`
+	Source                DataSource            `json:"source"`
+	SourceOfTruth         DataSource            `json:"sourceOfTruth"`
+	AppSource             string                `json:"appSource"`
 }
 
-func (Contract) IsNode()            {}
-func (this Contract) GetID() string { return this.ID }
+func (Contract) IsMetadataInterface()        {}
+func (this Contract) GetMetadata() *Metadata { return this.Metadata }
 
 type ContractInput struct {
 	OrganizationID     string                        `json:"organizationId"`

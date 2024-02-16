@@ -13,6 +13,14 @@ func MapEntityToContract(entity *neo4jentity.ContractEntity) *model.Contract {
 		return nil
 	}
 	return &model.Contract{
+		Metadata: &model.Metadata{
+			ID:            entity.Id,
+			Created:       entity.CreatedAt,
+			LastUpdated:   entity.UpdatedAt,
+			Source:        MapDataSourceToModel(entity.Source),
+			SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
+			AppSource:     entity.AppSource,
+		},
 		ID:                    entity.Id,
 		Name:                  entity.Name,
 		CreatedAt:             entity.CreatedAt,
@@ -54,39 +62,6 @@ func MapContractInputToEntity(input model.ContractInput) *neo4jentity.ContractEn
 		RenewalPeriods:     input.RenewalPeriods,
 	}
 
-	if input.RenewalCycle != nil {
-		contractEntity.RenewalCycle = MapContractRenewalCycleFromModel(*input.RenewalCycle)
-	} else {
-		contractEntity.RenewalCycle = neo4jenum.RenewalCycleNone
-	}
-
-	if input.Currency != nil {
-		contractEntity.Currency = MapCurrencyFromModel(*input.Currency)
-	}
-
-	if input.BillingCycle != nil {
-		contractEntity.BillingCycle = MapContractBillingCycleFromModel(*input.BillingCycle)
-	} else {
-		contractEntity.BillingCycle = neo4jenum.BillingCycleNone
-	}
-
-	return &contractEntity
-}
-
-func MapContractUpdateInputToEntity(input model.ContractUpdateInput) *neo4jentity.ContractEntity {
-	contractEntity := neo4jentity.ContractEntity{
-		Id:                 input.ContractID,
-		Name:               utils.IfNotNilString(input.Name),
-		ContractUrl:        utils.IfNotNilString(input.ContractURL),
-		ServiceStartedAt:   input.ServiceStartedAt,
-		SignedAt:           input.SignedAt,
-		EndedAt:            input.EndedAt,
-		InvoicingStartDate: input.InvoicingStartDate,
-		Source:             neo4jentity.DataSourceOpenline,
-		SourceOfTruth:      neo4jentity.DataSourceOpenline,
-		AppSource:          utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
-		RenewalPeriods:     input.RenewalPeriods,
-	}
 	if input.RenewalCycle != nil {
 		contractEntity.RenewalCycle = MapContractRenewalCycleFromModel(*input.RenewalCycle)
 	} else {
