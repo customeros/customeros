@@ -23,7 +23,7 @@ func NewApiKeyRepository(gormDb *gorm.DB) *ApiKeyRepositoryImpl {
 }
 
 func (repo *ApiKeyRepositoryImpl) GetApiKeyByTenantService(tenantName, serviceId string) (string, error) {
-	result := entity.TenantAPIKey{}
+	result := entity.TenantGoogleAPIKey{}
 	err := repo.gormDb.First(&result, "tenant_name = ? AND key = ?", tenantName, serviceId).Error
 
 	if err != nil {
