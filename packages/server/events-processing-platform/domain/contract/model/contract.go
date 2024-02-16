@@ -40,6 +40,7 @@ type Contract struct {
 	CanPayWithCard         bool                         `json:"canPayWithCard"`
 	CanPayWithDirectDebit  bool                         `json:"canPayWithDirectDebit"`
 	CanPayWithBankTransfer bool                         `json:"canPayWithBankTransfer"`
+	InvoicingEnabled       bool                         `json:"invoicingEnabled"`
 }
 
 type ContractDataFields struct {
@@ -68,6 +69,7 @@ type ContractDataFields struct {
 	CanPayWithCard         bool   `json:"canPayWithCard"`
 	CanPayWithDirectDebit  bool   `json:"canPayWithDirectDebit"`
 	CanPayWithBankTransfer bool   `json:"canPayWithBankTransfer"`
+	InvoicingEnabled       bool   `json:"invoicingEnabled"`
 }
 
 // ContractStatus represents the status of a contract.

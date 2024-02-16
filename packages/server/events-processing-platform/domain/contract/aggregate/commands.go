@@ -159,6 +159,7 @@ func (a *ContractAggregate) updateContract(ctx context.Context, request *contrac
 		CanPayWithCard:         request.CanPayWithCard,
 		CanPayWithDirectDebit:  request.CanPayWithDirectDebit,
 		CanPayWithBankTransfer: request.CanPayWithBankTransfer,
+		InvoicingEnabled:       request.InvoicingEnabled,
 	}
 	fieldsMask := extractFieldsMask(request.FieldsMask)
 
@@ -325,6 +326,8 @@ func extractFieldsMask(requestFieldsMask []contractpb.ContractFieldMask) []strin
 			fieldsMask = append(fieldsMask, event.FieldMaskInvoiceNote)
 		case contractpb.ContractFieldMask_CONTRACT_FIELD_NEXT_INVOICE_DATE:
 			fieldsMask = append(fieldsMask, event.FieldMaskNextInvoiceDate)
+		case contractpb.ContractFieldMask_CONTRACT_FIELD_INVOICING_ENABLED:
+			fieldsMask = append(fieldsMask, event.FieldMaskInvoicingEnabled)
 		}
 	}
 	fieldsMask = utils.RemoveDuplicates(fieldsMask)

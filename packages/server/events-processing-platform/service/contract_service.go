@@ -84,6 +84,7 @@ func (s *contractService) CreateContract(ctx context.Context, request *contractp
 			Currency:           request.Currency,
 			BillingCycle:       model.BillingCycle(request.BillingCycle).String(),
 			InvoicingStartDate: utils.TimestampProtoToTimePtr(request.InvoicingStartDate),
+			InvoicingEnabled:   request.InvoicingEnabled,
 		},
 		source,
 		externalSystem,

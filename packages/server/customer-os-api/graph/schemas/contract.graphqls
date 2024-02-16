@@ -78,6 +78,7 @@ input ContractInput {
     currency:           Currency
     invoicingStartDate: Time
     billingCycle:       ContractBillingCycle
+    invoicingEnabled:   Boolean
 }
 
 input ContractUpdateInput {
@@ -105,6 +106,7 @@ input ContractUpdateInput {
     canPayWithDirectDebit:     Boolean
     canPayWithBankTransfer: Boolean
     invoiceNote:        String
+    invoicingEnabled:   Boolean
 }
 
 enum ContractRenewalCycle {

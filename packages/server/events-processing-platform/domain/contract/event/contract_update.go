@@ -39,6 +39,7 @@ type ContractUpdateEvent struct {
 	CanPayWithCard         bool                       `json:"canPayWithCard,omitempty"`
 	CanPayWithDirectDebit  bool                       `json:"canPayWithDirectDebit,omitempty"`
 	CanPayWithBankTransfer bool                       `json:"canPayWithBankTransfer,omitempty"`
+	InvoicingEnabled       bool                       `json:"invoicingEnabled,omitempty"`
 }
 
 func NewContractUpdateEvent(aggr eventstore.Aggregate, dataFields model.ContractDataFields, externalSystem commonmodel.ExternalSystem, source string, updatedAt time.Time, fieldsMask []string) (eventstore.Event, error) {
@@ -63,6 +64,7 @@ func NewContractUpdateEvent(aggr eventstore.Aggregate, dataFields model.Contract
 		CanPayWithCard:         dataFields.CanPayWithCard,
 		CanPayWithDirectDebit:  dataFields.CanPayWithDirectDebit,
 		CanPayWithBankTransfer: dataFields.CanPayWithBankTransfer,
+		InvoicingEnabled:       dataFields.InvoicingEnabled,
 		UpdatedAt:              updatedAt,
 		Source:                 source,
 		FieldsMask:             fieldsMask,
@@ -185,4 +187,8 @@ func (e ContractUpdateEvent) UpdateCanPayWithBankTransfer() bool {
 
 func (e ContractUpdateEvent) UpdateNextInvoiceDate() bool {
 	return utils.Contains(e.FieldsMask, FieldMaskNextInvoiceDate)
+}
+
+func (e ContractUpdateEvent) UpdateInvoicingEnabled() bool {
+	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskInvoicingEnabled)
 }
