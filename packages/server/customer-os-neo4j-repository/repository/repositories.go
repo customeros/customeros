@@ -54,6 +54,8 @@ type Repositories struct {
 	TimelineEventReadRepository       TimelineEventReadRepository
 	UserReadRepository                UserReadRepository
 	UserWriteRepository               UserWriteRepository
+	DomainReadRepository              DomainReadRepository
+	DomainWriteRepository             DomainWriteRepository
 }
 
 func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string) *Repositories {
@@ -107,6 +109,8 @@ func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string
 		TimelineEventReadRepository:       NewTimelineEventReadRepository(driver, neo4jDatabase),
 		UserReadRepository:                NewUserReadRepository(driver, neo4jDatabase),
 		UserWriteRepository:               NewUserWriteRepository(driver, neo4jDatabase),
+		DomainReadRepository:              NewDomainReadRepository(driver, neo4jDatabase),
+		DomainWriteRepository:             NewDomainWriteRepository(driver, neo4jDatabase),
 	}
 	return &repositories
 }
