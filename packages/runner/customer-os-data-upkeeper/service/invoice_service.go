@@ -157,7 +157,7 @@ func (s *invoiceService) GenerateCycleInvoices() {
 				}
 			}
 			// mark invoicing started
-			err = s.repositories.Neo4jRepositories.ContractWriteRepository.MarkCycleInvoicingStarted(ctx, tenant, contract.Id, utils.Now())
+			err = s.repositories.Neo4jRepositories.ContractWriteRepository.MarkCycleInvoicingRequested(ctx, tenant, contract.Id, utils.Now())
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error marking invoicing started for contract %s: %s", contract.Id, err.Error())
@@ -349,7 +349,7 @@ func (s *invoiceService) GenerateOffCycleInvoices() {
 				}
 			}
 			// mark invoicing started
-			err = s.repositories.Neo4jRepositories.ContractWriteRepository.MarkCycleInvoicingStarted(ctx, tenant, contract.Id, utils.Now())
+			err = s.repositories.Neo4jRepositories.ContractWriteRepository.MarkCycleInvoicingRequested(ctx, tenant, contract.Id, utils.Now())
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error marking invoicing started for contract %s: %s", contract.Id, err.Error())
