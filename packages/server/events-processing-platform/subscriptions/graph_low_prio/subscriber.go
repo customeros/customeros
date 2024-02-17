@@ -1,4 +1,4 @@
-package notifications
+package graph_low_prio
 
 import (
 	"context"
@@ -20,30 +20,30 @@ import (
 	"github.com/pkg/errors"
 )
 
-type NotificationsSubscriber struct {
-	log             logger.Logger
-	db              *esdb.Client
-	cfg             *config.Config
-	orgEventHandler *OrganizationEventHandler
+type GraphLowPrioSubscriber struct {
+	log                      logger.Logger
+	db                       *esdb.Client
+	cfg                      *config.Config
+	organizationEventHandler *OrganizationEventHandler
 }
 
-func NewNotificationsSubscriber(log logger.Logger, db *esdb.Client, repositories *repository.Repositories, grpcClients *grpc_client.Clients, cfg *config.Config) *NotificationsSubscriber {
-	return &NotificationsSubscriber{
-		log:             log,
-		db:              db,
-		cfg:             cfg,
-		orgEventHandler: NewOrganizationEventHandler(log, repositories, cfg),
+func NewGraphLowPrioSubscriber(log logger.Logger, db *esdb.Client, repositories *repository.Repositories, grpcClients *grpc_client.Clients, cfg *config.Config) *GraphLowPrioSubscriber {
+	return &GraphLowPrioSubscriber{
+		log:                      log,
+		db:                       db,
+		cfg:                      cfg,
+		organizationEventHandler: NewOrganizationEventHandler(log, repositories, grpcClients),
 	}
 }
 
-func (s *NotificationsSubscriber) Connect(ctx context.Context, worker subscriptions.Worker) error {
+func (s *GraphLowPrioSubscriber) Connect(ctx context.Context, worker subscriptions.Worker) error {
 	group, ctx := errgroup.WithContext(ctx)
-	for i := 1; i <= s.cfg.Subscriptions.NotificationsSubscription.PoolSize; i++ {
+	for i := 1; i <= s.cfg.Subscriptions.GraphLowPrioritySubscription.PoolSize; i++ {
 		sub, err := s.db.SubscribeToPersistentSubscriptionToAll(
 			ctx,
-			s.cfg.Subscriptions.NotificationsSubscription.GroupName,
+			s.cfg.Subscriptions.GraphLowPrioritySubscription.GroupName,
 			esdb.SubscribeToPersistentSubscriptionOptions{
-				BufferSize: s.cfg.Subscriptions.NotificationsSubscription.BufferSizeClient,
+				BufferSize: s.cfg.Subscriptions.GraphLowPrioritySubscription.BufferSizeClient,
 			},
 		)
 		if err != nil {
@@ -56,13 +56,13 @@ func (s *NotificationsSubscriber) Connect(ctx context.Context, worker subscripti
 	return group.Wait()
 }
 
-func (consumer *NotificationsSubscriber) runWorker(ctx context.Context, worker subscriptions.Worker, stream *esdb.PersistentSubscription, i int) func() error {
+func (s *GraphLowPrioSubscriber) runWorker(ctx context.Context, worker subscriptions.Worker, stream *esdb.PersistentSubscription, i int) func() error {
 	return func() error {
 		return worker(ctx, stream, i)
 	}
 }
 
-func (s *NotificationsSubscriber) ProcessEvents(ctx context.Context, stream *esdb.PersistentSubscription, workerID int) error {
+func (s *GraphLowPrioSubscriber) ProcessEvents(ctx context.Context, stream *esdb.PersistentSubscription, workerID int) error {
 
 	for {
 		event := stream.Recv()
@@ -78,14 +78,14 @@ func (s *NotificationsSubscriber) ProcessEvents(ctx context.Context, stream *esd
 		}
 
 		if event.EventAppeared != nil {
-			s.log.EventAppeared(s.cfg.Subscriptions.NotificationsSubscription.GroupName, event.EventAppeared.Event, workerID)
+			s.log.EventAppeared(s.cfg.Subscriptions.GraphLowPrioritySubscription.GroupName, event.EventAppeared.Event, workerID)
 
 			if event.EventAppeared.Event.Event == nil {
-				s.log.Errorf("(NotificationsSubscriber) event.EventAppeared.Event.Event is nil")
+				s.log.Errorf("(GraphLowPrioSubscriber) event.EventAppeared.Event.Event is nil")
 			} else {
 				err := s.When(ctx, eventstore.NewEventFromRecorded(event.EventAppeared.Event.Event))
 				if err != nil {
-					s.log.Errorf("(NotificationSubscriber.when) err: {%v}", err)
+					s.log.Errorf("(GraphLowPrioSubscriber.when) err: {%v}", err)
 
 					if err := stream.Nack(err.Error(), esdb.NackActionPark, event.EventAppeared.Event); err != nil {
 						s.log.Errorf("(stream.Nack) err: {%v}", err)
@@ -104,8 +104,8 @@ func (s *NotificationsSubscriber) ProcessEvents(ctx context.Context, stream *esd
 	}
 }
 
-func (s *NotificationsSubscriber) When(ctx context.Context, evt eventstore.Event) error {
-	ctx, span := tracing.StartProjectionTracerSpan(ctx, "NotificationSubscriber.When", evt)
+func (s *GraphLowPrioSubscriber) When(ctx context.Context, evt eventstore.Event) error {
+	ctx, span := tracing.StartProjectionTracerSpan(ctx, "GraphLowPrioSubscriber.When", evt)
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()), log.String("EventType", evt.GetEventType()))
 
@@ -113,15 +113,12 @@ func (s *NotificationsSubscriber) When(ctx context.Context, evt eventstore.Event
 		return nil
 	}
 
-	if s.cfg.Subscriptions.NotificationsSubscription.IgnoreEvents {
-		return nil
-	}
-
 	switch evt.GetEventType() {
 
-	case orgevents.OrganizationUpdateOwnerNotificationV1:
-		return s.orgEventHandler.OnOrganizationUpdateOwner(ctx, evt)
-
+	case orgevents.OrganizationRefreshLastTouchpointV1:
+		// TODO enable when catchup is done and remove from normal graph
+		//return s.organizationEventHandler.OnRefreshLastTouchPointV1(ctx, evt)
+		return nil
 	default:
 		return nil
 	}

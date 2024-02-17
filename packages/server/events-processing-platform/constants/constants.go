@@ -72,8 +72,9 @@ const (
 	Bcrypt          = "bcrypt"
 	Redis           = "redis"
 
-	EsAll            = "$all"
-	StreamTempPrefix = "temp"
+	EsInternalStreamPrefix = "$"
+	EsAll                  = "$all"
+	StreamTempPrefix       = "temp"
 
 	StreamMetadataMaxCount              = 1000
 	StreamMetadataMaxAgeSeconds         = 7 * 24 * 60 * 60  // 7 days

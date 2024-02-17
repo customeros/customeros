@@ -2,6 +2,7 @@ package graph
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"strings"
 
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
@@ -112,7 +113,7 @@ func (s *GraphSubscriber) Connect(ctx context.Context, worker subscriptions.Work
 	return group.Wait()
 }
 
-func (consumer *GraphSubscriber) runWorker(ctx context.Context, worker subscriptions.Worker, stream *esdb.PersistentSubscription, i int) func() error {
+func (s *GraphSubscriber) runWorker(ctx context.Context, worker subscriptions.Worker, stream *esdb.PersistentSubscription, i int) func() error {
 	return func() error {
 		return worker(ctx, stream, i)
 	}
@@ -165,7 +166,7 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()), log.String("EventType", evt.GetEventType()))
 
-	if strings.HasPrefix(evt.GetAggregateID(), "$") {
+	if strings.HasPrefix(evt.GetAggregateID(), constants.EsInternalStreamPrefix) {
 		return nil
 	}
 
@@ -223,6 +224,7 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	case orgevents.OrganizationShowV1:
 		return s.organizationEventHandler.OnOrganizationShow(ctx, evt)
 	case orgevents.OrganizationRefreshLastTouchpointV1:
+		// DEPRECATED
 		return s.organizationEventHandler.OnRefreshLastTouchpoint(ctx, evt)
 	case orgevents.OrganizationRefreshArrV1:
 		return s.organizationEventHandler.OnRefreshArr(ctx, evt)

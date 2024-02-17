@@ -28,6 +28,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions"
 	email_validation_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/email_validation"
 	graph_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/graph"
+	graph_low_prio_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/graph_low_prio"
 	interaction_event_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/interaction_event"
 	location_validation_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/location_validation"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/notifications"
@@ -179,6 +180,17 @@ func InitSubscribers(server *Server, ctx context.Context, grpcClients *grpc_clie
 			err := graphSubscriber.Connect(ctx, graphSubscriber.ProcessEvents)
 			if err != nil {
 				server.Log.Errorf("(graphSubscriber.Connect) err: {%v}", err)
+				cancel()
+			}
+		}()
+	}
+
+	if server.Config.Subscriptions.GraphLowPrioritySubscription.Enabled {
+		subscriber := graph_low_prio_subscription.NewGraphLowPrioSubscriber(server.Log, esdb, server.Repositories, grpcClients, server.Config)
+		go func() {
+			err := subscriber.Connect(ctx, subscriber.ProcessEvents)
+			if err != nil {
+				server.Log.Errorf("(graphLowPrioSubscriber.Connect) err: {%v}", err)
 				cancel()
 			}
 		}()
