@@ -374,12 +374,21 @@ func (s *serviceLineItemService) CreateOrUpdateOrDeleteInBulk(ctx context.Contex
 
 	var responseIds []string
 
-	sliDbNodes, err := s.repositories.ServiceLineItemRepository.GetForContracts(ctx, common.GetTenantFromContext(ctx), []string{contractId})
+	allSliDbNodes, err := s.repositories.ServiceLineItemRepository.GetForContracts(ctx, common.GetTenantFromContext(ctx), []string{contractId})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Failed to get service line items for contract: %s", err.Error())
 		return []string{}, err
 	}
+
+	var sliDbNodes []*utils.DbNodeAndId
+	for _, sliDbNode := range allSliDbNodes {
+		endedAt := utils.GetTimePropOrNil(utils.GetPropsFromNode(*sliDbNode.Node), "endedAt")
+		if endedAt == nil {
+			sliDbNodes = append(sliDbNodes, sliDbNode)
+		}
+	}
+
 	var existingSliIds, inputSliIds []string
 	for _, sliDbNode := range sliDbNodes {
 		id := utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*sliDbNode.Node), "id")
