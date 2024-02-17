@@ -124,6 +124,9 @@ func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTr
 
 	//if it's a personal email, we create just the email node in tenant
 	domain := utils.ExtractDomain(email)
+	if domain == "" {
+		return "", fmt.Errorf("unable to extract domain from email: %s", email)
+	}
 	for _, personalEmailProvider := range personalEmailProviderList {
 		if strings.Contains(domain, personalEmailProvider.ProviderDomain) {
 			emailId, err := s.repositories.EmailRepository.CreateEmail(ctx, tx, tenant, email, source, AppSource)
@@ -149,7 +152,6 @@ func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTr
 			return "", fmt.Errorf("unable to create domain: %v", err)
 		}
 	}
-
 	organizationNode, err = s.repositories.OrganizationRepository.GetOrganizationWithDomain(ctx, tx, tenant, utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*domainNode), "domain"))
 	if err != nil {
 		return "", fmt.Errorf("unable to retrieve organization for tenant: %v", err)
@@ -160,7 +162,6 @@ func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTr
 		var organizationName string
 
 		if whitelistDomain == nil || whitelistDomain.Name == "" {
-
 			//TODO to insert into the allowed organization table with allowed = false t have it for the next time ????
 			organizationName, err = s.services.OpenAiService.AskForOrganizationNameByDomain(tenant, interactionEventId, domain)
 			if err != nil {
@@ -169,6 +170,8 @@ func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTr
 			if organizationName == "" {
 				return "", fmt.Errorf("unable to retrieve organization name for tenant: %v", err)
 			}
+			organizationName = strings.TrimSpace(organizationName)
+			organizationName = strings.TrimRight(organizationName, ".")
 		} else {
 			organizationName = whitelistDomain.Name
 		}
