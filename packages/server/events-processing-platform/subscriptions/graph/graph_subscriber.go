@@ -224,8 +224,7 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	case orgevents.OrganizationShowV1:
 		return s.organizationEventHandler.OnOrganizationShow(ctx, evt)
 	case orgevents.OrganizationRefreshLastTouchpointV1:
-		// DEPRECATED
-		return s.organizationEventHandler.OnRefreshLastTouchpoint(ctx, evt)
+		return nil
 	case orgevents.OrganizationRefreshArrV1:
 		return s.organizationEventHandler.OnRefreshArr(ctx, evt)
 	case orgevents.OrganizationRefreshRenewalSummaryV1:

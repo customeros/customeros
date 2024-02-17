@@ -116,9 +116,7 @@ func (s *GraphLowPrioSubscriber) When(ctx context.Context, evt eventstore.Event)
 	switch evt.GetEventType() {
 
 	case orgevents.OrganizationRefreshLastTouchpointV1:
-		// TODO enable when catchup is done and remove from normal graph
-		//return s.organizationEventHandler.OnRefreshLastTouchPointV1(ctx, evt)
-		return nil
+		return s.organizationEventHandler.OnRefreshLastTouchPointV1(ctx, evt)
 	default:
 		return nil
 	}
