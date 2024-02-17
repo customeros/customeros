@@ -19,7 +19,6 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
-	"math"
 	"time"
 )
 
@@ -295,7 +294,7 @@ func (h *contractHandler) calculateMaxArr(ctx context.Context, tenant string, co
 		arr = prorateArr(arr, monthsUntilContractEnd(utils.Now(), *contract.EndedAt))
 	}
 
-	return arr, nil
+	return utils.TruncateFloat64(arr, 2), nil
 }
 
 func monthsUntilContractEnd(start, end time.Time) int {
@@ -322,7 +321,7 @@ func prorateArr(arr float64, monthsRemaining int) float64 {
 		return arr
 	}
 	monthlyRate := arr / 12
-	return monthlyRate * float64(monthsRemaining)
+	return utils.TruncateFloat64(monthlyRate*float64(monthsRemaining), 2)
 }
 
 func (h *contractHandler) calculateCurrentArrByLikelihood(amount float64, likelihood string) float64 {
@@ -340,7 +339,7 @@ func (h *contractHandler) calculateCurrentArrByLikelihood(amount float64, likeli
 		likelihoodFactor = 1
 	}
 
-	return math.Trunc(amount*likelihoodFactor*100) / 100
+	return utils.TruncateFloat64(amount*likelihoodFactor, 2)
 }
 
 func (h *contractHandler) assertContractAndRenewalOpportunity(ctx context.Context, tenant, contractId string) (*neo4jentity.ContractEntity, *entity.OpportunityEntity, bool) {
