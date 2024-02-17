@@ -3,6 +3,7 @@ package invoice
 import (
 	"context"
 	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/notifications"
 	"strings"
@@ -114,7 +115,7 @@ func (s *InvoiceSubscriber) When(ctx context.Context, evt eventstore.Event) erro
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()), log.String("EventType", evt.GetEventType()))
 
-	if strings.HasPrefix(evt.GetAggregateID(), "$") {
+	if strings.HasPrefix(evt.GetAggregateID(), constants.EsInternalStreamPrefix) {
 		return nil
 	}
 

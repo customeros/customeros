@@ -2,6 +2,7 @@ package interactionEvent
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"strings"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
@@ -105,7 +106,7 @@ func (s *InteractionEventSubscriber) When(ctx context.Context, evt eventstore.Ev
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()), log.String("EventType", evt.GetEventType()))
 
-	if strings.HasPrefix(evt.GetAggregateID(), "$") {
+	if strings.HasPrefix(evt.GetAggregateID(), constants.EsInternalStreamPrefix) {
 		return nil
 	}
 
