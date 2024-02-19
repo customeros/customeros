@@ -1052,6 +1052,34 @@ func (r *queryResolver) Organization(ctx context.Context, id string) (*model.Org
 	return mapper.MapEntityToOrganization(organizationEntityPtr), nil
 }
 
+// OrganizationByCustomerOsID is the resolver for the organization_ByCustomerOsId field.
+func (r *queryResolver) OrganizationByCustomerOsID(ctx context.Context, customerOsID string) (*model.Organization, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.OrganizationByCustomerOsID", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.customerOsID", customerOsID))
+
+	if customerOsID == "" {
+		tracing.TraceErr(span, errors.New("missing organization id"))
+		graphql.AddErrorf(ctx, "Missing organization id")
+		return nil, nil
+	}
+
+	organizationEntityPtr, err := r.Services.OrganizationService.GetByCustomerOsId(ctx, customerOsID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Error getting organization not found by customerOsId %s", customerOsID)
+		return nil, nil
+	}
+	if organizationEntityPtr == nil {
+		err = errors.New("organization not found")
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Organization not found by customerOsId %s", customerOsID)
+		return nil, nil
+	}
+	return mapper.MapEntityToOrganization(organizationEntityPtr), nil
+}
+
 // OrganizationDistinctOwners is the resolver for the organization_DistinctOwners field.
 func (r *queryResolver) OrganizationDistinctOwners(ctx context.Context) ([]*model.User, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.OrganizationDistinctOwners", graphql.GetOperationContext(ctx))

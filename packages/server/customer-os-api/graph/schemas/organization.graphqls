@@ -1,6 +1,7 @@
 extend type Query {
     organizations(pagination: Pagination, where: Filter, sort: [SortBy!]): OrganizationPage! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization(id: ID!): Organization @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_ByCustomerOsId(customerOsId: String!): Organization @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_DistinctOwners: [User!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
