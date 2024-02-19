@@ -9,7 +9,10 @@ export function formatCurrency(
   return Intl.NumberFormat('en-US', {
     style: 'currency',
     currency,
-    minimumFractionDigits,
+    minimumFractionDigits:
+      maximumFractionDigits < minimumFractionDigits
+        ? maximumFractionDigits
+        : minimumFractionDigits,
     maximumFractionDigits: maximumFractionDigits,
   }).format(amount);
 }
