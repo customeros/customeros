@@ -1012,7 +1012,7 @@ func (h *InvoiceEventHandler) onInvoiceVoidV1(ctx context.Context, evt eventstor
 		return err
 	}
 
-	err = h.postmarkProvider.SendNotification(ctx, postmarkEmail, span)
+	err = h.postmarkProvider.SendNotification(ctx, postmarkEmail, span, eventData.Tenant)
 
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -1090,7 +1090,7 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 		return err
 	}
 
-	err = h.postmarkProvider.SendNotification(ctx, postmarkEmail, span)
+	err = h.postmarkProvider.SendNotification(ctx, postmarkEmail, span, eventData.Tenant)
 
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -1174,7 +1174,7 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 		return err
 	}
 
-	err = h.postmarkProvider.SendNotification(ctx, postmarkEmail, span)
+	err = h.postmarkProvider.SendNotification(ctx, postmarkEmail, span, eventData.Tenant)
 
 	if err != nil {
 		tracing.TraceErr(span, err)

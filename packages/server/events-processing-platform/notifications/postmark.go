@@ -4,13 +4,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
+
 	"github.com/aws/aws-sdk-go/aws"
 	awsSes "github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
-	"strings"
 
 	"github.com/Boostport/mjml-go"
 	"github.com/mrz1836/postmark"
@@ -43,18 +46,42 @@ type PostmarkEmailAttachment struct {
 }
 
 type PostmarkProvider struct {
-	Client *postmark.Client
-	log    logger.Logger
+	Client     *postmark.Client
+	log        logger.Logger
+	repository *repository.Repositories
 }
 
-func NewPostmarkProvider(log logger.Logger, serverToken string) *PostmarkProvider {
+func NewPostmarkProvider(log logger.Logger, repo *repository.Repositories) *PostmarkProvider {
 	return &PostmarkProvider{
-		Client: postmark.NewClient(serverToken, ""),
-		log:    log,
+		Client:     postmark.NewClient("", ""),
+		log:        log,
+		repository: repo,
 	}
 }
 
-func (np *PostmarkProvider) SendNotification(ctx context.Context, postmarkEmail PostmarkEmail, span opentracing.Span) error {
+func (np *PostmarkProvider) getPostmarkClient(tenant string) (*postmark.Client, error) {
+	p := np.repository.CommonRepositories.PostmarkApiKeyRepository.GetPostmarkApiKey(tenant)
+	if p.Error != nil {
+		return nil, p.Error
+	}
+
+	if p.Result == nil {
+		return nil, errors.New("postmark api key not found")
+	}
+
+	serverToken := p.Result.(entity.PostmarkApiKey).Key
+
+	return postmark.NewClient(serverToken, ""), nil
+}
+
+func (np *PostmarkProvider) SendNotification(ctx context.Context, postmarkEmail PostmarkEmail, span opentracing.Span, tenant string) error {
+	npClient, err := np.getPostmarkClient(tenant)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		np.log.Errorf("(PostmarkProvider.SendNotification) error: %s", err.Error())
+		return err
+	}
+	np.Client = npClient
 	htmlContent, err := np.LoadEmailContent(postmarkEmail.WorkflowId, "mjml", postmarkEmail.TemplateData)
 	if err != nil {
 		tracing.TraceErr(span, err)

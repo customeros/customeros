@@ -49,7 +49,7 @@ func InitServices(cfg *config.Config, repositories *repository.Repositories, agg
 	services.FileStoreApiService = fsc.NewFileStoreApiService(&cfg.Services.FileStoreApiConfig)
 	services.CommonServices = commonService.InitServices(repositories.Drivers.GormDb, repositories.Drivers.Neo4jDriver)
 
-	services.PostmarkProvider = notifications.NewPostmarkProvider(log, cfg.Services.Postmark.ApiKey)
+	services.PostmarkProvider = notifications.NewPostmarkProvider(log, repositories)
 
 	//GRPC services
 	services.ContactService = NewContactService(log, commandHandlers.Contact)
