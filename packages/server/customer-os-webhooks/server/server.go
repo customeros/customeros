@@ -69,7 +69,7 @@ func (server *server) Run(parentCtx context.Context) error {
 
 	// Setting up Postgres repositories
 	commonServices := commonservice.InitServices(postgresDb.GormDB, &neo4jDriver)
-	commonAuthServices := commonAuthService.InitServices(nil, postgresDb.GormDB)
+	commonAuthServices := commonAuthService.InitServices(nil, commonServices, postgresDb.GormDB)
 
 	// Setting up gRPC client
 	df := grpc_client.NewDialFactory(server.cfg)

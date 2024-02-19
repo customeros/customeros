@@ -46,14 +46,12 @@ type PostmarkEmailAttachment struct {
 }
 
 type PostmarkProvider struct {
-	Client     *postmark.Client
 	log        logger.Logger
 	repository *repository.Repositories
 }
 
 func NewPostmarkProvider(log logger.Logger, repo *repository.Repositories) *PostmarkProvider {
 	return &PostmarkProvider{
-		Client:     postmark.NewClient("", ""),
 		log:        log,
 		repository: repo,
 	}
@@ -75,13 +73,13 @@ func (np *PostmarkProvider) getPostmarkClient(tenant string) (*postmark.Client, 
 }
 
 func (np *PostmarkProvider) SendNotification(ctx context.Context, postmarkEmail PostmarkEmail, span opentracing.Span, tenant string) error {
-	npClient, err := np.getPostmarkClient(tenant)
+	postmarkClient, err := np.getPostmarkClient(tenant)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		np.log.Errorf("(PostmarkProvider.SendNotification) error: %s", err.Error())
 		return err
 	}
-	np.Client = npClient
+
 	htmlContent, err := np.LoadEmailContent(postmarkEmail.WorkflowId, "mjml", postmarkEmail.TemplateData)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -128,7 +126,7 @@ func (np *PostmarkProvider) SendNotification(ctx context.Context, postmarkEmail 
 		}
 	}
 
-	_, err = np.Client.SendEmail(ctx, email)
+	_, err = postmarkClient.SendEmail(ctx, email)
 
 	if err != nil {
 		tracing.TraceErr(span, err)

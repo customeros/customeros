@@ -2,17 +2,16 @@ package service
 
 import (
 	"fmt"
+	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"golang.org/x/net/context"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/repository/entity"
 )
 
-const GSUITE_SERVICE_PRIVATE_KEY = "GSUITE_SERVICE_PRIVATE_KEY"
-const GSUITE_SERVICE_EMAIL_ADDRESS = "GSUITE_SERVICE_EMAIL_ADDRESS"
-
 const SERVICE_GSUITE = "gsuite"
-const SERVICE_HUBSPOT = "hubspot"
 const SERVICE_SMARTSHEET = "smartsheet"
 const SERVICE_JIRA = "jira"
 const SERVICE_TRELLO = "trello"
@@ -81,7 +80,6 @@ const SERVICE_RECHARGE = "recharge"
 const SERVICE_RECRUITEE = "recruitee"
 const SERVICE_RECURLY = "recurly"
 const SERVICE_RETENTLY = "retently"
-const SERVICE_SALESFORCE = "salesforce"
 const SERVICE_SALESLOFT = "salesloft"
 const SERVICE_SENDGRID = "sendgrid"
 const SERVICE_SENTRY = "sentry"
@@ -126,8 +124,8 @@ func NewTenantSettingsService(repositories *repository.PostgresRepositories, log
 		repositories: repositories,
 		serviceMap: map[string][]keyMapping{
 			SERVICE_GSUITE: {
-				keyMapping{"privateKey", GSUITE_SERVICE_PRIVATE_KEY},
-				keyMapping{"clientEmail", GSUITE_SERVICE_EMAIL_ADDRESS},
+				keyMapping{"privateKey", commonEntity.GSUITE_SERVICE_PRIVATE_KEY},
+				keyMapping{"clientEmail", commonEntity.GSUITE_SERVICE_EMAIL_ADDRESS},
 			},
 		},
 		log: log,
@@ -177,7 +175,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 	if err != nil {
 		return nil, nil, err
 	}
-	var keysToUpdate []entity.TenantAPIKey
+	var keysToUpdate []commonEntity.GoogleServiceAccountKey
 	legacyUpdate := false
 
 	if tenantSettings == nil {
@@ -205,7 +203,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 					if !ok {
 						return nil, nil, fmt.Errorf("invalid data for key %s in integration %s", mapping.ApiKeyName, integrationId)
 					}
-					keysToUpdate = append(keysToUpdate, entity.TenantAPIKey{TenantName: tenantName, Key: mapping.DbKeyName, Value: valueStr})
+					keysToUpdate = append(keysToUpdate, commonEntity.GoogleServiceAccountKey{TenantName: tenantName, Key: mapping.DbKeyName, Value: valueStr})
 					data[mapping.DbKeyName] = value
 				}
 			}
@@ -215,12 +213,6 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		legacyUpdate = true
 
 		switch integrationId {
-		case SERVICE_HUBSPOT:
-			privateAppKey, ok := data["privateAppKey"].(string)
-			if !ok {
-				return nil, nil, fmt.Errorf("missing private app key for Hubspot integration")
-			}
-			tenantSettings.HubspotPrivateAppKey = &privateAppKey
 
 		case SERVICE_SMARTSHEET:
 			id, ok := data["id"].(string)
@@ -1039,24 +1031,6 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 			tenantSettings.RetentlyApiToken = &apiToken
 
-		case SERVICE_SALESFORCE:
-			clientId, ok := data["clientId"].(string)
-			if !ok {
-				return nil, nil, fmt.Errorf("missing client id for Salesforce integration")
-			}
-			clientSecret, ok := data["clientSecret"].(string)
-			if !ok {
-				return nil, nil, fmt.Errorf("missing client secret for Salesforce integration")
-			}
-			refreshToken, ok := data["refreshToken"].(string)
-			if !ok {
-				return nil, nil, fmt.Errorf("missing refresh token for Salesforce integration")
-			}
-
-			tenantSettings.SalesforceClientId = &clientId
-			tenantSettings.SalesforceClientSecret = &clientSecret
-			tenantSettings.SalesforceRefreshToken = &refreshToken
-
 		case SERVICE_SALESLOFT:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
@@ -1327,10 +1301,15 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		tenantSettings = qr.Result.(*entity.TenantSettings)
 	}
 
+	ctx, cancel := utils.GetLongLivedContext(context.Background())
+	defer cancel()
+
 	if keysToUpdate != nil {
-		err = s.repositories.TenantSettingsRepository.SaveKeys(keysToUpdate)
-		if err != nil {
-			return nil, nil, fmt.Errorf("SaveIntegrationData: %v", err)
+		for _, key := range keysToUpdate {
+			err = s.repositories.CommonRepositories.GoogleServiceAccountKeyRepository.SaveKey(ctx, key.TenantName, key.Key, key.Value)
+			if err != nil {
+				return nil, nil, fmt.Errorf("SaveIntegrationData: %v", err)
+			}
 		}
 	}
 
@@ -1343,6 +1322,9 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 }
 
 func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier string) (*entity.TenantSettings, map[string]bool, error) {
+	ctx, cancel := utils.GetLongLivedContext(context.Background())
+	defer cancel()
+
 	tenantSettings, _, err := s.GetForTenant(tenantName)
 	if err != nil {
 		return nil, nil, err
@@ -1352,22 +1334,17 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 		return nil, nil, nil
 	} else {
 
-		var keysToDelete []entity.TenantAPIKey
 		mappings, ok := s.serviceMap[identifier]
 		if ok {
 			for _, mapping := range mappings {
-
-				keysToDelete = append(keysToDelete, entity.TenantAPIKey{TenantName: tenantName, Key: mapping.DbKeyName})
-			}
-			err = s.repositories.TenantSettingsRepository.DeleteKeys(keysToDelete)
-			if err != nil {
-				return nil, nil, fmt.Errorf("ClearIntegrationData: %v", err)
+				err := s.repositories.CommonRepositories.GoogleServiceAccountKeyRepository.DeleteKey(ctx, tenantName, mapping.DbKeyName)
+				if err != nil {
+					return nil, nil, fmt.Errorf("ClearIntegrationData: %v", err)
+				}
 			}
 		} else {
 
 			switch identifier {
-			case SERVICE_HUBSPOT:
-				tenantSettings.HubspotPrivateAppKey = nil
 			case SERVICE_SMARTSHEET:
 				tenantSettings.SmartSheetId = nil
 				tenantSettings.SmartSheetAccessToken = nil
@@ -1554,10 +1531,6 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 				tenantSettings.RecurlyApiKey = nil
 			case SERVICE_RETENTLY:
 				tenantSettings.RetentlyApiToken = nil
-			case SERVICE_SALESFORCE:
-				tenantSettings.SalesforceClientId = nil
-				tenantSettings.SalesforceClientSecret = nil
-				tenantSettings.SalesforceRefreshToken = nil
 			case SERVICE_SALESLOFT:
 				tenantSettings.SalesloftApiKey = nil
 			case SERVICE_SENDGRID:

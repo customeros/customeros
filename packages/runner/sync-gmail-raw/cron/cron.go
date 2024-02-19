@@ -110,7 +110,7 @@ func syncEmailsInState(config *config.Config, services *service.Services, state 
 
 					logrus.Infof("syncing emails for user with email: %s in tenant: %s", emailForUser.RawEmail, tenant.Name)
 
-					gmailService, err := services.AuthServices.GoogleService.GetGmailService(emailForUser.RawEmail, tenant.Name)
+					gmailService, err := services.AuthServices.GoogleService.GetGmailService(ctx, emailForUser.RawEmail, tenant.Name)
 					if err != nil {
 						logrus.Errorf("failed to create gmail service: %v", err)
 						return
@@ -311,10 +311,12 @@ func InitializeGmailImportState(services *service.Services, tenantName, userEmai
 }
 
 func syncCalendarEventsForOauthTokens(config *config.Config, services *service.Services) {
+	ctx := context.Background()
+
 	runId, _ := uuid.NewRandom()
 	logrus.Infof("run id: %s syncing calendar events from google using oauth tokens into customer-os at %v", runId.String(), time.Now().UTC())
 
-	tokenEntities, err := services.AuthServices.CommonAuthRepositories.OAuthTokenRepository.GetAll()
+	tokenEntities, err := services.AuthServices.CommonAuthRepositories.OAuthTokenRepository.GetAll(ctx)
 	if err != nil {
 		logrus.Errorf("failed to get all oauth tokens: %v", err)
 		return
@@ -333,7 +335,7 @@ func syncCalendarEventsForOauthTokens(config *config.Config, services *service.S
 		go func(tokenEntity authEntity.OAuthTokenEntity) {
 			defer wg.Done()
 
-			serviceAccountExistsForTenant, err := services.AuthServices.GoogleService.ServiceAccountCredentialsExistsForTenant(tokenEntity.TenantName)
+			serviceAccountExistsForTenant, err := services.AuthServices.GoogleService.ServiceAccountCredentialsExistsForTenant(ctx, tokenEntity.TenantName)
 			if err != nil {
 				logrus.Error(err)
 				logrus.Errorf("syncing calendar events for oauth token with email address: %s error", tokenEntity.EmailAddress)
@@ -345,7 +347,7 @@ func syncCalendarEventsForOauthTokens(config *config.Config, services *service.S
 				return
 			}
 
-			gCalService, err := services.AuthServices.GoogleService.GetGCalServiceWithOauthToken(tokenEntity)
+			gCalService, err := services.AuthServices.GoogleService.GetGCalServiceWithOauthToken(ctx, tokenEntity)
 			if err != nil {
 				logrus.Errorf("failed to create gmail service: %v", err)
 				return

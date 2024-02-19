@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/repository/helper"
 	"gorm.io/gorm"
@@ -12,9 +13,7 @@ import (
 type TenantSettingsRepository interface {
 	FindForTenantName(tenantName string) helper.QueryResult
 	Save(tenantSettings *entity.TenantSettings) helper.QueryResult
-	SaveKeys(keys []entity.TenantAPIKey) error
 	CheckKeysExist(tenantName string, keyName []string) (bool, error)
-	DeleteKeys(keys []entity.TenantAPIKey) error
 }
 
 type tenantSettingsRepo struct {
@@ -49,8 +48,8 @@ func (r *tenantSettingsRepo) CheckKeysExist(tenantName string, keyName []string)
 	exists := true
 	for _, key := range keyName {
 		log.Printf("CheckKeysExist: %s, %s", tenantName, key)
-		err := r.db.Model(&entity.TenantAPIKey{}).
-			Where(&entity.TenantAPIKey{TenantName: tenantName, Key: key}, "tenant_name", "key").Count(&rows).Error
+		err := r.db.Model(&commonEntity.GoogleServiceAccountKey{}).
+			Where(&commonEntity.GoogleServiceAccountKey{TenantName: tenantName, Key: key}, "tenant_name", "key").Count(&rows).Error
 
 		if err != nil {
 			return false, fmt.Errorf("CheckKeysExist: %w", err)
@@ -63,7 +62,7 @@ func (r *tenantSettingsRepo) CheckKeysExist(tenantName string, keyName []string)
 	return exists, nil
 }
 
-func (r *tenantSettingsRepo) SaveKeys(keys []entity.TenantAPIKey) error {
+func (r *tenantSettingsRepo) SaveKeys(keys []commonEntity.GoogleServiceAccountKey) error {
 
 	for _, key := range keys {
 		result := r.db.Clauses(clause.OnConflict{
@@ -77,9 +76,9 @@ func (r *tenantSettingsRepo) SaveKeys(keys []entity.TenantAPIKey) error {
 	return nil
 }
 
-func (r *tenantSettingsRepo) DeleteKeys(keys []entity.TenantAPIKey) error {
+func (r *tenantSettingsRepo) DeleteKeys(keys []commonEntity.GoogleServiceAccountKey) error {
 
-	var deletedItem entity.TenantAPIKey
+	var deletedItem commonEntity.GoogleServiceAccountKey
 	for _, key := range keys {
 		log.Printf("DeleteKeys: %s, %s", key.TenantName, key.Key)
 		err := r.db.

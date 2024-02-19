@@ -11,34 +11,36 @@ import (
 )
 
 type Repositories struct {
-	AppKeyRepository                repository.AppKeyRepository
-	PersonalIntegrationRepository   repository.PersonalIntegrationRepository
-	AiPromptLogRepository           repository.AiPromptLogRepository
-	WhitelistDomainRepository       repository.WhitelistDomainRepository
-	PersonalEmailProviderRepository repository.PersonalEmailProviderRepository
-	UserRepository                  neo4jrepo.UserRepository
-	TenantRepository                neo4jrepo.TenantRepository
-	StateRepository                 neo4jrepo.StateRepository
-	TenantWebhookApiKeyRepository   repository.TenantWebhookApiKeyRepository
-	TenantWebhookRepository         repository.TenantWebhookRepository
-	SlackChannelRepository          repository.SlackChannelRepository
-	PostmarkApiKeyRepository        repository.PostmarkApiKeyRepository
+	AppKeyRepository                  repository.AppKeyRepository
+	PersonalIntegrationRepository     repository.PersonalIntegrationRepository
+	AiPromptLogRepository             repository.AiPromptLogRepository
+	WhitelistDomainRepository         repository.WhitelistDomainRepository
+	PersonalEmailProviderRepository   repository.PersonalEmailProviderRepository
+	UserRepository                    neo4jrepo.UserRepository
+	TenantRepository                  neo4jrepo.TenantRepository
+	StateRepository                   neo4jrepo.StateRepository
+	TenantWebhookApiKeyRepository     repository.TenantWebhookApiKeyRepository
+	TenantWebhookRepository           repository.TenantWebhookRepository
+	SlackChannelRepository            repository.SlackChannelRepository
+	PostmarkApiKeyRepository          repository.PostmarkApiKeyRepository
+	GoogleServiceAccountKeyRepository repository.GoogleServiceAccountKeyRepository
 }
 
 func InitRepositories(db *gorm.DB, driver *neo4j.DriverWithContext) *Repositories {
 	repositories := &Repositories{
-		AppKeyRepository:                repository.NewAppKeyRepo(db),
-		PersonalIntegrationRepository:   repository.NewPersonalIntegrationsRepo(db),
-		AiPromptLogRepository:           repository.NewAiPromptLogRepository(db),
-		WhitelistDomainRepository:       repository.NewWhitelistDomainRepository(db),
-		PersonalEmailProviderRepository: repository.NewPersonalEmailProviderRepository(db),
-		UserRepository:                  neo4jrepo.NewUserRepository(driver),
-		TenantRepository:                neo4jrepo.NewTenantRepository(driver),
-		StateRepository:                 neo4jrepo.NewStateRepository(driver),
-		TenantWebhookApiKeyRepository:   repository.NewTenantWebhookApiKeyRepo(db),
-		TenantWebhookRepository:         repository.NewTenantWebhookRepo(db),
-		SlackChannelRepository:          repository.NewSlackChannelRepository(db),
-		PostmarkApiKeyRepository:        repository.NewPostmarkApiKeyRepo(db),
+		AppKeyRepository:                  repository.NewAppKeyRepo(db),
+		PersonalIntegrationRepository:     repository.NewPersonalIntegrationsRepo(db),
+		AiPromptLogRepository:             repository.NewAiPromptLogRepository(db),
+		WhitelistDomainRepository:         repository.NewWhitelistDomainRepository(db),
+		PersonalEmailProviderRepository:   repository.NewPersonalEmailProviderRepository(db),
+		UserRepository:                    neo4jrepo.NewUserRepository(driver),
+		TenantRepository:                  neo4jrepo.NewTenantRepository(driver),
+		StateRepository:                   neo4jrepo.NewStateRepository(driver),
+		TenantWebhookApiKeyRepository:     repository.NewTenantWebhookApiKeyRepo(db),
+		TenantWebhookRepository:           repository.NewTenantWebhookRepo(db),
+		SlackChannelRepository:            repository.NewSlackChannelRepository(db),
+		PostmarkApiKeyRepository:          repository.NewPostmarkApiKeyRepo(db),
+		GoogleServiceAccountKeyRepository: repository.NewGoogleServiceAccountKeyRepository(db),
 	}
 
 	var err error
@@ -92,6 +94,12 @@ func InitRepositories(db *gorm.DB, driver *neo4j.DriverWithContext) *Repositorie
 	}
 
 	err = db.AutoMigrate(&entity.PostmarkApiKey{})
+	if err != nil {
+		log.Print(err)
+		panic(err)
+	}
+
+	err = db.AutoMigrate(&entity.GoogleServiceAccountKey{})
 	if err != nil {
 		log.Print(err)
 		panic(err)

@@ -12,7 +12,7 @@ type PostmarkApiKeyRepo struct {
 
 type PostmarkApiKeyRepository interface {
 	GetPostmarkApiKey(tenant string) helper.QueryResult
-	SaveApiKey(integration entity.PostmarkApiKey) helper.QueryResult
+	CreateApiKey(integration entity.PostmarkApiKey) helper.QueryResult
 }
 
 func NewPostmarkApiKeyRepo(db *gorm.DB) *PostmarkApiKeyRepo {
@@ -32,7 +32,7 @@ func (r *PostmarkApiKeyRepo) GetPostmarkApiKey(tenant string) helper.QueryResult
 	return helper.QueryResult{Result: &postmarkApiKeyEntity}
 }
 
-func (r *PostmarkApiKeyRepo) SaveApiKey(apiKey entity.PostmarkApiKey) helper.QueryResult {
+func (r *PostmarkApiKeyRepo) CreateApiKey(apiKey entity.PostmarkApiKey) helper.QueryResult {
 	postmarkApiKeyEntity := entity.PostmarkApiKey{
 		TenantName: apiKey.TenantName,
 		Key:        apiKey.Key,

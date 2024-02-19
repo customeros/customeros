@@ -135,6 +135,7 @@ func ApiKeyCheckerHTTP(tenantApiKeyRepo repository.TenantWebhookApiKeyRepository
 			//really important
 			//set the tenant name in the header for the next middleware
 			c.Request.Header.Set(TenantHeader, apiKey.TenantName)
+			c.Set(KEY_USER_ROLES, []string{"USER"})
 
 			if !spanFinished {
 				spanFinished = true
