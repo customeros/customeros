@@ -295,29 +295,6 @@ func TruncateFloat64(input float64, decimals int) float64 {
 	return truncated
 }
 
-func FormatCurrencyAmount(value float64) string {
-	// Format to 2 decimals
-	str := fmt.Sprintf("%.2f", value)
-
-	// Split into parts
-	parts := strings.Split(str, ".")
-	intPart := parts[0]
-	fracPart := parts[1]
-
-	// Trim trailing zeros
-	fracPart = strings.TrimRight(fracPart, "0")
-
-	// Add commas to int
-	intPartFormatted := addThousandSeparators(intPart)
-
-	// Join parts
-	if fracPart != "" {
-		return intPartFormatted + "." + fracPart
-	} else {
-		return intPartFormatted
-	}
-}
-
 // Helper to add commas to an integer string
 func addThousandSeparators(value string) string {
 	var newParts []string
