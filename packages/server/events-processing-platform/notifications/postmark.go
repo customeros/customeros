@@ -133,6 +133,8 @@ func (np *PostmarkProvider) GetFileName(workflowId, fileExtension string) string
 		fileName = "invoice.paid." + fileExtension
 	case WorkflowInvoiceReady:
 		fileName = "invoice.ready." + fileExtension
+	case WorkflowInvoiceVoided:
+		fileName = "invoice.voided." + fileExtension
 	}
 	return fileName
 }

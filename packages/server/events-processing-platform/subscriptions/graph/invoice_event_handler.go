@@ -249,6 +249,33 @@ func (s *InvoiceEventHandler) callRequestFillInvoiceGRPC(ctx context.Context, te
 	return nil
 }
 
+func (h *InvoiceEventHandler) OnInvoiceVoidV1(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.OnInvoiceVoidV1")
+	defer span.Finish()
+	setEventSpanTagsAndLogFields(span, evt)
+
+	var eventData invoice.InvoiceVoidEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+	invoiceId := invoice.GetInvoiceObjectID(evt.GetAggregateID(), eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, invoiceId)
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
+
+	err := h.repositories.Neo4jRepositories.InvoiceWriteRepository.UpdateInvoice(ctx, eventData.Tenant, invoiceId, neo4jrepository.InvoiceUpdateFields{
+		UpdatedAt:    eventData.UpdatedAt,
+		UpdateStatus: true,
+		Status:       neo4jenum.InvoiceStatus(eventData.Status),
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while voiding invoice {%s}: {%s}", invoiceId, err.Error())
+		return err
+	}
+	return err
+}
+
 func (h *InvoiceEventHandler) OnInvoiceDeleteV1(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.OnInvoiceDeleteV1")
 	defer span.Finish()

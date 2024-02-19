@@ -3647,17 +3647,19 @@ const (
 	InvoiceStatusDraft InvoiceStatus = "DRAFT"
 	InvoiceStatusDue   InvoiceStatus = "DUE"
 	InvoiceStatusPaid  InvoiceStatus = "PAID"
+	InvoiceStatusVoid  InvoiceStatus = "VOID"
 )
 
 var AllInvoiceStatus = []InvoiceStatus{
 	InvoiceStatusDraft,
 	InvoiceStatusDue,
 	InvoiceStatusPaid,
+	InvoiceStatusVoid,
 }
 
 func (e InvoiceStatus) IsValid() bool {
 	switch e {
-	case InvoiceStatusDraft, InvoiceStatusDue, InvoiceStatusPaid:
+	case InvoiceStatusDraft, InvoiceStatusDue, InvoiceStatusPaid, InvoiceStatusVoid:
 		return true
 	}
 	return false

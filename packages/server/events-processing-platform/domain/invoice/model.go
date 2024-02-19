@@ -125,6 +125,7 @@ const (
 	DraftInvoiceStatus
 	DueInvoiceStatus
 	PaidInvoiceStatus
+	VoidInvoiceStatus
 )
 
 // This function provides a string representation of the BillingCyckle enum.
@@ -138,6 +139,8 @@ func (is InvoiceStatus) String() string {
 		return string(neo4jenum.InvoiceStatusDue)
 	case PaidInvoiceStatus:
 		return string(neo4jenum.InvoiceStatusPaid)
+	case VoidInvoiceStatus:
+		return string(neo4jenum.InvoiceStatusVoid)
 	default:
 		return ""
 	}

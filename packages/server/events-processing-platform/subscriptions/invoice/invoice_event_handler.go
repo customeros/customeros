@@ -956,6 +956,81 @@ func (s *InvoiceEventHandler) callPdfGeneratedInvoice(ctx context.Context, tenan
 	return nil
 }
 
+func (h *InvoiceEventHandler) onInvoiceVoidV1(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.onInvoiceVoidV1")
+	defer span.Finish()
+	setEventSpanTagsAndLogFields(span, evt)
+
+	var eventData invoice.InvoiceVoidEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+	tracing.LogObjectAsJson(span, "eventData", eventData)
+	invoiceId := invoice.GetInvoiceObjectID(evt.GetAggregateID(), eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, invoiceId)
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
+
+	var invoiceEntity *neo4jentity.InvoiceEntity
+
+	//load invoice
+	invoiceNode, err := h.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoiceById(ctx, eventData.Tenant, invoiceId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.GetInvoice")
+	}
+	if invoiceNode != nil {
+		invoiceEntity = neo4jmapper.MapDbNodeToInvoiceEntity(invoiceNode)
+	} else {
+		return errors.New("invoiceNode is nil")
+	}
+
+	if invoiceEntity.DryRun {
+		return nil
+	}
+
+	postmarkEmail := notifications.PostmarkEmail{
+		WorkflowId:    notifications.WorkflowInvoiceVoided,
+		MessageStream: notifications.PostmarkMessageStreamInvoice,
+		From:          invoiceEntity.Provider.Email,
+		To:            invoiceEntity.Customer.Email,
+		Subject:       "Voided invoice " + invoiceEntity.Number,
+		TemplateData: map[string]string{
+			"{{userFirstName}}":  invoiceEntity.Customer.Name,
+			"{{invoiceNumber}}":  invoiceEntity.Number,
+			"{{currencySymbol}}": invoiceEntity.Currency.Symbol(),
+			"{{amtDue}}":         fmt.Sprintf("%.2f", invoiceEntity.TotalAmount),
+			"{{issueDate}}":      invoiceEntity.CreatedAt.Format("02 Jan 2006"),
+		},
+		Attachments: []notifications.PostmarkEmailAttachment{},
+	}
+
+	err = h.AppendProviderLogoToEmail(*invoiceEntity, &postmarkEmail)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error appending provider logo to email for invoice %s: %s", invoiceId, err.Error())
+		return err
+	}
+
+	err = h.postmarkProvider.SendNotification(ctx, postmarkEmail, span)
+
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error sending invoice voided notification for invoice %s: %s", invoiceId, err.Error())
+		return err
+	}
+
+	// Request was successful
+	err = h.repositories.Neo4jRepositories.InvoiceWriteRepository.SetPaidInvoiceNotificationSentAt(ctx, eventData.Tenant, invoiceId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error setting invoice voided notification sent at for invoice %s: %s", invoiceId, err.Error())
+		return err
+	}
+
+	return nil
+}
+
 func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.onInvoicePaidV1")
 	defer span.Finish()
@@ -1033,6 +1108,7 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 
 	return nil
 }
+
 func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.onInvoicePayNotificationV1")
 	defer span.Finish()
