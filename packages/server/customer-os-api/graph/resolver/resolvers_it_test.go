@@ -3,6 +3,7 @@ package resolver
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"github.com/99designs/gqlgen/client"
 	"github.com/99designs/gqlgen/graphql/handler"
@@ -18,7 +19,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/postgres"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	commonAuthService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
@@ -190,14 +190,12 @@ func callGraphQLExpectError(t *testing.T, queryLocation string, vars map[string]
 	require.Nil(t, err)
 	assertRawResponseError(t, rawResponse, err)
 
-	var rr struct {
-		GraphQlErrorResponse GraphQlErrorResponse
-	}
+	var rr []GraphQlErrorResponse
 
-	err = decode.Decode(rawResponse.Data.(map[string]any), &rr)
+	err = json.Unmarshal(rawResponse.Errors, &rr)
 	require.Nil(t, err)
 
-	return rr.GraphQlErrorResponse
+	return rr[0]
 }
 
 type GraphQlErrorResponse struct {

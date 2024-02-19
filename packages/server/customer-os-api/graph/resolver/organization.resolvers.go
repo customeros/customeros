@@ -1060,8 +1060,8 @@ func (r *queryResolver) OrganizationByCustomerOsID(ctx context.Context, customer
 	span.LogFields(log.String("request.customerOsID", customerOsID))
 
 	if customerOsID == "" {
-		tracing.TraceErr(span, errors.New("missing organization id"))
-		graphql.AddErrorf(ctx, "Missing organization id")
+		tracing.TraceErr(span, errors.New("missing customerOsId"))
+		graphql.AddErrorf(ctx, "Missing customerOsId")
 		return nil, nil
 	}
 
