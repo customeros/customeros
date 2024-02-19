@@ -14,7 +14,7 @@ import {
 
 type ServicesTableProps = {
   currency: string;
-  services: Array<InvoiceLine>;
+  services: Array<Partial<InvoiceLine>>;
 };
 
 export function ServicesTable({ services, currency }: ServicesTableProps) {
@@ -87,7 +87,7 @@ export function ServicesTable({ services, currency }: ServicesTableProps) {
                 borderColor='gray.300'
                 color='gray.500'
               >
-                {formatCurrency(service.price, 2, currency)}
+                {formatCurrency(service?.price ?? 0, 2, currency)}
               </Td>
               <Td
                 fontSize='sm'
@@ -96,7 +96,7 @@ export function ServicesTable({ services, currency }: ServicesTableProps) {
                 color='gray.500'
                 pr={0}
               >
-                {formatCurrency(service.amount, 2, currency)}
+                {formatCurrency(service?.amount ?? 0, 2, currency)}
               </Td>
             </Tr>
           ))}

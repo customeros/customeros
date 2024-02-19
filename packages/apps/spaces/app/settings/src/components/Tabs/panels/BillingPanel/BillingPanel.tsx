@@ -282,7 +282,7 @@ export const BillingPanel = () => {
     updateTenantSettingsMutation.mutate({
       input: {
         patch: true,
-        invoicingEnabled: !tenantSettingsData?.tenantSettings?.invoicingEnabled,
+        billingEnabled: !tenantSettingsData?.tenantSettings?.billingEnabled,
       },
     });
   };
@@ -315,7 +315,7 @@ export const BillingPanel = () => {
             <b>Billing</b>
           </Heading>
 
-          {tenantSettingsData?.tenantSettings.invoicingEnabled && (
+          {tenantSettingsData?.tenantSettings.billingEnabled && (
             <Menu>
               <MenuButton
                 as={IconButton}
@@ -339,16 +339,14 @@ export const BillingPanel = () => {
           )}
         </CardHeader>
 
-        {!tenantSettingsData?.tenantSettings.invoicingEnabled && (
+        {!tenantSettingsData?.tenantSettings.billingEnabled && (
           <CardBody
             as={Flex}
             flexDir='column'
             px='6'
             w='full'
             gap={4}
-            opacity={
-              tenantSettingsData?.tenantSettings.invoicingEnabled ? 0 : 1
-            }
+            opacity={tenantSettingsData?.tenantSettings.billingEnabled ? 0 : 1}
           >
             <Text fontSize='sm'>
               Master your revenue lifecycle from contract to cash by enabling
@@ -377,7 +375,7 @@ export const BillingPanel = () => {
 
         <Collapse
           delay={{ enter: 0.2 }}
-          in={tenantSettingsData?.tenantSettings.invoicingEnabled}
+          in={tenantSettingsData?.tenantSettings.billingEnabled}
           animateOpacity
           startingHeight={0}
         >
@@ -385,9 +383,7 @@ export const BillingPanel = () => {
             email={state.values.email}
             formId={formId}
             canPayWithCard={state.values.canPayWithCard}
-            invoicingEnabled={
-              tenantSettingsData?.tenantSettings.invoicingEnabled
-            }
+            invoicingEnabled={tenantSettingsData?.tenantSettings.billingEnabled}
             canPayWithDirectDebitACH={state.values.canPayWithDirectDebitACH}
             canPayWithDirectDebitSEPA={state.values.canPayWithDirectDebitSEPA}
             canPayWithDirectDebitBacs={state.values.canPayWithDirectDebitBacs}

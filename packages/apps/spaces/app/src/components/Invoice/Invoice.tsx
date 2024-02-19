@@ -40,8 +40,8 @@ type InvoiceProps = {
   note?: string | null;
   invoiceNumber: string;
   logoUrl?: string | null;
-  lines: Array<InvoiceLine>;
   isBilledToFocused?: boolean;
+  lines: Array<Partial<InvoiceLine>>;
   isInvoiceProviderFocused?: boolean;
   isDomesticBankingDetailsSectionFocused?: boolean;
   isInternationalBankingDetailsSectionFocused?: boolean;

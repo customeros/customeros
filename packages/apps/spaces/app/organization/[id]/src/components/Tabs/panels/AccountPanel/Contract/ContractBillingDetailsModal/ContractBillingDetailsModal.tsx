@@ -4,6 +4,7 @@ import { useForm } from 'react-inverted-form';
 import React, { useRef, useMemo, useState } from 'react';
 
 import { produce } from 'immer';
+import { useDeepCompareEffect } from 'rooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTenantBillingProfilesQuery } from '@settings/graphql/getTenantBillingProfiles.generated';
 
@@ -17,7 +18,7 @@ import { Invoice } from '@shared/components/Invoice/Invoice';
 import { countryOptions } from '@shared/util/countryOptions';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { toastError, toastSuccess } from '@ui/presentation/Toast';
-import { GetContractQuery } from '@organization/src/graphql/getContract.generated';
+import { useGetContractQuery } from '@organization/src/graphql/getContract.generated';
 import { useUpdateContractMutation } from '@organization/src/graphql/updateContract.generated';
 import {
   Modal,
@@ -40,7 +41,6 @@ interface SubscriptionServiceModalProps {
   onClose: () => void;
   notes?: string | null;
   organizationName: string;
-  data?: GetContractQuery['contract'] | null;
 }
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -49,13 +49,23 @@ export const ContractBillingDetailsModal = ({
   onClose,
   contractId,
   organizationName,
-  data,
   notes,
 }: SubscriptionServiceModalProps) => {
   const initialRef = useRef(null);
   const formId = `billing-details-form-${contractId}`;
   const organizationId = useParams()?.id as string;
+  const client = getGraphQLClient();
 
+  const { data } = useGetContractQuery(
+    client,
+    {
+      id: contractId,
+    },
+    {
+      enabled: isOpen && !!contractId,
+      refetchOnMount: true,
+    },
+  );
   const [isBillingDetailsFocused, setIsBillingDetailsFocused] =
     useState<boolean>(false);
 
@@ -64,7 +74,6 @@ export const ContractBillingDetailsModal = ({
   const queryKey = useGetContractsQuery.getKey({ id: organizationId });
 
   const queryClient = useQueryClient();
-  const client = getGraphQLClient();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { data: tenantBillingProfile } = useTenantBillingProfilesQuery(client);
 
@@ -127,12 +136,12 @@ export const ContractBillingDetailsModal = ({
     },
   });
   const defaultValues = new BillingDetailsDto({
-    ...(data ?? {}),
-    organizationLegalName: data?.organizationLegalName || organizationName,
+    ...(data?.contract ?? {}),
+    organizationLegalName:
+      data?.contract?.organizationLegalName || organizationName,
   });
 
-  const { state } = useForm({
-    debug: true,
+  const { state, setDefaultValues } = useForm({
     formId,
     defaultValues,
     stateReducer: (_, action, next) => {
@@ -151,6 +160,10 @@ export const ContractBillingDetailsModal = ({
       return next;
     },
   });
+
+  useDeepCompareEffect(() => {
+    setDefaultValues(defaultValues);
+  }, [defaultValues]);
 
   const handleApplyChanges = () => {
     const payload = BillingDetailsDto.toPayload(state.values);
@@ -256,7 +269,7 @@ export const ContractBillingDetailsModal = ({
                 <File02 color='primary.600' />
               </FeaturedIcon>
               <Heading fontSize='lg' mt='4'>
-                {data?.organizationLegalName ||
+                {data?.contract?.organizationLegalName ||
                   organizationName ||
                   "Unnamed's "}{' '}
                 contract details

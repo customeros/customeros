@@ -126,6 +126,21 @@ export enum BilledType {
   Usage = 'USAGE',
 }
 
+export type BillingDetails = {
+  __typename?: 'BillingDetails';
+  addressLine1?: Maybe<Scalars['String']['output']>;
+  addressLine2?: Maybe<Scalars['String']['output']>;
+  billingCycle?: Maybe<ContractBillingCycle>;
+  billingEmail?: Maybe<Scalars['String']['output']>;
+  country?: Maybe<Scalars['String']['output']>;
+  invoiceNote?: Maybe<Scalars['String']['output']>;
+  invoicingStarted?: Maybe<Scalars['Time']['output']>;
+  locality?: Maybe<Scalars['String']['output']>;
+  organizationLegalName?: Maybe<Scalars['String']['output']>;
+  postalCode?: Maybe<Scalars['String']['output']>;
+  region?: Maybe<Scalars['String']['output']>;
+};
+
 export type BillingProfile = Node &
   SourceFields & {
     __typename?: 'BillingProfile';
@@ -449,37 +464,72 @@ export type ContactsPage = Pages & {
   totalPages: Scalars['Int']['output'];
 };
 
-export type Contract = Node & {
+export type Contract = MetadataInterface & {
   __typename?: 'Contract';
+  /** @deprecated Use billingDetails instead. */
   addressLine1?: Maybe<Scalars['String']['output']>;
+  /** @deprecated Use billingDetails instead. */
   addressLine2?: Maybe<Scalars['String']['output']>;
+  /** @deprecated Use metadata instead. */
   appSource: Scalars['String']['output'];
+  /** @deprecated Use billingDetails instead. */
   billingCycle?: Maybe<ContractBillingCycle>;
+  billingDetails?: Maybe<BillingDetails>;
+  billingEnabled: Scalars['Boolean']['output'];
+  committedPeriods?: Maybe<Scalars['Int64']['output']>;
+  contractEnded?: Maybe<Scalars['Time']['output']>;
+  contractLineItems?: Maybe<Array<ServiceLineItem>>;
+  contractName: Scalars['String']['output'];
+  contractRenewalCycle: ContractRenewalCycle;
+  contractSigned?: Maybe<Scalars['Time']['output']>;
+  contractStatus: ContractStatus;
   contractUrl?: Maybe<Scalars['String']['output']>;
+  /** @deprecated Use billingDetails instead. */
   country?: Maybe<Scalars['String']['output']>;
+  /** @deprecated Use metadata instead. */
   createdAt: Scalars['Time']['output'];
   createdBy?: Maybe<User>;
   currency?: Maybe<Currency>;
+  /** @deprecated Use contractEnded instead. */
   endedAt?: Maybe<Scalars['Time']['output']>;
   externalLinks: Array<ExternalSystem>;
+  /** @deprecated Use metadata instead. */
   id: Scalars['ID']['output'];
+  /** @deprecated Use billingDetails instead. */
   invoiceEmail?: Maybe<Scalars['String']['output']>;
+  /** @deprecated Use billingDetails instead. */
   invoiceNote?: Maybe<Scalars['String']['output']>;
+  /** @deprecated Use billingDetails instead. */
   invoicingStartDate?: Maybe<Scalars['Time']['output']>;
+  /** @deprecated Use billingDetails instead. */
   locality?: Maybe<Scalars['String']['output']>;
+  metadata: Metadata;
+  /** @deprecated Use contractName instead. */
   name: Scalars['String']['output'];
   opportunities?: Maybe<Array<Opportunity>>;
+  /** @deprecated Use billingDetails instead. */
   organizationLegalName?: Maybe<Scalars['String']['output']>;
   owner?: Maybe<User>;
+  /** @deprecated Use contractRenewalCycle instead. */
   renewalCycle: ContractRenewalCycle;
+  /** @deprecated Use committedPeriods instead. */
   renewalPeriods?: Maybe<Scalars['Int64']['output']>;
+  /** @deprecated Use contractLineItems instead. */
   serviceLineItems?: Maybe<Array<ServiceLineItem>>;
+  serviceStarted?: Maybe<Scalars['Time']['output']>;
+  /** @deprecated Use serviceStarted instead. */
   serviceStartedAt?: Maybe<Scalars['Time']['output']>;
+  /** @deprecated Use contractSigned instead. */
   signedAt?: Maybe<Scalars['Time']['output']>;
+  /** @deprecated Use metadata instead. */
   source: DataSource;
+  /** @deprecated Use metadata instead. */
   sourceOfTruth: DataSource;
+  /** @deprecated Use contractStatus instead. */
   status: ContractStatus;
+  /** @deprecated Use metadata instead. */
   updatedAt: Scalars['Time']['output'];
+  /** @deprecated Use billingDetails instead. */
   zip?: Maybe<Scalars['String']['output']>;
 };
 
@@ -493,6 +543,7 @@ export enum ContractBillingCycle {
 export type ContractInput = {
   appSource?: InputMaybe<Scalars['String']['input']>;
   billingCycle?: InputMaybe<ContractBillingCycle>;
+  billingEnabled?: InputMaybe<Scalars['Boolean']['input']>;
   contractUrl?: InputMaybe<Scalars['String']['input']>;
   currency?: InputMaybe<Currency>;
   externalReference?: InputMaybe<ExternalSystemReferenceInput>;
@@ -524,6 +575,7 @@ export type ContractUpdateInput = {
   addressLine2?: InputMaybe<Scalars['String']['input']>;
   appSource?: InputMaybe<Scalars['String']['input']>;
   billingCycle?: InputMaybe<ContractBillingCycle>;
+  billingEnabled?: InputMaybe<Scalars['Boolean']['input']>;
   canPayWithBankTransfer?: InputMaybe<Scalars['Boolean']['input']>;
   canPayWithCard?: InputMaybe<Scalars['Boolean']['input']>;
   canPayWithDirectDebit?: InputMaybe<Scalars['Boolean']['input']>;
@@ -874,6 +926,7 @@ export enum DataSource {
   Mixpanel = 'MIXPANEL',
   Na = 'NA',
   Openline = 'OPENLINE',
+  Outlook = 'OUTLOOK',
   Pipedrive = 'PIPEDRIVE',
   Salesforce = 'SALESFORCE',
   Slack = 'SLACK',
@@ -1050,6 +1103,7 @@ export enum ExternalSystemType {
   Hubspot = 'HUBSPOT',
   Intercom = 'INTERCOM',
   Mixpanel = 'MIXPANEL',
+  Outlook = 'OUTLOOK',
   Pipedrive = 'PIPEDRIVE',
   Salesforce = 'SALESFORCE',
   Slack = 'SLACK',
@@ -1289,36 +1343,63 @@ export enum InternalType {
   Upsell = 'UPSELL',
 }
 
-export type Invoice = Node &
-  SourceFields & {
-    __typename?: 'Invoice';
-    amount: Scalars['Float']['output'];
-    appSource: Scalars['String']['output'];
-    createdAt: Scalars['Time']['output'];
-    currency: Scalars['String']['output'];
-    customer: InvoiceCustomer;
-    domesticPaymentsBankInfo?: Maybe<Scalars['String']['output']>;
-    dryRun: Scalars['Boolean']['output'];
-    dueDate: Scalars['Time']['output'];
-    id: Scalars['ID']['output'];
-    internationalPaymentsBankInfo?: Maybe<Scalars['String']['output']>;
-    invoiceLines: Array<InvoiceLine>;
-    note?: Maybe<Scalars['String']['output']>;
-    number: Scalars['String']['output'];
-    offCycle: Scalars['Boolean']['output'];
-    organization: Organization;
-    periodEndDate: Scalars['Time']['output'];
-    periodStartDate: Scalars['Time']['output'];
-    postpaid: Scalars['Boolean']['output'];
-    provider: InvoiceProvider;
-    repositoryFileId: Scalars['String']['output'];
-    source: DataSource;
-    sourceOfTruth: DataSource;
-    status?: Maybe<InvoiceStatus>;
-    totalAmount: Scalars['Float']['output'];
-    updatedAt: Scalars['Time']['output'];
-    vat: Scalars['Float']['output'];
-  };
+export type Invoice = MetadataInterface & {
+  __typename?: 'Invoice';
+  /** @deprecated Use subtotal instead. */
+  amount: Scalars['Float']['output'];
+  amountDue: Scalars['Float']['output'];
+  amountPaid: Scalars['Float']['output'];
+  amountRemaining: Scalars['Float']['output'];
+  /** @deprecated Use metadata instead. */
+  appSource: Scalars['String']['output'];
+  contract: Contract;
+  /** @deprecated Use metadata instead. */
+  createdAt: Scalars['Time']['output'];
+  currency: Scalars['String']['output'];
+  customer: InvoiceCustomer;
+  domesticPaymentsBankInfo?: Maybe<Scalars['String']['output']>;
+  dryRun: Scalars['Boolean']['output'];
+  due: Scalars['Time']['output'];
+  /** @deprecated Use due instead. */
+  dueDate: Scalars['Time']['output'];
+  /** @deprecated Use metadata instead. */
+  id: Scalars['ID']['output'];
+  internationalPaymentsBankInfo?: Maybe<Scalars['String']['output']>;
+  invoiceLineItems: Array<InvoiceLine>;
+  /** @deprecated Use invoiceLineItems instead. */
+  invoiceLines: Array<InvoiceLine>;
+  invoiceNumber: Scalars['String']['output'];
+  invoicePeriodEnd: Scalars['Time']['output'];
+  invoicePeriodStart: Scalars['Time']['output'];
+  invoiceUrl: Scalars['String']['output'];
+  metadata: Metadata;
+  note?: Maybe<Scalars['String']['output']>;
+  /** @deprecated Use invoiceNumber instead. */
+  number: Scalars['String']['output'];
+  offCycle: Scalars['Boolean']['output'];
+  organization: Organization;
+  paid: Scalars['Boolean']['output'];
+  /** @deprecated Use invoicePeriodEnd instead. */
+  periodEndDate: Scalars['Time']['output'];
+  /** @deprecated Use invoicePeriodStart instead. */
+  periodStartDate: Scalars['Time']['output'];
+  postpaid: Scalars['Boolean']['output'];
+  provider: InvoiceProvider;
+  repositoryFileId: Scalars['String']['output'];
+  /** @deprecated Use metadata instead. */
+  source: DataSource;
+  /** @deprecated Use metadata instead. */
+  sourceOfTruth: DataSource;
+  status?: Maybe<InvoiceStatus>;
+  subtotal: Scalars['Float']['output'];
+  taxDue: Scalars['Float']['output'];
+  /** @deprecated Use amountDue instead. */
+  totalAmount: Scalars['Float']['output'];
+  /** @deprecated Use metadata instead. */
+  updatedAt: Scalars['Time']['output'];
+  /** @deprecated Use taxDue instead. */
+  vat: Scalars['Float']['output'];
+};
 
 export type InvoiceCustomer = {
   __typename?: 'InvoiceCustomer';
@@ -1331,15 +1412,26 @@ export type InvoiceCustomer = {
   name?: Maybe<Scalars['String']['output']>;
 };
 
-export type InvoiceLine = Node & {
+export type InvoiceLine = MetadataInterface & {
   __typename?: 'InvoiceLine';
+  /** @deprecated Use subtotal instead. */
   amount: Scalars['Float']['output'];
+  /** @deprecated Use metadata instead. */
   createdAt: Scalars['Time']['output'];
+  description: Scalars['String']['output'];
+  /** @deprecated Use metadata instead. */
   id: Scalars['ID']['output'];
+  metadata: Metadata;
+  /** @deprecated Use description instead. */
   name: Scalars['String']['output'];
   price: Scalars['Float']['output'];
   quantity: Scalars['Int']['output'];
+  subtotal: Scalars['Float']['output'];
+  taxDue: Scalars['Float']['output'];
+  total: Scalars['Float']['output'];
+  /** @deprecated Use total instead. */
   totalAmount: Scalars['Float']['output'];
+  /** @deprecated Use taxDue instead. */
   vat: Scalars['Float']['output'];
 };
 
@@ -1374,6 +1466,12 @@ export enum InvoiceStatus {
   Due = 'DUE',
   Paid = 'PAID',
 }
+
+export type InvoiceUpdateInput = {
+  id: Scalars['ID']['input'];
+  patch: Scalars['Boolean']['input'];
+  status?: InputMaybe<InvoiceStatus>;
+};
 
 export type InvoicesPage = Pages & {
   __typename?: 'InvoicesPage';
@@ -1789,6 +1887,21 @@ export type MeetingsPage = Pages & {
   totalPages: Scalars['Int']['output'];
 };
 
+export type Metadata = Node &
+  SourceFieldsInterface & {
+    __typename?: 'Metadata';
+    appSource: Scalars['String']['output'];
+    created: Scalars['Time']['output'];
+    id: Scalars['ID']['output'];
+    lastUpdated: Scalars['Time']['output'];
+    source: DataSource;
+    sourceOfTruth: DataSource;
+  };
+
+export type MetadataInterface = {
+  metadata: Metadata;
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   analysis_Create: Analysis;
@@ -1848,6 +1961,7 @@ export type Mutation = {
   interactionSession_LinkAttachment: InteractionSession;
   invoice_NextDryRunForContract: Scalars['ID']['output'];
   invoice_Simulate: Scalars['ID']['output'];
+  invoice_Update: Invoice;
   invoicingCycle_Create: InvoicingCycle;
   invoicingCycle_Update: InvoicingCycle;
   jobRole_Create: JobRole;
@@ -2210,6 +2324,10 @@ export type MutationInvoice_NextDryRunForContractArgs = {
 
 export type MutationInvoice_SimulateArgs = {
   input: InvoiceSimulateInput;
+};
+
+export type MutationInvoice_UpdateArgs = {
+  input: InvoiceUpdateInput;
 };
 
 export type MutationInvoicingCycle_CreateArgs = {
@@ -3615,24 +3733,41 @@ export enum Role {
   User = 'USER',
 }
 
-export type ServiceLineItem = Node & {
+export type ServiceLineItem = MetadataInterface & {
   __typename?: 'ServiceLineItem';
+  /** @deprecated Use metadata instead. */
   appSource: Scalars['String']['output'];
+  /** @deprecated Use billingCycle instead. */
   billed: BilledType;
+  billingCycle: BilledType;
   comments: Scalars['String']['output'];
+  /** @deprecated Use metadata instead. */
   createdAt: Scalars['Time']['output'];
   createdBy?: Maybe<User>;
+  description: Scalars['String']['output'];
+  /** @deprecated Use serviceEnded instead. */
   endedAt?: Maybe<Scalars['Time']['output']>;
   externalLinks: Array<ExternalSystem>;
+  /** @deprecated Use metadata instead. */
   id: Scalars['ID']['output'];
+  metadata: Metadata;
+  /** @deprecated Use description instead. */
   name: Scalars['String']['output'];
   parentId: Scalars['ID']['output'];
   price: Scalars['Float']['output'];
   quantity: Scalars['Int64']['output'];
+  serviceEnded?: Maybe<Scalars['Time']['output']>;
+  serviceStarted: Scalars['Time']['output'];
+  /** @deprecated Use metadata instead. */
   source: DataSource;
+  /** @deprecated Use metadata instead. */
   sourceOfTruth: DataSource;
+  /** @deprecated Use serviceStarted instead. */
   startedAt: Scalars['Time']['output'];
+  tax: Tax;
+  /** @deprecated Use metadata instead. */
   updatedAt: Scalars['Time']['output'];
+  /** @deprecated Use tax instead. */
   vatRate: Scalars['Float']['output'];
 };
 
@@ -3727,6 +3862,12 @@ export type SourceFields = {
   sourceOfTruth: DataSource;
 };
 
+export type SourceFieldsInterface = {
+  appSource: Scalars['String']['output'];
+  source: DataSource;
+  sourceOfTruth: DataSource;
+};
+
 export type State = {
   __typename?: 'State';
   code: Scalars['String']['output'];
@@ -3789,6 +3930,13 @@ export type TagInput = {
 export type TagUpdateInput = {
   id: Scalars['ID']['input'];
   name: Scalars['String']['input'];
+};
+
+export type Tax = {
+  __typename?: 'Tax';
+  salesTax: Scalars['Boolean']['output'];
+  taxRate: Scalars['Float']['output'];
+  vat: Scalars['Boolean']['output'];
 };
 
 export type TenantBillableInfo = {
@@ -3879,14 +4027,14 @@ export type TenantInput = {
 
 export type TenantSettings = {
   __typename?: 'TenantSettings';
+  billingEnabled: Scalars['Boolean']['output'];
   defaultCurrency?: Maybe<Currency>;
-  invoicingEnabled: Scalars['Boolean']['output'];
   logoUrl: Scalars['String']['output'];
 };
 
 export type TenantSettingsInput = {
+  billingEnabled?: InputMaybe<Scalars['Boolean']['input']>;
   defaultCurrency?: InputMaybe<Currency>;
-  invoicingEnabled?: InputMaybe<Scalars['Boolean']['input']>;
   logoUrl?: InputMaybe<Scalars['String']['input']>;
   patch?: InputMaybe<Scalars['Boolean']['input']>;
 };

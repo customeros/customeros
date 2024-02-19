@@ -27,7 +27,7 @@ export type UpdateTenantSettingsMutation = {
   tenant_UpdateSettings: {
     __typename?: 'TenantSettings';
     logoUrl: string;
-    invoicingEnabled: boolean;
+    billingEnabled: boolean;
     defaultCurrency?: Types.Currency | null;
   };
 };
@@ -36,7 +36,7 @@ export const UpdateTenantSettingsDocument = `
     mutation UpdateTenantSettings($input: TenantSettingsInput!) {
   tenant_UpdateSettings(input: $input) {
     logoUrl
-    invoicingEnabled
+    billingEnabled
     defaultCurrency
   }
 }
