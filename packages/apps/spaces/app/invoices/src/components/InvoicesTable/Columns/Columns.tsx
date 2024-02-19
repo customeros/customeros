@@ -38,8 +38,8 @@ export const columns = [
   }),
   columnHelper.accessor('organization', {
     id: 'organizationName',
-    minSize: 120,
-    maxSize: 120,
+    minSize: 110,
+    maxSize: 110,
     enableSorting: false,
     enableColumnFilter: false,
     cell: (props) => (
@@ -66,8 +66,8 @@ export const columns = [
   }),
   columnHelper.accessor('status', {
     id: 'STATUS',
-    minSize: 115,
-    maxSize: 115,
+    minSize: 125,
+    maxSize: 130,
     enableSorting: false,
     enableColumnFilter: false,
     header: (props) => (
@@ -92,8 +92,8 @@ export const columns = [
   }),
   columnHelper.accessor('createdAt', {
     id: 'CREATED_AT',
-    minSize: 80,
-    maxSize: 80,
+    minSize: 60,
+    maxSize: 60,
     enableSorting: false,
     enableColumnFilter: false,
     header: (props) => (

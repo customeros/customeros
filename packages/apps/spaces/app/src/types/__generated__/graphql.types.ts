@@ -1465,6 +1465,7 @@ export enum InvoiceStatus {
   Draft = 'DRAFT',
   Due = 'DUE',
   Paid = 'PAID',
+  Void = 'VOID',
 }
 
 export type InvoiceUpdateInput = {
@@ -1962,6 +1963,7 @@ export type Mutation = {
   invoice_NextDryRunForContract: Scalars['ID']['output'];
   invoice_Simulate: Scalars['ID']['output'];
   invoice_Update: Invoice;
+  invoice_Void: Invoice;
   invoicingCycle_Create: InvoicingCycle;
   invoicingCycle_Update: InvoicingCycle;
   jobRole_Create: JobRole;
@@ -2328,6 +2330,10 @@ export type MutationInvoice_SimulateArgs = {
 
 export type MutationInvoice_UpdateArgs = {
   input: InvoiceUpdateInput;
+};
+
+export type MutationInvoice_VoidArgs = {
+  id: Scalars['ID']['input'];
 };
 
 export type MutationInvoicingCycle_CreateArgs = {
@@ -3785,6 +3791,7 @@ export type ServiceLineItemBulkUpdateItem = {
   price?: InputMaybe<Scalars['Float']['input']>;
   quantity?: InputMaybe<Scalars['Int64']['input']>;
   serviceLineItemId?: InputMaybe<Scalars['ID']['input']>;
+  serviceStarted?: InputMaybe<Scalars['Time']['input']>;
   vatRate?: InputMaybe<Scalars['Float']['input']>;
 };
 
@@ -3816,6 +3823,7 @@ export type ServiceLineItemUpdateInput = {
   price?: InputMaybe<Scalars['Float']['input']>;
   quantity?: InputMaybe<Scalars['Int64']['input']>;
   serviceLineItemId: Scalars['ID']['input'];
+  serviceStarted?: InputMaybe<Scalars['Time']['input']>;
   vatRate?: InputMaybe<Scalars['Float']['input']>;
 };
 
