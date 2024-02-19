@@ -188,7 +188,7 @@ func (s *serviceLineItemService) UpdateServiceLineItem(ctx context.Context, requ
 				Price:      float64(request.Price),
 				Name:       request.Name,
 				ContractId: request.ContractId,
-				ParentId:   request.Id,
+				ParentId:   request.ParentId,
 				Comments:   request.Comments,
 			},
 			source,

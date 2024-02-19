@@ -156,7 +156,7 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 		return err
 	}
 
-	serviceLineItem, err := s.GetById(ctx, serviceLineItemDetails.Id)
+	serviceLineItemEntity, err := s.GetById(ctx, serviceLineItemDetails.Id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error on getting service line item by id {%s}: %s", serviceLineItemDetails.Id, err.Error())
@@ -165,10 +165,10 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 
 	isRetroactiveCorrection := serviceLineItemDetails.IsRetroactiveCorrection
 	// If no price impacted fields changed, set retroactive correction to true
-	if serviceLineItem.Price == serviceLineItemDetails.SliPrice &&
-		serviceLineItem.Quantity == serviceLineItemDetails.SliQuantity &&
-		serviceLineItem.Billed == serviceLineItemDetails.SliBilledType &&
-		serviceLineItem.VatRate == serviceLineItemDetails.SliVatRate {
+	if serviceLineItemEntity.Price == serviceLineItemDetails.SliPrice &&
+		serviceLineItemEntity.Quantity == serviceLineItemDetails.SliQuantity &&
+		serviceLineItemEntity.Billed == serviceLineItemDetails.SliBilledType &&
+		serviceLineItemEntity.VatRate == serviceLineItemDetails.SliVatRate {
 		isRetroactiveCorrection = true
 	}
 
@@ -216,8 +216,9 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 			return err
 		}
 		serviceLineItemUpdateRequest.ContractId = utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*contractDbNode), "id")
+		serviceLineItemUpdateRequest.ParentId = serviceLineItemEntity.ParentID
 	}
-	if !isRetroactiveCorrection && serviceLineItem.EndedAt != nil {
+	if !isRetroactiveCorrection && serviceLineItemEntity.EndedAt != nil {
 		err = fmt.Errorf("service line item with id {%s} is already ended", serviceLineItemDetails.Id)
 		tracing.TraceErr(span, err)
 		return err
