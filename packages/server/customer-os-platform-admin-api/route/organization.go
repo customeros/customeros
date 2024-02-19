@@ -20,7 +20,7 @@ import (
 func AddOrganizationRoutes(ctx context.Context, route *gin.Engine, services *service.Services, log logger.Logger, cache *commoncaches.Cache) {
 	route.POST("/organization/refreshLastTouchpoint",
 		handler.TracingEnhancer(ctx, "/organization/refreshLastTouchpoint"),
-		commonservice.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.TenantApiKeyRepository, services.CommonServices.CommonRepositories.AppKeyRepository, commonservice.PLATFORM_ADMIN_API, commonservice.WithCache(cache)),
+		commonservice.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.TenantWebhookApiKeyRepository, services.CommonServices.CommonRepositories.AppKeyRepository, commonservice.PLATFORM_ADMIN_API, commonservice.WithCache(cache)),
 		commonservice.TenantUserContextEnhancer(commonservice.USERNAME_OR_TENANT, services.CommonServices.CommonRepositories, commonservice.WithCache(cache)),
 		refreshLastTouchpointHandler(services, log))
 }

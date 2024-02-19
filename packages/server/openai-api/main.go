@@ -36,7 +36,7 @@ func main() {
 	r.Use(cors.New(corsConfig))
 
 	r.POST("/ask",
-		commonService.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.TenantApiKeyRepository, services.CommonServices.CommonRepositories.AppKeyRepository, commonService.OPENAI_API),
+		commonService.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.TenantWebhookApiKeyRepository, services.CommonServices.CommonRepositories.AppKeyRepository, commonService.OPENAI_API),
 		func(c *gin.Context) {
 			var request dto.OpenAiApiRequest
 

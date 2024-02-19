@@ -2,7 +2,7 @@ package entity
 
 import "time"
 
-type TenantApiKey struct {
+type TenantWebhookApiKey struct {
 	ID         uint64    `gorm:"primary_key;autoIncrement:true" json:"id"`
 	TenantName string    `gorm:"column:tenant_name;type:varchar(255);NOT NULL" json:"tenantName" binding:"required"`
 	Key        string    `gorm:"column:key;type:varchar(255);NOT NULL;index:idx_key,unique" json:"key" binding:"required"`
@@ -10,6 +10,6 @@ type TenantApiKey struct {
 	UpdatedAt  time.Time `gorm:"column:updated_at;type:timestamp" json:"updatedAt"`
 }
 
-func (TenantApiKey) TableName() string {
-	return "tenant_api_keys"
+func (TenantWebhookApiKey) TableName() string {
+	return "tenant_webhook_api_keys"
 }

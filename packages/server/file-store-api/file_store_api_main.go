@@ -86,7 +86,7 @@ func main() {
 	r.POST("/file",
 		jwtTennantUserService.GetJWTTenantUserEnhancer(),
 		commonservice.TenantUserContextEnhancer(commonservice.USERNAME_OR_TENANT, commonRepositoryContainer, commonservice.WithCache(commonCache)),
-		commonservice.ApiKeyCheckerHTTP(commonRepositoryContainer.TenantApiKeyRepository, commonRepositoryContainer.AppKeyRepository, commonservice.FILE_STORE_API, commonservice.WithCache(commonCache)),
+		commonservice.ApiKeyCheckerHTTP(commonRepositoryContainer.TenantWebhookApiKeyRepository, commonRepositoryContainer.AppKeyRepository, commonservice.FILE_STORE_API, commonservice.WithCache(commonCache)),
 		func(ctx *gin.Context) {
 			tenantName, _ := ctx.Keys["TenantName"].(string)
 			userEmail, _ := ctx.Keys["UserEmail"].(string)
@@ -111,7 +111,7 @@ func main() {
 	r.GET("/file/:id",
 		jwtTennantUserService.GetJWTTenantUserEnhancer(),
 		commonservice.TenantUserContextEnhancer(commonservice.USERNAME_OR_TENANT, commonRepositoryContainer, commonservice.WithCache(commonCache)),
-		commonservice.ApiKeyCheckerHTTP(commonRepositoryContainer.TenantApiKeyRepository, commonRepositoryContainer.AppKeyRepository, commonservice.FILE_STORE_API, commonservice.WithCache(commonCache)),
+		commonservice.ApiKeyCheckerHTTP(commonRepositoryContainer.TenantWebhookApiKeyRepository, commonRepositoryContainer.AppKeyRepository, commonservice.FILE_STORE_API, commonservice.WithCache(commonCache)),
 		func(ctx *gin.Context) {
 			tenantName, _ := ctx.Keys["TenantName"].(string)
 			userEmail, _ := ctx.Keys["UserEmail"].(string)
@@ -131,7 +131,7 @@ func main() {
 	r.GET("/file/:id/download",
 		jwtTennantUserService.GetJWTTenantUserEnhancer(),
 		commonservice.TenantUserContextEnhancer(commonservice.USERNAME_OR_TENANT, commonRepositoryContainer, commonservice.WithCache(commonCache)),
-		commonservice.ApiKeyCheckerHTTP(commonRepositoryContainer.TenantApiKeyRepository, commonRepositoryContainer.AppKeyRepository, commonservice.FILE_STORE_API, commonservice.WithCache(commonCache)),
+		commonservice.ApiKeyCheckerHTTP(commonRepositoryContainer.TenantWebhookApiKeyRepository, commonRepositoryContainer.AppKeyRepository, commonservice.FILE_STORE_API, commonservice.WithCache(commonCache)),
 		func(ctx *gin.Context) {
 			tenantName, _ := ctx.Keys["TenantName"].(string)
 			userEmail, _ := ctx.Keys["UserEmail"].(string)
@@ -149,7 +149,7 @@ func main() {
 	r.GET("/file/:id/base64",
 		jwtTennantUserService.GetJWTTenantUserEnhancer(),
 		commonservice.TenantUserContextEnhancer(commonservice.USERNAME_OR_TENANT, commonRepositoryContainer, commonservice.WithCache(commonCache)),
-		commonservice.ApiKeyCheckerHTTP(commonRepositoryContainer.TenantApiKeyRepository, commonRepositoryContainer.AppKeyRepository, commonservice.FILE_STORE_API, commonservice.WithCache(commonCache)),
+		commonservice.ApiKeyCheckerHTTP(commonRepositoryContainer.TenantWebhookApiKeyRepository, commonRepositoryContainer.AppKeyRepository, commonservice.FILE_STORE_API, commonservice.WithCache(commonCache)),
 		func(ctx *gin.Context) {
 			tenantName, _ := ctx.Keys["TenantName"].(string)
 			userEmail, _ := ctx.Keys["UserEmail"].(string)
@@ -173,7 +173,7 @@ func main() {
 
 	r.GET("/jwt",
 		commonservice.TenantUserContextEnhancer(commonservice.USERNAME, commonRepositoryContainer, commonservice.WithCache(commonCache)),
-		commonservice.ApiKeyCheckerHTTP(commonRepositoryContainer.TenantApiKeyRepository, commonRepositoryContainer.AppKeyRepository, commonservice.FILE_STORE_API, commonservice.WithCache(commonCache)),
+		commonservice.ApiKeyCheckerHTTP(commonRepositoryContainer.TenantWebhookApiKeyRepository, commonRepositoryContainer.AppKeyRepository, commonservice.FILE_STORE_API, commonservice.WithCache(commonCache)),
 		func(ctx *gin.Context) {
 			jwtTennantUserService.MakeJWT(ctx)
 		})

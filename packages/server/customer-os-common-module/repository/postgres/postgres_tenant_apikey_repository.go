@@ -6,21 +6,21 @@ import (
 	"gorm.io/gorm"
 )
 
-type TenantApiKeyRepo struct {
+type TenantWebhookApiKeyRepo struct {
 	db *gorm.DB
 }
 
-type TenantApiKeyRepository interface {
+type TenantWebhookApiKeyRepository interface {
 	GetTenantWithApiKey(apiKey string) helper.QueryResult
-	SaveApiKey(integration entity.TenantApiKey) helper.QueryResult
+	SaveApiKey(integration entity.TenantWebhookApiKey) helper.QueryResult
 }
 
-func NewTenantApiKeyRepo(db *gorm.DB) *TenantApiKeyRepo {
-	return &TenantApiKeyRepo{db: db}
+func NewTenantWebhookApiKeyRepo(db *gorm.DB) *TenantWebhookApiKeyRepo {
+	return &TenantWebhookApiKeyRepo{db: db}
 }
 
-func (r *TenantApiKeyRepo) GetTenantWithApiKey(apiKey string) helper.QueryResult {
-	var apiKeyEntity entity.TenantApiKey
+func (r *TenantWebhookApiKeyRepo) GetTenantWithApiKey(apiKey string) helper.QueryResult {
+	var apiKeyEntity entity.TenantWebhookApiKey
 	err := r.db.
 		Where("key = ?", apiKey).
 		First(&apiKeyEntity).Error
@@ -32,8 +32,8 @@ func (r *TenantApiKeyRepo) GetTenantWithApiKey(apiKey string) helper.QueryResult
 	return helper.QueryResult{Result: &apiKeyEntity}
 }
 
-func (r *TenantApiKeyRepo) SaveApiKey(apiKey entity.TenantApiKey) helper.QueryResult {
-	apiKeyEntity := entity.TenantApiKey{
+func (r *TenantWebhookApiKeyRepo) SaveApiKey(apiKey entity.TenantWebhookApiKey) helper.QueryResult {
+	apiKeyEntity := entity.TenantWebhookApiKey{
 		TenantName: apiKey.TenantName,
 		Key:        apiKey.Key,
 	}
