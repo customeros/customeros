@@ -266,7 +266,7 @@ func (h *InvoiceEventHandler) OnInvoiceVoidV1(ctx context.Context, evt eventstor
 	err := h.repositories.Neo4jRepositories.InvoiceWriteRepository.UpdateInvoice(ctx, eventData.Tenant, invoiceId, neo4jrepository.InvoiceUpdateFields{
 		UpdatedAt:    eventData.UpdatedAt,
 		UpdateStatus: true,
-		Status:       neo4jenum.InvoiceStatus(eventData.Status),
+		Status:       neo4jenum.InvoiceStatusVoid,
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)

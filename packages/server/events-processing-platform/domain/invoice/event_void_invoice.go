@@ -10,14 +10,12 @@ import (
 type InvoiceVoidEvent struct {
 	Tenant    string    `json:"tenant" validate:"required"`
 	UpdatedAt time.Time `json:"updatedAt"`
-	Status    string    `json:"status"`
 }
 
-func NewInvoiceVoidEvent(aggregate eventstore.Aggregate, updatedAt time.Time, status string) (eventstore.Event, error) {
+func NewInvoiceVoidEvent(aggregate eventstore.Aggregate, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := InvoiceVoidEvent{
 		Tenant:    aggregate.GetTenant(),
 		UpdatedAt: updatedAt,
-		Status:    status,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

@@ -402,7 +402,7 @@ func (a *InvoiceAggregate) VoidInvoice(ctx context.Context, request *invoicepb.V
 
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.UpdatedAt), utils.Now())
 
-	voidEvent, err := NewInvoiceVoidEvent(a, updatedAtNotNil, InvoiceStatus(invoicepb.InvoiceStatus_INVOICE_STATUS_VOID).String())
+	voidEvent, err := NewInvoiceVoidEvent(a, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "InvoiceVoidEvent")
@@ -431,14 +431,13 @@ func (a *InvoiceAggregate) When(evt eventstore.Event) error {
 		return a.onPdfGeneratedInvoice(evt)
 	case InvoiceUpdateV1:
 		return a.onUpdateInvoice(evt)
-	case InvoiceVoidV1:
-		return a.onUpdateInvoice(evt)
 	case InvoicePayV1,
 		InvoicePdfRequestedV1,
 		InvoiceFillRequestedV1,
 		InvoicePaidV1,
 		InvoicePayNotificationV1,
-		InvoiceDeleteV1:
+		InvoiceDeleteV1,
+		InvoiceVoidV1:
 		return nil
 	default:
 		err := eventstore.ErrInvalidEventType
@@ -529,17 +528,6 @@ func (a *InvoiceAggregate) onUpdateInvoice(evt eventstore.Event) error {
 	if eventData.UpdatePaymentLink() {
 		a.Invoice.PaymentLink = eventData.PaymentLink
 	}
-
-	return nil
-}
-
-func (a *InvoiceAggregate) onVoidInvoice(evt eventstore.Event) error {
-	var eventData InvoiceVoidEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-
-	a.Invoice.Status = eventData.Status
 
 	return nil
 }

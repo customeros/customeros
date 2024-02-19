@@ -471,5 +471,4 @@ func TestInvoiceService_VoidInvoice(t *testing.T) {
 	require.Nil(t, err, "Failed to unmarshal event data")
 
 	require.Equal(t, tenant, eventData.Tenant)
-	require.Equal(t, neo4jenum.InvoiceStatusVoid.String(), eventData.Status)
 }
