@@ -12,6 +12,7 @@ enum InvoiceStatus {
   INVOICE_STATUS_DRAFT = 1;
   INVOICE_STATUS_DUE = 2;
   INVOICE_STATUS_PAID = 3;
+  INVOICE_STATUS_VOID = 4;
 }
 
 enum InvoiceFieldMask {
@@ -163,6 +164,14 @@ message PermanentlyDeleteDraftInvoiceRequest {
   string appSource = 4;
 }
 
+message VoidInvoiceRequest {
+  string tenant = 1;
+  string invoiceId = 2;
+  string loggedInUserId = 3;
+  string appSource = 4;
+  google.protobuf.Timestamp updatedAt = 5;
+}
+
 message InvoiceIdResponse {
   string id = 1;
 }
@@ -178,4 +187,5 @@ service InvoiceGrpcService {
   rpc PayInvoiceNotification(PayInvoiceNotificationRequest) returns (InvoiceIdResponse);
   rpc RequestFillInvoice(RequestFillInvoiceRequest) returns (InvoiceIdResponse);
   rpc PermanentlyDeleteDraftInvoice(PermanentlyDeleteDraftInvoiceRequest) returns (InvoiceIdResponse);
+  rpc VoidInvoice(VoidInvoiceRequest) returns (InvoiceIdResponse);
 }

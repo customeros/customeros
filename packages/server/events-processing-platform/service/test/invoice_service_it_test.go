@@ -421,3 +421,54 @@ func TestInvoiceService_RequestFillInvoice(t *testing.T) {
 	require.Equal(t, tenant, eventData.Tenant)
 	require.Equal(t, "contract-1", eventData.ContractId)
 }
+
+func TestInvoiceService_VoidInvoice(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// setup test environment
+	tenant := "ziggy"
+	invoiceId := "invoice-id"
+	now := utils.Now()
+
+	aggregateStore := eventstoret.NewTestAggregateStore()
+	invoiceAggregate := invoice.NewInvoiceAggregateWithTenantAndID(tenant, invoiceId)
+
+	newEvent, _ := invoice.NewInvoiceForContractCreateEvent(invoiceAggregate, commonmodel.Source{}, "contract-1", "USD", "MONTHLY_BILLED", "test note", false, false, false, now, now, now)
+	invoiceAggregate.UncommittedEvents = append(invoiceAggregate.UncommittedEvents, newEvent)
+	aggregateStore.Save(ctx, invoiceAggregate)
+
+	// prepare connection to grpc server
+	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
+	require.Nil(t, err)
+	invoiceClient := invoicepb.NewInvoiceGrpcServiceClient(grpcConnection)
+
+	// Execute the command
+	response, err := invoiceClient.VoidInvoice(ctx, &invoicepb.VoidInvoiceRequest{
+		Tenant:         tenant,
+		LoggedInUserId: "user-id",
+		InvoiceId:      invoiceId,
+		AppSource:      "test",
+	})
+	require.Nil(t, err)
+	require.NotNil(t, response)
+
+	// verify
+	require.Equal(t, invoiceId, response.Id)
+
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+
+	eventList := eventsMap[invoiceAggregate.ID]
+	require.Equal(t, 2, len(eventList))
+
+	require.Equal(t, invoice.InvoiceCreateForContractV1, eventList[0].GetEventType())
+	require.Equal(t, invoice.InvoiceVoidV1, eventList[1].GetEventType())
+	require.Equal(t, string(invoice.InvoiceAggregateType)+"-"+tenant+"-"+invoiceId, eventList[1].GetAggregateID())
+
+	var eventData invoice.InvoiceVoidEvent
+	err = eventList[1].GetJsonData(&eventData)
+	require.Nil(t, err, "Failed to unmarshal event data")
+
+	require.Equal(t, tenant, eventData.Tenant)
+}

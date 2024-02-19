@@ -88,6 +88,8 @@ func (a *InvoiceAggregate) HandleRequest(ctx context.Context, request any, param
 		return nil, a.CreateFillRequestedEvent(ctx, r)
 	case *invoicepb.PermanentlyDeleteDraftInvoiceRequest:
 		return nil, a.PermanentlyDeleteDraftInvoice(ctx, r)
+	case *invoicepb.VoidInvoiceRequest:
+		return nil, a.VoidInvoice(ctx, r)
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
 		return nil, eventstore.ErrInvalidRequestType
@@ -385,6 +387,40 @@ func (a *InvoiceAggregate) PermanentlyDeleteDraftInvoice(ctx context.Context, re
 	return a.Apply(deleteEvent)
 }
 
+func (a *InvoiceAggregate) VoidInvoice(ctx context.Context, request *invoicepb.VoidInvoiceRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "InvoiceAggregate.VoidInvoice")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("AggregateVersion", a.GetVersion()))
+
+	if a.Invoice == nil {
+		err := errors.New("invoice is nil")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.UpdatedAt), utils.Now())
+
+	voidEvent, err := NewInvoiceVoidEvent(a, updatedAtNotNil)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "InvoiceVoidEvent")
+	}
+
+	aggregate.EnrichEventWithMetadataExtended(&voidEvent, span, aggregate.EventMetadata{
+		Tenant: request.Tenant,
+		UserId: request.LoggedInUserId,
+		App:    request.AppSource,
+	})
+
+	streamMetadata := esdb.StreamMetadata{}
+	streamMetadata.SetMaxAge(time.Duration(constants.StreamMetadataMaxAgeSecondsExtended) * time.Second)
+	a.SetStreamMetadata(&streamMetadata)
+
+	return a.Apply(voidEvent)
+}
+
 func (a *InvoiceAggregate) When(evt eventstore.Event) error {
 	switch evt.GetEventType() {
 	case InvoiceCreateForContractV1:
@@ -400,7 +436,8 @@ func (a *InvoiceAggregate) When(evt eventstore.Event) error {
 		InvoiceFillRequestedV1,
 		InvoicePaidV1,
 		InvoicePayNotificationV1,
-		InvoiceDeleteV1:
+		InvoiceDeleteV1,
+		InvoiceVoidV1:
 		return nil
 	default:
 		err := eventstore.ErrInvalidEventType

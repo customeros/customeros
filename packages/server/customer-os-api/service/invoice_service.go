@@ -31,6 +31,7 @@ type InvoiceService interface {
 	SimulateInvoice(ctx context.Context, invoiceData *SimulateInvoiceData) (string, error)
 	NextInvoiceDryRun(ctx context.Context, contractId string) (string, error)
 	UpdateInvoice(ctx context.Context, input model.InvoiceUpdateInput) error
+	VoidInvoice(ctx context.Context, invoiceId string) error
 }
 type invoiceService struct {
 	log          logger.Logger
@@ -345,6 +346,32 @@ func (s *invoiceService) NextInvoiceDryRun(ctx context.Context, contractId strin
 
 	span.LogFields(log.String("output - createdInvoiceId", response.Id))
 	return response.Id, nil
+}
+
+func (s *invoiceService) VoidInvoice(ctx context.Context, invoiceId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.VoidInvoice")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("invoiceId", invoiceId))
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	response, err := s.grpcClients.InvoiceClient.VoidInvoice(ctx, &invoicepb.VoidInvoiceRequest{
+		Tenant:         tenant,
+		InvoiceId:      invoiceId,
+		LoggedInUserId: common.GetUserIdFromContext(ctx),
+		AppSource:      constants.AppSourceCustomerOsApi,
+	})
+
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error from events processing: %s", err.Error())
+		return err
+	}
+
+	span.LogFields(log.String("output - voidInvoiceId", response.Id))
+	return nil
 }
 
 func calculateInvoiceCycleEnd(start time.Time, cycle enum.BillingCycle) time.Time {

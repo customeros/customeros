@@ -20,6 +20,7 @@ const (
 	InvoicePaidV1              = "V1_INVOICE_PAID"
 	InvoicePayNotificationV1   = "V1_INVOICE_PAY_NOTIFICATION"
 	InvoiceDeleteV1            = "V1_INVOICE_DELETE"
+	InvoiceVoidV1              = "V1_INVOICE_VOID"
 )
 
 const (

@@ -418,6 +418,58 @@ func TestInvoiceEventHandler_OnInvoiceUpdateV1(t *testing.T) {
 	require.Equal(t, "link-1", invoiceEntity.PaymentDetails.PaymentLink)
 }
 
+func TestInvoiceEventHandler_OnInvoiceVoidV1(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// prepare neo4j data
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	organizationId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, organizationId, neo4jentity.ContractEntity{})
+	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.InvoiceEntity{})
+
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		neo4jutil.NodeLabelInvoice:      1,
+		neo4jutil.NodeLabelOrganization: 1,
+		neo4jutil.NodeLabelContract:     1,
+	})
+
+	// Prepare the event handler
+	eventHandler := &InvoiceEventHandler{
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
+	}
+
+	timeNow := utils.Now()
+
+	aggregate := invoice.NewInvoiceAggregateWithTenantAndID(tenantName, invoiceId)
+	voidEvent, err := invoice.NewInvoiceVoidEvent(
+		aggregate,
+		timeNow,
+	)
+	require.Nil(t, err)
+
+	// EXECUTE
+	err = eventHandler.OnInvoiceVoidV1(context.Background(), voidEvent)
+	require.Nil(t, err)
+
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		neo4jutil.NodeLabelInvoice:                    1,
+		neo4jutil.NodeLabelInvoice + "_" + tenantName: 1,
+	})
+
+	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelInvoice, invoiceId)
+	require.Nil(t, err)
+	require.NotNil(t, dbNode)
+
+	// verify invoice node
+	invoiceEntity := neo4jmapper.MapDbNodeToInvoiceEntity(dbNode)
+	require.Equal(t, invoiceId, invoiceEntity.Id)
+	require.Equal(t, timeNow, invoiceEntity.UpdatedAt)
+	require.Equal(t, neo4jenum.InvoiceStatusVoid, invoiceEntity.Status)
+}
+
 func TestInvoiceEventHandler_OnInvoiceDeleteV1(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
