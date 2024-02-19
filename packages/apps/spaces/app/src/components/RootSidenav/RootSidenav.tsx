@@ -91,10 +91,10 @@ export const RootSidenav = () => {
 
   const showInvoices = useMemo(() => {
     return (
-      tenantSettingsData?.tenantSettings?.invoicingEnabled ||
+      tenantSettingsData?.tenantSettings?.billingEnabled ||
       totalInvoices?.invoices?.totalElements > 0
     );
-  }, [tenantSettingsData?.tenantSettings?.invoicingEnabled]);
+  }, [tenantSettingsData?.tenantSettings?.billingEnabled]);
 
   useEffect(() => {
     [
