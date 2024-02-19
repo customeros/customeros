@@ -222,9 +222,6 @@ type Services struct {
 	Novu struct {
 		ApiKey string `env:"NOVU_API_KEY,required" envDefault:"N/A"`
 	}
-	Postmark struct {
-		ApiKey string `env:"POSTMARK_API_KEY,required" envDefault:"N/A"`
-	}
 	FileStoreApiConfig fsc.FileStoreApiConfig
 }
 
