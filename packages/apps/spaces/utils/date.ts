@@ -4,6 +4,7 @@ import {
   formatRFC3339,
   formatDistanceToNow,
   differenceInMinutes,
+  isPast as isPastDateFns,
   isToday as isTodayDateFns,
   isBefore as isBeforeDateFns,
   isFuture as isFutureDateFns,
@@ -100,6 +101,10 @@ export class DateTimeUtils {
 
   public static isFuture(date: string): boolean {
     return isFutureDateFns(this.getDate(date));
+  }
+
+  public static isPast(date: string): boolean {
+    return isPastDateFns(this.getDate(date));
   }
   public static isToday(date: string): boolean {
     return isTodayDateFns(this.getDate(date));

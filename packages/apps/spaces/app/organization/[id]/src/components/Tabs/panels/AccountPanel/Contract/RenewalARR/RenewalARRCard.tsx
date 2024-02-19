@@ -151,6 +151,12 @@ export const RenewalARRCard = ({
     opportunity?.renewalLikelihood === OpportunityRenewalLikelihood.ZeroRenewal;
   const timeToRenewal = getDifferenceFromNow(opportunity.renewedAt).join(' ');
 
+  const showTimeToRenewal =
+    !hasEnded &&
+    opportunity.renewedAt &&
+    startedAt &&
+    !DateTimeUtils.isPast(opportunity.renewedAt);
+
   useEffect(() => {
     return () => {
       if (timeoutRef.current) {
@@ -217,7 +223,7 @@ export const RenewalARRCard = ({
                   Renewal ARR
                 </Heading>
 
-                {!hasEnded && opportunity.renewedAt && startedAt && (
+                {showTimeToRenewal && (
                   <Text color='gray.500' ml={1} fontSize='sm'>
                     {timeToRenewal}
                   </Text>
