@@ -43,23 +43,23 @@ jobs:
 
       - run: npm install -g yarn
       # FIXME: These steps are hanging the build, commenting to go through
-      # - name: Deploy test Environment
-      #   run: |
-      #     curl http://openline.sh/install.sh | sh
-      #     openline dev start test-env -v
+      - name: Deploy test Environment
+        run: |
+          curl http://openline.sh/install.sh | sh
+          openline dev start test-env -v
 
-      # - name: Test GraphQL contracts
-      #   run: |
-      #     cd packages/apps/spaces
-      #     yarn install --frozen-lockfile
-      #     yarn test:graphql
-      #   env:
-      #     CUSTOMER_OS_API_PATH: http://127.0.0.1:10000
-      #     CUSTOMER_OS_API_KEY: ${{ secrets.CLI_CUSTOMER_OS_API_KEY }}
+      - name: Test GraphQL contracts
+        run: |
+          cd packages/apps/spaces
+          yarn install --frozen-lockfile
+          yarn test:graphql
+        env:
+          CUSTOMER_OS_API_PATH: http://127.0.0.1:10000
+          CUSTOMER_OS_API_KEY: ${{ secrets.CLI_CUSTOMER_OS_API_KEY }}
 
-      # - name: Cleanup test environment
-      #   if: ${{ always() }}
-      #   run: openline dev remove
+      - name: Cleanup test environment
+        if: ${{ always() }}
+        run: openline dev remove
 
       - name: Log in to the Container registry
         uses: docker/login-action@v3.0.0
