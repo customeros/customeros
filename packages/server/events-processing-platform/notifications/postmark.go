@@ -59,30 +59,29 @@ func NewPostmarkProvider(log logger.Logger, repo *repository.Repositories) *Post
 	}
 }
 
-func (np *PostmarkProvider) SetClientToken(tenant string) error {
+func (np *PostmarkProvider) getClientToken(tenant string) (string, error) {
 	p := np.repository.CommonRepositories.PostmarkApiKeyRepository.GetPostmarkApiKey(tenant)
 	if p.Error != nil {
-		return p.Error
+		return "", p.Error
 	}
 
 	if p.Result == nil {
-		return errors.New("postmark api key not found")
+		return "", errors.New("postmark api key not found")
 	}
 
 	serverToken := p.Result.(entity.PostmarkApiKey).Key
-	np.Client.ServerToken = serverToken
-	return nil
+	return serverToken, nil
 }
 
 func (np *PostmarkProvider) SendNotification(ctx context.Context, postmarkEmail PostmarkEmail, span opentracing.Span, tenant string) error {
-	if np.Client.ServerToken == "" {
-		err := np.SetClientToken(tenant)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			np.log.Errorf("(PostmarkProvider.SendNotification.SetClientToken) error: %s", err.Error())
-			return err
-		}
+	token, err := np.getClientToken(tenant)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		np.log.Errorf("(PostmarkProvider.SendNotification.SetClientToken) error: %s", err.Error())
+		return err
 	}
+
+	np.Client = postmark.NewClient(token, "")
 
 	htmlContent, err := np.LoadEmailContent(postmarkEmail.WorkflowId, "mjml", postmarkEmail.TemplateData)
 	if err != nil {
