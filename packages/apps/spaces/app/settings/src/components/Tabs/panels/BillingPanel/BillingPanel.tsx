@@ -4,8 +4,8 @@ import { useForm } from 'react-inverted-form';
 import React, { useMemo, useState, useEffect } from 'react';
 
 import { produce } from 'immer';
-import { useDebounce } from 'rooks';
 import { useQueryClient } from '@tanstack/react-query';
+import { useDebounce, useDeepCompareEffect } from 'rooks';
 import { useUpdateTenantSettingsMutation } from '@settings/graphql/updateTenantSettings.generated';
 import { useTenantBillingProfilesQuery } from '@settings/graphql/getTenantBillingProfiles.generated';
 import { useCreateBillingProfileMutation } from '@settings/graphql/createTenantBillingProfile.generated';
@@ -81,7 +81,7 @@ export const BillingPanel = () => {
   const updateBillingProfileMutation = useTenantUpdateBillingProfileMutation(
     client,
     {
-      onMutate: ({ input }) => {
+      onMutate: ({ input: { patch, ...restInput } }) => {
         queryClient.cancelQueries({ queryKey });
 
         useTenantBillingProfilesQuery.mutateCacheEntry(queryClient)(
@@ -91,14 +91,13 @@ export const BillingPanel = () => {
                 (profileId) =>
                   profileId.id === data?.tenantBillingProfiles?.[0]?.id,
               );
-
               if (
-                selectedProfile &&
+                selectedProfile >= 0 &&
                 draft?.tenantBillingProfiles?.[selectedProfile]
               ) {
                 draft.tenantBillingProfiles[selectedProfile] = {
                   ...draft.tenantBillingProfiles[selectedProfile],
-                  ...(input as TenantBillingProfile),
+                  ...(restInput as TenantBillingProfile),
                 };
               }
             });
@@ -146,7 +145,9 @@ export const BillingPanel = () => {
     [],
   );
 
-  const newDefaults = new TenantBillingDetailsDto();
+  const defaultValues = new TenantBillingDetailsDto(
+    data?.tenantBillingProfiles?.[0] as TenantBillingProfile,
+  );
 
   const handleUpdateData = useDebounce((d: TenantBillingDetails) => {
     const payload = TenantBillingDetailsDto.toPayload(d);
@@ -159,21 +160,31 @@ export const BillingPanel = () => {
   }, 2500);
   const { state, setDefaultValues } = useForm({
     formId,
-    defaultValues: newDefaults,
+    defaultValues,
     stateReducer: (_, action, next) => {
       if (action.type === 'FIELD_CHANGE') {
         switch (action.payload.name) {
-          case 'country':
           case 'canPayWithDirectDebitSEPA':
           case 'canPayWithDirectDebitACH':
           case 'canPayWithDirectDebitBacs':
           case 'canPayWithCard':
           case 'canPayWithPigeon': {
-            const payload = TenantBillingDetailsDto.toPayload(next.values);
             updateBillingProfileMutation.mutate({
               input: {
                 id: tenantBillingProfileId,
-                ...payload,
+                patch: true,
+                [action.payload.name]: action.payload.value,
+              },
+            });
+
+            return next;
+          }
+          case 'country': {
+            updateBillingProfileMutation.mutate({
+              input: {
+                id: tenantBillingProfileId,
+                patch: true,
+                [action.payload.name]: action.payload.value?.value,
               },
             });
 
@@ -240,18 +251,9 @@ export const BillingPanel = () => {
     }
   }, [isFetchedAfterMount, data]);
 
-  useEffect(() => {
-    if (
-      isFetchedAfterMount &&
-      !!data?.tenantBillingProfiles?.length &&
-      data?.tenantBillingProfiles?.[0]
-    ) {
-      const newDefaults = new TenantBillingDetailsDto(
-        data?.tenantBillingProfiles?.[0] as TenantBillingProfile,
-      );
-      setDefaultValues(newDefaults);
-    }
-  }, [isFetchedAfterMount, data]);
+  useDeepCompareEffect(() => {
+    setDefaultValues(defaultValues);
+  }, [defaultValues]);
 
   const handleDisablePaymentMethods = () => {
     updateBillingProfileMutation.mutate({
@@ -268,6 +270,7 @@ export const BillingPanel = () => {
     const newDefaults = new TenantBillingDetailsDto(
       data?.tenantBillingProfiles?.[0] as TenantBillingProfile,
     );
+
     setDefaultValues({
       ...newDefaults,
       canPayWithDirectDebitACH: false,
