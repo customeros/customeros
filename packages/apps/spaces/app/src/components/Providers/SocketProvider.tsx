@@ -4,21 +4,22 @@ import { useState, useEffect, createContext } from 'react';
 
 import { Socket } from 'phoenix';
 
-import { useEnv } from '@shared/hooks/useEnv';
-
 const PhoenixSocketContext = createContext<{ socket: Socket | null }>({
   socket: null,
 });
 
 const PhoenixSocketProvider = ({ children }: { children: React.ReactNode }) => {
-  const env = useEnv();
   const [socket, setSocket] = useState<Socket | null>(null);
-  const socketPath = `${env.REALTIME_WS_PATH}/socket`;
+  const socketPath = `/api/proxy/socket`;
 
   useEffect(() => {
-    const socket = new Socket(socketPath, { params: { token: '123' } });
-    socket.connect();
-    setSocket(socket);
+    try {
+      const socket = new Socket(socketPath, { params: { token: '123' } });
+      socket.connect();
+      setSocket(socket);
+    } catch (e) {
+      // TODO: log error
+    }
   }, [socketPath]);
 
   return (
