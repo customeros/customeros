@@ -38,7 +38,7 @@ export const FormSwitch = forwardRef(
     ref,
   ) => {
     const { getInputProps } = useField(name, formId);
-    const { value, onChange, ...rest } = getInputProps();
+    const { value, onChange, onBlur, ...rest } = getInputProps();
 
     const handleChange = (value: boolean) => {
       if (!value) {

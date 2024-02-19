@@ -160,6 +160,7 @@ export const TenantBillingPanelDetailsForm = ({
       </Flex>
 
       <PaymentMethods
+        formId={formId}
         canPayWithCard={canPayWithCard}
         canPayWithDirectDebitACH={canPayWithDirectDebitACH}
         canPayWithDirectDebitSEPA={canPayWithDirectDebitSEPA}

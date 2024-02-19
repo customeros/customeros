@@ -21,15 +21,15 @@ export const PaymentMethods = ({
   canPayWithDirectDebitSEPA,
   canPayWithDirectDebitACH,
   canPayWithDirectDebitBacs,
+  formId,
 }: {
+  formId: string;
   canPayWithCard?: boolean | null;
   onResetPaymentMethods: () => void;
   canPayWithDirectDebitACH?: boolean | null;
   canPayWithDirectDebitSEPA?: boolean | null;
   canPayWithDirectDebitBacs?: boolean | null;
 }) => {
-  const formId = 'tenant-billing-profile-form';
-
   const iApp = useIntegrationApp();
   const { items: iConnections, refresh, loading } = useConnections();
   const isStripeActive = iConnections
