@@ -24,13 +24,13 @@ func TestQueryResolver_Dashboard_Customer_Map_No_Data_In_DB(t *testing.T) {
 		map[string]interface{}{})
 
 	var dashboardReport struct {
-		Dashboard_NewCustomers []model.DashboardCustomerMap
+		Dashboard_CustomerMap []model.DashboardCustomerMap
 	}
 
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 0, len(dashboardReport.Dashboard_NewCustomers))
+	require.Equal(t, 0, len(dashboardReport.Dashboard_CustomerMap))
 }
 
 func TestQueryResolver_Dashboard_Customer_Map_Empty_Contract(t *testing.T) {
@@ -52,13 +52,13 @@ func TestQueryResolver_Dashboard_Customer_Map_Empty_Contract(t *testing.T) {
 		map[string]interface{}{})
 
 	var dashboardReport struct {
-		Dashboard_NewCustomers []model.DashboardCustomerMap
+		Dashboard_CustomerMap []model.DashboardCustomerMap
 	}
 
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 0, len(dashboardReport.Dashboard_NewCustomers))
+	require.Equal(t, 0, len(dashboardReport.Dashboard_CustomerMap))
 }
 
 func TestQueryResolver_Dashboard_Customer_Map_Draft_Contract(t *testing.T) {
@@ -72,10 +72,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Draft_Contract(t *testing.T) {
 
 	contract1ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
 	contractId := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
-		ContractStatus:   neo4jenum.ContractStatusLive,
+		ContractStatus:   neo4jenum.ContractStatusDraft,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, neo4jentity.OpportunityEntity{
 		InternalType:      neo4jenum.InternalTypeRenewal,
+		InternalStage:     neo4jenum.InternalStageOpen,
 		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
 	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
@@ -90,13 +91,15 @@ func TestQueryResolver_Dashboard_Customer_Map_Draft_Contract(t *testing.T) {
 		map[string]interface{}{})
 
 	var dashboardReport struct {
-		Dashboard_NewCustomers []model.DashboardCustomerMap
+		Dashboard_CustomerMap []model.DashboardCustomerMap
 	}
 
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 0, len(dashboardReport.Dashboard_NewCustomers))
+	require.Equal(t, 1, len(dashboardReport.Dashboard_CustomerMap))
+	require.Equal(t, orgId, dashboardReport.Dashboard_CustomerMap[0].Organization.ID)
+	require.Equal(t, float64(12), dashboardReport.Dashboard_CustomerMap[0].Arr)
 }
 
 func TestQueryResolver_Dashboard_Customer_Map_Hidden_Organization_With_Contract(t *testing.T) {

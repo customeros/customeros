@@ -920,7 +920,7 @@ func (r *dashboardRepository) GetDashboardCustomerMapData(ctx context.Context, t
 					WITH o.id AS oid,
 						COLLECT(DISTINCT CASE
 							WHEN c.status = 'ENDED' THEN 'CHURNED'
-							WHEN c.status = 'LIVE' AND 'ACTIVE_RENEWAL' in relTypes AND op.renewalLikelihood = 'HIGH' THEN 'OK'
+							WHEN c.status IN ['LIVE','DRAFT'] AND 'ACTIVE_RENEWAL' in relTypes AND op.renewalLikelihood = 'HIGH' THEN 'OK'
 							ELSE 'AT_RISK'
 						END) AS statuses,
 						COLLECT(DISTINCT { serviceStartedAt: c.serviceStartedAt }) AS contractsStartedAt
@@ -948,7 +948,7 @@ func (r *dashboardRepository) GetDashboardCustomerMapData(ctx context.Context, t
 					
 					WITH oid, oldestServiceStartedAt, status, CASE WHEN status = 'CHURNED' THEN [contractsDetails[0]]
 						ELSE REDUCE(a = [], c IN contractsDetails | 
-							CASE WHEN c.cStatus = 'LIVE' THEN a + c ELSE a END
+							CASE WHEN c.cStatus IN ['LIVE','DRAFT'] THEN a + c ELSE a END
 						) END AS contracts
 					
 					WITH oid, oldestServiceStartedAt, status, REDUCE(s = [], c IN contracts | 
