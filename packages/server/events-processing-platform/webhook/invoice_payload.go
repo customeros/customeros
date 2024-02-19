@@ -2,6 +2,7 @@ package webhook
 
 import (
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data"
 	"time"
 
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -17,21 +18,22 @@ type InvoiceLineItem struct {
 // source: https://docs.customeros.ai/en/api/invoice-events#example-event
 type InvoicePayload struct {
 	Data struct {
-		AmountDue          float64   `json:"amountDue"`
-		AmountPaid         float64   `json:"amountPaid"`
-		AmountRemaining    float64   `json:"amountRemaining"`
-		Currency           string    `json:"currency"`
-		Due                time.Time `json:"due"`
-		InvoiceNumber      string    `json:"invoiceNumber"`
-		InvoicePeriodEnd   time.Time `json:"invoicePeriodEnd"`
-		InvoicePeriodStart time.Time `json:"invoicePeriodStart"`
-		InvoiceUrl         string    `json:"invoiceUrl"`
-		Note               string    `json:"note"`
-		Paid               bool      `json:"paid"`
-		Status             string    `json:"status"`
-		Subtotal           float64   `json:"subtotal"`
-		TaxDue             float64   `json:"taxDue"`
-		Contract           struct {
+		AmountDue               float64   `json:"amountDue"`
+		AmountDueInSmallestUnit int64     `json:"amountDueInSmallestUnit"`
+		AmountPaid              float64   `json:"amountPaid"`
+		AmountRemaining         float64   `json:"amountRemaining"`
+		Currency                string    `json:"currency"`
+		Due                     time.Time `json:"due"`
+		InvoiceNumber           string    `json:"invoiceNumber"`
+		InvoicePeriodEnd        time.Time `json:"invoicePeriodEnd"`
+		InvoicePeriodStart      time.Time `json:"invoicePeriodStart"`
+		InvoiceUrl              string    `json:"invoiceUrl"`
+		Note                    string    `json:"note"`
+		Paid                    bool      `json:"paid"`
+		Status                  string    `json:"status"`
+		Subtotal                float64   `json:"subtotal"`
+		TaxDue                  float64   `json:"taxDue"`
+		Contract                struct {
 			ContractName   string `json:"contractName"`
 			ContractStatus string `json:"contractStatus"`
 			Metadata       struct {
@@ -141,7 +143,11 @@ func createInvoicePayload(
 ) *InvoicePayload {
 	payload := &InvoicePayload{}
 
+	// convert amount to the smallest currency unit
+	amountDueInSmallestCurrencyUnit, _ := data.InSmallestCurrencyUnit(currency, amountDue)
+
 	payload.Data.AmountDue = amountDue
+	payload.Data.AmountDueInSmallestUnit = amountDueInSmallestCurrencyUnit
 	payload.Data.AmountPaid = amountPaid
 	payload.Data.AmountRemaining = amountRemaining
 	payload.Data.Currency = currency
