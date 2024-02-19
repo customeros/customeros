@@ -31,7 +31,7 @@ const (
 const ApiKeyHeader = "X-Openline-API-KEY"
 const TenantApiKeyHeader = "X-CUSTOMER-OS-API-KEY"
 
-func ApiKeyCheckerHTTP(tenantApiKeyRepo repository.TenantApiKeyRepository, appKeyRepo repository.AppKeyRepository, app App, opts ...CommonServiceOption) func(c *gin.Context) {
+func ApiKeyCheckerHTTP(tenantApiKeyRepo repository.TenantWebhookApiKeyRepository, appKeyRepo repository.AppKeyRepository, app App, opts ...CommonServiceOption) func(c *gin.Context) {
 	// Apply the options to configure the middleware
 	config := &Options{}
 	for _, opt := range opts {
@@ -116,7 +116,7 @@ func ApiKeyCheckerHTTP(tenantApiKeyRepo repository.TenantApiKeyRepository, appKe
 				return
 			}
 
-			apiKey := keyResult.Result.(*entity.TenantApiKey)
+			apiKey := keyResult.Result.(*entity.TenantWebhookApiKey)
 
 			if apiKey == nil {
 				c.JSON(http.StatusUnauthorized, gin.H{
