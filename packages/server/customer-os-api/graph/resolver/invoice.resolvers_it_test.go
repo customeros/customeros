@@ -73,7 +73,7 @@ func TestInvoiceResolver_Invoice(t *testing.T) {
 	require.False(t, invoice.Postpaid)
 	require.False(t, invoice.OffCycle)
 	require.Equal(t, "1", invoice.InvoiceNumber)
-	require.Equal(t, fmt.Sprintf("%s/%s", constants.UrlInvoices, invoice.Metadata.ID), invoice.InvoiceURL)
+	require.Equal(t, fmt.Sprintf(constants.UrlFileStoreFileDownloadUrlTemplate, invoice.RepositoryFileID), invoice.InvoiceURL)
 	require.Equal(t, "RON", invoice.Currency)
 	require.Equal(t, yesterday, invoice.InvoicePeriodStart)
 	require.Equal(t, tomorrow, invoice.InvoicePeriodEnd)

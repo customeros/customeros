@@ -92,7 +92,7 @@ func PopulateInvoiceFinalizedPayload(invoice *neo4jentity.InvoiceEntity, org *ne
 		invoice.Number,
 		invoice.PeriodEndDate,
 		invoice.PeriodStartDate,
-		fmt.Sprintf("%s/%s", constants.UrlInvoices, invoice.Id),
+		fmt.Sprintf(constants.UrlFileStoreFileDownloadUrlTemplate, invoice.RepositoryFileId),
 		invoice.Note,
 		paid,
 		invoice.Status.String(),
