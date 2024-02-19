@@ -1,5 +1,3 @@
-import setHours from 'date-fns/setHours';
-
 import { DateTimeUtils } from '@spaces/utils/date';
 import {
   OnboardingPlanStatus,
@@ -16,8 +14,8 @@ export function getMilestoneDueDate(
   if (!value) return '';
   const isLate = checkMilestoneLate(status);
 
-  const dueDate = setHours(new Date(value), 0).toISOString();
-  const now = setHours(new Date(), 0).toISOString();
+  const dueDate = DateTimeUtils.toISOMidnight(value);
+  const now = DateTimeUtils.toISOMidnight(new Date());
 
   const days = DateTimeUtils.differenceInDays(dueDate, now);
   const displayText = (() => {
