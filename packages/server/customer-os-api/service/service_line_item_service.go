@@ -51,6 +51,7 @@ type ServiceLineItemUpdateData struct {
 	Source                  neo4jentity.DataSource `json:"source"`
 	AppSource               string                 `json:"appSource"`
 	SliVatRate              float64                `json:"sliVatRate"`
+	StartedAt               *time.Time             `json:"startedAt"`
 }
 
 type ServiceLineItemService interface {
@@ -172,6 +173,27 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 		isRetroactiveCorrection = true
 	}
 
+	if !isRetroactiveCorrection && serviceLineItemEntity.EndedAt != nil {
+		err = fmt.Errorf("service line item with id {%s} is already ended", serviceLineItemDetails.Id)
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if !isRetroactiveCorrection && serviceLineItemDetails.StartedAt != nil {
+		lastSliVersionDbNode, err := s.repositories.Neo4jRepositories.ServiceLineItemReadRepository.GetLatestServiceLineItemByParentId(ctx, common.GetTenantFromContext(ctx), serviceLineItemEntity.ParentID, nil)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error on getting latest service line item by parent id {%s}: %s", serviceLineItemEntity.ParentID, err.Error())
+			return err
+		}
+		lastSliVersionEntity := neo4jmapper.MapDbNodeToServiceLineItemEntity(lastSliVersionDbNode)
+		if lastSliVersionEntity.StartedAt.After(*serviceLineItemDetails.StartedAt) {
+			err = fmt.Errorf("service line item with id {%s} is already started at a later date", serviceLineItemDetails.Id)
+			tracing.TraceErr(span, err)
+			return err
+		}
+	}
+
 	serviceLineItemUpdateRequest := servicelineitempb.UpdateServiceLineItemGrpcRequest{
 		Tenant:                  common.GetTenantFromContext(ctx),
 		Id:                      serviceLineItemDetails.Id,
@@ -217,11 +239,7 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 		}
 		serviceLineItemUpdateRequest.ContractId = utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*contractDbNode), "id")
 		serviceLineItemUpdateRequest.ParentId = serviceLineItemEntity.ParentID
-	}
-	if !isRetroactiveCorrection && serviceLineItemEntity.EndedAt != nil {
-		err = fmt.Errorf("service line item with id {%s} is already ended", serviceLineItemDetails.Id)
-		tracing.TraceErr(span, err)
-		return err
+		serviceLineItemUpdateRequest.StartedAt = utils.ConvertTimeToTimestampPtr(serviceLineItemDetails.StartedAt)
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
@@ -365,6 +383,7 @@ type ServiceLineItemDetails struct {
 	Comments                string
 	IsRetroactiveCorrection bool
 	VatRate                 float64
+	StartedAt               *time.Time
 }
 
 func (s *serviceLineItemService) CreateOrUpdateOrDeleteInBulk(ctx context.Context, contractId string, sliBulkData []*ServiceLineItemDetails) ([]string, error) {
@@ -423,6 +442,7 @@ func (s *serviceLineItemService) CreateOrUpdateOrDeleteInBulk(ctx context.Contex
 				SliVatRate:    serviceLineItem.VatRate,
 				Source:        neo4jentity.DataSourceOpenline,
 				AppSource:     constants.AppSourceCustomerOsApi,
+				StartedAt:     serviceLineItem.StartedAt,
 			})
 			if err != nil {
 				tracing.TraceErr(span, err)
@@ -444,6 +464,7 @@ func (s *serviceLineItemService) CreateOrUpdateOrDeleteInBulk(ctx context.Contex
 				SliVatRate:              serviceLineItem.VatRate,
 				Source:                  neo4jentity.DataSourceOpenline,
 				AppSource:               constants.AppSourceCustomerOsApi,
+				StartedAt:               serviceLineItem.StartedAt,
 			})
 			if err != nil {
 				tracing.TraceErr(span, err)
@@ -484,5 +505,6 @@ func MapServiceLineItemBulkItemToData(input *model.ServiceLineItemBulkUpdateItem
 		Comments:                utils.IfNotNilString(input.Comments),
 		IsRetroactiveCorrection: utils.IfNotNilBool(input.IsRetroactiveCorrection),
 		VatRate:                 utils.IfNotNilFloat64(input.VatRate),
+		StartedAt:               input.ServiceStarted,
 	}
 }

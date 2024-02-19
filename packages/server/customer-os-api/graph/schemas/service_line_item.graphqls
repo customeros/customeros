@@ -44,22 +44,29 @@ input ServiceLineItemInput {
     quantity:           Int64
     vatRate:            Float
     appSource:          String
-    externalReference:  ExternalSystemReferenceInput
+    externalReference:  ExternalSystemReferenceInput @deprecated(reason: "Not used yet")
     startedAt:          Time
     endedAt:            Time
 }
 
 input ServiceLineItemUpdateInput {
-    serviceLineItemId:  ID!
-    name:               String
-    billed:             BilledType
-    price:              Float
-    quantity:           Int64
-    vatRate:            Float
-    comments:           String
-    appSource:          String
-    externalReference:  ExternalSystemReferenceInput
-    isRetroactiveCorrection: Boolean
+    serviceLineItemId:          ID!
+    name:                       String
+    billed:                     BilledType
+    price:                      Float
+    quantity:                   Int64
+    vatRate:                    Float
+    comments:                   String
+    appSource:                  String
+    externalReference:          ExternalSystemReferenceInput @deprecated(reason: "Not used yet")
+    isRetroactiveCorrection:    Boolean
+    serviceStarted:             Time
+}
+
+input ServiceLineItemBulkUpdateInput {
+    serviceLineItems:   [ServiceLineItemBulkUpdateItem]!
+    contractId:         ID!
+    invoiceNote:        String
 }
 
 input ServiceLineItemBulkUpdateItem {
@@ -71,12 +78,7 @@ input ServiceLineItemBulkUpdateItem {
     vatRate:                 Float
     comments:                String
     isRetroactiveCorrection: Boolean
-}
-
-input ServiceLineItemBulkUpdateInput {
-    serviceLineItems: [ServiceLineItemBulkUpdateItem]!
-    contractId: ID!
-    invoiceNote: String
+    serviceStarted:          Time
 }
 
 input ServiceLineItemCloseInput {

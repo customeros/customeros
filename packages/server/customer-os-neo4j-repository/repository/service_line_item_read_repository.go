@@ -15,7 +15,7 @@ import (
 type ServiceLineItemReadRepository interface {
 	GetServiceLineItemById(ctx context.Context, tenant, serviceLineItemId string) (*dbtype.Node, error)
 	GetAllForContract(ctx context.Context, tenant, contractId string) ([]*neo4j.Node, error)
-	GetLatestServiceLineItemByParentId(ctx context.Context, tenant, serviceLineItemParentId string, beforeDate time.Time) (*dbtype.Node, error)
+	GetLatestServiceLineItemByParentId(ctx context.Context, tenant, serviceLineItemParentId string, beforeDate *time.Time) (*dbtype.Node, error)
 }
 
 type serviceLineItemReadRepository struct {
@@ -99,18 +99,23 @@ func (r *serviceLineItemReadRepository) GetServiceLineItemById(ctx context.Conte
 	return result.(*dbtype.Node), nil
 }
 
-func (r *serviceLineItemReadRepository) GetLatestServiceLineItemByParentId(ctx context.Context, tenant, serviceLineItemParentId string, beforeDate time.Time) (*dbtype.Node, error) {
+func (r *serviceLineItemReadRepository) GetLatestServiceLineItemByParentId(ctx context.Context, tenant, serviceLineItemParentId string, beforeDate *time.Time) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemReadRepository.GetLatestServiceLineItemByParentId")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.LogFields(log.String("serviceLineItemParentId", serviceLineItemParentId), log.Object("beforeDate", beforeDate))
 
-	cypher := `MATCH (sli:ServiceLineItem {parentId:$parentId}) WHERE sli.startedAt < $before RETURN sli ORDER BY sli.startedAt DESC LIMIT 1`
 	params := map[string]any{
 		"tenant":   tenant,
 		"parentId": serviceLineItemParentId,
-		"before":   beforeDate.Add(time.Millisecond * 1),
 	}
+	cypher := `MATCH (sli:ServiceLineItem {parentId:$parentId}) `
+	if beforeDate != nil {
+		cypher += ` WHERE sli.startedAt < $before `
+		params["before"] = beforeDate.Add(time.Millisecond * 1)
+	}
+	cypher += ` RETURN sli ORDER BY sli.startedAt DESC LIMIT 1`
+
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 

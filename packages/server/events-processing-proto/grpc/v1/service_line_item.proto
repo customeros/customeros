@@ -40,6 +40,7 @@ message UpdateServiceLineItemGrpcRequest {
   string contractId = 12;
   double vatRate = 13;
   string parentId = 14;
+  google.protobuf.Timestamp startedAt = 15;
 }
 
 // Permanently delete service line item request

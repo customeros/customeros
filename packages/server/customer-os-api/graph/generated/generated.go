@@ -13762,22 +13762,29 @@ input ServiceLineItemInput {
     quantity:           Int64
     vatRate:            Float
     appSource:          String
-    externalReference:  ExternalSystemReferenceInput
+    externalReference:  ExternalSystemReferenceInput @deprecated(reason: "Not used yet")
     startedAt:          Time
     endedAt:            Time
 }
 
 input ServiceLineItemUpdateInput {
-    serviceLineItemId:  ID!
-    name:               String
-    billed:             BilledType
-    price:              Float
-    quantity:           Int64
-    vatRate:            Float
-    comments:           String
-    appSource:          String
-    externalReference:  ExternalSystemReferenceInput
-    isRetroactiveCorrection: Boolean
+    serviceLineItemId:          ID!
+    name:                       String
+    billed:                     BilledType
+    price:                      Float
+    quantity:                   Int64
+    vatRate:                    Float
+    comments:                   String
+    appSource:                  String
+    externalReference:          ExternalSystemReferenceInput @deprecated(reason: "Not used yet")
+    isRetroactiveCorrection:    Boolean
+    serviceStarted:             Time
+}
+
+input ServiceLineItemBulkUpdateInput {
+    serviceLineItems:   [ServiceLineItemBulkUpdateItem]!
+    contractId:         ID!
+    invoiceNote:        String
 }
 
 input ServiceLineItemBulkUpdateItem {
@@ -13789,12 +13796,7 @@ input ServiceLineItemBulkUpdateItem {
     vatRate:                 Float
     comments:                String
     isRetroactiveCorrection: Boolean
-}
-
-input ServiceLineItemBulkUpdateInput {
-    serviceLineItems: [ServiceLineItemBulkUpdateItem]!
-    contractId: ID!
-    invoiceNote: String
+    serviceStarted:          Time
 }
 
 input ServiceLineItemCloseInput {
@@ -89862,7 +89864,7 @@ func (ec *executionContext) unmarshalInputServiceLineItemBulkUpdateItem(ctx cont
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"serviceLineItemId", "name", "billed", "price", "quantity", "vatRate", "comments", "isRetroactiveCorrection"}
+	fieldsInOrder := [...]string{"serviceLineItemId", "name", "billed", "price", "quantity", "vatRate", "comments", "isRetroactiveCorrection", "serviceStarted"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -89925,6 +89927,13 @@ func (ec *executionContext) unmarshalInputServiceLineItemBulkUpdateItem(ctx cont
 				return it, err
 			}
 			it.IsRetroactiveCorrection = data
+		case "serviceStarted":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("serviceStarted"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ServiceStarted = data
 		}
 	}
 
@@ -90062,7 +90071,7 @@ func (ec *executionContext) unmarshalInputServiceLineItemUpdateInput(ctx context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"serviceLineItemId", "name", "billed", "price", "quantity", "vatRate", "comments", "appSource", "externalReference", "isRetroactiveCorrection"}
+	fieldsInOrder := [...]string{"serviceLineItemId", "name", "billed", "price", "quantity", "vatRate", "comments", "appSource", "externalReference", "isRetroactiveCorrection", "serviceStarted"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -90139,6 +90148,13 @@ func (ec *executionContext) unmarshalInputServiceLineItemUpdateInput(ctx context
 				return it, err
 			}
 			it.IsRetroactiveCorrection = data
+		case "serviceStarted":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("serviceStarted"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ServiceStarted = data
 		}
 	}
 
