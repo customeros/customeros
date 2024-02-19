@@ -227,6 +227,7 @@ func TestServiceLineItemService_UpdateServiceLineItemCreateNewVersion(t *testing
 		Comments:                "Some comments",
 		IsRetroactiveCorrection: false,
 		UpdatedAt:               timestamppb.New(updatedAt),
+		ParentId:                "SLI121",
 		SourceFields: &commonpb.SourceFields{
 			Source:    "openline",
 			AppSource: "unit-test",
