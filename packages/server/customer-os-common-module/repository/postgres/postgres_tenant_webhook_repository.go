@@ -49,10 +49,12 @@ func (r *TenantWebhookRepo) GetWebhooks(tenant string) helper.QueryResult {
 
 func (r *TenantWebhookRepo) CreateWebhook(webhook entity.TenantWebhook) helper.QueryResult {
 	webhookEntity := entity.TenantWebhook{
-		TenantName: webhook.TenantName,
-		ApiKey:     webhook.ApiKey,
-		Event:      webhook.Event,
-		WebhookUrl: webhook.WebhookUrl,
+		TenantName:      webhook.TenantName,
+		ApiKey:          webhook.ApiKey,
+		Event:           webhook.Event,
+		WebhookUrl:      webhook.WebhookUrl,
+		AuthHeaderName:  webhook.AuthHeaderName,
+		AuthHeaderValue: webhook.AuthHeaderValue,
 	}
 
 	err := r.db.Create(&webhookEntity).Error
