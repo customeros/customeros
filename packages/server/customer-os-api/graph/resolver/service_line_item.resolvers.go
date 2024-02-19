@@ -85,6 +85,7 @@ func (r *mutationResolver) ServiceLineItemUpdate(ctx context.Context, input mode
 		SliVatRate:              utils.IfNotNilFloat64(input.VatRate),
 		Source:                  neo4jentity.DataSourceOpenline,
 		AppSource:               utils.IfNotNilString(input.AppSource),
+		StartedAt:               input.ServiceStarted,
 	}
 
 	err := r.Services.ServiceLineItemService.Update(ctx, data)

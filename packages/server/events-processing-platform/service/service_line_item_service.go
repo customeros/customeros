@@ -137,6 +137,9 @@ func (s *serviceLineItemService) UpdateServiceLineItem(ctx context.Context, requ
 
 	} else {
 		versionDate := utils.NowPtr()
+		if request.StartedAt != nil {
+			versionDate = utils.TimestampProtoToTimePtr(request.StartedAt)
+		}
 
 		// Validate contract ID
 		if request.ContractId == "" {

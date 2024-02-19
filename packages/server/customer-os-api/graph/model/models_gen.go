@@ -2201,6 +2201,7 @@ type ServiceLineItemBulkUpdateItem struct {
 	VatRate                 *float64    `json:"vatRate,omitempty"`
 	Comments                *string     `json:"comments,omitempty"`
 	IsRetroactiveCorrection *bool       `json:"isRetroactiveCorrection,omitempty"`
+	ServiceStarted          *time.Time  `json:"serviceStarted,omitempty"`
 }
 
 type ServiceLineItemCloseInput struct {
@@ -2232,6 +2233,7 @@ type ServiceLineItemUpdateInput struct {
 	AppSource               *string                       `json:"appSource,omitempty"`
 	ExternalReference       *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
 	IsRetroactiveCorrection *bool                         `json:"isRetroactiveCorrection,omitempty"`
+	ServiceStarted          *time.Time                    `json:"serviceStarted,omitempty"`
 }
 
 type Social struct {
