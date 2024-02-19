@@ -20,7 +20,6 @@ import { toastError } from '@ui/presentation/Toast';
 import { DatePicker } from '@ui/form/DatePicker/DatePicker';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { Card, CardBody, CardFooter, CardHeader } from '@ui/presentation/Card';
-import { useGetContractQuery } from '@organization/src/graphql/getContract.generated';
 import { useUpdateContractMutation } from '@organization/src/graphql/updateContract.generated';
 import {
   Contract,
@@ -73,10 +72,6 @@ export const ContractCard = ({
   });
 
   const client = getGraphQLClient();
-
-  const { data: billingDetailsData } = useGetContractQuery(client, {
-    id: data.id,
-  });
 
   // this is needed to block scroll on safari when modal is open, scrollbar overflow issue
   useEffect(() => {
@@ -509,7 +504,6 @@ export const ContractCard = ({
           contractId={data.id}
           onClose={onClose}
           organizationName={organizationName}
-          data={billingDetailsData?.contract}
           notes={data?.invoiceNote}
         />
 
