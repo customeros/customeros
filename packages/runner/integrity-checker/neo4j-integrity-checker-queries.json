@@ -120,8 +120,8 @@
     },
     {
       "name": "Check organization derived data consistency",
-      "query": "CALL {\n     MATCH (org:Organization) WHERE org.derivedNextRenewalAt < datetime()-duration({minutes: 30}) RETURN count(org) as cnt\n     UNION ALL\n     MATCH (org:Organization) WHERE org.derivedRenewalLikelihood IS NOT NULL AND NOT org.derivedRenewalLikelihood IN ['','ZERO','LOW','MEDIUM','HIGH'] RETURN count(org) as cnt\n} RETURN sum(cnt)",
-      "description": "Checks: 1 - Organizations with wrong derivedNextRenewalAt date. 2 - Organizations with wrong derivedRenewalLikelihood value."
+      "query": "CALL {\n     MATCH (org:Organization) WHERE org.derivedNextRenewalAt < datetime()-duration({minutes: 30}) RETURN count(org) as cnt\n     UNION ALL\n     MATCH (org:Organization) WHERE org.derivedRenewalLikelihood IS NOT NULL AND NOT org.derivedRenewalLikelihood IN ['','ZERO','LOW','MEDIUM','HIGH'] RETURN count(org) as cnt\n     UNION ALL MATCH (org:Organization)--(c:Contract)-[:ACTIVE_RENEWAL]->(op:RenewalOpportunity) WHERE (org.renewalForecastMaxArr IS NULL OR org.renewalForecastMaxArr = 0) AND (op.maxAmount > 0) return count(org) AS cnt\n} RETURN sum(cnt)",
+      "description": "Checks: 1 - Organizations with wrong derivedNextRenewalAt date. 2 - Organizations with wrong derivedRenewalLikelihood value. 3 - Organizations with missing ARR"
     },
     {
       "name": "Check organization data consistency",
