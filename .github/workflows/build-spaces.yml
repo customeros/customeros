@@ -78,7 +78,7 @@ jobs:
         uses: docker/build-push-action@v5.1.0
         with:
           context: packages/apps/spaces/
-          push: ${{ github.ref_name == 'otter' || github.ref_name == 'dev' || github.event_name == 'release' }}
+          push: ${{ github.ref_name == 'otter' || github.event_name == 'release' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
