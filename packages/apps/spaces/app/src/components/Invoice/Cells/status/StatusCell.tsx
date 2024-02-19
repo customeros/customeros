@@ -3,6 +3,7 @@ import { Clock } from '@ui/media/icons/Clock';
 import { InvoiceStatus } from '@graphql/types';
 import { Tag, TagLeftIcon } from '@ui/presentation/Tag';
 import { CheckCircle } from '@ui/media/icons/CheckCircle';
+import { SlashCircle01 } from '@ui/media/icons/SlashCircle01';
 import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
 
 interface StatusCellProps {
@@ -52,13 +53,13 @@ function renderStatusNode(type: InvoiceStatus | null | undefined) {
           Due
         </Tag>
       );
-    // case 'VOIDED':
-    //   return (
-    //     <Tag colorScheme='gray' variant='outline'>
-    //       <TagLeftIcon as={SlashCircle01} />
-    //       Voided
-    //     </Tag>
-    //   );
+    case 'VOID':
+      return (
+        <Tag colorScheme='gray' variant='outline'>
+          <TagLeftIcon as={SlashCircle01} />
+          Voided
+        </Tag>
+      );
     default:
       return null;
   }
