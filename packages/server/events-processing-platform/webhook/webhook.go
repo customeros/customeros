@@ -25,6 +25,10 @@ func DispatchWebhook(tenant string, event WebhookEvent, payload *InvoicePayload,
 
 	wh := mapResultToWebhook(webhookResult)
 
+	if wh == nil {
+		return nil
+	}
+
 	requestBodyJSON, err := json.Marshal(payload)
 	if err != nil {
 		return fmt.Errorf("(webhook.DispatchWebhook) error marshalling request body: %v", err)
@@ -37,6 +41,8 @@ func DispatchWebhook(tenant string, event WebhookEvent, payload *InvoicePayload,
 	}
 
 	req.Header.Set("Content-Type", "application/json")
+	authHeader := fmt.Sprintf("%s %s", wh.AuthHeader, wh.ApiKey) // e.g. "Bearer <api_key>"
+	req.Header.Set("Authorization", authHeader)
 
 	// Send the request
 	client := &http.Client{}

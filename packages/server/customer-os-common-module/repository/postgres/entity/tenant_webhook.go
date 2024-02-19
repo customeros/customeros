@@ -11,6 +11,7 @@ type TenantWebhook struct {
 	WebhookUrl string    `gorm:"column:webhook_url;type:varchar(255);NOT NULL" json:"webhook" binding:"required"`
 	ApiKey     string    `gorm:"column:api_key;type:varchar(255);NOT NULL" json:"apiKey" binding:"required"`
 	Event      string    `gorm:"column:event;type:varchar(255);NOT NULL" json:"event" binding:"required"`
+	AuthHeader string    `gorm:"column:auth_header;type:varchar(255)" json:"authHeader"`
 }
 
 func (TenantWebhook) TableName() string {
