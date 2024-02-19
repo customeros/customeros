@@ -29,6 +29,7 @@ type OrganizationService interface {
 	GetOrganizationsForJobRoles(ctx context.Context, jobRoleIds []string) (*entity.OrganizationEntities, error)
 	GetOrganizationsForInvoices(ctx context.Context, invoiceIds []string) (*entity.OrganizationEntities, error)
 	GetById(ctx context.Context, organizationId string) (*entity.OrganizationEntity, error)
+	GetByCustomerOsId(ctx context.Context, customerOsId string) (*entity.OrganizationEntity, error)
 	ExistsById(ctx context.Context, organizationId string) (bool, error)
 	FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	GetOrganizationsForContact(ctx context.Context, contactId string, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
@@ -198,6 +199,23 @@ func (s *organizationService) GetById(ctx context.Context, organizationId string
 	if err != nil {
 		wrappedErr := errors.Wrap(err, fmt.Sprintf("Organization with id {%s} not found", organizationId))
 		return nil, wrappedErr
+	}
+	return s.mapDbNodeToOrganizationEntity(*dbNode), nil
+}
+
+func (s *organizationService) GetByCustomerOsId(ctx context.Context, customerOsId string) (*entity.OrganizationEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetByCustomerOsId")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("customerOsId", customerOsId))
+
+	dbNode, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByCustomerOsId(ctx, common.GetTenantFromContext(ctx), customerOsId)
+	if err != nil {
+		wrappedErr := errors.Wrap(err, fmt.Sprintf("Organization with customerOsId {%s} not found", customerOsId))
+		return nil, wrappedErr
+	}
+	if dbNode == nil {
+		return nil, nil
 	}
 	return s.mapDbNodeToOrganizationEntity(*dbNode), nil
 }

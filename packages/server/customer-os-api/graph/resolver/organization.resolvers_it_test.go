@@ -4,6 +4,7 @@ import (
 	"context"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"testing"
 	"time"
@@ -126,6 +127,29 @@ func TestQueryResolver_Organization(t *testing.T) {
 	require.Equal(t, inputOrganizationEntity.OnboardingDetails.UpdatedAt, organizationStruct.Organization.AccountDetails.Onboarding.UpdatedAt)
 	require.Equal(t, model.OnboardingStatusDone, organizationStruct.Organization.AccountDetails.Onboarding.Status)
 	require.Equal(t, inputOrganizationEntity.OnboardingDetails.Comments, *organizationStruct.Organization.AccountDetails.Onboarding.Comments)
+}
+
+func TestQueryResolver_OrganizationByCustomerOsId(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+		Name:         "Organization name",
+		CustomerOsId: "C-123-ABC",
+	})
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, neo4jutil.NodeLabelOrganization))
+
+	rawResponse := callGraphQL(t, "organization/get_organization_by_customer_os_id", map[string]interface{}{"customerOsId": "C-123-ABC"})
+
+	var organizationStruct struct {
+		Organization_ByCustomerOsId model.Organization
+	}
+	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
+	require.Nil(t, err)
+	require.NotNil(t, organizationStruct)
+	require.Equal(t, organizationId, organizationStruct.Organization_ByCustomerOsId.ID)
+	require.Equal(t, "C-123-ABC", organizationStruct.Organization_ByCustomerOsId.CustomerOsID)
+	require.Equal(t, "Organization name", organizationStruct.Organization_ByCustomerOsId.Name)
 }
 
 func TestQueryResolver_Organizations_WithLocations(t *testing.T) {

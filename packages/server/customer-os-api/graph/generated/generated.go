@@ -1278,6 +1278,7 @@ type ComplexityRoot struct {
 		Meeting                               func(childComplexity int, id string) int
 		Opportunity                           func(childComplexity int, id string) int
 		Organization                          func(childComplexity int, id string) int
+		OrganizationByCustomerOsID            func(childComplexity int, customerOsID string) int
 		OrganizationDistinctOwners            func(childComplexity int) int
 		OrganizationPlan                      func(childComplexity int, id string) int
 		OrganizationPlans                     func(childComplexity int, retired *bool) int
@@ -1881,6 +1882,7 @@ type QueryResolver interface {
 	Opportunity(ctx context.Context, id string) (*model.Opportunity, error)
 	Organizations(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.OrganizationPage, error)
 	Organization(ctx context.Context, id string) (*model.Organization, error)
+	OrganizationByCustomerOsID(ctx context.Context, customerOsID string) (*model.Organization, error)
 	OrganizationDistinctOwners(ctx context.Context) ([]*model.User, error)
 	OrganizationPlan(ctx context.Context, id string) (*model.OrganizationPlan, error)
 	OrganizationPlansForOrganization(ctx context.Context, organizationID string) ([]*model.OrganizationPlan, error)
@@ -9509,6 +9511,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Organization(childComplexity, args["id"].(string)), true
 
+	case "Query.organization_ByCustomerOsId":
+		if e.complexity.Query.OrganizationByCustomerOsID == nil {
+			break
+		}
+
+		args, err := ec.field_Query_organization_ByCustomerOsId_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.OrganizationByCustomerOsID(childComplexity, args["customerOsId"].(string)), true
+
 	case "Query.organization_DistinctOwners":
 		if e.complexity.Query.OrganizationDistinctOwners == nil {
 			break
@@ -13109,6 +13123,7 @@ input OpportunityUpdateInput {
 	{Name: "../schemas/organization.graphqls", Input: `extend type Query {
     organizations(pagination: Pagination, where: Filter, sort: [SortBy!]): OrganizationPage! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization(id: ID!): Organization @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_ByCustomerOsId(customerOsId: String!): Organization @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_DistinctOwners: [User!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
@@ -18366,6 +18381,21 @@ func (ec *executionContext) field_Query_organizationPlans_args(ctx context.Conte
 		}
 	}
 	args["retired"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_organization_ByCustomerOsId_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["customerOsId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("customerOsId"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["customerOsId"] = arg0
 	return args, nil
 }
 
@@ -74645,6 +74675,196 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_organization_ByCustomerOsId(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_organization_ByCustomerOsId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().OrganizationByCustomerOsID(rctx, fc.Args["customerOsId"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Organization); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.Organization`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Organization)
+	fc.Result = res
+	return ec.marshalOOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganization(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_organization_ByCustomerOsId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Organization_id(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_Organization_referenceId(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Organization_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Organization_updatedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_Organization_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Organization_description(ctx, field)
+			case "note":
+				return ec.fieldContext_Organization_note(ctx, field)
+			case "domains":
+				return ec.fieldContext_Organization_domains(ctx, field)
+			case "website":
+				return ec.fieldContext_Organization_website(ctx, field)
+			case "industry":
+				return ec.fieldContext_Organization_industry(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
+			case "industryGroup":
+				return ec.fieldContext_Organization_industryGroup(ctx, field)
+			case "targetAudience":
+				return ec.fieldContext_Organization_targetAudience(ctx, field)
+			case "valueProposition":
+				return ec.fieldContext_Organization_valueProposition(ctx, field)
+			case "isPublic":
+				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "isCustomer":
+				return ec.fieldContext_Organization_isCustomer(ctx, field)
+			case "market":
+				return ec.fieldContext_Organization_market(ctx, field)
+			case "employees":
+				return ec.fieldContext_Organization_employees(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
+			case "source":
+				return ec.fieldContext_Organization_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Organization_appSource(ctx, field)
+			case "locations":
+				return ec.fieldContext_Organization_locations(ctx, field)
+			case "socials":
+				return ec.fieldContext_Organization_socials(ctx, field)
+			case "contacts":
+				return ec.fieldContext_Organization_contacts(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_Organization_jobRoles(ctx, field)
+			case "notes":
+				return ec.fieldContext_Organization_notes(ctx, field)
+			case "tags":
+				return ec.fieldContext_Organization_tags(ctx, field)
+			case "contracts":
+				return ec.fieldContext_Organization_contracts(ctx, field)
+			case "emails":
+				return ec.fieldContext_Organization_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
+			case "subsidiaries":
+				return ec.fieldContext_Organization_subsidiaries(ctx, field)
+			case "subsidiaryOf":
+				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "suggestedMergeTo":
+				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
+			case "customFields":
+				return ec.fieldContext_Organization_customFields(ctx, field)
+			case "fieldSets":
+				return ec.fieldContext_Organization_fieldSets(ctx, field)
+			case "entityTemplate":
+				return ec.fieldContext_Organization_entityTemplate(ctx, field)
+			case "timelineEvents":
+				return ec.fieldContext_Organization_timelineEvents(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
+			case "owner":
+				return ec.fieldContext_Organization_owner(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "lastTouchPointAt":
+				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointType":
+				return ec.fieldContext_Organization_lastTouchPointType(ctx, field)
+			case "lastTouchPointTimelineEventId":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
+			case "lastTouchPointTimelineEvent":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
+			case "issueSummaryByStatus":
+				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
+			case "accountDetails":
+				return ec.fieldContext_Organization_accountDetails(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_organization_ByCustomerOsId_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_organization_DistinctOwners(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_organization_DistinctOwners(ctx, field)
 	if err != nil {
@@ -103247,6 +103467,25 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_organization(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "organization_ByCustomerOsId":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_organization_ByCustomerOsId(ctx, field)
 				return res
 			}
 
