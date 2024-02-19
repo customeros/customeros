@@ -24,11 +24,11 @@ import (
 func AddIssueRoutes(ctx context.Context, route *gin.Engine, services *service.Services, log logger.Logger, cache *commoncaches.Cache) {
 	route.POST("/sync/issues",
 		handler.TracingEnhancer(ctx, "/sync/issues"),
-		commonservice.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.TenantApiKeyRepository, services.CommonServices.CommonRepositories.AppKeyRepository, commonservice.CUSTOMER_OS_WEBHOOKS, commonservice.WithCache(cache)),
+		commonservice.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.TenantWebhookApiKeyRepository, services.CommonServices.CommonRepositories.AppKeyRepository, commonservice.CUSTOMER_OS_WEBHOOKS, commonservice.WithCache(cache)),
 		syncIssuesHandler(services, log))
 	route.POST("/sync/issue",
 		handler.TracingEnhancer(ctx, "/sync/issue"),
-		commonservice.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.TenantApiKeyRepository, services.CommonServices.CommonRepositories.AppKeyRepository, commonservice.CUSTOMER_OS_WEBHOOKS, commonservice.WithCache(cache)),
+		commonservice.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.TenantWebhookApiKeyRepository, services.CommonServices.CommonRepositories.AppKeyRepository, commonservice.CUSTOMER_OS_WEBHOOKS, commonservice.WithCache(cache)),
 		syncIssueHandler(services, log))
 }
 

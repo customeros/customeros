@@ -24,11 +24,11 @@ import (
 func AddUserRoutes(ctx context.Context, route *gin.Engine, services *service.Services, log logger.Logger, cache *commoncaches.Cache) {
 	route.POST("/sync/users",
 		handler.TracingEnhancer(ctx, "/sync/users"),
-		commonservice.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.TenantApiKeyRepository, services.CommonServices.CommonRepositories.AppKeyRepository, commonservice.CUSTOMER_OS_WEBHOOKS, commonservice.WithCache(cache)),
+		commonservice.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.TenantWebhookApiKeyRepository, services.CommonServices.CommonRepositories.AppKeyRepository, commonservice.CUSTOMER_OS_WEBHOOKS, commonservice.WithCache(cache)),
 		syncUsersHandler(services, log))
 	route.POST("/sync/user",
 		handler.TracingEnhancer(ctx, "/sync/user"),
-		commonservice.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.TenantApiKeyRepository, services.CommonServices.CommonRepositories.AppKeyRepository, commonservice.CUSTOMER_OS_WEBHOOKS, commonservice.WithCache(cache)),
+		commonservice.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.TenantWebhookApiKeyRepository, services.CommonServices.CommonRepositories.AppKeyRepository, commonservice.CUSTOMER_OS_WEBHOOKS, commonservice.WithCache(cache)),
 		syncUserHandler(services, log))
 }
 

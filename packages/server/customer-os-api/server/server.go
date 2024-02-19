@@ -129,7 +129,7 @@ func (server *server) Run(parentCtx context.Context) error {
 
 	r.POST("/query",
 		cosHandler.TracingEnhancer(ctx, "/query"),
-		apiKeyCheckerHTTPMiddleware(commonServices.CommonRepositories.TenantApiKeyRepository, commonServices.CommonRepositories.AppKeyRepository, commonservice.CUSTOMER_OS_API, commonservice.WithCache(commonCache)),
+		apiKeyCheckerHTTPMiddleware(commonServices.CommonRepositories.TenantWebhookApiKeyRepository, commonServices.CommonRepositories.AppKeyRepository, commonservice.CUSTOMER_OS_API, commonservice.WithCache(commonCache)),
 		tenantUserContextEnhancerMiddleware(commonservice.USERNAME_OR_TENANT, commonServices.CommonRepositories, commonservice.WithCache(commonCache)),
 		server.graphqlHandler(grpcContainer, serviceContainer))
 	if server.cfg.GraphQL.PlaygroundEnabled {
@@ -137,7 +137,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	}
 	r.GET("/whoami",
 		cosHandler.TracingEnhancer(ctx, "/whoami"),
-		commonservice.ApiKeyCheckerHTTP(commonServices.CommonRepositories.TenantApiKeyRepository, commonServices.CommonRepositories.AppKeyRepository, commonservice.CUSTOMER_OS_API, commonservice.WithCache(commonCache)),
+		commonservice.ApiKeyCheckerHTTP(commonServices.CommonRepositories.TenantWebhookApiKeyRepository, commonServices.CommonRepositories.AppKeyRepository, commonservice.CUSTOMER_OS_API, commonservice.WithCache(commonCache)),
 		rest.WhoamiHandler(serviceContainer))
 	r.POST("/admin/query",
 		cosHandler.TracingEnhancer(ctx, "/admin/query"),
@@ -173,7 +173,7 @@ func (server *server) Run(parentCtx context.Context) error {
 }
 
 // Define a custom middleware adapter for ApiKeyCheckerHTTP.
-func apiKeyCheckerHTTPMiddleware(tenantApiKeyRepo commonrepositorypostgres.TenantApiKeyRepository, appKeyRepo commonrepositorypostgres.AppKeyRepository, app commonservice.App, opts ...commonservice.CommonServiceOption) func(c *gin.Context) {
+func apiKeyCheckerHTTPMiddleware(tenantApiKeyRepo commonrepositorypostgres.TenantWebhookApiKeyRepository, appKeyRepo commonrepositorypostgres.AppKeyRepository, app commonservice.App, opts ...commonservice.CommonServiceOption) func(c *gin.Context) {
 	apiKeyChecker := commonservice.ApiKeyCheckerHTTP(tenantApiKeyRepo, appKeyRepo, app, opts...)
 	return func(c *gin.Context) {
 		if isIntrospectionQuery(c.Request) {
