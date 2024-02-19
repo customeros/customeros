@@ -170,18 +170,18 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
           option: (props, state) => {
             return {
               ...props,
-
               my: '2px',
               borderRadius: 'md',
               color: 'gray.700',
               noOfLines: 1,
               WebkitBoxAlign: 'start',
-              bg: state.isSelected ? 'primary.50' : 'white',
+              bg: state.isSelected ? 'gray.50' : 'white',
               boxShadow: state.isFocused ? 'menuOptionsFocus' : 'none',
-              _hover: { bg: state.isSelected ? 'primary.50' : 'gray.100' },
+              _hover: { bg: state.isSelected ? 'gray.50' : 'gray.50' },
               _selected: {
-                bg: 'primary.50',
-                color: 'primary.600',
+                bg: 'gray.50',
+                fontWeight: 'medium',
+                color: 'gray.700',
               },
               ...chakraStyles?.option?.(props, state),
             };
