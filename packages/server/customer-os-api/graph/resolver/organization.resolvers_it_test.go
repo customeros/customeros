@@ -152,6 +152,22 @@ func TestQueryResolver_OrganizationByCustomerOsId(t *testing.T) {
 	require.Equal(t, "Organization name", organizationStruct.Organization_ByCustomerOsId.Name)
 }
 
+func TestQueryResolver_OrganizationByCustomerOsId_NotFound(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+		Name:         "Organization name",
+		CustomerOsId: "C-123-ABC",
+	})
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, neo4jutil.NodeLabelOrganization))
+
+	response := callGraphQLExpectError(t, "organization/get_organization_by_customer_os_id", map[string]interface{}{"customerOsId": "C-999-JJJ"})
+
+	require.Equal(t, "Organization not found by customerOsId C-999-JJJ", response.Message)
+	require.Equal(t, "organization_ByCustomerOsId", response.Path[0])
+}
+
 func TestQueryResolver_Organizations_WithLocations(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
