@@ -177,11 +177,11 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
               WebkitBoxAlign: 'start',
               bg: state.isSelected ? 'gray.50' : 'white',
               boxShadow: state.isFocused ? 'menuOptionsFocus' : 'none',
-              _hover: { bg: state.isSelected ? 'gray.50' : 'gray.50' },
+              _hover: { bg: 'gray.50' },
               _selected: {
                 bg: 'gray.50',
-                fontWeight: 'medium',
                 color: 'gray.700',
+                fontWeight: 'medium',
               },
               ...chakraStyles?.option?.(props, state),
             };
