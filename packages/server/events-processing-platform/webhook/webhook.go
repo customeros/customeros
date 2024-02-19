@@ -41,8 +41,12 @@ func DispatchWebhook(tenant string, event WebhookEvent, payload *InvoicePayload,
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	authHeader := fmt.Sprintf("%s %s", wh.AuthHeader, wh.ApiKey) // e.g. "Bearer <api_key>"
-	req.Header.Set("Authorization", authHeader)
+	authHeader := fmt.Sprintf("%s %s", wh.AuthHeaderValue, wh.ApiKey) // e.g. "Bearer <api_key>"
+	headerName := "Authorization"
+	if wh.AuthHeaderName != "" {
+		headerName = wh.AuthHeaderName
+	}
+	req.Header.Set(headerName, authHeader)
 
 	// Send the request
 	client := &http.Client{}
