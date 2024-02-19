@@ -324,9 +324,9 @@ func (s *invoiceService) GenerateOffCycleInvoices() {
 			}
 
 			invoicePeriodStart := utils.StartOfDayInUTC(referenceTime)
-			invoicePeriodEnd := utils.StartOfDayInUTC(utils.IfNotNilTimeWithDefault(contract.NextInvoiceDate, referenceTime))
+			invoicePeriodEnd := utils.StartOfDayInUTC(utils.IfNotNilTimeWithDefault(contract.NextInvoiceDate, referenceTime).AddDate(0, 0, -1))
 
-			readyToRequestInvoice := invoicePeriodEnd.After(invoicePeriodStart)
+			readyToRequestInvoice := !invoicePeriodEnd.Before(invoicePeriodStart)
 			if readyToRequestInvoice {
 				newInvoiceRequest := invoicepb.NewInvoiceForContractRequest{
 					Tenant:             record.Tenant,
