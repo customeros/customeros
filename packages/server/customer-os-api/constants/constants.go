@@ -7,8 +7,10 @@ const (
 	ComponentService         = "service"
 	ComponentNeo4jRepository = "neo4jRepository"
 
-	UrlCustomerOsApi = "https://customeros.ai"
-	UrlInvoices      = UrlCustomerOsApi + "/invoices"
+	UrlCustomerOsApi                    = "https://customeros.ai"
+	UrlInvoices                         = UrlCustomerOsApi + "/invoices"
+	UrlFileStoreApi                     = "https://fs.customeros.ai/"
+	UrlFileStoreFileDownloadUrlTemplate = UrlFileStoreApi + "file/%s/download"
 
 	MaxRetriesCheckDataInNeo4jAfterEventRequest int = 5
 )
