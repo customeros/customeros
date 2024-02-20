@@ -105,6 +105,7 @@ func (r *invoiceLineReadRepository) GetLatestInvoiceLineWithInvoiceIdByServiceLi
 	span.LogFields(log.Object("sliParentId", sliParentId))
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice)-[:HAS_INVOICE_LINE]->(il:InvoiceLine)-[:INVOICED]->(sli:ServiceLineItem {parentId:$parentId})
+		WHERE i.status <> 'DRAFT' AND i.status <> 'VOID' AND i.dryRun = false
 		 RETURN il, i.id ORDER BY il.createdAt desc limit 1`
 	params := map[string]any{
 		"tenant":   tenant,
