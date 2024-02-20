@@ -1,5 +1,7 @@
 FROM golang:1.20.1-alpine3.17@sha256:87d0a3309b34e2ca732efd69fb899d3c420d3382370fd6e7e6d2cb5c930f27f9 AS builder
 
+WORKDIR /workspace
+
 RUN mkdir /workspace/packages
 RUN mkdir /workspace/packages/runner
 RUN mkdir /workspace/packages/runner/customer-os-data-upkeeper
