@@ -82,6 +82,7 @@ jobs:
         run: |
           mkdir tmp-sources
           mkdir tmp-sources/customer-os-common-module
+          mkdir tmp-sources/customer-os-common-auth
           mkdir tmp-sources/settings-api
 
           rsync -av --progress --exclude="tmp-sources" * tmp-sources/settings-api
