@@ -110,7 +110,7 @@ func main() {
 	//testUpdateOrgOwner()
 	//testRefreshLastTouchpoint()
 	//testAddTenantBillingProfile()
-	//PaidInvoiceNotification()
+	PaidInvoiceNotification()
 	//PleasePayInvoiceNotification()
 	//testCreateInvoice()
 	//testTenantSettingsUpdate()
@@ -139,7 +139,7 @@ func testCreateInvoice() {
 func PaidInvoiceNotification() {
 	_, err := clients.InvoiceClient.UpdateInvoice(context.Background(), &invoicepb.UpdateInvoiceRequest{
 		Tenant:    tenant,
-		InvoiceId: "e3af66b0-8e74-4aa7-941d-4b87518d7131",
+		InvoiceId: "5b052bf0-1027-4425-ba1e-4aa940754423",
 		Status:    invoicepb.InvoiceStatus_INVOICE_STATUS_PAID,
 	})
 

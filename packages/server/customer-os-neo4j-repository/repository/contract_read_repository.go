@@ -19,6 +19,7 @@ type ContractReadRepository interface {
 	GetContractByServiceLineItemId(ctx context.Context, tenant, serviceLineItemId string) (*dbtype.Node, error)
 	GetContractByOpportunityId(ctx context.Context, tenant string, opportunityId string) (*dbtype.Node, error)
 	GetContractsForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeAndId, error)
+	GetContractForInvoice(ctx context.Context, tenant string, invoiceId string) (*dbtype.Node, error)
 	GetContractsForInvoices(ctx context.Context, tenant string, invoiceIds []string) ([]*utils.DbNodeAndId, error)
 	TenantsHasAtLeastOneContract(ctx context.Context, tenant string) (bool, error)
 	CountContracts(ctx context.Context, tenant string) (int64, error)
@@ -170,6 +171,41 @@ func (r *contractReadRepository) GetContractsForOrganizations(ctx context.Contex
 	}
 	span.LogFields(log.Int("result.count", len(result.([]*utils.DbNodeAndId))))
 	return result.([]*utils.DbNodeAndId), err
+}
+
+func (r *contractReadRepository) GetContractForInvoice(ctx context.Context, tenant string, invoiceId string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractReadRepository.GetContractForInvoice")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+
+	cypher := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract)-[:HAS_INVOICE]->(i:Invoice_%s)
+			WHERE i.id = $invoiceId
+			RETURN c`, tenant)
+	params := map[string]any{
+		"tenant":    tenant,
+		"invoiceId": invoiceId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	records := result.([]*dbtype.Node)
+	span.LogFields(log.Int("result.count", len(records)))
+	if len(records) == 0 {
+		return nil, nil
+	} else {
+		return records[0], nil
+	}
 }
 
 func (r *contractReadRepository) GetContractsForInvoices(ctx context.Context, tenant string, invoiceIds []string) ([]*utils.DbNodeAndId, error) {
