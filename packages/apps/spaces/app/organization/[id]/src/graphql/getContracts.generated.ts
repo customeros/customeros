@@ -103,6 +103,8 @@ export type GetContractsQuery = {
         appSource: string;
         endedAt?: any | null;
         parentId: string;
+        serviceStarted: any;
+        vatRate: number;
       }> | null;
     }> | null;
   } | null;
@@ -176,6 +178,8 @@ export const GetContractsDocument = `
         appSource
         endedAt
         parentId
+        serviceStarted
+        vatRate
       }
     }
   }

@@ -1,29 +1,33 @@
 'use client';
 import React, { useRef, useEffect } from 'react';
+import { DatePicker as ReactDatePicker } from 'react-date-picker';
 
 import { Currency } from '@settings/components/Tabs/panels/BillingPanel/components/Currency';
 
 import { Flex } from '@ui/layout/Flex';
 import { Input } from '@ui/form/Input';
 import { Text } from '@ui/typography/Text';
-import { BilledType } from '@graphql/types';
 import { Select } from '@ui/form/SyncSelect';
 import { Delete } from '@ui/media/icons/Delete';
 import { IconButton } from '@ui/form/IconButton';
+import { DateTimeUtils } from '@spaces/utils/date';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { FlipBackward } from '@ui/media/icons/FlipBackward';
+import { BilledType, ServiceLineItem } from '@graphql/types';
 import { NumberInput, NumberInputField } from '@ui/form/NumberInput';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 import { billedTypeOptions } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 
 import { ServiceItem } from './type';
 import { ServiceLineItemInputWrapper } from './ServiceLineItemInputWrapper';
+type DateInputValue = null | string | number | Date;
 
 const [_, _1, ...subscriptionOptions] = billedTypeOptions;
 interface ServiceLineItemProps {
   index: number;
   service: ServiceItem;
   currency?: string | null;
+  prevServiceLineItemData?: ServiceLineItem;
   onChange: (updatedService: ServiceItem) => void;
 }
 
@@ -32,8 +36,12 @@ export const ServiceLineItemRow = ({
   onChange,
   index,
   currency,
+  prevServiceLineItemData,
 }: ServiceLineItemProps) => {
-  const handleChange = (field: keyof ServiceItem, value: string | boolean) => {
+  const handleChange = (
+    field: keyof ServiceItem,
+    value: string | boolean | Date,
+  ) => {
     onChange({ ...service, [field]: value });
   };
   const nameRef = useRef<HTMLInputElement | null>(null);
@@ -64,6 +72,23 @@ export const ServiceLineItemRow = ({
     }
   }, [service.name, nameRef]);
 
+  const handleDateInputChange = (data?: DateInputValue) => {
+    if (!data) return handleChange('serviceStarted', false);
+    const date = new Date(data);
+
+    const normalizedDate = new Date(
+      Date.UTC(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate(),
+        date.getHours(),
+        date.getMinutes(),
+        date.getSeconds(),
+      ),
+    );
+    handleChange('serviceStarted', normalizedDate);
+  };
+
   return (
     <Flex
       justifyContent='space-between'
@@ -74,16 +99,16 @@ export const ServiceLineItemRow = ({
       borderBottom='1px solid'
       borderColor='gray.300'
       sx={{
-        button: {
+        '.delete-button': {
           opacity: '0',
           transition: 'opacity 0.15s ease-in',
         },
-        '&:hover button': {
+        '&:hover .delete-button': {
           opacity: '1',
         },
       }}
     >
-      <ServiceLineItemInputWrapper width='30%' isDeleted={service.isDeleted}>
+      <ServiceLineItemInputWrapper width='20%' isDeleted={service.isDeleted}>
         <Input
           name='name'
           aria-label='Name'
@@ -98,7 +123,7 @@ export const ServiceLineItemRow = ({
           autoComplete='off'
         />
       </ServiceLineItemInputWrapper>
-      <ServiceLineItemInputWrapper width='20%' isDeleted={service.isDeleted}>
+      <ServiceLineItemInputWrapper width='15%' isDeleted={service.isDeleted}>
         <Select
           aria-label='Type'
           placeholder='Type'
@@ -156,7 +181,7 @@ export const ServiceLineItemRow = ({
           />
         </NumberInput>
       </ServiceLineItemInputWrapper>
-      <ServiceLineItemInputWrapper width='20%' isDeleted={service.isDeleted}>
+      <ServiceLineItemInputWrapper width='15%' isDeleted={service.isDeleted}>
         <Currency
           name='price'
           w='full'
@@ -178,7 +203,7 @@ export const ServiceLineItemRow = ({
           }}
         />
       </ServiceLineItemInputWrapper>
-      <ServiceLineItemInputWrapper width='20%' isDeleted={service.isDeleted}>
+      <ServiceLineItemInputWrapper width='15%' isDeleted={service.isDeleted}>
         {service.type === 'RECURRING' ? (
           <Select
             aria-label='Recurring'
@@ -217,9 +242,87 @@ export const ServiceLineItemRow = ({
         )}
       </ServiceLineItemInputWrapper>
 
+      {/*<ServiceLineItemInputWrapper width='10%' isDeleted={service.isDeleted}>*/}
+      {/*  <NumberInput value={service.quantity}>*/}
+      {/*    <NumberInputField*/}
+      {/*      placeholder='0'*/}
+      {/*      aria-label='VAT'*/}
+      {/*      textDecoration={service.isDeleted ? 'line-through' : 'unset'}*/}
+      {/*      min={0}*/}
+      {/*      name='vatRate'*/}
+      {/*      fontSize='sm'*/}
+      {/*      value={service.vatRate}*/}
+      {/*      p={0}*/}
+      {/*      onChange={(event) => handleChange('vatRate', event.target.value)}*/}
+      {/*    />*/}
+      {/*  </NumberInput>*/}
+      {/*</ServiceLineItemInputWrapper>*/}
+
+      <ServiceLineItemInputWrapper width='15%' isDeleted={service.isDeleted}>
+        <Flex
+          sx={{
+            '& .react-date-picker__calendar-button': {
+              pl: 0,
+            },
+            '& .react-date-picker__calendar': {
+              inset: `${'120% 0px auto auto'} !important`,
+            },
+            '& .react-date-picker__clear-button': {
+              top: '7px',
+            },
+            '& .react-calendar__month-view__weekdays__weekday': {
+              textTransform: 'capitalize',
+            },
+          }}
+        >
+          <ReactDatePicker
+            id='service-line-template-date-picker'
+            name='startDate'
+            clearIcon={null}
+            disabled={
+              !!service?.id &&
+              prevServiceLineItemData?.price === service.price &&
+              service.quantity === prevServiceLineItemData?.quantity
+            }
+            minDate={service?.id ? new Date() : undefined}
+            onChange={(event) => handleDateInputChange(event as DateInputValue)}
+            defaultValue={service.serviceStarted}
+            formatShortWeekday={(_, date) =>
+              DateTimeUtils.format(
+                date.toISOString(),
+                DateTimeUtils.shortWeekday,
+              )
+            }
+            formatMonth={(_, date) =>
+              DateTimeUtils.format(
+                date.toISOString(),
+                DateTimeUtils.abreviatedMonth,
+              )
+            }
+            calendarIcon={
+              <Flex alignItems='center'>
+                <Text
+                  color={service.serviceStarted ? 'gray.700' : 'gray.400'}
+                  role='button'
+                >
+                  {service.serviceStarted
+                    ? DateTimeUtils.format(
+                        (
+                          new Date(service.serviceStarted) as Date
+                        )?.toISOString(),
+                        DateTimeUtils.dateWithAbreviatedMonth,
+                      )
+                    : 'Start date'}
+                </Text>
+              </Flex>
+            }
+          />
+        </Flex>
+      </ServiceLineItemInputWrapper>
       <IconButton
         position='absolute'
         aria-label='Delete'
+        className='delete-button'
         icon={
           service.isDeleted ? (
             <FlipBackward color='gray.400' />

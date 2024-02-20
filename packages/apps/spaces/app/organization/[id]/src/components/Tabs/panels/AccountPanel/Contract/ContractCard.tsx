@@ -138,11 +138,12 @@ export const ContractCard = ({
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
-      queryClient.invalidateQueries({ queryKey });
 
       timeoutRef.current = setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey });
+
         queryClient.invalidateQueries({ queryKey: ['GetTimeline.infinite'] });
-      }, 500);
+      }, 1000);
     },
   });
 
