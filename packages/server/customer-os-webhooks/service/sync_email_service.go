@@ -23,11 +23,7 @@ import (
 
 type SyncEmailService interface {
 	SyncEmail(ctx context.Context, email model.EmailData) (organizationSync SyncResult, interactionEventSync SyncResult, contactSync SyncResult, err error)
-	ConvertToUTC(datetimeStr string) (time.Time, error)
-	IsValidEmailSyntax(email string) bool
-	BuildEmailsListExcludingPersonalEmails(personalEmailProviderList []commonEntity.PersonalEmailProvider, usernameSource, from string, to []string, cc []string, bcc []string) ([]string, error)
 	GetEmailIdForEmail(ctx context.Context, tenant string, email string, personalEmailProviderList []commonEntity.PersonalEmailProvider, source string) (string, error)
-	GetWhitelistedDomain(domain string, whitelistedDomains []commonEntity.WhitelistDomain) *commonEntity.WhitelistDomain
 }
 
 type syncEmailService struct {
@@ -82,20 +78,20 @@ func (s syncEmailService) SyncEmail(ctx context.Context, emailData model.EmailDa
 			logrus.Errorf("failed to convert emailData sent date to UTC for emailData with id %v :%v", emailData.Id, err)
 		}
 
-		from, to, cc, bcc, references, inReplyTo := s.extractEmailData(emailData)
+		from, to, cc, bcc, references, inReplyTo := extractEmailData(emailData)
 
 		personalEmailProviderList, err := s.services.CommonServices.CommonRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
 		if err != nil {
 			logrus.Errorf("failed to get personal emailData provider list: %v", err)
 		}
 
-		allEmailsString, err := s.BuildEmailsListExcludingPersonalEmails(personalEmailProviderList, "", emailData.SentBy, to, cc, bcc)
+		allEmailsString, err := buildEmailsListExcludingPersonalEmails(personalEmailProviderList, "", emailData.SentBy, to, cc, bcc)
 		if err != nil {
 			logrus.Errorf("failed to build emails list: %v", err)
 		}
 
 		if len(allEmailsString) == 0 {
-			return
+			return SyncResult{}, SyncResult{}, SyncResult{}, nil
 		}
 
 		// Create a map to store the domain counts
@@ -111,7 +107,7 @@ func (s syncEmailService) SyncEmail(ctx context.Context, emailData model.EmailDa
 
 		if len(domainCount) > 5 {
 			//reason := "more than 5 domains belongs to a workspace domain"
-			return
+			return SyncResult{}, SyncResult{}, SyncResult{}, nil
 		}
 
 		channelData, err := buildEmailChannelData(emailData.Subject, references, inReplyTo)
@@ -124,7 +120,7 @@ func (s syncEmailService) SyncEmail(ctx context.Context, emailData model.EmailDa
 
 		if err != nil {
 			logrus.Errorf("failed merge interaction session for emailData id %v :%v", emailData.Id, err)
-			return
+			return SyncResult{}, SyncResult{}, SyncResult{}, nil
 		}
 
 		//TODO check integration event data mapping
@@ -152,7 +148,7 @@ func (s syncEmailService) SyncEmail(ctx context.Context, emailData model.EmailDa
 		err = s.repositories.Neo4jRepositories.InteractionEventWriteRepository.LinkInteractionEventToSession(ctx, common.GetTenantFromContext(ctx), interactionEventId, sessionId)
 		if err != nil {
 			logrus.Errorf("failed to associate interaction event to session for raw emailData id %v :%v", emailData.Id, err)
-			return
+			return SyncResult{}, SyncResult{}, SyncResult{}, nil
 		}
 		var source string
 		if emailData.ExternalSystem == "gmail" {
@@ -167,14 +163,14 @@ func (s syncEmailService) SyncEmail(ctx context.Context, emailData model.EmailDa
 
 		if fromEmailId == "" {
 			logrus.Errorf("unable to retrieve emailData id for tenant %s and emailData %s", common.GetTenantFromContext(ctx), from)
-			return
+			return SyncResult{}, SyncResult{}, SyncResult{}, nil
 		}
 
 		// Process the "from" email
 		orgSyncResult, contactSyncResult, err = s.processEmail(ctx, name, from, emailData, personalEmailProviderList, source, interactionEventId)
 		if err != nil {
 			logrus.Errorf("failed to process emailData for emailData id %v :%v", emailData.Id, err)
-			return
+			return SyncResult{}, SyncResult{}, SyncResult{}, nil
 		}
 
 		// Combine the slices into one
@@ -186,13 +182,13 @@ func (s syncEmailService) SyncEmail(ctx context.Context, emailData model.EmailDa
 			orgSyncResult, contactSyncResult, err = s.processEmail(ctx, name, email, emailData, personalEmailProviderList, source, interactionEventId)
 			if err != nil {
 				logrus.Errorf("failed to process emailData for emailData id %v :%v", emailData.Id, err)
-				return
+				return SyncResult{}, SyncResult{}, SyncResult{}, nil
 			}
 		}
 
 	} else {
 		logrus.Infof("interaction event already exists for raw emailData id %v", emailData.Id)
-		return
+		return SyncResult{}, SyncResult{}, SyncResult{}, nil
 	}
 
 	return orgSyncResult, interactionEventSyncResult, contactSyncResult, nil
@@ -231,7 +227,7 @@ func (s *syncEmailService) GetEmailIdForEmail(ctx context.Context, tenant string
 }
 
 func (s *syncEmailService) processEmail(ctx context.Context, name string, email string, emailData model.EmailData, personalEmailProviderList []commonEntity.PersonalEmailProvider, source string, interactionEventId string) (SyncResult, SyncResult, error) {
-	from, to, cc, bcc, _, _ := s.extractEmailData(emailData)
+	from, to, cc, bcc, _, _ := extractEmailData(emailData)
 
 	emailId, err := s.GetEmailIdForEmail(ctx, common.GetTenantFromContext(ctx), email, personalEmailProviderList, source)
 	if err != nil {
@@ -279,20 +275,36 @@ func (s *syncEmailService) processEmail(ctx context.Context, name string, email 
 	return orgSyncResult, contactSyncResult, err
 }
 
-func (s *syncEmailService) extractEmailData(emailData model.EmailData) (string, []string, []string, []string, []string, []string) {
-	// Extract "from" email
-	from := s.extractEmailAddresses(emailData.SentBy)[0]
+func (s *syncEmailService) createOrganizationDataAndSync(ctx context.Context, name string, domain string, emailData model.EmailData) (SyncResult, error) {
+	domainSlice := []string{domain}
+	organizationsData := []model.OrganizationData{
+		{
+			BaseData: model.BaseData{
+				AppSource: emailData.AppSource,
+				Source:    emailData.ExternalSystem,
+			},
+			Name:           name,
+			Domains:        domainSlice,
+			DomainRequired: true,
+		},
+	}
 
-	// Extract other email addresses
-	to := s.extractEmailAddresses(emailData.SentTo)
-	cc := s.extractEmailAddresses(emailData.Cc)
-	bcc := s.extractEmailAddresses(emailData.Bcc)
+	orgSyncResult, err := s.services.OrganizationService.SyncOrganizations(ctx, organizationsData)
+	return orgSyncResult, err
+}
 
-	// Extract references
-	references := extractLines(emailData.Reference)
+func (s *syncEmailService) createContactDataAndSync(ctx context.Context, name string, email string, emailData model.EmailData) (SyncResult, error) {
+	contactsData := []model.ContactData{
+		{
+			BaseData: model.BaseData{
+				AppSource: emailData.AppSource,
+				Source:    emailData.ExternalSystem,
+			},
+			Name:  name,
+			Email: email,
+		},
+	}
 
-	// Extract in-reply-to
-	inReplyTo := extractLines(emailData.InReplyTo)
-
-	return from, to, cc, bcc, references, inReplyTo
+	orgSyncResult, err := s.services.ContactService.SyncContacts(ctx, contactsData)
+	return orgSyncResult, err
 }

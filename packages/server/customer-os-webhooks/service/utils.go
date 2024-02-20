@@ -1,7 +1,6 @@
 package service
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
@@ -54,47 +53,13 @@ func buildEmailChannelData(subject string, references, inReplyTo []string) (*str
 	return &jsonContentString, nil
 }
 
-func (s *syncEmailService) GetWhitelistedDomain(domain string, whitelistedDomains []commonEntity.WhitelistDomain) *commonEntity.WhitelistDomain {
+func GetWhitelistedDomain(domain string, whitelistedDomains []commonEntity.WhitelistDomain) *commonEntity.WhitelistDomain {
 	for _, allowedOrganization := range whitelistedDomains {
 		if strings.Contains(domain, allowedOrganization.Domain) {
 			return &allowedOrganization
 		}
 	}
 	return nil
-}
-
-func (s *syncEmailService) createOrganizationDataAndSync(ctx context.Context, name string, domain string, emailData model.EmailData) (SyncResult, error) {
-	domainSlice := []string{domain}
-	organizationsData := []model.OrganizationData{
-		{
-			BaseData: model.BaseData{
-				AppSource: emailData.AppSource,
-				Source:    emailData.ExternalSystem,
-			},
-			Name:           name,
-			Domains:        domainSlice,
-			DomainRequired: true,
-		},
-	}
-
-	orgSyncResult, err := s.services.OrganizationService.SyncOrganizations(ctx, organizationsData)
-	return orgSyncResult, err
-}
-
-func (s *syncEmailService) createContactDataAndSync(ctx context.Context, name string, email string, emailData model.EmailData) (SyncResult, error) {
-	contactsData := []model.ContactData{
-		{
-			BaseData: model.BaseData{
-				AppSource: emailData.AppSource,
-				Source:    emailData.ExternalSystem,
-			},
-			Name:  name,
-			Email: email,
-		},
-	}
-
-	orgSyncResult, err := s.services.ContactService.SyncContacts(ctx, contactsData)
-	return orgSyncResult, err
 }
 
 func (s *syncEmailService) ConvertToUTC(datetimeStr string) (time.Time, error) {
@@ -132,7 +97,7 @@ func (s *syncEmailService) ConvertToUTC(datetimeStr string) (time.Time, error) {
 	return parsedTime.UTC(), nil
 }
 
-func (s *syncEmailService) extractEmailAddresses(input string) []string {
+func extractEmailAddresses(input string) []string {
 	if input == "" {
 		return []string{""}
 	}
@@ -171,12 +136,12 @@ func (s *syncEmailService) extractEmailAddresses(input string) []string {
 
 			// Convert the map keys to an array of email addresses
 			for email := range emailMap {
-				if s.IsValidEmailSyntax(email) {
+				if IsValidEmailSyntax(email) {
 					emailAddresses = append(emailAddresses, email)
 				}
 			}
 
-		} else if s.IsValidEmailSyntax(email) {
+		} else if IsValidEmailSyntax(email) {
 			emailAddresses = append(emailAddresses, email)
 		}
 	}
@@ -188,7 +153,7 @@ func (s *syncEmailService) extractEmailAddresses(input string) []string {
 	return []string{input}
 }
 
-func (s *syncEmailService) IsValidEmailSyntax(email string) bool {
+func IsValidEmailSyntax(email string) bool {
 	_, err := mail.ParseAddress(email)
 	return err == nil
 }
@@ -202,7 +167,7 @@ func hasPersonalEmailProvider(providers []commonEntity.PersonalEmailProvider, do
 	return false
 }
 
-func (s *syncEmailService) extractSingleEmailAddresses(input string) []string {
+func extractSingleEmailAddresses(input string) []string {
 	if input == "" {
 		return []string{""}
 	}
@@ -241,12 +206,12 @@ func (s *syncEmailService) extractSingleEmailAddresses(input string) []string {
 
 			// Convert the map keys to an array of email addresses
 			for email := range emailMap {
-				if s.IsValidEmailSyntax(email) {
+				if IsValidEmailSyntax(email) {
 					emailAddresses = append(emailAddresses, email)
 				}
 			}
 
-		} else if s.IsValidEmailSyntax(email) {
+		} else if IsValidEmailSyntax(email) {
 			emailAddresses = append(emailAddresses, email)
 		}
 	}
@@ -263,7 +228,7 @@ func extractLines(input string) []string {
 	return lines
 }
 
-func (s *syncEmailService) BuildEmailsListExcludingPersonalEmails(personalEmailProviderList []commonEntity.PersonalEmailProvider, usernameSource, from string, to []string, cc []string, bcc []string) ([]string, error) {
+func buildEmailsListExcludingPersonalEmails(personalEmailProviderList []commonEntity.PersonalEmailProvider, usernameSource, from string, to []string, cc []string, bcc []string) ([]string, error) {
 	var allEmails []string
 
 	if from != "" && !hasPersonalEmailProvider(personalEmailProviderList, utils.ExtractDomain(from)) {
@@ -287,4 +252,22 @@ func contains(slice []string, element string) bool {
 		}
 	}
 	return false
+}
+
+func extractEmailData(emailData model.EmailData) (string, []string, []string, []string, []string, []string) {
+	// Extract "from" email
+	from := extractEmailAddresses(emailData.SentBy)[0]
+
+	// Extract other email addresses
+	to := extractEmailAddresses(emailData.SentTo)
+	cc := extractEmailAddresses(emailData.Cc)
+	bcc := extractEmailAddresses(emailData.Bcc)
+
+	// Extract references
+	references := extractLines(emailData.Reference)
+
+	// Extract in-reply-to
+	inReplyTo := extractLines(emailData.InReplyTo)
+
+	return from, to, cc, bcc, references, inReplyTo
 }
