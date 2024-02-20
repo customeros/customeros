@@ -20,9 +20,7 @@ RUN cd /workspace/packages/server/customer-os-common-module && go build
 #copy and build events-processing-proto
 COPY events-processing-proto/go.mod /workspace/packages/server/events-processing-proto/go.mod
 COPY events-processing-proto/go.sum /workspace/packages/server/events-processing-proto/go.sum
-RUN cd /workspace/packages/server/events-processing-proto && go mod download && go mod verify
 COPY events-processing-proto/. /workspace/packages/server/events-processing-proto/
-RUN cd /workspace/packages/server/events-processing-proto && go build
 
 #copy and build customer-os-neo4j-repository
 COPY customer-os-neo4j-repository/go.mod /workspace/packages/server/customer-os-neo4j-repository/go.mod
