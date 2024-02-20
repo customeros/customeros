@@ -3760,6 +3760,7 @@ a {
   outline: none;
   margin-bottom: 4px;
   overflow-x: hidden;
+  min-height: 45px;
 }
 
 .remirror-editor-wrapper {
@@ -3768,7 +3769,7 @@ a {
 }
 
 .customeros-logger .remirror-editor-wrapper {
-  min-height: 85px
+  min-height: 102px
 }
 .customeros-logger .remirror-editor,
 .customeros-logger .remirror-is-empty {

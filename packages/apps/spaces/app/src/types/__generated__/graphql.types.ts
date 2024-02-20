@@ -3460,6 +3460,7 @@ export type Query = {
   organizationPlan: OrganizationPlan;
   organizationPlans: Array<OrganizationPlan>;
   organizationPlansForOrganization: Array<OrganizationPlan>;
+  organization_ByCustomerOsId?: Maybe<Organization>;
   organization_DistinctOwners: Array<User>;
   organizations: OrganizationPage;
   phoneNumber: PhoneNumber;
@@ -3639,6 +3640,10 @@ export type QueryOrganizationPlansArgs = {
 
 export type QueryOrganizationPlansForOrganizationArgs = {
   organizationId: Scalars['ID']['input'];
+};
+
+export type QueryOrganization_ByCustomerOsIdArgs = {
+  customerOsId: Scalars['String']['input'];
 };
 
 export type QueryOrganizationsArgs = {
