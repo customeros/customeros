@@ -197,6 +197,7 @@ export const ServiceLineItemsModal = ({
             .map((e) => ({
               ...e,
               isDeleted: false,
+              serviceStarted: e.serviceStarted,
               type: [
                 BilledType.Quarterly,
                 BilledType.Monthly,
@@ -236,6 +237,8 @@ export const ServiceLineItemsModal = ({
             name: e.name,
             price: e.price,
             quantity: e.quantity,
+            // vatRate: e.vatRate,
+            serviceStarted: e.serviceStarted,
           })),
       },
     });
@@ -290,20 +293,23 @@ export const ServiceLineItemsModal = ({
             borderColor='gray.300'
             pb={1}
           >
-            <Text fontSize='sm' fontWeight='medium' w='30%'>
+            <Text fontSize='sm' fontWeight='medium' w='20%'>
               Name
             </Text>
-            <Text fontSize='sm' fontWeight='medium' w='20%'>
+            <Text fontSize='sm' fontWeight='medium' w='15%'>
               Type
             </Text>
             <Text fontSize='sm' fontWeight='medium' w='10%'>
               Qty
             </Text>
-            <Text fontSize='sm' fontWeight='medium' w='20%'>
-              Price
+            <Text fontSize='sm' fontWeight='medium' w='15%'>
+              Unit Price
             </Text>
-            <Text fontSize='sm' fontWeight='medium' w='20%'>
+            <Text fontSize='sm' fontWeight='medium' w='15%'>
               Recurring
+            </Text>{' '}
+            <Text fontSize='sm' fontWeight='medium' w='15%'>
+              Service Start
             </Text>
           </Flex>
 
@@ -314,6 +320,9 @@ export const ServiceLineItemsModal = ({
                 index={index}
                 currency={currency}
                 onChange={(data) => handleUpdateService(index, data)}
+                prevServiceLineItemData={serviceLineItems.find(
+                  (e) => e.id === service.id,
+                )}
               />
             </Fragment>
           ))}

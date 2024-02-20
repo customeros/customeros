@@ -25,8 +25,7 @@
 
 
 .react-date-picker--disabled {
-  background-color: #f0f0f0;
-  color: #6d6d6d;
+  opacity: 0.7;
 }
 
 .react-date-picker__wrapper {
@@ -350,8 +349,7 @@
 }
 
 .react-calendar__tile:disabled {
-  background-color: var(--chakra-colors-primary-100);
-
+  opacity: 0.5;
 }
 
 .react-calendar__tile:enabled:hover,
