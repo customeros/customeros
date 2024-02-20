@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { InvoiceLine } from '@graphql/types';
+import { Invoice } from '@graphql/types';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 import {
   Tr,
@@ -14,7 +14,7 @@ import {
 
 type ServicesTableProps = {
   currency: string;
-  services: Array<Partial<InvoiceLine>>;
+  services: Partial<Invoice['invoiceLineItems']>;
 };
 
 export function ServicesTable({ services, currency }: ServicesTableProps) {
@@ -71,7 +71,7 @@ export function ServicesTable({ services, currency }: ServicesTableProps) {
                 fontWeight='medium'
                 borderColor='gray.300'
               >
-                {service?.name ?? 'Unnamed'}
+                {service?.description ?? 'Unnamed'}
               </Td>
               <Td
                 fontSize='sm'
@@ -79,7 +79,7 @@ export function ServicesTable({ services, currency }: ServicesTableProps) {
                 borderColor='gray.300'
                 color='gray.500'
               >
-                {service.quantity}
+                {service?.quantity}
               </Td>
               <Td
                 fontSize='sm'
@@ -96,7 +96,7 @@ export function ServicesTable({ services, currency }: ServicesTableProps) {
                 color='gray.500'
                 pr={0}
               >
-                {formatCurrency(service?.amount ?? 0, 2, currency)}
+                {formatCurrency(service?.total ?? 0, 2, currency)}
               </Td>
             </Tr>
           ))}

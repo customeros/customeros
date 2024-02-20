@@ -12,7 +12,7 @@ import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 const columnHelper = createColumnHelper<Invoice>();
 
 export const columns = [
-  columnHelper.accessor('number', {
+  columnHelper.accessor('invoiceNumber', {
     id: 'NUMBER',
     minSize: 120,
     maxSize: 120,
@@ -90,7 +90,7 @@ export const columns = [
       />
     ),
   }),
-  columnHelper.accessor('createdAt', {
+  columnHelper.accessor('metadata', {
     id: 'CREATED_AT',
     minSize: 60,
     maxSize: 60,
@@ -108,7 +108,7 @@ export const columns = [
       return (
         <Text>
           {DateTimeUtils.format(
-            props.getValue(),
+            props.getValue()?.created,
             DateTimeUtils.defaultFormatShortString,
           )}
         </Text>
@@ -123,7 +123,7 @@ export const columns = [
       />
     ),
   }),
-  columnHelper.accessor('totalAmount', {
+  columnHelper.accessor('amountDue', {
     id: 'AMOUNT_DUE',
     minSize: 100,
     maxSize: 100,

@@ -66,7 +66,9 @@ export function useInfiniteInvoices(
 
   const invoiceFlattenData = useMemo(() => {
     return (
-      (data?.pages?.flatMap((o) => o.invoices?.content) as Invoice[]) || []
+      (data?.pages?.flatMap((o) => o.invoices?.content) as Invoice[])?.map(
+        (e) => ({ ...e, id: e.metadata.id }),
+      ) || []
     );
   }, [data]);
 

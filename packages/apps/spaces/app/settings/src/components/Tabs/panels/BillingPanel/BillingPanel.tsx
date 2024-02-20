@@ -22,13 +22,13 @@ import { Text } from '@ui/typography/Text';
 import { IconButton } from '@ui/form/IconButton';
 import { Heading } from '@ui/typography/Heading';
 import { Collapse } from '@ui/transitions/Collapse';
-import { TenantBillingProfile } from '@graphql/types';
 import { DotsVertical } from '@ui/media/icons/DotsVertical';
 import { SlashOctagon } from '@ui/media/icons/SlashOctagon';
 import { Invoice } from '@shared/components/Invoice/Invoice';
 import { Card, CardBody, CardHeader } from '@ui/layout/Card';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu';
+import { DataSource, InvoiceLine, TenantBillingProfile } from '@graphql/types';
 
 import { TenantBillingPanelDetailsForm } from './components';
 import {
@@ -116,15 +116,22 @@ export const BillingPanel = () => {
       invoiceNumber: 'INV-003',
       lines: [
         {
-          amount: 100,
+          subtotal: 100,
           createdAt: new Date().toISOString(),
-          id: 'dummy-id',
-          name: 'Professional tier',
+          metadata: {
+            id: 'dummy-id',
+            created: new Date().toISOString(),
+            lastUpdated: new Date().toISOString(),
+            source: DataSource.Openline,
+            sourceOfTruth: DataSource.Openline,
+            appSource: DataSource.Openline,
+          },
+          description: 'Professional tier',
           price: 50,
           quantity: 2,
-          totalAmount: 100,
-          vat: 0,
-        },
+          total: 100,
+          taxDue: 0,
+        } as InvoiceLine,
       ],
       tax: 0,
       note: '',

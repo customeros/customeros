@@ -32,19 +32,18 @@ export type GetInvoiceQuery = {
   __typename?: 'Query';
   invoice: {
     __typename?: 'Invoice';
-    id: string;
-    createdAt: any;
     status?: Types.InvoiceStatus | null;
-    number: string;
-    periodStartDate: any;
-    periodEndDate: any;
-    dueDate: any;
-    amount: number;
-    vat: number;
-    totalAmount: number;
+    invoiceNumber: string;
+    invoicePeriodStart: any;
+    invoicePeriodEnd: any;
+    due: any;
+    subtotal: number;
+    taxDue: number;
+    amountDue: number;
     currency: string;
     note?: string | null;
     repositoryFileId: string;
+    metadata: { __typename?: 'Metadata'; id: string; created: any };
     customer: {
       __typename?: 'InvoiceCustomer';
       name?: string | null;
@@ -65,16 +64,23 @@ export type GetInvoiceQuery = {
       addressLocality?: string | null;
       addressCountry?: string | null;
     };
-    invoiceLines: Array<{
+    invoiceLineItems: Array<{
       __typename?: 'InvoiceLine';
-      id: string;
-      createdAt: any;
       quantity: number;
-      amount: number;
-      vat: number;
-      totalAmount: number;
+      subtotal: number;
+      taxDue: number;
+      total: number;
       price: number;
-      name: string;
+      description: string;
+      metadata: {
+        __typename?: 'Metadata';
+        id: string;
+        created: any;
+        lastUpdated: any;
+        source: Types.DataSource;
+        sourceOfTruth: Types.DataSource;
+        appSource: string;
+      };
     }>;
   };
 };
@@ -82,16 +88,18 @@ export type GetInvoiceQuery = {
 export const GetInvoiceDocument = `
     query GetInvoice($id: ID!) {
   invoice(id: $id) {
-    id
-    createdAt
+    metadata {
+      id
+      created
+    }
     status
-    number
-    periodStartDate
-    periodEndDate
-    dueDate
-    amount
-    vat
-    totalAmount
+    invoiceNumber
+    invoicePeriodStart
+    invoicePeriodEnd
+    due
+    subtotal
+    taxDue
+    amountDue
     currency
     note
     repositoryFileId
@@ -113,15 +121,21 @@ export const GetInvoiceDocument = `
       addressLocality
       addressCountry
     }
-    invoiceLines {
-      id
-      createdAt
+    invoiceLineItems {
+      metadata {
+        id
+        created
+        lastUpdated
+        source
+        sourceOfTruth
+        appSource
+      }
       quantity
-      amount
-      vat
-      totalAmount
+      subtotal
+      taxDue
+      total
       price
-      name
+      description
     }
   }
 }
