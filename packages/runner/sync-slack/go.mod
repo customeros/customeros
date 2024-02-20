@@ -2,8 +2,6 @@ module github.com/openline-ai/openline-customer-os/packages/runner/sync-slack
 
 go 1.21
 
-toolchain go1.21.4
-
 require (
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/coocood/freecache v1.2.4
