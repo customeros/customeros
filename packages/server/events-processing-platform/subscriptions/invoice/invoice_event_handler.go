@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/mail"
 	"os"
 	"sort"
 	"time"
@@ -1049,12 +1050,13 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
 	var invoiceEntity *neo4jentity.InvoiceEntity
+	var contractEntity *neo4jentity.ContractEntity
 
 	//load invoice
 	invoiceNode, err := h.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoiceById(ctx, eventData.Tenant, invoiceId)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.GetInvoice")
+		return errors.Wrap(err, "InvoiceSubscriber.onInvoicePaidV1.GetInvoice")
 	}
 	if invoiceNode != nil {
 		invoiceEntity = neo4jmapper.MapDbNodeToInvoiceEntity(invoiceNode)
@@ -1062,11 +1064,28 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 		return errors.New("invoiceNode is nil")
 	}
 
+	contractNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractForInvoice(ctx, eventData.Tenant, invoiceEntity.Id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "InvoiceSubscriber.onInvoicePaidV1.GetContractForInvoice")
+	}
+	if contractNode != nil {
+		contractEntity = neo4jmapper.MapDbNodeToContractEntity(contractNode)
+	} else {
+		tracing.TraceErr(span, errors.New("contractNode is nil"))
+		return errors.New("contractNode is nil")
+	}
+
+	if contractEntity.InvoiceEmail == "" || !isValidEmailSyntax(contractEntity.InvoiceEmail) {
+		tracing.TraceErr(span, errors.New("contractEntity.InvoiceEmail is empty or invalid"))
+		return errors.New("contractEntity.InvoiceEmail is empty or invalid")
+	}
+
 	postmarkEmail := notifications.PostmarkEmail{
 		WorkflowId:    notifications.WorkflowInvoicePaid,
 		MessageStream: notifications.PostmarkMessageStreamInvoice,
 		From:          invoiceEntity.Provider.Email,
-		To:            invoiceEntity.Customer.Email,
+		To:            contractEntity.InvoiceEmail,
 		Subject:       "Paid Invoice " + invoiceEntity.Number + " from " + invoiceEntity.Provider.Name,
 		TemplateData: map[string]string{
 			"{{userFirstName}}":  invoiceEntity.Customer.Name,
@@ -1127,18 +1146,36 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
 	var invoiceEntity *neo4jentity.InvoiceEntity
+	var contractEntity *neo4jentity.ContractEntity
 
 	//load invoice
 	invoiceNode, err := h.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoiceById(ctx, eventData.Tenant, invoiceId)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.GetInvoice")
+		return errors.Wrap(err, "InvoiceSubscriber.onInvoicePayNotificationV1.GetInvoice")
 	}
 	if invoiceNode != nil {
 		invoiceEntity = neo4jmapper.MapDbNodeToInvoiceEntity(invoiceNode)
 	} else {
 		tracing.TraceErr(span, errors.New("invoiceNode is nil"))
 		return errors.New("invoiceNode is nil")
+	}
+
+	contractNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractForInvoice(ctx, eventData.Tenant, invoiceEntity.Id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "InvoiceSubscriber.onInvoicePayNotificationV1.GetContractForInvoice")
+	}
+	if contractNode != nil {
+		contractEntity = neo4jmapper.MapDbNodeToContractEntity(contractNode)
+	} else {
+		tracing.TraceErr(span, errors.New("contractNode is nil"))
+		return errors.New("contractNode is nil")
+	}
+
+	if contractEntity.InvoiceEmail == "" || !isValidEmailSyntax(contractEntity.InvoiceEmail) {
+		tracing.TraceErr(span, errors.New("contractEntity.InvoiceEmail is empty or invalid"))
+		return errors.New("contractEntity.InvoiceEmail is empty or invalid")
 	}
 
 	if invoiceEntity.PaymentDetails.PaymentLink == "" {
@@ -1150,7 +1187,7 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 		WorkflowId:    notifications.WorkflowInvoiceReady,
 		MessageStream: notifications.PostmarkMessageStreamInvoice,
 		From:          invoiceEntity.Provider.Email,
-		To:            invoiceEntity.Customer.Email,
+		To:            contractEntity.InvoiceEmail,
 		Subject:       "New invoice " + invoiceEntity.Number,
 		TemplateData: map[string]string{
 			"{{organizationName}}": invoiceEntity.Customer.Name,
@@ -1238,4 +1275,9 @@ func (h *InvoiceEventHandler) AppendProviderLogoToEmail(invoice neo4jentity.Invo
 	})
 
 	return nil
+}
+
+func isValidEmailSyntax(email string) bool {
+	_, err := mail.ParseAddress(email)
+	return err == nil
 }
