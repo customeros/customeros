@@ -11,8 +11,9 @@ func MapEntityToTenantSettings(entity *neo4jentity.TenantSettingsEntity) *model.
 		return nil
 	}
 	return &model.TenantSettings{
-		BillingEnabled:  entity.InvoicingEnabled,
-		LogoURL:         entity.LogoUrl,
-		DefaultCurrency: utils.ToPtr(MapCurrencyToModel(entity.DefaultCurrency)),
+		BillingEnabled:       entity.InvoicingEnabled,
+		LogoURL:              entity.LogoUrl,
+		LogoRepositoryFileID: utils.StringPtrNillable(entity.LogoRepositoryFileId),
+		DefaultCurrency:      utils.ToPtr(MapCurrencyToModel(entity.DefaultCurrency)),
 	}
 }

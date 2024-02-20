@@ -48,14 +48,15 @@ func MapDbNodeToInvoiceEntity(dbNode *dbtype.Node) *entity.InvoiceEntity {
 			Country:      utils.GetStringPropOrEmpty(props, "customerAddressCountry"),
 		},
 		Provider: entity.InvoiceProvider{
-			LogoUrl:      utils.GetStringPropOrEmpty(props, "providerLogoUrl"),
-			Name:         utils.GetStringPropOrEmpty(props, "providerName"),
-			Email:        utils.GetStringPropOrEmpty(props, "providerEmail"),
-			AddressLine1: utils.GetStringPropOrEmpty(props, "providerAddressLine1"),
-			AddressLine2: utils.GetStringPropOrEmpty(props, "providerAddressLine2"),
-			Zip:          utils.GetStringPropOrEmpty(props, "providerAddressZip"),
-			Locality:     utils.GetStringPropOrEmpty(props, "providerAddressLocality"),
-			Country:      utils.GetStringPropOrEmpty(props, "providerAddressCountry"),
+			LogoUrl:              utils.GetStringPropOrEmpty(props, "providerLogoUrl"),
+			LogoRepositoryFileId: utils.GetStringPropOrEmpty(props, "providerLogoRepositoryFileId"),
+			Name:                 utils.GetStringPropOrEmpty(props, "providerName"),
+			Email:                utils.GetStringPropOrEmpty(props, "providerEmail"),
+			AddressLine1:         utils.GetStringPropOrEmpty(props, "providerAddressLine1"),
+			AddressLine2:         utils.GetStringPropOrEmpty(props, "providerAddressLine2"),
+			Zip:                  utils.GetStringPropOrEmpty(props, "providerAddressZip"),
+			Locality:             utils.GetStringPropOrEmpty(props, "providerAddressLocality"),
+			Country:              utils.GetStringPropOrEmpty(props, "providerAddressCountry"),
 		},
 		PaymentDetails: entity.PaymentDetails{
 			PaymentLink: utils.GetStringPropOrEmpty(props, "paymentLink"),
@@ -276,13 +277,14 @@ func MapDbNodeToTenantSettingsEntity(dbNode *dbtype.Node) *entity.TenantSettings
 	}
 	props := utils.GetPropsFromNode(*dbNode)
 	tenantSettingsEntity := entity.TenantSettingsEntity{
-		Id:                utils.GetStringPropOrEmpty(props, "id"),
-		CreatedAt:         utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:         utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		LogoUrl:           utils.GetStringPropOrEmpty(props, "logoUrl"),
-		InvoicingEnabled:  utils.GetBoolPropOrFalse(props, "invoicingEnabled"),
-		InvoicingPostpaid: utils.GetBoolPropOrFalse(props, "invoicingPostpaid"),
-		DefaultCurrency:   enum.DecodeCurrency(utils.GetStringPropOrEmpty(props, "defaultCurrency")),
+		Id:                   utils.GetStringPropOrEmpty(props, "id"),
+		CreatedAt:            utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:            utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		LogoUrl:              utils.GetStringPropOrEmpty(props, "logoUrl"),
+		LogoRepositoryFileId: utils.GetStringPropOrEmpty(props, "logoRepositoryFileId"),
+		InvoicingEnabled:     utils.GetBoolPropOrFalse(props, "invoicingEnabled"),
+		InvoicingPostpaid:    utils.GetBoolPropOrFalse(props, "invoicingPostpaid"),
+		DefaultCurrency:      enum.DecodeCurrency(utils.GetStringPropOrEmpty(props, "defaultCurrency")),
 	}
 	return &tenantSettingsEntity
 }

@@ -71,13 +71,14 @@ type InvoiceCustomer {
 }
 
 type InvoiceProvider {
-    logoUrl:            String
-    name:               String
-    addressLine1:       String
-    addressLine2:       String
-    addressZip:         String
-    addressLocality:    String
-    addressCountry:     String
+    logoUrl:                String
+    logoRepositoryFileId:   String
+    name:                   String
+    addressLine1:           String
+    addressLine2:           String
+    addressZip:             String
+    addressLocality:        String
+    addressCountry:         String
 }
 
 type InvoiceLine implements MetadataInterface {

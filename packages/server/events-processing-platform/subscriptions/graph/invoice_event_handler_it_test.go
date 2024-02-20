@@ -174,6 +174,7 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 		"customerAddressCountry",
 		"customerEmail",
 		"providerLogoUrl",
+		"providerLogoRepositoryFileId",
 		"providerName",
 		"providerEmail",
 		"providerAddressLine1",
@@ -258,6 +259,7 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 	require.Equal(t, "customerAddressLocality", invoiceEntity.Customer.Locality)
 	require.Equal(t, "customerAddressCountry", invoiceEntity.Customer.Country)
 	require.Equal(t, "providerLogoUrl", invoiceEntity.Provider.LogoUrl)
+	require.Equal(t, "providerLogoRepositoryFileId", invoiceEntity.Provider.LogoRepositoryFileId)
 	require.Equal(t, "providerName", invoiceEntity.Provider.Name)
 	require.Equal(t, "providerEmail", invoiceEntity.Provider.Email)
 	require.Equal(t, "providerAddressLine1", invoiceEntity.Provider.AddressLine1)

@@ -431,9 +431,10 @@ func TestQueryResolver_GetTenantSettings(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateTenantSettings(ctx, driver, tenantName, neo4jentity.TenantSettingsEntity{
-		LogoUrl:          "logoUrl",
-		DefaultCurrency:  neo4jenum.CurrencyUSD,
-		InvoicingEnabled: true,
+		LogoUrl:              "logoUrl",
+		LogoRepositoryFileId: "logoRepositoryFileId",
+		DefaultCurrency:      neo4jenum.CurrencyUSD,
+		InvoicingEnabled:     true,
 	})
 
 	rawResponse, err := c.RawPost(getQuery("tenant/get_tenant_settings"))
@@ -449,6 +450,7 @@ func TestQueryResolver_GetTenantSettings(t *testing.T) {
 
 	tenantSettings := tenantGraphqlResponse.TenantSettings
 	require.Equal(t, "logoUrl", tenantSettings.LogoURL)
+	require.Equal(t, "logoRepositoryFileId", *tenantSettings.LogoRepositoryFileID)
 	require.Equal(t, model.CurrencyUsd, *tenantSettings.DefaultCurrency)
 	require.Equal(t, true, tenantSettings.BillingEnabled)
 }
@@ -468,6 +470,7 @@ func TestMutationResolver_TenantUpdateSettings(t *testing.T) {
 			require.Equal(t, testUserId, profile.LoggedInUserId)
 			require.Equal(t, constants.AppSourceCustomerOsApi, profile.AppSource)
 			require.Equal(t, "https://logo.com", profile.LogoUrl)
+			require.Equal(t, "123-456-789", profile.LogoRepositoryFileId)
 			require.Equal(t, "EUR", profile.DefaultCurrency)
 			require.Equal(t, true, profile.InvoicingEnabled)
 			require.ElementsMatch(t, []tenantpb.TenantSettingsFieldMask{

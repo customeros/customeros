@@ -205,12 +205,13 @@ func TestTenantService_UpdateTenantSettings(t *testing.T) {
 	tenantServiceClient := tenantpb.NewTenantGrpcServiceClient(grpcConnection)
 
 	response, err := tenantServiceClient.UpdateTenantSettings(ctx, &tenantpb.UpdateTenantSettingsRequest{
-		Tenant:           tenantName,
-		AppSource:        "test",
-		UpdatedAt:        utils.ConvertTimeToTimestampPtr(&now),
-		LogoUrl:          "logoUrl",
-		DefaultCurrency:  "USD",
-		InvoicingEnabled: true,
+		Tenant:               tenantName,
+		AppSource:            "test",
+		UpdatedAt:            utils.ConvertTimeToTimestampPtr(&now),
+		LogoUrl:              "logoUrl",
+		LogoRepositoryFileId: "logoRepositoryFileId",
+		DefaultCurrency:      "USD",
+		InvoicingEnabled:     true,
 	})
 	require.Nil(t, err)
 	require.NotNil(t, response)
@@ -232,6 +233,7 @@ func TestTenantService_UpdateTenantSettings(t *testing.T) {
 	require.Equal(t, tenantName, eventData.Tenant)
 	require.Equal(t, now, eventData.UpdatedAt)
 	require.Equal(t, "logoUrl", eventData.LogoUrl)
+	require.Equal(t, "logoRepositoryFileId", eventData.LogoRepositoryFileId)
 	require.Equal(t, "USD", eventData.DefaultCurrency)
 	require.Equal(t, true, eventData.InvoicingEnabled)
 	require.Equal(t, 0, len(eventData.FieldsMask))

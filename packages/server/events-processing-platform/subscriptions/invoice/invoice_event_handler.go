@@ -525,6 +525,7 @@ func (h *InvoiceEventHandler) prepareAndCallFillInvoice(ctx context.Context, ten
 		contractEntity.InvoiceEmail,
 		contractEntity.AddressLine1, contractEntity.AddressLine2, contractEntity.Zip, contractEntity.Locality, contractCountry,
 		tenantSettingsEntity.LogoUrl,
+		tenantSettingsEntity.LogoRepositoryFileId,
 		tenantBillingProfileEntity.LegalName,
 		tenantBillingProfileEntity.Email,
 		tenantBillingProfileEntity.AddressLine1, tenantBillingProfileEntity.AddressLine2, tenantBillingProfileEntity.Zip, tenantBillingProfileEntity.Locality, tenantBillingProfileCountry,
@@ -543,7 +544,7 @@ func (h *InvoiceEventHandler) prepareAndCallFillInvoice(ctx context.Context, ten
 
 func (h *InvoiceEventHandler) callFillInvoice(ctx context.Context, tenant, invoiceId, domesticPaymentsBankInfo, internationalPaymentsBankInfo,
 	customerName, customerEmail, customerAddressLine1, customerAddressLine2, customerAddressZip, customerAddressLocality, customerAddressCountry,
-	providerLogoUrl, providerName, providerEmail, providerAddressLine1, providerAddressLine2, providerAddressZip, providerAddressLocality, providerAddressCountry,
+	providerLogoUrl, providerLogoRepositoryFileId, providerName, providerEmail, providerAddressLine1, providerAddressLine2, providerAddressZip, providerAddressLocality, providerAddressCountry,
 	note string, amount, vat, total float64, invoiceLines []*invoicepb.InvoiceLine, span opentracing.Span) error {
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	now := time.Now()
@@ -563,14 +564,15 @@ func (h *InvoiceEventHandler) callFillInvoice(ctx context.Context, tenant, invoi
 			Country:      customerAddressCountry,
 		},
 		Provider: &invoicepb.FillInvoiceProvider{
-			LogoUrl:      providerLogoUrl,
-			Name:         providerName,
-			Email:        providerEmail,
-			AddressLine1: providerAddressLine1,
-			AddressLine2: providerAddressLine2,
-			Zip:          providerAddressZip,
-			Locality:     providerAddressLocality,
-			Country:      providerAddressCountry,
+			LogoUrl:              providerLogoUrl,
+			LogoRepositoryFileId: providerLogoRepositoryFileId,
+			Name:                 providerName,
+			Email:                providerEmail,
+			AddressLine1:         providerAddressLine1,
+			AddressLine2:         providerAddressLine2,
+			Zip:                  providerAddressZip,
+			Locality:             providerAddressLocality,
+			Country:              providerAddressCountry,
 		},
 		Amount:       amount,
 		Vat:          vat,

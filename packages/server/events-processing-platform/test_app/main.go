@@ -113,6 +113,7 @@ func main() {
 	//PaidInvoiceNotification()
 	//PleasePayInvoiceNotification()
 	//testCreateInvoice()
+	//testTenantSettingsUpdate()
 }
 
 func testCreateInvoice() {
@@ -758,4 +759,14 @@ func testRefreshLastTouchpoint() {
 		log.Fatalf("Failed: %v", err.Error())
 	}
 	log.Printf("Result: %v", result.Id)
+}
+
+func testTenantSettingsUpdate() {
+	_, err := clients.TenantClient.UpdateTenantSettings(context.Background(), &tenantpb.UpdateTenantSettingsRequest{
+		Tenant:               tenant,
+		LogoRepositoryFileId: "123-abc",
+	})
+	if err != nil {
+		log.Fatalf("Failed: %v", err.Error())
+	}
 }
