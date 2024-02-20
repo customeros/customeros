@@ -7,36 +7,33 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
 
-type IssueRepository interface {
-	// Deprecated
+type IssueReadRepository interface {
 	GetById(ctx context.Context, tenant, issueId string) (*dbtype.Node, error)
-	// Deprecated
 	GetMatchedIssueId(ctx context.Context, tenant, externalSystem, externalId string) (string, error)
-	// Deprecated
 	GetIssueIdByExternalId(ctx context.Context, tenant, externalId, externalSystemId string) (string, error)
 }
 
-type issueRepository struct {
+type issueReadRepository struct {
 	driver   *neo4j.DriverWithContext
 	database string
 }
 
-func NewIssueRepository(driver *neo4j.DriverWithContext, database string) IssueRepository {
-	return &issueRepository{
+func NewIssueReadRepository(driver *neo4j.DriverWithContext, database string) IssueReadRepository {
+	return &issueReadRepository{
 		driver:   driver,
 		database: database,
 	}
 }
 
-func (r *issueRepository) GetById(ctx context.Context, tenant, issueId string) (*dbtype.Node, error) {
+func (r *issueReadRepository) GetById(ctx context.Context, tenant, issueId string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueRepository.GetById")
 	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {id:$issueId}) RETURN i`
 	params := map[string]any{
@@ -58,10 +55,10 @@ func (r *issueRepository) GetById(ctx context.Context, tenant, issueId string) (
 	return dbRecord.(*dbtype.Node), err
 }
 
-func (r *issueRepository) GetMatchedIssueId(ctx context.Context, tenant, externalSystem, externalId string) (string, error) {
+func (r *issueReadRepository) GetMatchedIssueId(ctx context.Context, tenant, externalSystem, externalId string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueRepository.GetMatchedIssueId")
 	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.LogFields(log.String("externalSystem", externalSystem), log.String("externalId", externalId))
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
@@ -94,10 +91,10 @@ func (r *issueRepository) GetMatchedIssueId(ctx context.Context, tenant, externa
 	return "", nil
 }
 
-func (r *issueRepository) GetIssueIdByExternalId(ctx context.Context, tenant, externalId, externalSystemId string) (string, error) {
+func (r *issueReadRepository) GetIssueIdByExternalId(ctx context.Context, tenant, externalId, externalSystemId string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueRepository.GetIssueIdByExternalId")
 	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystemId})
 					MATCH (t)<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue_%s)-[:IS_LINKED_WITH {externalId:$externalId}]->(e)
