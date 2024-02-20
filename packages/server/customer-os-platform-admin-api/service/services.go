@@ -29,12 +29,13 @@ func InitServices(
 	grpcClients *grpc_client.Clients) *Services {
 
 	services := Services{
-		cfg:                cfg,
-		GrpcClients:        grpcClients,
-		Repositories:       repository.InitRepos(driver, gormDB, cfg.Neo4j.Database),
-		CommonServices:     commonservice.InitServices(gormDB, driver),
-		CommonAuthServices: commonAuthService.InitServices(nil, gormDB),
+		cfg:          cfg,
+		GrpcClients:  grpcClients,
+		Repositories: repository.InitRepos(driver, gormDB, cfg.Neo4j.Database),
 	}
+
+	services.CommonServices = commonservice.InitServices(gormDB, driver)
+	services.CommonAuthServices = commonAuthService.InitServices(nil, services.CommonServices, gormDB)
 
 	return &services
 }

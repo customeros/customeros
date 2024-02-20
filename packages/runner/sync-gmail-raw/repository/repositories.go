@@ -13,7 +13,6 @@ type Repositories struct {
 	TenantRepository TenantRepository
 	UserRepository   UserRepository
 	EmailRepository  EmailRepository
-	ApiKeyRepository ApiKeyRepository
 
 	UserGmailImportPageTokenRepository UserGmailImportStateRepository
 	UserGCalImportStateRepository      UserGCalImportStateRepository
@@ -30,7 +29,6 @@ func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB) *Repositories {
 		TenantRepository: NewTenantRepository(driver),
 		UserRepository:   NewUserRepository(driver),
 		EmailRepository:  NewEmailRepository(driver),
-		ApiKeyRepository: NewApiKeyRepository(gormDb),
 
 		UserGmailImportPageTokenRepository: NewUserGmailImportStateRepository(gormDb),
 		UserGCalImportStateRepository:      NewUserGCalImportStateRepository(gormDb),

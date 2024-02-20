@@ -10,23 +10,16 @@ import (
 type Repositories struct {
 	OAuthTokenRepository    repository.OAuthTokenRepository
 	SlackSettingsRepository repository.SlackSettingsRepository
-	ApiKeyRepository        repository.ApiKeyRepository
 }
 
 func InitRepositories(db *gorm.DB) *Repositories {
 	repositories := &Repositories{
 		OAuthTokenRepository:    repository.NewOAuthTokenRepository(db),
 		SlackSettingsRepository: repository.NewSlackSettingsRepository(db),
-		ApiKeyRepository:        repository.NewApiKeyRepository(db),
 	}
 
 	var err error
 
-	err = db.AutoMigrate(&entity.TenantAPIKey{})
-	if err != nil {
-		log.Print(err)
-		panic(err)
-	}
 	err = db.AutoMigrate(&entity.OAuthTokenEntity{})
 	if err != nil {
 		log.Print(err)
