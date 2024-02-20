@@ -57,7 +57,7 @@ func (s *invoiceService) GenerateCycleInvoices() {
 
 	referenceTime := utils.Now()
 	dryRun := false
-	cachedTenantDefaultCurrencies := make(map[string]neo4jenum.Currency)
+	cachedTenantBaseCurrencies := make(map[string]neo4jenum.Currency)
 	cachedTenantPostpaidFlags := make(map[string]bool)
 
 	for {
@@ -88,7 +88,7 @@ func (s *invoiceService) GenerateCycleInvoices() {
 
 			currency := contract.Currency.String()
 			if currency == "" {
-				currency = s.getTenantBaseCurrency(ctx, tenant, cachedTenantDefaultCurrencies).String()
+				currency = s.getTenantBaseCurrency(ctx, tenant, cachedTenantBaseCurrencies).String()
 			}
 
 			isPostpaid := s.getTenantInvoicingPostpaidFlag(ctx, tenant, cachedTenantPostpaidFlags)
@@ -193,8 +193,12 @@ func (s *invoiceService) getTenantBaseCurrency(ctx context.Context, tenant strin
 	dbNode, _ := s.repositories.Neo4jRepositories.TenantReadRepository.GetTenantSettings(ctx, tenant)
 	tenantSettings := neo4jmapper.MapDbNodeToTenantSettingsEntity(dbNode)
 
-	cachedTenantBaseCurrencies[tenant] = tenantSettings.DefaultCurrency
-	return tenantSettings.DefaultCurrency
+	currency := tenantSettings.BaseCurrency
+	if currency.String() == "" {
+		currency = tenantSettings.DefaultCurrency
+	}
+	cachedTenantBaseCurrencies[tenant] = currency
+	return currency
 }
 
 func (s *invoiceService) getTenantInvoicingPostpaidFlag(ctx context.Context, tenant string, cachedTenantPostpaidFlags map[string]bool) bool {
@@ -290,7 +294,7 @@ func (s *invoiceService) GenerateOffCycleInvoices() {
 
 	referenceTime := utils.Now()
 	dryRun := false
-	cachedTenantDefaultCurrencies := make(map[string]neo4jenum.Currency)
+	cachedTenantBaseCurrencies := make(map[string]neo4jenum.Currency)
 
 	for {
 		select {
@@ -320,7 +324,7 @@ func (s *invoiceService) GenerateOffCycleInvoices() {
 
 			currency := contract.Currency.String()
 			if currency == "" {
-				currency = s.getTenantBaseCurrency(ctx, tenant, cachedTenantDefaultCurrencies).String()
+				currency = s.getTenantBaseCurrency(ctx, tenant, cachedTenantBaseCurrencies).String()
 			}
 
 			invoicePeriodStart := utils.StartOfDayInUTC(referenceTime)
