@@ -1,7 +1,11 @@
 query GetOrganization($organizationId: ID!){
   organization(id: $organizationId) {
-    id
-    referenceId
+    metadata {
+        id
+        created
+        lastUpdated
+    }
+    customId
     customerOsId
     name
     description
@@ -15,13 +19,12 @@ query GetOrganization($organizationId: ID!){
     lastFundingRound
     lastFundingAmount
     note
-    isPublic
+    public
     isCustomer
-    createdAt
     lastTouchPointTimelineEventId
     lastTouchPointAt
     lastTouchPointType
-    logoUrl
+    logo
     yearFounded
     employeeGrowthRate
     headquarters

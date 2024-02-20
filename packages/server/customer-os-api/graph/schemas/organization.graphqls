@@ -29,63 +29,77 @@ type LinkedOrganization {
     type: String
 }
 
-type Organization implements Node {
-    id: ID!
-    customerOsId: String!
-    referenceId: String
-    createdAt:   Time!
-    updatedAt:   Time!
-    name:        String!
-    description: String
-    note:        String
-    domains:     [String!]! @goField(forceResolver: true)
-    website:     String
-    industry:    String
-    subIndustry: String
-    industryGroup: String
-    targetAudience: String
-    valueProposition: String
-    isPublic:    Boolean
-    isCustomer:  Boolean
-    market:      Market
-    employees:   Int64
-    yearFounded: Int64
-    headquarters: String
-    employeeGrowthRate: String
-    logoUrl:      String
-    lastFundingRound: FundingRound
-    lastFundingAmount: String
-    source: DataSource!
-    sourceOfTruth: DataSource!
-    appSource: String!
-    locations: [Location!]! @goField(forceResolver: true)
-    socials: [Social!]! @goField(forceResolver: true)
+type Organization implements MetadataInterface {
+    metadata:               Metadata!
+    accountDetails:         OrgAccountDetails
+    contracts:              [Contract!] @goField(forceResolver: true)
+    customerOsId:           String!
+    customFields:           [CustomField!]! @goField(forceResolver: true)
+    customId:               String
+    description:            String
+    domains:                [String!]! @goField(forceResolver: true)
+    employeeGrowthRate:     String
+    employees:              Int64
+    headquarters:           String
+    industry:               String
+    industryGroup:          String
+    isCustomer:             Boolean
+    lastFundingAmount:      String
+    lastFundingRound:       FundingRound
+    lastTouchpoint:         LastTouchpoint
+    locations:              [Location!]! @goField(forceResolver: true)
+    logo:                   String
+    market:                 Market
+    name:                   String!
+#    notes:                  String To replace the below notes field
+    notes(pagination: Pagination): NotePage! @goField(forceResolver: true) @deprecated
+    owner:                  User @goField(forceResolver: true)
+    parentCompanies:        [LinkedOrganization!]! @goField(forceResolver: true)
+    public:                 Boolean
+    socialMedia:            [Social!]! @goField(forceResolver: true)
+    subIndustry:            String
+    subsidiaries:           [LinkedOrganization!]! @goField(forceResolver: true)
+    tags:                   [Tag!] @goField(forceResolver: true)
+    targetAudience:         String
+    timelineEvents(from: Time, size: Int!, timelineEventTypes: [TimelineEventType!]): [TimelineEvent!]! @goField(forceResolver: true)
+    valueProposition:       String
+    website:                String
+    yearFounded:            Int64
+
     contacts(pagination: Pagination, where: Filter, sort: [SortBy!]): ContactsPage! @goField(forceResolver: true)
     jobRoles: [JobRole!]! @goField(forceResolver: true)
-    notes(pagination: Pagination): NotePage! @goField(forceResolver: true)
-    tags: [Tag!] @goField(forceResolver: true)
-    contracts: [Contract!] @goField(forceResolver: true)
     emails: [Email!]! @goField(forceResolver: true)
     phoneNumbers: [PhoneNumber!]! @goField(forceResolver: true)
-    subsidiaries: [LinkedOrganization!]! @goField(forceResolver: true)
-    subsidiaryOf: [LinkedOrganization!]! @goField(forceResolver: true)
     suggestedMergeTo: [SuggestedMergeOrganization!]! @goField(forceResolver: true)
-    customFields: [CustomField!]! @goField(forceResolver: true)
     fieldSets: [FieldSet!]! @goField(forceResolver: true)
     entityTemplate: EntityTemplate @goField(forceResolver: true)
-    timelineEvents(from: Time, size: Int!, timelineEventTypes: [TimelineEventType!]): [TimelineEvent!]! @goField(forceResolver: true)
     timelineEventsTotalCount(timelineEventTypes: [TimelineEventType!]): Int64! @goField(forceResolver: true)
-    owner: User @goField(forceResolver: true)
     externalLinks: [ExternalSystem!]! @goField(forceResolver: true)
+    issueSummaryByStatus: [IssueSummaryByStatus!]! @goField(forceResolver: true)
 
+    socials: [Social!]! @goField(forceResolver: true) @deprecated(reason: "Use socialMedia")
+    isPublic:    Boolean @deprecated(reason: "Use public")
+    note:        String @deprecated(reason: "Use notes")
+    logoUrl:                String @deprecated(reason: "Use logo")
+    id: ID! @deprecated(reason: "Use metadata.id")
+    createdAt:   Time! @deprecated(reason: "Use metadata.created")
+    updatedAt:   Time! @deprecated(reason: "Use metadata.lastUpdated")
+    source: DataSource! @deprecated(reason: "Use metadata.source")
+    sourceOfTruth: DataSource! @deprecated(reason: "Use metadata.sourceOfTruth")
+    appSource: String! @deprecated(reason: "Use metadata.appSource")
+    referenceId: String @deprecated(reason: "Use customId")
+    lastTouchPointAt: Time @deprecated(reason: "Use lastTouchpoint")
+    lastTouchPointType: LastTouchpointType @deprecated(reason: "Use lastTouchpoint")
+    lastTouchPointTimelineEventId: ID #we need this in order to use the dataloader for the lastTouchPointTimelineEvent if asked @deprecated(reason: "Use lastTouchpoint")
+    lastTouchPointTimelineEvent: TimelineEvent @goField(forceResolver: true) @deprecated(reason: "Use lastTouchpoint")
+    subsidiaryOf: [LinkedOrganization!]! @goField(forceResolver: true) @deprecated(reason: "Use parentCompany")
+}
+
+type LastTouchpoint {
     lastTouchPointAt: Time
     lastTouchPointType: LastTouchpointType
     lastTouchPointTimelineEventId: ID #we need this in order to use the dataloader for the lastTouchPointTimelineEvent if asked
     lastTouchPointTimelineEvent: TimelineEvent @goField(forceResolver: true)
-
-    issueSummaryByStatus: [IssueSummaryByStatus!]! @goField(forceResolver: true)
-
-    accountDetails: OrgAccountDetails
 }
 
 type OrgAccountDetails {

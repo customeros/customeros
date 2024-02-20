@@ -21,7 +21,6 @@ import (
 type NoteService interface {
 	GetNotesForContactPaginated(ctx context.Context, contactId string, page, limit int) (*utils.Pagination, error)
 	GetNotesForContactTimeRange(ctx context.Context, contactId string, start, end time.Time) (*entity.NoteEntities, error)
-	GetNotesForOrganization(ctx context.Context, organizationId string, page, limit int) (*utils.Pagination, error)
 	GetNotesForMeetings(ctx context.Context, ids []string) (*entity.NoteEntities, error)
 
 	CreateNoteForContact(ctx context.Context, contactId string, entity *entity.NoteEntity) (*entity.NoteEntity, error)
@@ -138,41 +137,6 @@ func (s *noteService) GetNotesForContactTimeRange(ctx context.Context, contactId
 		result[i] = *noteEntity
 	}
 	return &result, nil
-}
-
-func (s *noteService) GetNotesForOrganization(ctx context.Context, organizationId string, page, limit int) (*utils.Pagination, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteService.GetNotesForOrganization")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("organizationId", organizationId), log.Int("page", page), log.Int("limit", limit))
-
-	session := utils.NewNeo4jReadSession(ctx, *s.repositories.Drivers.Neo4jDriver)
-	defer session.Close(ctx)
-
-	var paginatedResult = utils.Pagination{
-		Limit: limit,
-		Page:  page,
-	}
-	noteDbNodesWithTotalCount, err := s.repositories.NoteRepository.GetPaginatedNotesForOrganization(
-		ctx,
-		session,
-		common.GetContext(ctx).Tenant,
-		organizationId,
-		paginatedResult.GetSkip(),
-		paginatedResult.GetLimit())
-	if err != nil {
-		return nil, err
-	}
-	paginatedResult.SetTotalRows(noteDbNodesWithTotalCount.Count)
-
-	entities := entity.NoteEntities{}
-
-	for _, v := range noteDbNodesWithTotalCount.Nodes {
-		noteEntity := *s.mapDbNodeToNoteEntity(*v.Node)
-		entities = append(entities, noteEntity)
-	}
-	paginatedResult.SetRows(&entities)
-	return &paginatedResult, nil
 }
 
 func (s *noteService) CreateNoteForContact(ctx context.Context, contactId string, entity *entity.NoteEntity) (*entity.NoteEntity, error) {
