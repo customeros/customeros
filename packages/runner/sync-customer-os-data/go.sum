@@ -32,6 +32,8 @@ github.com/neo4j/neo4j-go-driver/v5 v5.17.0 h1:Bdqg1Y8Hd3uLYToXtBjysDYXTdMiP7zeU
 github.com/neo4j/neo4j-go-driver/v5 v5.17.0/go.mod h1:Vff8OwT7QpLm7L2yYr85XNWe9Rbqlbeb9asNXJTHO4k=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20231223141039-1ccda1d986b4 h1:aTMTKpZlNZbRlMGuifp8o05FJQp9R5h5aNNf7bPgFzE=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20231223141039-1ccda1d986b4/go.mod h1:OFnjixw2S1dWlTWh4Ev7nLAJ7z4EViKOztdyz9uIc2A=
+github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240220064825-20118a9bac6a h1:WGNEuTao43ayNuXDVoN23mvV4g9Cnl725D7H48uRxk8=
+github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240220064825-20118a9bac6a/go.mod h1:ctIaDPWWhQcTpc701gORrGGtNSL323yRmXuh4W4EnnY=
 github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20231223141039-1ccda1d986b4 h1:hc3QAjLLTCjN+2wtydJGru5edgPu5BKzOoBayGcm4ps=
 github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20231223141039-1ccda1d986b4/go.mod h1:IsC9IawrEeGaGY0HeIPwgs4DSUbpSFdxo8EFhn175Qo=
 github.com/opentracing/opentracing-go v1.2.0 h1:uEJPy/1a5RIPAJ0Ov+OIO8OxWu77jEv+1B0VhjKrZUs=
@@ -108,6 +110,7 @@ google.golang.org/protobuf v1.26.0-rc.1/go.mod h1:jlhhOSvTdKEhbULTjvd4ARK9grFBp0
 google.golang.org/protobuf v1.26.0/go.mod h1:9q0QmTI4eRPtz6boOQmLYwt+qCgq0jsYwAQnmE0givc=
 google.golang.org/protobuf v1.31.0 h1:g0LDEJHgrBl9N9r17Ru3sqWhkIx2NB67okBHPwC7hs8=
 google.golang.org/protobuf v1.31.0/go.mod h1:HV8QOd/L58Z+nl8r43ehVNZIU/HEI6OcFqwMG9pJV4I=
+google.golang.org/protobuf v1.32.0/go.mod h1:c6P6GXX6sHbq/GpV6MGZEdwhWPcYBgnhAHhKbcUYpos=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
 gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
