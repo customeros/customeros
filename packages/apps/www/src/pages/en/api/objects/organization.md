@@ -32,7 +32,7 @@ lang: en
   "industryGroup": "industryGroup",
   "isCustomer": true,
   "lastFundingAmount": "100000000",
-  "lastFundingRound": "SERIES B",
+  "lastFundingRound": SERIES_B,
   "lastTouchpoint": {
     "<lastTouchpoint object>"
   },
@@ -46,8 +46,10 @@ lang: en
   },
   "name": "Acme Corp",
   "notes": "",
-  "owner": "sara@acmecorp.io",
-  "parentCompany": [
+  "owner": [
+    <user object>
+  ],
+  "parentCompanies": [
     <parentCompany object>
   ],
   "people": [
@@ -57,7 +59,7 @@ lang: en
   "socialMedia": [
     <socialMedia object>
   ],
-  "subindustry": "subindustry",
+  "subIndustry": "subIndustry",
   "subsidiaries": [
     <subsidiaries object>
   ],
@@ -76,3 +78,24 @@ lang: en
 
 ### id
 Unique `string` identifying the object.  This property is always set.
+
+### lastFundingRound
+An enum representing the last funding round for organization. Valid values are:
+- `PRE_SEED`
+- `SEED`
+- `SERIES_A`
+- `SERIES_B`
+- `SERIES_C`
+- `SERIES_D`
+- `SERIES_E`
+- `SERIES_F`
+- `IPO`
+- `FRIENDS_AND_FAMILY`
+- `ANGEL`
+- `BRIDGE`
+
+### market
+An enum. Valid values are:
+- `B2B`
+- `B2C`
+- `MARKETPLACE`

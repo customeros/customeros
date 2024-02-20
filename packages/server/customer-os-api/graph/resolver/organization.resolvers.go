@@ -7,6 +7,7 @@ package resolver
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -26,6 +27,24 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
+
+// LastTouchPointTimelineEvent is the resolver for the lastTouchPointTimelineEvent field.
+func (r *lastTouchpointResolver) LastTouchPointTimelineEvent(ctx context.Context, obj *model.LastTouchpoint) (model.TimelineEvent, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	if obj.LastTouchPointTimelineEventID == nil {
+		return nil, nil
+	}
+
+	timelineEventNillable, err := dataloader.For(ctx).GetTimelineEventForTimelineEventId(ctx, *obj.LastTouchPointTimelineEventID)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("Error fetching last touchpoint timeline event for organization %s: %s", *obj.LastTouchPointTimelineEventID, err.Error())
+		graphql.AddErrorf(ctx, "Error fetching last touchpoint timeline event for organization %s", *obj.LastTouchPointTimelineEventID)
+		return nil, err
+	}
+	return mapper.MapEntityToTimelineEvent(timelineEventNillable), nil
+}
 
 // OrganizationCreate is the resolver for the organization_Create field.
 func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.OrganizationInput) (*model.Organization, error) {
@@ -651,6 +670,39 @@ func (r *mutationResolver) OrganizationUpdateOnboardingStatus(ctx context.Contex
 	return mapper.MapEntityToOrganization(organizationEntity), nil
 }
 
+// Contracts is the resolver for the contracts field.
+func (r *organizationResolver) Contracts(ctx context.Context, obj *model.Organization) ([]*model.Contract, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	contractEntities, err := dataloader.For(ctx).GetContractsForOrganization(ctx, obj.ID)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("Failed to get contracts for organization %s: %s", obj.ID, err.Error())
+		graphql.AddErrorf(ctx, "Failed to get contracts for organization %s", obj.ID)
+		return nil, nil
+	}
+	return mapper.MapEntitiesToContracts(contractEntities), nil
+}
+
+// CustomFields is the resolver for the customFields field.
+func (r *organizationResolver) CustomFields(ctx context.Context, obj *model.Organization) ([]*model.CustomField, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "OrganizationResolver.CustomFields", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.organizationID", obj.ID))
+
+	var customFields []*model.CustomField
+	entityType := &model.CustomFieldEntityType{
+		ID:         obj.ID,
+		EntityType: model.EntityTypeOrganization,
+	}
+	customFieldEntities, err := r.Services.CustomFieldService.GetCustomFields(ctx, entityType)
+	for _, v := range mapper.MapEntitiesToCustomFields(customFieldEntities) {
+		customFields = append(customFields, v)
+	}
+	return customFields, err
+}
+
 // Domains is the resolver for the domains field.
 func (r *organizationResolver) Domains(ctx context.Context, obj *model.Organization) ([]string, error) {
 	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
@@ -679,8 +731,41 @@ func (r *organizationResolver) Locations(ctx context.Context, obj *model.Organiz
 	return mapper.MapEntitiesToLocations(locationEntities), err
 }
 
-// Socials is the resolver for the socials field.
-func (r *organizationResolver) Socials(ctx context.Context, obj *model.Organization) ([]*model.Social, error) {
+// Notes is the resolver for the notes field.
+func (r *organizationResolver) Notes(ctx context.Context, obj *model.Organization, pagination *model.Pagination) (*model.NotePage, error) {
+	panic(fmt.Errorf("not implemented: Notes - notes"))
+}
+
+// Owner is the resolver for the owner field.
+func (r *organizationResolver) Owner(ctx context.Context, obj *model.Organization) (*model.User, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	userEntityNillable, err := dataloader.For(ctx).GetUserOwnerForOrganization(ctx, obj.ID)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("Error fetching user owner for organization %s: %s", obj.ID, err.Error())
+		graphql.AddErrorf(ctx, "Error fetching user owner for organization %s", obj.ID)
+		return nil, nil
+	}
+	return mapper.MapEntityToUser(userEntityNillable), nil
+}
+
+// ParentCompanies is the resolver for the parentCompanies field.
+func (r *organizationResolver) ParentCompanies(ctx context.Context, obj *model.Organization) ([]*model.LinkedOrganization, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	organizationEntities, err := dataloader.For(ctx).GetSubsidiariesOfForOrganization(ctx, obj.ID)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("Failed to fetch parent organizations for organization %s: %s", obj.ID, err.Error())
+		graphql.AddErrorf(ctx, "Failed to fetch parent organizations for organization %s", obj.ID)
+		return nil, nil
+	}
+	return mapper.MapEntitiesToLinkedOrganizations(organizationEntities), nil
+}
+
+// SocialMedia is the resolver for the socialMedia field.
+func (r *organizationResolver) SocialMedia(ctx context.Context, obj *model.Organization) ([]*model.Social, error) {
 	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	socialEntities, err := dataloader.For(ctx).GetSocialsForOrganization(ctx, obj.ID)
@@ -691,6 +776,53 @@ func (r *organizationResolver) Socials(ctx context.Context, obj *model.Organizat
 		return nil, nil
 	}
 	return mapper.MapEntitiesToSocials(socialEntities), err
+}
+
+// Subsidiaries is the resolver for the subsidiaries field.
+func (r *organizationResolver) Subsidiaries(ctx context.Context, obj *model.Organization) ([]*model.LinkedOrganization, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	organizationEntities, err := dataloader.For(ctx).GetSubsidiariesForOrganization(ctx, obj.ID)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("Failed to fetch subsidiary organizations for orgnization %s: %s", obj.ID, err.Error())
+		graphql.AddErrorf(ctx, "Failed to fetch subsidiary organizations for orgnization %s", obj.ID)
+		return nil, nil
+	}
+	return mapper.MapEntitiesToLinkedOrganizations(organizationEntities), nil
+}
+
+// Tags is the resolver for the tags field.
+func (r *organizationResolver) Tags(ctx context.Context, obj *model.Organization) ([]*model.Tag, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	tagEntities, err := dataloader.For(ctx).GetTagsForOrganization(ctx, obj.ID)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("Failed to get tags for organization %s: %s", obj.ID, err.Error())
+		graphql.AddErrorf(ctx, "Failed to get tags for organization %s", obj.ID)
+		return nil, nil
+	}
+	return mapper.MapEntitiesToTags(tagEntities), nil
+}
+
+// TimelineEvents is the resolver for the timelineEvents field.
+func (r *organizationResolver) TimelineEvents(ctx context.Context, obj *model.Organization, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) ([]model.TimelineEvent, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "OrganizationResolver.TimelineEvents", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.organizationID", obj.ID), log.Int("request.size", size), log.Object("request.timelineEventTypes", timelineEventTypes))
+	if from != nil {
+		span.LogFields(log.Object("request.from", *from))
+	}
+
+	timelineEvents, err := r.Services.TimelineEventService.GetTimelineEventsForOrganization(ctx, obj.ID, from, size, timelineEventTypes)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "failed to get timeline events for organization %s", obj.ID)
+		return nil, err
+	}
+	return mapper.MapEntitiesToTimelineEvents(timelineEvents), nil
 }
 
 // Contacts is the resolver for the contacts field.
@@ -730,57 +862,6 @@ func (r *organizationResolver) JobRoles(ctx context.Context, obj *model.Organiza
 	return mapper.MapEntitiesToJobRoles(jobRoleEntities), err
 }
 
-// Notes is the resolver for the notes field.
-func (r *organizationResolver) Notes(ctx context.Context, obj *model.Organization, pagination *model.Pagination) (*model.NotePage, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "OrganizationResolver.Notes", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.organizationID", obj.ID))
-
-	if pagination == nil {
-		pagination = &model.Pagination{Page: 0, Limit: 0}
-	}
-	paginatedResult, err := r.Services.NoteService.GetNotesForOrganization(ctx, obj.ID, pagination.Page, pagination.Limit)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to get organization %s notes", obj.ID)
-		return nil, err
-	}
-	return &model.NotePage{
-		Content:       mapper.MapEntitiesToNotes(paginatedResult.Rows.(*entity.NoteEntities)),
-		TotalPages:    paginatedResult.TotalPages,
-		TotalElements: paginatedResult.TotalRows,
-	}, err
-}
-
-// Tags is the resolver for the tags field.
-func (r *organizationResolver) Tags(ctx context.Context, obj *model.Organization) ([]*model.Tag, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
-
-	tagEntities, err := dataloader.For(ctx).GetTagsForOrganization(ctx, obj.ID)
-	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
-		r.log.Errorf("Failed to get tags for organization %s: %s", obj.ID, err.Error())
-		graphql.AddErrorf(ctx, "Failed to get tags for organization %s", obj.ID)
-		return nil, nil
-	}
-	return mapper.MapEntitiesToTags(tagEntities), nil
-}
-
-// Contracts is the resolver for the contracts field.
-func (r *organizationResolver) Contracts(ctx context.Context, obj *model.Organization) ([]*model.Contract, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
-
-	contractEntities, err := dataloader.For(ctx).GetContractsForOrganization(ctx, obj.ID)
-	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
-		r.log.Errorf("Failed to get contracts for organization %s: %s", obj.ID, err.Error())
-		graphql.AddErrorf(ctx, "Failed to get contracts for organization %s", obj.ID)
-		return nil, nil
-	}
-	return mapper.MapEntitiesToContracts(contractEntities), nil
-}
-
 // Emails is the resolver for the emails field.
 func (r *organizationResolver) Emails(ctx context.Context, obj *model.Organization) ([]*model.Email, error) {
 	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
@@ -809,34 +890,6 @@ func (r *organizationResolver) PhoneNumbers(ctx context.Context, obj *model.Orga
 	return mapper.MapEntitiesToPhoneNumbers(phoneNumberEntities), nil
 }
 
-// Subsidiaries is the resolver for the subsidiaries field.
-func (r *organizationResolver) Subsidiaries(ctx context.Context, obj *model.Organization) ([]*model.LinkedOrganization, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
-
-	organizationEntities, err := dataloader.For(ctx).GetSubsidiariesForOrganization(ctx, obj.ID)
-	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
-		r.log.Errorf("Failed to fetch subsidiary organizations for orgnization %s: %s", obj.ID, err.Error())
-		graphql.AddErrorf(ctx, "Failed to fetch subsidiary organizations for orgnization %s", obj.ID)
-		return nil, nil
-	}
-	return mapper.MapEntitiesToLinkedOrganizations(organizationEntities), nil
-}
-
-// SubsidiaryOf is the resolver for the subsidiaryOf field.
-func (r *organizationResolver) SubsidiaryOf(ctx context.Context, obj *model.Organization) ([]*model.LinkedOrganization, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
-
-	organizationEntities, err := dataloader.For(ctx).GetSubsidiariesOfForOrganization(ctx, obj.ID)
-	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
-		r.log.Errorf("Failed to fetch parent organizations for organization %s: %s", obj.ID, err.Error())
-		graphql.AddErrorf(ctx, "Failed to fetch parent organizations for organization %s", obj.ID)
-		return nil, nil
-	}
-	return mapper.MapEntitiesToLinkedOrganizations(organizationEntities), nil
-}
-
 // SuggestedMergeTo is the resolver for the suggestedMergeTo field.
 func (r *organizationResolver) SuggestedMergeTo(ctx context.Context, obj *model.Organization) ([]*model.SuggestedMergeOrganization, error) {
 	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
@@ -849,25 +902,6 @@ func (r *organizationResolver) SuggestedMergeTo(ctx context.Context, obj *model.
 		return nil, nil
 	}
 	return mapper.MapEntitiesToSuggestedMergeOrganizations(organizationEntities), nil
-}
-
-// CustomFields is the resolver for the customFields field.
-func (r *organizationResolver) CustomFields(ctx context.Context, obj *model.Organization) ([]*model.CustomField, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "OrganizationResolver.CustomFields", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.organizationID", obj.ID))
-
-	var customFields []*model.CustomField
-	entityType := &model.CustomFieldEntityType{
-		ID:         obj.ID,
-		EntityType: model.EntityTypeOrganization,
-	}
-	customFieldEntities, err := r.Services.CustomFieldService.GetCustomFields(ctx, entityType)
-	for _, v := range mapper.MapEntitiesToCustomFields(customFieldEntities) {
-		customFields = append(customFields, v)
-	}
-	return customFields, err
 }
 
 // FieldSets is the resolver for the fieldSets field.
@@ -902,25 +936,6 @@ func (r *organizationResolver) EntityTemplate(ctx context.Context, obj *model.Or
 	return mapper.MapEntityToEntityTemplate(templateEntity), err
 }
 
-// TimelineEvents is the resolver for the timelineEvents field.
-func (r *organizationResolver) TimelineEvents(ctx context.Context, obj *model.Organization, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) ([]model.TimelineEvent, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "OrganizationResolver.TimelineEvents", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.organizationID", obj.ID), log.Int("request.size", size), log.Object("request.timelineEventTypes", timelineEventTypes))
-	if from != nil {
-		span.LogFields(log.Object("request.from", *from))
-	}
-
-	timelineEvents, err := r.Services.TimelineEventService.GetTimelineEventsForOrganization(ctx, obj.ID, from, size, timelineEventTypes)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "failed to get timeline events for organization %s", obj.ID)
-		return nil, err
-	}
-	return mapper.MapEntitiesToTimelineEvents(timelineEvents), nil
-}
-
 // TimelineEventsTotalCount is the resolver for the timelineEventsTotalCount field.
 func (r *organizationResolver) TimelineEventsTotalCount(ctx context.Context, obj *model.Organization, timelineEventTypes []model.TimelineEventType) (int64, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "OrganizationResolver.TimelineEventsTotalCount", graphql.GetOperationContext(ctx))
@@ -937,20 +952,6 @@ func (r *organizationResolver) TimelineEventsTotalCount(ctx context.Context, obj
 	return count, nil
 }
 
-// Owner is the resolver for the owner field.
-func (r *organizationResolver) Owner(ctx context.Context, obj *model.Organization) (*model.User, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
-
-	userEntityNillable, err := dataloader.For(ctx).GetUserOwnerForOrganization(ctx, obj.ID)
-	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
-		r.log.Errorf("Error fetching user owner for organization %s: %s", obj.ID, err.Error())
-		graphql.AddErrorf(ctx, "Error fetching user owner for organization %s", obj.ID)
-		return nil, nil
-	}
-	return mapper.MapEntityToUser(userEntityNillable), nil
-}
-
 // ExternalLinks is the resolver for the externalLinks field.
 func (r *organizationResolver) ExternalLinks(ctx context.Context, obj *model.Organization) ([]*model.ExternalSystem, error) {
 	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
@@ -963,24 +964,6 @@ func (r *organizationResolver) ExternalLinks(ctx context.Context, obj *model.Org
 		return nil, nil
 	}
 	return mapper.MapEntitiesToExternalSystems(entities), nil
-}
-
-// LastTouchPointTimelineEvent is the resolver for the lastTouchPointTimelineEvent field.
-func (r *organizationResolver) LastTouchPointTimelineEvent(ctx context.Context, obj *model.Organization) (model.TimelineEvent, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
-
-	if obj.LastTouchPointTimelineEventID == nil {
-		return nil, nil
-	}
-
-	timelineEventNillable, err := dataloader.For(ctx).GetTimelineEventForTimelineEventId(ctx, *obj.LastTouchPointTimelineEventID)
-	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
-		r.log.Errorf("Error fetching last touchpoint timeline event for organization %s: %s", *obj.LastTouchPointTimelineEventID, err.Error())
-		graphql.AddErrorf(ctx, "Error fetching last touchpoint timeline event for organization %s", *obj.LastTouchPointTimelineEventID)
-		return nil, err
-	}
-	return mapper.MapEntityToTimelineEvent(timelineEventNillable), nil
 }
 
 // IssueSummaryByStatus is the resolver for the issueSummaryByStatus field.
@@ -1004,6 +987,52 @@ func (r *organizationResolver) IssueSummaryByStatus(ctx context.Context, obj *mo
 		})
 	}
 	return issueSummaryByStatus, nil
+}
+
+// Socials is the resolver for the socials field.
+func (r *organizationResolver) Socials(ctx context.Context, obj *model.Organization) ([]*model.Social, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	socialEntities, err := dataloader.For(ctx).GetSocialsForOrganization(ctx, obj.ID)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("Failed to get socials for organization %s: %s", obj.ID, err.Error())
+		graphql.AddErrorf(ctx, "Failed to get socials for organization %s", obj.ID)
+		return nil, nil
+	}
+	return mapper.MapEntitiesToSocials(socialEntities), err
+}
+
+// LastTouchPointTimelineEvent is the resolver for the lastTouchPointTimelineEvent field.
+func (r *organizationResolver) LastTouchPointTimelineEvent(ctx context.Context, obj *model.Organization) (model.TimelineEvent, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	if obj.LastTouchPointTimelineEventID == nil {
+		return nil, nil
+	}
+
+	timelineEventNillable, err := dataloader.For(ctx).GetTimelineEventForTimelineEventId(ctx, *obj.LastTouchPointTimelineEventID)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("Error fetching last touchpoint timeline event for organization %s: %s", *obj.LastTouchPointTimelineEventID, err.Error())
+		graphql.AddErrorf(ctx, "Error fetching last touchpoint timeline event for organization %s", *obj.LastTouchPointTimelineEventID)
+		return nil, err
+	}
+	return mapper.MapEntityToTimelineEvent(timelineEventNillable), nil
+}
+
+// SubsidiaryOf is the resolver for the subsidiaryOf field.
+func (r *organizationResolver) SubsidiaryOf(ctx context.Context, obj *model.Organization) ([]*model.LinkedOrganization, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	organizationEntities, err := dataloader.For(ctx).GetSubsidiariesOfForOrganization(ctx, obj.ID)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("Failed to fetch parent organizations for organization %s: %s", obj.ID, err.Error())
+		graphql.AddErrorf(ctx, "Failed to fetch parent organizations for organization %s", obj.ID)
+		return nil, nil
+	}
+	return mapper.MapEntitiesToLinkedOrganizations(organizationEntities), nil
 }
 
 // Organizations is the resolver for the organizations field.
@@ -1095,7 +1124,13 @@ func (r *queryResolver) OrganizationDistinctOwners(ctx context.Context) ([]*mode
 	return mapper.MapEntitiesToUsers(userEntities), nil
 }
 
+// LastTouchpoint returns generated.LastTouchpointResolver implementation.
+func (r *Resolver) LastTouchpoint() generated.LastTouchpointResolver {
+	return &lastTouchpointResolver{r}
+}
+
 // Organization returns generated.OrganizationResolver implementation.
 func (r *Resolver) Organization() generated.OrganizationResolver { return &organizationResolver{r} }
 
+type lastTouchpointResolver struct{ *Resolver }
 type organizationResolver struct{ *Resolver }

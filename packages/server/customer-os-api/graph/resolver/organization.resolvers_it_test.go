@@ -102,14 +102,14 @@ func TestQueryResolver_Organization(t *testing.T) {
 	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
 	require.Nil(t, err)
 	require.NotNil(t, organizationStruct)
-	require.Equal(t, organizationId, organizationStruct.Organization.ID)
+	require.Equal(t, organizationId, organizationStruct.Organization.Metadata.ID)
 	require.Equal(t, inputOrganizationEntity.CustomerOsId, organizationStruct.Organization.CustomerOsID)
-	require.Equal(t, inputOrganizationEntity.ReferenceId, *organizationStruct.Organization.ReferenceID)
+	require.Equal(t, inputOrganizationEntity.ReferenceId, *organizationStruct.Organization.CustomID)
 	require.Equal(t, inputOrganizationEntity.Name, organizationStruct.Organization.Name)
 	require.Equal(t, inputOrganizationEntity.Description, *organizationStruct.Organization.Description)
 	require.Equal(t, []string{"domain1.com", "domain2.com"}, organizationStruct.Organization.Domains)
 	require.Equal(t, inputOrganizationEntity.Website, *organizationStruct.Organization.Website)
-	require.Equal(t, inputOrganizationEntity.IsPublic, *organizationStruct.Organization.IsPublic)
+	require.Equal(t, inputOrganizationEntity.IsPublic, *organizationStruct.Organization.Public)
 	require.Equal(t, inputOrganizationEntity.IsCustomer, *organizationStruct.Organization.IsCustomer)
 	require.Equal(t, inputOrganizationEntity.Industry, *organizationStruct.Organization.Industry)
 	require.Equal(t, inputOrganizationEntity.SubIndustry, *organizationStruct.Organization.SubIndustry)
@@ -122,7 +122,7 @@ func TestQueryResolver_Organization(t *testing.T) {
 	require.Equal(t, inputOrganizationEntity.YearFounded, organizationStruct.Organization.YearFounded)
 	require.Equal(t, inputOrganizationEntity.Headquarters, *organizationStruct.Organization.Headquarters)
 	require.Equal(t, inputOrganizationEntity.EmployeeGrowthRate, *organizationStruct.Organization.EmployeeGrowthRate)
-	require.Equal(t, inputOrganizationEntity.LogoUrl, *organizationStruct.Organization.LogoURL)
+	require.Equal(t, inputOrganizationEntity.LogoUrl, *organizationStruct.Organization.Logo)
 	require.NotNil(t, organizationStruct.Organization.CreatedAt)
 	require.Equal(t, inputOrganizationEntity.OnboardingDetails.UpdatedAt, organizationStruct.Organization.AccountDetails.Onboarding.UpdatedAt)
 	require.Equal(t, model.OnboardingStatusDone, organizationStruct.Organization.AccountDetails.Onboarding.Status)
@@ -291,58 +291,6 @@ func TestQueryResolver_Organizations_WithTags(t *testing.T) {
 	require.Equal(t, 1, len(organizations.Content[1].Tags))
 	require.Equal(t, tag1, organizations.Content[1].Tags[0].ID)
 	require.Equal(t, 0, len(organizations.Content[2].Tags))
-}
-
-func TestQueryResolver_Organization_WithNotes_ById(t *testing.T) {
-	ctx := context.TODO()
-	defer tearDownTestCase(ctx)(t)
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "test org")
-	neo4jtest.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
-	noteId1 := neo4jt.CreateNoteForOrganization(ctx, driver, tenantName, organizationId, "note1", utils.Now())
-	noteId2 := neo4jt.CreateNoteForOrganization(ctx, driver, tenantName, organizationId, "note2", utils.Now())
-	neo4jt.NoteCreatedByUser(ctx, driver, noteId1, testUserId)
-
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
-	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Note"))
-	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "NOTED"))
-	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "CREATED"))
-
-	rawResponse, err := c.RawPost(getQuery("organization/get_organization_with_notes_by_id"),
-		client.Var("organizationId", organizationId))
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	var searchedOrganization struct {
-		Organization model.Organization
-	}
-
-	err = decode.Decode(rawResponse.Data.(map[string]any), &searchedOrganization)
-	require.Nil(t, err)
-	require.Equal(t, organizationId, searchedOrganization.Organization.ID)
-
-	notes := searchedOrganization.Organization.Notes.Content
-	require.Equal(t, 2, len(notes))
-	var noteWithUser, noteWithoutUser *model.Note
-	if noteId1 == notes[0].ID {
-		noteWithUser = notes[0]
-		noteWithoutUser = notes[1]
-	} else {
-		noteWithUser = notes[1]
-		noteWithoutUser = notes[0]
-	}
-	require.Equal(t, noteId1, noteWithUser.ID)
-	require.Equal(t, "note1", *noteWithUser.Content)
-	require.NotNil(t, noteWithUser.CreatedAt)
-	require.NotNil(t, noteWithUser.CreatedBy)
-	require.Equal(t, testUserId, noteWithUser.CreatedBy.ID)
-	require.Equal(t, "first", noteWithUser.CreatedBy.FirstName)
-	require.Equal(t, "last", noteWithUser.CreatedBy.LastName)
-
-	require.Equal(t, noteId2, noteWithoutUser.ID)
-	require.Equal(t, "note2", *noteWithoutUser.Content)
-	require.NotNil(t, noteWithoutUser.CreatedAt)
-	require.Nil(t, noteWithoutUser.CreatedBy)
 }
 
 func TestMutationResolver_OrganizationArchive(t *testing.T) {

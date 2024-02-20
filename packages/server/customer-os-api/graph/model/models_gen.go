@@ -1302,6 +1302,13 @@ type JobRoleUpdateInput struct {
 	Company        *string    `json:"company,omitempty"`
 }
 
+type LastTouchpoint struct {
+	LastTouchPointAt              *time.Time          `json:"lastTouchPointAt,omitempty"`
+	LastTouchPointType            *LastTouchpointType `json:"lastTouchPointType,omitempty"`
+	LastTouchPointTimelineEventID *string             `json:"lastTouchPointTimelineEventId,omitempty"`
+	LastTouchPointTimelineEvent   TimelineEvent       `json:"lastTouchPointTimelineEvent,omitempty"`
+}
+
 type LinkOrganizationsInput struct {
 	OrganizationID    string  `json:"organizationId"`
 	SubOrganizationID string  `json:"subOrganizationId"`
@@ -1712,65 +1719,72 @@ type OrgAccountDetails struct {
 }
 
 type Organization struct {
-	ID                            string                        `json:"id"`
+	Metadata                      *Metadata                     `json:"metadata"`
+	AccountDetails                *OrgAccountDetails            `json:"accountDetails,omitempty"`
+	Contracts                     []*Contract                   `json:"contracts,omitempty"`
 	CustomerOsID                  string                        `json:"customerOsId"`
-	ReferenceID                   *string                       `json:"referenceId,omitempty"`
+	CustomFields                  []*CustomField                `json:"customFields"`
+	CustomID                      *string                       `json:"customId,omitempty"`
+	Description                   *string                       `json:"description,omitempty"`
+	Domains                       []string                      `json:"domains"`
+	EmployeeGrowthRate            *string                       `json:"employeeGrowthRate,omitempty"`
+	Employees                     *int64                        `json:"employees,omitempty"`
+	Headquarters                  *string                       `json:"headquarters,omitempty"`
+	Industry                      *string                       `json:"industry,omitempty"`
+	IndustryGroup                 *string                       `json:"industryGroup,omitempty"`
+	IsCustomer                    *bool                         `json:"isCustomer,omitempty"`
+	LastFundingAmount             *string                       `json:"lastFundingAmount,omitempty"`
+	LastFundingRound              *FundingRound                 `json:"lastFundingRound,omitempty"`
+	LastTouchpoint                *LastTouchpoint               `json:"lastTouchpoint,omitempty"`
+	Locations                     []*Location                   `json:"locations"`
+	Logo                          *string                       `json:"logo,omitempty"`
+	Market                        *Market                       `json:"market,omitempty"`
+	Name                          string                        `json:"name"`
+	Notes                         *NotePage                     `json:"notes"`
+	Owner                         *User                         `json:"owner,omitempty"`
+	ParentCompanies               []*LinkedOrganization         `json:"parentCompanies"`
+	Public                        *bool                         `json:"public,omitempty"`
+	SocialMedia                   []*Social                     `json:"socialMedia"`
+	SubIndustry                   *string                       `json:"subIndustry,omitempty"`
+	Subsidiaries                  []*LinkedOrganization         `json:"subsidiaries"`
+	Tags                          []*Tag                        `json:"tags,omitempty"`
+	TargetAudience                *string                       `json:"targetAudience,omitempty"`
+	TimelineEvents                []TimelineEvent               `json:"timelineEvents"`
+	ValueProposition              *string                       `json:"valueProposition,omitempty"`
+	Website                       *string                       `json:"website,omitempty"`
+	YearFounded                   *int64                        `json:"yearFounded,omitempty"`
+	Contacts                      *ContactsPage                 `json:"contacts"`
+	JobRoles                      []*JobRole                    `json:"jobRoles"`
+	Emails                        []*Email                      `json:"emails"`
+	PhoneNumbers                  []*PhoneNumber                `json:"phoneNumbers"`
+	SuggestedMergeTo              []*SuggestedMergeOrganization `json:"suggestedMergeTo"`
+	FieldSets                     []*FieldSet                   `json:"fieldSets"`
+	EntityTemplate                *EntityTemplate               `json:"entityTemplate,omitempty"`
+	TimelineEventsTotalCount      int64                         `json:"timelineEventsTotalCount"`
+	ExternalLinks                 []*ExternalSystem             `json:"externalLinks"`
+	IssueSummaryByStatus          []*IssueSummaryByStatus       `json:"issueSummaryByStatus"`
+	Socials                       []*Social                     `json:"socials"`
+	IsPublic                      *bool                         `json:"isPublic,omitempty"`
+	Note                          *string                       `json:"note,omitempty"`
+	LogoURL                       *string                       `json:"logoUrl,omitempty"`
+	ID                            string                        `json:"id"`
 	CreatedAt                     time.Time                     `json:"createdAt"`
 	UpdatedAt                     time.Time                     `json:"updatedAt"`
-	Name                          string                        `json:"name"`
-	Description                   *string                       `json:"description,omitempty"`
-	Note                          *string                       `json:"note,omitempty"`
-	Domains                       []string                      `json:"domains"`
-	Website                       *string                       `json:"website,omitempty"`
-	Industry                      *string                       `json:"industry,omitempty"`
-	SubIndustry                   *string                       `json:"subIndustry,omitempty"`
-	IndustryGroup                 *string                       `json:"industryGroup,omitempty"`
-	TargetAudience                *string                       `json:"targetAudience,omitempty"`
-	ValueProposition              *string                       `json:"valueProposition,omitempty"`
-	IsPublic                      *bool                         `json:"isPublic,omitempty"`
-	IsCustomer                    *bool                         `json:"isCustomer,omitempty"`
-	Market                        *Market                       `json:"market,omitempty"`
-	Employees                     *int64                        `json:"employees,omitempty"`
-	YearFounded                   *int64                        `json:"yearFounded,omitempty"`
-	Headquarters                  *string                       `json:"headquarters,omitempty"`
-	EmployeeGrowthRate            *string                       `json:"employeeGrowthRate,omitempty"`
-	LogoURL                       *string                       `json:"logoUrl,omitempty"`
-	LastFundingRound              *FundingRound                 `json:"lastFundingRound,omitempty"`
-	LastFundingAmount             *string                       `json:"lastFundingAmount,omitempty"`
 	Source                        DataSource                    `json:"source"`
 	SourceOfTruth                 DataSource                    `json:"sourceOfTruth"`
 	AppSource                     string                        `json:"appSource"`
-	Locations                     []*Location                   `json:"locations"`
-	Socials                       []*Social                     `json:"socials"`
-	Contacts                      *ContactsPage                 `json:"contacts"`
-	JobRoles                      []*JobRole                    `json:"jobRoles"`
-	Notes                         *NotePage                     `json:"notes"`
-	Tags                          []*Tag                        `json:"tags,omitempty"`
-	Contracts                     []*Contract                   `json:"contracts,omitempty"`
-	Emails                        []*Email                      `json:"emails"`
-	PhoneNumbers                  []*PhoneNumber                `json:"phoneNumbers"`
-	Subsidiaries                  []*LinkedOrganization         `json:"subsidiaries"`
-	SubsidiaryOf                  []*LinkedOrganization         `json:"subsidiaryOf"`
-	SuggestedMergeTo              []*SuggestedMergeOrganization `json:"suggestedMergeTo"`
-	CustomFields                  []*CustomField                `json:"customFields"`
-	FieldSets                     []*FieldSet                   `json:"fieldSets"`
-	EntityTemplate                *EntityTemplate               `json:"entityTemplate,omitempty"`
-	TimelineEvents                []TimelineEvent               `json:"timelineEvents"`
-	TimelineEventsTotalCount      int64                         `json:"timelineEventsTotalCount"`
-	Owner                         *User                         `json:"owner,omitempty"`
-	ExternalLinks                 []*ExternalSystem             `json:"externalLinks"`
+	ReferenceID                   *string                       `json:"referenceId,omitempty"`
 	LastTouchPointAt              *time.Time                    `json:"lastTouchPointAt,omitempty"`
 	LastTouchPointType            *LastTouchpointType           `json:"lastTouchPointType,omitempty"`
 	LastTouchPointTimelineEventID *string                       `json:"lastTouchPointTimelineEventId,omitempty"`
 	LastTouchPointTimelineEvent   TimelineEvent                 `json:"lastTouchPointTimelineEvent,omitempty"`
-	IssueSummaryByStatus          []*IssueSummaryByStatus       `json:"issueSummaryByStatus"`
-	AccountDetails                *OrgAccountDetails            `json:"accountDetails,omitempty"`
+	SubsidiaryOf                  []*LinkedOrganization         `json:"subsidiaryOf"`
 }
 
 func (Organization) IsNotedEntity() {}
 
-func (Organization) IsNode()            {}
-func (this Organization) GetID() string { return this.ID }
+func (Organization) IsMetadataInterface()        {}
+func (this Organization) GetMetadata() *Metadata { return this.Metadata }
 
 type OrganizationInput struct {
 	// The name of the organization.

@@ -11,6 +11,7 @@ lang: en
 ```json
 {
   "amountDue": 0.0,
+  "amountDueInSmallestUnit": 0,
   "amountPaid": 0.0,
   "amountRemaining": 0.0,
   "contract": {
@@ -92,9 +93,7 @@ An `enum` representing the current status of the invoice.  Valid values are:
 - DRAFT
 - DUE
 - PAID
-- OVERDUE
-- UNCOLLECTABLE
-- VOIDED
+- VOID
 
 ### tax
 The invoice [`tax` object](invoice-tax-object)
