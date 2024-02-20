@@ -128,7 +128,13 @@ func syncEmailHandler(services *service.Services, log logger.Logger) gin.Handler
 		ctx, cancel := context.WithTimeout(ctx, timeout)
 		defer cancel()
 
-		syncResult, err := services.SyncEmailService.SyncEmail(ctx, email)
+		organizationSync, interactionEventSync, contactSync, err := services.SyncEmailService.SyncEmail(ctx, email)
+		//combine the results into a single response
+		combinedResults := service.CombinedResults{
+			OrganizationSync:     organizationSync,
+			InteractionEventSync: interactionEventSync,
+			ContactSync:          contactSync,
+		}
 		if err != nil {
 			tracing.TraceErr(span, err)
 			log.Errorf("(SyncEmail) error in sync email: %s", err.Error())
@@ -138,7 +144,7 @@ func syncEmailHandler(services *service.Services, log logger.Logger) gin.Handler
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing log entry"})
 			}
 		} else {
-			c.JSON(http.StatusOK, syncResult)
+			c.JSON(http.StatusOK, combinedResults)
 		}
 	}
 }
