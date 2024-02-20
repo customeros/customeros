@@ -17,6 +17,7 @@ type IssueCreateFields struct {
 	CreatedAt                 time.Time    `json:"createdAt"`
 	UpdatedAt                 time.Time    `json:"updatedAt"`
 	SourceFields              model.Source `json:"sourceFields"`
+	GroupId                   string       `json:"groupId"`
 	Subject                   string       `json:"subject"`
 	Description               string       `json:"description"`
 	Status                    string       `json:"status"`
@@ -27,6 +28,7 @@ type IssueCreateFields struct {
 }
 
 type IssueUpdateFields struct {
+	GroupId     string    `json:"groupId"`
 	Subject     string    `json:"subject"`
 	Description string    `json:"description"`
 	Status      string    `json:"status"`
@@ -74,11 +76,13 @@ func (r *issueWriteRepository) Create(ctx context.Context, tenant, issueId strin
 								i.source=$source,
 								i.sourceOfTruth=$sourceOfTruth,
 								i.appSource=$appSource,
+								i.groupId=$groupId,
 								i.subject=$subject,
 								i.description=$description,	
 								i.status=$status,	
 								i.priority=$priority
 							ON MATCH SET 	
+								i.groupId = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.groupId is null OR i.groupId = '' THEN $groupId ELSE i.groupId END,
 								i.subject = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.subject is null OR i.subject = '' THEN $subject ELSE i.subject END,
 								i.description = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.description is null OR i.description = '' THEN $description ELSE i.description END,
 								i.status = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.status is null OR i.status = '' THEN $status ELSE i.status END,
@@ -110,6 +114,7 @@ func (r *issueWriteRepository) Create(ctx context.Context, tenant, issueId strin
 		"source":                    data.SourceFields.Source,
 		"sourceOfTruth":             data.SourceFields.SourceOfTruth,
 		"appSource":                 data.SourceFields.AppSource,
+		"groupId":                   data.GroupId,
 		"subject":                   data.Subject,
 		"description":               data.Description,
 		"status":                    data.Status,
@@ -138,6 +143,7 @@ func (r *issueWriteRepository) Update(ctx context.Context, tenant, issueId strin
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {id:$issueId})
 		 	SET	
+				i.groupId = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.groupId is null OR i.groupId = '' THEN $groupId ELSE i.groupId END,
 				i.subject = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.subject is null OR i.subject = '' THEN $subject ELSE i.subject END,
 				i.description = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.description is null OR i.description = '' THEN $description ELSE i.description END,
 				i.status = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.status is null OR i.status = '' THEN $status ELSE i.status END,
@@ -149,6 +155,7 @@ func (r *issueWriteRepository) Update(ctx context.Context, tenant, issueId strin
 		"tenant":        tenant,
 		"issueId":       issueId,
 		"updatedAt":     data.UpdatedAt,
+		"groupId":       data.GroupId,
 		"subject":       data.Subject,
 		"description":   data.Description,
 		"status":        data.Status,

@@ -2,6 +2,7 @@ package model
 
 type IssueData struct {
 	BaseData
+	GroupId              string                  `json:"groupId,omitempty"`
 	Subject              string                  `json:"subject,omitempty"`
 	Status               string                  `json:"status,omitempty"`
 	Priority             string                  `json:"priority,omitempty"`

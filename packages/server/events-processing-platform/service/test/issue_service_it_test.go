@@ -28,6 +28,7 @@ func TestIssueService_UpsertIssue_CreateIssue(t *testing.T) {
 	tenant := "ziggy"
 	response, err := issueClient.UpsertIssue(ctx, &issuepb.UpsertIssueGrpcRequest{
 		Tenant:      tenant,
+		GroupId:     &tenant,
 		Subject:     "This is subject",
 		Description: "This is description",
 		Status:      "open",
@@ -66,6 +67,7 @@ func TestIssueService_UpsertIssue_CreateIssue(t *testing.T) {
 	require.Equal(t, timeNow, eventData.UpdatedAt)
 	require.Equal(t, "This is subject", eventData.Subject)
 	require.Equal(t, "This is description", eventData.Description)
+	require.Equal(t, tenant, eventData.GroupId)
 	require.Equal(t, "open", eventData.Status)
 	require.Equal(t, "high", eventData.Priority)
 	require.Equal(t, "456", eventData.ReportedByOrganizationId)
@@ -92,6 +94,7 @@ func TestIssueService_UpsertIssue_UpdateIssue(t *testing.T) {
 	createEvent := eventstore.NewBaseEvent(issueAggregate, event.IssueCreateV1)
 	preconfiguredEventData := event.IssueCreateEvent{
 		Tenant:  tenant,
+		GroupId: "This is groupId",
 		Subject: "This is subject",
 	}
 	err = createEvent.SetJsonData(&preconfiguredEventData)
@@ -105,6 +108,7 @@ func TestIssueService_UpsertIssue_UpdateIssue(t *testing.T) {
 	response, err := issueClient.UpsertIssue(ctx, &issuepb.UpsertIssueGrpcRequest{
 		Tenant:      tenant,
 		Id:          issueId,
+		GroupId:     &tenant,
 		Subject:     "New subject",
 		Description: "New description",
 		Status:      "closed",
@@ -135,6 +139,7 @@ func TestIssueService_UpsertIssue_UpdateIssue(t *testing.T) {
 	require.Equal(t, tenant, eventData.Tenant)
 	require.Equal(t, "openline", eventData.Source)
 	require.Equal(t, timeNow, eventData.UpdatedAt)
+	require.Equal(t, tenant, eventData.GroupId)
 	require.Equal(t, "New subject", eventData.Subject)
 	require.Equal(t, "New description", eventData.Description)
 	require.Equal(t, "closed", eventData.Status)

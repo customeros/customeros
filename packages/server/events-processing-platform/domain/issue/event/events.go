@@ -21,6 +21,7 @@ const (
 
 type IssueCreateEvent struct {
 	Tenant                    string                `json:"tenant" validate:"required"`
+	GroupId                   string                `json:"groupId"`
 	Subject                   string                `json:"subject" validate:"required_without=Description"`
 	Description               string                `json:"description" validate:"required_without=Subject"`
 	Status                    string                `json:"status"`
@@ -38,6 +39,7 @@ type IssueCreateEvent struct {
 func NewIssueCreateEvent(aggregate eventstore.Aggregate, dataFields model.IssueDataFields, source cmnmod.Source, externalSystem cmnmod.ExternalSystem, createdAt, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := IssueCreateEvent{
 		Tenant:                    aggregate.GetTenant(),
+		GroupId:                   utils.IfNotNilString(dataFields.GroupId),
 		Subject:                   dataFields.Subject,
 		Description:               dataFields.Description,
 		Status:                    dataFields.Status,
@@ -67,6 +69,7 @@ func NewIssueCreateEvent(aggregate eventstore.Aggregate, dataFields model.IssueD
 
 type IssueUpdateEvent struct {
 	Tenant         string                `json:"tenant" validate:"required"`
+	GroupId        string                `json:"groupId"`
 	Subject        string                `json:"subject" validate:"required_without=Description"`
 	Description    string                `json:"description" validate:"required_without=Subject"`
 	Status         string                `json:"status"`
@@ -79,6 +82,7 @@ type IssueUpdateEvent struct {
 func NewIssueUpdateEvent(aggregate eventstore.Aggregate, dataFields model.IssueDataFields, source string, externalSystem cmnmod.ExternalSystem, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := IssueUpdateEvent{
 		Tenant:      aggregate.GetTenant(),
+		GroupId:     utils.IfNotNilString(dataFields.GroupId),
 		Subject:     dataFields.Subject,
 		Description: dataFields.Description,
 		Status:      dataFields.Status,

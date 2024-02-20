@@ -29,6 +29,7 @@ type Repositories struct {
 	InvoiceLineWriteRepository        InvoiceLineWriteRepository
 	InvoicingCycleReadRepository      InvoicingCycleReadRepository
 	InvoicingCycleWriteRepository     InvoicingCycleWriteRepository
+	IssueReadRepository               IssueReadRepository
 	IssueWriteRepository              IssueWriteRepository
 	JobRoleWriteRepository            JobRoleWriteRepository
 	LocationWriteRepository           LocationWriteRepository
@@ -82,6 +83,7 @@ func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string
 		InvoiceLineWriteRepository:        NewInvoiceLineWriteRepository(driver, neo4jDatabase),
 		InvoicingCycleReadRepository:      NewInvoicingCycleReadRepository(driver, neo4jDatabase),
 		InvoicingCycleWriteRepository:     NewInvoicingCycleWriteRepository(driver, neo4jDatabase),
+		IssueReadRepository:               NewIssueReadRepository(driver, neo4jDatabase),
 		IssueWriteRepository:              NewIssueWriteRepository(driver, neo4jDatabase),
 		JobRoleWriteRepository:            NewJobRoleWriteRepository(driver, neo4jDatabase),
 		LocationWriteRepository:           NewLocationWriteRepository(driver, neo4jDatabase),

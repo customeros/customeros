@@ -57,6 +57,7 @@ func (h *IssueEventHandler) OnCreate(ctx context.Context, evt eventstore.Event) 
 			AppSource:     helper.GetAppSource(eventData.AppSource),
 			SourceOfTruth: helper.GetSourceOfTruth(eventData.Source),
 		},
+		GroupId:                   eventData.GroupId,
 		Subject:                   eventData.Subject,
 		Description:               eventData.Description,
 		Status:                    eventData.Status,
@@ -121,6 +122,7 @@ func (h *IssueEventHandler) OnUpdate(ctx context.Context, evt eventstore.Event) 
 
 	issueId := aggregate.GetIssueObjectID(evt.AggregateID, eventData.Tenant)
 	data := neo4jrepository.IssueUpdateFields{
+		GroupId:     eventData.GroupId,
 		Subject:     eventData.Subject,
 		Description: eventData.Description,
 		Status:      eventData.Status,

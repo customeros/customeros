@@ -181,7 +181,7 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 	syncMutex.Lock()
 	defer syncMutex.Unlock()
 	// Check if issue already exists
-	issueId, err := s.repositories.IssueRepository.GetMatchedIssueId(ctx, tenant, issueInput.ExternalSystem, issueInput.ExternalId)
+	issueId, err := s.repositories.Neo4jRepositories.IssueReadRepository.GetMatchedIssueId(ctx, tenant, issueInput.ExternalSystem, issueInput.ExternalId)
 	if err != nil {
 		failedSync = true
 		tracing.TraceErr(span, err)
@@ -220,6 +220,9 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 				SyncDate:         utils.ConvertTimeToTimestampPtr(&syncDate),
 			},
 		}
+		if issueInput.GroupId != "" {
+			issueGrpcRequest.GroupId = &issueInput.GroupId
+		}
 		if reporterId != "" && reporterLabel == neo4jutil.NodeLabelOrganization {
 			issueGrpcRequest.ReportedByOrganizationId = &reporterId
 		}
@@ -244,7 +247,7 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 		// Wait for issue to be created in neo4j
 		if !failedSync && !matchingIssueExists {
 			for i := 1; i <= constants.MaxRetryCheckDataInNeo4jAfterEventRequest; i++ {
-				issue, findErr := s.repositories.IssueRepository.GetById(ctx, tenant, issueId)
+				issue, findErr := s.repositories.Neo4jRepositories.IssueReadRepository.GetById(ctx, tenant, issueId)
 				if issue != nil && findErr == nil {
 					break
 				}
@@ -370,7 +373,7 @@ func (s *issueService) GetIdForReferencedIssue(ctx context.Context, tenant, exte
 	}
 
 	if issue.ReferencedByExternalId() {
-		return s.repositories.IssueRepository.GetIssueIdByExternalId(ctx, tenant, issue.ExternalId, externalSystemId)
+		return s.repositories.Neo4jRepositories.IssueReadRepository.GetIssueIdByExternalId(ctx, tenant, issue.ExternalId, externalSystemId)
 	}
 	return "", nil
 }
