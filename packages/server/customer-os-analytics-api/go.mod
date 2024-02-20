@@ -2,8 +2,6 @@ module github.com/openline-ai/openline-customer-os/packages/server/customer-os-a
 
 go 1.21
 
-toolchain go1.21.4
-
 require (
 	github.com/99designs/gqlgen v0.17.44
 	github.com/caarlos0/env/v6 v6.10.1

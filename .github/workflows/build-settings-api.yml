@@ -82,11 +82,13 @@ jobs:
         run: |
           mkdir tmp-sources
           mkdir tmp-sources/customer-os-common-module
+          mkdir tmp-sources/customer-os-common-auth
           mkdir tmp-sources/settings-api
 
           rsync -av --progress --exclude="tmp-sources" * tmp-sources/settings-api
           cp .env tmp-sources/settings-api/.env
           cp -r ../customer-os-common-module/* tmp-sources/customer-os-common-module
+          cp -r ../../server/customer-os-common-auth/* tmp-sources/customer-os-common-auth
 
           cp Dockerfile tmp-sources/Dockerfile
 
