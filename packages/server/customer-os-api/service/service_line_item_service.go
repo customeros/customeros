@@ -172,6 +172,9 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 		serviceLineItemEntity.VatRate == serviceLineItemDetails.SliVatRate {
 		isRetroactiveCorrection = true
 	}
+	if !isRetroactiveCorrection && serviceLineItemDetails.StartedAt != nil && serviceLineItemEntity.StartedAt == *serviceLineItemDetails.StartedAt {
+		isRetroactiveCorrection = true
+	}
 
 	if !isRetroactiveCorrection && serviceLineItemEntity.EndedAt != nil {
 		err = fmt.Errorf("service line item with id {%s} is already ended", serviceLineItemDetails.Id)
