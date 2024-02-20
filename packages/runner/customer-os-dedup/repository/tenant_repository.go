@@ -98,6 +98,8 @@ func (r *tenantRepository) UpdateTenantMetadataOrgDedupAt(ctx context.Context, t
 	_, err := utils.ExecuteQuery(ctx, *r.driver, r.database, query, map[string]any{
 		"tenantName": tenantName,
 		"orgDedupAt": time,
+	}, func(err error) {
+		tracing.TraceErr(span, err)
 	})
 	return err
 }

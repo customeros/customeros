@@ -54,6 +54,8 @@ func (r *organizationRepository) SuggestOrganizationsMerge(ctx context.Context, 
 		"suggestedBy":     suggestedBy,
 		"suggestedByDtls": suggestedByDtls,
 		"confidence":      confidence,
+	}, func(err error) {
+		tracing.TraceErr(span, err)
 	})
 	return err
 }
