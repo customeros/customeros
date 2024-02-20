@@ -480,6 +480,7 @@ func TestMutationResolver_TenantUpdateSettings(t *testing.T) {
 				tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_LOGO_URL,
 				tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_INVOICING_ENABLED,
 				tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_DEFAULT_CURRENCY,
+				tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_BASE_CURRENCY,
 				tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_LOGO_REPOSITORY_FILE_ID,
 			},
 				profile.FieldsMask)
