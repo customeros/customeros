@@ -166,9 +166,11 @@ func (h *TenantEventHandler) OnUpdateTenantSettingsV1(ctx context.Context, evt e
 		InvoicingEnabled:           eventData.InvoicingEnabled,
 		InvoicingPostpaid:          eventData.InvoicingPostpaid,
 		DefaultCurrency:            neo4jenum.DecodeCurrency(eventData.DefaultCurrency),
+		BaseCurrency:               neo4jenum.DecodeCurrency(eventData.BaseCurrency),
 		UpdateLogoUrl:              eventData.UpdateLogoUrl(),
 		UpdateInvoicingEnabled:     eventData.UpdateInvoicingEnabled(),
 		UpdateDefaultCurrency:      eventData.UpdateDefaultCurrency(),
+		UpdateBaseCurrency:         eventData.UpdateBaseCurrency(),
 		UpdateInvoicingPostpaid:    eventData.UpdateInvoicingPostpaid(),
 		UpdateLogoRepositoryFileId: eventData.UpdateLogoRepositoryFileId(),
 	}

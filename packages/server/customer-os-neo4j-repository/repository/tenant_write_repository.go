@@ -90,6 +90,7 @@ type TenantSettingsFields struct {
 	LogoUrl                    string        `json:"logoUrl"`
 	LogoRepositoryFileId       string        `json:"logoRepositoryFileId"`
 	DefaultCurrency            enum.Currency `json:"defaultCurrency"`
+	BaseCurrency               enum.Currency `json:"baseCurrency"`
 	InvoicingEnabled           bool          `json:"invoicingEnabled"`
 	InvoicingPostpaid          bool          `json:"invoicingPostpaid"`
 	UpdateLogoUrl              bool          `json:"updateLogoUrl"`
@@ -97,6 +98,7 @@ type TenantSettingsFields struct {
 	UpdateInvoicingEnabled     bool          `json:"updateInvoicingEnabled"`
 	UpdateInvoicingPostpaid    bool          `json:"updateInvoicingPostpaid"`
 	UpdateDefaultCurrency      bool          `json:"updateDefaultCurrency"`
+	UpdateBaseCurrency         bool          `json:"updateBaseCurrency"`
 }
 
 type TenantWriteRepository interface {
@@ -328,6 +330,10 @@ func (r *tenantWriteRepository) UpdateTenantSettings(ctx context.Context, tenant
 	if data.UpdateDefaultCurrency {
 		cypher += ", ts.defaultCurrency=$defaultCurrency"
 		params["defaultCurrency"] = data.DefaultCurrency.String()
+	}
+	if data.UpdateBaseCurrency {
+		cypher += ", ts.baseCurrency=$baseCurrency"
+		params["baseCurrency"] = data.BaseCurrency.String()
 	}
 	if data.UpdateLogoUrl {
 		cypher += ", ts.logoUrl=$logoUrl"

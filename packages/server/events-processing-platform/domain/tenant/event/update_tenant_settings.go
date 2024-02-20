@@ -12,7 +12,8 @@ import (
 type TenantSettingsUpdateEvent struct {
 	Tenant               string    `json:"tenant" validate:"required"`
 	UpdatedAt            time.Time `json:"updatedAt"`
-	DefaultCurrency      string    `json:"defaultCurrency,omitempty"`
+	DefaultCurrency      string    `json:"defaultCurrency,omitempty"` //Deprecated
+	BaseCurrency         string    `json:"baseCurrency,omitempty"`
 	InvoicingEnabled     bool      `json:"invoicingEnabled,omitempty"`
 	InvoicingPostpaid    bool      `json:"invoicingPostpaid,omitempty"`
 	LogoUrl              string    `json:"logoUrl,omitempty"`
@@ -25,6 +26,7 @@ func NewTenantSettingsUpdateEvent(aggregate eventstore.Aggregate, request *tenan
 		Tenant:               aggregate.GetTenant(),
 		UpdatedAt:            updatedAt,
 		DefaultCurrency:      request.DefaultCurrency,
+		BaseCurrency:         request.BaseCurrency,
 		InvoicingEnabled:     request.InvoicingEnabled,
 		InvoicingPostpaid:    request.InvoicingPostpaid,
 		LogoUrl:              request.LogoUrl,
@@ -62,4 +64,8 @@ func (e TenantSettingsUpdateEvent) UpdateInvoicingPostpaid() bool {
 
 func (e TenantSettingsUpdateEvent) UpdateLogoRepositoryFileId() bool {
 	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskLogoRepositoryFileId)
+}
+
+func (e TenantSettingsUpdateEvent) UpdateBaseCurrency() bool {
+	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskBaseCurrency)
 }

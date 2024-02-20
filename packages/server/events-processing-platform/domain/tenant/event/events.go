@@ -28,7 +28,8 @@ const (
 
 	FieldMaskLogoUrl              = "logoUrl"
 	FieldMaskLogoRepositoryFileId = "logoRepositoryFileId"
-	FieldMaskDefaultCurrency      = "defaultCurrency"
+	FieldMaskDefaultCurrency      = "defaultCurrency" //Deprecated
+	FieldMaskBaseCurrency         = "baseCurrency"
 	FieldMaskInvoicingEnabled     = "invoicingEnabled"
 	FieldMaskInvoicingPostpaid    = "invoicingPostpaid"
 )
