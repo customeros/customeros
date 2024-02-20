@@ -160,15 +160,17 @@ func (h *TenantEventHandler) OnUpdateTenantSettingsV1(ctx context.Context, evt e
 	span.SetTag(tracing.SpanTagEntityId, tenantName)
 
 	data := neo4jrepository.TenantSettingsFields{
-		UpdatedAt:               eventData.UpdatedAt,
-		LogoUrl:                 eventData.LogoUrl,
-		InvoicingEnabled:        eventData.InvoicingEnabled,
-		InvoicingPostpaid:       eventData.InvoicingPostpaid,
-		DefaultCurrency:         neo4jenum.DecodeCurrency(eventData.DefaultCurrency),
-		UpdateLogoUrl:           eventData.UpdateLogoUrl(),
-		UpdateInvoicingEnabled:  eventData.UpdateInvoicingEnabled(),
-		UpdateDefaultCurrency:   eventData.UpdateDefaultCurrency(),
-		UpdateInvoicingPostpaid: eventData.UpdateInvoicingPostpaid(),
+		UpdatedAt:                  eventData.UpdatedAt,
+		LogoUrl:                    eventData.LogoUrl,
+		LogoRepositoryFileId:       eventData.LogoRepositoryFileId,
+		InvoicingEnabled:           eventData.InvoicingEnabled,
+		InvoicingPostpaid:          eventData.InvoicingPostpaid,
+		DefaultCurrency:            neo4jenum.DecodeCurrency(eventData.DefaultCurrency),
+		UpdateLogoUrl:              eventData.UpdateLogoUrl(),
+		UpdateInvoicingEnabled:     eventData.UpdateInvoicingEnabled(),
+		UpdateDefaultCurrency:      eventData.UpdateDefaultCurrency(),
+		UpdateInvoicingPostpaid:    eventData.UpdateInvoicingPostpaid(),
+		UpdateLogoRepositoryFileId: eventData.UpdateLogoRepositoryFileId(),
 	}
 	err := h.repositories.Neo4jRepositories.TenantWriteRepository.UpdateTenantSettings(ctx, tenantName, data)
 	if err != nil {

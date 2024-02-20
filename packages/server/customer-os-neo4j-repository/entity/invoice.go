@@ -48,14 +48,15 @@ type InvoiceCustomer struct {
 }
 
 type InvoiceProvider struct {
-	LogoUrl      string
-	Name         string
-	Email        string
-	AddressLine1 string
-	AddressLine2 string
-	Zip          string
-	Locality     string
-	Country      string
+	LogoUrl              string
+	LogoRepositoryFileId string
+	Name                 string
+	Email                string
+	AddressLine1         string
+	AddressLine2         string
+	Zip                  string
+	Locality             string
+	Country              string
 }
 
 type PaymentDetails struct {

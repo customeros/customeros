@@ -75,6 +75,7 @@ message FillInvoiceProvider {
   string Zip = 6;
   string Locality = 7;
   string Country = 8;
+  string LogoRepositoryFileId = 9;
 }
 
 message InvoiceLine {

@@ -1146,13 +1146,14 @@ type InvoiceLineInput struct {
 }
 
 type InvoiceProvider struct {
-	LogoURL         *string `json:"logoUrl,omitempty"`
-	Name            *string `json:"name,omitempty"`
-	AddressLine1    *string `json:"addressLine1,omitempty"`
-	AddressLine2    *string `json:"addressLine2,omitempty"`
-	AddressZip      *string `json:"addressZip,omitempty"`
-	AddressLocality *string `json:"addressLocality,omitempty"`
-	AddressCountry  *string `json:"addressCountry,omitempty"`
+	LogoURL              *string `json:"logoUrl,omitempty"`
+	LogoRepositoryFileID *string `json:"logoRepositoryFileId,omitempty"`
+	Name                 *string `json:"name,omitempty"`
+	AddressLine1         *string `json:"addressLine1,omitempty"`
+	AddressLine2         *string `json:"addressLine2,omitempty"`
+	AddressZip           *string `json:"addressZip,omitempty"`
+	AddressLocality      *string `json:"addressLocality,omitempty"`
+	AddressCountry       *string `json:"addressCountry,omitempty"`
 }
 
 type InvoiceSimulateInput struct {
@@ -2457,16 +2458,18 @@ type TenantInput struct {
 }
 
 type TenantSettings struct {
-	LogoURL         string    `json:"logoUrl"`
-	DefaultCurrency *Currency `json:"defaultCurrency,omitempty"`
-	BillingEnabled  bool      `json:"billingEnabled"`
+	LogoURL              string    `json:"logoUrl"`
+	LogoRepositoryFileID *string   `json:"logoRepositoryFileId,omitempty"`
+	DefaultCurrency      *Currency `json:"defaultCurrency,omitempty"`
+	BillingEnabled       bool      `json:"billingEnabled"`
 }
 
 type TenantSettingsInput struct {
-	Patch           *bool     `json:"patch,omitempty"`
-	LogoURL         *string   `json:"logoUrl,omitempty"`
-	DefaultCurrency *Currency `json:"defaultCurrency,omitempty"`
-	BillingEnabled  *bool     `json:"billingEnabled,omitempty"`
+	Patch                *bool     `json:"patch,omitempty"`
+	LogoURL              *string   `json:"logoUrl,omitempty"`
+	LogoRepositoryFileID *string   `json:"logoRepositoryFileId,omitempty"`
+	DefaultCurrency      *Currency `json:"defaultCurrency,omitempty"`
+	BillingEnabled       *bool     `json:"billingEnabled,omitempty"`
 }
 
 type TimeRange struct {

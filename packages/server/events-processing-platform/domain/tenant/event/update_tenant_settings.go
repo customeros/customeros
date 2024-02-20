@@ -10,24 +10,26 @@ import (
 )
 
 type TenantSettingsUpdateEvent struct {
-	Tenant            string    `json:"tenant" validate:"required"`
-	UpdatedAt         time.Time `json:"updatedAt"`
-	DefaultCurrency   string    `json:"defaultCurrency,omitempty"`
-	InvoicingEnabled  bool      `json:"invoicingEnabled,omitempty"`
-	InvoicingPostpaid bool      `json:"invoicingPostpaid,omitempty"`
-	LogoUrl           string    `json:"logoUrl,omitempty"`
-	FieldsMask        []string  `json:"fieldsMask,omitempty"`
+	Tenant               string    `json:"tenant" validate:"required"`
+	UpdatedAt            time.Time `json:"updatedAt"`
+	DefaultCurrency      string    `json:"defaultCurrency,omitempty"`
+	InvoicingEnabled     bool      `json:"invoicingEnabled,omitempty"`
+	InvoicingPostpaid    bool      `json:"invoicingPostpaid,omitempty"`
+	LogoUrl              string    `json:"logoUrl,omitempty"`
+	LogoRepositoryFileId string    `json:"logoRepositoryFileId,omitempty"`
+	FieldsMask           []string  `json:"fieldsMask,omitempty"`
 }
 
 func NewTenantSettingsUpdateEvent(aggregate eventstore.Aggregate, request *tenantpb.UpdateTenantSettingsRequest, updatedAt time.Time, fieldsMaks []string) (eventstore.Event, error) {
 	eventData := TenantSettingsUpdateEvent{
-		Tenant:            aggregate.GetTenant(),
-		UpdatedAt:         updatedAt,
-		DefaultCurrency:   request.DefaultCurrency,
-		InvoicingEnabled:  request.InvoicingEnabled,
-		InvoicingPostpaid: request.InvoicingPostpaid,
-		LogoUrl:           request.LogoUrl,
-		FieldsMask:        fieldsMaks,
+		Tenant:               aggregate.GetTenant(),
+		UpdatedAt:            updatedAt,
+		DefaultCurrency:      request.DefaultCurrency,
+		InvoicingEnabled:     request.InvoicingEnabled,
+		InvoicingPostpaid:    request.InvoicingPostpaid,
+		LogoUrl:              request.LogoUrl,
+		LogoRepositoryFileId: request.LogoRepositoryFileId,
+		FieldsMask:           fieldsMaks,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
@@ -56,4 +58,8 @@ func (e TenantSettingsUpdateEvent) UpdateInvoicingEnabled() bool {
 
 func (e TenantSettingsUpdateEvent) UpdateInvoicingPostpaid() bool {
 	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskInvoicingPostpaid)
+}
+
+func (e TenantSettingsUpdateEvent) UpdateLogoRepositoryFileId() bool {
+	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskLogoRepositoryFileId)
 }

@@ -53,6 +53,7 @@ type InvoiceFillFields struct {
 	CustomerAddressLocality       string                  `json:"customerAddressLocality"`
 	CustomerAddressCountry        string                  `json:"customerAddressCountry"`
 	ProviderLogoUrl               string                  `json:"providerLogoUrl"`
+	ProviderLogoRepositoryFileId  string                  `json:"providerLogoRepositoryFileId"`
 	ProviderName                  string                  `json:"providerName"`
 	ProviderEmail                 string                  `json:"providerEmail"`
 	ProviderAddressLine1          string                  `json:"providerAddressLine1"`
@@ -166,32 +167,9 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tenant, invoic
 								i:Invoice_%s,
 								i.currency=$currency,
 								i.dryRun=$dryRun,
-								i.currency=$currency,
 								i.periodStartDate=$periodStart,
 								i.periodEndDate=$periodEnd,
-								i.billingCycle=$billingCycle,
-								i.amount=$amount,
-								i.vat=$vat,
-								i.totalAmount=$totalAmount,
-								i.status=$status,
-								i.note=$note,
-								i.domesticPaymentsBankInfo=$domesticPaymentsBankInfo,
-								i.internationalPaymentsBankInfo=$internationalPaymentsBankInfo,
-								i.customerName=$customerName,
-								i.customerEmail=$customerEmail,
-								i.customerAddressLine1=$customerAddressLine1,
-								i.customerAddressLine2=$customerAddressLine2,
-								i.customerAddressZip=$customerAddressZip,
-								i.customerAddressLocality=$customerAddressLocality,
-								i.customerAddressCountry=$customerAddressCountry,
-								i.providerLogoUrl=$providerLogoUrl,
-								i.providerName=$providerName,
-								i.providerEmail=$providerEmail,
-								i.providerAddressLine1=$providerAddressLine1,
-								i.providerAddressLine2=$providerAddressLine2,
-								i.providerAddressZip=$providerAddressZip,
-								i.providerAddressLocality=$providerAddressLocality,
-								i.providerAddressCountry=$providerAddressCountry
+								i.billingCycle=$billingCycle
 							SET 
 								i.updatedAt=$updatedAt,
 								i.number=$number,
@@ -210,6 +188,7 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tenant, invoic
 								i.customerAddressLocality=$customerAddressLocality,
 								i.customerAddressCountry=$customerAddressCountry,
 								i.providerLogoUrl=$providerLogoUrl,
+								i.providerLogoRepositoryFileId=$providerLogoRepositoryFileId,
 								i.providerName=$providerName,
 								i.providerEmail=$providerEmail,
 								i.providerAddressLine1=$providerAddressLine1,
@@ -246,6 +225,7 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tenant, invoic
 		"customerAddressLocality":       data.CustomerAddressLocality,
 		"customerAddressCountry":        data.CustomerAddressCountry,
 		"providerLogoUrl":               data.ProviderLogoUrl,
+		"providerLogoRepositoryFileId":  data.ProviderLogoRepositoryFileId,
 		"providerName":                  data.ProviderName,
 		"providerEmail":                 data.ProviderEmail,
 		"providerAddressLine1":          data.ProviderAddressLine1,

@@ -54,7 +54,7 @@
       "query": "match (t:Tenant)-->(tm:TenantMetadata) with t, count(tm) as countMetadata where countMetadata > 1 return count(t)"
     },
     {
-      "name": "Check singe TenantSettings per Tenant",
+      "name": "Check single TenantSettings per Tenant",
       "query": "MATCH (t:Tenant)-->(ts:TenantSettings) with t, count(ts) as cnt where cnt > 1 return count(t)"
     },
     {

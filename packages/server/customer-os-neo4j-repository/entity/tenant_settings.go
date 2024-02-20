@@ -6,11 +6,12 @@ import (
 )
 
 type TenantSettingsEntity struct {
-	Id                string
-	LogoUrl           string
-	DefaultCurrency   enum.Currency
-	InvoicingEnabled  bool
-	InvoicingPostpaid bool
-	CreatedAt         time.Time
-	UpdatedAt         time.Time
+	Id                   string
+	LogoUrl              string
+	LogoRepositoryFileId string
+	DefaultCurrency      enum.Currency
+	InvoicingEnabled     bool
+	InvoicingPostpaid    bool
+	CreatedAt            time.Time
+	UpdatedAt            time.Time
 }

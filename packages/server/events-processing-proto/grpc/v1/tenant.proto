@@ -94,6 +94,7 @@ enum TenantSettingsFieldMask {
   TENANT_SETTINGS_FIELD_INVOICING_ENABLED = 2;
   TENANT_SETTINGS_FIELD_LOGO_URL = 3;
   TENANT_SETTINGS_FIELD_INVOICING_POSTPAID = 4;
+  TENANT_SETTINGS_FIELD_LOGO_REPOSITORY_FILE_ID = 5;
 }
 
 message UpdateTenantSettingsRequest {
@@ -106,6 +107,7 @@ message UpdateTenantSettingsRequest {
   bool invoicingEnabled = 8;
   string logoUrl = 9;
   bool invoicingPostpaid = 10;
+  string logoRepositoryFileId = 11;
 }
 
 service tenantGrpcService {

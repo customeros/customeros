@@ -40,20 +40,21 @@ type InvoiceFillCustomerEvent struct {
 	Email        string `json:"email"`
 }
 type InvoiceFillProviderEvent struct {
-	LogoUrl      string `json:"logoUrl"`
-	Name         string `json:"name"`
-	Email        string `json:"email"`
-	AddressLine1 string `json:"addressLine1"`
-	AddressLine2 string `json:"addressLine2"`
-	Zip          string `json:"zip"`
-	Locality     string `json:"locality"`
-	Country      string `json:"country"`
+	LogoUrl              string `json:"logoUrl"`
+	Name                 string `json:"name"`
+	Email                string `json:"email"`
+	AddressLine1         string `json:"addressLine1"`
+	AddressLine2         string `json:"addressLine2"`
+	Zip                  string `json:"zip"`
+	Locality             string `json:"locality"`
+	Country              string `json:"country"`
+	LogoRepositoryFileId string `json:"logoRepositoryFileId"`
 }
 
 func NewInvoiceFillEvent(aggregate eventstore.Aggregate, updatedAt time.Time, invoice Invoice,
 	domesticPaymentsBankInfo, internationalPaymentsBankInfo,
 	customerName, customerAddressLine1, customerAddressLine2, customerAddressZip, customerAddressLocality, customerAddressCountry, customerEmail,
-	providerLogoUrl, providerName, providerEmail, providerAddressLine1, providerAddressLine2, providerAddressZip, providerAddressLocality, providerAddressCountry,
+	providerLogoUrl, providerLogoRepositoryFileId, providerName, providerEmail, providerAddressLine1, providerAddressLine2, providerAddressZip, providerAddressLocality, providerAddressCountry,
 	note, status, invoiceNumber string, amount, vat, totalAmount float64, invoiceLines []InvoiceLineEvent) (eventstore.Event, error) {
 	eventData := InvoiceFillEvent{
 		Tenant:                        aggregate.GetTenant(),
@@ -83,14 +84,15 @@ func NewInvoiceFillEvent(aggregate eventstore.Aggregate, updatedAt time.Time, in
 			Country:      customerAddressCountry,
 		},
 		Provider: InvoiceFillProviderEvent{
-			LogoUrl:      providerLogoUrl,
-			Name:         providerName,
-			Email:        providerEmail,
-			AddressLine1: providerAddressLine1,
-			AddressLine2: providerAddressLine2,
-			Zip:          providerAddressZip,
-			Locality:     providerAddressLocality,
-			Country:      providerAddressCountry,
+			LogoUrl:              providerLogoUrl,
+			Name:                 providerName,
+			Email:                providerEmail,
+			AddressLine1:         providerAddressLine1,
+			AddressLine2:         providerAddressLine2,
+			Zip:                  providerAddressZip,
+			Locality:             providerAddressLocality,
+			Country:              providerAddressCountry,
+			LogoRepositoryFileId: providerLogoRepositoryFileId,
 		},
 	}
 

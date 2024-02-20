@@ -325,17 +325,21 @@ func (s *tenantService) UpdateTenantSettings(ctx context.Context, input *model.T
 
 	var fieldMask []tenantpb.TenantSettingsFieldMask
 	updateRequest := tenantpb.UpdateTenantSettingsRequest{
-		Tenant:           common.GetTenantFromContext(ctx),
-		LoggedInUserId:   common.GetUserIdFromContext(ctx),
-		AppSource:        constants.AppSourceCustomerOsApi,
-		LogoUrl:          utils.IfNotNilString(input.LogoURL),
-		DefaultCurrency:  defaultCurrency,
-		InvoicingEnabled: utils.IfNotNilBool(input.BillingEnabled),
+		Tenant:               common.GetTenantFromContext(ctx),
+		LoggedInUserId:       common.GetUserIdFromContext(ctx),
+		AppSource:            constants.AppSourceCustomerOsApi,
+		LogoUrl:              utils.IfNotNilString(input.LogoURL),
+		LogoRepositoryFileId: utils.IfNotNilString(input.LogoRepositoryFileID),
+		DefaultCurrency:      defaultCurrency,
+		InvoicingEnabled:     utils.IfNotNilBool(input.BillingEnabled),
 	}
 
 	if input.Patch != nil && *input.Patch {
 		if input.LogoURL != nil {
 			fieldMask = append(fieldMask, tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_LOGO_URL)
+		}
+		if input.LogoRepositoryFileID != nil {
+			fieldMask = append(fieldMask, tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_LOGO_REPOSITORY_FILE_ID)
 		}
 		if input.DefaultCurrency != nil {
 			fieldMask = append(fieldMask, tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_DEFAULT_CURRENCY)

@@ -654,13 +654,14 @@ type ComplexityRoot struct {
 	}
 
 	InvoiceProvider struct {
-		AddressCountry  func(childComplexity int) int
-		AddressLine1    func(childComplexity int) int
-		AddressLine2    func(childComplexity int) int
-		AddressLocality func(childComplexity int) int
-		AddressZip      func(childComplexity int) int
-		LogoURL         func(childComplexity int) int
-		Name            func(childComplexity int) int
+		AddressCountry       func(childComplexity int) int
+		AddressLine1         func(childComplexity int) int
+		AddressLine2         func(childComplexity int) int
+		AddressLocality      func(childComplexity int) int
+		AddressZip           func(childComplexity int) int
+		LogoRepositoryFileID func(childComplexity int) int
+		LogoURL              func(childComplexity int) int
+		Name                 func(childComplexity int) int
 	}
 
 	InvoicesPage struct {
@@ -1462,9 +1463,10 @@ type ComplexityRoot struct {
 	}
 
 	TenantSettings struct {
-		BillingEnabled  func(childComplexity int) int
-		DefaultCurrency func(childComplexity int) int
-		LogoURL         func(childComplexity int) int
+		BillingEnabled       func(childComplexity int) int
+		DefaultCurrency      func(childComplexity int) int
+		LogoRepositoryFileID func(childComplexity int) int
+		LogoURL              func(childComplexity int) int
 	}
 
 	User struct {
@@ -4921,6 +4923,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.InvoiceProvider.AddressZip(childComplexity), true
+
+	case "InvoiceProvider.logoRepositoryFileId":
+		if e.complexity.InvoiceProvider.LogoRepositoryFileID == nil {
+			break
+		}
+
+		return e.complexity.InvoiceProvider.LogoRepositoryFileID(childComplexity), true
 
 	case "InvoiceProvider.logoUrl":
 		if e.complexity.InvoiceProvider.LogoURL == nil {
@@ -10577,6 +10586,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.TenantSettings.DefaultCurrency(childComplexity), true
 
+	case "TenantSettings.logoRepositoryFileId":
+		if e.complexity.TenantSettings.LogoRepositoryFileID == nil {
+			break
+		}
+
+		return e.complexity.TenantSettings.LogoRepositoryFileID(childComplexity), true
+
 	case "TenantSettings.logoUrl":
 		if e.complexity.TenantSettings.LogoURL == nil {
 			break
@@ -12604,13 +12620,14 @@ type InvoiceCustomer {
 }
 
 type InvoiceProvider {
-    logoUrl:            String
-    name:               String
-    addressLine1:       String
-    addressLine2:       String
-    addressZip:         String
-    addressLocality:    String
-    addressCountry:     String
+    logoUrl:                String
+    logoRepositoryFileId:   String
+    name:                   String
+    addressLine1:           String
+    addressLine2:           String
+    addressZip:             String
+    addressLocality:        String
+    addressCountry:         String
 }
 
 type InvoiceLine implements MetadataInterface {
@@ -13277,7 +13294,7 @@ type Organization implements MetadataInterface {
     logo:                   String
     market:                 Market
     name:                   String!
-#    notes:                  String
+#    notes:                  String To replace the below notes field
     notes(pagination: Pagination): NotePage! @goField(forceResolver: true) @deprecated
     owner:                  User @goField(forceResolver: true)
     parentCompanies:        [LinkedOrganization!]! @goField(forceResolver: true)
@@ -14061,9 +14078,10 @@ extend type Mutation {
 }
 
 type TenantSettings {
-    logoUrl:            String!
-    defaultCurrency:    Currency
-    billingEnabled:     Boolean!
+    logoUrl:                String!
+    logoRepositoryFileId:   String
+    defaultCurrency:        Currency
+    billingEnabled:         Boolean!
 }
 
 type TenantBillingProfile implements SourceFields & Node {
@@ -14143,10 +14161,11 @@ input TenantBillingProfileUpdateInput {
 }
 
 input TenantSettingsInput {
-    patch:              Boolean
-    logoUrl:            String
-    defaultCurrency:    Currency
-    billingEnabled:     Boolean
+    patch:                  Boolean
+    logoUrl:                String
+    logoRepositoryFileId:   String
+    defaultCurrency:        Currency
+    billingEnabled:         Boolean
 }`, BuiltIn: false},
 	{Name: "../schemas/tenant_billable.graphqls", Input: `extend type Query {
     billableInfo: TenantBillableInfo! @hasRole(roles: [USER, ADMIN])
@@ -37239,6 +37258,8 @@ func (ec *executionContext) fieldContext_Invoice_provider(ctx context.Context, f
 			switch field.Name {
 			case "logoUrl":
 				return ec.fieldContext_InvoiceProvider_logoUrl(ctx, field)
+			case "logoRepositoryFileId":
+				return ec.fieldContext_InvoiceProvider_logoRepositoryFileId(ctx, field)
 			case "name":
 				return ec.fieldContext_InvoiceProvider_name(ctx, field)
 			case "addressLine1":
@@ -38936,6 +38957,47 @@ func (ec *executionContext) _InvoiceProvider_logoUrl(ctx context.Context, field 
 }
 
 func (ec *executionContext) fieldContext_InvoiceProvider_logoUrl(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InvoiceProvider",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _InvoiceProvider_logoRepositoryFileId(ctx context.Context, field graphql.CollectedField, obj *model.InvoiceProvider) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InvoiceProvider_logoRepositoryFileId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LogoRepositoryFileID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InvoiceProvider_logoRepositoryFileId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "InvoiceProvider",
 		Field:      field,
@@ -61551,6 +61613,8 @@ func (ec *executionContext) fieldContext_Mutation_tenant_UpdateSettings(ctx cont
 			switch field.Name {
 			case "logoUrl":
 				return ec.fieldContext_TenantSettings_logoUrl(ctx, field)
+			case "logoRepositoryFileId":
+				return ec.fieldContext_TenantSettings_logoRepositoryFileId(ctx, field)
 			case "defaultCurrency":
 				return ec.fieldContext_TenantSettings_defaultCurrency(ctx, field)
 			case "billingEnabled":
@@ -77172,6 +77236,8 @@ func (ec *executionContext) fieldContext_Query_tenantSettings(ctx context.Contex
 			switch field.Name {
 			case "logoUrl":
 				return ec.fieldContext_TenantSettings_logoUrl(ctx, field)
+			case "logoRepositoryFileId":
+				return ec.fieldContext_TenantSettings_logoRepositoryFileId(ctx, field)
 			case "defaultCurrency":
 				return ec.fieldContext_TenantSettings_defaultCurrency(ctx, field)
 			case "billingEnabled":
@@ -82920,6 +82986,47 @@ func (ec *executionContext) _TenantSettings_logoUrl(ctx context.Context, field g
 }
 
 func (ec *executionContext) fieldContext_TenantSettings_logoUrl(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantSettings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantSettings_logoRepositoryFileId(ctx context.Context, field graphql.CollectedField, obj *model.TenantSettings) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantSettings_logoRepositoryFileId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LogoRepositoryFileID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantSettings_logoRepositoryFileId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "TenantSettings",
 		Field:      field,
@@ -92078,7 +92185,7 @@ func (ec *executionContext) unmarshalInputTenantSettingsInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"patch", "logoUrl", "defaultCurrency", "billingEnabled"}
+	fieldsInOrder := [...]string{"patch", "logoUrl", "logoRepositoryFileId", "defaultCurrency", "billingEnabled"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -92099,6 +92206,13 @@ func (ec *executionContext) unmarshalInputTenantSettingsInput(ctx context.Contex
 				return it, err
 			}
 			it.LogoURL = data
+		case "logoRepositoryFileId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("logoRepositoryFileId"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LogoRepositoryFileID = data
 		case "defaultCurrency":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("defaultCurrency"))
 			data, err := ec.unmarshalOCurrency2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCurrency(ctx, v)
@@ -98235,6 +98349,8 @@ func (ec *executionContext) _InvoiceProvider(ctx context.Context, sel ast.Select
 			out.Values[i] = graphql.MarshalString("InvoiceProvider")
 		case "logoUrl":
 			out.Values[i] = ec._InvoiceProvider_logoUrl(ctx, field, obj)
+		case "logoRepositoryFileId":
+			out.Values[i] = ec._InvoiceProvider_logoRepositoryFileId(ctx, field, obj)
 		case "name":
 			out.Values[i] = ec._InvoiceProvider_name(ctx, field, obj)
 		case "addressLine1":
@@ -106103,6 +106219,8 @@ func (ec *executionContext) _TenantSettings(ctx context.Context, sel ast.Selecti
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "logoRepositoryFileId":
+			out.Values[i] = ec._TenantSettings_logoRepositoryFileId(ctx, field, obj)
 		case "defaultCurrency":
 			out.Values[i] = ec._TenantSettings_defaultCurrency(ctx, field, obj)
 		case "billingEnabled":
