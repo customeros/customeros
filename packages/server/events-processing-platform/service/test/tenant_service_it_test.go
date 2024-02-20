@@ -211,6 +211,7 @@ func TestTenantService_UpdateTenantSettings(t *testing.T) {
 		LogoUrl:              "logoUrl",
 		LogoRepositoryFileId: "logoRepositoryFileId",
 		DefaultCurrency:      "USD",
+		BaseCurrency:         "USD",
 		InvoicingEnabled:     true,
 	})
 	require.Nil(t, err)
@@ -235,6 +236,7 @@ func TestTenantService_UpdateTenantSettings(t *testing.T) {
 	require.Equal(t, "logoUrl", eventData.LogoUrl)
 	require.Equal(t, "logoRepositoryFileId", eventData.LogoRepositoryFileId)
 	require.Equal(t, "USD", eventData.DefaultCurrency)
+	require.Equal(t, "USD", eventData.BaseCurrency)
 	require.Equal(t, true, eventData.InvoicingEnabled)
 	require.Equal(t, 0, len(eventData.FieldsMask))
 }

@@ -285,6 +285,7 @@ func MapDbNodeToTenantSettingsEntity(dbNode *dbtype.Node) *entity.TenantSettings
 		InvoicingEnabled:     utils.GetBoolPropOrFalse(props, "invoicingEnabled"),
 		InvoicingPostpaid:    utils.GetBoolPropOrFalse(props, "invoicingPostpaid"),
 		DefaultCurrency:      enum.DecodeCurrency(utils.GetStringPropOrEmpty(props, "defaultCurrency")),
+		BaseCurrency:         enum.DecodeCurrency(utils.GetStringPropOrEmpty(props, "baseCurrency")),
 	}
 	return &tenantSettingsEntity
 }

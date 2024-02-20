@@ -88,7 +88,7 @@ func (s *invoiceService) GenerateCycleInvoices() {
 
 			currency := contract.Currency.String()
 			if currency == "" {
-				currency = s.getTenantDefaultCurrency(ctx, tenant, cachedTenantDefaultCurrencies).String()
+				currency = s.getTenantBaseCurrency(ctx, tenant, cachedTenantDefaultCurrencies).String()
 			}
 
 			isPostpaid := s.getTenantInvoicingPostpaidFlag(ctx, tenant, cachedTenantPostpaidFlags)
@@ -185,15 +185,15 @@ func calculateInvoiceCycleEnd(start time.Time, cycle neo4jenum.BillingCycle) tim
 	return previousDay
 }
 
-func (s *invoiceService) getTenantDefaultCurrency(ctx context.Context, tenant string, cachedTenantDefaultCurrencies map[string]neo4jenum.Currency) neo4jenum.Currency {
-	if currency, ok := cachedTenantDefaultCurrencies[tenant]; ok {
+func (s *invoiceService) getTenantBaseCurrency(ctx context.Context, tenant string, cachedTenantBaseCurrencies map[string]neo4jenum.Currency) neo4jenum.Currency {
+	if currency, ok := cachedTenantBaseCurrencies[tenant]; ok {
 		return currency
 	}
 
 	dbNode, _ := s.repositories.Neo4jRepositories.TenantReadRepository.GetTenantSettings(ctx, tenant)
 	tenantSettings := neo4jmapper.MapDbNodeToTenantSettingsEntity(dbNode)
 
-	cachedTenantDefaultCurrencies[tenant] = tenantSettings.DefaultCurrency
+	cachedTenantBaseCurrencies[tenant] = tenantSettings.DefaultCurrency
 	return tenantSettings.DefaultCurrency
 }
 
@@ -320,7 +320,7 @@ func (s *invoiceService) GenerateOffCycleInvoices() {
 
 			currency := contract.Currency.String()
 			if currency == "" {
-				currency = s.getTenantDefaultCurrency(ctx, tenant, cachedTenantDefaultCurrencies).String()
+				currency = s.getTenantBaseCurrency(ctx, tenant, cachedTenantDefaultCurrencies).String()
 			}
 
 			invoicePeriodStart := utils.StartOfDayInUTC(referenceTime)

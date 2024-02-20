@@ -4,5 +4,6 @@ query GetTenantSettings {
     logoRepositoryFileId
     billingEnabled
     defaultCurrency
+    baseCurrency
   }
 }

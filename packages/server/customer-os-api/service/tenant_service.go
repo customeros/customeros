@@ -323,6 +323,11 @@ func (s *tenantService) UpdateTenantSettings(ctx context.Context, input *model.T
 		defaultCurrency = input.DefaultCurrency.String()
 	}
 
+	var baseCurrency string
+	if input.BaseCurrency != nil {
+		baseCurrency = input.BaseCurrency.String()
+	}
+
 	var fieldMask []tenantpb.TenantSettingsFieldMask
 	updateRequest := tenantpb.UpdateTenantSettingsRequest{
 		Tenant:               common.GetTenantFromContext(ctx),
@@ -331,6 +336,7 @@ func (s *tenantService) UpdateTenantSettings(ctx context.Context, input *model.T
 		LogoUrl:              utils.IfNotNilString(input.LogoURL),
 		LogoRepositoryFileId: utils.IfNotNilString(input.LogoRepositoryFileID),
 		DefaultCurrency:      defaultCurrency,
+		BaseCurrency:         baseCurrency,
 		InvoicingEnabled:     utils.IfNotNilBool(input.BillingEnabled),
 	}
 
@@ -343,6 +349,9 @@ func (s *tenantService) UpdateTenantSettings(ctx context.Context, input *model.T
 		}
 		if input.DefaultCurrency != nil {
 			fieldMask = append(fieldMask, tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_DEFAULT_CURRENCY)
+		}
+		if input.BaseCurrency != nil {
+			fieldMask = append(fieldMask, tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_BASE_CURRENCY)
 		}
 		if input.BillingEnabled != nil {
 			fieldMask = append(fieldMask, tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_INVOICING_ENABLED)

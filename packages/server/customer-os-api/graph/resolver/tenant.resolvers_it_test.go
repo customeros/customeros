@@ -434,6 +434,7 @@ func TestQueryResolver_GetTenantSettings(t *testing.T) {
 		LogoUrl:              "logoUrl",
 		LogoRepositoryFileId: "logoRepositoryFileId",
 		DefaultCurrency:      neo4jenum.CurrencyUSD,
+		BaseCurrency:         neo4jenum.CurrencyUSD,
 		InvoicingEnabled:     true,
 	})
 
@@ -452,6 +453,7 @@ func TestQueryResolver_GetTenantSettings(t *testing.T) {
 	require.Equal(t, "logoUrl", tenantSettings.LogoURL)
 	require.Equal(t, "logoRepositoryFileId", *tenantSettings.LogoRepositoryFileID)
 	require.Equal(t, model.CurrencyUsd, *tenantSettings.DefaultCurrency)
+	require.Equal(t, model.CurrencyUsd, *tenantSettings.BaseCurrency)
 	require.Equal(t, true, tenantSettings.BillingEnabled)
 }
 
@@ -472,6 +474,7 @@ func TestMutationResolver_TenantUpdateSettings(t *testing.T) {
 			require.Equal(t, "https://logo.com", profile.LogoUrl)
 			require.Equal(t, "123-456-789", profile.LogoRepositoryFileId)
 			require.Equal(t, "EUR", profile.DefaultCurrency)
+			require.Equal(t, "EUR", profile.BaseCurrency)
 			require.Equal(t, true, profile.InvoicingEnabled)
 			require.ElementsMatch(t, []tenantpb.TenantSettingsFieldMask{
 				tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_LOGO_URL,

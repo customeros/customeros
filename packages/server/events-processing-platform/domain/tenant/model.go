@@ -18,7 +18,8 @@ type Tenant struct {
 type TenantSettings struct {
 	InvoicingEnabled     bool   `json:"invoicingEnabled"`
 	InvoicingPostpaid    bool   `json:"invoicingPostpaid"`
-	DefaultCurrency      string `json:"defaultCurrency"`
+	DefaultCurrency      string `json:"defaultCurrency"` //Deprecated
+	BaseCurrency         string `json:"baseCurrency"`
 	LogoUrl              string `json:"logoUrl"`
 	LogoRepositoryFileId string `json:"logoRepositoryFileId"`
 }

@@ -9,7 +9,8 @@ type TenantSettingsEntity struct {
 	Id                   string
 	LogoUrl              string
 	LogoRepositoryFileId string
-	DefaultCurrency      enum.Currency
+	DefaultCurrency      enum.Currency //Deprecated
+	BaseCurrency         enum.Currency
 	InvoicingEnabled     bool
 	InvoicingPostpaid    bool
 	CreatedAt            time.Time

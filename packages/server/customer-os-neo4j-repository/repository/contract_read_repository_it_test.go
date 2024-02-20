@@ -24,7 +24,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices(t *testing.T
 	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
 		InvoicingEnabled:  true,
 		InvoicingPostpaid: false,
-		DefaultCurrency:   neo4jenum.CurrencyUSD,
+		BaseCurrency:      neo4jenum.CurrencyUSD,
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
@@ -61,7 +61,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_Organization
 	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
 		InvoicingEnabled:  true,
 		InvoicingPostpaid: true,
-		DefaultCurrency:   neo4jenum.CurrencyUSD,
+		BaseCurrency:      neo4jenum.CurrencyUSD,
 	})
 
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
@@ -111,13 +111,13 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_InvoicingNod
 	neo4jtest.CreateTenant(ctx, driver, tenant)
 	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
 		InvoicingEnabled: true,
-		DefaultCurrency:  neo4jenum.CurrencyUSD,
+		BaseCurrency:     neo4jenum.CurrencyUSD,
 	})
 
 	neo4jtest.CreateTenant(ctx, driver, tenantNok)
 	neo4jtest.CreateTenantSettings(ctx, driver, tenantNok, entity.TenantSettingsEntity{
 		InvoicingEnabled: false,
-		DefaultCurrency:  neo4jenum.CurrencyUSD,
+		BaseCurrency:     neo4jenum.CurrencyUSD,
 	})
 
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
@@ -194,7 +194,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_MissingBilli
 	neo4jtest.CreateTenant(ctx, driver, tenant)
 	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
 		InvoicingEnabled: true,
-		DefaultCurrency:  neo4jenum.CurrencyUSD,
+		BaseCurrency:     neo4jenum.CurrencyUSD,
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
@@ -232,7 +232,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_CheckByNextI
 	neo4jtest.CreateTenant(ctx, driver, tenant)
 	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
 		InvoicingEnabled: true,
-		DefaultCurrency:  neo4jenum.CurrencyUSD,
+		BaseCurrency:     neo4jenum.CurrencyUSD,
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractIdYesterday := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
@@ -286,7 +286,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_CheckByInvoi
 	neo4jtest.CreateTenant(ctx, driver, tenant)
 	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
 		InvoicingEnabled: true,
-		DefaultCurrency:  neo4jenum.CurrencyUSD,
+		BaseCurrency:     neo4jenum.CurrencyUSD,
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractIdYesterday := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
@@ -344,7 +344,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_CheckByContr
 	neo4jtest.CreateTenant(ctx, driver, tenant)
 	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
 		InvoicingEnabled: true,
-		DefaultCurrency:  neo4jenum.CurrencyUSD,
+		BaseCurrency:     neo4jenum.CurrencyUSD,
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractIdYesterday := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
@@ -394,7 +394,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_MissingOrgan
 	neo4jtest.CreateTenant(ctx, driver, tenant)
 	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
 		InvoicingEnabled: true,
-		DefaultCurrency:  neo4jenum.CurrencyUSD,
+		BaseCurrency:     neo4jenum.CurrencyUSD,
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
@@ -430,7 +430,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_MissingInvoi
 	neo4jtest.CreateTenant(ctx, driver, tenant)
 	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
 		InvoicingEnabled: true,
-		DefaultCurrency:  neo4jenum.CurrencyUSD,
+		BaseCurrency:     neo4jenum.CurrencyUSD,
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
@@ -466,7 +466,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_MissingServi
 	neo4jtest.CreateTenant(ctx, driver, tenant)
 	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
 		InvoicingEnabled: true,
-		DefaultCurrency:  neo4jenum.CurrencyUSD,
+		BaseCurrency:     neo4jenum.CurrencyUSD,
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
@@ -505,7 +505,7 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices(t *testin
 	neo4jtest.CreateTenant(ctx, driver, tenant)
 	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
 		InvoicingEnabled: true,
-		DefaultCurrency:  neo4jenum.CurrencyUSD,
+		BaseCurrency:     neo4jenum.CurrencyUSD,
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
@@ -539,7 +539,7 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_Invoicing
 	neo4jtest.CreateTenant(ctx, driver, tenant)
 	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
 		InvoicingEnabled: false,
-		DefaultCurrency:  neo4jenum.CurrencyUSD,
+		BaseCurrency:     neo4jenum.CurrencyUSD,
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
@@ -571,7 +571,7 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_Organizat
 	neo4jtest.CreateTenant(ctx, driver, tenant)
 	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
 		InvoicingEnabled: true,
-		DefaultCurrency:  neo4jenum.CurrencyUSD,
+		BaseCurrency:     neo4jenum.CurrencyUSD,
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{
 		Hide: true,
@@ -636,7 +636,7 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_MissingOr
 	neo4jtest.CreateTenant(ctx, driver, tenant)
 	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
 		InvoicingEnabled: true,
-		DefaultCurrency:  neo4jenum.CurrencyUSD,
+		BaseCurrency:     neo4jenum.CurrencyUSD,
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
@@ -667,7 +667,7 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_MissingIn
 	neo4jtest.CreateTenant(ctx, driver, tenant)
 	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
 		InvoicingEnabled: true,
-		DefaultCurrency:  neo4jenum.CurrencyUSD,
+		BaseCurrency:     neo4jenum.CurrencyUSD,
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
@@ -697,7 +697,7 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_NextInvoi
 	neo4jtest.CreateTenant(ctx, driver, tenant)
 	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
 		InvoicingEnabled: true,
-		DefaultCurrency:  neo4jenum.CurrencyUSD,
+		BaseCurrency:     neo4jenum.CurrencyUSD,
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
@@ -729,7 +729,7 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_ContractA
 	neo4jtest.CreateTenant(ctx, driver, tenant)
 	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
 		InvoicingEnabled: true,
-		DefaultCurrency:  neo4jenum.CurrencyUSD,
+		BaseCurrency:     neo4jenum.CurrencyUSD,
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
@@ -762,7 +762,7 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_ServiceLi
 	neo4jtest.CreateTenant(ctx, driver, tenant)
 	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
 		InvoicingEnabled: true,
-		DefaultCurrency:  neo4jenum.CurrencyUSD,
+		BaseCurrency:     neo4jenum.CurrencyUSD,
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
@@ -796,7 +796,7 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_ServiceLi
 	neo4jtest.CreateTenant(ctx, driver, tenant)
 	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
 		InvoicingEnabled: true,
-		DefaultCurrency:  neo4jenum.CurrencyUSD,
+		BaseCurrency:     neo4jenum.CurrencyUSD,
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
@@ -827,7 +827,7 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_ServiceLi
 	neo4jtest.CreateTenant(ctx, driver, tenant)
 	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
 		InvoicingEnabled: true,
-		DefaultCurrency:  neo4jenum.CurrencyUSD,
+		BaseCurrency:     neo4jenum.CurrencyUSD,
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
@@ -860,7 +860,7 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_LastServi
 	neo4jtest.CreateTenant(ctx, driver, tenant)
 	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
 		InvoicingEnabled: true,
-		DefaultCurrency:  neo4jenum.CurrencyUSD,
+		BaseCurrency:     neo4jenum.CurrencyUSD,
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
@@ -900,7 +900,7 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_LastServi
 	neo4jtest.CreateTenant(ctx, driver, tenant)
 	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
 		InvoicingEnabled: true,
-		DefaultCurrency:  neo4jenum.CurrencyUSD,
+		BaseCurrency:     neo4jenum.CurrencyUSD,
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{

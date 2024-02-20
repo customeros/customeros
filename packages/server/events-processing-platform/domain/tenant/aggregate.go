@@ -287,6 +287,9 @@ func (a *TenantAggregate) onUpdateTenantSettings(evt eventstore.Event) error {
 	if eventData.UpdateDefaultCurrency() {
 		a.TenantDetails.TenantSettings.DefaultCurrency = eventData.DefaultCurrency
 	}
+	if eventData.UpdateBaseCurrency() {
+		a.TenantDetails.TenantSettings.BaseCurrency = eventData.BaseCurrency
+	}
 	if eventData.UpdateInvoicingEnabled() {
 		a.TenantDetails.TenantSettings.InvoicingEnabled = eventData.InvoicingEnabled
 	}
@@ -355,6 +358,8 @@ func extractTenantSettingsFieldsMask(inputFieldsMask []tenantpb.TenantSettingsFi
 			fieldsMask = append(fieldsMask, event.FieldMaskLogoRepositoryFileId)
 		case tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_DEFAULT_CURRENCY:
 			fieldsMask = append(fieldsMask, event.FieldMaskDefaultCurrency)
+		case tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_BASE_CURRENCY:
+			fieldsMask = append(fieldsMask, event.FieldMaskBaseCurrency)
 		case tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_INVOICING_ENABLED:
 			fieldsMask = append(fieldsMask, event.FieldMaskInvoicingEnabled)
 		case tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_INVOICING_POSTPAID:
