@@ -67,7 +67,7 @@ func (np *PostmarkProvider) getPostmarkClient(tenant string) (*postmark.Client, 
 		return nil, errors.New("postmark api key not found")
 	}
 
-	serverToken := p.Result.(entity.PostmarkApiKey).Key
+	serverToken := p.Result.(*entity.PostmarkApiKey).Key
 
 	return postmark.NewClient(serverToken, ""), nil
 }
