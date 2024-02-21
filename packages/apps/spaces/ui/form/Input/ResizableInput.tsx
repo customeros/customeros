@@ -30,7 +30,7 @@ export const ResizableInput = forwardRef<HTMLInputElement, InputProps>(
         >
           {props.value}
         </Flex>
-        <Input ref={ref} w={width} {...props} />
+        <Input ref={ref} w={width} {...props} data-1p-ignore />
       </>
     );
   },
