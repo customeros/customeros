@@ -3,8 +3,8 @@
 import React from 'react';
 
 import { Flex } from '@ui/layout/Flex';
+import { Invoice } from '@graphql/types';
 import { Text } from '@ui/typography/Text';
-import { InvoiceLine } from '@graphql/types';
 import { DateTimeUtils } from '@spaces/utils/date';
 
 import { ServicesTable } from './ServicesTable';
@@ -41,8 +41,8 @@ type InvoiceProps = {
   invoiceNumber: string;
   logoUrl?: string | null;
   isBilledToFocused?: boolean;
-  lines: Array<Partial<InvoiceLine>>;
   isInvoiceProviderFocused?: boolean;
+  lines: Partial<Invoice['invoiceLineItems']>;
   isDomesticBankingDetailsSectionFocused?: boolean;
   isInternationalBankingDetailsSectionFocused?: boolean;
 };

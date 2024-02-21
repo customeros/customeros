@@ -38,26 +38,34 @@ export type GetInvoicesQuery = {
     totalElements: any;
     content: Array<{
       __typename?: 'Invoice';
-      id: string;
-      number: string;
-      dueDate: any;
-      periodStartDate: any;
-      periodEndDate: any;
-      totalAmount: number;
+      invoiceNumber: string;
+      invoicePeriodStart: any;
+      invoicePeriodEnd: any;
+      due: any;
+      amountDue: number;
       currency: string;
       dryRun: boolean;
       status?: Types.InvoiceStatus | null;
-      createdAt: any;
+      metadata: { __typename?: 'Metadata'; id: string; created: any };
       organization: { __typename?: 'Organization'; id: string; name: string };
       invoiceLines: Array<{
         __typename?: 'InvoiceLine';
-        id: string;
-        name: string;
-        price: number;
+        createdAt: any;
         quantity: number;
-        amount: number;
-        vat: number;
-        totalAmount: number;
+        subtotal: number;
+        taxDue: number;
+        total: number;
+        price: number;
+        description: string;
+        metadata: {
+          __typename?: 'Metadata';
+          id: string;
+          created: any;
+          lastUpdated: any;
+          source: Types.DataSource;
+          sourceOfTruth: Types.DataSource;
+          appSource: string;
+        };
       }>;
     }>;
   };
@@ -71,28 +79,38 @@ export const GetInvoicesDocument = `
     where: $where
   ) {
     content {
-      id
+      metadata {
+        id
+        created
+      }
       organization {
         id
         name
       }
-      number
-      dueDate
-      periodStartDate
-      periodEndDate
-      totalAmount
+      invoiceNumber
+      invoicePeriodStart
+      invoicePeriodEnd
+      due
+      amountDue
       currency
       dryRun
       status
-      createdAt
       invoiceLines {
-        id
-        name
-        price
+        metadata {
+          id
+          created
+          lastUpdated
+          source
+          sourceOfTruth
+          appSource
+        }
+        createdAt
         quantity
-        amount
-        vat
-        totalAmount
+        subtotal
+        taxDue
+        total
+        price
+        description
       }
     }
     totalPages

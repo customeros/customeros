@@ -31,8 +31,8 @@ export const PreviewPanel = ({ id }: { id: string }) => {
       >
         <InvoiceActionHeader
           status={data?.invoice?.status}
-          id={data?.invoice?.id}
-          number={data?.invoice?.number}
+          id={data?.invoice?.metadata?.id}
+          number={data?.invoice?.invoiceNumber}
         />
 
         <Flex direction='row' justifyContent='flex-end' alignItems='center'>

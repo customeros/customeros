@@ -14,6 +14,7 @@ import { FeaturedIcon } from '@ui/media/Icon';
 import { File02 } from '@ui/media/icons/File02';
 import { Grid, GridItem } from '@ui/layout/Grid';
 import { Heading } from '@ui/typography/Heading';
+import { DataSource, InvoiceLine } from '@graphql/types';
 import { Invoice } from '@shared/components/Invoice/Invoice';
 import { countryOptions } from '@shared/util/countryOptions';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
@@ -181,15 +182,22 @@ export const ContractBillingDetailsModal = ({
       invoiceNumber: 'INV-003',
       lines: [
         {
-          amount: 100,
+          subtotal: 100,
           createdAt: new Date().toISOString(),
-          id: 'dummy-id',
-          name: 'Professional tier',
+          metadata: {
+            id: 'dummy-id',
+            created: new Date().toISOString(),
+            lastUpdated: new Date().toISOString(),
+            source: DataSource.Openline,
+            sourceOfTruth: DataSource.Openline,
+            appSource: DataSource.Openline,
+          },
+          description: 'Professional tier',
           price: 50,
           quantity: 2,
-          totalAmount: 100,
-          vat: 0,
-        },
+          total: 100,
+          taxDue: 0,
+        } as InvoiceLine,
       ],
       tax: 0,
       total: 100,

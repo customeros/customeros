@@ -10,29 +10,39 @@ query getInvoices(
 
     ) {
         content {
-            id
+            metadata {
+                id
+                created
+            }
             organization {
                 id
                 name
             }
-            number
-            dueDate
-            periodStartDate
-            periodEndDate
-            totalAmount
+            invoiceNumber
+            invoicePeriodStart
+            invoicePeriodEnd
+            due
+            amountDue
             currency
             dryRun
             status
-            createdAt
 
             invoiceLines {
-                id
-                name
-                price
+                metadata {
+                    id
+                    created
+                    lastUpdated
+                    source
+                    sourceOfTruth
+                    appSource
+                }
+                createdAt
                 quantity
-                amount
-                vat
-                totalAmount
+                subtotal
+                taxDue
+                total
+                price
+                description
 
             }
         }
