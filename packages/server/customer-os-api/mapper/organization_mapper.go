@@ -57,6 +57,7 @@ func MapEntityToOrganization(entity *entity.OrganizationEntity) *model.Organizat
 			LastTouchPointAt:              entity.LastTouchpointAt,
 			LastTouchPointType:            MapLastTouchpointTypeToModel(entity.LastTouchpointType),
 		},
+		Hide: entity.Hide,
 
 		// TODO: All below fields are deprecated and should be removed
 		IsPublic:                      utils.BoolPtr(entity.IsPublic),
