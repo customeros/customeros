@@ -13,6 +13,7 @@ const (
 	contractGroup              = "contract"
 	invoiceGroup               = "invoice"
 	refreshLastTouchpointGroup = "refreshLastTouchpoint"
+	currencyGroup              = "currency"
 )
 
 var jobLocks = struct {
@@ -24,6 +25,7 @@ var jobLocks = struct {
 		contractGroup:              {},
 		invoiceGroup:               {},
 		refreshLastTouchpointGroup: {},
+		currencyGroup:              {},
 	},
 }
 
@@ -73,6 +75,13 @@ func StartCron(cont *container.Container) *cron.Cron {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "refreshLastTouchpoint", err.Error())
 	}
 
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleGetCurrencyRatesECB, func() {
+		lockAndRunJob(cont, currencyGroup, getCurrencyRatesECB)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "getCurrencyRatesECB", err.Error())
+	}
+
 	c.Start()
 
 	return c
@@ -114,4 +123,8 @@ func sendPayInvoiceNotifications(cont *container.Container) {
 
 func refreshLastTouchpoint(cont *container.Container) {
 	service.NewOrganizationService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).RefreshLastTouchpoint()
+}
+
+func getCurrencyRatesECB(cont *container.Container) {
+	service.NewCurrencyService(cont.Cfg, cont.Log, cont.Repositories).GetCurrencyRatesECB()
 }
