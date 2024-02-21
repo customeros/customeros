@@ -3,6 +3,7 @@ package repository
 import (
 	"errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"gorm.io/gorm"
 	"time"
 )
@@ -63,5 +64,6 @@ func (r *currencyRateRepo) SaveCurrencyRate(currency string, rate float64, date 
 
 	// If the currency rate exists, update the rate
 	existingRate.Rate = rate
+	existingRate.UpdatedAt = utils.Now()
 	return r.db.Save(&existingRate).Error
 }
