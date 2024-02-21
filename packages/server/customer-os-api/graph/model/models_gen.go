@@ -2220,35 +2220,46 @@ type ServiceLineItemBulkUpdateItem struct {
 }
 
 type ServiceLineItemCloseInput struct {
-	ID      string     `json:"id"`
-	EndedAt *time.Time `json:"endedAt,omitempty"`
+	ID           string     `json:"id"`
+	EndedAt      *time.Time `json:"endedAt,omitempty"`
+	ServiceEnded *time.Time `json:"serviceEnded,omitempty"`
 }
 
 type ServiceLineItemInput struct {
 	ContractID        string                        `json:"contractId"`
-	Name              *string                       `json:"name,omitempty"`
-	Billed            *BilledType                   `json:"billed,omitempty"`
+	Description       *string                       `json:"description,omitempty"`
+	BillingCycle      *BilledType                   `json:"billingCycle,omitempty"`
 	Price             *float64                      `json:"price,omitempty"`
 	Quantity          *int64                        `json:"quantity,omitempty"`
-	VatRate           *float64                      `json:"vatRate,omitempty"`
+	Tax               *TaxInput                     `json:"tax,omitempty"`
 	AppSource         *string                       `json:"appSource,omitempty"`
-	ExternalReference *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
-	StartedAt         *time.Time                    `json:"startedAt,omitempty"`
+	ServiceStarted    *time.Time                    `json:"serviceStarted,omitempty"`
+	ServiceEnded      *time.Time                    `json:"serviceEnded,omitempty"`
+	VatRate           *float64                      `json:"vatRate,omitempty"`
+	Name              *string                       `json:"name,omitempty"`
+	Billed            *BilledType                   `json:"billed,omitempty"`
 	EndedAt           *time.Time                    `json:"endedAt,omitempty"`
+	StartedAt         *time.Time                    `json:"startedAt,omitempty"`
+	ExternalReference *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
 }
 
 type ServiceLineItemUpdateInput struct {
-	ServiceLineItemID       string                        `json:"serviceLineItemId"`
-	Name                    *string                       `json:"name,omitempty"`
-	Billed                  *BilledType                   `json:"billed,omitempty"`
+	ID                      *string                       `json:"id,omitempty"`
+	Description             *string                       `json:"description,omitempty"`
+	BillingCycle            *BilledType                   `json:"billingCycle,omitempty"`
 	Price                   *float64                      `json:"price,omitempty"`
 	Quantity                *int64                        `json:"quantity,omitempty"`
-	VatRate                 *float64                      `json:"vatRate,omitempty"`
+	Tax                     *TaxInput                     `json:"tax,omitempty"`
 	Comments                *string                       `json:"comments,omitempty"`
 	AppSource               *string                       `json:"appSource,omitempty"`
-	ExternalReference       *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
 	IsRetroactiveCorrection *bool                         `json:"isRetroactiveCorrection,omitempty"`
 	ServiceStarted          *time.Time                    `json:"serviceStarted,omitempty"`
+	ServiceEnded            *time.Time                    `json:"serviceEnded,omitempty"`
+	ServiceLineItemID       string                        `json:"serviceLineItemId"`
+	Name                    *string                       `json:"name,omitempty"`
+	VatRate                 *float64                      `json:"vatRate,omitempty"`
+	ExternalReference       *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
+	Billed                  *BilledType                   `json:"billed,omitempty"`
 }
 
 type Social struct {
@@ -2364,6 +2375,10 @@ type Tax struct {
 	SalesTax bool    `json:"salesTax"`
 	Vat      bool    `json:"vat"`
 	TaxRate  float64 `json:"taxRate"`
+}
+
+type TaxInput struct {
+	TaxRate float64 `json:"taxRate"`
 }
 
 type TenantBillableInfo struct {

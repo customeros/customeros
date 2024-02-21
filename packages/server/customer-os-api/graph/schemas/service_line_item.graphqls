@@ -2,11 +2,16 @@ extend type Query {
     serviceLineItem(id: ID!): ServiceLineItem!
 }
 extend type Mutation {
-    serviceLineItemCreate(input: ServiceLineItemInput!): ServiceLineItem! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    serviceLineItemUpdate(input: ServiceLineItemUpdateInput!): ServiceLineItem! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    contractLineItem_Create(input: ServiceLineItemInput!): ServiceLineItem! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    contractLineItem_Update(input: ServiceLineItemUpdateInput!): ServiceLineItem! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    contractLineItem_Close(input: ServiceLineItemCloseInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
+
     serviceLineItem_Delete(id: ID!): DeleteResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    serviceLineItem_Close(input: ServiceLineItemCloseInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
     serviceLineItem_BulkUpdate(input: ServiceLineItemBulkUpdateInput!): [ID!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+
+    serviceLineItem_Close(input: ServiceLineItemCloseInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated(reason: "Use contractLineItem_Close instead.")
+    serviceLineItemCreate(input: ServiceLineItemInput!): ServiceLineItem! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated(reason: "Use contractLineItem_Create instead.")
+    serviceLineItemUpdate(input: ServiceLineItemUpdateInput!): ServiceLineItem! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated(reason: "Use contractLineItem_Update instead.")
 }
 
 type ServiceLineItem implements MetadataInterface {
@@ -38,29 +43,39 @@ type ServiceLineItem implements MetadataInterface {
 
 input ServiceLineItemInput {
     contractId:         ID!
-    name:               String
-    billed:             BilledType
+    description:        String
+    billingCycle:       BilledType
     price:              Float
     quantity:           Int64
-    vatRate:            Float
+    tax:                TaxInput
     appSource:          String
+    serviceStarted:     Time
+    serviceEnded:       Time
+    vatRate:            Float @deprecated(reason: "Use tax instead.")
+    name:               String @deprecated(reason: "Use description instead")
+    billed:             BilledType @deprecated(reason: "Use billingCycle instead")
+    endedAt:            Time @deprecated(reason: "Use serviceEnded instead")
+    startedAt:          Time @deprecated(reason: "Use serviceStarted instead")
     externalReference:  ExternalSystemReferenceInput @deprecated(reason: "Not used yet")
-    startedAt:          Time
-    endedAt:            Time
 }
 
 input ServiceLineItemUpdateInput {
-    serviceLineItemId:          ID!
-    name:                       String
-    billed:                     BilledType
+    id:                         ID
+    description:                String
+    billingCycle:               BilledType
     price:                      Float
     quantity:                   Int64
-    vatRate:                    Float
+    tax:                        TaxInput
     comments:                   String
     appSource:                  String
-    externalReference:          ExternalSystemReferenceInput @deprecated(reason: "Not used yet")
     isRetroactiveCorrection:    Boolean
     serviceStarted:             Time
+    serviceEnded:               Time
+    serviceLineItemId:          ID! @deprecated(reason: "Use ID instead.")
+    name:                       String @deprecated(reason: "Use description instead")
+    vatRate:                    Float @deprecated(reason: "Use tax instead.")
+    externalReference:          ExternalSystemReferenceInput @deprecated(reason: "Not used yet")
+    billed:                     BilledType @deprecated(reason: "Use billingCycle instead")
 }
 
 input ServiceLineItemBulkUpdateInput {
@@ -82,8 +97,9 @@ input ServiceLineItemBulkUpdateItem {
 }
 
 input ServiceLineItemCloseInput {
-    id:         ID!
-    endedAt:    Time
+    id:             ID!
+    endedAt:        Time
+    serviceEnded:   Time
 }
 
 
@@ -94,4 +110,8 @@ enum BilledType {
     ANNUALLY
     ONCE
     USAGE
+}
+
+input TaxInput {
+    taxRate:    Float!
 }

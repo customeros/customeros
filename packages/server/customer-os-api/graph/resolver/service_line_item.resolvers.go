@@ -7,7 +7,6 @@ package resolver
 import (
 	"context"
 	"errors"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
@@ -21,6 +20,205 @@ import (
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
+
+// ContractLineItemCreate is the resolver for the contractLineItem_Create field.
+func (r *mutationResolver) ContractLineItemCreate(ctx context.Context, input model.ServiceLineItemInput) (*model.ServiceLineItem, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContractLineItemCreate", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.input", input)
+
+	billedType := neo4jenum.BilledTypeNone
+	if input.Billed != nil {
+		billedType = mapper.MapBilledTypeFromModel(*input.Billed)
+	}
+
+	data := service.ServiceLineItemCreateData{
+		ContractId:        input.ContractID,
+		ExternalReference: mapper.MapExternalSystemReferenceInputToRelationship(input.ExternalReference),
+		Source:            neo4jentity.DataSourceOpenline,
+		StartedAt:         input.StartedAt,
+		EndedAt:           input.EndedAt,
+		SliBilledType:     billedType,
+		SliName:           utils.IfNotNilString(input.Name),
+		SliPrice:          utils.IfNotNilFloat64(input.Price),
+		SliQuantity:       utils.IfNotNilInt64(input.Quantity),
+		SliVatRate:        utils.IfNotNilFloat64(input.VatRate),
+	}
+	if input.ServiceStarted != nil {
+		data.StartedAt = input.ServiceStarted
+	}
+	if input.ServiceEnded != nil {
+		data.EndedAt = input.ServiceEnded
+	}
+	if input.BillingCycle != nil {
+		data.SliBilledType = mapper.MapBilledTypeFromModel(*input.BillingCycle)
+	}
+	if input.Description != nil {
+		data.SliName = *input.Description
+	}
+	if input.Tax != nil {
+		data.SliVatRate = (*input.Tax).TaxRate
+	}
+
+	serviceLineItemId, err := r.Services.ServiceLineItemService.Create(ctx, data)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to create service line item")
+		return &model.ServiceLineItem{ID: serviceLineItemId}, err
+	}
+	createdServiceLineItemEntity, err := r.Services.ServiceLineItemService.GetById(ctx, serviceLineItemId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Service line item details not yet available. Service line item id: %s", serviceLineItemId)
+		return &model.ServiceLineItem{ID: serviceLineItemId}, nil
+	}
+	span.LogFields(log.String("response.serviceLineItemID", serviceLineItemId))
+	return mapper.MapEntityToServiceLineItem(createdServiceLineItemEntity), nil
+}
+
+// ContractLineItemUpdate is the resolver for the contractLineItem_Update field.
+func (r *mutationResolver) ContractLineItemUpdate(ctx context.Context, input model.ServiceLineItemUpdateInput) (*model.ServiceLineItem, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContractLineItemUpdate", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.input", input)
+
+	billedType := neo4jenum.BilledTypeNone
+	if input.Billed != nil {
+		billedType = mapper.MapBilledTypeFromModel(*input.Billed)
+	}
+
+	data := service.ServiceLineItemUpdateData{
+		Id:                      input.ServiceLineItemID,
+		IsRetroactiveCorrection: utils.IfNotNilBool(input.IsRetroactiveCorrection),
+		SliName:                 utils.IfNotNilString(input.Name),
+		SliPrice:                utils.IfNotNilFloat64(input.Price),
+		SliQuantity:             utils.IfNotNilInt64(input.Quantity),
+		SliBilledType:           billedType,
+		SliComments:             utils.IfNotNilString(input.Comments),
+		SliVatRate:              utils.IfNotNilFloat64(input.VatRate),
+		Source:                  neo4jentity.DataSourceOpenline,
+		AppSource:               utils.IfNotNilString(input.AppSource),
+		StartedAt:               input.ServiceStarted,
+	}
+	if input.ID != nil {
+		data.Id = *input.ID
+	}
+	if input.Tax != nil {
+		data.SliVatRate = (*input.Tax).TaxRate
+	}
+	if input.BillingCycle != nil {
+		data.SliBilledType = mapper.MapBilledTypeFromModel(*input.BillingCycle)
+	}
+	if input.Description != nil {
+		data.SliName = *input.Description
+	}
+
+	err := r.Services.ServiceLineItemService.Update(ctx, data)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to update service line item %s", input.ServiceLineItemID)
+		return &model.ServiceLineItem{ID: input.ServiceLineItemID}, nil
+	}
+
+	serviceLineItemEntity, err := r.Services.ServiceLineItemService.GetById(ctx, input.ServiceLineItemID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed fetching service line item details. Service line item id: %s", input.ServiceLineItemID)
+		return &model.ServiceLineItem{ID: input.ServiceLineItemID}, nil
+	}
+
+	return mapper.MapEntityToServiceLineItem(serviceLineItemEntity), nil
+}
+
+// ContractLineItemClose is the resolver for the contractLineItem_Close field.
+func (r *mutationResolver) ContractLineItemClose(ctx context.Context, input model.ServiceLineItemCloseInput) (string, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContractLineItemClose", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.input", input)
+
+	endedAt := input.EndedAt
+	if input.ServiceEnded != nil {
+		endedAt = input.ServiceEnded
+	}
+	err := r.Services.ServiceLineItemService.Close(ctx, input.ID, endedAt)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "failed to close service line item %s", input.ID)
+		return input.ID, nil
+	}
+	return input.ID, nil
+}
+
+// ServiceLineItemDelete is the resolver for the serviceLineItem_Delete field.
+func (r *mutationResolver) ServiceLineItemDelete(ctx context.Context, id string) (*model.DeleteResponse, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ServiceLineItemDelete", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.id", id))
+
+	deletionCompleted, err := r.Services.ServiceLineItemService.Delete(ctx, id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "failed to delete service line item %s", id)
+		return &model.DeleteResponse{Accepted: false, Completed: false}, nil
+	}
+	return &model.DeleteResponse{Accepted: true, Completed: deletionCompleted}, nil
+}
+
+// ServiceLineItemBulkUpdate is the resolver for the serviceLineItemBulkUpdate field.
+func (r *mutationResolver) ServiceLineItemBulkUpdate(ctx context.Context, input model.ServiceLineItemBulkUpdateInput) ([]string, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ServiceLineItemBulkUpdate", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.input", input)
+
+	sliEntitiesForBulkSync := service.MapServiceLineItemBulkItemsToData(input.ServiceLineItems)
+
+	updatedServiceLineItemIds, err := r.Services.ServiceLineItemService.CreateOrUpdateOrDeleteInBulk(ctx, input.ContractID, sliEntitiesForBulkSync)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "failed to bulk update service line items")
+		return nil, nil
+	}
+
+	if input.InvoiceNote != nil && input.ContractID != "" {
+		err = r.Services.ContractService.Update(ctx, model.ContractUpdateInput{
+			Patch:       utils.ToPtr(true),
+			ContractID:  input.ContractID,
+			InvoiceNote: input.InvoiceNote,
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "failed to update contract invoice note")
+			return nil, nil
+		}
+	}
+
+	return updatedServiceLineItemIds, nil
+}
+
+// ServiceLineItemClose is the resolver for the serviceLineItem_Close field.
+func (r *mutationResolver) ServiceLineItemClose(ctx context.Context, input model.ServiceLineItemCloseInput) (string, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ServiceLineItemClose", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.input", input)
+
+	endedAt := input.EndedAt
+	if input.ServiceEnded != nil {
+		endedAt = input.ServiceEnded
+	}
+	err := r.Services.ServiceLineItemService.Close(ctx, input.ID, endedAt)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "failed to close service line item %s", input.ID)
+		return input.ID, nil
+	}
+	return input.ID, nil
+}
 
 // ServiceLineItemCreate is the resolver for the serviceLineItem_Create field.
 func (r *mutationResolver) ServiceLineItemCreate(ctx context.Context, input model.ServiceLineItemInput) (*model.ServiceLineItem, error) {
@@ -44,6 +242,21 @@ func (r *mutationResolver) ServiceLineItemCreate(ctx context.Context, input mode
 		SliPrice:          utils.IfNotNilFloat64(input.Price),
 		SliQuantity:       utils.IfNotNilInt64(input.Quantity),
 		SliVatRate:        utils.IfNotNilFloat64(input.VatRate),
+	}
+	if input.ServiceStarted != nil {
+		data.StartedAt = input.ServiceStarted
+	}
+	if input.ServiceEnded != nil {
+		data.EndedAt = input.ServiceEnded
+	}
+	if input.BillingCycle != nil {
+		data.SliBilledType = mapper.MapBilledTypeFromModel(*input.BillingCycle)
+	}
+	if input.Description != nil {
+		data.SliName = *input.Description
+	}
+	if input.Tax != nil {
+		data.SliVatRate = (*input.Tax).TaxRate
 	}
 
 	serviceLineItemId, err := r.Services.ServiceLineItemService.Create(ctx, data)
@@ -87,6 +300,18 @@ func (r *mutationResolver) ServiceLineItemUpdate(ctx context.Context, input mode
 		AppSource:               utils.IfNotNilString(input.AppSource),
 		StartedAt:               input.ServiceStarted,
 	}
+	if input.ID != nil {
+		data.Id = *input.ID
+	}
+	if input.Tax != nil {
+		data.SliVatRate = (*input.Tax).TaxRate
+	}
+	if input.BillingCycle != nil {
+		data.SliBilledType = mapper.MapBilledTypeFromModel(*input.BillingCycle)
+	}
+	if input.Description != nil {
+		data.SliName = *input.Description
+	}
 
 	err := r.Services.ServiceLineItemService.Update(ctx, data)
 	if err != nil {
@@ -103,70 +328,6 @@ func (r *mutationResolver) ServiceLineItemUpdate(ctx context.Context, input mode
 	}
 
 	return mapper.MapEntityToServiceLineItem(serviceLineItemEntity), nil
-}
-
-// ServiceLineItemDelete is the resolver for the serviceLineItem_Delete field.
-func (r *mutationResolver) ServiceLineItemDelete(ctx context.Context, id string) (*model.DeleteResponse, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ServiceLineItemDelete", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.id", id))
-
-	deletionCompleted, err := r.Services.ServiceLineItemService.Delete(ctx, id)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "failed to delete service line item %s", id)
-		return &model.DeleteResponse{Accepted: false, Completed: false}, nil
-	}
-	return &model.DeleteResponse{Accepted: true, Completed: deletionCompleted}, nil
-}
-
-// ServiceLineItemClose is the resolver for the serviceLineItem_Close field.
-func (r *mutationResolver) ServiceLineItemClose(ctx context.Context, input model.ServiceLineItemCloseInput) (string, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ServiceLineItemClose", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.Object("request.input", input))
-
-	err := r.Services.ServiceLineItemService.Close(ctx, input.ID, input.EndedAt)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "failed to close service line item %s", input.ID)
-		return input.ID, nil
-	}
-	return input.ID, nil
-}
-
-// ServiceLineItemBulkUpdate is the resolver for the serviceLineItemBulkUpdate field.
-func (r *mutationResolver) ServiceLineItemBulkUpdate(ctx context.Context, input model.ServiceLineItemBulkUpdateInput) ([]string, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ServiceLineItemBulkUpdate", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
-
-	sliEntitiesForBulkSync := service.MapServiceLineItemBulkItemsToData(input.ServiceLineItems)
-
-	updatedServiceLineItemIds, err := r.Services.ServiceLineItemService.CreateOrUpdateOrDeleteInBulk(ctx, input.ContractID, sliEntitiesForBulkSync)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "failed to bulk update service line items")
-		return nil, nil
-	}
-
-	if input.InvoiceNote != nil && input.ContractID != "" {
-		err = r.Services.ContractService.Update(ctx, model.ContractUpdateInput{
-			Patch:       utils.ToPtr(true),
-			ContractID:  input.ContractID,
-			InvoiceNote: input.InvoiceNote,
-		})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			graphql.AddErrorf(ctx, "failed to update contract invoice note")
-			return nil, nil
-		}
-	}
-
-	return updatedServiceLineItemIds, nil
 }
 
 // ServiceLineItem is the resolver for the serviceLineItem field.
