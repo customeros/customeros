@@ -1094,6 +1094,7 @@ type ComplexityRoot struct {
 		ExternalLinks                 func(childComplexity int) int
 		FieldSets                     func(childComplexity int) int
 		Headquarters                  func(childComplexity int) int
+		Hide                          func(childComplexity int) int
 		ID                            func(childComplexity int) int
 		Industry                      func(childComplexity int) int
 		IndustryGroup                 func(childComplexity int) int
@@ -8334,6 +8335,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Organization.Headquarters(childComplexity), true
 
+	case "Organization.hide":
+		if e.complexity.Organization.Hide == nil {
+			break
+		}
+
+		return e.complexity.Organization.Hide(childComplexity), true
+
 	case "Organization.id":
 		if e.complexity.Organization.ID == nil {
 			break
@@ -13360,6 +13368,7 @@ type Organization implements MetadataInterface {
     website:                String
     yearFounded:            Int64
 
+    hide:                   Boolean!
     contacts(pagination: Pagination, where: Filter, sort: [SortBy!]): ContactsPage! @goField(forceResolver: true)
     jobRoles: [JobRole!]! @goField(forceResolver: true)
     emails: [Email!]! @goField(forceResolver: true)
@@ -28791,6 +28800,8 @@ func (ec *executionContext) fieldContext_DashboardCustomerMap_organization(ctx c
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "hide":
+				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
 				return ec.fieldContext_Organization_contacts(ctx, field)
 			case "jobRoles":
@@ -31624,6 +31635,8 @@ func (ec *executionContext) fieldContext_Email_organizations(ctx context.Context
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "hide":
+				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
 				return ec.fieldContext_Organization_contacts(ctx, field)
 			case "jobRoles":
@@ -36280,6 +36293,8 @@ func (ec *executionContext) fieldContext_Invoice_organization(ctx context.Contex
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "hide":
+				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
 				return ec.fieldContext_Organization_contacts(ctx, field)
 			case "jobRoles":
@@ -41086,6 +41101,8 @@ func (ec *executionContext) fieldContext_JobRole_organization(ctx context.Contex
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "hide":
+				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
 				return ec.fieldContext_Organization_contacts(ctx, field)
 			case "jobRoles":
@@ -42015,6 +42032,8 @@ func (ec *executionContext) fieldContext_LinkedOrganization_organization(ctx con
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "hide":
+				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
 				return ec.fieldContext_Organization_contacts(ctx, field)
 			case "jobRoles":
@@ -52561,6 +52580,8 @@ func (ec *executionContext) fieldContext_Mutation_location_RemoveFromOrganizatio
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "hide":
+				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
 				return ec.fieldContext_Organization_contacts(ctx, field)
 			case "jobRoles":
@@ -55941,6 +55962,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "hide":
+				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
 				return ec.fieldContext_Organization_contacts(ctx, field)
 			case "jobRoles":
@@ -56148,6 +56171,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "hide":
+				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
 				return ec.fieldContext_Organization_contacts(ctx, field)
 			case "jobRoles":
@@ -56869,6 +56894,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "hide":
+				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
 				return ec.fieldContext_Organization_contacts(ctx, field)
 			case "jobRoles":
@@ -57076,6 +57103,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddSubsidiary(ctx
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "hide":
+				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
 				return ec.fieldContext_Organization_contacts(ctx, field)
 			case "jobRoles":
@@ -57283,6 +57312,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveSubsidiary(
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "hide":
+				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
 				return ec.fieldContext_Organization_contacts(ctx, field)
 			case "jobRoles":
@@ -57732,6 +57763,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetOwner(ctx cont
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "hide":
+				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
 				return ec.fieldContext_Organization_contacts(ctx, field)
 			case "jobRoles":
@@ -57939,6 +57972,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnsetOwner(ctx co
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "hide":
+				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
 				return ec.fieldContext_Organization_contacts(ctx, field)
 			case "jobRoles":
@@ -58146,6 +58181,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_UpdateOnboardingS
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "hide":
+				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
 				return ec.fieldContext_Organization_contacts(ctx, field)
 			case "jobRoles":
@@ -67144,6 +67181,50 @@ func (ec *executionContext) fieldContext_Organization_yearFounded(ctx context.Co
 	return fc, nil
 }
 
+func (ec *executionContext) _Organization_hide(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_hide(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Hide, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_hide(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Organization_contacts(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_contacts(ctx, field)
 	if err != nil {
@@ -68574,6 +68655,8 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(ctx context.Co
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "hide":
+				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
 				return ec.fieldContext_Organization_contacts(ctx, field)
 			case "jobRoles":
@@ -68872,6 +68955,8 @@ func (ec *executionContext) fieldContext_OrganizationParticipant_organizationPar
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "hide":
+				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
 				return ec.fieldContext_Organization_contacts(ctx, field)
 			case "jobRoles":
@@ -71945,6 +72030,8 @@ func (ec *executionContext) fieldContext_PhoneNumber_organizations(ctx context.C
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "hide":
+				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
 				return ec.fieldContext_Organization_contacts(ctx, field)
 			case "jobRoles":
@@ -76018,6 +76105,8 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "hide":
+				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
 				return ec.fieldContext_Organization_contacts(ctx, field)
 			case "jobRoles":
@@ -76222,6 +76311,8 @@ func (ec *executionContext) fieldContext_Query_organization_ByCustomerOsId(ctx c
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "hide":
+				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
 				return ec.fieldContext_Organization_contacts(ctx, field)
 			case "jobRoles":
@@ -78459,6 +78550,8 @@ func (ec *executionContext) fieldContext_RenewalRecord_organization(ctx context.
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "hide":
+				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
 				return ec.fieldContext_Organization_contacts(ctx, field)
 			case "jobRoles":
@@ -80850,6 +80943,8 @@ func (ec *executionContext) fieldContext_SuggestedMergeOrganization_organization
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "hide":
+				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
 				return ec.fieldContext_Organization_contacts(ctx, field)
 			case "jobRoles":
@@ -102983,6 +103078,11 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 			out.Values[i] = ec._Organization_website(ctx, field, obj)
 		case "yearFounded":
 			out.Values[i] = ec._Organization_yearFounded(ctx, field, obj)
+		case "hide":
+			out.Values[i] = ec._Organization_hide(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
 		case "contacts":
 			field := field
 

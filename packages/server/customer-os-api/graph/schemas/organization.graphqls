@@ -66,6 +66,7 @@ type Organization implements MetadataInterface {
     website:                String
     yearFounded:            Int64
 
+    hide:                   Boolean!
     contacts(pagination: Pagination, where: Filter, sort: [SortBy!]): ContactsPage! @goField(forceResolver: true)
     jobRoles: [JobRole!]! @goField(forceResolver: true)
     emails: [Email!]! @goField(forceResolver: true)

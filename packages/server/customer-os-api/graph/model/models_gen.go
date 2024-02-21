@@ -1754,6 +1754,7 @@ type Organization struct {
 	ValueProposition              *string                       `json:"valueProposition,omitempty"`
 	Website                       *string                       `json:"website,omitempty"`
 	YearFounded                   *int64                        `json:"yearFounded,omitempty"`
+	Hide                          bool                          `json:"hide"`
 	Contacts                      *ContactsPage                 `json:"contacts"`
 	JobRoles                      []*JobRole                    `json:"jobRoles"`
 	Emails                        []*Email                      `json:"emails"`
