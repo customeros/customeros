@@ -24,6 +24,7 @@ type Repositories struct {
 	SlackChannelRepository            repository.SlackChannelRepository
 	PostmarkApiKeyRepository          repository.PostmarkApiKeyRepository
 	GoogleServiceAccountKeyRepository repository.GoogleServiceAccountKeyRepository
+	CurrencyRateRepository            repository.CurrencyRateRepository
 }
 
 func InitRepositories(db *gorm.DB, driver *neo4j.DriverWithContext) *Repositories {
@@ -41,6 +42,7 @@ func InitRepositories(db *gorm.DB, driver *neo4j.DriverWithContext) *Repositorie
 		SlackChannelRepository:            repository.NewSlackChannelRepository(db),
 		PostmarkApiKeyRepository:          repository.NewPostmarkApiKeyRepo(db),
 		GoogleServiceAccountKeyRepository: repository.NewGoogleServiceAccountKeyRepository(db),
+		CurrencyRateRepository:            repository.NewCurrencyRateRepository(db),
 	}
 
 	var err error
@@ -100,6 +102,12 @@ func InitRepositories(db *gorm.DB, driver *neo4j.DriverWithContext) *Repositorie
 	}
 
 	err = db.AutoMigrate(&entity.GoogleServiceAccountKey{})
+	if err != nil {
+		log.Print(err)
+		panic(err)
+	}
+
+	err = db.AutoMigrate(&entity.CurrencyRate{})
 	if err != nil {
 		log.Print(err)
 		panic(err)
