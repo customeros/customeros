@@ -264,6 +264,25 @@ func (s *syncEmailService) processEmail(ctx context.Context, name string, email 
 		s.log.Error(reason)
 	}
 
+	// Set the timeout for waiting
+	timeout := 10 * time.Second
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	// Define a channel for the timeout
+	_ = time.After(timeout)
+
+	// Perform the operation within a select statement
+	select {
+	case <-ctx.Done():
+		// Timeout occurred, handle accordingly (e.g., log, return an error)
+		reason := fmt.Sprintf("timeout waiting for operation to complete")
+		s.log.Error(reason)
+		return SyncResult{}, SyncResult{}, nil
+	default:
+		// Continue with the operation
+	}
+
 	var eventType string
 	if email == from {
 		// Handle "from" case
