@@ -27,7 +27,7 @@ COPY customer-os-neo4j-repository/go.mod /workspace/packages/server/customer-os-
 COPY customer-os-neo4j-repository/go.sum /workspace/packages/server/customer-os-neo4j-repository/go.sum
 RUN cd /workspace/packages/server/customer-os-neo4j-repository && go mod download && go mod verify
 COPY customer-os-neo4j-repository/. /workspace/packages/server/customer-os-neo4j-repository/
-RUN cd /workspace/packages/server/customer-os-neo4j-repository && go build
+RUN cd /workspace/packages/server/customer-os-neo4j-repository && go build -v ./...
 
 #copy and build customer-os-data-upkeeper
 COPY customer-os-data-upkeeper/go.mod /workspace/packages/runner/customer-os-data-upkeeper/go.mod
