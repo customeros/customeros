@@ -51,12 +51,13 @@ func NewSyncEmailService(log logger.Logger, repositories *repository.Repositorie
 		cache.SetPersonalEmailProviders(personalEmailProviders)
 	}
 	return &syncEmailService{
-		log:          log,
-		repositories: repositories,
-		grpcClients:  grpcClients,
-		services:     services,
-		maxWorkers:   services.cfg.ConcurrencyConfig.InteractionEventSyncConcurrency,
-		cache:        cache,
+		log:                    log,
+		repositories:           repositories,
+		grpcClients:            grpcClients,
+		services:               services,
+		maxWorkers:             services.cfg.ConcurrencyConfig.InteractionEventSyncConcurrency,
+		cache:                  cache,
+		personalEmailProviders: personalEmailProvidersList,
 	}
 }
 
