@@ -16,7 +16,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"github.com/sirupsen/logrus"
 	"strings"
 	"time"
 )
@@ -48,13 +47,20 @@ func (s syncEmailService) SyncEmail(ctx context.Context, emailData model.EmailDa
 	var name string
 	var orgSyncResult, interactionEventSyncResult, contactSyncResult SyncResult
 
+	personalEmailProviderList, err := s.services.CommonServices.CommonRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
+	if err != nil {
+		reason := fmt.Sprintf("failed to get personal emailData provider list: %v", err)
+		s.log.Error(reason)
+	}
+
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SyncEmailService.SyncEmails")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "emailData", emailData)
 
 	if !s.services.TenantService.Exists(ctx, common.GetTenantFromContext(ctx)) {
-		s.log.Errorf("tenant {%s} does not exist", common.GetTenantFromContext(ctx))
+		reason := fmt.Sprintf("tenant {%s} does not exist", common.GetTenantFromContext(ctx))
+		s.log.Errorf(reason)
 		tracing.TraceErr(span, errors.ErrTenantNotValid)
 		return SyncResult{}, SyncResult{}, SyncResult{}, errors.ErrTenantNotValid
 	}
@@ -65,7 +71,8 @@ func (s syncEmailService) SyncEmail(ctx context.Context, emailData model.EmailDa
 
 	interactionEventId, err := s.repositories.InteractionEventRepository.GetInteractionEventIdByExternalId(ctx, common.GetTenantFromContext(ctx), emailData.ExternalId, emailData.ExternalSystem)
 	if err != nil {
-		logrus.Errorf("failed to check if interaction event exists for external id %v for tenant %v :%v", emailData.ExternalId, common.GetTenantFromContext(ctx), err)
+		reason := fmt.Sprintf("failed to check if interaction event exists for external id %v for tenant %v :%v", emailData.ExternalId, common.GetTenantFromContext(ctx), err)
+		s.log.Error(reason)
 		return SyncResult{}, SyncResult{Failed: 1}, SyncResult{}, nil
 	}
 
@@ -73,21 +80,18 @@ func (s syncEmailService) SyncEmail(ctx context.Context, emailData model.EmailDa
 
 		now := time.Now().UTC()
 
-		emailSentDate, err := s.ConvertToUTC(emailData.CreatedAtStr)
+		emailSentDate, err := utils.UnmarshalDateTime(emailData.CreatedAtStr)
 		if err != nil {
-			logrus.Errorf("failed to convert emailData sent date to UTC for emailData with id %v :%v", emailData.Id, err)
+			reason := fmt.Sprintf("failed convert email date to utc %s", err.Error())
+			s.log.Error(reason)
 		}
 
 		from, to, cc, bcc, references, inReplyTo := extractEmailData(emailData)
 
-		personalEmailProviderList, err := s.services.CommonServices.CommonRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
-		if err != nil {
-			logrus.Errorf("failed to get personal emailData provider list: %v", err)
-		}
-
 		allEmailsString, err := buildEmailsListExcludingPersonalEmails(personalEmailProviderList, "", emailData.SentBy, to, cc, bcc)
 		if err != nil {
-			logrus.Errorf("failed to build emails list: %v", err)
+			reason := fmt.Sprintf("failed to build emails list: %v", err)
+			s.log.Error(reason)
 		}
 
 		if len(allEmailsString) == 0 {
@@ -112,20 +116,21 @@ func (s syncEmailService) SyncEmail(ctx context.Context, emailData model.EmailDa
 
 		channelData, err := buildEmailChannelData(emailData.Subject, references, inReplyTo)
 		if err != nil {
-			logrus.Errorf("failed to build emailData channel data for emailData with id %v: %v", emailData.Id, err)
-			return SyncResult{Skipped: 1}, SyncResult{}, SyncResult{}, nil
+			reason := fmt.Sprintf("failed to build emailData channel data for emailData with id %v: %v", emailData.Id, err)
+			s.log.Error(reason)
+			return SyncResult{Skipped: 1}, SyncResult{}, SyncResult{}, err
 		}
 
 		sessionId, err := s.services.InteractionSessionService.MergeInteractionSession(ctx, common.GetTenantFromContext(ctx), emailData.ExternalSystem, emailData.SessionDetails, now)
 
 		if err != nil {
-			logrus.Errorf("failed merge interaction session for emailData id %v :%v", emailData.Id, err)
-			return SyncResult{}, SyncResult{}, SyncResult{}, nil
+			reason := fmt.Sprintf("failed merge interaction session for emailData id %v :%v", emailData.Id, err)
+			s.log.Error(reason)
+			return SyncResult{}, SyncResult{}, SyncResult{}, err
 		}
 
-		//TODO check integration event data mapping
 		integrationEvent := model.InteractionEventData{
-			BaseData:       model.BaseData{CreatedAt: &emailSentDate},
+			BaseData:       model.BaseData{CreatedAt: emailSentDate},
 			Content:        emailData.Content,
 			ContentType:    emailData.ContentType,
 			Channel:        emailData.Channel,
@@ -141,13 +146,15 @@ func (s syncEmailService) SyncEmail(ctx context.Context, emailData model.EmailDa
 
 		interactionEventSyncResult, err = s.services.InteractionEventService.SyncInteractionEvents(ctx, interactionEvents)
 		if err != nil {
-			logrus.Errorf("failed merge interaction event for emailData id %v :%v", emailData.Id, err)
+			reason := fmt.Sprintf("failed merge interaction event for emailData id %v :%v", emailData.Id, err)
+			s.log.Error(reason)
 			return SyncResult{}, SyncResult{Failed: 1}, SyncResult{}, nil
 		}
 
-		err = s.repositories.Neo4jRepositories.InteractionEventWriteRepository.LinkInteractionEventToSession(ctx, common.GetTenantFromContext(ctx), interactionEventId, sessionId)
+		err = s.linkInteractionEventToSessionWithRetry(ctx, &emailData, interactionEventId, sessionId)
 		if err != nil {
-			logrus.Errorf("failed to associate interaction event to session for raw emailData id %v :%v", emailData.Id, err)
+			reason := fmt.Sprintf("failed to associate interaction event to session for raw emailData id %v :%v", emailData.Id, err)
+			s.log.Error(reason)
 			return SyncResult{}, SyncResult{}, SyncResult{}, nil
 		}
 		var source string
@@ -156,20 +163,24 @@ func (s syncEmailService) SyncEmail(ctx context.Context, emailData model.EmailDa
 		} else if emailData.ExternalSystem == "outlook" {
 			source = "OUTLOOK"
 		} else {
-			source = "OTHER"
+			err = fmt.Errorf("unknown emailData source: %s", emailData.ExternalSystem)
+			s.log.Error(err.Error())
+			return SyncResult{}, SyncResult{}, SyncResult{}, err
 		}
 
 		fromEmailId, err := s.GetEmailIdForEmail(ctx, common.GetTenantFromContext(ctx), from, personalEmailProviderList, source)
 
 		if fromEmailId == "" {
-			logrus.Errorf("unable to retrieve emailData id for tenant %s and emailData %s", common.GetTenantFromContext(ctx), from)
+			reason := fmt.Sprintf("unable to retrieve emailData id for tenant %s and emailData %s", common.GetTenantFromContext(ctx), from)
+			s.log.Error(reason)
 			return SyncResult{}, SyncResult{}, SyncResult{}, nil
 		}
 
 		// Process the "from" email
 		orgSyncResult, contactSyncResult, err = s.processEmail(ctx, name, from, emailData, personalEmailProviderList, source, interactionEventId)
 		if err != nil {
-			logrus.Errorf("failed to process emailData for emailData id %v :%v", emailData.Id, err)
+			reason := fmt.Sprintf("failed to process emailData for emailData id %v :%v", emailData.Id, err)
+			s.log.Error(reason)
 			return SyncResult{}, SyncResult{}, SyncResult{}, nil
 		}
 
@@ -181,13 +192,15 @@ func (s syncEmailService) SyncEmail(ctx context.Context, emailData model.EmailDa
 			// Process each email using the common function
 			orgSyncResult, contactSyncResult, err = s.processEmail(ctx, name, email, emailData, personalEmailProviderList, source, interactionEventId)
 			if err != nil {
-				logrus.Errorf("failed to process emailData for emailData id %v :%v", emailData.Id, err)
+				reason := fmt.Sprintf("failed to process emailData for emailData id %v :%v", emailData.Id, err)
+				s.log.Error(reason)
 				return SyncResult{}, SyncResult{}, SyncResult{}, nil
 			}
 		}
 
 	} else {
-		logrus.Infof("interaction event already exists for raw emailData id %v", emailData.Id)
+		reason := fmt.Sprintf("interaction event already exists for raw emailData id %v", emailData.Id)
+		s.log.Info(reason)
 		return SyncResult{}, SyncResult{}, SyncResult{}, nil
 	}
 
@@ -231,24 +244,24 @@ func (s *syncEmailService) processEmail(ctx context.Context, name string, email 
 
 	emailId, err := s.GetEmailIdForEmail(ctx, common.GetTenantFromContext(ctx), email, personalEmailProviderList, source)
 	if err != nil {
-		logrus.Errorf("unable to retrieve emailData id for tenant: %v", err)
-		// handle error
+		reason := fmt.Sprintf("unable to retrieve emailData id for tenant: %v", err)
+		s.log.Error(reason)
 	}
 	if emailId == "" {
-		logrus.Errorf("unable to retrieve emailData id for tenant %s and emailData %s", common.GetTenantFromContext(ctx), email)
-		// handle error
+		reason := fmt.Sprintf("unable to retrieve emailData id for tenant %s and emailData %s", common.GetTenantFromContext(ctx), email)
+		s.log.Error(reason)
 	}
 
 	orgSyncResult, err := s.createOrganizationDataAndSync(ctx, name, email, emailData)
 	if err != nil {
-		logrus.Errorf("unable to sync org: %v", err)
-		// handle error
+		reason := fmt.Sprintf("unable to sync org: %v", err)
+		s.log.Error(reason)
 	}
 
 	contactSyncResult, err := s.createContactDataAndSync(ctx, name, email, emailData)
 	if err != nil {
-		logrus.Errorf("unable sync contact: %v", err)
-		// handle error
+		reason := fmt.Sprintf("unable sync contact: %v", err)
+		s.log.Error(reason)
 	}
 
 	var eventType string
@@ -269,10 +282,11 @@ func (s *syncEmailService) processEmail(ctx context.Context, name string, email 
 	}
 
 	if err != nil {
-		logrus.Errorf("unable to link emailData to interaction event: %v", err)
-		return SyncResult{}, SyncResult{}, nil
+		reason := fmt.Sprintf("unable to link emailData to interaction event: %v", err)
+		s.log.Error(reason)
+		return SyncResult{}, SyncResult{}, err
 	}
-	return orgSyncResult, contactSyncResult, err
+	return orgSyncResult, contactSyncResult, nil
 }
 
 func (s *syncEmailService) createOrganizationDataAndSync(ctx context.Context, name string, domain string, emailData model.EmailData) (SyncResult, error) {
@@ -307,4 +321,55 @@ func (s *syncEmailService) createContactDataAndSync(ctx context.Context, name st
 
 	orgSyncResult, err := s.services.ContactService.SyncContacts(ctx, contactsData)
 	return orgSyncResult, err
+}
+
+// Define a function to link interaction event to session with retry and timeout
+func (s *syncEmailService) linkInteractionEventToSessionWithRetry(ctx context.Context, emailData *model.EmailData, interactionEventId, sessionId string) error {
+	// Set the timeout for waiting on node persistence
+	timeout := 10 * time.Second
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	// Define a function for retry with backoff
+	retry := func(ctx context.Context) error {
+		err := s.repositories.Neo4jRepositories.InteractionEventWriteRepository.LinkInteractionEventToSession(ctx, common.GetTenantFromContext(ctx), interactionEventId, sessionId)
+		return err
+	}
+
+	// Use retry with exponential backoff until timeout
+	err := retryWithExponentialBackoff(ctx, retry)
+	if err != nil {
+		reason := fmt.Sprintf("failed to associate interaction event to session for raw emailData id %v: %v", emailData.Id, err)
+		s.log.Error(reason)
+		return err
+	}
+
+	return nil
+}
+
+// retry with exponential backoff
+func retryWithExponentialBackoff(ctx context.Context, retryFunc func(context.Context) error) error {
+	initialDelay := 100 * time.Millisecond
+	maxDelay := 2 * time.Second
+
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+			err := retryFunc(ctx)
+			if err == nil {
+				return nil
+			}
+
+			// Exponential backoff
+			delay := initialDelay
+			initialDelay *= 2
+			if initialDelay > maxDelay {
+				initialDelay = maxDelay
+			}
+
+			time.Sleep(delay)
+		}
+	}
 }

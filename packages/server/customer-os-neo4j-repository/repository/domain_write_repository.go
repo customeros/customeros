@@ -20,7 +20,7 @@ type domainWriteRepository struct {
 	database string
 }
 
-func (d domainWriteRepository) CreateDomain(ctx context.Context, domain, source, appSource string, now time.Time) error {
+func (d domainWriteRepository) CreateDomain(ctx context.Context, domain, source, appSource string, time time.Time) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventWriteRepository.Create")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, domain)
@@ -39,8 +39,8 @@ func (d domainWriteRepository) CreateDomain(ctx context.Context, domain, source,
 
 	params := map[string]interface{}{
 		"domain":    domain,
-		"createdAt": now,
-		"updatedAt": now,
+		"createdAt": time,
+		"updatedAt": time,
 		"source":    source,
 		"appSource": appSource,
 	}

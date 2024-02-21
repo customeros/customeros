@@ -12,7 +12,7 @@ import (
 )
 
 type DomainReadRepository interface {
-	GetDomain(ctx context.Context, domain string, tenant string) (*dbtype.Node, error)
+	GetDomain(ctx context.Context, domain string) (*dbtype.Node, error)
 }
 
 type domainReadRepository struct {
@@ -31,10 +31,10 @@ func (r *domainReadRepository) prepareReadSession(ctx context.Context) neo4j.Ses
 	return utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 }
 
-func (r *domainReadRepository) GetDomain(ctx context.Context, domain string, tenant string) (*dbtype.Node, error) {
+func (r *domainReadRepository) GetDomain(ctx context.Context, domain string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventReadRepository.GetInteractionEvent")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.SetNeo4jRepositorySpanTags(span, domain)
 
 	cypher := fmt.Sprintf(`MATCH (d:Domain{domain:$domain}) RETURN d`)
 	params := map[string]any{
