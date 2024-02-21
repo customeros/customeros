@@ -26,8 +26,10 @@ curl -X POST \
           salesTax: false,
           taxRate: 0.20
         }
-      }) { 
-        id
+      }) {
+        metadata {
+          id
+        } 
       } 
     }"
   }' 
@@ -39,11 +41,13 @@ The contractLineItem mutation request requires that you pass the contract `contr
 
 As this is a graphQL request, you are able to specify the exact payload you would like returned in the response.  In the example above, we've specified that only `id` is returned, but you can choose from any of the response parameters defined in the [contractLineItem object](objects/contract-line-items)
 
-## UpdateContract mutation response
+## CreateContractLineItem mutation response
 ```json
 "data": {
     "contractLineItem_Update": {
-        "id": "96d699a8-b986-4dae-9f10-a23196f30c90",
+        "metadata": {
+            "id": "96d699a8-b986-4dae-9f10-a23196f30c90",
+        }
     }
 }
 ```
