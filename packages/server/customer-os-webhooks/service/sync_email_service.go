@@ -272,34 +272,29 @@ func (s *syncEmailService) processEmail(ctx context.Context, name string, email 
 	// Define a channel for the timeout
 	_ = time.After(timeout)
 
-	// Perform the operation within a select statement
 	select {
 	case <-ctx.Done():
-		// Timeout occurred, handle accordingly (e.g., log, return an error)
 		reason := fmt.Sprintf("timeout waiting for operation to complete")
 		s.log.Error(reason)
 		return SyncResult{}, SyncResult{}, nil
 	default:
-		// Continue with the operation
-	}
-
-	var eventType string
-	if email == from {
-		// Handle "from" case
-		eventType = "FROM"
-		err = s.repositories.Neo4jRepositories.InteractionEventWriteRepository.InteractionEventSentByEmail(ctx, common.GetTenantFromContext(ctx), interactionEventId, emailId)
-	} else {
-		// Handle other cases
-		if contains(to, email) {
-			eventType = "TO"
-		} else if contains(cc, email) {
-			eventType = "CC"
-		} else if contains(bcc, email) {
-			eventType = "BCC"
+		var eventType string
+		if email == from {
+			// Handle "from" case
+			eventType = "FROM"
+			err = s.repositories.Neo4jRepositories.InteractionEventWriteRepository.InteractionEventSentByEmail(ctx, common.GetTenantFromContext(ctx), interactionEventId, emailId)
+		} else {
+			// Handle other cases
+			if contains(to, email) {
+				eventType = "TO"
+			} else if contains(cc, email) {
+				eventType = "CC"
+			} else if contains(bcc, email) {
+				eventType = "BCC"
+			}
+			err = s.repositories.Neo4jRepositories.InteractionEventWriteRepository.InteractionEventSentToEmails(ctx, common.GetTenantFromContext(ctx), interactionEventId, eventType, []string{emailId})
 		}
-		err = s.repositories.Neo4jRepositories.InteractionEventWriteRepository.InteractionEventSentToEmails(ctx, common.GetTenantFromContext(ctx), interactionEventId, eventType, []string{emailId})
 	}
-
 	if err != nil {
 		reason := fmt.Sprintf("unable to link emailData to interaction event: %v", err)
 		s.log.Error(reason)
