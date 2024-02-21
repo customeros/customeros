@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	repository2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/grpc_client"
@@ -26,32 +27,42 @@ type SyncEmailService interface {
 }
 
 type syncEmailService struct {
-	log          logger.Logger
-	repositories *repository.Repositories
-	grpcClients  *grpc_client.Clients
-	services     *Services
-	maxWorkers   int
+	log                    logger.Logger
+	repositories           *repository.Repositories
+	grpcClients            *grpc_client.Clients
+	services               *Services
+	cache                  *caches.Cache
+	maxWorkers             int
+	personalEmailProviders []commonEntity.PersonalEmailProvider
 }
 
-func NewSyncEmailService(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients, services *Services) SyncEmailService {
+func NewSyncEmailService(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients, services *Services, cache *caches.Cache, personalEmailProvidersList []commonEntity.PersonalEmailProvider) SyncEmailService {
+	personalEmailProviders := cache.GetPersonalEmailProviders()
+	var err error
+	if len(personalEmailProviders) == 0 {
+		personalEmailProvidersList, err = repositories.CommonRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
+		if err != nil {
+			log.Errorf("error while getting personal email providers: %v", err)
+		}
+		personalEmailProviders = make([]string, 0)
+		for _, personalEmailProvider := range personalEmailProvidersList {
+			personalEmailProviders = append(personalEmailProviders, personalEmailProvider.ProviderDomain)
+		}
+		cache.SetPersonalEmailProviders(personalEmailProviders)
+	}
 	return &syncEmailService{
 		log:          log,
 		repositories: repositories,
 		grpcClients:  grpcClients,
 		services:     services,
 		maxWorkers:   services.cfg.ConcurrencyConfig.InteractionEventSyncConcurrency,
+		cache:        cache,
 	}
 }
 
 func (s syncEmailService) SyncEmail(ctx context.Context, emailData model.EmailData) (organizationSync SyncResult, interactionEventSync SyncResult, contactSync SyncResult, err error) {
 	var name string
 	var orgSyncResult, interactionEventSyncResult, contactSyncResult SyncResult
-
-	personalEmailProviderList, err := s.services.CommonServices.CommonRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
-	if err != nil {
-		reason := fmt.Sprintf("failed to get personal emailData provider list: %v", err)
-		s.log.Error(reason)
-	}
 
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SyncEmailService.SyncEmails")
 	defer span.Finish()
@@ -88,7 +99,7 @@ func (s syncEmailService) SyncEmail(ctx context.Context, emailData model.EmailDa
 
 		from, to, cc, bcc, references, inReplyTo := extractEmailData(emailData)
 
-		allEmailsString, err := buildEmailsListExcludingPersonalEmails(personalEmailProviderList, "", emailData.SentBy, to, cc, bcc)
+		allEmailsString, err := buildEmailsListExcludingPersonalEmails(s.personalEmailProviders, "", emailData.SentBy, to, cc, bcc)
 		if err != nil {
 			reason := fmt.Sprintf("failed to build emails list: %v", err)
 			s.log.Error(reason)
@@ -168,7 +179,7 @@ func (s syncEmailService) SyncEmail(ctx context.Context, emailData model.EmailDa
 			return SyncResult{}, SyncResult{}, SyncResult{}, err
 		}
 
-		fromEmailId, err := s.GetEmailIdForEmail(ctx, common.GetTenantFromContext(ctx), from, personalEmailProviderList, source)
+		fromEmailId, err := s.GetEmailIdForEmail(ctx, common.GetTenantFromContext(ctx), from, s.personalEmailProviders, source)
 
 		if fromEmailId == "" {
 			reason := fmt.Sprintf("unable to retrieve emailData id for tenant %s and emailData %s", common.GetTenantFromContext(ctx), from)
@@ -177,7 +188,7 @@ func (s syncEmailService) SyncEmail(ctx context.Context, emailData model.EmailDa
 		}
 
 		// Process the "from" email
-		orgSyncResult, contactSyncResult, err = s.processEmail(ctx, name, from, emailData, personalEmailProviderList, source, interactionEventId)
+		orgSyncResult, contactSyncResult, err = s.processEmail(ctx, name, from, emailData, s.personalEmailProviders, source, interactionEventId)
 		if err != nil {
 			reason := fmt.Sprintf("failed to process emailData for emailData id %v :%v", emailData.Id, err)
 			s.log.Error(reason)
@@ -190,7 +201,7 @@ func (s syncEmailService) SyncEmail(ctx context.Context, emailData model.EmailDa
 		// Iterate over the combined slice
 		for _, email := range allEmails {
 			// Process each email using the common function
-			orgSyncResult, contactSyncResult, err = s.processEmail(ctx, name, email, emailData, personalEmailProviderList, source, interactionEventId)
+			orgSyncResult, contactSyncResult, err = s.processEmail(ctx, name, email, emailData, s.personalEmailProviders, source, interactionEventId)
 			if err != nil {
 				reason := fmt.Sprintf("failed to process emailData for emailData id %v :%v", emailData.Id, err)
 				s.log.Error(reason)
@@ -226,14 +237,18 @@ func (s *syncEmailService) GetEmailIdForEmail(ctx context.Context, tenant string
 	domain := utils.ExtractDomain(email)
 	for _, personalEmailProvider := range personalEmailProviderList {
 		if strings.Contains(domain, personalEmailProvider.ProviderDomain) {
-			err = s.repositories.Neo4jRepositories.EmailWriteRepository.CreateEmail(ctx, tenant, email, repository2.EmailCreateFields{
+			id, err := utils.GenerateUUID()
+			if err != nil {
+				return "", fmt.Errorf("unable to generate email id: %v", err)
+			}
+			err = s.repositories.Neo4jRepositories.EmailWriteRepository.CreateEmail(ctx, tenant, id, repository2.EmailCreateFields{
 				RawEmail:     email,
 				SourceFields: neo4jmodel.Source{Source: source},
 			})
 			if err != nil {
 				return "", fmt.Errorf("unable to create email: %v", err)
 			}
-			return email, nil
+			return id, nil
 		}
 	}
 	return emailId, nil

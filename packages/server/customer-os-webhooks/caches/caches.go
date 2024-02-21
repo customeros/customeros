@@ -23,15 +23,16 @@ type Cache struct {
 	mu                         sync.RWMutex
 	externalSystemCache        *freecache.Cache
 	tenantCache                *freecache.Cache
-	perosnalEmailProviderCache *freecache.Cache
+	personalEmailProviderCache *freecache.Cache
 }
 
 func NewCache() *Cache {
-	return &Cache{
+	cache := Cache{
 		externalSystemCache:        freecache.NewCache(cache5MB),
 		tenantCache:                freecache.NewCache(cache1MB),
-		perosnalEmailProviderCache: freecache.NewCache(cache5MB),
+		personalEmailProviderCache: freecache.NewCache(cache5MB),
 	}
+	return &cache
 }
 
 func (c *Cache) AddExternalSystem(tenant, externalSystem string) {
@@ -101,7 +102,7 @@ func (c *Cache) SetPersonalEmailProviders(domains []string) {
 		domainChunk := domains[i:j]
 		domainChunkBytes, err := json.Marshal(domainChunk)
 		if err != nil {
-			c.perosnalEmailProviderCache.Clear() // Clear the cache
+			c.personalEmailProviderCache.Clear() // Clear the cache
 			return
 		}
 
@@ -109,9 +110,9 @@ func (c *Cache) SetPersonalEmailProviders(domains []string) {
 		key := strconv.Itoa(i/chunkSize + 1) // Convert the integer to a string
 
 		// Store the chunk in the cache
-		err = c.perosnalEmailProviderCache.Set([]byte(key), domainChunkBytes, expire1Hour)
+		err = c.personalEmailProviderCache.Set([]byte(key), domainChunkBytes, expire1Hour)
 		if err != nil {
-			c.perosnalEmailProviderCache.Clear()
+			c.personalEmailProviderCache.Clear()
 		}
 	}
 }
@@ -128,7 +129,7 @@ func (c *Cache) GetPersonalEmailProviders() []string {
 		key := strconv.Itoa(keyIndex)
 
 		// Attempt to get the domains chunk from the cache
-		domainChunkBytes, err := c.perosnalEmailProviderCache.Get([]byte(key))
+		domainChunkBytes, err := c.personalEmailProviderCache.Get([]byte(key))
 		if err != nil {
 			break // If a key is not found, assume no more chunks are available
 		}

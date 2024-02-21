@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"github.com/google/uuid"
 	"strings"
 )
 
@@ -18,4 +19,13 @@ func EnsureEmailRfcIds(to []string) []string {
 		result = append(result, EnsureEmailRfcId(id))
 	}
 	return result
+}
+
+func GenerateUUID() (string, error) {
+	uuidObj, err := uuid.NewRandom()
+	if err != nil {
+		return "", err
+	}
+
+	return uuidObj.String(), nil
 }
