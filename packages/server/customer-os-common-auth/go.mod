@@ -12,7 +12,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/testcontainers/testcontainers-go v0.25.0
 	github.com/uber/jaeger-client-go v2.30.0+incompatible
-	go.uber.org/zap v1.26.0
+	go.uber.org/zap v1.27.0
 	golang.org/x/oauth2 v0.14.0
 	google.golang.org/api v0.149.0
 	gorm.io/driver/postgres v1.5.6

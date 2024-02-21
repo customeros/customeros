@@ -3,7 +3,9 @@ module github.com/openline-ai/openline-customer-os/packages/runner/customer-os-d
 go 1.21
 
 replace github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto => ../../server/events-processing-proto
+
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ../../server/customer-os-common-module
+
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository => ../../server/customer-os-neo4j-repository
 
 require (
@@ -38,7 +40,7 @@ require (
 	github.com/uber/jaeger-lib v2.4.1+incompatible // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	go.uber.org/zap v1.26.0 // indirect
+	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/crypto v0.18.0 // indirect
 	golang.org/x/net v0.20.0 // indirect
 	golang.org/x/sync v0.6.0 // indirect
