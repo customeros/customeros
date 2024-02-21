@@ -1741,7 +1741,7 @@ type Organization struct {
 	Logo                          *string                       `json:"logo,omitempty"`
 	Market                        *Market                       `json:"market,omitempty"`
 	Name                          string                        `json:"name"`
-	Notes                         *NotePage                     `json:"notes"`
+	Notes                         *string                       `json:"notes,omitempty"`
 	Owner                         *User                         `json:"owner,omitempty"`
 	ParentCompanies               []*LinkedOrganization         `json:"parentCompanies"`
 	Public                        *bool                         `json:"public,omitempty"`
