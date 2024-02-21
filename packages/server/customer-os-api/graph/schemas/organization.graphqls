@@ -51,8 +51,7 @@ type Organization implements MetadataInterface {
     logo:                   String
     market:                 Market
     name:                   String!
-#    notes:                  String To replace the below notes field
-    notes(pagination: Pagination): NotePage! @goField(forceResolver: true) @deprecated
+    notes:                  String
     owner:                  User @goField(forceResolver: true)
     parentCompanies:        [LinkedOrganization!]! @goField(forceResolver: true)
     public:                 Boolean

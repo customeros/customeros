@@ -1116,7 +1116,7 @@ type ComplexityRoot struct {
 		Metadata                      func(childComplexity int) int
 		Name                          func(childComplexity int) int
 		Note                          func(childComplexity int) int
-		Notes                         func(childComplexity int, pagination *model.Pagination) int
+		Notes                         func(childComplexity int) int
 		Owner                         func(childComplexity int) int
 		ParentCompanies               func(childComplexity int) int
 		PhoneNumbers                  func(childComplexity int) int
@@ -1841,7 +1841,6 @@ type OrganizationResolver interface {
 
 	Locations(ctx context.Context, obj *model.Organization) ([]*model.Location, error)
 
-	Notes(ctx context.Context, obj *model.Organization, pagination *model.Pagination) (*model.NotePage, error)
 	Owner(ctx context.Context, obj *model.Organization) (*model.User, error)
 	ParentCompanies(ctx context.Context, obj *model.Organization) ([]*model.LinkedOrganization, error)
 
@@ -8494,12 +8493,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Organization_notes_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Organization.Notes(childComplexity, args["pagination"].(*model.Pagination)), true
+		return e.complexity.Organization.Notes(childComplexity), true
 
 	case "Organization.owner":
 		if e.complexity.Organization.Owner == nil {
@@ -13353,8 +13347,7 @@ type Organization implements MetadataInterface {
     logo:                   String
     market:                 Market
     name:                   String!
-#    notes:                  String To replace the below notes field
-    notes(pagination: Pagination): NotePage! @goField(forceResolver: true) @deprecated
+    notes:                  String
     owner:                  User @goField(forceResolver: true)
     parentCompanies:        [LinkedOrganization!]! @goField(forceResolver: true)
     public:                 Boolean
@@ -17901,21 +17894,6 @@ func (ec *executionContext) field_Organization_contacts_args(ctx context.Context
 		}
 	}
 	args["sort"] = arg2
-	return args, nil
-}
-
-func (ec *executionContext) field_Organization_notes_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 *model.Pagination
-	if tmp, ok := rawArgs["pagination"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pagination"))
-		arg0, err = ec.unmarshalOPagination2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPagination(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["pagination"] = arg0
 	return args, nil
 }
 
@@ -66533,51 +66511,29 @@ func (ec *executionContext) _Organization_notes(ctx context.Context, field graph
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Organization().Notes(rctx, obj, fc.Args["pagination"].(*model.Pagination))
+		return obj.Notes, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.NotePage)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalNNotePage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNotePage(ctx, field.Selections, res)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Organization_notes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Organization",
 		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
+		IsMethod:   false,
+		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "content":
-				return ec.fieldContext_NotePage_content(ctx, field)
-			case "totalPages":
-				return ec.fieldContext_NotePage_totalPages(ctx, field)
-			case "totalElements":
-				return ec.fieldContext_NotePage_totalElements(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type NotePage", field.Name)
+			return nil, errors.New("field of type String does not have child fields")
 		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Organization_notes_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
 	}
 	return fc, nil
 }
@@ -102821,41 +102777,7 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "notes":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Organization_notes(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
-			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			out.Values[i] = ec._Organization_notes(ctx, field, obj)
 		case "owner":
 			field := field
 
