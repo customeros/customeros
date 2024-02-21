@@ -39,7 +39,7 @@ jobs:
           with:
             access_token: ${{ github.token }}
         - name: Checkout Github repo
-          uses: actions/checkout@v2
+          uses: actions/checkout@v4
         - name: Sets up an Erlang/OTP environment
           uses: erlef/setup-beam@v1
           with:
