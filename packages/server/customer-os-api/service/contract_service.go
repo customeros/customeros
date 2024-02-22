@@ -131,15 +131,15 @@ func (s *contractService) createContractWithEvents(ctx context.Context, contract
 	if contractDetails.ContractEntity.Currency.String() != "" {
 		createContractRequest.Currency = contractDetails.ContractEntity.Currency.String()
 	} else {
-		// if not privided, get default currency from tenant settings
+		// if not provided, get default currency from tenant settings
 		dbNode, err := s.repositories.Neo4jRepositories.TenantReadRepository.GetTenantSettings(ctx, common.GetTenantFromContext(ctx))
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return "", err
 		}
 		tenantSettingsEntity := neo4jmapper.MapDbNodeToTenantSettingsEntity(dbNode)
-		if tenantSettingsEntity.DefaultCurrency.String() != "" {
-			createContractRequest.Currency = tenantSettingsEntity.DefaultCurrency.String()
+		if tenantSettingsEntity.BaseCurrency.String() != "" {
+			createContractRequest.Currency = tenantSettingsEntity.BaseCurrency.String()
 		}
 	}
 

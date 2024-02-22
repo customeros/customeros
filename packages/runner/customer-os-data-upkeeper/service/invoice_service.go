@@ -194,9 +194,6 @@ func (s *invoiceService) getTenantBaseCurrency(ctx context.Context, tenant strin
 	tenantSettings := neo4jmapper.MapDbNodeToTenantSettingsEntity(dbNode)
 
 	currency := tenantSettings.BaseCurrency
-	if currency.String() == "" {
-		currency = tenantSettings.DefaultCurrency
-	}
 	cachedTenantBaseCurrencies[tenant] = currency
 	return currency
 }

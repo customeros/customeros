@@ -305,7 +305,7 @@ func (s *invoiceService) NextInvoiceDryRun(ctx context.Context, contractId strin
 
 	currency := contract.Currency.String()
 	if currency == "" {
-		currency = tenantSettings.DefaultCurrency.String()
+		currency = tenantSettings.BaseCurrency.String()
 	}
 
 	dryRunInvoiceRequest := invoicepb.NewInvoiceForContractRequest{

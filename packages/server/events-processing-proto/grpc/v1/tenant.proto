@@ -90,7 +90,7 @@ message UpdateBillingProfileRequest {
 
 enum TenantSettingsFieldMask {
   TENANT_SETTINGS_FIELD_NONE = 0; // No property, ignored by the server
-  TENANT_SETTINGS_FIELD_DEFAULT_CURRENCY = 1;
+  TENANT_SETTINGS_FIELD_DEFAULT_CURRENCY = 1 [deprecated = true];
   TENANT_SETTINGS_FIELD_INVOICING_ENABLED = 2;
   TENANT_SETTINGS_FIELD_LOGO_URL = 3;
   TENANT_SETTINGS_FIELD_INVOICING_POSTPAID = 4;
@@ -104,7 +104,7 @@ message UpdateTenantSettingsRequest {
   google.protobuf.Timestamp updatedAt = 4;
   string appSource = 5;
   repeated TenantSettingsFieldMask fieldsMask = 6;
-  string defaultCurrency = 7;
+  string defaultCurrency = 7 [deprecated = true];
   bool invoicingEnabled = 8;
   string logoUrl = 9;
   bool invoicingPostpaid = 10;

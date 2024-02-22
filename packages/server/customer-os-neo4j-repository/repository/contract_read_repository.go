@@ -310,7 +310,7 @@ func (r *contractReadRepository) GetContractsToGenerateCycleInvoices(ctx context
 				ts.invoicingEnabled = true AND
 				(c.invoicingEnabled = true OR c.invoicingEnabled IS NULL) AND
 				(o.hide = false OR o.hide IS NULL) AND
-				(c.currency <> "" OR ts.defaultCurrency <> "" OR ts.baseCurrency <> "" ) AND
+				(c.currency <> "" OR ts.baseCurrency <> "" ) AND
 				c.organizationLegalName IS NOT NULL AND 
 				c.organizationLegalName <> "" AND
 				c.invoiceEmail IS NOT NULL AND
@@ -361,7 +361,7 @@ func (r *contractReadRepository) GetContractsToGenerateOffCycleInvoices(ctx cont
 				ts.invoicingPostpaid = false  AND
 				(c.invoicingEnabled = true OR c.invoicingEnabled IS NULL) AND
 				(o.hide = false OR o.hide IS NULL) AND
-				(c.currency <> "" OR ts.defaultCurrency <> "" OR ts.baseCurrency <> "") AND
+				(c.currency <> "" OR ts.baseCurrency <> "") AND
 				c.organizationLegalName IS NOT NULL AND 
 				c.organizationLegalName <> "" AND
 				c.invoiceEmail IS NOT NULL AND

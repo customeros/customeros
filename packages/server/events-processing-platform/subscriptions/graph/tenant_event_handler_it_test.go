@@ -130,7 +130,6 @@ func TestTenantEventHandler_OnUpdateTenantSettingsV1(t *testing.T) {
 		&tenantpb.UpdateTenantSettingsRequest{
 			LogoUrl:              "http://logo",
 			LogoRepositoryFileId: "logoRepositoryFileId",
-			DefaultCurrency:      neo4jenum.CurrencyAUD.String(),
 			BaseCurrency:         neo4jenum.CurrencyAUD.String(),
 			InvoicingEnabled:     true,
 			InvoicingPostpaid:    true,
@@ -162,6 +161,5 @@ func TestTenantEventHandler_OnUpdateTenantSettingsV1(t *testing.T) {
 	require.Equal(t, "logoRepositoryFileId", tenantSettingsEntity.LogoRepositoryFileId)
 	require.Equal(t, true, tenantSettingsEntity.InvoicingEnabled)
 	require.Equal(t, true, tenantSettingsEntity.InvoicingPostpaid)
-	require.Equal(t, neo4jenum.CurrencyAUD, tenantSettingsEntity.DefaultCurrency)
 	require.Equal(t, neo4jenum.CurrencyAUD, tenantSettingsEntity.BaseCurrency)
 }

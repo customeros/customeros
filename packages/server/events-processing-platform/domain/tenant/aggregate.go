@@ -284,9 +284,6 @@ func (a *TenantAggregate) onUpdateTenantSettings(evt eventstore.Event) error {
 		return errors.Wrap(err, "GetJsonData")
 	}
 
-	if eventData.UpdateDefaultCurrency() {
-		a.TenantDetails.TenantSettings.DefaultCurrency = eventData.DefaultCurrency
-	}
 	if eventData.UpdateBaseCurrency() {
 		a.TenantDetails.TenantSettings.BaseCurrency = eventData.BaseCurrency
 	}
@@ -356,8 +353,6 @@ func extractTenantSettingsFieldsMask(inputFieldsMask []tenantpb.TenantSettingsFi
 			fieldsMask = append(fieldsMask, event.FieldMaskLogoUrl)
 		case tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_LOGO_REPOSITORY_FILE_ID:
 			fieldsMask = append(fieldsMask, event.FieldMaskLogoRepositoryFileId)
-		case tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_DEFAULT_CURRENCY:
-			fieldsMask = append(fieldsMask, event.FieldMaskDefaultCurrency)
 		case tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_BASE_CURRENCY:
 			fieldsMask = append(fieldsMask, event.FieldMaskBaseCurrency)
 		case tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_INVOICING_ENABLED:

@@ -2513,7 +2513,6 @@ type TenantInput struct {
 type TenantSettings struct {
 	LogoURL              string    `json:"logoUrl"`
 	LogoRepositoryFileID *string   `json:"logoRepositoryFileId,omitempty"`
-	DefaultCurrency      *Currency `json:"defaultCurrency,omitempty"`
 	BaseCurrency         *Currency `json:"baseCurrency,omitempty"`
 	BillingEnabled       bool      `json:"billingEnabled"`
 }
@@ -2522,7 +2521,6 @@ type TenantSettingsInput struct {
 	Patch                *bool     `json:"patch,omitempty"`
 	LogoURL              *string   `json:"logoUrl,omitempty"`
 	LogoRepositoryFileID *string   `json:"logoRepositoryFileId,omitempty"`
-	DefaultCurrency      *Currency `json:"defaultCurrency,omitempty"`
 	BaseCurrency         *Currency `json:"baseCurrency,omitempty"`
 	BillingEnabled       *bool     `json:"billingEnabled,omitempty"`
 }

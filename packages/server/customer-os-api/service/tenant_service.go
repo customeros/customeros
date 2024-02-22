@@ -318,11 +318,6 @@ func (s *tenantService) UpdateTenantSettings(ctx context.Context, input *model.T
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", input)
 
-	var defaultCurrency string
-	if input.DefaultCurrency != nil {
-		defaultCurrency = input.DefaultCurrency.String()
-	}
-
 	var baseCurrency string
 	if input.BaseCurrency != nil {
 		baseCurrency = input.BaseCurrency.String()
@@ -335,7 +330,6 @@ func (s *tenantService) UpdateTenantSettings(ctx context.Context, input *model.T
 		AppSource:            constants.AppSourceCustomerOsApi,
 		LogoUrl:              utils.IfNotNilString(input.LogoURL),
 		LogoRepositoryFileId: utils.IfNotNilString(input.LogoRepositoryFileID),
-		DefaultCurrency:      defaultCurrency,
 		BaseCurrency:         baseCurrency,
 		InvoicingEnabled:     utils.IfNotNilBool(input.BillingEnabled),
 	}
@@ -346,9 +340,6 @@ func (s *tenantService) UpdateTenantSettings(ctx context.Context, input *model.T
 		}
 		if input.LogoRepositoryFileID != nil {
 			fieldMask = append(fieldMask, tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_LOGO_REPOSITORY_FILE_ID)
-		}
-		if input.DefaultCurrency != nil {
-			fieldMask = append(fieldMask, tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_DEFAULT_CURRENCY)
 		}
 		if input.BaseCurrency != nil {
 			fieldMask = append(fieldMask, tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_BASE_CURRENCY)
