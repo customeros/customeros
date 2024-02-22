@@ -219,12 +219,12 @@ func contains(slice []string, element string) bool {
 
 func extractEmailData(emailData model.EmailData) (string, []string, []string, []string, []string) {
 	// Extract "from" email
-	from := extractEmailAddresses(emailData.SentBy)[0]
+	from := extractEmailAddresses(emailData.SentBy.Address)[0]
 
 	// Extract other email addresses
-	to := extractEmailAddresses(emailData.SentTo)
-	cc := extractEmailAddresses(emailData.Cc)
-	bcc := extractEmailAddresses(emailData.Bcc)
+	to := extractEmailAddressesFromSlice(emailData.SentTo)
+	cc := extractEmailAddressesFromSlice(emailData.Cc)
+	bcc := extractEmailAddressesFromSlice(emailData.Bcc)
 
 	// Extract references
 
@@ -232,4 +232,13 @@ func extractEmailData(emailData model.EmailData) (string, []string, []string, []
 	inReplyTo := extractLines(emailData.InReplyTo)
 
 	return from, to, cc, bcc, inReplyTo
+}
+
+// Helper function to extract email addresses from a slice of EmailAddresses
+func extractEmailAddressesFromSlice(emailAddresses []model.EmailAddress) []string {
+	addresses := make([]string, len(emailAddresses))
+	for i, addr := range emailAddresses {
+		addresses[i] = addr.Address
+	}
+	return addresses
 }

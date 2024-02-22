@@ -62,7 +62,6 @@ func NewSyncEmailService(log logger.Logger, repositories *repository.Repositorie
 }
 
 func (s syncEmailService) SyncEmail(ctx context.Context, emailData model.EmailData) (organizationSync SyncResult, interactionEventSync SyncResult, contactSync SyncResult, err error) {
-	var name string
 	var orgSyncResult, interactionEventSyncResult, contactSyncResult SyncResult
 
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SyncEmailService.SyncEmails")
@@ -100,7 +99,7 @@ func (s syncEmailService) SyncEmail(ctx context.Context, emailData model.EmailDa
 
 		from, to, cc, bcc, inReplyTo := extractEmailData(emailData)
 
-		allEmailsString, err := buildEmailsListExcludingPersonalEmails(s.personalEmailProviders, "", emailData.SentBy, to, cc, bcc)
+		allEmailsString, err := buildEmailsListExcludingPersonalEmails(s.personalEmailProviders, "", emailData.SentBy.Address, to, cc, bcc)
 		if err != nil {
 			reason := fmt.Sprintf("failed to build emails list: %v", err)
 			s.log.Error(reason)
@@ -204,7 +203,7 @@ func (s syncEmailService) SyncEmail(ctx context.Context, emailData model.EmailDa
 		}
 
 		// Process the "from" email
-		orgSyncResult, contactSyncResult, err = s.processEmail(ctx, name, from, emailData, s.personalEmailProviders, source, interactionEventId)
+		orgSyncResult, contactSyncResult, err = s.processEmail(ctx, emailData.SentBy.Name, from, emailData, s.personalEmailProviders, source, interactionEventId)
 		if err != nil {
 			reason := fmt.Sprintf("failed to process emailData for emailData id %v :%v", emailData.Id, err)
 			s.log.Error(reason)
@@ -215,7 +214,30 @@ func (s syncEmailService) SyncEmail(ctx context.Context, emailData model.EmailDa
 		allEmails := append(append(to, cc...), bcc...)
 
 		// Iterate over the combined slice
-		for _, email := range allEmails {
+		for i, email := range allEmails {
+			// Determine the category (To, Cc, Bcc) for the current email
+			var category string
+			switch {
+			case contains(to, email):
+				category = "To"
+			case contains(cc, email):
+				category = "Cc"
+			case contains(bcc, email):
+				category = "Bcc"
+			}
+
+			// Get the corresponding name for the current category from emailData
+			var name string
+			switch category {
+			case "To":
+				name = emailData.SentTo[i].Name // Assuming SentTo has both name and address
+			case "Cc":
+				name = emailData.Cc[i].Name
+			case "Bcc":
+				name = emailData.Bcc[i].Name
+			default:
+				name = "Unnamed"
+			}
 			// Process each email using the common function
 			orgSyncResult, contactSyncResult, err = s.processEmail(ctx, name, email, emailData, s.personalEmailProviders, source, interactionEventId)
 			if err != nil {
