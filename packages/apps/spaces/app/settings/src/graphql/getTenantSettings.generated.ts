@@ -33,7 +33,8 @@ export type TenantSettingsQuery = {
   tenantSettings: {
     __typename?: 'TenantSettings';
     logoUrl: string;
-    defaultCurrency?: Types.Currency | null;
+    logoRepositoryFileId?: string | null;
+    baseCurrency?: Types.Currency | null;
     billingEnabled: boolean;
   };
 };
@@ -42,7 +43,8 @@ export const TenantSettingsDocument = `
     query TenantSettings {
   tenantSettings {
     logoUrl
-    defaultCurrency
+    logoRepositoryFileId
+    baseCurrency
     billingEnabled
   }
 }

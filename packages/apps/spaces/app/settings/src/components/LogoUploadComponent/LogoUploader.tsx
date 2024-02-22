@@ -95,18 +95,12 @@ export const LogoUploader: React.FC<LogoUploaderProps> = () => {
     queryClient.cancelQueries({ queryKey });
   });
   useEffect(() => {
-    if (tenantSettingsData?.tenantSettings?.logoUrl) {
-      const uuidRegex =
-        /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/;
-      const match = `${tenantSettingsData?.tenantSettings?.logoUrl}`.match(
-        uuidRegex,
-      );
-
-      if (match) {
-        fetchLogo({ id: match[0] });
-      }
+    if (tenantSettingsData?.tenantSettings?.logoRepositoryFileId) {
+      fetchLogo({
+        id: tenantSettingsData?.tenantSettings?.logoRepositoryFileId,
+      });
     }
-  }, [tenantSettingsData?.tenantSettings?.logoUrl]);
+  }, [tenantSettingsData?.tenantSettings?.logoRepositoryFileId]);
 
   function getDefaultLabel() {
     return renderToString(
@@ -252,11 +246,12 @@ export const LogoUploader: React.FC<LogoUploaderProps> = () => {
                 if (request.status >= 200 && request.status < 300) {
                   // the load method accepts either a string (id) or an object
                   load(request.responseText);
-                  const previewUrl = JSON.parse(request.response).id;
+                  const parsedResponse = JSON.parse(request.response);
                   updateTenantSettingsMutation.mutate({
                     input: {
                       patch: true,
-                      logoUrl: previewUrl, // Ensure this matches the structure of your API response
+                      logoUrl: parsedResponse?.previewUrl,
+                      logoRepositoryFileId: parsedResponse.id,
                     },
                   });
                   const reader = new FileReader();
@@ -271,7 +266,7 @@ export const LogoUploader: React.FC<LogoUploaderProps> = () => {
                         height: img.height,
                       },
                     });
-                    fetchLogo({ id: previewUrl });
+                    fetchLogo({ id: parsedResponse.id });
 
                     return reader.result;
                   };
@@ -329,6 +324,7 @@ export const LogoUploader: React.FC<LogoUploaderProps> = () => {
                 input: {
                   patch: true,
                   logoUrl: '',
+                  logoRepositoryFileId: '',
                 },
               });
             }
@@ -340,6 +336,7 @@ export const LogoUploader: React.FC<LogoUploaderProps> = () => {
                 input: {
                   patch: true,
                   logoUrl: '',
+                  logoRepositoryFileId: '',
                 },
               });
             }
