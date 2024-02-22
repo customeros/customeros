@@ -6,11 +6,8 @@ import Config
 # which you should run after static files are built and
 # before starting your production server.
 config :customer_os_realtime, CustomerOsRealtimeWeb.Endpoint,
-  cache_static_manifest: "priv/static/cache_manifest.json"
-  check_origin: [
-        "https://app.openline.dev",
-        "https://app.customeros.ai",
-      ]
+  cache_static_manifest: "priv/static/cache_manifest.json",
+  check_origin: ["https://app.openline.dev", "https://app.customeros.ai"]
 
 # Configures Swoosh API Client
 config :swoosh, api_client: Swoosh.ApiClient.Finch, finch_name: CustomerOsRealtime.Finch
