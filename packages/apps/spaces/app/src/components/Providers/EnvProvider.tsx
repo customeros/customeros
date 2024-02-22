@@ -5,6 +5,7 @@ import { createContext } from 'react';
 export type Env = {
   PRODUCTION: string;
   REALTIME_WS_PATH: string;
+  REALTIME_WS_API_KEY: string;
   NOTIFICATION_PROD_APP_IDENTIFIER: string;
   NOTIFICATION_TEST_APP_IDENTIFIER: string;
 };
@@ -12,6 +13,7 @@ export type Env = {
 export const EnvContext = createContext<Env>({
   PRODUCTION: '',
   REALTIME_WS_PATH: '',
+  REALTIME_WS_API_KEY: '',
   NOTIFICATION_PROD_APP_IDENTIFIER: '',
   NOTIFICATION_TEST_APP_IDENTIFIER: '',
 });
