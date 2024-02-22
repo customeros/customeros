@@ -1976,19 +1976,18 @@ type OrganizationPlanUpdateInput struct {
 }
 
 type OrganizationUpdateInput struct {
-	ID          string  `json:"id"`
-	ReferenceID *string `json:"referenceId,omitempty"`
+	ID       string  `json:"id"`
+	CustomID *string `json:"customId,omitempty"`
 	// Set to true when partial update is needed. Empty or missing fields will not be ignored.
 	Patch              *bool         `json:"patch,omitempty"`
 	Name               *string       `json:"name,omitempty"`
 	Description        *string       `json:"description,omitempty"`
-	Note               *string       `json:"note,omitempty"`
-	Domains            []string      `json:"domains,omitempty"`
+	Notes              *string       `json:"notes,omitempty"`
 	Website            *string       `json:"website,omitempty"`
 	Industry           *string       `json:"industry,omitempty"`
 	SubIndustry        *string       `json:"subIndustry,omitempty"`
 	IndustryGroup      *string       `json:"industryGroup,omitempty"`
-	IsPublic           *bool         `json:"isPublic,omitempty"`
+	Public             *bool         `json:"public,omitempty"`
 	IsCustomer         *bool         `json:"isCustomer,omitempty"`
 	Market             *Market       `json:"market,omitempty"`
 	Employees          *int64        `json:"employees,omitempty"`
@@ -1996,10 +1995,15 @@ type OrganizationUpdateInput struct {
 	ValueProposition   *string       `json:"valueProposition,omitempty"`
 	LastFundingRound   *FundingRound `json:"lastFundingRound,omitempty"`
 	LastFundingAmount  *string       `json:"lastFundingAmount,omitempty"`
-	LogoURL            *string       `json:"logoUrl,omitempty"`
+	Logo               *string       `json:"logo,omitempty"`
 	EmployeeGrowthRate *string       `json:"employeeGrowthRate,omitempty"`
 	Headquarters       *string       `json:"headquarters,omitempty"`
 	YearFounded        *int64        `json:"yearFounded,omitempty"`
+	IsPublic           *bool         `json:"isPublic,omitempty"`
+	LogoURL            *string       `json:"logoUrl,omitempty"`
+	Domains            []string      `json:"domains,omitempty"`
+	Note               *string       `json:"note,omitempty"`
+	ReferenceID        *string       `json:"referenceId,omitempty"`
 }
 
 type PageView struct {

@@ -156,21 +156,20 @@ input OrganizationInput {
 }
 
 input OrganizationUpdateInput {
-    id: ID!
-    referenceId: String
+    id:                 ID!
+    customId:           String
     """
     Set to true when partial update is needed. Empty or missing fields will not be ignored.
     """
     patch:              Boolean
     name:               String
     description:        String
-    note:               String
-    domains:            [String!] @deprecated(reason: "to be implemented in separate mutation, add and remove by domain")
+    notes:              String
     website:            String
     industry:           String
     subIndustry:        String
     industryGroup:      String
-    isPublic:           Boolean
+    public:             Boolean
     isCustomer:         Boolean
     market:             Market
     employees:          Int64
@@ -178,10 +177,16 @@ input OrganizationUpdateInput {
     valueProposition:   String
     lastFundingRound:   FundingRound
     lastFundingAmount:  String
-    logoUrl:            String
+    logo:               String
     employeeGrowthRate: String
     headquarters:       String
     yearFounded:        Int64
+
+    isPublic:           Boolean @deprecated(reason: "Use public")
+    logoUrl:            String @deprecated(reason: "Use logo")
+    domains:            [String!] @deprecated(reason: "to be implemented in separate mutation, add and remove by domain")
+    note:               String @deprecated(reason: "Use notes")
+    referenceId: String @deprecated(reason: "Use customId")
 }
 
 input LinkOrganizationsInput {
