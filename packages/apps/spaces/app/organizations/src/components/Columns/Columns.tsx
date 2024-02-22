@@ -3,6 +3,7 @@ import { Organization } from '@graphql/types';
 import { Skeleton } from '@ui/presentation/Skeleton';
 import { createColumnHelper } from '@ui/presentation/Table';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
+import { OrganizationRelationship } from '@organizations/components/Columns/Cells';
 import { TimeToRenewalCell } from '@organizations/components/Columns/Cells/renewal/TimeToRenewalCell';
 import {
   ForecastFilter,
@@ -37,7 +38,6 @@ import {
   RelationshipFilter,
   filterRelationshipFn,
 } from './Filters/Relationship';
-import { OrganizationRelationship } from './Cells/relationship/OrganizationRelationship';
 import {
   LastTouchpointFilter,
   filterLastTouchpointFn,

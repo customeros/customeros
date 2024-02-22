@@ -12,7 +12,6 @@ import { Flex } from '@ui/layout/Flex';
 import { Icons } from '@ui/media/Icon';
 import { Tag } from '@ui/presentation/Tag';
 import { Text } from '@ui/typography/Text';
-import { FormInput } from '@ui/form/Input';
 import { Tooltip } from '@ui/overlay/Tooltip';
 import { Organization } from '@graphql/types';
 import { FormSelect } from '@ui/form/SyncSelect';
@@ -27,6 +26,7 @@ import { useOrganizationQuery } from '@organization/src/graphql/organization.gen
 import { Branches } from '@organization/src/components/Tabs/panels/AboutPanel/branches/Branches';
 import { OwnerInput } from '@organization/src/components/Tabs/panels/AboutPanel/owner/OwnerInput';
 import { ParentOrgInput } from '@organization/src/components/Tabs/panels/AboutPanel/branches/ParentOrgInput';
+import { OrganizationNameInput } from '@organization/src/components/Tabs/panels/AboutPanel/OrganizationNameInput';
 
 import { FormSocialInput } from '../../shared/FormSocialInput';
 import { useAboutPanelMethods } from './hooks/useAboutPanelMethods';
@@ -160,6 +160,13 @@ export const AboutPanel = () => {
     }
   }, [nameRef]);
 
+  useEffect(() => {
+    if (nameRef.current?.value === 'Unnamed') {
+      nameRef.current?.focus();
+      nameRef.current?.setSelectionRange(0, 7);
+    }
+  }, [nameRef]);
+
   useWillUnmount(() => {
     debouncedMutateOrganization.flush();
   });
@@ -200,18 +207,11 @@ export const AboutPanel = () => {
         w='full'
       >
         <Flex align='center'>
-          <FormInput
-            name='name'
-            fontSize='lg'
-            ref={nameRef}
-            autoComplete='off'
-            fontWeight='semibold'
-            variant='unstyled'
-            borderRadius='unset'
-            placeholder='Company name'
-            formId='organization-about'
-            isReadOnly={orgNameReadOnly}
+          <OrganizationNameInput
+            orgNameReadOnly={orgNameReadOnly}
+            name={data?.organization?.name ?? ''}
           />
+
           {data?.organization?.referenceId && (
             <Box h='full' ml='4'>
               <Tooltip label={'Copy ID'}>

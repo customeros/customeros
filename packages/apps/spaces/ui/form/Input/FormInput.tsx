@@ -46,7 +46,13 @@ export const FormInput = forwardRef(
           </VisuallyHidden>
         )}
 
-        <Input ref={ref} {...getInputProps()} {...props} autoComplete='off' />
+        <Input
+          ref={ref}
+          {...getInputProps()}
+          {...props}
+          autoComplete='off'
+          data-1p-ignore
+        />
       </FormControl>
     );
   },
