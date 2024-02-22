@@ -36,7 +36,8 @@ This event occurs when an invoice has been voided and is no longer able to be ac
 ```json
 {
   "data": {
-    "amountDue": 0.0,
+    "amountDue": 3.50,
+    "amountDueInSmallestUnit": 350,
     "amountPaid": 0.0,
     "amountRemaining": 0.0,
     "contract": {
