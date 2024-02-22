@@ -190,6 +190,7 @@
   align-self: stretch;
   align-items: flex-end;
   flex-direction: column;
+  width: 100%;
 }
 .invoice-table-container {
   display: flex;
