@@ -22,6 +22,11 @@ type SyncResult struct {
 	Failed    int `json:"failed"`
 	Completed int `json:"completed"`
 }
+type CombinedResults struct {
+	OrganizationSync     SyncResult `json:"organizationSync"`
+	InteractionEventSync SyncResult `json:"interactionEventSync"`
+	ContactSync          SyncResult `json:"contactSync"`
+}
 
 func NewFailedSyncStatus(reason string) SyncStatus {
 	return SyncStatus{

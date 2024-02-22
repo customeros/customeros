@@ -12,6 +12,12 @@ import (
 const customLayout1 = "2006-01-02 15:04:05"
 const customLayout2 = "2006-01-02T15:04:05.000-0700"
 const customLayout3 = "2006-01-02T15:04:05-07:00"
+const customLayout4 = "Mon, 2 Jan 2006 15:04:05 -0700 (MST)"
+const customLayout5 = "Mon, 2 Jan 2006 15:04:05 MST"
+const customLayout6 = "Mon, 2 Jan 2006 15:04:05 -0700"
+const customLayout7 = "Mon, 2 Jan 2006 15:04:05 +0000 (GMT)"
+const customLayout8 = "Mon, 2 Jan 2006 15:04:05 -0700 (MST)"
+const customLayout9 = "2 Jan 2006 15:04:05 -0700"
 
 type YearMonth struct {
 	Year  int
@@ -56,16 +62,14 @@ func UnmarshalDateTime(input string) (*time.Time, error) {
 	}
 
 	// Try custom layouts
-	t, err = time.Parse(customLayout1, input)
-	if err == nil {
-		return &t, nil
-	}
+	customLayouts := []string{customLayout1, customLayout2, customLayout4, customLayout5, customLayout6, customLayout7, customLayout8, customLayout9}
 
-	t, err = time.Parse(customLayout2, input)
-	if err == nil {
-		return &t, nil
+	for _, layout := range customLayouts {
+		t, err = time.Parse(layout, input)
+		if err == nil {
+			return &t, nil
+		}
 	}
-
 	inputForLayout3 := input
 	if !strings.Contains(input, "[UTC]") {
 		index := strings.Index(input, "[")

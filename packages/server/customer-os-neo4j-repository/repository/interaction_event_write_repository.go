@@ -48,6 +48,10 @@ type InteractionEventWriteRepository interface {
 	AddActionItemForInteractionEvent(ctx context.Context, tenant, interactionEventId, content, source, appSource string, updatedAt time.Time) error
 	LinkInteractionEventWithSenderById(ctx context.Context, tenant, interactionEventId, entityId, label, relationType string) error
 	LinkInteractionEventWithReceiverById(ctx context.Context, tenant, interactionEventId, entityId, label, relationType string) error
+
+	LinkInteractionEventToSession(ctx context.Context, tenant, interactionEventId, interactionSessionId string) error
+	InteractionEventSentByEmail(ctx context.Context, tenant, interactionEventId, emailId string) error
+	InteractionEventSentToEmails(ctx context.Context, tenant, interactionEventId, sentType string, emailsId []string) error
 }
 
 type interactionEventWriteRepository struct {
@@ -327,6 +331,89 @@ func (r *interactionEventWriteRepository) LinkInteractionEventWithReceiverById(c
 		"entityId":           entityId,
 		"label":              label,
 		"relationType":       relationType,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *interactionEventWriteRepository) LinkInteractionEventToSession(ctx context.Context, tenant, interactionEventId, interactionSessionId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.LinkInteractionEventToSession")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.LogFields(log.String("interactionEventId", interactionEventId))
+
+	cypher := fmt.Sprintf(`
+	MATCH (is:InteractionSession_%s {id:$interactionSessionId})
+	MATCH (ie:InteractionEvent {id:$interactionEventId})
+    MERGE (ie)-[:PART_OF]->(is)
+		`, tenant)
+
+	params := map[string]interface{}{
+		"tenant":               tenant,
+		"interactionSessionId": interactionSessionId,
+		"interactionEventId":   interactionEventId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *interactionEventWriteRepository) InteractionEventSentByEmail(ctx context.Context, tenant, interactionEventId, emailId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.LinkInteractionEventToSession")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.LogFields(log.String("interactionEventId", interactionEventId))
+
+	cypher := fmt.Sprintf(`
+	MATCH (ie:InteractionEvent_%s {id:$interactionEventId})
+	MATCH (e:Email_%s {id: $emailId})
+	MERGE (ie)-[:SENT_BY]->(e)
+`, tenant, tenant)
+
+	params := map[string]interface{}{
+		"tenant":             tenant,
+		"interactionEventId": interactionEventId,
+		"emailId":            emailId,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *interactionEventWriteRepository) InteractionEventSentToEmails(ctx context.Context, tenant, interactionEventId, sentType string, emailsId []string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.LinkInteractionEventToSession")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.LogFields(log.String("interactionEventId", interactionEventId))
+
+	cypher := fmt.Sprintf(`
+	MATCH (ie:InteractionEvent_%s {id:$interactionEventId})
+	MATCH (e:Email_%s) WHERE e.id IN $emailsId
+	MERGE (ie)-[:SENT_TO {type: $sentType}]->(e)
+`, tenant, tenant)
+
+	params := map[string]interface{}{
+		"tenant":             tenant,
+		"interactionEventId": interactionEventId,
+		"sentType":           sentType,
+		"emailsId":           emailsId,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
