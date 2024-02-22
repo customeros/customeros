@@ -81,9 +81,7 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 		}
 	}
 
-	var err error
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := r.Clients.OrganizationClient.UpsertOrganization(ctx, &organizationpb.UpsertOrganizationGrpcRequest{
+	upsertOrganizationRequest := organizationpb.UpsertOrganizationGrpcRequest{
 		Tenant:             common.GetTenantFromContext(ctx),
 		LoggedInUserId:     common.GetUserIdFromContext(ctx),
 		Name:               utils.IfNotNilString(input.Name),
@@ -106,7 +104,23 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 			AppSource: utils.IfNotNilString(input.AppSource),
 		},
 		Note: utils.IfNotNilString(input.Note),
-	})
+	}
+	if input.Logo != nil {
+		upsertOrganizationRequest.LogoUrl = *input.Logo
+	}
+	if input.Notes != nil {
+		upsertOrganizationRequest.Note = *input.Notes
+	}
+	if input.CustomID != nil {
+		upsertOrganizationRequest.ReferenceId = *input.CustomID
+	}
+	if input.Public != nil {
+		upsertOrganizationRequest.IsPublic = *input.Public
+	}
+
+	var err error
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	response, err := r.Clients.OrganizationClient.UpsertOrganization(ctx, &upsertOrganizationRequest)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to create organization")

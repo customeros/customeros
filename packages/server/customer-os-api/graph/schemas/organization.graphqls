@@ -132,27 +132,32 @@ input OrganizationInput {
     The name of the organization.
     **Required.**
     """
-    referenceId:   String
+    customId:      String
     name:          String
     description:   String
-    note:          String
+    notes:         String
     domains:       [String!]
     website:       String
     industry:      String
     subIndustry:   String
     industryGroup: String
-    isPublic:      Boolean
+    public:        Boolean
     isCustomer:    Boolean
     customFields:  [CustomFieldInput!]
-    fieldSets:     [FieldSetInput!] @deprecated
-    templateId:    ID @deprecated
     market:        Market
-    logoUrl:            String
+    logo:               String
     employeeGrowthRate: String
     headquarters:       String
     yearFounded:        Int64
     employees:     Int64
     appSource:     String
+
+    fieldSets:     [FieldSetInput!] @deprecated
+    templateId:    ID @deprecated
+    isPublic:      Boolean @deprecated(reason: "Use public")
+    referenceId:   String @deprecated(reason: "Use customId")
+    note:          String @deprecated(reason: "Use notes")
+    logoUrl:       String @deprecated(reason: "Use logo")
 }
 
 input OrganizationUpdateInput {

@@ -1791,27 +1791,31 @@ func (this Organization) GetMetadata() *Metadata { return this.Metadata }
 type OrganizationInput struct {
 	// The name of the organization.
 	// **Required.**
-	ReferenceID        *string             `json:"referenceId,omitempty"`
+	CustomID           *string             `json:"customId,omitempty"`
 	Name               *string             `json:"name,omitempty"`
 	Description        *string             `json:"description,omitempty"`
-	Note               *string             `json:"note,omitempty"`
+	Notes              *string             `json:"notes,omitempty"`
 	Domains            []string            `json:"domains,omitempty"`
 	Website            *string             `json:"website,omitempty"`
 	Industry           *string             `json:"industry,omitempty"`
 	SubIndustry        *string             `json:"subIndustry,omitempty"`
 	IndustryGroup      *string             `json:"industryGroup,omitempty"`
-	IsPublic           *bool               `json:"isPublic,omitempty"`
+	Public             *bool               `json:"public,omitempty"`
 	IsCustomer         *bool               `json:"isCustomer,omitempty"`
 	CustomFields       []*CustomFieldInput `json:"customFields,omitempty"`
-	FieldSets          []*FieldSetInput    `json:"fieldSets,omitempty"`
-	TemplateID         *string             `json:"templateId,omitempty"`
 	Market             *Market             `json:"market,omitempty"`
-	LogoURL            *string             `json:"logoUrl,omitempty"`
+	Logo               *string             `json:"logo,omitempty"`
 	EmployeeGrowthRate *string             `json:"employeeGrowthRate,omitempty"`
 	Headquarters       *string             `json:"headquarters,omitempty"`
 	YearFounded        *int64              `json:"yearFounded,omitempty"`
 	Employees          *int64              `json:"employees,omitempty"`
 	AppSource          *string             `json:"appSource,omitempty"`
+	FieldSets          []*FieldSetInput    `json:"fieldSets,omitempty"`
+	TemplateID         *string             `json:"templateId,omitempty"`
+	IsPublic           *bool               `json:"isPublic,omitempty"`
+	ReferenceID        *string             `json:"referenceId,omitempty"`
+	Note               *string             `json:"note,omitempty"`
+	LogoURL            *string             `json:"logoUrl,omitempty"`
 }
 
 type OrganizationPage struct {
