@@ -18,7 +18,6 @@ extend type Mutation {
 type TenantSettings {
     logoUrl:                String!
     logoRepositoryFileId:   String
-    defaultCurrency:        Currency @deprecated(reason: "Use baseCurrency instead")
     baseCurrency:           Currency
     billingEnabled:         Boolean!
 }
@@ -103,7 +102,6 @@ input TenantSettingsInput {
     patch:                  Boolean
     logoUrl:                String
     logoRepositoryFileId:   String
-    defaultCurrency:        Currency @deprecated(reason: "Use baseCurrency instead")
     baseCurrency:           Currency
     billingEnabled:         Boolean
 }

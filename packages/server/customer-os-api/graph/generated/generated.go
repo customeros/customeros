@@ -1469,7 +1469,6 @@ type ComplexityRoot struct {
 	TenantSettings struct {
 		BaseCurrency         func(childComplexity int) int
 		BillingEnabled       func(childComplexity int) int
-		DefaultCurrency      func(childComplexity int) int
 		LogoRepositoryFileID func(childComplexity int) int
 		LogoURL              func(childComplexity int) int
 	}
@@ -10631,13 +10630,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.TenantSettings.BillingEnabled(childComplexity), true
 
-	case "TenantSettings.defaultCurrency":
-		if e.complexity.TenantSettings.DefaultCurrency == nil {
-			break
-		}
-
-		return e.complexity.TenantSettings.DefaultCurrency(childComplexity), true
-
 	case "TenantSettings.logoRepositoryFileId":
 		if e.complexity.TenantSettings.LogoRepositoryFileID == nil {
 			break
@@ -14195,7 +14187,6 @@ extend type Mutation {
 type TenantSettings {
     logoUrl:                String!
     logoRepositoryFileId:   String
-    defaultCurrency:        Currency @deprecated(reason: "Use baseCurrency instead")
     baseCurrency:           Currency
     billingEnabled:         Boolean!
 }
@@ -14280,7 +14271,6 @@ input TenantSettingsInput {
     patch:                  Boolean
     logoUrl:                String
     logoRepositoryFileId:   String
-    defaultCurrency:        Currency @deprecated(reason: "Use baseCurrency instead")
     baseCurrency:           Currency
     billingEnabled:         Boolean
 }`, BuiltIn: false},
@@ -62141,8 +62131,6 @@ func (ec *executionContext) fieldContext_Mutation_tenant_UpdateSettings(ctx cont
 				return ec.fieldContext_TenantSettings_logoUrl(ctx, field)
 			case "logoRepositoryFileId":
 				return ec.fieldContext_TenantSettings_logoRepositoryFileId(ctx, field)
-			case "defaultCurrency":
-				return ec.fieldContext_TenantSettings_defaultCurrency(ctx, field)
 			case "baseCurrency":
 				return ec.fieldContext_TenantSettings_baseCurrency(ctx, field)
 			case "billingEnabled":
@@ -77798,8 +77786,6 @@ func (ec *executionContext) fieldContext_Query_tenantSettings(ctx context.Contex
 				return ec.fieldContext_TenantSettings_logoUrl(ctx, field)
 			case "logoRepositoryFileId":
 				return ec.fieldContext_TenantSettings_logoRepositoryFileId(ctx, field)
-			case "defaultCurrency":
-				return ec.fieldContext_TenantSettings_defaultCurrency(ctx, field)
 			case "baseCurrency":
 				return ec.fieldContext_TenantSettings_baseCurrency(ctx, field)
 			case "billingEnabled":
@@ -83600,47 +83586,6 @@ func (ec *executionContext) fieldContext_TenantSettings_logoRepositoryFileId(ctx
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _TenantSettings_defaultCurrency(ctx context.Context, field graphql.CollectedField, obj *model.TenantSettings) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_TenantSettings_defaultCurrency(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.DefaultCurrency, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.Currency)
-	fc.Result = res
-	return ec.marshalOCurrency2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCurrency(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_TenantSettings_defaultCurrency(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "TenantSettings",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Currency does not have child fields")
 		},
 	}
 	return fc, nil
@@ -93154,7 +93099,7 @@ func (ec *executionContext) unmarshalInputTenantSettingsInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"patch", "logoUrl", "logoRepositoryFileId", "defaultCurrency", "baseCurrency", "billingEnabled"}
+	fieldsInOrder := [...]string{"patch", "logoUrl", "logoRepositoryFileId", "baseCurrency", "billingEnabled"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -93182,13 +93127,6 @@ func (ec *executionContext) unmarshalInputTenantSettingsInput(ctx context.Contex
 				return it, err
 			}
 			it.LogoRepositoryFileID = data
-		case "defaultCurrency":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("defaultCurrency"))
-			data, err := ec.unmarshalOCurrency2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCurrency(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.DefaultCurrency = data
 		case "baseCurrency":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("baseCurrency"))
 			data, err := ec.unmarshalOCurrency2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCurrency(ctx, v)
@@ -107189,8 +107127,6 @@ func (ec *executionContext) _TenantSettings(ctx context.Context, sel ast.Selecti
 			}
 		case "logoRepositoryFileId":
 			out.Values[i] = ec._TenantSettings_logoRepositoryFileId(ctx, field, obj)
-		case "defaultCurrency":
-			out.Values[i] = ec._TenantSettings_defaultCurrency(ctx, field, obj)
 		case "baseCurrency":
 			out.Values[i] = ec._TenantSettings_baseCurrency(ctx, field, obj)
 		case "billingEnabled":

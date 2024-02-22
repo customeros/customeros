@@ -3,7 +3,6 @@ query GetTenantSettings {
     logoUrl
     logoRepositoryFileId
     billingEnabled
-    defaultCurrency
     baseCurrency
   }
 }
