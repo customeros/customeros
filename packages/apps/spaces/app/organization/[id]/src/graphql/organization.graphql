@@ -18,6 +18,7 @@ query Organization($id: ID!) {
     referenceId
     customerOsId
     isCustomer
+    hide
     socials {
       id
       url
