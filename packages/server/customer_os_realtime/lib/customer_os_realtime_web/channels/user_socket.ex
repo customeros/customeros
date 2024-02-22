@@ -36,10 +36,10 @@ defmodule CustomerOsRealtimeWeb.UserSocket do
 
   @impl true
   def connect(params, socket, _connect_info) do
-    if !authorized(params["token"]) do
-      {:error, %{reason: "unauthorized"}}
-    else
+    if authorized(params["token"]) do
       {:ok, socket}
+    else
+      {:error, %{reason: "unauthorized"}}
     end
   end
 
