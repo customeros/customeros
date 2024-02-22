@@ -7,14 +7,15 @@ package resolver
 import (
 	"context"
 	"errors"
-
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -114,12 +115,14 @@ func (r *mutationResolver) ContractCreate(ctx context.Context, input model.Contr
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContractCreate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.contractInput", input)
 
 	contractId, err := r.Services.ContractService.Create(ctx, &service.ContractCreateData{
 		ContractEntity:    mapper.MapContractInputToEntity(input),
 		OrganizationId:    input.OrganizationID,
 		ExternalReference: mapper.MapExternalSystemReferenceInputToRelationship(input.ExternalReference),
 		Source:            neo4jentity.DataSourceOpenline,
+		AppSource:         utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)

@@ -10922,6 +10922,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputAnalysisDescriptionInput,
 		ec.unmarshalInputAnalysisInput,
 		ec.unmarshalInputAttachmentInput,
+		ec.unmarshalInputBillingDetailsInput,
 		ec.unmarshalInputBillingProfileInput,
 		ec.unmarshalInputBillingProfileLinkEmailInput,
 		ec.unmarshalInputBillingProfileLinkLocationInput,
@@ -11684,47 +11685,78 @@ type BillingDetails {
 }
 
 input ContractInput {
-    organizationId:     ID!
-    name:               String
-    renewalCycle:       ContractRenewalCycle
-    renewalPeriods:     Int64
-    appSource:          String
-    contractUrl:        String
-    serviceStartedAt:   Time
-    signedAt:           Time
-    externalReference:  ExternalSystemReferenceInput
-    currency:           Currency
-    invoicingStartDate: Time
-    billingCycle:       ContractBillingCycle
-    billingEnabled:     Boolean
+    organizationId:         ID!
+    contractName:           String
+    contractRenewalCycle:   ContractRenewalCycle
+    committedPeriods:       Int64
+    appSource:              String
+    contractUrl:            String
+    serviceStarted:         Time
+    contractSigned:         Time
+    currency:               Currency
+    billingEnabled:         Boolean
+
+    invoicingStartDate:     Time @deprecated(reason: "Removed from create input.")
+    externalReference:      ExternalSystemReferenceInput @deprecated(reason: "Not used yet")
+    billingCycle:           ContractBillingCycle @deprecated(reason: "Removed from create input.")
+    renewalPeriods:         Int64 @deprecated(reason: "Use committedPeriods instead.")
+    renewalCycle:       ContractRenewalCycle @deprecated(reason: "Use contractRenewalCycle instead.")
+    signedAt:           Time @deprecated(reason: "Use contractSigned instead.")
+    serviceStartedAt:   Time @deprecated(reason: "Use serviceStarted instead.")
+    name:               String @deprecated(reason: "Use contractName instead.")
 }
 
 input ContractUpdateInput {
-    contractId:         ID!
-    patch:              Boolean
-    name:               String
-    contractUrl:        String
-    renewalCycle:       ContractRenewalCycle
-    renewalPeriods:     Int64
-    serviceStartedAt:   Time
-    signedAt:           Time
-    endedAt:            Time
-    appSource:          String
-    currency:           Currency
-    invoicingStartDate: Time
-    billingCycle:       ContractBillingCycle
-    addressLine1:       String
-    addressLine2:       String
-    locality:           String
-    country:            String
-    zip:                String
-    organizationLegalName: String
-    invoiceEmail:       String
-    canPayWithCard:     Boolean
-    canPayWithDirectDebit:     Boolean
+    contractId:             ID!
+    patch:                  Boolean
+    contractName:           String
+    contractUrl:            String
+    contractRenewalCycle:   ContractRenewalCycle
+    committedPeriods:       Int64
+    serviceStarted:         Time
+    contractSigned:         Time
+    contractEnded:          Time
+    currency:               Currency
+    billingDetails:         BillingDetailsInput
+    appSource:              String
+
+    canPayWithCard:         Boolean @deprecated(reason: "Use billingDetails instead.")
+    canPayWithDirectDebit:  Boolean @deprecated(reason: "Use billingDetails instead.")
+    canPayWithBankTransfer: Boolean @deprecated(reason: "Use billingDetails instead.")
+    billingEnabled:         Boolean
+    invoicingStartDate:     Time @deprecated(reason: "Use billingDetails instead.")
+    addressLine1:           String @deprecated(reason: "Use billingDetails instead.")
+    addressLine2:           String @deprecated(reason: "Use billingDetails instead.")
+    locality:               String @deprecated(reason: "Use billingDetails instead.")
+    country:                String @deprecated(reason: "Use billingDetails instead.")
+    zip:                    String @deprecated(reason: "Use billingDetails instead.")
+    billingCycle:           ContractBillingCycle @deprecated(reason: "Use billingDetails instead.")
+    invoiceNote:            String @deprecated(reason: "Use billingDetails instead.")
+    endedAt:                Time @deprecated(reason: "Use contractEnded instead.")
+    renewalPeriods:         Int64 @deprecated(reason: "Use committedPeriods instead.")
+    invoiceEmail:           String @deprecated(reason: "Use billingDetails instead.")
+    organizationLegalName:  String @deprecated(reason: "Use billingDetails instead.")
+    renewalCycle:       ContractRenewalCycle @deprecated(reason: "Use contractRenewalCycle instead.")
+    signedAt:           Time @deprecated(reason: "Use contractSigned instead.")
+    serviceStartedAt:   Time @deprecated(reason: "Use serviceStarted instead.")
+    name:               String @deprecated(reason: "Use contractName instead.")
+}
+
+input BillingDetailsInput {
+    billingCycle:           ContractBillingCycle
+    invoicingStarted:       Time
+    addressLine1:           String
+    addressLine2:           String
+    locality:               String
+    region:                 String
+    country:                String
+    postalCode:             String
+    organizationLegalName:  String
+    billingEmail:           String
+    invoiceNote:            String
+    canPayWithCard:         Boolean
+    canPayWithDirectDebit:  Boolean
     canPayWithBankTransfer: Boolean
-    invoiceNote:        String
-    billingEnabled:     Boolean
 }
 
 enum ContractRenewalCycle {
@@ -87526,6 +87558,124 @@ func (ec *executionContext) unmarshalInputAttachmentInput(ctx context.Context, o
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputBillingDetailsInput(ctx context.Context, obj interface{}) (model.BillingDetailsInput, error) {
+	var it model.BillingDetailsInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"billingCycle", "invoicingStarted", "addressLine1", "addressLine2", "locality", "region", "country", "postalCode", "organizationLegalName", "billingEmail", "invoiceNote", "canPayWithCard", "canPayWithDirectDebit", "canPayWithBankTransfer"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "billingCycle":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingCycle"))
+			data, err := ec.unmarshalOContractBillingCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContractBillingCycle(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BillingCycle = data
+		case "invoicingStarted":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("invoicingStarted"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InvoicingStarted = data
+		case "addressLine1":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("addressLine1"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AddressLine1 = data
+		case "addressLine2":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("addressLine2"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AddressLine2 = data
+		case "locality":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("locality"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Locality = data
+		case "region":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("region"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Region = data
+		case "country":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("country"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Country = data
+		case "postalCode":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("postalCode"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PostalCode = data
+		case "organizationLegalName":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationLegalName"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OrganizationLegalName = data
+		case "billingEmail":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingEmail"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BillingEmail = data
+		case "invoiceNote":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("invoiceNote"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InvoiceNote = data
+		case "canPayWithCard":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("canPayWithCard"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CanPayWithCard = data
+		case "canPayWithDirectDebit":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("canPayWithDirectDebit"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CanPayWithDirectDebit = data
+		case "canPayWithBankTransfer":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("canPayWithBankTransfer"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CanPayWithBankTransfer = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputBillingProfileInput(ctx context.Context, obj interface{}) (model.BillingProfileInput, error) {
 	var it model.BillingProfileInput
 	asMap := map[string]interface{}{}
@@ -88008,7 +88158,7 @@ func (ec *executionContext) unmarshalInputContractInput(ctx context.Context, obj
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"organizationId", "name", "renewalCycle", "renewalPeriods", "appSource", "contractUrl", "serviceStartedAt", "signedAt", "externalReference", "currency", "invoicingStartDate", "billingCycle", "billingEnabled"}
+	fieldsInOrder := [...]string{"organizationId", "contractName", "contractRenewalCycle", "committedPeriods", "appSource", "contractUrl", "serviceStarted", "contractSigned", "currency", "billingEnabled", "invoicingStartDate", "externalReference", "billingCycle", "renewalPeriods", "renewalCycle", "signedAt", "serviceStartedAt", "name"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -88022,27 +88172,27 @@ func (ec *executionContext) unmarshalInputContractInput(ctx context.Context, obj
 				return it, err
 			}
 			it.OrganizationID = data
-		case "name":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+		case "contractName":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contractName"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.Name = data
-		case "renewalCycle":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("renewalCycle"))
+			it.ContractName = data
+		case "contractRenewalCycle":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contractRenewalCycle"))
 			data, err := ec.unmarshalOContractRenewalCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContractRenewalCycle(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.RenewalCycle = data
-		case "renewalPeriods":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("renewalPeriods"))
+			it.ContractRenewalCycle = data
+		case "committedPeriods":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("committedPeriods"))
 			data, err := ec.unmarshalOInt642ᚖint64(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.RenewalPeriods = data
+			it.CommittedPeriods = data
 		case "appSource":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -88057,27 +88207,20 @@ func (ec *executionContext) unmarshalInputContractInput(ctx context.Context, obj
 				return it, err
 			}
 			it.ContractURL = data
-		case "serviceStartedAt":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("serviceStartedAt"))
+		case "serviceStarted":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("serviceStarted"))
 			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.ServiceStartedAt = data
-		case "signedAt":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("signedAt"))
+			it.ServiceStarted = data
+		case "contractSigned":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contractSigned"))
 			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.SignedAt = data
-		case "externalReference":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalReference"))
-			data, err := ec.unmarshalOExternalSystemReferenceInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐExternalSystemReferenceInput(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.ExternalReference = data
+			it.ContractSigned = data
 		case "currency":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currency"))
 			data, err := ec.unmarshalOCurrency2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCurrency(ctx, v)
@@ -88085,20 +88228,6 @@ func (ec *executionContext) unmarshalInputContractInput(ctx context.Context, obj
 				return it, err
 			}
 			it.Currency = data
-		case "invoicingStartDate":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("invoicingStartDate"))
-			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.InvoicingStartDate = data
-		case "billingCycle":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingCycle"))
-			data, err := ec.unmarshalOContractBillingCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContractBillingCycle(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.BillingCycle = data
 		case "billingEnabled":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingEnabled"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
@@ -88106,6 +88235,62 @@ func (ec *executionContext) unmarshalInputContractInput(ctx context.Context, obj
 				return it, err
 			}
 			it.BillingEnabled = data
+		case "invoicingStartDate":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("invoicingStartDate"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InvoicingStartDate = data
+		case "externalReference":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalReference"))
+			data, err := ec.unmarshalOExternalSystemReferenceInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐExternalSystemReferenceInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExternalReference = data
+		case "billingCycle":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingCycle"))
+			data, err := ec.unmarshalOContractBillingCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContractBillingCycle(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BillingCycle = data
+		case "renewalPeriods":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("renewalPeriods"))
+			data, err := ec.unmarshalOInt642ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RenewalPeriods = data
+		case "renewalCycle":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("renewalCycle"))
+			data, err := ec.unmarshalOContractRenewalCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContractRenewalCycle(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RenewalCycle = data
+		case "signedAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("signedAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SignedAt = data
+		case "serviceStartedAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("serviceStartedAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ServiceStartedAt = data
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
 		}
 	}
 
@@ -88119,7 +88304,7 @@ func (ec *executionContext) unmarshalInputContractUpdateInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"contractId", "patch", "name", "contractUrl", "renewalCycle", "renewalPeriods", "serviceStartedAt", "signedAt", "endedAt", "appSource", "currency", "invoicingStartDate", "billingCycle", "addressLine1", "addressLine2", "locality", "country", "zip", "organizationLegalName", "invoiceEmail", "canPayWithCard", "canPayWithDirectDebit", "canPayWithBankTransfer", "invoiceNote", "billingEnabled"}
+	fieldsInOrder := [...]string{"contractId", "patch", "contractName", "contractUrl", "contractRenewalCycle", "committedPeriods", "serviceStarted", "contractSigned", "contractEnded", "currency", "billingDetails", "appSource", "canPayWithCard", "canPayWithDirectDebit", "canPayWithBankTransfer", "billingEnabled", "invoicingStartDate", "addressLine1", "addressLine2", "locality", "country", "zip", "billingCycle", "invoiceNote", "endedAt", "renewalPeriods", "invoiceEmail", "organizationLegalName", "renewalCycle", "signedAt", "serviceStartedAt", "name"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -88140,13 +88325,13 @@ func (ec *executionContext) unmarshalInputContractUpdateInput(ctx context.Contex
 				return it, err
 			}
 			it.Patch = data
-		case "name":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+		case "contractName":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contractName"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.Name = data
+			it.ContractName = data
 		case "contractUrl":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contractUrl"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -88154,48 +88339,41 @@ func (ec *executionContext) unmarshalInputContractUpdateInput(ctx context.Contex
 				return it, err
 			}
 			it.ContractURL = data
-		case "renewalCycle":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("renewalCycle"))
+		case "contractRenewalCycle":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contractRenewalCycle"))
 			data, err := ec.unmarshalOContractRenewalCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContractRenewalCycle(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.RenewalCycle = data
-		case "renewalPeriods":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("renewalPeriods"))
+			it.ContractRenewalCycle = data
+		case "committedPeriods":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("committedPeriods"))
 			data, err := ec.unmarshalOInt642ᚖint64(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.RenewalPeriods = data
-		case "serviceStartedAt":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("serviceStartedAt"))
+			it.CommittedPeriods = data
+		case "serviceStarted":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("serviceStarted"))
 			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.ServiceStartedAt = data
-		case "signedAt":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("signedAt"))
+			it.ServiceStarted = data
+		case "contractSigned":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contractSigned"))
 			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.SignedAt = data
-		case "endedAt":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("endedAt"))
+			it.ContractSigned = data
+		case "contractEnded":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contractEnded"))
 			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.EndedAt = data
-		case "appSource":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.AppSource = data
+			it.ContractEnded = data
 		case "currency":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currency"))
 			data, err := ec.unmarshalOCurrency2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCurrency(ctx, v)
@@ -88203,6 +88381,48 @@ func (ec *executionContext) unmarshalInputContractUpdateInput(ctx context.Contex
 				return it, err
 			}
 			it.Currency = data
+		case "billingDetails":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingDetails"))
+			data, err := ec.unmarshalOBillingDetailsInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐBillingDetailsInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BillingDetails = data
+		case "appSource":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AppSource = data
+		case "canPayWithCard":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("canPayWithCard"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CanPayWithCard = data
+		case "canPayWithDirectDebit":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("canPayWithDirectDebit"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CanPayWithDirectDebit = data
+		case "canPayWithBankTransfer":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("canPayWithBankTransfer"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CanPayWithBankTransfer = data
+		case "billingEnabled":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingEnabled"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BillingEnabled = data
 		case "invoicingStartDate":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("invoicingStartDate"))
 			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
@@ -88210,13 +88430,6 @@ func (ec *executionContext) unmarshalInputContractUpdateInput(ctx context.Contex
 				return it, err
 			}
 			it.InvoicingStartDate = data
-		case "billingCycle":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingCycle"))
-			data, err := ec.unmarshalOContractBillingCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContractBillingCycle(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.BillingCycle = data
 		case "addressLine1":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("addressLine1"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -88252,41 +88465,13 @@ func (ec *executionContext) unmarshalInputContractUpdateInput(ctx context.Contex
 				return it, err
 			}
 			it.Zip = data
-		case "organizationLegalName":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationLegalName"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+		case "billingCycle":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingCycle"))
+			data, err := ec.unmarshalOContractBillingCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContractBillingCycle(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.OrganizationLegalName = data
-		case "invoiceEmail":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("invoiceEmail"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.InvoiceEmail = data
-		case "canPayWithCard":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("canPayWithCard"))
-			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.CanPayWithCard = data
-		case "canPayWithDirectDebit":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("canPayWithDirectDebit"))
-			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.CanPayWithDirectDebit = data
-		case "canPayWithBankTransfer":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("canPayWithBankTransfer"))
-			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.CanPayWithBankTransfer = data
+			it.BillingCycle = data
 		case "invoiceNote":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("invoiceNote"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -88294,13 +88479,62 @@ func (ec *executionContext) unmarshalInputContractUpdateInput(ctx context.Contex
 				return it, err
 			}
 			it.InvoiceNote = data
-		case "billingEnabled":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingEnabled"))
-			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+		case "endedAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("endedAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.BillingEnabled = data
+			it.EndedAt = data
+		case "renewalPeriods":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("renewalPeriods"))
+			data, err := ec.unmarshalOInt642ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RenewalPeriods = data
+		case "invoiceEmail":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("invoiceEmail"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InvoiceEmail = data
+		case "organizationLegalName":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationLegalName"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OrganizationLegalName = data
+		case "renewalCycle":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("renewalCycle"))
+			data, err := ec.unmarshalOContractRenewalCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContractRenewalCycle(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RenewalCycle = data
+		case "signedAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("signedAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SignedAt = data
+		case "serviceStartedAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("serviceStartedAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ServiceStartedAt = data
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
 		}
 	}
 
@@ -112445,6 +112679,14 @@ func (ec *executionContext) marshalOBillingDetails2ᚖgithubᚗcomᚋopenlineᚑ
 		return graphql.Null
 	}
 	return ec._BillingDetails(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOBillingDetailsInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐBillingDetailsInput(ctx context.Context, v interface{}) (*model.BillingDetailsInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputBillingDetailsInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
