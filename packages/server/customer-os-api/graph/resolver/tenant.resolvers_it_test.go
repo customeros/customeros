@@ -476,7 +476,6 @@ func TestMutationResolver_TenantUpdateSettings(t *testing.T) {
 			require.ElementsMatch(t, []tenantpb.TenantSettingsFieldMask{
 				tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_LOGO_URL,
 				tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_INVOICING_ENABLED,
-				tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_DEFAULT_CURRENCY,
 				tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_BASE_CURRENCY,
 				tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_LOGO_REPOSITORY_FILE_ID,
 			},
