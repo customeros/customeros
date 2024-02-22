@@ -223,7 +223,7 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 		if utils.IfNotNilString(input.Name) != "" {
 			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NAME)
 		}
-		if input.ReferenceID != nil {
+		if input.ReferenceID != nil || input.CustomID != nil {
 			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_REFERENCE_ID)
 		}
 		if input.Description != nil {
@@ -262,19 +262,18 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 		if input.Headquarters != nil {
 			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_HEADQUARTERS)
 		}
-		if input.LogoURL != nil {
+		if input.LogoURL != nil || input.Logo != nil {
 			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_LOGO_URL)
 		}
 		if input.EmployeeGrowthRate != nil {
 			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_EMPLOYEE_GROWTH_RATE)
 		}
-		if input.Note != nil {
+		if input.Note != nil || input.Notes != nil {
 			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NOTE)
 		}
 	}
 
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := r.Clients.OrganizationClient.UpsertOrganization(ctx, &organizationpb.UpsertOrganizationGrpcRequest{
+	upsertOrganizationRequest := organizationpb.UpsertOrganizationGrpcRequest{
 		Tenant:             common.GetTenantFromContext(ctx),
 		LoggedInUserId:     common.GetUserIdFromContext(ctx),
 		Id:                 input.ID,
@@ -302,7 +301,22 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 		SourceFields: &commonpb.SourceFields{
 			Source: string(neo4jentity.DataSourceOpenline),
 		},
-	})
+	}
+	if input.Logo != nil {
+		upsertOrganizationRequest.LogoUrl = *input.Logo
+	}
+	if input.Notes != nil {
+		upsertOrganizationRequest.Note = *input.Notes
+	}
+	if input.CustomID != nil {
+		upsertOrganizationRequest.ReferenceId = *input.CustomID
+	}
+	if input.Public != nil {
+		upsertOrganizationRequest.IsPublic = *input.Public
+	}
+
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	response, err := r.Clients.OrganizationClient.UpsertOrganization(ctx, &upsertOrganizationRequest)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to update organization")
