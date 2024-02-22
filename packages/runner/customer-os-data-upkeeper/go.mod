@@ -20,7 +20,7 @@ require (
 	github.com/robfig/cron v1.2.0
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/net v0.20.0
-	google.golang.org/grpc v1.61.1
+	google.golang.org/grpc v1.62.0
 	gorm.io/gorm v1.25.7-0.20240204074919-46816ad31dde
 )
 
@@ -46,7 +46,7 @@ require (
 	golang.org/x/sync v0.6.0 // indirect
 	golang.org/x/sys v0.16.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240108191215-35c7eff3a6b1 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240123012728-ef4313101c80 // indirect
 	google.golang.org/protobuf v1.32.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gorm.io/driver/postgres v1.5.6 // indirect
