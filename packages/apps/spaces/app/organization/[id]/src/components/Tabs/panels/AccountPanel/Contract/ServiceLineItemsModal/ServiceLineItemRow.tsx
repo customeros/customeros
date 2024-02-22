@@ -304,6 +304,7 @@ export const ServiceLineItemRow = ({
                 <Text
                   color={service.serviceStarted ? 'gray.700' : 'gray.400'}
                   role='button'
+                  textDecoration={service.isDeleted ? 'line-through' : 'unset'}
                 >
                   {service.serviceStarted
                     ? DateTimeUtils.format(

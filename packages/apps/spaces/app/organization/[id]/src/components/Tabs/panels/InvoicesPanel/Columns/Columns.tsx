@@ -12,10 +12,10 @@ import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 const columnHelper = createColumnHelper<Invoice>();
 
 export const columns = [
-  columnHelper.accessor('number', {
+  columnHelper.accessor('invoiceNumber', {
     id: 'NUMBER',
-    minSize: 110,
-    maxSize: 110,
+    minSize: 90,
+    maxSize: 90,
     enableSorting: false,
     enableColumnFilter: false,
     cell: (props) => <Text overflow='hidden'>{props?.getValue()}</Text>,
@@ -34,8 +34,8 @@ export const columns = [
 
   columnHelper.accessor('status', {
     id: 'STATUS',
-    minSize: 65,
-    maxSize: 65,
+    minSize: 105,
+    maxSize: 105,
     enableSorting: false,
     enableColumnFilter: false,
     header: (props) => (
@@ -53,10 +53,10 @@ export const columns = [
       />
     ),
   }),
-  columnHelper.accessor('createdAt', {
+  columnHelper.accessor('metadata', {
     id: 'DATE',
-    minSize: 20,
-    maxSize: 20,
+    minSize: 10,
+    maxSize: 10,
     enableSorting: false,
     enableColumnFilter: false,
     header: (props) => (
@@ -66,7 +66,7 @@ export const columns = [
       return (
         <Text>
           {DateTimeUtils.format(
-            props.getValue(),
+            props.getValue().created,
             DateTimeUtils.defaultFormatShortString,
           )}
         </Text>
@@ -81,7 +81,7 @@ export const columns = [
       />
     ),
   }),
-  columnHelper.accessor('totalAmount', {
+  columnHelper.accessor('amountDue', {
     id: 'AMOUNT_DUE',
     minSize: 20,
     maxSize: 20,
