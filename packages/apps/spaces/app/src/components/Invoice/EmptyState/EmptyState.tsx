@@ -40,7 +40,7 @@ export const EmptyState = ({
             Awaiting your invoices
           </Text>
           <Text maxW='350px' fontSize='sm' color='gray.600' my={1}>
-            Create your first contract with services, and your invoices will
+            Create your first contract with services. Once issued, invoices will
             appear here.
           </Text>
         </Flex>
