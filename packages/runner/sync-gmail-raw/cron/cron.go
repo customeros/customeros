@@ -102,97 +102,16 @@ func syncEmailsInState(config *config.Config, services *service.Services, state 
 				go func(user entity.UserEntity) {
 					defer wgTenant.Done()
 
-					emailForUser, err := services.EmailService.FindEmailForUser(tenant.Name, user.Id)
+					emailsForUser, err := services.EmailService.FindEmailsForUser(tenant.Name, user.Id)
 					if err != nil {
 						logrus.Infof("failed to find email for user: %v", err)
 						return
 					}
 
-					logrus.Infof("syncing emails for user with email: %s in tenant: %s", emailForUser.RawEmail, tenant.Name)
-
-					gmailService, err := services.AuthServices.GoogleService.GetGmailService(ctx, emailForUser.RawEmail, tenant.Name)
-					if err != nil {
-						logrus.Errorf("failed to create gmail service: %v", err)
-						return
+					for _, emailForUser := range emailsForUser {
+						syncEmailsForEmailAddress(ctx, config, emailForUser, tenant, services, state)
 					}
 
-					if gmailService != nil {
-						err := InitializeGmailImportState(services, tenant.Name, emailForUser.RawEmail)
-						if err != nil {
-							logrus.Errorf("failed to initialize gmail import state: %v", err)
-							return
-						}
-
-						var gmailImportState *entity.UserGmailImportState
-						if state == entity.REAL_TIME {
-							gmailImportStateLastWeek, err := services.Repositories.UserGmailImportPageTokenRepository.GetGmailImportState(tenant.Name, emailForUser.RawEmail, entity.LAST_WEEK)
-							if err != nil {
-								logrus.Errorf("failed to get gmail import state: %v", err)
-								return
-							}
-							if gmailImportStateLastWeek.Active == true {
-								logrus.Infof("gmail import state for tenant: %s and username: %s is active for last week. skipping real time import", tenant.Name, emailForUser.RawEmail)
-								return
-							}
-
-							gmailImportState, err = services.Repositories.UserGmailImportPageTokenRepository.GetGmailImportState(tenant.Name, emailForUser.RawEmail, entity.REAL_TIME)
-							if err != nil {
-								logrus.Errorf("failed to get gmail import state: %v", err)
-								return
-							}
-
-							if gmailImportState.Active == false {
-								importedEmails, err := services.Repositories.RawEmailRepository.CountForUsername("gmail", tenant.Name, emailForUser.RawEmail)
-								if err != nil {
-									logrus.Errorf("failed to count imported emails: %v", err)
-									return
-								}
-
-								if importedEmails > config.SyncData.BatchSize {
-									err = services.Repositories.UserGmailImportPageTokenRepository.ActivateGmailImportState(tenant.Name, emailForUser.RawEmail, entity.REAL_TIME)
-									if err != nil {
-										logrus.Errorf("failed to update gmail import state: %v", err)
-										return
-									}
-
-									gmailImportState, err = services.Repositories.UserGmailImportPageTokenRepository.GetGmailImportState(tenant.Name, emailForUser.RawEmail, entity.REAL_TIME)
-									if err != nil {
-										logrus.Errorf("failed to get gmail import state: %v", err)
-										return
-									}
-								} else {
-									logrus.Infof("gmail import state for tenant: %s and username: %s is not active for real time. skipping real time import", tenant.Name, emailForUser.RawEmail)
-									return
-								}
-							}
-						} else {
-							gmailImportState, err = getHistoryImportGmailImportState(services, tenant.Name, emailForUser.RawEmail, entity.LAST_WEEK)
-							if err != nil {
-								logrus.Errorf("failed to get gmail import state: %v", err)
-								return
-							}
-							if gmailImportState == nil {
-								logrus.Infof("no gmail import state found for tenant: %s and username: %s", tenant.Name, emailForUser.RawEmail)
-								return
-							}
-						}
-
-						gmailImportState, err = services.EmailService.ReadEmailsForUsername(gmailService, gmailImportState)
-						if err != nil {
-							logrus.Errorf("failed to read emails for username: %v", err)
-							return
-						}
-
-						if state == entity.HISTORY && gmailImportState.Cursor == "" {
-							err = services.Repositories.UserGmailImportPageTokenRepository.DeactivateGmailImportState(tenant.Name, emailForUser.RawEmail, gmailImportState.State)
-							if err != nil {
-								logrus.Errorf("failed to update gmail import state: %v", err)
-								return
-							}
-						}
-					}
-
-					logrus.Infof("syncing emails for user with email: %s in tenant: %s completed", emailForUser.RawEmail, tenant.Name)
 				}(*user)
 			}
 
@@ -205,6 +124,94 @@ func syncEmailsInState(config *config.Config, services *service.Services, state 
 	wg.Wait()
 	logrus.Infof("syncing emails for all tenants completed")
 	logrus.Infof("run id: %s sync completed at %v", runId.String(), time.Now().UTC())
+}
+
+func syncEmailsForEmailAddress(ctx context.Context, config *config.Config, emailForUser *entity.EmailEntity, tenant entity.TenantEntity, services *service.Services, state entity.GmailImportState) {
+	logrus.Infof("syncing emails for user with email: %s in tenant: %s", emailForUser.RawEmail, tenant.Name)
+
+	gmailService, err := services.AuthServices.GoogleService.GetGmailService(ctx, emailForUser.RawEmail, tenant.Name)
+	if err != nil {
+		logrus.Errorf("failed to create gmail service: %v", err)
+		return
+	}
+
+	if gmailService != nil {
+		err := InitializeGmailImportState(services, tenant.Name, emailForUser.RawEmail)
+		if err != nil {
+			logrus.Errorf("failed to initialize gmail import state: %v", err)
+			return
+		}
+
+		var gmailImportState *entity.UserGmailImportState
+		if state == entity.REAL_TIME {
+			gmailImportStateLastWeek, err := services.Repositories.UserGmailImportPageTokenRepository.GetGmailImportState(tenant.Name, emailForUser.RawEmail, entity.LAST_WEEK)
+			if err != nil {
+				logrus.Errorf("failed to get gmail import state: %v", err)
+				return
+			}
+			if gmailImportStateLastWeek.Active == true {
+				logrus.Infof("gmail import state for tenant: %s and username: %s is active for last week. skipping real time import", tenant.Name, emailForUser.RawEmail)
+				return
+			}
+
+			gmailImportState, err = services.Repositories.UserGmailImportPageTokenRepository.GetGmailImportState(tenant.Name, emailForUser.RawEmail, entity.REAL_TIME)
+			if err != nil {
+				logrus.Errorf("failed to get gmail import state: %v", err)
+				return
+			}
+
+			if gmailImportState.Active == false {
+				importedEmails, err := services.Repositories.RawEmailRepository.CountForUsername("gmail", tenant.Name, emailForUser.RawEmail)
+				if err != nil {
+					logrus.Errorf("failed to count imported emails: %v", err)
+					return
+				}
+
+				if importedEmails > config.SyncData.BatchSize {
+					err = services.Repositories.UserGmailImportPageTokenRepository.ActivateGmailImportState(tenant.Name, emailForUser.RawEmail, entity.REAL_TIME)
+					if err != nil {
+						logrus.Errorf("failed to update gmail import state: %v", err)
+						return
+					}
+
+					gmailImportState, err = services.Repositories.UserGmailImportPageTokenRepository.GetGmailImportState(tenant.Name, emailForUser.RawEmail, entity.REAL_TIME)
+					if err != nil {
+						logrus.Errorf("failed to get gmail import state: %v", err)
+						return
+					}
+				} else {
+					logrus.Infof("gmail import state for tenant: %s and username: %s is not active for real time. skipping real time import", tenant.Name, emailForUser.RawEmail)
+					return
+				}
+			}
+		} else {
+			gmailImportState, err = getHistoryImportGmailImportState(services, tenant.Name, emailForUser.RawEmail, entity.LAST_WEEK)
+			if err != nil {
+				logrus.Errorf("failed to get gmail import state: %v", err)
+				return
+			}
+			if gmailImportState == nil {
+				logrus.Infof("no gmail import state found for tenant: %s and username: %s", tenant.Name, emailForUser.RawEmail)
+				return
+			}
+		}
+
+		gmailImportState, err = services.EmailService.ReadEmailsForUsername(gmailService, gmailImportState)
+		if err != nil {
+			logrus.Errorf("failed to read emails for username: %v", err)
+			return
+		}
+
+		if state == entity.HISTORY && gmailImportState.Cursor == "" {
+			err = services.Repositories.UserGmailImportPageTokenRepository.DeactivateGmailImportState(tenant.Name, emailForUser.RawEmail, gmailImportState.State)
+			if err != nil {
+				logrus.Errorf("failed to update gmail import state: %v", err)
+				return
+			}
+		}
+	}
+
+	logrus.Infof("syncing emails for user with email: %s in tenant: %s completed", emailForUser.RawEmail, tenant.Name)
 }
 
 func getHistoryImportGmailImportState(services *service.Services, tenant string, username string, state entity.GmailImportState) (*entity.UserGmailImportState, error) {
