@@ -13428,27 +13428,32 @@ input OrganizationInput {
     The name of the organization.
     **Required.**
     """
-    referenceId:   String
+    customId:      String
     name:          String
     description:   String
-    note:          String
+    notes:         String
     domains:       [String!]
     website:       String
     industry:      String
     subIndustry:   String
     industryGroup: String
-    isPublic:      Boolean
+    public:        Boolean
     isCustomer:    Boolean
     customFields:  [CustomFieldInput!]
-    fieldSets:     [FieldSetInput!] @deprecated
-    templateId:    ID @deprecated
     market:        Market
-    logoUrl:            String
+    logo:               String
     employeeGrowthRate: String
     headquarters:       String
     yearFounded:        Int64
     employees:     Int64
     appSource:     String
+
+    fieldSets:     [FieldSetInput!] @deprecated
+    templateId:    ID @deprecated
+    isPublic:      Boolean @deprecated(reason: "Use public")
+    referenceId:   String @deprecated(reason: "Use customId")
+    note:          String @deprecated(reason: "Use notes")
+    logoUrl:       String @deprecated(reason: "Use logo")
 }
 
 input OrganizationUpdateInput {
@@ -90817,20 +90822,20 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"referenceId", "name", "description", "note", "domains", "website", "industry", "subIndustry", "industryGroup", "isPublic", "isCustomer", "customFields", "fieldSets", "templateId", "market", "logoUrl", "employeeGrowthRate", "headquarters", "yearFounded", "employees", "appSource"}
+	fieldsInOrder := [...]string{"customId", "name", "description", "notes", "domains", "website", "industry", "subIndustry", "industryGroup", "public", "isCustomer", "customFields", "market", "logo", "employeeGrowthRate", "headquarters", "yearFounded", "employees", "appSource", "fieldSets", "templateId", "isPublic", "referenceId", "note", "logoUrl"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "referenceId":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("referenceId"))
+		case "customId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("customId"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.ReferenceID = data
+			it.CustomID = data
 		case "name":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -90845,13 +90850,13 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 				return it, err
 			}
 			it.Description = data
-		case "note":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("note"))
+		case "notes":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notes"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.Note = data
+			it.Notes = data
 		case "domains":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("domains"))
 			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
@@ -90887,13 +90892,13 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 				return it, err
 			}
 			it.IndustryGroup = data
-		case "isPublic":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isPublic"))
+		case "public":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("public"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.IsPublic = data
+			it.Public = data
 		case "isCustomer":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isCustomer"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
@@ -90908,20 +90913,6 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 				return it, err
 			}
 			it.CustomFields = data
-		case "fieldSets":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fieldSets"))
-			data, err := ec.unmarshalOFieldSetInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFieldSetInputᚄ(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.FieldSets = data
-		case "templateId":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("templateId"))
-			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.TemplateID = data
 		case "market":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("market"))
 			data, err := ec.unmarshalOMarket2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMarket(ctx, v)
@@ -90929,13 +90920,13 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 				return it, err
 			}
 			it.Market = data
-		case "logoUrl":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("logoUrl"))
+		case "logo":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("logo"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.LogoURL = data
+			it.Logo = data
 		case "employeeGrowthRate":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("employeeGrowthRate"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -90971,6 +90962,48 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 				return it, err
 			}
 			it.AppSource = data
+		case "fieldSets":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fieldSets"))
+			data, err := ec.unmarshalOFieldSetInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFieldSetInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FieldSets = data
+		case "templateId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("templateId"))
+			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TemplateID = data
+		case "isPublic":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isPublic"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IsPublic = data
+		case "referenceId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("referenceId"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReferenceID = data
+		case "note":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("note"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Note = data
+		case "logoUrl":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("logoUrl"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LogoURL = data
 		}
 	}
 
