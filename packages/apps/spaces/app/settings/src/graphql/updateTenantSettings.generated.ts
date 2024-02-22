@@ -28,7 +28,7 @@ export type UpdateTenantSettingsMutation = {
     __typename?: 'TenantSettings';
     logoUrl: string;
     billingEnabled: boolean;
-    defaultCurrency?: Types.Currency | null;
+    baseCurrency?: Types.Currency | null;
   };
 };
 
@@ -37,7 +37,7 @@ export const UpdateTenantSettingsDocument = `
   tenant_UpdateSettings(input: $input) {
     logoUrl
     billingEnabled
-    defaultCurrency
+    baseCurrency
   }
 }
     `;
