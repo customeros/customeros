@@ -37,11 +37,10 @@ type EmailChannelData struct {
 	Reference []string `json:"Reference"`
 }
 
-func buildEmailChannelData(subject string, references, inReplyTo []string) (*string, error) {
+func buildEmailChannelData(subject string, inReplyTo []string) (*string, error) {
 	emailContent := EmailChannelData{
 		Subject:   subject,
 		InReplyTo: utils.EnsureEmailRfcIds(inReplyTo),
-		Reference: utils.EnsureEmailRfcIds(references),
 	}
 	jsonContent, err := json.Marshal(emailContent)
 	if err != nil {
@@ -218,7 +217,7 @@ func contains(slice []string, element string) bool {
 	return false
 }
 
-func extractEmailData(emailData model.EmailData) (string, []string, []string, []string, []string, []string) {
+func extractEmailData(emailData model.EmailData) (string, []string, []string, []string, []string) {
 	// Extract "from" email
 	from := extractEmailAddresses(emailData.SentBy)[0]
 
@@ -228,10 +227,9 @@ func extractEmailData(emailData model.EmailData) (string, []string, []string, []
 	bcc := extractEmailAddresses(emailData.Bcc)
 
 	// Extract references
-	references := extractLines(emailData.Reference)
 
 	// Extract in-reply-to
 	inReplyTo := extractLines(emailData.InReplyTo)
 
-	return from, to, cc, bcc, references, inReplyTo
+	return from, to, cc, bcc, inReplyTo
 }

@@ -90,7 +90,7 @@ func (s syncEmailService) SyncEmail(ctx context.Context, emailData model.EmailDa
 
 	if interactionEventId == "" {
 
-		now := time.Now().UTC()
+		//now := time.Now().UTC()
 
 		emailSentDate, err := utils.UnmarshalDateTime(emailData.CreatedAtStr)
 		if err != nil {
@@ -98,7 +98,7 @@ func (s syncEmailService) SyncEmail(ctx context.Context, emailData model.EmailDa
 			s.log.Error(reason)
 		}
 
-		from, to, cc, bcc, references, inReplyTo := extractEmailData(emailData)
+		from, to, cc, bcc, inReplyTo := extractEmailData(emailData)
 
 		allEmailsString, err := buildEmailsListExcludingPersonalEmails(s.personalEmailProviders, "", emailData.SentBy, to, cc, bcc)
 		if err != nil {
@@ -126,32 +126,47 @@ func (s syncEmailService) SyncEmail(ctx context.Context, emailData model.EmailDa
 			return SyncResult{}, SyncResult{}, SyncResult{}, nil
 		}
 
-		channelData, err := buildEmailChannelData(emailData.Subject, references, inReplyTo)
+		channelData, err := buildEmailChannelData(emailData.Subject, inReplyTo)
 		if err != nil {
 			reason := fmt.Sprintf("failed to build emailData channel data for emailData with id %v: %v", emailData.Id, err)
 			s.log.Error(reason)
 			return SyncResult{Skipped: 1}, SyncResult{}, SyncResult{}, err
 		}
-
-		sessionId, err := s.services.InteractionSessionService.MergeInteractionSession(ctx, common.GetTenantFromContext(ctx), emailData.ExternalSystem, emailData.SessionDetails, now)
-
-		if err != nil {
-			reason := fmt.Sprintf("failed merge interaction session for emailData id %v :%v", emailData.Id, err)
-			s.log.Error(reason)
-			return SyncResult{}, SyncResult{}, SyncResult{}, err
+		session := model.InteractionSessionData{
+			BaseData: model.BaseData{
+				CreatedAt:            emailSentDate,
+				ExternalSystem:       emailData.ExternalSystem,
+				ExternalId:           emailData.ThreadId,
+				ExternalSourceEntity: emailData.ExternalSourceEntity,
+				SyncId:               emailData.SyncId,
+				AppSource:            emailData.AppSource,
+			},
+			Channel:     "EMAIL",
+			ChannelData: *channelData,
+			Identifier:  emailData.ThreadId,
+			Status:      "ACTIVE",
+			Type:        "THREAD",
+			Name:        emailData.Subject,
 		}
 
 		integrationEvent := model.InteractionEventData{
-			BaseData:       model.BaseData{CreatedAt: emailSentDate},
+			BaseData: model.BaseData{
+				CreatedAt:            emailSentDate,
+				ExternalSystem:       emailData.ExternalSystem,
+				ExternalId:           emailData.ExternalId,
+				ExternalIdSecond:     emailData.ExternalIdSecond,
+				ExternalUrl:          emailData.ExternalUrl,
+				ExternalSourceEntity: emailData.ExternalSourceEntity,
+				SyncId:               emailData.SyncId,
+				AppSource:            emailData.AppSource,
+			},
 			Content:        emailData.Content,
 			ContentType:    emailData.ContentType,
-			Channel:        emailData.Channel,
+			Channel:        "EMAIL",
 			ChannelData:    *channelData,
-			Identifier:     emailData.Identifier,
-			EventType:      emailData.EventType,
+			Identifier:     emailData.ExternalId,
 			Hide:           emailData.Hide,
-			BelongsTo:      emailData.BelongsTo,
-			SessionDetails: emailData.SessionDetails,
+			SessionDetails: session,
 		}
 		var interactionEvents []model.InteractionEventData
 		interactionEvents = append(interactionEvents, integrationEvent)
@@ -160,10 +175,10 @@ func (s syncEmailService) SyncEmail(ctx context.Context, emailData model.EmailDa
 		if err != nil {
 			reason := fmt.Sprintf("failed merge interaction event for emailData id %v :%v", emailData.Id, err)
 			s.log.Error(reason)
-			return SyncResult{}, SyncResult{Failed: 1}, SyncResult{}, nil
+			return SyncResult{}, interactionEventSyncResult, SyncResult{}, nil
 		}
 
-		err = s.linkInteractionEventToSessionWithRetry(ctx, &emailData, interactionEventId, sessionId)
+		err = s.linkInteractionEventToSessionWithRetry(ctx, &emailData, interactionEventId, session.Identifier)
 		if err != nil {
 			reason := fmt.Sprintf("failed to associate interaction event to session for raw emailData id %v :%v", emailData.Id, err)
 			s.log.Error(reason)
@@ -256,7 +271,7 @@ func (s *syncEmailService) GetEmailIdForEmail(ctx context.Context, tenant string
 }
 
 func (s *syncEmailService) processEmail(ctx context.Context, name string, email string, emailData model.EmailData, personalEmailProviderList []commonEntity.PersonalEmailProvider, source string, interactionEventId string) (SyncResult, SyncResult, error) {
-	from, to, cc, bcc, _, _ := extractEmailData(emailData)
+	from, to, cc, bcc, _ := extractEmailData(emailData)
 
 	emailId, err := s.GetEmailIdForEmail(ctx, common.GetTenantFromContext(ctx), email, personalEmailProviderList, source)
 	if err != nil {
