@@ -98,7 +98,7 @@ func (s *contractService) createContractWithEvents(ctx context.Context, contract
 		LoggedInUserId:     common.GetUserIdFromContext(ctx),
 		SourceFields: &commonpb.SourceFields{
 			Source:    string(contractDetails.Source),
-			AppSource: utils.StringFirstNonEmpty(contractDetails.AppSource, constants.AppSourceCustomerOsApi),
+			AppSource: contractDetails.AppSource,
 		},
 		RenewalPeriods: contractDetails.ContractEntity.RenewalPeriods,
 	}
@@ -181,7 +181,7 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 		return err
 	}
 
-	fieldMask := []contractpb.ContractFieldMask{}
+	var fieldMask []contractpb.ContractFieldMask
 	contractUpdateRequest := contractpb.UpdateContractGrpcRequest{
 		Tenant:         common.GetTenantFromContext(ctx),
 		Id:             input.ContractID,
@@ -209,12 +209,60 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 	if input.Currency != nil {
 		contractUpdateRequest.Currency = mapper.MapCurrencyFromModel(*input.Currency).String()
 	}
+	if input.BillingDetails != nil {
+		if input.BillingDetails.CanPayWithCard != nil {
+			contractUpdateRequest.CanPayWithCard = *input.BillingDetails.CanPayWithCard
+		}
+		if input.BillingDetails.CanPayWithDirectDebit != nil {
+			contractUpdateRequest.CanPayWithDirectDebit = *input.BillingDetails.CanPayWithDirectDebit
+		}
+		if input.BillingDetails.CanPayWithBankTransfer != nil {
+			contractUpdateRequest.CanPayWithBankTransfer = *input.BillingDetails.CanPayWithBankTransfer
+		}
+		if input.BillingDetails.AddressLine1 != nil {
+			contractUpdateRequest.AddressLine1 = *input.BillingDetails.AddressLine1
+		}
+		if input.BillingDetails.AddressLine2 != nil {
+			contractUpdateRequest.AddressLine2 = *input.BillingDetails.AddressLine2
+		}
+		if input.BillingDetails.Locality != nil {
+			contractUpdateRequest.Locality = *input.BillingDetails.Locality
+		}
+		if input.BillingDetails.Country != nil {
+			contractUpdateRequest.Country = *input.BillingDetails.Country
+		}
+		if input.BillingDetails.PostalCode != nil {
+			contractUpdateRequest.Zip = *input.BillingDetails.PostalCode
+		}
+		if input.BillingDetails.OrganizationLegalName != nil {
+			contractUpdateRequest.OrganizationLegalName = *input.BillingDetails.OrganizationLegalName
+		}
+		if input.BillingDetails.BillingEmail != nil {
+			contractUpdateRequest.InvoiceEmail = *input.BillingDetails.BillingEmail
+		}
+		if input.BillingDetails.InvoiceNote != nil {
+			contractUpdateRequest.InvoiceNote = *input.BillingDetails.InvoiceNote
+		}
+	}
+	if input.CommittedPeriods != nil {
+		contractUpdateRequest.RenewalPeriods = input.CommittedPeriods
+	}
+	if input.ContractName != nil {
+		contractUpdateRequest.Name = *input.ContractName
+	}
 
 	nullTime := time.Time{}
 
 	if input.SignedAt != nil {
 		if *input.SignedAt != nullTime {
 			contractUpdateRequest.SignedAt = utils.ConvertTimeToTimestampPtr(input.SignedAt)
+		} else {
+			contractUpdateRequest.SignedAt = nil
+		}
+	}
+	if input.ContractSigned != nil {
+		if *input.ContractSigned != nullTime {
+			contractUpdateRequest.SignedAt = utils.ConvertTimeToTimestampPtr(input.ContractSigned)
 		} else {
 			contractUpdateRequest.SignedAt = nil
 		}
@@ -227,10 +275,24 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 			contractUpdateRequest.ServiceStartedAt = nil
 		}
 	}
+	if input.ServiceStarted != nil {
+		if *input.ServiceStarted != nullTime {
+			contractUpdateRequest.ServiceStartedAt = utils.ConvertTimeToTimestampPtr(input.ServiceStarted)
+		} else {
+			contractUpdateRequest.ServiceStartedAt = nil
+		}
+	}
 
 	if input.EndedAt != nil {
 		if *input.EndedAt != nullTime {
 			contractUpdateRequest.EndedAt = utils.ConvertTimeToTimestampPtr(input.EndedAt)
+		} else {
+			contractUpdateRequest.EndedAt = nil
+		}
+	}
+	if input.ContractEnded != nil {
+		if *input.ContractEnded != nullTime {
+			contractUpdateRequest.EndedAt = utils.ConvertTimeToTimestampPtr(input.ContractEnded)
 		} else {
 			contractUpdateRequest.EndedAt = nil
 		}
@@ -243,10 +305,29 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 			contractUpdateRequest.InvoicingStartDate = nil
 		}
 	}
+	if input.BillingDetails != nil && input.BillingDetails.InvoicingStarted != nil {
+		if *input.BillingDetails.InvoicingStarted != nullTime {
+			contractUpdateRequest.InvoicingStartDate = utils.ConvertTimeToTimestampPtr(input.BillingDetails.InvoicingStarted)
+		} else {
+			contractUpdateRequest.InvoicingStartDate = nil
+		}
+	}
 
 	// prepare renewal cycle
 	if input.RenewalCycle != nil {
 		switch *input.RenewalCycle {
+		case model.ContractRenewalCycleMonthlyRenewal:
+			contractUpdateRequest.RenewalCycle = contractpb.RenewalCycle_MONTHLY_RENEWAL
+		case model.ContractRenewalCycleQuarterlyRenewal:
+			contractUpdateRequest.RenewalCycle = contractpb.RenewalCycle_QUARTERLY_RENEWAL
+		case model.ContractRenewalCycleAnnualRenewal:
+			contractUpdateRequest.RenewalCycle = contractpb.RenewalCycle_ANNUALLY_RENEWAL
+		default:
+			contractUpdateRequest.RenewalCycle = contractpb.RenewalCycle_NONE
+		}
+	}
+	if input.ContractRenewalCycle != nil {
+		switch *input.ContractRenewalCycle {
 		case model.ContractRenewalCycleMonthlyRenewal:
 			contractUpdateRequest.RenewalCycle = contractpb.RenewalCycle_MONTHLY_RENEWAL
 		case model.ContractRenewalCycleQuarterlyRenewal:
@@ -271,69 +352,81 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 			contractUpdateRequest.BillingCycle = commonpb.BillingCycle_NONE_BILLING
 		}
 	}
+	if input.BillingDetails != nil && input.BillingDetails.BillingCycle != nil {
+		switch *input.BillingDetails.BillingCycle {
+		case model.ContractBillingCycleMonthlyBilling:
+			contractUpdateRequest.BillingCycle = commonpb.BillingCycle_MONTHLY_BILLING
+		case model.ContractBillingCycleQuarterlyBilling:
+			contractUpdateRequest.BillingCycle = commonpb.BillingCycle_QUARTERLY_BILLING
+		case model.ContractBillingCycleAnnualBilling:
+			contractUpdateRequest.BillingCycle = commonpb.BillingCycle_ANNUALLY_BILLING
+		default:
+			contractUpdateRequest.BillingCycle = commonpb.BillingCycle_NONE_BILLING
+		}
+	}
 
 	if input.Patch != nil && *input.Patch {
-		if input.Name != nil {
+		if input.Name != nil || input.ContractName != nil {
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_NAME)
 		}
 		if input.ContractURL != nil {
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_CONTRACT_URL)
 		}
-		if input.RenewalCycle != nil {
+		if input.RenewalCycle != nil || input.ContractRenewalCycle != nil {
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_RENEWAL_CYCLE)
 		}
-		if input.RenewalPeriods != nil {
+		if input.RenewalPeriods != nil || input.CommittedPeriods != nil {
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_RENEWAL_PERIODS)
 		}
-		if input.ServiceStartedAt != nil {
+		if input.ServiceStartedAt != nil || input.ServiceStarted != nil {
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_SERVICE_STARTED_AT)
 		}
-		if input.SignedAt != nil {
+		if input.SignedAt != nil || input.ContractSigned != nil {
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_SIGNED_AT)
 		}
-		if input.EndedAt != nil {
+		if input.EndedAt != nil || input.ContractEnded != nil {
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_ENDED_AT)
 		}
-		if input.InvoicingStartDate != nil {
+		if input.InvoicingStartDate != nil || (input.BillingDetails != nil && input.BillingDetails.InvoicingStarted != nil) {
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_INVOICING_START_DATE)
 		}
 		if input.Currency != nil {
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_CURRENCY)
 		}
-		if input.BillingCycle != nil {
+		if input.BillingCycle != nil || (input.BillingDetails != nil && input.BillingDetails.BillingCycle != nil) {
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_BILLING_CYCLE)
 		}
-		if input.AddressLine1 != nil {
+		if input.AddressLine1 != nil || (input.BillingDetails != nil && input.BillingDetails.AddressLine1 != nil) {
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_ADDRESS_LINE_1)
 		}
-		if input.AddressLine2 != nil {
+		if input.AddressLine2 != nil || (input.BillingDetails != nil && input.BillingDetails.AddressLine2 != nil) {
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_ADDRESS_LINE_2)
 		}
-		if input.Locality != nil {
+		if input.Locality != nil || (input.BillingDetails != nil && input.BillingDetails.Locality != nil) {
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_LOCALITY)
 		}
-		if input.Country != nil {
+		if input.Country != nil || (input.BillingDetails != nil && input.BillingDetails.Country != nil) {
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_COUNTRY)
 		}
-		if input.Zip != nil {
+		if input.Zip != nil || (input.BillingDetails != nil && input.BillingDetails.PostalCode != nil) {
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_ZIP)
 		}
-		if input.OrganizationLegalName != nil {
+		if input.OrganizationLegalName != nil || (input.BillingDetails != nil && input.BillingDetails.OrganizationLegalName != nil) {
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_ORGANIZATION_LEGAL_NAME)
 		}
-		if input.InvoiceEmail != nil {
+		if input.InvoiceEmail != nil || (input.BillingDetails != nil && input.BillingDetails.BillingEmail != nil) {
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_INVOICE_EMAIL)
 		}
-		if input.InvoiceNote != nil {
+		if input.InvoiceNote != nil || (input.BillingDetails != nil && input.BillingDetails.InvoiceNote != nil) {
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_INVOICE_NOTE)
 		}
-		if input.CanPayWithCard != nil {
+		if input.CanPayWithCard != nil || (input.BillingDetails != nil && input.BillingDetails.CanPayWithCard != nil) {
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_CAN_PAY_WITH_CARD)
 		}
-		if input.CanPayWithDirectDebit != nil {
+		if input.CanPayWithDirectDebit != nil || (input.BillingDetails != nil && input.BillingDetails.CanPayWithDirectDebit != nil) {
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_CAN_PAY_WITH_DIRECT_DEBIT)
 		}
-		if input.CanPayWithBankTransfer != nil {
+		if input.CanPayWithBankTransfer != nil || (input.BillingDetails != nil && input.BillingDetails.CanPayWithBankTransfer != nil) {
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_CAN_PAY_WITH_BANK_TRANSFER)
 		}
 		if input.BillingEnabled != nil {

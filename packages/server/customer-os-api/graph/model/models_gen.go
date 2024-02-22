@@ -173,6 +173,23 @@ type BillingDetails struct {
 	InvoiceNote           *string               `json:"invoiceNote,omitempty"`
 }
 
+type BillingDetailsInput struct {
+	BillingCycle           *ContractBillingCycle `json:"billingCycle,omitempty"`
+	InvoicingStarted       *time.Time            `json:"invoicingStarted,omitempty"`
+	AddressLine1           *string               `json:"addressLine1,omitempty"`
+	AddressLine2           *string               `json:"addressLine2,omitempty"`
+	Locality               *string               `json:"locality,omitempty"`
+	Region                 *string               `json:"region,omitempty"`
+	Country                *string               `json:"country,omitempty"`
+	PostalCode             *string               `json:"postalCode,omitempty"`
+	OrganizationLegalName  *string               `json:"organizationLegalName,omitempty"`
+	BillingEmail           *string               `json:"billingEmail,omitempty"`
+	InvoiceNote            *string               `json:"invoiceNote,omitempty"`
+	CanPayWithCard         *bool                 `json:"canPayWithCard,omitempty"`
+	CanPayWithDirectDebit  *bool                 `json:"canPayWithDirectDebit,omitempty"`
+	CanPayWithBankTransfer *bool                 `json:"canPayWithBankTransfer,omitempty"`
+}
+
 type BillingProfile struct {
 	ID            string     `json:"id"`
 	CreatedAt     time.Time  `json:"createdAt"`
@@ -479,47 +496,59 @@ func (Contract) IsMetadataInterface()        {}
 func (this Contract) GetMetadata() *Metadata { return this.Metadata }
 
 type ContractInput struct {
-	OrganizationID     string                        `json:"organizationId"`
-	Name               *string                       `json:"name,omitempty"`
-	RenewalCycle       *ContractRenewalCycle         `json:"renewalCycle,omitempty"`
-	RenewalPeriods     *int64                        `json:"renewalPeriods,omitempty"`
-	AppSource          *string                       `json:"appSource,omitempty"`
-	ContractURL        *string                       `json:"contractUrl,omitempty"`
-	ServiceStartedAt   *time.Time                    `json:"serviceStartedAt,omitempty"`
-	SignedAt           *time.Time                    `json:"signedAt,omitempty"`
-	ExternalReference  *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
-	Currency           *Currency                     `json:"currency,omitempty"`
-	InvoicingStartDate *time.Time                    `json:"invoicingStartDate,omitempty"`
-	BillingCycle       *ContractBillingCycle         `json:"billingCycle,omitempty"`
-	BillingEnabled     *bool                         `json:"billingEnabled,omitempty"`
+	OrganizationID       string                        `json:"organizationId"`
+	ContractName         *string                       `json:"contractName,omitempty"`
+	ContractRenewalCycle *ContractRenewalCycle         `json:"contractRenewalCycle,omitempty"`
+	CommittedPeriods     *int64                        `json:"committedPeriods,omitempty"`
+	AppSource            *string                       `json:"appSource,omitempty"`
+	ContractURL          *string                       `json:"contractUrl,omitempty"`
+	ServiceStarted       *time.Time                    `json:"serviceStarted,omitempty"`
+	ContractSigned       *time.Time                    `json:"contractSigned,omitempty"`
+	Currency             *Currency                     `json:"currency,omitempty"`
+	BillingEnabled       *bool                         `json:"billingEnabled,omitempty"`
+	InvoicingStartDate   *time.Time                    `json:"invoicingStartDate,omitempty"`
+	ExternalReference    *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
+	BillingCycle         *ContractBillingCycle         `json:"billingCycle,omitempty"`
+	RenewalPeriods       *int64                        `json:"renewalPeriods,omitempty"`
+	RenewalCycle         *ContractRenewalCycle         `json:"renewalCycle,omitempty"`
+	SignedAt             *time.Time                    `json:"signedAt,omitempty"`
+	ServiceStartedAt     *time.Time                    `json:"serviceStartedAt,omitempty"`
+	Name                 *string                       `json:"name,omitempty"`
 }
 
 type ContractUpdateInput struct {
 	ContractID             string                `json:"contractId"`
 	Patch                  *bool                 `json:"patch,omitempty"`
-	Name                   *string               `json:"name,omitempty"`
+	ContractName           *string               `json:"contractName,omitempty"`
 	ContractURL            *string               `json:"contractUrl,omitempty"`
-	RenewalCycle           *ContractRenewalCycle `json:"renewalCycle,omitempty"`
-	RenewalPeriods         *int64                `json:"renewalPeriods,omitempty"`
-	ServiceStartedAt       *time.Time            `json:"serviceStartedAt,omitempty"`
-	SignedAt               *time.Time            `json:"signedAt,omitempty"`
-	EndedAt                *time.Time            `json:"endedAt,omitempty"`
-	AppSource              *string               `json:"appSource,omitempty"`
+	ContractRenewalCycle   *ContractRenewalCycle `json:"contractRenewalCycle,omitempty"`
+	CommittedPeriods       *int64                `json:"committedPeriods,omitempty"`
+	ServiceStarted         *time.Time            `json:"serviceStarted,omitempty"`
+	ContractSigned         *time.Time            `json:"contractSigned,omitempty"`
+	ContractEnded          *time.Time            `json:"contractEnded,omitempty"`
 	Currency               *Currency             `json:"currency,omitempty"`
+	BillingDetails         *BillingDetailsInput  `json:"billingDetails,omitempty"`
+	AppSource              *string               `json:"appSource,omitempty"`
+	CanPayWithCard         *bool                 `json:"canPayWithCard,omitempty"`
+	CanPayWithDirectDebit  *bool                 `json:"canPayWithDirectDebit,omitempty"`
+	CanPayWithBankTransfer *bool                 `json:"canPayWithBankTransfer,omitempty"`
+	BillingEnabled         *bool                 `json:"billingEnabled,omitempty"`
 	InvoicingStartDate     *time.Time            `json:"invoicingStartDate,omitempty"`
-	BillingCycle           *ContractBillingCycle `json:"billingCycle,omitempty"`
 	AddressLine1           *string               `json:"addressLine1,omitempty"`
 	AddressLine2           *string               `json:"addressLine2,omitempty"`
 	Locality               *string               `json:"locality,omitempty"`
 	Country                *string               `json:"country,omitempty"`
 	Zip                    *string               `json:"zip,omitempty"`
-	OrganizationLegalName  *string               `json:"organizationLegalName,omitempty"`
-	InvoiceEmail           *string               `json:"invoiceEmail,omitempty"`
-	CanPayWithCard         *bool                 `json:"canPayWithCard,omitempty"`
-	CanPayWithDirectDebit  *bool                 `json:"canPayWithDirectDebit,omitempty"`
-	CanPayWithBankTransfer *bool                 `json:"canPayWithBankTransfer,omitempty"`
+	BillingCycle           *ContractBillingCycle `json:"billingCycle,omitempty"`
 	InvoiceNote            *string               `json:"invoiceNote,omitempty"`
-	BillingEnabled         *bool                 `json:"billingEnabled,omitempty"`
+	EndedAt                *time.Time            `json:"endedAt,omitempty"`
+	RenewalPeriods         *int64                `json:"renewalPeriods,omitempty"`
+	InvoiceEmail           *string               `json:"invoiceEmail,omitempty"`
+	OrganizationLegalName  *string               `json:"organizationLegalName,omitempty"`
+	RenewalCycle           *ContractRenewalCycle `json:"renewalCycle,omitempty"`
+	SignedAt               *time.Time            `json:"signedAt,omitempty"`
+	ServiceStartedAt       *time.Time            `json:"serviceStartedAt,omitempty"`
+	Name                   *string               `json:"name,omitempty"`
 }
 
 type Country struct {

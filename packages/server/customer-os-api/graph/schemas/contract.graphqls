@@ -66,47 +66,78 @@ type BillingDetails {
 }
 
 input ContractInput {
-    organizationId:     ID!
-    name:               String
-    renewalCycle:       ContractRenewalCycle
-    renewalPeriods:     Int64
-    appSource:          String
-    contractUrl:        String
-    serviceStartedAt:   Time
-    signedAt:           Time
-    externalReference:  ExternalSystemReferenceInput
-    currency:           Currency
-    invoicingStartDate: Time
-    billingCycle:       ContractBillingCycle
-    billingEnabled:     Boolean
+    organizationId:         ID!
+    contractName:           String
+    contractRenewalCycle:   ContractRenewalCycle
+    committedPeriods:       Int64
+    appSource:              String
+    contractUrl:            String
+    serviceStarted:         Time
+    contractSigned:         Time
+    currency:               Currency
+    billingEnabled:         Boolean
+
+    invoicingStartDate:     Time @deprecated(reason: "Removed from create input.")
+    externalReference:      ExternalSystemReferenceInput @deprecated(reason: "Not used yet")
+    billingCycle:           ContractBillingCycle @deprecated(reason: "Removed from create input.")
+    renewalPeriods:         Int64 @deprecated(reason: "Use committedPeriods instead.")
+    renewalCycle:       ContractRenewalCycle @deprecated(reason: "Use contractRenewalCycle instead.")
+    signedAt:           Time @deprecated(reason: "Use contractSigned instead.")
+    serviceStartedAt:   Time @deprecated(reason: "Use serviceStarted instead.")
+    name:               String @deprecated(reason: "Use contractName instead.")
 }
 
 input ContractUpdateInput {
-    contractId:         ID!
-    patch:              Boolean
-    name:               String
-    contractUrl:        String
-    renewalCycle:       ContractRenewalCycle
-    renewalPeriods:     Int64
-    serviceStartedAt:   Time
-    signedAt:           Time
-    endedAt:            Time
-    appSource:          String
-    currency:           Currency
-    invoicingStartDate: Time
-    billingCycle:       ContractBillingCycle
-    addressLine1:       String
-    addressLine2:       String
-    locality:           String
-    country:            String
-    zip:                String
-    organizationLegalName: String
-    invoiceEmail:       String
-    canPayWithCard:     Boolean
-    canPayWithDirectDebit:     Boolean
+    contractId:             ID!
+    patch:                  Boolean
+    contractName:           String
+    contractUrl:            String
+    contractRenewalCycle:   ContractRenewalCycle
+    committedPeriods:       Int64
+    serviceStarted:         Time
+    contractSigned:         Time
+    contractEnded:          Time
+    currency:               Currency
+    billingDetails:         BillingDetailsInput
+    appSource:              String
+    billingEnabled:         Boolean
+
+    canPayWithCard:         Boolean @deprecated(reason: "Use billingDetails instead.")
+    canPayWithDirectDebit:  Boolean @deprecated(reason: "Use billingDetails instead.")
+    canPayWithBankTransfer: Boolean @deprecated(reason: "Use billingDetails instead.")
+    invoicingStartDate:     Time @deprecated(reason: "Use billingDetails instead.")
+    addressLine1:           String @deprecated(reason: "Use billingDetails instead.")
+    addressLine2:           String @deprecated(reason: "Use billingDetails instead.")
+    locality:               String @deprecated(reason: "Use billingDetails instead.")
+    country:                String @deprecated(reason: "Use billingDetails instead.")
+    zip:                    String @deprecated(reason: "Use billingDetails instead.")
+    billingCycle:           ContractBillingCycle @deprecated(reason: "Use billingDetails instead.")
+    invoiceNote:            String @deprecated(reason: "Use billingDetails instead.")
+    endedAt:                Time @deprecated(reason: "Use contractEnded instead.")
+    renewalPeriods:         Int64 @deprecated(reason: "Use committedPeriods instead.")
+    invoiceEmail:           String @deprecated(reason: "Use billingDetails instead.")
+    organizationLegalName:  String @deprecated(reason: "Use billingDetails instead.")
+    renewalCycle:       ContractRenewalCycle @deprecated(reason: "Use contractRenewalCycle instead.")
+    signedAt:           Time @deprecated(reason: "Use contractSigned instead.")
+    serviceStartedAt:   Time @deprecated(reason: "Use serviceStarted instead.")
+    name:               String @deprecated(reason: "Use contractName instead.")
+}
+
+input BillingDetailsInput {
+    billingCycle:           ContractBillingCycle
+    invoicingStarted:       Time
+    addressLine1:           String
+    addressLine2:           String
+    locality:               String
+    region:                 String
+    country:                String
+    postalCode:             String
+    organizationLegalName:  String
+    billingEmail:           String
+    invoiceNote:            String
+    canPayWithCard:         Boolean
+    canPayWithDirectDebit:  Boolean
     canPayWithBankTransfer: Boolean
-    invoiceNote:        String
-    billingEnabled:     Boolean
 }
 
 enum ContractRenewalCycle {
