@@ -44,6 +44,9 @@ type IssueWriteRepository interface {
 	RemoveUserAssignee(ctx context.Context, tenant, issueId, userId string, at time.Time) error
 	AddUserFollower(ctx context.Context, tenant, issueId, userId string, at time.Time) error
 	RemoveUserFollower(ctx context.Context, tenant, issueId, userId string, at time.Time) error
+
+	ReportedByOrganizationWithGroupId(ctx context.Context, tenant, organizationId, groupId string) error
+	RemoveReportedByOrganizationWithGroupId(ctx context.Context, tenant, organizationId, groupId string) error
 }
 
 type issueWriteRepository struct {
@@ -272,6 +275,55 @@ func (r *issueWriteRepository) RemoveUserFollower(ctx context.Context, tenant, i
 		"issueId":   issueId,
 		"updatedAt": at,
 		"userId":    userId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *issueWriteRepository) ReportedByOrganizationWithGroupId(ctx context.Context, tenant, organizationId, groupId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueWriteRepository.ReportedByOrganizationWithGroupId")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.LogFields(log.String("organizationId", organizationId))
+	span.LogFields(log.String("groupId", groupId))
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {id:$organizationId}) 
+			   OPTIONAL MATCH (t)<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {groupId:$groupId}) 
+			   MERGE (i)-[:REPORTED_BY]->(o)`
+	params := map[string]any{
+		"tenant":         tenant,
+		"organizationId": organizationId,
+		"groupId":        groupId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *issueWriteRepository) RemoveReportedByOrganizationWithGroupId(ctx context.Context, tenant, organizationId, groupId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueWriteRepository.RemoveReportedByOrganizationWithGroupId")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.LogFields(log.String("organizationId", organizationId))
+	span.LogFields(log.String("groupId", groupId))
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {id:$organizationId})<-[r:REPORTED_BY]-(i:Issue{groupId:$groupId}) 
+			   DELETE r`
+	params := map[string]any{
+		"tenant":         tenant,
+		"organizationId": organizationId,
+		"groupId":        groupId,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

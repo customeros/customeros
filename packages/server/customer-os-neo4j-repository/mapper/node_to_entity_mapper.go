@@ -212,6 +212,7 @@ func MapDbNodeToOrganizationEntity(dbNode *dbtype.Node) *entity.OrganizationEnti
 		YearFounded:        utils.GetInt64PropOrNil(props, "yearFounded"),
 		Headquarters:       utils.GetStringPropOrEmpty(props, "headquarters"),
 		EmployeeGrowthRate: utils.GetStringPropOrEmpty(props, "employeeGrowthRate"),
+		SlackChannelId:     utils.GetStringPropOrEmpty(props, "slackChannelId"),
 		LogoUrl:            utils.GetStringPropOrEmpty(props, "logoUrl"),
 		RenewalSummary: entity.RenewalSummary{
 			ArrForecast:            utils.GetFloatPropOrNil(props, "renewalForecastArr"),
