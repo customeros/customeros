@@ -101,11 +101,11 @@ export const IssueStub: FC<{ data: IssueWithAliases }> = ({ data }) => {
             position='relative'
             borderRadius='md'
           >
-            {!!data?.externalLinks?.length && (
-              <Text mb={1} zIndex={1} fontWeight='semibold' color='gray.500'>
-                {data?.externalLinks[0]?.externalId}
-              </Text>
-            )}
+            {/*{!!data?.externalLinks?.length && (*/}
+            {/*  <Text mb={1} zIndex={1} fontWeight='semibold' color='gray.500'>*/}
+            {/*    {data?.externalLinks[0]?.externalId}*/}
+            {/*  </Text>*/}
+            {/*)}*/}
 
             <Tag
               zIndex={1}
