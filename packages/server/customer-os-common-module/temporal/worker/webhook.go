@@ -16,6 +16,9 @@ func RunWebhookWorker(hostPort, namespace string) {
 	if err != nil {
 		log.Fatalln("Unable to create a Temporal Client", err)
 	}
+	if temporalClient == nil {
+		log.Fatalln("Temporal Client is nil")
+	}
 	defer temporalClient.Close()
 	// Create a new Worker
 	yourWorker := worker.New(temporalClient, workflows.WEBHOOK_CALLS_TASK_QUEUE, worker.Options{

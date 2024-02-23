@@ -15,7 +15,7 @@ func TemporalClient(hostPort, namespace string) (client.Client, error) {
 	}
 	temporalClient, err := client.Dial(clientOptions)
 	if err != nil {
-		return nil, fmt.Errorf("unable to create a Temporal Client: %s", err.Error())
+		return nil, fmt.Errorf("unable to create a Temporal Client for hostPort %s and namespace %s: %s", hostPort, namespace, err.Error())
 	}
 	return temporalClient, nil
 }

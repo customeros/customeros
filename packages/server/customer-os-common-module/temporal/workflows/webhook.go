@@ -29,6 +29,14 @@ type WHWorkflowParam struct {
 func WebhookWorkflow(ctx workflow.Context, param WHWorkflowParam) error {
 	// Define the Activity Execution options
 	retrypolicy := param.RetryPolicy
+	if retrypolicy == nil {
+		retrypolicy = &temporal.RetryPolicy{
+			InitialInterval:    time.Second,
+			BackoffCoefficient: 2.0,
+			MaximumInterval:    time.Second * 100,
+			MaximumAttempts:    3,
+		}
+	}
 	// StartToCloseTimeout or ScheduleToCloseTimeout must be set
 	activityOptions := workflow.ActivityOptions{
 		StartToCloseTimeout: 10 * time.Second,

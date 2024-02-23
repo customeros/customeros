@@ -5,8 +5,15 @@
 func Example() error {
     hostPort := "localhost:7233" // pick this up from config
     namespace := "customer-os" // same here
-    tClient := TemporalClient(hostPort, namespace)
-    defer tClient.Close()
+    tClient, err := temporal_client.TemporalClient(hostPort, namespace)
+    if err != nil {
+        return fmt.Errorf("failed to create Temporal client: %v", err)
+    }
+    defer func() {
+        if err := tClient.Close(); err != nil {
+            log.Printf("Error closing Temporal client: %v", err)
+        }
+    }()
     // this is left to be implemented at this level so each execution can be configured
     workflowOptions := client.StartWorkflowOptions{
         ID:                       fmt.Sprintf("%s_%s", workflows.WEBHOOK_CALLS_TASK_QUEUE, uuid.New().String()),
