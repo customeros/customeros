@@ -17,11 +17,14 @@ export type LogEntryWithAliases = LogEntry & {
 export type IssueWithAliases = Issue & {
   issueStatus: string;
 };
+export type InvoiceWithId = Invoice & {
+  id: string;
+};
 
 export type TimelineEvent =
   | InteractionEventWithDate
   | Meeting
   | Action
   | IssueWithAliases
-  | Pick<Invoice, 'id' | '__typename'>
+  | Pick<InvoiceWithId, 'id' | '__typename'>
   | LogEntryWithAliases;

@@ -1,6 +1,5 @@
 import React from 'react';
 
-import { Invoice } from '@graphql/types';
 import { Text } from '@ui/typography/Text';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { Skeleton } from '@ui/presentation/Skeleton';
@@ -24,7 +23,7 @@ export const columns = [
       <THead
         id='number'
         title='   N°'
-        {...getTHeadProps<Invoice>(props)}
+        {...getTHeadProps<InvoiceTableData>(props)}
         py='2'
       />
     ),
@@ -52,7 +51,7 @@ export const columns = [
       <THead
         id='organization'
         title='Organization'
-        {...getTHeadProps<Invoice>(props)}
+        {...getTHeadProps<InvoiceTableData>(props)}
         py='2'
       />
     ),
@@ -75,7 +74,7 @@ export const columns = [
       <THead
         id='status'
         title='Status'
-        {...getTHeadProps<Invoice>(props)}
+        {...getTHeadProps<InvoiceTableData>(props)}
         py='2'
       />
     ),
@@ -101,7 +100,7 @@ export const columns = [
       <THead
         id='issued'
         title='Issued'
-        {...getTHeadProps<Invoice>(props)}
+        {...getTHeadProps<InvoiceTableData>(props)}
         py='2'
       />
     ),
@@ -134,7 +133,7 @@ export const columns = [
       <THead
         id='amount'
         title='Amount'
-        {...getTHeadProps<Invoice>(props)}
+        {...getTHeadProps<InvoiceTableData>(props)}
         py='2'
       />
     ),
