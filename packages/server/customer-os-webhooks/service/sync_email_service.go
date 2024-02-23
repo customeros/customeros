@@ -62,7 +62,11 @@ func NewSyncEmailService(log logger.Logger, repositories *repository.Repositorie
 }
 
 func (s syncEmailService) SyncEmail(ctx context.Context, emailData model.EmailData) (organizationSync SyncResult, interactionEventSync SyncResult, contactSync SyncResult, err error) {
-	var orgSyncResult, interactionEventSyncResult, contactSyncResult SyncResult
+	var orgSyncResult, interactionEventSyncResult, contactSyncResult, orgSync, contactsSync SyncResult
+
+	var toOrgSync, toContactsSync SyncResult
+	var ccOrgSync, ccContactsSync SyncResult
+	var bccOrgSync, bccContactsSync SyncResult
 
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SyncEmailService.SyncEmails")
 	defer span.Finish()
@@ -88,9 +92,6 @@ func (s syncEmailService) SyncEmail(ctx context.Context, emailData model.EmailDa
 	}
 
 	if interactionEventId == "" {
-
-		//now := time.Now().UTC()
-
 		emailSentDate, err := utils.UnmarshalDateTime(emailData.CreatedAtStr)
 		if err != nil {
 			reason := fmt.Sprintf("failed convert email date to utc %s", err.Error())
@@ -121,7 +122,8 @@ func (s syncEmailService) SyncEmail(ctx context.Context, emailData model.EmailDa
 		}
 
 		if len(domainCount) > 5 {
-			//reason := "more than 5 domains belongs to a workspace domain"
+			reason := "more than 5 domains belongs to a workspace domain"
+			s.log.Error(reason)
 			return SyncResult{}, SyncResult{}, SyncResult{}, nil
 		}
 
@@ -194,14 +196,6 @@ func (s syncEmailService) SyncEmail(ctx context.Context, emailData model.EmailDa
 			return SyncResult{}, SyncResult{}, SyncResult{}, err
 		}
 
-		fromEmailId, err := s.GetEmailIdForEmail(ctx, common.GetTenantFromContext(ctx), from, s.personalEmailProviders, source)
-
-		if fromEmailId == "" {
-			reason := fmt.Sprintf("unable to retrieve emailData id for tenant %s and emailData %s", common.GetTenantFromContext(ctx), from)
-			s.log.Error(reason)
-			return SyncResult{}, SyncResult{}, SyncResult{}, nil
-		}
-
 		// Process the "from" email
 		orgSyncResult, contactSyncResult, err = s.processEmail(ctx, emailData.SentBy.Name, from, emailData, s.personalEmailProviders, source, interactionEventId)
 		if err != nil {
@@ -210,50 +204,55 @@ func (s syncEmailService) SyncEmail(ctx context.Context, emailData model.EmailDa
 			return SyncResult{}, SyncResult{}, SyncResult{}, nil
 		}
 
-		// Combine the slices into one
-		allEmails := append(append(to, cc...), bcc...)
+		fromEmailId, err := s.GetEmailIdForEmail(ctx, common.GetTenantFromContext(ctx), from, s.personalEmailProviders, source)
 
-		// Iterate over the combined slice
-		for i, email := range allEmails {
-			// Determine the category (To, Cc, Bcc) for the current email
-			var category string
-			switch {
-			case contains(to, email):
-				category = "To"
-			case contains(cc, email):
-				category = "Cc"
-			case contains(bcc, email):
-				category = "Bcc"
-			}
+		if fromEmailId == "" {
+			reason := fmt.Sprintf("unable to retrieve emailData id for tenant %s and emailData %s", common.GetTenantFromContext(ctx), from)
+			s.log.Error(reason)
+			return SyncResult{}, SyncResult{}, SyncResult{}, nil
+		}
 
-			// Get the corresponding name for the current category from emailData
-			var name string
-			switch category {
-			case "To":
-				name = emailData.SentTo[i].Name // Assuming SentTo has both name and address
-			case "Cc":
-				name = emailData.Cc[i].Name
-			case "Bcc":
-				name = emailData.Bcc[i].Name
-			default:
-				name = "Unnamed"
-			}
-			// Process each email using the common function
-			orgSyncResult, contactSyncResult, err = s.processEmail(ctx, name, email, emailData, s.personalEmailProviders, source, interactionEventId)
+		// Loop for To
+		for i, email := range to {
+			name := emailData.SentTo[i].Name
+			toOrgSync, toContactsSync, err = s.processEmail(ctx, name, email, emailData, s.personalEmailProviders, source, interactionEventId)
 			if err != nil {
-				reason := fmt.Sprintf("failed to process emailData for emailData id %v :%v", emailData.Id, err)
+				reason := fmt.Sprintf("failed to process emailData for emailData id %v: %v", emailData.Id, err)
 				s.log.Error(reason)
 				return SyncResult{}, SyncResult{}, SyncResult{}, nil
 			}
 		}
+		// Loop for Cc
+		for i, email := range cc {
+			name := emailData.Cc[i].Name
+			ccOrgSync, ccContactsSync, err = s.processEmail(ctx, name, email, emailData, s.personalEmailProviders, source, interactionEventId)
+			if err != nil {
+				reason := fmt.Sprintf("failed to process emailData for emailData id %v: %v", emailData.Id, err)
+				s.log.Error(reason)
+				return SyncResult{}, SyncResult{}, SyncResult{}, nil
+			}
+		}
+		// Loop for Bcc
+		for i, email := range bcc {
+			name := emailData.Bcc[i].Name
+			bccOrgSync, bccContactsSync, err = s.processEmail(ctx, name, email, emailData, s.personalEmailProviders, source, interactionEventId)
+			if err != nil {
+				reason := fmt.Sprintf("failed to process emailData for emailData id %v: %v", emailData.Id, err)
+				s.log.Error(reason)
+				return SyncResult{}, SyncResult{}, SyncResult{}, nil
+			}
+		}
+
+		// Merge results
+		orgSync = mergeSyncResults(toOrgSync, ccOrgSync, bccOrgSync, orgSyncResult)
+		contactsSync = mergeSyncResults(toContactsSync, ccContactsSync, bccContactsSync, contactSyncResult)
 
 	} else {
 		reason := fmt.Sprintf("interaction event already exists for raw emailData id %v", emailData.Id)
 		s.log.Info(reason)
 		return SyncResult{}, SyncResult{}, SyncResult{}, nil
 	}
-
-	return orgSyncResult, interactionEventSyncResult, contactSyncResult, nil
+	return orgSync, interactionEventSyncResult, contactsSync, nil
 }
 
 func (s *syncEmailService) GetEmailIdForEmail(ctx context.Context, tenant string, email string, personalEmailProviderList []commonEntity.PersonalEmailProvider, source string) (string, error) {
@@ -378,16 +377,16 @@ func (s *syncEmailService) createContactDataAndSync(ctx context.Context, name st
 	contactsData := []model.ContactData{
 		{
 			BaseData: model.BaseData{
-				AppSource: emailData.AppSource,
-				Source:    emailData.ExternalSystem,
+				AppSource:      emailData.AppSource,
+				ExternalSystem: emailData.ExternalSystem,
 			},
 			Name:  name,
 			Email: email,
 		},
 	}
 
-	orgSyncResult, err := s.services.ContactService.SyncContacts(ctx, contactsData)
-	return orgSyncResult, err
+	contactSyncResult, err := s.services.ContactService.SyncContacts(ctx, contactsData)
+	return contactSyncResult, err
 }
 
 // Define a function to link interaction event to session with retry and timeout
@@ -439,4 +438,16 @@ func retryWithExponentialBackoff(ctx context.Context, retryFunc func(context.Con
 			time.Sleep(delay)
 		}
 	}
+}
+
+func mergeSyncResults(results ...SyncResult) SyncResult {
+	mergedResult := SyncResult{}
+
+	for _, result := range results {
+		mergedResult.Skipped += result.Skipped
+		mergedResult.Failed += result.Failed
+		mergedResult.Completed += result.Completed
+	}
+
+	return mergedResult
 }
