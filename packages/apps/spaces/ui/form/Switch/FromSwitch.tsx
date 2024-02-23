@@ -77,10 +77,10 @@ export const FormSwitch = forwardRef(
           <Switch
             ref={ref}
             {...rest}
+            colorScheme='primary'
             {...props}
             isChecked={value}
             onChange={() => handleChange(!value)}
-            colorScheme='primary'
           />
         </Flex>
       </FormControl>

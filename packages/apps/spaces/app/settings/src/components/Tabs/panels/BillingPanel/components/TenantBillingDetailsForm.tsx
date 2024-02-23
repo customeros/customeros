@@ -17,7 +17,6 @@ const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const TenantBillingPanelDetailsForm = ({
   setIsInvoiceProviderDetailsHovered,
   setIsInvoiceProviderFocused,
-  onDisablePaymentMethods,
   formId,
   invoicingEnabled,
   canPayWithCard,
@@ -33,7 +32,6 @@ export const TenantBillingPanelDetailsForm = ({
   canPayWithDirectDebitACH?: boolean;
   canPayWithDirectDebitSEPA?: boolean;
   canPayWithDirectDebitBacs?: boolean;
-  onDisablePaymentMethods: () => void;
   setIsInvoiceProviderFocused: (newState: boolean) => void;
   setIsInvoiceProviderDetailsHovered: (newState: boolean) => void;
 }) => {
@@ -149,7 +147,7 @@ export const TenantBillingPanelDetailsForm = ({
             fontWeight: 'semibold',
           }}
           formId={formId}
-          name='email'
+          name='sendInvoicesFrom'
           textOverflow='ellipsis'
           placeholder='Email'
           type='email'
@@ -165,7 +163,6 @@ export const TenantBillingPanelDetailsForm = ({
         canPayWithDirectDebitACH={canPayWithDirectDebitACH}
         canPayWithDirectDebitSEPA={canPayWithDirectDebitSEPA}
         canPayWithDirectDebitBacs={canPayWithDirectDebitBacs}
-        onResetPaymentMethods={onDisablePaymentMethods}
       />
       {/*<Flex justifyContent='space-between' alignItems='center'>*/}
       {/*  <Text fontSize='sm' fontWeight='semibold' whiteSpace='nowrap'>*/}

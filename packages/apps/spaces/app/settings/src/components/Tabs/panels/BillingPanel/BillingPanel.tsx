@@ -28,13 +28,15 @@ import { Invoice } from '@shared/components/Invoice/Invoice';
 import { Card, CardBody, CardHeader } from '@ui/layout/Card';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu';
-import { DataSource, InvoiceLine, TenantBillingProfile } from '@graphql/types';
+import {
+  DataSource,
+  InvoiceLine,
+  TenantBillingProfile,
+  TenantBillingProfileUpdateInput,
+} from '@graphql/types';
 
 import { TenantBillingPanelDetailsForm } from './components';
-import {
-  TenantBillingDetails,
-  TenantBillingDetailsDto,
-} from './TenantBillingProfile.dto';
+import { TenantBillingDetailsDto } from './TenantBillingProfile.dto';
 
 export const BillingPanel = () => {
   const client = getGraphQLClient();
@@ -156,15 +158,18 @@ export const BillingPanel = () => {
     data?.tenantBillingProfiles?.[0] as TenantBillingProfile,
   );
 
-  const handleUpdateData = useDebounce((d: TenantBillingDetails) => {
-    const payload = TenantBillingDetailsDto.toPayload(d);
-    updateBillingProfileMutation.mutate({
-      input: {
-        id: tenantBillingProfileId,
-        ...payload,
-      },
-    });
-  }, 2500);
+  const handleUpdateData = useDebounce(
+    (d: Partial<TenantBillingProfileUpdateInput>) => {
+      updateBillingProfileMutation.mutate({
+        input: {
+          id: tenantBillingProfileId,
+          patch: true,
+          ...d,
+        },
+      });
+    },
+    2500,
+  );
   const { state, setDefaultValues } = useForm({
     formId,
     defaultValues,
@@ -199,14 +204,14 @@ export const BillingPanel = () => {
           }
           case 'vatNumber':
           case 'sendInvoicesFrom':
-          case 'organizationLegalName':
+          case 'legalName':
           case 'addressLine1':
           case 'addressLine2':
           case 'addressLine3':
           case 'zip':
           case 'locality': {
             handleUpdateData({
-              ...next.values,
+              [action.payload.name]: action.payload.value,
             });
 
             return next;
@@ -219,7 +224,7 @@ export const BillingPanel = () => {
         switch (action.payload.name) {
           case 'vatNumber':
           case 'sendInvoicesFrom':
-          case 'organizationLegalName':
+          case 'legalName':
           case 'addressLine1':
           case 'addressLine2':
           case 'addressLine3':
@@ -261,32 +266,6 @@ export const BillingPanel = () => {
   useDeepCompareEffect(() => {
     setDefaultValues(defaultValues);
   }, [defaultValues]);
-
-  const handleDisablePaymentMethods = () => {
-    updateBillingProfileMutation.mutate({
-      input: {
-        id: tenantBillingProfileId,
-        canPayWithDirectDebitACH: false,
-        canPayWithDirectDebitSEPA: false,
-        canPayWithDirectDebitBacs: false,
-        canPayWithCard: false,
-        canPayWithPigeon: false,
-        patch: true,
-      },
-    });
-    const newDefaults = new TenantBillingDetailsDto(
-      data?.tenantBillingProfiles?.[0] as TenantBillingProfile,
-    );
-
-    setDefaultValues({
-      ...newDefaults,
-      canPayWithDirectDebitACH: false,
-      canPayWithDirectDebitSEPA: false,
-      canPayWithDirectDebitBacs: false,
-      canPayWithCard: false,
-      canPayWithPigeon: false,
-    });
-  };
 
   const handleToggleInvoices = () => {
     updateTenantSettingsMutation.mutate({
@@ -390,14 +369,13 @@ export const BillingPanel = () => {
           startingHeight={0}
         >
           <TenantBillingPanelDetailsForm
-            email={state.values.email}
+            email={state.values.sendInvoicesFrom}
             formId={formId}
             canPayWithCard={state.values.canPayWithCard}
             invoicingEnabled={tenantSettingsData?.tenantSettings.billingEnabled}
             canPayWithDirectDebitACH={state.values.canPayWithDirectDebitACH}
             canPayWithDirectDebitSEPA={state.values.canPayWithDirectDebitSEPA}
             canPayWithDirectDebitBacs={state.values.canPayWithDirectDebitBacs}
-            onDisablePaymentMethods={handleDisablePaymentMethods}
             setIsInvoiceProviderFocused={setIsInvoiceProviderFocused}
             setIsInvoiceProviderDetailsHovered={
               setIsInvoiceProviderDetailsHovered
