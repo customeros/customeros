@@ -26,11 +26,11 @@ import (
 func (r *invoiceResolver) Organization(ctx context.Context, obj *model.Invoice) (*model.Organization, error) {
 	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
-	organizationEntity, err := dataloader.For(ctx).GetOrganizationForInvoice(ctx, obj.ID)
+	organizationEntity, err := dataloader.For(ctx).GetOrganizationForInvoice(ctx, obj.Metadata.ID)
 	if err != nil {
 		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
-		r.log.Errorf("error fetching organization for invoice %s: %s", obj.ID, err.Error())
-		graphql.AddErrorf(ctx, "Error fetching organization for invoice %s", obj.ID)
+		r.log.Errorf("error fetching organization for invoice %s: %s", obj.Metadata.ID, err.Error())
+		graphql.AddErrorf(ctx, "Error fetching organization for invoice %s", obj.Metadata.ID)
 		return nil, nil
 	}
 	return mapper.MapEntityToOrganization(organizationEntity), nil
@@ -40,11 +40,11 @@ func (r *invoiceResolver) Organization(ctx context.Context, obj *model.Invoice) 
 func (r *invoiceResolver) Contract(ctx context.Context, obj *model.Invoice) (*model.Contract, error) {
 	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
-	contractEntity, err := dataloader.For(ctx).GetContractForInvoice(ctx, obj.ID)
+	contractEntity, err := dataloader.For(ctx).GetContractForInvoice(ctx, obj.Metadata.ID)
 	if err != nil {
 		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
-		r.log.Errorf("error fetching contract for invoice %s: %s", obj.ID, err.Error())
-		graphql.AddErrorf(ctx, "Error fetching contract for invoice %s", obj.ID)
+		r.log.Errorf("error fetching contract for invoice %s: %s", obj.Metadata.ID, err.Error())
+		graphql.AddErrorf(ctx, "Error fetching contract for invoice %s", obj.Metadata.ID)
 		return nil, nil
 	}
 	return mapper.MapEntityToContract(contractEntity), nil
@@ -54,11 +54,11 @@ func (r *invoiceResolver) Contract(ctx context.Context, obj *model.Invoice) (*mo
 func (r *invoiceResolver) InvoiceLineItems(ctx context.Context, obj *model.Invoice) ([]*model.InvoiceLine, error) {
 	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
-	entities, err := dataloader.For(ctx).GetInvoiceLinesForInvoice(ctx, obj.ID)
+	entities, err := dataloader.For(ctx).GetInvoiceLinesForInvoice(ctx, obj.Metadata.ID)
 	if err != nil {
 		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
-		r.log.Errorf("failed to get invoice lines for invoice %s: %s", obj.ID, err.Error())
-		graphql.AddErrorf(ctx, "Failed to fetch invoice lines for invoice %s", obj.ID)
+		r.log.Errorf("failed to get invoice lines for invoice %s: %s", obj.Metadata.ID, err.Error())
+		graphql.AddErrorf(ctx, "Failed to fetch invoice lines for invoice %s", obj.Metadata.ID)
 		return nil, nil
 	}
 	return mapper.MapEntitiesToInvoiceLines(entities), nil
@@ -68,11 +68,11 @@ func (r *invoiceResolver) InvoiceLineItems(ctx context.Context, obj *model.Invoi
 func (r *invoiceResolver) InvoiceLines(ctx context.Context, obj *model.Invoice) ([]*model.InvoiceLine, error) {
 	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
-	entities, err := dataloader.For(ctx).GetInvoiceLinesForInvoice(ctx, obj.ID)
+	entities, err := dataloader.For(ctx).GetInvoiceLinesForInvoice(ctx, obj.Metadata.ID)
 	if err != nil {
 		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
-		r.log.Errorf("Failed to get invoice lines for invoice %s: %s", obj.ID, err.Error())
-		graphql.AddErrorf(ctx, "Failed to get invoice lines for invoice %s", obj.ID)
+		r.log.Errorf("Failed to get invoice lines for invoice %s: %s", obj.Metadata.ID, err.Error())
+		graphql.AddErrorf(ctx, "Failed to get invoice lines for invoice %s", obj.Metadata.ID)
 		return nil, nil
 	}
 	return mapper.MapEntitiesToInvoiceLines(entities), nil

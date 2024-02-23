@@ -43,21 +43,7 @@ type Invoice implements MetadataInterface {
     paid:                       Boolean!
     subtotal:                   Float!
     taxDue:                     Float!
-
-    id:                 ID! @deprecated(reason: "Use metadata instead.")
-    createdAt:          Time! @deprecated(reason: "Use metadata instead.")
-    updatedAt:          Time! @deprecated(reason: "Use metadata instead.")
-    source:             DataSource! @deprecated(reason: "Use metadata instead.")
-    sourceOfTruth:      DataSource! @deprecated(reason: "Use metadata instead.")
-    appSource:          String! @deprecated(reason: "Use metadata instead.")
     invoiceLines:       [InvoiceLine!]! @goField(forceResolver: true) @deprecated(reason: "Use invoiceLineItems instead.")
-    number:             String! @deprecated(reason: "Use invoiceNumber instead.")
-    dueDate:            Time! @deprecated(reason: "Use due instead.")
-    periodStartDate:    Time! @deprecated(reason: "Use invoicePeriodStart instead.")
-    periodEndDate:      Time! @deprecated(reason: "Use invoicePeriodEnd instead.")
-    amount:             Float! @deprecated(reason: "Use subtotal instead.")
-    totalAmount:        Float! @deprecated(reason: "Use amountDue instead.")
-    vat:                Float! @deprecated(reason: "Use taxDue instead.")
 }
 
 type InvoiceCustomer {
@@ -89,13 +75,7 @@ type InvoiceLine implements MetadataInterface {
     subtotal:           Float!
     taxDue:             Float!
     total:              Float!
-
-    id:                 ID! @deprecated(reason: "Use metadata instead.")
     createdAt:          Time! @deprecated(reason: "Use metadata instead.")
-    name:               String! @deprecated(reason: "Use description instead.")
-    amount:             Float! @deprecated(reason: "Use subtotal instead.")
-    vat:                Float! @deprecated(reason: "Use taxDue instead.")
-    totalAmount:        Float! @deprecated(reason: "Use total instead.")
 }
 
 type Tax {
