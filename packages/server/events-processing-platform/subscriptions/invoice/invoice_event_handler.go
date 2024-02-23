@@ -288,14 +288,14 @@ func (h *InvoiceEventHandler) fillOffCyclePrepaidInvoice(ctx context.Context, te
 	// iterate SLIs by parent id
 	for parentId, slis := range sliByParentID {
 		// get latest SLI that is active on reference date
-		var sliToInvoice *neo4jentity.ServiceLineItemEntity
+		var sliEntityToInvoice *neo4jentity.ServiceLineItemEntity
 		for _, sliEntity := range slis {
 			if sliEntity.IsActiveAt(invoiceEntity.PeriodStartDate) {
-				sliToInvoice = &sliEntity
+				sliEntityToInvoice = &sliEntity
 			}
 		}
 		// if no SLI is active on reference date, skip
-		if sliToInvoice == nil {
+		if sliEntityToInvoice == nil {
 			span.LogFields(log.String("result - no active SLI for parent id", parentId))
 			continue
 		}
@@ -307,16 +307,16 @@ func (h *InvoiceEventHandler) fillOffCyclePrepaidInvoice(ctx context.Context, te
 			return err
 		}
 		finalSLIAmount, calculatedSLIVat := float64(0), float64(0)
-		if sliToInvoice.Billed == neo4jenum.BilledTypeOnce {
-			quantity := sliToInvoice.Quantity
+		if sliEntityToInvoice.Billed == neo4jenum.BilledTypeOnce {
+			quantity := sliEntityToInvoice.Quantity
 			if quantity <= 0 {
 				quantity = 1
 			}
-			finalSLIAmount = utils.TruncateFloat64(float64(quantity)*sliToInvoice.Price, 2)
+			finalSLIAmount = utils.TruncateFloat64(float64(quantity)*sliEntityToInvoice.Price, 2)
 			if finalSLIAmount <= 0 {
 				continue
 			}
-			calculatedSLIVat = utils.TruncateFloat64(finalSLIAmount*sliToInvoice.VatRate/100, 2)
+			calculatedSLIVat = utils.TruncateFloat64(finalSLIAmount*sliEntityToInvoice.VatRate/100, 2)
 		} else {
 			proratedInvoicedSLIAmount := float64(0)
 			if ilDbNodeAndInvoiceId != nil {
@@ -332,35 +332,35 @@ func (h *InvoiceEventHandler) fillOffCyclePrepaidInvoice(ctx context.Context, te
 					// calculate already invoiced amount, prorated for the period
 					invoiceLineEntity := neo4jmapper.MapDbNodeToInvoiceLineEntity(ilDbNodeAndInvoiceId.Node)
 					calculatedInvoicedSLIAmountFor1Year := calculateSLIAmountForCycleInvoicing(invoiceLineEntity.Quantity, invoiceLineEntity.Price, invoiceLineEntity.BilledType, neo4jenum.BillingCycleAnnuallyBilling)
-					proratedInvoicedSLIAmount = prorateAnnualSLIAmount(sliToInvoice.StartedAt, invoiceEntity.PeriodEndDate, calculatedInvoicedSLIAmountFor1Year)
+					proratedInvoicedSLIAmount = prorateAnnualSLIAmount(sliEntityToInvoice.StartedAt, invoiceEntity.PeriodEndDate, calculatedInvoicedSLIAmountFor1Year)
 					proratedInvoicedSLIAmount = utils.TruncateFloat64(proratedInvoicedSLIAmount, 2)
 				}
 			}
 
-			calculatedSLIAmountFor1Year := calculateSLIAmountForCycleInvoicing(sliToInvoice.Quantity, sliToInvoice.Price, sliToInvoice.Billed, neo4jenum.BillingCycleAnnuallyBilling)
-			proratedSLIAmount := prorateAnnualSLIAmount(sliToInvoice.StartedAt, invoiceEntity.PeriodEndDate, calculatedSLIAmountFor1Year)
+			calculatedSLIAmountFor1Year := calculateSLIAmountForCycleInvoicing(sliEntityToInvoice.Quantity, sliEntityToInvoice.Price, sliEntityToInvoice.Billed, neo4jenum.BillingCycleAnnuallyBilling)
+			proratedSLIAmount := prorateAnnualSLIAmount(sliEntityToInvoice.StartedAt, invoiceEntity.PeriodEndDate, calculatedSLIAmountFor1Year)
 			proratedSLIAmount = utils.TruncateFloat64(proratedSLIAmount, 2)
 			finalSLIAmount = proratedSLIAmount - proratedInvoicedSLIAmount
 			span.LogFields(log.Float64(fmt.Sprintf("result - final amount for SLI with parent id %s", parentId), finalSLIAmount))
 			if finalSLIAmount <= 0 {
 				continue
 			}
-			calculatedSLIVat = utils.TruncateFloat64(finalSLIAmount*sliToInvoice.VatRate/100, 2)
+			calculatedSLIVat = utils.TruncateFloat64(finalSLIAmount*sliEntityToInvoice.VatRate/100, 2)
 			proratedSliFound = true
 		}
 		amount += finalSLIAmount
 		vat += calculatedSLIVat
 		invoiceLine := invoicepb.InvoiceLine{
-			Name:                    sliToInvoice.Name,
-			Price:                   sliToInvoice.Price, //TODO IMPORTANT - check if price should be calculated for billed type
-			Quantity:                sliToInvoice.Quantity,
+			Name:                    sliEntityToInvoice.Name,
+			Price:                   utils.TruncateFloat64(calculatePriceForBilledType(sliEntityToInvoice.Price, sliEntityToInvoice.Billed, invoiceEntity.BillingCycle), 2),
+			Quantity:                sliEntityToInvoice.Quantity,
 			Amount:                  finalSLIAmount,
 			Total:                   finalSLIAmount + calculatedSLIVat,
 			Vat:                     calculatedSLIVat,
-			ServiceLineItemId:       sliToInvoice.ID,
-			ServiceLineItemParentId: sliToInvoice.ParentID,
+			ServiceLineItemId:       sliEntityToInvoice.ID,
+			ServiceLineItemParentId: sliEntityToInvoice.ParentID,
 		}
-		switch sliToInvoice.Billed {
+		switch sliEntityToInvoice.Billed {
 		case neo4jenum.BilledTypeMonthly:
 			invoiceLine.BilledType = commonpb.BilledType_MONTHLY_BILLED
 		case neo4jenum.BilledTypeQuarterly:
