@@ -126,6 +126,10 @@ func (s *organizationPlanService) UpdateOrganizationPlan(ctx context.Context, or
 		fieldsMask = append(fieldsMask, orgplanpb.OrganizationPlanFieldMask_ORGANIZATION_PLAN_PROPERTY_STATUS_DETAILS)
 		grpcRequest.StatusDetails = statusDetailsInputToProtobuf(statusDetails)
 	}
+	if len(fieldsMask) == 0 {
+		span.LogFields(log.String("result", "No fields to update"))
+		return nil
+	}
 	grpcRequest.FieldsMask = fieldsMask
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
@@ -330,6 +334,10 @@ func (s *organizationPlanService) UpdateOrganizationPlanMilestone(ctx context.Co
 	}
 	if adhoc != nil {
 		fieldsMask = append(fieldsMask, orgplanpb.OrganizationPlanMilestoneFieldMask_ORGANIZATION_PLAN_MILESTONE_PROPERTY_ADHOC)
+	}
+	if len(fieldsMask) == 0 {
+		span.LogFields(log.String("result", "No fields to update"))
+		return nil
 	}
 	grpcRequest.FieldsMask = fieldsMask
 
