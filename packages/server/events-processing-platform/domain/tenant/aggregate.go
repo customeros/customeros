@@ -175,7 +175,6 @@ func (a *TenantAggregate) onAddBillingProfile(evt eventstore.Event) error {
 	tenantBillingProfile := TenantBillingProfile{
 		Id:                                eventData.Id,
 		CreatedAt:                         eventData.CreatedAt,
-		Email:                             eventData.Email,
 		Phone:                             eventData.Phone,
 		AddressLine1:                      eventData.AddressLine1,
 		AddressLine2:                      eventData.AddressLine2,
@@ -221,9 +220,6 @@ func (a *TenantAggregate) onUpdateBillingProfile(evt eventstore.Event) error {
 	}
 
 	tenantBillingProfile := a.TenantDetails.GetBillingProfile(eventData.Id)
-	if eventData.UpdateEmail() {
-		tenantBillingProfile.Email = eventData.Email
-	}
 	if eventData.UpdatePhone() {
 		tenantBillingProfile.Phone = eventData.Phone
 	}
@@ -303,8 +299,6 @@ func extractTenantBillingProfileFieldsMask(requestFieldsMask []tenantpb.TenantBi
 	var fieldsMask []string
 	for _, requestFieldMask := range requestFieldsMask {
 		switch requestFieldMask {
-		case tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_EMAIL:
-			fieldsMask = append(fieldsMask, event.FieldMaskEmail)
 		case tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_PHONE:
 			fieldsMask = append(fieldsMask, event.FieldMaskPhone)
 		case tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_ADDRESS_LINE_1:

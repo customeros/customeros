@@ -3,7 +3,6 @@ tenant_UpdateBillingProfile(
     input: {
         id: $id
         patch: true
-        email: "email"
         phone: "phone"
         addressLine1: "addressLine1"
         addressLine2: "addressLine2"

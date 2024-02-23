@@ -1,7 +1,6 @@
 mutation AddBillingProfile() {
 tenant_AddBillingProfile(
     input: {
-        email: "email"
         phone: "phone"
         addressLine1: "addressLine1"
         addressLine2: "addressLine2"

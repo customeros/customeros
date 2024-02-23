@@ -7,7 +7,6 @@ const (
 )
 
 const (
-	FieldMaskEmail                         = "email"
 	FieldMaskPhone                         = "phone"
 	FieldMaskAddressLine1                  = "addressLine1"
 	FieldMaskAddressLine2                  = "addressLine2"

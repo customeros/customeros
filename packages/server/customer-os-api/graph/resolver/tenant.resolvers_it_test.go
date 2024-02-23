@@ -175,7 +175,6 @@ func TestQueryResolver_GetTenantBillingProfiles(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	profileId := neo4jtest.CreateTenantBillingProfile(ctx, driver, tenantName, neo4jentity.TenantBillingProfileEntity{
-		Email:                         "test@gmail.com",
 		Phone:                         "123456789",
 		LegalName:                     "test",
 		AddressLine1:                  "address1",
@@ -209,7 +208,6 @@ func TestQueryResolver_GetTenantBillingProfiles(t *testing.T) {
 	require.Equal(t, 1, len(tenantGraphqlResponse.TenantBillingProfiles))
 	tenantBillingProfile := tenantGraphqlResponse.TenantBillingProfiles[0]
 	require.Equal(t, profileId, tenantBillingProfile.ID)
-	require.Equal(t, "test@gmail.com", tenantBillingProfile.Email)
 	require.Equal(t, "123456789", tenantBillingProfile.Phone)
 	require.Equal(t, "test", tenantBillingProfile.LegalName)
 	require.Equal(t, "address1", tenantBillingProfile.AddressLine1)
@@ -235,7 +233,6 @@ func TestQueryResolver_GetTenantBillingProfile(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	profileId := neo4jtest.CreateTenantBillingProfile(ctx, driver, tenantName, neo4jentity.TenantBillingProfileEntity{
-		Email:                         "test@gmail.com",
 		Phone:                         "123456789",
 		LegalName:                     "test",
 		AddressLine1:                  "address1",
@@ -268,7 +265,6 @@ func TestQueryResolver_GetTenantBillingProfile(t *testing.T) {
 
 	tenantBillingProfile := tenantGraphqlResponse.TenantBillingProfile
 	require.Equal(t, profileId, tenantBillingProfile.ID)
-	require.Equal(t, "test@gmail.com", tenantBillingProfile.Email)
 	require.Equal(t, "123456789", tenantBillingProfile.Phone)
 	require.Equal(t, "test", tenantBillingProfile.LegalName)
 	require.Equal(t, "address1", tenantBillingProfile.AddressLine1)
@@ -303,7 +299,6 @@ func TestMutationResolver_TenantAddBillingProfile(t *testing.T) {
 			require.Equal(t, testUserId, profile.LoggedInUserId)
 			require.Equal(t, neo4jentity.DataSourceOpenline.String(), profile.SourceFields.Source)
 			require.Equal(t, constants.AppSourceCustomerOsApi, profile.SourceFields.AppSource)
-			require.Equal(t, "email", profile.Email)
 			require.Equal(t, "phone", profile.Phone)
 			require.Equal(t, "legalName", profile.LegalName)
 			require.Equal(t, "addressLine1", profile.AddressLine1)
@@ -362,7 +357,6 @@ func TestMutationResolver_TenantUpdateBillingProfile(t *testing.T) {
 			require.Equal(t, profileId, profile.Id)
 			require.Equal(t, testUserId, profile.LoggedInUserId)
 			require.Equal(t, constants.AppSourceCustomerOsApi, profile.AppSource)
-			require.Equal(t, "email", profile.Email)
 			require.Equal(t, "phone", profile.Phone)
 			require.Equal(t, "legalName", profile.LegalName)
 			require.Equal(t, "addressLine1", profile.AddressLine1)
@@ -381,7 +375,6 @@ func TestMutationResolver_TenantUpdateBillingProfile(t *testing.T) {
 			require.Equal(t, true, profile.CanPayWithDirectDebitBacs)
 			require.Equal(t, true, profile.CanPayWithPigeon)
 			require.ElementsMatch(t, []tenantpb.TenantBillingProfileFieldMask{
-				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_EMAIL,
 				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_PHONE,
 				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_LEGAL_NAME,
 				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_ADDRESS_LINE_1,

@@ -41,7 +41,6 @@ func TestTenantEventHandler_OnUpdateBillingProfileV1(t *testing.T) {
 		aggregate,
 		profileId,
 		&tenantpb.UpdateBillingProfileRequest{
-			Email:                         "email",
 			Phone:                         "phone",
 			AddressLine1:                  "addressLine1",
 			AddressLine2:                  "addressLine2",
@@ -83,7 +82,6 @@ func TestTenantEventHandler_OnUpdateBillingProfileV1(t *testing.T) {
 	tenantBillingProfileEntity := neo4jmapper.MapDbNodeToTenantBillingProfileEntity(dbNode)
 	require.Equal(t, profileId, tenantBillingProfileEntity.Id)
 	require.Equal(t, timeNow, tenantBillingProfileEntity.UpdatedAt)
-	require.Equal(t, "email", tenantBillingProfileEntity.Email)
 	require.Equal(t, "phone", tenantBillingProfileEntity.Phone)
 	require.Equal(t, "addressLine1", tenantBillingProfileEntity.AddressLine1)
 	require.Equal(t, "addressLine2", tenantBillingProfileEntity.AddressLine2)

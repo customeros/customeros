@@ -17,7 +17,6 @@ func MapEntityToTenantBillingProfile(entity *neo4jentity.TenantBillingProfileEnt
 		SourceOfTruth:                 MapDataSourceToModel(entity.SourceOfTruth),
 		AppSource:                     entity.AppSource,
 		LegalName:                     entity.LegalName,
-		Email:                         entity.Email,
 		Phone:                         entity.Phone,
 		AddressLine1:                  entity.AddressLine1,
 		AddressLine2:                  entity.AddressLine2,

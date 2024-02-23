@@ -14161,7 +14161,7 @@ type TenantBillingProfile implements SourceFields & Node {
     source:             DataSource!
     sourceOfTruth:      DataSource!
     appSource:          String!
-    email:              String!
+    email:              String! @deprecated(reason: "Use sendInvoicesFrom")
     phone:              String!
     addressLine1:       String!
     addressLine2:       String!
@@ -14187,7 +14187,7 @@ input TenantInput {
 }
 
 input TenantBillingProfileInput {
-    email:              String
+    email:              String @deprecated(reason: "Use sendInvoicesFrom")
     phone:              String
     addressLine1:       String
     addressLine2:       String
@@ -14210,7 +14210,7 @@ input TenantBillingProfileInput {
 input TenantBillingProfileUpdateInput {
     id:                 ID!
     patch:              Boolean
-    email:              String
+    email:              String @deprecated(reason: "Use sendInvoicesFrom")
     phone:              String
     addressLine1:       String
     addressLine2:       String
@@ -14221,13 +14221,13 @@ input TenantBillingProfileUpdateInput {
     legalName:          String
     domesticPaymentsBankInfo:      String
     internationalPaymentsBankInfo: String
-    vatNumber: String
-    sendInvoicesFrom: String
-    canPayWithCard: Boolean
-    canPayWithDirectDebitSEPA: Boolean
-    canPayWithDirectDebitACH: Boolean
-    canPayWithDirectDebitBacs: Boolean
-    canPayWithPigeon: Boolean
+    vatNumber:                  String
+    sendInvoicesFrom:           String
+    canPayWithCard:             Boolean
+    canPayWithDirectDebitSEPA:  Boolean
+    canPayWithDirectDebitACH:   Boolean
+    canPayWithDirectDebitBacs:  Boolean
+    canPayWithPigeon:           Boolean
 }
 
 input TenantSettingsInput {

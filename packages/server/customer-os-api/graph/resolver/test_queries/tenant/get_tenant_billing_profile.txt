@@ -1,7 +1,6 @@
 query GetTenantBillingProfiles($id: ID!) {
   tenantBillingProfile(id: $id){
     id
-    email
     phone
     addressLine1
     addressLine2
