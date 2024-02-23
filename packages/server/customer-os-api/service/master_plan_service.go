@@ -116,6 +116,10 @@ func (s *masterPlanService) UpdateMasterPlan(ctx context.Context, masterPlanId s
 	if retired != nil {
 		fieldsMask = append(fieldsMask, masterplanpb.MasterPlanFieldMask_MASTER_PLAN_PROPERTY_RETIRED)
 	}
+	if len(fieldsMask) == 0 {
+		span.LogFields(log.String("result", "No fields to update"))
+		return nil
+	}
 	grpcRequest.FieldsMask = fieldsMask
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
@@ -296,6 +300,10 @@ func (s *masterPlanService) UpdateMasterPlanMilestone(ctx context.Context, maste
 	if items != nil {
 		grpcRequest.Items = items
 		fieldsMask = append(fieldsMask, masterplanpb.MasterPlanMilestoneFieldMask_MASTER_PLAN_MILESTONE_PROPERTY_ITEMS)
+	}
+	if len(fieldsMask) == 0 {
+		span.LogFields(log.String("result", "No fields to update"))
+		return nil
 	}
 	grpcRequest.FieldsMask = fieldsMask
 

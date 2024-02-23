@@ -298,6 +298,18 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 		if input.SlackChannelID != nil {
 			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_SLACK_CHANNEL_ID)
 		}
+		if len(fieldsMask) == 0 {
+			span.LogFields(log.String("result", "No fields to update"))
+			organizationEntity, err := r.Services.OrganizationService.GetById(ctx, input.ID)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				graphql.AddErrorf(ctx, "Failed to fetch organization details")
+				return &model.Organization{
+					ID: input.ID,
+				}, nil
+			}
+			return mapper.MapEntityToOrganization(organizationEntity), nil
+		}
 	}
 
 	upsertOrganizationRequest := organizationpb.UpsertOrganizationGrpcRequest{

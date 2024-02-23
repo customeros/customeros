@@ -120,6 +120,10 @@ func (s *billingProfileService) UpdateBillingProfile(ctx context.Context, organi
 	if taxId != nil {
 		fieldsMask = append(fieldsMask, organizationpb.BillingProfileFieldMask_BILLING_PROFILE_PROPERTY_TAX_ID)
 	}
+	if len(fieldsMask) == 0 {
+		span.LogFields(log.String("result", "No fields to update"))
+		return nil
+	}
 	grpcRequest.FieldsMask = fieldsMask
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)

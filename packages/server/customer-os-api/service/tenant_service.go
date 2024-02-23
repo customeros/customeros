@@ -202,7 +202,7 @@ func (s *tenantService) UpdateTenantBillingProfile(ctx context.Context, input mo
 		return err
 	}
 
-	var fieldMask []tenantpb.TenantBillingProfileFieldMask
+	var fieldsMask []tenantpb.TenantBillingProfileFieldMask
 	updateRequest := tenantpb.UpdateBillingProfileRequest{
 		Tenant:                        common.GetTenantFromContext(ctx),
 		Id:                            input.ID,
@@ -229,57 +229,61 @@ func (s *tenantService) UpdateTenantBillingProfile(ctx context.Context, input mo
 
 	if input.Patch != nil && *input.Patch {
 		if input.Phone != nil {
-			fieldMask = append(fieldMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_PHONE)
+			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_PHONE)
 		}
 		if input.LegalName != nil {
-			fieldMask = append(fieldMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_LEGAL_NAME)
+			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_LEGAL_NAME)
 		}
 		if input.AddressLine1 != nil {
-			fieldMask = append(fieldMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_ADDRESS_LINE_1)
+			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_ADDRESS_LINE_1)
 		}
 		if input.AddressLine2 != nil {
-			fieldMask = append(fieldMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_ADDRESS_LINE_2)
+			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_ADDRESS_LINE_2)
 		}
 		if input.AddressLine3 != nil {
-			fieldMask = append(fieldMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_ADDRESS_LINE_3)
+			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_ADDRESS_LINE_3)
 		}
 		if input.Locality != nil {
-			fieldMask = append(fieldMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_LOCALITY)
+			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_LOCALITY)
 		}
 		if input.Country != nil {
-			fieldMask = append(fieldMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_COUNTRY)
+			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_COUNTRY)
 		}
 		if input.Zip != nil {
-			fieldMask = append(fieldMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_ZIP)
+			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_ZIP)
 		}
 		if input.DomesticPaymentsBankInfo != nil {
-			fieldMask = append(fieldMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_DOMESTIC_PAYMENTS_BANK_INFO)
+			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_DOMESTIC_PAYMENTS_BANK_INFO)
 		}
 		if input.InternationalPaymentsBankInfo != nil {
-			fieldMask = append(fieldMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_INTERNATIONAL_PAYMENTS_BANK_INFO)
+			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_INTERNATIONAL_PAYMENTS_BANK_INFO)
 		}
 		if input.VatNumber != nil {
-			fieldMask = append(fieldMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_VAT_NUMBER)
+			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_VAT_NUMBER)
 		}
 		if input.SendInvoicesFrom != nil {
-			fieldMask = append(fieldMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_SEND_INVOICES_FROM)
+			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_SEND_INVOICES_FROM)
 		}
 		if input.CanPayWithCard != nil {
-			fieldMask = append(fieldMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_CARD)
+			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_CARD)
 		}
 		if input.CanPayWithDirectDebitSepa != nil {
-			fieldMask = append(fieldMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_DIRECT_DEBIT_SEPA)
+			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_DIRECT_DEBIT_SEPA)
 		}
 		if input.CanPayWithDirectDebitAch != nil {
-			fieldMask = append(fieldMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_DIRECT_DEBIT_ACH)
+			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_DIRECT_DEBIT_ACH)
 		}
 		if input.CanPayWithDirectDebitBacs != nil {
-			fieldMask = append(fieldMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_DIRECT_DEBIT_BACS)
+			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_DIRECT_DEBIT_BACS)
 		}
 		if input.CanPayWithPigeon != nil {
-			fieldMask = append(fieldMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_PIGEON)
+			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_PIGEON)
 		}
-		updateRequest.FieldsMask = fieldMask
+		if len(fieldsMask) == 0 {
+			span.LogFields(log.String("result", "No fields to update"))
+			return nil
+		}
+		updateRequest.FieldsMask = fieldsMask
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
