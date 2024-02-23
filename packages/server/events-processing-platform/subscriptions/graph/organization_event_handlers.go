@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
@@ -219,6 +220,16 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 
+	var existingOrganizationEntity *neo4jentity.OrganizationEntity
+	existingOrganization, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, eventData.Tenant, organizationId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	if existingOrganization != nil {
+		existingOrganizationEntity = neo4jmapper.MapDbNodeToOrganizationEntity(existingOrganization)
+	}
+
 	data := neo4jrepository.OrganizationUpdateFields{
 		UpdatedAt:                eventData.UpdatedAt,
 		Name:                     eventData.Name,
@@ -268,7 +279,7 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 		UpdateEmployeeGrowthRate: eventData.UpdateEmployeeGrowthRate(),
 		UpdateSlackChannelId:     eventData.UpdateSlackChannelId(),
 	}
-	err := h.repositories.Neo4jRepositories.OrganizationWriteRepository.UpdateOrganization(ctx, eventData.Tenant, organizationId, data)
+	err = h.repositories.Neo4jRepositories.OrganizationWriteRepository.UpdateOrganization(ctx, eventData.Tenant, organizationId, data)
 	// set customer os id
 	customerOsErr := h.setCustomerOsId(ctx, eventData.Tenant, organizationId)
 	if customerOsErr != nil {
@@ -306,6 +317,22 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
+		}
+	}
+
+	if existingOrganizationEntity != nil && existingOrganizationEntity.SlackChannelId != eventData.SlackChannelId {
+		if eventData.SlackChannelId == "" {
+			err := h.repositories.Neo4jRepositories.IssueWriteRepository.RemoveReportedByOrganizationWithGroupId(ctx, eventData.Tenant, organizationId, existingOrganizationEntity.SlackChannelId)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				h.log.Errorf("Failed to remove reported by organization with groupId %s: %s", existingOrganizationEntity.SlackChannelId, err.Error())
+			}
+		} else {
+			err := h.repositories.Neo4jRepositories.IssueWriteRepository.ReportedByOrganizationWithGroupId(ctx, eventData.Tenant, organizationId, eventData.SlackChannelId)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				h.log.Errorf("Failed to mark reported by organization with groupId %s: %s", eventData.SlackChannelId, err.Error())
+			}
 		}
 	}
 
