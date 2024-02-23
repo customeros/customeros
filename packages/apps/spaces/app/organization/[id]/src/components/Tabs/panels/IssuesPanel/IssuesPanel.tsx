@@ -17,6 +17,8 @@ import { IssuesPanelSkeleton } from '@organization/src/components/Tabs/panels/Is
 import { OrganizationPanel } from '@organization/src/components/Tabs/panels/OrganizationPanel/OrganizationPanel';
 import { EmptyIssueMessage } from '@organization/src/components/Tabs/panels/IssuesPanel/EmptyIssueMessage/EmptyIssueMessage';
 
+import { ChannelLinkSelect } from './ChannelLinkSelect';
+
 export const NEW_DATE = new Date(new Date().setDate(new Date().getDate() + 1));
 
 function filterIssues(issues: Array<Issue>): {
@@ -62,7 +64,11 @@ export const IssuesPanel = () => {
 
   if (!issues.length) {
     return (
-      <OrganizationPanel title='Issues' withFade>
+      <OrganizationPanel
+        title='Issues'
+        withFade
+        actionItem={<ChannelLinkSelect />}
+      >
         <EmptyIssueMessage
           title='No issues detected'
           description={`It looks like ${
@@ -76,7 +82,11 @@ export const IssuesPanel = () => {
   }
 
   return (
-    <OrganizationPanel title='Issues' withFade>
+    <OrganizationPanel
+      title='Issues'
+      withFade
+      actionItem={<ChannelLinkSelect />}
+    >
       <Flex as='article' w='full' direction='column'>
         <Heading fontWeight='semibold' fontSize='md' mb={2}>
           Open

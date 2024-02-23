@@ -51,6 +51,7 @@ export type OrganizationQuery = {
     customerOsId: string;
     isCustomer?: boolean | null;
     hide: boolean;
+    slackChannelId?: string | null;
     socials: Array<{ __typename?: 'Social'; id: string; url: string }>;
     subsidiaryOf: Array<{
       __typename?: 'LinkedOrganization';
@@ -100,6 +101,7 @@ export const OrganizationDocument = `
     customerOsId
     isCustomer
     hide
+    slackChannelId
     socials {
       id
       url
