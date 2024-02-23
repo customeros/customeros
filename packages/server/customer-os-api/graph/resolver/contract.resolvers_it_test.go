@@ -220,17 +220,20 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
-		AddressLine1:          "address line 1",
-		AddressLine2:          "address line 2",
-		Zip:                   "zip",
-		Locality:              "locality",
-		Country:               "country",
-		OrganizationLegalName: "organization legal name",
-		InvoiceEmail:          "invoice email",
-		InvoiceNote:           "invoice note",
-		BillingCycle:          neo4jenum.BillingCycleMonthlyBilling,
-		InvoicingStartDate:    &now,
-		InvoicingEnabled:      true,
+		AddressLine1:           "address line 1",
+		AddressLine2:           "address line 2",
+		Zip:                    "zip",
+		Locality:               "locality",
+		Country:                "country",
+		OrganizationLegalName:  "organization legal name",
+		InvoiceEmail:           "invoice email",
+		InvoiceNote:            "invoice note",
+		BillingCycle:           neo4jenum.BillingCycleMonthlyBilling,
+		InvoicingStartDate:     &now,
+		InvoicingEnabled:       true,
+		CanPayWithCard:         true,
+		CanPayWithDirectDebit:  true,
+		CanPayWithBankTransfer: true,
 	})
 
 	serviceLineItemId1 := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
@@ -288,6 +291,9 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 	require.Equal(t, "invoice email", *billingDetails.BillingEmail)
 	require.Equal(t, "invoice note", *billingDetails.InvoiceNote)
 	require.Equal(t, model.ContractBillingCycleMonthlyBilling, *billingDetails.BillingCycle)
+	require.True(t, *billingDetails.CanPayWithCard)
+	require.True(t, *billingDetails.CanPayWithDirectDebit)
+	require.True(t, *billingDetails.CanPayWithBankTransfer)
 
 	require.Equal(t, 2, len(contract.ContractLineItems))
 
