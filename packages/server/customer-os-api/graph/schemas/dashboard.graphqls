@@ -43,7 +43,8 @@ type DashboardMRRPerCustomerPerMonth {
 
 type DashboardGrossRevenueRetention {
     grossRevenueRetention: Float!
-    increasePercentage: String!
+    increasePercentage: String! @deprecated(reason: "Use increasePercentageValue instead")
+    increasePercentageValue: Float!
     perMonth: [DashboardGrossRevenueRetentionPerMonth]!
 }
 type DashboardGrossRevenueRetentionPerMonth {
@@ -75,7 +76,8 @@ type DashboardRevenueAtRisk {
 
 type DashboardRetentionRate {
     retentionRate: Float!
-    increasePercentage: String!
+    increasePercentage: String! @deprecated(reason: "Use increasePercentageValue instead")
+    increasePercentageValue: Float!
     perMonth: [DashboardRetentionRatePerMonth]!
 }
 type DashboardRetentionRatePerMonth {

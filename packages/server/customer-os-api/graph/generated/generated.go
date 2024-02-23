@@ -361,9 +361,10 @@ type ComplexityRoot struct {
 	}
 
 	DashboardGrossRevenueRetention struct {
-		GrossRevenueRetention func(childComplexity int) int
-		IncreasePercentage    func(childComplexity int) int
-		PerMonth              func(childComplexity int) int
+		GrossRevenueRetention   func(childComplexity int) int
+		IncreasePercentage      func(childComplexity int) int
+		IncreasePercentageValue func(childComplexity int) int
+		PerMonth                func(childComplexity int) int
 	}
 
 	DashboardGrossRevenueRetentionPerMonth struct {
@@ -409,9 +410,10 @@ type ComplexityRoot struct {
 	}
 
 	DashboardRetentionRate struct {
-		IncreasePercentage func(childComplexity int) int
-		PerMonth           func(childComplexity int) int
-		RetentionRate      func(childComplexity int) int
+		IncreasePercentage      func(childComplexity int) int
+		IncreasePercentageValue func(childComplexity int) int
+		PerMonth                func(childComplexity int) int
+		RetentionRate           func(childComplexity int) int
 	}
 
 	DashboardRetentionRatePerMonth struct {
@@ -3480,6 +3482,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.DashboardGrossRevenueRetention.IncreasePercentage(childComplexity), true
 
+	case "DashboardGrossRevenueRetention.increasePercentageValue":
+		if e.complexity.DashboardGrossRevenueRetention.IncreasePercentageValue == nil {
+			break
+		}
+
+		return e.complexity.DashboardGrossRevenueRetention.IncreasePercentageValue(childComplexity), true
+
 	case "DashboardGrossRevenueRetention.perMonth":
 		if e.complexity.DashboardGrossRevenueRetention.PerMonth == nil {
 			break
@@ -3640,6 +3649,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.DashboardRetentionRate.IncreasePercentage(childComplexity), true
+
+	case "DashboardRetentionRate.increasePercentageValue":
+		if e.complexity.DashboardRetentionRate.IncreasePercentageValue == nil {
+			break
+		}
+
+		return e.complexity.DashboardRetentionRate.IncreasePercentageValue(childComplexity), true
 
 	case "DashboardRetentionRate.perMonth":
 		if e.complexity.DashboardRetentionRate.PerMonth == nil {
@@ -11799,11 +11815,11 @@ input ContractUpdateInput {
     currency:               Currency
     billingDetails:         BillingDetailsInput
     appSource:              String
+    billingEnabled:         Boolean
 
     canPayWithCard:         Boolean @deprecated(reason: "Use billingDetails instead.")
     canPayWithDirectDebit:  Boolean @deprecated(reason: "Use billingDetails instead.")
     canPayWithBankTransfer: Boolean @deprecated(reason: "Use billingDetails instead.")
-    billingEnabled:         Boolean
     invoicingStartDate:     Time @deprecated(reason: "Use billingDetails instead.")
     addressLine1:           String @deprecated(reason: "Use billingDetails instead.")
     addressLine2:           String @deprecated(reason: "Use billingDetails instead.")
@@ -12122,7 +12138,8 @@ type DashboardMRRPerCustomerPerMonth {
 
 type DashboardGrossRevenueRetention {
     grossRevenueRetention: Float!
-    increasePercentage: String!
+    increasePercentage: String! @deprecated(reason: "Use increasePercentageValue instead")
+    increasePercentageValue: Float!
     perMonth: [DashboardGrossRevenueRetentionPerMonth]!
 }
 type DashboardGrossRevenueRetentionPerMonth {
@@ -12154,7 +12171,8 @@ type DashboardRevenueAtRisk {
 
 type DashboardRetentionRate {
     retentionRate: Float!
-    increasePercentage: String!
+    increasePercentage: String! @deprecated(reason: "Use increasePercentageValue instead")
+    increasePercentageValue: Float!
     perMonth: [DashboardRetentionRatePerMonth]!
 }
 type DashboardRetentionRatePerMonth {
@@ -29217,6 +29235,50 @@ func (ec *executionContext) fieldContext_DashboardGrossRevenueRetention_increase
 	return fc, nil
 }
 
+func (ec *executionContext) _DashboardGrossRevenueRetention_increasePercentageValue(ctx context.Context, field graphql.CollectedField, obj *model.DashboardGrossRevenueRetention) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardGrossRevenueRetention_increasePercentageValue(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IncreasePercentageValue, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardGrossRevenueRetention_increasePercentageValue(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardGrossRevenueRetention",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _DashboardGrossRevenueRetention_perMonth(ctx context.Context, field graphql.CollectedField, obj *model.DashboardGrossRevenueRetention) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_DashboardGrossRevenueRetention_perMonth(ctx, field)
 	if err != nil {
@@ -30300,6 +30362,50 @@ func (ec *executionContext) fieldContext_DashboardRetentionRate_increasePercenta
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardRetentionRate_increasePercentageValue(ctx context.Context, field graphql.CollectedField, obj *model.DashboardRetentionRate) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardRetentionRate_increasePercentageValue(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IncreasePercentageValue, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardRetentionRate_increasePercentageValue(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardRetentionRate",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
 		},
 	}
 	return fc, nil
@@ -74150,6 +74256,8 @@ func (ec *executionContext) fieldContext_Query_dashboard_GrossRevenueRetention(c
 				return ec.fieldContext_DashboardGrossRevenueRetention_grossRevenueRetention(ctx, field)
 			case "increasePercentage":
 				return ec.fieldContext_DashboardGrossRevenueRetention_increasePercentage(ctx, field)
+			case "increasePercentageValue":
+				return ec.fieldContext_DashboardGrossRevenueRetention_increasePercentageValue(ctx, field)
 			case "perMonth":
 				return ec.fieldContext_DashboardGrossRevenueRetention_perMonth(ctx, field)
 			}
@@ -74328,6 +74436,8 @@ func (ec *executionContext) fieldContext_Query_dashboard_RetentionRate(ctx conte
 				return ec.fieldContext_DashboardRetentionRate_retentionRate(ctx, field)
 			case "increasePercentage":
 				return ec.fieldContext_DashboardRetentionRate_increasePercentage(ctx, field)
+			case "increasePercentageValue":
+				return ec.fieldContext_DashboardRetentionRate_increasePercentageValue(ctx, field)
 			case "perMonth":
 				return ec.fieldContext_DashboardRetentionRate_perMonth(ctx, field)
 			}
@@ -89004,7 +89114,7 @@ func (ec *executionContext) unmarshalInputContractUpdateInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"contractId", "patch", "contractName", "contractUrl", "contractRenewalCycle", "committedPeriods", "serviceStarted", "contractSigned", "contractEnded", "currency", "billingDetails", "appSource", "canPayWithCard", "canPayWithDirectDebit", "canPayWithBankTransfer", "billingEnabled", "invoicingStartDate", "addressLine1", "addressLine2", "locality", "country", "zip", "billingCycle", "invoiceNote", "endedAt", "renewalPeriods", "invoiceEmail", "organizationLegalName", "renewalCycle", "signedAt", "serviceStartedAt", "name"}
+	fieldsInOrder := [...]string{"contractId", "patch", "contractName", "contractUrl", "contractRenewalCycle", "committedPeriods", "serviceStarted", "contractSigned", "contractEnded", "currency", "billingDetails", "appSource", "billingEnabled", "canPayWithCard", "canPayWithDirectDebit", "canPayWithBankTransfer", "invoicingStartDate", "addressLine1", "addressLine2", "locality", "country", "zip", "billingCycle", "invoiceNote", "endedAt", "renewalPeriods", "invoiceEmail", "organizationLegalName", "renewalCycle", "signedAt", "serviceStartedAt", "name"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -89095,6 +89205,13 @@ func (ec *executionContext) unmarshalInputContractUpdateInput(ctx context.Contex
 				return it, err
 			}
 			it.AppSource = data
+		case "billingEnabled":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingEnabled"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BillingEnabled = data
 		case "canPayWithCard":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("canPayWithCard"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
@@ -89116,13 +89233,6 @@ func (ec *executionContext) unmarshalInputContractUpdateInput(ctx context.Contex
 				return it, err
 			}
 			it.CanPayWithBankTransfer = data
-		case "billingEnabled":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingEnabled"))
-			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.BillingEnabled = data
 		case "invoicingStartDate":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("invoicingStartDate"))
 			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
@@ -97376,6 +97486,11 @@ func (ec *executionContext) _DashboardGrossRevenueRetention(ctx context.Context,
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "increasePercentageValue":
+			out.Values[i] = ec._DashboardGrossRevenueRetention_increasePercentageValue(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "perMonth":
 			out.Values[i] = ec._DashboardGrossRevenueRetention_perMonth(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -97765,6 +97880,11 @@ func (ec *executionContext) _DashboardRetentionRate(ctx context.Context, sel ast
 			}
 		case "increasePercentage":
 			out.Values[i] = ec._DashboardRetentionRate_increasePercentage(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "increasePercentageValue":
+			out.Values[i] = ec._DashboardRetentionRate_increasePercentageValue(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

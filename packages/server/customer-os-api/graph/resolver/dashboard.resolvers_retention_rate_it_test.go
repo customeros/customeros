@@ -32,7 +32,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_No_Period_No_Data_In_DB(t *testi
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, "0", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_RetentionRate.IncreasePercentageValue)
 	require.Equal(t, 12, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_RetentionRate.PerMonth {
@@ -86,7 +86,7 @@ func assert_Dashboard_Retention_Rate_PeriodIntervals(t *testing.T, start, end st
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, "0", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_RetentionRate.IncreasePercentageValue)
 	require.Equal(t, months, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 }
 
@@ -101,7 +101,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Hidden_Organization(t *testing.T
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
+	sli1StartedAt := utils.FirstTimeOfMonth(2023, 7)
 	contractId := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{}, neo4jentity.OpportunityEntity{})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
@@ -125,7 +125,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Hidden_Organization(t *testing.T
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, "0", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_RetentionRate.IncreasePercentageValue)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_RetentionRate.PerMonth {
@@ -146,7 +146,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Prospect_Organization(t *testing
 		IsCustomer: false,
 	})
 
-	sli1StartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
+	sli1StartedAt := utils.FirstTimeOfMonth(2023, 7)
 	contractId := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{}, neo4jentity.OpportunityEntity{})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
@@ -170,7 +170,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Prospect_Organization(t *testing
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, "0", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_RetentionRate.IncreasePercentageValue)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_RetentionRate.PerMonth {
@@ -191,7 +191,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_1_Renewal_1_SLI_V1(t *testing.T)
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := neo4jtest.FirstTimeOfMonth(2023, 6)
+	sli1StartedAt := utils.FirstTimeOfMonth(2023, 6)
 	contractId := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
@@ -219,7 +219,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_1_Renewal_1_SLI_V1(t *testing.T)
 	require.Nil(t, err)
 
 	require.Equal(t, float64(100), dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, "+100", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(100), dashboardReport.Dashboard_RetentionRate.IncreasePercentageValue)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_RetentionRate.PerMonth {
@@ -240,7 +240,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_1_Renewal_1_SLI_V2(t *testing.T)
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := neo4jtest.FirstTimeOfMonth(2023, 6)
+	sli1StartedAt := utils.FirstTimeOfMonth(2023, 6)
 	sli1EndedAt := neo4jtest.MiddleTimeOfMonth(2023, 6)
 	contractId := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
@@ -270,7 +270,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_1_Renewal_1_SLI_V2(t *testing.T)
 	require.Nil(t, err)
 
 	require.Equal(t, float64(100), dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, "+100", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(100), dashboardReport.Dashboard_RetentionRate.IncreasePercentageValue)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_RetentionRate.PerMonth {
@@ -291,7 +291,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_1_Renewal_2_SLI_V1(t *testing.T)
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := neo4jtest.FirstTimeOfMonth(2023, 6)
+	sli1StartedAt := utils.FirstTimeOfMonth(2023, 6)
 	contractId := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
@@ -321,7 +321,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_1_Renewal_2_SLI_V1(t *testing.T)
 	require.Nil(t, err)
 
 	require.Equal(t, float64(100), dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, "+100", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(100), dashboardReport.Dashboard_RetentionRate.IncreasePercentageValue)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_RetentionRate.PerMonth {
@@ -342,7 +342,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_1_Renewal_2_SLI_V2(t *testing.T)
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := neo4jtest.FirstTimeOfMonth(2023, 6)
+	sli1StartedAt := utils.FirstTimeOfMonth(2023, 6)
 	sli1EndedAt := neo4jtest.MiddleTimeOfMonth(2023, 6)
 	contractId := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
@@ -376,7 +376,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_1_Renewal_2_SLI_V2(t *testing.T)
 	require.Nil(t, err)
 
 	require.Equal(t, float64(100), dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, "+100", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(100), dashboardReport.Dashboard_RetentionRate.IncreasePercentageValue)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_RetentionRate.PerMonth {
@@ -397,7 +397,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_2_Renewals_1_SLI_V1(t *testing.T
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := neo4jtest.FirstTimeOfMonth(2023, 6)
+	sli1StartedAt := utils.FirstTimeOfMonth(2023, 6)
 	contract1Id := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
@@ -405,7 +405,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_2_Renewals_1_SLI_V1(t *testing.T
 	}, neo4jentity.OpportunityEntity{})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contract1Id, neo4jenum.BilledTypeMonthly, 1, 1, sli1StartedAt)
 
-	sli2StartedAt := neo4jtest.FirstTimeOfMonth(2023, 5)
+	sli2StartedAt := utils.FirstTimeOfMonth(2023, 5)
 	contract2Id := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
@@ -433,7 +433,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_2_Renewals_1_SLI_V1(t *testing.T
 	require.Nil(t, err)
 
 	require.Equal(t, float64(100), dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, "+100", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(100), dashboardReport.Dashboard_RetentionRate.IncreasePercentageValue)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_RetentionRate.PerMonth {
@@ -454,7 +454,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_2_Renewals_1_SLI_V2(t *testing.T
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := neo4jtest.FirstTimeOfMonth(2023, 6)
+	sli1StartedAt := utils.FirstTimeOfMonth(2023, 6)
 	sli1EndedAt := neo4jtest.MiddleTimeOfMonth(2023, 6)
 	contract1Id := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
@@ -464,7 +464,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_2_Renewals_1_SLI_V2(t *testing.T
 	sli1Id := neo4jtest.InsertServiceLineItemEnded(ctx, driver, tenantName, contract1Id, neo4jenum.BilledTypeMonthly, 1, 1, sli1StartedAt, sli1EndedAt)
 	neo4jtest.InsertServiceLineItemWithParent(ctx, driver, tenantName, contract1Id, neo4jenum.BilledTypeMonthly, 2, 1, neo4jenum.BilledTypeMonthly, 1, 1, sli1StartedAt, sli1Id)
 
-	sli2StartedAt := neo4jtest.FirstTimeOfMonth(2023, 5)
+	sli2StartedAt := utils.FirstTimeOfMonth(2023, 5)
 	sli2EndedAt := neo4jtest.MiddleTimeOfMonth(2023, 5)
 	contract2Id := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
@@ -494,7 +494,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_2_Renewals_1_SLI_V2(t *testing.T
 	require.Nil(t, err)
 
 	require.Equal(t, float64(100), dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, "+100", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(100), dashboardReport.Dashboard_RetentionRate.IncreasePercentageValue)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_RetentionRate.PerMonth {
@@ -515,7 +515,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Monthly_Contract_Monthl
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := neo4jtest.FirstTimeOfMonth(2023, 6)
+	sli1StartedAt := utils.FirstTimeOfMonth(2023, 6)
 	contract1Id := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
@@ -543,7 +543,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Monthly_Contract_Monthl
 	require.Nil(t, err)
 
 	require.Equal(t, float64(100), dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, "+100", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(100), dashboardReport.Dashboard_RetentionRate.IncreasePercentageValue)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_RetentionRate.PerMonth {
@@ -564,7 +564,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Monthly_Contract_Quarte
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := neo4jtest.FirstTimeOfMonth(2023, 6)
+	sli1StartedAt := utils.FirstTimeOfMonth(2023, 6)
 	contract1Id := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
@@ -579,8 +579,8 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Monthly_Contract_Quarte
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	format := "2006-01-02T15:04:05.000Z"
-	startTime := neo4jtest.FirstTimeOfMonth(2023, 7)
-	endTime := neo4jtest.FirstTimeOfMonth(2023, 12)
+	startTime := utils.FirstTimeOfMonth(2023, 7)
+	endTime := utils.FirstTimeOfMonth(2023, 12)
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_retention_rate",
 		map[string]interface{}{
 			"start": startTime.Format(format),
@@ -595,7 +595,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Monthly_Contract_Quarte
 	require.Nil(t, err)
 
 	require.Equal(t, float64(100), dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, "+100", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(100), dashboardReport.Dashboard_RetentionRate.IncreasePercentageValue)
 	require.Equal(t, 6, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	assertRetentionRateMonthData(t, &dashboardReport.Dashboard_RetentionRate, 2023, 7, 0, 0)
@@ -616,7 +616,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Monthly_Contract_Annual
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := neo4jtest.FirstTimeOfMonth(2023, 6)
+	sli1StartedAt := utils.FirstTimeOfMonth(2023, 6)
 	contract1Id := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
@@ -631,8 +631,8 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Monthly_Contract_Annual
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	format := "2006-01-02T15:04:05.000Z"
-	startTime := neo4jtest.FirstTimeOfMonth(2023, 7)
-	endTime := neo4jtest.FirstTimeOfMonth(2024, 7)
+	startTime := utils.FirstTimeOfMonth(2023, 7)
+	endTime := utils.FirstTimeOfMonth(2024, 7)
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_retention_rate",
 		map[string]interface{}{
 			"start": startTime.Format(format),
@@ -647,7 +647,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Monthly_Contract_Annual
 	require.Nil(t, err)
 
 	require.Equal(t, float64(-100), dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, "-100", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(-100), dashboardReport.Dashboard_RetentionRate.IncreasePercentageValue)
 	require.Equal(t, 13, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	assertRetentionRateMonthData(t, &dashboardReport.Dashboard_RetentionRate, 2023, 7, 0, 0)
@@ -675,7 +675,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Quarterly_Contract_Mont
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := neo4jtest.FirstTimeOfMonth(2023, 6)
+	sli1StartedAt := utils.FirstTimeOfMonth(2023, 6)
 	contract1Id := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
@@ -690,8 +690,8 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Quarterly_Contract_Mont
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	format := "2006-01-02T15:04:05.000Z"
-	startTime := neo4jtest.FirstTimeOfMonth(2023, 7)
-	endTime := neo4jtest.FirstTimeOfMonth(2024, 7)
+	startTime := utils.FirstTimeOfMonth(2023, 7)
+	endTime := utils.FirstTimeOfMonth(2024, 7)
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_retention_rate",
 		map[string]interface{}{
 			"start": startTime.Format(format),
@@ -706,7 +706,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Quarterly_Contract_Mont
 	require.Nil(t, err)
 
 	require.Equal(t, float64(-100), dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, "-100", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(-100), dashboardReport.Dashboard_RetentionRate.IncreasePercentageValue)
 	require.Equal(t, 13, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	assertRetentionRateMonthData(t, &dashboardReport.Dashboard_RetentionRate, 2023, 7, 0, 0)
@@ -734,7 +734,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Quarterly_Contract_Quar
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := neo4jtest.FirstTimeOfMonth(2023, 6)
+	sli1StartedAt := utils.FirstTimeOfMonth(2023, 6)
 	contract1Id := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
@@ -749,8 +749,8 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Quarterly_Contract_Quar
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	format := "2006-01-02T15:04:05.000Z"
-	startTime := neo4jtest.FirstTimeOfMonth(2023, 7)
-	endTime := neo4jtest.FirstTimeOfMonth(2024, 7)
+	startTime := utils.FirstTimeOfMonth(2023, 7)
+	endTime := utils.FirstTimeOfMonth(2024, 7)
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_retention_rate",
 		map[string]interface{}{
 			"start": startTime.Format(format),
@@ -765,7 +765,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Quarterly_Contract_Quar
 	require.Nil(t, err)
 
 	require.Equal(t, float64(-100), dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, "-100", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(-100), dashboardReport.Dashboard_RetentionRate.IncreasePercentageValue)
 	require.Equal(t, 13, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	assertRetentionRateMonthData(t, &dashboardReport.Dashboard_RetentionRate, 2023, 7, 0, 0)
@@ -793,7 +793,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Quarterly_Contract_Annu
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := neo4jtest.FirstTimeOfMonth(2023, 6)
+	sli1StartedAt := utils.FirstTimeOfMonth(2023, 6)
 	contract1Id := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
@@ -808,8 +808,8 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Quarterly_Contract_Annu
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	format := "2006-01-02T15:04:05.000Z"
-	startTime := neo4jtest.FirstTimeOfMonth(2023, 7)
-	endTime := neo4jtest.FirstTimeOfMonth(2024, 7)
+	startTime := utils.FirstTimeOfMonth(2023, 7)
+	endTime := utils.FirstTimeOfMonth(2024, 7)
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_retention_rate",
 		map[string]interface{}{
 			"start": startTime.Format(format),
@@ -824,7 +824,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Quarterly_Contract_Annu
 	require.Nil(t, err)
 
 	require.Equal(t, float64(-100), dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, "-100", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(-100), dashboardReport.Dashboard_RetentionRate.IncreasePercentageValue)
 	require.Equal(t, 13, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	assertRetentionRateMonthData(t, &dashboardReport.Dashboard_RetentionRate, 2023, 7, 0, 0)
@@ -852,7 +852,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Annually_Contract_Month
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := neo4jtest.FirstTimeOfMonth(2023, 6)
+	sli1StartedAt := utils.FirstTimeOfMonth(2023, 6)
 	contract1Id := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
@@ -867,8 +867,8 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Annually_Contract_Month
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	format := "2006-01-02T15:04:05.000Z"
-	startTime := neo4jtest.FirstTimeOfMonth(2023, 7)
-	endTime := neo4jtest.FirstTimeOfMonth(2024, 7)
+	startTime := utils.FirstTimeOfMonth(2023, 7)
+	endTime := utils.FirstTimeOfMonth(2024, 7)
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_retention_rate",
 		map[string]interface{}{
 			"start": startTime.Format(format),
@@ -883,7 +883,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Annually_Contract_Month
 	require.Nil(t, err)
 
 	require.Equal(t, float64(-100), dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, "-100", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(-100), dashboardReport.Dashboard_RetentionRate.IncreasePercentageValue)
 	require.Equal(t, 13, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	assertRetentionRateMonthData(t, &dashboardReport.Dashboard_RetentionRate, 2023, 7, 0, 0)
@@ -911,7 +911,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Annually_Contract_Quart
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := neo4jtest.FirstTimeOfMonth(2023, 6)
+	sli1StartedAt := utils.FirstTimeOfMonth(2023, 6)
 	contract1Id := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
@@ -926,8 +926,8 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Annually_Contract_Quart
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	format := "2006-01-02T15:04:05.000Z"
-	startTime := neo4jtest.FirstTimeOfMonth(2023, 7)
-	endTime := neo4jtest.FirstTimeOfMonth(2024, 7)
+	startTime := utils.FirstTimeOfMonth(2023, 7)
+	endTime := utils.FirstTimeOfMonth(2024, 7)
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_retention_rate",
 		map[string]interface{}{
 			"start": startTime.Format(format),
@@ -942,7 +942,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Annually_Contract_Quart
 	require.Nil(t, err)
 
 	require.Equal(t, float64(-100), dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, "-100", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(-100), dashboardReport.Dashboard_RetentionRate.IncreasePercentageValue)
 	require.Equal(t, 13, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	assertRetentionRateMonthData(t, &dashboardReport.Dashboard_RetentionRate, 2023, 7, 0, 0)
@@ -970,7 +970,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Annually_Contract_Annua
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := neo4jtest.FirstTimeOfMonth(2023, 6)
+	sli1StartedAt := utils.FirstTimeOfMonth(2023, 6)
 	contract1Id := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
@@ -985,8 +985,8 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Annually_Contract_Annua
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	format := "2006-01-02T15:04:05.000Z"
-	startTime := neo4jtest.FirstTimeOfMonth(2023, 7)
-	endTime := neo4jtest.FirstTimeOfMonth(2024, 7)
+	startTime := utils.FirstTimeOfMonth(2023, 7)
+	endTime := utils.FirstTimeOfMonth(2024, 7)
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_retention_rate",
 		map[string]interface{}{
 			"start": startTime.Format(format),
@@ -1001,7 +1001,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Annually_Contract_Annua
 	require.Nil(t, err)
 
 	require.Equal(t, float64(-100), dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, "-100", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(-100), dashboardReport.Dashboard_RetentionRate.IncreasePercentageValue)
 	require.Equal(t, 13, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	assertRetentionRateMonthData(t, &dashboardReport.Dashboard_RetentionRate, 2023, 7, 0, 0)
@@ -1029,7 +1029,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_1_Multi_Year_Contract(t
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := neo4jtest.FirstTimeOfMonth(2023, 6)
+	sli1StartedAt := utils.FirstTimeOfMonth(2023, 6)
 	contract1Id := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
@@ -1045,8 +1045,8 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_1_Multi_Year_Contract(t
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	format := "2006-01-02T15:04:05.000Z"
-	startTime := neo4jtest.FirstTimeOfMonth(2023, 7)
-	endTime := neo4jtest.FirstTimeOfMonth(2025, 7)
+	startTime := utils.FirstTimeOfMonth(2023, 7)
+	endTime := utils.FirstTimeOfMonth(2025, 7)
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_retention_rate",
 		map[string]interface{}{
 			"start": startTime.Format(format),
@@ -1061,7 +1061,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_1_Multi_Year_Contract(t
 	require.Nil(t, err)
 
 	require.Equal(t, float64(-100), dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, "-100", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(-100), dashboardReport.Dashboard_RetentionRate.IncreasePercentageValue)
 	require.Equal(t, 25, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	assertRetentionRateMonthData(t, &dashboardReport.Dashboard_RetentionRate, 2023, 7, 0, 0)
@@ -1101,7 +1101,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_2_Multi_Year_Contract(t
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := neo4jtest.FirstTimeOfMonth(2023, 6)
+	sli1StartedAt := utils.FirstTimeOfMonth(2023, 6)
 	contract1Id := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
@@ -1117,8 +1117,8 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_2_Multi_Year_Contract(t
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	format := "2006-01-02T15:04:05.000Z"
-	startTime := neo4jtest.FirstTimeOfMonth(2023, 7)
-	endTime := neo4jtest.FirstTimeOfMonth(2025, 7)
+	startTime := utils.FirstTimeOfMonth(2023, 7)
+	endTime := utils.FirstTimeOfMonth(2025, 7)
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_retention_rate",
 		map[string]interface{}{
 			"start": startTime.Format(format),
@@ -1133,7 +1133,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_2_Multi_Year_Contract(t
 	require.Nil(t, err)
 
 	require.Equal(t, float64(-100), dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, "-100", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(-100), dashboardReport.Dashboard_RetentionRate.IncreasePercentageValue)
 	require.Equal(t, 25, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	assertRetentionRateMonthData(t, &dashboardReport.Dashboard_RetentionRate, 2023, 7, 0, 0)
@@ -1173,7 +1173,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Churned_Before_Month(t *testing.
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := neo4jtest.FirstTimeOfMonth(2023, 5)
+	sli1StartedAt := utils.FirstTimeOfMonth(2023, 5)
 	sli1EndedAt := neo4jtest.MiddleTimeOfMonth(2023, 6)
 	contractId := neo4jtest.InsertContractWithOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusEnded,
@@ -1203,7 +1203,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Churned_Before_Month(t *testing.
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, "0", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_RetentionRate.IncreasePercentageValue)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_RetentionRate.PerMonth {
@@ -1224,7 +1224,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Churned_After_Month(t *testing.T
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := neo4jtest.FirstTimeOfMonth(2023, 5)
+	sli1StartedAt := utils.FirstTimeOfMonth(2023, 5)
 	sli1EndedAt := neo4jtest.MiddleTimeOfMonth(2023, 8)
 	contractId := neo4jtest.InsertContractWithOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusEnded,
@@ -1254,7 +1254,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Churned_After_Month(t *testing.T
 	require.Nil(t, err)
 
 	require.Equal(t, float64(100), dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, "+100", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(100), dashboardReport.Dashboard_RetentionRate.IncreasePercentageValue)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_RetentionRate.PerMonth {
@@ -1275,7 +1275,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Churned_In_Month(t *testing.T) {
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := neo4jtest.FirstTimeOfMonth(2023, 5)
+	sli1StartedAt := utils.FirstTimeOfMonth(2023, 5)
 	sli1EndedAt := neo4jtest.MiddleTimeOfMonth(2023, 7)
 	contractId := neo4jtest.InsertContractWithOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusEnded,
@@ -1305,7 +1305,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Churned_In_Month(t *testing.T) {
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, "-100", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(-100), dashboardReport.Dashboard_RetentionRate.IncreasePercentageValue)
 	require.Equal(t, 3, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	assertRetentionRateMonthData(t, &dashboardReport.Dashboard_RetentionRate, 2023, 5, 0, 0)
@@ -1323,8 +1323,8 @@ func TestQueryResolver_Dashboard_Retention_Rate_1_Renewal_1_Churned_In_Month(t *
 		IsCustomer: true,
 	})
 
-	sliStartedAt := neo4jtest.FirstTimeOfMonth(2023, 6)
-	sliEndedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
+	sliStartedAt := utils.FirstTimeOfMonth(2023, 6)
+	sliEndedAt := utils.FirstTimeOfMonth(2023, 7)
 	contract1Id := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &sliStartedAt,
@@ -1360,7 +1360,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_1_Renewal_1_Churned_In_Month(t *
 	require.Nil(t, err)
 
 	require.Equal(t, float64(50), dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, "+50", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(50), dashboardReport.Dashboard_RetentionRate.IncreasePercentageValue)
 	require.Equal(t, 2, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	assertRetentionRateMonthData(t, &dashboardReport.Dashboard_RetentionRate, 2023, 6, 0, 0)

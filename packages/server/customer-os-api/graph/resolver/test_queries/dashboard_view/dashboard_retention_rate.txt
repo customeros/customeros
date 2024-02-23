@@ -4,6 +4,7 @@ query GetDashboard_RetentionRate ($start: Time!, $end: Time!) {
      ) {
     retentionRate
     increasePercentage
+    increasePercentageValue
     perMonth {
       year
       month
