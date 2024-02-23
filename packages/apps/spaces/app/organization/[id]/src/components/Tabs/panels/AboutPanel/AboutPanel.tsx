@@ -1,9 +1,7 @@
 'use client';
-import { useRef, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useForm } from 'react-inverted-form';
 
-import { useQueryClient } from '@tanstack/react-query';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 import { useDebounce, useWillUnmount, useDeepCompareEffect } from 'rooks';
 
@@ -50,14 +48,11 @@ export const AboutPanel = () => {
   const client = getGraphQLClient();
   const id = useParams()?.id as string;
   const [_, copyToClipboard] = useCopyToClipboard();
-  const { data } = useOrganizationQuery(client, { id });
-  const queryKey = useOrganizationQuery.getKey({ id });
-  const queryClient = useQueryClient();
+  const { data, isLoading } = useOrganizationQuery(client, { id });
 
   const showParentRelationshipSelector = useFeatureIsOn(
     'show-parent-relationship-selector',
   );
-  const nameRef = useRef<HTMLInputElement | null>(null);
   const parentRelationshipReadOnly = useFeatureIsOn(
     'parent-relationship-selector-read-only',
   );
@@ -104,8 +99,6 @@ export const AboutPanel = () => {
           case 'valueProposition':
           case 'targetAudience':
           case 'lastFundingAmount': {
-            queryClient.cancelQueries({ queryKey });
-
             const trimmedValue = (action.payload?.value || '')?.trim();
             if (
               //@ts-expect-error fixme
@@ -153,20 +146,6 @@ export const AboutPanel = () => {
     setDefaultValues(defaultValues);
   }, [defaultValues]);
 
-  useEffect(() => {
-    if (nameRef.current?.value === 'Unnamed') {
-      nameRef.current?.focus();
-      nameRef.current?.setSelectionRange(0, 7);
-    }
-  }, [nameRef]);
-
-  useEffect(() => {
-    if (nameRef.current?.value === 'Unnamed') {
-      nameRef.current?.focus();
-      nameRef.current?.setSelectionRange(0, 7);
-    }
-  }, [nameRef]);
-
   useWillUnmount(() => {
     debouncedMutateOrganization.flush();
   });
@@ -209,7 +188,7 @@ export const AboutPanel = () => {
         <Flex align='center'>
           <OrganizationNameInput
             orgNameReadOnly={orgNameReadOnly}
-            name={data?.organization?.name ?? ''}
+            isLoading={isLoading}
           />
 
           {data?.organization?.referenceId && (

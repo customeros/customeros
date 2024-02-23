@@ -5,19 +5,19 @@ import { FormInput } from '@ui/form/Input';
 
 export const OrganizationNameInput = ({
   orgNameReadOnly,
-  name,
+  isLoading,
 }: {
-  name: string;
+  isLoading: boolean;
   orgNameReadOnly: boolean;
 }) => {
   const nameRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    if (nameRef.current?.value === 'Unnamed') {
+    if (nameRef.current?.value === 'Unnamed' && !isLoading) {
       nameRef.current?.focus();
       nameRef.current?.setSelectionRange(0, 7);
     }
-  }, [nameRef]);
+  }, [nameRef, isLoading]);
 
   return (
     <>
