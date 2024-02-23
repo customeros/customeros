@@ -15,6 +15,9 @@ query GetContract($contractId: ID!) {
         organizationLegalName
         billingEmail
         invoiceNote
+        canPayWithCard
+        canPayWithDirectDebit
+        canPayWithBankTransfer
     }
     committedPeriods
     contractEnded

@@ -52,17 +52,20 @@ type Contract implements MetadataInterface {
 }
 
 type BillingDetails {
-    billingCycle:          ContractBillingCycle
-    invoicingStarted:      Time
-    addressLine1:          String
-    addressLine2:          String
-    locality:              String
-    region:                String
-    country:               String
-    postalCode:            String
-    organizationLegalName: String
-    billingEmail:          String
-    invoiceNote:           String
+    billingCycle:           ContractBillingCycle
+    invoicingStarted:       Time
+    addressLine1:           String
+    addressLine2:           String
+    locality:               String
+    region:                 String
+    country:                String
+    postalCode:             String
+    organizationLegalName:  String
+    billingEmail:           String
+    invoiceNote:            String
+    canPayWithCard:         Boolean
+    canPayWithDirectDebit:  Boolean
+    canPayWithBankTransfer: Boolean
 }
 
 input ContractInput {

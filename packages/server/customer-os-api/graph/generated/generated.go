@@ -126,17 +126,20 @@ type ComplexityRoot struct {
 	}
 
 	BillingDetails struct {
-		AddressLine1          func(childComplexity int) int
-		AddressLine2          func(childComplexity int) int
-		BillingCycle          func(childComplexity int) int
-		BillingEmail          func(childComplexity int) int
-		Country               func(childComplexity int) int
-		InvoiceNote           func(childComplexity int) int
-		InvoicingStarted      func(childComplexity int) int
-		Locality              func(childComplexity int) int
-		OrganizationLegalName func(childComplexity int) int
-		PostalCode            func(childComplexity int) int
-		Region                func(childComplexity int) int
+		AddressLine1           func(childComplexity int) int
+		AddressLine2           func(childComplexity int) int
+		BillingCycle           func(childComplexity int) int
+		BillingEmail           func(childComplexity int) int
+		CanPayWithBankTransfer func(childComplexity int) int
+		CanPayWithCard         func(childComplexity int) int
+		CanPayWithDirectDebit  func(childComplexity int) int
+		Country                func(childComplexity int) int
+		InvoiceNote            func(childComplexity int) int
+		InvoicingStarted       func(childComplexity int) int
+		Locality               func(childComplexity int) int
+		OrganizationLegalName  func(childComplexity int) int
+		PostalCode             func(childComplexity int) int
+		Region                 func(childComplexity int) int
 	}
 
 	BillingProfile struct {
@@ -2227,6 +2230,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.BillingDetails.BillingEmail(childComplexity), true
+
+	case "BillingDetails.canPayWithBankTransfer":
+		if e.complexity.BillingDetails.CanPayWithBankTransfer == nil {
+			break
+		}
+
+		return e.complexity.BillingDetails.CanPayWithBankTransfer(childComplexity), true
+
+	case "BillingDetails.canPayWithCard":
+		if e.complexity.BillingDetails.CanPayWithCard == nil {
+			break
+		}
+
+		return e.complexity.BillingDetails.CanPayWithCard(childComplexity), true
+
+	case "BillingDetails.canPayWithDirectDebit":
+		if e.complexity.BillingDetails.CanPayWithDirectDebit == nil {
+			break
+		}
+
+		return e.complexity.BillingDetails.CanPayWithDirectDebit(childComplexity), true
 
 	case "BillingDetails.country":
 		if e.complexity.BillingDetails.Country == nil {
@@ -11623,17 +11647,20 @@ type Contract implements MetadataInterface {
 }
 
 type BillingDetails {
-    billingCycle:          ContractBillingCycle
-    invoicingStarted:      Time
-    addressLine1:          String
-    addressLine2:          String
-    locality:              String
-    region:                String
-    country:               String
-    postalCode:            String
-    organizationLegalName: String
-    billingEmail:          String
-    invoiceNote:           String
+    billingCycle:           ContractBillingCycle
+    invoicingStarted:       Time
+    addressLine1:           String
+    addressLine2:           String
+    locality:               String
+    region:                 String
+    country:                String
+    postalCode:             String
+    organizationLegalName:  String
+    billingEmail:           String
+    invoiceNote:            String
+    canPayWithCard:         Boolean
+    canPayWithDirectDebit:  Boolean
+    canPayWithBankTransfer: Boolean
 }
 
 input ContractInput {
@@ -20784,6 +20811,129 @@ func (ec *executionContext) fieldContext_BillingDetails_invoiceNote(ctx context.
 	return fc, nil
 }
 
+func (ec *executionContext) _BillingDetails_canPayWithCard(ctx context.Context, field graphql.CollectedField, obj *model.BillingDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_BillingDetails_canPayWithCard(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CanPayWithCard, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_BillingDetails_canPayWithCard(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingDetails_canPayWithDirectDebit(ctx context.Context, field graphql.CollectedField, obj *model.BillingDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_BillingDetails_canPayWithDirectDebit(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CanPayWithDirectDebit, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_BillingDetails_canPayWithDirectDebit(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingDetails_canPayWithBankTransfer(ctx context.Context, field graphql.CollectedField, obj *model.BillingDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_BillingDetails_canPayWithBankTransfer(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CanPayWithBankTransfer, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_BillingDetails_canPayWithBankTransfer(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _BillingProfile_id(ctx context.Context, field graphql.CollectedField, obj *model.BillingProfile) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_BillingProfile_id(ctx, field)
 	if err != nil {
@@ -24955,6 +25105,12 @@ func (ec *executionContext) fieldContext_Contract_billingDetails(ctx context.Con
 				return ec.fieldContext_BillingDetails_billingEmail(ctx, field)
 			case "invoiceNote":
 				return ec.fieldContext_BillingDetails_invoiceNote(ctx, field)
+			case "canPayWithCard":
+				return ec.fieldContext_BillingDetails_canPayWithCard(ctx, field)
+			case "canPayWithDirectDebit":
+				return ec.fieldContext_BillingDetails_canPayWithDirectDebit(ctx, field)
+			case "canPayWithBankTransfer":
+				return ec.fieldContext_BillingDetails_canPayWithBankTransfer(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type BillingDetails", field.Name)
 		},
@@ -94233,6 +94389,12 @@ func (ec *executionContext) _BillingDetails(ctx context.Context, sel ast.Selecti
 			out.Values[i] = ec._BillingDetails_billingEmail(ctx, field, obj)
 		case "invoiceNote":
 			out.Values[i] = ec._BillingDetails_invoiceNote(ctx, field, obj)
+		case "canPayWithCard":
+			out.Values[i] = ec._BillingDetails_canPayWithCard(ctx, field, obj)
+		case "canPayWithDirectDebit":
+			out.Values[i] = ec._BillingDetails_canPayWithDirectDebit(ctx, field, obj)
+		case "canPayWithBankTransfer":
+			out.Values[i] = ec._BillingDetails_canPayWithBankTransfer(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

@@ -160,17 +160,20 @@ type AttachmentInput struct {
 }
 
 type BillingDetails struct {
-	BillingCycle          *ContractBillingCycle `json:"billingCycle,omitempty"`
-	InvoicingStarted      *time.Time            `json:"invoicingStarted,omitempty"`
-	AddressLine1          *string               `json:"addressLine1,omitempty"`
-	AddressLine2          *string               `json:"addressLine2,omitempty"`
-	Locality              *string               `json:"locality,omitempty"`
-	Region                *string               `json:"region,omitempty"`
-	Country               *string               `json:"country,omitempty"`
-	PostalCode            *string               `json:"postalCode,omitempty"`
-	OrganizationLegalName *string               `json:"organizationLegalName,omitempty"`
-	BillingEmail          *string               `json:"billingEmail,omitempty"`
-	InvoiceNote           *string               `json:"invoiceNote,omitempty"`
+	BillingCycle           *ContractBillingCycle `json:"billingCycle,omitempty"`
+	InvoicingStarted       *time.Time            `json:"invoicingStarted,omitempty"`
+	AddressLine1           *string               `json:"addressLine1,omitempty"`
+	AddressLine2           *string               `json:"addressLine2,omitempty"`
+	Locality               *string               `json:"locality,omitempty"`
+	Region                 *string               `json:"region,omitempty"`
+	Country                *string               `json:"country,omitempty"`
+	PostalCode             *string               `json:"postalCode,omitempty"`
+	OrganizationLegalName  *string               `json:"organizationLegalName,omitempty"`
+	BillingEmail           *string               `json:"billingEmail,omitempty"`
+	InvoiceNote            *string               `json:"invoiceNote,omitempty"`
+	CanPayWithCard         *bool                 `json:"canPayWithCard,omitempty"`
+	CanPayWithDirectDebit  *bool                 `json:"canPayWithDirectDebit,omitempty"`
+	CanPayWithBankTransfer *bool                 `json:"canPayWithBankTransfer,omitempty"`
 }
 
 type BillingDetailsInput struct {
