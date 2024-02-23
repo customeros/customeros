@@ -34,6 +34,7 @@ export type GetContractQuery = {
     __typename?: 'Contract';
     id: string;
     contractUrl?: string | null;
+    billingEnabled: boolean;
     organizationLegalName?: string | null;
     addressLine1?: string | null;
     addressLine2?: string | null;
@@ -50,6 +51,7 @@ export const GetContractDocument = `
   contract(id: $id) {
     id
     contractUrl
+    billingEnabled
     organizationLegalName
     addressLine1
     addressLine2

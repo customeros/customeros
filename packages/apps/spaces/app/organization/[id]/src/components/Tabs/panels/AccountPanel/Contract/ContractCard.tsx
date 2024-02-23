@@ -228,6 +228,7 @@ export const ContractCard = ({
               },
             };
           case 'billingCycle':
+          case 'billingEnabled':
             updateContract.mutate(
               ContractDTO.toPayload({
                 contractId: data.id,
@@ -473,6 +474,19 @@ export const ContractCard = ({
               name='billingCycle'
               formId={formId}
               options={contractBillingCycleOptions}
+            />
+          </Flex>
+          <Flex gap='4' flexGrow={0} mb={2}>
+            <FormSelect
+              label='Billing is'
+              placeholder='Enable billing'
+              isLabelVisible
+              name='billingEnabled'
+              formId={formId}
+              options={[
+                { label: 'Enabled', value: true },
+                { label: 'Disabled', value: false },
+              ]}
             />
           </Flex>
         </CardBody>

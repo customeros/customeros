@@ -2,6 +2,7 @@ query getContract($id: ID!) {
   contract(id: $id) {
     id
     contractUrl
+    billingEnabled
     organizationLegalName
     addressLine1
     addressLine2

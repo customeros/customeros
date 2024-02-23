@@ -19,6 +19,7 @@ export interface TimeToRenewalData {
   contractUrl?: string | null;
 
   renewalPeriods?: number | null;
+  billingEnabled?: boolean | null;
   renewalCycle?: ContractRenewalCycle;
   billingCycle?: ContractBillingCycle | null;
 }
@@ -31,6 +32,7 @@ export interface TimeToRenewalForm {
   renewalPeriods?: string | null;
   country?: SelectOption<string> | null;
   organizationLegalName?: string | null;
+  billingEnabled?: SelectOption<boolean> | null;
   billingCycle?: SelectOption<ContractBillingCycle> | null;
   renewalCycle?: SelectOption<ContractRenewalCycle | 'MULTI_YEAR'> | null;
 }
@@ -44,6 +46,7 @@ export class ContractDTO implements TimeToRenewalForm {
   contractUrl?: string | null;
   renewalPeriods?: string | null;
   billingCycle?: SelectOption<ContractBillingCycle> | null;
+  billingEnabled?: SelectOption<boolean> | null;
 
   constructor(data?: TimeToRenewalData | null) {
     this.renewalCycle =
@@ -52,6 +55,9 @@ export class ContractDTO implements TimeToRenewalForm {
           ? value === 'MULTI_YEAR'
           : value === data?.renewalCycle,
       ) ?? undefined;
+    this.billingEnabled = data?.billingEnabled
+      ? { label: 'Enabled', value: true }
+      : { label: 'Disabled', value: false };
     this.billingCycle =
       [...contractBillingCycleOptions].find(
         ({ value }) => value === data?.billingCycle,
