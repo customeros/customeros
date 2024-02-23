@@ -302,7 +302,7 @@ func (s *dashboardService) GetDashboardGrossRevenueRetentionData(ctx context.Con
 		response.GrossRevenueRetention = roundToTwoDecimalPlaces(currentValue)
 	}
 
-	response.IncreasePercentage = ComputeNumbersDisplay(previousValue, currentValue)
+	response.IncreasePercentage = calculatePercentageChange(previousValue, currentValue)
 
 	return &response, nil
 
@@ -728,12 +728,12 @@ func ComputeNumbersDisplay(previousMonthCount, currentMonthCount float64) string
 	return PrintFloatValue(percentage, true) + "%"
 }
 
-func ComputePercentagesDisplay(previous, current float64) string {
+func ComputePercentagesDisplay(previous, current float64) float64 {
 	if math.IsNaN(current) {
-		return "0"
+		return float64(0)
 	}
 	if math.IsNaN(previous) {
-		return PrintFloatValue(current, true)
+		return current
 	}
 
 	diff := current - previous
@@ -745,7 +745,7 @@ func ComputePercentagesDisplay(previous, current float64) string {
 		diff = -100
 	}
 
-	return PrintFloatValue(diff, true)
+	return diff
 }
 
 func PrintFloatValue(number float64, withSign bool) string {

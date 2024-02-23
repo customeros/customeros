@@ -529,10 +529,10 @@ type ContractUpdateInput struct {
 	Currency               *Currency             `json:"currency,omitempty"`
 	BillingDetails         *BillingDetailsInput  `json:"billingDetails,omitempty"`
 	AppSource              *string               `json:"appSource,omitempty"`
+	BillingEnabled         *bool                 `json:"billingEnabled,omitempty"`
 	CanPayWithCard         *bool                 `json:"canPayWithCard,omitempty"`
 	CanPayWithDirectDebit  *bool                 `json:"canPayWithDirectDebit,omitempty"`
 	CanPayWithBankTransfer *bool                 `json:"canPayWithBankTransfer,omitempty"`
-	BillingEnabled         *bool                 `json:"billingEnabled,omitempty"`
 	InvoicingStartDate     *time.Time            `json:"invoicingStartDate,omitempty"`
 	AddressLine1           *string               `json:"addressLine1,omitempty"`
 	AddressLine2           *string               `json:"addressLine2,omitempty"`
@@ -707,9 +707,10 @@ type DashboardCustomerMap struct {
 }
 
 type DashboardGrossRevenueRetention struct {
-	GrossRevenueRetention float64                                   `json:"grossRevenueRetention"`
-	IncreasePercentage    string                                    `json:"increasePercentage"`
-	PerMonth              []*DashboardGrossRevenueRetentionPerMonth `json:"perMonth"`
+	GrossRevenueRetention   float64                                   `json:"grossRevenueRetention"`
+	IncreasePercentage      string                                    `json:"increasePercentage"`
+	IncreasePercentageValue float64                                   `json:"increasePercentageValue"`
+	PerMonth                []*DashboardGrossRevenueRetentionPerMonth `json:"perMonth"`
 }
 
 type DashboardGrossRevenueRetentionPerMonth struct {
@@ -760,9 +761,10 @@ type DashboardPeriodInput struct {
 }
 
 type DashboardRetentionRate struct {
-	RetentionRate      float64                           `json:"retentionRate"`
-	IncreasePercentage string                            `json:"increasePercentage"`
-	PerMonth           []*DashboardRetentionRatePerMonth `json:"perMonth"`
+	RetentionRate           float64                           `json:"retentionRate"`
+	IncreasePercentage      string                            `json:"increasePercentage"`
+	IncreasePercentageValue float64                           `json:"increasePercentageValue"`
+	PerMonth                []*DashboardRetentionRatePerMonth `json:"perMonth"`
 }
 
 type DashboardRetentionRatePerMonth struct {

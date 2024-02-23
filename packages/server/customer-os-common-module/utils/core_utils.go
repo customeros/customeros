@@ -290,6 +290,9 @@ func Float64PtrEquals(a, b *float64) bool {
 }
 
 func TruncateFloat64(input float64, decimals int) float64 {
+	if input == 0 {
+		return 0
+	}
 	multiplier := math.Pow(10, float64(decimals))
 	truncated := math.Trunc(input*multiplier) / multiplier
 	return truncated

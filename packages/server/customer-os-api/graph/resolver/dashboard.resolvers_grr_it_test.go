@@ -53,7 +53,7 @@ func TestQueryResolver_Dashboard_GRR_1_Contract_1_SLI_V1(t *testing.T) {
 	require.Nil(t, err)
 
 	require.Equal(t, 12, len(dashboardReport.Dashboard_GrossRevenueRetention.PerMonth))
-	require.Equal(t, "0%", dashboardReport.Dashboard_GrossRevenueRetention.IncreasePercentage)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_GrossRevenueRetention.IncreasePercentageValue)
 	require.Equal(t, float64(100), dashboardReport.Dashboard_GrossRevenueRetention.GrossRevenueRetention)
 
 	assertGRRMonthData(t, &dashboardReport.Dashboard_GrossRevenueRetention, 2022, 5, 0)
@@ -108,7 +108,7 @@ func TestQueryResolver_Dashboard_GRR_1_Contract_1_SLI_Contract_Ended_V1(t *testi
 	require.Nil(t, err)
 
 	require.Equal(t, 12, len(dashboardReport.Dashboard_GrossRevenueRetention.PerMonth))
-	require.Equal(t, "0%", dashboardReport.Dashboard_GrossRevenueRetention.IncreasePercentage)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_GrossRevenueRetention.IncreasePercentageValue)
 	require.Equal(t, float64(0), dashboardReport.Dashboard_GrossRevenueRetention.GrossRevenueRetention)
 
 	assertGRRMonthData(t, &dashboardReport.Dashboard_GrossRevenueRetention, 2022, 5, 0)
@@ -170,7 +170,7 @@ func TestQueryResolver_Dashboard_GRR_2_Contracts_1_SLI_Each(t *testing.T) {
 	require.Nil(t, err)
 
 	require.Equal(t, 12, len(dashboardReport.Dashboard_GrossRevenueRetention.PerMonth))
-	require.Equal(t, "0%", dashboardReport.Dashboard_GrossRevenueRetention.IncreasePercentage)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_GrossRevenueRetention.IncreasePercentageValue)
 	require.Equal(t, float64(100), dashboardReport.Dashboard_GrossRevenueRetention.GrossRevenueRetention)
 
 	assertGRRMonthData(t, &dashboardReport.Dashboard_GrossRevenueRetention, 2022, 5, 0)
@@ -235,7 +235,7 @@ func TestQueryResolver_Dashboard_GRR_2_Contracts_1_SLI_Each_Both_Contracts_Ended
 	require.Nil(t, err)
 
 	require.Equal(t, 12, len(dashboardReport.Dashboard_GrossRevenueRetention.PerMonth))
-	require.Equal(t, "0%", dashboardReport.Dashboard_GrossRevenueRetention.IncreasePercentage)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_GrossRevenueRetention.IncreasePercentageValue)
 	require.Equal(t, float64(0), dashboardReport.Dashboard_GrossRevenueRetention.GrossRevenueRetention)
 
 	assertGRRMonthData(t, &dashboardReport.Dashboard_GrossRevenueRetention, 2022, 5, 0)
@@ -298,8 +298,8 @@ func TestQueryResolver_Dashboard_GRR_2_Contracts_1_SLI_1_Contract_Ended(t *testi
 	require.Nil(t, err)
 
 	require.Equal(t, 12, len(dashboardReport.Dashboard_GrossRevenueRetention.PerMonth))
-	require.Equal(t, "0%", dashboardReport.Dashboard_GrossRevenueRetention.IncreasePercentage)
-	require.Equal(t, float64(66.67), dashboardReport.Dashboard_GrossRevenueRetention.GrossRevenueRetention)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_GrossRevenueRetention.IncreasePercentageValue)
+	require.Equal(t, float64(66.6), dashboardReport.Dashboard_GrossRevenueRetention.GrossRevenueRetention)
 
 	assertGRRMonthData(t, &dashboardReport.Dashboard_GrossRevenueRetention, 2022, 5, 0)
 	assertGRRMonthData(t, &dashboardReport.Dashboard_GrossRevenueRetention, 2022, 6, 100)
@@ -361,7 +361,7 @@ func TestQueryResolver_Dashboard_GRR_2_Contracts_1_SLI_1_SLI_Ended(t *testing.T)
 	require.Nil(t, err)
 	//
 	//require.Equal(t, 12, len(dashboardReport.Dashboard_GrossRevenueRetention.PerMonth))
-	//require.Equal(t, "0%", dashboardReport.Dashboard_GrossRevenueRetention.IncreasePercentage)
+	//require.Equal(t, "0%", dashboardReport.Dashboard_GrossRevenueRetention.IncreasePercentageValue)
 	//require.Equal(t, float64(33.33), dashboardReport.Dashboard_GrossRevenueRetention.GrossRevenueRetention)
 	//
 	//assertGRRMonthData(t, &dashboardReport.Dashboard_GrossRevenueRetention, 2022, 5, 0)
@@ -423,8 +423,8 @@ func TestQueryResolver_Dashboard_GRR_2_Contracts_1_SLI_1_SLI_Canceld(t *testing.
 	require.Nil(t, err)
 
 	require.Equal(t, 12, len(dashboardReport.Dashboard_GrossRevenueRetention.PerMonth))
-	require.Equal(t, "0%", dashboardReport.Dashboard_GrossRevenueRetention.IncreasePercentage)
-	require.Equal(t, float64(33.33), dashboardReport.Dashboard_GrossRevenueRetention.GrossRevenueRetention)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_GrossRevenueRetention.IncreasePercentageValue)
+	require.Equal(t, 33.3, dashboardReport.Dashboard_GrossRevenueRetention.GrossRevenueRetention)
 
 	assertGRRMonthData(t, &dashboardReport.Dashboard_GrossRevenueRetention, 2022, 5, 0)
 	assertGRRMonthData(t, &dashboardReport.Dashboard_GrossRevenueRetention, 2022, 6, 100)
