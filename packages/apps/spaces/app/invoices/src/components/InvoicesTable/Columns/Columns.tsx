@@ -8,8 +8,9 @@ import { createColumnHelper } from '@ui/presentation/Table';
 import { StatusCell } from '@shared/components/Invoice/Cells';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
+import { InvoiceTableData } from '@shared/components/Invoice/hooks/useInfiniteInvoices';
 
-const columnHelper = createColumnHelper<Invoice>();
+const columnHelper = createColumnHelper<InvoiceTableData>();
 
 export const columns = [
   columnHelper.accessor('invoiceNumber', {

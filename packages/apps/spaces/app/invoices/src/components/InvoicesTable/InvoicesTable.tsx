@@ -7,11 +7,13 @@ import { useIsRestoring } from '@tanstack/react-query';
 
 import { Box } from '@ui/layout/Box';
 import { Flex } from '@ui/layout/Flex';
-import { Invoice } from '@graphql/types';
 import { Heading } from '@ui/typography/Heading';
 import { Table, TableInstance } from '@ui/presentation/Table';
 import { EmptyState } from '@shared/components/Invoice/EmptyState/EmptyState';
-import { useInfiniteInvoices } from '@shared/components/Invoice/hooks/useInfiniteInvoices';
+import {
+  InvoiceTableData,
+  useInfiniteInvoices,
+} from '@shared/components/Invoice/hooks/useInfiniteInvoices';
 
 import { columns } from './Columns/Columns';
 
@@ -21,7 +23,7 @@ export function InvoicesTable() {
   const selectedInvoiceId = searchParams?.get('invoice');
   const router = useRouter();
 
-  const tableRef = useRef<TableInstance<Invoice>>(null);
+  const tableRef = useRef<TableInstance<InvoiceTableData>>(null);
   const {
     invoiceFlattenData,
     totalInvoicesCount,
@@ -66,7 +68,7 @@ export function InvoicesTable() {
         Invoices
       </Heading>
       <Box ml={-3}>
-        <Table<Invoice>
+        <Table<InvoiceTableData>
           data={invoiceFlattenData ?? []}
           columns={columns}
           onFullRowSelection={(id) => id && handleOpenInvoice(id)}
