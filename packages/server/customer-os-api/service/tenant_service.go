@@ -149,7 +149,6 @@ func (s *tenantService) CreateTenantBillingProfile(ctx context.Context, input mo
 			Source:    neo4jentity.DataSourceOpenline.String(),
 			AppSource: constants.AppSourceCustomerOsApi,
 		},
-		Email:                         utils.IfNotNilString(input.Email),
 		Phone:                         utils.IfNotNilString(input.Phone),
 		LegalName:                     utils.IfNotNilString(input.LegalName),
 		AddressLine1:                  utils.IfNotNilString(input.AddressLine1),
@@ -209,7 +208,6 @@ func (s *tenantService) UpdateTenantBillingProfile(ctx context.Context, input mo
 		Id:                            input.ID,
 		LoggedInUserId:                common.GetUserIdFromContext(ctx),
 		AppSource:                     constants.AppSourceCustomerOsApi,
-		Email:                         utils.IfNotNilString(input.Email),
 		Phone:                         utils.IfNotNilString(input.Phone),
 		LegalName:                     utils.IfNotNilString(input.LegalName),
 		AddressLine1:                  utils.IfNotNilString(input.AddressLine1),
@@ -230,9 +228,6 @@ func (s *tenantService) UpdateTenantBillingProfile(ctx context.Context, input mo
 	}
 
 	if input.Patch != nil && *input.Patch {
-		if input.Email != nil {
-			fieldMask = append(fieldMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_EMAIL)
-		}
 		if input.Phone != nil {
 			fieldMask = append(fieldMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_PHONE)
 		}

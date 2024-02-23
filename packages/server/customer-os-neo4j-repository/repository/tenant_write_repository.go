@@ -17,7 +17,6 @@ type TenantBillingProfileCreateFields struct {
 	Id                                string       `json:"id"`
 	CreatedAt                         time.Time    `json:"createdAt"`
 	SourceFields                      model.Source `json:"sourceFields"`
-	Email                             string       `json:"email"`
 	Phone                             string       `json:"phone"`
 	LegalName                         string       `json:"legalName"`
 	AddressLine1                      string       `json:"addressLine1"`
@@ -47,7 +46,6 @@ type TenantBillingProfileCreateFields struct {
 type TenantBillingProfileUpdateFields struct {
 	Id                                  string    `json:"id"`
 	UpdatedAt                           time.Time `json:"updatedAt"`
-	Email                               string    `json:"email"`
 	Phone                               string    `json:"phone"`
 	LegalName                           string    `json:"legalName"`
 	AddressLine1                        string    `json:"addressLine1"`
@@ -65,7 +63,6 @@ type TenantBillingProfileUpdateFields struct {
 	CanPayWithDirectDebitACH            bool      `json:"canPayWithDirectDebitACH"`
 	CanPayWithDirectDebitBacs           bool      `json:"canPayWithDirectDebitBacs"`
 	CanPayWithPigeon                    bool      `json:"canPayWithPigeon"`
-	UpdateEmail                         bool      `json:"updateEmail"`
 	UpdatePhone                         bool      `json:"updatePhone"`
 	UpdateLegalName                     bool      `json:"updateLegalName"`
 	UpdateAddressLine1                  bool      `json:"updateAddressLine1"`
@@ -131,7 +128,6 @@ func (r *tenantWriteRepository) CreateTenantBillingProfile(ctx context.Context, 
 								tbp.source=$source,
 								tbp.sourceOfTruth=$sourceOfTruth,
 								tbp.appSource=$appSource,
-								tbp.email=$email,
 								tbp.phone=$phone,
 								tbp.legalName=$legalName,	
 								tbp.addressLine1=$addressLine1,	
@@ -165,7 +161,6 @@ func (r *tenantWriteRepository) CreateTenantBillingProfile(ctx context.Context, 
 		"source":                            data.SourceFields.Source,
 		"sourceOfTruth":                     data.SourceFields.Source,
 		"appSource":                         data.SourceFields.AppSource,
-		"email":                             data.Email,
 		"phone":                             data.Phone,
 		"legalName":                         data.LegalName,
 		"addressLine1":                      data.AddressLine1,
@@ -215,10 +210,6 @@ func (r *tenantWriteRepository) UpdateTenantBillingProfile(ctx context.Context, 
 		"tenant":           tenant,
 		"billingProfileId": data.Id,
 		"updatedAt":        data.UpdatedAt,
-	}
-	if data.UpdateEmail {
-		cypher += `,tbp.email=$email`
-		params["email"] = data.Email
 	}
 	if data.UpdatePhone {
 		cypher += `,tbp.phone=$phone`

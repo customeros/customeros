@@ -299,7 +299,6 @@ func MapDbNodeToTenantBillingProfileEntity(dbNode *dbtype.Node) *entity.TenantBi
 		CreatedAt:                         utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:                         utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		LegalName:                         utils.GetStringPropOrEmpty(props, "legalName"),
-		Email:                             utils.GetStringPropOrEmpty(props, "email"),
 		Phone:                             utils.GetStringPropOrEmpty(props, "phone"),
 		AddressLine1:                      utils.GetStringPropOrEmpty(props, "addressLine1"),
 		AddressLine2:                      utils.GetStringPropOrEmpty(props, "addressLine2"),

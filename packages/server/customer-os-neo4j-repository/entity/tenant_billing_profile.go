@@ -9,7 +9,6 @@ type TenantBillingProfileEntity struct {
 	CreatedAt                         time.Time
 	UpdatedAt                         time.Time
 	LegalName                         string
-	Email                             string
 	Phone                             string
 	AddressLine1                      string
 	AddressLine2                      string

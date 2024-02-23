@@ -1,7 +1,6 @@
 query GetTenantBillingProfiles {
   tenantBillingProfiles{
     id
-    email
     phone
     addressLine1
     addressLine2

@@ -49,7 +49,6 @@ func (h *TenantEventHandler) OnAddBillingProfileV1(ctx context.Context, evt even
 			Source:    helper.GetSource(eventData.SourceFields.Source),
 			AppSource: helper.GetAppSource(eventData.SourceFields.AppSource),
 		},
-		Email:                             eventData.Email,
 		Phone:                             eventData.Phone,
 		LegalName:                         eventData.LegalName,
 		AddressLine1:                      eventData.AddressLine1,
@@ -100,7 +99,6 @@ func (h *TenantEventHandler) OnUpdateBillingProfileV1(ctx context.Context, evt e
 	data := neo4jrepository.TenantBillingProfileUpdateFields{
 		Id:                                  eventData.Id,
 		UpdatedAt:                           eventData.UpdatedAt,
-		Email:                               eventData.Email,
 		Phone:                               eventData.Phone,
 		LegalName:                           eventData.LegalName,
 		AddressLine1:                        eventData.AddressLine1,
@@ -118,7 +116,6 @@ func (h *TenantEventHandler) OnUpdateBillingProfileV1(ctx context.Context, evt e
 		CanPayWithDirectDebitACH:            eventData.CanPayWithDirectDebitACH,
 		CanPayWithDirectDebitBacs:           eventData.CanPayWithDirectDebitBacs,
 		CanPayWithPigeon:                    eventData.CanPayWithPigeon,
-		UpdateEmail:                         eventData.UpdateEmail(),
 		UpdatePhone:                         eventData.UpdatePhone(),
 		UpdateAddressLine1:                  eventData.UpdateAddressLine1(),
 		UpdateAddressLine2:                  eventData.UpdateAddressLine2(),

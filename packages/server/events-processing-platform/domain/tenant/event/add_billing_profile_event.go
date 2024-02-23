@@ -14,7 +14,6 @@ type TenantBillingProfileCreateEvent struct {
 	Id                                string             `json:"id" validate:"required"`
 	CreatedAt                         time.Time          `json:"createdAt"`
 	SourceFields                      commonmodel.Source `json:"sourceFields"`
-	Email                             string             `json:"email"`
 	Phone                             string             `json:"phone"`
 	AddressLine1                      string             `json:"addressLine1"`
 	AddressLine2                      string             `json:"addressLine2"`
@@ -47,7 +46,6 @@ func NewTenantBillingProfileCreateEvent(aggregate eventstore.Aggregate, sourceFi
 		Id:                                id,
 		CreatedAt:                         createdAt,
 		SourceFields:                      sourceFields,
-		Email:                             request.Email,
 		Phone:                             request.Phone,
 		AddressLine1:                      request.AddressLine1,
 		AddressLine2:                      request.AddressLine2,

@@ -13,7 +13,6 @@ type TenantBillingProfileUpdateEvent struct {
 	Tenant                        string    `json:"tenant" validate:"required"`
 	Id                            string    `json:"id" validate:"required"`
 	UpdatedAt                     time.Time `json:"updatedAt"`
-	Email                         string    `json:"email,omitempty"`
 	Phone                         string    `json:"phone,omitempty"`
 	AddressLine1                  string    `json:"addressLine1,omitempty"`
 	AddressLine2                  string    `json:"addressLine2,omitempty"`
@@ -39,7 +38,6 @@ func NewTenantBillingProfileUpdateEvent(aggregate eventstore.Aggregate, id strin
 		Tenant:                        aggregate.GetTenant(),
 		Id:                            id,
 		UpdatedAt:                     updatedAt,
-		Email:                         request.Email,
 		Phone:                         request.Phone,
 		AddressLine1:                  request.AddressLine1,
 		AddressLine2:                  request.AddressLine2,
@@ -70,10 +68,6 @@ func NewTenantBillingProfileUpdateEvent(aggregate eventstore.Aggregate, id strin
 	}
 
 	return event, nil
-}
-
-func (e TenantBillingProfileUpdateEvent) UpdateEmail() bool {
-	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskEmail)
 }
 
 func (e TenantBillingProfileUpdateEvent) UpdatePhone() bool {

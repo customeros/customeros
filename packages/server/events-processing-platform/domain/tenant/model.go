@@ -28,7 +28,6 @@ type TenantBillingProfile struct {
 	CreatedAt                         time.Time          `json:"createdAt"`
 	UpdatedAt                         time.Time          `json:"updatedAt"`
 	SourceFields                      commonmodel.Source `json:"source"`
-	Email                             string             `json:"email"`
 	Phone                             string             `json:"phone"`
 	AddressLine1                      string             `json:"addressLine1"`
 	AddressLine2                      string             `json:"addressLine2"`

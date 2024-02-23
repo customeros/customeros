@@ -12,7 +12,7 @@ message AddBillingProfileRequest {
   string loggedInUserId = 2;
   google.protobuf.Timestamp createdAt = 3;
   SourceFields sourceFields = 4;
-  string email = 5;
+  string email = 5 [deprecated = true];
   string phone = 6;
   string legalName = 7;
   string addressLine1 = 8;
@@ -41,7 +41,7 @@ message AddBillingProfileRequest {
 
 enum TenantBillingProfileFieldMask {
   TENANT_BILLING_PROFILE_FIELD_NONE = 0; // No property, ignored by the server
-  TENANT_BILLING_PROFILE_FIELD_EMAIL = 1;
+  TENANT_BILLING_PROFILE_FIELD_EMAIL = 1 [deprecated = true];
   TENANT_BILLING_PROFILE_FIELD_PHONE = 2;
   TENANT_BILLING_PROFILE_FIELD_LEGAL_NAME = 3;
   TENANT_BILLING_PROFILE_FIELD_ADDRESS_LINE_1 = 4;

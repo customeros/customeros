@@ -529,7 +529,7 @@ func (h *InvoiceEventHandler) prepareAndCallFillInvoice(ctx context.Context, ten
 		tenantSettingsEntity.LogoUrl,
 		tenantSettingsEntity.LogoRepositoryFileId,
 		tenantBillingProfileEntity.LegalName,
-		tenantBillingProfileEntity.Email,
+		tenantBillingProfileEntity.SendInvoicesFrom,
 		tenantBillingProfileEntity.AddressLine1, tenantBillingProfileEntity.AddressLine2, tenantBillingProfileEntity.Zip, tenantBillingProfileEntity.Locality, tenantBillingProfileCountry,
 		contractEntity.InvoiceNote,
 		amount,
