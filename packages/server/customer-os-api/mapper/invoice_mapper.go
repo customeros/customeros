@@ -58,20 +58,6 @@ func MapEntityToInvoice(entity *neo4jentity.InvoiceEntity) *model.Invoice {
 			AddressLocality:      utils.StringPtrNillable(entity.Provider.Locality),
 			AddressCountry:       utils.StringPtrNillable(entity.Provider.Country),
 		},
-		// Deprecated all below
-		ID:              entity.Id,
-		CreatedAt:       entity.CreatedAt,
-		UpdatedAt:       entity.UpdatedAt,
-		Source:          MapDataSourceToModel(entity.Source),
-		SourceOfTruth:   MapDataSourceToModel(entity.SourceOfTruth),
-		AppSource:       entity.AppSource,
-		Number:          entity.Number,
-		PeriodStartDate: entity.PeriodStartDate,
-		PeriodEndDate:   entity.PeriodEndDate,
-		DueDate:         entity.DueDate,
-		Amount:          entity.Amount,
-		Vat:             entity.Vat,
-		TotalAmount:     entity.TotalAmount,
 	}
 	if entity.Status == neo4jenum.InvoiceStatusPaid {
 		invoice.Paid = true
@@ -106,12 +92,7 @@ func MapEntityToInvoiceLine(entity *neo4jentity.InvoiceLineEntity) *model.Invoic
 		TaxDue:      entity.Vat,
 
 		//Deprecated all below
-		ID:          entity.Id,
-		CreatedAt:   entity.CreatedAt,
-		Name:        entity.Name,
-		Amount:      entity.Amount,
-		Vat:         entity.Vat,
-		TotalAmount: entity.TotalAmount,
+		CreatedAt: entity.CreatedAt,
 	}
 }
 

@@ -1120,20 +1120,7 @@ type Invoice struct {
 	Paid                          bool             `json:"paid"`
 	Subtotal                      float64          `json:"subtotal"`
 	TaxDue                        float64          `json:"taxDue"`
-	ID                            string           `json:"id"`
-	CreatedAt                     time.Time        `json:"createdAt"`
-	UpdatedAt                     time.Time        `json:"updatedAt"`
-	Source                        DataSource       `json:"source"`
-	SourceOfTruth                 DataSource       `json:"sourceOfTruth"`
-	AppSource                     string           `json:"appSource"`
 	InvoiceLines                  []*InvoiceLine   `json:"invoiceLines"`
-	Number                        string           `json:"number"`
-	DueDate                       time.Time        `json:"dueDate"`
-	PeriodStartDate               time.Time        `json:"periodStartDate"`
-	PeriodEndDate                 time.Time        `json:"periodEndDate"`
-	Amount                        float64          `json:"amount"`
-	TotalAmount                   float64          `json:"totalAmount"`
-	Vat                           float64          `json:"vat"`
 }
 
 func (Invoice) IsMetadataInterface()        {}
@@ -1157,12 +1144,7 @@ type InvoiceLine struct {
 	Subtotal    float64   `json:"subtotal"`
 	TaxDue      float64   `json:"taxDue"`
 	Total       float64   `json:"total"`
-	ID          string    `json:"id"`
 	CreatedAt   time.Time `json:"createdAt"`
-	Name        string    `json:"name"`
-	Amount      float64   `json:"amount"`
-	Vat         float64   `json:"vat"`
-	TotalAmount float64   `json:"totalAmount"`
 }
 
 func (InvoiceLine) IsMetadataInterface()        {}
