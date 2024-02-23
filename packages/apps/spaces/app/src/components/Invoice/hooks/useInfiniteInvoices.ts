@@ -14,12 +14,13 @@ import {
   useInfiniteGetInvoicesQuery,
 } from '@shared/graphql/getInvoices.generated';
 
+export type InvoiceTableData = Invoice & { id: string };
 interface useInfiniteInvoicesReturn {
   isFetched: boolean;
   isFetching: boolean;
   hasNextPage: boolean;
   totalInvoicesCount: number;
-  invoiceFlattenData: Invoice[];
+  invoiceFlattenData: InvoiceTableData[];
   fetchNextPage: (
     options?: FetchNextPageOptions | undefined,
   ) => Promise<

@@ -22,6 +22,7 @@ query getContracts($id: ID!) {
             status
             contractUrl
             billingCycle
+            billingEnabled
             invoicingStartDate
             currency
             organizationLegalName

@@ -1,7 +1,6 @@
 import React from 'react';
 
 import { Flex } from '@ui/layout/Flex';
-import { Invoice } from '@graphql/types';
 import { Link03 } from '@ui/media/icons/Link03';
 import { XClose } from '@ui/media/icons/XClose';
 import { IconButton } from '@ui/form/IconButton';
@@ -10,6 +9,7 @@ import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { Card, CardBody, CardHeader } from '@ui/presentation/Card';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import { useGetInvoiceQuery } from '@shared/graphql/getInvoice.generated';
+import { InvoiceWithId } from '@organization/src/components/Timeline/types';
 import { InvoiceActionHeader } from '@shared/components/Invoice/InvoiceActionHeader';
 import { InvoicePreviewModalContent } from '@shared/components/Invoice/InvoicePreviewModal';
 import {
@@ -22,7 +22,7 @@ export const InvoicePreviewModal = () => {
   const { closeModal } = useTimelineEventPreviewMethodsContext();
   const [_, copy] = useCopyToClipboard();
   const client = getGraphQLClient();
-  const event = modalContent as Pick<Invoice, 'id' | '__typename'>;
+  const event = modalContent as Pick<InvoiceWithId, 'id' | '__typename'>;
   const { data, isFetching, isError } = useGetInvoiceQuery(client, {
     id: event.id,
   });

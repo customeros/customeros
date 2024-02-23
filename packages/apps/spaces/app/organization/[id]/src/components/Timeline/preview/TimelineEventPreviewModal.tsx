@@ -1,18 +1,20 @@
 import { VirtuosoHandle } from 'react-virtuoso';
 
-import { LogEntryWithAliases } from '@organization/src/components/Timeline/types';
+import {
+  InvoiceWithId,
+  LogEntryWithAliases,
+} from '@organization/src/components/Timeline/types';
 import { IssuePreviewModal } from '@organization/src/components/Timeline/events/issue/IssuePreviewModal';
-import { InvoicePreviewModal } from '@organization/src/components/Timeline/events/invoice/InvoicePreviewModal';
-import { TimelinePreviewBackdrop } from '@organization/src/components/Timeline/preview/TimelinePreviewBackdrop';
-import { LogEntryPreviewModal } from '@organization/src/components/Timeline/events/logEntry/LogEntryPreviewModal';
 import {
   Issue,
   Action,
   Meeting,
-  Invoice,
   InteractionEvent,
   ExternalSystemType,
 } from '@graphql/types';
+import { InvoicePreviewModal } from '@organization/src/components/Timeline/events/invoice/InvoicePreviewModal';
+import { TimelinePreviewBackdrop } from '@organization/src/components/Timeline/preview/TimelinePreviewBackdrop';
+import { LogEntryPreviewModal } from '@organization/src/components/Timeline/events/logEntry/LogEntryPreviewModal';
 import { IntercomThreadPreviewModal } from '@organization/src/components/Timeline/events/intercom/IntercomThreadPreviewModal';
 import { useTimelineEventPreviewStateContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 import { LogEntryUpdateModalContextProvider } from '@organization/src/components/Timeline/events/logEntry/context/LogEntryUpdateModalContext';
@@ -38,7 +40,7 @@ export const TimelineEventPreviewModal = ({
     | Meeting
     | Action
     | Issue
-    | Pick<Invoice, 'id' | '__typename'>
+    | InvoiceWithId
     | LogEntryWithAliases;
   const isMeeting = event?.__typename === 'Meeting';
   const isAction = event?.__typename === 'Action';

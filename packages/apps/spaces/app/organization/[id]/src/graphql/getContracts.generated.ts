@@ -57,6 +57,7 @@ export type GetContractsQuery = {
       status: Types.ContractStatus;
       contractUrl?: string | null;
       billingCycle?: Types.ContractBillingCycle | null;
+      billingEnabled: boolean;
       invoicingStartDate?: any | null;
       currency?: Types.Currency | null;
       organizationLegalName?: string | null;
@@ -135,6 +136,7 @@ export const GetContractsDocument = `
       status
       contractUrl
       billingCycle
+      billingEnabled
       invoicingStartDate
       currency
       organizationLegalName

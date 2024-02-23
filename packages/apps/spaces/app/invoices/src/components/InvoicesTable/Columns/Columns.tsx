@@ -1,6 +1,5 @@
 import React from 'react';
 
-import { Invoice } from '@graphql/types';
 import { Text } from '@ui/typography/Text';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { Skeleton } from '@ui/presentation/Skeleton';
@@ -8,8 +7,9 @@ import { createColumnHelper } from '@ui/presentation/Table';
 import { StatusCell } from '@shared/components/Invoice/Cells';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
+import { InvoiceTableData } from '@shared/components/Invoice/hooks/useInfiniteInvoices';
 
-const columnHelper = createColumnHelper<Invoice>();
+const columnHelper = createColumnHelper<InvoiceTableData>();
 
 export const columns = [
   columnHelper.accessor('invoiceNumber', {
@@ -23,7 +23,7 @@ export const columns = [
       <THead
         id='number'
         title='   N°'
-        {...getTHeadProps<Invoice>(props)}
+        {...getTHeadProps<InvoiceTableData>(props)}
         py='2'
       />
     ),
@@ -51,7 +51,7 @@ export const columns = [
       <THead
         id='organization'
         title='Organization'
-        {...getTHeadProps<Invoice>(props)}
+        {...getTHeadProps<InvoiceTableData>(props)}
         py='2'
       />
     ),
@@ -74,7 +74,7 @@ export const columns = [
       <THead
         id='status'
         title='Status'
-        {...getTHeadProps<Invoice>(props)}
+        {...getTHeadProps<InvoiceTableData>(props)}
         py='2'
       />
     ),
@@ -100,7 +100,7 @@ export const columns = [
       <THead
         id='issued'
         title='Issued'
-        {...getTHeadProps<Invoice>(props)}
+        {...getTHeadProps<InvoiceTableData>(props)}
         py='2'
       />
     ),
@@ -133,7 +133,7 @@ export const columns = [
       <THead
         id='amount'
         title='Amount'
-        {...getTHeadProps<Invoice>(props)}
+        {...getTHeadProps<InvoiceTableData>(props)}
         py='2'
       />
     ),

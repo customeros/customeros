@@ -80,6 +80,7 @@ const AccountPanelComponent = () => {
         status: ContractStatus.Draft,
         updatedAt: new Date().toISOString(),
         serviceLineItems: [],
+        billingEnabled: false,
       };
       queryClient.cancelQueries({ queryKey });
       queryClient.setQueryData<GetContractsQuery>(queryKey, (currentCache) => {
