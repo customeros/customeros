@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 
 import { useConnections, useIntegrationApp } from '@integration-app/react';
 
@@ -16,7 +16,6 @@ import { toastError } from '@ui/presentation/Toast';
 import { FormSwitch } from '@ui/form/Switch/FromSwitch';
 
 export const PaymentMethods = ({
-  onResetPaymentMethods,
   canPayWithCard,
   canPayWithDirectDebitSEPA,
   canPayWithDirectDebitACH,
@@ -25,13 +24,12 @@ export const PaymentMethods = ({
 }: {
   formId: string;
   canPayWithCard?: boolean | null;
-  onResetPaymentMethods: () => void;
   canPayWithDirectDebitACH?: boolean | null;
   canPayWithDirectDebitSEPA?: boolean | null;
   canPayWithDirectDebitBacs?: boolean | null;
 }) => {
   const iApp = useIntegrationApp();
-  const { items: iConnections, refresh, loading } = useConnections();
+  const { items: iConnections, refresh } = useConnections();
   const isStripeActive = iConnections
     .map((item) => item.integration?.key)
     .find((e) => e === 'stripe');
@@ -62,11 +60,6 @@ export const PaymentMethods = ({
       toastError('Integration failed', 'get-intergration-data');
     }
   };
-  useEffect(() => {
-    if (!isStripeActive && !loading && iConnections?.length > 0) {
-      onResetPaymentMethods();
-    }
-  }, [iConnections, isStripeActive, loading]);
 
   return (
     <>
@@ -82,6 +75,7 @@ export const PaymentMethods = ({
         formId={formId}
         size='sm'
         onChangeCallback={handleStripe}
+        colorScheme={isStripeActive ? 'primary' : 'warning'}
         leftElement={
           canPayWithCard && (
             <IconButton
@@ -113,6 +107,7 @@ export const PaymentMethods = ({
           name='canPayWithDirectDebitSEPA'
           formId={formId}
           size='sm'
+          colorScheme={isStripeActive ? 'primary' : 'warning'}
           onChangeCallback={handleStripe}
           leftElement={
             canPayWithDirectDebitSEPA && (
@@ -147,6 +142,7 @@ export const PaymentMethods = ({
           formId={formId}
           size='sm'
           onChangeCallback={handleStripe}
+          colorScheme={isStripeActive ? 'primary' : 'warning'}
           leftElement={
             canPayWithDirectDebitACH && (
               <IconButton
@@ -181,6 +177,7 @@ export const PaymentMethods = ({
           formId={formId}
           size='sm'
           onChangeCallback={handleStripe}
+          colorScheme={isStripeActive ? 'primary' : 'warning'}
           leftElement={
             canPayWithDirectDebitBacs && (
               <IconButton
