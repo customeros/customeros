@@ -35,6 +35,7 @@ type OrganizationEntity struct {
 	YearFounded        *int64
 	Headquarters       string
 	EmployeeGrowthRate string
+	SlackChannelId     string
 	LogoUrl            string
 	Source             neo4jentity.DataSource
 	SourceOfTruth      neo4jentity.DataSource

@@ -80,6 +80,7 @@ type OrganizationCreateEvent struct {
 	YearFounded        *int64                `json:"yearFounded,omitempty"`
 	Headquarters       string                `json:"headquarters,omitempty"`
 	EmployeeGrowthRate string                `json:"employeeGrowthRate,omitempty"`
+	SlackChannelId     string                `json:"slackChannelId,omitempty"`
 }
 
 func NewOrganizationCreateEvent(aggregate eventstore.Aggregate, organizationFields *model.OrganizationFields, createdAt, updatedAt time.Time) (eventstore.Event, error) {
@@ -111,6 +112,7 @@ func NewOrganizationCreateEvent(aggregate eventstore.Aggregate, organizationFiel
 		YearFounded:        organizationFields.OrganizationDataFields.YearFounded,
 		Headquarters:       organizationFields.OrganizationDataFields.Headquarters,
 		EmployeeGrowthRate: organizationFields.OrganizationDataFields.EmployeeGrowthRate,
+		SlackChannelId:     organizationFields.OrganizationDataFields.SlackChannelId,
 	}
 	if organizationFields.ExternalSystem.Available() {
 		eventData.ExternalSystem = organizationFields.ExternalSystem

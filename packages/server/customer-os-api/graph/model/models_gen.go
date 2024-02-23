@@ -1757,6 +1757,7 @@ type Organization struct {
 	CustomID                      *string                       `json:"customId,omitempty"`
 	Description                   *string                       `json:"description,omitempty"`
 	Domains                       []string                      `json:"domains"`
+	SlackChannelID                *string                       `json:"slackChannelId,omitempty"`
 	EmployeeGrowthRate            *string                       `json:"employeeGrowthRate,omitempty"`
 	Employees                     *int64                        `json:"employees,omitempty"`
 	Headquarters                  *string                       `json:"headquarters,omitempty"`
@@ -1838,6 +1839,7 @@ type OrganizationInput struct {
 	Headquarters       *string             `json:"headquarters,omitempty"`
 	YearFounded        *int64              `json:"yearFounded,omitempty"`
 	Employees          *int64              `json:"employees,omitempty"`
+	SlackChannelID     *string             `json:"slackChannelId,omitempty"`
 	AppSource          *string             `json:"appSource,omitempty"`
 	FieldSets          []*FieldSetInput    `json:"fieldSets,omitempty"`
 	TemplateID         *string             `json:"templateId,omitempty"`
@@ -2032,6 +2034,7 @@ type OrganizationUpdateInput struct {
 	EmployeeGrowthRate *string       `json:"employeeGrowthRate,omitempty"`
 	Headquarters       *string       `json:"headquarters,omitempty"`
 	YearFounded        *int64        `json:"yearFounded,omitempty"`
+	SlackChannelID     *string       `json:"slackChannelId,omitempty"`
 	IsPublic           *bool         `json:"isPublic,omitempty"`
 	LogoURL            *string       `json:"logoUrl,omitempty"`
 	Domains            []string      `json:"domains,omitempty"`
@@ -2299,6 +2302,29 @@ type ServiceLineItemUpdateInput struct {
 	ExternalReference       *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
 	Billed                  *BilledType                   `json:"billed,omitempty"`
 }
+
+type SlackChannel struct {
+	Metadata     *Metadata     `json:"metadata"`
+	Organization *Organization `json:"organization,omitempty"`
+	ChannelID    string        `json:"channelId"`
+}
+
+type SlackChannelPage struct {
+	Content        []*SlackChannel `json:"content"`
+	TotalPages     int             `json:"totalPages"`
+	TotalElements  int64           `json:"totalElements"`
+	TotalAvailable int64           `json:"totalAvailable"`
+}
+
+func (SlackChannelPage) IsPages() {}
+
+// The total number of pages included in the query response.
+// **Required.**
+func (this SlackChannelPage) GetTotalPages() int { return this.TotalPages }
+
+// The total number of elements included in the query response.
+// **Required.**
+func (this SlackChannelPage) GetTotalElements() int64 { return this.TotalElements }
 
 type Social struct {
 	ID            string     `json:"id"`
@@ -3235,6 +3261,7 @@ const (
 	DataSourceMixpanel       DataSource = "MIXPANEL"
 	DataSourceClose          DataSource = "CLOSE"
 	DataSourceOutlook        DataSource = "OUTLOOK"
+	DataSourceUnthread       DataSource = "UNTHREAD"
 )
 
 var AllDataSource = []DataSource{
@@ -3251,11 +3278,12 @@ var AllDataSource = []DataSource{
 	DataSourceMixpanel,
 	DataSourceClose,
 	DataSourceOutlook,
+	DataSourceUnthread,
 }
 
 func (e DataSource) IsValid() bool {
 	switch e {
-	case DataSourceNa, DataSourceOpenline, DataSourceWebscrape, DataSourceHubspot, DataSourceZendeskSupport, DataSourcePipedrive, DataSourceSLACk, DataSourceIntercom, DataSourceSalesforce, DataSourceStripe, DataSourceMixpanel, DataSourceClose, DataSourceOutlook:
+	case DataSourceNa, DataSourceOpenline, DataSourceWebscrape, DataSourceHubspot, DataSourceZendeskSupport, DataSourcePipedrive, DataSourceSLACk, DataSourceIntercom, DataSourceSalesforce, DataSourceStripe, DataSourceMixpanel, DataSourceClose, DataSourceOutlook, DataSourceUnthread:
 		return true
 	}
 	return false

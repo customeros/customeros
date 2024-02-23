@@ -33,6 +33,7 @@ const (
 	FieldMaskHeadquarters       = "headquarters"
 	FieldMaskLogoUrl            = "logoUrl"
 	FieldMaskEmployeeGrowthRate = "employeeGrowthRate"
+	FieldMaskSlackChannelId     = "slackChannelId"
 )
 
 type CustomFieldDataType string
@@ -95,6 +96,7 @@ type Organization struct {
 	YearFounded         *int64                                   `json:"yearFounded,omitempty"`
 	Headquarters        string                                   `json:"headquarters,omitempty"`
 	EmployeeGrowthRate  string                                   `json:"employeeGrowthRate,omitempty"`
+	SlackChannelId      string                                   `json:"slackChannelId,omitempty"`
 	OnboardingDetails   OnboardingDetails                        `json:"onboardingDetails,omitempty"`
 	BillingProfiles     map[string]BillingProfile                `json:"billingProfiles,omitempty"`
 	OrganizationPlans   map[string]orgplanmodel.OrganizationPlan `json:"organizationPlans,omitempty"`

@@ -31,6 +31,7 @@ enum OrganizationMaskField {
   ORGANIZATION_PROPERTY_LOGO_URL = 20;
   ORGANIZATION_PROPERTY_HEADQUARTERS = 21;
   ORGANIZATION_PROPERTY_EMPLOYEE_GROWTH_RATE = 22;
+  ORGANIZATION_PROPERTY_SLACK_CHANNEL_ID = 23;
 }
 
 enum BillingProfileFieldMask {
@@ -70,6 +71,7 @@ message UpsertOrganizationGrpcRequest {
   string headquarters = 33;
   string employeeGrowthRate = 34;
   optional int64 yearFounded = 35;
+  string slackChannelId = 36;
 }
 
 message UpdateOrganizationGrpcRequest {
@@ -94,6 +96,7 @@ message UpdateOrganizationGrpcRequest {
   string description = 19;
   string website = 20;
   int64 employees = 21;
+  string slackChannelId = 36;
 }
 
 message OrganizationIdGrpcRequest {

@@ -83,6 +83,7 @@ type Loaders struct {
 	TimelineEventForTimelineEventId               *dataloader.Loader
 	OrganizationForJobRole                        *dataloader.Loader
 	OrganizationForInvoice                        *dataloader.Loader
+	OrganizationForSlackChannel                   *dataloader.Loader
 	ContactForJobRole                             *dataloader.Loader
 	IssueForInteractionEvent                      *dataloader.Loader
 	MeetingForInteractionEvent                    *dataloader.Loader
@@ -376,6 +377,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		TimelineEventForTimelineEventId:               dataloader.NewBatchedLoader(timelineEventBatcher.getTimelineEventsForTimelineEventIds, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		OrganizationForJobRole:                        dataloader.NewBatchedLoader(organizationBatcher.getOrganizationsForJobRoles, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		OrganizationForInvoice:                        dataloader.NewBatchedLoader(organizationBatcher.getOrganizationsForInvoices, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		OrganizationForSlackChannel:                   dataloader.NewBatchedLoader(organizationBatcher.getOrganizationsForSlackChannels, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		ContactForJobRole:                             dataloader.NewBatchedLoader(contactBatcher.getContactsForJobRoles, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		IssueForInteractionEvent:                      dataloader.NewBatchedLoader(issueBatcher.getIssuesForInteractionEvents, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		MeetingForInteractionEvent:                    dataloader.NewBatchedLoader(meetingBatcher.getMeetingsForInteractionEvents, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),

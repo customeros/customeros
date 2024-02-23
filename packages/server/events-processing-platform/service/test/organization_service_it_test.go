@@ -51,6 +51,7 @@ func TestOrganizationsService_UpsertOrganization_NewOrganization(t *testing.T) {
 		YearFounded:        utils.ToPtr(int64(2019)),
 		Headquarters:       "San Francisco, CA",
 		EmployeeGrowthRate: "10%",
+		SlackChannelId:     "channel-id",
 		LogoUrl:            "https://www.openline.ai/logo.png",
 		SourceFields: &commonpb.SourceFields{
 			AppSource: "unit-test",
@@ -99,6 +100,7 @@ func TestOrganizationsService_UpsertOrganization_NewOrganization(t *testing.T) {
 	require.Equal(t, utils.ToPtr(int64(2019)), eventData.YearFounded)
 	require.Equal(t, "San Francisco, CA", eventData.Headquarters)
 	require.Equal(t, "10%", eventData.EmployeeGrowthRate)
+	require.Equal(t, "channel-id", eventData.SlackChannelId)
 	require.Equal(t, "https://www.openline.ai/logo.png", eventData.LogoUrl)
 
 	require.Equal(t, orgevents.OrganizationRequestScrapeByWebsiteV1, eventList[1].GetEventType())

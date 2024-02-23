@@ -38,6 +38,7 @@ func MapEntityToOrganization(entity *entity.OrganizationEntity) *model.Organizat
 		YearFounded:        entity.YearFounded,
 		Headquarters:       utils.StringPtr(entity.Headquarters),
 		EmployeeGrowthRate: utils.StringPtr(entity.EmployeeGrowthRate),
+		SlackChannelID:     utils.StringPtr(entity.SlackChannelId),
 		Logo:               utils.StringPtr(entity.LogoUrl),
 		AccountDetails: &model.OrgAccountDetails{
 			RenewalSummary: &model.RenewalSummary{

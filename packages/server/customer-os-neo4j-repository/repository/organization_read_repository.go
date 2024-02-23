@@ -19,6 +19,7 @@ type OrganizationReadRepository interface {
 	GetOrganizationByInvoiceId(ctx context.Context, tenant, invoiceId string) (*dbtype.Node, error)
 	GetOrganizationByCustomerOsId(ctx context.Context, tenant, customerOsId string) (*dbtype.Node, error)
 	GetAllForInvoices(ctx context.Context, tenant string, invoiceIds []string) ([]*utils.DbNodeAndId, error)
+	GetAllForSlackChannels(ctx context.Context, tenant string, slackChannelIds []string) ([]*utils.DbNodeAndId, error)
 }
 
 type organizationReadRepository struct {
@@ -282,6 +283,40 @@ func (r *organizationReadRepository) GetAllForInvoices(ctx context.Context, tena
 	params := map[string]any{
 		"tenant":     tenant,
 		"invoiceIds": invoiceIds,
+	}
+
+	span.LogFields(log.String("query", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	span.LogFields(log.Int("result.count", len(result.([]*utils.DbNodeAndId))))
+	return result.([]*utils.DbNodeAndId), err
+}
+
+func (r *organizationReadRepository) GetAllForSlackChannels(ctx context.Context, tenant string, slackChannelIds []string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetAllForSlackChannels")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.LogFields(log.Object("slackChannelIds", slackChannelIds))
+
+	cypher := `MATCH (t:Tenant {name:$tenant})-[:ORGANIZATION_BELONGS_TO_TENANT]->(o:Organization)
+				WHERE o.slackChannelId IN $slackChannelIds
+				RETURN o, i.id`
+	params := map[string]any{
+		"tenant":          tenant,
+		"slackChannelIds": slackChannelIds,
 	}
 
 	span.LogFields(log.String("query", cypher))

@@ -38,6 +38,7 @@ type Organization implements MetadataInterface {
     customId:               String
     description:            String
     domains:                [String!]! @goField(forceResolver: true)
+    slackChannelId:         String
     employeeGrowthRate:     String
     employees:              Int64
     headquarters:           String
@@ -150,6 +151,7 @@ input OrganizationInput {
     headquarters:       String
     yearFounded:        Int64
     employees:     Int64
+    slackChannelId:     String
     appSource:     String
 
     fieldSets:     [FieldSetInput!] @deprecated
@@ -186,6 +188,7 @@ input OrganizationUpdateInput {
     employeeGrowthRate: String
     headquarters:       String
     yearFounded:        Int64
+    slackChannelId:     String
 
     isPublic:           Boolean @deprecated(reason: "Use public")
     logoUrl:            String @deprecated(reason: "Use logo")

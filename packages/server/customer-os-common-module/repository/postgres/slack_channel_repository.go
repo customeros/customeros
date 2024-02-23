@@ -2,26 +2,29 @@ package repository
 
 import (
 	"errors"
+	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"gorm.io/gorm"
 )
 
-type slackChannelRepo struct {
+type slackChannelRepository struct {
 	db *gorm.DB
 }
 
 type SlackChannelRepository interface {
 	GetSlackChannel(tenant, channelId string) (*entity.SlackChannel, error)
 	GetSlackChannels(tenant string) ([]*entity.SlackChannel, error)
+	GetPaginatedSlackChannels(tenant string, skip, limit int) ([]*entity.SlackChannel, int64, error)
+
 	CreateSlackChannel(entity *entity.SlackChannel) error
-	UpdateSlackChannel(entityId uint64, organizationId string) error
+	UpdateSlackChannel(entityId uuid.UUID, organizationId string) error
 }
 
 func NewSlackChannelRepository(db *gorm.DB) SlackChannelRepository {
-	return &slackChannelRepo{db: db}
+	return &slackChannelRepository{db: db}
 }
 
-func (r *slackChannelRepo) GetSlackChannel(tenant, channelId string) (*entity.SlackChannel, error) {
+func (r *slackChannelRepository) GetSlackChannel(tenant, channelId string) (*entity.SlackChannel, error) {
 	var entities []entity.SlackChannel
 	err := r.db.
 		Where("tenant_name = ?", tenant).
@@ -42,7 +45,7 @@ func (r *slackChannelRepo) GetSlackChannel(tenant, channelId string) (*entity.Sl
 	return &entities[0], nil
 }
 
-func (r *slackChannelRepo) GetSlackChannels(tenant string) ([]*entity.SlackChannel, error) {
+func (r *slackChannelRepository) GetSlackChannels(tenant string) ([]*entity.SlackChannel, error) {
 	var entities []*entity.SlackChannel
 	err := r.db.
 		Where("tenant_name = ?", tenant).
@@ -55,7 +58,34 @@ func (r *slackChannelRepo) GetSlackChannels(tenant string) ([]*entity.SlackChann
 	return entities, nil
 }
 
-func (r *slackChannelRepo) CreateSlackChannel(entity *entity.SlackChannel) error {
+func (r *slackChannelRepository) GetPaginatedSlackChannels(tenant string, skip, limit int) ([]*entity.SlackChannel, int64, error) {
+	var err error
+	var total int64
+	var entities []*entity.SlackChannel
+
+	err = r.db.
+		Model(&entity.SlackChannel{}).
+		Where("tenant_name = ?", tenant).
+		Count(&total).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	err = r.db.
+		Model(&entity.SlackChannel{}).
+		Offset(skip).
+		Limit(limit).
+		Where("tenant_name = ?", tenant).
+		Find(&entities).Error
+
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return entities, total, nil
+}
+
+func (r *slackChannelRepository) CreateSlackChannel(entity *entity.SlackChannel) error {
 	err := r.db.Create(entity).Error
 	if err != nil {
 		return err
@@ -64,6 +94,6 @@ func (r *slackChannelRepo) CreateSlackChannel(entity *entity.SlackChannel) error
 	return nil
 }
 
-func (r *slackChannelRepo) UpdateSlackChannel(entityId uint64, organizationId string) error {
+func (r *slackChannelRepository) UpdateSlackChannel(entityId uuid.UUID, organizationId string) error {
 	return r.db.Model(&entity.SlackChannel{}).Where("id = ?", entityId).Update("organization_id", organizationId).Error
 }

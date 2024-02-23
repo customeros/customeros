@@ -28,6 +28,7 @@ type OrganizationService interface {
 	CountOrganizations(ctx context.Context, tenant string) (int64, error)
 	GetOrganizationsForJobRoles(ctx context.Context, jobRoleIds []string) (*entity.OrganizationEntities, error)
 	GetOrganizationsForInvoices(ctx context.Context, invoiceIds []string) (*entity.OrganizationEntities, error)
+	GetOrganizationsForSlackChannels(ctx context.Context, slackChannelIds []string) (*entity.OrganizationEntities, error)
 	GetById(ctx context.Context, organizationId string) (*entity.OrganizationEntity, error)
 	GetByCustomerOsId(ctx context.Context, customerOsId string) (*entity.OrganizationEntity, error)
 	ExistsById(ctx context.Context, organizationId string) (bool, error)
@@ -811,6 +812,7 @@ func (s *organizationService) mapDbNodeToOrganizationEntity(node dbtype.Node) *e
 		YearFounded:        utils.GetInt64PropOrNil(props, "yearFounded"),
 		LogoUrl:            utils.GetStringPropOrEmpty(props, "logoUrl"),
 		EmployeeGrowthRate: utils.GetStringPropOrEmpty(props, "employeeGrowthRate"),
+		SlackChannelId:     utils.GetStringPropOrEmpty(props, "slackChannelId"),
 		CreatedAt:          utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:          utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		Source:             neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
@@ -855,6 +857,25 @@ func (s *organizationService) GetOrganizationsForInvoices(ctx context.Context, i
 	span.LogFields(log.Object("invoiceIds", invoiceIds))
 
 	organizations, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetAllForInvoices(ctx, common.GetTenantFromContext(ctx), invoiceIds)
+	if err != nil {
+		return nil, err
+	}
+	organizationEntities := make(entity.OrganizationEntities, 0, len(organizations))
+	for _, v := range organizations {
+		organizationEntity := s.mapDbNodeToOrganizationEntity(*v.Node)
+		organizationEntity.DataloaderKey = v.LinkedNodeId
+		organizationEntities = append(organizationEntities, *organizationEntity)
+	}
+	return &organizationEntities, nil
+}
+
+func (s *organizationService) GetOrganizationsForSlackChannels(ctx context.Context, slackChannelIds []string) (*entity.OrganizationEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetOrganizationsForSlackChannels")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("slackChannelIds", slackChannelIds))
+
+	organizations, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetAllForSlackChannels(ctx, common.GetTenantFromContext(ctx), slackChannelIds)
 	if err != nil {
 		return nil, err
 	}
