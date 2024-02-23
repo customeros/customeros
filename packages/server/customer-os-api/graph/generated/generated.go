@@ -69,6 +69,7 @@ type ResolverRoot interface {
 	Player() PlayerResolver
 	Query() QueryResolver
 	ServiceLineItem() ServiceLineItemResolver
+	SlackChannel() SlackChannelResolver
 	TableViewDef() TableViewDefResolver
 	User() UserResolver
 	ViewType() ViewTypeResolver
@@ -1122,6 +1123,7 @@ type ComplexityRoot struct {
 		PhoneNumbers                  func(childComplexity int) int
 		Public                        func(childComplexity int) int
 		ReferenceID                   func(childComplexity int) int
+		SlackChannelID                func(childComplexity int) int
 		SocialMedia                   func(childComplexity int) int
 		Socials                       func(childComplexity int) int
 		Source                        func(childComplexity int) int
@@ -1307,6 +1309,7 @@ type ComplexityRoot struct {
 		PhoneNumber                           func(childComplexity int, id string) int
 		PlayerByAuthIDProvider                func(childComplexity int, authID string, provider string) int
 		ServiceLineItem                       func(childComplexity int, id string) int
+		SlackChannels                         func(childComplexity int, pagination *model.Pagination) int
 		TableViewDefs                         func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort *model.SortBy) int
 		Tags                                  func(childComplexity int) int
 		Tenant                                func(childComplexity int) int
@@ -1369,6 +1372,19 @@ type ComplexityRoot struct {
 		Tax            func(childComplexity int) int
 		UpdatedAt      func(childComplexity int) int
 		VatRate        func(childComplexity int) int
+	}
+
+	SlackChannel struct {
+		ChannelID    func(childComplexity int) int
+		Metadata     func(childComplexity int) int
+		Organization func(childComplexity int) int
+	}
+
+	SlackChannelPage struct {
+		Content        func(childComplexity int) int
+		TotalAvailable func(childComplexity int) int
+		TotalElements  func(childComplexity int) int
+		TotalPages     func(childComplexity int) int
 	}
 
 	Social struct {
@@ -1926,6 +1942,7 @@ type QueryResolver interface {
 	PlayerByAuthIDProvider(ctx context.Context, authID string, provider string) (*model.Player, error)
 	GcliSearch(ctx context.Context, keyword string, limit *int) ([]*model.GCliItem, error)
 	ServiceLineItem(ctx context.Context, id string) (*model.ServiceLineItem, error)
+	SlackChannels(ctx context.Context, pagination *model.Pagination) (*model.SlackChannelPage, error)
 	Tags(ctx context.Context) ([]*model.Tag, error)
 	Tenant(ctx context.Context) (string, error)
 	TenantByWorkspace(ctx context.Context, workspace model.WorkspaceInput) (*string, error)
@@ -1943,6 +1960,9 @@ type QueryResolver interface {
 type ServiceLineItemResolver interface {
 	CreatedBy(ctx context.Context, obj *model.ServiceLineItem) (*model.User, error)
 	ExternalLinks(ctx context.Context, obj *model.ServiceLineItem) ([]*model.ExternalSystem, error)
+}
+type SlackChannelResolver interface {
+	Organization(ctx context.Context, obj *model.SlackChannel) (*model.Organization, error)
 }
 type TableViewDefResolver interface {
 	CreatedBy(ctx context.Context, obj *model.TableViewDef) (*model.User, error)
@@ -8529,6 +8549,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Organization.ReferenceID(childComplexity), true
 
+	case "Organization.slackChannelId":
+		if e.complexity.Organization.SlackChannelID == nil {
+			break
+		}
+
+		return e.complexity.Organization.SlackChannelID(childComplexity), true
+
 	case "Organization.socialMedia":
 		if e.complexity.Organization.SocialMedia == nil {
 			break
@@ -9771,6 +9798,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.ServiceLineItem(childComplexity, args["id"].(string)), true
 
+	case "Query.slack_Channels":
+		if e.complexity.Query.SlackChannels == nil {
+			break
+		}
+
+		args, err := ec.field_Query_slack_Channels_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.SlackChannels(childComplexity, args["pagination"].(*model.Pagination)), true
+
 	case "Query.tableViewDefs":
 		if e.complexity.Query.TableViewDefs == nil {
 			break
@@ -10139,6 +10178,55 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ServiceLineItem.VatRate(childComplexity), true
+
+	case "SlackChannel.channelId":
+		if e.complexity.SlackChannel.ChannelID == nil {
+			break
+		}
+
+		return e.complexity.SlackChannel.ChannelID(childComplexity), true
+
+	case "SlackChannel.metadata":
+		if e.complexity.SlackChannel.Metadata == nil {
+			break
+		}
+
+		return e.complexity.SlackChannel.Metadata(childComplexity), true
+
+	case "SlackChannel.organization":
+		if e.complexity.SlackChannel.Organization == nil {
+			break
+		}
+
+		return e.complexity.SlackChannel.Organization(childComplexity), true
+
+	case "SlackChannelPage.content":
+		if e.complexity.SlackChannelPage.Content == nil {
+			break
+		}
+
+		return e.complexity.SlackChannelPage.Content(childComplexity), true
+
+	case "SlackChannelPage.totalAvailable":
+		if e.complexity.SlackChannelPage.TotalAvailable == nil {
+			break
+		}
+
+		return e.complexity.SlackChannelPage.TotalAvailable(childComplexity), true
+
+	case "SlackChannelPage.totalElements":
+		if e.complexity.SlackChannelPage.TotalElements == nil {
+			break
+		}
+
+		return e.complexity.SlackChannelPage.TotalElements(childComplexity), true
+
+	case "SlackChannelPage.totalPages":
+		if e.complexity.SlackChannelPage.TotalPages == nil {
+			break
+		}
+
+		return e.complexity.SlackChannelPage.TotalPages(childComplexity), true
 
 	case "Social.appSource":
 		if e.complexity.Social.AppSource == nil {
@@ -13358,6 +13446,7 @@ type Organization implements MetadataInterface {
     customId:               String
     description:            String
     domains:                [String!]! @goField(forceResolver: true)
+    slackChannelId:         String
     employeeGrowthRate:     String
     employees:              Int64
     headquarters:           String
@@ -13470,6 +13559,7 @@ input OrganizationInput {
     headquarters:       String
     yearFounded:        Int64
     employees:     Int64
+    slackChannelId:     String
     appSource:     String
 
     fieldSets:     [FieldSetInput!] @deprecated
@@ -13506,6 +13596,7 @@ input OrganizationUpdateInput {
     employeeGrowthRate: String
     headquarters:       String
     yearFounded:        Int64
+    slackChannelId:     String
 
     isPublic:           Boolean @deprecated(reason: "Use public")
     logoUrl:            String @deprecated(reason: "Use logo")
@@ -14086,6 +14177,23 @@ enum BilledType {
 input TaxInput {
     taxRate:    Float!
 }`, BuiltIn: false},
+	{Name: "../schemas/slack.graphqls", Input: `extend type Query {
+    slack_Channels(pagination: Pagination): SlackChannelPage! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+type SlackChannelPage implements Pages {
+    content: [SlackChannel!]!
+    totalPages: Int!
+    totalElements: Int64!
+    totalAvailable: Int64!
+}
+
+type SlackChannel {
+    metadata:              Metadata!
+    organization:          Organization @goField(forceResolver: true)
+    channelId:             String!
+}
+`, BuiltIn: false},
 	{Name: "../schemas/social.graphqls", Input: `extend type Mutation {
     social_Update(input: SocialUpdateInput!): Social! @hasRole(roles: [ADMIN, USER]) @hasTenant
     social_Remove(socialId: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -14127,6 +14235,7 @@ input SocialUpdateInput {
     MIXPANEL
     CLOSE
     OUTLOOK
+    UNTHREAD
 }`, BuiltIn: false},
 	{Name: "../schemas/state.graphqls", Input: `type State {
     id: ID!
@@ -18772,6 +18881,21 @@ func (ec *executionContext) field_Query_serviceLineItem_args(ctx context.Context
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_slack_Channels_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *model.Pagination
+	if tmp, ok := rawArgs["pagination"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pagination"))
+		arg0, err = ec.unmarshalOPagination2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPagination(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["pagination"] = arg0
 	return args, nil
 }
 
@@ -28758,6 +28882,8 @@ func (ec *executionContext) fieldContext_DashboardCustomerMap_organization(ctx c
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
 				return ec.fieldContext_Organization_domains(ctx, field)
+			case "slackChannelId":
+				return ec.fieldContext_Organization_slackChannelId(ctx, field)
 			case "employeeGrowthRate":
 				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
 			case "employees":
@@ -31593,6 +31719,8 @@ func (ec *executionContext) fieldContext_Email_organizations(ctx context.Context
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
 				return ec.fieldContext_Organization_domains(ctx, field)
+			case "slackChannelId":
+				return ec.fieldContext_Organization_slackChannelId(ctx, field)
 			case "employeeGrowthRate":
 				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
 			case "employees":
@@ -36251,6 +36379,8 @@ func (ec *executionContext) fieldContext_Invoice_organization(ctx context.Contex
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
 				return ec.fieldContext_Organization_domains(ctx, field)
+			case "slackChannelId":
+				return ec.fieldContext_Organization_slackChannelId(ctx, field)
 			case "employeeGrowthRate":
 				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
 			case "employees":
@@ -41059,6 +41189,8 @@ func (ec *executionContext) fieldContext_JobRole_organization(ctx context.Contex
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
 				return ec.fieldContext_Organization_domains(ctx, field)
+			case "slackChannelId":
+				return ec.fieldContext_Organization_slackChannelId(ctx, field)
 			case "employeeGrowthRate":
 				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
 			case "employees":
@@ -41990,6 +42122,8 @@ func (ec *executionContext) fieldContext_LinkedOrganization_organization(ctx con
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
 				return ec.fieldContext_Organization_domains(ctx, field)
+			case "slackChannelId":
+				return ec.fieldContext_Organization_slackChannelId(ctx, field)
 			case "employeeGrowthRate":
 				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
 			case "employees":
@@ -52538,6 +52672,8 @@ func (ec *executionContext) fieldContext_Mutation_location_RemoveFromOrganizatio
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
 				return ec.fieldContext_Organization_domains(ctx, field)
+			case "slackChannelId":
+				return ec.fieldContext_Organization_slackChannelId(ctx, field)
 			case "employeeGrowthRate":
 				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
 			case "employees":
@@ -55920,6 +56056,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
 				return ec.fieldContext_Organization_domains(ctx, field)
+			case "slackChannelId":
+				return ec.fieldContext_Organization_slackChannelId(ctx, field)
 			case "employeeGrowthRate":
 				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
 			case "employees":
@@ -56129,6 +56267,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
 				return ec.fieldContext_Organization_domains(ctx, field)
+			case "slackChannelId":
+				return ec.fieldContext_Organization_slackChannelId(ctx, field)
 			case "employeeGrowthRate":
 				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
 			case "employees":
@@ -56852,6 +56992,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
 				return ec.fieldContext_Organization_domains(ctx, field)
+			case "slackChannelId":
+				return ec.fieldContext_Organization_slackChannelId(ctx, field)
 			case "employeeGrowthRate":
 				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
 			case "employees":
@@ -57061,6 +57203,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddSubsidiary(ctx
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
 				return ec.fieldContext_Organization_domains(ctx, field)
+			case "slackChannelId":
+				return ec.fieldContext_Organization_slackChannelId(ctx, field)
 			case "employeeGrowthRate":
 				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
 			case "employees":
@@ -57270,6 +57414,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveSubsidiary(
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
 				return ec.fieldContext_Organization_domains(ctx, field)
+			case "slackChannelId":
+				return ec.fieldContext_Organization_slackChannelId(ctx, field)
 			case "employeeGrowthRate":
 				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
 			case "employees":
@@ -57721,6 +57867,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetOwner(ctx cont
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
 				return ec.fieldContext_Organization_domains(ctx, field)
+			case "slackChannelId":
+				return ec.fieldContext_Organization_slackChannelId(ctx, field)
 			case "employeeGrowthRate":
 				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
 			case "employees":
@@ -57930,6 +58078,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnsetOwner(ctx co
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
 				return ec.fieldContext_Organization_domains(ctx, field)
+			case "slackChannelId":
+				return ec.fieldContext_Organization_slackChannelId(ctx, field)
 			case "employeeGrowthRate":
 				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
 			case "employees":
@@ -58139,6 +58289,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_UpdateOnboardingS
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
 				return ec.fieldContext_Organization_domains(ctx, field)
+			case "slackChannelId":
+				return ec.fieldContext_Organization_slackChannelId(ctx, field)
 			case "employeeGrowthRate":
 				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
 			case "employees":
@@ -65924,6 +66076,47 @@ func (ec *executionContext) fieldContext_Organization_domains(ctx context.Contex
 	return fc, nil
 }
 
+func (ec *executionContext) _Organization_slackChannelId(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_slackChannelId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SlackChannelID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_slackChannelId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Organization_employeeGrowthRate(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
 	if err != nil {
@@ -68589,6 +68782,8 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(ctx context.Co
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
 				return ec.fieldContext_Organization_domains(ctx, field)
+			case "slackChannelId":
+				return ec.fieldContext_Organization_slackChannelId(ctx, field)
 			case "employeeGrowthRate":
 				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
 			case "employees":
@@ -68889,6 +69084,8 @@ func (ec *executionContext) fieldContext_OrganizationParticipant_organizationPar
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
 				return ec.fieldContext_Organization_domains(ctx, field)
+			case "slackChannelId":
+				return ec.fieldContext_Organization_slackChannelId(ctx, field)
 			case "employeeGrowthRate":
 				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
 			case "employees":
@@ -71964,6 +72161,8 @@ func (ec *executionContext) fieldContext_PhoneNumber_organizations(ctx context.C
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
 				return ec.fieldContext_Organization_domains(ctx, field)
+			case "slackChannelId":
+				return ec.fieldContext_Organization_slackChannelId(ctx, field)
 			case "employeeGrowthRate":
 				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
 			case "employees":
@@ -76039,6 +76238,8 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
 				return ec.fieldContext_Organization_domains(ctx, field)
+			case "slackChannelId":
+				return ec.fieldContext_Organization_slackChannelId(ctx, field)
 			case "employeeGrowthRate":
 				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
 			case "employees":
@@ -76245,6 +76446,8 @@ func (ec *executionContext) fieldContext_Query_organization_ByCustomerOsId(ctx c
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
 				return ec.fieldContext_Organization_domains(ctx, field)
+			case "slackChannelId":
+				return ec.fieldContext_Organization_slackChannelId(ctx, field)
 			case "employeeGrowthRate":
 				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
 			case "employees":
@@ -77194,6 +77397,101 @@ func (ec *executionContext) fieldContext_Query_serviceLineItem(ctx context.Conte
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_serviceLineItem_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_slack_Channels(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_slack_Channels(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().SlackChannels(rctx, fc.Args["pagination"].(*model.Pagination))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.SlackChannelPage); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.SlackChannelPage`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.SlackChannelPage)
+	fc.Result = res
+	return ec.marshalNSlackChannelPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSlackChannelPage(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_slack_Channels(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "content":
+				return ec.fieldContext_SlackChannelPage_content(ctx, field)
+			case "totalPages":
+				return ec.fieldContext_SlackChannelPage_totalPages(ctx, field)
+			case "totalElements":
+				return ec.fieldContext_SlackChannelPage_totalElements(ctx, field)
+			case "totalAvailable":
+				return ec.fieldContext_SlackChannelPage_totalAvailable(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SlackChannelPage", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_slack_Channels_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -78482,6 +78780,8 @@ func (ec *executionContext) fieldContext_RenewalRecord_organization(ctx context.
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
 				return ec.fieldContext_Organization_domains(ctx, field)
+			case "slackChannelId":
+				return ec.fieldContext_Organization_slackChannelId(ctx, field)
 			case "employeeGrowthRate":
 				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
 			case "employees":
@@ -80283,6 +80583,459 @@ func (ec *executionContext) fieldContext_ServiceLineItem_appSource(ctx context.C
 	return fc, nil
 }
 
+func (ec *executionContext) _SlackChannel_metadata(ctx context.Context, field graphql.CollectedField, obj *model.SlackChannel) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SlackChannel_metadata(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Metadata, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Metadata)
+	fc.Result = res
+	return ec.marshalNMetadata2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMetadata(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SlackChannel_metadata(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SlackChannel",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Metadata_id(ctx, field)
+			case "created":
+				return ec.fieldContext_Metadata_created(ctx, field)
+			case "lastUpdated":
+				return ec.fieldContext_Metadata_lastUpdated(ctx, field)
+			case "source":
+				return ec.fieldContext_Metadata_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Metadata_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Metadata_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Metadata", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SlackChannel_organization(ctx context.Context, field graphql.CollectedField, obj *model.SlackChannel) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SlackChannel_organization(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.SlackChannel().Organization(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Organization)
+	fc.Result = res
+	return ec.marshalOOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganization(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SlackChannel_organization(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SlackChannel",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "metadata":
+				return ec.fieldContext_Organization_metadata(ctx, field)
+			case "accountDetails":
+				return ec.fieldContext_Organization_accountDetails(ctx, field)
+			case "contracts":
+				return ec.fieldContext_Organization_contracts(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
+			case "customFields":
+				return ec.fieldContext_Organization_customFields(ctx, field)
+			case "customId":
+				return ec.fieldContext_Organization_customId(ctx, field)
+			case "description":
+				return ec.fieldContext_Organization_description(ctx, field)
+			case "domains":
+				return ec.fieldContext_Organization_domains(ctx, field)
+			case "slackChannelId":
+				return ec.fieldContext_Organization_slackChannelId(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "employees":
+				return ec.fieldContext_Organization_employees(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "industry":
+				return ec.fieldContext_Organization_industry(ctx, field)
+			case "industryGroup":
+				return ec.fieldContext_Organization_industryGroup(ctx, field)
+			case "isCustomer":
+				return ec.fieldContext_Organization_isCustomer(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastTouchpoint":
+				return ec.fieldContext_Organization_lastTouchpoint(ctx, field)
+			case "locations":
+				return ec.fieldContext_Organization_locations(ctx, field)
+			case "logo":
+				return ec.fieldContext_Organization_logo(ctx, field)
+			case "market":
+				return ec.fieldContext_Organization_market(ctx, field)
+			case "name":
+				return ec.fieldContext_Organization_name(ctx, field)
+			case "notes":
+				return ec.fieldContext_Organization_notes(ctx, field)
+			case "owner":
+				return ec.fieldContext_Organization_owner(ctx, field)
+			case "parentCompanies":
+				return ec.fieldContext_Organization_parentCompanies(ctx, field)
+			case "public":
+				return ec.fieldContext_Organization_public(ctx, field)
+			case "socialMedia":
+				return ec.fieldContext_Organization_socialMedia(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
+			case "subsidiaries":
+				return ec.fieldContext_Organization_subsidiaries(ctx, field)
+			case "tags":
+				return ec.fieldContext_Organization_tags(ctx, field)
+			case "targetAudience":
+				return ec.fieldContext_Organization_targetAudience(ctx, field)
+			case "timelineEvents":
+				return ec.fieldContext_Organization_timelineEvents(ctx, field)
+			case "valueProposition":
+				return ec.fieldContext_Organization_valueProposition(ctx, field)
+			case "website":
+				return ec.fieldContext_Organization_website(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "hide":
+				return ec.fieldContext_Organization_hide(ctx, field)
+			case "contacts":
+				return ec.fieldContext_Organization_contacts(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_Organization_jobRoles(ctx, field)
+			case "emails":
+				return ec.fieldContext_Organization_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
+			case "suggestedMergeTo":
+				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
+			case "fieldSets":
+				return ec.fieldContext_Organization_fieldSets(ctx, field)
+			case "entityTemplate":
+				return ec.fieldContext_Organization_entityTemplate(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "issueSummaryByStatus":
+				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
+			case "socials":
+				return ec.fieldContext_Organization_socials(ctx, field)
+			case "isPublic":
+				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "note":
+				return ec.fieldContext_Organization_note(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
+			case "id":
+				return ec.fieldContext_Organization_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Organization_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Organization_updatedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_Organization_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Organization_appSource(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_Organization_referenceId(ctx, field)
+			case "lastTouchPointAt":
+				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointType":
+				return ec.fieldContext_Organization_lastTouchPointType(ctx, field)
+			case "lastTouchPointTimelineEventId":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
+			case "lastTouchPointTimelineEvent":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
+			case "subsidiaryOf":
+				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SlackChannel_channelId(ctx context.Context, field graphql.CollectedField, obj *model.SlackChannel) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SlackChannel_channelId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ChannelID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SlackChannel_channelId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SlackChannel",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SlackChannelPage_content(ctx context.Context, field graphql.CollectedField, obj *model.SlackChannelPage) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SlackChannelPage_content(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Content, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.SlackChannel)
+	fc.Result = res
+	return ec.marshalNSlackChannel2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSlackChannelᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SlackChannelPage_content(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SlackChannelPage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "metadata":
+				return ec.fieldContext_SlackChannel_metadata(ctx, field)
+			case "organization":
+				return ec.fieldContext_SlackChannel_organization(ctx, field)
+			case "channelId":
+				return ec.fieldContext_SlackChannel_channelId(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SlackChannel", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SlackChannelPage_totalPages(ctx context.Context, field graphql.CollectedField, obj *model.SlackChannelPage) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SlackChannelPage_totalPages(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TotalPages, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SlackChannelPage_totalPages(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SlackChannelPage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SlackChannelPage_totalElements(ctx context.Context, field graphql.CollectedField, obj *model.SlackChannelPage) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SlackChannelPage_totalElements(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TotalElements, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SlackChannelPage_totalElements(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SlackChannelPage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SlackChannelPage_totalAvailable(ctx context.Context, field graphql.CollectedField, obj *model.SlackChannelPage) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SlackChannelPage_totalAvailable(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TotalAvailable, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SlackChannelPage_totalAvailable(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SlackChannelPage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Social_id(ctx context.Context, field graphql.CollectedField, obj *model.Social) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Social_id(ctx, field)
 	if err != nil {
@@ -80875,6 +81628,8 @@ func (ec *executionContext) fieldContext_SuggestedMergeOrganization_organization
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
 				return ec.fieldContext_Organization_domains(ctx, field)
+			case "slackChannelId":
+				return ec.fieldContext_Organization_slackChannelId(ctx, field)
 			case "employeeGrowthRate":
 				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
 			case "employees":
@@ -91001,7 +91756,7 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"customId", "name", "description", "notes", "domains", "website", "industry", "subIndustry", "industryGroup", "public", "isCustomer", "customFields", "market", "logo", "employeeGrowthRate", "headquarters", "yearFounded", "employees", "appSource", "fieldSets", "templateId", "isPublic", "referenceId", "note", "logoUrl"}
+	fieldsInOrder := [...]string{"customId", "name", "description", "notes", "domains", "website", "industry", "subIndustry", "industryGroup", "public", "isCustomer", "customFields", "market", "logo", "employeeGrowthRate", "headquarters", "yearFounded", "employees", "slackChannelId", "appSource", "fieldSets", "templateId", "isPublic", "referenceId", "note", "logoUrl"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -91134,6 +91889,13 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 				return it, err
 			}
 			it.Employees = data
+		case "slackChannelId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("slackChannelId"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SlackChannelID = data
 		case "appSource":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -91650,7 +92412,7 @@ func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Co
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "customId", "patch", "name", "description", "notes", "website", "industry", "subIndustry", "industryGroup", "public", "isCustomer", "market", "employees", "targetAudience", "valueProposition", "lastFundingRound", "lastFundingAmount", "logo", "employeeGrowthRate", "headquarters", "yearFounded", "isPublic", "logoUrl", "domains", "note", "referenceId"}
+	fieldsInOrder := [...]string{"id", "customId", "patch", "name", "description", "notes", "website", "industry", "subIndustry", "industryGroup", "public", "isCustomer", "market", "employees", "targetAudience", "valueProposition", "lastFundingRound", "lastFundingAmount", "logo", "employeeGrowthRate", "headquarters", "yearFounded", "slackChannelId", "isPublic", "logoUrl", "domains", "note", "referenceId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -91811,6 +92573,13 @@ func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Co
 				return it, err
 			}
 			it.YearFounded = data
+		case "slackChannelId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("slackChannelId"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SlackChannelID = data
 		case "isPublic":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isPublic"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
@@ -93893,6 +94662,13 @@ func (ec *executionContext) _Pages(ctx context.Context, sel ast.SelectionSet, ob
 			return graphql.Null
 		}
 		return ec._OrganizationPage(ctx, sel, obj)
+	case model.SlackChannelPage:
+		return ec._SlackChannelPage(ctx, sel, &obj)
+	case *model.SlackChannelPage:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._SlackChannelPage(ctx, sel, obj)
 	case model.UserPage:
 		return ec._UserPage(ctx, sel, &obj)
 	case *model.UserPage:
@@ -102951,6 +103727,8 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "slackChannelId":
+			out.Values[i] = ec._Organization_slackChannelId(ctx, field, obj)
 		case "employeeGrowthRate":
 			out.Values[i] = ec._Organization_employeeGrowthRate(ctx, field, obj)
 		case "employees":
@@ -105771,6 +106549,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "slack_Channels":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_slack_Channels(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "tags":
 			field := field
 
@@ -106441,6 +107241,137 @@ func (ec *executionContext) _ServiceLineItem(ctx context.Context, sel ast.Select
 			out.Values[i] = ec._ServiceLineItem_appSource(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var slackChannelImplementors = []string{"SlackChannel"}
+
+func (ec *executionContext) _SlackChannel(ctx context.Context, sel ast.SelectionSet, obj *model.SlackChannel) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, slackChannelImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SlackChannel")
+		case "metadata":
+			out.Values[i] = ec._SlackChannel_metadata(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "organization":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._SlackChannel_organization(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "channelId":
+			out.Values[i] = ec._SlackChannel_channelId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var slackChannelPageImplementors = []string{"SlackChannelPage", "Pages"}
+
+func (ec *executionContext) _SlackChannelPage(ctx context.Context, sel ast.SelectionSet, obj *model.SlackChannelPage) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, slackChannelPageImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SlackChannelPage")
+		case "content":
+			out.Values[i] = ec._SlackChannelPage_content(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalPages":
+			out.Values[i] = ec._SlackChannelPage_totalPages(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalElements":
+			out.Values[i] = ec._SlackChannelPage_totalElements(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalAvailable":
+			out.Values[i] = ec._SlackChannelPage_totalAvailable(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -111671,6 +112602,74 @@ func (ec *executionContext) unmarshalNServiceLineItemInput2githubᚗcomᚋopenli
 func (ec *executionContext) unmarshalNServiceLineItemUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐServiceLineItemUpdateInput(ctx context.Context, v interface{}) (model.ServiceLineItemUpdateInput, error) {
 	res, err := ec.unmarshalInputServiceLineItemUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNSlackChannel2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSlackChannelᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.SlackChannel) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNSlackChannel2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSlackChannel(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNSlackChannel2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSlackChannel(ctx context.Context, sel ast.SelectionSet, v *model.SlackChannel) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._SlackChannel(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNSlackChannelPage2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSlackChannelPage(ctx context.Context, sel ast.SelectionSet, v model.SlackChannelPage) graphql.Marshaler {
+	return ec._SlackChannelPage(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNSlackChannelPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSlackChannelPage(ctx context.Context, sel ast.SelectionSet, v *model.SlackChannelPage) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._SlackChannelPage(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNSocial2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSocial(ctx context.Context, sel ast.SelectionSet, v model.Social) graphql.Marshaler {

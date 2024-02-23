@@ -40,6 +40,7 @@ type OrganizationCreateFields struct {
 	Headquarters       string       `json:"headquarters"`
 	YearFounded        *int64       `json:"yearFounded"`
 	EmployeeGrowthRate string       `json:"employeeGrowthRate"`
+	SlackChannelId     string       `json:"slackChannelId"`
 }
 
 type OrganizationUpdateFields struct {
@@ -64,6 +65,7 @@ type OrganizationUpdateFields struct {
 	Headquarters             string    `json:"headquarters"`
 	YearFounded              *int64    `json:"yearFounded"`
 	EmployeeGrowthRate       string    `json:"employeeGrowthRate"`
+	SlackChannelId           string    `json:"slackChannelId"`
 	WebScrapedUrl            string    `json:"webScrapedUrl"`
 	Source                   string    `json:"source"`
 	UpdatedAt                time.Time `json:"updatedAt"`
@@ -88,6 +90,7 @@ type OrganizationUpdateFields struct {
 	UpdateHeadquarters       bool      `json:"updateHeadquarters"`
 	UpdateLogoUrl            bool      `json:"updateLogoUrl"`
 	UpdateEmployeeGrowthRate bool      `json:"updateEmployeeGrowthRate"`
+	UpdateSlackChannelId     bool      `json:"slackChannelId"`
 }
 
 type OrganizationWriteRepository interface {
@@ -196,6 +199,7 @@ func (r *organizationWriteRepository) CreateOrganizationInTx(ctx context.Context
 						org.isPublic = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.isPublic is null THEN $isPublic ELSE org.isPublic END,
 						org.employees = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.employees is null THEN $employees ELSE org.employees END,
 						org.market = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.market is null OR org.market = '' THEN $market ELSE org.market END,
+						org.slackChannelId = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.slackChannelId is null OR org.slackChannelId = '' THEN $slackChannelId ELSE org.slackChannelId END,
 						org.updatedAt=$updatedAt,
 						org.syncedWithEventStore = true`, tenant)
 	params := map[string]any{
@@ -222,6 +226,7 @@ func (r *organizationWriteRepository) CreateOrganizationInTx(ctx context.Context
 		"headquarters":       data.Headquarters,
 		"yearFounded":        data.YearFounded,
 		"employeeGrowthRate": data.EmployeeGrowthRate,
+		"slackChannelId":     data.SlackChannelId,
 		"source":             data.SourceFields.Source,
 		"sourceOfTruth":      data.SourceFields.SourceOfTruth,
 		"appSource":          data.SourceFields.AppSource,
@@ -271,6 +276,7 @@ func (r *organizationWriteRepository) UpdateOrganization(ctx context.Context, te
 		"headquarters":       data.Headquarters,
 		"yearFounded":        data.YearFounded,
 		"employeeGrowthRate": data.EmployeeGrowthRate,
+		"slackChannelId":     data.SlackChannelId,
 		"source":             data.Source,
 		"updatedAt":          data.UpdatedAt,
 		"overwrite":          data.Source == constants.SourceOpenline || data.Source == constants.SourceWebscrape,
@@ -338,6 +344,9 @@ func (r *organizationWriteRepository) UpdateOrganization(ctx context.Context, te
 	}
 	if data.UpdateEmployeeGrowthRate {
 		cypher += `org.employeeGrowthRate = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.employeeGrowthRate is null OR org.employeeGrowthRate = '' THEN $employeeGrowthRate ELSE org.employeeGrowthRate END,`
+	}
+	if data.UpdateSlackChannelId {
+		cypher += `org.slackChannelId = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.slackChannelId is null OR org.slackChannelId = '' THEN $slackChannelId ELSE org.slackChannelId END,`
 	}
 	if data.WebScrapedUrl != "" {
 		params["webScrapedUrl"] = data.WebScrapedUrl

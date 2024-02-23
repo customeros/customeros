@@ -61,6 +61,7 @@ type Services struct {
 	BillingProfileService      BillingProfileService
 	InvoiceService             InvoiceService
 	OrganizationPlanService    OrganizationPlanService
+	SlackService               SlackService
 }
 
 func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *config.Config, commonServices *commonService.Services, commonAuthServices *commonAuthService.Services, grpcClients *grpc_client.Clients) *Services {
@@ -114,6 +115,7 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *confi
 	services.OpportunityService = NewOpportunityService(log, repositories, grpcClients, &services)
 	services.BillingProfileService = NewBillingProfileService(log, repositories, grpcClients)
 	services.InvoiceService = NewInvoiceService(log, repositories, grpcClients, &services)
+	services.SlackService = NewSlackService(log, repositories, grpcClients, &services)
 
 	log.Info("Init cache service")
 	services.Cache = NewCacheService(&services)

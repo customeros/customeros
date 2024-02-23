@@ -12,4 +12,5 @@ enum DataSource {
     MIXPANEL
     CLOSE
     OUTLOOK
+    UNTHREAD
 }

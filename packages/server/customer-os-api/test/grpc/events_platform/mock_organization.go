@@ -7,7 +7,7 @@ import (
 )
 
 type MockOrganizationServiceCallbacks struct {
-	CreateOrganization               func(context.Context, *organizationpb.UpsertOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
+	UpsertOrganization               func(context.Context, *organizationpb.UpsertOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	AddParent                        func(context.Context, *organizationpb.AddParentOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	RemoveParent                     func(context.Context, *organizationpb.RemoveParentOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	LinkEmailToOrganization          func(context context.Context, proto *organizationpb.LinkEmailToOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
@@ -34,10 +34,10 @@ type MockOrganizationService struct {
 }
 
 func (MockOrganizationService) UpsertOrganization(context context.Context, proto *organizationpb.UpsertOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-	if organizationCallbacks.CreateOrganization == nil {
-		panic("organizationCallbacks.CreateOrganization is not set")
+	if organizationCallbacks.UpsertOrganization == nil {
+		panic("organizationCallbacks.UpsertOrganization is not set")
 	}
-	return organizationCallbacks.CreateOrganization(context, proto)
+	return organizationCallbacks.UpsertOrganization(context, proto)
 }
 
 func (MockOrganizationService) LinkEmailToOrganization(context context.Context, proto *organizationpb.LinkEmailToOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {

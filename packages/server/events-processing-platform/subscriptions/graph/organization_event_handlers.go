@@ -97,6 +97,7 @@ func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt
 			Headquarters:       eventData.Headquarters,
 			YearFounded:        eventData.YearFounded,
 			EmployeeGrowthRate: eventData.EmployeeGrowthRate,
+			SlackChannelId:     eventData.SlackChannelId,
 		}
 		err = h.repositories.Neo4jRepositories.OrganizationWriteRepository.CreateOrganizationInTx(ctx, tx, eventData.Tenant, organizationId, data)
 		if err != nil {
@@ -241,6 +242,7 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 		Headquarters:             eventData.Headquarters,
 		YearFounded:              eventData.YearFounded,
 		EmployeeGrowthRate:       eventData.EmployeeGrowthRate,
+		SlackChannelId:           eventData.SlackChannelId,
 		WebScrapedUrl:            eventData.WebScrapedUrl,
 		Source:                   helper.GetSource(eventData.Source),
 		UpdateName:               eventData.UpdateName(),
@@ -264,6 +266,7 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 		UpdateHeadquarters:       eventData.UpdateHeadquarters(),
 		UpdateLogoUrl:            eventData.UpdateLogoUrl(),
 		UpdateEmployeeGrowthRate: eventData.UpdateEmployeeGrowthRate(),
+		UpdateSlackChannelId:     eventData.UpdateSlackChannelId(),
 	}
 	err := h.repositories.Neo4jRepositories.OrganizationWriteRepository.UpdateOrganization(ctx, eventData.Tenant, organizationId, data)
 	// set customer os id

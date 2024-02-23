@@ -99,6 +99,7 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 		LogoUrl:            utils.IfNotNilString(input.LogoURL),
 		Headquarters:       utils.IfNotNilString(input.Headquarters),
 		EmployeeGrowthRate: utils.IfNotNilString(input.EmployeeGrowthRate),
+		SlackChannelId:     utils.IfNotNilString(input.SlackChannelID),
 		SourceFields: &commonpb.SourceFields{
 			Source:    string(neo4jentity.DataSourceOpenline),
 			AppSource: utils.IfNotNilString(input.AppSource),
@@ -206,9 +207,18 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 		}
 	}
 
-	return &model.Organization{
-		ID: response.Id,
-	}, nil
+	time.Sleep(100 * time.Millisecond)
+
+	organizationEntity, err := r.Services.OrganizationService.GetById(ctx, response.Id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to fetch organization details")
+		return &model.Organization{
+			ID: response.Id,
+		}, nil
+	}
+
+	return mapper.MapEntityToOrganization(organizationEntity), nil
 }
 
 // OrganizationUpdate is the resolver for the organization_Update field.
@@ -285,6 +295,9 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 		if input.Note != nil || input.Notes != nil {
 			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NOTE)
 		}
+		if input.SlackChannelID != nil {
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_SLACK_CHANNEL_ID)
+		}
 	}
 
 	upsertOrganizationRequest := organizationpb.UpsertOrganizationGrpcRequest{
@@ -312,6 +325,7 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 		LogoUrl:            utils.IfNotNilString(input.LogoURL),
 		Headquarters:       utils.IfNotNilString(input.Headquarters),
 		EmployeeGrowthRate: utils.IfNotNilString(input.EmployeeGrowthRate),
+		SlackChannelId:     utils.IfNotNilString(input.SlackChannelID),
 		SourceFields: &commonpb.SourceFields{
 			Source: string(neo4jentity.DataSourceOpenline),
 		},

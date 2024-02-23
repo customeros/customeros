@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"net/mail"
 	"os"
@@ -913,10 +914,10 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 	}
 
 	// Save the PDF file to disk
-	//err = ioutil.WriteFile("output.pdf", *pdfBytes, 0644)
-	//if err != nil {
-	//	return errors.Wrap(err, "ioutil.WriteFile")
-	//}
+	err = ioutil.WriteFile("output.pdf", *pdfBytes, 0644)
+	if err != nil {
+		return errors.Wrap(err, "ioutil.WriteFile")
+	}
 
 	basePath := fmt.Sprintf("/INVOICE/%d/%s", invoiceEntity.CreatedAt.Year(), invoiceEntity.CreatedAt.Format("01"))
 

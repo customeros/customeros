@@ -153,6 +153,7 @@ func (a *OrganizationAggregate) onOrganizationCreate(event eventstore.Event) err
 	a.Organization.YearFounded = eventData.YearFounded
 	a.Organization.Headquarters = eventData.Headquarters
 	a.Organization.EmployeeGrowthRate = eventData.EmployeeGrowthRate
+	a.Organization.SlackChannelId = eventData.SlackChannelId
 	a.Organization.LogoUrl = eventData.LogoUrl
 	return nil
 }
@@ -227,6 +228,9 @@ func (a *OrganizationAggregate) onOrganizationUpdate(event eventstore.Event) err
 		if a.Organization.EmployeeGrowthRate == "" && eventData.UpdateEmployeeGrowthRate() {
 			a.Organization.EmployeeGrowthRate = eventData.EmployeeGrowthRate
 		}
+		if a.Organization.SlackChannelId == "" && eventData.UpdateSlackChannelId() {
+			a.Organization.SlackChannelId = eventData.SlackChannelId
+		}
 		if a.Organization.LogoUrl == "" && eventData.UpdateLogoUrl() {
 			a.Organization.LogoUrl = eventData.LogoUrl
 		}
@@ -292,6 +296,9 @@ func (a *OrganizationAggregate) onOrganizationUpdate(event eventstore.Event) err
 			if eventData.UpdateEmployeeGrowthRate() {
 				a.Organization.EmployeeGrowthRate = eventData.EmployeeGrowthRate
 			}
+			if eventData.UpdateSlackChannelId() {
+				a.Organization.SlackChannelId = eventData.SlackChannelId
+			}
 			if eventData.UpdateLogoUrl() {
 				a.Organization.LogoUrl = eventData.LogoUrl
 			}
@@ -349,6 +356,9 @@ func (a *OrganizationAggregate) onOrganizationUpdate(event eventstore.Event) err
 			}
 			if eventData.EmployeeGrowthRate != "" {
 				a.Organization.EmployeeGrowthRate = eventData.EmployeeGrowthRate
+			}
+			if eventData.SlackChannelId != "" {
+				a.Organization.SlackChannelId = eventData.SlackChannelId
 			}
 			if eventData.LogoUrl != "" {
 				a.Organization.LogoUrl = eventData.LogoUrl

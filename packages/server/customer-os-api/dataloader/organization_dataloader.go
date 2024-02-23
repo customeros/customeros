@@ -98,6 +98,18 @@ func (i *Loaders) GetOrganizationForInvoice(ctx context.Context, invoiceId strin
 	return result.(*entity.OrganizationEntity), nil
 }
 
+func (i *Loaders) GetOrganizationForSlackChannel(ctx context.Context, slackChannelId string) (*entity.OrganizationEntity, error) {
+	thunk := i.OrganizationForInvoice.Load(ctx, dataloader.StringKey(slackChannelId))
+	result, err := thunk()
+	if err != nil {
+		return nil, err
+	}
+	if result == nil {
+		return nil, nil
+	}
+	return result.(*entity.OrganizationEntity), nil
+}
+
 func (b *organizationBatcher) getOrganizationsForEmails(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationDataLoader.getOrganizationsForEmails")
 	defer span.Finish()
@@ -417,6 +429,52 @@ func (b *organizationBatcher) getOrganizationsForInvoices(ctx context.Context, k
 	for jobRoleId, _ := range organizationEntityByInvoiceId {
 		if ix, ok := keyOrder[jobRoleId]; ok {
 			val := organizationEntityByInvoiceId[jobRoleId]
+			results[ix] = &dataloader.Result{Data: &val, Error: nil}
+			delete(keyOrder, jobRoleId)
+		}
+	}
+	for _, ix := range keyOrder {
+		results[ix] = &dataloader.Result{Data: nil, Error: nil}
+	}
+
+	if err = assertEntitiesPtrType(results, reflect.TypeOf(entity.OrganizationEntity{}), true); err != nil {
+		tracing.TraceErr(span, err)
+		return []*dataloader.Result{{nil, err}}
+	}
+
+	span.LogFields(log.Int("result.length", len(results)))
+
+	return results
+}
+
+func (b *organizationBatcher) getOrganizationsForSlackChannels(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationDataLoader.getOrganizationsForSlackChannels")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+
+	ids, keyOrder := sortKeys(keys)
+
+	organizationEntities, err := b.organizationService.GetOrganizationsForSlackChannels(ctx, ids)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		// check if context deadline exceeded error occurred
+		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get organizations for invoices")}}
+		}
+		return []*dataloader.Result{{Data: nil, Error: err}}
+	}
+
+	organizationEntityBySlackChannelId := make(map[string]entity.OrganizationEntity)
+	for _, val := range *organizationEntities {
+		organizationEntityBySlackChannelId[val.DataloaderKey] = val
+	}
+
+	// construct an output array of dataloader results
+	results := make([]*dataloader.Result, len(keys))
+	for jobRoleId, _ := range organizationEntityBySlackChannelId {
+		if ix, ok := keyOrder[jobRoleId]; ok {
+			val := organizationEntityBySlackChannelId[jobRoleId]
 			results[ix] = &dataloader.Result{Data: &val, Error: nil}
 			delete(keyOrder, jobRoleId)
 		}

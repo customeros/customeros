@@ -90,7 +90,7 @@ func TestQueryResolver_Organization(t *testing.T) {
 	organizationId := neo4jt.CreateOrg(ctx, driver, tenantName, inputOrganizationEntity)
 	neo4jt.AddDomainToOrg(ctx, driver, organizationId, "domain1.com")
 	neo4jt.AddDomainToOrg(ctx, driver, organizationId, "domain2.com")
-	neo4jt.CreateOrganization(ctx, driver, tenantName, "otherOrganization")
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "otherOrganization"})
 
 	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 
@@ -291,47 +291,6 @@ func TestQueryResolver_Organizations_WithTags(t *testing.T) {
 	require.Equal(t, 1, len(organizations.Content[1].Tags))
 	require.Equal(t, tag1, organizations.Content[1].Tags[0].ID)
 	require.Equal(t, 0, len(organizations.Content[2].Tags))
-}
-
-func TestMutationResolver_OrganizationArchive(t *testing.T) {
-	ctx := context.TODO()
-	defer tearDownTestCase(ctx)(t)
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "LLC LLC")
-	locationId := neo4jt.CreateLocation(ctx, driver, tenantName, entity.LocationEntity{
-		Source: "manual",
-	})
-	neo4jt.OrganizationAssociatedWithLocation(ctx, driver, organizationId, locationId)
-
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Location"))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-
-	rawResponse, err := c.RawPost(getQuery("organization/archive_organization"),
-		client.Var("organizationId", organizationId))
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	var result struct {
-		Organization_Archive model.Result
-	}
-
-	err = decode.Decode(rawResponse.Data.(map[string]any), &result)
-	require.Nil(t, err)
-	require.NotNil(t, result)
-	require.Equal(t, true, result.Organization_Archive.Result)
-
-	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
-		"Organization":                       1,
-		"Organization_" + tenantName:         0,
-		"ArchivedOrganization":               0,
-		"ArchivedOrganization_" + tenantName: 1,
-	})
-	neo4jtest.AssertNeo4jRelationCount(ctx, t, driver, map[string]int{
-		"ARCHIVED":                       1,
-		"ORGANIZATION_BELONGS_TO_TENANT": 0,
-	})
-
-	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Organization", "ArchivedOrganization_" + tenantName, "Location", "Location_" + tenantName})
 }
 
 func TestQueryResolver_Organization_WithRoles_ById(t *testing.T) {
@@ -899,6 +858,364 @@ func TestQueryResolver_Organization_WithAccountDetails(t *testing.T) {
 	require.Equal(t, nextRenewal, *organization.AccountDetails.RenewalSummary.NextRenewalDate)
 }
 
+func TestQueryResolver_Organization_WithSocials(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	orgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
+
+	socialId1 := neo4jt.CreateSocial(ctx, driver, tenantName, entity.SocialEntity{
+		PlatformName: "p1",
+		Url:          "url1",
+	})
+	socialId2 := neo4jt.CreateSocial(ctx, driver, tenantName, entity.SocialEntity{
+		PlatformName: "p2",
+		Url:          "url2",
+	})
+	neo4jt.LinkSocialWithEntity(ctx, driver, orgId, socialId1)
+	neo4jt.LinkSocialWithEntity(ctx, driver, orgId, socialId2)
+
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Social"))
+	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "HAS"))
+
+	rawResponse := callGraphQL(t, "organization/get_organization_with_socials",
+		map[string]interface{}{"organizationId": orgId})
+
+	var orgStruct struct {
+		Organization model.Organization
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &orgStruct)
+	require.Nil(t, err)
+
+	organization := orgStruct.Organization
+	require.NotNil(t, organization)
+	require.Equal(t, 2, len(organization.Socials))
+
+	require.Equal(t, socialId1, organization.Socials[0].ID)
+	require.Equal(t, "p1", *organization.Socials[0].PlatformName)
+	require.Equal(t, "url1", organization.Socials[0].URL)
+	require.NotNil(t, organization.Socials[0].CreatedAt)
+	require.NotNil(t, organization.Socials[0].UpdatedAt)
+	require.Equal(t, "test", organization.Socials[0].AppSource)
+
+	require.Equal(t, socialId2, organization.Socials[1].ID)
+	require.Equal(t, "p2", *organization.Socials[1].PlatformName)
+	require.Equal(t, "url2", organization.Socials[1].URL)
+	require.NotNil(t, organization.Socials[1].CreatedAt)
+	require.NotNil(t, organization.Socials[1].UpdatedAt)
+	require.Equal(t, "test", organization.Socials[1].AppSource)
+}
+
+func TestQueryResolver_Organization_WithOwner(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	userId := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
+	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
+	neo4jt.UserOwnsOrganization(ctx, driver, userId, organizationId)
+
+	rawResponse := callGraphQL(t, "organization/get_organization_with_owner",
+		map[string]interface{}{"organizationId": organizationId})
+
+	var organizationStruct struct {
+		Organization model.Organization
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
+	require.Nil(t, err)
+	require.NotNil(t, organizationStruct)
+
+	organization := organizationStruct.Organization
+	require.Equal(t, organizationId, organization.ID)
+	require.Equal(t, userId, organization.Owner.ID)
+	require.Equal(t, "first", organization.Owner.FirstName)
+	require.Equal(t, "last", organization.Owner.LastName)
+
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "OWNS"))
+	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Organization", "Organization_" + tenantName})
+}
+
+func TestQueryResolver_Organization_WithExternalLinks(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
+
+	neo4jt.CreateHubspotExternalSystem(ctx, driver, tenantName)
+	syncDate1 := utils.Now()
+	syncDate2 := syncDate1.Add(time.Hour * 1)
+	neo4jt.LinkWithHubspotExternalSystem(ctx, driver, organizationId, "111", utils.StringPtr("www.external1.com"), nil, syncDate1)
+	neo4jt.LinkWithHubspotExternalSystem(ctx, driver, organizationId, "222", utils.StringPtr("www.external2.com"), nil, syncDate2)
+
+	rawResponse := callGraphQL(t, "organization/get_organization_with_external_links",
+		map[string]interface{}{"organizationId": organizationId})
+
+	var organizationStruct struct {
+		Organization model.Organization
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
+	require.Nil(t, err)
+	require.NotNil(t, organizationStruct)
+
+	organization := organizationStruct.Organization
+	require.Equal(t, organizationId, organization.ID)
+	require.Equal(t, 2, len(organization.ExternalLinks))
+	require.Equal(t, "111", *organization.ExternalLinks[0].ExternalID)
+	require.Equal(t, "222", *organization.ExternalLinks[1].ExternalID)
+	require.Equal(t, "www.external1.com", *organization.ExternalLinks[0].ExternalURL)
+	require.Equal(t, "www.external2.com", *organization.ExternalLinks[1].ExternalURL)
+	require.Nil(t, organization.ExternalLinks[0].ExternalSource)
+	require.Nil(t, organization.ExternalLinks[1].ExternalSource)
+	require.Equal(t, syncDate1, *organization.ExternalLinks[0].SyncDate)
+	require.Equal(t, syncDate2, *organization.ExternalLinks[1].SyncDate)
+}
+
+func TestQueryResolver_OrganizationDistinctOwners(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	userId1 := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
+	userId2 := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{
+		FirstName: "first2",
+		LastName:  "last2",
+	})
+	organizationId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name 1")
+	organizationId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name 2")
+	organizationId3 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name 3")
+	neo4jt.UserOwnsOrganization(ctx, driver, userId1, organizationId1)
+	neo4jt.UserOwnsOrganization(ctx, driver, userId2, organizationId2)
+	neo4jt.UserOwnsOrganization(ctx, driver, userId2, organizationId3)
+
+	rawResponse := callGraphQL(t, "organization/get_organization_owners", map[string]interface{}{})
+
+	var usersStruct struct {
+		Organization_DistinctOwners []model.User
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &usersStruct)
+	require.Nil(t, err)
+	require.NotNil(t, usersStruct)
+
+	users := usersStruct.Organization_DistinctOwners
+	require.Equal(t, 2, len(users))
+	require.Equal(t, userId1, users[0].ID)
+	require.Equal(t, userId2, users[1].ID)
+
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 3, neo4jtest.GetCountOfRelationships(ctx, driver, "OWNS"))
+}
+
+func TestQueryResolver_Organization_WithContracts(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+
+	now := utils.Now()
+	yesterday := now.Add(time.Duration(-24) * time.Hour)
+	hoursAgo1 := now.Add(time.Duration(-1) * time.Hour)
+	hoursAgo2 := now.Add(time.Duration(-2) * time.Hour)
+	hoursAgo3 := now.Add(time.Duration(-3) * time.Hour)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "org name"})
+	orgId2 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "just another org"})
+	contractId1 := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		Name:                  "contract 1",
+		CreatedAt:             now,
+		UpdatedAt:             now,
+		ServiceStartedAt:      &hoursAgo3,
+		SignedAt:              &hoursAgo2,
+		EndedAt:               &hoursAgo1,
+		RenewalCycle:          neo4jenum.RenewalCycleMonthlyRenewal,
+		ContractStatus:        neo4jenum.ContractStatusDraft,
+		ContractUrl:           "url1",
+		Source:                neo4jentity.DataSourceOpenline,
+		AppSource:             "test1",
+		OrganizationLegalName: "legal name 1",
+		Country:               "country 1",
+		Locality:              "locality 1",
+		Zip:                   "zip 1",
+		InvoiceEmail:          "invoice email 1",
+		InvoiceNote:           "invoice note 1",
+	})
+	contractId2 := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		Name:                  "contract 2",
+		CreatedAt:             yesterday,
+		UpdatedAt:             yesterday,
+		ServiceStartedAt:      &hoursAgo1,
+		SignedAt:              &hoursAgo3,
+		EndedAt:               &hoursAgo2,
+		RenewalCycle:          neo4jenum.RenewalCycleAnnualRenewal,
+		ContractStatus:        neo4jenum.ContractStatusLive,
+		ContractUrl:           "url2",
+		Source:                neo4jentity.DataSourceOpenline,
+		AppSource:             "test2",
+		OrganizationLegalName: "legal name 2",
+		Country:               "country 2",
+		Locality:              "locality 2",
+		Zip:                   "zip 2",
+		InvoiceEmail:          "invoice email 2",
+		InvoiceNote:           "invoice note 2",
+	})
+	contractId3 := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId2, neo4jentity.ContractEntity{})
+
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
+		"Organization":           2,
+		"Contract":               3,
+		"Contract_" + tenantName: 3,
+	})
+	neo4jtest.AssertRelationship(ctx, t, driver, orgId, "HAS_CONTRACT", contractId1)
+	neo4jtest.AssertRelationship(ctx, t, driver, orgId, "HAS_CONTRACT", contractId2)
+	neo4jtest.AssertRelationship(ctx, t, driver, orgId2, "HAS_CONTRACT", contractId3)
+
+	rawResponse := callGraphQL(t, "organization/get_organization_with_contracts",
+		map[string]interface{}{"organizationId": orgId})
+
+	var orgStruct struct {
+		Organization model.Organization
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &orgStruct)
+	require.Nil(t, err)
+
+	organization := orgStruct.Organization
+	require.NotNil(t, organization)
+	require.Equal(t, 2, len(organization.Contracts))
+
+	firstContract := organization.Contracts[0]
+	require.Equal(t, contractId1, firstContract.ID)
+	require.Equal(t, "contract 1", firstContract.Name)
+	require.Equal(t, now, firstContract.CreatedAt)
+	require.Equal(t, now, firstContract.UpdatedAt)
+	require.Equal(t, hoursAgo3, *firstContract.ServiceStartedAt)
+	require.Equal(t, hoursAgo2, *firstContract.SignedAt)
+	require.Equal(t, hoursAgo1, *firstContract.EndedAt)
+	require.Equal(t, model.ContractRenewalCycleMonthlyRenewal, firstContract.RenewalCycle)
+	require.Equal(t, model.ContractStatusDraft, firstContract.Status)
+	require.Equal(t, "url1", *firstContract.ContractURL)
+	require.Equal(t, model.DataSourceOpenline, firstContract.Source)
+	require.Equal(t, "test1", firstContract.AppSource)
+	require.Equal(t, "legal name 1", *firstContract.OrganizationLegalName)
+	require.Equal(t, "country 1", *firstContract.Country)
+	require.Equal(t, "locality 1", *firstContract.Locality)
+	require.Equal(t, "zip 1", *firstContract.Zip)
+	require.Equal(t, "invoice email 1", *firstContract.InvoiceEmail)
+	require.Equal(t, "invoice note 1", *firstContract.InvoiceNote)
+
+	secondContract := organization.Contracts[1]
+	require.Equal(t, contractId2, secondContract.ID)
+	require.Equal(t, "contract 2", secondContract.Name)
+	require.Equal(t, yesterday, secondContract.CreatedAt)
+	require.Equal(t, yesterday, secondContract.UpdatedAt)
+	require.Equal(t, hoursAgo1, *secondContract.ServiceStartedAt)
+	require.Equal(t, hoursAgo3, *secondContract.SignedAt)
+	require.Equal(t, hoursAgo2, *secondContract.EndedAt)
+	require.Equal(t, model.ContractRenewalCycleAnnualRenewal, secondContract.RenewalCycle)
+	require.Equal(t, model.ContractStatusLive, secondContract.Status)
+	require.Equal(t, "url2", *secondContract.ContractURL)
+	require.Equal(t, model.DataSourceOpenline, secondContract.Source)
+	require.Equal(t, "test2", secondContract.AppSource)
+	require.Equal(t, "legal name 2", *secondContract.OrganizationLegalName)
+	require.Equal(t, "country 2", *secondContract.Country)
+	require.Equal(t, "locality 2", *secondContract.Locality)
+	require.Equal(t, "zip 2", *secondContract.Zip)
+	require.Equal(t, "invoice email 2", *secondContract.InvoiceEmail)
+	require.Equal(t, "invoice note 2", *secondContract.InvoiceNote)
+}
+
+func TestMutationResolver_OrganizationCreate(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	organizationId := "orgId"
+	calledCreateOrganization := false
+
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: organizationId})
+
+	organizationServiceCallbacks := events_platform.MockOrganizationServiceCallbacks{
+		UpsertOrganization: func(context context.Context, request *organizationpb.UpsertOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+			require.Equal(t, tenantName, request.Tenant)
+			require.Equal(t, "slackChannelId", request.SlackChannelId)
+
+			calledCreateOrganization = true
+
+			return &organizationpb.OrganizationIdGrpcResponse{
+				Id: organizationId,
+			}, nil
+		},
+	}
+	events_platform.SetOrganizationCallbacks(&organizationServiceCallbacks)
+
+	rawResponse := callGraphQL(t, "organization/create_organization",
+		map[string]interface{}{"input": map[string]interface{}{
+			"slackChannelId": "slackChannelId",
+		},
+		})
+
+	var organizationStruct struct {
+		Organization_Create model.Organization
+	}
+
+	require.Equal(t, true, calledCreateOrganization)
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
+	require.Nil(t, err)
+	require.NotNil(t, organizationStruct)
+
+	organization := organizationStruct.Organization_Create
+	require.Equal(t, organizationId, organization.Metadata.ID)
+}
+
+func TestMutationResolver_OrganizationArchive(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "LLC LLC")
+	locationId := neo4jt.CreateLocation(ctx, driver, tenantName, entity.LocationEntity{
+		Source: "manual",
+	})
+	neo4jt.OrganizationAssociatedWithLocation(ctx, driver, organizationId, locationId)
+
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Location"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+
+	rawResponse, err := c.RawPost(getQuery("organization/archive_organization"),
+		client.Var("organizationId", organizationId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var result struct {
+		Organization_Archive model.Result
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &result)
+	require.Nil(t, err)
+	require.NotNil(t, result)
+	require.Equal(t, true, result.Organization_Archive.Result)
+
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
+		"Organization":                       1,
+		"Organization_" + tenantName:         0,
+		"ArchivedOrganization":               0,
+		"ArchivedOrganization_" + tenantName: 1,
+	})
+	neo4jtest.AssertNeo4jRelationCount(ctx, t, driver, map[string]int{
+		"ARCHIVED":                       1,
+		"ORGANIZATION_BELONGS_TO_TENANT": 0,
+	})
+
+	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Organization", "ArchivedOrganization_" + tenantName, "Location", "Location_" + tenantName})
+}
+
 func TestMutationResolver_OrganizationMerge_Properties(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
@@ -1216,56 +1533,6 @@ func TestMutationResolver_OrganizationAddNewLocation(t *testing.T) {
 	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Location", "Location_" + tenantName, "Organization", "Organization_" + tenantName})
 }
 
-func TestQueryResolver_Organization_WithSocials(t *testing.T) {
-	ctx := context.TODO()
-	defer tearDownTestCase(ctx)(t)
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	orgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
-
-	socialId1 := neo4jt.CreateSocial(ctx, driver, tenantName, entity.SocialEntity{
-		PlatformName: "p1",
-		Url:          "url1",
-	})
-	socialId2 := neo4jt.CreateSocial(ctx, driver, tenantName, entity.SocialEntity{
-		PlatformName: "p2",
-		Url:          "url2",
-	})
-	neo4jt.LinkSocialWithEntity(ctx, driver, orgId, socialId1)
-	neo4jt.LinkSocialWithEntity(ctx, driver, orgId, socialId2)
-
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Social"))
-	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "HAS"))
-
-	rawResponse := callGraphQL(t, "organization/get_organization_with_socials",
-		map[string]interface{}{"organizationId": orgId})
-
-	var orgStruct struct {
-		Organization model.Organization
-	}
-
-	err := decode.Decode(rawResponse.Data.(map[string]any), &orgStruct)
-	require.Nil(t, err)
-
-	organization := orgStruct.Organization
-	require.NotNil(t, organization)
-	require.Equal(t, 2, len(organization.Socials))
-
-	require.Equal(t, socialId1, organization.Socials[0].ID)
-	require.Equal(t, "p1", *organization.Socials[0].PlatformName)
-	require.Equal(t, "url1", organization.Socials[0].URL)
-	require.NotNil(t, organization.Socials[0].CreatedAt)
-	require.NotNil(t, organization.Socials[0].UpdatedAt)
-	require.Equal(t, "test", organization.Socials[0].AppSource)
-
-	require.Equal(t, socialId2, organization.Socials[1].ID)
-	require.Equal(t, "p2", *organization.Socials[1].PlatformName)
-	require.Equal(t, "url2", organization.Socials[1].URL)
-	require.NotNil(t, organization.Socials[1].CreatedAt)
-	require.NotNil(t, organization.Socials[1].UpdatedAt)
-	require.Equal(t, "test", organization.Socials[1].AppSource)
-}
-
 func TestMutationResolver_OrganizationSetOwner_NewOwner(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
@@ -1392,229 +1659,6 @@ func TestMutationResolver_OrganizationUnsetOwner(t *testing.T) {
 	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Organization", "Organization_" + tenantName})
 }
 
-func TestQueryResolver_Organization_WithOwner(t *testing.T) {
-	ctx := context.TODO()
-	defer tearDownTestCase(ctx)(t)
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	userId := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
-	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
-	neo4jt.UserOwnsOrganization(ctx, driver, userId, organizationId)
-
-	rawResponse := callGraphQL(t, "organization/get_organization_with_owner",
-		map[string]interface{}{"organizationId": organizationId})
-
-	var organizationStruct struct {
-		Organization model.Organization
-	}
-
-	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
-	require.Nil(t, err)
-	require.NotNil(t, organizationStruct)
-
-	organization := organizationStruct.Organization
-	require.Equal(t, organizationId, organization.ID)
-	require.Equal(t, userId, organization.Owner.ID)
-	require.Equal(t, "first", organization.Owner.FirstName)
-	require.Equal(t, "last", organization.Owner.LastName)
-
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
-	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "OWNS"))
-	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Organization", "Organization_" + tenantName})
-}
-
-func TestQueryResolver_Organization_WithExternalLinks(t *testing.T) {
-	ctx := context.TODO()
-	defer tearDownTestCase(ctx)(t)
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
-
-	neo4jt.CreateHubspotExternalSystem(ctx, driver, tenantName)
-	syncDate1 := utils.Now()
-	syncDate2 := syncDate1.Add(time.Hour * 1)
-	neo4jt.LinkWithHubspotExternalSystem(ctx, driver, organizationId, "111", utils.StringPtr("www.external1.com"), nil, syncDate1)
-	neo4jt.LinkWithHubspotExternalSystem(ctx, driver, organizationId, "222", utils.StringPtr("www.external2.com"), nil, syncDate2)
-
-	rawResponse := callGraphQL(t, "organization/get_organization_with_external_links",
-		map[string]interface{}{"organizationId": organizationId})
-
-	var organizationStruct struct {
-		Organization model.Organization
-	}
-
-	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
-	require.Nil(t, err)
-	require.NotNil(t, organizationStruct)
-
-	organization := organizationStruct.Organization
-	require.Equal(t, organizationId, organization.ID)
-	require.Equal(t, 2, len(organization.ExternalLinks))
-	require.Equal(t, "111", *organization.ExternalLinks[0].ExternalID)
-	require.Equal(t, "222", *organization.ExternalLinks[1].ExternalID)
-	require.Equal(t, "www.external1.com", *organization.ExternalLinks[0].ExternalURL)
-	require.Equal(t, "www.external2.com", *organization.ExternalLinks[1].ExternalURL)
-	require.Nil(t, organization.ExternalLinks[0].ExternalSource)
-	require.Nil(t, organization.ExternalLinks[1].ExternalSource)
-	require.Equal(t, syncDate1, *organization.ExternalLinks[0].SyncDate)
-	require.Equal(t, syncDate2, *organization.ExternalLinks[1].SyncDate)
-}
-
-func TestQueryResolver_OrganizationDistinctOwners(t *testing.T) {
-	ctx := context.TODO()
-	defer tearDownTestCase(ctx)(t)
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	userId1 := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
-	userId2 := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{
-		FirstName: "first2",
-		LastName:  "last2",
-	})
-	organizationId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name 1")
-	organizationId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name 2")
-	organizationId3 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name 3")
-	neo4jt.UserOwnsOrganization(ctx, driver, userId1, organizationId1)
-	neo4jt.UserOwnsOrganization(ctx, driver, userId2, organizationId2)
-	neo4jt.UserOwnsOrganization(ctx, driver, userId2, organizationId3)
-
-	rawResponse := callGraphQL(t, "organization/get_organization_owners", map[string]interface{}{})
-
-	var usersStruct struct {
-		Organization_DistinctOwners []model.User
-	}
-
-	err := decode.Decode(rawResponse.Data.(map[string]any), &usersStruct)
-	require.Nil(t, err)
-	require.NotNil(t, usersStruct)
-
-	users := usersStruct.Organization_DistinctOwners
-	require.Equal(t, 2, len(users))
-	require.Equal(t, userId1, users[0].ID)
-	require.Equal(t, userId2, users[1].ID)
-
-	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
-	require.Equal(t, 3, neo4jtest.GetCountOfRelationships(ctx, driver, "OWNS"))
-}
-
-func TestQueryResolver_Organization_WithContracts(t *testing.T) {
-	ctx := context.TODO()
-	defer tearDownTestCase(ctx)(t)
-
-	now := utils.Now()
-	yesterday := now.Add(time.Duration(-24) * time.Hour)
-	hoursAgo1 := now.Add(time.Duration(-1) * time.Hour)
-	hoursAgo2 := now.Add(time.Duration(-2) * time.Hour)
-	hoursAgo3 := now.Add(time.Duration(-3) * time.Hour)
-
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "org name"})
-	orgId2 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "just another org"})
-	contractId1 := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
-		Name:                  "contract 1",
-		CreatedAt:             now,
-		UpdatedAt:             now,
-		ServiceStartedAt:      &hoursAgo3,
-		SignedAt:              &hoursAgo2,
-		EndedAt:               &hoursAgo1,
-		RenewalCycle:          neo4jenum.RenewalCycleMonthlyRenewal,
-		ContractStatus:        neo4jenum.ContractStatusDraft,
-		ContractUrl:           "url1",
-		Source:                neo4jentity.DataSourceOpenline,
-		AppSource:             "test1",
-		OrganizationLegalName: "legal name 1",
-		Country:               "country 1",
-		Locality:              "locality 1",
-		Zip:                   "zip 1",
-		InvoiceEmail:          "invoice email 1",
-		InvoiceNote:           "invoice note 1",
-	})
-	contractId2 := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
-		Name:                  "contract 2",
-		CreatedAt:             yesterday,
-		UpdatedAt:             yesterday,
-		ServiceStartedAt:      &hoursAgo1,
-		SignedAt:              &hoursAgo3,
-		EndedAt:               &hoursAgo2,
-		RenewalCycle:          neo4jenum.RenewalCycleAnnualRenewal,
-		ContractStatus:        neo4jenum.ContractStatusLive,
-		ContractUrl:           "url2",
-		Source:                neo4jentity.DataSourceOpenline,
-		AppSource:             "test2",
-		OrganizationLegalName: "legal name 2",
-		Country:               "country 2",
-		Locality:              "locality 2",
-		Zip:                   "zip 2",
-		InvoiceEmail:          "invoice email 2",
-		InvoiceNote:           "invoice note 2",
-	})
-	contractId3 := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId2, neo4jentity.ContractEntity{})
-
-	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
-		"Organization":           2,
-		"Contract":               3,
-		"Contract_" + tenantName: 3,
-	})
-	neo4jtest.AssertRelationship(ctx, t, driver, orgId, "HAS_CONTRACT", contractId1)
-	neo4jtest.AssertRelationship(ctx, t, driver, orgId, "HAS_CONTRACT", contractId2)
-	neo4jtest.AssertRelationship(ctx, t, driver, orgId2, "HAS_CONTRACT", contractId3)
-
-	rawResponse := callGraphQL(t, "organization/get_organization_with_contracts",
-		map[string]interface{}{"organizationId": orgId})
-
-	var orgStruct struct {
-		Organization model.Organization
-	}
-
-	err := decode.Decode(rawResponse.Data.(map[string]any), &orgStruct)
-	require.Nil(t, err)
-
-	organization := orgStruct.Organization
-	require.NotNil(t, organization)
-	require.Equal(t, 2, len(organization.Contracts))
-
-	firstContract := organization.Contracts[0]
-	require.Equal(t, contractId1, firstContract.ID)
-	require.Equal(t, "contract 1", firstContract.Name)
-	require.Equal(t, now, firstContract.CreatedAt)
-	require.Equal(t, now, firstContract.UpdatedAt)
-	require.Equal(t, hoursAgo3, *firstContract.ServiceStartedAt)
-	require.Equal(t, hoursAgo2, *firstContract.SignedAt)
-	require.Equal(t, hoursAgo1, *firstContract.EndedAt)
-	require.Equal(t, model.ContractRenewalCycleMonthlyRenewal, firstContract.RenewalCycle)
-	require.Equal(t, model.ContractStatusDraft, firstContract.Status)
-	require.Equal(t, "url1", *firstContract.ContractURL)
-	require.Equal(t, model.DataSourceOpenline, firstContract.Source)
-	require.Equal(t, "test1", firstContract.AppSource)
-	require.Equal(t, "legal name 1", *firstContract.OrganizationLegalName)
-	require.Equal(t, "country 1", *firstContract.Country)
-	require.Equal(t, "locality 1", *firstContract.Locality)
-	require.Equal(t, "zip 1", *firstContract.Zip)
-	require.Equal(t, "invoice email 1", *firstContract.InvoiceEmail)
-	require.Equal(t, "invoice note 1", *firstContract.InvoiceNote)
-
-	secondContract := organization.Contracts[1]
-	require.Equal(t, contractId2, secondContract.ID)
-	require.Equal(t, "contract 2", secondContract.Name)
-	require.Equal(t, yesterday, secondContract.CreatedAt)
-	require.Equal(t, yesterday, secondContract.UpdatedAt)
-	require.Equal(t, hoursAgo1, *secondContract.ServiceStartedAt)
-	require.Equal(t, hoursAgo3, *secondContract.SignedAt)
-	require.Equal(t, hoursAgo2, *secondContract.EndedAt)
-	require.Equal(t, model.ContractRenewalCycleAnnualRenewal, secondContract.RenewalCycle)
-	require.Equal(t, model.ContractStatusLive, secondContract.Status)
-	require.Equal(t, "url2", *secondContract.ContractURL)
-	require.Equal(t, model.DataSourceOpenline, secondContract.Source)
-	require.Equal(t, "test2", secondContract.AppSource)
-	require.Equal(t, "legal name 2", *secondContract.OrganizationLegalName)
-	require.Equal(t, "country 2", *secondContract.Country)
-	require.Equal(t, "locality 2", *secondContract.Locality)
-	require.Equal(t, "zip 2", *secondContract.Zip)
-	require.Equal(t, "invoice email 2", *secondContract.InvoiceEmail)
-	require.Equal(t, "invoice note 2", *secondContract.InvoiceNote)
-}
-
 func TestMutationResolver_OrganizationUpdateOnboardingStatus(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
@@ -1654,4 +1698,50 @@ func TestMutationResolver_OrganizationUpdateOnboardingStatus(t *testing.T) {
 	organization := organizationStruct.Organization_UpdateOnboardingStatus
 	require.Equal(t, organizationId, organization.ID)
 	require.True(t, calledEventsPlatform)
+}
+
+func TestMutationResolver_OrganizationUpdate(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+
+	calledUpdateOrganization := false
+
+	organizationServiceCallbacks := events_platform.MockOrganizationServiceCallbacks{
+		UpsertOrganization: func(context context.Context, request *organizationpb.UpsertOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+			require.Equal(t, organizationId, request.Id)
+			require.Equal(t, tenantName, request.Tenant)
+			require.Equal(t, "slackChannelId", request.SlackChannelId)
+
+			calledUpdateOrganization = true
+
+			return &organizationpb.OrganizationIdGrpcResponse{
+				Id: organizationId,
+			}, nil
+		},
+	}
+	events_platform.SetOrganizationCallbacks(&organizationServiceCallbacks)
+
+	rawResponse := callGraphQL(t, "organization/update_organization",
+		map[string]interface{}{"input": map[string]interface{}{
+			"id":             organizationId,
+			"patch":          true,
+			"slackChannelId": "slackChannelId",
+		},
+		})
+
+	var organizationStruct struct {
+		Organization_Update model.Organization
+	}
+
+	require.Equal(t, true, calledUpdateOrganization)
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
+	require.Nil(t, err)
+	require.NotNil(t, organizationStruct)
+
+	organization := organizationStruct.Organization_Update
+	require.Equal(t, organizationId, organization.Metadata.ID)
 }
