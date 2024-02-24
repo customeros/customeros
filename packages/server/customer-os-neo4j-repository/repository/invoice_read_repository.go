@@ -16,7 +16,7 @@ import (
 type InvoiceReadRepository interface {
 	GetInvoiceById(ctx context.Context, tenant, invoiceId string) (*dbtype.Node, error)
 	GetPaginatedInvoices(ctx context.Context, tenant, organizationId string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
-	GetInvoicesForPayNotifications(ctx context.Context, minutesFromLastUpdate int, referenceTime time.Time) ([]*utils.DbNodeAndTenant, error)
+	GetInvoicesForPayNotifications(ctx context.Context, minutesFromLastUpdate, invoiceNotOlderThanDays int, referenceTime time.Time) ([]*utils.DbNodeAndTenant, error)
 }
 
 type invoiceReadRepository struct {
@@ -143,11 +143,11 @@ func (r *invoiceReadRepository) GetInvoiceById(ctx context.Context, tenant, invo
 	return result.(*dbtype.Node), nil
 }
 
-func (r *invoiceReadRepository) GetInvoicesForPayNotifications(ctx context.Context, minutesFromLastUpdate int, referenceTime time.Time) ([]*utils.DbNodeAndTenant, error) {
+func (r *invoiceReadRepository) GetInvoicesForPayNotifications(ctx context.Context, minutesFromLastUpdate, invoiceNotOlderThanDays int, referenceTime time.Time) ([]*utils.DbNodeAndTenant, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceReadRepository.GetInvoicesForPayNotifications")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, "")
-	span.LogFields(log.Int("minutesFromLastUpdate", minutesFromLastUpdate), log.Object("referenceTime", referenceTime))
+	span.LogFields(log.Int("minutesFromLastUpdate", minutesFromLastUpdate), log.Int("invoiceNotOlderThanDays", invoiceNotOlderThanDays), log.Object("referenceTime", referenceTime))
 
 	cypher := `MATCH (i:Invoice)-[:INVOICE_BELONGS_TO_TENANT]->(t:Tenant)
 			WHERE 
@@ -157,11 +157,14 @@ func (r *invoiceReadRepository) GetInvoicesForPayNotifications(ctx context.Conte
 				i.customerEmail IS NOT NULL AND
 				i.customerEmail <> '' AND	
 				i.techPayInvoiceNotificationSentAt IS NULL AND
+				i.createdAt+duration({days: $lookbackWindow}) > $now AND
 				(i.updatedAt + duration({minutes: $delay}) < $referenceTime)
 			RETURN distinct(i), t.name limit 100`
 	params := map[string]any{
-		"delay":         minutesFromLastUpdate,
-		"referenceTime": referenceTime,
+		"delay":          minutesFromLastUpdate,
+		"lookbackWindow": invoiceNotOlderThanDays,
+		"referenceTime":  referenceTime,
+		"now":            utils.Now(),
 		"ignoredStatuses": []string{
 			neo4jenum.InvoiceStatusPaid.String(), neo4jenum.InvoiceStatusDraft.String(), neo4jenum.InvoiceStatusNone.String(),
 		},

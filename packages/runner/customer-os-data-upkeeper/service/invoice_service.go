@@ -235,7 +235,8 @@ func (s *invoiceService) SendPayNotifications() {
 			// continue as normal
 		}
 
-		records, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoicesForPayNotifications(ctx, s.cfg.ProcessConfig.DelaySendPayInvoiceNotificationInMinutes, referenceTime)
+		records, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoicesForPayNotifications(
+			ctx, s.cfg.ProcessConfig.DelaySendPayInvoiceNotificationInMinutes, s.cfg.ProcessConfig.RetrySendPayInvoiceNotificationDays, referenceTime)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting invoices for pay notifications: %v", err)
