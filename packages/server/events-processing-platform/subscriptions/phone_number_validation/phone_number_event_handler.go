@@ -80,7 +80,7 @@ func (h *phoneNumberEventHandler) OnPhoneNumberCreate(ctx context.Context, evt e
 	countryCodeA2, err := h.repositories.Neo4jRepositories.PhoneNumberReadRepository.GetCountryCodeA2ForPhoneNumber(ctx, tenant, phoneNumberId)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, err.Error(), span)
+		return h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, err.Error())
 	}
 
 	phoneNumberValidate := PhoneNumberValidateRequest{
@@ -91,18 +91,18 @@ func (h *phoneNumberEventHandler) OnPhoneNumberCreate(ctx context.Context, evt e
 	preValidationErr := validator.GetValidator().Struct(phoneNumberValidate)
 	if preValidationErr != nil {
 		tracing.TraceErr(span, preValidationErr)
-		return h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, preValidationErr.Error(), span)
+		return h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, preValidationErr.Error())
 	}
 	evJSON, err := json.Marshal(phoneNumberValidate)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, err.Error(), span)
+		return h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, err.Error())
 	}
 	requestBody := []byte(string(evJSON))
 	req, err := http.NewRequest("POST", h.cfg.Services.ValidationApi+"/validatePhoneNumber", bytes.NewBuffer(requestBody))
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, err.Error(), span)
+		return h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, err.Error())
 	}
 	// Set the request headers
 	req.Header.Set(commonservice.ApiKeyHeader, h.cfg.Services.ValidationApiKey)
@@ -113,27 +113,29 @@ func (h *phoneNumberEventHandler) OnPhoneNumberCreate(ctx context.Context, evt e
 	response, err := client.Do(req)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, err.Error(), span)
+		return h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, err.Error())
 	}
 	defer response.Body.Close()
 	var result PhoneNumberValidationResponseV1
 	err = json.NewDecoder(response.Body).Decode(&result)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, err.Error(), span)
+		return h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, err.Error())
 	}
 	if !result.Valid {
-		return h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, result.Error, span)
+		return h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, result.Error)
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = h.grpcClients.PhoneNumberClient.PassPhoneNumberValidation(ctx, &phonenumberpb.PassPhoneNumberValidationGrpcRequest{
-		Tenant:        tenant,
-		PhoneNumberId: phoneNumberId,
-		PhoneNumber:   rawPhoneNumber,
-		E164:          result.E164,
-		CountryCodeA2: result.CountryA2,
-		AppSource:     constants.AppSourceEventProcessingPlatform,
+	_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*phonenumberpb.PhoneNumberIdGrpcResponse](func() (*phonenumberpb.PhoneNumberIdGrpcResponse, error) {
+		return h.grpcClients.PhoneNumberClient.PassPhoneNumberValidation(ctx, &phonenumberpb.PassPhoneNumberValidationGrpcRequest{
+			Tenant:        tenant,
+			PhoneNumberId: phoneNumberId,
+			PhoneNumber:   rawPhoneNumber,
+			E164:          result.E164,
+			CountryCodeA2: result.CountryA2,
+			AppSource:     constants.AppSourceEventProcessingPlatform,
+		})
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -142,16 +144,23 @@ func (h *phoneNumberEventHandler) OnPhoneNumberCreate(ctx context.Context, evt e
 	return err
 }
 
-func (h *phoneNumberEventHandler) sendPhoneNumberFailedValidationEvent(ctx context.Context, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, errorMessage string, span opentracing.Span) error {
+func (h *phoneNumberEventHandler) sendPhoneNumberFailedValidationEvent(ctx context.Context, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, errorMessage string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailEventHandler.sendEmailFailedValidationEvent")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.LogFields(log.String("phoneNumberId", phoneNumberId), log.String("rawPhoneNumber", rawPhoneNumber), log.String("errorMessage", errorMessage))
+
 	h.log.Errorf("Failed validating phone number %s for tenant %s: %s", phoneNumberId, tenant, errorMessage)
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := h.grpcClients.PhoneNumberClient.FailPhoneNumberValidation(ctx, &phonenumberpb.FailPhoneNumberValidationGrpcRequest{
-		Tenant:        tenant,
-		PhoneNumberId: phoneNumberId,
-		PhoneNumber:   rawPhoneNumber,
-		CountryCodeA2: countryCodeA2,
-		AppSource:     constants.AppSourceEventProcessingPlatform,
-		ErrorMessage:  utils.StringFirstNonEmpty(errorMessage, "Error message not available"),
+	_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*phonenumberpb.PhoneNumberIdGrpcResponse](func() (*phonenumberpb.PhoneNumberIdGrpcResponse, error) {
+		return h.grpcClients.PhoneNumberClient.FailPhoneNumberValidation(ctx, &phonenumberpb.FailPhoneNumberValidationGrpcRequest{
+			Tenant:        tenant,
+			PhoneNumberId: phoneNumberId,
+			PhoneNumber:   rawPhoneNumber,
+			CountryCodeA2: countryCodeA2,
+			AppSource:     constants.AppSourceEventProcessingPlatform,
+			ErrorMessage:  utils.StringFirstNonEmpty(errorMessage, "Error message not available"),
+		})
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)

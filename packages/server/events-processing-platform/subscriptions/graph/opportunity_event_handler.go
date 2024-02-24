@@ -18,6 +18,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions"
 	contracthandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/contract"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
@@ -227,10 +228,12 @@ func (h *OpportunityEventHandler) sendEventToUpdateOrganizationRenewalSummary(ct
 	organization := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = h.grpcClients.OrganizationClient.RefreshRenewalSummary(ctx, &organizationpb.OrganizationIdGrpcRequest{
-		Tenant:         tenant,
-		OrganizationId: organization.ID,
-		AppSource:      constants.AppSourceEventProcessingPlatform,
+	_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+		return h.grpcClients.OrganizationClient.RefreshRenewalSummary(ctx, &organizationpb.OrganizationIdGrpcRequest{
+			Tenant:         tenant,
+			OrganizationId: organization.ID,
+			AppSource:      constants.AppSourceEventProcessingPlatform,
+		})
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -309,10 +312,12 @@ func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 		organization := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
 
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = h.grpcClients.OrganizationClient.RefreshArr(ctx, &organizationpb.OrganizationIdGrpcRequest{
-			Tenant:         eventData.Tenant,
-			OrganizationId: organization.ID,
-			AppSource:      constants.AppSourceEventProcessingPlatform,
+		_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+			return h.grpcClients.OrganizationClient.RefreshArr(ctx, &organizationpb.OrganizationIdGrpcRequest{
+				Tenant:         eventData.Tenant,
+				OrganizationId: organization.ID,
+				AppSource:      constants.AppSourceEventProcessingPlatform,
+			})
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -408,10 +413,12 @@ func (h *OpportunityEventHandler) OnUpdateRenewal(ctx context.Context, evt event
 		organization := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
 
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = h.grpcClients.OrganizationClient.RefreshArr(ctx, &organizationpb.OrganizationIdGrpcRequest{
-			Tenant:         eventData.Tenant,
-			OrganizationId: organization.ID,
-			AppSource:      constants.AppSourceEventProcessingPlatform,
+		_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+			return h.grpcClients.OrganizationClient.RefreshArr(ctx, &organizationpb.OrganizationIdGrpcRequest{
+				Tenant:         eventData.Tenant,
+				OrganizationId: organization.ID,
+				AppSource:      constants.AppSourceEventProcessingPlatform,
+			})
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)

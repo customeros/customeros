@@ -18,6 +18,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions"
 	contracthandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/contract"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
@@ -108,13 +109,15 @@ func (h *ContractEventHandler) OnCreate(ctx context.Context, evt eventstore.Even
 
 	if neo4jenum.IsFrequencyBasedRenewalCycle(neo4jenum.RenewalCycle(eventData.RenewalCycle)) {
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = h.grpcClients.OpportunityClient.CreateRenewalOpportunity(ctx, &opportunitypb.CreateRenewalOpportunityGrpcRequest{
-			Tenant:     eventData.Tenant,
-			ContractId: contractId,
-			SourceFields: &commonpb.SourceFields{
-				Source:    eventData.Source.Source,
-				AppSource: constants.AppSourceEventProcessingPlatform,
-			},
+		_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
+			return h.grpcClients.OpportunityClient.CreateRenewalOpportunity(ctx, &opportunitypb.CreateRenewalOpportunityGrpcRequest{
+				Tenant:     eventData.Tenant,
+				ContractId: contractId,
+				SourceFields: &commonpb.SourceFields{
+					Source:    eventData.Source.Source,
+					AppSource: constants.AppSourceEventProcessingPlatform,
+				},
+			})
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -239,19 +242,23 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 		organization := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
 
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = h.grpcClients.OrganizationClient.RefreshRenewalSummary(ctx, &organizationpb.OrganizationIdGrpcRequest{
-			Tenant:         eventData.Tenant,
-			OrganizationId: organization.ID,
-			AppSource:      constants.AppSourceEventProcessingPlatform,
+		_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+			return h.grpcClients.OrganizationClient.RefreshRenewalSummary(ctx, &organizationpb.OrganizationIdGrpcRequest{
+				Tenant:         eventData.Tenant,
+				OrganizationId: organization.ID,
+				AppSource:      constants.AppSourceEventProcessingPlatform,
+			})
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("RefreshRenewalSummary failed: %v", err.Error())
 		}
-		_, err = h.grpcClients.OrganizationClient.RefreshArr(ctx, &organizationpb.OrganizationIdGrpcRequest{
-			Tenant:         eventData.Tenant,
-			OrganizationId: organization.ID,
-			AppSource:      constants.AppSourceEventProcessingPlatform,
+		_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+			return h.grpcClients.OrganizationClient.RefreshArr(ctx, &organizationpb.OrganizationIdGrpcRequest{
+				Tenant:         eventData.Tenant,
+				OrganizationId: organization.ID,
+				AppSource:      constants.AppSourceEventProcessingPlatform,
+			})
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -318,10 +325,12 @@ func (h *ContractEventHandler) OnRolloutRenewalOpportunity(ctx context.Context, 
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		if currentRenewalOpportunityDbNode != nil {
 			currentOpportunity := graph_db.MapDbNodeToOpportunityEntity(currentRenewalOpportunityDbNode)
-			_, err = h.grpcClients.OpportunityClient.CloseWinOpportunity(ctx, &opportunitypb.CloseWinOpportunityGrpcRequest{
-				Tenant:    eventData.Tenant,
-				Id:        currentOpportunity.Id,
-				AppSource: constants.AppSourceEventProcessingPlatform,
+			_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
+				return h.grpcClients.OpportunityClient.CloseWinOpportunity(ctx, &opportunitypb.CloseWinOpportunityGrpcRequest{
+					Tenant:    eventData.Tenant,
+					Id:        currentOpportunity.Id,
+					AppSource: constants.AppSourceEventProcessingPlatform,
+				})
 			})
 			if err != nil {
 				tracing.TraceErr(span, err)
@@ -329,13 +338,15 @@ func (h *ContractEventHandler) OnRolloutRenewalOpportunity(ctx context.Context, 
 			}
 		}
 
-		_, err = h.grpcClients.OpportunityClient.CreateRenewalOpportunity(ctx, &opportunitypb.CreateRenewalOpportunityGrpcRequest{
-			Tenant:     eventData.Tenant,
-			ContractId: contractId,
-			SourceFields: &commonpb.SourceFields{
-				Source:    constants.SourceOpenline,
-				AppSource: constants.AppSourceEventProcessingPlatform,
-			},
+		_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
+			return h.grpcClients.OpportunityClient.CreateRenewalOpportunity(ctx, &opportunitypb.CreateRenewalOpportunityGrpcRequest{
+				Tenant:     eventData.Tenant,
+				ContractId: contractId,
+				SourceFields: &commonpb.SourceFields{
+					Source:    constants.SourceOpenline,
+					AppSource: constants.AppSourceEventProcessingPlatform,
+				},
+			})
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -458,12 +469,14 @@ func (h *ContractEventHandler) startOnboardingIfEligible(ctx context.Context, te
 		}
 		organization := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = h.grpcClients.OrganizationClient.UpdateOnboardingStatus(ctx, &organizationpb.UpdateOnboardingStatusGrpcRequest{
-			Tenant:             tenant,
-			OrganizationId:     organization.ID,
-			CausedByContractId: contractEntity.Id,
-			OnboardingStatus:   organizationpb.OnboardingStatus_ONBOARDING_STATUS_NOT_STARTED,
-			AppSource:          constants.AppSourceEventProcessingPlatform,
+		_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+			return h.grpcClients.OrganizationClient.UpdateOnboardingStatus(ctx, &organizationpb.UpdateOnboardingStatusGrpcRequest{
+				Tenant:             tenant,
+				OrganizationId:     organization.ID,
+				CausedByContractId: contractEntity.Id,
+				OnboardingStatus:   organizationpb.OnboardingStatus_ONBOARDING_STATUS_NOT_STARTED,
+				AppSource:          constants.AppSourceEventProcessingPlatform,
+			})
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)

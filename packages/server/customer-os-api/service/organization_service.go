@@ -384,13 +384,15 @@ func (s *organizationService) AddSubsidiary(ctx context.Context, parentOrganizat
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = s.grpcClients.OrganizationClient.AddParentOrganization(ctx, &organizationpb.AddParentOrganizationGrpcRequest{
-		Tenant:               common.GetTenantFromContext(ctx),
-		OrganizationId:       subOrganizationId,
-		ParentOrganizationId: parentOrganizationId,
-		Type:                 subsidiaryType,
-		LoggedInUserId:       common.GetUserIdFromContext(ctx),
-		AppSource:            constants.AppSourceCustomerOsApi,
+	_, err = CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+		return s.grpcClients.OrganizationClient.AddParentOrganization(ctx, &organizationpb.AddParentOrganizationGrpcRequest{
+			Tenant:               common.GetTenantFromContext(ctx),
+			OrganizationId:       subOrganizationId,
+			ParentOrganizationId: parentOrganizationId,
+			Type:                 subsidiaryType,
+			LoggedInUserId:       common.GetUserIdFromContext(ctx),
+			AppSource:            constants.AppSourceCustomerOsApi,
+		})
 	})
 	if err != nil {
 		s.log.Errorf("error sending event to events-platform: {%v}", err.Error())
@@ -432,12 +434,14 @@ func (s *organizationService) RemoveSubsidiary(ctx context.Context, parentOrgani
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = s.grpcClients.OrganizationClient.RemoveParentOrganization(ctx, &organizationpb.RemoveParentOrganizationGrpcRequest{
-		Tenant:               common.GetTenantFromContext(ctx),
-		OrganizationId:       subOrganizationId,
-		ParentOrganizationId: parentOrganizationId,
-		LoggedInUserId:       common.GetUserIdFromContext(ctx),
-		AppSource:            constants.AppSourceCustomerOsApi,
+	_, err = CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+		return s.grpcClients.OrganizationClient.RemoveParentOrganization(ctx, &organizationpb.RemoveParentOrganizationGrpcRequest{
+			Tenant:               common.GetTenantFromContext(ctx),
+			OrganizationId:       subOrganizationId,
+			ParentOrganizationId: parentOrganizationId,
+			LoggedInUserId:       common.GetUserIdFromContext(ctx),
+			AppSource:            constants.AppSourceCustomerOsApi,
+		})
 	})
 	if err != nil {
 		s.log.Errorf("error sending event to events-platform: {%v}", err.Error())
@@ -519,7 +523,9 @@ func (s *organizationService) ReplaceOwner(ctx context.Context, organizationID, 
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := s.grpcClients.OrganizationClient.UpdateOrganizationOwner(ctx, ownerUpdateReq)
+	_, err := CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+		return s.grpcClients.OrganizationClient.UpdateOrganizationOwner(ctx, ownerUpdateReq)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -755,11 +761,13 @@ func (s *organizationService) updateLastTouchpoint(ctx context.Context, organiza
 	span.LogFields(log.String("organizationID", organizationID))
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := s.grpcClients.OrganizationClient.RefreshLastTouchpoint(ctx, &organizationpb.OrganizationIdGrpcRequest{
-		Tenant:         common.GetTenantFromContext(ctx),
-		OrganizationId: organizationID,
-		LoggedInUserId: common.GetUserIdFromContext(ctx),
-		AppSource:      constants.AppSourceCustomerOsApi,
+	_, err := CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+		return s.grpcClients.OrganizationClient.RefreshLastTouchpoint(ctx, &organizationpb.OrganizationIdGrpcRequest{
+			Tenant:         common.GetTenantFromContext(ctx),
+			OrganizationId: organizationID,
+			LoggedInUserId: common.GetUserIdFromContext(ctx),
+			AppSource:      constants.AppSourceCustomerOsApi,
+		})
 	})
 	if err != nil {
 		s.log.Errorf("error sending event to events-platform: {%v}", err.Error())

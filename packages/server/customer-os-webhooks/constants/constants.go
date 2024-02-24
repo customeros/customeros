@@ -14,5 +14,4 @@ const (
 	RequestMaxBodySizeMessages                    = 10 * 1024 * 1024  // 10 MB
 	RequestMaxTimeout                             = 300 * time.Second // 5 minutes
 	MaxRetryCheckDataInNeo4jAfterEventRequest int = 10
-	MaxRetryGrpcCallWhenUnavailable           int = 5
 )

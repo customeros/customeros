@@ -13,6 +13,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
@@ -68,6 +69,7 @@ func (h *emailEventHandler) ValidateEmail(ctx context.Context, evt eventstore.Ev
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
 	emailValidate := EmailValidate{
 		Email: strings.TrimSpace(eventData.RawEmail),
@@ -78,18 +80,18 @@ func (h *emailEventHandler) ValidateEmail(ctx context.Context, evt eventstore.Ev
 
 	preValidationErr := validator.GetValidator().Struct(emailValidate)
 	if preValidationErr != nil {
-		return h.sendEmailFailedValidationEvent(ctx, eventData.Tenant, emailId, preValidationErr.Error(), span)
+		return h.sendEmailFailedValidationEvent(ctx, eventData.Tenant, emailId, preValidationErr.Error())
 	}
 	evJSON, err := json.Marshal(emailValidate)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return h.sendEmailFailedValidationEvent(ctx, eventData.Tenant, emailId, err.Error(), span)
+		return h.sendEmailFailedValidationEvent(ctx, eventData.Tenant, emailId, err.Error())
 	}
 	requestBody := []byte(string(evJSON))
 	req, err := http.NewRequest("POST", h.cfg.Services.ValidationApi+"/validateEmail", bytes.NewBuffer(requestBody))
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return h.sendEmailFailedValidationEvent(ctx, eventData.Tenant, emailId, err.Error(), span)
+		return h.sendEmailFailedValidationEvent(ctx, eventData.Tenant, emailId, err.Error())
 	}
 	// Set the request headers
 	req.Header.Set(common_module.ApiKeyHeader, h.cfg.Services.ValidationApiKey)
@@ -100,38 +102,40 @@ func (h *emailEventHandler) ValidateEmail(ctx context.Context, evt eventstore.Ev
 	response, err := client.Do(req)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return h.sendEmailFailedValidationEvent(ctx, eventData.Tenant, emailId, err.Error(), span)
+		return h.sendEmailFailedValidationEvent(ctx, eventData.Tenant, emailId, err.Error())
 	}
 	defer response.Body.Close()
 	var result EmailValidationResponseV1
 	err = json.NewDecoder(response.Body).Decode(&result)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return h.sendEmailFailedValidationEvent(ctx, eventData.Tenant, emailId, err.Error(), span)
+		return h.sendEmailFailedValidationEvent(ctx, eventData.Tenant, emailId, err.Error())
 	}
 	if result.IsReachable == "" {
 		errMsg := utils.StringFirstNonEmpty(result.Error, "IsReachable flag not set. Email not passed validation.")
-		return h.sendEmailFailedValidationEvent(ctx, eventData.Tenant, emailId, errMsg, span)
+		return h.sendEmailFailedValidationEvent(ctx, eventData.Tenant, emailId, errMsg)
 	}
 	email := utils.StringFirstNonEmpty(result.Address, result.NormalizedEmail)
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = h.grpcClients.EmailClient.PassEmailValidation(ctx, &emailpb.PassEmailValidationGrpcRequest{
-		Tenant:         eventData.Tenant,
-		EmailId:        emailId,
-		AppSource:      constants.AppSourceEventProcessingPlatform,
-		RawEmail:       emailValidate.Email,
-		Email:          email,
-		IsReachable:    result.IsReachable,
-		ErrorMessage:   result.Error,
-		Domain:         result.Domain,
-		Username:       result.Username,
-		AcceptsMail:    result.AcceptsMail,
-		CanConnectSmtp: result.CanConnectSmtp,
-		HasFullInbox:   result.HasFullInbox,
-		IsCatchAll:     result.IsCatchAll,
-		IsDisabled:     result.IsDisabled,
-		IsValidSyntax:  result.IsValidSyntax,
+	_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*emailpb.EmailIdGrpcResponse](func() (*emailpb.EmailIdGrpcResponse, error) {
+		return h.grpcClients.EmailClient.PassEmailValidation(ctx, &emailpb.PassEmailValidationGrpcRequest{
+			Tenant:         eventData.Tenant,
+			EmailId:        emailId,
+			AppSource:      constants.AppSourceEventProcessingPlatform,
+			RawEmail:       emailValidate.Email,
+			Email:          email,
+			IsReachable:    result.IsReachable,
+			ErrorMessage:   result.Error,
+			Domain:         result.Domain,
+			Username:       result.Username,
+			AcceptsMail:    result.AcceptsMail,
+			CanConnectSmtp: result.CanConnectSmtp,
+			HasFullInbox:   result.HasFullInbox,
+			IsCatchAll:     result.IsCatchAll,
+			IsDisabled:     result.IsDisabled,
+			IsValidSyntax:  result.IsValidSyntax,
+		})
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -140,14 +144,21 @@ func (h *emailEventHandler) ValidateEmail(ctx context.Context, evt eventstore.Ev
 	return err
 }
 
-func (h *emailEventHandler) sendEmailFailedValidationEvent(ctx context.Context, tenant, emailId string, errorMessage string, span opentracing.Span) error {
+func (h *emailEventHandler) sendEmailFailedValidationEvent(ctx context.Context, tenant, emailId string, errorMessage string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailEventHandler.sendEmailFailedValidationEvent")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.LogFields(log.String("emailId", emailId), log.String("errorMessage", errorMessage))
+
 	h.log.Errorf("Failed validating email %s for tenant %s: %s", emailId, tenant, errorMessage)
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := h.grpcClients.EmailClient.FailEmailValidation(ctx, &emailpb.FailEmailValidationGrpcRequest{
-		Tenant:       tenant,
-		EmailId:      emailId,
-		AppSource:    constants.AppSourceEventProcessingPlatform,
-		ErrorMessage: utils.StringFirstNonEmpty(errorMessage, "Error message not available"),
+	_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*emailpb.EmailIdGrpcResponse](func() (*emailpb.EmailIdGrpcResponse, error) {
+		return h.grpcClients.EmailClient.FailEmailValidation(ctx, &emailpb.FailEmailValidationGrpcRequest{
+			Tenant:       tenant,
+			EmailId:      emailId,
+			AppSource:    constants.AppSourceEventProcessingPlatform,
+			ErrorMessage: utils.StringFirstNonEmpty(errorMessage, "Error message not available"),
+		})
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)

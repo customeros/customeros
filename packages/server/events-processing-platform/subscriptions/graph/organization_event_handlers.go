@@ -11,6 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions"
 	"strings"
 	"time"
 
@@ -158,10 +159,12 @@ func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt
 
 	// Request last touch point update
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = h.grpcClients.OrganizationClient.RefreshLastTouchpoint(ctx, &organizationpb.OrganizationIdGrpcRequest{
-		Tenant:         eventData.Tenant,
-		OrganizationId: organizationId,
-		AppSource:      constants.AppSourceEventProcessingPlatform,
+	_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+		return h.grpcClients.OrganizationClient.RefreshLastTouchpoint(ctx, &organizationpb.OrganizationIdGrpcRequest{
+			Tenant:         eventData.Tenant,
+			OrganizationId: organizationId,
+			AppSource:      constants.AppSourceEventProcessingPlatform,
+		})
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)

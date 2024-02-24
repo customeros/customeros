@@ -14,6 +14,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/opentracing/opentracing-go"
@@ -116,10 +117,12 @@ func (h *InteractionEventHandler) OnCreate(ctx context.Context, evt eventstore.E
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	for _, organizationId := range organizationIds {
-		_, err = h.grpcClients.OrganizationClient.RefreshLastTouchpoint(ctx, &organizationpb.OrganizationIdGrpcRequest{
-			Tenant:         eventData.Tenant,
-			OrganizationId: organizationId,
-			AppSource:      constants.AppSourceEventProcessingPlatform,
+		_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+			return h.grpcClients.OrganizationClient.RefreshLastTouchpoint(ctx, &organizationpb.OrganizationIdGrpcRequest{
+				Tenant:         eventData.Tenant,
+				OrganizationId: organizationId,
+				AppSource:      constants.AppSourceEventProcessingPlatform,
+			})
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)

@@ -3,6 +3,7 @@ module github.com/openline-ai/openline-customer-os/packages/server/customer-os-c
 go 1.21
 
 require (
+	github.com/cenkalti/backoff/v4 v4.2.1
 	github.com/coocood/freecache v1.2.4
 	github.com/gin-gonic/gin v1.9.1
 	github.com/google/uuid v1.6.0

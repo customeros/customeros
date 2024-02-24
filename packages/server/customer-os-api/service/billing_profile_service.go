@@ -73,7 +73,9 @@ func (s *billingProfileService) CreateBillingProfile(ctx context.Context, organi
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := s.grpcClients.OrganizationClient.CreateBillingProfile(ctx, &grpcRequest)
+	response, err := CallEventsPlatformGRPCWithRetry[*organizationpb.BillingProfileIdGrpcResponse](func() (*organizationpb.BillingProfileIdGrpcResponse, error) {
+		return s.grpcClients.OrganizationClient.CreateBillingProfile(ctx, &grpcRequest)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
@@ -127,7 +129,9 @@ func (s *billingProfileService) UpdateBillingProfile(ctx context.Context, organi
 	grpcRequest.FieldsMask = fieldsMask
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = s.grpcClients.OrganizationClient.UpdateBillingProfile(ctx, &grpcRequest)
+	_, err = CallEventsPlatformGRPCWithRetry[*organizationpb.BillingProfileIdGrpcResponse](func() (*organizationpb.BillingProfileIdGrpcResponse, error) {
+		return s.grpcClients.OrganizationClient.UpdateBillingProfile(ctx, &grpcRequest)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
@@ -177,7 +181,9 @@ func (s *billingProfileService) LinkEmailToBillingProfile(ctx context.Context, o
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = s.grpcClients.OrganizationClient.LinkEmailToBillingProfile(ctx, &grpcRequest)
+	_, err = CallEventsPlatformGRPCWithRetry[*organizationpb.BillingProfileIdGrpcResponse](func() (*organizationpb.BillingProfileIdGrpcResponse, error) {
+		return s.grpcClients.OrganizationClient.LinkEmailToBillingProfile(ctx, &grpcRequest)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
@@ -226,7 +232,9 @@ func (s *billingProfileService) UnlinkEmailFromBillingProfile(ctx context.Contex
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = s.grpcClients.OrganizationClient.UnlinkEmailFromBillingProfile(ctx, &grpcRequest)
+	_, err = CallEventsPlatformGRPCWithRetry[*organizationpb.BillingProfileIdGrpcResponse](func() (*organizationpb.BillingProfileIdGrpcResponse, error) {
+		return s.grpcClients.OrganizationClient.UnlinkEmailFromBillingProfile(ctx, &grpcRequest)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
@@ -275,7 +283,9 @@ func (s *billingProfileService) LinkLocationToBillingProfile(ctx context.Context
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = s.grpcClients.OrganizationClient.LinkLocationToBillingProfile(ctx, &grpcRequest)
+	_, err = CallEventsPlatformGRPCWithRetry[*organizationpb.BillingProfileIdGrpcResponse](func() (*organizationpb.BillingProfileIdGrpcResponse, error) {
+		return s.grpcClients.OrganizationClient.LinkLocationToBillingProfile(ctx, &grpcRequest)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
@@ -324,7 +334,9 @@ func (s *billingProfileService) UnlinkLocationFromBillingProfile(ctx context.Con
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = s.grpcClients.OrganizationClient.UnlinkLocationFromBillingProfile(ctx, &grpcRequest)
+	_, err = CallEventsPlatformGRPCWithRetry[*organizationpb.BillingProfileIdGrpcResponse](func() (*organizationpb.BillingProfileIdGrpcResponse, error) {
+		return s.grpcClients.OrganizationClient.UnlinkLocationFromBillingProfile(ctx, &grpcRequest)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())

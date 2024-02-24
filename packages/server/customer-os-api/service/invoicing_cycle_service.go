@@ -55,7 +55,9 @@ func (s *invoicingCycleService) CreateInvoicingCycle(ctx context.Context, invoic
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := s.grpcClients.InvoicingCycleClient.CreateInvoicingCycleType(ctx, &grpcRequest)
+	response, err := CallEventsPlatformGRPCWithRetry[*invoicingcyclepb.InvoicingCycleTypeResponse](func() (*invoicingcyclepb.InvoicingCycleTypeResponse, error) {
+		return s.grpcClients.InvoicingCycleClient.CreateInvoicingCycleType(ctx, &grpcRequest)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
@@ -96,7 +98,9 @@ func (s *invoicingCycleService) UpdateInvoicingCycle(ctx context.Context, id str
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = s.grpcClients.InvoicingCycleClient.UpdateInvoicingCycleType(ctx, &grpcRequest)
+	_, err = CallEventsPlatformGRPCWithRetry[*invoicingcyclepb.InvoicingCycleTypeResponse](func() (*invoicingcyclepb.InvoicingCycleTypeResponse, error) {
+		return s.grpcClients.InvoicingCycleClient.UpdateInvoicingCycleType(ctx, &grpcRequest)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())

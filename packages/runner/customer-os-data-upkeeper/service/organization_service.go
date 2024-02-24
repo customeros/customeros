@@ -66,11 +66,13 @@ func (s *organizationService) webScrapeOrganizations(ctx context.Context) {
 
 	// web scrape organizations
 	for _, record := range records {
-		_, err = s.eventsProcessingClient.OrganizationClient.WebScrapeOrganization(ctx, &organizationpb.WebScrapeOrganizationGrpcRequest{
-			Tenant:         record.Tenant,
-			OrganizationId: record.OrganizationId,
-			AppSource:      constants.AppSourceDataUpkeeper,
-			Url:            record.Url,
+		_, err = CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+			return s.eventsProcessingClient.OrganizationClient.WebScrapeOrganization(ctx, &organizationpb.WebScrapeOrganizationGrpcRequest{
+				Tenant:         record.Tenant,
+				OrganizationId: record.OrganizationId,
+				AppSource:      constants.AppSourceDataUpkeeper,
+				Url:            record.Url,
+			})
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)

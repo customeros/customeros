@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"fmt"
-
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
@@ -66,7 +65,9 @@ func (s *masterPlanService) CreateMasterPlan(ctx context.Context, name string) (
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := s.grpcClients.MasterPlanClient.CreateMasterPlan(ctx, &grpcRequest)
+	response, err := CallEventsPlatformGRPCWithRetry[*masterplanpb.MasterPlanIdGrpcResponse](func() (*masterplanpb.MasterPlanIdGrpcResponse, error) {
+		return s.grpcClients.MasterPlanClient.CreateMasterPlan(ctx, &grpcRequest)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
@@ -123,7 +124,9 @@ func (s *masterPlanService) UpdateMasterPlan(ctx context.Context, masterPlanId s
 	grpcRequest.FieldsMask = fieldsMask
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = s.grpcClients.MasterPlanClient.UpdateMasterPlan(ctx, &grpcRequest)
+	_, err = CallEventsPlatformGRPCWithRetry[*masterplanpb.MasterPlanIdGrpcResponse](func() (*masterplanpb.MasterPlanIdGrpcResponse, error) {
+		return s.grpcClients.MasterPlanClient.UpdateMasterPlan(ctx, &grpcRequest)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
@@ -180,7 +183,9 @@ func (s *masterPlanService) CreateMasterPlanMilestone(ctx context.Context, maste
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := s.grpcClients.MasterPlanClient.CreateMasterPlanMilestone(ctx, &grpcRequest)
+	response, err := CallEventsPlatformGRPCWithRetry[*masterplanpb.MasterPlanMilestoneIdGrpcResponse](func() (*masterplanpb.MasterPlanMilestoneIdGrpcResponse, error) {
+		return s.grpcClients.MasterPlanClient.CreateMasterPlanMilestone(ctx, &grpcRequest)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
@@ -308,7 +313,9 @@ func (s *masterPlanService) UpdateMasterPlanMilestone(ctx context.Context, maste
 	grpcRequest.FieldsMask = fieldsMask
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = s.grpcClients.MasterPlanClient.UpdateMasterPlanMilestone(ctx, &grpcRequest)
+	_, err = CallEventsPlatformGRPCWithRetry[*masterplanpb.MasterPlanMilestoneIdGrpcResponse](func() (*masterplanpb.MasterPlanMilestoneIdGrpcResponse, error) {
+		return s.grpcClients.MasterPlanClient.UpdateMasterPlanMilestone(ctx, &grpcRequest)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
@@ -342,7 +349,9 @@ func (s *masterPlanService) ReorderMasterPlanMilestones(ctx context.Context, mas
 		MasterPlanMilestoneIds: masterPlanMilestoneIds,
 	}
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = s.grpcClients.MasterPlanClient.ReorderMasterPlanMilestones(ctx, &grpcRequest)
+	_, err = CallEventsPlatformGRPCWithRetry[*masterplanpb.MasterPlanIdGrpcResponse](func() (*masterplanpb.MasterPlanIdGrpcResponse, error) {
+		return s.grpcClients.MasterPlanClient.ReorderMasterPlanMilestones(ctx, &grpcRequest)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
@@ -390,7 +399,9 @@ func (s *masterPlanService) DuplicateMasterPlanMilestone(ctx context.Context, ma
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := s.grpcClients.MasterPlanClient.CreateMasterPlanMilestone(ctx, &grpcRequest)
+	response, err := CallEventsPlatformGRPCWithRetry[*masterplanpb.MasterPlanMilestoneIdGrpcResponse](func() (*masterplanpb.MasterPlanMilestoneIdGrpcResponse, error) {
+		return s.grpcClients.MasterPlanClient.CreateMasterPlanMilestone(ctx, &grpcRequest)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
@@ -434,7 +445,9 @@ func (s *masterPlanService) DuplicateMasterPlan(ctx context.Context, sourceMaste
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := s.grpcClients.MasterPlanClient.CreateMasterPlan(ctx, &grpcRequest)
+	response, err := CallEventsPlatformGRPCWithRetry[*masterplanpb.MasterPlanIdGrpcResponse](func() (*masterplanpb.MasterPlanIdGrpcResponse, error) {
+		return s.grpcClients.MasterPlanClient.CreateMasterPlan(ctx, &grpcRequest)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
@@ -459,7 +472,9 @@ func (s *masterPlanService) DuplicateMasterPlan(ctx context.Context, sourceMaste
 					AppSource: constants.AppSourceCustomerOsApi,
 				},
 			}
-			_, err = s.grpcClients.MasterPlanClient.CreateMasterPlanMilestone(ctx, &grpcRequestCreateMilestone)
+			_, err = CallEventsPlatformGRPCWithRetry[*masterplanpb.MasterPlanMilestoneIdGrpcResponse](func() (*masterplanpb.MasterPlanMilestoneIdGrpcResponse, error) {
+				return s.grpcClients.MasterPlanClient.CreateMasterPlanMilestone(ctx, &grpcRequestCreateMilestone)
+			})
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error from events processing: %s", err.Error())
@@ -486,7 +501,9 @@ func (s *masterPlanService) CreateDefaultMasterPlan(ctx context.Context) (string
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := s.grpcClients.MasterPlanClient.CreateMasterPlan(ctx, &grpcRequest)
+	response, err := CallEventsPlatformGRPCWithRetry[*masterplanpb.MasterPlanIdGrpcResponse](func() (*masterplanpb.MasterPlanIdGrpcResponse, error) {
+		return s.grpcClients.MasterPlanClient.CreateMasterPlan(ctx, &grpcRequest)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
@@ -516,7 +533,9 @@ func (s *masterPlanService) CreateDefaultMasterPlan(ctx context.Context) (string
 		durationHours := milestone["durationHours"].(int64)
 		items := milestone["items"].([]string)
 		grpcRequestCreateMilestone := newDefaultMasterPlanMilestone(mid, text, common.GetUserIdFromContext(ctx), common.GetTenantFromContext(ctx), order, items, durationHours)
-		_, err = s.grpcClients.MasterPlanClient.CreateMasterPlanMilestone(ctx, &grpcRequestCreateMilestone)
+		_, err = CallEventsPlatformGRPCWithRetry[*masterplanpb.MasterPlanMilestoneIdGrpcResponse](func() (*masterplanpb.MasterPlanMilestoneIdGrpcResponse, error) {
+			return s.grpcClients.MasterPlanClient.CreateMasterPlanMilestone(ctx, &grpcRequestCreateMilestone)
+		})
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error from events processing: %s", err.Error())

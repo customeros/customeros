@@ -154,7 +154,9 @@ func (s *contractService) createContractWithEvents(ctx context.Context, contract
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := s.grpcClients.ContractClient.CreateContract(ctx, &createContractRequest)
+	response, err := CallEventsPlatformGRPCWithRetry[*contractpb.ContractIdGrpcResponse](func() (*contractpb.ContractIdGrpcResponse, error) {
+		return s.grpcClients.ContractClient.CreateContract(ctx, &createContractRequest)
+	})
 
 	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jutil.NodeLabelContact, span)
 	return response.Id, err
@@ -440,7 +442,9 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := s.grpcClients.ContractClient.UpdateContract(ctx, &contractUpdateRequest)
+	_, err := CallEventsPlatformGRPCWithRetry[*contractpb.ContractIdGrpcResponse](func() (*contractpb.ContractIdGrpcResponse, error) {
+		return s.grpcClients.ContractClient.UpdateContract(ctx, &contractUpdateRequest)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
