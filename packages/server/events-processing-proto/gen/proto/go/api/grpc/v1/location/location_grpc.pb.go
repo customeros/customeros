@@ -23,6 +23,9 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type LocationGrpcServiceClient interface {
 	UpsertLocation(ctx context.Context, in *UpsertLocationGrpcRequest, opts ...grpc.CallOption) (*LocationIdGrpcResponse, error)
+	FailLocationValidation(ctx context.Context, in *FailLocationValidationGrpcRequest, opts ...grpc.CallOption) (*LocationIdGrpcResponse, error)
+	SkipLocationValidation(ctx context.Context, in *SkipLocationValidationGrpcRequest, opts ...grpc.CallOption) (*LocationIdGrpcResponse, error)
+	PassLocationValidation(ctx context.Context, in *PassLocationValidationGrpcRequest, opts ...grpc.CallOption) (*LocationIdGrpcResponse, error)
 }
 
 type locationGrpcServiceClient struct {
@@ -42,11 +45,41 @@ func (c *locationGrpcServiceClient) UpsertLocation(ctx context.Context, in *Upse
 	return out, nil
 }
 
+func (c *locationGrpcServiceClient) FailLocationValidation(ctx context.Context, in *FailLocationValidationGrpcRequest, opts ...grpc.CallOption) (*LocationIdGrpcResponse, error) {
+	out := new(LocationIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/LocationGrpcService/FailLocationValidation", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *locationGrpcServiceClient) SkipLocationValidation(ctx context.Context, in *SkipLocationValidationGrpcRequest, opts ...grpc.CallOption) (*LocationIdGrpcResponse, error) {
+	out := new(LocationIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/LocationGrpcService/SkipLocationValidation", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *locationGrpcServiceClient) PassLocationValidation(ctx context.Context, in *PassLocationValidationGrpcRequest, opts ...grpc.CallOption) (*LocationIdGrpcResponse, error) {
+	out := new(LocationIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/LocationGrpcService/PassLocationValidation", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // LocationGrpcServiceServer is the server API for LocationGrpcService service.
 // All implementations should embed UnimplementedLocationGrpcServiceServer
 // for forward compatibility
 type LocationGrpcServiceServer interface {
 	UpsertLocation(context.Context, *UpsertLocationGrpcRequest) (*LocationIdGrpcResponse, error)
+	FailLocationValidation(context.Context, *FailLocationValidationGrpcRequest) (*LocationIdGrpcResponse, error)
+	SkipLocationValidation(context.Context, *SkipLocationValidationGrpcRequest) (*LocationIdGrpcResponse, error)
+	PassLocationValidation(context.Context, *PassLocationValidationGrpcRequest) (*LocationIdGrpcResponse, error)
 }
 
 // UnimplementedLocationGrpcServiceServer should be embedded to have forward compatible implementations.
@@ -55,6 +88,15 @@ type UnimplementedLocationGrpcServiceServer struct {
 
 func (UnimplementedLocationGrpcServiceServer) UpsertLocation(context.Context, *UpsertLocationGrpcRequest) (*LocationIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpsertLocation not implemented")
+}
+func (UnimplementedLocationGrpcServiceServer) FailLocationValidation(context.Context, *FailLocationValidationGrpcRequest) (*LocationIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FailLocationValidation not implemented")
+}
+func (UnimplementedLocationGrpcServiceServer) SkipLocationValidation(context.Context, *SkipLocationValidationGrpcRequest) (*LocationIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SkipLocationValidation not implemented")
+}
+func (UnimplementedLocationGrpcServiceServer) PassLocationValidation(context.Context, *PassLocationValidationGrpcRequest) (*LocationIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PassLocationValidation not implemented")
 }
 
 // UnsafeLocationGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -86,6 +128,60 @@ func _LocationGrpcService_UpsertLocation_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _LocationGrpcService_FailLocationValidation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FailLocationValidationGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LocationGrpcServiceServer).FailLocationValidation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/LocationGrpcService/FailLocationValidation",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LocationGrpcServiceServer).FailLocationValidation(ctx, req.(*FailLocationValidationGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _LocationGrpcService_SkipLocationValidation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SkipLocationValidationGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LocationGrpcServiceServer).SkipLocationValidation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/LocationGrpcService/SkipLocationValidation",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LocationGrpcServiceServer).SkipLocationValidation(ctx, req.(*SkipLocationValidationGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _LocationGrpcService_PassLocationValidation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PassLocationValidationGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LocationGrpcServiceServer).PassLocationValidation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/LocationGrpcService/PassLocationValidation",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LocationGrpcServiceServer).PassLocationValidation(ctx, req.(*PassLocationValidationGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // LocationGrpcService_ServiceDesc is the grpc.ServiceDesc for LocationGrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -96,6 +192,18 @@ var LocationGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpsertLocation",
 			Handler:    _LocationGrpcService_UpsertLocation_Handler,
+		},
+		{
+			MethodName: "FailLocationValidation",
+			Handler:    _LocationGrpcService_FailLocationValidation_Handler,
+		},
+		{
+			MethodName: "SkipLocationValidation",
+			Handler:    _LocationGrpcService_SkipLocationValidation_Handler,
+		},
+		{
+			MethodName: "PassLocationValidation",
+			Handler:    _LocationGrpcService_PassLocationValidation_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

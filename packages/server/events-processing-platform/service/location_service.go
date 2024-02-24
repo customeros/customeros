@@ -72,6 +72,77 @@ func (s *locationService) UpsertLocation(ctx context.Context, request *locationp
 	return &locationpb.LocationIdGrpcResponse{Id: locationId}, nil
 }
 
+func (s *locationService) FailLocationValidation(ctx context.Context, request *locationpb.FailLocationValidationGrpcRequest) (*locationpb.LocationIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "LocationService.FailLocationValidation")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	span.SetTag(tracing.SpanTagEntityId, request.LocationId)
+	tracing.LogObjectAsJson(span, "request", request)
+
+	cmd := command.NewFailedLocationValidationCommand(request.LocationId, request.Tenant, request.LoggedInUserId, request.RawAddress, request.Country, request.ErrorMessage)
+	if err := s.locationCommands.FailedLocationValidation.Handle(ctx, cmd); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(FailLocationValidation) tenant:{%s}, location ID: {%s}, err: {%v}", request.Tenant, request.LocationId, err.Error())
+		return nil, s.errResponse(err)
+	}
+
+	return &locationpb.LocationIdGrpcResponse{Id: request.LocationId}, nil
+}
+
+func (s *locationService) SkipLocationValidation(ctx context.Context, request *locationpb.SkipLocationValidationGrpcRequest) (*locationpb.LocationIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "LocationService.SkipLocationValidation")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	span.SetTag(tracing.SpanTagEntityId, request.LocationId)
+	tracing.LogObjectAsJson(span, "request", request)
+
+	cmd := command.NewSkippedLocationValidationCommand(request.LocationId, request.Tenant, request.LoggedInUserId, request.RawAddress, request.Reason)
+	if err := s.locationCommands.SkipLocationValidation.Handle(ctx, cmd); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(SkipLocationValidation) tenant:{%s}, location ID: {%s}, err: {%v}", request.Tenant, request.LocationId, err.Error())
+		return nil, s.errResponse(err)
+	}
+
+	return &locationpb.LocationIdGrpcResponse{Id: request.LocationId}, nil
+}
+
+func (s *locationService) PassLocationValidation(ctx context.Context, request *locationpb.PassLocationValidationGrpcRequest) (*locationpb.LocationIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "LocationService.PassLocationValidation")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	span.SetTag(tracing.SpanTagEntityId, request.LocationId)
+	tracing.LogObjectAsJson(span, "request", request)
+
+	addressFields := models.LocationAddressFields{
+		Country:      request.Country,
+		Region:       request.Region,
+		District:     request.District,
+		Locality:     request.Locality,
+		Street:       request.Street,
+		Address1:     request.AddressLine1,
+		Address2:     request.AddressLine2,
+		Zip:          request.ZipCode,
+		AddressType:  request.AddressType,
+		HouseNumber:  request.HouseNumber,
+		PostalCode:   request.PostalCode,
+		PlusFour:     request.PlusFour,
+		Commercial:   request.Commercial,
+		Predirection: request.Predirection,
+		Latitude:     utils.ParseStringToFloat(request.Latitude),
+		Longitude:    utils.ParseStringToFloat(request.Longitude),
+		TimeZone:     request.TimeZone,
+		UtcOffset:    int(request.UtcOffset),
+	}
+	cmd := command.NewLocationValidatedCommand(request.LocationId, request.Tenant, request.LoggedInUserId, request.RawAddress, request.Country, addressFields)
+	if err := s.locationCommands.LocationValidated.Handle(ctx, cmd); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(PassLocationValidation) tenant:{%s}, location ID: {%s}, err: {%v}", request.Tenant, request.LocationId, err.Error())
+		return nil, s.errResponse(err)
+	}
+
+	return &locationpb.LocationIdGrpcResponse{Id: request.LocationId}, nil
+}
+
 func (s *locationService) errResponse(err error) error {
 	return grpcerr.ErrResponse(err)
 }

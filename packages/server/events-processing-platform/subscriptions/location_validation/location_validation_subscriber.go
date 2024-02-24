@@ -4,9 +4,9 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions"
@@ -27,16 +27,16 @@ type LocationValidationSubscriber struct {
 	repositories         *repository.Repositories
 }
 
-func NewLocationValidationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, locationCommands *command_handler.CommandHandlers, repositories *repository.Repositories) *LocationValidationSubscriber {
+func NewLocationValidationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, repositories *repository.Repositories, grpcClients *grpc_client.Clients) *LocationValidationSubscriber {
 	return &LocationValidationSubscriber{
 		log: log,
 		db:  db,
 		cfg: cfg,
 		locationEventHandler: &LocationEventHandler{
-			log:              log,
-			cfg:              cfg,
-			locationCommands: locationCommands,
-			repositories:     repositories,
+			log:          log,
+			cfg:          cfg,
+			repositories: repositories,
+			grpcClients:  grpcClients,
 		},
 	}
 }
