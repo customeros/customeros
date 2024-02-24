@@ -67,14 +67,16 @@ func (s *phoneNumberService) CreatePhoneNumberByEvents(ctx context.Context, phon
 	if phoneNumberEntity == nil {
 		// phone number not exist, create new one
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		response, err := s.grpcClients.PhoneNumberClient.UpsertPhoneNumber(ctx, &phonenumpb.UpsertPhoneNumberGrpcRequest{
-			Tenant:      common.GetTenantFromContext(ctx),
-			PhoneNumber: phoneNumber,
-			SourceFields: &commonpb.SourceFields{
-				Source:    string(neo4jentity.DataSourceOpenline),
-				AppSource: utils.StringFirstNonEmpty(appSource, constants.AppSourceCustomerOsApi),
-			},
-			LoggedInUserId: common.GetUserIdFromContext(ctx),
+		response, err := CallEventsPlatformGRPCWithRetry[*phonenumpb.PhoneNumberIdGrpcResponse](func() (*phonenumpb.PhoneNumberIdGrpcResponse, error) {
+			return s.grpcClients.PhoneNumberClient.UpsertPhoneNumber(ctx, &phonenumpb.UpsertPhoneNumberGrpcRequest{
+				Tenant:      common.GetTenantFromContext(ctx),
+				PhoneNumber: phoneNumber,
+				SourceFields: &commonpb.SourceFields{
+					Source:    string(neo4jentity.DataSourceOpenline),
+					AppSource: utils.StringFirstNonEmpty(appSource, constants.AppSourceCustomerOsApi),
+				},
+				LoggedInUserId: common.GetUserIdFromContext(ctx),
+			})
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)

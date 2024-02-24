@@ -12,6 +12,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	"github.com/opentracing/opentracing-go"
@@ -221,10 +222,12 @@ func (h *InvoiceEventHandler) OnInvoicePdfGenerated(ctx context.Context, evt eve
 
 func (s *InvoiceEventHandler) callGeneratePdfRequestGRPC(ctx context.Context, tenant, invoiceId string, span opentracing.Span) error {
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := s.grpcClients.InvoiceClient.GenerateInvoicePdf(ctx, &invoicepb.GenerateInvoicePdfRequest{
-		Tenant:    tenant,
-		InvoiceId: invoiceId,
-		AppSource: constants.AppSourceEventProcessingPlatform,
+	_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
+		return s.grpcClients.InvoiceClient.GenerateInvoicePdf(ctx, &invoicepb.GenerateInvoicePdfRequest{
+			Tenant:    tenant,
+			InvoiceId: invoiceId,
+			AppSource: constants.AppSourceEventProcessingPlatform,
+		})
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -236,11 +239,13 @@ func (s *InvoiceEventHandler) callGeneratePdfRequestGRPC(ctx context.Context, te
 
 func (s *InvoiceEventHandler) callRequestFillInvoiceGRPC(ctx context.Context, tenant, invoiceId, contractId string, span opentracing.Span) error {
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := s.grpcClients.InvoiceClient.RequestFillInvoice(ctx, &invoicepb.RequestFillInvoiceRequest{
-		Tenant:     tenant,
-		InvoiceId:  invoiceId,
-		ContractId: contractId,
-		AppSource:  constants.AppSourceEventProcessingPlatform,
+	_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
+		return s.grpcClients.InvoiceClient.RequestFillInvoice(ctx, &invoicepb.RequestFillInvoiceRequest{
+			Tenant:     tenant,
+			InvoiceId:  invoiceId,
+			ContractId: contractId,
+			AppSource:  constants.AppSourceEventProcessingPlatform,
+		})
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)

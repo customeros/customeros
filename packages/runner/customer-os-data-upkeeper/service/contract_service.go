@@ -83,10 +83,12 @@ func (s *contractService) updateContractStatuses(ctx context.Context, referenceT
 
 		//process contracts
 		for _, record := range records {
-			_, err = s.eventsProcessingClient.ContractClient.RefreshContractStatus(ctx, &contractpb.RefreshContractStatusGrpcRequest{
-				Tenant:    record.Tenant,
-				Id:        record.ContractId,
-				AppSource: constants.AppSourceDataUpkeeper,
+			_, err = CallEventsPlatformGRPCWithRetry[*contractpb.ContractIdGrpcResponse](func() (*contractpb.ContractIdGrpcResponse, error) {
+				return s.eventsProcessingClient.ContractClient.RefreshContractStatus(ctx, &contractpb.RefreshContractStatusGrpcRequest{
+					Tenant:    record.Tenant,
+					Id:        record.ContractId,
+					AppSource: constants.AppSourceDataUpkeeper,
+				})
 			})
 			if err != nil {
 				tracing.TraceErr(span, err)
@@ -136,10 +138,12 @@ func (s *contractService) rolloutContractRenewals(ctx context.Context, reference
 
 		//process contracts
 		for _, record := range records {
-			_, err = s.eventsProcessingClient.ContractClient.RolloutRenewalOpportunityOnExpiration(ctx, &contractpb.RolloutRenewalOpportunityOnExpirationGrpcRequest{
-				Tenant:    record.Tenant,
-				Id:        record.ContractId,
-				AppSource: constants.AppSourceDataUpkeeper,
+			_, err = CallEventsPlatformGRPCWithRetry[*contractpb.ContractIdGrpcResponse](func() (*contractpb.ContractIdGrpcResponse, error) {
+				return s.eventsProcessingClient.ContractClient.RolloutRenewalOpportunityOnExpiration(ctx, &contractpb.RolloutRenewalOpportunityOnExpirationGrpcRequest{
+					Tenant:    record.Tenant,
+					Id:        record.ContractId,
+					AppSource: constants.AppSourceDataUpkeeper,
+				})
 			})
 			if err != nil {
 				tracing.TraceErr(span, err)
@@ -189,10 +193,12 @@ func (s *contractService) closeEndedContractOpportunityRenewals(ctx context.Cont
 
 		//process renewal opportunities
 		for _, record := range records {
-			_, err = s.eventsProcessingClient.OpportunityClient.CloseLooseOpportunity(ctx, &opportunitypb.CloseLooseOpportunityGrpcRequest{
-				Tenant:    record.Tenant,
-				Id:        record.OpportunityId,
-				AppSource: constants.AppSourceDataUpkeeper,
+			_, err = CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
+				return s.eventsProcessingClient.OpportunityClient.CloseLooseOpportunity(ctx, &opportunitypb.CloseLooseOpportunityGrpcRequest{
+					Tenant:    record.Tenant,
+					Id:        record.OpportunityId,
+					AppSource: constants.AppSourceDataUpkeeper,
+				})
 			})
 			if err != nil {
 				tracing.TraceErr(span, err)
@@ -256,7 +262,9 @@ func (s *contractService) ResyncContract(ctx context.Context, tenant, contractId
 		request.BillingCycle = commonpb.BillingCycle_NONE_BILLING
 	}
 
-	_, err = s.eventsProcessingClient.ContractClient.UpdateContract(ctx, &request)
+	_, err = CallEventsPlatformGRPCWithRetry[*contractpb.ContractIdGrpcResponse](func() (*contractpb.ContractIdGrpcResponse, error) {
+		return s.eventsProcessingClient.ContractClient.UpdateContract(ctx, &request)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error re-syncing contract {%s}: %s", contractId, err.Error())

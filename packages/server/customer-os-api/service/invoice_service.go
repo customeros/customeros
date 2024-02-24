@@ -94,7 +94,9 @@ func (s *invoiceService) UpdateInvoice(ctx context.Context, input model.InvoiceU
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := s.grpcClients.InvoiceClient.UpdateInvoice(ctx, &invoiceUpdateRequest)
+	_, err := CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
+		return s.grpcClients.InvoiceClient.UpdateInvoice(ctx, &invoiceUpdateRequest)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
@@ -261,7 +263,9 @@ func (s *invoiceService) SimulateInvoice(ctx context.Context, invoiceData *Simul
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := s.grpcClients.InvoiceClient.SimulateInvoice(ctx, &simulateInvoiceRequest)
+	response, err := CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
+		return s.grpcClients.InvoiceClient.SimulateInvoice(ctx, &simulateInvoiceRequest)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
@@ -335,7 +339,9 @@ func (s *invoiceService) NextInvoiceDryRun(ctx context.Context, contractId strin
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := s.grpcClients.InvoiceClient.NewInvoiceForContract(ctx, &dryRunInvoiceRequest)
+	response, err := CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
+		return s.grpcClients.InvoiceClient.NewInvoiceForContract(ctx, &dryRunInvoiceRequest)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
@@ -357,11 +363,13 @@ func (s *invoiceService) VoidInvoice(ctx context.Context, invoiceId string) erro
 	tenant := common.GetTenantFromContext(ctx)
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := s.grpcClients.InvoiceClient.VoidInvoice(ctx, &invoicepb.VoidInvoiceRequest{
-		Tenant:         tenant,
-		InvoiceId:      invoiceId,
-		LoggedInUserId: common.GetUserIdFromContext(ctx),
-		AppSource:      constants.AppSourceCustomerOsApi,
+	response, err := CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
+		return s.grpcClients.InvoiceClient.VoidInvoice(ctx, &invoicepb.VoidInvoiceRequest{
+			Tenant:         tenant,
+			InvoiceId:      invoiceId,
+			LoggedInUserId: common.GetUserIdFromContext(ctx),
+			AppSource:      constants.AppSourceCustomerOsApi,
+		})
 	})
 
 	if err != nil {

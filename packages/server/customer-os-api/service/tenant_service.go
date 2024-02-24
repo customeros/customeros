@@ -19,6 +19,7 @@ import (
 	tenantpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/tenant"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"math/rand"
 )
 
@@ -169,7 +170,9 @@ func (s *tenantService) CreateTenantBillingProfile(ctx context.Context, input mo
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := s.grpcClients.TenantClient.AddBillingProfile(ctx, &grpcRequest)
+	response, err := CallEventsPlatformGRPCWithRetry[*commonpb.IdResponse](func() (*commonpb.IdResponse, error) {
+		return s.grpcClients.TenantClient.AddBillingProfile(ctx, &grpcRequest)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
@@ -287,7 +290,9 @@ func (s *tenantService) UpdateTenantBillingProfile(ctx context.Context, input mo
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := s.grpcClients.TenantClient.UpdateBillingProfile(ctx, &updateRequest)
+	_, err := CallEventsPlatformGRPCWithRetry[*commonpb.IdResponse](func() (*commonpb.IdResponse, error) {
+		return s.grpcClients.TenantClient.UpdateBillingProfile(ctx, &updateRequest)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
@@ -350,7 +355,9 @@ func (s *tenantService) UpdateTenantSettings(ctx context.Context, input *model.T
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := s.grpcClients.TenantClient.UpdateTenantSettings(ctx, &updateRequest)
+	_, err := CallEventsPlatformGRPCWithRetry[*emptypb.Empty](func() (*emptypb.Empty, error) {
+		return s.grpcClients.TenantClient.UpdateTenantSettings(ctx, &updateRequest)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())

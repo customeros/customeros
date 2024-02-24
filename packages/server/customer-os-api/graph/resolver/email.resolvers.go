@@ -7,6 +7,7 @@ package resolver
 import (
 	"context"
 	"errors"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"strings"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -157,14 +158,16 @@ func (r *mutationResolver) EmailMergeToUser(ctx context.Context, userID string, 
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = r.Clients.UserClient.LinkEmailToUser(ctx, &userpb.LinkEmailToUserGrpcRequest{
-		Tenant:         common.GetTenantFromContext(ctx),
-		UserId:         userID,
-		EmailId:        emailId,
-		Primary:        utils.IfNotNilBool(input.Primary),
-		Label:          utils.IfNotNilString(input.Label, func() string { return input.Label.String() }),
-		LoggedInUserId: common.GetUserIdFromContext(ctx),
-		AppSource:      utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
+	_, err = service.CallEventsPlatformGRPCWithRetry[*userpb.UserIdGrpcResponse](func() (*userpb.UserIdGrpcResponse, error) {
+		return r.Clients.UserClient.LinkEmailToUser(ctx, &userpb.LinkEmailToUserGrpcRequest{
+			Tenant:         common.GetTenantFromContext(ctx),
+			UserId:         userID,
+			EmailId:        emailId,
+			Primary:        utils.IfNotNilBool(input.Primary),
+			Label:          utils.IfNotNilString(input.Label, func() string { return input.Label.String() }),
+			LoggedInUserId: common.GetUserIdFromContext(ctx),
+			AppSource:      utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
+		})
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)

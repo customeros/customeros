@@ -151,7 +151,9 @@ func (s *contactService) createContactWithEvents(ctx context.Context, contactDet
 		}
 	}
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := s.grpcClients.ContactClient.UpsertContact(ctx, &upsertContactRequest)
+	response, err := CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
+		return s.grpcClients.ContactClient.UpsertContact(ctx, &upsertContactRequest)
+	})
 
 	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jutil.NodeLabelContact, span)
 
@@ -169,14 +171,16 @@ func (s *contactService) linkEmailByEvents(ctx context.Context, contactId, appSo
 	}
 	if emailId != "" {
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = s.grpcClients.ContactClient.LinkEmailToContact(ctx, &contactpb.LinkEmailToContactGrpcRequest{
-			Tenant:         common.GetTenantFromContext(ctx),
-			LoggedInUserId: common.GetUserIdFromContext(ctx),
-			ContactId:      contactId,
-			EmailId:        emailId,
-			Primary:        emailEntity.Primary,
-			Label:          emailEntity.Label,
-			AppSource:      appSource,
+		_, err = CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
+			return s.grpcClients.ContactClient.LinkEmailToContact(ctx, &contactpb.LinkEmailToContactGrpcRequest{
+				Tenant:         common.GetTenantFromContext(ctx),
+				LoggedInUserId: common.GetUserIdFromContext(ctx),
+				ContactId:      contactId,
+				EmailId:        emailId,
+				Primary:        emailEntity.Primary,
+				Label:          emailEntity.Label,
+				AppSource:      appSource,
+			})
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -196,14 +200,16 @@ func (s *contactService) linkPhoneNumberByEvents(ctx context.Context, contactId,
 	}
 	if phoneNumberId != "" {
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = s.grpcClients.ContactClient.LinkPhoneNumberToContact(ctx, &contactpb.LinkPhoneNumberToContactGrpcRequest{
-			Tenant:         common.GetTenantFromContext(ctx),
-			LoggedInUserId: common.GetUserIdFromContext(ctx),
-			ContactId:      contactId,
-			PhoneNumberId:  phoneNumberId,
-			Primary:        phoneNumberEntity.Primary,
-			Label:          phoneNumberEntity.Label,
-			AppSource:      appSource,
+		_, err = CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
+			return s.grpcClients.ContactClient.LinkPhoneNumberToContact(ctx, &contactpb.LinkPhoneNumberToContactGrpcRequest{
+				Tenant:         common.GetTenantFromContext(ctx),
+				LoggedInUserId: common.GetUserIdFromContext(ctx),
+				ContactId:      contactId,
+				PhoneNumberId:  phoneNumberId,
+				Primary:        phoneNumberEntity.Primary,
+				Label:          phoneNumberEntity.Label,
+				AppSource:      appSource,
+			})
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -279,7 +285,9 @@ func (s *contactService) Update(ctx context.Context, input model.ContactUpdateIn
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := s.grpcClients.ContactClient.UpsertContact(ctx, &upsertContactRequest)
+	response, err := CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
+		return s.grpcClients.ContactClient.UpsertContact(ctx, &upsertContactRequest)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Error("Error from events processing: %s", err.Error())
@@ -618,12 +626,14 @@ func (s *contactService) CustomerContactCreate(ctx context.Context, data *Custom
 	contextWithTimeout, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	contactId, err := s.grpcClients.ContactClient.UpsertContact(contextWithTimeout, contactCreateRequest)
+	response, err := CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
+		return s.grpcClients.ContactClient.UpsertContact(contextWithTimeout, contactCreateRequest)
+	})
 	if err != nil {
 		s.log.Errorf("(%s) Failed to call method: {%v}", utils.GetFunctionName(), err.Error())
 		return nil, err
 	}
-	result.ID = contactId.Id
+	result.ID = response.Id
 
 	if data.EmailEntity != nil {
 		emailCreate := &emailpb.UpsertEmailGrpcRequest{
@@ -638,7 +648,9 @@ func (s *contactService) CustomerContactCreate(ctx context.Context, data *Custom
 		if data.ContactEntity.CreatedAt != nil {
 			emailCreate.CreatedAt = timestamppb.New(*data.ContactEntity.CreatedAt)
 		}
-		emailId, err := s.grpcClients.EmailClient.UpsertEmail(contextWithTimeout, emailCreate)
+		emailId, err := CallEventsPlatformGRPCWithRetry[*emailpb.EmailIdGrpcResponse](func() (*emailpb.EmailIdGrpcResponse, error) {
+			return s.grpcClients.EmailClient.UpsertEmail(contextWithTimeout, emailCreate)
+		})
 		if err != nil {
 			s.log.Errorf("(%s) Failed to call method: {%v}", utils.GetFunctionName(), err.Error())
 			return nil, err
@@ -647,13 +659,15 @@ func (s *contactService) CustomerContactCreate(ctx context.Context, data *Custom
 		result.Email = &model.CustomerEmail{
 			ID: emailId.Id,
 		}
-		_, err = s.grpcClients.ContactClient.LinkEmailToContact(contextWithTimeout, &contactpb.LinkEmailToContactGrpcRequest{
-			Primary:   data.EmailEntity.Primary,
-			Label:     data.EmailEntity.Label,
-			ContactId: contactId.Id,
-			EmailId:   emailId.Id,
-			Tenant:    common.GetTenantFromContext(ctx),
-			AppSource: data.ContactEntity.AppSource,
+		_, err = CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
+			return s.grpcClients.ContactClient.LinkEmailToContact(contextWithTimeout, &contactpb.LinkEmailToContactGrpcRequest{
+				Primary:   data.EmailEntity.Primary,
+				Label:     data.EmailEntity.Label,
+				ContactId: response.Id,
+				EmailId:   emailId.Id,
+				Tenant:    common.GetTenantFromContext(ctx),
+				AppSource: data.ContactEntity.AppSource,
+			})
 		})
 		if err != nil {
 			s.log.Errorf("(%s) Failed to call method: {%v}", utils.GetFunctionName(), err.Error())

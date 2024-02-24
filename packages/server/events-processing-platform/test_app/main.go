@@ -313,7 +313,6 @@ func testAddCustomField() {
 }
 
 func testCreateEmail() {
-	tenant := "openline"
 	userId := "697563a8-171c-4950-a067-1aaaaf2de1d8"
 	rawEmail := "aa@test.com"
 

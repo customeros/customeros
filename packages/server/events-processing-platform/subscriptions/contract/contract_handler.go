@@ -12,6 +12,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
@@ -129,14 +130,16 @@ func (h *contractHandler) UpdateActiveRenewalOpportunityLikelihood(ctx context.C
 
 	if renewalLikelihood != "" {
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err := h.grpcClients.OpportunityClient.UpdateRenewalOpportunity(ctx, &opportunitypb.UpdateRenewalOpportunityGrpcRequest{
-			Tenant:            tenant,
-			Id:                opportunityEntity.Id,
-			RenewalLikelihood: renewalLikelihoodForGrpcRequest(renewalLikelihood),
-			SourceFields: &commonpb.SourceFields{
-				AppSource: constants.AppSourceEventProcessingPlatform,
-			},
-			FieldsMask: []opportunitypb.OpportunityMaskField{opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_RENEWAL_LIKELIHOOD},
+		_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
+			return h.grpcClients.OpportunityClient.UpdateRenewalOpportunity(ctx, &opportunitypb.UpdateRenewalOpportunityGrpcRequest{
+				Tenant:            tenant,
+				Id:                opportunityEntity.Id,
+				RenewalLikelihood: renewalLikelihoodForGrpcRequest(renewalLikelihood),
+				SourceFields: &commonpb.SourceFields{
+					AppSource: constants.AppSourceEventProcessingPlatform,
+				},
+				FieldsMask: []opportunitypb.OpportunityMaskField{opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_RENEWAL_LIKELIHOOD},
+			})
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -151,10 +154,12 @@ func (h *contractHandler) UpdateActiveRenewalOpportunityLikelihood(ctx context.C
 func (h *contractHandler) updateRenewalNextCycleDate(ctx context.Context, tenant string, contractEntity *neo4jentity.ContractEntity, renewalOpportunityEntity *entity.OpportunityEntity, span opentracing.Span) error {
 	if contractEntity.IsEnded() && renewalOpportunityEntity != nil {
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err := h.grpcClients.OpportunityClient.CloseLooseOpportunity(ctx, &opportunitypb.CloseLooseOpportunityGrpcRequest{
-			Tenant:    tenant,
-			Id:        renewalOpportunityEntity.Id,
-			AppSource: constants.AppSourceEventProcessingPlatform,
+		_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
+			return h.grpcClients.OpportunityClient.CloseLooseOpportunity(ctx, &opportunitypb.CloseLooseOpportunityGrpcRequest{
+				Tenant:    tenant,
+				Id:        renewalOpportunityEntity.Id,
+				AppSource: constants.AppSourceEventProcessingPlatform,
+			})
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -167,11 +172,13 @@ func (h *contractHandler) updateRenewalNextCycleDate(ctx context.Context, tenant
 	renewedAt := h.calculateNextCycleDate(contractEntity.ServiceStartedAt, contractEntity.RenewalCycle, contractEntity.RenewalPeriods)
 	if !utils.IsEqualTimePtr(renewedAt, renewalOpportunityEntity.RenewalDetails.RenewedAt) {
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err := h.grpcClients.OpportunityClient.UpdateRenewalOpportunityNextCycleDate(ctx, &opportunitypb.UpdateRenewalOpportunityNextCycleDateGrpcRequest{
-			OpportunityId: renewalOpportunityEntity.Id,
-			Tenant:        tenant,
-			AppSource:     constants.AppSourceEventProcessingPlatform,
-			RenewedAt:     utils.ConvertTimeToTimestampPtr(renewedAt),
+		_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
+			return h.grpcClients.OpportunityClient.UpdateRenewalOpportunityNextCycleDate(ctx, &opportunitypb.UpdateRenewalOpportunityNextCycleDateGrpcRequest{
+				OpportunityId: renewalOpportunityEntity.Id,
+				Tenant:        tenant,
+				AppSource:     constants.AppSourceEventProcessingPlatform,
+				RenewedAt:     utils.ConvertTimeToTimestampPtr(renewedAt),
+			})
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -229,19 +236,21 @@ func (h *contractHandler) updateRenewalArr(ctx context.Context, tenant string, c
 	currentArr := h.calculateCurrentArrByLikelihood(maxArr, renewalOpportunity.RenewalDetails.RenewalLikelihood)
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = h.grpcClients.OpportunityClient.UpdateOpportunity(ctx, &opportunitypb.UpdateOpportunityGrpcRequest{
-		Tenant:    tenant,
-		Id:        renewalOpportunity.Id,
-		Amount:    currentArr,
-		MaxAmount: maxArr,
-		SourceFields: &commonpb.SourceFields{
-			AppSource: constants.AppSourceEventProcessingPlatform,
-			Source:    constants.SourceOpenline,
-		},
-		FieldsMask: []opportunitypb.OpportunityMaskField{
-			opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_AMOUNT,
-			opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_MAX_AMOUNT,
-		},
+	_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
+		return h.grpcClients.OpportunityClient.UpdateOpportunity(ctx, &opportunitypb.UpdateOpportunityGrpcRequest{
+			Tenant:    tenant,
+			Id:        renewalOpportunity.Id,
+			Amount:    currentArr,
+			MaxAmount: maxArr,
+			SourceFields: &commonpb.SourceFields{
+				AppSource: constants.AppSourceEventProcessingPlatform,
+				Source:    constants.SourceOpenline,
+			},
+			FieldsMask: []opportunitypb.OpportunityMaskField{
+				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_AMOUNT,
+				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_MAX_AMOUNT,
+			},
+		})
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -372,12 +381,14 @@ func (h *contractHandler) assertContractAndRenewalOpportunity(ctx context.Contex
 	if currentRenewalOpportunityDbNode == nil {
 		if !contract.IsEnded() {
 			ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-			_, err = h.grpcClients.OpportunityClient.CreateRenewalOpportunity(ctx, &opportunitypb.CreateRenewalOpportunityGrpcRequest{
-				Tenant:     tenant,
-				ContractId: contractId,
-				SourceFields: &commonpb.SourceFields{
-					AppSource: constants.AppSourceEventProcessingPlatform,
-				},
+			_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
+				return h.grpcClients.OpportunityClient.CreateRenewalOpportunity(ctx, &opportunitypb.CreateRenewalOpportunityGrpcRequest{
+					Tenant:     tenant,
+					ContractId: contractId,
+					SourceFields: &commonpb.SourceFields{
+						AppSource: constants.AppSourceEventProcessingPlatform,
+					},
+				})
 			})
 			if err != nil {
 				tracing.TraceErr(span, err)

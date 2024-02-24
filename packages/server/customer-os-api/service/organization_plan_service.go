@@ -71,7 +71,9 @@ func (s *organizationPlanService) CreateOrganizationPlan(ctx context.Context, na
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := s.grpcClients.OrganizationPlanClient.CreateOrganizationPlan(ctx, &grpcRequest)
+	response, err := CallEventsPlatformGRPCWithRetry[*orgplanpb.OrganizationPlanIdGrpcResponse](func() (*orgplanpb.OrganizationPlanIdGrpcResponse, error) {
+		return s.grpcClients.OrganizationPlanClient.CreateOrganizationPlan(ctx, &grpcRequest)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
@@ -133,7 +135,9 @@ func (s *organizationPlanService) UpdateOrganizationPlan(ctx context.Context, or
 	grpcRequest.FieldsMask = fieldsMask
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = s.grpcClients.OrganizationPlanClient.UpdateOrganizationPlan(ctx, &grpcRequest)
+	_, err = CallEventsPlatformGRPCWithRetry[*orgplanpb.OrganizationPlanIdGrpcResponse](func() (*orgplanpb.OrganizationPlanIdGrpcResponse, error) {
+		return s.grpcClients.OrganizationPlanClient.UpdateOrganizationPlan(ctx, &grpcRequest)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
@@ -203,7 +207,9 @@ func (s *organizationPlanService) CreateOrganizationPlanMilestone(ctx context.Co
 	tracing.LogObjectAsJson(span, "CreateOrganizationPlanMilestoneGrpcRequest", &grpcRequest)
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := s.grpcClients.OrganizationPlanClient.CreateOrganizationPlanMilestone(ctx, &grpcRequest)
+	response, err := CallEventsPlatformGRPCWithRetry[*orgplanpb.OrganizationPlanMilestoneIdGrpcResponse](func() (*orgplanpb.OrganizationPlanMilestoneIdGrpcResponse, error) {
+		return s.grpcClients.OrganizationPlanClient.CreateOrganizationPlanMilestone(ctx, &grpcRequest)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
@@ -342,7 +348,9 @@ func (s *organizationPlanService) UpdateOrganizationPlanMilestone(ctx context.Co
 	grpcRequest.FieldsMask = fieldsMask
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = s.grpcClients.OrganizationPlanClient.UpdateOrganizationPlanMilestone(ctx, &grpcRequest)
+	_, err = CallEventsPlatformGRPCWithRetry[*orgplanpb.OrganizationPlanMilestoneIdGrpcResponse](func() (*orgplanpb.OrganizationPlanMilestoneIdGrpcResponse, error) {
+		return s.grpcClients.OrganizationPlanClient.UpdateOrganizationPlanMilestone(ctx, &grpcRequest)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
@@ -377,7 +385,9 @@ func (s *organizationPlanService) ReorderOrganizationPlanMilestones(ctx context.
 		OrgId:                        orgId,
 	}
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = s.grpcClients.OrganizationPlanClient.ReorderOrganizationPlanMilestones(ctx, &grpcRequest)
+	_, err = CallEventsPlatformGRPCWithRetry[*orgplanpb.OrganizationPlanIdGrpcResponse](func() (*orgplanpb.OrganizationPlanIdGrpcResponse, error) {
+		return s.grpcClients.OrganizationPlanClient.ReorderOrganizationPlanMilestones(ctx, &grpcRequest)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
@@ -430,7 +440,9 @@ func (s *organizationPlanService) DuplicateOrganizationPlanMilestone(ctx context
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := s.grpcClients.OrganizationPlanClient.CreateOrganizationPlanMilestone(ctx, &grpcRequest)
+	response, err := CallEventsPlatformGRPCWithRetry[*orgplanpb.OrganizationPlanMilestoneIdGrpcResponse](func() (*orgplanpb.OrganizationPlanMilestoneIdGrpcResponse, error) {
+		return s.grpcClients.OrganizationPlanClient.CreateOrganizationPlanMilestone(ctx, &grpcRequest)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
@@ -475,7 +487,9 @@ func (s *organizationPlanService) DuplicateOrganizationPlan(ctx context.Context,
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := s.grpcClients.OrganizationPlanClient.CreateOrganizationPlan(ctx, &grpcRequest)
+	response, err := CallEventsPlatformGRPCWithRetry[*orgplanpb.OrganizationPlanIdGrpcResponse](func() (*orgplanpb.OrganizationPlanIdGrpcResponse, error) {
+		return s.grpcClients.OrganizationPlanClient.CreateOrganizationPlan(ctx, &grpcRequest)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
@@ -505,7 +519,9 @@ func (s *organizationPlanService) DuplicateOrganizationPlan(ctx context.Context,
 				},
 				OrgId: orgId,
 			}
-			_, err = s.grpcClients.OrganizationPlanClient.CreateOrganizationPlanMilestone(ctx, &grpcRequestCreateMilestone)
+			_, err = CallEventsPlatformGRPCWithRetry[*orgplanpb.OrganizationPlanMilestoneIdGrpcResponse](func() (*orgplanpb.OrganizationPlanMilestoneIdGrpcResponse, error) {
+				return s.grpcClients.OrganizationPlanClient.CreateOrganizationPlanMilestone(ctx, &grpcRequestCreateMilestone)
+			})
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error from events processing: %s", err.Error())

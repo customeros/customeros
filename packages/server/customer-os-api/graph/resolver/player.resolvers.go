@@ -6,7 +6,6 @@ package resolver
 
 import (
 	"context"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
@@ -14,12 +13,13 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	commongrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
-	usergrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/user"
-	opentracing "github.com/opentracing/opentracing-go"
+	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/user"
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
 
@@ -31,17 +31,19 @@ func (r *mutationResolver) PlayerMerge(ctx context.Context, userID string, input
 	span.LogFields(log.String("request.userID", userID), log.String("IdentityID", utils.IfNotNilString(input.IdentityID)), log.String("AuthID", input.AuthID), log.String("Provider", input.Provider))
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := r.Clients.UserClient.AddPlayerInfo(ctx, &usergrpc.AddPlayerInfoGrpcRequest{
-		UserId:         userID,
-		Tenant:         common.GetTenantFromContext(ctx),
-		LoggedInUserId: common.GetUserIdFromContext(ctx),
-		AuthId:         input.AuthID,
-		Provider:       input.Provider,
-		IdentityId:     utils.IfNotNilString(input.IdentityID),
-		SourceFields: &commongrpc.SourceFields{
-			Source:    string(neo4jentity.DataSourceOpenline),
-			AppSource: utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
-		},
+	_, err := service.CallEventsPlatformGRPCWithRetry[*userpb.UserIdGrpcResponse](func() (*userpb.UserIdGrpcResponse, error) {
+		return r.Clients.UserClient.AddPlayerInfo(ctx, &userpb.AddPlayerInfoGrpcRequest{
+			UserId:         userID,
+			Tenant:         common.GetTenantFromContext(ctx),
+			LoggedInUserId: common.GetUserIdFromContext(ctx),
+			AuthId:         input.AuthID,
+			Provider:       input.Provider,
+			IdentityId:     utils.IfNotNilString(input.IdentityID),
+			SourceFields: &commongrpc.SourceFields{
+				Source:    string(neo4jentity.DataSourceOpenline),
+				AppSource: utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
+			},
+		})
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)

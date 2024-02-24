@@ -130,25 +130,29 @@ func (s *invoiceService) GenerateCycleInvoices() {
 				case neo4jenum.BillingCycleAnnuallyBilling:
 					newInvoiceRequest.BillingCycle = commonpb.BillingCycle_ANNUALLY_BILLING
 				}
-				_, err = s.eventsProcessingClient.InvoiceClient.NewInvoiceForContract(ctx, &newInvoiceRequest)
-
+				_, err = CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
+					return s.eventsProcessingClient.InvoiceClient.NewInvoiceForContract(ctx, &newInvoiceRequest)
+				})
 				if err != nil {
 					tracing.TraceErr(span, err)
 					s.log.Errorf("Error generating invoice for contract %s: %s", contract.Id, err.Error())
 				}
+
 				if !dryRun && err == nil {
 					nextInvoiceDate := utils.ToPtr(invoicePeriodEnd.AddDate(0, 0, 1))
-					_, err = s.eventsProcessingClient.ContractClient.UpdateContract(ctx, &contractpb.UpdateContractGrpcRequest{
-						Tenant: tenant,
-						Id:     contract.Id,
-						SourceFields: &commonpb.SourceFields{
-							AppSource: constants.AppSourceDataUpkeeper,
-						},
-						NextInvoiceDate: utils.ConvertTimeToTimestampPtr(nextInvoiceDate),
-						InvoiceNote:     "",
-						FieldsMask: []contractpb.ContractFieldMask{
-							contractpb.ContractFieldMask_CONTRACT_FIELD_INVOICE_NOTE,
-							contractpb.ContractFieldMask_CONTRACT_FIELD_NEXT_INVOICE_DATE},
+					_, err = CallEventsPlatformGRPCWithRetry[*contractpb.ContractIdGrpcResponse](func() (*contractpb.ContractIdGrpcResponse, error) {
+						return s.eventsProcessingClient.ContractClient.UpdateContract(ctx, &contractpb.UpdateContractGrpcRequest{
+							Tenant: tenant,
+							Id:     contract.Id,
+							SourceFields: &commonpb.SourceFields{
+								AppSource: constants.AppSourceDataUpkeeper,
+							},
+							NextInvoiceDate: utils.ConvertTimeToTimestampPtr(nextInvoiceDate),
+							InvoiceNote:     "",
+							FieldsMask: []contractpb.ContractFieldMask{
+								contractpb.ContractFieldMask_CONTRACT_FIELD_INVOICE_NOTE,
+								contractpb.ContractFieldMask_CONTRACT_FIELD_NEXT_INVOICE_DATE},
+						})
 					})
 					if err != nil {
 						tracing.TraceErr(span, err)
@@ -258,12 +262,14 @@ func (s *invoiceService) SendPayNotifications() {
 				AppSource: constants.AppSourceDataUpkeeper,
 				InvoiceId: invoice.Id,
 			}
-			_, err = s.eventsProcessingClient.InvoiceClient.PayInvoiceNotification(ctx, &grpcRequest)
-
+			_, err = CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
+				return s.eventsProcessingClient.InvoiceClient.PayInvoiceNotification(ctx, &grpcRequest)
+			})
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error sending pay notification for invoice %s: %s", invoice.Id, err.Error())
 			}
+
 			// mark invoicing started
 			err = s.repositories.Neo4jRepositories.InvoiceWriteRepository.MarkPayNotificationRequested(ctx, tenant, invoice.Id, utils.Now())
 			if err != nil {
@@ -343,7 +349,9 @@ func (s *invoiceService) GenerateOffCycleInvoices() {
 						Source:    neo4jentity.DataSourceOpenline.String(),
 					},
 				}
-				_, err = s.eventsProcessingClient.InvoiceClient.NewInvoiceForContract(ctx, &newInvoiceRequest)
+				_, err = CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
+					return s.eventsProcessingClient.InvoiceClient.NewInvoiceForContract(ctx, &newInvoiceRequest)
+				})
 
 				if err != nil {
 					tracing.TraceErr(span, err)

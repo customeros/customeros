@@ -2,32 +2,31 @@ package service
 
 import (
 	"encoding/json"
+	"github.com/cenkalti/backoff/v4"
 	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"net/mail"
 	"regexp"
 	"strings"
-	"time"
 )
 
-func CallEventsPlatformGRPCWithRetry[T any](fn func() (T, error)) (T, error) {
-	var err error
-	var response T
-	for attempt := 1; attempt <= constants.MaxRetryGrpcCallWhenUnavailable; attempt++ {
-		response, err = fn()
-		if err == nil {
-			break
+func CallEventsPlatformGRPCWithRetry[T any](operation func() (T, error)) (T, error) {
+	operationWithData := func() (T, error) {
+		result, opErr := operation()
+		if opErr != nil {
+			grpcError, ok := status.FromError(opErr)
+			if ok && (grpcError.Code() == codes.Unavailable || grpcError.Code() == codes.DeadlineExceeded) {
+				return result, opErr
+			}
+			return result, backoff.Permanent(opErr)
 		}
-		if grpcError, ok := status.FromError(err); ok && (grpcError.Code() == codes.Unavailable || grpcError.Code() == codes.DeadlineExceeded) {
-			time.Sleep(utils.BackOffExponentialDelay(attempt))
-		} else {
-			break
-		}
+		return result, nil
 	}
+
+	response, err := backoff.RetryWithData(operationWithData, utils.BackOffForInvokingEventsPlatformGrpcClient())
 	return response, err
 }
 

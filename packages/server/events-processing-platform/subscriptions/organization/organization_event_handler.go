@@ -233,7 +233,9 @@ func (h *organizationEventHandler) webScrapeOrganization(ctx context.Context, te
 		Name:               result.CompanyName,
 		Website:            result.Website,
 	}
-	_, err = h.grpcClients.OrganizationClient.UpdateOrganization(ctx, &updateGrpcRequest)
+	_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+		return h.grpcClients.OrganizationClient.UpdateOrganization(ctx, &updateGrpcRequest)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error updating organization: %s", err.Error())
@@ -283,15 +285,17 @@ func (h *organizationEventHandler) addFieldMasks(orgFields *model.OrganizationDa
 func (h *organizationEventHandler) updateOrganizationNameIfEmpty(ctx context.Context, tenant, url string, organization *neo4jentity.OrganizationEntity, span opentracing.Span) {
 	if organization.Name == "" && strings.Contains(url, ".") {
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err := h.grpcClients.OrganizationClient.UpdateOrganization(ctx, &organizationpb.UpdateOrganizationGrpcRequest{
-			Tenant:         tenant,
-			OrganizationId: organization.ID,
-			SourceFields: &commonpb.SourceFields{
-				AppSource: constants.AppSourceEventProcessingPlatform,
-				Source:    constants.SourceWebscrape,
-			},
-			Name:       utils.ExtractFirstPart(utils.ExtractDomain(url), "."),
-			FieldsMask: []organizationpb.OrganizationMaskField{organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NAME},
+		_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+			return h.grpcClients.OrganizationClient.UpdateOrganization(ctx, &organizationpb.UpdateOrganizationGrpcRequest{
+				Tenant:         tenant,
+				OrganizationId: organization.ID,
+				SourceFields: &commonpb.SourceFields{
+					AppSource: constants.AppSourceEventProcessingPlatform,
+					Source:    constants.SourceWebscrape,
+				},
+				Name:       utils.ExtractFirstPart(utils.ExtractDomain(url), "."),
+				FieldsMask: []organizationpb.OrganizationMaskField{organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NAME},
+			})
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -306,16 +310,18 @@ func (h *organizationEventHandler) addSocial(ctx context.Context, organizationId
 	span.LogFields(log.String("organizationId", organizationId), log.String("tenant", tenant), log.String("platform", platform), log.String("url", url))
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 
-	_, err := h.grpcClients.OrganizationClient.AddSocial(ctx, &organizationpb.AddSocialGrpcRequest{
-		Tenant:         tenant,
-		OrganizationId: organizationId,
-		SourceFields: &commonpb.SourceFields{
-			AppSource:     constants.AppSourceEventProcessingPlatform,
-			Source:        constants.SourceWebscrape,
-			SourceOfTruth: constants.SourceWebscrape,
-		},
-		Platform: platform,
-		Url:      url,
+	_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+		return h.grpcClients.OrganizationClient.AddSocial(ctx, &organizationpb.AddSocialGrpcRequest{
+			Tenant:         tenant,
+			OrganizationId: organizationId,
+			SourceFields: &commonpb.SourceFields{
+				AppSource:     constants.AppSourceEventProcessingPlatform,
+				Source:        constants.SourceWebscrape,
+				SourceOfTruth: constants.SourceWebscrape,
+			},
+			Platform: platform,
+			Url:      url,
+		})
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -391,19 +397,21 @@ func (h *organizationEventHandler) AdjustUpdatedOrganizationFields(ctx context.C
 
 func (h *organizationEventHandler) callUpdateOrganizationCommand(ctx context.Context, tenant, organizationId, source, market, industry string, span opentracing.Span) error {
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := h.grpcClients.OrganizationClient.UpdateOrganization(ctx, &organizationpb.UpdateOrganizationGrpcRequest{
-		Tenant:         tenant,
-		OrganizationId: organizationId,
-		SourceFields: &commonpb.SourceFields{
-			AppSource: constants.AppSourceEventProcessingPlatform,
-			Source:    source,
-		},
-		Market:   market,
-		Industry: industry,
-		FieldsMask: []organizationpb.OrganizationMaskField{
-			organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_MARKET,
-			organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_INDUSTRY,
-		},
+	_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+		return h.grpcClients.OrganizationClient.UpdateOrganization(ctx, &organizationpb.UpdateOrganizationGrpcRequest{
+			Tenant:         tenant,
+			OrganizationId: organizationId,
+			SourceFields: &commonpb.SourceFields{
+				AppSource: constants.AppSourceEventProcessingPlatform,
+				Source:    source,
+			},
+			Market:   market,
+			Industry: industry,
+			FieldsMask: []organizationpb.OrganizationMaskField{
+				organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_MARKET,
+				organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_INDUSTRY,
+			},
+		})
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)

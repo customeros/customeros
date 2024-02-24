@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -386,10 +387,12 @@ func (h *InvoiceEventHandler) fillOffCyclePrepaidInvoice(ctx context.Context, te
 	}
 
 	if totalAmount == 0 || len(invoiceLines) == 0 {
-		_, err = h.grpcClients.InvoiceClient.PermanentlyDeleteDraftInvoice(ctx, &invoicepb.PermanentlyDeleteDraftInvoiceRequest{
-			Tenant:    tenant,
-			InvoiceId: invoiceEntity.Id,
-			AppSource: constants.AppSourceEventProcessingPlatform,
+		_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
+			return h.grpcClients.InvoiceClient.PermanentlyDeleteDraftInvoice(ctx, &invoicepb.PermanentlyDeleteDraftInvoiceRequest{
+				Tenant:    tenant,
+				InvoiceId: invoiceEntity.Id,
+				AppSource: constants.AppSourceEventProcessingPlatform,
+			})
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -550,39 +553,41 @@ func (h *InvoiceEventHandler) callFillInvoice(ctx context.Context, tenant, invoi
 	note string, amount, vat, total float64, invoiceLines []*invoicepb.InvoiceLine, span opentracing.Span) error {
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	now := time.Now()
-	_, err := h.grpcClients.InvoiceClient.FillInvoice(ctx, &invoicepb.FillInvoiceRequest{
-		Tenant:                        tenant,
-		InvoiceId:                     invoiceId,
-		Note:                          note,
-		DomesticPaymentsBankInfo:      domesticPaymentsBankInfo,
-		InternationalPaymentsBankInfo: internationalPaymentsBankInfo,
-		Customer: &invoicepb.FillInvoiceCustomer{
-			Name:         customerName,
-			Email:        customerEmail,
-			AddressLine1: customerAddressLine1,
-			AddressLine2: customerAddressLine2,
-			Zip:          customerAddressZip,
-			Locality:     customerAddressLocality,
-			Country:      customerAddressCountry,
-		},
-		Provider: &invoicepb.FillInvoiceProvider{
-			LogoUrl:              providerLogoUrl,
-			LogoRepositoryFileId: providerLogoRepositoryFileId,
-			Name:                 providerName,
-			Email:                providerEmail,
-			AddressLine1:         providerAddressLine1,
-			AddressLine2:         providerAddressLine2,
-			Zip:                  providerAddressZip,
-			Locality:             providerAddressLocality,
-			Country:              providerAddressCountry,
-		},
-		Amount:       amount,
-		Vat:          vat,
-		Total:        total,
-		InvoiceLines: invoiceLines,
-		UpdatedAt:    utils.ConvertTimeToTimestampPtr(&now),
-		AppSource:    constants.AppSourceEventProcessingPlatform,
-		Status:       invoicepb.InvoiceStatus_INVOICE_STATUS_DUE,
+	_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
+		return h.grpcClients.InvoiceClient.FillInvoice(ctx, &invoicepb.FillInvoiceRequest{
+			Tenant:                        tenant,
+			InvoiceId:                     invoiceId,
+			Note:                          note,
+			DomesticPaymentsBankInfo:      domesticPaymentsBankInfo,
+			InternationalPaymentsBankInfo: internationalPaymentsBankInfo,
+			Customer: &invoicepb.FillInvoiceCustomer{
+				Name:         customerName,
+				Email:        customerEmail,
+				AddressLine1: customerAddressLine1,
+				AddressLine2: customerAddressLine2,
+				Zip:          customerAddressZip,
+				Locality:     customerAddressLocality,
+				Country:      customerAddressCountry,
+			},
+			Provider: &invoicepb.FillInvoiceProvider{
+				LogoUrl:              providerLogoUrl,
+				LogoRepositoryFileId: providerLogoRepositoryFileId,
+				Name:                 providerName,
+				Email:                providerEmail,
+				AddressLine1:         providerAddressLine1,
+				AddressLine2:         providerAddressLine2,
+				Zip:                  providerAddressZip,
+				Locality:             providerAddressLocality,
+				Country:              providerAddressCountry,
+			},
+			Amount:       amount,
+			Vat:          vat,
+			Total:        total,
+			InvoiceLines: invoiceLines,
+			UpdatedAt:    utils.ConvertTimeToTimestampPtr(&now),
+			AppSource:    constants.AppSourceEventProcessingPlatform,
+			Status:       invoicepb.InvoiceStatus_INVOICE_STATUS_DUE,
+		})
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -946,11 +951,13 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 
 func (s *InvoiceEventHandler) callPdfGeneratedInvoice(ctx context.Context, tenant, invoiceId, repositoryFileId string, span opentracing.Span) error {
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := s.grpcClients.InvoiceClient.PdfGeneratedInvoice(ctx, &invoicepb.PdfGeneratedInvoiceRequest{
-		Tenant:           tenant,
-		InvoiceId:        invoiceId,
-		RepositoryFileId: repositoryFileId,
-		AppSource:        constants.AppSourceEventProcessingPlatform,
+	_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
+		return s.grpcClients.InvoiceClient.PdfGeneratedInvoice(ctx, &invoicepb.PdfGeneratedInvoiceRequest{
+			Tenant:           tenant,
+			InvoiceId:        invoiceId,
+			RepositoryFileId: repositoryFileId,
+			AppSource:        constants.AppSourceEventProcessingPlatform,
+		})
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)

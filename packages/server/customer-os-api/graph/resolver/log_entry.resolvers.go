@@ -7,7 +7,6 @@ package resolver
 import (
 	"context"
 	"fmt"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
@@ -15,12 +14,13 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	grpccommon "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
-	logentrygrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/log_entry"
-	opentracing "github.com/opentracing/opentracing-go"
+	logentrypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/log_entry"
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -85,18 +85,20 @@ func (r *mutationResolver) LogEntryCreateForOrganization(ctx context.Context, or
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := r.Clients.LogEntryClient.UpsertLogEntry(ctx, &logentrygrpc.UpsertLogEntryGrpcRequest{
-		Tenant:      common.GetTenantFromContext(ctx),
-		UserId:      common.GetUserIdFromContext(ctx),
-		Content:     utils.IfNotNilString(input.Content),
-		ContentType: utils.IfNotNilString(input.ContentType),
-		StartedAt:   timestamppb.New(utils.IfNotNilTimeWithDefault(input.StartedAt, utils.Now())),
-		SourceFields: &grpccommon.SourceFields{
-			AppSource: constants.AppSourceCustomerOsApi,
-			Source:    string(neo4jentity.DataSourceOpenline),
-		},
-		LoggedOrganizationId: utils.StringPtr(organizationID),
-		AuthorUserId:         utils.StringPtr(common.GetUserIdFromContext(ctx)),
+	response, err := service.CallEventsPlatformGRPCWithRetry[*logentrypb.LogEntryIdGrpcResponse](func() (*logentrypb.LogEntryIdGrpcResponse, error) {
+		return r.Clients.LogEntryClient.UpsertLogEntry(ctx, &logentrypb.UpsertLogEntryGrpcRequest{
+			Tenant:      common.GetTenantFromContext(ctx),
+			UserId:      common.GetUserIdFromContext(ctx),
+			Content:     utils.IfNotNilString(input.Content),
+			ContentType: utils.IfNotNilString(input.ContentType),
+			StartedAt:   timestamppb.New(utils.IfNotNilTimeWithDefault(input.StartedAt, utils.Now())),
+			SourceFields: &grpccommon.SourceFields{
+				AppSource: constants.AppSourceCustomerOsApi,
+				Source:    string(neo4jentity.DataSourceOpenline),
+			},
+			LoggedOrganizationId: utils.StringPtr(organizationID),
+			AuthorUserId:         utils.StringPtr(common.GetUserIdFromContext(ctx)),
+		})
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -113,11 +115,13 @@ func (r *mutationResolver) LogEntryCreateForOrganization(ctx context.Context, or
 			}
 		}
 		if tagId != "" {
-			_, err := r.Clients.LogEntryClient.AddTag(ctx, &logentrygrpc.AddTagGrpcRequest{
-				Tenant: common.GetTenantFromContext(ctx),
-				UserId: common.GetUserIdFromContext(ctx),
-				Id:     response.Id,
-				TagId:  tagId,
+			_, err = service.CallEventsPlatformGRPCWithRetry[*logentrypb.LogEntryIdGrpcResponse](func() (*logentrypb.LogEntryIdGrpcResponse, error) {
+				return r.Clients.LogEntryClient.AddTag(ctx, &logentrypb.AddTagGrpcRequest{
+					Tenant: common.GetTenantFromContext(ctx),
+					UserId: common.GetUserIdFromContext(ctx),
+					Id:     response.Id,
+					TagId:  tagId,
+				})
 			})
 			if err != nil {
 				tracing.TraceErr(span, err)
@@ -145,7 +149,7 @@ func (r *mutationResolver) LogEntryUpdate(ctx context.Context, id string, input 
 		graphql.AddErrorf(ctx, "Log entry %s not found", id)
 		return "", nil
 	}
-	grpcRequestMessage := logentrygrpc.UpsertLogEntryGrpcRequest{
+	grpcRequestMessage := logentrypb.UpsertLogEntryGrpcRequest{
 		Id:          id,
 		Tenant:      common.GetTenantFromContext(ctx),
 		UserId:      common.GetUserIdFromContext(ctx),
@@ -160,7 +164,9 @@ func (r *mutationResolver) LogEntryUpdate(ctx context.Context, id string, input 
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := r.Clients.LogEntryClient.UpsertLogEntry(ctx, &grpcRequestMessage)
+	response, err := service.CallEventsPlatformGRPCWithRetry[*logentrypb.LogEntryIdGrpcResponse](func() (*logentrypb.LogEntryIdGrpcResponse, error) {
+		return r.Clients.LogEntryClient.UpsertLogEntry(ctx, &grpcRequestMessage)
+	})
 
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -196,11 +202,13 @@ func (r *mutationResolver) LogEntryAddTag(ctx context.Context, id string, input 
 	}
 	if tagId != "" {
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err := r.Clients.LogEntryClient.AddTag(ctx, &logentrygrpc.AddTagGrpcRequest{
-			Tenant: common.GetTenantFromContext(ctx),
-			UserId: common.GetUserIdFromContext(ctx),
-			Id:     id,
-			TagId:  tagId,
+		_, err = service.CallEventsPlatformGRPCWithRetry[*logentrypb.LogEntryIdGrpcResponse](func() (*logentrypb.LogEntryIdGrpcResponse, error) {
+			return r.Clients.LogEntryClient.AddTag(ctx, &logentrypb.AddTagGrpcRequest{
+				Tenant: common.GetTenantFromContext(ctx),
+				UserId: common.GetUserIdFromContext(ctx),
+				Id:     id,
+				TagId:  tagId,
+			})
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -231,11 +239,13 @@ func (r *mutationResolver) LogEntryRemoveTag(ctx context.Context, id string, inp
 	tagId := GetTagId(ctx, r.Services, input.ID, input.Name)
 	if tagId != "" {
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = r.Clients.LogEntryClient.RemoveTag(ctx, &logentrygrpc.RemoveTagGrpcRequest{
-			Tenant: common.GetTenantFromContext(ctx),
-			UserId: common.GetUserIdFromContext(ctx),
-			Id:     id,
-			TagId:  tagId,
+		_, err = service.CallEventsPlatformGRPCWithRetry[*logentrypb.LogEntryIdGrpcResponse](func() (*logentrypb.LogEntryIdGrpcResponse, error) {
+			return r.Clients.LogEntryClient.RemoveTag(ctx, &logentrypb.RemoveTagGrpcRequest{
+				Tenant: common.GetTenantFromContext(ctx),
+				UserId: common.GetUserIdFromContext(ctx),
+				Id:     id,
+				TagId:  tagId,
+			})
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -290,11 +300,13 @@ func (r *mutationResolver) LogEntryResetTags(ctx context.Context, id string, inp
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	for _, currentTagId := range currentTagIds {
 		if !utils.Contains(newTagIds, currentTagId) {
-			_, err = r.Clients.LogEntryClient.RemoveTag(ctx, &logentrygrpc.RemoveTagGrpcRequest{
-				Tenant: common.GetTenantFromContext(ctx),
-				UserId: common.GetUserIdFromContext(ctx),
-				Id:     id,
-				TagId:  currentTagId,
+			_, err = service.CallEventsPlatformGRPCWithRetry[*logentrypb.LogEntryIdGrpcResponse](func() (*logentrypb.LogEntryIdGrpcResponse, error) {
+				return r.Clients.LogEntryClient.RemoveTag(ctx, &logentrypb.RemoveTagGrpcRequest{
+					Tenant: common.GetTenantFromContext(ctx),
+					UserId: common.GetUserIdFromContext(ctx),
+					Id:     id,
+					TagId:  currentTagId,
+				})
 			})
 			if err != nil {
 				tracing.TraceErr(span, err)
@@ -305,11 +317,13 @@ func (r *mutationResolver) LogEntryResetTags(ctx context.Context, id string, inp
 	}
 	for _, newTagId := range newTagIds {
 		if !utils.Contains(currentTagIds, newTagId) {
-			_, err := r.Clients.LogEntryClient.AddTag(ctx, &logentrygrpc.AddTagGrpcRequest{
-				Tenant: common.GetTenantFromContext(ctx),
-				UserId: common.GetUserIdFromContext(ctx),
-				Id:     id,
-				TagId:  newTagId,
+			_, err = service.CallEventsPlatformGRPCWithRetry[*logentrypb.LogEntryIdGrpcResponse](func() (*logentrypb.LogEntryIdGrpcResponse, error) {
+				return r.Clients.LogEntryClient.AddTag(ctx, &logentrypb.AddTagGrpcRequest{
+					Tenant: common.GetTenantFromContext(ctx),
+					UserId: common.GetUserIdFromContext(ctx),
+					Id:     id,
+					TagId:  newTagId,
+				})
 			})
 			if err != nil {
 				tracing.TraceErr(span, err)
