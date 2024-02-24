@@ -32,7 +32,7 @@ func TestInvoiceReadRepository_GetInvoicesForPayNotifications(t *testing.T) {
 		Status: enum.InvoiceStatusDue,
 	})
 
-	result, err := repositories.InvoiceReadRepository.GetInvoicesForPayNotifications(ctx, 60, referenceDate)
+	result, err := repositories.InvoiceReadRepository.GetInvoicesForPayNotifications(ctx, 60, 1, referenceDate)
 	require.NoError(t, err)
 	require.Len(t, result, 1)
 	props := utils.GetPropsFromNode(*result[0].Node)
@@ -68,7 +68,7 @@ func TestInvoiceReadRepository_GetInvoicesForPayNotifications_InvoiceIsDryRun(t 
 		Status: enum.InvoiceStatusDue,
 	})
 
-	result, err := repositories.InvoiceReadRepository.GetInvoicesForPayNotifications(ctx, 60, referenceDate)
+	result, err := repositories.InvoiceReadRepository.GetInvoicesForPayNotifications(ctx, 60, 1, referenceDate)
 	require.NoError(t, err)
 	require.Len(t, result, 1)
 	props := utils.GetPropsFromNode(*result[0].Node)
@@ -104,7 +104,7 @@ func TestInvoiceReadRepository_GetInvoicesForPayNotifications_StatusIsDraft(t *t
 		Status: enum.InvoiceStatusDraft,
 	})
 
-	result, err := repositories.InvoiceReadRepository.GetInvoicesForPayNotifications(ctx, 60, referenceDate)
+	result, err := repositories.InvoiceReadRepository.GetInvoicesForPayNotifications(ctx, 60, 1, referenceDate)
 	require.NoError(t, err)
 	require.Len(t, result, 1)
 	props := utils.GetPropsFromNode(*result[0].Node)
@@ -140,7 +140,7 @@ func TestInvoiceReadRepository_GetInvoicesForPayNotifications_StatusIsPaid(t *te
 		Status: enum.InvoiceStatusPaid,
 	})
 
-	result, err := repositories.InvoiceReadRepository.GetInvoicesForPayNotifications(ctx, 60, referenceDate)
+	result, err := repositories.InvoiceReadRepository.GetInvoicesForPayNotifications(ctx, 60, 1, referenceDate)
 	require.NoError(t, err)
 	require.Len(t, result, 1)
 	props := utils.GetPropsFromNode(*result[0].Node)
@@ -173,7 +173,7 @@ func TestInvoiceReadRepository_GetInvoicesForPayNotifications_MissingCustomerEma
 		Status:    enum.InvoiceStatusDue,
 	})
 
-	result, err := repositories.InvoiceReadRepository.GetInvoicesForPayNotifications(ctx, 60, referenceDate)
+	result, err := repositories.InvoiceReadRepository.GetInvoicesForPayNotifications(ctx, 60, 1, referenceDate)
 	require.NoError(t, err)
 	require.Len(t, result, 1)
 	props := utils.GetPropsFromNode(*result[0].Node)
@@ -210,7 +210,47 @@ func TestInvoiceReadRepository_GetInvoicesForPayNotifications_RecentlyUpdated(t 
 		Status: enum.InvoiceStatusDue,
 	})
 
-	result, err := repositories.InvoiceReadRepository.GetInvoicesForPayNotifications(ctx, 60, referenceDate)
+	result, err := repositories.InvoiceReadRepository.GetInvoicesForPayNotifications(ctx, 60, 1, referenceDate)
+	require.NoError(t, err)
+	require.Len(t, result, 1)
+	props := utils.GetPropsFromNode(*result[0].Node)
+	require.Equal(t, invoiceId, props["id"])
+}
+
+func TestInvoiceReadRepository_GetInvoicesForPayNotifications_LookBackWindowExceeded(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	tenant := "tenant1"
+
+	referenceDate := utils.Now()
+	yesterday := referenceDate.Add(-24 * time.Hour)
+	weekAgo := referenceDate.Add(-7 * 24 * time.Hour)
+	lookBackWindowDays := 5
+
+	neo4jtest.CreateTenant(ctx, driver, tenant)
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{})
+	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, entity.InvoiceEntity{
+		UpdatedAt: yesterday,
+		CreatedAt: yesterday,
+		Customer: entity.InvoiceCustomer{
+			Email: "email",
+		},
+		DryRun: false,
+		Status: enum.InvoiceStatusDue,
+	})
+	neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, entity.InvoiceEntity{
+		UpdatedAt: yesterday,
+		CreatedAt: weekAgo,
+		Customer: entity.InvoiceCustomer{
+			Email: "email",
+		},
+		DryRun: false,
+		Status: enum.InvoiceStatusDue,
+	})
+
+	result, err := repositories.InvoiceReadRepository.GetInvoicesForPayNotifications(ctx, 60, lookBackWindowDays, referenceDate)
 	require.NoError(t, err)
 	require.Len(t, result, 1)
 	props := utils.GetPropsFromNode(*result[0].Node)
