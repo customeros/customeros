@@ -4,28 +4,28 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
-
 	aiConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/config"
 	ai "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/service"
 	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/command"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	interactioneventpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/interaction_event"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 )
 
-func NewInteractionEventHandler(repositories *repository.Repositories, interactionEventCommands *command_handler.CommandHandlers, log logger.Logger, cfg *config.Config) *interactionEventHandler {
+func NewInteractionEventHandler(repositories *repository.Repositories, log logger.Logger, cfg *config.Config, grpcClients *grpc_client.Clients) *interactionEventHandler {
 	aiCfg := aiConfig.Config{
 		OpenAi: aiConfig.AiModelConfigOpenAi{},
 		Anthropic: aiConfig.AiModelConfigAnthropic{
@@ -34,20 +34,20 @@ func NewInteractionEventHandler(repositories *repository.Repositories, interacti
 		},
 	}
 	return &interactionEventHandler{
-		repositories:             repositories,
-		interactionEventCommands: interactionEventCommands,
-		log:                      log,
-		cfg:                      cfg,
-		aiModel:                  ai.NewAiModel(ai.AnthropicModelType, aiCfg),
+		repositories: repositories,
+		log:          log,
+		cfg:          cfg,
+		aiModel:      ai.NewAiModel(ai.AnthropicModelType, aiCfg),
+		grpcClients:  grpcClients,
 	}
 }
 
 type interactionEventHandler struct {
-	repositories             *repository.Repositories
-	interactionEventCommands *command_handler.CommandHandlers
-	log                      logger.Logger
-	cfg                      *config.Config
-	aiModel                  ai.AiModel
+	repositories *repository.Repositories
+	log          logger.Logger
+	cfg          *config.Config
+	aiModel      ai.AiModel
+	grpcClients  *grpc_client.Clients
 }
 
 func (h *interactionEventHandler) GenerateSummaryForEmail(ctx context.Context, evt eventstore.Event) error {
@@ -125,7 +125,16 @@ func (h *interactionEventHandler) GenerateSummaryForEmail(ctx context.Context, e
 	}
 	summary := utils.ExtractAfterColon(aiResponse)
 
-	err = h.interactionEventCommands.ReplaceSummary.Handle(ctx, command.NewReplaceSummaryCommand(eventData.Tenant, interactionEventId, summary, "text/plain", nil))
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*interactioneventpb.InteractionEventIdGrpcResponse](func() (*interactioneventpb.InteractionEventIdGrpcResponse, error) {
+		return h.grpcClients.InteractionEventClient.ReplaceSummary(ctx, &interactioneventpb.ReplaceSummaryGrpcRequest{
+			Tenant:             eventData.Tenant,
+			InteractionEventId: interactionEventId,
+			AppSource:          constants.AppSourceEventProcessingPlatform,
+			Summary:            summary,
+			ContentType:        "text/plain",
+		})
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error replacing summary: %v", err)
@@ -229,7 +238,15 @@ func (h *interactionEventHandler) GenerateActionItemsForEmail(ctx context.Contex
 		}
 	}
 
-	err = h.interactionEventCommands.ReplaceActionItems.Handle(ctx, command.NewReplaceActionItemsCommand(eventData.Tenant, interactionEventId, actionItems, nil))
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*interactioneventpb.InteractionEventIdGrpcResponse](func() (*interactioneventpb.InteractionEventIdGrpcResponse, error) {
+		return h.grpcClients.InteractionEventClient.ReplaceActionItems(ctx, &interactioneventpb.ReplaceActionItemsGrpcRequest{
+			Tenant:             eventData.Tenant,
+			InteractionEventId: interactionEventId,
+			AppSource:          constants.AppSourceEventProcessingPlatform,
+			ActionItems:        actionItems,
+		})
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error replacing action items: %v", err)

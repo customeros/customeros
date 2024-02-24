@@ -25,6 +25,8 @@ type InteractionEventGrpcServiceClient interface {
 	RequestGenerateSummary(ctx context.Context, in *RequestGenerateSummaryGrpcRequest, opts ...grpc.CallOption) (*InteractionEventIdGrpcResponse, error)
 	RequestGenerateActionItems(ctx context.Context, in *RequestGenerateActionItemsGrpcRequest, opts ...grpc.CallOption) (*InteractionEventIdGrpcResponse, error)
 	UpsertInteractionEvent(ctx context.Context, in *UpsertInteractionEventGrpcRequest, opts ...grpc.CallOption) (*InteractionEventIdGrpcResponse, error)
+	ReplaceSummary(ctx context.Context, in *ReplaceSummaryGrpcRequest, opts ...grpc.CallOption) (*InteractionEventIdGrpcResponse, error)
+	ReplaceActionItems(ctx context.Context, in *ReplaceActionItemsGrpcRequest, opts ...grpc.CallOption) (*InteractionEventIdGrpcResponse, error)
 }
 
 type interactionEventGrpcServiceClient struct {
@@ -62,6 +64,24 @@ func (c *interactionEventGrpcServiceClient) UpsertInteractionEvent(ctx context.C
 	return out, nil
 }
 
+func (c *interactionEventGrpcServiceClient) ReplaceSummary(ctx context.Context, in *ReplaceSummaryGrpcRequest, opts ...grpc.CallOption) (*InteractionEventIdGrpcResponse, error) {
+	out := new(InteractionEventIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/interactionEventGrpcService/ReplaceSummary", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *interactionEventGrpcServiceClient) ReplaceActionItems(ctx context.Context, in *ReplaceActionItemsGrpcRequest, opts ...grpc.CallOption) (*InteractionEventIdGrpcResponse, error) {
+	out := new(InteractionEventIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/interactionEventGrpcService/ReplaceActionItems", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // InteractionEventGrpcServiceServer is the server API for InteractionEventGrpcService service.
 // All implementations should embed UnimplementedInteractionEventGrpcServiceServer
 // for forward compatibility
@@ -69,6 +89,8 @@ type InteractionEventGrpcServiceServer interface {
 	RequestGenerateSummary(context.Context, *RequestGenerateSummaryGrpcRequest) (*InteractionEventIdGrpcResponse, error)
 	RequestGenerateActionItems(context.Context, *RequestGenerateActionItemsGrpcRequest) (*InteractionEventIdGrpcResponse, error)
 	UpsertInteractionEvent(context.Context, *UpsertInteractionEventGrpcRequest) (*InteractionEventIdGrpcResponse, error)
+	ReplaceSummary(context.Context, *ReplaceSummaryGrpcRequest) (*InteractionEventIdGrpcResponse, error)
+	ReplaceActionItems(context.Context, *ReplaceActionItemsGrpcRequest) (*InteractionEventIdGrpcResponse, error)
 }
 
 // UnimplementedInteractionEventGrpcServiceServer should be embedded to have forward compatible implementations.
@@ -83,6 +105,12 @@ func (UnimplementedInteractionEventGrpcServiceServer) RequestGenerateActionItems
 }
 func (UnimplementedInteractionEventGrpcServiceServer) UpsertInteractionEvent(context.Context, *UpsertInteractionEventGrpcRequest) (*InteractionEventIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpsertInteractionEvent not implemented")
+}
+func (UnimplementedInteractionEventGrpcServiceServer) ReplaceSummary(context.Context, *ReplaceSummaryGrpcRequest) (*InteractionEventIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ReplaceSummary not implemented")
+}
+func (UnimplementedInteractionEventGrpcServiceServer) ReplaceActionItems(context.Context, *ReplaceActionItemsGrpcRequest) (*InteractionEventIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ReplaceActionItems not implemented")
 }
 
 // UnsafeInteractionEventGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -150,6 +178,42 @@ func _InteractionEventGrpcService_UpsertInteractionEvent_Handler(srv interface{}
 	return interceptor(ctx, in, info, handler)
 }
 
+func _InteractionEventGrpcService_ReplaceSummary_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReplaceSummaryGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InteractionEventGrpcServiceServer).ReplaceSummary(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/interactionEventGrpcService/ReplaceSummary",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InteractionEventGrpcServiceServer).ReplaceSummary(ctx, req.(*ReplaceSummaryGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _InteractionEventGrpcService_ReplaceActionItems_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReplaceActionItemsGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InteractionEventGrpcServiceServer).ReplaceActionItems(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/interactionEventGrpcService/ReplaceActionItems",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InteractionEventGrpcServiceServer).ReplaceActionItems(ctx, req.(*ReplaceActionItemsGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // InteractionEventGrpcService_ServiceDesc is the grpc.ServiceDesc for InteractionEventGrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -168,6 +232,14 @@ var InteractionEventGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpsertInteractionEvent",
 			Handler:    _InteractionEventGrpcService_UpsertInteractionEvent_Handler,
+		},
+		{
+			MethodName: "ReplaceSummary",
+			Handler:    _InteractionEventGrpcService_ReplaceSummary_Handler,
+		},
+		{
+			MethodName: "ReplaceActionItems",
+			Handler:    _InteractionEventGrpcService_ReplaceActionItems_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

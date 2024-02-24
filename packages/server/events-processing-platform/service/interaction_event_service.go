@@ -136,3 +136,35 @@ func GetParticipantTypeFromPB(participant *interactioneventpb.Participant) commo
 		return ""
 	}
 }
+
+func (s *interactionEventService) ReplaceSummary(ctx context.Context, request *interactioneventpb.ReplaceSummaryGrpcRequest) (*interactioneventpb.InteractionEventIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "InteractionEventService.ReplaceSummary")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+
+	cmd := command.NewReplaceSummaryCommand(request.Tenant, request.InteractionEventId, request.Summary, request.ContentType, nil)
+	if err := s.interactionEventsCommandHandlers.ReplaceSummary.Handle(ctx, cmd); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error handling ReplaceSummary command: %v", err.Error())
+		return nil, s.errResponse(err)
+	}
+
+	return &interactioneventpb.InteractionEventIdGrpcResponse{Id: request.InteractionEventId}, nil
+}
+
+func (s *interactionEventService) ReplaceActionItems(ctx context.Context, request *interactioneventpb.ReplaceActionItemsGrpcRequest) (*interactioneventpb.InteractionEventIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "InteractionEventService.ReplaceActionItems")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+
+	cmd := command.NewReplaceActionItemsCommand(request.Tenant, request.InteractionEventId, request.ActionItems, nil)
+	if err := s.interactionEventsCommandHandlers.ReplaceActionItems.Handle(ctx, cmd); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error handling ReplaceActionItems command: %v", err.Error())
+		return nil, s.errResponse(err)
+	}
+
+	return &interactioneventpb.InteractionEventIdGrpcResponse{Id: request.InteractionEventId}, nil
+}
