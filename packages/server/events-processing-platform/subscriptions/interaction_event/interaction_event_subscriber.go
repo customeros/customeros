@@ -3,10 +3,10 @@ package interactionEvent
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
 	"strings"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
@@ -27,12 +27,12 @@ type InteractionEventSubscriber struct {
 	interactionEventHandler *interactionEventHandler
 }
 
-func NewInteractionEventSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, commands *command_handler.CommandHandlers, repositories *repository.Repositories) *InteractionEventSubscriber {
+func NewInteractionEventSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, repositories *repository.Repositories, grpcClients *grpc_client.Clients) *InteractionEventSubscriber {
 	return &InteractionEventSubscriber{
 		log:                     log,
 		db:                      db,
 		cfg:                     cfg,
-		interactionEventHandler: NewInteractionEventHandler(repositories, commands, log, cfg),
+		interactionEventHandler: NewInteractionEventHandler(repositories, log, cfg, grpcClients),
 	}
 }
 

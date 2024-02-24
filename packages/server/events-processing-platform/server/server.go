@@ -252,7 +252,7 @@ func InitSubscribers(server *Server, ctx context.Context, grpcClients *grpc_clie
 	}
 
 	if server.Config.Subscriptions.InteractionEventSubscription.Enabled {
-		interactionEventSubscriber := interaction_event_subscription.NewInteractionEventSubscriber(server.Log, esdb, server.Config, server.CommandHandlers.InteractionEvent, server.Repositories)
+		interactionEventSubscriber := interaction_event_subscription.NewInteractionEventSubscriber(server.Log, esdb, server.Config, server.Repositories, grpcClients)
 		go func() {
 			err := interactionEventSubscriber.Connect(ctx, interactionEventSubscriber.ProcessEvents)
 			if err != nil {
