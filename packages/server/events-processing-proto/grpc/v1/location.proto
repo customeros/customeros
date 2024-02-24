@@ -35,10 +35,58 @@ message UpsertLocationGrpcRequest {
   SourceFields sourceFields = 27;
 }
 
+message FailLocationValidationGrpcRequest {
+  string tenant = 1;
+  string locationId = 2;
+  string errorMessage = 3;
+  string appSource = 4;
+  string loggedInUserId = 5;
+  string rawAddress = 6;
+  string country = 7;
+}
+
+message SkipLocationValidationGrpcRequest {
+  string tenant = 1;
+  string locationId = 2;
+  string appSource = 3;
+  string loggedInUserId = 4;
+  string rawAddress = 5;
+  string reason = 6;
+}
+
+message PassLocationValidationGrpcRequest {
+  string tenant = 1;
+  string locationId = 2;
+  string appSource = 3;
+  string loggedInUserId = 4;
+  string rawAddress = 5;
+  string country = 6;
+  string region = 7;
+  string locality = 8;
+  string addressLine1 = 9;
+  string addressLine2 = 10;
+  string zipCode = 11;
+  string addressType = 12;
+  string houseNumber = 13;
+  string postalCode = 14;
+  bool commercial = 15;
+  string predirection = 16;
+  string district = 17;
+  string street = 18;
+  string latitude = 19;
+  string longitude = 20;
+  string plusFour = 21;
+  string timeZone = 22;
+  int32 utcOffset = 23;
+}
+
 message LocationIdGrpcResponse {
   string id = 1;
 }
 
 service LocationGrpcService {
   rpc UpsertLocation(UpsertLocationGrpcRequest) returns (LocationIdGrpcResponse);
+  rpc FailLocationValidation(FailLocationValidationGrpcRequest) returns (LocationIdGrpcResponse);
+  rpc SkipLocationValidation(SkipLocationValidationGrpcRequest) returns (LocationIdGrpcResponse);
+  rpc PassLocationValidation(PassLocationValidationGrpcRequest) returns (LocationIdGrpcResponse);
 }

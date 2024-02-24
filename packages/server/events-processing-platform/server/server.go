@@ -219,7 +219,7 @@ func InitSubscribers(server *Server, ctx context.Context, grpcClients *grpc_clie
 	}
 
 	if server.Config.Subscriptions.LocationValidationSubscription.Enabled {
-		locationValidationSubscriber := location_validation_subscription.NewLocationValidationSubscriber(server.Log, esdb, server.Config, server.CommandHandlers.Location, server.Repositories)
+		locationValidationSubscriber := location_validation_subscription.NewLocationValidationSubscriber(server.Log, esdb, server.Config, server.Repositories, grpcClients)
 		go func() {
 			err := locationValidationSubscriber.Connect(ctx, locationValidationSubscriber.ProcessEvents)
 			if err != nil {

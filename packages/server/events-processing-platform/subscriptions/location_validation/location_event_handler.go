@@ -7,16 +7,17 @@ import (
 	common_module "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/command"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
+	locationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -25,10 +26,10 @@ import (
 )
 
 type LocationEventHandler struct {
-	repositories     *repository.Repositories
-	locationCommands *command_handler.CommandHandlers //Deprecated
-	log              logger.Logger
-	cfg              *config.Config
+	repositories *repository.Repositories
+	log          logger.Logger
+	cfg          *config.Config
+	grpcClients  *grpc_client.Clients
 }
 
 type LocationValidateRequest struct {
@@ -79,12 +80,40 @@ func (h *LocationEventHandler) OnLocationCreate(ctx context.Context, evt eventst
 	locationId := aggregate.GetLocationObjectID(evt.AggregateID, tenant)
 
 	if eventData.RawAddress == "" && eventData.LocationAddress.Address1 == "" && (eventData.LocationAddress.Street == "" || eventData.LocationAddress.HouseNumber == "") {
-		return h.locationCommands.SkipLocationValidation.Handle(ctx, command.NewSkippedLocationValidationCommand(locationId, tenant, "", "", "Missing raw Address"))
+		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+		_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*locationpb.LocationIdGrpcResponse](func() (*locationpb.LocationIdGrpcResponse, error) {
+			return h.grpcClients.LocationClient.SkipLocationValidation(ctx, &locationpb.SkipLocationValidationGrpcRequest{
+				Tenant:     tenant,
+				LocationId: locationId,
+				AppSource:  constants.AppSourceEventProcessingPlatform,
+				RawAddress: "",
+				Reason:     "Missing raw Address",
+			})
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Failed sending skipped location validation event for location %s for tenant %s: %s", locationId, tenant, err.Error())
+		}
+		return err
 	}
 	rawAddress := h.prepareRawAddress(eventData)
 	country := h.prepareCountry(ctx, tenant, eventData.LocationAddress.Country)
 	if country == "" {
-		return h.locationCommands.SkipLocationValidation.Handle(ctx, command.NewSkippedLocationValidationCommand(locationId, tenant, "", rawAddress, "Missing country"))
+		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+		_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*locationpb.LocationIdGrpcResponse](func() (*locationpb.LocationIdGrpcResponse, error) {
+			return h.grpcClients.LocationClient.SkipLocationValidation(ctx, &locationpb.SkipLocationValidationGrpcRequest{
+				Tenant:     tenant,
+				LocationId: locationId,
+				AppSource:  constants.AppSourceEventProcessingPlatform,
+				RawAddress: rawAddress,
+				Reason:     "Missing country",
+			})
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Failed sending skipped location validation event for location %s for tenant %s: %s", locationId, tenant, err.Error())
+		}
+		return err
 	}
 	locationValidateRequest := LocationValidateRequest{
 		Address:       rawAddress,
@@ -135,27 +164,43 @@ func (h *LocationEventHandler) OnLocationCreate(ctx context.Context, evt eventst
 		return h.sendLocationFailedValidationEvent(ctx, tenant, locationId, rawAddress, country, utils.IfNotNilStringWithDefault(result.Error, "missing error in validation response"))
 	}
 
-	locationAddressFields := models.LocationAddressFields{
-		Country:      result.Address.Country,
-		Region:       result.Address.Region,
-		District:     result.Address.District,
-		Locality:     result.Address.Locality,
-		Street:       result.Address.Street,
-		Address1:     result.Address.AddressLine1,
-		Address2:     result.Address.AddressLine2,
-		Zip:          result.Address.Zip,
-		AddressType:  result.Address.AddressType,
-		HouseNumber:  result.Address.HouseNumber,
-		PostalCode:   result.Address.PostalCode,
-		PlusFour:     result.Address.PlusFour,
-		Commercial:   result.Address.Commercial,
-		Predirection: result.Address.Predirection,
-		Latitude:     result.Address.Latitude,
-		Longitude:    result.Address.Longitude,
-		TimeZone:     result.Address.TimeZone,
-		UtcOffset:    result.Address.UtcOffset,
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*locationpb.LocationIdGrpcResponse](func() (*locationpb.LocationIdGrpcResponse, error) {
+		request := locationpb.PassLocationValidationGrpcRequest{
+			Tenant:       tenant,
+			LocationId:   locationId,
+			AppSource:    constants.AppSourceEventProcessingPlatform,
+			RawAddress:   rawAddress,
+			Country:      country,
+			Region:       result.Address.Region,
+			District:     result.Address.District,
+			Locality:     result.Address.Locality,
+			Street:       result.Address.Street,
+			AddressLine1: result.Address.AddressLine1,
+			AddressLine2: result.Address.AddressLine2,
+			ZipCode:      result.Address.Zip,
+			PostalCode:   result.Address.PostalCode,
+			AddressType:  result.Address.AddressType,
+			HouseNumber:  result.Address.HouseNumber,
+			PlusFour:     result.Address.PlusFour,
+			Commercial:   result.Address.Commercial,
+			Predirection: result.Address.Predirection,
+			TimeZone:     result.Address.TimeZone,
+			UtcOffset:    int32(result.Address.UtcOffset),
+		}
+		if result.Address.Latitude != nil {
+			request.Latitude = utils.FloatToString(result.Address.Latitude)
+		}
+		if result.Address.Longitude != nil {
+			request.Longitude = utils.FloatToString(result.Address.Longitude)
+		}
+		return h.grpcClients.LocationClient.PassLocationValidation(ctx, &request)
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Failed sending skipped location validation event for location %s for tenant %s: %s", locationId, tenant, err.Error())
 	}
-	return h.locationCommands.LocationValidated.Handle(ctx, command.NewLocationValidatedCommand(locationId, tenant, "", rawAddress, country, locationAddressFields))
+	return err
 }
 
 func (h *LocationEventHandler) prepareRawAddress(eventData events.LocationCreateEvent) string {
@@ -197,7 +242,28 @@ func isCountryUSA(country string) bool {
 	return country == "USA" || country == "US" || country == "United States" || country == "United States of America"
 }
 
-func (h *LocationEventHandler) sendLocationFailedValidationEvent(ctx context.Context, tenant, locationId, rawAddress, country, error string) error {
-	h.log.Errorf("Failed validating location %s for tenant %s: %s", locationId, tenant, error)
-	return h.locationCommands.FailedLocationValidation.Handle(ctx, command.NewFailedLocationValidationCommand(locationId, tenant, "", rawAddress, country, error))
+func (h *LocationEventHandler) sendLocationFailedValidationEvent(ctx context.Context, tenant, locationId, rawAddress, country, errorMessage string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailEventHandler.sendEmailFailedValidationEvent")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.LogFields(log.String("locationId", locationId), log.String("errorMessage", errorMessage))
+
+	h.log.Errorf("Failed validating location %s for tenant %s: %s", locationId, tenant, errorMessage)
+
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*locationpb.LocationIdGrpcResponse](func() (*locationpb.LocationIdGrpcResponse, error) {
+		return h.grpcClients.LocationClient.FailLocationValidation(ctx, &locationpb.FailLocationValidationGrpcRequest{
+			Tenant:       tenant,
+			LocationId:   locationId,
+			AppSource:    constants.AppSourceEventProcessingPlatform,
+			RawAddress:   rawAddress,
+			Country:      country,
+			ErrorMessage: utils.StringFirstNonEmpty(errorMessage, "Error message not available"),
+		})
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Failed sending failed location validation event for location %s for tenant %s: %s", locationId, tenant, err.Error())
+	}
+	return err
 }
