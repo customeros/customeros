@@ -24,6 +24,7 @@ func TestInvoiceReadRepository_GetInvoicesForPayNotifications(t *testing.T) {
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{})
 	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, entity.InvoiceEntity{
+		CreatedAt: referenceDate,
 		UpdatedAt: yesterday,
 		Customer: entity.InvoiceCustomer{
 			Email: "email",
@@ -52,6 +53,7 @@ func TestInvoiceReadRepository_GetInvoicesForPayNotifications_InvoiceIsDryRun(t 
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{})
 	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, entity.InvoiceEntity{
+		CreatedAt: referenceDate,
 		UpdatedAt: yesterday,
 		Customer: entity.InvoiceCustomer{
 			Email: "email",
@@ -60,6 +62,7 @@ func TestInvoiceReadRepository_GetInvoicesForPayNotifications_InvoiceIsDryRun(t 
 		Status: enum.InvoiceStatusDue,
 	})
 	neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, entity.InvoiceEntity{
+		CreatedAt: referenceDate,
 		UpdatedAt: yesterday,
 		Customer: entity.InvoiceCustomer{
 			Email: "email",
@@ -88,6 +91,7 @@ func TestInvoiceReadRepository_GetInvoicesForPayNotifications_StatusIsDraft(t *t
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{})
 	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, entity.InvoiceEntity{
+		CreatedAt: referenceDate,
 		UpdatedAt: yesterday,
 		Customer: entity.InvoiceCustomer{
 			Email: "email",
@@ -96,6 +100,7 @@ func TestInvoiceReadRepository_GetInvoicesForPayNotifications_StatusIsDraft(t *t
 		Status: enum.InvoiceStatusDue,
 	})
 	neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, entity.InvoiceEntity{
+		CreatedAt: referenceDate,
 		UpdatedAt: yesterday,
 		Customer: entity.InvoiceCustomer{
 			Email: "email",
@@ -124,6 +129,7 @@ func TestInvoiceReadRepository_GetInvoicesForPayNotifications_StatusIsPaid(t *te
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{})
 	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, entity.InvoiceEntity{
+		CreatedAt: referenceDate,
 		UpdatedAt: yesterday,
 		Customer: entity.InvoiceCustomer{
 			Email: "email",
@@ -132,6 +138,7 @@ func TestInvoiceReadRepository_GetInvoicesForPayNotifications_StatusIsPaid(t *te
 		Status: enum.InvoiceStatusDue,
 	})
 	neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, entity.InvoiceEntity{
+		CreatedAt: referenceDate,
 		UpdatedAt: yesterday,
 		Customer: entity.InvoiceCustomer{
 			Email: "email",
@@ -160,6 +167,7 @@ func TestInvoiceReadRepository_GetInvoicesForPayNotifications_MissingCustomerEma
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{})
 	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, entity.InvoiceEntity{
+		CreatedAt: referenceDate,
 		UpdatedAt: yesterday,
 		Customer: entity.InvoiceCustomer{
 			Email: "email",
@@ -194,6 +202,7 @@ func TestInvoiceReadRepository_GetInvoicesForPayNotifications_RecentlyUpdated(t 
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{})
 	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, entity.InvoiceEntity{
+		CreatedAt: referenceDate,
 		UpdatedAt: yesterday,
 		Customer: entity.InvoiceCustomer{
 			Email: "email",
@@ -202,6 +211,7 @@ func TestInvoiceReadRepository_GetInvoicesForPayNotifications_RecentlyUpdated(t 
 		Status: enum.InvoiceStatusDue,
 	})
 	neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, entity.InvoiceEntity{
+		CreatedAt: referenceDate,
 		UpdatedAt: minAgo10,
 		Customer: entity.InvoiceCustomer{
 			Email: "email",
