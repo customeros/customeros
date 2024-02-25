@@ -481,3 +481,20 @@ func MapDbNodeToServiceLineItemEntity(dbNode *dbtype.Node) *entity.ServiceLineIt
 	}
 	return &serviceLineItem
 }
+
+func MapDbNodeToTagEntity(dbNode *dbtype.Node) *entity.TagEntity {
+	if dbNode == nil {
+		return &entity.TagEntity{}
+	}
+	props := utils.GetPropsFromNode(*dbNode)
+	tag := entity.TagEntity{
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		Name:          utils.GetStringPropOrEmpty(props, "name"),
+		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+	}
+	return &tag
+}
