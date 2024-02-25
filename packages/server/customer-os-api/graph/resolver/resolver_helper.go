@@ -19,7 +19,7 @@ func GetTagId(ctx context.Context, services *service.Services, tagId, tagName *s
 		}
 	}
 	if outputTagId == "" && tagName != nil && strings.TrimSpace(*tagName) != "" {
-		tagEntity, _ := services.TagService.GetByName(ctx, strings.TrimSpace(*tagName))
+		tagEntity, _ := services.TagService.GetByNameOptional(ctx, strings.TrimSpace(*tagName))
 		if tagEntity != nil {
 			outputTagId = tagEntity.Id
 		}

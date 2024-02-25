@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// Deprecated: use neo4jentity.TagEntity instead
 type TagEntity struct {
 	Id            string
 	Name          string
@@ -24,6 +25,7 @@ func (tag TagEntity) ToString() string {
 	return fmt.Sprintf("id: %s\nname: %s", tag.Id, tag.Name)
 }
 
+// Deprecated: use neo4jentity.TagEntities instead
 type TagEntities []TagEntity
 
 func (TagEntity) Labels(tenant string) []string {

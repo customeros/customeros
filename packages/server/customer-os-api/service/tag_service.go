@@ -20,7 +20,7 @@ type TagService interface {
 	UnlinkAndDelete(ctx context.Context, id string) (bool, error)
 	GetAll(ctx context.Context) (*entity.TagEntities, error)
 	GetById(ctx context.Context, tagId string) (*entity.TagEntity, error)
-	GetByName(ctx context.Context, tagName string) (*entity.TagEntity, error)
+	GetByNameOptional(ctx context.Context, tagName string) (*entity.TagEntity, error)
 	GetTagsForContact(ctx context.Context, contactId string) (*entity.TagEntities, error)
 	GetTagsForContacts(ctx context.Context, contactIds []string) (*entity.TagEntities, error)
 	GetTagsForIssues(ctx context.Context, issueIds []string) (*entity.TagEntities, error)
@@ -175,20 +175,24 @@ func (s *tagService) GetById(ctx context.Context, tagId string) (*entity.TagEnti
 	return s.mapDbNodeToTagEntity(*tagDbNode), nil
 }
 
-func (s *tagService) GetByName(ctx context.Context, tagName string) (*entity.TagEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TagService.GetByName")
+func (s *tagService) GetByNameOptional(ctx context.Context, tagName string) (*entity.TagEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TagService.GetByNameOptional")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("tagName", tagName))
 
-	tagDbNode, err := s.repositories.TagRepository.GetByName(ctx, tagName)
+	tagDbNode, err := s.repositories.Neo4jRepositories.TagReadRepository.GetByNameOptional(ctx, common.GetTenantFromContext(ctx), tagName)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
+	if tagDbNode == nil {
+		return nil, nil
+	}
 	return s.mapDbNodeToTagEntity(*tagDbNode), nil
 }
 
+// Deprecated, use neo4j model instead
 func (s *tagService) mapDbNodeToTagEntity(dbNode dbtype.Node) *entity.TagEntity {
 	props := utils.GetPropsFromNode(dbNode)
 	tag := entity.TagEntity{
