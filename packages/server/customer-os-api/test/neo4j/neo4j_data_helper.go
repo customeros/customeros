@@ -506,23 +506,6 @@ func AddSetTemplateToEntity(ctx context.Context, driver *neo4j.DriverWithContext
 }
 
 // Deprecated
-func CreateTag(ctx context.Context, driver *neo4j.DriverWithContext, tenant, tagName string) string {
-	var tagId, _ = uuid.NewRandom()
-	query := `MATCH (t:Tenant {name:$tenant})
-			MERGE (t)<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {id:$id})
-			ON CREATE SET tag.name=$name, tag.source=$source, tag.appSource=$appSource, tag.createdAt=$now, tag.updatedAt=$now`
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"id":        tagId.String(),
-		"tenant":    tenant,
-		"name":      tagName,
-		"source":    "openline",
-		"appSource": "test",
-		"now":       utils.Now(),
-	})
-	return tagId.String()
-}
-
-// Deprecated
 func CreateIssue(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, issue entity.IssueEntity) string {
 	var issueId, _ = uuid.NewRandom()
 	query := `MATCH (t:Tenant {name:$tenant})

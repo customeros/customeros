@@ -27,8 +27,12 @@ func TestQueryResolver_Issue(t *testing.T) {
 		CreatedAt:   utils.Now(),
 	})
 
-	tagId1 := neo4jt.CreateTag(ctx, driver, tenantName, "critical")
-	tagId2 := neo4jt.CreateTag(ctx, driver, tenantName, "issue-tag")
+	tagId1 := neo4jtest.CreateTag(ctx, driver, tenantName, neo4jentity.TagEntity{
+		Name: "critical",
+	})
+	tagId2 := neo4jtest.CreateTag(ctx, driver, tenantName, neo4jentity.TagEntity{
+		Name: "issue-tag",
+	})
 
 	neo4jt.CreateHubspotExternalSystem(ctx, driver, tenantName)
 	syncDate := utils.Now()

@@ -6,16 +6,16 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
 
 type TagRepository interface {
-	Merge(ctx context.Context, tenant string, tag entity.TagEntity) (*dbtype.Node, error)
-	Update(ctx context.Context, tenant string, tag entity.TagEntity) (*dbtype.Node, error)
+	Merge(ctx context.Context, tenant string, tag neo4jentity.TagEntity) (*dbtype.Node, error)
+	Update(ctx context.Context, tenant string, tag neo4jentity.TagEntity) (*dbtype.Node, error)
 	UnlinkAndDelete(ctx context.Context, tenant string, tagId string) error
 	GetAll(ctx context.Context, tenant string) ([]*dbtype.Node, error)
 	GetForContact(ctx context.Context, tenant, contactId string) ([]*dbtype.Node, error)
@@ -36,7 +36,7 @@ func NewTagRepository(driver *neo4j.DriverWithContext) TagRepository {
 	}
 }
 
-func (r *tagRepository) Merge(ctx context.Context, tenant string, tag entity.TagEntity) (*dbtype.Node, error) {
+func (r *tagRepository) Merge(ctx context.Context, tenant string, tag neo4jentity.TagEntity) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TagRepository.Merge")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -74,7 +74,7 @@ func (r *tagRepository) Merge(ctx context.Context, tenant string, tag entity.Tag
 	}
 }
 
-func (r *tagRepository) Update(ctx context.Context, tenant string, tag entity.TagEntity) (*dbtype.Node, error) {
+func (r *tagRepository) Update(ctx context.Context, tenant string, tag neo4jentity.TagEntity) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TagRepository.Update")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
