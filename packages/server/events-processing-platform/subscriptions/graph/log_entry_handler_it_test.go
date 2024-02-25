@@ -12,7 +12,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/mocked_grpc"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/neo4j"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
@@ -159,7 +158,7 @@ func TestGraphLogEntryEventHandler_OnAddTag(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
 	logEntryId := neo4jtest.CreateLogEntryForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.LogEntryEntity{})
-	tagId := neo4jt.CreateTag(ctx, testDatabase.Driver, tenantName, entity.TagEntity{})
+	tagId := neo4jtest.CreateTag(ctx, testDatabase.Driver, tenantName, neo4jentity.TagEntity{})
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Organization": 1, "LogEntry": 1, "TimelineEvent": 1, "Tag": 1})
 
@@ -199,7 +198,7 @@ func TestGraphLogEntryEventHandler_OnRemoveTag(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
 	logEntryId := neo4jtest.CreateLogEntryForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.LogEntryEntity{})
-	tagId := neo4jt.CreateTag(ctx, testDatabase.Driver, tenantName, entity.TagEntity{})
+	tagId := neo4jtest.CreateTag(ctx, testDatabase.Driver, tenantName, neo4jentity.TagEntity{})
 	neo4jt.LinkTag(ctx, testDatabase.Driver, tagId, logEntryId)
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Organization": 1, "LogEntry": 1, "TimelineEvent": 1, "Tag": 1})
