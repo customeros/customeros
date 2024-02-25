@@ -1060,15 +1060,16 @@ func MarkInvoicingStarted(ctx context.Context, driver *neo4j.DriverWithContext, 
 
 func CreateTag(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, tagEntity entity.TagEntity) string {
 	tagId := utils.NewUUIDIfEmpty(tagEntity.Id)
-	query := `MATCH (t:Tenant {name:$tenant})
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
 			MERGE (t)<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {id:$id})
 			ON CREATE SET 
+				tag:Tag_%s,
 				tag.name=$name, 
 				tag.source=$source, 
 				tag.sourceOfTruth=$sourceOfTruth,
 				tag.appSource=$appSource, 
 				tag.createdAt=$createdAt, 
-				tag.updatedAt=$updatedAt`
+				tag.updatedAt=$updatedAt`, tenant)
 	params := map[string]any{
 		"tenant":        tenant,
 		"id":            tagId,
