@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// Deprecated
 type MeetingEntity struct {
 	Id                 string
 	Name               *string `neo4jDb:"property:name;lookupName:NAME;supportCaseSensitive:true"`

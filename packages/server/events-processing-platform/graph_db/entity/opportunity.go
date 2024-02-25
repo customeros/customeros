@@ -12,6 +12,7 @@ type RenewalDetails struct {
 	RenewalUpdatedByUserAt *time.Time
 }
 
+// Deprecated
 type OpportunityEntity struct {
 	Id                string
 	CreatedAt         time.Time

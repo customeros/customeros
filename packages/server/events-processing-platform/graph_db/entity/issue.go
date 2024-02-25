@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// Deprecated
 type IssueEntity struct {
 	Id            string
 	CreatedAt     time.Time

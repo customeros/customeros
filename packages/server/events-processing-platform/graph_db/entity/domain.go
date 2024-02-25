@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// Deprecated
 type DomainEntity struct {
 	Id        string
 	Domain    string `neo4jDb:"property:domain;lookupName:DOMAIN;supportCaseSensitive:true"`

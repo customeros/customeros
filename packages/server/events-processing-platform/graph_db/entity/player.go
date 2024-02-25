@@ -9,10 +9,7 @@ import (
 
 type PlayerRelation string
 
-const (
-	IDENTIFIES PlayerRelation = "IDENTIFIES"
-)
-
+// Deprecated
 type PlayerEntity struct {
 	Id            string
 	IdentityId    *string

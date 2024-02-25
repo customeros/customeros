@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// Deprecated
 type NoteEntity struct {
 	Id            string
 	Content       string

@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// Deprecated
 type WorkspaceEntity struct {
 	Id            string
 	Name          string

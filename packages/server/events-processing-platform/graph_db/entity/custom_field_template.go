@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// Deprecated
 type CustomFieldTemplateEntity struct {
 	Id        string
 	CreatedAt time.Time

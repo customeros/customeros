@@ -4,6 +4,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 )
 
+// Deprecated
 type CountryEntity struct {
 	Name      string
 	CodeA2    string

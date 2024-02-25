@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// Deprecated
 type ActionItemEntity struct {
 	Id        string
 	CreatedAt *time.Time

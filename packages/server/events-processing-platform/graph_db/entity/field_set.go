@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// Deprecated
 type FieldSetEntity struct {
 	Id            *string
 	Name          string
