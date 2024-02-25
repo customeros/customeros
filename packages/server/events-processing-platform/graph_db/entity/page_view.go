@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// Deprecated
 type PageViewEntity struct {
 	Id             string
 	Application    string

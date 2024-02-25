@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// Deprecated
 type EmailEntity struct {
 	Id            string
 	Email         string `neo4jDb:"property:email;lookupName:EMAIL;supportCaseSensitive:true"`

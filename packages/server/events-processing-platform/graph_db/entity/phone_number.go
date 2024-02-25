@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// Deprecated
 type PhoneNumberEntity struct {
 	Id             string
 	E164           string

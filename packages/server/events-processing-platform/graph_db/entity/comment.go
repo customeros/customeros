@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// Deprecated
 type CommentEntity struct {
 	Id            string
 	Content       string

@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// Deprecated
 type LocationEntity struct {
 	Id            string
 	Name          string

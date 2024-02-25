@@ -4,6 +4,7 @@ import (
 	"time"
 )
 
+// Deprecated
 type SocialEntity struct {
 	Id           string
 	PlatformName string

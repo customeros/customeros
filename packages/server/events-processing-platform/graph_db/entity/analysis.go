@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// Deprecated
 type AnalysisEntity struct {
 	Id        string
 	CreatedAt *time.Time

@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// Deprecated
 type EntityTemplateEntity struct {
 	Id           string
 	Name         string

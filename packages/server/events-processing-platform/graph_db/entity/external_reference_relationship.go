@@ -12,11 +12,7 @@ const (
 	Slack          ExternalSystemId = "slack"
 )
 
-const (
-	ExternalNodeContact string = "Contact"
-	ExternalNodeMeeting string = "Meeting"
-)
-
+// Deprecated
 type ExternalSystemEntity struct {
 	ExternalSystemId ExternalSystemId
 	Relationship     struct {

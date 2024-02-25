@@ -1,5 +1,6 @@
 package entity
 
+// Deprecated
 type MentionedEntity interface {
 	IsMentionedEntity()
 	MentionedEntityLabel() string

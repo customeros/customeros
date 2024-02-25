@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// Deprecated
 type InteractionSessionEntity struct {
 	Id            string
 	CreatedAt     time.Time

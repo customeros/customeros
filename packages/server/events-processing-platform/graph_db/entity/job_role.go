@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// Deprecated
 type JobRoleEntity struct {
 	Id            string
 	JobTitle      string

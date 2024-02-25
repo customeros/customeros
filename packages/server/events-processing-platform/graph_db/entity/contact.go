@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// Deprecated
 type ContactEntity struct {
 	Id              string
 	Prefix          string

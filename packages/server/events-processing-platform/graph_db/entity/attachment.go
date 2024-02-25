@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// Deprecated
 type AttachmentEntity struct {
 	Id        string
 	CreatedAt *time.Time

@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// Deprecated
 type CalendarEntity struct {
 	Id            string
 	CalType       string
