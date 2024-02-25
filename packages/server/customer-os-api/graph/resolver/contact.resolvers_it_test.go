@@ -603,9 +603,15 @@ func TestQueryResolver_Contact_WithTags_ById(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	contactId2 := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	tagId1 := neo4jt.CreateTag(ctx, driver, tenantName, "tag1")
-	tagId2 := neo4jt.CreateTag(ctx, driver, tenantName, "tag2")
-	tagId3 := neo4jt.CreateTag(ctx, driver, tenantName, "tag3")
+	tagId1 := neo4jtest.CreateTag(ctx, driver, tenantName, neo4jentity.TagEntity{
+		Name: "tag1",
+	})
+	tagId2 := neo4jtest.CreateTag(ctx, driver, tenantName, neo4jentity.TagEntity{
+		Name: "tag2",
+	})
+	tagId3 := neo4jtest.CreateTag(ctx, driver, tenantName, neo4jentity.TagEntity{
+		Name: "tag3",
+	})
 	neo4jt.TagContact(ctx, driver, contactId, tagId1)
 	neo4jt.TagContact(ctx, driver, contactId, tagId2)
 	neo4jt.TagContact(ctx, driver, contactId2, tagId3)
@@ -1114,10 +1120,9 @@ func TestMutationResolver_ContactAddTagByID(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	tagId1 := neo4jt.CreateTag(ctx, driver, tenantName, "tag1")
-	tagId2 := neo4jt.CreateTag(ctx, driver, tenantName, "tag2")
+	tagId1 := neo4jtest.CreateTag(ctx, driver, tenantName, neo4jentity.TagEntity{Name: "tag1"})
+	tagId2 := neo4jtest.CreateTag(ctx, driver, tenantName, neo4jentity.TagEntity{Name: "tag2"})
 	neo4jt.TagContact(ctx, driver, contactId, tagId1)
-	time.Sleep(100 * time.Millisecond)
 
 	rawResponse := callGraphQL(t, "contact/add_tag_to_contact", map[string]interface{}{"contactId": contactId, "tagId": tagId2})
 
@@ -1148,8 +1153,12 @@ func TestMutationResolver_ContactRemoveTagByID(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	tagId1 := neo4jt.CreateTag(ctx, driver, tenantName, "tag1")
-	tagId2 := neo4jt.CreateTag(ctx, driver, tenantName, "tag2")
+	tagId1 := neo4jtest.CreateTag(ctx, driver, tenantName, neo4jentity.TagEntity{
+		Name: "tag1",
+	})
+	tagId2 := neo4jtest.CreateTag(ctx, driver, tenantName, neo4jentity.TagEntity{
+		Name: "tag2",
+	})
 	neo4jt.TagContact(ctx, driver, contactId, tagId1)
 	neo4jt.TagContact(ctx, driver, contactId, tagId2)
 

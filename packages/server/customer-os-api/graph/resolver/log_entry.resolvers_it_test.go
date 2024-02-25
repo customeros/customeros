@@ -7,6 +7,7 @@ import (
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -27,8 +28,12 @@ func TestQueryResolver_LogEntry(t *testing.T) {
 		ContentType: "text/plain",
 	})
 
-	tagId1 := neo4jt.CreateTag(ctx, driver, tenantName, "red")
-	tagId2 := neo4jt.CreateTag(ctx, driver, tenantName, "blue")
+	tagId1 := neo4jtest.CreateTag(ctx, driver, tenantName, neo4jentity.TagEntity{
+		Name: "red",
+	})
+	tagId2 := neo4jtest.CreateTag(ctx, driver, tenantName, neo4jentity.TagEntity{
+		Name: "blue",
+	})
 
 	neo4jt.TagLogEntry(ctx, driver, logEntryId, tagId1, &secAgo30)
 	neo4jt.TagLogEntry(ctx, driver, logEntryId, tagId2, nil)

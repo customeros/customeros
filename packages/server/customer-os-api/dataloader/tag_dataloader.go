@@ -4,50 +4,50 @@ import (
 	"context"
 	"errors"
 	"github.com/graph-gophers/dataloader"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"reflect"
 )
 
-func (i *Loaders) GetTagsForOrganization(ctx context.Context, organizationId string) (*entity.TagEntities, error) {
+func (i *Loaders) GetTagsForOrganization(ctx context.Context, organizationId string) (*neo4jentity.TagEntities, error) {
 	thunk := i.TagsForOrganization.Load(ctx, dataloader.StringKey(organizationId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.TagEntities)
+	resultObj := result.(neo4jentity.TagEntities)
 	return &resultObj, nil
 }
 
-func (i *Loaders) GetTagsForContact(ctx context.Context, contactId string) (*entity.TagEntities, error) {
+func (i *Loaders) GetTagsForContact(ctx context.Context, contactId string) (*neo4jentity.TagEntities, error) {
 	thunk := i.TagsForContact.Load(ctx, dataloader.StringKey(contactId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.TagEntities)
+	resultObj := result.(neo4jentity.TagEntities)
 	return &resultObj, nil
 }
 
-func (i *Loaders) GetTagsForIssue(ctx context.Context, issueId string) (*entity.TagEntities, error) {
+func (i *Loaders) GetTagsForIssue(ctx context.Context, issueId string) (*neo4jentity.TagEntities, error) {
 	thunk := i.TagsForIssue.Load(ctx, dataloader.StringKey(issueId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.TagEntities)
+	resultObj := result.(neo4jentity.TagEntities)
 	return &resultObj, nil
 }
 
-func (i *Loaders) GetTagsForLogEntry(ctx context.Context, logEntryId string) (*entity.TagEntities, error) {
+func (i *Loaders) GetTagsForLogEntry(ctx context.Context, logEntryId string) (*neo4jentity.TagEntities, error) {
 	thunk := i.TagsForLogEntry.Load(ctx, dataloader.StringKey(logEntryId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.TagEntities)
+	resultObj := result.(neo4jentity.TagEntities)
 	return &resultObj, nil
 }
 
@@ -69,12 +69,12 @@ func (b *tagBatcher) getTagsForOrganizations(ctx context.Context, keys dataloade
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	tagEntitiesByOrganizationId := make(map[string]entity.TagEntities)
+	tagEntitiesByOrganizationId := make(map[string]neo4jentity.TagEntities)
 	for _, val := range *tagEntitiesPtr {
 		if list, ok := tagEntitiesByOrganizationId[val.DataloaderKey]; ok {
 			tagEntitiesByOrganizationId[val.DataloaderKey] = append(list, val)
 		} else {
-			tagEntitiesByOrganizationId[val.DataloaderKey] = entity.TagEntities{val}
+			tagEntitiesByOrganizationId[val.DataloaderKey] = neo4jentity.TagEntities{val}
 		}
 	}
 
@@ -87,10 +87,10 @@ func (b *tagBatcher) getTagsForOrganizations(ctx context.Context, keys dataloade
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.TagEntities{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: neo4jentity.TagEntities{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(entity.TagEntities{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.TagEntities{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
@@ -118,12 +118,12 @@ func (b *tagBatcher) getTagsForContacts(ctx context.Context, keys dataloader.Key
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	tagEntitiesByContactId := make(map[string]entity.TagEntities)
+	tagEntitiesByContactId := make(map[string]neo4jentity.TagEntities)
 	for _, val := range *tagEntitiesPtr {
 		if list, ok := tagEntitiesByContactId[val.DataloaderKey]; ok {
 			tagEntitiesByContactId[val.DataloaderKey] = append(list, val)
 		} else {
-			tagEntitiesByContactId[val.DataloaderKey] = entity.TagEntities{val}
+			tagEntitiesByContactId[val.DataloaderKey] = neo4jentity.TagEntities{val}
 		}
 	}
 
@@ -136,10 +136,10 @@ func (b *tagBatcher) getTagsForContacts(ctx context.Context, keys dataloader.Key
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.TagEntities{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: neo4jentity.TagEntities{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(entity.TagEntities{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.TagEntities{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
@@ -167,12 +167,12 @@ func (b *tagBatcher) getTagsForIssues(ctx context.Context, keys dataloader.Keys)
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	tagEntitiesByIssueId := make(map[string]entity.TagEntities)
+	tagEntitiesByIssueId := make(map[string]neo4jentity.TagEntities)
 	for _, val := range *tagEntitiesPtr {
 		if list, ok := tagEntitiesByIssueId[val.DataloaderKey]; ok {
 			tagEntitiesByIssueId[val.DataloaderKey] = append(list, val)
 		} else {
-			tagEntitiesByIssueId[val.DataloaderKey] = entity.TagEntities{val}
+			tagEntitiesByIssueId[val.DataloaderKey] = neo4jentity.TagEntities{val}
 		}
 	}
 
@@ -185,10 +185,10 @@ func (b *tagBatcher) getTagsForIssues(ctx context.Context, keys dataloader.Keys)
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.TagEntities{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: neo4jentity.TagEntities{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(entity.TagEntities{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.TagEntities{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
@@ -216,12 +216,12 @@ func (b *tagBatcher) getTagsForLogEntries(ctx context.Context, keys dataloader.K
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	tagEntitiesByLogEntryId := make(map[string]entity.TagEntities)
+	tagEntitiesByLogEntryId := make(map[string]neo4jentity.TagEntities)
 	for _, val := range *tagEntitiesPtr {
 		if list, ok := tagEntitiesByLogEntryId[val.DataloaderKey]; ok {
 			tagEntitiesByLogEntryId[val.DataloaderKey] = append(list, val)
 		} else {
-			tagEntitiesByLogEntryId[val.DataloaderKey] = entity.TagEntities{val}
+			tagEntitiesByLogEntryId[val.DataloaderKey] = neo4jentity.TagEntities{val}
 		}
 	}
 
@@ -234,10 +234,10 @@ func (b *tagBatcher) getTagsForLogEntries(ctx context.Context, keys dataloader.K
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.TagEntities{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: neo4jentity.TagEntities{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(entity.TagEntities{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.TagEntities{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}

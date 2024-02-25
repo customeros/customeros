@@ -7,6 +7,7 @@ import (
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -50,7 +51,13 @@ func TestMutationResolver_TagUpdate(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	tagId := neo4jt.CreateTag(ctx, driver, tenantName, "original tag")
+	tagId := neo4jtest.CreateTag(ctx, driver, tenantName, neo4jentity.TagEntity{
+		Name:          "original tag",
+		CreatedAt:     utils.Now(),
+		Source:        neo4jentity.DataSourceOpenline,
+		SourceOfTruth: neo4jentity.DataSourceOpenline,
+		AppSource:     "test",
+	})
 
 	rawResponse, err := c.RawPost(getQuery("tag/update_tag"),
 		client.Var("tagId", tagId),
@@ -79,7 +86,7 @@ func TestMutationResolver_TagDelete(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	tagId := neo4jt.CreateTag(ctx, driver, tenantName, "original tag")
+	tagId := neo4jtest.CreateTag(ctx, driver, tenantName, neo4jentity.TagEntity{Name: "original tag"})
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	neo4jt.TagContact(ctx, driver, contactId, tagId)
 
@@ -113,9 +120,23 @@ func TestQueryResolver_Tags(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateTenant(ctx, driver, "other")
-	tagId1 := neo4jt.CreateTag(ctx, driver, tenantName, "tag B")
-	tagId2 := neo4jt.CreateTag(ctx, driver, tenantName, "tag A")
-	neo4jt.CreateTag(ctx, driver, "other", "contact type for other tenant")
+	tagId1 := neo4jtest.CreateTag(ctx, driver, tenantName, neo4jentity.TagEntity{
+		Name:          "tag B",
+		CreatedAt:     utils.Now(),
+		UpdatedAt:     utils.Now(),
+		Source:        neo4jentity.DataSourceOpenline,
+		SourceOfTruth: neo4jentity.DataSourceOpenline,
+		AppSource:     "test",
+	})
+	tagId2 := neo4jtest.CreateTag(ctx, driver, tenantName, neo4jentity.TagEntity{
+		Name:          "tag A",
+		CreatedAt:     utils.Now(),
+		UpdatedAt:     utils.Now(),
+		Source:        neo4jentity.DataSourceOpenline,
+		SourceOfTruth: neo4jentity.DataSourceOpenline,
+		AppSource:     "test",
+	})
+	neo4jtest.CreateTag(ctx, driver, "other", neo4jentity.TagEntity{Name: "contact type for other tenant"})
 
 	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Tag"))
 

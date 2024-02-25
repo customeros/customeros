@@ -1058,6 +1058,31 @@ func MarkInvoicingStarted(ctx context.Context, driver *neo4j.DriverWithContext, 
 	ExecuteWriteQuery(ctx, driver, query, params)
 }
 
+func CreateTag(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, tagEntity entity.TagEntity) string {
+	tagId := utils.NewUUIDIfEmpty(tagEntity.Id)
+	query := `MATCH (t:Tenant {name:$tenant})
+			MERGE (t)<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {id:$id})
+			ON CREATE SET 
+				tag.name=$name, 
+				tag.source=$source, 
+				tag.sourceOfTruth=$sourceOfTruth,
+				tag.appSource=$appSource, 
+				tag.createdAt=$createdAt, 
+				tag.updatedAt=$updatedAt`
+	params := map[string]any{
+		"tenant":        tenant,
+		"id":            tagId,
+		"name":          tagEntity.Name,
+		"createdAt":     tagEntity.CreatedAt,
+		"updatedAt":     tagEntity.UpdatedAt,
+		"source":        tagEntity.Source,
+		"appSource":     tagEntity.AppSource,
+		"sourceOfTruth": tagEntity.SourceOfTruth,
+	}
+	ExecuteWriteQuery(ctx, driver, query, params)
+	return tagId
+}
+
 // Deprecated
 func FirstTimeOfMonth(year, month int) time.Time {
 	return time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)

@@ -258,8 +258,12 @@ func TestQueryResolver_Organizations_WithTags(t *testing.T) {
 	organizationId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "Org 1 with 2 tags")
 	organizationId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "Org 2 with 1 tag")
 	neo4jt.CreateOrganization(ctx, driver, tenantName, "Org 3 with 0 tags")
-	tag1 := neo4jt.CreateTag(ctx, driver, tenantName, "tag1")
-	tag2 := neo4jt.CreateTag(ctx, driver, tenantName, "tag2")
+	tag1 := neo4jtest.CreateTag(ctx, driver, tenantName, neo4jentity.TagEntity{
+		Name: "tag1",
+	})
+	tag2 := neo4jtest.CreateTag(ctx, driver, tenantName, neo4jentity.TagEntity{
+		Name: "tag2",
+	})
 
 	neo4jt.TagOrganization(ctx, driver, organizationId1, tag1)
 	neo4jt.TagOrganization(ctx, driver, organizationId1, tag2)
@@ -450,8 +454,12 @@ func TestQueryResolver_Organization_WithTimelineEvents_DirectAndFromMultipleCont
 		Status:      "OPEN",
 		Description: "description 1",
 	})
-	tagId1 := neo4jt.CreateTag(ctx, driver, tenantName, "tag1")
-	tagId2 := neo4jt.CreateTag(ctx, driver, tenantName, "tag2")
+	tagId1 := neo4jtest.CreateTag(ctx, driver, tenantName, neo4jentity.TagEntity{
+		Name: "tag1",
+	})
+	tagId2 := neo4jtest.CreateTag(ctx, driver, tenantName, neo4jentity.TagEntity{
+		Name: "tag2",
+	})
 	neo4jt.TagIssue(ctx, driver, issueId1, tagId1)
 	neo4jt.TagIssue(ctx, driver, issueId1, tagId2)
 	neo4jt.IssueReportedBy(ctx, driver, issueId1, organizationId)
