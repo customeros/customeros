@@ -416,25 +416,6 @@ func CreateInteractionEvent(ctx context.Context, driver *neo4j.DriverWithContext
 	return interactionEventId
 }
 
-func CreateTag(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, tag entity.TagEntity) string {
-	tagId := tag.Id
-	if tagId == "" {
-		tagId = uuid.New().String()
-	}
-
-	query := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})
-			  MERGE (t)<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {id:$tagId})
-				SET tag:Tag_%s,
-					tag.name=$name`, tenant)
-
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"tenant": tenant,
-		"tagId":  tagId,
-		"name":   tag.Name,
-	})
-	return tagId
-}
-
 func LinkTag(ctx context.Context, driver *neo4j.DriverWithContext, tagId, entityId string) {
 
 	query := `MATCH (e {id:$entityId})
