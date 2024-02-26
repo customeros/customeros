@@ -7,7 +7,6 @@ package resolver
 import (
 	"context"
 	"errors"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"strings"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -18,6 +17,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/user"
