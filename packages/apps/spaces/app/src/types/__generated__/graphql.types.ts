@@ -132,6 +132,9 @@ export type BillingDetails = {
   addressLine2?: Maybe<Scalars['String']['output']>;
   billingCycle?: Maybe<ContractBillingCycle>;
   billingEmail?: Maybe<Scalars['String']['output']>;
+  canPayWithBankTransfer?: Maybe<Scalars['Boolean']['output']>;
+  canPayWithCard?: Maybe<Scalars['Boolean']['output']>;
+  canPayWithDirectDebit?: Maybe<Scalars['Boolean']['output']>;
   country?: Maybe<Scalars['String']['output']>;
   invoiceNote?: Maybe<Scalars['String']['output']>;
   invoicingStarted?: Maybe<Scalars['Time']['output']>;
@@ -3906,6 +3909,7 @@ export type ServiceLineItemUpdateInput = {
 export type SlackChannel = {
   __typename?: 'SlackChannel';
   channelId: Scalars['String']['output'];
+  channelName: Scalars['String']['output'];
   metadata: Metadata;
   organization?: Maybe<Organization>;
 };

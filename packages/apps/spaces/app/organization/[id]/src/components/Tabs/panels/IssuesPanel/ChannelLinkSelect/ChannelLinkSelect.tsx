@@ -36,7 +36,6 @@ export const ChannelLinkSelect = ({ from }: ChannelLinkSelectProps) => {
   });
 
   const isLoading = organizationIsPending || isPending;
-  const value = organization?.organization?.slackChannelId;
   const queryKey = useOrganizationQuery.getKey({ id });
   const updateOrganization = useUpdateOrganizationMutation(client, {
     onMutate: ({ input }) => {
@@ -90,9 +89,12 @@ export const ChannelLinkSelect = ({ from }: ChannelLinkSelectProps) => {
     isPending || !data?.slack_Channels?.content
       ? []
       : data?.slack_Channels?.content?.map((el) => ({
-          label: el?.channelId,
+          label: el?.channelName || el?.channelId,
           value: el?.channelId,
         }));
+
+  const selectedChannelId = organization?.organization?.slackChannelId;
+  const value = options.find((el) => el.value === selectedChannelId);
 
   useOutsideClick({ ref, handler: onClose });
 
@@ -114,7 +116,7 @@ export const ChannelLinkSelect = ({ from }: ChannelLinkSelectProps) => {
     }
 
     return (
-      <Tooltip label={`Edit channel ${value}`} hasArrow>
+      <Tooltip label={`Edit channel ${value.label}`} hasArrow>
         <Button
           size='sm'
           variant='outline'
@@ -137,14 +139,7 @@ export const ChannelLinkSelect = ({ from }: ChannelLinkSelectProps) => {
         size='sm'
         isClearable
         options={options}
-        value={
-          value
-            ? {
-                label: value,
-                value,
-              }
-            : undefined
-        }
+        value={value}
         onChange={handleChange}
         openMenuOnClick={!value}
         placeholder='Paste Slack Channel ID'
