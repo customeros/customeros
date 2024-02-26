@@ -1123,7 +1123,6 @@ type Invoice struct {
 	Paid                          bool             `json:"paid"`
 	Subtotal                      float64          `json:"subtotal"`
 	TaxDue                        float64          `json:"taxDue"`
-	InvoiceLines                  []*InvoiceLine   `json:"invoiceLines"`
 }
 
 func (Invoice) IsMetadataInterface()        {}
@@ -1147,7 +1146,6 @@ type InvoiceLine struct {
 	Subtotal    float64   `json:"subtotal"`
 	TaxDue      float64   `json:"taxDue"`
 	Total       float64   `json:"total"`
-	CreatedAt   time.Time `json:"createdAt"`
 }
 
 func (InvoiceLine) IsMetadataInterface()        {}

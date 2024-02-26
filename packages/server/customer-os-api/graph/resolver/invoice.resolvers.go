@@ -64,20 +64,6 @@ func (r *invoiceResolver) InvoiceLineItems(ctx context.Context, obj *model.Invoi
 	return mapper.MapEntitiesToInvoiceLines(entities), nil
 }
 
-// InvoiceLines is the resolver for the invoiceLines field.
-func (r *invoiceResolver) InvoiceLines(ctx context.Context, obj *model.Invoice) ([]*model.InvoiceLine, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
-
-	entities, err := dataloader.For(ctx).GetInvoiceLinesForInvoice(ctx, obj.Metadata.ID)
-	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
-		r.log.Errorf("Failed to get invoice lines for invoice %s: %s", obj.Metadata.ID, err.Error())
-		graphql.AddErrorf(ctx, "Failed to get invoice lines for invoice %s", obj.Metadata.ID)
-		return nil, nil
-	}
-	return mapper.MapEntitiesToInvoiceLines(entities), nil
-}
-
 // InvoiceNextDryRunForContract is the resolver for the invoice_NextDryRunForContract field.
 func (r *mutationResolver) InvoiceNextDryRunForContract(ctx context.Context, contractID string) (string, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InvoiceResolver.InvoiceNextInvoiceDryRun", graphql.GetOperationContext(ctx))

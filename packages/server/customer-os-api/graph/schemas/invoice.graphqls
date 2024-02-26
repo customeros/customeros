@@ -43,7 +43,6 @@ type Invoice implements MetadataInterface {
     paid:                       Boolean!
     subtotal:                   Float!
     taxDue:                     Float!
-    invoiceLines:       [InvoiceLine!]! @goField(forceResolver: true) @deprecated(reason: "Use invoiceLineItems instead.")
 }
 
 type InvoiceCustomer {
@@ -75,7 +74,6 @@ type InvoiceLine implements MetadataInterface {
     subtotal:           Float!
     taxDue:             Float!
     total:              Float!
-    createdAt:          Time! @deprecated(reason: "Use metadata instead.")
 }
 
 type Tax {
