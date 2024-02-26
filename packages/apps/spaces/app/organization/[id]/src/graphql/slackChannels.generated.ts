@@ -36,6 +36,7 @@ export type SlackChannelsQuery = {
     content: Array<{
       __typename?: 'SlackChannel';
       channelId: string;
+      channelName: string;
       organization?: {
         __typename?: 'Organization';
         metadata: { __typename?: 'Metadata'; id: string };
@@ -49,6 +50,7 @@ export const SlackChannelsDocument = `
   slack_Channels(pagination: $pagination) {
     content {
       channelId
+      channelName
       organization {
         metadata {
           id
