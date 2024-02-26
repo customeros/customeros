@@ -13,4 +13,5 @@ type SlackChannel {
     metadata:              Metadata!
     organization:          Organization @goField(forceResolver: true)
     channelId:             String!
+    channelName:           String!
 }

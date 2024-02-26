@@ -13,6 +13,7 @@ replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-
 require (
 	github.com/99designs/gqlgen v0.17.44
 	github.com/caarlos0/env/v6 v6.10.1
+	github.com/cenkalti/backoff/v4 v4.2.1
 	github.com/docker/docker v25.0.2+incompatible
 	github.com/gin-contrib/cors v1.5.0
 	github.com/gin-contrib/zap v0.2.0
@@ -52,7 +53,6 @@ require (
 	github.com/agnivade/levenshtein v1.1.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bytedance/sonic v1.10.2 // indirect
-	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20230717121745-296ad89f973d // indirect
 	github.com/chenzhuoyu/iasm v0.9.1 // indirect

@@ -12,6 +12,7 @@ type SlackChannel struct {
 	UpdatedAt      time.Time `gorm:"column:updated_at;type:timestamp"`
 	TenantName     string    `gorm:"column:tenant_name;type:varchar(255);NOT NULL"`
 	ChannelId      string    `gorm:"column:channel_id;type:varchar(255);NOT NULL"`
+	ChannelName    string    `gorm:"column:channel_name;type:varchar(255);"`
 	OrganizationId *string   `gorm:"column:organization_id;type:varchar(255);"`
 }
 

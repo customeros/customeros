@@ -16,7 +16,8 @@ func MapEntityToSlackChannel(entity *postgresEntity.SlackChannel) *model.SlackCh
 			LastUpdated: entity.UpdatedAt,
 			Source:      model.DataSource(entity.Source),
 		},
-		ChannelID: entity.ChannelId,
+		ChannelID:   entity.ChannelId,
+		ChannelName: entity.ChannelName,
 	}
 	return &output
 }

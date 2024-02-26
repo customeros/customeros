@@ -17,7 +17,8 @@ type SlackChannelRepository interface {
 	GetPaginatedSlackChannels(tenant string, skip, limit int) ([]*entity.SlackChannel, int64, error)
 
 	CreateSlackChannel(entity *entity.SlackChannel) error
-	UpdateSlackChannel(entityId uuid.UUID, organizationId string) error
+	UpdateSlackChannelOrganization(entityId uuid.UUID, organizationId string) error
+	UpdateSlackChannelName(entityId uuid.UUID, channelName string) error
 }
 
 func NewSlackChannelRepository(db *gorm.DB) SlackChannelRepository {
@@ -94,6 +95,10 @@ func (r *slackChannelRepository) CreateSlackChannel(entity *entity.SlackChannel)
 	return nil
 }
 
-func (r *slackChannelRepository) UpdateSlackChannel(entityId uuid.UUID, organizationId string) error {
+func (r *slackChannelRepository) UpdateSlackChannelOrganization(entityId uuid.UUID, organizationId string) error {
 	return r.db.Model(&entity.SlackChannel{}).Where("id = ?", entityId).Update("organization_id", organizationId).Error
+}
+
+func (r *slackChannelRepository) UpdateSlackChannelName(entityId uuid.UUID, channelName string) error {
+	return r.db.Model(&entity.SlackChannel{}).Where("id = ?", entityId).Update("channel_name", channelName).Error
 }

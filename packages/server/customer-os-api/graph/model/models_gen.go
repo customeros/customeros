@@ -2294,6 +2294,7 @@ type SlackChannel struct {
 	Metadata     *Metadata     `json:"metadata"`
 	Organization *Organization `json:"organization,omitempty"`
 	ChannelID    string        `json:"channelId"`
+	ChannelName  string        `json:"channelName"`
 }
 
 type SlackChannelPage struct {

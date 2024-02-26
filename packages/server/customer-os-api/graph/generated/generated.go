@@ -1363,6 +1363,7 @@ type ComplexityRoot struct {
 
 	SlackChannel struct {
 		ChannelID    func(childComplexity int) int
+		ChannelName  func(childComplexity int) int
 		Metadata     func(childComplexity int) int
 		Organization func(childComplexity int) int
 	}
@@ -10082,6 +10083,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.SlackChannel.ChannelID(childComplexity), true
 
+	case "SlackChannel.channelName":
+		if e.complexity.SlackChannel.ChannelName == nil {
+			break
+		}
+
+		return e.complexity.SlackChannel.ChannelName(childComplexity), true
+
 	case "SlackChannel.metadata":
 		if e.complexity.SlackChannel.Metadata == nil {
 			break
@@ -14073,6 +14081,7 @@ type SlackChannel {
     metadata:              Metadata!
     organization:          Organization @goField(forceResolver: true)
     channelId:             String!
+    channelName:           String!
 }
 `, BuiltIn: false},
 	{Name: "../schemas/social.graphqls", Input: `extend type Mutation {
@@ -80038,6 +80047,50 @@ func (ec *executionContext) fieldContext_SlackChannel_channelId(ctx context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _SlackChannel_channelName(ctx context.Context, field graphql.CollectedField, obj *model.SlackChannel) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SlackChannel_channelName(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ChannelName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SlackChannel_channelName(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SlackChannel",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _SlackChannelPage_content(ctx context.Context, field graphql.CollectedField, obj *model.SlackChannelPage) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_SlackChannelPage_content(ctx, field)
 	if err != nil {
@@ -80083,6 +80136,8 @@ func (ec *executionContext) fieldContext_SlackChannelPage_content(ctx context.Co
 				return ec.fieldContext_SlackChannel_organization(ctx, field)
 			case "channelId":
 				return ec.fieldContext_SlackChannel_channelId(ctx, field)
+			case "channelName":
+				return ec.fieldContext_SlackChannel_channelName(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SlackChannel", field.Name)
 		},
@@ -106428,6 +106483,11 @@ func (ec *executionContext) _SlackChannel(ctx context.Context, sel ast.Selection
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "channelId":
 			out.Values[i] = ec._SlackChannel_channelId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "channelName":
+			out.Values[i] = ec._SlackChannel_channelName(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
