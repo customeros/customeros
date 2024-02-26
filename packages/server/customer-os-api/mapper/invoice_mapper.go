@@ -90,9 +90,6 @@ func MapEntityToInvoiceLine(entity *neo4jentity.InvoiceLineEntity) *model.Invoic
 		Total:       entity.TotalAmount,
 		Subtotal:    entity.Amount,
 		TaxDue:      entity.Vat,
-
-		//Deprecated all below
-		CreatedAt: entity.CreatedAt,
 	}
 }
 
