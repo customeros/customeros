@@ -13,11 +13,16 @@ import { Link01 } from '@ui/media/icons/Link01';
 import { toastError } from '@ui/presentation/Toast';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { SelectOption, useDisclosure, useOutsideClick } from '@ui/utils';
+import { useGetIssuesQuery } from '@organization/src/graphql/getIssues.generated';
 import { useOrganizationQuery } from '@organization/src/graphql/organization.generated';
 import { useSlackChannelsQuery } from '@organization/src/graphql/slackChannels.generated';
 import { useUpdateOrganizationMutation } from '@shared/graphql/updateOrganization.generated';
 
-export const ChannelLinkSelect = () => {
+interface ChannelLinkSelectProps {
+  from: Date;
+}
+
+export const ChannelLinkSelect = ({ from }: ChannelLinkSelectProps) => {
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
   const id = useParams()?.id as string;
@@ -60,6 +65,13 @@ export const ChannelLinkSelect = () => {
     onSettled: () => {
       setTimeout(() => {
         queryClient.invalidateQueries({ queryKey });
+        queryClient.invalidateQueries({
+          queryKey: useGetIssuesQuery.getKey({
+            organizationId: id,
+            from,
+            size: 50,
+          }),
+        });
       }, 1000);
     },
   });

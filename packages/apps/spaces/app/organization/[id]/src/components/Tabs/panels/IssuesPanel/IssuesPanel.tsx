@@ -67,7 +67,7 @@ export const IssuesPanel = () => {
       <OrganizationPanel
         title='Issues'
         withFade
-        actionItem={<ChannelLinkSelect />}
+        actionItem={<ChannelLinkSelect from={NEW_DATE} />}
       >
         <EmptyIssueMessage
           title='No issues detected'
@@ -85,7 +85,7 @@ export const IssuesPanel = () => {
     <OrganizationPanel
       title='Issues'
       withFade
-      actionItem={<ChannelLinkSelect />}
+      actionItem={<ChannelLinkSelect from={NEW_DATE} />}
     >
       <Flex as='article' w='full' direction='column'>
         <Heading fontWeight='semibold' fontSize='md' mb={2}>
