@@ -275,7 +275,38 @@ func (s *organizationService) Merge(ctx context.Context, primaryOrganizationId, 
 		return nil, nil
 	})
 
+	// Update last touchpoint
 	s.UpdateLastTouchpoint(ctx, primaryOrganizationId)
+
+	// Refresh forecast ARR
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err = CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+		return s.grpcClients.OrganizationClient.RefreshArr(ctx, &organizationpb.OrganizationIdGrpcRequest{
+			Tenant:         common.GetTenantFromContext(ctx),
+			OrganizationId: primaryOrganizationId,
+			LoggedInUserId: common.GetUserIdFromContext(ctx),
+			AppSource:      constants.AppSourceCustomerOsApi,
+		})
+	})
+	if err != nil {
+		s.log.Errorf("error sending event to events-platform: {%s}", err.Error())
+		tracing.TraceErr(span, err, log.String("grpcMethod", "RefreshArr"))
+	}
+
+	// Refresh renewal likelihood
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err = CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+		return s.grpcClients.OrganizationClient.RefreshRenewalSummary(ctx, &organizationpb.OrganizationIdGrpcRequest{
+			Tenant:         common.GetTenantFromContext(ctx),
+			OrganizationId: primaryOrganizationId,
+			LoggedInUserId: common.GetUserIdFromContext(ctx),
+			AppSource:      constants.AppSourceCustomerOsApi,
+		})
+	})
+	if err != nil {
+		s.log.Errorf("error sending event to events-platform: {%s}", err.Error())
+		tracing.TraceErr(span, err, log.String("grpcMethod", "RefreshRenewalSummary"))
+	}
 
 	return err
 }
