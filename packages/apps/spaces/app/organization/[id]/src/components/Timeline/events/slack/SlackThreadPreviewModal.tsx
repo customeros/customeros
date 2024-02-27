@@ -98,7 +98,13 @@ export const SlackThreadPreviewModal: React.FC = () => {
           </Flex>
         </Flex>
       </CardHeader>
-      <CardBody mt={0} maxHeight='50%' overflow='auto' pb={6} pt={0}>
+      <CardBody
+        mt={0}
+        maxHeight='calc(100vh - 60px - 56px)'
+        overflow='auto'
+        pb={6}
+        pt={0}
+      >
         <SlackMessageCard
           w='full'
           name={slackSender.displayName}
