@@ -49,16 +49,18 @@ export const OwnerFilter = ({
   });
 
   const { data } = useGetUsersQuery(client, {
-    pagination: { limit: 100, page: 1 },
+    pagination: { limit: 1000, page: 0 },
   });
 
   const users = useMemo(() => {
     const items = [
       { value: '__EMPTY__', label: 'Unknown' },
-      ...(data?.users.content.map(({ id, name, firstName, lastName }) => ({
-        value: id,
-        label: name ? name : [firstName, lastName].filter(Boolean).join(' '),
-      })) ?? []),
+      ...(data?.users.content
+        .map(({ id, name, firstName, lastName }) => ({
+          value: id,
+          label: name ? name : [firstName, lastName].filter(Boolean).join(' '),
+        }))
+        .filter((o) => o.label) ?? []),
     ];
 
     if (!searchValue) return items;

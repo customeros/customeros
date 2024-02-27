@@ -20,7 +20,7 @@ export const columns = [
     enableColumnFilter: false,
     cell: (props) => <Text overflow='hidden'>{props?.getValue()}</Text>,
     header: (props) => (
-      <THead id='number' title='N°' {...getTHeadProps<Invoice>(props)} />
+      <THead id='number' title='N°' py='1' {...getTHeadProps<Invoice>(props)} />
     ),
     skeleton: () => (
       <Skeleton
@@ -39,7 +39,12 @@ export const columns = [
     enableSorting: false,
     enableColumnFilter: false,
     header: (props) => (
-      <THead id='status' title='Status' {...getTHeadProps<Invoice>(props)} />
+      <THead
+        id='status'
+        title='Status'
+        py='1'
+        {...getTHeadProps<Invoice>(props)}
+      />
     ),
     cell: (props) => {
       return <StatusCell status={props.getValue()} />;
@@ -60,7 +65,12 @@ export const columns = [
     enableSorting: false,
     enableColumnFilter: false,
     header: (props) => (
-      <THead id='issued' title='Issued' {...getTHeadProps<Invoice>(props)} />
+      <THead
+        id='issued'
+        title='Issued'
+        py='1'
+        {...getTHeadProps<Invoice>(props)}
+      />
     ),
     cell: (props) => {
       return (
@@ -88,7 +98,12 @@ export const columns = [
     enableSorting: false,
     enableColumnFilter: false,
     header: (props) => (
-      <THead id='amount' title='Amount' {...getTHeadProps<Invoice>(props)} />
+      <THead
+        id='amount'
+        title='Amount'
+        py='1'
+        {...getTHeadProps<Invoice>(props)}
+      />
     ),
     cell: (props) => {
       return (

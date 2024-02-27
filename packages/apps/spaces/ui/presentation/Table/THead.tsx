@@ -85,7 +85,7 @@ const THead = <InitialRefType extends { focus(): void } = HTMLButtonElement>({
             align='center'
             border='1px solid'
             borderRadius='4px'
-            py={py ?? '1'}
+            py={py ?? '0'}
             transition='opacity 0.2s ease-in-out'
             ml={(canSort && isOpen) || isSorted ? '0' : '3'}
             borderColor={isFiltered || isOpen ? 'gray.300' : 'transparent'}
