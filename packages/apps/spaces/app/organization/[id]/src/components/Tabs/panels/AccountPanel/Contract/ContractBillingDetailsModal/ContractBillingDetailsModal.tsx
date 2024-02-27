@@ -79,7 +79,16 @@ export const ContractBillingDetailsModal = ({
   const { data: tenantBillingProfile } = useTenantBillingProfilesQuery(client);
 
   const updateContract = useUpdateContractMutation(client, {
-    onMutate: ({ input: { patch, contractId, ...input } }) => {
+    onMutate: ({
+      input: {
+        patch,
+        contractId,
+        canPayWithBankTransfer,
+        canPayWithDirectDebit,
+        canPayWithCard,
+        ...input
+      },
+    }) => {
       queryClient.cancelQueries({ queryKey });
       queryClient.setQueryData<GetContractsQuery>(queryKey, (currentCache) => {
         return produce(currentCache, (draft) => {

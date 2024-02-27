@@ -36,13 +36,22 @@ export type GetContractQuery = {
     contractUrl?: string | null;
     billingEnabled: boolean;
     organizationLegalName?: string | null;
-    addressLine1?: string | null;
-    addressLine2?: string | null;
-    locality?: string | null;
-    country?: string | null;
-    zip?: string | null;
-    invoiceEmail?: string | null;
     currency?: Types.Currency | null;
+    billingDetails?: {
+      __typename?: 'BillingDetails';
+      addressLine1?: string | null;
+      addressLine2?: string | null;
+      locality?: string | null;
+      region?: string | null;
+      invoicingStarted?: any | null;
+      country?: string | null;
+      postalCode?: string | null;
+      billingEmail?: string | null;
+      invoiceNote?: string | null;
+      canPayWithCard?: boolean | null;
+      canPayWithDirectDebit?: boolean | null;
+      canPayWithBankTransfer?: boolean | null;
+    } | null;
   };
 };
 
@@ -53,13 +62,21 @@ export const GetContractDocument = `
     contractUrl
     billingEnabled
     organizationLegalName
-    addressLine1
-    addressLine2
-    locality
-    country
-    zip
-    invoiceEmail
     currency
+    billingDetails {
+      addressLine1
+      addressLine2
+      locality
+      region
+      invoicingStarted
+      country
+      postalCode
+      billingEmail
+      invoiceNote
+      canPayWithCard
+      canPayWithDirectDebit
+      canPayWithBankTransfer
+    }
   }
 }
     `;
