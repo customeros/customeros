@@ -50,11 +50,13 @@ export const Notes = ({ data, id }: NotesProps) => {
   const { setDefaultValues } = useForm({
     formId: 'account-notes-form',
     defaultValues: {
-      notes: data?.note ?? '',
+      notes: data?.note ?? '<p style=""></p>',
     },
-    stateReducer: (_, action, next) => {
+    stateReducer: (state, action, next) => {
       if (action.type === 'FIELD_CHANGE') {
-        updateNote(action.payload.value);
+        if (action.payload.value !== state.values.notes) {
+          updateNote(action.payload.value);
+        }
       }
       if (action.type === 'FIELD_BLUR') {
         updateNote.flush();
