@@ -48,9 +48,8 @@ export type GetInvoicesQuery = {
       status?: Types.InvoiceStatus | null;
       metadata: { __typename?: 'Metadata'; id: string; created: any };
       organization: { __typename?: 'Organization'; id: string; name: string };
-      invoiceLines: Array<{
+      invoiceLineItems: Array<{
         __typename?: 'InvoiceLine';
-        createdAt: any;
         quantity: number;
         subtotal: number;
         taxDue: number;
@@ -95,7 +94,7 @@ export const GetInvoicesDocument = `
       currency
       dryRun
       status
-      invoiceLines {
+      invoiceLineItems {
         metadata {
           id
           created
@@ -104,7 +103,6 @@ export const GetInvoicesDocument = `
           sourceOfTruth
           appSource
         }
-        createdAt
         quantity
         subtotal
         taxDue
