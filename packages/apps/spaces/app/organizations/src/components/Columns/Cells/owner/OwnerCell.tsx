@@ -44,7 +44,7 @@ export const OwnerCell = ({ id, owner }: OwnerProps) => {
     {
       pagination: {
         limit: 1000,
-        page: 1,
+        page: 0,
       },
     },
     {
