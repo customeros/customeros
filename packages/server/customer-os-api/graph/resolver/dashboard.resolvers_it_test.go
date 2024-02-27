@@ -392,8 +392,8 @@ func TestQueryResolver_Search_Organizations_By_External_Id(t *testing.T) {
 	organizationId1 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "org 1"})
 	organizationId2 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "org 2"})
 	neo4jt.CreateHubspotExternalSystem(ctx, driver, tenantName)
-	neo4jt.LinkWithExternalSystem(ctx, driver, organizationId1, externalId, string(entity.Hubspot), nil, nil, utils.Now())
-	neo4jt.LinkWithExternalSystem(ctx, driver, organizationId2, "otherId", string(entity.Hubspot), nil, nil, utils.Now())
+	neo4jt.LinkWithExternalSystem(ctx, driver, organizationId1, externalId, string(neo4jenum.Hubspot), nil, nil, utils.Now())
+	neo4jt.LinkWithExternalSystem(ctx, driver, organizationId2, "otherId", string(neo4jenum.Hubspot), nil, nil, utils.Now())
 
 	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, neo4jutil.NodeLabelOrganization))
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, neo4jutil.NodeLabelExternalSystem))

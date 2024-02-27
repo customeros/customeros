@@ -6,68 +6,69 @@ import (
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"reflect"
 )
 
-func (i *Loaders) GetExternalSystemsForComment(ctx context.Context, commentId string) (*entity.ExternalSystemEntities, error) {
+func (i *Loaders) GetExternalSystemsForComment(ctx context.Context, commentId string) (*neo4jentity.ExternalSystemEntities, error) {
 	thunk := i.ExternalSystemsForComment.Load(ctx, dataloader.StringKey(commentId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.ExternalSystemEntities)
+	resultObj := result.(neo4jentity.ExternalSystemEntities)
 	return &resultObj, nil
 }
 
-func (i *Loaders) GetExternalSystemsForIssue(ctx context.Context, issueId string) (*entity.ExternalSystemEntities, error) {
+func (i *Loaders) GetExternalSystemsForIssue(ctx context.Context, issueId string) (*neo4jentity.ExternalSystemEntities, error) {
 	thunk := i.ExternalSystemsForIssue.Load(ctx, dataloader.StringKey(issueId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.ExternalSystemEntities)
+	resultObj := result.(neo4jentity.ExternalSystemEntities)
 	return &resultObj, nil
 }
 
-func (i *Loaders) GetExternalSystemsForOrganization(ctx context.Context, organizationId string) (*entity.ExternalSystemEntities, error) {
+func (i *Loaders) GetExternalSystemsForOrganization(ctx context.Context, organizationId string) (*neo4jentity.ExternalSystemEntities, error) {
 	thunk := i.ExternalSystemsForOrganization.Load(ctx, dataloader.StringKey(organizationId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.ExternalSystemEntities)
+	resultObj := result.(neo4jentity.ExternalSystemEntities)
 	return &resultObj, nil
 }
 
-func (i *Loaders) GetExternalSystemsForLogEntry(ctx context.Context, logEntryId string) (*entity.ExternalSystemEntities, error) {
+func (i *Loaders) GetExternalSystemsForLogEntry(ctx context.Context, logEntryId string) (*neo4jentity.ExternalSystemEntities, error) {
 	thunk := i.ExternalSystemsForLogEntry.Load(ctx, dataloader.StringKey(logEntryId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.ExternalSystemEntities)
+	resultObj := result.(neo4jentity.ExternalSystemEntities)
 	return &resultObj, nil
 }
 
-func (i *Loaders) GetExternalSystemsForMeeting(ctx context.Context, meetingId string) (*entity.ExternalSystemEntities, error) {
+func (i *Loaders) GetExternalSystemsForMeeting(ctx context.Context, meetingId string) (*neo4jentity.ExternalSystemEntities, error) {
 	thunk := i.ExternalSystemsForMeeting.Load(ctx, dataloader.StringKey(meetingId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.ExternalSystemEntities)
+	resultObj := result.(neo4jentity.ExternalSystemEntities)
 	return &resultObj, nil
 }
 
-func (i *Loaders) GetExternalSystemsForInteractionEvent(ctx context.Context, ieId string) (*entity.ExternalSystemEntities, error) {
+func (i *Loaders) GetExternalSystemsForInteractionEvent(ctx context.Context, ieId string) (*neo4jentity.ExternalSystemEntities, error) {
 	thunk := i.ExternalSystemsForInteractionEvent.Load(ctx, dataloader.StringKey(ieId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.ExternalSystemEntities)
+	resultObj := result.(neo4jentity.ExternalSystemEntities)
 	return &resultObj, nil
 }
 
@@ -165,12 +166,12 @@ func (b *externalSystemBatcher) getExternalSystemsFor(ctx context.Context, keys 
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	ExternalSystemsByEntityId := make(map[string]entity.ExternalSystemEntities)
+	ExternalSystemsByEntityId := make(map[string]neo4jentity.ExternalSystemEntities)
 	for _, val := range *ExternalSystemsPtr {
 		if list, ok := ExternalSystemsByEntityId[val.DataloaderKey]; ok {
 			ExternalSystemsByEntityId[val.DataloaderKey] = append(list, val)
 		} else {
-			ExternalSystemsByEntityId[val.DataloaderKey] = entity.ExternalSystemEntities{val}
+			ExternalSystemsByEntityId[val.DataloaderKey] = neo4jentity.ExternalSystemEntities{val}
 		}
 	}
 
@@ -183,10 +184,10 @@ func (b *externalSystemBatcher) getExternalSystemsFor(ctx context.Context, keys 
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.ExternalSystemEntities{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: neo4jentity.ExternalSystemEntities{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(entity.ExternalSystemEntities{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.ExternalSystemEntities{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
@@ -196,32 +197,32 @@ func (b *externalSystemBatcher) getExternalSystemsFor(ctx context.Context, keys 
 	return results
 }
 
-func (i *Loaders) GetExternalSystemsForContract(ctx context.Context, contractId string) (*entity.ExternalSystemEntities, error) {
+func (i *Loaders) GetExternalSystemsForContract(ctx context.Context, contractId string) (*neo4jentity.ExternalSystemEntities, error) {
 	thunk := i.ExternalSystemsForContract.Load(ctx, dataloader.StringKey(contractId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.ExternalSystemEntities)
+	resultObj := result.(neo4jentity.ExternalSystemEntities)
 	return &resultObj, nil
 }
 
-func (i *Loaders) GetExternalSystemsForOpportunity(ctx context.Context, opportunityId string) (*entity.ExternalSystemEntities, error) {
+func (i *Loaders) GetExternalSystemsForOpportunity(ctx context.Context, opportunityId string) (*neo4jentity.ExternalSystemEntities, error) {
 	thunk := i.ExternalSystemsForOpportunity.Load(ctx, dataloader.StringKey(opportunityId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.ExternalSystemEntities)
+	resultObj := result.(neo4jentity.ExternalSystemEntities)
 	return &resultObj, nil
 }
 
-func (i *Loaders) GetExternalSystemsForServiceLineItem(ctx context.Context, serviceLineItemId string) (*entity.ExternalSystemEntities, error) {
+func (i *Loaders) GetExternalSystemsForServiceLineItem(ctx context.Context, serviceLineItemId string) (*neo4jentity.ExternalSystemEntities, error) {
 	thunk := i.ExternalSystemsForServiceLineItem.Load(ctx, dataloader.StringKey(serviceLineItemId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.ExternalSystemEntities)
+	resultObj := result.(neo4jentity.ExternalSystemEntities)
 	return &resultObj, nil
 }

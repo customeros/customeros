@@ -12336,6 +12336,7 @@ enum ExternalSystemType {
     MIXPANEL
     CLOSE
     OUTLOOK
+    UNTHREAD
 }
 
 type ExternalSystem {

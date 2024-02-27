@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"log"
 	"time"
@@ -32,7 +33,7 @@ func CreateHubspotExternalSystem(ctx context.Context, driver *neo4j.DriverWithCo
 			MERGE (e:ExternalSystem {id:$externalSystemId})-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]->(t)`
 	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tenant":           tenant,
-		"externalSystemId": string(entity.Hubspot),
+		"externalSystemId": string(neo4jenum.Hubspot),
 	})
 }
 
@@ -42,7 +43,7 @@ func CreateSlackExternalSystem(ctx context.Context, driver *neo4j.DriverWithCont
 			SET e.externalSource=$externalSource`
 	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tenant":           tenant,
-		"externalSystemId": string(entity.Slack),
+		"externalSystemId": string(neo4jenum.Slack),
 		"externalSource":   "Slack",
 	})
 }
@@ -57,11 +58,11 @@ func CreateCalComExternalSystem(ctx context.Context, driver *neo4j.DriverWithCon
 }
 
 func LinkWithHubspotExternalSystem(ctx context.Context, driver *neo4j.DriverWithContext, entityId, externalId string, externalUrl, externalSource *string, syncDate time.Time) {
-	LinkWithExternalSystem(ctx, driver, entityId, externalId, string(entity.Hubspot), externalUrl, externalSource, syncDate)
+	LinkWithExternalSystem(ctx, driver, entityId, externalId, string(neo4jenum.Hubspot), externalUrl, externalSource, syncDate)
 }
 
 func LinkWithSlackExternalSystem(ctx context.Context, driver *neo4j.DriverWithContext, entityId, externalId string, externalUrl, externalSource *string, syncDate time.Time) {
-	LinkWithExternalSystem(ctx, driver, entityId, externalId, string(entity.Slack), externalUrl, externalSource, syncDate)
+	LinkWithExternalSystem(ctx, driver, entityId, externalId, string(neo4jenum.Slack), externalUrl, externalSource, syncDate)
 }
 
 func LinkWithExternalSystem(ctx context.Context, driver *neo4j.DriverWithContext, entityId, externalId, externalSystemId string, externalUrl, externalSource *string, syncDate time.Time) {

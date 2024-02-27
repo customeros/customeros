@@ -13,6 +13,8 @@ const (
 	Stripe         ExternalSystemId = "stripe"
 	Mixpanel       ExternalSystemId = "mixpanel"
 	Close          ExternalSystemId = "close"
+	Unthread       ExternalSystemId = "unthread"
+	Outlook        ExternalSystemId = "outlook"
 )
 
 func (e ExternalSystemId) String() string {
@@ -41,6 +43,10 @@ func DecodeExternalSystemId(value string) ExternalSystemId {
 		return Mixpanel
 	case "close":
 		return Close
+	case "unthread":
+		return Unthread
+	case "outlook":
+		return Outlook
 	}
 	return ""
 }

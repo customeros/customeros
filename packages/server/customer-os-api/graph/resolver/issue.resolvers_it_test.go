@@ -9,6 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -57,7 +58,7 @@ func TestQueryResolver_Issue(t *testing.T) {
 		"ExternalSystem":   1,
 		"Comment":          2,
 	})
-	neo4jtest.AssertRelationship(ctx, t, driver, issueId, "IS_LINKED_WITH", string(entity.Hubspot))
+	neo4jtest.AssertRelationship(ctx, t, driver, issueId, "IS_LINKED_WITH", string(neo4jenum.Hubspot))
 
 	rawResponse, err := c.RawPost(getQuery("issue/get_issue"),
 		client.Var("issueId", issueId))

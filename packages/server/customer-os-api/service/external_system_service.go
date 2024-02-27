@@ -9,12 +9,14 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
 
 type ExternalSystemService interface {
-	GetExternalSystemsFor(ctx context.Context, ids []string, entityType entity.EntityType) (*entity.ExternalSystemEntities, error)
+	GetExternalSystemsFor(ctx context.Context, ids []string, entityType entity.EntityType) (*neo4jentity.ExternalSystemEntities, error)
 }
 
 type externalSystemService struct {
@@ -29,7 +31,7 @@ func NewExternalSystemService(log logger.Logger, repositories *repository.Reposi
 	}
 }
 
-func (s *externalSystemService) GetExternalSystemsFor(ctx context.Context, ids []string, entityType entity.EntityType) (*entity.ExternalSystemEntities, error) {
+func (s *externalSystemService) GetExternalSystemsFor(ctx context.Context, ids []string, entityType entity.EntityType) (*neo4jentity.ExternalSystemEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemService.GetExternalSystemsFor")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -39,7 +41,7 @@ func (s *externalSystemService) GetExternalSystemsFor(ctx context.Context, ids [
 	if err != nil {
 		return nil, err
 	}
-	externalSystemEntities := make(entity.ExternalSystemEntities, 0, len(dbRecords))
+	externalSystemEntities := make(neo4jentity.ExternalSystemEntities, 0, len(dbRecords))
 	for _, v := range dbRecords {
 		externalSystemEntity := s.mapDbNodeToExternalSystemEntity(*v.Node)
 		s.addDbRelationshipToExternalSystemEntity(*v.Relationship, externalSystemEntity)
@@ -49,14 +51,14 @@ func (s *externalSystemService) GetExternalSystemsFor(ctx context.Context, ids [
 	return &externalSystemEntities, nil
 }
 
-func (s *externalSystemService) mapDbNodeToExternalSystemEntity(dbNode dbtype.Node) *entity.ExternalSystemEntity {
+func (s *externalSystemService) mapDbNodeToExternalSystemEntity(dbNode dbtype.Node) *neo4jentity.ExternalSystemEntity {
 	props := utils.GetPropsFromNode(dbNode)
-	return &entity.ExternalSystemEntity{
-		ExternalSystemId: entity.ExternalSystemTypeFromString(utils.GetStringPropOrEmpty(props, "id")),
+	return &neo4jentity.ExternalSystemEntity{
+		ExternalSystemId: neo4jenum.DecodeExternalSystemId(utils.GetStringPropOrEmpty(props, "id")),
 	}
 }
 
-func (s *externalSystemService) addDbRelationshipToExternalSystemEntity(relationship dbtype.Relationship, entity *entity.ExternalSystemEntity) {
+func (s *externalSystemService) addDbRelationshipToExternalSystemEntity(relationship dbtype.Relationship, entity *neo4jentity.ExternalSystemEntity) {
 	props := utils.GetPropsFromRelationship(relationship)
 	entity.Relationship.SyncDate = utils.GetTimePropOrNil(props, "syncDate")
 	entity.Relationship.ExternalId = utils.GetStringPropOrEmpty(props, "externalId")

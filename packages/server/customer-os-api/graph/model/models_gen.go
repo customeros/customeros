@@ -3439,6 +3439,7 @@ const (
 	ExternalSystemTypeMixpanel       ExternalSystemType = "MIXPANEL"
 	ExternalSystemTypeClose          ExternalSystemType = "CLOSE"
 	ExternalSystemTypeOutlook        ExternalSystemType = "OUTLOOK"
+	ExternalSystemTypeUnthread       ExternalSystemType = "UNTHREAD"
 )
 
 var AllExternalSystemType = []ExternalSystemType{
@@ -3453,11 +3454,12 @@ var AllExternalSystemType = []ExternalSystemType{
 	ExternalSystemTypeMixpanel,
 	ExternalSystemTypeClose,
 	ExternalSystemTypeOutlook,
+	ExternalSystemTypeUnthread,
 }
 
 func (e ExternalSystemType) IsValid() bool {
 	switch e {
-	case ExternalSystemTypeHubspot, ExternalSystemTypeZendeskSupport, ExternalSystemTypeCalcom, ExternalSystemTypePipedrive, ExternalSystemTypeSLACk, ExternalSystemTypeIntercom, ExternalSystemTypeSalesforce, ExternalSystemTypeStripe, ExternalSystemTypeMixpanel, ExternalSystemTypeClose, ExternalSystemTypeOutlook:
+	case ExternalSystemTypeHubspot, ExternalSystemTypeZendeskSupport, ExternalSystemTypeCalcom, ExternalSystemTypePipedrive, ExternalSystemTypeSLACk, ExternalSystemTypeIntercom, ExternalSystemTypeSalesforce, ExternalSystemTypeStripe, ExternalSystemTypeMixpanel, ExternalSystemTypeClose, ExternalSystemTypeOutlook, ExternalSystemTypeUnthread:
 		return true
 	}
 	return false

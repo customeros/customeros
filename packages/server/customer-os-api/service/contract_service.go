@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
@@ -53,7 +52,7 @@ func NewContractService(log logger.Logger, repositories *repository.Repositories
 type ContractCreateData struct {
 	ContractEntity    *neo4jentity.ContractEntity
 	OrganizationId    string
-	ExternalReference *entity.ExternalSystemEntity
+	ExternalReference *neo4jentity.ExternalSystemEntity
 	Source            neo4jentity.DataSource
 	AppSource         string
 }

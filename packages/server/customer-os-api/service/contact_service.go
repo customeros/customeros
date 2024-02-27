@@ -55,7 +55,7 @@ type ContactCreateData struct {
 	ContactEntity     *entity.ContactEntity
 	EmailEntity       *entity.EmailEntity
 	PhoneNumberEntity *entity.PhoneNumberEntity
-	ExternalReference *entity.ExternalSystemEntity
+	ExternalReference *neo4jentity.ExternalSystemEntity
 	Source            neo4jentity.DataSource
 	AppSource         string
 }
