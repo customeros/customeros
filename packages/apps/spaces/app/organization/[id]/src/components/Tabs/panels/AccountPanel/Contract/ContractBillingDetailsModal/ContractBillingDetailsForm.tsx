@@ -2,13 +2,11 @@
 import React, { FC, useMemo } from 'react';
 
 import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
 import { FormInput } from '@ui/form/Input';
 import { ModalBody } from '@ui/overlay/Modal';
 import { FormUrlInput } from '@ui/form/UrlInput';
 import { FormSelect } from '@ui/form/SyncSelect';
 import { countryOptions } from '@shared/util/countryOptions';
-import { FormCheckbox } from '@ui/form/Checkbox/FormCheckbox';
 import { getCurrencyOptions } from '@shared/util/currencyOptions';
 
 interface SubscriptionServiceModalProps {
@@ -153,27 +151,6 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
         formId={formId}
         options={currencyOptions ?? []}
       />
-
-      <Flex flexDirection='column' gap={2}>
-        <Text fontSize='sm' fontWeight='semibold' whiteSpace='nowrap'>
-          Customer can pay using...
-        </Text>
-        <FormCheckbox name='canPayWithCard' formId={formId} size='md'>
-          <Text fontSize='sm' whiteSpace='nowrap'>
-            Credit or Debit cards
-          </Text>
-        </FormCheckbox>
-        <FormCheckbox name='canPayWithDirectDebit' formId={formId} size='md'>
-          <Text fontSize='sm' whiteSpace='nowrap'>
-            Direct Debit
-          </Text>
-        </FormCheckbox>
-        <FormCheckbox name='canPayWithBankTransfer' formId={formId} size='md'>
-          <Text fontSize='sm' whiteSpace='nowrap'>
-            Bank Transfer
-          </Text>
-        </FormCheckbox>
-      </Flex>
     </ModalBody>
   );
 };

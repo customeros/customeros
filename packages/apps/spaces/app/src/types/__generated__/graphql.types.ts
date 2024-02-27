@@ -1393,6 +1393,8 @@ export type Invoice = MetadataInterface & {
   due: Scalars['Time']['output'];
   internationalPaymentsBankInfo?: Maybe<Scalars['String']['output']>;
   invoiceLineItems: Array<InvoiceLine>;
+  /** @deprecated Use invoiceLineItems instead. */
+  invoiceLines: Array<InvoiceLine>;
   invoiceNumber: Scalars['String']['output'];
   invoicePeriodEnd: Scalars['Time']['output'];
   invoicePeriodStart: Scalars['Time']['output'];
@@ -1423,6 +1425,8 @@ export type InvoiceCustomer = {
 
 export type InvoiceLine = MetadataInterface & {
   __typename?: 'InvoiceLine';
+  /** @deprecated Use metadata instead. */
+  createdAt: Scalars['Time']['output'];
   description: Scalars['String']['output'];
   metadata: Metadata;
   price: Scalars['Float']['output'];
