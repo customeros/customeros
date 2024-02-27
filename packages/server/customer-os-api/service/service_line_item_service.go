@@ -9,7 +9,6 @@ import (
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
@@ -27,17 +26,17 @@ import (
 )
 
 type ServiceLineItemCreateData struct {
-	ContractId        string                       `json:"contractId"`
-	SliName           string                       `json:"sliName"`
-	SliPrice          float64                      `json:"sliPrice"`
-	SliQuantity       int64                        `json:"sliQuantity"`
-	SliBilledType     neo4jenum.BilledType         `json:"sliBilledType"`
-	ExternalReference *entity.ExternalSystemEntity `json:"externalReference"`
-	Source            neo4jentity.DataSource       `json:"source"`
-	AppSource         string                       `json:"appSource"`
-	StartedAt         *time.Time                   `json:"startedAt"`
-	EndedAt           *time.Time                   `json:"endedAt"`
-	SliVatRate        float64                      `json:"sliVatRate"`
+	ContractId        string                            `json:"contractId"`
+	SliName           string                            `json:"sliName"`
+	SliPrice          float64                           `json:"sliPrice"`
+	SliQuantity       int64                             `json:"sliQuantity"`
+	SliBilledType     neo4jenum.BilledType              `json:"sliBilledType"`
+	ExternalReference *neo4jentity.ExternalSystemEntity `json:"externalReference"`
+	Source            neo4jentity.DataSource            `json:"source"`
+	AppSource         string                            `json:"appSource"`
+	StartedAt         *time.Time                        `json:"startedAt"`
+	EndedAt           *time.Time                        `json:"endedAt"`
+	SliVatRate        float64                           `json:"sliVatRate"`
 }
 
 type ServiceLineItemUpdateData struct {

@@ -56,14 +56,14 @@ type MeetingCreateData struct {
 	CreatedBy         []MeetingParticipant
 	AttendedBy        []MeetingParticipant
 	NoteInput         *model.NoteInput
-	ExternalReference *entity.ExternalSystemEntity
+	ExternalReference *neo4jentity.ExternalSystemEntity
 }
 
 type MeetingUpdateData struct {
 	MeetingEntity     *entity.MeetingEntity
 	NoteEntity        *entity.NoteEntity
 	Meeting           *string
-	ExternalReference *entity.ExternalSystemEntity
+	ExternalReference *neo4jentity.ExternalSystemEntity
 }
 
 type meetingService struct {
@@ -117,7 +117,7 @@ func (s *meetingService) Update(ctx context.Context, input *MeetingUpdateData) (
 		meetingDbNode, err := s.repositories.MeetingRepository.Update(ctx, tx, common.GetTenantFromContext(ctx), input.MeetingEntity)
 		tenant := common.GetContext(ctx).Tenant
 		if input.ExternalReference != nil {
-			err := s.repositories.ExternalSystemRepository.LinkNodeWithExternalSystemInTx(ctx, tx, tenant, input.MeetingEntity.Id, entity.ExternalNodeMeeting, *input.ExternalReference)
+			err := s.repositories.ExternalSystemRepository.LinkNodeWithExternalSystemInTx(ctx, tx, tenant, input.MeetingEntity.Id, neo4jutil.NodeLabelMeeting, *input.ExternalReference)
 			if err != nil {
 				return nil, err
 			}
@@ -271,7 +271,7 @@ func (s *meetingService) createMeetingInDBTxWork(ctx context.Context, newMeeting
 		}
 
 		if newMeeting.ExternalReference != nil {
-			err := s.repositories.ExternalSystemRepository.LinkNodeWithExternalSystemInTx(ctx, tx, tenant, meetingId, entity.ExternalNodeMeeting, *newMeeting.ExternalReference)
+			err := s.repositories.ExternalSystemRepository.LinkNodeWithExternalSystemInTx(ctx, tx, tenant, meetingId, neo4jutil.NodeLabelMeeting, *newMeeting.ExternalReference)
 			if err != nil {
 				return nil, err
 			}

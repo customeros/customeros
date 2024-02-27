@@ -4,15 +4,15 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
 
 type ExternalSystemRepository interface {
-	LinkNodeWithExternalSystemInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, nodeId, nodeType string, relationship entity.ExternalSystemEntity) error
+	LinkNodeWithExternalSystemInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, nodeId, nodeType string, relationship neo4jentity.ExternalSystemEntity) error
 	GetFor(ctx context.Context, tenant string, ids []string, label string) ([]*utils.DbNodeWithRelationAndId, error)
 }
 
@@ -26,7 +26,7 @@ func NewExternalSystemRepository(driver *neo4j.DriverWithContext) ExternalSystem
 	}
 }
 
-func (r *externalSystemRepository) LinkNodeWithExternalSystemInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, nodeId, nodeType string, externalSystem entity.ExternalSystemEntity) error {
+func (r *externalSystemRepository) LinkNodeWithExternalSystemInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, nodeId, nodeLabel string, externalSystem neo4jentity.ExternalSystemEntity) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemRepository.LinkContactWithExternalSystemInTx")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -42,7 +42,7 @@ func (r *externalSystemRepository) LinkNodeWithExternalSystemInTx(ctx context.Co
 		" ON MATCH SET r.syncDate=$syncDate " +
 		" RETURN r"
 
-	queryResult, err := tx.Run(ctx, fmt.Sprintf(query, nodeType, "ExternalSystem_"+tenant),
+	queryResult, err := tx.Run(ctx, fmt.Sprintf(query, nodeLabel, "ExternalSystem_"+tenant),
 		map[string]any{
 			"nodeId":           nodeId,
 			"tenant":           tenant,
