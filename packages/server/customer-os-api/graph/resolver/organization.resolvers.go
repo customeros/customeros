@@ -249,73 +249,71 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 		}, nil
 	}
 	fieldsMask := []organizationpb.OrganizationMaskField{}
-	if input.Patch != nil && *input.Patch {
-		if utils.IfNotNilString(input.Name) != "" {
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NAME)
+	if utils.IfNotNilString(input.Name) != "" {
+		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NAME)
+	}
+	if input.ReferenceID != nil || input.CustomID != nil {
+		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_REFERENCE_ID)
+	}
+	if input.Description != nil {
+		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_DESCRIPTION)
+	}
+	if input.Website != nil {
+		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_WEBSITE)
+	}
+	if input.Industry != nil {
+		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_INDUSTRY)
+	}
+	if input.SubIndustry != nil {
+		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_SUB_INDUSTRY)
+	}
+	if input.IndustryGroup != nil {
+		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_INDUSTRY_GROUP)
+	}
+	if input.Market != nil {
+		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_MARKET)
+	}
+	if input.TargetAudience != nil {
+		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_TARGET_AUDIENCE)
+	}
+	if input.ValueProposition != nil {
+		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_VALUE_PROPOSITION)
+	}
+	if input.LastFundingAmount != nil {
+		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_LAST_FUNDING_AMOUNT)
+	}
+	if input.LastFundingRound != nil {
+		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_LAST_FUNDING_ROUND)
+	}
+	if input.YearFounded != nil {
+		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_YEAR_FOUNDED)
+	}
+	if input.Headquarters != nil {
+		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_HEADQUARTERS)
+	}
+	if input.LogoURL != nil || input.Logo != nil {
+		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_LOGO_URL)
+	}
+	if input.EmployeeGrowthRate != nil {
+		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_EMPLOYEE_GROWTH_RATE)
+	}
+	if input.Note != nil || input.Notes != nil {
+		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NOTE)
+	}
+	if input.SlackChannelID != nil {
+		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_SLACK_CHANNEL_ID)
+	}
+	if len(fieldsMask) == 0 {
+		span.LogFields(log.String("result", "No fields to update"))
+		organizationEntity, err := r.Services.OrganizationService.GetById(ctx, input.ID)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "Failed to fetch organization details")
+			return &model.Organization{
+				ID: input.ID,
+			}, nil
 		}
-		if input.ReferenceID != nil || input.CustomID != nil {
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_REFERENCE_ID)
-		}
-		if input.Description != nil {
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_DESCRIPTION)
-		}
-		if input.Website != nil {
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_WEBSITE)
-		}
-		if input.Industry != nil {
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_INDUSTRY)
-		}
-		if input.SubIndustry != nil {
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_SUB_INDUSTRY)
-		}
-		if input.IndustryGroup != nil {
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_INDUSTRY_GROUP)
-		}
-		if input.Market != nil {
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_MARKET)
-		}
-		if input.TargetAudience != nil {
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_TARGET_AUDIENCE)
-		}
-		if input.ValueProposition != nil {
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_VALUE_PROPOSITION)
-		}
-		if input.LastFundingAmount != nil {
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_LAST_FUNDING_AMOUNT)
-		}
-		if input.LastFundingRound != nil {
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_LAST_FUNDING_ROUND)
-		}
-		if input.YearFounded != nil {
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_YEAR_FOUNDED)
-		}
-		if input.Headquarters != nil {
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_HEADQUARTERS)
-		}
-		if input.LogoURL != nil || input.Logo != nil {
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_LOGO_URL)
-		}
-		if input.EmployeeGrowthRate != nil {
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_EMPLOYEE_GROWTH_RATE)
-		}
-		if input.Note != nil || input.Notes != nil {
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NOTE)
-		}
-		if input.SlackChannelID != nil {
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_SLACK_CHANNEL_ID)
-		}
-		if len(fieldsMask) == 0 {
-			span.LogFields(log.String("result", "No fields to update"))
-			organizationEntity, err := r.Services.OrganizationService.GetById(ctx, input.ID)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				graphql.AddErrorf(ctx, "Failed to fetch organization details")
-				return &model.Organization{
-					ID: input.ID,
-				}, nil
-			}
-			return mapper.MapEntityToOrganization(organizationEntity), nil
-		}
+		return mapper.MapEntityToOrganization(organizationEntity), nil
 	}
 
 	upsertOrganizationRequest := organizationpb.UpsertOrganizationGrpcRequest{
