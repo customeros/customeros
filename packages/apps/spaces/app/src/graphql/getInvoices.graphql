@@ -27,7 +27,7 @@ query getInvoices(
             dryRun
             status
 
-            invoiceLines {
+            invoiceLineItems {
                 metadata {
                     id
                     created
@@ -36,7 +36,6 @@ query getInvoices(
                     sourceOfTruth
                     appSource
                 }
-                createdAt
                 quantity
                 subtotal
                 taxDue
