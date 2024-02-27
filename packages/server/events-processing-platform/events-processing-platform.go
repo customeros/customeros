@@ -3,14 +3,16 @@ package main
 import (
 	"context"
 	"flag"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/server"
 	"log"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/temporal/worker"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/server"
 )
 
 func main() {
@@ -34,6 +36,9 @@ func main() {
 	// Launch server goroutine
 	waitGroup.Add(1)
 	go startServer(ctx, cfg, appLogger, &waitGroup)
+
+	// Run Temporal worker
+	go runTemporalWorker(cfg, appLogger, &waitGroup)
 
 	// Propagate cancel signal
 	go handleSignals(cancel, appLogger)
@@ -70,6 +75,16 @@ func handleSignals(cancel context.CancelFunc, appLogger *logger.ExtendedLogger) 
 			appLogger.Info("Interrupt signal received. Shutting down...")
 			cancel()
 		}
+	}()
+}
+
+func runTemporalWorker(cfg *config.Config, logger *logger.ExtendedLogger, waitGroup *sync.WaitGroup) {
+	// Start it in the background
+	go func() {
+		if err := worker.RunWebhookWorker(cfg.Temporal.HostPort, cfg.Temporal.Namespace); err != nil {
+			logger.Error(err)
+		}
+		waitGroup.Done()
 	}()
 }
 

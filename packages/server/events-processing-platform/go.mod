@@ -47,19 +47,32 @@ require (
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/chenzhuoyu/iasm v0.9.1 // indirect
 	github.com/distribution/reference v0.5.0 // indirect
+	github.com/facebookgo/clock v0.0.0-20150410010913-600d898af40a // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
+	github.com/gogo/googleapis v1.4.1 // indirect
+	github.com/gogo/status v1.1.1 // indirect
+	github.com/golang/mock v1.6.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
+	github.com/grpc-ecosystem/grpc-gateway v1.16.0 // indirect
 	github.com/h2non/filetype v1.1.3 // indirect
 	github.com/jackc/puddle/v2 v2.2.1 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/moby/sys/user v0.1.0 // indirect
+	github.com/pborman/uuid v1.2.1 // indirect
+	github.com/robfig/cron v1.2.0 // indirect
+	github.com/stretchr/objx v0.5.0 // indirect
 	github.com/tetratelabs/wazero v1.6.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.45.0 // indirect
 	go.opentelemetry.io/otel v1.19.0 // indirect
 	go.opentelemetry.io/otel/metric v1.19.0 // indirect
 	go.opentelemetry.io/otel/trace v1.19.0 // indirect
+	go.temporal.io/api v1.24.0 // indirect
+	go.temporal.io/sdk v1.25.1 // indirect
+	golang.org/x/time v0.5.0 // indirect
+	google.golang.org/genproto v0.0.0-20240125205218-1f4bbc51befe // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20240123012728-ef4313101c80 // indirect
 )
 
 require (

@@ -24,6 +24,7 @@ type Config struct {
 	Services           Services
 	Utils              Utils
 	EventNotifications EventNotifications
+	Temporal           config.TemporalConfig
 }
 
 type GRPC struct {
