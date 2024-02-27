@@ -1229,9 +1229,9 @@ func TestMutationResolver_OrganizationMerge_Properties(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	parentOrgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "main organization")
-	mergedOrgId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "to merge 1")
-	mergedOrgId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "to merge 2")
+	parentOrgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "main organization"})
+	mergedOrgId1 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "to merge 1"})
+	mergedOrgId2 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "to merge 2"})
 
 	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 

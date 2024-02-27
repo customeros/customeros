@@ -168,7 +168,7 @@ input OrganizationUpdateInput {
     """
     Set to true when partial update is needed. Empty or missing fields will not be ignored.
     """
-    patch:              Boolean
+    patch:              Boolean @deprecated(reason: "all updates are patched now")
     name:               String
     description:        String
     notes:              String
