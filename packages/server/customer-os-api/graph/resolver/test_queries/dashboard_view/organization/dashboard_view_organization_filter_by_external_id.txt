@@ -1,0 +1,22 @@
+query dashboardView_Organizations($page: Int!, $limit: Int!, $externalId: Any!) {
+  dashboardView_Organizations(
+  pagination: { page: $page, limit: $limit },
+  where: {
+     AND: [
+         {
+             filter: {
+                 property: "EXTERNAL_ID",
+                 operation: EQ,
+                 value: $externalId
+             }
+         }
+     ]
+    },
+    sort: {by: "NAME"}) {
+    content {
+       id
+    }
+    totalAvailable
+    totalElements
+  }
+}
