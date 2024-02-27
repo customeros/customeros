@@ -328,6 +328,12 @@ func extractFieldsMask(requestFieldsMask []contractpb.ContractFieldMask) []strin
 			fieldsMask = append(fieldsMask, event.FieldMaskNextInvoiceDate)
 		case contractpb.ContractFieldMask_CONTRACT_FIELD_INVOICING_ENABLED:
 			fieldsMask = append(fieldsMask, event.FieldMaskInvoicingEnabled)
+		case contractpb.ContractFieldMask_CONTRACT_FIELD_CAN_PAY_WITH_CARD:
+			fieldsMask = append(fieldsMask, event.FieldMaskCanPayWithCard)
+		case contractpb.ContractFieldMask_CONTRACT_FIELD_CAN_PAY_WITH_DIRECT_DEBIT:
+			fieldsMask = append(fieldsMask, event.FieldMaskCanPayWithDirectDebit)
+		case contractpb.ContractFieldMask_CONTRACT_FIELD_CAN_PAY_WITH_BANK_TRANSFER:
+			fieldsMask = append(fieldsMask, event.FieldMaskCanPayWithBankTransfer)
 		}
 	}
 	fieldsMask = utils.RemoveDuplicates(fieldsMask)
