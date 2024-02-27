@@ -11,8 +11,11 @@ export interface BillingDetailsForm {
   invoiceEmail?: string | null;
   addressLine1?: string | null;
   addressLine2?: string | null;
+  canPayWithCard?: boolean | null;
   organizationLegalName?: string | null;
   country?: SelectOption<string> | null;
+  canPayWithDirectDebit?: boolean | null;
+  canPayWithBankTransfer?: boolean | null;
   currency?: SelectOption<Currency> | null;
 }
 
@@ -26,17 +29,26 @@ export class BillingDetailsDto implements BillingDetailsForm {
   country?: SelectOption<string> | null;
   currency?: SelectOption<Currency> | null;
   contractUrl?: string | null;
+  canPayWithCard?: boolean | null;
+  canPayWithDirectDebit?: boolean | null;
+  canPayWithBankTransfer?: boolean | null;
 
   constructor(data?: Partial<GetContractQuery['contract']> | null) {
-    this.zip = data?.zip ?? '';
-    this.locality = data?.locality ?? '';
-    this.invoiceEmail = data?.invoiceEmail ?? '';
-    this.addressLine1 = data?.addressLine1 ?? '';
-    this.country = countryOptions.find((i) => data?.country === i.value);
+    this.zip = data?.billingDetails?.postalCode ?? '';
+    this.locality = data?.billingDetails?.locality ?? '';
+    this.invoiceEmail = data?.billingDetails?.billingEmail ?? '';
+    this.addressLine1 = data?.billingDetails?.addressLine1 ?? '';
+    this.canPayWithCard = data?.billingDetails?.canPayWithCard;
+    this.canPayWithDirectDebit = data?.billingDetails?.canPayWithDirectDebit;
+    this.canPayWithBankTransfer = data?.billingDetails?.canPayWithBankTransfer;
+
+    this.country = countryOptions.find(
+      (i) => data?.billingDetails?.country === i.value,
+    );
     this.currency = getCurrencyOptions().find(
       (i) => data?.currency === i.value,
     );
-    this.addressLine2 = data?.addressLine2 ?? '';
+    this.addressLine2 = data?.billingDetails?.addressLine2 ?? '';
     this.organizationLegalName = data?.organizationLegalName ?? '';
     this.contractUrl = data?.contractUrl ?? '';
   }
@@ -64,6 +76,9 @@ export class BillingDetailsDto implements BillingDetailsForm {
       currency: data?.currency?.value,
       addressLine2: data?.addressLine2,
       organizationLegalName: data?.organizationLegalName,
+      canPayWithCard: data?.canPayWithCard,
+      canPayWithDirectDebit: data?.canPayWithDirectDebit,
+      canPayWithBankTransfer: data?.canPayWithBankTransfer,
       patch: true,
     };
   }

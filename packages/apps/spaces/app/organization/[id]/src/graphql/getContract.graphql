@@ -4,12 +4,20 @@ query getContract($id: ID!) {
     contractUrl
     billingEnabled
     organizationLegalName
-    addressLine1
-    addressLine2
-    locality
-    country
-    zip
-    invoiceEmail
     currency
+    billingDetails {
+      addressLine1
+      addressLine2
+      locality
+      region
+      invoicingStarted
+      country
+      postalCode
+      billingEmail
+      invoiceNote
+      canPayWithCard
+      canPayWithDirectDebit
+      canPayWithBankTransfer
+    }
     }
   }
