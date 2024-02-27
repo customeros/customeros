@@ -38,6 +38,7 @@ const (
 	SearchSortParamLastTouchpointAt   = "LAST_TOUCHPOINT_AT"
 	SearchSortParamLastTouchpointType = "LAST_TOUCHPOINT_TYPE"
 	SearchSortParamRenewalCycle       = "RENEWAL_CYCLE"
+	SearchParamExternalId             = "EXTERNAL_ID"
 )
 
 type DashboardRepository interface {
@@ -119,6 +120,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 
 	ownerId := []string{}
 	ownerIncludeEmpty := true
+	externalId := ""
 
 	//ORGANIZATION, EMAIL, COUNTRY, REGION, LOCALITY
 	//region organization filters
@@ -166,6 +168,8 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 			} else if filter.Filter.Property == SearchSortParamOwnerId {
 				ownerId = *filter.Filter.Value.ArrayStr
 				ownerIncludeEmpty = *filter.Filter.IncludeEmpty
+			} else if filter.Filter.Property == SearchParamExternalId {
+				externalId = *filter.Filter.Value.Str
 			} else if filter.Filter.Property == SearchSortParamIsCustomer && filter.Filter.Value.ArrayBool != nil && len(*filter.Filter.Value.ArrayBool) >= 1 {
 				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("isCustomer", *filter.Filter.Value.ArrayBool, utils.IN, false))
 			} else if filter.Filter.Property == SearchSortParamRenewalLikelihood && filter.Filter.Value.ArrayStr != nil && len(*filter.Filter.Value.ArrayStr) >= 1 {
@@ -211,10 +215,11 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		params := map[string]any{
-			"tenant":  tenant,
-			"ownerId": ownerId,
-			"skip":    skip,
-			"limit":   limit,
+			"tenant":     tenant,
+			"ownerId":    ownerId,
+			"externalId": externalId,
+			"skip":       skip,
+			"limit":      limit,
 		}
 
 		utils.MergeMapToMap(organizationFilterParams, params)
@@ -231,6 +236,9 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		}
 		if locationFilterCypher != "" {
 			countQuery += ` MATCH (o)-[:ASSOCIATED_WITH]->(l:Location) WITH *`
+		}
+		if externalId != "" {
+			countQuery += ` MATCH (o)-[:IS_LINKED_WITH {externalId:$externalId}]->(ext:ExternalSystem) WITH *`
 		}
 		countQuery += ` WHERE o.hide = false `
 
@@ -276,6 +284,9 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		query := `MATCH (o:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
 		if len(ownerId) > 0 {
 			query += fmt.Sprintf(` OPTIONAL MATCH (o)<-[:OWNS]-(owner:User) WITH *`)
+		}
+		if externalId != "" {
+			query += ` MATCH (o)-[:IS_LINKED_WITH {externalId:$externalId}]->(ext:ExternalSystem) WITH *`
 		}
 		query += fmt.Sprintf(` OPTIONAL MATCH (o)-[:HAS_DOMAIN]->(d:Domain) WITH *`)
 		query += fmt.Sprintf(` OPTIONAL MATCH (o)-[:HAS]->(e:Email_%s) WITH *`, tenant)
