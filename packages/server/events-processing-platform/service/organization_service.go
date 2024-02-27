@@ -500,6 +500,8 @@ func extractOrganizationMaskFields(requestMaskFields []organizationpb.Organizati
 			fieldsMask = append(fieldsMask, model.FieldMaskYearFounded)
 		case organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_EMPLOYEE_GROWTH_RATE:
 			fieldsMask = append(fieldsMask, model.FieldMaskEmployeeGrowthRate)
+		case organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_SLACK_CHANNEL_ID:
+			fieldsMask = append(fieldsMask, model.FieldMaskSlackChannelId)
 		}
 	}
 	return utils.RemoveDuplicates(fieldsMask)
