@@ -15,6 +15,7 @@ query dashboardView_Organizations($page: Int!, $limit: Int!, $externalId: Any!) 
     sort: {by: "NAME"}) {
     content {
        id
+       customerOsId
     }
     totalAvailable
     totalElements
