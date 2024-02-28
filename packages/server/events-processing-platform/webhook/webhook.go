@@ -19,6 +19,10 @@ import (
 )
 
 func DispatchWebhook(tenant string, event WebhookEvent, payload *InvoicePayload, db *repository.Repositories, cfg config.Config) error {
+	if !cfg.Temporal.RunWorker {
+		return fmt.Errorf("temporal worker is not running")
+	}
+
 	// fetch webhook data from db
 	webhookResult := db.CommonRepositories.TenantWebhookRepository.GetWebhook(tenant, event.String())
 	if webhookResult.Error != nil {
