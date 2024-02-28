@@ -43,9 +43,9 @@ COPY events-processing-platform/go.sum /workspace/build/events-processing-platfo
 RUN cd /workspace/build/events-processing-platform && go mod download && go mod verify
 
 COPY events-processing-platform/. /workspace/build/events-processing-platform/
+
 ENV GOCACHE=/root/.cache/go-build
-RUN cd /workspace/build/events-processing-platform
-RUN --mount=type=cache,target="/root/.cache/go-build" go build -v -o /go/bin/app
+RUN --mount=type=cache,target="/root/.cache/go-build" cd /workspace/build/events-processing-platform && go build -v -o /go/bin/app
 
 FROM alpine:3.14@sha256:0f2d5c38dd7a4f4f733e688e3a6733cb5ab1ac6e3cb4603a5dd564e5bfb80eed
 
