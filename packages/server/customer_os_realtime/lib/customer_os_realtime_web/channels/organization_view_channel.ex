@@ -5,7 +5,7 @@ defmodule CustomerOsRealtimeWeb.OrganizationChannel do
   require Logger
   require Enum
   use CustomerOsRealtimeWeb, :channel
-  # alias CustomerOsRealtime.Util
+  alias CustomerOsRealtime.Util
   alias CustomerOsRealtimeWeb.Presence
 
   @impl true
@@ -14,10 +14,13 @@ defmodule CustomerOsRealtimeWeb.OrganizationChannel do
         %{"user_id" => user_id, "username" => username},
         socket
       ) do
+    color = Util.generate_random_color()
+
     socket =
       socket
       |> assign(:user_id, user_id)
       |> assign(:username, username)
+      |> assign(user_color: %{user_id => color})
 
     send(self(), :after_join)
     {:ok, socket}
@@ -25,13 +28,12 @@ defmodule CustomerOsRealtimeWeb.OrganizationChannel do
 
   @impl true
   def handle_info(:after_join, socket) do
-    # user_color = Util.generate_user_color([])
-
     {:ok, _} =
       Presence.track(socket, socket.assigns.user_id, %{
         online_at: inspect(System.system_time(:second)),
         metadata: %{"source" => "customerOS"},
-        username: socket.assigns.username
+        username: socket.assigns.username,
+        color: Map.get(socket.assigns.user_color, socket.assigns.user_id)
       })
 
     push(socket, "presence_state", Presence.list(socket))

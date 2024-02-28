@@ -11,7 +11,9 @@ import { Card, CardBody, CardHeader } from '@ui/presentation/Card';
 
 export const MainSection = ({ children }: { children?: React.ReactNode }) => {
   const organizationId = useParams()?.id as string;
-  const { presentUsers } = useChannel(`organization:${organizationId}`);
+  const { presentUsers, username } = useChannel(
+    `organization:${organizationId}`,
+  );
   const isPresenceEnabled = useFeatureIsOn('presence');
 
   return (
@@ -41,8 +43,13 @@ export const MainSection = ({ children }: { children?: React.ReactNode }) => {
         </Heading>
         {isPresenceEnabled && (
           <HStack>
-            {presentUsers.map((user) => (
-              <UserHexagon key={user} name={user} />
+            {presentUsers.map(([user, color]) => (
+              <UserHexagon
+                key={user}
+                name={user}
+                color={color}
+                isCurrent={user === username}
+              />
             ))}
           </HStack>
         )}

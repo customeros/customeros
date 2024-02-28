@@ -2,20 +2,41 @@ import type { Channel } from 'phoenix';
 
 import { useState, useEffect, useContext } from 'react';
 
+import { Presence } from 'phoenix';
+
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 
-import { usePresence } from '../usePresence';
 import { PhoenixSocketContext } from '../../components/Providers/SocketProvider';
+
+type Meta = {
+  color: string;
+  phx_ref: string;
+  username: string;
+  online_at: number;
+  metadata: { source: string };
+};
+type PresenceDiff = {
+  [key: string]: {
+    metas: Meta[];
+  };
+};
+
+type PresenceState = { metas: Meta[] }[];
 
 export const useChannel = (channelName: string) => {
   const client = getGraphQLClient();
   const { socket } = useContext(PhoenixSocketContext);
 
-  const [channel, setChannel] = useState<Channel | null>(null);
-  const { presence, presentUsers } = usePresence(channel);
+  const [presenceState, setPresenceState] = useState<PresenceState | null>(
+    null,
+  );
 
-  const { data, isPending } = useGlobalCacheQuery(client);
+  const [channel, setChannel] = useState<Channel | null>(null);
+  const [presence, setPresence] = useState<PresenceDiff | null>(null);
+  const presentUsers = parsePresentUsers(presenceState || []);
+
+  const { data } = useGlobalCacheQuery(client);
 
   const user = data?.global_Cache?.user;
   const user_id = user?.id;
@@ -28,7 +49,7 @@ export const useChannel = (channelName: string) => {
   })();
 
   useEffect(() => {
-    if (isPending || !user_id || !username) return;
+    if (!socket) return;
 
     const phoenixChannel = socket?.channel(channelName, {
       user_id,
@@ -46,10 +67,20 @@ export const useChannel = (channelName: string) => {
         // TODO: handle error
       });
 
+    const presence = new Presence(phoenixChannel);
+
+    presence.onSync(() => {
+      setPresenceState(presence.list());
+    });
+
     return () => {
       phoenixChannel.leave();
     };
-  }, [channelName, isPending, user_id, username]);
+  }, [setPresence, socket]);
 
-  return { channel, presence, presentUsers };
+  return { username, channel, presence, presentUsers };
 };
+
+function parsePresentUsers(presenceState: PresenceState) {
+  return presenceState.map((p) => [p.metas?.[0].username, p.metas?.[0].color]);
+}
