@@ -3,20 +3,23 @@ import { useParams } from 'next/navigation';
 
 import { produce } from 'immer';
 import { useQueryClient } from '@tanstack/react-query';
+import { useConnections } from '@integration-app/react';
 
 import { Flex } from '@ui/layout/Flex';
 import { Button } from '@ui/form/Button';
-import { Select } from '@ui/form/SyncSelect';
 import { Tooltip } from '@ui/overlay/Tooltip';
-import { Slack } from '@ui/media/logos/Slack';
 import { Link01 } from '@ui/media/icons/Link01';
+import { Unthread } from '@ui/media/logos/Unthread';
 import { toastError } from '@ui/presentation/Toast';
+import { Select, SelectInstance } from '@ui/form/SyncSelect';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { SelectOption, useDisclosure, useOutsideClick } from '@ui/utils';
 import { useGetIssuesQuery } from '@organization/src/graphql/getIssues.generated';
 import { useOrganizationQuery } from '@organization/src/graphql/organization.generated';
 import { useSlackChannelsQuery } from '@organization/src/graphql/slackChannels.generated';
 import { useUpdateOrganizationMutation } from '@shared/graphql/updateOrganization.generated';
+import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
+import { useTimelineMeta } from '@organization/src/components/Timeline/shared/state/TimelineMeta.atom';
 
 interface ChannelLinkSelectProps {
   from: Date;
@@ -27,7 +30,10 @@ export const ChannelLinkSelect = ({ from }: ChannelLinkSelectProps) => {
   const queryClient = useQueryClient();
   const id = useParams()?.id as string;
   const ref = useRef(null);
+  const selectRef = useRef<SelectInstance>(null);
   const { isOpen, onClose, onOpen } = useDisclosure();
+  const { items } = useConnections();
+  const [timelineMeta] = useTimelineMeta();
 
   const { data: organization, isPending: organizationIsPending } =
     useOrganizationQuery(client, { id });
@@ -36,10 +42,19 @@ export const ChannelLinkSelect = ({ from }: ChannelLinkSelectProps) => {
   });
 
   const isLoading = organizationIsPending || isPending;
-  const queryKey = useOrganizationQuery.getKey({ id });
+  const organizationQueryKey = useOrganizationQuery.getKey({ id });
+  const issuesQueryKey = useGetIssuesQuery.getKey({
+    organizationId: id,
+    from,
+    size: 50,
+  });
+  const timelineQueryKey = useInfiniteGetTimelineQuery.getKey({
+    ...timelineMeta.getTimelineVariables,
+  });
+
   const updateOrganization = useUpdateOrganizationMutation(client, {
     onMutate: ({ input }) => {
-      queryClient.cancelQueries({ queryKey });
+      queryClient.cancelQueries({ queryKey: organizationQueryKey });
 
       const previousEntry = useOrganizationQuery.mutateCacheEntry(queryClient, {
         id,
@@ -54,7 +69,7 @@ export const ChannelLinkSelect = ({ from }: ChannelLinkSelectProps) => {
     },
     onError: (_, __, context) => {
       if (context?.previousEntry) {
-        queryClient.setQueryData([queryKey], context.previousEntry);
+        queryClient.setQueryData([organizationQueryKey], context.previousEntry);
       }
       toastError(
         `We couldn't update the slack channel.`,
@@ -62,15 +77,11 @@ export const ChannelLinkSelect = ({ from }: ChannelLinkSelectProps) => {
       );
     },
     onSettled: () => {
+      onClose();
       setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey });
-        queryClient.invalidateQueries({
-          queryKey: useGetIssuesQuery.getKey({
-            organizationId: id,
-            from,
-            size: 50,
-          }),
-        });
+        queryClient.invalidateQueries({ queryKey: organizationQueryKey });
+        queryClient.invalidateQueries({ queryKey: issuesQueryKey });
+        queryClient.invalidateQueries({ queryKey: timelineQueryKey });
       }, 1000);
     },
   });
@@ -96,7 +107,13 @@ export const ChannelLinkSelect = ({ from }: ChannelLinkSelectProps) => {
   const selectedChannelId = organization?.organization?.slackChannelId;
   const value = options.find((el) => el.value === selectedChannelId);
 
+  const hasUnthreadIntegration = items
+    .map((i) => i.integration?.key)
+    .some((i) => ['unthread'].includes(i ?? ''));
+
   useOutsideClick({ ref, handler: onClose });
+
+  if (!hasUnthreadIntegration) return null;
 
   if (!isOpen) {
     if (!value) {
@@ -104,13 +121,19 @@ export const ChannelLinkSelect = ({ from }: ChannelLinkSelectProps) => {
         <Button
           size='sm'
           variant='ghost'
-          onClick={onOpen}
+          onClick={() => {
+            onOpen();
+            setTimeout(
+              () => selectRef.current && selectRef.current?.focus(),
+              0,
+            );
+          }}
           color='gray.500'
           fontWeight='normal'
           isLoading={isLoading}
           leftIcon={<Link01 color='gray.500' />}
         >
-          Link Slack channel
+          Link Unthread Slack channel
         </Button>
       );
     }
@@ -120,14 +143,20 @@ export const ChannelLinkSelect = ({ from }: ChannelLinkSelectProps) => {
         <Button
           size='sm'
           variant='outline'
-          onClick={onOpen}
+          onClick={() => {
+            onOpen();
+            setTimeout(
+              () => selectRef.current && selectRef.current?.focus(),
+              0,
+            );
+          }}
           color='gray.500'
           fontWeight='normal'
           borderRadius='full'
           isLoading={isLoading}
-          leftIcon={<Slack />}
+          leftIcon={<Unthread />}
         >
-          Channel linked
+          Unthread issues linked
         </Button>
       </Tooltip>
     );
@@ -138,11 +167,13 @@ export const ChannelLinkSelect = ({ from }: ChannelLinkSelectProps) => {
       <Select
         size='sm'
         isClearable
-        options={options}
+        ref={selectRef}
         value={value}
+        options={options}
         onChange={handleChange}
+        onBlur={onClose}
         openMenuOnClick={!value}
-        placeholder='Paste Slack Channel ID'
+        placeholder='Slack channel'
         isLoading={updateOrganization.isPending}
         leftElement={<Link01 color='gray.500' mr='2' />}
       />

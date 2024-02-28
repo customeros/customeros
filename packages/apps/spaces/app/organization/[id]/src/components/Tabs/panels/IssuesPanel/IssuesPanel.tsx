@@ -2,9 +2,12 @@
 import React, { useState } from 'react';
 import { useParams } from 'next/navigation';
 
+import { useConnections } from '@integration-app/react';
+
 import { Flex } from '@ui/layout/Flex';
 import { Issue } from '@graphql/types';
 import { VStack } from '@ui/layout/Stack';
+import { Link } from '@ui/navigation/Link';
 import { Fade } from '@ui/transitions/Fade';
 import { Heading } from '@ui/typography/Heading';
 import { Collapse } from '@ui/transitions/Collapse';
@@ -49,7 +52,7 @@ export const IssuesPanel = () => {
   const id = useParams()?.id as string;
   const client = getGraphQLClient();
   const [isExpanded, setIsExpanded] = useState(true);
-  const { data, isInitialLoading } = useGetIssuesQuery(client, {
+  const { data, isLoading } = useGetIssuesQuery(client, {
     organizationId: id,
     from: NEW_DATE,
     size: 50,
@@ -57,9 +60,41 @@ export const IssuesPanel = () => {
   const issues: Array<Issue> =
     (data?.organization?.timelineEvents as Array<Issue>) ?? [];
   const { open: openIssues, closed: closedIssues } = filterIssues(issues);
+  const { items, loading } = useConnections();
+  const connections = items
+    .map((item) => item.integration?.key)
+    .filter((item) => ['unthread', 'zendesk'].includes(item ?? ''));
 
-  if (isInitialLoading) {
+  if (loading || isLoading) {
     return <IssuesPanelSkeleton />;
+  }
+
+  if (!connections.length) {
+    return (
+      <OrganizationPanel title='Issues' withFade>
+        <EmptyIssueMessage title='Connect your customer support app'>
+          To see your customers support issues here,{' '}
+          <Link color='primary.600' as='span' href='/settings?tab=integrations'>
+            Go to settings
+          </Link>{' '}
+          and connect an app like Zendesk or Unthread.
+        </EmptyIssueMessage>
+      </OrganizationPanel>
+    );
+  }
+
+  if (connections?.[0] === 'unthread' && !issues.length) {
+    return (
+      <OrganizationPanel
+        title='Issues'
+        withFade
+        actionItem={<ChannelLinkSelect from={NEW_DATE} />}
+      >
+        <EmptyIssueMessage title='Link an Unthread Slack channel'>
+          Show your Unthread support issues here by linking a Slack channel.
+        </EmptyIssueMessage>
+      </OrganizationPanel>
+    );
   }
 
   if (!issues.length) {

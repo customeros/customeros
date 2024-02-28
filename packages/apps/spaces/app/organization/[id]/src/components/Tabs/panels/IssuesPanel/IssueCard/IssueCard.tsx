@@ -82,6 +82,8 @@ export const IssueCard = ({ issue }: IssueCardProps) => {
     return issue?.status === 'pending' ? 250 : 260;
   }, [isStatusClosed, issue?.status]);
 
+  const displayStatus = issue.status.replaceAll('_', ' ').replaceAll('-', ' ');
+
   return (
     <Card
       key={issue.id}
@@ -158,7 +160,7 @@ export const IssueCard = ({ issue }: IssueCardProps) => {
               position='absolute'
               right={3}
             >
-              <TagLabel textTransform='capitalize'>{issue.status}</TagLabel>
+              <TagLabel textTransform='capitalize'>{displayStatus}</TagLabel>
             </Tag>
           )}
         </Flex>
