@@ -307,7 +307,7 @@ func (r *queryResolver) OrganizationPlan(ctx context.Context, id string) (*model
 		graphql.AddErrorf(ctx, "Failed to get Org plan with id %s", id)
 		return nil, nil
 	}
-	if orgPlanEntity == nil {
+	if orgPlanEntity == nil || orgPlanEntity.Id == "" {
 		graphql.AddErrorf(ctx, "Org plan with id %s not found", id)
 		return nil, nil
 	}

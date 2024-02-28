@@ -85,7 +85,7 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 	var user *dbtype.Node
-	var userEntity *neo4jentity.UserEntity
+	var userEntity neo4jentity.UserEntity
 	var message string
 	var name string
 	var priceChanged bool
@@ -189,10 +189,7 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 				h.log.Errorf("Failed to get user for service line item %s with userid %s", serviceLineItemId, usrMetadata.UserId)
 			}
 		}
-		userEntity = neo4jmapper.MapDbNodeToUserEntity(user)
-	}
-	if userEntity == nil {
-		return nil
+		userEntity = *neo4jmapper.MapDbNodeToUserEntity(user)
 	}
 	if eventData.Name == "" {
 		name = serviceLineItemEntity.Name
@@ -204,8 +201,9 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 		name = "Unnamed service"
 	}
 
+	userName := userEntity.GetFullName()
 	metadataPrice, err := utils.ToJson(ActionPriceMetadata{
-		UserName:        userEntity.FirstName + " " + userEntity.LastName,
+		UserName:        userName,
 		ServiceName:     name,
 		Quantity:        eventData.Quantity,
 		BilledType:      eventData.Billed,
@@ -220,7 +218,7 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 		return errors.Wrap(err, "Failed to serialize price metadata")
 	}
 	metadataQuantity, err := utils.ToJson(ActionQuantityMetadata{
-		UserName:         userEntity.FirstName + " " + userEntity.LastName,
+		UserName:         userName,
 		ServiceName:      name,
 		Price:            eventData.Price,
 		PreviousQuantity: previousQuantity,
@@ -235,7 +233,7 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 		return errors.Wrap(err, "Failed to serialize quantity metadata")
 	}
 	metadataBilledType, err := utils.ToJson(ActionBilledTypeMetadata{
-		UserName:           userEntity.FirstName + " " + userEntity.LastName,
+		UserName:           userName,
 		ServiceName:        name,
 		BilledType:         eventData.Billed,
 		PreviousBilledType: previousBilled,
@@ -260,7 +258,7 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 
 	if !isNewVersionForExistingSLI {
 		if serviceLineItemEntity.Billed.String() == model.AnnuallyBilled.String() || serviceLineItemEntity.Billed.String() == model.QuarterlyBilled.String() || serviceLineItemEntity.Billed.String() == model.MonthlyBilled.String() {
-			message = userEntity.FirstName + " " + userEntity.LastName + " added a recurring service to " + contractEntity.Name + ": " + name + " at " + strconv.FormatInt(serviceLineItemEntity.Quantity, 10) + " x " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + cycle
+			message = userName + " added a recurring service to " + contractEntity.Name + ": " + name + " at " + strconv.FormatInt(serviceLineItemEntity.Quantity, 10) + " x " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + cycle
 			_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, eventData.ContractId, neo4jenum.CONTRACT, neo4jenum.ActionServiceLineItemBilledTypeRecurringCreated, message, metadataBilledType, utils.Now(), extraActionProperties)
 			if err != nil {
 				tracing.TraceErr(span, err)
@@ -268,7 +266,7 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 			}
 		}
 		if serviceLineItemEntity.Billed.String() == model.OnceBilled.String() {
-			message = userEntity.FirstName + " " + userEntity.LastName + " added an one time service to " + contractEntity.Name + ": " + name + " at " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price)
+			message = userName + " added an one time service to " + contractEntity.Name + ": " + name + " at " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price)
 			_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, eventData.ContractId, neo4jenum.CONTRACT, neo4jenum.ActionServiceLineItemBilledTypeOnceCreated, message, metadataBilledType, utils.Now(), extraActionProperties)
 			if err != nil {
 				tracing.TraceErr(span, err)
@@ -276,7 +274,7 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 			}
 		}
 		if serviceLineItemEntity.Billed.String() == model.UsageBilled.String() {
-			message = userEntity.FirstName + " " + userEntity.LastName + " added a per use service to " + contractEntity.Name + ": " + name + " at " + fmt.Sprintf("%.4f", serviceLineItemEntity.Price)
+			message = userName + " added a per use service to " + contractEntity.Name + ": " + name + " at " + fmt.Sprintf("%.4f", serviceLineItemEntity.Price)
 			_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, eventData.ContractId, neo4jenum.CONTRACT, neo4jenum.ActionServiceLineItemBilledTypeUsageCreated, message, metadataBilledType, utils.Now(), extraActionProperties)
 			if err != nil {
 				tracing.TraceErr(span, err)
@@ -287,10 +285,10 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 	if isNewVersionForExistingSLI {
 		if priceChanged && (eventData.Billed == model.AnnuallyBilled.String() || eventData.Billed == model.QuarterlyBilled.String() || eventData.Billed == model.MonthlyBilled.String()) {
 			if eventData.Price > previousPrice {
-				message = userEntity.FirstName + " " + userEntity.LastName + " increased the price for " + name + " from " + fmt.Sprintf("%.2f", previousPrice) + "/" + previousCycle + " to " + fmt.Sprintf("%.2f", eventData.Price) + "/" + cycle
+				message = userName + " increased the price for " + name + " from " + fmt.Sprintf("%.2f", previousPrice) + "/" + previousCycle + " to " + fmt.Sprintf("%.2f", eventData.Price) + "/" + cycle
 			}
 			if eventData.Price < previousPrice {
-				message = userEntity.FirstName + " " + userEntity.LastName + " decreased the price for " + name + " from " + fmt.Sprintf("%.2f", previousPrice) + "/" + previousCycle + " to " + fmt.Sprintf("%.2f", eventData.Price) + "/" + cycle
+				message = userName + " decreased the price for " + name + " from " + fmt.Sprintf("%.2f", previousPrice) + "/" + previousCycle + " to " + fmt.Sprintf("%.2f", eventData.Price) + "/" + cycle
 			}
 			_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, contractEntity.Id, neo4jenum.CONTRACT, neo4jenum.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), extraActionProperties)
 			if err != nil {
@@ -301,10 +299,10 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 
 		if priceChanged && eventData.Billed == model.OnceBilled.String() {
 			if eventData.Price > previousPrice {
-				message = userEntity.FirstName + " " + userEntity.LastName + " increased the price for " + name + " from " + fmt.Sprintf("%.2f", previousPrice) + " to " + fmt.Sprintf("%.2f", eventData.Price)
+				message = userName + " increased the price for " + name + " from " + fmt.Sprintf("%.2f", previousPrice) + " to " + fmt.Sprintf("%.2f", eventData.Price)
 			}
 			if eventData.Price < serviceLineItemEntity.Price {
-				message = userEntity.FirstName + " " + userEntity.LastName + " decreased the price for " + name + " from " + fmt.Sprintf("%.2f", previousPrice) + " to " + fmt.Sprintf("%.2f", eventData.Price)
+				message = userName + " decreased the price for " + name + " from " + fmt.Sprintf("%.2f", previousPrice) + " to " + fmt.Sprintf("%.2f", eventData.Price)
 			}
 			_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, contractEntity.Id, neo4jenum.CONTRACT, neo4jenum.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), extraActionProperties)
 			if err != nil {
@@ -314,10 +312,10 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 		}
 		if priceChanged && eventData.Billed == model.UsageBilled.String() {
 			if eventData.Price > previousPrice {
-				message = userEntity.FirstName + " " + userEntity.LastName + " increased the price for " + name + " from " + fmt.Sprintf("%.4f", previousPrice) + " to " + fmt.Sprintf("%.4f", eventData.Price)
+				message = userName + " increased the price for " + name + " from " + fmt.Sprintf("%.4f", previousPrice) + " to " + fmt.Sprintf("%.4f", eventData.Price)
 			}
 			if eventData.Price < serviceLineItemEntity.Price {
-				message = userEntity.FirstName + " " + userEntity.LastName + " decreased the price for " + name + " from " + fmt.Sprintf("%.4f", previousPrice) + " to " + fmt.Sprintf("%.4f", eventData.Price)
+				message = userName + " decreased the price for " + name + " from " + fmt.Sprintf("%.4f", previousPrice) + " to " + fmt.Sprintf("%.4f", eventData.Price)
 			}
 			_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, contractEntity.Id, neo4jenum.CONTRACT, neo4jenum.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), extraActionProperties)
 			if err != nil {
@@ -327,10 +325,10 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 		}
 		if quantityChanged {
 			if eventData.Quantity > previousQuantity {
-				message = userEntity.FirstName + " " + userEntity.LastName + " increased the quantity of " + name + " from " + strconv.FormatInt(previousQuantity, 10) + " to " + strconv.FormatInt(eventData.Quantity, 10)
+				message = userName + " increased the quantity of " + name + " from " + strconv.FormatInt(previousQuantity, 10) + " to " + strconv.FormatInt(eventData.Quantity, 10)
 			}
 			if eventData.Quantity < previousQuantity {
-				message = userEntity.FirstName + " " + userEntity.LastName + " decreased the quantity of " + name + " from " + strconv.FormatInt(previousQuantity, 10) + " to " + strconv.FormatInt(eventData.Quantity, 10)
+				message = userName + " decreased the quantity of " + name + " from " + strconv.FormatInt(previousQuantity, 10) + " to " + strconv.FormatInt(eventData.Quantity, 10)
 			}
 			_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, contractEntity.Id, neo4jenum.CONTRACT, neo4jenum.ActionServiceLineItemQuantityUpdated, message, metadataQuantity, utils.Now(), extraActionProperties)
 			if err != nil {
@@ -339,7 +337,7 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 			}
 		}
 		if billedTypeChanged && previousBilled != "" {
-			message = userEntity.FirstName + " " + userEntity.LastName + " changed the billing cycle for " + name + " from " + fmt.Sprintf("%.2f", previousPrice) + "/" + previousCycle + " to " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + cycle
+			message = userName + " changed the billing cycle for " + name + " from " + fmt.Sprintf("%.2f", previousPrice) + "/" + previousCycle + " to " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + cycle
 			_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, contractEntity.Id, neo4jenum.CONTRACT, neo4jenum.ActionServiceLineItemBilledTypeUpdated, message, metadataBilledType, utils.Now(), extraActionProperties)
 			if err != nil {
 				tracing.TraceErr(span, err)
@@ -357,7 +355,7 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 	setEventSpanTagsAndLogFields(span, evt)
 	var contractId string
 	var user *dbtype.Node
-	var userEntity *neo4jentity.UserEntity
+	var userEntity neo4jentity.UserEntity
 	var name string
 	var message string
 	var eventData event.ServiceLineItemUpdateEvent
@@ -433,11 +431,11 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 				h.log.Errorf("Failed to get user for service line item %s with userid %s", serviceLineItemId, usrMetadata.UserId)
 			}
 		}
-		userEntity = neo4jmapper.MapDbNodeToUserEntity(user)
+		userEntity = *neo4jmapper.MapDbNodeToUserEntity(user)
 	}
 
 	metadataPrice, err := utils.ToJson(ActionPriceMetadata{
-		UserName:        userEntity.FirstName + " " + userEntity.LastName,
+		UserName:        userEntity.GetFullName(),
 		ServiceName:     serviceLineItemEntity.Name,
 		Price:           eventData.Price,
 		PreviousPrice:   serviceLineItemEntity.Price,
@@ -452,7 +450,7 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 		return errors.Wrap(err, "Failed to serialize price metadata")
 	}
 	metadataQuantity, err := utils.ToJson(ActionQuantityMetadata{
-		UserName:         userEntity.FirstName + " " + userEntity.LastName,
+		UserName:         userEntity.GetFullName(),
 		ServiceName:      serviceLineItemEntity.Name,
 		PreviousQuantity: serviceLineItemEntity.Quantity,
 		Quantity:         eventData.Quantity,
@@ -467,7 +465,7 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 		return errors.Wrap(err, "Failed to serialize quantity metadata")
 	}
 	metadataBilledType, err := utils.ToJson(ActionBilledTypeMetadata{
-		UserName:           userEntity.FirstName + " " + userEntity.LastName,
+		UserName:           userEntity.GetFullName(),
 		ServiceName:        serviceLineItemEntity.Name,
 		BilledType:         eventData.Billed,
 		PreviousBilledType: serviceLineItemEntity.Billed.String(),
@@ -489,10 +487,10 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 
 	if priceChanged && (eventData.Billed == model.AnnuallyBilled.String() || eventData.Billed == model.QuarterlyBilled.String() || eventData.Billed == model.MonthlyBilled.String()) {
 		if eventData.Price > serviceLineItemEntity.Price {
-			message = userEntity.FirstName + " " + userEntity.LastName + " retroactively increased the price for " + name + " from " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + oldCycle + " to " + fmt.Sprintf("%.2f", eventData.Price) + "/" + cycle
+			message = userEntity.GetFullName() + " retroactively increased the price for " + name + " from " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + oldCycle + " to " + fmt.Sprintf("%.2f", eventData.Price) + "/" + cycle
 		}
 		if eventData.Price < serviceLineItemEntity.Price {
-			message = userEntity.FirstName + " " + userEntity.LastName + " retroactively decreased the price for " + name + " from " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + oldCycle + " to " + fmt.Sprintf("%.2f", eventData.Price) + "/" + cycle
+			message = userEntity.GetFullName() + " retroactively decreased the price for " + name + " from " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + oldCycle + " to " + fmt.Sprintf("%.2f", eventData.Price) + "/" + cycle
 		}
 		_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, contractId, neo4jenum.CONTRACT, neo4jenum.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), extraActionProperties)
 		if err != nil {
@@ -503,10 +501,10 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 
 	if priceChanged && eventData.Billed == model.OnceBilled.String() {
 		if eventData.Price > serviceLineItemEntity.Price {
-			message = userEntity.FirstName + " " + userEntity.LastName + " retroactively increased the price for " + name + " from " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + " to " + fmt.Sprintf("%.2f", eventData.Price)
+			message = userEntity.GetFullName() + " retroactively increased the price for " + name + " from " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + " to " + fmt.Sprintf("%.2f", eventData.Price)
 		}
 		if eventData.Price < serviceLineItemEntity.Price {
-			message = userEntity.FirstName + " " + userEntity.LastName + " retroactively decreased the price for " + name + " from " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + " to " + fmt.Sprintf("%.2f", eventData.Price)
+			message = userEntity.GetFullName() + " retroactively decreased the price for " + name + " from " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + " to " + fmt.Sprintf("%.2f", eventData.Price)
 		}
 		_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, contractId, neo4jenum.CONTRACT, neo4jenum.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), extraActionProperties)
 		if err != nil {
@@ -516,10 +514,10 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 	}
 	if priceChanged && eventData.Billed == model.UsageBilled.String() {
 		if eventData.Price > serviceLineItemEntity.Price {
-			message = userEntity.FirstName + " " + userEntity.LastName + " retroactively increased the price for " + name + " from " + fmt.Sprintf("%.4f", serviceLineItemEntity.Price) + " to " + fmt.Sprintf("%.4f", eventData.Price)
+			message = userEntity.GetFullName() + " retroactively increased the price for " + name + " from " + fmt.Sprintf("%.4f", serviceLineItemEntity.Price) + " to " + fmt.Sprintf("%.4f", eventData.Price)
 		}
 		if eventData.Price < serviceLineItemEntity.Price {
-			message = userEntity.FirstName + " " + userEntity.LastName + " retroactively decreased the price for " + name + " from " + fmt.Sprintf("%.4f", serviceLineItemEntity.Price) + " to " + fmt.Sprintf("%.4f", eventData.Price)
+			message = userEntity.GetFullName() + " retroactively decreased the price for " + name + " from " + fmt.Sprintf("%.4f", serviceLineItemEntity.Price) + " to " + fmt.Sprintf("%.4f", eventData.Price)
 		}
 		_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, contractId, neo4jenum.CONTRACT, neo4jenum.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), extraActionProperties)
 		if err != nil {
@@ -530,10 +528,10 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 
 	if quantityChanged {
 		if eventData.Quantity > serviceLineItemEntity.Quantity {
-			message = userEntity.FirstName + " " + userEntity.LastName + " retroactively increased the quantity of " + name + " from " + strconv.FormatInt(serviceLineItemEntity.Quantity, 10) + " to " + strconv.FormatInt(eventData.Quantity, 10)
+			message = userEntity.GetFullName() + " retroactively increased the quantity of " + name + " from " + strconv.FormatInt(serviceLineItemEntity.Quantity, 10) + " to " + strconv.FormatInt(eventData.Quantity, 10)
 		}
 		if eventData.Quantity < serviceLineItemEntity.Quantity {
-			message = userEntity.FirstName + " " + userEntity.LastName + " retroactively decreased the quantity of " + name + " from " + strconv.FormatInt(serviceLineItemEntity.Quantity, 10) + " to " + strconv.FormatInt(eventData.Quantity, 10)
+			message = userEntity.GetFullName() + " retroactively decreased the quantity of " + name + " from " + strconv.FormatInt(serviceLineItemEntity.Quantity, 10) + " to " + strconv.FormatInt(eventData.Quantity, 10)
 		}
 		_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, contractId, neo4jenum.CONTRACT, neo4jenum.ActionServiceLineItemQuantityUpdated, message, metadataQuantity, utils.Now(), extraActionProperties)
 		if err != nil {
@@ -542,7 +540,7 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 		}
 	}
 	if billedTypeChanged && serviceLineItemEntity.Billed != "" {
-		message = userEntity.FirstName + " " + userEntity.LastName + " changed the billing cycle for " + name + " from " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + oldCycle + " to " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + cycle
+		message = userEntity.GetFullName() + " changed the billing cycle for " + name + " from " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + oldCycle + " to " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + cycle
 		_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, contractId, neo4jenum.CONTRACT, neo4jenum.ActionServiceLineItemBilledTypeUpdated, message, metadataBilledType, utils.Now(), extraActionProperties)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -557,7 +555,7 @@ func (h *ServiceLineItemEventHandler) OnDelete(ctx context.Context, evt eventsto
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 	var user *dbtype.Node
-	var userEntity *neo4jentity.UserEntity
+	var userEntity neo4jentity.UserEntity
 	var serviceLineItemName string
 	var contractName string
 
@@ -592,7 +590,7 @@ func (h *ServiceLineItemEventHandler) OnDelete(ctx context.Context, evt eventsto
 				h.log.Errorf("Failed to get user for service line item %s with userid %s", serviceLineItemId, usrMetadata.UserId)
 			}
 		}
-		userEntity = neo4jmapper.MapDbNodeToUserEntity(user)
+		userEntity = *neo4jmapper.MapDbNodeToUserEntity(user)
 	}
 
 	contractDbNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractByServiceLineItemId(ctx, eventData.Tenant, serviceLineItemId)
@@ -625,11 +623,11 @@ func (h *ServiceLineItemEventHandler) OnDelete(ctx context.Context, evt eventsto
 		}
 	}
 	metadata, err := utils.ToJson(ActionServiceLineItemRemovedMetadata{
-		UserName:    userEntity.FirstName + " " + userEntity.LastName,
+		UserName:    userEntity.GetFullName(),
 		ServiceName: serviceLineItemName,
-		Comment:     "service line item removed is " + serviceLineItemName + " from " + contractName + " by " + userEntity.FirstName + " " + userEntity.LastName + "",
+		Comment:     "service line item removed is " + serviceLineItemName + " from " + contractName + " by " + userEntity.GetFullName(),
 	})
-	message := userEntity.FirstName + " " + userEntity.LastName + " removed " + serviceLineItemName + " from " + contractName
+	message := userEntity.GetFullName() + " removed " + serviceLineItemName + " from " + contractName
 
 	_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.Create(ctx, eventData.Tenant, contract.Id, neo4jenum.CONTRACT, neo4jenum.ActionServiceLineItemRemoved, message, metadata, utils.Now())
 	if err != nil {

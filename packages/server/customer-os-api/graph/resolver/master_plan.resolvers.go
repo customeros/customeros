@@ -298,7 +298,7 @@ func (r *queryResolver) MasterPlan(ctx context.Context, id string) (*model.Maste
 		graphql.AddErrorf(ctx, "Failed to get Master plan with id %s", id)
 		return nil, nil
 	}
-	if masterPlanEntity == nil {
+	if masterPlanEntity == nil || masterPlanEntity.Id == "" {
 		graphql.AddErrorf(ctx, "Master plan with id %s not found", id)
 		return nil, nil
 	}

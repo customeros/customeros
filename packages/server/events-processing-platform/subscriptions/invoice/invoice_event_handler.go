@@ -467,7 +467,7 @@ func prorateAnnualSLIAmount(startDate, endDate time.Time, amount float64) float6
 }
 
 func (h *InvoiceEventHandler) prepareAndCallFillInvoice(ctx context.Context, tenant string, contractId string, invoiceEntity neo4jentity.InvoiceEntity, amount, vat, totalAmount float64, invoiceLines []*invoicepb.InvoiceLine, span opentracing.Span) error {
-	var contractEntity *neo4jentity.ContractEntity
+	var contractEntity neo4jentity.ContractEntity
 	var tenantSettingsEntity *neo4jentity.TenantSettingsEntity
 	var tenantBillingProfileEntity *neo4jentity.TenantBillingProfileEntity
 
@@ -478,7 +478,7 @@ func (h *InvoiceEventHandler) prepareAndCallFillInvoice(ctx context.Context, ten
 		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.GetContractById")
 	}
 	if contract != nil {
-		contractEntity = neo4jmapper.MapDbNodeToContractEntity(contract)
+		contractEntity = *neo4jmapper.MapDbNodeToContractEntity(contract)
 	} else {
 		return errors.New("contract is nil")
 	}
@@ -1057,8 +1057,8 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 	span.SetTag(tracing.SpanTagEntityId, invoiceId)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
-	var invoiceEntity *neo4jentity.InvoiceEntity
-	var contractEntity *neo4jentity.ContractEntity
+	var invoiceEntity neo4jentity.InvoiceEntity
+	var contractEntity neo4jentity.ContractEntity
 
 	//load invoice
 	invoiceNode, err := h.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoiceById(ctx, eventData.Tenant, invoiceId)
@@ -1067,7 +1067,7 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 		return errors.Wrap(err, "InvoiceSubscriber.onInvoicePaidV1.GetInvoice")
 	}
 	if invoiceNode != nil {
-		invoiceEntity = neo4jmapper.MapDbNodeToInvoiceEntity(invoiceNode)
+		invoiceEntity = *neo4jmapper.MapDbNodeToInvoiceEntity(invoiceNode)
 	} else {
 		return errors.New("invoiceNode is nil")
 	}
@@ -1078,7 +1078,7 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 		return errors.Wrap(err, "InvoiceSubscriber.onInvoicePaidV1.GetContractForInvoice")
 	}
 	if contractNode != nil {
-		contractEntity = neo4jmapper.MapDbNodeToContractEntity(contractNode)
+		contractEntity = *neo4jmapper.MapDbNodeToContractEntity(contractNode)
 	} else {
 		tracing.TraceErr(span, errors.New("contractNode is nil"))
 		return errors.New("contractNode is nil")
@@ -1105,14 +1105,14 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 		Attachments: []notifications.PostmarkEmailAttachment{},
 	}
 
-	err = h.AppendInvoiceFileToEmailAsAttachment(eventData.Tenant, *invoiceEntity, &postmarkEmail, span)
+	err = h.AppendInvoiceFileToEmailAsAttachment(eventData.Tenant, invoiceEntity, &postmarkEmail, span)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error appending invoice file to email attachment for invoice %s: %s", invoiceId, err.Error())
 		return err
 	}
 
-	err = h.AppendProviderLogoToEmail(*invoiceEntity, &postmarkEmail)
+	err = h.AppendProviderLogoToEmail(invoiceEntity, &postmarkEmail)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error appending provider logo to email for invoice %s: %s", invoiceId, err.Error())
@@ -1153,8 +1153,8 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 	span.SetTag(tracing.SpanTagEntityId, invoiceId)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
-	var invoiceEntity *neo4jentity.InvoiceEntity
-	var contractEntity *neo4jentity.ContractEntity
+	var invoiceEntity neo4jentity.InvoiceEntity
+	var contractEntity neo4jentity.ContractEntity
 
 	//load invoice
 	invoiceNode, err := h.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoiceById(ctx, eventData.Tenant, invoiceId)
@@ -1163,7 +1163,7 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 		return errors.Wrap(err, "InvoiceSubscriber.onInvoicePayNotificationV1.GetInvoice")
 	}
 	if invoiceNode != nil {
-		invoiceEntity = neo4jmapper.MapDbNodeToInvoiceEntity(invoiceNode)
+		invoiceEntity = *neo4jmapper.MapDbNodeToInvoiceEntity(invoiceNode)
 	} else {
 		tracing.TraceErr(span, errors.New("invoiceNode is nil"))
 		return errors.New("invoiceNode is nil")
@@ -1175,7 +1175,7 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 		return errors.Wrap(err, "InvoiceSubscriber.onInvoicePayNotificationV1.GetContractForInvoice")
 	}
 	if contractNode != nil {
-		contractEntity = neo4jmapper.MapDbNodeToContractEntity(contractNode)
+		contractEntity = *neo4jmapper.MapDbNodeToContractEntity(contractNode)
 	} else {
 		tracing.TraceErr(span, errors.New("contractNode is nil"))
 		return errors.New("contractNode is nil")
@@ -1207,14 +1207,14 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 		Attachments: []notifications.PostmarkEmailAttachment{},
 	}
 
-	err = h.AppendInvoiceFileToEmailAsAttachment(eventData.Tenant, *invoiceEntity, &postmarkEmail, span)
+	err = h.AppendInvoiceFileToEmailAsAttachment(eventData.Tenant, invoiceEntity, &postmarkEmail, span)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error appending invoice file to email attachment for invoice %s: %s", invoiceId, err.Error())
 		return err
 	}
 
-	err = h.AppendProviderLogoToEmail(*invoiceEntity, &postmarkEmail)
+	err = h.AppendProviderLogoToEmail(invoiceEntity, &postmarkEmail)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error appending provider logo to email for invoice %s: %s", invoiceId, err.Error())

@@ -73,7 +73,7 @@ func MapDbNodeToInvoiceEntity(dbNode *dbtype.Node) *entity.InvoiceEntity {
 
 func MapDbNodeToInvoiceLineEntity(dbNode *dbtype.Node) *entity.InvoiceLineEntity {
 	if dbNode == nil {
-		return nil
+		return &entity.InvoiceLineEntity{}
 	}
 	props := utils.GetPropsFromNode(*dbNode)
 	invoiceLineEntity := entity.InvoiceLineEntity{
@@ -98,7 +98,7 @@ func MapDbNodeToInvoiceLineEntity(dbNode *dbtype.Node) *entity.InvoiceLineEntity
 
 func MapDbNodeToInvoicingCycleEntity(dbNode *dbtype.Node) *entity.InvoicingCycleEntity {
 	if dbNode == nil {
-		return nil
+		return &entity.InvoicingCycleEntity{}
 	}
 	props := utils.GetPropsFromNode(*dbNode)
 	masterPlanEntity := entity.InvoicingCycleEntity{
@@ -115,7 +115,7 @@ func MapDbNodeToInvoicingCycleEntity(dbNode *dbtype.Node) *entity.InvoicingCycle
 
 func MapDbNodeToMasterPlanEntity(dbNode *dbtype.Node) *entity.MasterPlanEntity {
 	if dbNode == nil {
-		return nil
+		return &entity.MasterPlanEntity{}
 	}
 	props := utils.GetPropsFromNode(*dbNode)
 	masterPlanEntity := entity.MasterPlanEntity{
@@ -133,7 +133,7 @@ func MapDbNodeToMasterPlanEntity(dbNode *dbtype.Node) *entity.MasterPlanEntity {
 
 func MapDbNodeToMasterPlanMilestoneEntity(dbNode *dbtype.Node) *entity.MasterPlanMilestoneEntity {
 	if dbNode == nil {
-		return nil
+		return &entity.MasterPlanMilestoneEntity{}
 	}
 	props := utils.GetPropsFromNode(*dbNode)
 	masterPlanMilestoneEntity := entity.MasterPlanMilestoneEntity{
@@ -155,7 +155,7 @@ func MapDbNodeToMasterPlanMilestoneEntity(dbNode *dbtype.Node) *entity.MasterPla
 
 func MapDbNodeToUserEntity(dbNode *dbtype.Node) *entity.UserEntity {
 	if dbNode == nil {
-		return nil
+		return &entity.UserEntity{}
 	}
 	props := utils.GetPropsFromNode(*dbNode)
 	userEntity := entity.UserEntity{
@@ -179,7 +179,7 @@ func MapDbNodeToUserEntity(dbNode *dbtype.Node) *entity.UserEntity {
 
 func MapDbNodeToOrganizationEntity(dbNode *dbtype.Node) *entity.OrganizationEntity {
 	if dbNode == nil {
-		return nil
+		return &entity.OrganizationEntity{}
 	}
 	props := utils.GetPropsFromNode(*dbNode)
 	organizationEntity := entity.OrganizationEntity{
@@ -240,7 +240,7 @@ func MapDbNodeToOrganizationEntity(dbNode *dbtype.Node) *entity.OrganizationEnti
 
 func MapDbNodeToBillingProfileEntity(dbNode *dbtype.Node) *entity.BillingProfileEntity {
 	if dbNode == nil {
-		return nil
+		return &entity.BillingProfileEntity{}
 	}
 	props := utils.GetPropsFromNode(*dbNode)
 	billingProfileEntity := entity.BillingProfileEntity{
@@ -258,7 +258,7 @@ func MapDbNodeToBillingProfileEntity(dbNode *dbtype.Node) *entity.BillingProfile
 
 func MapDbNodeToTenantEntity(dbNode *dbtype.Node) *entity.TenantEntity {
 	if dbNode == nil {
-		return nil
+		return &entity.TenantEntity{}
 	}
 	props := utils.GetPropsFromNode(*dbNode)
 	tenant := entity.TenantEntity{
@@ -332,7 +332,7 @@ func MapDbNodeToTenantBillingProfileEntity(dbNode *dbtype.Node) *entity.TenantBi
 
 func MapDbNodeToCountryEntity(dbNode *dbtype.Node) *entity.CountryEntity {
 	if dbNode == nil {
-		return nil
+		return &entity.CountryEntity{}
 	}
 	props := utils.GetPropsFromNode(*dbNode)
 	result := entity.CountryEntity{
@@ -349,7 +349,7 @@ func MapDbNodeToCountryEntity(dbNode *dbtype.Node) *entity.CountryEntity {
 
 func MapDbNodeToContractEntity(dbNode *dbtype.Node) *entity.ContractEntity {
 	if dbNode == nil {
-		return nil
+		return &entity.ContractEntity{}
 	}
 	props := utils.GetPropsFromNode(*dbNode)
 	contract := entity.ContractEntity{
@@ -390,7 +390,7 @@ func MapDbNodeToContractEntity(dbNode *dbtype.Node) *entity.ContractEntity {
 
 func MapDbNodeToOrganizationPlanEntity(dbNode *dbtype.Node) *entity.OrganizationPlanEntity {
 	if dbNode == nil {
-		return nil
+		return &entity.OrganizationPlanEntity{}
 	}
 	props := utils.GetPropsFromNode(*dbNode)
 	orgPlanEntity := entity.OrganizationPlanEntity{
@@ -414,7 +414,7 @@ func MapDbNodeToOrganizationPlanEntity(dbNode *dbtype.Node) *entity.Organization
 
 func MapDbNodeToOrganizationPlanMilestoneEntity(dbNode *dbtype.Node) *entity.OrganizationPlanMilestoneEntity {
 	if dbNode == nil {
-		return nil
+		return &entity.OrganizationPlanMilestoneEntity{}
 	}
 	props := utils.GetPropsFromNode(*dbNode)
 	orgPlanMilestoneEntity := entity.OrganizationPlanMilestoneEntity{
