@@ -1020,7 +1020,8 @@ func CreateInvoiceLine(ctx context.Context, driver *neo4j.DriverWithContext, ten
 					il.quantity=$quantity,
 					il.amount=$amount,
 					il.vat=$vat,
-					il.totalAmount=$totalAmount
+					il.totalAmount=$totalAmount,
+					il.billedType=$billedType
 				`, tenant)
 
 	params := map[string]any{
@@ -1038,6 +1039,7 @@ func CreateInvoiceLine(ctx context.Context, driver *neo4j.DriverWithContext, ten
 		"amount":        invoiceLine.Amount,
 		"vat":           invoiceLine.Vat,
 		"totalAmount":   invoiceLine.TotalAmount,
+		"billedType":    invoiceLine.BilledType.String(),
 	}
 
 	ExecuteWriteQuery(ctx, driver, query, params)
