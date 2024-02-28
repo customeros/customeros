@@ -893,7 +893,7 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 	//prepare the temp html file
 	tmpInvoiceFile, err := os.CreateTemp("", "invoice_*.html")
 	if err != nil {
-		return errors.Wrap(err, "ioutil.TempFile")
+		return errors.Wrap(err, "os.TempFile")
 	}
 	defer os.Remove(tmpInvoiceFile.Name()) // Delete the temporary HTML file when done
 	defer tmpInvoiceFile.Close()
@@ -929,7 +929,7 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 	// Save the PDF file to disk
 	err = os.WriteFile("output.pdf", *pdfBytes, 0644)
 	if err != nil {
-		return errors.Wrap(err, "ioutil.WriteFile")
+		return errors.Wrap(err, "os.WriteFile")
 	}
 
 	basePath := fmt.Sprintf("/INVOICE/%d/%s", invoiceEntity.CreatedAt.Year(), invoiceEntity.CreatedAt.Format("01"))
