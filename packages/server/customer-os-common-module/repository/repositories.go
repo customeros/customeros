@@ -1,12 +1,10 @@
 package repository
 
 import (
-	"log"
-
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	neo4jrepo "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/neo4j"
 	repository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
+	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"gorm.io/gorm"
 )
 
@@ -45,73 +43,66 @@ func InitRepositories(db *gorm.DB, driver *neo4j.DriverWithContext) *Repositorie
 		CurrencyRateRepository:            repository.NewCurrencyRateRepository(db),
 	}
 
+	return repositories
+}
+
+func Migration(db *gorm.DB) {
+
 	var err error
 
-	err = db.AutoMigrate(&entity.AppKey{})
+	err = db.AutoMigrate(&commonEntity.AppKey{})
 	if err != nil {
-		log.Print(err)
 		panic(err)
 	}
 
-	err = db.AutoMigrate(&entity.AiPromptLog{})
+	err = db.AutoMigrate(&commonEntity.AiPromptLog{})
 	if err != nil {
-		log.Print(err)
 		panic(err)
 	}
 
-	err = db.AutoMigrate(&entity.WhitelistDomain{})
+	err = db.AutoMigrate(&commonEntity.WhitelistDomain{})
 	if err != nil {
-		log.Print(err)
 		panic(err)
 	}
 
-	err = db.AutoMigrate(&entity.PersonalIntegration{})
+	err = db.AutoMigrate(&commonEntity.PersonalIntegration{})
 	if err != nil {
-		log.Print(err)
 		panic(err)
 	}
 
-	err = db.AutoMigrate(&entity.PersonalEmailProvider{})
+	err = db.AutoMigrate(&commonEntity.PersonalEmailProvider{})
 	if err != nil {
-		log.Print(err)
 		panic(err)
 	}
 
-	err = db.AutoMigrate(&entity.TenantWebhookApiKey{})
+	err = db.AutoMigrate(&commonEntity.TenantWebhookApiKey{})
 	if err != nil {
-		log.Print(err)
 		panic(err)
 	}
 
-	err = db.AutoMigrate(&entity.TenantWebhook{})
+	err = db.AutoMigrate(&commonEntity.TenantWebhook{})
 	if err != nil {
-		log.Print(err)
 		panic(err)
 	}
 
-	err = db.AutoMigrate(&entity.SlackChannel{})
+	err = db.AutoMigrate(&commonEntity.SlackChannel{})
 	if err != nil {
-		log.Print(err)
 		panic(err)
 	}
 
-	err = db.AutoMigrate(&entity.PostmarkApiKey{})
+	err = db.AutoMigrate(&commonEntity.PostmarkApiKey{})
 	if err != nil {
-		log.Print(err)
 		panic(err)
 	}
 
-	err = db.AutoMigrate(&entity.GoogleServiceAccountKey{})
+	err = db.AutoMigrate(&commonEntity.GoogleServiceAccountKey{})
 	if err != nil {
-		log.Print(err)
 		panic(err)
 	}
 
-	err = db.AutoMigrate(&entity.CurrencyRate{})
+	err = db.AutoMigrate(&commonEntity.CurrencyRate{})
 	if err != nil {
-		log.Print(err)
 		panic(err)
 	}
 
-	return repositories
 }

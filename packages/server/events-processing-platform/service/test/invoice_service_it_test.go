@@ -115,8 +115,7 @@ func TestInvoiceService_FillInvoice(t *testing.T) {
 		DomesticPaymentsBankInfo:      "a",
 		InternationalPaymentsBankInfo: "b",
 		Provider: &invoicepb.FillInvoiceProvider{
-			LogoUrl:              "c",
-			LogoRepositoryFileId: "c2",
+			LogoRepositoryFileId: "c",
 			Name:                 "d",
 			AddressLine1:         "e",
 			AddressLine2:         "f",
@@ -179,8 +178,7 @@ func TestInvoiceService_FillInvoice(t *testing.T) {
 	require.Equal(t, 9, len(eventData.InvoiceNumber))
 	require.Equal(t, "a", eventData.DomesticPaymentsBankInfo)
 	require.Equal(t, "b", eventData.InternationalPaymentsBankInfo)
-	require.Equal(t, "c", eventData.Provider.LogoUrl)
-	require.Equal(t, "c2", eventData.Provider.LogoRepositoryFileId)
+	require.Equal(t, "c", eventData.Provider.LogoRepositoryFileId)
 	require.Equal(t, "d", eventData.Provider.Name)
 	require.Equal(t, "e", eventData.Provider.AddressLine1)
 	require.Equal(t, "f", eventData.Provider.AddressLine2)

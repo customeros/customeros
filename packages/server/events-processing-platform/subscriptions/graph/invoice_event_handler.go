@@ -110,7 +110,6 @@ func (h *InvoiceEventHandler) OnInvoiceFillV1(ctx context.Context, evt eventstor
 		CustomerAddressZip:            eventData.Customer.Zip,
 		CustomerAddressLocality:       eventData.Customer.Locality,
 		CustomerAddressCountry:        eventData.Customer.Country,
-		ProviderLogoUrl:               eventData.Provider.LogoUrl,
 		ProviderLogoRepositoryFileId:  eventData.Provider.LogoRepositoryFileId,
 		ProviderName:                  eventData.Provider.Name,
 		ProviderEmail:                 eventData.Provider.Email,

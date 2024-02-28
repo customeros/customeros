@@ -16,10 +16,11 @@ extend type Mutation {
 }
 
 type TenantSettings {
-    logoUrl:                String!
     logoRepositoryFileId:   String
     baseCurrency:           Currency
     billingEnabled:         Boolean!
+
+    logoUrl:                String! @deprecated(reason: "Use logoRepositoryFileId")
 }
 
 type TenantBillingProfile implements SourceFields & Node {

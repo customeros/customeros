@@ -126,7 +126,6 @@ func TestTenantEventHandler_OnUpdateTenantSettingsV1(t *testing.T) {
 	updateEvent, err := event.NewTenantSettingsUpdateEvent(
 		aggregate,
 		&tenantpb.UpdateTenantSettingsRequest{
-			LogoUrl:              "http://logo",
 			LogoRepositoryFileId: "logoRepositoryFileId",
 			BaseCurrency:         neo4jenum.CurrencyAUD.String(),
 			InvoicingEnabled:     true,
@@ -155,7 +154,6 @@ func TestTenantEventHandler_OnUpdateTenantSettingsV1(t *testing.T) {
 	tenantSettingsEntity := neo4jmapper.MapDbNodeToTenantSettingsEntity(dbNode)
 	require.Equal(t, settingsId, tenantSettingsEntity.Id)
 	require.Equal(t, timeNow, tenantSettingsEntity.UpdatedAt)
-	require.Equal(t, "http://logo", tenantSettingsEntity.LogoUrl)
 	require.Equal(t, "logoRepositoryFileId", tenantSettingsEntity.LogoRepositoryFileId)
 	require.Equal(t, true, tenantSettingsEntity.InvoicingEnabled)
 	require.Equal(t, true, tenantSettingsEntity.InvoicingPostpaid)

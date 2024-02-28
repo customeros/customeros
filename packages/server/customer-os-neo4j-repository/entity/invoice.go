@@ -48,7 +48,6 @@ type InvoiceCustomer struct {
 }
 
 type InvoiceProvider struct {
-	LogoUrl              string
 	LogoRepositoryFileId string
 	Name                 string
 	Email                string

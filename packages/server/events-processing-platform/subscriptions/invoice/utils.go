@@ -3,6 +3,7 @@ package invoice
 import (
 	"bytes"
 	"fmt"
+	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -67,7 +68,7 @@ func FillInvoiceHtmlTemplate(tmpFile *os.File, invoiceData map[string]interface{
 	return nil
 }
 
-func ConvertInvoiceHtmlToPdf(pdfConverterUrl string, tmpFile *os.File, invoiceData map[string]interface{}) (*[]byte, error) {
+func ConvertInvoiceHtmlToPdf(fsc fsc.FileStoreApiService, pdfConverterUrl string, tmpFile *os.File, invoiceData map[string]interface{}, span opentracing.Span) (*[]byte, error) {
 	// This is doing a request like this:
 	//curl \
 	//--request POST 'http://localhost:11006/forms/chromium/convert/html' \
@@ -104,10 +105,17 @@ func ConvertInvoiceHtmlToPdf(pdfConverterUrl string, tmpFile *os.File, invoiceDa
 	}
 
 	//provider logo
-	if providerLogoUrl, ok := invoiceData["ProviderLogoUrl"].(string); ok && providerLogoUrl != "" {
-		err = addProviderLogoAsResourceFile(writer, providerLogoUrl)
+	if providerLogoRepositoryFileId, ok := invoiceData["ProviderLogoRepositoryFileId"].(string); ok && providerLogoRepositoryFileId != "" {
+		file, metadata, err := downloadProviderLogoAsTempFile(fsc, invoiceData["Tenant"].(string), providerLogoRepositoryFileId, span)
 		if err != nil {
-			return nil, errors.Wrap(err, "addProviderLogoAsResourceFile")
+			return nil, errors.Wrap(err, "downloadProviderLogoAsTempFile")
+		}
+
+		fileExtension := GetFileExtensionFromMetadata(metadata)
+
+		err = addMultipartFile(writer, file, "provider-logo"+fileExtension)
+		if err != nil {
+			return nil, errors.Wrap(err, "addMultipartFile provider-logo"+fileExtension)
 		}
 	}
 
@@ -196,45 +204,36 @@ func ConvertInvoiceHtmlToPdf(pdfConverterUrl string, tmpFile *os.File, invoiceDa
 	return &pdfBytes, nil
 }
 
-func downloadProviderLogoAsResourceFile(logoURL string) (*os.File, error) {
-	fileExtension := GetFileExtensionFromUrl(logoURL)
+func downloadProviderLogoAsTempFile(fsc fsc.FileStoreApiService, tenant, repositoryFileId string, span opentracing.Span) (*os.File, *fsc.FileDTO, error) {
+	fileMetadata, fileBytes, err := fsc.GetFile(tenant, repositoryFileId, span)
+	if err != nil {
+		fmt.Println("Error getting file metadata:", err)
+		return nil, nil, err
+	}
+
+	fileExtension := GetFileExtensionFromMetadata(fileMetadata)
 	// Create a temporary file
 	tmpFile, err := os.CreateTemp("", "downloaded-logo-*"+fileExtension)
 	if err != nil {
 		fmt.Println("Error creating temporary file:", err)
-		return nil, err
+		return nil, nil, err
 	}
 	defer os.Remove(tmpFile.Name())
 	defer tmpFile.Close()
 
-	// Download the image
-	response, err := http.Get(logoURL)
-	if err != nil {
-		fmt.Println("Error downloading image:", err)
-		return nil, err
-	}
-	defer response.Body.Close()
-
 	// Save the image to the temporary file
-	_, err = io.Copy(tmpFile, response.Body)
+	_, err = io.Copy(tmpFile, bytes.NewReader(*fileBytes))
 	if err != nil {
-		fmt.Println("Error saving image to file:", err)
-		return nil, err
+		fmt.Println("Error copying file to temporary file:", err)
+		return nil, nil, err
 	}
 
-	return getFileByName(tmpFile.Name())
-}
-
-func addProviderLogoAsResourceFile(writer *multipart.Writer, logoURL string) error {
-	fileExtension := GetFileExtensionFromUrl(logoURL)
-	logoFile, err := downloadProviderLogoAsResourceFile(logoURL)
-
-	err = addMultipartFile(writer, logoFile, "provider-logo"+fileExtension)
+	fileByName, err := getFileByName(tmpFile.Name())
 	if err != nil {
-		return errors.Wrap(err, "addMultipartFile "+"provider-logo"+fileExtension)
+		fmt.Println("Error getting file by name:", err)
+		return nil, nil, err
 	}
-
-	return nil
+	return fileByName, fileMetadata, nil
 }
 
 func getFileByName(filePath string) (*os.File, error) {
@@ -283,20 +282,6 @@ func addResourceFile(writer *multipart.Writer, basePath, fileName, partName stri
 	return nil
 }
 
-func GetFileExtensionFromUrl(url string) string {
-	ext := filepath.Ext(url)
-	if ext == "" {
-		contentType := http.DetectContentType([]byte(url))
-		switch {
-		case strings.HasPrefix(contentType, "image/jpeg"):
-			ext = ".jpg"
-		case strings.HasPrefix(contentType, "image/png"):
-			ext = ".png"
-		case strings.HasPrefix(contentType, "image/svg"):
-			ext = ".svg"
-		default:
-			ext = ".bin"
-		}
-	}
-	return ext
+func GetFileExtensionFromMetadata(metadata *fsc.FileDTO) string {
+	return strings.Split(metadata.MimeType, "/")[1]
 }

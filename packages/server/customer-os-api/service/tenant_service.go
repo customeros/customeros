@@ -332,16 +332,12 @@ func (s *tenantService) UpdateTenantSettings(ctx context.Context, input *model.T
 		Tenant:               common.GetTenantFromContext(ctx),
 		LoggedInUserId:       common.GetUserIdFromContext(ctx),
 		AppSource:            constants.AppSourceCustomerOsApi,
-		LogoUrl:              utils.IfNotNilString(input.LogoURL),
 		LogoRepositoryFileId: utils.IfNotNilString(input.LogoRepositoryFileID),
 		BaseCurrency:         baseCurrency,
 		InvoicingEnabled:     utils.IfNotNilBool(input.BillingEnabled),
 	}
 
 	if input.Patch != nil && *input.Patch {
-		if input.LogoURL != nil {
-			fieldMask = append(fieldMask, tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_LOGO_URL)
-		}
 		if input.LogoRepositoryFileID != nil {
 			fieldMask = append(fieldMask, tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_LOGO_REPOSITORY_FILE_ID)
 		}
