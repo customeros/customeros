@@ -191,6 +191,9 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 		}
 		userEntity = neo4jmapper.MapDbNodeToUserEntity(user)
 	}
+	if userEntity == nil {
+		return nil
+	}
 	if eventData.Name == "" {
 		name = serviceLineItemEntity.Name
 	}
