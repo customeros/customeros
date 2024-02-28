@@ -5,13 +5,13 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions"
-	"io/ioutil"
 	"net/http"
 	"net/mail"
 	"os"
 	"sort"
 	"time"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data"
 	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
@@ -782,7 +782,7 @@ func (h *InvoiceEventHandler) dispatchInvoiceFinalizedEvent(ctx context.Context,
 	webhookPayload := webhook.PopulateInvoiceFinalizedPayload(&invoice, &organizationEntity, &contractEntity, ilEntities)
 
 	// dispatch the event
-	err = webhook.DispatchWebhook(tenant, webhook.WebhookEventInvoiceFinalized, webhookPayload, h.repositories)
+	err = webhook.DispatchWebhook(tenant, webhook.WebhookEventInvoiceFinalized, webhookPayload, h.repositories, h.cfg)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error dispatching invoice finalized event for invoice %s: %s", invoice.Id, err.Error())
@@ -893,7 +893,7 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 	//prepare the temp html file
 	tmpInvoiceFile, err := os.CreateTemp("", "invoice_*.html")
 	if err != nil {
-		return errors.Wrap(err, "ioutil.TempFile")
+		return errors.Wrap(err, "os.TempFile")
 	}
 	defer os.Remove(tmpInvoiceFile.Name()) // Delete the temporary HTML file when done
 	defer tmpInvoiceFile.Close()
@@ -927,9 +927,9 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 	}
 
 	// Save the PDF file to disk
-	err = ioutil.WriteFile("output.pdf", *pdfBytes, 0644)
+	err = os.WriteFile("output.pdf", *pdfBytes, 0644)
 	if err != nil {
-		return errors.Wrap(err, "ioutil.WriteFile")
+		return errors.Wrap(err, "os.WriteFile")
 	}
 
 	basePath := fmt.Sprintf("/INVOICE/%d/%s", invoiceEntity.CreatedAt.Year(), invoiceEntity.CreatedAt.Format("01"))

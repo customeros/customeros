@@ -56,6 +56,6 @@ func WebhookWorkflow(ctx workflow.Context, param WHWorkflowParam) error {
 	if err != nil {
 		return err
 	}
-	// Make the results of the Workflow available
+
 	return nil
 }
