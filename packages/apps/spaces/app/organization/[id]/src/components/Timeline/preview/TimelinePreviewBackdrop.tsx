@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, PropsWithChildren } from 'react';
+import { useState, useEffect, PropsWithChildren } from 'react';
 
 import { Flex } from '@ui/layout/Flex';
 import { Card } from '@ui/presentation/Card';
@@ -16,7 +16,6 @@ export const TimelinePreviewBackdrop = ({
   children,
   onCloseModal,
 }: TimelinePreviewBackdropProps) => {
-  const mouseTarget = useRef<string | null>(null);
   const [isMounted, setIsMounted] = useState(false); // needed for delaying the backdrop filter
   const { isModalOpen, modalContent } = useTimelineEventPreviewStateContext();
   const { closeModal } = useTimelineEventPreviewMethodsContext();
@@ -46,14 +45,13 @@ export const TimelinePreviewBackdrop = ({
       transition='all 0.1s linear'
       onMouseDown={(e) => {
         e.stopPropagation();
-        mouseTarget.current = e.currentTarget.id;
       }}
-      onMouseUp={() => {
-        if (mouseTarget?.current === 'timeline-preview-backdrop') {
+      onMouseUp={(e) => {
+        const target = e.target as HTMLDivElement;
+        if (!target) return;
+        if (target.id === 'timeline-preview-backdrop') {
           closeModal();
           onCloseModal?.();
-        } else {
-          mouseTarget.current = null;
         }
       }}
     >

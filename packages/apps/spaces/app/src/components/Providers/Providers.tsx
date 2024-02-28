@@ -14,6 +14,7 @@ import { Env, EnvProvider } from './EnvProvider';
 import { NextAuthProvider } from './SessionProvider';
 import { PhoenixSocketProvider } from './SocketProvider';
 import { GrowthbookProvider } from './GrowthbookProvider';
+import { IntegrationsProvider } from './IntegrationsProvider';
 import { NotificationsProvider } from './NotificationsProvider';
 interface ProvidersProps {
   env: Env;
@@ -56,13 +57,15 @@ export const Providers = ({
         <PhoenixSocketProvider>
           <RecoilRoot>
             <NextAuthProvider>
-              <GrowthbookProvider>
-                <NotificationsProvider isProduction={isProduction}>
-                  <AnalyticsProvider isProduction={isProduction}>
-                    {children}
-                  </AnalyticsProvider>
-                </NotificationsProvider>
-              </GrowthbookProvider>
+              <IntegrationsProvider>
+                <GrowthbookProvider>
+                  <NotificationsProvider isProduction={isProduction}>
+                    <AnalyticsProvider isProduction={isProduction}>
+                      {children}
+                    </AnalyticsProvider>
+                  </NotificationsProvider>
+                </GrowthbookProvider>
+              </IntegrationsProvider>
             </NextAuthProvider>
           </RecoilRoot>
         </PhoenixSocketProvider>

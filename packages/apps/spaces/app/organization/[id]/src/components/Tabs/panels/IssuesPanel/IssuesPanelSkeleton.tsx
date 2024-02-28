@@ -4,18 +4,27 @@ import React from 'react';
 
 import { Flex } from '@ui/layout/Flex';
 import { Card } from '@ui/layout/Card';
-import { CardHeader } from '@ui/presentation/Card';
+import { CardBody } from '@ui/presentation/Card';
 import { Skeleton, SkeletonCircle } from '@ui/presentation/Skeleton';
 import { OrganizationPanel } from '@organization/src/components/Tabs/panels/OrganizationPanel/OrganizationPanel';
 
 export const IssuesPanelSkeleton = () => {
   return (
     <OrganizationPanel title='Issues'>
+      <Flex w='full' justify='flex-start'>
+        <Skeleton
+          borderRadius='full'
+          w='50px'
+          mb='1'
+          h='16px'
+          startColor='gray.300'
+          endColor='gray.100'
+        />
+      </Flex>
       {Array.from({ length: 3 }).map((_, i) => (
         <Card
           key={i}
           w='full'
-          h='66px'
           boxShadow={'xs'}
           cursor='pointer'
           size='sm'
@@ -31,11 +40,11 @@ export const IssuesPanelSkeleton = () => {
           }}
           transition='all 0.2s ease-out'
         >
-          <CardHeader>
+          <CardBody>
             <Flex flex='1' gap='4' alignItems='flex-start' flexWrap='wrap'>
               <SkeletonCircle
-                height={12}
-                width={12}
+                height={10}
+                width={10}
                 startColor='gray.300'
                 endColor='gray.100'
               />
@@ -45,7 +54,7 @@ export const IssuesPanelSkeleton = () => {
                   <Skeleton
                     borderRadius='full'
                     h={3}
-                    w={200}
+                    w={'50%'}
                     mb={2}
                     startColor='gray.300'
                     endColor='gray.100'
@@ -55,19 +64,18 @@ export const IssuesPanelSkeleton = () => {
                 <Skeleton
                   borderRadius='full'
                   h={3}
-                  w={220}
+                  w={'55%'}
                   mb={2}
                   startColor='gray.300'
                   endColor='gray.100'
                 />
-                {/* TODO uncomment commented out code as soon as COS-464 is merged */}
-                {/*<Skeleton*/}
-                {/*  borderRadius='full'*/}
-                {/*  h={3}*/}
-                {/*  w={180}*/}
-                {/*  startColor='gray.300'*/}
-                {/*  endColor='gray.100'*/}
-                {/*/>*/}
+                <Skeleton
+                  borderRadius='full'
+                  h={3}
+                  w={'45%'}
+                  startColor='gray.300'
+                  endColor='gray.100'
+                />
               </Flex>
               <Skeleton
                 display='block'
@@ -79,7 +87,7 @@ export const IssuesPanelSkeleton = () => {
                 endColor='gray.100'
               />
             </Flex>
-          </CardHeader>
+          </CardBody>
         </Card>
       ))}
     </OrganizationPanel>
