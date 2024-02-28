@@ -65,4 +65,5 @@ enum ComparisonOperator {
     GTE
     IN
     BETWEEN
+    IS_NULL
 }
