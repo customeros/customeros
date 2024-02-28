@@ -64,7 +64,7 @@ export const PaymentMethods = ({
   return (
     <>
       <Flex position='relative' alignItems='center'>
-        <Text color='gray.500' fontSize='xs' whiteSpace='nowrap' mr={2}>
+        <Text fontSize='sm' whiteSpace='nowrap' mr={2}>
           Customer can pay using
         </Text>
         <Divider background='gray.200' />
