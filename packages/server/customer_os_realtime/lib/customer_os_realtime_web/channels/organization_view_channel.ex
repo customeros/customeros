@@ -28,8 +28,6 @@ defmodule CustomerOsRealtimeWeb.OrganizationChannel do
 
   @impl true
   def handle_info(:after_join, socket) do
-    dbg(socket.assigns)
-
     {:ok, _} =
       Presence.track(socket, socket.assigns.user_id, %{
         online_at: inspect(System.system_time(:second)),
