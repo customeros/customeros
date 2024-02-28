@@ -39,7 +39,9 @@ func main() {
 	go startServer(ctx, cfg, appLogger, &waitGroup)
 
 	// Run Temporal worker
-	go runTemporalWorker(cfg, appLogger, &waitGroup)
+	if cfg.Temporal.RunWorker {
+		go runTemporalWorker(cfg, appLogger, &waitGroup)
+	}
 
 	// Start a heartbeat
 	done := make(chan interface{})
