@@ -12413,6 +12413,7 @@ enum ComparisonOperator {
     GTE
     IN
     BETWEEN
+    IS_NULL
 }`, BuiltIn: false},
 	{Name: "../schemas/interaction_event.graphqls", Input: `union InteractionEventParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant | OrganizationParticipant | JobRoleParticipant
 union InteractionSessionParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant

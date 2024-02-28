@@ -2847,6 +2847,7 @@ const (
 	ComparisonOperatorGte        ComparisonOperator = "GTE"
 	ComparisonOperatorIn         ComparisonOperator = "IN"
 	ComparisonOperatorBetween    ComparisonOperator = "BETWEEN"
+	ComparisonOperatorIsNull     ComparisonOperator = "IS_NULL"
 )
 
 var AllComparisonOperator = []ComparisonOperator{
@@ -2857,11 +2858,12 @@ var AllComparisonOperator = []ComparisonOperator{
 	ComparisonOperatorGte,
 	ComparisonOperatorIn,
 	ComparisonOperatorBetween,
+	ComparisonOperatorIsNull,
 }
 
 func (e ComparisonOperator) IsValid() bool {
 	switch e {
-	case ComparisonOperatorEq, ComparisonOperatorContains, ComparisonOperatorStartsWith, ComparisonOperatorLte, ComparisonOperatorGte, ComparisonOperatorIn, ComparisonOperatorBetween:
+	case ComparisonOperatorEq, ComparisonOperatorContains, ComparisonOperatorStartsWith, ComparisonOperatorLte, ComparisonOperatorGte, ComparisonOperatorIn, ComparisonOperatorBetween, ComparisonOperatorIsNull:
 		return true
 	}
 	return false
