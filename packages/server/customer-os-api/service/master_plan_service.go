@@ -423,7 +423,7 @@ func (s *masterPlanService) DuplicateMasterPlan(ctx context.Context, sourceMaste
 		tracing.TraceErr(span, err)
 		return "", err
 	}
-	if sourceMasterPlanEntity == nil {
+	if sourceMasterPlanEntity == nil || sourceMasterPlanEntity.Id == "" {
 		err = errors.New(fmt.Sprintf("Master plan with id {%s} not found", sourceMasterPlanId))
 		tracing.TraceErr(span, err)
 		return "", err

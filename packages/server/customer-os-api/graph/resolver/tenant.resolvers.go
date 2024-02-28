@@ -127,7 +127,7 @@ func (r *queryResolver) TenantByWorkspace(ctx context.Context, workspace model.W
 	if err != nil {
 		return nil, err
 	}
-	if tenant == nil {
+	if tenant == nil || tenant.Name == "" {
 		return nil, nil
 	}
 	return &tenant.Name, nil
@@ -144,7 +144,7 @@ func (r *queryResolver) TenantByEmail(ctx context.Context, email string) (*strin
 	if err != nil {
 		return nil, err
 	}
-	if tenant == nil {
+	if tenant == nil || tenant.Name == "" {
 		return nil, nil
 	}
 	return &tenant.Name, nil

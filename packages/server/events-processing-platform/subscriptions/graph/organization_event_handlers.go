@@ -223,14 +223,14 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 
-	var existingOrganizationEntity *neo4jentity.OrganizationEntity
+	var existingOrganizationEntity neo4jentity.OrganizationEntity
 	existingOrganization, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, eventData.Tenant, organizationId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 	if existingOrganization != nil {
-		existingOrganizationEntity = neo4jmapper.MapDbNodeToOrganizationEntity(existingOrganization)
+		existingOrganizationEntity = *neo4jmapper.MapDbNodeToOrganizationEntity(existingOrganization)
 	}
 
 	data := neo4jrepository.OrganizationUpdateFields{
@@ -323,7 +323,7 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 		}
 	}
 
-	if existingOrganizationEntity != nil && existingOrganizationEntity.SlackChannelId != eventData.SlackChannelId {
+	if existingOrganizationEntity.ID != "" && existingOrganizationEntity.SlackChannelId != eventData.SlackChannelId {
 		if eventData.SlackChannelId == "" {
 			err := h.repositories.Neo4jRepositories.IssueWriteRepository.RemoveReportedByOrganizationWithGroupId(ctx, eventData.Tenant, organizationId, existingOrganizationEntity.SlackChannelId)
 			if err != nil {

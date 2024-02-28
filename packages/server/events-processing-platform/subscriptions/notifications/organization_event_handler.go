@@ -128,9 +128,9 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "h.repositories.UserRepository.GetUser")
 	}
-	var user *neo4jentity.UserEntity
+	var user neo4jentity.UserEntity
 	if userDbNode != nil {
-		user = neo4jmapper.MapDbNodeToUserEntity(userDbNode)
+		user = *neo4jmapper.MapDbNodeToUserEntity(userDbNode)
 	}
 
 	// actor user
@@ -140,9 +140,9 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "h.repositories.UserRepository.GetUser")
 	}
-	var actor *neo4jentity.UserEntity
+	var actor neo4jentity.UserEntity
 	if userDbNode != nil {
-		actor = neo4jmapper.MapDbNodeToUserEntity(actorDbNode)
+		actor = *neo4jmapper.MapDbNodeToUserEntity(actorDbNode)
 	}
 
 	// Organization
@@ -152,9 +152,9 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "h.repositories.OrganizationRepository.GetOrganization")
 	}
-	var org *neo4jentity.OrganizationEntity
+	var org neo4jentity.OrganizationEntity
 	if orgDbNode != nil {
-		org = neo4jmapper.MapDbNodeToOrganizationEntity(orgDbNode)
+		org = *neo4jmapper.MapDbNodeToOrganizationEntity(orgDbNode)
 	}
 
 	/////////////////////////////////// Notification Provider Payload And Call ///////////////////////////////////
@@ -230,9 +230,9 @@ func (h *OrganizationEventHandler) notificationProviderSendInAppNotification(ctx
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "h.repositories.UserRepository.GetUser")
 	}
-	var user *neo4jentity.UserEntity
+	var user neo4jentity.UserEntity
 	if userDbNode != nil {
-		user = neo4jmapper.MapDbNodeToUserEntity(userDbNode)
+		user = *neo4jmapper.MapDbNodeToUserEntity(userDbNode)
 	}
 
 	// actor user
@@ -242,9 +242,9 @@ func (h *OrganizationEventHandler) notificationProviderSendInAppNotification(ctx
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "h.repositories.UserRepository.GetUser")
 	}
-	var actor *neo4jentity.UserEntity
+	var actor neo4jentity.UserEntity
 	if userDbNode != nil {
-		actor = neo4jmapper.MapDbNodeToUserEntity(actorDbNode)
+		actor = *neo4jmapper.MapDbNodeToUserEntity(actorDbNode)
 	}
 
 	// Organization
@@ -254,9 +254,9 @@ func (h *OrganizationEventHandler) notificationProviderSendInAppNotification(ctx
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "h.repositories.OrganizationRepository.GetOrganization")
 	}
-	var org *neo4jentity.OrganizationEntity
+	var org neo4jentity.OrganizationEntity
 	if orgDbNode != nil {
-		org = neo4jmapper.MapDbNodeToOrganizationEntity(orgDbNode)
+		org = *neo4jmapper.MapDbNodeToOrganizationEntity(orgDbNode)
 	}
 	/////////////////////////////////// Notification Provider Payload And Call ///////////////////////////////////
 
