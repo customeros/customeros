@@ -54,14 +54,14 @@ func DispatchWebhook(tenant string, event WebhookEvent, payload *InvoicePayload,
 	retryPolicy := &temporal.RetryPolicy{
 		InitialInterval:        time.Second,
 		BackoffCoefficient:     2.0,
-		MaximumInterval:        time.Second * 100, // 100 * InitialInterval
-		MaximumAttempts:        3,                 // if set to 0 means Unlimited attempts; not inclusive eg. n < 3.
-		NonRetryableErrorTypes: []string{},        // empty
+		MaximumInterval:        time.Second * 259200, // 259200 seconds = 3 days
+		MaximumAttempts:        0,                    // if set to 0 means Unlimited attempts; this number is not inclusive eg. n < 3.
+		NonRetryableErrorTypes: []string{},           // empty
 	}
 
 	workflowOptions := client.StartWorkflowOptions{
 		ID:                       "webhook-calls_" + uuid.New().String(),
-		WorkflowExecutionTimeout: time.Hour * 24 * 365 * 10,
+		WorkflowExecutionTimeout: time.Hour * 24 * 3,                 // timeout after 3 days
 		TaskQueue:                workflows.WEBHOOK_CALLS_TASK_QUEUE, // "webhook-calls",
 	}
 
