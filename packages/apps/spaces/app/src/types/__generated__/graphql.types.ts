@@ -1145,6 +1145,7 @@ export enum ExternalSystemType {
   Salesforce = 'SALESFORCE',
   Slack = 'SLACK',
   Stripe = 'STRIPE',
+  Unthread = 'UNTHREAD',
   ZendeskSupport = 'ZENDESK_SUPPORT',
 }
 

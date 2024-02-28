@@ -509,7 +509,7 @@ export const ContractCard = ({
           )}
         </Collapse>
         <Services
-          data={data?.serviceLineItems}
+          data={data?.contractLineItems}
           currency={data?.currency}
           onModalOpen={onServiceLineItemsOpen}
         />
@@ -528,7 +528,7 @@ export const ContractCard = ({
           onClose={onServiceLineItemClose}
           contractName={data.name}
           currency={data.currency}
-          serviceLineItems={data?.serviceLineItems ?? []}
+          contractLineItems={data?.contractLineItems ?? []}
           organizationName={organizationName}
           notes={data?.invoiceNote}
         />
