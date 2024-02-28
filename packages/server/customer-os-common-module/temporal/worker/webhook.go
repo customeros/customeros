@@ -1,7 +1,7 @@
 package worker
 
 import (
-	"log"
+	"fmt"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/temporal/activity"
 	temporal_client "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/temporal/client"
@@ -9,15 +9,15 @@ import (
 	"go.temporal.io/sdk/worker"
 )
 
-func RunWebhookWorker(hostPort, namespace string) {
+func RunWebhookWorker(hostPort, namespace string) error {
 	// Initialize a Temporal Client
 	// Specify the Namespace in the Client options
 	temporalClient, err := temporal_client.TemporalClient(hostPort, namespace)
 	if err != nil {
-		log.Fatalln("Unable to create a Temporal Client", err)
+		return fmt.Errorf("unable to create a Temporal Client: %v", err)
 	}
 	if temporalClient == nil {
-		log.Fatalln("Temporal Client is nil")
+		return fmt.Errorf("temporal Client is nil")
 	}
 	defer temporalClient.Close()
 	// Create a new Worker
@@ -31,6 +31,7 @@ func RunWebhookWorker(hostPort, namespace string) {
 	// Start the Worker Process
 	err = yourWorker.Run(worker.InterruptCh())
 	if err != nil {
-		log.Fatalln("Unable to start the Worker Process", err)
+		return fmt.Errorf("unable to start the Worker Process: %v", err)
 	}
+	return nil
 }
