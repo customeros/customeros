@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/google/uuid"
@@ -41,7 +40,7 @@ func DispatchWebhook(tenant string, event WebhookEvent, payload *InvoicePayload,
 	if err != nil {
 		return fmt.Errorf("(webhook.DispatchWebhook) error marshalling request body: %v", err)
 	}
-	// TODO: use Temporal here
+	// Start Temporal Client to queue webhook workflow
 	tClient, err := temporal_client.TemporalClient(cfg.Temporal.HostPort, cfg.Temporal.Namespace)
 	if err != nil {
 		return fmt.Errorf("error creating Temporal client: %v", err)
@@ -70,36 +69,10 @@ func DispatchWebhook(tenant string, event WebhookEvent, payload *InvoicePayload,
 		RetryPolicy:     retryPolicy,
 	}
 
+	// the workflow will run async, so we don't need to wait for it to finish
 	_, err = tClient.ExecuteWorkflow(context.Background(), workflowOptions, workflows.WebhookWorkflow, workflowParams)
 	if err != nil {
 		return fmt.Errorf("error executing Temporal workflow: %v", err)
-	}
-	// Create a POST request with headers and body
-	// req, err := http.NewRequest("POST", wh.WebhookUrl, bytes.NewBuffer(requestBodyJSON))
-	// if err != nil {
-	// 	return fmt.Errorf("error creating request: %v", err)
-	// }
-
-	// req.Header.Set("Content-Type", "application/json")
-	// authHeader := fmt.Sprintf("%s %s", wh.AuthHeaderValue, wh.ApiKey) // e.g. "Bearer <api_key>"
-	// headerName := "Authorization"
-	// if wh.AuthHeaderName != "" {
-	// 	headerName = wh.AuthHeaderName
-	// }
-	// req.Header.Set(headerName, authHeader)
-
-	// // Send the request
-	// client := &http.Client{}
-	// resp, err := client.Do(req)
-	// if err != nil {
-	// 	return fmt.Errorf("error sending request: %v", err)
-	// }
-	// defer resp.Body.Close()
-	// TODO: Up to here with Temporal
-
-	// Check the response
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status code: %v", resp.StatusCode)
 	}
 
 	return nil
