@@ -25,7 +25,6 @@ const (
 	FieldMaskCanPayWithDirectDebitBacs     = "canPayWithDirectDebitBacs"
 	FieldMaskCanPayWithPigeon              = "canPayWithPigeon"
 
-	FieldMaskLogoUrl              = "logoUrl"
 	FieldMaskLogoRepositoryFileId = "logoRepositoryFileId"
 	FieldMaskBaseCurrency         = "baseCurrency"
 	FieldMaskInvoicingEnabled     = "invoicingEnabled"

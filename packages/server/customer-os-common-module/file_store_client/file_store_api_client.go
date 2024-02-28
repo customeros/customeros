@@ -14,34 +14,75 @@ import (
 )
 
 type FileStoreApiService interface {
+	GetFile(tenantName, fileId string, span opentracing.Span) (*FileDTO, *[]byte, error)
+	GetFileMetadata(tenantName, fileId string, span opentracing.Span) (*FileDTO, error)
+	GetFileBytes(tenantName, fileId string, span opentracing.Span) (*[]byte, error)
+
 	UploadSingleMultipartFile(tenantName, basePath string, multipartFileHeader *multipart.FileHeader, span opentracing.Span) (*FileDTO, error)
 	UploadSingleFileBytes(tenantName, basePath, fileId, fileName string, fileBytes []byte, span opentracing.Span) (*FileDTO, error)
-	DownloadFile(tenantName, fileId string, span opentracing.Span) (*[]byte, error)
 }
 
 type fileStoreApiService struct {
 	conf *FileStoreApiConfig
 }
 
-func (fsas *fileStoreApiService) UploadSingleMultipartFile(tenantName, basePath string, multipartFileHeader *multipart.FileHeader, span opentracing.Span) (*FileDTO, error) {
-	file, err := multipartFileHeader.Open()
+func (fsas *fileStoreApiService) GetFile(tenantName, fileId string, span opentracing.Span) (*FileDTO, *[]byte, error) {
+	fileMetadata, err := fsas.GetFileMetadata(tenantName, fileId, span)
 	if err != nil {
-		return nil, fmt.Errorf("UploadSingleMultipartFile: failed to open multipart file: %w", err)
+		return nil, nil, errors.Wrap(err, "GetFileMetadata")
 	}
 
-	fileBytes, err := io.ReadAll(file)
+	fileBytes, err := fsas.GetFileBytes(tenantName, fileId, span)
 	if err != nil {
-		return nil, fmt.Errorf("UploadSingleMultipartFile: failed to read multipart file: %w", err)
+		return nil, nil, errors.Wrap(err, "GetFileBytes")
 	}
 
-	return sendRequest(fsas.conf, tenantName, basePath, "", multipartFileHeader.Filename, fileBytes, span)
+	return fileMetadata, fileBytes, nil
 }
 
-func (fsas *fileStoreApiService) UploadSingleFileBytes(tenantName, basePath, fileId, fileName string, fileBytes []byte, span opentracing.Span) (*FileDTO, error) {
-	return sendRequest(fsas.conf, tenantName, basePath, fileId, fileName, fileBytes, span)
+func (fsas *fileStoreApiService) GetFileMetadata(tenantName, fileId string, span opentracing.Span) (*FileDTO, error) {
+
+	url := fmt.Sprintf("%s/file/%s", fsas.conf.ApiPath, fileId)
+	log.Printf("DownloadFile: url: %s", url)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("GetFile: failed to create new request: %w", err)
+	}
+
+	req.Header.Add("X-Openline-API-KEY", fsas.conf.ApiKey)
+	req.Header.Add("X-Openline-TENANT", tenantName)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		ext.LogError(span, err)
+		return nil, fmt.Errorf("GetFile: failed to perform request: %w", err)
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusOK {
+		var fileResponse FileDTO
+		if err := json.NewDecoder(resp.Body).Decode(&fileResponse); err != nil {
+			ext.LogError(span, err)
+			return nil, fmt.Errorf("GetFile: failed to decode response: %w", err)
+		}
+		return &fileResponse, nil
+	} else {
+		var responseBody bytes.Buffer
+		_, err = io.Copy(&responseBody, resp.Body)
+		if err != nil {
+			ext.LogError(span, err)
+			return nil, err
+		}
+
+		err = fmt.Errorf("Got error from File Store API: Status: %d Response: %s", resp.StatusCode, responseBody.String())
+		ext.LogError(span, err)
+		return nil, err
+	}
 }
 
-func (fsas *fileStoreApiService) DownloadFile(tenantName, fileId string, span opentracing.Span) (*[]byte, error) {
+func (fsas *fileStoreApiService) GetFileBytes(tenantName, fileId string, span opentracing.Span) (*[]byte, error) {
 
 	url := fmt.Sprintf("%s/file/%s/download", fsas.conf.ApiPath, fileId)
 	log.Printf("DownloadFile: url: %s", url)
@@ -81,6 +122,24 @@ func (fsas *fileStoreApiService) DownloadFile(tenantName, fileId string, span op
 		ext.LogError(span, err)
 		return nil, err
 	}
+}
+
+func (fsas *fileStoreApiService) UploadSingleMultipartFile(tenantName, basePath string, multipartFileHeader *multipart.FileHeader, span opentracing.Span) (*FileDTO, error) {
+	file, err := multipartFileHeader.Open()
+	if err != nil {
+		return nil, fmt.Errorf("UploadSingleMultipartFile: failed to open multipart file: %w", err)
+	}
+
+	fileBytes, err := io.ReadAll(file)
+	if err != nil {
+		return nil, fmt.Errorf("UploadSingleMultipartFile: failed to read multipart file: %w", err)
+	}
+
+	return sendRequest(fsas.conf, tenantName, basePath, "", multipartFileHeader.Filename, fileBytes, span)
+}
+
+func (fsas *fileStoreApiService) UploadSingleFileBytes(tenantName, basePath, fileId, fileName string, fileBytes []byte, span opentracing.Span) (*FileDTO, error) {
+	return sendRequest(fsas.conf, tenantName, basePath, fileId, fileName, fileBytes, span)
 }
 
 func sendRequest(conf *FileStoreApiConfig, tenantName, basePath, fileId, fileName string, fileBytes []byte, span opentracing.Span) (*FileDTO, error) {

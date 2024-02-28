@@ -4,7 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
+	authRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/repository"
+	commonRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 	"gorm.io/driver/postgres"
@@ -91,11 +92,8 @@ func InitTestDB() (testcontainers.Container, *gorm.DB, *sql.DB) {
 func createAllTables(db *gorm.DB) {
 	db.Exec("create schema if not exists derived")
 
-	var err error
-	err = db.AutoMigrate(&entity.AppKey{})
-	if err != nil {
-		log.Panicf("Error creating %v table", entity.AppKey{}.TableName())
-	}
+	commonRepository.Migration(db)
+	authRepository.Migration(db)
 }
 
 // initLog Connection Log Configuration

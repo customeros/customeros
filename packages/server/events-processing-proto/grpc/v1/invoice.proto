@@ -67,7 +67,6 @@ message FillInvoiceCustomer {
 }
 
 message FillInvoiceProvider {
-  string LogoUrl = 1;
   string Name = 2;
   string Email = 3;
   string AddressLine1 = 4;

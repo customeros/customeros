@@ -2,9 +2,8 @@ package repository
 
 import (
 	repository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/repository/postgres"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/repository/postgres/entity"
+	authEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/repository/postgres/entity"
 	"gorm.io/gorm"
-	"log"
 )
 
 type Repositories struct {
@@ -18,18 +17,19 @@ func InitRepositories(db *gorm.DB) *Repositories {
 		SlackSettingsRepository: repository.NewSlackSettingsRepository(db),
 	}
 
+	return repositories
+}
+
+func Migration(db *gorm.DB) {
+
 	var err error
 
-	err = db.AutoMigrate(&entity.OAuthTokenEntity{})
+	err = db.AutoMigrate(&authEntity.OAuthTokenEntity{})
 	if err != nil {
-		log.Print(err)
 		panic(err)
 	}
-	err = db.AutoMigrate(&entity.SlackSettingsEntity{})
+	err = db.AutoMigrate(&authEntity.SlackSettingsEntity{})
 	if err != nil {
-		log.Print(err)
 		panic(err)
 	}
-
-	return repositories
 }

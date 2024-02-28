@@ -286,9 +286,6 @@ func (a *TenantAggregate) onUpdateTenantSettings(evt eventstore.Event) error {
 	if eventData.UpdateInvoicingEnabled() {
 		a.TenantDetails.TenantSettings.InvoicingEnabled = eventData.InvoicingEnabled
 	}
-	if eventData.UpdateLogoUrl() {
-		a.TenantDetails.TenantSettings.LogoUrl = eventData.LogoUrl
-	}
 	if eventData.UpdateLogoRepositoryFileId() {
 		a.TenantDetails.TenantSettings.LogoRepositoryFileId = eventData.LogoRepositoryFileId
 	}
@@ -343,8 +340,6 @@ func extractTenantSettingsFieldsMask(inputFieldsMask []tenantpb.TenantSettingsFi
 	var fieldsMask []string
 	for _, requestFieldMask := range inputFieldsMask {
 		switch requestFieldMask {
-		case tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_LOGO_URL:
-			fieldsMask = append(fieldsMask, event.FieldMaskLogoUrl)
 		case tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_LOGO_REPOSITORY_FILE_ID:
 			fieldsMask = append(fieldsMask, event.FieldMaskLogoRepositoryFileId)
 		case tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_BASE_CURRENCY:

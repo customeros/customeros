@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	postgrest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/test/postgres"
+	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -10,9 +11,9 @@ import (
 
 func TestServiceAccountCredentialsExistsForTenant(t *testing.T) {
 	tenant := "test_tenant"
-	err := postgrest.InsertTenantAPIKey(postgresGormDB, tenant, "GSUITE_SERVICE_PRIVATE_KEY", "test1")
+	err := postgrest.InsertTenantAPIKey(postgresGormDB, tenant, commonEntity.GSUITE_SERVICE_PRIVATE_KEY, "test1")
 	require.NoError(t, err)
-	err = postgrest.InsertTenantAPIKey(postgresGormDB, tenant, "GSUITE_SERVICE_EMAIL_ADDRESS", "test2")
+	err = postgrest.InsertTenantAPIKey(postgresGormDB, tenant, commonEntity.GSUITE_SERVICE_EMAIL_ADDRESS, "test2")
 	require.NoError(t, err)
 
 	// positive case

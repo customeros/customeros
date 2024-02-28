@@ -49,7 +49,6 @@ func MapEntityToInvoice(entity *neo4jentity.InvoiceEntity) *model.Invoice {
 			AddressCountry:  utils.StringPtrNillable(entity.Customer.Country),
 		},
 		Provider: &model.InvoiceProvider{
-			LogoURL:              utils.StringPtrNillable(entity.Provider.LogoUrl),
 			LogoRepositoryFileID: utils.StringPtrNillable(entity.Provider.LogoRepositoryFileId),
 			Name:                 utils.StringPtrNillable(entity.Provider.Name),
 			AddressLine1:         utils.StringPtrNillable(entity.Provider.AddressLine1),

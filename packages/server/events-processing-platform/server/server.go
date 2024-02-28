@@ -105,6 +105,8 @@ func (server *Server) Start(parentCtx context.Context) error {
 	postgresDb, _ := InitPostgresDB(server.Config, server.Log)
 	defer postgresDb.SqlDB.Close()
 
+	repository.Migration(postgresDb.GormDB)
+
 	// Setting up Neo4j
 	neo4jDriver, err := commonconf.NewNeo4jDriver(server.Config.Neo4j)
 	if err != nil {

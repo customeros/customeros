@@ -7,7 +7,6 @@ import (
 
 type TenantSettingsEntity struct {
 	Id                   string
-	LogoUrl              string
 	LogoRepositoryFileId string
 	BaseCurrency         enum.Currency
 	InvoicingEnabled     bool

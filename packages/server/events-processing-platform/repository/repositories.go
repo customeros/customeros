@@ -37,10 +37,13 @@ func InitRepos(driver *neo4j.DriverWithContext, neo4jDatabase string, gormDb *go
 		InvoiceRepository:       repository.NewInvoiceRepository(gormDb),
 	}
 
-	err := gormDb.AutoMigrate(&entity.CustomerOsIds{}, &entity.EventBuffer{}, &entity.InvoiceNumberEntity{})
+	return &repositories
+}
+
+func Migration(db *gorm.DB) {
+
+	err := db.AutoMigrate(&entity.CustomerOsIds{}, &entity.EventBuffer{}, &entity.InvoiceNumberEntity{})
 	if err != nil {
 		panic(err)
 	}
-
-	return &repositories
 }

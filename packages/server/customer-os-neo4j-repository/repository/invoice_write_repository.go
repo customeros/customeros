@@ -52,7 +52,6 @@ type InvoiceFillFields struct {
 	CustomerAddressZip            string                  `json:"customerAddressZip"`
 	CustomerAddressLocality       string                  `json:"customerAddressLocality"`
 	CustomerAddressCountry        string                  `json:"customerAddressCountry"`
-	ProviderLogoUrl               string                  `json:"providerLogoUrl"`
 	ProviderLogoRepositoryFileId  string                  `json:"providerLogoRepositoryFileId"`
 	ProviderName                  string                  `json:"providerName"`
 	ProviderEmail                 string                  `json:"providerEmail"`
@@ -187,7 +186,6 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tenant, invoic
 								i.customerAddressZip=$customerAddressZip,
 								i.customerAddressLocality=$customerAddressLocality,
 								i.customerAddressCountry=$customerAddressCountry,
-								i.providerLogoUrl=$providerLogoUrl,
 								i.providerLogoRepositoryFileId=$providerLogoRepositoryFileId,
 								i.providerName=$providerName,
 								i.providerEmail=$providerEmail,
@@ -224,7 +222,6 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tenant, invoic
 		"customerAddressZip":            data.CustomerAddressZip,
 		"customerAddressLocality":       data.CustomerAddressLocality,
 		"customerAddressCountry":        data.CustomerAddressCountry,
-		"providerLogoUrl":               data.ProviderLogoUrl,
 		"providerLogoRepositoryFileId":  data.ProviderLogoRepositoryFileId,
 		"providerName":                  data.ProviderName,
 		"providerEmail":                 data.ProviderEmail,

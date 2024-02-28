@@ -84,12 +84,10 @@ type TenantBillingProfileUpdateFields struct {
 
 type TenantSettingsFields struct {
 	UpdatedAt                  time.Time     `json:"updatedAt"`
-	LogoUrl                    string        `json:"logoUrl"`
 	LogoRepositoryFileId       string        `json:"logoRepositoryFileId"`
 	BaseCurrency               enum.Currency `json:"baseCurrency"`
 	InvoicingEnabled           bool          `json:"invoicingEnabled"`
 	InvoicingPostpaid          bool          `json:"invoicingPostpaid"`
-	UpdateLogoUrl              bool          `json:"updateLogoUrl"`
 	UpdateLogoRepositoryFileId bool          `json:"updateLogoRepositoryFileId"`
 	UpdateInvoicingEnabled     bool          `json:"updateInvoicingEnabled"`
 	UpdateInvoicingPostpaid    bool          `json:"updateInvoicingPostpaid"`
@@ -319,10 +317,6 @@ func (r *tenantWriteRepository) UpdateTenantSettings(ctx context.Context, tenant
 	if data.UpdateBaseCurrency {
 		cypher += ", ts.baseCurrency=$baseCurrency"
 		params["baseCurrency"] = data.BaseCurrency.String()
-	}
-	if data.UpdateLogoUrl {
-		cypher += ", ts.logoUrl=$logoUrl"
-		params["logoUrl"] = data.LogoUrl
 	}
 	if data.UpdateLogoRepositoryFileId {
 		cypher += ", ts.logoRepositoryFileId=$logoRepositoryFileId"

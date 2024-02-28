@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"net/mail"
@@ -529,7 +528,6 @@ func (h *InvoiceEventHandler) prepareAndCallFillInvoice(ctx context.Context, ten
 		contractEntity.OrganizationLegalName,
 		contractEntity.InvoiceEmail,
 		contractEntity.AddressLine1, contractEntity.AddressLine2, contractEntity.Zip, contractEntity.Locality, contractCountry,
-		tenantSettingsEntity.LogoUrl,
 		tenantSettingsEntity.LogoRepositoryFileId,
 		tenantBillingProfileEntity.LegalName,
 		tenantBillingProfileEntity.SendInvoicesFrom,
@@ -549,7 +547,7 @@ func (h *InvoiceEventHandler) prepareAndCallFillInvoice(ctx context.Context, ten
 
 func (h *InvoiceEventHandler) callFillInvoice(ctx context.Context, tenant, invoiceId, domesticPaymentsBankInfo, internationalPaymentsBankInfo,
 	customerName, customerEmail, customerAddressLine1, customerAddressLine2, customerAddressZip, customerAddressLocality, customerAddressCountry,
-	providerLogoUrl, providerLogoRepositoryFileId, providerName, providerEmail, providerAddressLine1, providerAddressLine2, providerAddressZip, providerAddressLocality, providerAddressCountry,
+	providerLogoRepositoryFileId, providerName, providerEmail, providerAddressLine1, providerAddressLine2, providerAddressZip, providerAddressLocality, providerAddressCountry,
 	note string, amount, vat, total float64, invoiceLines []*invoicepb.InvoiceLine, span opentracing.Span) error {
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	now := time.Now()
@@ -570,7 +568,6 @@ func (h *InvoiceEventHandler) callFillInvoice(ctx context.Context, tenant, invoi
 				Country:      customerAddressCountry,
 			},
 			Provider: &invoicepb.FillInvoiceProvider{
-				LogoUrl:              providerLogoUrl,
 				LogoRepositoryFileId: providerLogoRepositoryFileId,
 				Name:                 providerName,
 				Email:                providerEmail,
@@ -843,14 +840,15 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 	}
 
 	data := map[string]interface{}{
+		"Tenant":                        eventData.Tenant,
 		"CustomerName":                  invoiceEntity.Customer.Name,
 		"CustomerEmail":                 invoiceEntity.Customer.Email,
 		"CustomerAddressLine1":          invoiceEntity.Customer.AddressLine1,
 		"CustomerAddressLine2":          invoiceEntity.Customer.AddressLine2,
 		"CustomerAddressLine3":          utils.JoinNonEmpty(", ", invoiceEntity.Customer.Locality, invoiceEntity.Customer.Zip),
 		"CustomerCountry":               invoiceEntity.Customer.Country,
-		"ProviderLogoUrl":               invoiceEntity.Provider.LogoUrl,
-		"ProviderLogoExtension":         GetFileExtensionFromUrl(invoiceEntity.Provider.LogoUrl),
+		"ProviderLogoExtension":         "",
+		"ProviderLogoRepositoryFileId":  invoiceEntity.Provider.LogoRepositoryFileId,
 		"ProviderName":                  invoiceEntity.Provider.Name,
 		"ProviderEmail":                 invoiceEntity.Provider.Email,
 		"ProviderAddressLine1":          invoiceEntity.Provider.AddressLine1,
@@ -900,6 +898,16 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 	defer os.Remove(tmpInvoiceFile.Name()) // Delete the temporary HTML file when done
 	defer tmpInvoiceFile.Close()
 
+	if invoiceEntity.Provider.LogoRepositoryFileId != "" {
+		fileMetadata, err := h.fsc.GetFileMetadata(eventData.Tenant, invoiceEntity.Provider.LogoRepositoryFileId, span)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.GetFileMetadata")
+		}
+
+		data["ProviderLogoExtension"] = GetFileExtensionFromMetadata(fileMetadata)
+	}
+
 	//fill the template with data and store it in temp
 	err = FillInvoiceHtmlTemplate(tmpInvoiceFile, data)
 	if err != nil {
@@ -908,7 +916,7 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 	}
 
 	//convert the temp to pdf
-	pdfBytes, err := ConvertInvoiceHtmlToPdf(h.cfg.Subscriptions.InvoiceSubscription.PdfConverterUrl, tmpInvoiceFile, data)
+	pdfBytes, err := ConvertInvoiceHtmlToPdf(h.fsc, h.cfg.Subscriptions.InvoiceSubscription.PdfConverterUrl, tmpInvoiceFile, data, span)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "ConvertInvoiceHtmlToPdf")
@@ -1016,7 +1024,7 @@ func (h *InvoiceEventHandler) onInvoiceVoidV1(ctx context.Context, evt eventstor
 		Attachments: []notifications.PostmarkEmailAttachment{},
 	}
 
-	err = h.AppendProviderLogoToEmail(*invoiceEntity, &postmarkEmail)
+	err = h.AppendProviderLogoToEmail(eventData.Tenant, invoiceEntity.Provider.LogoRepositoryFileId, &postmarkEmail, span)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error appending provider logo to email for invoice %s: %s", invoiceId, err.Error())
@@ -1112,7 +1120,7 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 		return err
 	}
 
-	err = h.AppendProviderLogoToEmail(invoiceEntity, &postmarkEmail)
+	err = h.AppendProviderLogoToEmail(eventData.Tenant, invoiceEntity.Provider.LogoRepositoryFileId, &postmarkEmail, span)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error appending provider logo to email for invoice %s: %s", invoiceId, err.Error())
@@ -1214,7 +1222,7 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 		return err
 	}
 
-	err = h.AppendProviderLogoToEmail(invoiceEntity, &postmarkEmail)
+	err = h.AppendProviderLogoToEmail(eventData.Tenant, invoiceEntity.Provider.LogoRepositoryFileId, &postmarkEmail, span)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error appending provider logo to email for invoice %s: %s", invoiceId, err.Error())
@@ -1241,7 +1249,7 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 }
 
 func (h *InvoiceEventHandler) AppendInvoiceFileToEmailAsAttachment(tenant string, invoice neo4jentity.InvoiceEntity, postmarkEmail *notifications.PostmarkEmail, span opentracing.Span) error {
-	invoiceFileBytes, err := h.fsc.DownloadFile(tenant, invoice.RepositoryFileId, span)
+	invoiceFileBytes, err := h.fsc.GetFileBytes(tenant, invoice.RepositoryFileId, span)
 	if err != nil {
 		return err
 	}
@@ -1255,30 +1263,20 @@ func (h *InvoiceEventHandler) AppendInvoiceFileToEmailAsAttachment(tenant string
 	return nil
 }
 
-func (h *InvoiceEventHandler) AppendProviderLogoToEmail(invoice neo4jentity.InvoiceEntity, postmarkEmail *notifications.PostmarkEmail) error {
-	if invoice.Provider.LogoUrl == "" {
+func (h *InvoiceEventHandler) AppendProviderLogoToEmail(tenant, logoFileId string, postmarkEmail *notifications.PostmarkEmail, span opentracing.Span) error {
+	if logoFileId == "" {
 		return nil
 	}
 
-	lg, err := downloadProviderLogoAsResourceFile(invoice.Provider.LogoUrl)
-	if err != nil {
-		return err
-	}
-	defer os.Remove(lg.Name())
-	var logoBytes []byte
-	if logoBytes, err = io.ReadAll(lg); err != nil {
-		return err
-	}
-
-	logoFileType, err := utils.GetFileType(logoBytes)
+	metadata, fileBytes, err := h.fsc.GetFile(tenant, logoFileId, span)
 	if err != nil {
 		return err
 	}
 
 	postmarkEmail.Attachments = append(postmarkEmail.Attachments, notifications.PostmarkEmailAttachment{
 		Filename:       "provider-logo-file-encoded",
-		ContentEncoded: base64.StdEncoding.EncodeToString(logoBytes),
-		ContentType:    logoFileType.MIME.Value,
+		ContentEncoded: base64.StdEncoding.EncodeToString(*fileBytes),
+		ContentType:    metadata.MimeType,
 		ContentID:      "cid:provider-logo-file-encoded",
 	})
 

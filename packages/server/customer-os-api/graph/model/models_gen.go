@@ -2523,10 +2523,10 @@ type TenantInput struct {
 }
 
 type TenantSettings struct {
-	LogoURL              string    `json:"logoUrl"`
 	LogoRepositoryFileID *string   `json:"logoRepositoryFileId,omitempty"`
 	BaseCurrency         *Currency `json:"baseCurrency,omitempty"`
 	BillingEnabled       bool      `json:"billingEnabled"`
+	LogoURL              string    `json:"logoUrl"`
 }
 
 type TenantSettingsInput struct {

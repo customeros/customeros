@@ -158,12 +158,10 @@ func (h *TenantEventHandler) OnUpdateTenantSettingsV1(ctx context.Context, evt e
 
 	data := neo4jrepository.TenantSettingsFields{
 		UpdatedAt:                  eventData.UpdatedAt,
-		LogoUrl:                    eventData.LogoUrl,
 		LogoRepositoryFileId:       eventData.LogoRepositoryFileId,
 		InvoicingEnabled:           eventData.InvoicingEnabled,
 		InvoicingPostpaid:          eventData.InvoicingPostpaid,
 		BaseCurrency:               neo4jenum.DecodeCurrency(eventData.BaseCurrency),
-		UpdateLogoUrl:              eventData.UpdateLogoUrl(),
 		UpdateInvoicingEnabled:     eventData.UpdateInvoicingEnabled(),
 		UpdateBaseCurrency:         eventData.UpdateBaseCurrency(),
 		UpdateInvoicingPostpaid:    eventData.UpdateInvoicingPostpaid(),
