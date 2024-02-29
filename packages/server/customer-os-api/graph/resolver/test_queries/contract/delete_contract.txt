@@ -1,0 +1,6 @@
+mutation DeleteContract($contractId: ID!) {
+  contract_Delete(id: $contractId) {
+    accepted
+    completed
+  }
+}

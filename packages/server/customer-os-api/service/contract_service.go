@@ -28,7 +28,7 @@ import (
 type ContractService interface {
 	Create(ctx context.Context, contract *ContractCreateData) (string, error)
 	Update(ctx context.Context, input model.ContractUpdateInput) error
-	PermanentlyDeleteContract(ctx context.Context, contractId string) (bool, error)
+	SoftDeleteContract(ctx context.Context, contractId string) (bool, error)
 	GetById(ctx context.Context, id string) (*neo4jentity.ContractEntity, error)
 	GetContractsForOrganizations(ctx context.Context, organizationIds []string) (*neo4jentity.ContractEntities, error)
 	GetContractsForInvoices(ctx context.Context, invoiceIds []string) (*neo4jentity.ContractEntities, error)
@@ -159,7 +159,7 @@ func (s *contractService) createContractWithEvents(ctx context.Context, contract
 		return s.grpcClients.ContractClient.CreateContract(ctx, &createContractRequest)
 	})
 
-	WaitForNodeCreatedInNeo4j(ctx, s.repositories, response.Id, neo4jutil.NodeLabelContact)
+	WaitForNodeCreatedInNeo4j(ctx, s.repositories, response.Id, neo4jutil.NodeLabelContact, span)
 	return response.Id, err
 }
 
@@ -526,8 +526,8 @@ func (s *contractService) CountContracts(ctx context.Context, tenant string) (in
 	return s.repositories.Neo4jRepositories.ContractReadRepository.CountContracts(ctx, tenant)
 }
 
-func (s *contractService) PermanentlyDeleteContract(ctx context.Context, contractId string) (bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.PermanentlyDeleteContract")
+func (s *contractService) SoftDeleteContract(ctx context.Context, contractId string) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.SoftDeleteContract")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagEntityId, contractId)
@@ -560,7 +560,7 @@ func (s *contractService) PermanentlyDeleteContract(ctx context.Context, contrac
 		return false, err
 	}
 
-	deleteRequest := contractpb.DeleteContractGrpcRequest{
+	deleteRequest := contractpb.SoftDeleteContractGrpcRequest{
 		Tenant:         common.GetTenantFromContext(ctx),
 		Id:             contractId,
 		LoggedInUserId: common.GetUserIdFromContext(ctx),
@@ -569,7 +569,7 @@ func (s *contractService) PermanentlyDeleteContract(ctx context.Context, contrac
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err = CallEventsPlatformGRPCWithRetry[*emptypb.Empty](func() (*emptypb.Empty, error) {
-		return s.grpcClients.ContractClient.DeleteContract(ctx, &deleteRequest)
+		return s.grpcClients.ContractClient.SoftDeleteContract(ctx, &deleteRequest)
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -578,7 +578,7 @@ func (s *contractService) PermanentlyDeleteContract(ctx context.Context, contrac
 	}
 
 	// wait for contract to be deleted from graph db
-	WaitForNodeDeletedFromNeo4j(ctx, s.repositories, contractId, neo4jutil.NodeLabelContract)
+	WaitForNodeDeletedFromNeo4j(ctx, s.repositories, contractId, neo4jutil.NodeLabelContract, span)
 
 	return false, nil
 }

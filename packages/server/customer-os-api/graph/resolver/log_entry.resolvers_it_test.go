@@ -15,7 +15,7 @@ import (
 )
 
 func TestQueryResolver_LogEntry(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 

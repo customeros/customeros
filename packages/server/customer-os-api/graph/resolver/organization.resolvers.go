@@ -131,7 +131,6 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 		return nil, nil
 	}
 
-	service.WaitForNodeCreatedInNeo4j(ctx, r.Services.OrganizationService.re, response.Id, "Organization", span)
 	var findOrgErr error
 	var organizationCreated = false
 	for i := 1; i <= constants.MaxRetriesCheckDataInNeo4jAfterEventRequest; i++ {

@@ -14,7 +14,7 @@ import (
 )
 
 func TestMutationResolver_LocationUpdate(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
@@ -63,7 +63,7 @@ func TestMutationResolver_LocationUpdate(t *testing.T) {
 }
 
 func TestMutationResolver_LocationRemoveFromOrganization_UniqueRelation(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
@@ -100,7 +100,7 @@ func TestMutationResolver_LocationRemoveFromOrganization_UniqueRelation(t *testi
 }
 
 func TestMutationResolver_LocationRemoveFromOrganization_SharedLocation(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)

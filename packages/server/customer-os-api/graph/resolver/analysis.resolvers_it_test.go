@@ -16,7 +16,7 @@ import (
 )
 
 func TestMutationResolver_AnalysisCreate_Session(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
@@ -59,7 +59,7 @@ func TestMutationResolver_AnalysisCreate_Session(t *testing.T) {
 }
 
 func TestMutationResolver_AnalysisCreate_Meeting(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
@@ -101,7 +101,7 @@ func TestMutationResolver_AnalysisCreate_Meeting(t *testing.T) {
 }
 
 func TestMutationResolver_AnalysisCreate_Event(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
@@ -153,7 +153,7 @@ func TestMutationResolver_AnalysisCreate_Event(t *testing.T) {
 }
 
 func TestQueryResolver_Analysis(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 

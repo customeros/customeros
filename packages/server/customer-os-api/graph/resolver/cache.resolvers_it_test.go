@@ -13,7 +13,7 @@ import (
 )
 
 func TestQueryResolver_GCliCache_IsOwnerFalse(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
@@ -48,7 +48,7 @@ func TestQueryResolver_GCliCache_IsOwnerFalse(t *testing.T) {
 }
 
 func TestQueryResolver_GCliCache_IsOwnerTrue(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
@@ -85,7 +85,7 @@ func TestQueryResolver_GCliCache_IsOwnerTrue(t *testing.T) {
 }
 
 func TestQueryResolver_GCliCache(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
@@ -156,7 +156,7 @@ func TestQueryResolver_GCliCache(t *testing.T) {
 }
 
 func TestQueryResolver_GCliCache_HasContracts_False(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
@@ -189,7 +189,7 @@ func TestQueryResolver_GCliCache_HasContracts_False(t *testing.T) {
 }
 
 func TestQueryResolver_GCliCache_HasContracts_True(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)

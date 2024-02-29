@@ -17,7 +17,7 @@ import (
 )
 
 func TestMutationResolver_JobRoleCreate_WithOrganization(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
@@ -76,7 +76,7 @@ func TestMutationResolver_JobRoleCreate_WithOrganization(t *testing.T) {
 }
 
 func TestMutationResolver_JobRoleCreate_WithoutOrganization(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
@@ -118,7 +118,7 @@ func TestMutationResolver_JobRoleCreate_WithoutOrganization(t *testing.T) {
 }
 
 func TestMutationResolver_JobRoleUpdate(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
@@ -160,7 +160,7 @@ func TestMutationResolver_JobRoleUpdate(t *testing.T) {
 }
 
 func TestMutationResolver_JobRoleUpdate_ChangeOrganization(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
@@ -201,7 +201,7 @@ func TestMutationResolver_JobRoleUpdate_ChangeOrganization(t *testing.T) {
 }
 
 func TestMutationResolver_JobRoleDelete(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)

@@ -24,7 +24,7 @@ import (
 )
 
 func TestQueryResolver_Organizations_FilterByNameLike(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "A closed organization"})
@@ -57,7 +57,7 @@ func TestQueryResolver_Organizations_FilterByNameLike(t *testing.T) {
 }
 
 func TestQueryResolver_Organizations_FilterByName_IsEmpty(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "A closed organization"})
@@ -86,7 +86,7 @@ func TestQueryResolver_Organizations_FilterByName_IsEmpty(t *testing.T) {
 }
 
 func TestQueryResolver_Organization(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	now := utils.NowPtr()
@@ -159,7 +159,7 @@ func TestQueryResolver_Organization(t *testing.T) {
 }
 
 func TestQueryResolver_OrganizationByCustomerOsId(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
@@ -182,7 +182,7 @@ func TestQueryResolver_OrganizationByCustomerOsId(t *testing.T) {
 }
 
 func TestQueryResolver_OrganizationByCustomerOsId_NotFound(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
@@ -198,7 +198,7 @@ func TestQueryResolver_OrganizationByCustomerOsId_NotFound(t *testing.T) {
 }
 
 func TestQueryResolver_Organizations_WithLocations(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	organizationId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "OPENLINE")
@@ -281,7 +281,7 @@ func TestQueryResolver_Organizations_WithLocations(t *testing.T) {
 }
 
 func TestQueryResolver_Organizations_WithTags(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	organizationId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "Org 1 with 2 tags")
@@ -327,7 +327,7 @@ func TestQueryResolver_Organizations_WithTags(t *testing.T) {
 }
 
 func TestQueryResolver_Organization_WithRoles_ById(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	contactId1 := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
@@ -371,7 +371,7 @@ func TestQueryResolver_Organization_WithRoles_ById(t *testing.T) {
 }
 
 func TestQueryResolver_Organization_WithContacts_ById(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "organization1")
@@ -414,7 +414,7 @@ func TestQueryResolver_Organization_WithContacts_ById(t *testing.T) {
 }
 
 func TestQueryResolver_Organization_WithTimelineEvents_DirectAndFromMultipleContacts(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -589,7 +589,7 @@ func TestQueryResolver_Organization_WithTimelineEvents_DirectAndFromMultipleCont
 }
 
 func TestQueryResolver_Organization_WithTimelineEventsTotalCount(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -659,7 +659,7 @@ func TestQueryResolver_Organization_WithTimelineEventsTotalCount(t *testing.T) {
 }
 
 func TestQueryResolver_Organization_WithEmails(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -710,7 +710,7 @@ func TestQueryResolver_Organization_WithEmails(t *testing.T) {
 }
 
 func TestQueryResolver_Organization_WithPhoneNumbers(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -761,7 +761,7 @@ func TestQueryResolver_Organization_WithPhoneNumbers(t *testing.T) {
 }
 
 func TestQueryResolver_Organization_WithSubsidiaries(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -796,7 +796,7 @@ func TestQueryResolver_Organization_WithSubsidiaries(t *testing.T) {
 }
 
 func TestQueryResolver_Organization_WithParentForSubsidiary(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -826,7 +826,7 @@ func TestQueryResolver_Organization_WithParentForSubsidiary(t *testing.T) {
 }
 
 func TestQueryResolver_Organization_WithSuggestedMerges(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -858,7 +858,7 @@ func TestQueryResolver_Organization_WithSuggestedMerges(t *testing.T) {
 }
 
 func TestQueryResolver_Organization_WithAccountDetails(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -896,7 +896,7 @@ func TestQueryResolver_Organization_WithAccountDetails(t *testing.T) {
 }
 
 func TestQueryResolver_Organization_WithSocials(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	orgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
@@ -946,7 +946,7 @@ func TestQueryResolver_Organization_WithSocials(t *testing.T) {
 }
 
 func TestQueryResolver_Organization_WithOwner(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -978,7 +978,7 @@ func TestQueryResolver_Organization_WithOwner(t *testing.T) {
 }
 
 func TestQueryResolver_Organization_WithExternalLinks(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -1015,7 +1015,7 @@ func TestQueryResolver_Organization_WithExternalLinks(t *testing.T) {
 }
 
 func TestQueryResolver_OrganizationDistinctOwners(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -1052,7 +1052,7 @@ func TestQueryResolver_OrganizationDistinctOwners(t *testing.T) {
 }
 
 func TestQueryResolver_Organization_WithContracts(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	now := utils.Now()
@@ -1169,7 +1169,7 @@ func TestQueryResolver_Organization_WithContracts(t *testing.T) {
 }
 
 func TestMutationResolver_OrganizationCreate(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -1213,7 +1213,7 @@ func TestMutationResolver_OrganizationCreate(t *testing.T) {
 }
 
 func TestMutationResolver_OrganizationArchive(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -1254,7 +1254,7 @@ func TestMutationResolver_OrganizationArchive(t *testing.T) {
 }
 
 func TestMutationResolver_OrganizationMerge_Properties(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -1308,7 +1308,7 @@ func TestMutationResolver_OrganizationMerge_Properties(t *testing.T) {
 }
 
 func TestMutationResolver_OrganizationMerge_CheckSubsidiariesMerge(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -1353,7 +1353,7 @@ func TestMutationResolver_OrganizationMerge_CheckSubsidiariesMerge(t *testing.T)
 }
 
 func TestMutationResolver_OrganizationMerge_MergeBetweenParentAndSubsidiaryOrg(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -1392,7 +1392,7 @@ func TestMutationResolver_OrganizationMerge_MergeBetweenParentAndSubsidiaryOrg(t
 }
 
 func TestMutationResolver_OrganizationMerge_CheckLastTouchpointUpdated(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -1467,7 +1467,7 @@ func TestMutationResolver_OrganizationMerge_CheckLastTouchpointUpdated(t *testin
 }
 
 func TestMutationResolver_OrganizationAddSubsidiary(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -1521,7 +1521,7 @@ func TestMutationResolver_OrganizationAddSubsidiary(t *testing.T) {
 }
 
 func TestMutationResolver_OrganizationRemoveSubsidiary(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -1566,7 +1566,7 @@ func TestMutationResolver_OrganizationRemoveSubsidiary(t *testing.T) {
 }
 
 func TestMutationResolver_OrganizationAddNewLocation(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -1597,7 +1597,7 @@ func TestMutationResolver_OrganizationAddNewLocation(t *testing.T) {
 }
 
 func TestMutationResolver_OrganizationSetOwner_NewOwner(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -1641,7 +1641,7 @@ func TestMutationResolver_OrganizationSetOwner_NewOwner(t *testing.T) {
 }
 
 func TestMutationResolver_OrganizationSetOwner_ReplaceOwner(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -1688,7 +1688,7 @@ func TestMutationResolver_OrganizationSetOwner_ReplaceOwner(t *testing.T) {
 }
 
 func TestMutationResolver_OrganizationUnsetOwner(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -1723,7 +1723,7 @@ func TestMutationResolver_OrganizationUnsetOwner(t *testing.T) {
 }
 
 func TestMutationResolver_OrganizationUpdateOnboardingStatus(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -1764,7 +1764,7 @@ func TestMutationResolver_OrganizationUpdateOnboardingStatus(t *testing.T) {
 }
 
 func TestMutationResolver_OrganizationUpdate(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 

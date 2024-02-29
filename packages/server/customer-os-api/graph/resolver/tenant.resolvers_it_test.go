@@ -22,7 +22,7 @@ import (
 )
 
 func TestMutationResolver_TenantMerge(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateTenant(ctx, driver, "other")
@@ -63,7 +63,7 @@ func TestMutationResolver_TenantMerge(t *testing.T) {
 }
 
 func TestMutationResolver_TenantMerge_AccessControlled(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	rawResponse, err := c.RawPost(getQuery("tenant/merge_tenant"),
@@ -76,7 +76,7 @@ func TestMutationResolver_TenantMerge_AccessControlled(t *testing.T) {
 }
 
 func TestMutationResolver_TenantMerge_CheckDefaultData(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateOrganizationRelationship(ctx, driver, "Customer")
 	neo4jt.CreateOrganizationRelationship(ctx, driver, "Supplier")
@@ -91,7 +91,7 @@ func TestMutationResolver_TenantMerge_CheckDefaultData(t *testing.T) {
 }
 
 func TestMutationResolver_GetByWorkspace(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateTenant(ctx, driver, "other")
@@ -132,7 +132,7 @@ func TestMutationResolver_GetByWorkspace(t *testing.T) {
 }
 
 func TestMutationResolver_GetByEmail(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	userId := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{})
@@ -170,7 +170,7 @@ func TestMutationResolver_GetByEmail(t *testing.T) {
 }
 
 func TestQueryResolver_GetTenantBillingProfiles(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
@@ -228,7 +228,7 @@ func TestQueryResolver_GetTenantBillingProfiles(t *testing.T) {
 }
 
 func TestQueryResolver_GetTenantBillingProfile(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
@@ -419,7 +419,7 @@ func TestMutationResolver_TenantUpdateBillingProfile(t *testing.T) {
 }
 
 func TestQueryResolver_GetTenantSettings(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
