@@ -90,7 +90,7 @@ type OrganizationUpdateFields struct {
 	UpdateHeadquarters       bool      `json:"updateHeadquarters"`
 	UpdateLogoUrl            bool      `json:"updateLogoUrl"`
 	UpdateEmployeeGrowthRate bool      `json:"updateEmployeeGrowthRate"`
-	UpdateSlackChannelId     bool      `json:"slackChannelId"`
+	UpdateSlackChannelId     bool      `json:"updateSlackChannelId"`
 }
 
 type OrganizationWriteRepository interface {
