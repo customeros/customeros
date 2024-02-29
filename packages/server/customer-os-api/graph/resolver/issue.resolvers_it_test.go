@@ -16,7 +16,7 @@ import (
 )
 
 func TestQueryResolver_Issue(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -97,7 +97,7 @@ func TestQueryResolver_Issue(t *testing.T) {
 }
 
 func TestQueryResolver_Issue_WithParticipants(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 

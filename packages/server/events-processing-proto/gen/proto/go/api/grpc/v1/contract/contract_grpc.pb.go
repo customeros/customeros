@@ -27,7 +27,7 @@ type ContractGrpcServiceClient interface {
 	UpdateContract(ctx context.Context, in *UpdateContractGrpcRequest, opts ...grpc.CallOption) (*ContractIdGrpcResponse, error)
 	RolloutRenewalOpportunityOnExpiration(ctx context.Context, in *RolloutRenewalOpportunityOnExpirationGrpcRequest, opts ...grpc.CallOption) (*ContractIdGrpcResponse, error)
 	RefreshContractStatus(ctx context.Context, in *RefreshContractStatusGrpcRequest, opts ...grpc.CallOption) (*ContractIdGrpcResponse, error)
-	DeleteContract(ctx context.Context, in *DeleteContractGrpcRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	SoftDeleteContract(ctx context.Context, in *SoftDeleteContractGrpcRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type contractGrpcServiceClient struct {
@@ -74,9 +74,9 @@ func (c *contractGrpcServiceClient) RefreshContractStatus(ctx context.Context, i
 	return out, nil
 }
 
-func (c *contractGrpcServiceClient) DeleteContract(ctx context.Context, in *DeleteContractGrpcRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *contractGrpcServiceClient) SoftDeleteContract(ctx context.Context, in *SoftDeleteContractGrpcRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/ContractGrpcService/DeleteContract", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/ContractGrpcService/SoftDeleteContract", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +91,7 @@ type ContractGrpcServiceServer interface {
 	UpdateContract(context.Context, *UpdateContractGrpcRequest) (*ContractIdGrpcResponse, error)
 	RolloutRenewalOpportunityOnExpiration(context.Context, *RolloutRenewalOpportunityOnExpirationGrpcRequest) (*ContractIdGrpcResponse, error)
 	RefreshContractStatus(context.Context, *RefreshContractStatusGrpcRequest) (*ContractIdGrpcResponse, error)
-	DeleteContract(context.Context, *DeleteContractGrpcRequest) (*emptypb.Empty, error)
+	SoftDeleteContract(context.Context, *SoftDeleteContractGrpcRequest) (*emptypb.Empty, error)
 }
 
 // UnimplementedContractGrpcServiceServer should be embedded to have forward compatible implementations.
@@ -110,8 +110,8 @@ func (UnimplementedContractGrpcServiceServer) RolloutRenewalOpportunityOnExpirat
 func (UnimplementedContractGrpcServiceServer) RefreshContractStatus(context.Context, *RefreshContractStatusGrpcRequest) (*ContractIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RefreshContractStatus not implemented")
 }
-func (UnimplementedContractGrpcServiceServer) DeleteContract(context.Context, *DeleteContractGrpcRequest) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteContract not implemented")
+func (UnimplementedContractGrpcServiceServer) SoftDeleteContract(context.Context, *SoftDeleteContractGrpcRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SoftDeleteContract not implemented")
 }
 
 // UnsafeContractGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -197,20 +197,20 @@ func _ContractGrpcService_RefreshContractStatus_Handler(srv interface{}, ctx con
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ContractGrpcService_DeleteContract_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteContractGrpcRequest)
+func _ContractGrpcService_SoftDeleteContract_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SoftDeleteContractGrpcRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ContractGrpcServiceServer).DeleteContract(ctx, in)
+		return srv.(ContractGrpcServiceServer).SoftDeleteContract(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ContractGrpcService/DeleteContract",
+		FullMethod: "/ContractGrpcService/SoftDeleteContract",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ContractGrpcServiceServer).DeleteContract(ctx, req.(*DeleteContractGrpcRequest))
+		return srv.(ContractGrpcServiceServer).SoftDeleteContract(ctx, req.(*SoftDeleteContractGrpcRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -239,8 +239,8 @@ var ContractGrpcService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _ContractGrpcService_RefreshContractStatus_Handler,
 		},
 		{
-			MethodName: "DeleteContract",
-			Handler:    _ContractGrpcService_DeleteContract_Handler,
+			MethodName: "SoftDeleteContract",
+			Handler:    _ContractGrpcService_SoftDeleteContract_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

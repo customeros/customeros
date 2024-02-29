@@ -13,7 +13,7 @@ import (
 )
 
 func TestMutationResolver_CustomFieldsMergeAndUpdateInContact(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
@@ -109,7 +109,7 @@ func checkCustomField(t *testing.T, customField model.CustomField, name, value s
 }
 
 func TestMutationResolver_FieldSetMergeToContact_AllowMultipleFieldSetWithSameNameOnDifferentContacts(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	contactId1 := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
@@ -156,7 +156,7 @@ func TestMutationResolver_FieldSetMergeToContact_AllowMultipleFieldSetWithSameNa
 }
 
 func TestMutationResolver_MergeCustomFieldToFieldSet(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
@@ -186,7 +186,7 @@ func TestMutationResolver_MergeCustomFieldToFieldSet(t *testing.T) {
 }
 
 func TestMutationResolver_CustomFieldUpdateInFieldSet(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
@@ -218,7 +218,7 @@ func TestMutationResolver_CustomFieldUpdateInFieldSet(t *testing.T) {
 }
 
 func TestMutationResolver_CustomFieldDeleteFromFieldSetByID(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
@@ -246,7 +246,7 @@ func TestMutationResolver_CustomFieldDeleteFromFieldSetByID(t *testing.T) {
 }
 
 func TestMutationResolver_FieldSetDeleteFromContact(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
@@ -277,7 +277,7 @@ func TestMutationResolver_FieldSetDeleteFromContact(t *testing.T) {
 }
 
 func TestMutationResolver_EntityTemplateCreate(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateTenant(ctx, driver, "other")
@@ -371,7 +371,7 @@ func TestMutationResolver_EntityTemplateCreate(t *testing.T) {
 }
 
 func TestQueryResolver_EntityTemplates_FilterExtendsProperty(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 

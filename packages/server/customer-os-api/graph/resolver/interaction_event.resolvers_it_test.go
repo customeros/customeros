@@ -23,7 +23,7 @@ import (
 )
 
 func TestMutationResolver_InteractionSessionCreate_Min(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
@@ -50,7 +50,7 @@ func TestMutationResolver_InteractionSessionCreate_Min(t *testing.T) {
 }
 
 func TestMutationResolver_InteractionSessionCreateWithAttachment(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
@@ -89,7 +89,7 @@ func TestMutationResolver_InteractionSessionCreateWithAttachment(t *testing.T) {
 }
 
 func TestMutationResolver_InteractionSessionCreateWithPhone(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
@@ -151,7 +151,7 @@ func TestMutationResolver_InteractionSessionCreateWithPhone(t *testing.T) {
 }
 
 func TestMutationResolver_InteractionSessionCreate(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
@@ -189,7 +189,7 @@ func TestMutationResolver_InteractionSessionCreate(t *testing.T) {
 }
 
 func TestMutationResolver_InteractionEventCreateWithAttachment(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -230,7 +230,7 @@ func TestMutationResolver_InteractionEventCreateWithAttachment(t *testing.T) {
 }
 
 func TestMutationResolver_InteractionEventCreate_Min(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
@@ -287,7 +287,7 @@ func TestMutationResolver_InteractionEventCreate_Min(t *testing.T) {
 }
 
 func TestMutationResolver_InteractionEventCreate_Email(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
@@ -406,7 +406,7 @@ func TestMutationResolver_InteractionEventCreate_Email(t *testing.T) {
 }
 
 func TestMutationResolver_InteractionEventCreate_Meeting(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
@@ -489,7 +489,7 @@ func TestMutationResolver_InteractionEventCreate_Meeting(t *testing.T) {
 }
 
 func TestMutationResolver_InteractionEventCreate_Voice(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
@@ -602,7 +602,7 @@ func TestMutationResolver_InteractionEventCreate_Voice(t *testing.T) {
 }
 
 func TestQueryResolver_InteractionEvent(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -689,7 +689,7 @@ func TestQueryResolver_InteractionEvent(t *testing.T) {
 }
 
 func TestQueryResolver_InteractionEvent_WithIssue(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -725,7 +725,7 @@ func TestQueryResolver_InteractionEvent_WithIssue(t *testing.T) {
 }
 
 func TestQueryResolver_InteractionEvent_ByEventIdentifier(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -812,7 +812,7 @@ func TestQueryResolver_InteractionEvent_ByEventIdentifier(t *testing.T) {
 }
 
 func TestQueryResolver_InteractionSession(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -894,7 +894,7 @@ func TestQueryResolver_InteractionSession(t *testing.T) {
 }
 
 func TestQueryResolver_InteractionSession_BySessionIdentifier(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -964,7 +964,7 @@ func TestQueryResolver_InteractionSession_BySessionIdentifier(t *testing.T) {
 }
 
 func TestQueryResolver_Contact_WithTimelineEvents_InteractionEvents_With_InteractionSession(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -1094,7 +1094,7 @@ func TestQueryResolver_Contact_WithTimelineEvents_InteractionEvents_With_Interac
 }
 
 func TestQueryResolver_Contact_WithTimelineEvents_InteractionEvents_With_MultipleParticipants(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -1219,7 +1219,7 @@ func TestQueryResolver_Contact_WithTimelineEvents_InteractionEvents_With_Multipl
 }
 
 func TestQueryResolver_InteractionEvent_WithExternalLinks(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 

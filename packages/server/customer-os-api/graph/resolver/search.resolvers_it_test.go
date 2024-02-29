@@ -11,7 +11,7 @@ import (
 )
 
 func TestQueryResolver_GCliSearch(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateFullTextBasicSearchIndexes(ctx, driver, tenantName)
 

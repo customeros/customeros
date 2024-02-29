@@ -169,7 +169,7 @@ func (r *mutationResolver) ContractDelete(ctx context.Context, id string) (*mode
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.id", id))
 
-	deletionCompleted, err := r.Services.ContractService.PermanentlyDeleteContract(ctx, id)
+	deletionCompleted, err := r.Services.ContractService.SoftDeleteContract(ctx, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "failed to delete contract %s", id)

@@ -18,7 +18,7 @@ import (
 )
 
 func TestMutationResolver_EmailMergeToContact(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	// Create a tenant in the Neo4j database
@@ -70,7 +70,7 @@ func TestMutationResolver_EmailMergeToContact(t *testing.T) {
 }
 
 func TestMutationResolver_EmailMergeToContact_SecondEmail(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	// Create a tenant in the Neo4j database
@@ -124,7 +124,7 @@ func TestMutationResolver_EmailMergeToContact_SecondEmail(t *testing.T) {
 }
 
 func TestMutationResolver_EmailUpdateInContact(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	// Create a tenant in the Neo4j database
@@ -166,7 +166,7 @@ func TestMutationResolver_EmailUpdateInContact(t *testing.T) {
 }
 
 func TestMutationResolver_EmailUpdateInContact_ReplaceEmail(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	// Create a tenant in the Neo4j database
@@ -213,7 +213,7 @@ func TestMutationResolver_EmailUpdateInContact_ReplaceEmail(t *testing.T) {
 }
 
 func TestMutationResolver_EmailUpdateInUser(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	// Create a tenant in the Neo4j database
@@ -255,7 +255,7 @@ func TestMutationResolver_EmailUpdateInUser(t *testing.T) {
 }
 
 func TestMutationResolver_EmailDelete(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	// Create a tenant in the Neo4j database
@@ -296,7 +296,7 @@ func TestMutationResolver_EmailDelete(t *testing.T) {
 }
 
 func TestMutationResolver_EmailRemoveFromUser(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	// Create a tenant in the Neo4j database
@@ -337,7 +337,7 @@ func TestMutationResolver_EmailRemoveFromUser(t *testing.T) {
 }
 
 func TestMutationResolver_EmailRemoveFromUserById(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	// Create a tenant in the Neo4j database
@@ -378,7 +378,7 @@ func TestMutationResolver_EmailRemoveFromUserById(t *testing.T) {
 }
 
 func TestMutationResolver_EmailMergeToOrganization(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	// Create a tenant in the Neo4j database
@@ -440,7 +440,7 @@ func TestMutationResolver_EmailMergeToOrganization(t *testing.T) {
 }
 
 func TestMutationResolver_EmailUpdateInOrganization(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	// Create a tenant in the Neo4j database
@@ -482,7 +482,7 @@ func TestMutationResolver_EmailUpdateInOrganization(t *testing.T) {
 }
 
 func TestMutationResolver_EmailRemoveFromOrganization(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	// Create a tenant in the Neo4j database
@@ -523,7 +523,7 @@ func TestMutationResolver_EmailRemoveFromOrganization(t *testing.T) {
 }
 
 func TestMutationResolver_EmailRemoveFromOrganizationById(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	// Create a tenant in the Neo4j database
@@ -564,7 +564,7 @@ func TestMutationResolver_EmailRemoveFromOrganizationById(t *testing.T) {
 }
 
 func TestQueryResolver_GetEmail_WithParentOwners(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
@@ -626,7 +626,7 @@ func TestQueryResolver_GetEmail_WithParentOwners(t *testing.T) {
 }
 
 func TestQueryResolver_GetEmail_ById(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)

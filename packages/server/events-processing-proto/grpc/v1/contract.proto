@@ -113,7 +113,7 @@ message RefreshContractStatusGrpcRequest {
 }
 
 // Permanently delete contract request
-message DeleteContractGrpcRequest {
+message SoftDeleteContractGrpcRequest {
   string id = 1;
   string tenant = 2;
   string loggedInUserId = 3;
@@ -131,5 +131,5 @@ service ContractGrpcService {
   rpc UpdateContract(UpdateContractGrpcRequest) returns (ContractIdGrpcResponse);
   rpc RolloutRenewalOpportunityOnExpiration(RolloutRenewalOpportunityOnExpirationGrpcRequest) returns (ContractIdGrpcResponse);
   rpc RefreshContractStatus(RefreshContractStatusGrpcRequest) returns (ContractIdGrpcResponse);
-  rpc DeleteContract(DeleteContractGrpcRequest) returns (google.protobuf.Empty);
+  rpc SoftDeleteContract(SoftDeleteContractGrpcRequest) returns (google.protobuf.Empty);
 }

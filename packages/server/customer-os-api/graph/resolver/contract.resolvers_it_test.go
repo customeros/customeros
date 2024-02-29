@@ -16,13 +16,14 @@ import (
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"testing"
 	"time"
 )
 
 func TestMutationResolver_ContractCreate(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
@@ -83,7 +84,7 @@ func TestMutationResolver_ContractCreate(t *testing.T) {
 }
 
 func TestMutationResolver_ContractUpdate(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
@@ -158,7 +159,7 @@ func TestMutationResolver_ContractUpdate(t *testing.T) {
 }
 
 func TestMutationResolver_ContractUpdate_NullDateFields(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
@@ -211,7 +212,7 @@ func TestMutationResolver_ContractUpdate_NullDateFields(t *testing.T) {
 }
 
 func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	now := utils.Now()
@@ -323,7 +324,7 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 }
 
 func TestQueryResolver_Contract_WithOpportunities(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	now := utils.Now()
@@ -403,4 +404,42 @@ func TestQueryResolver_Contract_WithOpportunities(t *testing.T) {
 	require.Equal(t, "test notes 2", secondOpportunity.GeneralNotes)
 	require.Equal(t, "test comments 2", secondOpportunity.Comments)
 	require.Equal(t, "test2", secondOpportunity.AppSource)
+}
+
+func TestMutationResolver_ContractDelete(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
+
+	calledDeleteContractEvent := false
+
+	contractCallbacks := events_platform.MockContractServiceCallbacks{
+		SoftDeleteContract: func(context context.Context, contract *contractpb.SoftDeleteContractGrpcRequest) (*emptypb.Empty, error) {
+			require.Equal(t, tenantName, contract.Tenant)
+			require.Equal(t, contractId, contract.Id)
+			require.Equal(t, testUserId, contract.LoggedInUserId)
+			require.Equal(t, constants.AppSourceCustomerOsApi, constants.AppSourceCustomerOsApi)
+			calledDeleteContractEvent = true
+			return &emptypb.Empty{}, nil
+		},
+	}
+	events_platform.SetContractCallbacks(&contractCallbacks)
+
+	rawResponse := callGraphQL(t, "contract/delete_contract", map[string]interface{}{
+		"contractId": contractId,
+	})
+
+	var response struct {
+		Contract_Delete model.DeleteResponse
+	}
+
+	require.Nil(t, rawResponse.Errors)
+	err := decode.Decode(rawResponse.Data.(map[string]any), &response)
+	require.Nil(t, err)
+	require.True(t, response.Contract_Delete.Accepted)
+	require.False(t, response.Contract_Delete.Completed)
+	require.True(t, calledDeleteContractEvent)
 }

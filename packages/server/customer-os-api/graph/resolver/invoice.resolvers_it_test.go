@@ -248,7 +248,7 @@ func TestInvoiceResolver_SimulateInvoice(t *testing.T) {
 }
 
 func TestInvoiceResolver_InvoicesForOrganization(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
@@ -296,7 +296,7 @@ func TestInvoiceResolver_InvoicesForOrganization(t *testing.T) {
 }
 
 func TestInvoiceResolver_NextDryRunForContract(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	nextInvoiceDate := neo4jtest.FirstTimeOfMonth(2023, 6)
@@ -357,7 +357,7 @@ func TestInvoiceResolver_NextDryRunForContract(t *testing.T) {
 }
 
 func TestMutationResolver_InvoiceUpdate(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
@@ -404,7 +404,7 @@ func TestMutationResolver_InvoiceUpdate(t *testing.T) {
 }
 
 func TestMutationResolver_InvoiceVoid(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
