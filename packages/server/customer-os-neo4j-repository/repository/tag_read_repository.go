@@ -37,7 +37,8 @@ func (r *tagReadRepository) GetByNameOptional(ctx context.Context, tenant, name 
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {name:$name}) return tag limit 1`
 	params := map[string]any{
-		"name": name,
+		"name":   name,
+		"tenant": tenant,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
