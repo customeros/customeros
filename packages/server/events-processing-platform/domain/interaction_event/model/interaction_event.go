@@ -27,6 +27,29 @@ type InteractionEvent struct {
 	Receivers          []Receiver                   `json:"receivers"`
 }
 
+func (e InteractionEvent) SameData(fields InteractionEventDataFields, externalSystem commonmodel.ExternalSystem) bool {
+	if !externalSystem.Available() {
+		return false
+	}
+
+	if externalSystem.Available() && !e.HasExternalSystem(externalSystem) {
+		return false
+	}
+
+	if e.Source.SourceOfTruth == externalSystem.ExternalSystemId {
+		if e.Channel == fields.Channel &&
+			e.ChannelData == fields.ChannelData &&
+			e.Content == fields.Content &&
+			e.ContentType == fields.ContentType &&
+			e.Identifier == fields.Identifier &&
+			e.EventType == fields.EventType {
+			return true
+		}
+	}
+
+	return false
+}
+
 type Sender struct {
 	Participant  commonmodel.Participant `json:"participant"`
 	RelationType string                  `json:"relationType"`
@@ -43,4 +66,17 @@ func (s Sender) Available() bool {
 
 func (r Receiver) Available() bool {
 	return r.Participant.ID != "" && r.Participant.ParticipantType != ""
+}
+
+func (e *InteractionEvent) HasExternalSystem(externalSystem commonmodel.ExternalSystem) bool {
+	for _, es := range e.ExternalSystems {
+		if es.ExternalSystemId == externalSystem.ExternalSystemId &&
+			es.ExternalId == externalSystem.ExternalId &&
+			es.ExternalSource == externalSystem.ExternalSource &&
+			es.ExternalUrl == externalSystem.ExternalUrl &&
+			es.ExternalIdSecond == externalSystem.ExternalIdSecond {
+			return true
+		}
+	}
+	return false
 }
