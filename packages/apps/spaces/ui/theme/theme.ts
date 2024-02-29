@@ -5,6 +5,7 @@ import { Button } from '@ui/form/Button/Button.theme';
 import { Avatar } from '@ui/media/Avatar/Avatar.theme';
 import { Card } from '@ui/presentation/Card/Card.theme';
 import { TagTheme } from '@ui/presentation/Tag/Tag.theme';
+import { switchTheme } from '@ui/form/Switch/Switch.theme';
 import { Checkbox } from '@ui/form/Checkbox/Checkbox.theme';
 import { Textarea } from '@ui/form/Textarea/Textarea.theme';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.theme';
@@ -30,6 +31,7 @@ export const theme = extendTheme({
     Textarea,
     Checkbox,
     Tooltip,
+    Switch: switchTheme,
   },
   styles: {
     global: () => ({
