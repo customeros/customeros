@@ -213,7 +213,7 @@ func (s *serviceLineItemService) DeleteServiceLineItem(ctx context.Context, requ
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ServiceLineItemService.DeleteServiceLineItem")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	span.LogFields(log.Object("request", request))
+	tracing.LogObjectAsJson(span, "request", request)
 
 	// Validate service line item ID
 	if request.Id == "" {

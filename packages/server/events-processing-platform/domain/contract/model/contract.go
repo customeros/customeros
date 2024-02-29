@@ -41,6 +41,7 @@ type Contract struct {
 	CanPayWithDirectDebit  bool                         `json:"canPayWithDirectDebit"`
 	CanPayWithBankTransfer bool                         `json:"canPayWithBankTransfer"`
 	InvoicingEnabled       bool                         `json:"invoicingEnabled"`
+	Removed                bool                         `json:"removed"`
 }
 
 type ContractDataFields struct {

@@ -9,6 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -95,6 +96,7 @@ type ContractWriteRepository interface {
 	MarkRolloutRenewalRequested(ctx context.Context, tenant, contractId string) error
 	MarkCycleInvoicingRequested(ctx context.Context, tenant, contractId string, invoicingStartedAt time.Time) error
 	MarkOffCycleInvoicingRequested(ctx context.Context, tenant, contractId string, invoicingStartedAt time.Time) error
+	SoftDelete(ctx context.Context, tenant, contractId string, deletedAt time.Time) error
 }
 
 type contractWriteRepository struct {
@@ -505,6 +507,40 @@ func (r *contractWriteRepository) MarkOffCycleInvoicingRequested(ctx context.Con
 	tracing.LogObjectAsJson(span, "params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *contractWriteRepository) SoftDelete(ctx context.Context, tenant, contractId string, deletedAt time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.SoftDelete")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, contractId)
+
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(ct:Contract {id:$contractId})
+			SET ct.updatedAt=$deletedAt,
+				ct:%s,
+				ct:%s
+			REMOVE 	ct:%s, 
+					ct:%s`,
+		neo4jutil.NodeLabelDeletedContract, neo4jutil.NodeLabelDeletedContract+"_"+tenant,
+		neo4jutil.NodeLabelContract, neo4jutil.NodeLabelContract+"_"+tenant)
+	params := map[string]any{
+		"tenant":     tenant,
+		"contractId": contractId,
+		"deletedAt":  deletedAt,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
+	defer session.Close(ctx)
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		return tx.Run(ctx, cypher, params)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}

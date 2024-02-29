@@ -44,6 +44,8 @@ func (a *ContractAggregate) HandleRequest(ctx context.Context, request any) (any
 	switch r := request.(type) {
 	case *contractpb.UpdateContractGrpcRequest:
 		return nil, a.updateContract(ctx, r)
+	case *contractpb.SoftDeleteContractGrpcRequest:
+		return nil, a.softDeleteContract(ctx, r)
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
 		return nil, eventstore.ErrInvalidRequestType
@@ -342,4 +344,26 @@ func extractFieldsMask(requestFieldsMask []contractpb.ContractFieldMask) []strin
 
 func isUpdated(field string, fieldsMask []string) bool {
 	return len(fieldsMask) == 0 || utils.Contains(fieldsMask, field)
+}
+
+func (a *ContractAggregate) softDeleteContract(ctx context.Context, r *contractpb.SoftDeleteContractGrpcRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "ContractAggregate.softDeleteContract")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "request", r)
+
+	deleteEvent, err := event.NewContractDeleteEvent(a, utils.Now())
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewContractDeleteEvent")
+	}
+	aggregate.EnrichEventWithMetadataExtended(&deleteEvent, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: r.LoggedInUserId,
+		App:    r.AppSource,
+	})
+
+	return a.Apply(deleteEvent)
 }

@@ -19,6 +19,7 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type contractService struct {
@@ -176,4 +177,24 @@ func (s *contractService) checkOrganizationExists(ctx context.Context, tenant, o
 	}
 
 	return true, nil // The organization exists
+}
+
+func (s *contractService) SoftDeleteContract(ctx context.Context, request *contractpb.SoftDeleteContractGrpcRequest) (*emptypb.Empty, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContractService.SoftDeleteContract")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+
+	// Validate contract ID
+	if request.Id == "" {
+		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("id"))
+	}
+
+	if _, err := s.contractRequestHandler.HandleWithRetry(ctx, request.Tenant, request.Id, false, request); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(DeleteContract.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		return nil, grpcerr.ErrResponse(err)
+	}
+
+	return &emptypb.Empty{}, nil
 }

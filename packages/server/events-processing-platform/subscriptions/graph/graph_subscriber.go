@@ -354,6 +354,8 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.contractEventHandler.OnRolloutRenewalOpportunity(ctx, evt)
 	case contractevent.ContractUpdateStatusV1:
 		return s.contractEventHandler.OnUpdateStatus(ctx, evt)
+	case contractevent.ContractDeleteV1:
+		return s.contractEventHandler.OnDeleteV1(ctx, evt)
 
 	case servicelineitemevent.ServiceLineItemCreateV1:
 		return s.serviceLineItemEventHandler.OnCreate(ctx, evt)

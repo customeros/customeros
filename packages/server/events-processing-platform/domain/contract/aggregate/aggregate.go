@@ -51,6 +51,8 @@ func (a *ContractAggregate) When(evt eventstore.Event) error {
 		return a.onContractRefreshStatus(evt)
 	case event.ContractRolloutRenewalOpportunityV1:
 		return nil
+	case event.ContractDeleteV1:
+		return a.onContractDelete(evt)
 	default:
 		err := eventstore.ErrInvalidEventType
 		err.EventType = evt.GetEventType()
@@ -210,5 +212,15 @@ func (a *ContractAggregate) onContractRefreshStatus(evt eventstore.Event) error 
 	}
 
 	a.Contract.Status = eventData.Status
+	return nil
+}
+
+func (a *ContractAggregate) onContractDelete(evt eventstore.Event) error {
+	var eventData event.ContractDeleteEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+
+	a.Contract.Removed = true
 	return nil
 }

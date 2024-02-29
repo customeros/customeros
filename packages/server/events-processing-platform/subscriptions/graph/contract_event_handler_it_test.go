@@ -7,6 +7,7 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -921,4 +922,48 @@ func TestContractEventHandler_OnUpdate_CanPayWithCardSet(t *testing.T) {
 	contract := mapper.MapDbNodeToContractEntity(contractDbNode)
 	require.Equal(t, contractId, contract.Id)
 	require.Equal(t, true, contract.CanPayWithCard)
+}
+
+func TestContractEventHandler_OnDeleteV1(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// Prepare neo4j data
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId1 := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{})
+	contractId2 := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		neo4jutil.NodeLabelOrganization: 1, neo4jutil.NodeLabelOrganization + "_" + tenantName: 1,
+		neo4jutil.NodeLabelContract: 2, neo4jutil.NodeLabelContract + "_" + tenantName: 2})
+
+	// prepare event handler
+	contractEventHandler := &ContractEventHandler{
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
+	}
+	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId1)
+	now := utils.Now()
+	deleteEvent, err := event.NewContractDeleteEvent(contractAggregate, now)
+	require.Nil(t, err)
+
+	// EXECUTE
+	err = contractEventHandler.OnDeleteV1(context.Background(), deleteEvent)
+	require.Nil(t, err)
+
+	// VERIFY
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		neo4jutil.NodeLabelOrganization: 1, neo4jutil.NodeLabelOrganization + "_" + tenantName: 1,
+		neo4jutil.NodeLabelContract: 1, neo4jutil.NodeLabelContract + "_" + tenantName: 1,
+		neo4jutil.NodeLabelDeletedContract: 1, neo4jutil.NodeLabelDeletedContract + "_" + tenantName: 1,
+	})
+
+	contractDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Contract_"+tenantName, contractId2)
+	require.Nil(t, err)
+	require.NotNil(t, contractDbNode)
+
+	deletedContractDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "DeletedContract_"+tenantName, contractId1)
+	require.Nil(t, err)
+	require.NotNil(t, deletedContractDbNode)
 }
