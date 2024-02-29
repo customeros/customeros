@@ -484,3 +484,27 @@ func (h *ContractEventHandler) startOnboardingIfEligible(ctx context.Context, te
 		}
 	}
 }
+
+func (h *ContractEventHandler) OnDeleteV1(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractEventHandler.OnDeleteV1")
+	defer span.Finish()
+	setEventSpanTagsAndLogFields(span, evt)
+
+	var eventData event.ContractDeleteEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+	contractId := aggregate.GetContractObjectID(evt.GetAggregateID(), eventData.Tenant)
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, contractId)
+
+	err := h.repositories.Neo4jRepositories.ContractWriteRepository.SoftDelete(ctx, eventData.Tenant, contractId, eventData.UpdatedAt)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while deleting contract %s: %s", contractId, err.Error())
+		return err
+	}
+
+	return nil
+}

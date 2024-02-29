@@ -33,6 +33,7 @@ const (
 	NodeLabelActionItem                = "ActionItem"
 	NodeLabelComment                   = "Comment"
 	NodeLabelContract                  = "Contract"
+	NodeLabelDeletedContract           = "DeletedContract"
 	NodeLabelServiceLineItem           = "ServiceLineItem"
 	NodeLabelOpportunity               = "Opportunity"
 	NodeLabelInvoicingCycle            = "InvoicingCycle"
