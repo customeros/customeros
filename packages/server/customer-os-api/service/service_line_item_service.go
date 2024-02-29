@@ -60,7 +60,7 @@ type ServiceLineItemService interface {
 	GetById(ctx context.Context, id string) (*neo4jentity.ServiceLineItemEntity, error)
 	GetServiceLineItemsForContracts(ctx context.Context, contractIds []string) (*neo4jentity.ServiceLineItemEntities, error)
 	Close(ctx context.Context, serviceLineItemId string, endedAt *time.Time) error
-	CreateOrUpdateOrDeleteInBulk(ctx context.Context, contractId string, sliBulkData []*ServiceLineItemDetails) ([]string, error)
+	CreateOrUpdateOrCloseInBulk(ctx context.Context, contractId string, sliBulkData []*ServiceLineItemDetails) ([]string, error)
 }
 
 type serviceLineItemService struct {
@@ -141,7 +141,7 @@ func (s *serviceLineItemService) createServiceLineItemWithEvents(ctx context.Con
 		return "", err
 	}
 
-	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jutil.NodeLabelServiceLineItem, span)
+	WaitForNodeCreatedInNeo4j(ctx, s.repositories, response.Id, neo4jutil.NodeLabelServiceLineItem, span)
 	return response.Id, err
 }
 
@@ -296,17 +296,7 @@ func (s *serviceLineItemService) Delete(ctx context.Context, serviceLineItemId s
 	}
 
 	// wait for service line item to be deleted from graph db
-	for i := 1; i <= constants.MaxRetriesCheckDataInNeo4jAfterEventRequest; i++ {
-		serviceLineItemFound, findErr := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), serviceLineItemId, neo4jutil.NodeLabelServiceLineItem)
-		if findErr != nil {
-			tracing.TraceErr(span, findErr)
-			s.log.Errorf("error on checking if service line item exists: %s", findErr.Error())
-		} else if !serviceLineItemFound {
-			span.LogFields(log.Bool("serviceLineItemDeletedFromGraphDb", true))
-			return true, nil
-		}
-		time.Sleep(utils.BackOffIncrementalDelay(i))
-	}
+	WaitForNodeDeletedFromNeo4j(ctx, s.repositories, serviceLineItemId, neo4jutil.NodeLabelServiceLineItem, span)
 
 	return false, nil
 }
@@ -396,8 +386,8 @@ type ServiceLineItemDetails struct {
 	StartedAt               *time.Time
 }
 
-func (s *serviceLineItemService) CreateOrUpdateOrDeleteInBulk(ctx context.Context, contractId string, sliBulkData []*ServiceLineItemDetails) ([]string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemService.CreateOrUpdateOrDeleteInBulk")
+func (s *serviceLineItemService) CreateOrUpdateOrCloseInBulk(ctx context.Context, contractId string, sliBulkData []*ServiceLineItemDetails) ([]string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemService.CreateOrUpdateOrCloseInBulk")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("contractId", contractId))

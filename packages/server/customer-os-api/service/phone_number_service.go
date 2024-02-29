@@ -84,7 +84,7 @@ func (s *phoneNumberService) CreatePhoneNumberByEvents(ctx context.Context, phon
 			return "", err
 		}
 
-		WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jutil.NodeLabelPhoneNumber, span)
+		WaitForNodeCreatedInNeo4j(ctx, s.repositories, response.Id, neo4jutil.NodeLabelPhoneNumber, span)
 		return response.Id, nil
 	} else {
 		return phoneNumberEntity.Id, nil

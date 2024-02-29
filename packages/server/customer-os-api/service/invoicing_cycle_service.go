@@ -64,7 +64,7 @@ func (s *invoicingCycleService) CreateInvoicingCycle(ctx context.Context, invoic
 		return "", err
 	}
 
-	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jutil.NodeLabelInvoicingCycle, span)
+	WaitForNodeCreatedInNeo4j(ctx, s.repositories, response.Id, neo4jutil.NodeLabelInvoicingCycle, span)
 
 	return response.Id, nil
 }

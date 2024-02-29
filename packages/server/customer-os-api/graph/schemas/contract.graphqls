@@ -4,6 +4,7 @@ extend type Query {
 extend type Mutation {
     contract_Create(input: ContractInput!): Contract!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     contract_Update(input: ContractUpdateInput!): Contract!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+    contract_Delete(id: ID!): DeleteResponse!  @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type Contract implements MetadataInterface {

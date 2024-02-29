@@ -21,12 +21,14 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"time"
 )
 
 type ContractService interface {
 	Create(ctx context.Context, contract *ContractCreateData) (string, error)
 	Update(ctx context.Context, input model.ContractUpdateInput) error
+	PermanentlyDeleteContract(ctx context.Context, contractId string) (bool, error)
 	GetById(ctx context.Context, id string) (*neo4jentity.ContractEntity, error)
 	GetContractsForOrganizations(ctx context.Context, organizationIds []string) (*neo4jentity.ContractEntities, error)
 	GetContractsForInvoices(ctx context.Context, invoiceIds []string) (*neo4jentity.ContractEntities, error)
@@ -157,7 +159,7 @@ func (s *contractService) createContractWithEvents(ctx context.Context, contract
 		return s.grpcClients.ContractClient.CreateContract(ctx, &createContractRequest)
 	})
 
-	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jutil.NodeLabelContact, span)
+	WaitForNodeCreatedInNeo4j(ctx, s.repositories, response.Id, neo4jutil.NodeLabelContact)
 	return response.Id, err
 }
 
@@ -522,4 +524,61 @@ func (s *contractService) CountContracts(ctx context.Context, tenant string) (in
 	span.LogFields(log.String("tenant", tenant))
 
 	return s.repositories.Neo4jRepositories.ContractReadRepository.CountContracts(ctx, tenant)
+}
+
+func (s *contractService) PermanentlyDeleteContract(ctx context.Context, contractId string) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.PermanentlyDeleteContract")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.SetTag(tracing.SpanTagEntityId, contractId)
+
+	// check contract exists
+	contractExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), contractId, neo4jutil.NodeLabelContract)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("error on checking if contract exists: %s", err.Error())
+		return false, err
+	}
+	if !contractExists {
+		err := fmt.Errorf("contract with id {%s} not found", contractId)
+		tracing.TraceErr(span, err)
+		s.log.Errorf(err.Error())
+		return false, err
+	}
+
+	// check contract has no invoices
+	countInvoices, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.CountNonDryRunInvoicesForContract(ctx, common.GetTenantFromContext(ctx), contractId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("error on counting invoices for contract: %s", err.Error())
+		return false, err
+	}
+	if countInvoices > 0 {
+		err := fmt.Errorf("contract with id {%s} has invoices", contractId)
+		tracing.TraceErr(span, err)
+		s.log.Errorf(err.Error())
+		return false, err
+	}
+
+	deleteRequest := contractpb.DeleteContractGrpcRequest{
+		Tenant:         common.GetTenantFromContext(ctx),
+		Id:             contractId,
+		LoggedInUserId: common.GetUserIdFromContext(ctx),
+		AppSource:      constants.AppSourceCustomerOsApi,
+	}
+
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err = CallEventsPlatformGRPCWithRetry[*emptypb.Empty](func() (*emptypb.Empty, error) {
+		return s.grpcClients.ContractClient.DeleteContract(ctx, &deleteRequest)
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error from events processing: %s", err.Error())
+		return false, err
+	}
+
+	// wait for contract to be deleted from graph db
+	WaitForNodeDeletedFromNeo4j(ctx, s.repositories, contractId, neo4jutil.NodeLabelContract)
+
+	return false, nil
 }

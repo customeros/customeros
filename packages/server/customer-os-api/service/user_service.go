@@ -686,7 +686,7 @@ func (s *userService) Create(ctx context.Context, userEntity entity.UserEntity) 
 		return "", err
 	}
 
-	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jutil.NodeLabelUser, span)
+	WaitForNodeCreatedInNeo4j(ctx, s.repositories, response.Id, neo4jutil.NodeLabelUser, span)
 	return response.Id, nil
 }
 

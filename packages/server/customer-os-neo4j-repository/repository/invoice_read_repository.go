@@ -17,11 +17,42 @@ type InvoiceReadRepository interface {
 	GetInvoiceById(ctx context.Context, tenant, invoiceId string) (*dbtype.Node, error)
 	GetPaginatedInvoices(ctx context.Context, tenant, organizationId string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	GetInvoicesForPayNotifications(ctx context.Context, minutesFromLastUpdate, invoiceNotOlderThanDays int, referenceTime time.Time) ([]*utils.DbNodeAndTenant, error)
+	CountNonDryRunInvoicesForContract(ctx context.Context, tenant, contractId string) (int, error)
 }
 
 type invoiceReadRepository struct {
 	driver   *neo4j.DriverWithContext
 	database string
+}
+
+func (r *invoiceReadRepository) CountNonDryRunInvoicesForContract(ctx context.Context, tenant, contractId string) (int, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceReadRepository.CountNonDryRunInvoicesForContract")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, contractId)
+	span.LogFields(log.String("contractId", contractId))
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	count, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_CONTRACT]->(c:Contract {id:$contractId})-[:HAS_INVOICE]->(i:Invoice) RETURN count(i) as count`
+		params := map[string]any{
+			"tenant":     tenant,
+			"contractId": contractId,
+		}
+		span.LogFields(log.String("cypher", cypher))
+		tracing.LogObjectAsJson(span, "params", params)
+
+		queryResult, err := tx.Run(ctx, cypher, params)
+		return utils.ExtractSingleRecordFirstValueAsType[int64](ctx, queryResult, err)
+	})
+	if err != nil {
+		span.LogFields(log.Bool("result.found", false))
+		return 0, err
+	}
+	span.LogFields(log.Int64("result.count", count.(int64)))
+	return int(count.(int64)), nil
 }
 
 func NewInvoiceReadRepository(driver *neo4j.DriverWithContext, database string) InvoiceReadRepository {

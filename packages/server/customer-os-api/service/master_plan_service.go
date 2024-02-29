@@ -74,7 +74,7 @@ func (s *masterPlanService) CreateMasterPlan(ctx context.Context, name string) (
 		return "", err
 	}
 
-	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jutil.NodeLabelMasterPlan, span)
+	WaitForNodeCreatedInNeo4j(ctx, s.repositories, response.Id, neo4jutil.NodeLabelMasterPlan, span)
 
 	return response.Id, nil
 }
@@ -192,7 +192,7 @@ func (s *masterPlanService) CreateMasterPlanMilestone(ctx context.Context, maste
 		return "", err
 	}
 
-	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jutil.NodeLabelMasterPlanMilestone, span)
+	WaitForNodeCreatedInNeo4j(ctx, s.repositories, response.Id, neo4jutil.NodeLabelMasterPlanMilestone, span)
 
 	span.LogFields(log.String("response - created masterPlanMilestoneId", response.Id))
 	return response.Id, nil
@@ -408,7 +408,7 @@ func (s *masterPlanService) DuplicateMasterPlanMilestone(ctx context.Context, ma
 		return "", err
 	}
 
-	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jutil.NodeLabelMasterPlanMilestone, span)
+	WaitForNodeCreatedInNeo4j(ctx, s.repositories, response.Id, neo4jutil.NodeLabelMasterPlanMilestone, span)
 	return response.Id, nil
 }
 
@@ -454,7 +454,7 @@ func (s *masterPlanService) DuplicateMasterPlan(ctx context.Context, sourceMaste
 		return "", err
 	}
 
-	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jutil.NodeLabelMasterPlan, span)
+	WaitForNodeCreatedInNeo4j(ctx, s.repositories, response.Id, neo4jutil.NodeLabelMasterPlan, span)
 
 	for _, masterPlanMilestoneEntity := range *masterPlanMilestoneEntities {
 		if !masterPlanMilestoneEntity.Retired {
@@ -510,7 +510,7 @@ func (s *masterPlanService) CreateDefaultMasterPlan(ctx context.Context) (string
 		return "", err
 	}
 
-	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jutil.NodeLabelMasterPlan, span)
+	WaitForNodeCreatedInNeo4j(ctx, s.repositories, response.Id, neo4jutil.NodeLabelMasterPlan, span)
 	mid := response.Id
 
 	milestones := []map[string]any{

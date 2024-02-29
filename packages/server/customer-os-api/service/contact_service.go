@@ -155,7 +155,7 @@ func (s *contactService) createContactWithEvents(ctx context.Context, contactDet
 		return s.grpcClients.ContactClient.UpsertContact(ctx, &upsertContactRequest)
 	})
 
-	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jutil.NodeLabelContact, span)
+	WaitForNodeCreatedInNeo4j(ctx, s.repositories, response.Id, neo4jutil.NodeLabelContact, span)
 
 	return response.Id, err
 }

@@ -80,7 +80,7 @@ func (s *organizationPlanService) CreateOrganizationPlan(ctx context.Context, na
 		return "", err
 	}
 
-	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jutil.NodeLabelOrganizationPlan, span)
+	WaitForNodeCreatedInNeo4j(ctx, s.repositories, response.Id, neo4jutil.NodeLabelOrganizationPlan, span)
 
 	return response.Id, nil
 }
@@ -216,7 +216,7 @@ func (s *organizationPlanService) CreateOrganizationPlanMilestone(ctx context.Co
 		return "", err
 	}
 
-	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jutil.NodeLabelOrganizationPlanMilestone, span)
+	WaitForNodeCreatedInNeo4j(ctx, s.repositories, response.Id, neo4jutil.NodeLabelOrganizationPlanMilestone, span)
 
 	span.LogFields(log.String("response - created organizationPlanMilestoneId", response.Id))
 	return response.Id, nil
@@ -449,7 +449,7 @@ func (s *organizationPlanService) DuplicateOrganizationPlanMilestone(ctx context
 		return "", err
 	}
 
-	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jutil.NodeLabelOrganizationPlanMilestone, span)
+	WaitForNodeCreatedInNeo4j(ctx, s.repositories, response.Id, neo4jutil.NodeLabelOrganizationPlanMilestone, span)
 	return response.Id, nil
 }
 
@@ -496,7 +496,7 @@ func (s *organizationPlanService) DuplicateOrganizationPlan(ctx context.Context,
 		return "", err
 	}
 
-	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jutil.NodeLabelOrganizationPlan, span)
+	WaitForNodeCreatedInNeo4j(ctx, s.repositories, response.Id, neo4jutil.NodeLabelOrganizationPlan, span)
 
 	for _, organizationPlanMilestoneEntity := range *organizationPlanMilestoneEntities {
 		itemsText := make([]string, 0, len(organizationPlanMilestoneEntity.Items))

@@ -324,7 +324,7 @@ func (s *emailService) CreateEmailAddressByEvents(ctx context.Context, email, ap
 			return "", err
 		}
 
-		WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jutil.NodeLabelEmail, span)
+		WaitForNodeCreatedInNeo4j(ctx, s.repositories, response.Id, neo4jutil.NodeLabelEmail, span)
 		return response.Id, nil
 	} else {
 		return emailEntity.Id, nil
