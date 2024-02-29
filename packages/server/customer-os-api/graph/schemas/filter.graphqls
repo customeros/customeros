@@ -66,4 +66,5 @@ enum ComparisonOperator {
     IN
     BETWEEN
     IS_NULL
+    IS_EMPTY
 }

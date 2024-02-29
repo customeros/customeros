@@ -12414,6 +12414,7 @@ enum ComparisonOperator {
     IN
     BETWEEN
     IS_NULL
+    IS_EMPTY
 }`, BuiltIn: false},
 	{Name: "../schemas/interaction_event.graphqls", Input: `union InteractionEventParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant | OrganizationParticipant | JobRoleParticipant
 union InteractionSessionParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant

@@ -23,6 +23,7 @@ const (
 	GTE
 	IN
 	BETWEEN
+	IS_EMPTY
 )
 
 func (c ComparisonOperator) String() string {
@@ -45,6 +46,8 @@ func (c ComparisonOperator) String() string {
 		return "IN"
 	case BETWEEN:
 		return "BETWEEN"
+	case IS_EMPTY:
+		return "IS_EMPTY"
 	default:
 		return fmt.Sprintf("%d", int(c))
 	}
@@ -160,6 +163,32 @@ func (f *CypherFilter) BuildCypherFilterFragment(nodeAlias string) (string, map[
 func (f *CypherFilter) BuildCypherFilterFragmentWithParamName(nodeAlias string, customParamPrefix string) (string, map[string]any) {
 	var cypherStr strings.Builder
 	var params = map[string]any{}
+
+	// convert IS_EMPTY to IS_NULL + EQUALS empty string
+	if f.Details != nil && f.Details.ComparisonOperator == IS_EMPTY {
+		nodeProperty := f.Details.NodeProperty
+		dbNodePropertyProps := f.Details.DbNodePropertyProps
+		f.LogicalOperator = OR
+		f.Filters = append(f.Filters,
+			&CypherFilter{
+				Details: &CypherFilterItem{
+					NodeProperty:        nodeProperty,
+					ComparisonOperator:  IS_NULL,
+					DbNodePropertyProps: dbNodePropertyProps,
+				},
+				LogicalOperator: L_NONE,
+			},
+			&CypherFilter{
+				Details: &CypherFilterItem{
+					NodeProperty:        nodeProperty,
+					ComparisonOperator:  EQUALS,
+					Value:               "",
+					DbNodePropertyProps: dbNodePropertyProps,
+				},
+				LogicalOperator: L_NONE,
+			})
+		f.Details = nil
+	}
 
 	if f.Negate {
 		cypherStr.WriteString(" NOT ")

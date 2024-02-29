@@ -56,6 +56,35 @@ func TestQueryResolver_Organizations_FilterByNameLike(t *testing.T) {
 	require.Equal(t, "some other open organization", pagedOrganizations.Content[2].Name)
 }
 
+func TestQueryResolver_Organizations_FilterByName_IsEmpty(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "A closed organization"})
+	org2 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: ""})
+	org3 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: ""})
+
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+
+	rawResponse, err := c.RawPost(getQuery("organization/get_organizations_filter_is_empty"),
+		client.Var("page", 1),
+		client.Var("limit", 3),
+	)
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var organizations struct {
+		Organizations model.OrganizationPage
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &organizations)
+	require.Nil(t, err)
+	require.NotNil(t, organizations)
+	pagedOrganizations := organizations.Organizations
+	require.Equal(t, 1, pagedOrganizations.TotalPages)
+	require.Equal(t, int64(2), pagedOrganizations.TotalElements)
+	require.ElementsMatch(t, []string{org2, org3}, []string{pagedOrganizations.Content[0].ID, pagedOrganizations.Content[1].ID})
+}
+
 func TestQueryResolver_Organization(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
