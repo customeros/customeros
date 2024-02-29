@@ -35,7 +35,7 @@ export const LogoUploader: React.FC<LogoUploaderProps> = () => {
 
   const { data: tenantSettingsData } = useTenantSettingsQuery(client);
   const queryKey = useTenantSettingsQuery.getKey();
-  const [{ logoUrl, dimensions }, setLogoUrl] = useCustomerLogo();
+  const [{ logoUrl }, setLogoUrl] = useCustomerLogo();
   const [hasError, setHasError] = useState<null | {
     file: string;
     error: string;
@@ -158,15 +158,18 @@ export const LogoUploader: React.FC<LogoUploaderProps> = () => {
           maxHeight={120}
           width='full'
           display='flex'
-          justifyContent='center'
           padding={4}
         >
           <ChakraImage
             src={`${logoUrl}`}
             alt='CustomerOS'
-            width={dimensions.width || 136}
-            height={dimensions.height || 45}
-            style={{ objectFit: 'contain', maxHeight: '40px' }}
+            width={40}
+            height={40}
+            style={{
+              objectFit: 'contain',
+              maxHeight: '40px',
+              maxWidth: 'fit-content',
+            }}
           />
         </Box>
       )}
@@ -185,6 +188,9 @@ export const LogoUploader: React.FC<LogoUploaderProps> = () => {
           '& .filepond--root .filepond--drop-label': {
             minHeight:
               files.length || hasError ? `${32}px` : `${120}px !important`,
+          },
+          '& .filepond--image-clip': {
+            margin: 0,
           },
         }}
       >
