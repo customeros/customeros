@@ -1,7 +1,6 @@
 package workflows
 
 import (
-	"bytes"
 	"time"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/temporal/activity"
@@ -11,7 +10,7 @@ import (
 
 type WHWorkflowParam struct {
 	TargetUrl       string
-	RequestBody     *bytes.Buffer
+	RequestBody     string
 	AuthHeaderName  string
 	AuthHeaderValue string
 	RetryPolicy     *temporal.RetryPolicy

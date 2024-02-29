@@ -3,13 +3,29 @@ package activity
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 )
 
-func WebhookActivity(ctx context.Context, targetUrl, authHeaderName, authHeaderValue string, reqBody *bytes.Buffer) error {
+func WebhookActivity(ctx context.Context, targetUrl, authHeaderName, authHeaderValue string, reqBody string) error {
+	var data map[string]interface{}
+
+	// Unmarshal the JSON string into a map
+	if err := json.Unmarshal([]byte(reqBody), &data); err != nil {
+		fmt.Println("Error unmarshaling JSON:", err)
+		return err
+	}
+
+	// Marshal the map back to JSON
+	requestBody, err := json.Marshal(data)
+	if err != nil {
+		fmt.Println("Error marshaling JSON:", err)
+		return err
+	}
+
 	// Create a POST request with headers and body
-	req, err := http.NewRequest("POST", targetUrl, reqBody)
+	req, err := http.NewRequest("POST", targetUrl, bytes.NewBuffer(requestBody))
 	if err != nil {
 		return fmt.Errorf("error creating request: %v", err)
 	}
