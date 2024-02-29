@@ -4,28 +4,55 @@ import (
 	"fmt"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"time"
 )
 
-func WaitForObjectCreationAndLogSpan(ctx context.Context, s *repository.Repositories, id, nodeLabel string, span opentracing.Span) {
-	for i := 1; i <= constants.MaxRetriesCheckDataInNeo4jAfterEventRequest; i++ {
-		found, findErr := s.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), id, nodeLabel)
-		if found && findErr == nil {
-			span.LogFields(log.Bool(fmt.Sprintf("response - %s saved in db", nodeLabel), true))
-			break
+func WaitForNodeCreatedInNeo4j(ctx context.Context, repositories *repository.Repositories, id, nodeLabel string, span opentracing.Span) {
+	operation := func() error {
+		found, findErr := repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), id, nodeLabel)
+		if findErr != nil {
+			return findErr
 		}
-		time.Sleep(utils.BackOffIncrementalDelay(i))
+		if !found {
+			return errors.New(fmt.Sprintf("Node %s with id %s not found in Neo4j", nodeLabel, id))
+		}
+		return nil
 	}
 
-	span.LogFields(log.String(fmt.Sprintf("response - created %s with id", nodeLabel), id))
+	err := backoff.Retry(operation, utils.BackOffConfig(100*time.Millisecond, 1.5, 1*time.Second, 5*time.Second, 10))
+	if err != nil {
+		span.LogFields(log.Bool("result.created", false))
+	} else {
+		span.LogFields(log.Bool("result.created", true))
+	}
+}
+
+func WaitForNodeDeletedFromNeo4j(ctx context.Context, repositories *repository.Repositories, id, nodeLabel string, span opentracing.Span) {
+	operation := func() error {
+		found, findErr := repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), id, nodeLabel)
+		if findErr != nil {
+			return findErr
+		}
+		if found {
+			return errors.New(fmt.Sprintf("Node %s with id %s still exists in Neo4j", nodeLabel, id))
+		}
+		return nil
+	}
+
+	err := backoff.Retry(operation, utils.BackOffConfig(100*time.Millisecond, 1.5, 1*time.Second, 5*time.Second, 10))
+	if err != nil {
+		span.LogFields(log.Bool("result.deleted", false))
+	} else {
+		span.LogFields(log.Bool("result.deleted", true))
+	}
 }
 
 func CallEventsPlatformGRPCWithRetry[T any](operation func() (T, error)) (T, error) {

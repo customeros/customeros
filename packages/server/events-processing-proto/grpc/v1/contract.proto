@@ -1,5 +1,6 @@
 syntax = "proto3";
 
+import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 import "common/source.proto";
 import "common/external_system.proto";
@@ -111,6 +112,14 @@ message RefreshContractStatusGrpcRequest {
   string appSource = 4;
 }
 
+// Permanently delete contract request
+message DeleteContractGrpcRequest {
+  string id = 1;
+  string tenant = 2;
+  string loggedInUserId = 3;
+  string appSource = 4;
+}
+
 // Contract response message
 message ContractIdGrpcResponse {
   string id = 1;
@@ -122,4 +131,5 @@ service ContractGrpcService {
   rpc UpdateContract(UpdateContractGrpcRequest) returns (ContractIdGrpcResponse);
   rpc RolloutRenewalOpportunityOnExpiration(RolloutRenewalOpportunityOnExpirationGrpcRequest) returns (ContractIdGrpcResponse);
   rpc RefreshContractStatus(RefreshContractStatusGrpcRequest) returns (ContractIdGrpcResponse);
+  rpc DeleteContract(DeleteContractGrpcRequest) returns (google.protobuf.Empty);
 }

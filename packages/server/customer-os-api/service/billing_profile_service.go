@@ -82,7 +82,7 @@ func (s *billingProfileService) CreateBillingProfile(ctx context.Context, organi
 		return "", err
 	}
 
-	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jutil.NodeLabelBillingProfile, span)
+	WaitForNodeCreatedInNeo4j(ctx, s.repositories, response.Id, neo4jutil.NodeLabelBillingProfile, span)
 
 	return response.Id, nil
 }

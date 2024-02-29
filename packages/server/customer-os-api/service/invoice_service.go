@@ -272,7 +272,7 @@ func (s *invoiceService) SimulateInvoice(ctx context.Context, invoiceData *Simul
 		return "", err
 	}
 
-	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jutil.NodeLabelInvoice, span)
+	WaitForNodeCreatedInNeo4j(ctx, s.repositories, response.Id, neo4jutil.NodeLabelInvoice, span)
 
 	span.LogFields(log.String("output - createdInvoiceId", response.Id))
 	return response.Id, nil
@@ -348,7 +348,7 @@ func (s *invoiceService) NextInvoiceDryRun(ctx context.Context, contractId strin
 		return "", err
 	}
 
-	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jutil.NodeLabelInvoice, span)
+	WaitForNodeCreatedInNeo4j(ctx, s.repositories, response.Id, neo4jutil.NodeLabelInvoice, span)
 
 	span.LogFields(log.String("output - createdInvoiceId", response.Id))
 	return response.Id, nil

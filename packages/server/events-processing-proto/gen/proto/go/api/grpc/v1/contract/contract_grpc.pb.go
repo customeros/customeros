@@ -11,6 +11,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -26,6 +27,7 @@ type ContractGrpcServiceClient interface {
 	UpdateContract(ctx context.Context, in *UpdateContractGrpcRequest, opts ...grpc.CallOption) (*ContractIdGrpcResponse, error)
 	RolloutRenewalOpportunityOnExpiration(ctx context.Context, in *RolloutRenewalOpportunityOnExpirationGrpcRequest, opts ...grpc.CallOption) (*ContractIdGrpcResponse, error)
 	RefreshContractStatus(ctx context.Context, in *RefreshContractStatusGrpcRequest, opts ...grpc.CallOption) (*ContractIdGrpcResponse, error)
+	DeleteContract(ctx context.Context, in *DeleteContractGrpcRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type contractGrpcServiceClient struct {
@@ -72,6 +74,15 @@ func (c *contractGrpcServiceClient) RefreshContractStatus(ctx context.Context, i
 	return out, nil
 }
 
+func (c *contractGrpcServiceClient) DeleteContract(ctx context.Context, in *DeleteContractGrpcRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/ContractGrpcService/DeleteContract", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ContractGrpcServiceServer is the server API for ContractGrpcService service.
 // All implementations should embed UnimplementedContractGrpcServiceServer
 // for forward compatibility
@@ -80,6 +91,7 @@ type ContractGrpcServiceServer interface {
 	UpdateContract(context.Context, *UpdateContractGrpcRequest) (*ContractIdGrpcResponse, error)
 	RolloutRenewalOpportunityOnExpiration(context.Context, *RolloutRenewalOpportunityOnExpirationGrpcRequest) (*ContractIdGrpcResponse, error)
 	RefreshContractStatus(context.Context, *RefreshContractStatusGrpcRequest) (*ContractIdGrpcResponse, error)
+	DeleteContract(context.Context, *DeleteContractGrpcRequest) (*emptypb.Empty, error)
 }
 
 // UnimplementedContractGrpcServiceServer should be embedded to have forward compatible implementations.
@@ -97,6 +109,9 @@ func (UnimplementedContractGrpcServiceServer) RolloutRenewalOpportunityOnExpirat
 }
 func (UnimplementedContractGrpcServiceServer) RefreshContractStatus(context.Context, *RefreshContractStatusGrpcRequest) (*ContractIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RefreshContractStatus not implemented")
+}
+func (UnimplementedContractGrpcServiceServer) DeleteContract(context.Context, *DeleteContractGrpcRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteContract not implemented")
 }
 
 // UnsafeContractGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -182,6 +197,24 @@ func _ContractGrpcService_RefreshContractStatus_Handler(srv interface{}, ctx con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ContractGrpcService_DeleteContract_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteContractGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ContractGrpcServiceServer).DeleteContract(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ContractGrpcService/DeleteContract",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ContractGrpcServiceServer).DeleteContract(ctx, req.(*DeleteContractGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ContractGrpcService_ServiceDesc is the grpc.ServiceDesc for ContractGrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -204,6 +237,10 @@ var ContractGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RefreshContractStatus",
 			Handler:    _ContractGrpcService_RefreshContractStatus_Handler,
+		},
+		{
+			MethodName: "DeleteContract",
+			Handler:    _ContractGrpcService_DeleteContract_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

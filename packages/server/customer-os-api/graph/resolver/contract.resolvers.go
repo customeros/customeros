@@ -7,7 +7,6 @@ package resolver
 import (
 	"context"
 	"errors"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
@@ -161,6 +160,22 @@ func (r *mutationResolver) ContractUpdate(ctx context.Context, input model.Contr
 	}
 
 	return mapper.MapEntityToContract(contractEntity), nil
+}
+
+// ContractDelete is the resolver for the contract_Delete field.
+func (r *mutationResolver) ContractDelete(ctx context.Context, id string) (*model.DeleteResponse, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContractDelete", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.id", id))
+
+	deletionCompleted, err := r.Services.ContractService.PermanentlyDeleteContract(ctx, id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "failed to delete contract %s", id)
+		return &model.DeleteResponse{Accepted: false, Completed: false}, nil
+	}
+	return &model.DeleteResponse{Accepted: true, Completed: deletionCompleted}, nil
 }
 
 // Contract is the resolver for the contract field.

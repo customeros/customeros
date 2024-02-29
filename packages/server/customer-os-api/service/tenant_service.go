@@ -179,7 +179,7 @@ func (s *tenantService) CreateTenantBillingProfile(ctx context.Context, input mo
 		return "", err
 	}
 
-	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jutil.NodeLabelTenantBillingProfile, span)
+	WaitForNodeCreatedInNeo4j(ctx, s.repositories, response.Id, neo4jutil.NodeLabelTenantBillingProfile, span)
 
 	return response.Id, nil
 }
