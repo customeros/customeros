@@ -55,6 +55,10 @@ func (r *TenantWebhookRepo) CreateWebhook(webhook entity.TenantWebhook) helper.Q
 		WebhookUrl:      webhook.WebhookUrl,
 		AuthHeaderName:  webhook.AuthHeaderName,
 		AuthHeaderValue: webhook.AuthHeaderValue,
+		UserId:          webhook.UserId,
+		UserFirstName:   webhook.UserFirstName,
+		UserLastName:    webhook.UserLastName,
+		UserEmail:       webhook.UserEmail,
 	}
 
 	err := r.db.Create(&webhookEntity).Error

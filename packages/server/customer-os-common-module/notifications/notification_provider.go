@@ -4,8 +4,7 @@ import (
 	"context"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/aws_client"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
-	"github.com/opentracing/opentracing-go"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 )
 
 const (
@@ -15,7 +14,23 @@ const (
 	WorkflowInvoicePaid                     = "invoice-paid"
 	WorkflowInvoiceReady                    = "invoice-ready"
 	WorkflowInvoiceVoided                   = "invoice-voided"
+	WorkflowFailedWebhook                   = "failed-webhook"
 )
+
+var REQUIRED_TEMPLATE_VALUES = map[string][]string{
+	WorkflowIdOrgOwnerUpdateEmail: {
+		"{{userFirstName}}",
+		"{{actorFirstName}}",
+		"{{actorLastName}}",
+		"{{orgName}}",
+		"{{orgLink}}",
+	},
+	WorkflowFailedWebhook: {
+		"{{userFirstName}}",
+		"{{tenant}}",
+		"{{webhookUrl}}",
+	},
+}
 
 type NotifiableUser struct {
 	FirstName    string `json:"firstName"`
@@ -34,7 +49,7 @@ type NovuNotification struct {
 }
 
 type NotificationProvider interface {
-	SendNotification(ctx context.Context, notification *NovuNotification, span opentracing.Span) error
+	SendNotification(ctx context.Context, notification *NovuNotification) error
 }
 
 func NewNovuNotificationProvider(log logger.Logger, apiKey string, s3Client aws_client.S3ClientI) NotificationProvider {

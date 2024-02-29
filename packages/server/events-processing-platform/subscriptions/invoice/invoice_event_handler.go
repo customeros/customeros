@@ -11,6 +11,9 @@ import (
 	"sort"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/aws_client"
+	common_notif "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/notifications"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data"
@@ -55,9 +58,11 @@ type InvoiceEventHandler struct {
 	grpcClients      *grpc_client.Clients
 	fsc              fsc.FileStoreApiService
 	postmarkProvider *notifications.PostmarkProvider
+	novuProvider     common_notif.NotificationProvider
 }
 
 func NewInvoiceEventHandler(log logger.Logger, repositories *repository.Repositories, cfg config.Config, grpcClients *grpc_client.Clients, fsc fsc.FileStoreApiService, postmarkProvider *notifications.PostmarkProvider) *InvoiceEventHandler {
+	s3 := aws_client.NewS3Client(&aws.Config{Region: aws.String("eu-west-1")})
 	return &InvoiceEventHandler{
 		log:              log,
 		repositories:     repositories,
@@ -65,6 +70,7 @@ func NewInvoiceEventHandler(log logger.Logger, repositories *repository.Reposito
 		grpcClients:      grpcClients,
 		fsc:              fsc,
 		postmarkProvider: postmarkProvider,
+		novuProvider:     common_notif.NewNovuNotificationProvider(log, cfg.Services.Novu.ApiKey, s3),
 	}
 }
 
@@ -415,10 +421,7 @@ func (h *InvoiceEventHandler) fillOffCyclePrepaidInvoice(ctx context.Context, te
 
 func isMonthlyAnniversary(date time.Time) bool {
 	now := utils.Now()
-	if now.Day() == date.Day() {
-		return true
-	}
-	return false
+	return now.Day() == date.Day()
 }
 
 func calculatePriceForBilledType(price float64, billed neo4jenum.BilledType, cycle neo4jenum.BillingCycle) float64 {
@@ -789,8 +792,17 @@ func (h *InvoiceEventHandler) dispatchInvoiceFinalizedEvent(ctx context.Context,
 
 	webhookPayload := webhook.PopulateInvoiceFinalizedPayload(&invoice, &organizationEntity, &contractEntity, ilEntities)
 
+	notifyFailure := true
 	// dispatch the event
-	err = webhook.DispatchWebhook(tenant, webhook.WebhookEventInvoiceFinalized, webhookPayload, h.repositories, h.cfg)
+	err = webhook.DispatchWebhook(
+		tenant,
+		webhook.WebhookEventInvoiceFinalized,
+		webhookPayload,
+		h.repositories,
+		h.cfg,
+		h.novuProvider,
+		notifyFailure,
+	)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error dispatching invoice finalized event for invoice %s: %s", invoice.Id, err.Error())

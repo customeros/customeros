@@ -9,9 +9,7 @@ import (
 	"github.com/Boostport/mjml-go"
 	novu "github.com/novuhq/go-novu/lib"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/aws_client"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
-	"github.com/opentracing/opentracing-go"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 )
 
 type NovuProvider struct {
@@ -28,21 +26,19 @@ func newNovuProvider(log logger.Logger, apiKey string, s3 aws_client.S3ClientI) 
 	}
 }
 
-func (np *NovuProvider) SendNotification(ctx context.Context, notification *NovuNotification, span opentracing.Span) error {
+func (np *NovuProvider) SendNotification(ctx context.Context, notification *NovuNotification) error {
 	payload := notification.Payload
 	u := notification.To
 	workflowId := notification.WorkflowId
 
 	rawEmailTemplate, err := np.LoadEmailBody(workflowId)
 	if err != nil {
-		tracing.TraceErr(span, err)
 		return err
 	}
 
 	if rawEmailTemplate != "" {
-		htmlEmailTemplate, err := np.FillTemplate(rawEmailTemplate, notification.TemplateData)
+		htmlEmailTemplate, err := np.FillTemplate(workflowId, rawEmailTemplate, notification.TemplateData)
 		if err != nil {
-			tracing.TraceErr(span, err)
 			return err
 		}
 		payload["html"] = htmlEmailTemplate
@@ -78,6 +74,8 @@ func (np *NovuProvider) LoadEmailBody(workflowId string) (string, error) {
 	switch workflowId {
 	case WorkflowIdOrgOwnerUpdateEmail:
 		fileName = "ownership.single.mjml"
+	case WorkflowFailedWebhook:
+		fileName = "webhook.failed.mjml"
 	}
 
 	if fileName == "" {
@@ -88,14 +86,8 @@ func (np *NovuProvider) LoadEmailBody(workflowId string) (string, error) {
 	return np.s3Client.Download("openline-production-mjml-templates", fileName)
 }
 
-func (np *NovuProvider) FillTemplate(template string, replace map[string]string) (string, error) {
-	requiredVars := []string{
-		"{{userFirstName}}",
-		"{{actorFirstName}}",
-		"{{actorLastName}}",
-		"{{orgName}}",
-		"{{orgLink}}",
-	}
+func (np *NovuProvider) FillTemplate(workflowId, template string, replace map[string]string) (string, error) {
+	requiredVars := REQUIRED_TEMPLATE_VALUES[workflowId]
 	err := checkRequiredTemplateVars(replace, requiredVars)
 	if err != nil {
 		return "", err

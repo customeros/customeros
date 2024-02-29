@@ -8,7 +8,7 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/aws_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/aws_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -25,7 +25,7 @@ import (
 type OrganizationEventHandler struct {
 	repositories         *repository.Repositories
 	log                  logger.Logger
-	notificationProvider notifications.NotificationProvider
+	notificationProvider notifications.NotificationProvider // TODO: refactor to use notification under common module
 	cfg                  *config.Config
 }
 

@@ -3,17 +3,21 @@ package workflows
 import (
 	"time"
 
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/notifications"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/temporal/activity"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
 
 type WHWorkflowParam struct {
-	TargetUrl       string
-	RequestBody     string
-	AuthHeaderName  string
-	AuthHeaderValue string
-	RetryPolicy     *temporal.RetryPolicy
+	TargetUrl            string
+	RequestBody          string
+	AuthHeaderName       string
+	AuthHeaderValue      string
+	RetryPolicy          *temporal.RetryPolicy
+	Notification         *notifications.NovuNotification
+	NotificationProvider notifications.NotificationProvider
+	NotifyFailure        bool
 }
 
 // Example retry policy
@@ -51,6 +55,9 @@ func WebhookWorkflow(ctx workflow.Context, param WHWorkflowParam) error {
 		param.AuthHeaderName,
 		param.AuthHeaderValue,
 		param.RequestBody,
+		param.NotifyFailure,
+		param.Notification,
+		param.NotificationProvider,
 	).Get(ctx, nil)
 	if err != nil {
 		return err
