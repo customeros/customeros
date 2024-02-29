@@ -1,7 +1,6 @@
 package webhook
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -67,7 +66,7 @@ func DispatchWebhook(tenant string, event WebhookEvent, payload *InvoicePayload,
 
 	workflowParams := workflows.WHWorkflowParam{
 		TargetUrl:       wh.WebhookUrl,
-		RequestBody:     bytes.NewBuffer(requestBodyJSON),
+		RequestBody:     string(requestBodyJSON),
 		AuthHeaderName:  wh.AuthHeaderName,
 		AuthHeaderValue: wh.AuthHeaderValue,
 		RetryPolicy:     retryPolicy,

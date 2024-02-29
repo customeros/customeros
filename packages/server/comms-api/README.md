@@ -109,6 +109,7 @@ if running out of k8s, need to set up the port forward on the postgres and the r
 
 kubectl port-forward --namespace openline svc/customer-db-redis-master 6379:6379 &
 kubectl port-forward --namespace openline svc/events-processing-platform 5001:5001
+kubectl port-forward --namespace openline svc/openline-prod-temporal-frontend 7233:7233
 kubectl port-forward --namespace openline svc/customer-db-postgresql 5432:5432 &
 
 ### sending a call_progress webhook
