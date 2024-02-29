@@ -235,134 +235,71 @@ func (a *OrganizationAggregate) onOrganizationUpdate(event eventstore.Event) err
 			a.Organization.LogoUrl = eventData.LogoUrl
 		}
 	} else {
-		if !eventData.IgnoreEmptyFields {
-			if eventData.UpdateIsPublic() {
-				a.Organization.IsPublic = eventData.IsPublic
-			}
-			if eventData.UpdateIsCustomer() {
-				a.Organization.IsCustomer = eventData.IsCustomer
-			}
-			if eventData.UpdateHide() {
-				a.Organization.Hide = eventData.Hide
-			}
-			if eventData.UpdateName() {
-				a.Organization.Name = eventData.Name
-			}
-			if eventData.UpdateDescription() {
-				a.Organization.Description = eventData.Description
-			}
-			if eventData.UpdateWebsite() {
-				a.Organization.Website = eventData.Website
-			}
-			if eventData.UpdateIndustry() {
-				a.Organization.Industry = eventData.Industry
-			}
-			if eventData.UpdateSubIndustry() {
-				a.Organization.SubIndustry = eventData.SubIndustry
-			}
-			if eventData.UpdateIndustryGroup() {
-				a.Organization.IndustryGroup = eventData.IndustryGroup
-			}
-			if eventData.UpdateTargetAudience() {
-				a.Organization.TargetAudience = eventData.TargetAudience
-			}
-			if eventData.UpdateValueProposition() {
-				a.Organization.ValueProposition = eventData.ValueProposition
-			}
-			if eventData.UpdateLastFundingRound() {
-				a.Organization.LastFundingRound = eventData.LastFundingRound
-			}
-			if eventData.UpdateLastFundingAmount() {
-				a.Organization.LastFundingAmount = eventData.LastFundingAmount
-			}
-			if eventData.UpdateReferenceId() {
-				a.Organization.ReferenceId = eventData.ReferenceId
-			}
-			if eventData.UpdateNote() {
-				a.Organization.Note = eventData.Note
-			}
-			if eventData.UpdateEmployees() {
-				a.Organization.Employees = eventData.Employees
-			}
-			if eventData.UpdateMarket() {
-				a.Organization.Market = eventData.Market
-			}
-			if eventData.UpdateYearFounded() {
-				a.Organization.YearFounded = eventData.YearFounded
-			}
-			if eventData.UpdateHeadquarters() {
-				a.Organization.Headquarters = eventData.Headquarters
-			}
-			if eventData.UpdateEmployeeGrowthRate() {
-				a.Organization.EmployeeGrowthRate = eventData.EmployeeGrowthRate
-			}
-			if eventData.UpdateSlackChannelId() {
-				a.Organization.SlackChannelId = eventData.SlackChannelId
-			}
-			if eventData.UpdateLogoUrl() {
-				a.Organization.LogoUrl = eventData.LogoUrl
-			}
-		} else {
-			if eventData.Name != "" {
-				a.Organization.Name = eventData.Name
-			}
-			if eventData.Description != "" {
-				a.Organization.Description = eventData.Description
-			}
-			if eventData.Website != "" {
-				a.Organization.Website = eventData.Website
-			}
-			if eventData.Industry != "" {
-				a.Organization.Industry = eventData.Industry
-			}
-			if eventData.SubIndustry != "" {
-				a.Organization.SubIndustry = eventData.SubIndustry
-			}
-			if eventData.IndustryGroup != "" {
-				a.Organization.IndustryGroup = eventData.IndustryGroup
-			}
-			if eventData.TargetAudience != "" {
-				a.Organization.TargetAudience = eventData.TargetAudience
-			}
-			if eventData.ValueProposition != "" {
-				a.Organization.ValueProposition = eventData.ValueProposition
-			}
-			if eventData.LastFundingRound != "" {
-				a.Organization.LastFundingRound = eventData.LastFundingRound
-			}
-			if eventData.LastFundingAmount != "" {
-				a.Organization.LastFundingAmount = eventData.LastFundingAmount
-			}
-			if eventData.ReferenceId != "" {
-				a.Organization.ReferenceId = eventData.ReferenceId
-			}
-			if eventData.Note != "" {
-				a.Organization.Note = eventData.Note
-			}
-			if eventData.Employees != 0 {
-				a.Organization.Employees = eventData.Employees
-			}
-			if eventData.Market != "" {
-				a.Organization.Market = eventData.Market
-			}
-			if eventData.IsCustomer {
-				a.Organization.IsCustomer = eventData.IsCustomer
-			}
-			if eventData.YearFounded != nil {
-				a.Organization.YearFounded = eventData.YearFounded
-			}
-			if eventData.Headquarters != "" {
-				a.Organization.Headquarters = eventData.Headquarters
-			}
-			if eventData.EmployeeGrowthRate != "" {
-				a.Organization.EmployeeGrowthRate = eventData.EmployeeGrowthRate
-			}
-			if eventData.SlackChannelId != "" {
-				a.Organization.SlackChannelId = eventData.SlackChannelId
-			}
-			if eventData.LogoUrl != "" {
-				a.Organization.LogoUrl = eventData.LogoUrl
-			}
+		if eventData.UpdateIsPublic() {
+			a.Organization.IsPublic = eventData.IsPublic
+		}
+		if eventData.UpdateIsCustomer() {
+			a.Organization.IsCustomer = eventData.IsCustomer
+		}
+		if eventData.UpdateHide() {
+			a.Organization.Hide = eventData.Hide
+		}
+		if eventData.UpdateName() {
+			a.Organization.Name = eventData.Name
+		}
+		if eventData.UpdateDescription() {
+			a.Organization.Description = eventData.Description
+		}
+		if eventData.UpdateWebsite() {
+			a.Organization.Website = eventData.Website
+		}
+		if eventData.UpdateIndustry() {
+			a.Organization.Industry = eventData.Industry
+		}
+		if eventData.UpdateSubIndustry() {
+			a.Organization.SubIndustry = eventData.SubIndustry
+		}
+		if eventData.UpdateIndustryGroup() {
+			a.Organization.IndustryGroup = eventData.IndustryGroup
+		}
+		if eventData.UpdateTargetAudience() {
+			a.Organization.TargetAudience = eventData.TargetAudience
+		}
+		if eventData.UpdateValueProposition() {
+			a.Organization.ValueProposition = eventData.ValueProposition
+		}
+		if eventData.UpdateLastFundingRound() {
+			a.Organization.LastFundingRound = eventData.LastFundingRound
+		}
+		if eventData.UpdateLastFundingAmount() {
+			a.Organization.LastFundingAmount = eventData.LastFundingAmount
+		}
+		if eventData.UpdateReferenceId() {
+			a.Organization.ReferenceId = eventData.ReferenceId
+		}
+		if eventData.UpdateNote() {
+			a.Organization.Note = eventData.Note
+		}
+		if eventData.UpdateEmployees() {
+			a.Organization.Employees = eventData.Employees
+		}
+		if eventData.UpdateMarket() {
+			a.Organization.Market = eventData.Market
+		}
+		if eventData.UpdateYearFounded() {
+			a.Organization.YearFounded = eventData.YearFounded
+		}
+		if eventData.UpdateHeadquarters() {
+			a.Organization.Headquarters = eventData.Headquarters
+		}
+		if eventData.UpdateEmployeeGrowthRate() {
+			a.Organization.EmployeeGrowthRate = eventData.EmployeeGrowthRate
+		}
+		if eventData.UpdateSlackChannelId() {
+			a.Organization.SlackChannelId = eventData.SlackChannelId
+		}
+		if eventData.UpdateLogoUrl() {
+			a.Organization.LogoUrl = eventData.LogoUrl
 		}
 	}
 	if eventData.ExternalSystem.Available() {

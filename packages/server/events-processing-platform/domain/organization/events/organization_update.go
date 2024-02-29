@@ -90,12 +90,8 @@ func NewOrganizationUpdateEvent(aggregate eventstore.Aggregate, organizationFiel
 	return event, nil
 }
 
-func (e OrganizationUpdateEvent) shouldUpdateFieldIfNotIgnored(input string) bool {
-	return e.IgnoreEmptyFields == false || input != ""
-}
-
 func (e OrganizationUpdateEvent) UpdateName() bool {
-	return (e.shouldUpdateFieldIfNotIgnored(e.Name)) || utils.Contains(e.FieldsMask, model.FieldMaskName)
+	return utils.Contains(e.FieldsMask, model.FieldMaskName)
 }
 
 func (e OrganizationUpdateEvent) UpdateHide() bool {
@@ -103,31 +99,31 @@ func (e OrganizationUpdateEvent) UpdateHide() bool {
 }
 
 func (e OrganizationUpdateEvent) UpdateDescription() bool {
-	return (e.shouldUpdateFieldIfNotIgnored(e.Description)) || utils.Contains(e.FieldsMask, model.FieldMaskDescription)
+	return utils.Contains(e.FieldsMask, model.FieldMaskDescription)
 }
 
 func (e OrganizationUpdateEvent) UpdateWebsite() bool {
-	return (e.shouldUpdateFieldIfNotIgnored(e.Website)) || utils.Contains(e.FieldsMask, model.FieldMaskWebsite)
+	return utils.Contains(e.FieldsMask, model.FieldMaskWebsite)
 }
 
 func (e OrganizationUpdateEvent) UpdateIndustry() bool {
-	return (e.shouldUpdateFieldIfNotIgnored(e.Industry)) || utils.Contains(e.FieldsMask, model.FieldMaskIndustry)
+	return utils.Contains(e.FieldsMask, model.FieldMaskIndustry)
 }
 
 func (e OrganizationUpdateEvent) UpdateSubIndustry() bool {
-	return (e.shouldUpdateFieldIfNotIgnored(e.SubIndustry)) || utils.Contains(e.FieldsMask, model.FieldMaskSubIndustry)
+	return utils.Contains(e.FieldsMask, model.FieldMaskSubIndustry)
 }
 
 func (e OrganizationUpdateEvent) UpdateIndustryGroup() bool {
-	return (e.shouldUpdateFieldIfNotIgnored(e.IndustryGroup)) || utils.Contains(e.FieldsMask, model.FieldMaskIndustryGroup)
+	return utils.Contains(e.FieldsMask, model.FieldMaskIndustryGroup)
 }
 
 func (e OrganizationUpdateEvent) UpdateTargetAudience() bool {
-	return (e.shouldUpdateFieldIfNotIgnored(e.TargetAudience)) || utils.Contains(e.FieldsMask, model.FieldMaskTargetAudience)
+	return utils.Contains(e.FieldsMask, model.FieldMaskTargetAudience)
 }
 
 func (e OrganizationUpdateEvent) UpdateValueProposition() bool {
-	return (e.shouldUpdateFieldIfNotIgnored(e.ValueProposition)) || utils.Contains(e.FieldsMask, model.FieldMaskValueProposition)
+	return utils.Contains(e.FieldsMask, model.FieldMaskValueProposition)
 }
 
 func (e OrganizationUpdateEvent) UpdateIsPublic() bool {
@@ -143,23 +139,23 @@ func (e OrganizationUpdateEvent) UpdateEmployees() bool {
 }
 
 func (e OrganizationUpdateEvent) UpdateMarket() bool {
-	return (e.shouldUpdateFieldIfNotIgnored(e.Market)) || utils.Contains(e.FieldsMask, model.FieldMaskMarket)
+	return utils.Contains(e.FieldsMask, model.FieldMaskMarket)
 }
 
 func (e OrganizationUpdateEvent) UpdateLastFundingRound() bool {
-	return (e.shouldUpdateFieldIfNotIgnored(e.LastFundingRound)) || utils.Contains(e.FieldsMask, model.FieldMaskLastFundingRound)
+	return utils.Contains(e.FieldsMask, model.FieldMaskLastFundingRound)
 }
 
 func (e OrganizationUpdateEvent) UpdateLastFundingAmount() bool {
-	return (e.shouldUpdateFieldIfNotIgnored(e.LastFundingAmount)) || utils.Contains(e.FieldsMask, model.FieldMaskLastFundingAmount)
+	return utils.Contains(e.FieldsMask, model.FieldMaskLastFundingAmount)
 }
 
 func (e OrganizationUpdateEvent) UpdateReferenceId() bool {
-	return (e.shouldUpdateFieldIfNotIgnored(e.ReferenceId)) || utils.Contains(e.FieldsMask, model.FieldMaskReferenceId)
+	return utils.Contains(e.FieldsMask, model.FieldMaskReferenceId)
 }
 
 func (e OrganizationUpdateEvent) UpdateNote() bool {
-	return (e.shouldUpdateFieldIfNotIgnored(e.Note)) || utils.Contains(e.FieldsMask, model.FieldMaskNote)
+	return utils.Contains(e.FieldsMask, model.FieldMaskNote)
 }
 
 func (e OrganizationUpdateEvent) UpdateYearFounded() bool {
