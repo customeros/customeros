@@ -36,7 +36,7 @@ func (r *invoiceReadRepository) CountNonDryRunInvoicesForContract(ctx context.Co
 	defer session.Close(ctx)
 
 	count, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_CONTRACT]->(c:Contract {id:$contractId})-[:HAS_INVOICE]->(i:Invoice) RETURN count(i) as count`
+		cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_CONTRACT]->(c:Contract {id:$contractId})-[:HAS_INVOICE]->(i:Invoice {dryRun:false}) RETURN count(i) as count`
 		params := map[string]any{
 			"tenant":     tenant,
 			"contractId": contractId,
