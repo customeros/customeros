@@ -1777,7 +1777,13 @@ func TestMutationResolver_OrganizationUpdate(t *testing.T) {
 			require.Equal(t, organizationId, request.Id)
 			require.Equal(t, tenantName, request.Tenant)
 			require.Equal(t, "slackChannelId", request.SlackChannelId)
-
+			require.Equal(t, true, request.IsCustomer)
+			require.Equal(t, true, request.IsPublic)
+			require.ElementsMatch(t, []organizationpb.OrganizationMaskField{
+				organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_SLACK_CHANNEL_ID,
+				organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_IS_CUSTOMER,
+				organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_IS_PUBLIC,
+			}, request.FieldsMask)
 			calledUpdateOrganization = true
 
 			return &organizationpb.OrganizationIdGrpcResponse{
@@ -1790,8 +1796,9 @@ func TestMutationResolver_OrganizationUpdate(t *testing.T) {
 	rawResponse := callGraphQL(t, "organization/update_organization",
 		map[string]interface{}{"input": map[string]interface{}{
 			"id":             organizationId,
-			"patch":          true,
 			"slackChannelId": "slackChannelId",
+			"isCustomer":     true,
+			"public":         true,
 		},
 		})
 
