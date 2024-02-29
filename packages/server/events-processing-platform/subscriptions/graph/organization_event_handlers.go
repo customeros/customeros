@@ -323,18 +323,20 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 		}
 	}
 
-	if existingOrganizationEntity.ID != "" && existingOrganizationEntity.SlackChannelId != eventData.SlackChannelId {
-		if eventData.SlackChannelId == "" {
-			err := h.repositories.Neo4jRepositories.IssueWriteRepository.RemoveReportedByOrganizationWithGroupId(ctx, eventData.Tenant, organizationId, existingOrganizationEntity.SlackChannelId)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				h.log.Errorf("Failed to remove reported by organization with groupId %s: %s", existingOrganizationEntity.SlackChannelId, err.Error())
-			}
-		} else {
-			err := h.repositories.Neo4jRepositories.IssueWriteRepository.ReportedByOrganizationWithGroupId(ctx, eventData.Tenant, organizationId, eventData.SlackChannelId)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				h.log.Errorf("Failed to mark reported by organization with groupId %s: %s", eventData.SlackChannelId, err.Error())
+	if eventData.UpdateSlackChannelId() {
+		if existingOrganizationEntity.ID != "" && existingOrganizationEntity.SlackChannelId != eventData.SlackChannelId {
+			if eventData.SlackChannelId == "" {
+				err := h.repositories.Neo4jRepositories.IssueWriteRepository.RemoveReportedByOrganizationWithGroupId(ctx, eventData.Tenant, organizationId, existingOrganizationEntity.SlackChannelId)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					h.log.Errorf("Failed to remove reported by organization with groupId %s: %s", existingOrganizationEntity.SlackChannelId, err.Error())
+				}
+			} else {
+				err := h.repositories.Neo4jRepositories.IssueWriteRepository.ReportedByOrganizationWithGroupId(ctx, eventData.Tenant, organizationId, eventData.SlackChannelId)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					h.log.Errorf("Failed to mark reported by organization with groupId %s: %s", eventData.SlackChannelId, err.Error())
+				}
 			}
 		}
 	}
