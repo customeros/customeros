@@ -926,11 +926,9 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 		return errors.New("pdfBytes is nil")
 	}
 
+	//TODO remove this at some point when we are sure that the pdf is generated correctly
 	// Save the PDF file to disk
-	err = os.WriteFile("output.pdf", *pdfBytes, 0644)
-	if err != nil {
-		return errors.Wrap(err, "os.WriteFile")
-	}
+	os.WriteFile("output.pdf", *pdfBytes, 0644)
 
 	basePath := fmt.Sprintf("/INVOICE/%d/%s", invoiceEntity.CreatedAt.Year(), invoiceEntity.CreatedAt.Format("01"))
 
