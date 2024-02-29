@@ -1,0 +1,12 @@
+query GetOrganizations($page: Int!, $limit: Int!){
+  organizations(pagination: {page: $page, limit: $limit}
+            where:{filter: {property:"NAME" operation:IS_EMPTY value:""}}
+            sort:[{by: "NAME" direction:ASC }]) {
+    totalPages
+    totalElements
+    content {
+      id
+      name
+    }
+  }
+}
