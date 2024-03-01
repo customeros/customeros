@@ -2,6 +2,12 @@ defmodule CustomerOsRealtime.ColorManager do
   require Logger
   use GenServer
 
+  @moduledoc """
+  CustomerOsRealtime.ColorManager keeps track of color assignments for users.
+  It persists the color assignments in an ETS table. It also provides
+  functionality to assign and release colors for users.
+  """
+
   @name __MODULE__
 
   @colors [
