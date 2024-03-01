@@ -58,7 +58,7 @@ export const Logger = () => {
       flexDirection='column'
       position='relative'
       className='customeros-logger'
-      height={135}
+      minH={135}
     >
       <Box position='absolute' top={-4} right={-6}>
         <Image src={noteIcon} alt='' height={123} width={174} />
