@@ -316,6 +316,7 @@ func MapDbNodeToTenantBillingProfileEntity(dbNode *dbtype.Node) *entity.TenantBi
 		InternationalPaymentsInstructions: utils.GetStringPropOrEmpty(props, "internationalPaymentsInstructions"),
 		VatNumber:                         utils.GetStringPropOrEmpty(props, "vatNumber"),
 		SendInvoicesFrom:                  utils.GetStringPropOrEmpty(props, "sendInvoicesFrom"),
+		SendInvoicesBcc:                   utils.GetStringPropOrEmpty(props, "sendInvoicesBcc"),
 		CanPayWithCard:                    utils.GetBoolPropOrFalse(props, "canPayWithCard"),
 		CanPayWithDirectDebitSEPA:         utils.GetBoolPropOrFalse(props, "canPayWithDirectDebitSEPA"),
 		CanPayWithDirectDebitACH:          utils.GetBoolPropOrFalse(props, "canPayWithDirectDebitACH"),

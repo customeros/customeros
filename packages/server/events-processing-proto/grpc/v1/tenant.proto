@@ -37,6 +37,7 @@ message AddBillingProfileRequest {
   bool canPayWithDirectDebitACH = 27;
   bool canPayWithDirectDebitBacs = 28;
   bool canPayWithPigeon = 29;
+  string sendInvoicesBcc = 30;
 }
 
 enum TenantBillingProfileFieldMask {
@@ -59,6 +60,7 @@ enum TenantBillingProfileFieldMask {
   TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_DIRECT_DEBIT_ACH = 16;
   TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_DIRECT_DEBIT_BACS = 17;
   TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_PIGEON = 18;
+  TENANT_BILLING_PROFILE_FIELD_SEND_INVOICES_BCC = 19;
 }
 
 message UpdateBillingProfileRequest {
@@ -86,6 +88,7 @@ message UpdateBillingProfileRequest {
   bool canPayWithPigeon = 22;
   string appSource = 23;
   repeated TenantBillingProfileFieldMask fieldsMask = 24;
+  string sendInvoicesBcc = 25;
 }
 
 enum TenantSettingsFieldMask {

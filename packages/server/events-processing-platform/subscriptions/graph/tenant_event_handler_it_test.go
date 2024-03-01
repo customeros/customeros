@@ -94,6 +94,7 @@ func TestTenantEventHandler_OnUpdateBillingProfileV1(t *testing.T) {
 	require.Equal(t, "internationalPaymentsBankInfo", tenantBillingProfileEntity.InternationalPaymentsBankInfo)
 	require.Equal(t, "vatNumber", tenantBillingProfileEntity.VatNumber)
 	require.Equal(t, "sendInvoicesFrom", tenantBillingProfileEntity.SendInvoicesFrom)
+	require.Equal(t, "sendInvoicesBcc", tenantBillingProfileEntity.SendInvoicesBcc)
 	require.Equal(t, true, tenantBillingProfileEntity.CanPayWithCard)
 	require.Equal(t, true, tenantBillingProfileEntity.CanPayWithDirectDebitSEPA)
 	require.Equal(t, true, tenantBillingProfileEntity.CanPayWithDirectDebitACH)

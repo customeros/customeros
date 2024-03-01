@@ -2458,6 +2458,7 @@ type TenantBillingProfile struct {
 	InternationalPaymentsBankInfo string     `json:"internationalPaymentsBankInfo"`
 	VatNumber                     string     `json:"vatNumber"`
 	SendInvoicesFrom              string     `json:"sendInvoicesFrom"`
+	SendInvoicesBcc               string     `json:"sendInvoicesBcc"`
 	CanPayWithCard                bool       `json:"canPayWithCard"`
 	CanPayWithDirectDebitSepa     bool       `json:"canPayWithDirectDebitSEPA"`
 	CanPayWithDirectDebitAch      bool       `json:"canPayWithDirectDebitACH"`
@@ -2487,6 +2488,7 @@ type TenantBillingProfileInput struct {
 	InternationalPaymentsBankInfo *string `json:"internationalPaymentsBankInfo,omitempty"`
 	VatNumber                     string  `json:"vatNumber"`
 	SendInvoicesFrom              string  `json:"sendInvoicesFrom"`
+	SendInvoicesBcc               *string `json:"sendInvoicesBcc,omitempty"`
 	CanPayWithCard                bool    `json:"canPayWithCard"`
 	CanPayWithDirectDebitSepa     bool    `json:"canPayWithDirectDebitSEPA"`
 	CanPayWithDirectDebitAch      bool    `json:"canPayWithDirectDebitACH"`
@@ -2510,6 +2512,7 @@ type TenantBillingProfileUpdateInput struct {
 	InternationalPaymentsBankInfo *string `json:"internationalPaymentsBankInfo,omitempty"`
 	VatNumber                     *string `json:"vatNumber,omitempty"`
 	SendInvoicesFrom              *string `json:"sendInvoicesFrom,omitempty"`
+	SendInvoicesBcc               *string `json:"sendInvoicesBcc,omitempty"`
 	CanPayWithCard                *bool   `json:"canPayWithCard,omitempty"`
 	CanPayWithDirectDebitSepa     *bool   `json:"canPayWithDirectDebitSEPA,omitempty"`
 	CanPayWithDirectDebitAch      *bool   `json:"canPayWithDirectDebitACH,omitempty"`

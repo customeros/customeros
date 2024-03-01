@@ -27,6 +27,7 @@ type TenantBillingProfileEntity struct {
 	InternationalPaymentsInstructions string
 	VatNumber                         string
 	SendInvoicesFrom                  string
+	SendInvoicesBcc                   string
 	CanPayWithCard                    bool
 	CanPayWithDirectDebitSEPA         bool
 	CanPayWithDirectDebitACH          bool
