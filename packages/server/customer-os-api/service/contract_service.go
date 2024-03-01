@@ -435,11 +435,11 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 		if input.BillingEnabled != nil {
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_INVOICING_ENABLED)
 		}
-		contractUpdateRequest.FieldsMask = fieldMask
 		if len(fieldMask) == 0 {
 			span.LogFields(log.String("result", "No fields to update"))
 			return nil
 		}
+		contractUpdateRequest.FieldsMask = fieldMask
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)

@@ -132,7 +132,9 @@ func TestMutationResolver_ContractUpdate(t *testing.T) {
 			require.Equal(t, true, contract.CanPayWithCard)
 			require.Equal(t, true, contract.CanPayWithDirectDebit)
 			require.Equal(t, true, contract.CanPayWithBankTransfer)
-			require.Equal(t, 20, len(contract.FieldsMask))
+			require.Equal(t, true, contract.InvoicingEnabled)
+			require.Equal(t, 21, len(contract.FieldsMask))
+
 			calledUpdateContract = true
 			return &contractpb.ContractIdGrpcResponse{
 				Id: contractId,
