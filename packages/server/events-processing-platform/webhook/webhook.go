@@ -67,7 +67,7 @@ func DispatchWebhook(tenant string, event WebhookEvent, payload *InvoicePayload,
 
 	var notification *notifications.NovuNotification
 	if failureNotify {
-		notification = populateNotification(tenant, wh)
+		notification = populateNotification(tenant, event.String(), wh)
 	}
 
 	workflowParams := workflows.WHWorkflowParam{
@@ -101,10 +101,9 @@ func mapResultToWebhook(result helper.QueryResult) *entity.TenantWebhook {
 	return webhook
 }
 
-func populateNotification(tenant string, wh *entity.TenantWebhook) *notifications.NovuNotification {
+func populateNotification(tenant, webhookName string, wh *entity.TenantWebhook) *notifications.NovuNotification {
 	payload := map[string]interface{}{
-		// these will be filled in the notification
-		"subject":       "A webhook call is failing",
+		"subject":       fmt.Sprintf("Webhook %s is currently offline", webhookName),
 		"email":         wh.UserEmail,
 		"tenant":        tenant,
 		"userFirstName": wh.UserFirstName,
@@ -115,7 +114,7 @@ func populateNotification(tenant string, wh *entity.TenantWebhook) *notification
 		WorkflowId: notifications.WorkflowFailedWebhook,
 		TemplateData: map[string]string{
 			"{{userFirstName}}": wh.UserFirstName,
-			"{{tenant}}":        tenant,
+			"{{webhookName}}":   webhookName,
 			"{{webhookUrl}}":    wh.WebhookUrl,
 		},
 		To: &notifications.NotifiableUser{
@@ -124,7 +123,7 @@ func populateNotification(tenant string, wh *entity.TenantWebhook) *notification
 			Email:        wh.UserEmail,
 			SubscriberID: wh.UserId,
 		},
-		Subject: "A webhook call is failing",
+		Subject: fmt.Sprintf("Webhook %s is currently offline", webhookName),
 		Payload: payload,
 	}
 	return notification
