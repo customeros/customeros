@@ -289,7 +289,7 @@ func (r *contractWriteRepository) UpdateAndReturn(ctx context.Context, tenant, c
 	}
 	if data.UpdateInvoicingEnabled {
 		cypher += `, ct.invoicingEnabled=$invoicingEnabled `
-		params["invoicingEnabled"] = data.UpdateInvoicingEnabled
+		params["invoicingEnabled"] = data.InvoicingEnabled
 	}
 	cypher += ` RETURN ct`
 
