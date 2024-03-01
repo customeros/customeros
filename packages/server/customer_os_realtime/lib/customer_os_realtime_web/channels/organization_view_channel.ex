@@ -5,7 +5,7 @@ defmodule CustomerOsRealtimeWeb.OrganizationChannel do
   require Logger
   require Enum
   use CustomerOsRealtimeWeb, :channel
-  alias CustomerOsRealtime.Util
+  alias CustomerOsRealtime.ColorManager
   alias CustomerOsRealtimeWeb.Presence
 
   @impl true
@@ -14,7 +14,7 @@ defmodule CustomerOsRealtimeWeb.OrganizationChannel do
         %{"user_id" => user_id, "username" => username},
         socket
       ) do
-    color = Util.generate_random_color()
+    {:ok, color} = ColorManager.assign_color(user_id)
 
     socket =
       socket
@@ -79,6 +79,12 @@ defmodule CustomerOsRealtimeWeb.OrganizationChannel do
   def handle_in("shout", payload, socket) do
     broadcast!(socket, "shout", payload)
     {:noreply, socket}
+  end
+
+  @impl true
+  def terminate(_reason, socket) do
+    Logger.info("User #{socket.assigns.user_id} left the channel")
+    {:ok, socket}
   end
 
   # Add authorization logic here as required.
