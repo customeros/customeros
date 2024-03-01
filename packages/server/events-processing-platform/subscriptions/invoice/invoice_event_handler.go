@@ -420,6 +420,10 @@ func isMonthlyAnniversary(date time.Time) bool {
 }
 
 func calculatePriceForBilledType(price float64, billed neo4jenum.BilledType, cycle neo4jenum.BillingCycle) float64 {
+	if billed == neo4jenum.BilledTypeOnce {
+		return price
+	}
+
 	switch cycle {
 	case neo4jenum.BillingCycleMonthlyBilling:
 		switch billed {
