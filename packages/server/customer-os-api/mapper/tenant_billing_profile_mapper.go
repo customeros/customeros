@@ -28,6 +28,7 @@ func MapEntityToTenantBillingProfile(entity *neo4jentity.TenantBillingProfileEnt
 		InternationalPaymentsBankInfo: entity.InternationalPaymentsBankInfo,
 		VatNumber:                     entity.VatNumber,
 		SendInvoicesFrom:              entity.SendInvoicesFrom,
+		SendInvoicesBcc:               entity.SendInvoicesBcc,
 		CanPayWithCard:                entity.CanPayWithCard,
 		CanPayWithDirectDebitSepa:     entity.CanPayWithDirectDebitSEPA,
 		CanPayWithDirectDebitAch:      entity.CanPayWithDirectDebitACH,

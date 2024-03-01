@@ -187,6 +187,7 @@ func TestQueryResolver_GetTenantBillingProfiles(t *testing.T) {
 		InternationalPaymentsBankInfo: "internationalPaymentsBankInfo",
 		VatNumber:                     "vatNumber",
 		SendInvoicesFrom:              "sendInvoicesFrom",
+		SendInvoicesBcc:               "sendInvoicesBcc",
 		CanPayWithCard:                true,
 		CanPayWithDirectDebitSEPA:     true,
 		CanPayWithDirectDebitACH:      true,
@@ -245,6 +246,7 @@ func TestQueryResolver_GetTenantBillingProfile(t *testing.T) {
 		InternationalPaymentsBankInfo: "internationalPaymentsBankInfo",
 		VatNumber:                     "vatNumber",
 		SendInvoicesFrom:              "sendInvoicesFrom",
+		SendInvoicesBcc:               "sendInvoicesBcc",
 		CanPayWithCard:                true,
 		CanPayWithDirectDebitSEPA:     true,
 		CanPayWithDirectDebitACH:      true,
@@ -311,6 +313,7 @@ func TestMutationResolver_TenantAddBillingProfile(t *testing.T) {
 			require.Equal(t, "internationalPaymentsBankInfo", profile.InternationalPaymentsBankInfo)
 			require.Equal(t, "vatNumber", profile.VatNumber)
 			require.Equal(t, "sendInvoicesFrom", profile.SendInvoicesFrom)
+			require.Equal(t, "sendInvoicesBcc", profile.SendInvoicesBcc)
 			require.Equal(t, true, profile.CanPayWithCard)
 			require.Equal(t, true, profile.CanPayWithDirectDebitSEPA)
 			require.Equal(t, true, profile.CanPayWithDirectDebitACH)
@@ -369,6 +372,7 @@ func TestMutationResolver_TenantUpdateBillingProfile(t *testing.T) {
 			require.Equal(t, "internationalPaymentsBankInfo", profile.InternationalPaymentsBankInfo)
 			require.Equal(t, "vatNumber", profile.VatNumber)
 			require.Equal(t, "sendInvoicesFrom", profile.SendInvoicesFrom)
+			require.Equal(t, "sendInvoicesBcc", profile.SendInvoicesBcc)
 			require.Equal(t, true, profile.CanPayWithCard)
 			require.Equal(t, true, profile.CanPayWithDirectDebitSEPA)
 			require.Equal(t, true, profile.CanPayWithDirectDebitACH)
@@ -387,6 +391,7 @@ func TestMutationResolver_TenantUpdateBillingProfile(t *testing.T) {
 				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_INTERNATIONAL_PAYMENTS_BANK_INFO,
 				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_VAT_NUMBER,
 				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_SEND_INVOICES_FROM,
+				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_SEND_INVOICES_BCC,
 				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_CARD,
 				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_DIRECT_DEBIT_SEPA,
 				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_DIRECT_DEBIT_ACH,

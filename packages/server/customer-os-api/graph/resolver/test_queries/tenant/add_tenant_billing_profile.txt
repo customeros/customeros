@@ -13,6 +13,7 @@ tenant_AddBillingProfile(
         internationalPaymentsBankInfo: "internationalPaymentsBankInfo"
         vatNumber: "vatNumber"
         sendInvoicesFrom: "sendInvoicesFrom"
+        sendInvoicesBcc: "sendInvoicesBcc"
         canPayWithCard: true
         canPayWithDirectDebitSEPA: true
         canPayWithDirectDebitACH: true

@@ -162,6 +162,7 @@ func (s *tenantService) CreateTenantBillingProfile(ctx context.Context, input mo
 		InternationalPaymentsBankInfo: utils.IfNotNilString(input.InternationalPaymentsBankInfo),
 		VatNumber:                     utils.IfNotNilString(input.VatNumber),
 		SendInvoicesFrom:              utils.IfNotNilString(input.SendInvoicesFrom),
+		SendInvoicesBcc:               utils.IfNotNilString(input.SendInvoicesBcc),
 		CanPayWithCard:                utils.IfNotNilBool(input.CanPayWithCard),
 		CanPayWithDirectDebitSEPA:     utils.IfNotNilBool(input.CanPayWithDirectDebitSepa),
 		CanPayWithDirectDebitACH:      utils.IfNotNilBool(input.CanPayWithDirectDebitAch),
@@ -223,6 +224,7 @@ func (s *tenantService) UpdateTenantBillingProfile(ctx context.Context, input mo
 		InternationalPaymentsBankInfo: utils.IfNotNilString(input.InternationalPaymentsBankInfo),
 		VatNumber:                     utils.IfNotNilString(input.VatNumber),
 		SendInvoicesFrom:              utils.IfNotNilString(input.SendInvoicesFrom),
+		SendInvoicesBcc:               utils.IfNotNilString(input.SendInvoicesBcc),
 		CanPayWithCard:                utils.IfNotNilBool(input.CanPayWithCard),
 		CanPayWithDirectDebitSEPA:     utils.IfNotNilBool(input.CanPayWithDirectDebitSepa),
 		CanPayWithDirectDebitACH:      utils.IfNotNilBool(input.CanPayWithDirectDebitAch),
@@ -266,6 +268,9 @@ func (s *tenantService) UpdateTenantBillingProfile(ctx context.Context, input mo
 		}
 		if input.SendInvoicesFrom != nil {
 			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_SEND_INVOICES_FROM)
+		}
+		if input.SendInvoicesBcc != nil {
+			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_SEND_INVOICES_BCC)
 		}
 		if input.CanPayWithCard != nil {
 			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_CARD)
