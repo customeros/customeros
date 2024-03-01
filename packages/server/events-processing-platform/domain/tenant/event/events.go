@@ -19,6 +19,7 @@ const (
 	FieldMaskInternationalPaymentsBankInfo = "internationalPaymentsBankInfo"
 	FieldMaskVatNumber                     = "vatNumber"
 	FieldMaskSendInvoicesFrom              = "sendInvoicesFrom"
+	FieldMaskSendInvoicesBcc               = "sendInvoicesBcc"
 	FieldMaskCanPayWithCard                = "canPayWithCard"
 	FieldMaskCanPayWithDirectDebitSEPA     = "canPayWithDirectDebitSEPA"
 	FieldMaskCanPayWithDirectDebitACH      = "canPayWithDirectDebitACH"
