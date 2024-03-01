@@ -24,7 +24,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/labstack/echo/v4 v4.11.4
 	github.com/mrz1836/postmark v1.6.3
-	github.com/neo4j/neo4j-go-driver/v5 v5.17.0
+	github.com/neo4j/neo4j-go-driver/v5 v5.18.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240206104907-b429ee046270
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20240206104907-b429ee046270
 	github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20240206104907-b429ee046270
@@ -33,6 +33,7 @@ require (
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.8.4
 	github.com/testcontainers/testcontainers-go v0.28.0
+	go.temporal.io/sdk v1.25.1
 	go.uber.org/zap v1.27.0
 	golang.org/x/exp v0.0.0-20240205201215-2c58cdc269a3
 	golang.org/x/net v0.21.0
@@ -69,7 +70,6 @@ require (
 	go.opentelemetry.io/otel/metric v1.19.0 // indirect
 	go.opentelemetry.io/otel/trace v1.19.0 // indirect
 	go.temporal.io/api v1.24.0 // indirect
-	go.temporal.io/sdk v1.25.1 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	google.golang.org/genproto v0.0.0-20240125205218-1f4bbc51befe // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240123012728-ef4313101c80 // indirect
