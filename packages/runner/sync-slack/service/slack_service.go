@@ -12,6 +12,7 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"github.com/slack-go/slack"
+	"strconv"
 	"time"
 )
 
@@ -177,7 +178,14 @@ func (s *slackService) FetchNewMessagesFromSlackChannel(ctx context.Context, ten
 				return nil, err
 			}
 		} else {
-			messages = append(messages, page.Messages...)
+			for _, msg := range page.Messages {
+				// if message is before the "from" time skip it
+				messageTime, err := fromFloatTs(msg.Timestamp)
+				if err != nil && messageTime.Before(from) {
+					continue
+				}
+				messages = append(messages, msg)
+			}
 			cursor = page.ResponseMetaData.NextCursor
 			if page.HasMore == false || cursor == "" {
 				break // no more pages
@@ -291,6 +299,11 @@ func (s *slackService) FetchNewThreadMessages(ctx context.Context, token, channe
 		} else {
 			for _, message := range pageMsgs {
 				if message.ThreadTimestamp != message.Timestamp {
+					// if message is before the "from" time skip it
+					messageTime, err := fromFloatTs(message.Timestamp)
+					if err != nil && messageTime.Before(from) {
+						continue
+					}
 					messages = append(messages, message)
 				}
 			}
@@ -307,6 +320,7 @@ func (s *slackService) FetchNewThreadMessages(ctx context.Context, token, channe
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
+	span.LogFields(log.Int("result.count", len(messages)))
 	return messages, nil
 }
 
@@ -351,4 +365,15 @@ func (s *slackService) GetMessagePermalink(ctx context.Context, token, channelId
 func toFloatTs(time time.Time) string {
 	timestampMcs := float64(time.UnixNano()) / 1e9
 	return fmt.Sprintf("%.3f", timestampMcs)
+}
+
+// fromFloatTs converts a float timestamp string back to a time.Time object.
+func fromFloatTs(tsStr string) (time.Time, error) {
+	tsFloat, err := strconv.ParseFloat(tsStr, 64)
+	if err != nil {
+		return time.Time{}, err
+	}
+	// Convert seconds back to nanoseconds for UnixNano
+	tsNano := int64(tsFloat * 1e9)
+	return time.Unix(0, tsNano), nil
 }
