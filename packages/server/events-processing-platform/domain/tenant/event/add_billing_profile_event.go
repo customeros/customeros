@@ -33,6 +33,7 @@ type TenantBillingProfileCreateEvent struct {
 	InternationalPaymentsInstructions string             `json:"internationalPaymentsInstructions"`
 	VatNumber                         string             `json:"vatNumber"`
 	SendInvoicesFrom                  string             `json:"sendInvoicesFrom"`
+	SendInvoicesBcc                   string             `json:"sendInvoicesBcc"`
 	CanPayWithCard                    bool               `json:"canPayWithCard"`
 	CanPayWithDirectDebitSEPA         bool               `json:"canPayWithDirectDebitSEPA"`
 	CanPayWithDirectDebitACH          bool               `json:"canPayWithDirectDebitACH"`
@@ -65,6 +66,7 @@ func NewTenantBillingProfileCreateEvent(aggregate eventstore.Aggregate, sourceFi
 		InternationalPaymentsInstructions: request.InternationalPaymentsInstructions,
 		VatNumber:                         request.VatNumber,
 		SendInvoicesFrom:                  request.SendInvoicesFrom,
+		SendInvoicesBcc:                   request.SendInvoicesBcc,
 		CanPayWithCard:                    request.CanPayWithCard,
 		CanPayWithDirectDebitSEPA:         request.CanPayWithDirectDebitSEPA,
 		CanPayWithDirectDebitACH:          request.CanPayWithDirectDebitACH,

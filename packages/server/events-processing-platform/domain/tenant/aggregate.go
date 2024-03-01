@@ -194,6 +194,7 @@ func (a *TenantAggregate) onAddBillingProfile(evt eventstore.Event) error {
 		InternationalPaymentsInstructions: eventData.InternationalPaymentsInstructions,
 		VatNumber:                         eventData.VatNumber,
 		SendInvoicesFrom:                  eventData.SendInvoicesFrom,
+		SendInvoicesBcc:                   eventData.SendInvoicesBcc,
 		CanPayWithCard:                    eventData.CanPayWithCard,
 		CanPayWithDirectDebitSEPA:         eventData.CanPayWithDirectDebitSEPA,
 		CanPayWithDirectDebitACH:          eventData.CanPayWithDirectDebitACH,
@@ -255,6 +256,9 @@ func (a *TenantAggregate) onUpdateBillingProfile(evt eventstore.Event) error {
 	}
 	if eventData.UpdateSendInvoicesFrom() {
 		tenantBillingProfile.SendInvoicesFrom = eventData.SendInvoicesFrom
+	}
+	if eventData.UpdateSendInvoicesBcc() {
+		tenantBillingProfile.SendInvoicesBcc = eventData.SendInvoicesBcc
 	}
 	if eventData.UpdateCanPayWithCard() {
 		tenantBillingProfile.CanPayWithCard = eventData.CanPayWithCard
@@ -320,6 +324,8 @@ func extractTenantBillingProfileFieldsMask(requestFieldsMask []tenantpb.TenantBi
 			fieldsMask = append(fieldsMask, event.FieldMaskVatNumber)
 		case tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_SEND_INVOICES_FROM:
 			fieldsMask = append(fieldsMask, event.FieldMaskSendInvoicesFrom)
+		case tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_SEND_INVOICES_BCC:
+			fieldsMask = append(fieldsMask, event.FieldMaskSendInvoicesBcc)
 		case tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_CARD:
 			fieldsMask = append(fieldsMask, event.FieldMaskCanPayWithCard)
 		case tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_DIRECT_DEBIT_SEPA:

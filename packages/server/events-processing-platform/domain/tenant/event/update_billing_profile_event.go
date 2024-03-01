@@ -25,6 +25,7 @@ type TenantBillingProfileUpdateEvent struct {
 	InternationalPaymentsBankInfo string    `json:"internationalPaymentsBankInfo,omitempty"`
 	VatNumber                     string    `json:"vatNumber"`
 	SendInvoicesFrom              string    `json:"sendInvoicesFrom"`
+	SendInvoicesBcc               string    `json:"sendInvoicesBcc"`
 	CanPayWithCard                bool      `json:"canPayWithCard"`
 	CanPayWithDirectDebitSEPA     bool      `json:"canPayWithDirectDebitSEPA"`
 	CanPayWithDirectDebitACH      bool      `json:"canPayWithDirectDebitACH"`
@@ -50,6 +51,7 @@ func NewTenantBillingProfileUpdateEvent(aggregate eventstore.Aggregate, id strin
 		InternationalPaymentsBankInfo: request.InternationalPaymentsBankInfo,
 		VatNumber:                     request.VatNumber,
 		SendInvoicesFrom:              request.SendInvoicesFrom,
+		SendInvoicesBcc:               request.SendInvoicesBcc,
 		CanPayWithCard:                request.CanPayWithCard,
 		CanPayWithDirectDebitSEPA:     request.CanPayWithDirectDebitSEPA,
 		CanPayWithDirectDebitACH:      request.CanPayWithDirectDebitACH,
@@ -116,6 +118,10 @@ func (e TenantBillingProfileUpdateEvent) UpdateVatNumber() bool {
 
 func (e TenantBillingProfileUpdateEvent) UpdateSendInvoicesFrom() bool {
 	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskSendInvoicesFrom)
+}
+
+func (e TenantBillingProfileUpdateEvent) UpdateSendInvoicesBcc() bool {
+	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskSendInvoicesBcc)
 }
 
 func (e TenantBillingProfileUpdateEvent) UpdateCanPayWithCard() bool {

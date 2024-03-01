@@ -47,6 +47,7 @@ type TenantBillingProfile struct {
 	InternationalPaymentsInstructions string             `json:"internationalPaymentsInstructions"`
 	VatNumber                         string             `json:"vatNumber"`
 	SendInvoicesFrom                  string             `json:"sendInvoicesFrom"`
+	SendInvoicesBcc                   string             `json:"sendInvoicesBcc"`
 	CanPayWithCard                    bool               `json:"canPayWithCard"`
 	CanPayWithDirectDebitSEPA         bool               `json:"canPayWithDirectDebitSEPA"`
 	CanPayWithDirectDebitACH          bool               `json:"canPayWithDirectDebitACH"`

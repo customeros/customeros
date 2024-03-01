@@ -36,6 +36,7 @@ type TenantBillingProfileCreateFields struct {
 	InternationalPaymentsInstructions string       `json:"internationalPaymentsInstructions"`
 	VatNumber                         string       `json:"vatNumber"`
 	SendInvoicesFrom                  string       `json:"sendInvoicesFrom"`
+	SendInvoicesBcc                   string       `json:"sendInvoicesBcc"`
 	CanPayWithCard                    bool         `json:"canPayWithCard"`
 	CanPayWithDirectDebitSEPA         bool         `json:"canPayWithDirectDebitSEPA"`
 	CanPayWithDirectDebitACH          bool         `json:"canPayWithDirectDebitACH"`
@@ -58,6 +59,7 @@ type TenantBillingProfileUpdateFields struct {
 	InternationalPaymentsBankInfo       string    `json:"internationalPaymentsBankInfo"`
 	VatNumber                           string    `json:"vatNumber"`
 	SendInvoicesFrom                    string    `json:"sendInvoicesFrom"`
+	SendInvoicesBcc                     string    `json:"sendInvoicesBcc"`
 	CanPayWithCard                      bool      `json:"canPayWithCard"`
 	CanPayWithDirectDebitSEPA           bool      `json:"canPayWithDirectDebitSEPA"`
 	CanPayWithDirectDebitACH            bool      `json:"canPayWithDirectDebitACH"`
@@ -75,6 +77,7 @@ type TenantBillingProfileUpdateFields struct {
 	UpdateInternationalPaymentsBankInfo bool      `json:"updateInternationalPaymentsBankInfo"`
 	UpdateVatNumber                     bool      `json:"updateVatNumber"`
 	UpdateSendInvoicesFrom              bool      `json:"updateSendInvoicesFrom"`
+	UpdateSendInvoicesBcc               bool      `json:"updateSendInvoicesBcc"`
 	UpdateCanPayWithCard                bool      `json:"updateCanPayWithCard"`
 	UpdateCanPayWithDirectDebitSEPA     bool      `json:"updateCanPayWithDirectDebitSEPA"`
 	UpdateCanPayWithDirectDebitACH      bool      `json:"updateCanPayWithDirectDebitACH"`
@@ -145,6 +148,7 @@ func (r *tenantWriteRepository) CreateTenantBillingProfile(ctx context.Context, 
 								tbp.internationalPaymentsInstructions=$internationalPaymentsInstructions,
 								tbp.vatNumber=$vatNumber,	
 								tbp.sendInvoicesFrom=$sendInvoicesFrom,
+								tbp.sendInvoicesBcc=$sendInvoicesBcc,
 								tbp.canPayWithCard=$canPayWithCard,
 								tbp.canPayWithDirectDebitSEPA=$canPayWithDirectDebitSEPA,
 								tbp.canPayWithDirectDebitACH=$canPayWithDirectDebitACH,	
@@ -178,6 +182,7 @@ func (r *tenantWriteRepository) CreateTenantBillingProfile(ctx context.Context, 
 		"internationalPaymentsInstructions": data.InternationalPaymentsInstructions,
 		"vatNumber":                         data.VatNumber,
 		"sendInvoicesFrom":                  data.SendInvoicesFrom,
+		"sendInvoicesBcc":                   data.SendInvoicesBcc,
 		"canPayWithCard":                    data.CanPayWithCard,
 		"canPayWithDirectDebitSEPA":         data.CanPayWithDirectDebitSEPA,
 		"canPayWithDirectDebitACH":          data.CanPayWithDirectDebitACH,
@@ -256,6 +261,10 @@ func (r *tenantWriteRepository) UpdateTenantBillingProfile(ctx context.Context, 
 	if data.UpdateSendInvoicesFrom {
 		cypher += `,tbp.sendInvoicesFrom=$sendInvoicesFrom`
 		params["sendInvoicesFrom"] = data.SendInvoicesFrom
+	}
+	if data.UpdateSendInvoicesBcc {
+		cypher += `,tbp.sendInvoicesBcc=$sendInvoicesBcc`
+		params["sendInvoicesBcc"] = data.SendInvoicesBcc
 	}
 	if data.UpdateCanPayWithCard {
 		cypher += `,tbp.canPayWithCard=$canPayWithCard`
