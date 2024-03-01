@@ -1,20 +1,12 @@
 'use client';
 import { useParams } from 'next/navigation';
 
-import { useFeatureIsOn } from '@growthbook/growthbook-react';
-
-import { HStack } from '@ui/layout/Stack';
 import { Heading } from '@ui/typography/Heading';
-import { useChannel } from '@shared/hooks/useChannel';
-import { UserHexagon } from '@shared/components/UserHexagon';
+import { UserPresence } from '@shared/components/UserPresence';
 import { Card, CardBody, CardHeader } from '@ui/presentation/Card';
 
 export const MainSection = ({ children }: { children?: React.ReactNode }) => {
   const organizationId = useParams()?.id as string;
-  const { presentUsers, username } = useChannel(
-    `organization:${organizationId}`,
-  );
-  const isPresenceEnabled = useFeatureIsOn('presence');
 
   return (
     <Card
@@ -41,18 +33,7 @@ export const MainSection = ({ children }: { children?: React.ReactNode }) => {
         <Heading as='h1' fontSize='lg' color='gray.700'>
           Timeline
         </Heading>
-        {isPresenceEnabled && (
-          <HStack>
-            {presentUsers.map(([user, color]) => (
-              <UserHexagon
-                key={user}
-                name={user}
-                color={color}
-                isCurrent={user === username}
-              />
-            ))}
-          </HStack>
-        )}
+        <UserPresence channelName={`organization:${organizationId}`} />
       </CardHeader>
       <CardBody pr={0} pt={0} p={0} position='unset'>
         {children}

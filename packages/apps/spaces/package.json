@@ -76,6 +76,7 @@
     "react-date-picker": "^10.0.3",
     "react-datepicker": "^6.1.0",
     "react-dom": "^18.2.0",
+    "react-error-boundary": "^4.0.12",
     "react-filepond": "^7.1.2",
     "react-hook-form": "7.47.0",
     "react-imask": "^7.4.0",
