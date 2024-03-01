@@ -468,7 +468,6 @@ func prorateAnnualSLIAmount(startDate, endDate time.Time, amount float64) float6
 func (h *InvoiceEventHandler) prepareAndCallFillInvoice(ctx context.Context, tenant string, contractId string, invoiceEntity neo4jentity.InvoiceEntity, amount, vat, totalAmount float64, invoiceLines []*invoicepb.InvoiceLine, span opentracing.Span) error {
 	var contractEntity neo4jentity.ContractEntity
 	var tenantSettingsEntity *neo4jentity.TenantSettingsEntity
-	var tenantBillingProfileEntity *neo4jentity.TenantBillingProfileEntity
 
 	//load contract from neo4j
 	contract, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, tenant, contractId)
@@ -496,15 +495,10 @@ func (h *InvoiceEventHandler) prepareAndCallFillInvoice(ctx context.Context, ten
 	}
 
 	//load tenant billing profile from neo4j
-	tenantBillingProfiles, err := h.repositories.Neo4jRepositories.TenantReadRepository.GetTenantBillingProfiles(ctx, tenant)
+	tenantBillingProfileEntity, err := h.loadTenantBillingProfile(ctx, tenant, true)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
-	}
-	if tenantBillingProfiles == nil || len(tenantBillingProfiles) > 0 {
-		tenantBillingProfileEntity = neo4jmapper.MapDbNodeToTenantBillingProfileEntity(tenantBillingProfiles[0])
-	} else {
-		return errors.New("tenantBillingProfiles is nil or empty")
 	}
 
 	contractCountry := contractEntity.Country
@@ -1006,11 +1000,19 @@ func (h *InvoiceEventHandler) onInvoiceVoidV1(ctx context.Context, evt eventstor
 		return nil
 	}
 
+	//load tenant billing profile from neo4j
+	tenantBillingProfileEntity, err := h.loadTenantBillingProfile(ctx, eventData.Tenant, false)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
 	postmarkEmail := notifications.PostmarkEmail{
 		WorkflowId:    notifications.WorkflowInvoiceVoided,
 		MessageStream: notifications.PostmarkMessageStreamInvoice,
 		From:          invoiceEntity.Provider.Email,
 		To:            invoiceEntity.Customer.Email,
+		BCC:           tenantBillingProfileEntity.SendInvoicesBcc,
 		Subject:       "Voided invoice " + invoiceEntity.Number,
 		TemplateData: map[string]string{
 			"{{userFirstName}}":  invoiceEntity.Customer.Name,
@@ -1078,6 +1080,7 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 		return errors.New("invoiceNode is nil")
 	}
 
+	// load contract
 	contractNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractForInvoice(ctx, eventData.Tenant, invoiceEntity.Id)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -1095,11 +1098,19 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 		return errors.New("contractEntity.InvoiceEmail is empty or invalid")
 	}
 
+	//load tenant billing profile from neo4j
+	tenantBillingProfileEntity, err := h.loadTenantBillingProfile(ctx, eventData.Tenant, false)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
 	postmarkEmail := notifications.PostmarkEmail{
 		WorkflowId:    notifications.WorkflowInvoicePaid,
 		MessageStream: notifications.PostmarkMessageStreamInvoice,
 		From:          invoiceEntity.Provider.Email,
 		To:            contractEntity.InvoiceEmail,
+		BCC:           tenantBillingProfileEntity.SendInvoicesBcc,
 		Subject:       "Paid Invoice " + invoiceEntity.Number + " from " + invoiceEntity.Provider.Name,
 		TemplateData: map[string]string{
 			"{{userFirstName}}":  invoiceEntity.Customer.Name,
@@ -1197,11 +1208,19 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 		return errors.New("invoiceEntity.PaymentDetails.PaymentLink is empty")
 	}
 
+	//load tenant billing profile from neo4j
+	tenantBillingProfileEntity, err := h.loadTenantBillingProfile(ctx, eventData.Tenant, false)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
 	postmarkEmail := notifications.PostmarkEmail{
 		WorkflowId:    notifications.WorkflowInvoiceReady,
 		MessageStream: notifications.PostmarkMessageStreamInvoice,
 		From:          invoiceEntity.Provider.Email,
 		To:            contractEntity.InvoiceEmail,
+		BCC:           tenantBillingProfileEntity.SendInvoicesBcc,
 		Subject:       "New invoice " + invoiceEntity.Number,
 		TemplateData: map[string]string{
 			"{{organizationName}}": invoiceEntity.Customer.Name,
@@ -1284,4 +1303,20 @@ func (h *InvoiceEventHandler) AppendProviderLogoToEmail(tenant, logoFileId strin
 func isValidEmailSyntax(email string) bool {
 	_, err := mail.ParseAddress(email)
 	return err == nil
+}
+
+func (h *InvoiceEventHandler) loadTenantBillingProfile(ctx context.Context, tenant string, failIfNotFound bool) (neo4jentity.TenantBillingProfileEntity, error) {
+	tenantBillingProfiles, err := h.repositories.Neo4jRepositories.TenantReadRepository.GetTenantBillingProfiles(ctx, tenant)
+	if err != nil {
+		return neo4jentity.TenantBillingProfileEntity{}, err
+	}
+	if len(tenantBillingProfiles) == 0 {
+		if failIfNotFound {
+			return neo4jentity.TenantBillingProfileEntity{}, errors.New("tenantBillingProfiles not available")
+		} else {
+			return neo4jentity.TenantBillingProfileEntity{}, nil
+		}
+	}
+	tenantBillingProfileEntity := neo4jmapper.MapDbNodeToTenantBillingProfileEntity(tenantBillingProfiles[0])
+	return *tenantBillingProfileEntity, nil
 }
