@@ -53,6 +53,7 @@ func TestTenantEventHandler_OnUpdateBillingProfileV1(t *testing.T) {
 			InternationalPaymentsBankInfo: "internationalPaymentsBankInfo",
 			VatNumber:                     "vatNumber",
 			SendInvoicesFrom:              "sendInvoicesFrom",
+			SendInvoicesBcc:               "sendInvoicesBcc",
 			CanPayWithCard:                true,
 			CanPayWithDirectDebitSEPA:     true,
 			CanPayWithDirectDebitACH:      true,
