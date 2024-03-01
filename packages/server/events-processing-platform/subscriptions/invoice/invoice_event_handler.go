@@ -150,6 +150,10 @@ func (h *InvoiceEventHandler) fillCycleInvoice(ctx context.Context, tenant, cont
 			continue
 		}
 
+		if sliEntity.Quantity <= 0 {
+			continue
+		}
+
 		calculatedSLIAmount, calculatedSLIVat := float64(0), float64(0)
 		invoiceLineCalculationsReady := false
 		// process one time SLIs
@@ -265,6 +269,10 @@ func (h *InvoiceEventHandler) fillOffCyclePrepaidInvoice(ctx context.Context, te
 			if ilDbNodeAndInvoiceId != nil {
 				continue
 			}
+		}
+
+		if sliEntity.Quantity <= 0 {
+			continue
 		}
 
 		filteredSliEntities = append(filteredSliEntities, sliEntity)
