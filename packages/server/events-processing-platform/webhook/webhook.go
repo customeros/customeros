@@ -103,7 +103,7 @@ func mapResultToWebhook(result helper.QueryResult) *entity.TenantWebhook {
 
 func populateNotification(tenant, webhookName string, wh *entity.TenantWebhook) *notifications.NovuNotification {
 	payload := map[string]interface{}{
-		"subject":       fmt.Sprintf("Webhook %s is currently offline", webhookName),
+		"subject":       fmt.Sprintf("[Action Required] Webhook %s is offline", webhookName),
 		"email":         wh.UserEmail,
 		"tenant":        tenant,
 		"userFirstName": wh.UserFirstName,
@@ -123,7 +123,7 @@ func populateNotification(tenant, webhookName string, wh *entity.TenantWebhook) 
 			Email:        wh.UserEmail,
 			SubscriberID: wh.UserId,
 		},
-		Subject: fmt.Sprintf("Webhook %s is currently offline", webhookName),
+		Subject: fmt.Sprintf("[Action Required] Webhook %s is offline", webhookName),
 		Payload: payload,
 	}
 	return notification
