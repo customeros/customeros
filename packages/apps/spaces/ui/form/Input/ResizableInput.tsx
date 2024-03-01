@@ -30,7 +30,13 @@ export const ResizableInput = forwardRef<HTMLInputElement, InputProps>(
         >
           {props.value}
         </Flex>
-        <Input ref={ref} w={width} {...props} data-1p-ignore />
+        <Input
+          ref={ref}
+          w={width}
+          minW={2} // accessibility after removing value
+          {...props}
+          data-1p-ignore
+        />
       </>
     );
   },

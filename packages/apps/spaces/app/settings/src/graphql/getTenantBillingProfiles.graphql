@@ -13,6 +13,7 @@ query TenantBillingProfiles {
         email
         vatNumber
         sendInvoicesFrom
+        sendInvoicesBcc
         canPayWithDirectDebitACH
         canPayWithDirectDebitSEPA
         canPayWithDirectDebitBacs

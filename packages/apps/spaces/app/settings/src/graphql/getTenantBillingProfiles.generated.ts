@@ -45,6 +45,7 @@ export type TenantBillingProfilesQuery = {
     email: string;
     vatNumber: string;
     sendInvoicesFrom: string;
+    sendInvoicesBcc: string;
     canPayWithDirectDebitACH: boolean;
     canPayWithDirectDebitSEPA: boolean;
     canPayWithDirectDebitBacs: boolean;
@@ -69,6 +70,7 @@ export const TenantBillingProfilesDocument = `
     email
     vatNumber
     sendInvoicesFrom
+    sendInvoicesBcc
     canPayWithDirectDebitACH
     canPayWithDirectDebitSEPA
     canPayWithDirectDebitBacs

@@ -173,7 +173,7 @@ export const BillingPanel = () => {
   const { state, setDefaultValues } = useForm({
     formId,
     defaultValues,
-    stateReducer: (_, action, next) => {
+    stateReducer: (state, action, next) => {
       if (action.type === 'FIELD_CHANGE') {
         switch (action.payload.name) {
           case 'canPayWithDirectDebitSEPA':
@@ -202,16 +202,28 @@ export const BillingPanel = () => {
 
             return next;
           }
+          case 'sendInvoicesBcc':
           case 'vatNumber':
-          case 'sendInvoicesFrom':
           case 'legalName':
           case 'addressLine1':
           case 'addressLine2':
           case 'addressLine3':
           case 'zip':
           case 'locality': {
+            handleUpdateData.cancel();
             handleUpdateData({
               [action.payload.name]: action.payload.value,
+            });
+
+            return next;
+          }
+
+          case 'sendInvoicesFrom': {
+            handleUpdateData.cancel();
+
+            handleUpdateData({
+              [action.payload
+                .name]: `${action.payload.value}@invoices.customeros.ai`,
             });
 
             return next;
@@ -220,10 +232,11 @@ export const BillingPanel = () => {
             return next;
         }
       }
+
       if (action.type === 'FIELD_BLUR') {
+        setIsInvoiceProviderFocused(false);
         switch (action.payload.name) {
           case 'vatNumber':
-          case 'sendInvoicesFrom':
           case 'legalName':
           case 'addressLine1':
           case 'addressLine2':
@@ -231,6 +244,39 @@ export const BillingPanel = () => {
           case 'zip':
           case 'locality': {
             handleUpdateData.flush();
+
+            return next;
+          }
+          case 'sendInvoicesFrom': {
+            const trimmedValue = (action.payload?.value || '')?.trim();
+            if (!trimmedValue?.length && state.values?.legalName?.length) {
+              handleUpdateData.cancel();
+              const newEmail = `${state.values.legalName
+                .split(' ')
+                .join('-')
+                .toLowerCase()}@invoices.customeros.ai`;
+
+              updateBillingProfileMutation.mutate({
+                input: {
+                  id: tenantBillingProfileId,
+                  patch: true,
+                  sendInvoicesFrom: newEmail,
+                },
+              });
+
+              return {
+                ...next,
+                values: {
+                  ...next.values,
+                  sendInvoicesFrom: `${state.values.legalName
+                    .split(' ')
+                    .join('-')
+                    .toLowerCase()}`,
+                },
+              };
+            } else {
+              handleUpdateData.flush();
+            }
 
             return next;
           }
@@ -370,6 +416,7 @@ export const BillingPanel = () => {
         >
           <TenantBillingPanelDetailsForm
             email={state.values.sendInvoicesFrom}
+            bcc={state.values.sendInvoicesBcc}
             formId={formId}
             canPayWithCard={state.values.canPayWithCard}
             invoicingEnabled={tenantSettingsData?.tenantSettings.billingEnabled}

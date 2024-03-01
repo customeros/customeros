@@ -16,6 +16,7 @@ export interface TenantBillingDetails {
   addressLine2?: string | null;
   addressLine3?: string | null;
   canPayWithCard?: boolean | null;
+  sendInvoicesBcc?: string | null;
   sendInvoicesFrom?: string | null;
   canPayWithPigeon?: boolean | null;
   country?: SelectOption<string> | null;
@@ -44,6 +45,7 @@ export class TenantBillingDetailsDto implements TenantBillingDetails {
   canPayWithCard;
   canPayWithPigeon;
   sendInvoicesFrom;
+  sendInvoicesBcc;
   vatNumber;
 
   constructor(data?: TenantBillingProfile | null) {
@@ -63,7 +65,8 @@ export class TenantBillingDetailsDto implements TenantBillingDetails {
     this.canPayWithDirectDebitBacs = data?.canPayWithDirectDebitBacs;
     this.canPayWithCard = data?.canPayWithCard;
     this.canPayWithPigeon = data?.canPayWithPigeon;
-    this.sendInvoicesFrom = data?.sendInvoicesFrom;
+    this.sendInvoicesFrom = data?.sendInvoicesFrom?.split('@')[0] ?? '';
+    this.sendInvoicesBcc = data?.sendInvoicesBcc ?? '';
     this.vatNumber = data?.vatNumber;
   }
 
