@@ -27,7 +27,7 @@ var REQUIRED_TEMPLATE_VALUES = map[string][]string{
 	},
 	WorkflowFailedWebhook: {
 		"{{userFirstName}}",
-		"{{tenant}}",
+		"{{webhookName}}",
 		"{{webhookUrl}}",
 	},
 }
