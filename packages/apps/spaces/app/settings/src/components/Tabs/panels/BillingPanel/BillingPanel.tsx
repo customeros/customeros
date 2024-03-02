@@ -11,6 +11,10 @@ import { useTenantBillingProfilesQuery } from '@settings/graphql/getTenantBillin
 import { useCreateBillingProfileMutation } from '@settings/graphql/createTenantBillingProfile.generated';
 import { useTenantUpdateBillingProfileMutation } from '@settings/graphql/updateTenantBillingProfile.generated';
 import {
+  validateEmail,
+  validateEmailLocalPart,
+} from '@settings/components/Tabs/panels/BillingPanel/utils';
+import {
   TenantSettingsQuery,
   useTenantSettingsQuery,
 } from '@settings/graphql/getTenantSettings.generated';
@@ -170,10 +174,25 @@ export const BillingPanel = () => {
     },
     2500,
   );
+
   const { state, setDefaultValues } = useForm({
     formId,
     defaultValues,
-    stateReducer: (_, action, next) => {
+    stateReducer: (state, action, next) => {
+      const getStateAfterValidation = () => {
+        return produce(next, (draft) => {
+          const sendInvoiceFromError = validateEmailLocalPart(
+            draft.values.sendInvoicesFrom,
+          );
+          const bccError = validateEmail(draft.values.sendInvoicesBcc);
+          // we do it like this so that if the email is valid, we reset the states.
+          draft.fields.sendInvoicesFrom.meta.hasError = !!sendInvoiceFromError;
+          draft.fields.sendInvoicesFrom.error = sendInvoiceFromError ?? '';
+
+          draft.fields.sendInvoicesBcc.meta.hasError = !!bccError;
+          draft.fields.sendInvoicesBcc.error = bccError ?? '';
+        });
+      };
       if (action.type === 'FIELD_CHANGE') {
         switch (action.payload.name) {
           case 'canPayWithDirectDebitSEPA':
@@ -202,28 +221,41 @@ export const BillingPanel = () => {
 
             return next;
           }
+          case 'sendInvoicesBcc':
           case 'vatNumber':
-          case 'sendInvoicesFrom':
           case 'legalName':
           case 'addressLine1':
           case 'addressLine2':
           case 'addressLine3':
           case 'zip':
           case 'locality': {
+            handleUpdateData.cancel();
             handleUpdateData({
               [action.payload.name]: action.payload.value,
             });
 
             return next;
           }
+
+          case 'sendInvoicesFrom': {
+            handleUpdateData.cancel();
+
+            handleUpdateData({
+              [action.payload
+                .name]: `${action.payload.value}@invoices.customeros.ai`,
+            });
+
+            return getStateAfterValidation();
+          }
           default:
             return next;
         }
       }
+
       if (action.type === 'FIELD_BLUR') {
+        setIsInvoiceProviderFocused(false);
         switch (action.payload.name) {
           case 'vatNumber':
-          case 'sendInvoicesFrom':
           case 'legalName':
           case 'addressLine1':
           case 'addressLine2':
@@ -234,9 +266,46 @@ export const BillingPanel = () => {
 
             return next;
           }
+          case 'sendInvoicesFrom': {
+            const trimmedValue = (action.payload?.value || '')?.trim();
+            if (!trimmedValue?.length && state.values?.legalName?.length) {
+              handleUpdateData.cancel();
+              const newEmail = `${state.values.legalName
+                .split(' ')
+                .join('-')
+                .toLowerCase()}@invoices.customeros.ai`;
+
+              updateBillingProfileMutation.mutate({
+                input: {
+                  id: tenantBillingProfileId,
+                  patch: true,
+                  sendInvoicesFrom: newEmail,
+                },
+              });
+
+              return {
+                ...next,
+                values: {
+                  ...next.values,
+                  sendInvoicesFrom: `${state.values.legalName
+                    .split(' ')
+                    .join('-')
+                    .toLowerCase()}`,
+                },
+              };
+            } else {
+              handleUpdateData.flush();
+            }
+
+            return getStateAfterValidation();
+          }
           default:
             return next;
         }
+      }
+
+      if (action.type === 'SET_DEFAULT_VALUES') {
+        return getStateAfterValidation();
       }
 
       return next;
@@ -370,6 +439,7 @@ export const BillingPanel = () => {
         >
           <TenantBillingPanelDetailsForm
             email={state.values.sendInvoicesFrom}
+            bcc={state.values.sendInvoicesBcc}
             formId={formId}
             canPayWithCard={state.values.canPayWithCard}
             invoicingEnabled={tenantSettingsData?.tenantSettings.billingEnabled}

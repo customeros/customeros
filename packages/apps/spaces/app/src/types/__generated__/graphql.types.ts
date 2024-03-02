@@ -268,6 +268,8 @@ export enum ComparisonOperator {
   Eq = 'EQ',
   Gte = 'GTE',
   In = 'IN',
+  IsEmpty = 'IS_EMPTY',
+  IsNull = 'IS_NULL',
   Lte = 'LTE',
   StartsWith = 'STARTS_WITH',
 }
@@ -1937,6 +1939,7 @@ export type Mutation = {
   contractLineItem_Create: ServiceLineItem;
   contractLineItem_Update: ServiceLineItem;
   contract_Create: Contract;
+  contract_Delete: DeleteResponse;
   contract_Update: Contract;
   customFieldDeleteFromContactById: Result;
   customFieldDeleteFromContactByName: Result;
@@ -2181,6 +2184,10 @@ export type MutationContractLineItem_UpdateArgs = {
 
 export type MutationContract_CreateArgs = {
   input: ContractInput;
+};
+
+export type MutationContract_DeleteArgs = {
+  id: Scalars['ID']['input'];
 };
 
 export type MutationContract_UpdateArgs = {
@@ -4073,6 +4080,7 @@ export type TenantBillingProfile = Node &
     legalName: Scalars['String']['output'];
     locality: Scalars['String']['output'];
     phone: Scalars['String']['output'];
+    sendInvoicesBcc: Scalars['String']['output'];
     sendInvoicesFrom: Scalars['String']['output'];
     source: DataSource;
     sourceOfTruth: DataSource;
@@ -4097,6 +4105,7 @@ export type TenantBillingProfileInput = {
   legalName?: InputMaybe<Scalars['String']['input']>;
   locality?: InputMaybe<Scalars['String']['input']>;
   phone?: InputMaybe<Scalars['String']['input']>;
+  sendInvoicesBcc?: InputMaybe<Scalars['String']['input']>;
   sendInvoicesFrom: Scalars['String']['input'];
   vatNumber: Scalars['String']['input'];
   zip?: InputMaybe<Scalars['String']['input']>;
@@ -4120,6 +4129,7 @@ export type TenantBillingProfileUpdateInput = {
   locality?: InputMaybe<Scalars['String']['input']>;
   patch?: InputMaybe<Scalars['Boolean']['input']>;
   phone?: InputMaybe<Scalars['String']['input']>;
+  sendInvoicesBcc?: InputMaybe<Scalars['String']['input']>;
   sendInvoicesFrom?: InputMaybe<Scalars['String']['input']>;
   vatNumber?: InputMaybe<Scalars['String']['input']>;
   zip?: InputMaybe<Scalars['String']['input']>;
@@ -4135,6 +4145,7 @@ export type TenantSettings = {
   baseCurrency?: Maybe<Currency>;
   billingEnabled: Scalars['Boolean']['output'];
   logoRepositoryFileId?: Maybe<Scalars['String']['output']>;
+  /** @deprecated Use logoRepositoryFileId */
   logoUrl: Scalars['String']['output'];
 };
 
