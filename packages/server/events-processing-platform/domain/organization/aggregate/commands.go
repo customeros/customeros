@@ -44,6 +44,19 @@ func (a *OrganizationAggregate) HandleRequest(ctx context.Context, request any) 
 	}
 }
 
+func (a *OrganizationTempAggregate) HandleRequest(ctx context.Context, request any) (any, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationTempAggregate.HandleRequest")
+	defer span.Finish()
+
+	switch r := request.(type) {
+	case *organizationpb.RefreshRenewalSummaryGrpcRequest:
+		return nil, a.refreshRenewalSummary(ctx, r)
+	default:
+		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
+		return nil, eventstore.ErrInvalidRequestType
+	}
+}
+
 func (a *OrganizationAggregate) CreateBillingProfile(ctx context.Context, request *organizationpb.CreateBillingProfileGrpcRequest) (billingProfileId string, err error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.CreateBillingProfile")
 	defer span.Finish()
@@ -238,8 +251,6 @@ func (a *OrganizationTempAggregate) HandleCommand(ctx context.Context, cmd event
 		return a.refreshLastTouchpoint(ctx, c)
 	case *command.RefreshArrCommand:
 		return a.refreshArr(ctx, c)
-	case *command.RefreshRenewalSummaryCommand:
-		return a.refreshRenewalSummary(ctx, c)
 
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidCommandType)
@@ -635,25 +646,24 @@ func (a *OrganizationTempAggregate) refreshArr(ctx context.Context, cmd *command
 	return a.Apply(event)
 }
 
-func (a *OrganizationTempAggregate) refreshRenewalSummary(ctx context.Context, cmd *command.RefreshRenewalSummaryCommand) error {
+func (a *OrganizationTempAggregate) refreshRenewalSummary(ctx context.Context, request *organizationpb.RefreshRenewalSummaryGrpcRequest) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.refreshRenewalSummary")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.SetTag(tracing.SpanTagEntityId, cmd.ObjectID)
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
-	tracing.LogObjectAsJson(span, "command", cmd)
+	tracing.LogObjectAsJson(span, "request", request)
 
 	event, err := events.NewOrganizationRefreshRenewalSummaryEvent(a)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewOrganizationRefreshArrEvent")
+		return errors.Wrap(err, "NewOrganizationRefreshRenewalSummaryEvent")
 	}
 
 	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
 		Tenant: a.GetTenant(),
-		UserId: cmd.LoggedInUserId,
-		App:    cmd.AppSource,
+		UserId: request.LoggedInUserId,
+		App:    request.AppSource,
 	})
 
 	return a.Apply(event)

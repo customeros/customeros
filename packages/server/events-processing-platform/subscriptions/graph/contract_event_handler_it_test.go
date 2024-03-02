@@ -395,7 +395,7 @@ func TestContractEventHandler_OnUpdate_FrequencyRemoved(t *testing.T) {
 	// prepare grpc mock
 	calledEventsPlatformToRefreshRenewalSummary, calledEventsPlatformToRefreshArr := false, false
 	organizationServiceRefreshCallbacks := mocked_grpc.MockOrganizationServiceCallbacks{
-		RefreshRenewalSummary: func(context context.Context, org *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+		RefreshRenewalSummary: func(context context.Context, org *organizationpb.RefreshRenewalSummaryGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 			require.Equal(t, tenantName, org.Tenant)
 			require.Equal(t, orgId, org.OrganizationId)
 			require.Equal(t, constants.AppSourceEventProcessingPlatform, org.AppSource)
@@ -937,6 +937,30 @@ func TestContractEventHandler_OnDeleteV1(t *testing.T) {
 		neo4jutil.NodeLabelOrganization: 1, neo4jutil.NodeLabelOrganization + "_" + tenantName: 1,
 		neo4jutil.NodeLabelContract: 2, neo4jutil.NodeLabelContract + "_" + tenantName: 2})
 
+	// prepare grpc mock
+	calledEventsPlatformToRefreshRenewalSummary, calledEventsPlatformToRefreshArr := false, false
+	organizationServiceRefreshCallbacks := mocked_grpc.MockOrganizationServiceCallbacks{
+		RefreshRenewalSummary: func(context context.Context, org *organizationpb.RefreshRenewalSummaryGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+			require.Equal(t, tenantName, org.Tenant)
+			require.Equal(t, orgId, org.OrganizationId)
+			require.Equal(t, constants.AppSourceEventProcessingPlatform, org.AppSource)
+			calledEventsPlatformToRefreshRenewalSummary = true
+			return &organizationpb.OrganizationIdGrpcResponse{
+				Id: orgId,
+			}, nil
+		},
+		RefreshArr: func(context context.Context, org *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+			require.Equal(t, tenantName, org.Tenant)
+			require.Equal(t, orgId, org.OrganizationId)
+			require.Equal(t, constants.AppSourceEventProcessingPlatform, org.AppSource)
+			calledEventsPlatformToRefreshArr = true
+			return &organizationpb.OrganizationIdGrpcResponse{
+				Id: orgId,
+			}, nil
+		},
+	}
+	mocked_grpc.SetOrganizationCallbacks(&organizationServiceRefreshCallbacks)
+
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{
 		log:          testLogger,
@@ -966,4 +990,8 @@ func TestContractEventHandler_OnDeleteV1(t *testing.T) {
 	deletedContractDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "DeletedContract_"+tenantName, contractId1)
 	require.Nil(t, err)
 	require.NotNil(t, deletedContractDbNode)
+
+	// verify call to events platform
+	require.True(t, calledEventsPlatformToRefreshRenewalSummary)
+	require.True(t, calledEventsPlatformToRefreshArr)
 }

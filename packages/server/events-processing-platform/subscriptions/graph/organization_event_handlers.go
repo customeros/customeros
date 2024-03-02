@@ -521,8 +521,8 @@ func (h *OrganizationEventHandler) OnRefreshArr(ctx context.Context, evt eventst
 	return nil
 }
 
-func (h *OrganizationEventHandler) OnRefreshRenewalSummary(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnRefreshRenewalSummary")
+func (h *OrganizationEventHandler) OnRefreshRenewalSummaryV1(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnRefreshRenewalSummaryV1")
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
@@ -531,8 +531,9 @@ func (h *OrganizationEventHandler) OnRefreshRenewalSummary(ctx context.Context, 
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
-
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, organizationId)
 
 	openRenewalOpportunityDbNodes, err := h.repositories.Neo4jRepositories.OpportunityReadRepository.GetOpenRenewalOpportunitiesForOrganization(ctx, eventData.Tenant, organizationId)
 	if err != nil {

@@ -13,7 +13,7 @@ type MockOrganizationServiceCallbacks struct {
 	LinkPhoneNumberToOrganization func(ctx context.Context, proto *organizationpb.LinkPhoneNumberToOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	RefreshLastTouchpoint         func(ctx context.Context, proto *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	UpdateOnboardingStatus        func(ctx context.Context, proto *organizationpb.UpdateOnboardingStatusGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
-	RefreshRenewalSummary         func(ctx context.Context, proto *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
+	RefreshRenewalSummary         func(ctx context.Context, proto *organizationpb.RefreshRenewalSummaryGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	RefreshArr                    func(ctx context.Context, proto *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 }
 
@@ -55,7 +55,7 @@ func (MockOrganizationService) RefreshLastTouchpoint(ctx context.Context, proto 
 	return organizationCallbacks.RefreshLastTouchpoint(ctx, proto)
 }
 
-func (MockOrganizationService) RefreshRenewalSummary(ctx context.Context, proto *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+func (MockOrganizationService) RefreshRenewalSummary(ctx context.Context, proto *organizationpb.RefreshRenewalSummaryGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 	if organizationCallbacks.RefreshRenewalSummary == nil {
 		panic("organizationCallbacks.RefreshRenewalSummary is not set")
 	}

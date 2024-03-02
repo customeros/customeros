@@ -109,8 +109,9 @@ func main() {
 	//testUpdateOnboardingStatus()
 	//testUpdateOrgOwner()
 	//testRefreshLastTouchpoint()
+	testRefreshRenewalSummary()
 	//testAddTenantBillingProfile()
-	PaidInvoiceNotification()
+	//PaidInvoiceNotification()
 	//PleasePayInvoiceNotification()
 	//testCreateInvoice()
 	//testTenantSettingsUpdate()
@@ -751,6 +752,17 @@ func testUpdateOrgOwner() {
 
 func testRefreshLastTouchpoint() {
 	result, err := clients.OrganizationClient.RefreshLastTouchpoint(context.Background(), &organizationpb.OrganizationIdGrpcRequest{
+		Tenant:         tenant,
+		OrganizationId: orgId,
+	})
+	if err != nil {
+		log.Fatalf("Failed: %v", err.Error())
+	}
+	log.Printf("Result: %v", result.Id)
+}
+
+func testRefreshRenewalSummary() {
+	result, err := clients.OrganizationClient.RefreshRenewalSummary(context.Background(), &organizationpb.RefreshRenewalSummaryGrpcRequest{
 		Tenant:         tenant,
 		OrganizationId: orgId,
 	})

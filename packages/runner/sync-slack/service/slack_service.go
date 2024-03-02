@@ -301,7 +301,7 @@ func (s *slackService) FetchNewThreadMessages(ctx context.Context, token, channe
 				if message.ThreadTimestamp != message.Timestamp {
 					// if message is before the "from" time skip it
 					messageTime, err := fromFloatTs(message.Timestamp)
-					if err != nil && messageTime.Before(from) {
+					if err == nil && messageTime.Before(from) {
 						continue
 					}
 					messages = append(messages, message)

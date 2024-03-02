@@ -1275,7 +1275,7 @@ func TestMutationResolver_OrganizationMerge_Properties(t *testing.T) {
 				Id: parentOrgId,
 			}, nil
 		},
-		RefreshRenewalSummary: func(ctx context.Context, proto *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+		RefreshRenewalSummary: func(ctx context.Context, proto *organizationpb.RefreshRenewalSummaryGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 			return &organizationpb.OrganizationIdGrpcResponse{
 				Id: parentOrgId,
 			}, nil
@@ -1430,7 +1430,7 @@ func TestMutationResolver_OrganizationMerge_CheckLastTouchpointUpdated(t *testin
 				Id: parentOrgId,
 			}, nil
 		},
-		RefreshRenewalSummary: func(ctx context.Context, proto *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+		RefreshRenewalSummary: func(ctx context.Context, proto *organizationpb.RefreshRenewalSummaryGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 			calledRefreshRenewalSummary = true
 			return &organizationpb.OrganizationIdGrpcResponse{
 				Id: parentOrgId,

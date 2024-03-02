@@ -14,8 +14,8 @@
     },
     {
       "name": "Check for nodes missing mandatory links",
-      "query": "CALL {\n     MATCH (n:InvoiceLine) WHERE NOT (n)<-[:HAS_INVOICE_LINE]-(:Invoice) RETURN count(n) as cnt\n     UNION ALL\n     MATCH (n:Invoice) WHERE NOT (n)<-[:HAS_INVOICE]-(:Contract) RETURN count(n) as cnt\n     UNION ALL\n     MATCH (n:ServiceLineItem) WHERE NOT (n)<-[:HAS_SERVICE]-(:Contract) RETURN count(n) as cnt\n} RETURN sum(cnt)",
-      "description": "Checks: 1 - Invoice line without invoice. 2 - Invoice without contract. 3 - Service line item without contract."
+      "query": "CALL {\n     MATCH (n:InvoiceLine) WHERE NOT (n)<-[:HAS_INVOICE_LINE]-(:Invoice) RETURN count(n) as cnt\n     UNION ALL\n     MATCH (n:Invoice) WHERE NOT (n)<-[:HAS_INVOICE]-(:Contract|DeletedContract) RETURN count(n) as cnt\n     UNION ALL\n     MATCH (n:ServiceLineItem) WHERE NOT (n)<-[:HAS_SERVICE]-(:Contract|DeletedContract) RETURN count(n) as cnt\n     UNION ALL\n     MATCH (n:Contract) WHERE NOT (n)<-[:HAS_CONTRACT]-(:Organization) RETURN count(n) as cnt\n} RETURN sum(cnt)",
+      "description": "Checks: 1 - Invoice line without invoice. 2 - Invoice without contract/deleted contract. 3 - Service line item without contract/deleted contract. 4 - Contract without organization."
     },
     {
       "name": "Check organization nodes labels",
@@ -120,8 +120,8 @@
     },
     {
       "name": "Check organization derived data consistency",
-      "query": "CALL {\n     MATCH (org:Organization) WHERE org.derivedNextRenewalAt < datetime()-duration({minutes: 30}) RETURN count(org) as cnt\n     UNION ALL\n     MATCH (org:Organization) WHERE org.derivedRenewalLikelihood IS NOT NULL AND NOT org.derivedRenewalLikelihood IN ['','ZERO','LOW','MEDIUM','HIGH'] RETURN count(org) as cnt\n     UNION ALL MATCH (org:Organization)--(c:Contract)-[:ACTIVE_RENEWAL]->(op:RenewalOpportunity) WHERE (org.renewalForecastMaxArr IS NULL OR org.renewalForecastMaxArr = 0) AND (op.maxAmount > 0) return count(org) AS cnt\n} RETURN sum(cnt)",
-      "description": "Checks: 1 - Organizations with wrong derivedNextRenewalAt date. 2 - Organizations with wrong derivedRenewalLikelihood value. 3 - Organizations with missing ARR"
+      "query": "CALL {\n     MATCH (org:Organization) WHERE org.derivedNextRenewalAt < datetime()-duration({minutes: 30}) RETURN count(org) as cnt\n     UNION ALL\n     MATCH (org:Organization) WHERE org.derivedRenewalLikelihood IS NOT NULL AND NOT org.derivedRenewalLikelihood IN ['','ZERO','LOW','MEDIUM','HIGH'] RETURN count(org) as cnt\n     UNION ALL\n     MATCH (org:Organization) WHERE org.derivedRenewalLikelihood IS NULL AND NOT org.derivedRenewalLikelihood IS NULL RETURN count(org) as cnt\n     UNION ALL MATCH (org:Organization)--(c:Contract)-[:ACTIVE_RENEWAL]->(op:RenewalOpportunity) WHERE (org.renewalForecastMaxArr IS NULL OR org.renewalForecastMaxArr = 0) AND (op.maxAmount > 0) return count(org) AS cnt\n} RETURN sum(cnt)",
+      "description": "Checks: 1 - Organizations with wrong derivedNextRenewalAt date. 2 - Organizations with wrong derivedRenewalLikelihood value. 3 - Organization with renewal likelihood but without renewal date. 4 - Organizations with missing ARR"
     },
     {
       "name": "Check organization data consistency",
