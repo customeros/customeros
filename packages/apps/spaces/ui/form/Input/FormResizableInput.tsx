@@ -26,8 +26,6 @@ interface FormInputProps extends InputProps {
   rightElement?: React.ReactNode;
 }
 
-//todo add visually hidden label - accessibility
-
 export const FormResizableInput = forwardRef<HTMLInputElement, FormInputProps>(
   (
     {
@@ -37,12 +35,11 @@ export const FormResizableInput = forwardRef<HTMLInputElement, FormInputProps>(
       isLabelVisible,
       labelProps,
       rightElement,
-      error,
       ...props
     }: FormInputProps,
     ref,
   ) => {
-    const { getInputProps } = useField(name, formId);
+    const { getInputProps, renderError, state } = useField(name, formId);
 
     return (
       <FormControl>
@@ -58,15 +55,16 @@ export const FormResizableInput = forwardRef<HTMLInputElement, FormInputProps>(
             ref={ref}
             {...getInputProps()}
             {...props}
+            isInvalid={state.meta?.meta?.hasError}
             autoComplete='off'
           />
           {rightElement && rightElement}
         </Flex>
-        {props?.isInvalid && (
+        {renderError((error) => (
           <Text fontSize='xs' color='error.500'>
             {error}
           </Text>
-        )}
+        ))}
       </FormControl>
     );
   },

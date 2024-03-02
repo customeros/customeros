@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 
 import { LogoUploader } from '@settings/components/LogoUploadComponent/LogoUploader';
 import { VatInput } from '@settings/components/Tabs/panels/BillingPanel/components/VatInput';
@@ -13,26 +13,6 @@ import { FormSelect } from '@ui/form/SyncSelect';
 import { Divider } from '@ui/presentation/Divider';
 import { countryOptions } from '@shared/util/countryOptions';
 import { FormInput, FormResizableInput } from '@ui/form/Input';
-
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-function validateLocalPart(localPart: string) {
-  if (localPart.startsWith('.') || localPart.endsWith('.')) {
-    return 'The email address cannot start or end with a dot.';
-  }
-
-  const regex =
-    /^(?:(?:[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+)|(?:"(?:[\\"]|[^"\\])*")|(?:\.(?!\.)))+$/;
-
-  if (!regex.test(localPart)) {
-    if (localPart.includes('..')) {
-      return 'The email address cannot contain consecutive dots.';
-    }
-
-    return 'The email address contains invalid characters.';
-  }
-
-  return '';
-}
 
 export const TenantBillingPanelDetailsForm = ({
   setIsInvoiceProviderDetailsHovered,
@@ -57,14 +37,6 @@ export const TenantBillingPanelDetailsForm = ({
   setIsInvoiceProviderFocused: (newState: boolean) => void;
   setIsInvoiceProviderDetailsHovered: (newState: boolean) => void;
 }) => {
-  const [emailError, setEmailError] = useState<string | null>(null);
-  useEffect(() => {
-    if (email && email?.length > 0) {
-      const emailValidation = validateLocalPart(email);
-      setEmailError(emailValidation);
-    }
-  }, [email]);
-
   return (
     <CardBody
       as={Flex}
@@ -188,8 +160,6 @@ export const TenantBillingPanelDetailsForm = ({
           isLabelVisible
           name='sendInvoicesFrom'
           placeholder=''
-          isInvalid={!!email?.length && Boolean(emailError)}
-          error={emailError}
           rightElement={'@invoices.customeros.com'}
           onFocus={() => setIsInvoiceProviderFocused(true)}
         />
@@ -209,7 +179,6 @@ export const TenantBillingPanelDetailsForm = ({
           textOverflow='ellipsis'
           placeholder='BCC'
           type='email'
-          isInvalid={!!bcc?.length && !emailRegex.test(bcc)}
         />
       </Flex>
       <PaymentMethods

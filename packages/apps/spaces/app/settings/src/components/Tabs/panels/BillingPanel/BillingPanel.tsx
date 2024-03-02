@@ -11,6 +11,10 @@ import { useTenantBillingProfilesQuery } from '@settings/graphql/getTenantBillin
 import { useCreateBillingProfileMutation } from '@settings/graphql/createTenantBillingProfile.generated';
 import { useTenantUpdateBillingProfileMutation } from '@settings/graphql/updateTenantBillingProfile.generated';
 import {
+  validateEmail,
+  validateEmailLocalPart,
+} from '@settings/components/Tabs/panels/BillingPanel/utils';
+import {
   TenantSettingsQuery,
   useTenantSettingsQuery,
 } from '@settings/graphql/getTenantSettings.generated';
@@ -170,10 +174,25 @@ export const BillingPanel = () => {
     },
     2500,
   );
+
   const { state, setDefaultValues } = useForm({
     formId,
     defaultValues,
     stateReducer: (state, action, next) => {
+      const getStateAfterValidation = () => {
+        return produce(next, (draft) => {
+          const sendInvoiceFromError = validateEmailLocalPart(
+            draft.values.sendInvoicesFrom,
+          );
+          const bccError = validateEmail(draft.values.sendInvoicesBcc);
+          // we do it like this so that if the email is valid, we reset the states.
+          draft.fields.sendInvoicesFrom.meta.hasError = !!sendInvoiceFromError;
+          draft.fields.sendInvoicesFrom.error = sendInvoiceFromError ?? '';
+
+          draft.fields.sendInvoicesBcc.meta.hasError = !!bccError;
+          draft.fields.sendInvoicesBcc.error = bccError ?? '';
+        });
+      };
       if (action.type === 'FIELD_CHANGE') {
         switch (action.payload.name) {
           case 'canPayWithDirectDebitSEPA':
@@ -226,7 +245,7 @@ export const BillingPanel = () => {
                 .name]: `${action.payload.value}@invoices.customeros.ai`,
             });
 
-            return next;
+            return getStateAfterValidation();
           }
           default:
             return next;
@@ -278,11 +297,15 @@ export const BillingPanel = () => {
               handleUpdateData.flush();
             }
 
-            return next;
+            return getStateAfterValidation();
           }
           default:
             return next;
         }
+      }
+
+      if (action.type === 'SET_DEFAULT_VALUES') {
+        return getStateAfterValidation();
       }
 
       return next;
