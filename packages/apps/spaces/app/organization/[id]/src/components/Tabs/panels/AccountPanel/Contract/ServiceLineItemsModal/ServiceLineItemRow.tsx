@@ -17,18 +17,18 @@ import { BilledType, ServiceLineItem } from '@graphql/types';
 import { NumberInput, NumberInputField } from '@ui/form/NumberInput';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 import { billedTypeOptions } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
+import { BulkUpdateServiceLineItem } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ServiceLineItemsModal/ServiceLineItemsModal.dto';
 
-import { ServiceItem } from './type';
 import { ServiceLineItemInputWrapper } from './ServiceLineItemInputWrapper';
 type DateInputValue = null | string | number | Date;
 
 const [_, _1, ...subscriptionOptions] = billedTypeOptions;
 interface ServiceLineItemProps {
   index: number;
-  service: ServiceItem;
   currency?: string | null;
+  service: BulkUpdateServiceLineItem;
   prevServiceLineItemData?: ServiceLineItem;
-  onChange: (updatedService: ServiceItem) => void;
+  onChange: (updatedService: BulkUpdateServiceLineItem) => void;
 }
 
 export const ServiceLineItemRow = ({
@@ -39,7 +39,7 @@ export const ServiceLineItemRow = ({
   prevServiceLineItemData,
 }: ServiceLineItemProps) => {
   const handleChange = (
-    field: keyof ServiceItem,
+    field: keyof BulkUpdateServiceLineItem,
     value: string | boolean | Date,
   ) => {
     onChange({ ...service, [field]: value });
@@ -280,11 +280,11 @@ export const ServiceLineItemRow = ({
             name='startDate'
             clearIcon={null}
             disabled={
-              !!service?.id &&
+              !!service?.serviceLineItemId &&
               prevServiceLineItemData?.price === service.price &&
               service.quantity === prevServiceLineItemData?.quantity
             }
-            minDate={service?.id ? new Date() : undefined}
+            minDate={service?.serviceLineItemId ? new Date() : undefined}
             onChange={(event) => handleDateInputChange(event as DateInputValue)}
             defaultValue={service.serviceStarted}
             formatShortWeekday={(_, date) =>

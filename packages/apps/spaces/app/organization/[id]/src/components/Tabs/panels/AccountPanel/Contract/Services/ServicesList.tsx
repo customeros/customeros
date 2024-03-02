@@ -34,7 +34,7 @@ const ServiceItem = ({
   currency?: string | null;
   onOpen: (props: ServiceLineItem) => void;
 }) => {
-  const allowedFractionDigits = data.billed === BilledType.Usage ? 4 : 2;
+  const allowedFractionDigits = data.billingCycle === BilledType.Usage ? 4 : 2;
 
   return (
     <>
@@ -53,14 +53,16 @@ const ServiceItem = ({
         }}
         sx={{ '& button': { opacity: 0 } }}
       >
-        {data.name && (
+        {data.description && (
           <Text fontSize='sm' color='gray.500' noOfLines={1} textAlign='left'>
-            {data.name}
+            {data.description}
           </Text>
         )}
         <Flex justifyContent='space-between' w='full'>
           <Text>
-            {![BilledType.Usage, BilledType.Once].includes(data.billed) && (
+            {![BilledType.Usage, BilledType.Once].includes(
+              data.billingCycle,
+            ) && (
               <>
                 {data.quantity}
                 <Text as='span' fontSize='sm' mx={1}>
@@ -74,7 +76,7 @@ const ServiceItem = ({
               allowedFractionDigits,
               currency || 'USD',
             )}
-            {getBilledTypeLabel(data.billed)}
+            {getBilledTypeLabel(data.billingCycle)}
           </Text>
         </Flex>
       </Flex>
@@ -93,12 +95,12 @@ export const ServicesList = ({
   currency,
   onModalOpen,
 }: ServicesListProps) => {
-  const filteredData = data?.filter(({ endedAt }) => !endedAt);
+  const filteredData = data?.filter(({ serviceEnded }) => !serviceEnded);
 
   return (
     <Flex flexDir='column' gap={1}>
       {filteredData?.map((service, i) => (
-        <React.Fragment key={`service-item-${service.id}`}>
+        <React.Fragment key={`service-item-${service.metadata.id}`}>
           <ServiceItem
             data={service}
             onOpen={onModalOpen}

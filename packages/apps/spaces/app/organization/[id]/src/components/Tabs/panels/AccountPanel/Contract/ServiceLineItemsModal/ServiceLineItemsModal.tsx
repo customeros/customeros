@@ -27,7 +27,6 @@ import {
   useGetContractsQuery,
 } from '@organization/src/graphql/getContracts.generated';
 import { useUpdateCacheWithNewEvent } from '@organization/src/components/Timeline/hooks/updateCacheWithNewEvent';
-import { ServiceItem } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ServiceLineItemsModal/type';
 import {
   Modal,
   ModalBody,
@@ -45,6 +44,10 @@ import {
   ServiceLineItemBulkUpdateItem,
 } from '@graphql/types';
 import { updateTimelineCacheAfterServiceLineItemChange } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ServiceLineItemsModal/utils';
+import {
+  ServiceLineItemsDTO,
+  BulkUpdateServiceLineItem,
+} from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ServiceLineItemsModal/ServiceLineItemsModal.dto';
 
 import { ServiceLineItemRow } from './ServiceLineItemRow';
 
@@ -56,7 +59,7 @@ interface SubscriptionServiceModalProps {
   notes?: string | null;
   currency?: string | null;
   organizationName: string;
-  serviceLineItems: Array<ServiceLineItem>;
+  contractLineItems: Array<ServiceLineItem>;
 }
 
 interface SubscriptionServiceModalProps {
@@ -105,7 +108,7 @@ const getNewItem = (input: InputMaybe<ServiceLineItemBulkUpdateItem>) => ({
 export const ServiceLineItemsModal = ({
   isOpen,
   onClose,
-  serviceLineItems,
+  contractLineItems,
   contractId,
   contractName,
   notes = '',
@@ -170,7 +173,7 @@ export const ServiceLineItemsModal = ({
         contractName,
         user: session?.data?.user?.name ?? '',
         updateTimelineCache,
-        prevServiceLineItems: serviceLineItems,
+        prevServiceLineItems: contractLineItems,
         newServiceLineItems: variables.input.serviceLineItems,
       });
 
@@ -186,29 +189,22 @@ export const ServiceLineItemsModal = ({
       }, 1000);
     },
   });
-  const [services, setServices] = useState<Array<ServiceItem>>([]);
+  const [services, setServices] = useState<Array<BulkUpdateServiceLineItem>>(
+    [],
+  );
   const [invoiceNote, setInvoiceNote] = useState<string>(`${notes}`);
   useEffect(() => {
     if (isOpen) {
-      if (serviceLineItems.length) {
+      if (contractLineItems.length) {
         setServices(
-          serviceLineItems
-            .filter((e) => !e.endedAt)
-            .map((e) => ({
-              ...e,
-              isDeleted: false,
-              serviceStarted: e.serviceStarted,
-              type: [
-                BilledType.Quarterly,
-                BilledType.Monthly,
-                BilledType.Annually,
-              ].includes(e.billed)
-                ? 'RECURRING'
-                : e.billed,
-            })),
+          contractLineItems
+            .filter((e) => !e.serviceEnded)
+            .map((e) => {
+              return ServiceLineItemsDTO.toPayload(e);
+            }),
         );
       }
-      if (!serviceLineItems.length) {
+      if (!contractLineItems.length) {
         setServices([defaultValue]);
       }
     }
@@ -217,7 +213,10 @@ export const ServiceLineItemsModal = ({
     setServices([...services, defaultValue]);
   };
 
-  const handleUpdateService = (index: number, updatedService: ServiceItem) => {
+  const handleUpdateService = (
+    index: number,
+    updatedService: BulkUpdateServiceLineItem,
+  ) => {
     const updatedServices = [...services];
 
     updatedServices[index] = updatedService;
@@ -232,7 +231,7 @@ export const ServiceLineItemsModal = ({
         serviceLineItems: services
           .filter((e) => !e.isDeleted)
           .map((e) => ({
-            serviceLineItemId: e?.id ?? '',
+            serviceLineItemId: e?.serviceLineItemId ?? '',
             billed: e.billed,
             name: e.name,
             price: e.price,
@@ -320,8 +319,8 @@ export const ServiceLineItemsModal = ({
                 index={index}
                 currency={currency}
                 onChange={(data) => handleUpdateService(index, data)}
-                prevServiceLineItemData={serviceLineItems.find(
-                  (e) => e.id === service.id,
+                prevServiceLineItemData={contractLineItems.find(
+                  (e) => e.metadata.id === service?.serviceLineItemId,
                 )}
               />
             </Fragment>
