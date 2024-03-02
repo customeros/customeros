@@ -150,6 +150,7 @@ func TestServiceLineItemEventHandler_OnUpdate(t *testing.T) {
 			AppSource: constants.AppSourceEventProcessingPlatform,
 		},
 		updatedAt,
+		nil,
 	)
 	require.Nil(t, err, "failed to create service line item update event")
 
@@ -495,6 +496,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceIncreaseRetroactively_Timeline
 			AppSource: constants.AppSourceEventProcessingPlatform,
 		},
 		updatedAt,
+		nil,
 	)
 	require.Nil(t, err, "failed to create service line item update event")
 
@@ -580,6 +582,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceIncreasePerUseRetroactively_Ti
 			AppSource: constants.AppSourceEventProcessingPlatform,
 		},
 		updatedAt,
+		nil,
 	)
 	require.Nil(t, err, "failed to create service line item update event")
 
@@ -667,6 +670,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseRetroactively_Timeline
 			AppSource: constants.AppSourceEventProcessingPlatform,
 		},
 		updatedAt,
+		nil,
 	)
 	require.Nil(t, err, "failed to create service line item update event")
 
@@ -753,6 +757,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseOnceRetroactively_Time
 			AppSource: constants.AppSourceEventProcessingPlatform,
 		},
 		updatedAt,
+		nil,
 	)
 	require.Nil(t, err, "failed to create service line item update event")
 
@@ -836,6 +841,7 @@ func TestServiceLineItemEventHandler_OnUpdateQuantityIncreaseRetroactively_Timel
 			AppSource: constants.AppSourceEventProcessingPlatform,
 		},
 		updatedAt,
+		nil,
 	)
 	require.Nil(t, err, "failed to create service line item update event")
 
@@ -917,6 +923,7 @@ func TestServiceLineItemEventHandler_OnUpdateQuantityDecreaseRetroactively_Timel
 			AppSource: constants.AppSourceEventProcessingPlatform,
 		},
 		updatedAt,
+		nil,
 	)
 	require.Nil(t, err, "failed to create service line item update event")
 
@@ -1001,6 +1008,7 @@ func TestServiceLineItemEventHandler_OnUpdateBilledType_TimelineEvent(t *testing
 			AppSource: constants.AppSourceEventProcessingPlatform,
 		},
 		updatedAt,
+		nil,
 	)
 	require.Nil(t, err, "failed to create service line item update event")
 
