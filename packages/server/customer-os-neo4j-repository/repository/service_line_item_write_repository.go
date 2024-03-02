@@ -35,14 +35,15 @@ type ServiceLineItemCreateFields struct {
 }
 
 type ServiceLineItemUpdateFields struct {
-	Price     float64   `json:"price"`
-	Quantity  int64     `json:"quantity"`
-	Name      string    `json:"name"`
-	Billed    string    `json:"billed"`
-	Comments  string    `json:"comments"`
-	Source    string    `json:"source"`
-	UpdatedAt time.Time `json:"updatedAt"`
-	VatRate   float64   `json:"vatRate"`
+	Price     float64    `json:"price"`
+	Quantity  int64      `json:"quantity"`
+	Name      string     `json:"name"`
+	Billed    string     `json:"billed"`
+	Comments  string     `json:"comments"`
+	Source    string     `json:"source"`
+	UpdatedAt time.Time  `json:"updatedAt"`
+	VatRate   float64    `json:"vatRate"`
+	StartedAt *time.Time `json:"startedAt"`
 }
 
 type ServiceLineItemWriteRepository interface {
@@ -155,6 +156,10 @@ func (r *serviceLineItemWriteRepository) Update(ctx context.Context, tenant, ser
 		"comments":          data.Comments,
 		"sourceOfTruth":     data.Source,
 		"overwrite":         data.Source == constants.SourceOpenline,
+	}
+	if data.StartedAt != nil {
+		params["startedAt"] = *data.StartedAt
+		cypher += `, sli.startedAt = $startedAt`
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
