@@ -147,7 +147,6 @@ func (r *invoiceReadRepository) GetInvoiceById(ctx context.Context, tenant, invo
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, invoiceId)
-	span.LogFields(log.String("invoiceId", invoiceId))
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$id}) RETURN i`
 	params := map[string]any{

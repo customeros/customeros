@@ -23,7 +23,6 @@ const (
 type OrganizationRepository interface {
 	CountOrganizations(ctx context.Context, tenant string) (int64, error)
 	CountCustomers(ctx context.Context, tenant string) (int64, error)
-	GetOrganizationById(ctx context.Context, tenant, organizationId string) (*dbtype.Node, error)
 	GetPaginatedOrganizations(ctx context.Context, tenant string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	GetPaginatedOrganizationsForContact(ctx context.Context, tenant, contactId string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	Archive(ctx context.Context, organizationId string) error
@@ -129,35 +128,6 @@ func (r *organizationRepository) CountCustomers(ctx context.Context, tenant stri
 		return 0, err
 	}
 	return dbRecord.(*db.Record).Values[0].(int64), nil
-}
-
-func (r *organizationRepository) GetOrganizationById(ctx context.Context, tenant, organizationId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetOrganizationById")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("organizationId", organizationId))
-
-	cypher := `MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) RETURN org`
-	params := map[string]any{
-		"organizationId": organizationId,
-		"tenant":         tenant,
-	}
-	span.LogFields(log.String("query", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
-
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-	dbRecord, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
-			return nil, err
-		} else {
-			return queryResult.Single(ctx)
-		}
-	})
-	if err != nil {
-		return nil, err
-	}
-	return utils.NodePtr(dbRecord.(*db.Record).Values[0].(dbtype.Node)), nil
 }
 
 func (r *organizationRepository) GetPaginatedOrganizations(ctx context.Context, tenant string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {

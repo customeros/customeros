@@ -131,7 +131,7 @@ func TestOpportunityEventHandler_OnCreateRenewal(t *testing.T) {
 	// prepare grpc mock
 	calledEventsPlatformToRefreshRenewalSummary := false
 	organizationServiceRefreshCallbacks := mocked_grpc.MockOrganizationServiceCallbacks{
-		RefreshRenewalSummary: func(context context.Context, org *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+		RefreshRenewalSummary: func(context context.Context, org *organizationpb.RefreshRenewalSummaryGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 			require.Equal(t, tenantName, org.Tenant)
 			require.Equal(t, orgId, org.OrganizationId)
 			require.Equal(t, constants.AppSourceEventProcessingPlatform, org.AppSource)
@@ -368,7 +368,7 @@ func TestOpportunityEventHandler_OnUpdateRenewal_AmountAndRenewalChangedByUser(t
 	// prepare grpc mock
 	calledEventsPlatformToRefreshRenewalSummary, calledEventsPlatformToRefreshArr := false, false
 	organizationServiceRefreshCallbacks := mocked_grpc.MockOrganizationServiceCallbacks{
-		RefreshRenewalSummary: func(context context.Context, org *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+		RefreshRenewalSummary: func(context context.Context, org *organizationpb.RefreshRenewalSummaryGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 			require.Equal(t, tenantName, org.Tenant)
 			require.Equal(t, orgId, org.OrganizationId)
 			require.Equal(t, constants.AppSourceEventProcessingPlatform, org.AppSource)
@@ -691,7 +691,7 @@ func TestOpportunityEventHandler_OnUpdateRenewal_ChangeOwner(t *testing.T) {
 	// prepare grpc mock
 	calledEventsPlatformToRefreshRenewalSummary := false
 	organizationServiceRefreshCallbacks := mocked_grpc.MockOrganizationServiceCallbacks{
-		RefreshRenewalSummary: func(context context.Context, org *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+		RefreshRenewalSummary: func(context context.Context, org *organizationpb.RefreshRenewalSummaryGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 			require.Equal(t, tenantName, org.Tenant)
 			require.Equal(t, orgId, org.OrganizationId)
 			require.Equal(t, constants.AppSourceEventProcessingPlatform, org.AppSource)

@@ -440,7 +440,7 @@ func TestGraphOrganizationEventHandler_OnRefreshRenewalSummary(t *testing.T) {
 	require.Nil(t, err)
 
 	// EXECUTE
-	err = orgEventHandler.OnRefreshRenewalSummary(context.Background(), event)
+	err = orgEventHandler.OnRefreshRenewalSummaryV1(context.Background(), event)
 	require.Nil(t, err)
 
 	orgDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Organization", orgId)
