@@ -42,3 +42,11 @@ func (sli ServiceLineItemEntity) IsParent() bool {
 func (sli ServiceLineItemEntity) IsActiveAt(referenceTime time.Time) bool {
 	return (sli.StartedAt.Equal(referenceTime) || sli.StartedAt.Before(referenceTime)) && (sli.EndedAt == nil || sli.EndedAt.After(referenceTime))
 }
+
+func (sli ServiceLineItemEntity) IsRecurrent() bool {
+	return sli.Billed == enum.BilledTypeMonthly || sli.Billed == enum.BilledTypeAnnually || sli.Billed == enum.BilledTypeQuarterly
+}
+
+func (sli ServiceLineItemEntity) IsOneTime() bool {
+	return sli.Billed == enum.BilledTypeOnce
+}

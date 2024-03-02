@@ -384,6 +384,7 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 		Source:    helper.GetSource(eventData.Source.Source),
 		UpdatedAt: eventData.UpdatedAt,
 		VatRate:   eventData.VatRate,
+		StartedAt: eventData.StartedAt,
 	}
 	err = h.repositories.Neo4jRepositories.ServiceLineItemWriteRepository.Update(ctx, eventData.Tenant, serviceLineItemId, data)
 	if err != nil {

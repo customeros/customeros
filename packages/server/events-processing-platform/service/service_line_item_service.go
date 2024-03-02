@@ -126,6 +126,9 @@ func (s *serviceLineItemService) UpdateServiceLineItem(ctx context.Context, requ
 			source,
 			updatedAt,
 		)
+		if request.StartedAt != nil {
+			updateServiceLineItemCommand.StartedAt = utils.TimestampProtoToTimePtr(request.StartedAt)
+		}
 
 		if err := s.serviceLineItemCommandHandlers.UpdateServiceLineItem.Handle(ctx, updateServiceLineItemCommand); err != nil {
 			tracing.TraceErr(span, err)

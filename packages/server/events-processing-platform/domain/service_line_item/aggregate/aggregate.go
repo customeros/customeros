@@ -31,13 +31,13 @@ func NewServiceLineItemAggregateWithTenantAndID(tenant, id string) *ServiceLineI
 func (a *ServiceLineItemAggregate) When(evt eventstore.Event) error {
 	switch evt.GetEventType() {
 	case event.ServiceLineItemCreateV1:
-		return a.onServiceLineItemCreate(evt)
+		return a.onCreate(evt)
 	case event.ServiceLineItemUpdateV1:
-		return a.onServiceLineItemUpdate(evt)
+		return a.onUpdate(evt)
 	case event.ServiceLineItemDeleteV1:
-		return a.onServiceLineItemDelete()
+		return a.onDelete()
 	case event.ServiceLineItemCloseV1:
-		return a.onServiceLineItemClose(evt)
+		return a.onClose(evt)
 	default:
 		err := eventstore.ErrInvalidEventType
 		err.EventType = evt.GetEventType()
@@ -45,7 +45,7 @@ func (a *ServiceLineItemAggregate) When(evt eventstore.Event) error {
 	}
 }
 
-func (a *ServiceLineItemAggregate) onServiceLineItemCreate(evt eventstore.Event) error {
+func (a *ServiceLineItemAggregate) onCreate(evt eventstore.Event) error {
 	var eventData event.ServiceLineItemCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
@@ -70,7 +70,7 @@ func (a *ServiceLineItemAggregate) onServiceLineItemCreate(evt eventstore.Event)
 }
 
 // onServiceLineItemUpdate handles the update event for a service line item.
-func (a *ServiceLineItemAggregate) onServiceLineItemUpdate(evt eventstore.Event) error {
+func (a *ServiceLineItemAggregate) onUpdate(evt eventstore.Event) error {
 	var eventData event.ServiceLineItemUpdateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
@@ -87,16 +87,19 @@ func (a *ServiceLineItemAggregate) onServiceLineItemUpdate(evt eventstore.Event)
 	}
 	a.ServiceLineItem.Comments = eventData.Comments
 	a.ServiceLineItem.VatRate = eventData.VatRate
+	if eventData.StartedAt != nil {
+		a.ServiceLineItem.StartedAt = *eventData.StartedAt
+	}
 
 	return nil
 }
 
-func (a *ServiceLineItemAggregate) onServiceLineItemDelete() error {
+func (a *ServiceLineItemAggregate) onDelete() error {
 	a.ServiceLineItem.IsDeleted = true
 	return nil
 }
 
-func (a *ServiceLineItemAggregate) onServiceLineItemClose(evt eventstore.Event) error {
+func (a *ServiceLineItemAggregate) onClose(evt eventstore.Event) error {
 	var eventData event.ServiceLineItemCloseEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")

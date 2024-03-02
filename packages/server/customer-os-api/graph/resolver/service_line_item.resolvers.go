@@ -119,14 +119,14 @@ func (r *mutationResolver) ContractLineItemUpdate(ctx context.Context, input mod
 	err := r.Services.ServiceLineItemService.Update(ctx, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to update service line item %s", input.ServiceLineItemID)
-		return &model.ServiceLineItem{ID: input.ServiceLineItemID}, nil
+		graphql.AddErrorf(ctx, "failed to update contract line item {%s}", input.ServiceLineItemID)
+		return &model.ServiceLineItem{ID: input.ServiceLineItemID}, err
 	}
 
 	serviceLineItemEntity, err := r.Services.ServiceLineItemService.GetById(ctx, input.ServiceLineItemID)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed fetching service line item details. Service line item id: %s", input.ServiceLineItemID)
+		graphql.AddErrorf(ctx, "Failed fetching contract line item details. Contract line item id: {%s}", input.ServiceLineItemID)
 		return &model.ServiceLineItem{ID: input.ServiceLineItemID}, nil
 	}
 

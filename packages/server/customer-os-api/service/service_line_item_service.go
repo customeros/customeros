@@ -152,7 +152,7 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 	tracing.LogObjectAsJson(span, "serviceLineItemDetails", serviceLineItemDetails)
 
 	if serviceLineItemDetails.Id == "" {
-		err := fmt.Errorf("(ServiceLineItemService.Update) service line item id is missing")
+		err := fmt.Errorf("(ServiceLineItemService.Update) contract line item id is missing")
 		s.log.Error(err.Error())
 		tracing.TraceErr(span, err)
 		return err
@@ -161,11 +161,20 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 	serviceLineItemEntity, err := s.GetById(ctx, serviceLineItemDetails.Id)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("Error on getting service line item by id {%s}: %s", serviceLineItemDetails.Id, err.Error())
+		s.log.Errorf("Error on getting contract line item by id {%s}: %s", serviceLineItemDetails.Id, err.Error())
 		return err
 	}
 
+	if (serviceLineItemEntity.IsOneTime() && serviceLineItemDetails.SliBilledType != neo4jenum.BilledTypeOnce) ||
+		(serviceLineItemDetails.SliBilledType == neo4jenum.BilledTypeOnce && !serviceLineItemEntity.IsOneTime()) {
+		err = fmt.Errorf("cannot change billing cycle for contract line item with id {%s}", serviceLineItemDetails.Id)
+		tracing.TraceErr(span, err)
+		return err
+	}
 	isRetroactiveCorrection := serviceLineItemDetails.IsRetroactiveCorrection
+	if serviceLineItemEntity.IsOneTime() {
+		isRetroactiveCorrection = true
+	}
 	// If no price impacted fields changed, set retroactive correction to true
 	if serviceLineItemEntity.Price == serviceLineItemDetails.SliPrice &&
 		serviceLineItemEntity.Quantity == serviceLineItemDetails.SliQuantity &&
@@ -243,6 +252,11 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 		}
 		serviceLineItemUpdateRequest.ContractId = utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*contractDbNode), "id")
 		serviceLineItemUpdateRequest.ParentId = serviceLineItemEntity.ParentID
+		serviceLineItemUpdateRequest.StartedAt = utils.ConvertTimeToTimestampPtr(serviceLineItemDetails.StartedAt)
+	}
+
+	// allow setting startedAt if it's a single or first service line item
+	if isRetroactiveCorrection && serviceLineItemEntity.ParentID == serviceLineItemEntity.ID {
 		serviceLineItemUpdateRequest.StartedAt = utils.ConvertTimeToTimestampPtr(serviceLineItemDetails.StartedAt)
 	}
 

@@ -123,6 +123,7 @@ func (a *ServiceLineItemAggregate) updateServiceLineItem(ctx context.Context, cm
 		cmd.DataFields,
 		cmd.Source,
 		updatedAtNotNil,
+		cmd.StartedAt,
 	)
 	if err != nil {
 		tracing.TraceErr(span, err)
