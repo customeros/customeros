@@ -535,3 +535,21 @@ func MapDbNodeToCommentEntity(dbNode *dbtype.Node) *entity.CommentEntity {
 	}
 	return &comment
 }
+
+func MapDbNodeToSocialEntity(dbNode *dbtype.Node) *entity.SocialEntity {
+	if dbNode == nil {
+		return &entity.SocialEntity{}
+	}
+	props := utils.GetPropsFromNode(*dbNode)
+	social := entity.SocialEntity{
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		PlatformName:  utils.GetStringPropOrEmpty(props, "platformName"),
+		Url:           utils.GetStringPropOrEmpty(props, "url"),
+		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+	}
+	return &social
+}

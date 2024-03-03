@@ -203,7 +203,7 @@ func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_New(t *testin
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "test org",
 	})
-	neo4jt.CreateSocial(ctx, testDatabase.Driver, tenantName, entity.SocialEntity{
+	neo4jt.CreateSocial(ctx, testDatabase.Driver, tenantName, neo4jentity.SocialEntity{
 		Url: socialUrl,
 	})
 	orgEventHandler := &OrganizationEventHandler{
@@ -224,13 +224,13 @@ func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_New(t *testin
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 
-	social := graph_db.MapDbNodeToSocialEntity(*dbNode)
+	social := neo4jmapper.MapDbNodeToSocialEntity(dbNode)
 	require.Equal(t, socialId, social.Id)
 	require.Equal(t, socialUrl, social.Url)
 	require.Equal(t, platformName, social.PlatformName)
-	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), social.SourceFields.Source)
-	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), social.SourceFields.SourceOfTruth)
-	require.Equal(t, constants.AppSourceEventProcessingPlatform, social.SourceFields.AppSource)
+	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), social.Source)
+	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), social.SourceOfTruth)
+	require.Equal(t, constants.AppSourceEventProcessingPlatform, social.AppSource)
 	require.Equal(t, now, social.CreatedAt)
 	require.Equal(t, now, social.UpdatedAt)
 }
@@ -247,7 +247,7 @@ func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_SocialUrlAlre
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "test org",
 	})
-	existingSocialId := neo4jt.CreateSocial(ctx, testDatabase.Driver, tenantName, entity.SocialEntity{
+	existingSocialId := neo4jt.CreateSocial(ctx, testDatabase.Driver, tenantName, neo4jentity.SocialEntity{
 		Url:          socialUrl,
 		PlatformName: platformName,
 	})
@@ -270,7 +270,7 @@ func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_SocialUrlAlre
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 
-	social := graph_db.MapDbNodeToSocialEntity(*dbNode)
+	social := neo4jmapper.MapDbNodeToSocialEntity(dbNode)
 	require.Equal(t, existingSocialId, social.Id)
 	require.Equal(t, socialUrl, social.Url)
 	require.Equal(t, platformName, social.PlatformName)

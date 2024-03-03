@@ -7,6 +7,7 @@ import (
 )
 
 type ContractEntity struct {
+	DataLoaderKey
 	Id                              string
 	Name                            string
 	CreatedAt                       time.Time
@@ -38,8 +39,6 @@ type ContractEntity struct {
 	CanPayWithDirectDebit           bool
 	CanPayWithBankTransfer          bool
 	InvoicingEnabled                bool
-
-	DataloaderKey string
 }
 
 type ContractEntities []ContractEntity
