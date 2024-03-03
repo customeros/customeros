@@ -7,7 +7,6 @@ import (
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	servicelineitemmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/mocked_grpc"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/neo4j"
@@ -272,9 +271,9 @@ func TestContractEventHandler_UpdateRenewalArrForecast_OnlyOnceBilled(t *testing
 		},
 	})
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
-	neo4jt.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, entity.ServiceLineItemEntity{
+	neo4jtest.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
 		Price:     float64(10),
-		Billed:    string(servicelineitemmodel.OnceBilledString),
+		Billed:    neo4jenum.BilledTypeOnce,
 		CreatedAt: utils.Now(),
 	})
 
@@ -328,21 +327,21 @@ func TestContractEventHandler_UpdateRenewalArrForecast_MultipleServices(t *testi
 		},
 	})
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
-	neo4jt.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, entity.ServiceLineItemEntity{
+	neo4jtest.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
 		Price:     float64(1000000),
-		Billed:    string(servicelineitemmodel.OnceBilledString),
+		Billed:    neo4jenum.BilledTypeOnce,
 		CreatedAt: utils.Now(),
 	})
-	neo4jt.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, entity.ServiceLineItemEntity{
+	neo4jtest.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
 		Price:     float64(10),
 		Quantity:  int64(5),
-		Billed:    string(servicelineitemmodel.MonthlyBilledString),
+		Billed:    neo4jenum.BilledTypeMonthly,
 		CreatedAt: utils.Now(),
 	})
-	neo4jt.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, entity.ServiceLineItemEntity{
+	neo4jtest.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
 		Price:     float64(1000),
 		Quantity:  int64(2),
-		Billed:    string(servicelineitemmodel.AnnuallyBilledString),
+		Billed:    neo4jenum.BilledTypeAnnually,
 		CreatedAt: utils.Now(),
 	})
 
@@ -396,10 +395,10 @@ func TestContractEventHandler_UpdateRenewalArrForecast_MediumLikelihood(t *testi
 		},
 	})
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
-	neo4jt.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, entity.ServiceLineItemEntity{
+	neo4jtest.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
 		Price:     float64(1000),
 		Quantity:  int64(4),
-		Billed:    string(servicelineitemmodel.AnnuallyBilledString),
+		Billed:    neo4jenum.BilledTypeAnnually,
 		CreatedAt: utils.Now(),
 	})
 
@@ -520,10 +519,10 @@ func TestContractEventHandler_UpdateRenewalArrForecast_ContractEndsIn6Months_Pro
 		},
 	})
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
-	neo4jt.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, entity.ServiceLineItemEntity{
+	neo4jtest.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
 		Price:     float64(1000),
 		Quantity:  int64(1),
-		Billed:    string(servicelineitemmodel.AnnuallyBilledString),
+		Billed:    neo4jenum.BilledTypeAnnually,
 		CreatedAt: utils.Now(),
 	})
 
@@ -582,10 +581,10 @@ func TestContractEventHandler_UpdateRenewalArrForecast_ContractEndsInMoreThan12M
 		},
 	})
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
-	neo4jt.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, entity.ServiceLineItemEntity{
+	neo4jtest.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
 		Price:     float64(1000),
 		Quantity:  int64(1),
-		Billed:    string(servicelineitemmodel.AnnuallyBilledString),
+		Billed:    neo4jenum.BilledTypeAnnually,
 		CreatedAt: utils.Now(),
 	})
 
