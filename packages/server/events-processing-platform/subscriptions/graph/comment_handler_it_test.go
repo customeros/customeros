@@ -4,13 +4,13 @@ import (
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment/model"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/neo4j"
 	"github.com/stretchr/testify/require"
@@ -71,7 +71,7 @@ func TestGraphCommentEventHandler_OnCreate(t *testing.T) {
 	require.NotNil(t, commentDbNode)
 
 	// verify comment
-	comment := graph_db.MapDbNodeToCommentEntity(*commentDbNode)
+	comment := neo4jmapper.MapDbNodeToCommentEntity(commentDbNode)
 	require.Equal(t, commentId, comment.Id)
 	require.Equal(t, "test content", comment.Content)
 	require.Equal(t, "text", comment.ContentType)
@@ -88,7 +88,7 @@ func TestGraphCommentEventHandler_OnUpdate(t *testing.T) {
 
 	// prepare neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	commentId := neo4jt.CreateComment(ctx, testDatabase.Driver, tenantName, entity.CommentEntity{
+	commentId := neo4jt.CreateComment(ctx, testDatabase.Driver, tenantName, neo4jentity.CommentEntity{
 		Content:     "test content",
 		ContentType: "text",
 	})
@@ -114,7 +114,7 @@ func TestGraphCommentEventHandler_OnUpdate(t *testing.T) {
 	require.NotNil(t, commentDbNode)
 
 	// verify comment
-	comment := graph_db.MapDbNodeToCommentEntity(*commentDbNode)
+	comment := neo4jmapper.MapDbNodeToCommentEntity(commentDbNode)
 	require.Equal(t, commentId, comment.Id)
 	require.Equal(t, "test content update", comment.Content)
 	require.Equal(t, "html", comment.ContentType)
@@ -128,7 +128,7 @@ func TestGraphCommentEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNon
 
 	// prepare neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	commentId := neo4jt.CreateComment(ctx, testDatabase.Driver, tenantName, entity.CommentEntity{
+	commentId := neo4jt.CreateComment(ctx, testDatabase.Driver, tenantName, neo4jentity.CommentEntity{
 		Content:       "original content",
 		Source:        constants.SourceOpenline,
 		SourceOfTruth: constants.SourceOpenline,
@@ -156,7 +156,7 @@ func TestGraphCommentEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNon
 	require.NotNil(t, commentDbNode)
 
 	// verify comment
-	comment := graph_db.MapDbNodeToCommentEntity(*commentDbNode)
+	comment := neo4jmapper.MapDbNodeToCommentEntity(commentDbNode)
 	require.Equal(t, commentId, comment.Id)
 	require.Equal(t, "original content", comment.Content)
 	require.Equal(t, "type updated", comment.ContentType)

@@ -89,7 +89,7 @@ func CreateIssue(ctx context.Context, driver *neo4j.DriverWithContext, tenant st
 	return issueId
 }
 
-func CreateComment(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, comment entity.CommentEntity) string {
+func CreateComment(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, comment neo4jentity.CommentEntity) string {
 	commentId := utils.NewUUIDIfEmpty(comment.Id)
 	query := fmt.Sprintf(`MERGE (c:Comment:Comment_%s {id:$id})
 				SET c.content=$content,
