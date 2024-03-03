@@ -56,7 +56,7 @@ func InitServices(cfg *config.Config, repositories *repository.Repositories, agg
 	services.OrganizationService = NewOrganizationService(log, commandHandlers.Organization, aggregateStore, cfg)
 	services.PhoneNumberService = NewPhoneNumberService(log, repositories.Neo4jRepositories, commandHandlers.PhoneNumber)
 	services.EmailService = NewEmailService(log, repositories.Neo4jRepositories, commandHandlers.Email)
-	services.UserService = NewUserService(log, commandHandlers.User)
+	services.UserService = NewUserService(log, aggregateStore, cfg, commandHandlers.User)
 	services.LocationService = NewLocationService(log, commandHandlers.Location)
 	services.JobRoleService = NewJobRoleService(log, commandHandlers.JobRole)
 	services.InteractionEventService = NewInteractionEventService(log, commandHandlers.InteractionEvent)

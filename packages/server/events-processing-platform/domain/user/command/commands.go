@@ -61,22 +61,6 @@ func NewLinkJobRoleCommand(objectID, tenant, jobRoleId string) *LinkJobRoleComma
 	}
 }
 
-type LinkPhoneNumberCommand struct {
-	eventstore.BaseCommand
-	PhoneNumberId string `json:"phoneNumberId" validate:"required"`
-	Primary       bool
-	Label         string
-}
-
-func NewLinkPhoneNumberCommand(objectID, tenant, userId, phoneNumberId, label string, primary bool) *LinkPhoneNumberCommand {
-	return &LinkPhoneNumberCommand{
-		BaseCommand:   eventstore.NewBaseCommand(objectID, tenant, userId),
-		PhoneNumberId: phoneNumberId,
-		Primary:       primary,
-		Label:         label,
-	}
-}
-
 type LinkEmailCommand struct {
 	eventstore.BaseCommand
 	EmailId   string `json:"emailId" validate:"required"`
