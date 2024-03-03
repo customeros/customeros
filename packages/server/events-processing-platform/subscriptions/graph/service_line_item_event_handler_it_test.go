@@ -118,8 +118,8 @@ func TestServiceLineItemEventHandler_OnUpdate(t *testing.T) {
 		LastName:  "user",
 	})
 	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, neo4jentity.ContractEntity{})
-	serviceLineItemId := neo4jt.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, entity.ServiceLineItemEntity{
-		Billed: model.MonthlyBilled.String(),
+	serviceLineItemId := neo4jtest.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
+		Billed: neo4jenum.BilledTypeMonthly,
 	})
 	// Assert Neo4j Node Counts
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
@@ -196,8 +196,8 @@ func TestServiceLineItemEventHandler_OnDeleteUnnamed(t *testing.T) {
 	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, neo4jentity.ContractEntity{
 		RenewalCycle: neo4jenum.RenewalCycleAnnualRenewal,
 	})
-	serviceLineItemId := neo4jt.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, entity.ServiceLineItemEntity{
-		Billed: model.MonthlyBilled.String(),
+	serviceLineItemId := neo4jtest.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
+		Billed: neo4jenum.BilledTypeMonthly,
 	})
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
 		InternalStage: string(neo4jenum.OpportunityInternalStageOpen),
@@ -290,9 +290,9 @@ func TestServiceLineItemEventHandler_OnDelete(t *testing.T) {
 		Name:         "Contract 1",
 		RenewalCycle: neo4jenum.RenewalCycleAnnualRenewal,
 	})
-	serviceLineItemId := neo4jt.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, entity.ServiceLineItemEntity{
+	serviceLineItemId := neo4jtest.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
 		Name:   "Service 1",
-		Billed: model.MonthlyBilled.String(),
+		Billed: neo4jenum.BilledTypeMonthly,
 	})
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
 		InternalStage: string(neo4jenum.OpportunityInternalStageOpen),
@@ -380,8 +380,8 @@ func TestServiceLineItemEventHandler_OnClose(t *testing.T) {
 	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, neo4jentity.ContractEntity{
 		RenewalCycle: neo4jenum.RenewalCycleAnnualRenewal,
 	})
-	serviceLineItemId := neo4jt.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, entity.ServiceLineItemEntity{
-		Billed: model.MonthlyBilled.String(),
+	serviceLineItemId := neo4jtest.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
+		Billed: neo4jenum.BilledTypeMonthly,
 	})
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
 		InternalStage: string(neo4jenum.OpportunityInternalStageOpen),
@@ -463,9 +463,9 @@ func TestServiceLineItemEventHandler_OnUpdatePriceIncreaseRetroactively_Timeline
 		LastName:  "user",
 	})
 	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, neo4jentity.ContractEntity{})
-	serviceLineItemId := neo4jt.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, entity.ServiceLineItemEntity{
+	serviceLineItemId := neo4jtest.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
 		Name:   "Service 1",
-		Billed: model.MonthlyBilled.String(),
+		Billed: neo4jenum.BilledTypeMonthly,
 		Price:  150.0,
 	})
 	// Assert Neo4j Node Counts
@@ -549,9 +549,9 @@ func TestServiceLineItemEventHandler_OnUpdatePriceIncreasePerUseRetroactively_Ti
 		LastName:  "user",
 	})
 	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, neo4jentity.ContractEntity{})
-	serviceLineItemId := neo4jt.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, entity.ServiceLineItemEntity{
+	serviceLineItemId := neo4jtest.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
 		Name:   "Service 1",
-		Billed: model.UsageBilled.String(),
+		Billed: neo4jenum.BilledTypeUsage,
 		Price:  150.0,
 	})
 	// Assert Neo4j Node Counts
@@ -636,9 +636,9 @@ func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseRetroactively_Timeline
 		LastName:  "user",
 	})
 	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, neo4jentity.ContractEntity{})
-	serviceLineItemId := neo4jt.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, entity.ServiceLineItemEntity{
+	serviceLineItemId := neo4jtest.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
 		Name:   "Service 1",
-		Billed: model.AnnuallyBilled.String(),
+		Billed: neo4jenum.BilledTypeAnnually,
 		Price:  150.0,
 	})
 	// Assert Neo4j Node Counts
@@ -724,9 +724,9 @@ func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseOnceRetroactively_Time
 		LastName:  "user",
 	})
 	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, neo4jentity.ContractEntity{})
-	serviceLineItemId := neo4jt.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, entity.ServiceLineItemEntity{
+	serviceLineItemId := neo4jtest.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
 		Name:   "Service 1",
-		Billed: model.OnceBilled.String(),
+		Billed: neo4jenum.BilledTypeOnce,
 		Price:  150.0,
 	})
 	// Assert Neo4j Node Counts
@@ -811,7 +811,7 @@ func TestServiceLineItemEventHandler_OnUpdateQuantityIncreaseRetroactively_Timel
 		LastName:  "user",
 	})
 	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, neo4jentity.ContractEntity{})
-	serviceLineItemId := neo4jt.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, entity.ServiceLineItemEntity{
+	serviceLineItemId := neo4jtest.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
 		Name:     "Service 1",
 		Quantity: 15,
 	})
@@ -893,7 +893,7 @@ func TestServiceLineItemEventHandler_OnUpdateQuantityDecreaseRetroactively_Timel
 		LastName:  "user",
 	})
 	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, neo4jentity.ContractEntity{})
-	serviceLineItemId := neo4jt.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, entity.ServiceLineItemEntity{
+	serviceLineItemId := neo4jtest.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
 		Name:     "Service 1",
 		Quantity: 400,
 	})
@@ -975,10 +975,10 @@ func TestServiceLineItemEventHandler_OnUpdateBilledType_TimelineEvent(t *testing
 		LastName:  "user",
 	})
 	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, neo4jentity.ContractEntity{})
-	serviceLineItemId := neo4jt.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, entity.ServiceLineItemEntity{
+	serviceLineItemId := neo4jtest.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
 		Name:   "Service 1",
 		Price:  20,
-		Billed: model.AnnuallyBilled.String(),
+		Billed: neo4jenum.BilledTypeAnnually,
 	})
 	// Assert Neo4j Node Counts
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
@@ -1554,7 +1554,7 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactiveQuantity
 		Name: "Contract 1",
 	})
 
-	serviceLineItemParentId := neo4jt.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, entity.ServiceLineItemEntity{
+	serviceLineItemParentId := neo4jtest.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
 		Name:     "Service Parent",
 		Quantity: 400,
 	})
@@ -1655,7 +1655,7 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceInc
 		Name: "Contract 1",
 	})
 
-	serviceLineItemParentId := neo4jt.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, entity.ServiceLineItemEntity{
+	serviceLineItemParentId := neo4jtest.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
 		Name:  "Service Parent",
 		Price: 1500.56,
 	})
@@ -1756,7 +1756,7 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceInc
 		Name: "Contract 1",
 	})
 
-	serviceLineItemParentId := neo4jt.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, entity.ServiceLineItemEntity{
+	serviceLineItemParentId := neo4jtest.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
 		Price: 1500.56,
 	})
 
@@ -1862,10 +1862,10 @@ func TestServiceLineItemEventHandler_OnUpdateBilledTypeNonRetroactiveForExisting
 		Name: "Contract 1",
 	})
 
-	neo4jt.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, entity.ServiceLineItemEntity{
-		Id:       serviceLineItemId1,
+	neo4jtest.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
+		ID:       serviceLineItemId1,
 		Name:     "service 1",
-		Billed:   model.AnnuallyBilled.String(),
+		Billed:   neo4jenum.BilledTypeAnnually,
 		Price:    170.25,
 		Quantity: 10,
 	})
@@ -1971,10 +1971,10 @@ func TestServiceLineItemEventHandler_OnUpdatePriceAndBilledTypeNonRetroactiveFor
 		Name: "Contract 1",
 	})
 
-	neo4jt.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, entity.ServiceLineItemEntity{
-		Id:       serviceLineItemId1,
+	neo4jtest.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
+		ID:       serviceLineItemId1,
 		Name:     "service 1",
-		Billed:   model.AnnuallyBilled.String(),
+		Billed:   neo4jenum.BilledTypeAnnually,
 		Price:    170.25,
 		Quantity: 10,
 	})
