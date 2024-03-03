@@ -56,7 +56,7 @@ func (u *User) HasEmail(emailId, label string, primary bool) bool {
 	return false
 }
 
-func (u *User) SameData(fields UserDataFields, externalSystem commonmodel.ExternalSystem) bool {
+func (u *User) SameUserData(fields UserDataFields, externalSystem commonmodel.ExternalSystem) bool {
 	if !externalSystem.Available() {
 		return false
 	}
@@ -98,6 +98,16 @@ func (u *User) HasExternalSystem(externalSystem commonmodel.ExternalSystem) bool
 			es.ExternalIdSecond == externalSystem.ExternalIdSecond {
 			return true
 		}
+	}
+	return false
+}
+
+func (u *User) PhoneNumberAlreadyExists(phoneNumberId, label string, primary bool) bool {
+	if len(u.PhoneNumbers) == 0 {
+		return false
+	}
+	if phoneNumber, ok := u.PhoneNumbers[phoneNumberId]; ok {
+		return phoneNumber.Label == label && phoneNumber.Primary == primary
 	}
 	return false
 }
