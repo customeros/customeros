@@ -69,7 +69,15 @@ func (a *IssueAggregate) updateIssue(ctx context.Context, cmd *command.UpsertIss
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.Tenant)
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("command", fmt.Sprintf("%+v", cmd)))
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "command", cmd)
+
+	if aggregate.AllowCheckForNoChanges(cmd.AppSource, cmd.LoggedInUserId) {
+		if a.Issue.SameData(cmd.DataFields, cmd.ExternalSystem) {
+			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
+			return nil
+		}
+	}
 
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
 	source := cmd.Source.Source
