@@ -47,24 +47,6 @@ func MapDbNodeToLogEntryEntity(node dbtype.Node) *entity.LogEntryEntity {
 }
 
 // Deprecated
-func MapDbNodeToSocialEntity(node dbtype.Node) *entity.SocialEntity {
-	props := utils.GetPropsFromNode(node)
-	social := entity.SocialEntity{
-		Id:           utils.GetStringPropOrEmpty(props, "id"),
-		PlatformName: utils.GetStringPropOrEmpty(props, "platformName"),
-		Url:          utils.GetStringPropOrEmpty(props, "url"),
-		CreatedAt:    utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:    utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		SourceFields: entity.SourceFields{
-			Source:        neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-			AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-			SourceOfTruth: neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		},
-	}
-	return &social
-}
-
-// Deprecated
 func MapDbNodeToInteractionEventEntity(node dbtype.Node) *entity.InteractionEventEntity {
 	props := utils.GetPropsFromNode(node)
 	issue := entity.InteractionEventEntity{
