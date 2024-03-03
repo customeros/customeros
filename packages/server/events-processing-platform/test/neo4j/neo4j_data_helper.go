@@ -109,41 +109,6 @@ func CreateComment(ctx context.Context, driver *neo4j.DriverWithContext, tenant 
 }
 
 // Deprecated
-func CreateContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, contract neo4jentity.ContractEntity) string {
-	contractId := utils.NewUUIDIfEmpty(contract.Id)
-	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
-				MERGE (t)<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$id})
-				SET 
-					c:Contract_%s,
-					c.name=$name,
-					c.contractUrl=$contractUrl,
-					c.source=$source,
-					c.sourceOfTruth=$sourceOfTruth,
-					c.status=$status,
-					c.renewalCycle=$renewalCycle,
-					c.renewalPeriods=$renewalPeriods,
-					c.signedAt=$signedAt,
-					c.serviceStartedAt=$serviceStartedAt,
-					c.endedAt=$endedAt
-				`, tenant)
-
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"id":               contractId,
-		"tenant":           tenant,
-		"name":             contract.Name,
-		"contractUrl":      contract.ContractUrl,
-		"source":           contract.Source,
-		"sourceOfTruth":    contract.SourceOfTruth,
-		"status":           contract.ContractStatus,
-		"renewalCycle":     contract.RenewalCycle,
-		"renewalPeriods":   contract.RenewalPeriods,
-		"signedAt":         utils.TimePtrFirstNonNilNillableAsAny(contract.SignedAt),
-		"serviceStartedAt": utils.TimePtrFirstNonNilNillableAsAny(contract.ServiceStartedAt),
-		"endedAt":          utils.TimePtrFirstNonNilNillableAsAny(contract.EndedAt),
-	})
-	return contractId
-}
-
 func CreateOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, opportunity entity.OpportunityEntity) string {
 	opportunityId := utils.NewUUIDIfEmpty(opportunity.Id)
 	query := fmt.Sprintf(`
