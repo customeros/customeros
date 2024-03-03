@@ -12,14 +12,12 @@ type CommandHandlers struct {
 	AddRole            AddRoleCommandHandler
 	RemoveRole         RemoveRoleCommandHandler
 	LinkJobRoleCommand LinkJobRoleCommandHandler
-	LinkEmailCommand   LinkEmailCommandHandler
 }
 
 func NewCommandHandlers(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *CommandHandlers {
 	return &CommandHandlers{
 		UpsertUser:         NewUpsertUserCommandHandler(log, cfg, es),
 		AddPlayerInfo:      NewAddPlayerInfoCommandHandler(log, cfg, es),
-		LinkEmailCommand:   NewLinkEmailCommandHandler(log, cfg, es),
 		LinkJobRoleCommand: NewLinkJobRoleCommandHandler(log, cfg, es),
 		AddRole:            NewAddRoleCommandHandler(log, cfg, es),
 		RemoveRole:         NewRemoveRoleCommandHandler(log, cfg, es),

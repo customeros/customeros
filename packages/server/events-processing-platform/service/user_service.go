@@ -116,7 +116,7 @@ func (s *userService) LinkPhoneNumberToUser(ctx context.Context, request *userpb
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "UserService.LinkPhoneNumberToUser")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
+	tracing.LogObjectAsJson(span, "request", request)
 
 	if _, err := s.userRequestHandler.HandleWithRetry(ctx, request.Tenant, request.UserId, false, request); err != nil {
 		tracing.TraceErr(span, err)
@@ -131,15 +131,13 @@ func (s *userService) LinkEmailToUser(ctx context.Context, request *userpb.LinkE
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "UserService.LinkEmailToUser")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	span.LogFields(log.Object("request", request))
+	tracing.LogObjectAsJson(span, "request", request)
 
-	cmd := command.NewLinkEmailCommand(request.UserId, request.Tenant, request.LoggedInUserId, request.EmailId, request.Label, request.AppSource, request.Primary)
-	if err := s.userCommands.LinkEmailCommand.Handle(ctx, cmd); err != nil {
+	if _, err := s.userRequestHandler.HandleWithRetry(ctx, request.Tenant, request.UserId, false, request); err != nil {
+		tracing.TraceErr(span, err)
 		s.log.Errorf("(LinkEmailToUser.Handle) tenant:{%s}, user ID: {%s}, err: {%v}", request.Tenant, request.UserId, err)
-		return nil, s.errResponse(err)
+		return nil, grpcerr.ErrResponse(err)
 	}
-
-	s.log.Infof("Linked email {%s} to user {%s}", request.EmailId, request.UserId)
 
 	return &userpb.UserIdGrpcResponse{Id: request.UserId}, nil
 }
