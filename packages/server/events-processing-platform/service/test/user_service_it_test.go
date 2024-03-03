@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
@@ -147,4 +148,235 @@ func TestUserService_UpsertUserAndLinkJobRole(t *testing.T) {
 	require.Equal(t, 2, len(eventList))
 	require.Equal(t, events.UserCreateV1, eventList[0].EventType)
 	require.Equal(t, events.UserJobRoleLinkV1, eventList[1].EventType)
+}
+
+func TestUserService_LinkEmail(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	tenant := "ziggy"
+
+	aggregateStore := eventstore.NewTestAggregateStore()
+
+	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
+	require.Nil(t, err)
+	userClient := userpb.NewUserGrpcServiceClient(grpcConnection)
+
+	userId := uuid.New().String()
+	emailId := uuid.New().String()
+
+	// Grpc call
+	response, err := userClient.LinkEmailToUser(ctx, &userpb.LinkEmailToUserGrpcRequest{
+		Tenant:         tenant,
+		UserId:         userId,
+		LoggedInUserId: userId,
+		EmailId:        emailId,
+		Primary:        true,
+		Label:          "work",
+	})
+	require.Nil(t, err)
+
+	// Assert response
+	require.NotNil(t, response)
+	require.NotEmpty(t, response.Id)
+
+	// Retrieve and assert events
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+	eventList := eventsMap[aggregate.NewUserAggregateWithTenantAndID("ziggy", userId).ID]
+	require.Equal(t, 1, len(eventList))
+
+	require.Equal(t, events.UserEmailLinkV1, eventList[0].EventType)
+	var eventData events.UserLinkEmailEvent
+
+	err = eventList[0].GetJsonData(&eventData)
+	require.Nil(t, err)
+
+	require.Equal(t, tenant, eventData.Tenant)
+	require.Equal(t, emailId, eventData.EmailId)
+	require.Equal(t, "work", eventData.Label)
+	require.True(t, eventData.Primary)
+}
+
+func TestUserService_LinkEmail_IgnoreDuplicates(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	tenant := "ziggy"
+	userId := uuid.New().String()
+	emailId := uuid.New().String()
+
+	aggregateStore := eventstore.NewTestAggregateStore()
+
+	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
+	require.Nil(t, err)
+	userClient := userpb.NewUserGrpcServiceClient(grpcConnection)
+
+	// Grpc call
+	response1, err := userClient.LinkEmailToUser(ctx, &userpb.LinkEmailToUserGrpcRequest{
+		Tenant:    tenant,
+		UserId:    userId,
+		EmailId:   emailId,
+		Primary:   false,
+		Label:     "work",
+		AppSource: constants.AppSourceIntegrationApp,
+	})
+	require.Nil(t, err)
+	// Second grpc call
+	response2, err := userClient.LinkEmailToUser(ctx, &userpb.LinkEmailToUserGrpcRequest{
+		Tenant:    tenant,
+		UserId:    userId,
+		EmailId:   emailId,
+		Primary:   true,
+		Label:     "work",
+		AppSource: constants.AppSourceIntegrationApp,
+	})
+	require.Nil(t, err)
+
+	// Assert response
+	require.NotNil(t, response1)
+	require.NotEmpty(t, response1.Id)
+	require.NotNil(t, response2)
+	require.NotEmpty(t, response2.Id)
+
+	// Retrieve and assert events
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+	eventList := eventsMap[aggregate.NewUserAggregateWithTenantAndID("ziggy", userId).ID]
+	require.Equal(t, 1, len(eventList))
+
+	require.Equal(t, events.UserEmailLinkV1, eventList[0].EventType)
+	var eventData events.UserLinkEmailEvent
+
+	err = eventList[0].GetJsonData(&eventData)
+	require.Nil(t, err)
+
+	require.Equal(t, tenant, eventData.Tenant)
+	require.Equal(t, emailId, eventData.EmailId)
+	require.Equal(t, "work", eventData.Label)
+	require.False(t, eventData.Primary)
+}
+
+func TestUserService_LinkPhoneNumber(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	tenant := "ziggy"
+
+	aggregateStore := eventstore.NewTestAggregateStore()
+
+	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
+	require.Nil(t, err)
+	userClient := userpb.NewUserGrpcServiceClient(grpcConnection)
+
+	userId := uuid.New().String()
+	phoneNumberId := uuid.New().String()
+
+	// Grpc call
+	response, err := userClient.LinkPhoneNumberToUser(ctx, &userpb.LinkPhoneNumberToUserGrpcRequest{
+		Tenant:         tenant,
+		UserId:         userId,
+		LoggedInUserId: userId,
+		PhoneNumberId:  phoneNumberId,
+		Primary:        true,
+		Label:          "work",
+	})
+	require.Nil(t, err)
+
+	// Assert response
+	require.NotNil(t, response)
+	require.NotEmpty(t, response.Id)
+
+	// Retrieve and assert events
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+	eventList := eventsMap[aggregate.NewUserAggregateWithTenantAndID("ziggy", userId).ID]
+	require.Equal(t, 1, len(eventList))
+
+	require.Equal(t, events.UserPhoneNumberLinkV1, eventList[0].EventType)
+	var eventData events.UserLinkPhoneNumberEvent
+
+	err = eventList[0].GetJsonData(&eventData)
+	require.Nil(t, err)
+
+	require.Equal(t, tenant, eventData.Tenant)
+	require.Equal(t, phoneNumberId, eventData.PhoneNumberId)
+	require.Equal(t, "work", eventData.Label)
+	require.True(t, eventData.Primary)
+}
+
+func TestUserService_LinkPhoneNumber_IgnoreDuplicates(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	tenant := "ziggy"
+	userId := uuid.New().String()
+	phoneNumberId := uuid.New().String()
+
+	aggregateStore := eventstore.NewTestAggregateStore()
+
+	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
+	require.Nil(t, err)
+	userClient := userpb.NewUserGrpcServiceClient(grpcConnection)
+
+	// Grpc call
+	response1, err := userClient.LinkPhoneNumberToUser(ctx, &userpb.LinkPhoneNumberToUserGrpcRequest{
+		Tenant:        tenant,
+		UserId:        userId,
+		PhoneNumberId: phoneNumberId,
+		Primary:       false,
+		Label:         "work",
+		AppSource:     constants.AppSourceIntegrationApp,
+	})
+	require.Nil(t, err)
+	// Second grpc call same label different primary flag
+	response2, err := userClient.LinkPhoneNumberToUser(ctx, &userpb.LinkPhoneNumberToUserGrpcRequest{
+		Tenant:        tenant,
+		UserId:        userId,
+		PhoneNumberId: phoneNumberId,
+		Primary:       true,
+		Label:         "work",
+		AppSource:     constants.AppSourceIntegrationApp,
+	})
+	require.Nil(t, err)
+	// Third grpc call different label
+	response3, err := userClient.LinkPhoneNumberToUser(ctx, &userpb.LinkPhoneNumberToUserGrpcRequest{
+		Tenant:        tenant,
+		UserId:        userId,
+		PhoneNumberId: phoneNumberId,
+		Primary:       true,
+		Label:         "home",
+		AppSource:     constants.AppSourceIntegrationApp,
+	})
+	require.Nil(t, err)
+
+	// Assert response
+	require.NotEmpty(t, response1.Id)
+	require.NotEmpty(t, response2.Id)
+	require.NotEmpty(t, response3.Id)
+
+	// Retrieve and assert events
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+	eventList := eventsMap[aggregate.NewUserAggregateWithTenantAndID("ziggy", userId).ID]
+	require.Equal(t, 2, len(eventList))
+
+	require.Equal(t, events.UserPhoneNumberLinkV1, eventList[0].EventType)
+	var eventData1 events.UserLinkPhoneNumberEvent
+	var eventData2 events.UserLinkPhoneNumberEvent
+
+	err = eventList[0].GetJsonData(&eventData1)
+	require.Nil(t, err)
+	err = eventList[1].GetJsonData(&eventData2)
+	require.Nil(t, err)
+
+	require.Equal(t, tenant, eventData1.Tenant)
+	require.Equal(t, phoneNumberId, eventData1.PhoneNumberId)
+	require.Equal(t, "work", eventData1.Label)
+	require.False(t, eventData1.Primary)
+
+	require.Equal(t, tenant, eventData2.Tenant)
+	require.Equal(t, phoneNumberId, eventData2.PhoneNumberId)
+	require.Equal(t, "home", eventData2.Label)
+	require.True(t, eventData2.Primary)
 }
