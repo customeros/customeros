@@ -5,13 +5,13 @@ import (
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/mocked_grpc"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/neo4j"
@@ -101,7 +101,7 @@ func TestGraphIssueEventHandler_OnCreate(t *testing.T) {
 	require.NotNil(t, issueDbNode)
 
 	// verify issue
-	issue := graph_db.MapDbNodeToIssueEntity(*issueDbNode)
+	issue := neo4jmapper.MapDbNodeToIssueEntity(issueDbNode)
 	require.Equal(t, issueId, issue.Id)
 	require.Equal(t, "test subject", issue.Subject)
 	require.Equal(t, "test description", issue.Description)
@@ -162,7 +162,7 @@ func TestGraphIssueEventHandler_OnUpdate(t *testing.T) {
 	require.NotNil(t, issueDbNode)
 
 	// verify issue
-	issue := graph_db.MapDbNodeToIssueEntity(*issueDbNode)
+	issue := neo4jmapper.MapDbNodeToIssueEntity(issueDbNode)
 	require.Equal(t, issueId, issue.Id)
 	require.Equal(t, "test subject updated", issue.Subject)
 	require.Equal(t, "test description updated", issue.Description)
@@ -216,7 +216,7 @@ func TestGraphIssueEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOp
 	require.NotNil(t, issueDbNode)
 
 	// verify issue
-	issue := graph_db.MapDbNodeToIssueEntity(*issueDbNode)
+	issue := neo4jmapper.MapDbNodeToIssueEntity(issueDbNode)
 	require.Equal(t, issueId, issue.Id)
 	require.Equal(t, "test subject", issue.Subject)
 	require.Equal(t, "test description", issue.Description)
@@ -259,7 +259,7 @@ func TestGraphIssueEventHandler_OnAddUserAssignee(t *testing.T) {
 	issueDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Issue_"+tenantName, issueId)
 	require.Nil(t, err)
 	require.NotNil(t, issueDbNode)
-	issue := graph_db.MapDbNodeToIssueEntity(*issueDbNode)
+	issue := neo4jmapper.MapDbNodeToIssueEntity(issueDbNode)
 	require.Equal(t, updatedAt, issue.UpdatedAt)
 }
 
@@ -297,7 +297,7 @@ func TestGraphIssueEventHandler_OnRemoveUserAssignee(t *testing.T) {
 	issueDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Issue_"+tenantName, issueId)
 	require.Nil(t, err)
 	require.NotNil(t, issueDbNode)
-	issue := graph_db.MapDbNodeToIssueEntity(*issueDbNode)
+	issue := neo4jmapper.MapDbNodeToIssueEntity(issueDbNode)
 	require.Equal(t, updatedAt, issue.UpdatedAt)
 }
 
@@ -334,7 +334,7 @@ func TestGraphIssueEventHandler_OnAddUserFollower(t *testing.T) {
 	issueDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Issue_"+tenantName, issueId)
 	require.Nil(t, err)
 	require.NotNil(t, issueDbNode)
-	issue := graph_db.MapDbNodeToIssueEntity(*issueDbNode)
+	issue := neo4jmapper.MapDbNodeToIssueEntity(issueDbNode)
 	require.Equal(t, updatedAt, issue.UpdatedAt)
 }
 
@@ -372,6 +372,6 @@ func TestGraphIssueEventHandler_OnRemoveUserFollower(t *testing.T) {
 	issueDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Issue_"+tenantName, issueId)
 	require.Nil(t, err)
 	require.NotNil(t, issueDbNode)
-	issue := graph_db.MapDbNodeToIssueEntity(*issueDbNode)
+	issue := neo4jmapper.MapDbNodeToIssueEntity(issueDbNode)
 	require.Equal(t, updatedAt, issue.UpdatedAt)
 }

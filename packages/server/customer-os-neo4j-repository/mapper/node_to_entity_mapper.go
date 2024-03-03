@@ -497,3 +497,41 @@ func MapDbNodeToTagEntity(dbNode *dbtype.Node) *entity.TagEntity {
 	}
 	return &tag
 }
+
+func MapDbNodeToIssueEntity(dbNode *dbtype.Node) *entity.IssueEntity {
+	if dbNode == nil {
+		return &entity.IssueEntity{}
+	}
+	props := utils.GetPropsFromNode(*dbNode)
+	issue := entity.IssueEntity{
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		CreatedAt:     utils.GetTimePropOrNow(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrNow(props, "updatedAt"),
+		Subject:       utils.GetStringPropOrEmpty(props, "subject"),
+		Status:        utils.GetStringPropOrEmpty(props, "status"),
+		Priority:      utils.GetStringPropOrEmpty(props, "priority"),
+		Description:   utils.GetStringPropOrEmpty(props, "description"),
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
+	}
+	return &issue
+}
+
+func MapDbNodeToCommentEntity(dbNode *dbtype.Node) *entity.CommentEntity {
+	if dbNode == nil {
+		return &entity.CommentEntity{}
+	}
+	props := utils.GetPropsFromNode(*dbNode)
+	comment := entity.CommentEntity{
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		Content:       utils.GetStringPropOrEmpty(props, "content"),
+		ContentType:   utils.GetStringPropOrEmpty(props, "contentType"),
+		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+	}
+	return &comment
+}

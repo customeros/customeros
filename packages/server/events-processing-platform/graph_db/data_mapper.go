@@ -3,6 +3,7 @@ package graph_db
 import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"time"
 
@@ -102,40 +103,6 @@ func MapDbNodeToInteractionSessionEntity(node dbtype.Node) *entity.InteractionSe
 		SourceOfTruth: neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
 	return &issue
-}
-
-// Deprecated
-func MapDbNodeToIssueEntity(node dbtype.Node) *entity.IssueEntity {
-	props := utils.GetPropsFromNode(node)
-	issue := entity.IssueEntity{
-		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		Subject:       utils.GetStringPropOrEmpty(props, "subject"),
-		Description:   utils.GetStringPropOrEmpty(props, "description"),
-		Status:        utils.GetStringPropOrEmpty(props, "status"),
-		Priority:      utils.GetStringPropOrEmpty(props, "priority"),
-		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-	}
-	return &issue
-}
-
-// Deprecated
-func MapDbNodeToCommentEntity(node dbtype.Node) *entity.CommentEntity {
-	props := utils.GetPropsFromNode(node)
-	comment := entity.CommentEntity{
-		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		Content:       utils.GetStringPropOrEmpty(props, "content"),
-		ContentType:   utils.GetStringPropOrEmpty(props, "contentType"),
-		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-	}
-	return &comment
 }
 
 // Deprecated
@@ -271,7 +238,7 @@ func MapDbNodeToTimelineEvent(dbNode *dbtype.Node) neo4jentity.TimelineEvent {
 	} else if slices.Contains(dbNode.Labels, neo4jutil.NodeLabelInteractionSession) {
 		return MapDbNodeToInteractionSessionEntity(*dbNode)
 	} else if slices.Contains(dbNode.Labels, neo4jutil.NodeLabelIssue) {
-		return MapDbNodeToIssueEntity(*dbNode)
+		return neo4jmapper.MapDbNodeToIssueEntity(dbNode)
 	} else if slices.Contains(dbNode.Labels, neo4jutil.NodeLabelNote) {
 		return MapDbNodeToNoteEntity(*dbNode)
 	} else if slices.Contains(dbNode.Labels, neo4jutil.NodeLabelInteractionEvent) {
