@@ -142,6 +142,11 @@
       "name": "Check invoices",
       "query": "CALL {\n    MATCH (i:Invoice) WHERE i.dryRun IS NULL OR i.periodEndDate IS NULL OR i.periodStartDate IS NULL OR i.currency IS NULL RETURN count(i) AS cnt\n    UNION ALL\n    MATCH (i:Invoice) WHERE i.dryRun = false AND i.status = 'DRAFT' AND duration.between(i.createdAt, datetime()).minutes > 5 RETURN count(i) AS cnt\n} RETURN sum(cnt)",
       "description": "Checks: 1 - Mandatory invoice properties. 2 - Invoices stuck in draft status > 5 minutes."
+    },
+    {
+      "name": "Check invoice lines",
+      "query": "CALL {MATCH (n:InvoiceLine) WHERE (n.billedType IS NULL OR n.billedType = \"\") RETURN count(n) as cnt } return sum(cnt)",
+      "description": "Checks: 1 - Invoice lines missing mandatory properties."
     }
   ]
 }

@@ -203,6 +203,8 @@ func (h *InvoiceEventHandler) fillCycleInvoice(ctx context.Context, tenant, cont
 				invoiceLine.BilledType = commonpb.BilledType_QUARTERLY_BILLED
 			case neo4jenum.BilledTypeAnnually:
 				invoiceLine.BilledType = commonpb.BilledType_ANNUALLY_BILLED
+			case neo4jenum.BilledTypeOnce:
+				invoiceLine.BilledType = commonpb.BilledType_ONCE_BILLED
 			}
 			invoiceLines = append(invoiceLines, &invoiceLine)
 			continue
