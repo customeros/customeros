@@ -19,7 +19,7 @@ require (
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/robfig/cron v1.2.0
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.9.0
 	golang.org/x/net v0.20.0
 	google.golang.org/grpc v1.62.0
 	gorm.io/gorm v1.25.7-0.20240204074919-46816ad31dde
