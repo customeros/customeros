@@ -542,6 +542,20 @@ func TestOpportunityEventHandler_OnUpdateRenewal_LikelihoodChangedByUser_Generat
 	}
 	mocked_grpc.SetOpportunityCallbacks(&opportunityCallbacks)
 
+	// prepare grpc mock for onboarding status update
+	calledEventsPlatformForRefreshRenewalSummary := false
+	organizationServiceCallbacks := mocked_grpc.MockOrganizationServiceCallbacks{
+		RefreshRenewalSummary: func(context context.Context, org *organizationpb.RefreshRenewalSummaryGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+			require.Equal(t, tenantName, org.Tenant)
+			require.Equal(t, orgId, org.OrganizationId)
+			calledEventsPlatformForRefreshRenewalSummary = true
+			return &organizationpb.OrganizationIdGrpcResponse{
+				Id: orgId,
+			}, nil
+		},
+	}
+	mocked_grpc.SetOrganizationCallbacks(&organizationServiceCallbacks)
+
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
 		log:          testLogger,
@@ -599,6 +613,7 @@ func TestOpportunityEventHandler_OnUpdateRenewal_LikelihoodChangedByUser_Generat
 
 	// check that event was invoked
 	require.True(t, calledEventsPlatformToUpdateOpportunity)
+	require.True(t, calledEventsPlatformForRefreshRenewalSummary)
 }
 
 func TestOpportunityEventHandler_OnCloseWin(t *testing.T) {
