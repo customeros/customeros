@@ -25,7 +25,6 @@ import { Button } from '@ui/form/Button';
 import { Text } from '@ui/typography/Text';
 import { IconButton } from '@ui/form/IconButton';
 import { Heading } from '@ui/typography/Heading';
-import { Collapse } from '@ui/transitions/Collapse';
 import { DotsVertical } from '@ui/media/icons/DotsVertical';
 import { SlashOctagon } from '@ui/media/icons/SlashOctagon';
 import { Invoice } from '@shared/components/Invoice/Invoice';
@@ -356,10 +355,12 @@ export const BillingPanel = () => {
         boxShadow='none'
         background='gray.25'
         maxW={400}
+        minW={400}
         borderRight='1px solid'
         borderColor='gray.300'
         overflowY='scroll'
         borderRadius='none'
+        pr={0}
       >
         <CardHeader
           px='6'
@@ -431,15 +432,8 @@ export const BillingPanel = () => {
           </CardBody>
         )}
 
-        <Collapse
-          delay={{ enter: 0.2 }}
-          in={tenantSettingsData?.tenantSettings.billingEnabled}
-          animateOpacity
-          startingHeight={0}
-        >
+        {tenantSettingsData?.tenantSettings.billingEnabled && (
           <TenantBillingPanelDetailsForm
-            email={state.values.sendInvoicesFrom}
-            bcc={state.values.sendInvoicesBcc}
             formId={formId}
             canPayWithCard={state.values.canPayWithCard}
             invoicingEnabled={tenantSettingsData?.tenantSettings.billingEnabled}
@@ -451,7 +445,7 @@ export const BillingPanel = () => {
               setIsInvoiceProviderDetailsHovered
             }
           />
-        </Collapse>
+        )}
       </Card>
       <Box borderRight='1px solid' borderColor='gray.300' maxH='100vh'>
         <Invoice
