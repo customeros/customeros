@@ -24,7 +24,7 @@ require (
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/redis/go-redis/v9 v9.5.1
 	github.com/sirupsen/logrus v1.9.3
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.9.0
 	github.com/vektah/gqlparser/v2 v2.5.11
 	google.golang.org/api v0.167.0
 	google.golang.org/grpc v1.62.0
