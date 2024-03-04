@@ -34,6 +34,7 @@ func (s *finderService) FindReferencedEntityId(ctx context.Context, externalSyst
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("externalSystem", externalSystemId))
+	span.LogFields(log.Object("referencedEntity", referencedEntity))
 
 	id = ""
 	label = ""
