@@ -392,7 +392,11 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		cypherSort := utils.CypherSort{}
 		if sort != nil {
 			if sort.By == SearchSortParamName {
-				query += " ORDER BY NAME_FOR_SORTING " + string(sort.Direction)
+				if sort.CaseSensitive != nil && *sort.CaseSensitive {
+					query += " ORDER BY NAME_FOR_SORTING " + string(sort.Direction)
+				} else {
+					query += " ORDER BY toLower(NAME_FOR_SORTING) " + string(sort.Direction)
+				}
 			} else if sort.By == SearchSortParamOrganization {
 				cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.OrganizationEntity{})).WithCoalesce().WithAlias("parent")
 				cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.OrganizationEntity{})).WithCoalesce()
@@ -422,7 +426,11 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 				cypherSort.NewSortRule("LOCALITY", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.LocationEntity{}))
 				query += string(cypherSort.SortingCypherFragment("l"))
 			} else if sort.By == "OWNER" {
-				query += " ORDER BY OWNER_FIRST_NAME_FOR_SORTING " + string(sort.Direction) + ", OWNER_LAST_NAME_FOR_SORTING " + string(sort.Direction)
+				if sort.CaseSensitive != nil && *sort.CaseSensitive {
+					query += " ORDER BY OWNER_FIRST_NAME_FOR_SORTING " + string(sort.Direction) + ", OWNER_LAST_NAME_FOR_SORTING " + string(sort.Direction)
+				} else {
+					query += " ORDER BY toLower(OWNER_FIRST_NAME_FOR_SORTING) " + string(sort.Direction) + ", toLower(OWNER_LAST_NAME_FOR_SORTING) " + string(sort.Direction)
+				}
 			} else if sort.By == SearchSortParamLastTouchpointAt {
 				cypherSort.NewSortRule("LAST_TOUCHPOINT_AT", sort.Direction.String(), false, reflect.TypeOf(entity.OrganizationEntity{}))
 				query += string(cypherSort.SortingCypherFragment("o"))
