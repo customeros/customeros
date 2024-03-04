@@ -75,8 +75,8 @@
     },
     {
       "name": "Check organization missing properties",
-      "query": "CALL {MATCH (n:Organization) WHERE n.hide IS NULL RETURN count(n) as cnt } return sum(cnt)",
-      "description": "Checks: 1 - Organization with missing hide property."
+      "query": "CALL {MATCH (n:Organization) WHERE (n.hide IS NULL OR n.isCustomer IS NULL) RETURN count(n) as cnt } return sum(cnt)",
+      "description": "Checks: 1 - Organization with missing boolean properties."
     },
     {
       "name": "Check duplicate values",
