@@ -224,6 +224,9 @@ export const ServiceLineItemRow = ({
                   },
                 };
               },
+              menuList: (props, state) => ({
+                minW: '100px',
+              }),
               input: (props, state) => {
                 return {
                   minHeight: 'auto',
