@@ -21,13 +21,13 @@ export const Currency = ({
 }: CurrencyProps) => {
   const { ref, setUnmaskedValue, unmaskedValue, setValue } = useIMask({
     mask: `${currency}num`,
+
     blocks: {
       num: {
         mask: Number,
         thousandsSeparator: ',',
         radix: '.',
         mapToRadix: ['.'],
-        min: 0.01,
         normalizeZeros: true,
         padFractionalZeros: true,
       },
@@ -46,6 +46,16 @@ export const Currency = ({
     }
   }, []);
 
+  const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const isNegative = e.target.value?.indexOf('-') !== -1;
+    if (isNegative) {
+      setValue('0');
+
+      return;
+    }
+    setValue(e.target.value);
+  };
+
   return (
     <FormControl>
       {isLabelVisible ? (
@@ -59,7 +69,7 @@ export const Currency = ({
       <Input
         ref={ref}
         {...props}
-        onChange={(e) => setValue(e.target.value)}
+        onChange={handleValueChange}
         autoComplete='off'
       />
     </FormControl>
