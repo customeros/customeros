@@ -624,6 +624,25 @@ func TestContractEventHandler_OnUpdate_EndDateSet(t *testing.T) {
 	}
 	mocked_grpc.SetOpportunityCallbacks(&opportunityCallbacks)
 
+	// prepare grpc mock for onboarding status update
+	calledEventsPlatformForOnboardingStatusChange := false
+	organizationServiceCallbacks := mocked_grpc.MockOrganizationServiceCallbacks{
+		UpdateOnboardingStatus: func(context context.Context, org *organizationpb.UpdateOnboardingStatusGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+			require.Equal(t, tenantName, org.Tenant)
+			require.Equal(t, orgId, org.OrganizationId)
+			require.Equal(t, constants.AppSourceEventProcessingPlatform, org.AppSource)
+			require.Equal(t, organizationpb.OnboardingStatus_ONBOARDING_STATUS_NOT_STARTED, org.OnboardingStatus)
+			require.Equal(t, "", org.LoggedInUserId)
+			require.Equal(t, "", org.Comments)
+			require.Equal(t, contractId, org.CausedByContractId)
+			calledEventsPlatformForOnboardingStatusChange = true
+			return &organizationpb.OrganizationIdGrpcResponse{
+				Id: orgId,
+			}, nil
+		},
+	}
+	mocked_grpc.SetOrganizationCallbacks(&organizationServiceCallbacks)
+
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{
 		log:          testLogger,
@@ -678,6 +697,7 @@ func TestContractEventHandler_OnUpdate_EndDateSet(t *testing.T) {
 	require.True(t, calledEventsPlatformToUpdateRenewalOpportunity)
 	require.True(t, calledEventsPlatformToUpdateRenewalOpportunityNextCycleDate)
 	require.True(t, calledEventsPlatformToUpdateOpportunity)
+	require.True(t, calledEventsPlatformForOnboardingStatusChange)
 }
 
 func TestContractEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOpenline(t *testing.T) {
