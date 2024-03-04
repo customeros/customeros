@@ -31,6 +31,7 @@ import {
   GetContractsQuery,
   useGetContractsQuery,
 } from '@organization/src/graphql/getContracts.generated';
+import { ContractEndModal } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/EndContractModal';
 import { ContractSubtitle } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ContractSubtitle';
 import { useUpdatePanelModalStateContext } from '@organization/src/components/Tabs/panels/AccountPanel/context/AccountModalsContext';
 
