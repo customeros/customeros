@@ -83,7 +83,7 @@ export const OrganizationTimeline: FC = () => {
   const [timelineMeta, setTimelineMeta] = useTimelineMeta();
   const isRestoring = useIsRestoring();
   const client = getGraphQLClient();
-  const { data, isFetchingNextPage, fetchNextPage } =
+  const { data, isFetchingNextPage, fetchNextPage, isPending } =
     useInfiniteGetTimelineQuery(
       client,
       {
@@ -179,7 +179,7 @@ export const OrganizationTimeline: FC = () => {
       return Date.parse(aDate) - Date.parse(bDate);
     });
 
-  if (!isRestoring && !timelineEmailEvents?.length) {
+  if (!isRestoring && !isPending && !timelineEmailEvents?.length) {
     return (
       <>
         <EmptyTimeline invalidateQuery={invalidateQuery} />
@@ -190,7 +190,7 @@ export const OrganizationTimeline: FC = () => {
 
   return (
     <>
-      {isFetchingNextPage && (
+      {(isFetchingNextPage || isPending) && (
         <Flex direction='column' mt={4} pl={6}>
           <TimelineItemSkeleton />
           <TimelineItemSkeleton />
