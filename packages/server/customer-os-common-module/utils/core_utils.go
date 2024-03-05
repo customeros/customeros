@@ -2,13 +2,10 @@ package utils
 
 import (
 	"encoding/json"
-	"fmt"
-	"math"
 	"math/rand"
 	"net/url"
 	"reflect"
 	"runtime"
-	"strconv"
 	"strings"
 	"time"
 
@@ -225,26 +222,6 @@ func GetFunctionName() string {
 	return fullName
 }
 
-func ParseStringToFloat(input string) *float64 {
-	if input == "" {
-		return nil
-	}
-
-	parsedFloat, err := strconv.ParseFloat(input, 64)
-	if err != nil {
-		fmt.Printf("Error parsing string to float: %v\n", err)
-		return nil
-	}
-	return &parsedFloat
-}
-
-func FloatToString(num *float64) string {
-	if num == nil {
-		return ""
-	}
-	return fmt.Sprintf("%f", *num)
-}
-
 func FirstNotEmpty(input ...string) *string {
 	for _, item := range input {
 		if item != "" {
@@ -277,25 +254,6 @@ func ExtractAfterColon(s string) string {
 	}
 	// Return substring after colon
 	return s[idx+1:]
-}
-
-func Float64PtrEquals(a, b *float64) bool {
-	if a == nil && b == nil {
-		return true
-	}
-	if a != nil && b != nil {
-		return *a == *b
-	}
-	return false
-}
-
-func TruncateFloat64(input float64, decimals int) float64 {
-	if input == 0 {
-		return 0
-	}
-	multiplier := math.Pow(10, float64(decimals))
-	truncated := math.Trunc(input*multiplier) / multiplier
-	return truncated
 }
 
 // Helper to add commas to an integer string
