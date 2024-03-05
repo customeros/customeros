@@ -1,6 +1,7 @@
 'use client';
 import { ReactElement, MouseEventHandler } from 'react';
 
+import { cn } from '@ui/utils/cn';
 import { Button } from '@ui/form/Button/Button';
 
 interface SidenavItemProps {
@@ -22,15 +23,16 @@ export const SidenavItem = ({
     onClick?.();
   };
 
-  const className = isActive
-    ? `w-full justify-start font-semibold`
-    : `w-full justify-start font-normal`;
+  const dynamicClasses = cn(
+    isActive
+      ? ['font-semibold', 'bg-gray-100', 'text-gray-700']
+      : ['font-normal', 'bg-transparent', 'text-gray-500'],
+  );
 
   return (
     <Button
       size='md'
       variant='tertiary'
-      isDestructive
       // px='3'
       // w='full'
       // size='md'
@@ -43,11 +45,11 @@ export const SidenavItem = ({
       // bg={isActive ? 'gray.100' : 'transparent'}
       // color={isActive ? 'gray.700' : 'gray.500'}
       onClick={handleClick}
-      // leftIcon={typeof icon === 'function' ? icon(!!isActive) : icon}
+      leftIcon={typeof icon === 'function' ? icon(!!isActive) : icon}
       // _focus={{
       //   boxShadow: 'sidenavItemFocus',
       // }}
-      className={className}
+      className={`w-full justify-start px-3 ${dynamicClasses} focus:shadow-sidenavItemFocus`}
     >
       {label}
     </Button>

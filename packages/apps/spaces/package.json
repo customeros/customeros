@@ -45,6 +45,7 @@
     "bufferutil": "^4.0.8",
     "chakra-react-select": "^4.7.6",
     "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.0",
     "compressorjs": "^1.2.1",
     "d3": "^7.8.5",
     "date-fns": "^2.29.3",

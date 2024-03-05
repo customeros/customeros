@@ -172,12 +172,17 @@ interface ButtonProps
   extends React.HTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof button> {
   asChild?: boolean;
+  leftIcon?: React.ReactNode;
+  rightIcon?: React.ReactNode;
 }
 
 export const Button = ({
   size,
   variant,
+  leftIcon,
+  children,
   className,
+  rightIcon,
   isDestructive,
   ...props
 }: ButtonProps) => {
@@ -185,6 +190,10 @@ export const Button = ({
     <button
       {...props}
       className={twMerge(button({ size, variant, isDestructive, className }))}
-    />
+    >
+      {leftIcon && <span>{leftIcon}</span>}
+      {children}
+      {rightIcon && <span>{leftIcon}</span>}
+    </button>
   );
 };
