@@ -882,13 +882,21 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 
 	for _, line := range invoiceLineEntities {
 		invoiceLineItem := map[string]string{
-			"Name":               line.Name,
-			"InvoicePeriodStart": invoiceEntity.PeriodStartDate.Format("02 Jan 2006"),
-			"InvoicePeriodEnd":   invoiceEntity.PeriodEndDate.Format("02 Jan 2006"),
-			"Quantity":           fmt.Sprintf("%d", line.Quantity),
-			"UnitPrice":          invoiceEntity.Currency.Symbol() + utils.FormatAmount(line.Price, 2),
-			"Amount":             invoiceEntity.Currency.Symbol() + utils.FormatAmount(line.Amount, 2),
-			"Vat":                invoiceEntity.Currency.Symbol() + utils.FormatAmount(line.Vat, 2),
+			"Name":      line.Name,
+			"Quantity":  fmt.Sprintf("%d", line.Quantity),
+			"UnitPrice": invoiceEntity.Currency.Symbol() + utils.FormatAmount(line.Price, 2),
+			"Amount":    invoiceEntity.Currency.Symbol() + utils.FormatAmount(line.Amount, 2),
+			"Vat":       invoiceEntity.Currency.Symbol() + utils.FormatAmount(line.Vat, 2),
+		}
+		if line.BilledType == neo4jenum.BilledTypeOnce {
+			sliDbNode, err := h.repositories.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemById(ctx, eventData.Tenant, line.ServiceLineItemId)
+			if err == nil && sliDbNode != nil {
+				sliEntity := neo4jmapper.MapDbNodeToServiceLineItemEntity(sliDbNode)
+				invoiceLineItem["InvoiceLineSubtitle"] = sliEntity.StartedAt.Format("02 Jan 2006")
+			}
+		}
+		if _, ok := invoiceLineItem["InvoiceLineSubtitle"]; !ok {
+			invoiceLineItem["InvoiceLineSubtitle"] = fmt.Sprintf("%s - %s", invoiceEntity.PeriodStartDate.Format("02 Jan 2006"), invoiceEntity.PeriodEndDate.Format("02 Jan 2006"))
 		}
 
 		if invoiceHasVat {
