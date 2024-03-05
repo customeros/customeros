@@ -578,8 +578,10 @@ func (s *customerOsClient) UpdateContract(tenant, username string, input model.C
 func (s *customerOsClient) CreateServiceLine(tenant, username string, input interface{}) (string, error) {
 	graphqlRequest := graphql.NewRequest(
 		`mutation serviceLineItem($input: ServiceLineItemInput!) {
-				serviceLineItemCreate(input: $input) {
-					id
+				contractLineItem_Create(input: $input) {
+					metadata {
+						id
+					}
 			}
 		}`)
 
@@ -600,7 +602,7 @@ func (s *customerOsClient) CreateServiceLine(tenant, username string, input inte
 		return "", fmt.Errorf("serviceLineItem_Create: %w", err)
 	}
 
-	return graphqlResponse.ServiceLineItemCreate.Id, nil
+	return graphqlResponse.ContractLineItemCreate.Metadata.Id, nil
 }
 
 func (s *customerOsClient) GetServiceLine(contractId, serviceLineId string) (*dbtype.Node, error) {
