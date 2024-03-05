@@ -109,7 +109,7 @@ func main() {
 	//testUpdateOnboardingStatus()
 	//testUpdateOrgOwner()
 	//testRefreshLastTouchpoint()
-	testRefreshRenewalSummary()
+	//testRefreshRenewalSummary()
 	//testAddTenantBillingProfile()
 	//PaidInvoiceNotification()
 	//PleasePayInvoiceNotification()

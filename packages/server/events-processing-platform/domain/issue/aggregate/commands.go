@@ -72,7 +72,7 @@ func (a *IssueAggregate) updateIssue(ctx context.Context, cmd *command.UpsertIss
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
 	tracing.LogObjectAsJson(span, "command", cmd)
 
-	if aggregate.AllowCheckForNoChanges(cmd.AppSource, cmd.LoggedInUserId) {
+	if aggregate.AllowCheckForNoChanges(cmd.Source.AppSource, cmd.LoggedInUserId) {
 		if a.Issue.SameData(cmd.DataFields, cmd.ExternalSystem) {
 			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
 			return nil
