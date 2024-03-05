@@ -21,7 +21,7 @@ require (
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240219173641-99951e96f1dc
 	github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20240219173641-99951e96f1dc
 	github.com/sirupsen/logrus v1.9.3
-	golang.org/x/oauth2 v0.17.0
+	golang.org/x/oauth2 v0.18.0
 	golang.org/x/text v0.14.0
 	google.golang.org/api v0.167.0
 	google.golang.org/grpc v1.62.0
