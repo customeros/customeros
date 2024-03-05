@@ -536,6 +536,7 @@ type ComplexityRoot struct {
 	}
 
 	GlobalCache struct {
+		CdnLogoURL           func(childComplexity int) int
 		ContractsExist       func(childComplexity int) int
 		GCliCache            func(childComplexity int) int
 		IsGoogleActive       func(childComplexity int) int
@@ -4195,6 +4196,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.GCliItem.Type(childComplexity), true
+
+	case "GlobalCache.cdnLogoUrl":
+		if e.complexity.GlobalCache.CdnLogoURL == nil {
+			break
+		}
+
+		return e.complexity.GlobalCache.CdnLogoURL(childComplexity), true
 
 	case "GlobalCache.contractsExist":
 		if e.complexity.GlobalCache.ContractsExist == nil {
@@ -11270,6 +11278,8 @@ type GlobalCache {
     minARRForecastValue: Float!
     maxARRForecastValue: Float!
     contractsExist: Boolean!
+
+    cdnLogoUrl: String!
 }`, BuiltIn: false},
 	{Name: "../schemas/calendar.graphqls", Input: `"""
 Describes the relationship a Contact has with a Organization.
@@ -34468,6 +34478,50 @@ func (ec *executionContext) fieldContext_GlobalCache_contractsExist(ctx context.
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _GlobalCache_cdnLogoUrl(ctx context.Context, field graphql.CollectedField, obj *model.GlobalCache) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GlobalCache_cdnLogoUrl(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CdnLogoURL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GlobalCache_cdnLogoUrl(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GlobalCache",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -72577,6 +72631,8 @@ func (ec *executionContext) fieldContext_Query_global_Cache(ctx context.Context,
 				return ec.fieldContext_GlobalCache_maxARRForecastValue(ctx, field)
 			case "contractsExist":
 				return ec.fieldContext_GlobalCache_contractsExist(ctx, field)
+			case "cdnLogoUrl":
+				return ec.fieldContext_GlobalCache_cdnLogoUrl(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type GlobalCache", field.Name)
 		},
@@ -98264,6 +98320,11 @@ func (ec *executionContext) _GlobalCache(ctx context.Context, sel ast.SelectionS
 			}
 		case "contractsExist":
 			out.Values[i] = ec._GlobalCache_contractsExist(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "cdnLogoUrl":
+			out.Values[i] = ec._GlobalCache_cdnLogoUrl(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

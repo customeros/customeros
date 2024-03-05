@@ -22,5 +22,6 @@ query global_Cache {
       }
     }
     contractsExist
+    cdnLogoUrl
   }
 }
