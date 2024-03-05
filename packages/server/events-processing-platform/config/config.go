@@ -34,6 +34,7 @@ type GRPC struct {
 }
 
 type Subscriptions struct {
+	Enabled                           bool `env:"SUBSCRIPTIONS_ENABLED" envDefault:"false"`
 	GraphSubscription                 GraphSubscription
 	GraphLowPrioritySubscription      GraphLowPrioritySubscription
 	EmailValidationSubscription       EmailValidationSubscription

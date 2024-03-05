@@ -136,7 +136,10 @@ func (server *Server) Start(parentCtx context.Context) error {
 	}
 	defer df.Close(gRPCconn)
 	grpcClients := grpc_client.InitGrpcClients(gRPCconn)
-	InitSubscribers(server, ctx, grpcClients, esdb, cancel, server.Services)
+
+	if server.Config.Subscriptions.Enabled {
+		InitSubscribers(server, ctx, grpcClients, esdb, cancel, server.Services)
+	}
 
 	closeGrpcServer, grpcServer, err := server.NewEventProcessorGrpcServer()
 	if err != nil {
