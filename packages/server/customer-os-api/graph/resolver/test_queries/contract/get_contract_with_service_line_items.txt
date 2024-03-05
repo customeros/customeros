@@ -30,17 +30,21 @@ query GetContract($contractId: ID!) {
     serviceStarted
     contractStatus
     contractLineItems {
-      id
-      createdAt
-      updatedAt
-      name
-      billed
+      metadata {
+        id
+        created
+        lastUpdated
+        source
+        sourceOfTruth
+        appSource
+      }
+      description
+      billingCycle
       price
       quantity
-      source
-      sourceOfTruth
-      appSource
-      vatRate
+      tax {
+        taxRate
+      }
     }
     createdBy {
         id

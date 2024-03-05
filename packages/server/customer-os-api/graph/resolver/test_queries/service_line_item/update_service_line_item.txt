@@ -1,18 +1,22 @@
 mutation UpdateServiceLineItem($serviceLineItemId: ID!) {
-  serviceLineItemUpdate(
+  contractLineItem_Update(
     input: {
-      serviceLineItemId: $serviceLineItemId
-      name: "Service Line Item 1"
-      billed: MONTHLY
+      id: $serviceLineItemId
+      description: "Service Line Item 1"
+      billingCycle: MONTHLY
       price: 30
       quantity: 2
       comments: "test comments"
       isRetroactiveCorrection: true
-      vatRate: 10.5
+      tax: {
+        taxRate: 10.5
+      }
     }
   ) {
-    id
-    name
+    metadata {
+      id
+    }
+    description
     parentId
   }
 }
