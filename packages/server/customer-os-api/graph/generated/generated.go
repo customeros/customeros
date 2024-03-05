@@ -116,6 +116,7 @@ type ComplexityRoot struct {
 	Attachment struct {
 		AppSource     func(childComplexity int) int
 		BasePath      func(childComplexity int) int
+		CdnURL        func(childComplexity int) int
 		CreatedAt     func(childComplexity int) int
 		FileName      func(childComplexity int) int
 		ID            func(childComplexity int) int
@@ -2153,6 +2154,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Attachment.BasePath(childComplexity), true
+
+	case "Attachment.cdnUrl":
+		if e.complexity.Attachment.CdnURL == nil {
+			break
+		}
+
+		return e.complexity.Attachment.CdnURL(childComplexity), true
 
 	case "Attachment.createdAt":
 		if e.complexity.Attachment.CreatedAt == nil {
@@ -11182,6 +11190,7 @@ type Attachment implements Node {
     id: ID!
     createdAt: Time!
     basePath: String!
+    cdnUrl:   String!
     fileName: String!
     mimeType: String!
     size: Int64!
@@ -11194,6 +11203,7 @@ type Attachment implements Node {
 input AttachmentInput {
     id: ID
     createdAt: Time
+    cdnUrl: String!
     basePath: String!
     fileName: String!
     mimeType: String!
@@ -20118,6 +20128,50 @@ func (ec *executionContext) _Attachment_basePath(ctx context.Context, field grap
 }
 
 func (ec *executionContext) fieldContext_Attachment_basePath(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Attachment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Attachment_cdnUrl(ctx context.Context, field graphql.CollectedField, obj *model.Attachment) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Attachment_cdnUrl(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CdnURL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Attachment_cdnUrl(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Attachment",
 		Field:      field,
@@ -35175,6 +35229,8 @@ func (ec *executionContext) fieldContext_InteractionEvent_includes(ctx context.C
 				return ec.fieldContext_Attachment_createdAt(ctx, field)
 			case "basePath":
 				return ec.fieldContext_Attachment_basePath(ctx, field)
+			case "cdnUrl":
+				return ec.fieldContext_Attachment_cdnUrl(ctx, field)
 			case "fileName":
 				return ec.fieldContext_Attachment_fileName(ctx, field)
 			case "mimeType":
@@ -36315,6 +36371,8 @@ func (ec *executionContext) fieldContext_InteractionSession_includes(ctx context
 				return ec.fieldContext_Attachment_createdAt(ctx, field)
 			case "basePath":
 				return ec.fieldContext_Attachment_basePath(ctx, field)
+			case "cdnUrl":
+				return ec.fieldContext_Attachment_cdnUrl(ctx, field)
 			case "fileName":
 				return ec.fieldContext_Attachment_fileName(ctx, field)
 			case "mimeType":
@@ -44621,6 +44679,8 @@ func (ec *executionContext) fieldContext_Meeting_includes(ctx context.Context, f
 				return ec.fieldContext_Attachment_createdAt(ctx, field)
 			case "basePath":
 				return ec.fieldContext_Attachment_basePath(ctx, field)
+			case "cdnUrl":
+				return ec.fieldContext_Attachment_cdnUrl(ctx, field)
 			case "fileName":
 				return ec.fieldContext_Attachment_fileName(ctx, field)
 			case "mimeType":
@@ -44902,6 +44962,8 @@ func (ec *executionContext) fieldContext_Meeting_recording(ctx context.Context, 
 				return ec.fieldContext_Attachment_createdAt(ctx, field)
 			case "basePath":
 				return ec.fieldContext_Attachment_basePath(ctx, field)
+			case "cdnUrl":
+				return ec.fieldContext_Attachment_cdnUrl(ctx, field)
 			case "fileName":
 				return ec.fieldContext_Attachment_fileName(ctx, field)
 			case "mimeType":
@@ -45797,6 +45859,8 @@ func (ec *executionContext) fieldContext_Mutation_attachment_Create(ctx context.
 				return ec.fieldContext_Attachment_createdAt(ctx, field)
 			case "basePath":
 				return ec.fieldContext_Attachment_basePath(ctx, field)
+			case "cdnUrl":
+				return ec.fieldContext_Attachment_cdnUrl(ctx, field)
 			case "fileName":
 				return ec.fieldContext_Attachment_fileName(ctx, field)
 			case "mimeType":
@@ -63075,6 +63139,8 @@ func (ec *executionContext) fieldContext_Note_includes(ctx context.Context, fiel
 				return ec.fieldContext_Attachment_createdAt(ctx, field)
 			case "basePath":
 				return ec.fieldContext_Attachment_basePath(ctx, field)
+			case "cdnUrl":
+				return ec.fieldContext_Attachment_cdnUrl(ctx, field)
 			case "fileName":
 				return ec.fieldContext_Attachment_fileName(ctx, field)
 			case "mimeType":
@@ -72424,6 +72490,8 @@ func (ec *executionContext) fieldContext_Query_attachment(ctx context.Context, f
 				return ec.fieldContext_Attachment_createdAt(ctx, field)
 			case "basePath":
 				return ec.fieldContext_Attachment_basePath(ctx, field)
+			case "cdnUrl":
+				return ec.fieldContext_Attachment_cdnUrl(ctx, field)
 			case "fileName":
 				return ec.fieldContext_Attachment_fileName(ctx, field)
 			case "mimeType":
@@ -87489,7 +87557,7 @@ func (ec *executionContext) unmarshalInputAttachmentInput(ctx context.Context, o
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "createdAt", "basePath", "fileName", "mimeType", "size", "appSource"}
+	fieldsInOrder := [...]string{"id", "createdAt", "cdnUrl", "basePath", "fileName", "mimeType", "size", "appSource"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -87510,6 +87578,13 @@ func (ec *executionContext) unmarshalInputAttachmentInput(ctx context.Context, o
 				return it, err
 			}
 			it.CreatedAt = data
+		case "cdnUrl":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cdnUrl"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CdnURL = data
 		case "basePath":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("basePath"))
 			data, err := ec.unmarshalNString2string(ctx, v)
@@ -94421,6 +94496,11 @@ func (ec *executionContext) _Attachment(ctx context.Context, sel ast.SelectionSe
 			}
 		case "basePath":
 			out.Values[i] = ec._Attachment_basePath(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "cdnUrl":
+			out.Values[i] = ec._Attachment_cdnUrl(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

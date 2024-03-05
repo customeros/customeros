@@ -3,8 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
-
 	"github.com/caarlos0/env/v6"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -20,6 +18,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/service"
 	"github.com/sirupsen/logrus"
+	"log"
 )
 
 const apiPort = "10000"
@@ -91,6 +90,7 @@ func main() {
 			tenantName, _ := ctx.Keys["TenantName"].(string)
 			userEmail, _ := ctx.Keys["UserEmail"].(string)
 
+			cdnUpload := ctx.Request.FormValue("cdnUpload") == "true"
 			basePath := ctx.Request.FormValue("basePath")
 			fileId := ctx.Request.FormValue("fileId")
 
@@ -100,7 +100,7 @@ func main() {
 				return
 			}
 
-			fileEntity, err := services.FileService.UploadSingleFile(userEmail, tenantName, basePath, fileId, multipartFileHeader)
+			fileEntity, err := services.FileService.UploadSingleFile(userEmail, tenantName, basePath, fileId, multipartFileHeader, cdnUpload)
 			if err != nil {
 				ctx.AbortWithStatusJSON(500, map[string]string{"error": fmt.Sprintf("Error Uploading File %v", err)}) //todo
 				return

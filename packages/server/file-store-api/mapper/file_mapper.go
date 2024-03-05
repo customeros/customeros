@@ -17,6 +17,7 @@ func MapFileEntityToDTO(input *model.File, serviceUrl string) *fs.FileDTO {
 		Size:        input.Size,
 		MetadataUrl: fmt.Sprintf("%s/file/%s", serviceUrl, input.ID),
 		DownloadUrl: fmt.Sprintf("%s/file/%s/download", serviceUrl, input.ID),
+		CdnUrl:      input.CdnUrl,
 	}
 	return &file
 }
@@ -31,5 +32,6 @@ func MapAttachmentResponseToFileEntity(input *model.Attachment) *model.File {
 		MimeType: input.MimeType,
 		BasePath: input.BasePath,
 		Size:     input.Size,
+		CdnUrl:   input.CdnUrl,
 	}
 }

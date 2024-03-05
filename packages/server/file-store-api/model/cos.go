@@ -9,6 +9,7 @@ type Attachment struct {
 	FileName  string    `json:"fileName"`
 	BasePath  string    `json:"basePath"`
 	Size      int64     `json:"size"`
+	CdnUrl    string    `json:"cdnUrl"`
 }
 
 type AttachmentCreateResponse struct {

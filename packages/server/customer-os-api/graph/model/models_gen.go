@@ -138,6 +138,7 @@ type Attachment struct {
 	ID            string     `json:"id"`
 	CreatedAt     time.Time  `json:"createdAt"`
 	BasePath      string     `json:"basePath"`
+	CdnURL        string     `json:"cdnUrl"`
 	FileName      string     `json:"fileName"`
 	MimeType      string     `json:"mimeType"`
 	Size          int64      `json:"size"`
@@ -152,6 +153,7 @@ func (this Attachment) GetID() string { return this.ID }
 type AttachmentInput struct {
 	ID        *string    `json:"id,omitempty"`
 	CreatedAt *time.Time `json:"createdAt,omitempty"`
+	CdnURL    string     `json:"cdnUrl"`
 	BasePath  string     `json:"basePath"`
 	FileName  string     `json:"fileName"`
 	MimeType  string     `json:"mimeType"`

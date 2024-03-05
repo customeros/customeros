@@ -89,7 +89,7 @@ func (s *attachmentService) Create(ctx context.Context, newAnalysis *entity.Atta
 func (s *attachmentService) createAttachmentInDBTxWork(ctx context.Context, newAttachment *entity.AttachmentEntity, source, sourceOfTruth neo4jentity.DataSource) func(tx neo4j.ManagedTransaction) (any, error) {
 	return func(tx neo4j.ManagedTransaction) (any, error) {
 		tenant := common.GetContext(ctx).Tenant
-		analysisDbNode, err := s.repositories.AttachmentRepository.Create(ctx, tx, tenant, newAttachment.Id, newAttachment.BasePath, newAttachment.FileName, newAttachment.MimeType, newAttachment.Size, newAttachment.CreatedAt, source, sourceOfTruth, newAttachment.AppSource)
+		analysisDbNode, err := s.repositories.AttachmentRepository.Create(ctx, tx, tenant, newAttachment.Id, newAttachment.CdnUrl, newAttachment.BasePath, newAttachment.FileName, newAttachment.MimeType, newAttachment.Size, newAttachment.CreatedAt, source, sourceOfTruth, newAttachment.AppSource)
 		if err != nil {
 			return nil, err
 		}
@@ -129,6 +129,7 @@ func (s *attachmentService) MapDbNodeToAttachmentEntity(node dbtype.Node) *entit
 		CreatedAt:     &createdAt,
 		FileName:      utils.GetStringPropOrEmpty(props, "fileName"),
 		MimeType:      utils.GetStringPropOrEmpty(props, "mimeType"),
+		CdnUrl:        utils.GetStringPropOrEmpty(props, "cdnUrl"),
 		BasePath:      utils.GetStringPropOrEmpty(props, "basePath"),
 		Size:          utils.GetInt64PropOrZero(props, "size"),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),

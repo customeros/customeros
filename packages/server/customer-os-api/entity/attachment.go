@@ -11,6 +11,7 @@ type AttachmentEntity struct {
 	Id        string
 	CreatedAt *time.Time
 
+	CdnUrl   string
 	BasePath string
 	FileName string
 	MimeType string
