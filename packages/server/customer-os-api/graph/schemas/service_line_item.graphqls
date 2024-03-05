@@ -24,7 +24,6 @@ type ServiceLineItem implements MetadataInterface {
     createdBy:          User @goField(forceResolver: true)
     externalLinks:      [ExternalSystem!]! @goField(forceResolver: true)
 
-    vatRate:            Float! @deprecated(reason: "Use tax instead.")
     startedAt:          Time! @deprecated(reason: "Use serviceStarted instead.")
     endedAt:            Time @deprecated(reason: "Use serviceEnded instead.")
     name:               String! @deprecated(reason: "Use description instead.")

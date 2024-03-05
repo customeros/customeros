@@ -61,12 +61,12 @@ type SourceData struct {
 			InvoiceEmail          string     `json:"invoiceEmail"`
 			InvoiceNote           string     `json:"invoiceNote"`
 			ServiceLines          []struct {
-				Name      string    `json:"name"`
-				Billed    string    `json:"billed"`
+				Name      string    `json:"description"`
+				Billed    string    `json:"billingCycle"`
 				Price     int       `json:"price"`
 				Quantity  int       `json:"quantity"`
-				StartedAt time.Time `json:"startedAt"`
-				EndedAt   time.Time `json:"endedAt,omitempty"`
+				StartedAt time.Time `json:"serviceStarted"`
+				EndedAt   time.Time `json:"serviceEnded,omitempty"`
 			} `json:"serviceLines"`
 		} `json:"contracts,omitempty"`
 		People []struct {
