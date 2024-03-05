@@ -2,7 +2,7 @@ package grpc_client
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client/interceptor"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"google.golang.org/grpc"
 	"log"
 )

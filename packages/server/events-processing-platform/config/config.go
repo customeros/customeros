@@ -36,7 +36,6 @@ type GRPC struct {
 type Subscriptions struct {
 	Enabled                           bool `env:"SUBSCRIPTIONS_ENABLED" envDefault:"false"`
 	GraphSubscription                 GraphSubscription
-	GraphLowPrioritySubscription      GraphLowPrioritySubscription
 	EmailValidationSubscription       EmailValidationSubscription
 	PhoneNumberValidationSubscription PhoneNumberValidationSubscription
 	LocationValidationSubscription    LocationValidationSubscription
@@ -53,13 +52,6 @@ type GraphSubscription struct {
 	GroupName        string `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_GROUP_NAME" envDefault:"graph-v1" validate:"required"`
 	PoolSize         int    `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_POOL_SIZE" envDefault:"6" validate:"required,gte=0"`
 	BufferSizeClient uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_CLIENT_BUFFER_SIZE" envDefault:"5" validate:"required,gte=0"`
-}
-
-type GraphLowPrioritySubscription struct {
-	Enabled          bool   `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_LOW_PRIO_ENABLED" envDefault:"true"`
-	GroupName        string `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_LOW_PRIO_GROUP_NAME" envDefault:"graph-low-prio-v1" validate:"required"`
-	PoolSize         int    `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_LOW_PRIO_POOL_SIZE" envDefault:"3" validate:"required,gte=0"`
-	BufferSizeClient uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_LOW_PRIO_CLIENT_BUFFER_SIZE" envDefault:"10" validate:"required,gte=0"`
 }
 
 type EmailValidationSubscription struct {

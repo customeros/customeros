@@ -28,7 +28,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions"
 	email_validation_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/email_validation"
 	graph_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/graph"
-	graph_low_prio_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/graph_low_prio"
 	interaction_event_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/interaction_event"
 	location_validation_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/location_validation"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/notifications"
@@ -94,11 +93,13 @@ func (server *Server) Start(parentCtx context.Context) error {
 	}
 	defer esdb.Close() // nolint: errcheck
 
-	// Setting up eventstore subscriptions
-	err = subscriptions.NewSubscriptions(server.Log, esdb, server.Config).RefreshSubscriptions(ctx)
-	if err != nil {
-		server.Log.Errorf("(graphConsumer.Connect) err: {%v}", err)
-		cancel()
+	if server.Config.Subscriptions.Enabled {
+		// Setting up eventstore subscriptions
+		err = subscriptions.NewSubscriptions(server.Log, esdb, server.Config).RefreshSubscriptions(ctx)
+		if err != nil {
+			server.Log.Errorf("(graphConsumer.Connect) err: {%v}", err)
+			cancel()
+		}
 	}
 
 	// Initialize postgres db
@@ -185,17 +186,6 @@ func InitSubscribers(server *Server, ctx context.Context, grpcClients *grpc_clie
 			err := graphSubscriber.Connect(ctx, graphSubscriber.ProcessEvents)
 			if err != nil {
 				server.Log.Errorf("(graphSubscriber.Connect) err: {%v}", err)
-				cancel()
-			}
-		}()
-	}
-
-	if server.Config.Subscriptions.GraphLowPrioritySubscription.Enabled {
-		subscriber := graph_low_prio_subscription.NewGraphLowPrioSubscriber(server.Log, esdb, server.Repositories, grpcClients, server.Config)
-		go func() {
-			err := subscriber.Connect(ctx, subscriber.ProcessEvents)
-			if err != nil {
-				server.Log.Errorf("(graphLowPrioSubscriber.Connect) err: {%v}", err)
 				cancel()
 			}
 		}()

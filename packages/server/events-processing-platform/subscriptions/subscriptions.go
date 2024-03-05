@@ -40,17 +40,6 @@ func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
 	}
 
 	if err := s.subscribeToAll(ctx,
-		s.cfg.Subscriptions.GraphLowPrioritySubscription.GroupName,
-		nil,
-		&defaultSettings,
-		false,
-		false,
-		esdb.Start{},
-	); err != nil {
-		return err
-	}
-
-	if err := s.subscribeToAll(ctx,
 		s.cfg.Subscriptions.EmailValidationSubscription.GroupName,
 		&esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: []string{s.cfg.Subscriptions.EmailValidationSubscription.Prefix}},
 		&defaultSettings,
