@@ -15,4 +15,6 @@ type Config struct {
 	CronScheduleRefreshLastTouchpoint string `env:"CRON_SCHEDULE_REFRESH_LAST_TOUCHPOINT" envDefault:"0 35 */6 * * *"`
 	// Defaults to each 15 minutes between 15-16 hours on working days
 	CronScheduleGetCurrencyRatesECB string `env:"CRON_SCHEDULE_GET_CURRENCY_RATES_ECB" envDefault:"0 15 14-16 * * 1-5"`
+	// Defaults to each 2 minutes
+	CronScheduleLinkUnthreadIssues string `env:"CRON_LINK_UNTHREAD_ISSUES" envDefault:"0 */2 * * * *"`
 }

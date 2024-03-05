@@ -14,6 +14,7 @@ const (
 	invoiceGroup               = "invoice"
 	refreshLastTouchpointGroup = "refreshLastTouchpoint"
 	currencyGroup              = "currency"
+	linkUnthreadIssuesGroup    = "linkUnthreadIssues"
 )
 
 var jobLocks = struct {
@@ -26,6 +27,7 @@ var jobLocks = struct {
 		invoiceGroup:               {},
 		refreshLastTouchpointGroup: {},
 		currencyGroup:              {},
+		linkUnthreadIssuesGroup:    {},
 	},
 }
 
@@ -82,6 +84,13 @@ func StartCron(cont *container.Container) *cron.Cron {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "getCurrencyRatesECB", err.Error())
 	}
 
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleLinkUnthreadIssues, func() {
+		lockAndRunJob(cont, linkUnthreadIssuesGroup, linkUnthreadIssues)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "linkUnthreadIssues", err.Error())
+	}
+
 	c.Start()
 
 	return c
@@ -127,4 +136,8 @@ func refreshLastTouchpoint(cont *container.Container) {
 
 func getCurrencyRatesECB(cont *container.Container) {
 	service.NewCurrencyService(cont.Cfg, cont.Log, cont.Repositories).GetCurrencyRatesECB()
+}
+
+func linkUnthreadIssues(cont *container.Container) {
+	service.NewIssueService(cont.Cfg, cont.Log, cont.Repositories).LinkUnthreadIssues()
 }
