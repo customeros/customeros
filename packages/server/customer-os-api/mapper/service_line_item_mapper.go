@@ -29,19 +29,6 @@ func MapEntityToServiceLineItem(entity *neo4jentity.ServiceLineItemEntity) *mode
 		Tax: &model.Tax{
 			TaxRate: entity.VatRate,
 		},
-
-		// All below are deprecated
-		VatRate:       entity.VatRate,
-		EndedAt:       entity.EndedAt,
-		StartedAt:     entity.StartedAt,
-		Name:          entity.Name,
-		Billed:        MapBilledTypeToModel(entity.Billed),
-		CreatedAt:     entity.CreatedAt,
-		UpdatedAt:     entity.UpdatedAt,
-		ID:            entity.ID,
-		Source:        MapDataSourceToModel(entity.Source),
-		SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
-		AppSource:     entity.AppSource,
 	}
 }
 

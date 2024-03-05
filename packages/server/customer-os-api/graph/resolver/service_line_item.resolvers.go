@@ -29,22 +29,14 @@ func (r *mutationResolver) ContractLineItemCreate(ctx context.Context, input mod
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	billedType := neo4jenum.BilledTypeNone
-	if input.Billed != nil {
-		billedType = mapper.MapBilledTypeFromModel(*input.Billed)
-	}
-
 	data := service.ServiceLineItemCreateData{
-		ContractId:        input.ContractID,
-		ExternalReference: mapper.MapExternalSystemReferenceInputToRelationship(input.ExternalReference),
-		Source:            neo4jentity.DataSourceOpenline,
-		StartedAt:         input.StartedAt,
-		EndedAt:           input.EndedAt,
-		SliBilledType:     billedType,
-		SliName:           utils.IfNotNilString(input.Name),
-		SliPrice:          utils.IfNotNilFloat64(input.Price),
-		SliQuantity:       utils.IfNotNilInt64(input.Quantity),
-		SliVatRate:        utils.IfNotNilFloat64(input.VatRate),
+		ContractId:  input.ContractID,
+		Source:      neo4jentity.DataSourceOpenline,
+		StartedAt:   input.ServiceStarted,
+		EndedAt:     input.ServiceEnded,
+		SliName:     utils.IfNotNilString(input.Description),
+		SliPrice:    utils.IfNotNilFloat64(input.Price),
+		SliQuantity: utils.IfNotNilInt64(input.Quantity),
 	}
 	if input.ServiceStarted != nil {
 		data.StartedAt = input.ServiceStarted
@@ -54,9 +46,8 @@ func (r *mutationResolver) ContractLineItemCreate(ctx context.Context, input mod
 	}
 	if input.BillingCycle != nil {
 		data.SliBilledType = mapper.MapBilledTypeFromModel(*input.BillingCycle)
-	}
-	if input.Description != nil {
-		data.SliName = *input.Description
+	} else {
+		data.SliBilledType = neo4jenum.BilledTypeNone
 	}
 	if input.Tax != nil {
 		data.SliVatRate = (*input.Tax).TaxRate
@@ -66,13 +57,13 @@ func (r *mutationResolver) ContractLineItemCreate(ctx context.Context, input mod
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to create service line item")
-		return &model.ServiceLineItem{ID: serviceLineItemId}, err
+		return &model.ServiceLineItem{Metadata: &model.Metadata{ID: serviceLineItemId}}, err
 	}
 	createdServiceLineItemEntity, err := r.Services.ServiceLineItemService.GetById(ctx, serviceLineItemId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Service line item details not yet available. Service line item id: %s", serviceLineItemId)
-		return &model.ServiceLineItem{ID: serviceLineItemId}, nil
+		return &model.ServiceLineItem{Metadata: &model.Metadata{ID: serviceLineItemId}}, nil
 	}
 	span.LogFields(log.String("response.serviceLineItemID", serviceLineItemId))
 	return mapper.MapEntityToServiceLineItem(createdServiceLineItemEntity), nil
@@ -85,49 +76,38 @@ func (r *mutationResolver) ContractLineItemUpdate(ctx context.Context, input mod
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	billedType := neo4jenum.BilledTypeNone
-	if input.Billed != nil {
-		billedType = mapper.MapBilledTypeFromModel(*input.Billed)
-	}
-
 	data := service.ServiceLineItemUpdateData{
-		Id:                      input.ServiceLineItemID,
+		Id:                      utils.IfNotNilString(input.ID),
 		IsRetroactiveCorrection: utils.IfNotNilBool(input.IsRetroactiveCorrection),
-		SliName:                 utils.IfNotNilString(input.Name),
+		SliName:                 utils.IfNotNilString(input.Description),
 		SliPrice:                utils.IfNotNilFloat64(input.Price),
 		SliQuantity:             utils.IfNotNilInt64(input.Quantity),
-		SliBilledType:           billedType,
 		SliComments:             utils.IfNotNilString(input.Comments),
-		SliVatRate:              utils.IfNotNilFloat64(input.VatRate),
 		Source:                  neo4jentity.DataSourceOpenline,
 		AppSource:               utils.IfNotNilString(input.AppSource),
 		StartedAt:               input.ServiceStarted,
-	}
-	if input.ID != nil {
-		data.Id = *input.ID
 	}
 	if input.Tax != nil {
 		data.SliVatRate = (*input.Tax).TaxRate
 	}
 	if input.BillingCycle != nil {
 		data.SliBilledType = mapper.MapBilledTypeFromModel(*input.BillingCycle)
-	}
-	if input.Description != nil {
-		data.SliName = *input.Description
+	} else {
+		data.SliBilledType = neo4jenum.BilledTypeNone
 	}
 
 	err := r.Services.ServiceLineItemService.Update(ctx, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "failed to update contract line item {%s}", input.ServiceLineItemID)
-		return &model.ServiceLineItem{ID: input.ServiceLineItemID}, err
+		graphql.AddErrorf(ctx, "failed to update contract line item {%s}", utils.IfNotNilString(input.ID))
+		return &model.ServiceLineItem{Metadata: &model.Metadata{ID: utils.IfNotNilString(input.ID)}}, err
 	}
 
-	serviceLineItemEntity, err := r.Services.ServiceLineItemService.GetById(ctx, input.ServiceLineItemID)
+	serviceLineItemEntity, err := r.Services.ServiceLineItemService.GetById(ctx, utils.IfNotNilString(input.ID))
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed fetching contract line item details. Contract line item id: {%s}", input.ServiceLineItemID)
-		return &model.ServiceLineItem{ID: input.ServiceLineItemID}, nil
+		graphql.AddErrorf(ctx, "Failed fetching contract line item details. Contract line item id: {%s}", utils.IfNotNilString(input.ID))
+		return &model.ServiceLineItem{Metadata: &model.Metadata{ID: utils.IfNotNilString(input.ID)}}, nil
 	}
 
 	return mapper.MapEntityToServiceLineItem(serviceLineItemEntity), nil
@@ -227,11 +207,11 @@ func (r *queryResolver) ServiceLineItem(ctx context.Context, id string) (*model.
 func (r *serviceLineItemResolver) CreatedBy(ctx context.Context, obj *model.ServiceLineItem) (*model.User, error) {
 	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
-	userEntityNillable, err := dataloader.For(ctx).GetUserCreatorForServiceLineItem(ctx, obj.ID)
+	userEntityNillable, err := dataloader.For(ctx).GetUserCreatorForServiceLineItem(ctx, obj.Metadata.ID)
 	if err != nil {
 		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
-		r.log.Errorf("error fetching user creator for service line item %s: %s", obj.ID, err.Error())
-		graphql.AddErrorf(ctx, "error fetching user creator for service line item %s", obj.ID)
+		r.log.Errorf("error fetching user creator for service line item %s: %s", obj.Metadata.ID, err.Error())
+		graphql.AddErrorf(ctx, "error fetching user creator for service line item %s", obj.Metadata.ID)
 		return nil, nil
 	}
 	return mapper.MapEntityToUser(userEntityNillable), nil
@@ -241,11 +221,11 @@ func (r *serviceLineItemResolver) CreatedBy(ctx context.Context, obj *model.Serv
 func (r *serviceLineItemResolver) ExternalLinks(ctx context.Context, obj *model.ServiceLineItem) ([]*model.ExternalSystem, error) {
 	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
-	entities, err := dataloader.For(ctx).GetExternalSystemsForServiceLineItem(ctx, obj.ID)
+	entities, err := dataloader.For(ctx).GetExternalSystemsForServiceLineItem(ctx, obj.Metadata.ID)
 	if err != nil {
 		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
-		r.log.Errorf("Failed to get external system for service line item %s: %s", obj.ID, err.Error())
-		graphql.AddErrorf(ctx, "Failed to get external system for service line item %s", obj.ID)
+		r.log.Errorf("Failed to get external system for service line item %s: %s", obj.Metadata.ID, err.Error())
+		graphql.AddErrorf(ctx, "Failed to get external system for service line item %s", obj.Metadata.ID)
 		return nil, nil
 	}
 	return mapper.MapEntitiesToExternalSystems(entities), nil
