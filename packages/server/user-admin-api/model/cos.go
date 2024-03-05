@@ -78,9 +78,11 @@ type UpdateContractResponse struct {
 }
 
 type CreateServiceLineItemResponse struct {
-	ServiceLineItemCreate struct {
-		Id string `json:"id"`
-	} `json:"serviceLineItemCreate"`
+	ContractLineItemCreate struct {
+		Metadata struct {
+			Id string `json:"id"`
+		} `json:"metadata"`
+	} `json:"contractLineItem_Create"`
 }
 
 type CreateMasterPlanResponse struct {

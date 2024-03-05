@@ -982,10 +982,7 @@ type ComplexityRoot struct {
 		PhoneNumberUpdateInUser                 func(childComplexity int, userID string, input model.PhoneNumberUpdateInput) int
 		PlayerMerge                             func(childComplexity int, userID string, input model.PlayerInput) int
 		ServiceLineItemBulkUpdate               func(childComplexity int, input model.ServiceLineItemBulkUpdateInput) int
-		ServiceLineItemClose                    func(childComplexity int, input model.ServiceLineItemCloseInput) int
-		ServiceLineItemCreate                   func(childComplexity int, input model.ServiceLineItemInput) int
 		ServiceLineItemDelete                   func(childComplexity int, id string) int
-		ServiceLineItemUpdate                   func(childComplexity int, input model.ServiceLineItemUpdateInput) int
 		SocialRemove                            func(childComplexity int, socialID string) int
 		SocialUpdate                            func(childComplexity int, input model.SocialUpdateInput) int
 		TagCreate                               func(childComplexity int, input model.TagInput) int
@@ -1801,9 +1798,6 @@ type MutationResolver interface {
 	ContractLineItemClose(ctx context.Context, input model.ServiceLineItemCloseInput) (string, error)
 	ServiceLineItemDelete(ctx context.Context, id string) (*model.DeleteResponse, error)
 	ServiceLineItemBulkUpdate(ctx context.Context, input model.ServiceLineItemBulkUpdateInput) ([]string, error)
-	ServiceLineItemClose(ctx context.Context, input model.ServiceLineItemCloseInput) (string, error)
-	ServiceLineItemCreate(ctx context.Context, input model.ServiceLineItemInput) (*model.ServiceLineItem, error)
-	ServiceLineItemUpdate(ctx context.Context, input model.ServiceLineItemUpdateInput) (*model.ServiceLineItem, error)
 	SocialUpdate(ctx context.Context, input model.SocialUpdateInput) (*model.Social, error)
 	SocialRemove(ctx context.Context, socialID string) (*model.Result, error)
 	TagCreate(ctx context.Context, input model.TagInput) (*model.Tag, error)
@@ -7562,30 +7556,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.ServiceLineItemBulkUpdate(childComplexity, args["input"].(model.ServiceLineItemBulkUpdateInput)), true
 
-	case "Mutation.serviceLineItem_Close":
-		if e.complexity.Mutation.ServiceLineItemClose == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_serviceLineItem_Close_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.ServiceLineItemClose(childComplexity, args["input"].(model.ServiceLineItemCloseInput)), true
-
-	case "Mutation.serviceLineItemCreate":
-		if e.complexity.Mutation.ServiceLineItemCreate == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_serviceLineItemCreate_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.ServiceLineItemCreate(childComplexity, args["input"].(model.ServiceLineItemInput)), true
-
 	case "Mutation.serviceLineItem_Delete":
 		if e.complexity.Mutation.ServiceLineItemDelete == nil {
 			break
@@ -7597,18 +7567,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.ServiceLineItemDelete(childComplexity, args["id"].(string)), true
-
-	case "Mutation.serviceLineItemUpdate":
-		if e.complexity.Mutation.ServiceLineItemUpdate == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_serviceLineItemUpdate_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.ServiceLineItemUpdate(childComplexity, args["input"].(model.ServiceLineItemUpdateInput)), true
 
 	case "Mutation.social_Remove":
 		if e.complexity.Mutation.SocialRemove == nil {
@@ -13986,9 +13944,9 @@ extend type Mutation {
     serviceLineItem_Delete(id: ID!): DeleteResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
     serviceLineItem_BulkUpdate(input: ServiceLineItemBulkUpdateInput!): [ID!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
-    serviceLineItem_Close(input: ServiceLineItemCloseInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated(reason: "Use contractLineItem_Close instead.")
-    serviceLineItemCreate(input: ServiceLineItemInput!): ServiceLineItem! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated(reason: "Use contractLineItem_Create instead.")
-    serviceLineItemUpdate(input: ServiceLineItemUpdateInput!): ServiceLineItem! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated(reason: "Use contractLineItem_Update instead.")
+#    serviceLineItem_Close(input: ServiceLineItemCloseInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated(reason: "Use contractLineItem_Close instead.")
+#    serviceLineItemCreate(input: ServiceLineItemInput!): ServiceLineItem! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated(reason: "Use contractLineItem_Create instead.")
+#    serviceLineItemUpdate(input: ServiceLineItemUpdateInput!): ServiceLineItem! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated(reason: "Use contractLineItem_Update instead.")
 }
 
 type ServiceLineItem implements MetadataInterface {
@@ -17508,36 +17466,6 @@ func (ec *executionContext) field_Mutation_player_Merge_args(ctx context.Context
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_serviceLineItemCreate_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 model.ServiceLineItemInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNServiceLineItemInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐServiceLineItemInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_serviceLineItemUpdate_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 model.ServiceLineItemUpdateInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNServiceLineItemUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐServiceLineItemUpdateInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
-	return args, nil
-}
-
 func (ec *executionContext) field_Mutation_serviceLineItem_BulkUpdate_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -17545,21 +17473,6 @@ func (ec *executionContext) field_Mutation_serviceLineItem_BulkUpdate_args(ctx c
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalNServiceLineItemBulkUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐServiceLineItemBulkUpdateInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_serviceLineItem_Close_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 model.ServiceLineItemCloseInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNServiceLineItemCloseInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐServiceLineItemCloseInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -60464,357 +60377,6 @@ func (ec *executionContext) fieldContext_Mutation_serviceLineItem_BulkUpdate(ctx
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_serviceLineItem_Close(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_serviceLineItem_Close(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().ServiceLineItemClose(rctx, fc.Args["input"].(model.ServiceLineItemCloseInput))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRole == nil {
-				return nil, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				return nil, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(string); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be string`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_serviceLineItem_Close(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_serviceLineItem_Close_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_serviceLineItemCreate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_serviceLineItemCreate(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().ServiceLineItemCreate(rctx, fc.Args["input"].(model.ServiceLineItemInput))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRole == nil {
-				return nil, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				return nil, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.ServiceLineItem); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.ServiceLineItem`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.ServiceLineItem)
-	fc.Result = res
-	return ec.marshalNServiceLineItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐServiceLineItem(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_serviceLineItemCreate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "metadata":
-				return ec.fieldContext_ServiceLineItem_metadata(ctx, field)
-			case "billingCycle":
-				return ec.fieldContext_ServiceLineItem_billingCycle(ctx, field)
-			case "comments":
-				return ec.fieldContext_ServiceLineItem_comments(ctx, field)
-			case "description":
-				return ec.fieldContext_ServiceLineItem_description(ctx, field)
-			case "parentId":
-				return ec.fieldContext_ServiceLineItem_parentId(ctx, field)
-			case "price":
-				return ec.fieldContext_ServiceLineItem_price(ctx, field)
-			case "quantity":
-				return ec.fieldContext_ServiceLineItem_quantity(ctx, field)
-			case "serviceEnded":
-				return ec.fieldContext_ServiceLineItem_serviceEnded(ctx, field)
-			case "serviceStarted":
-				return ec.fieldContext_ServiceLineItem_serviceStarted(ctx, field)
-			case "tax":
-				return ec.fieldContext_ServiceLineItem_tax(ctx, field)
-			case "createdBy":
-				return ec.fieldContext_ServiceLineItem_createdBy(ctx, field)
-			case "externalLinks":
-				return ec.fieldContext_ServiceLineItem_externalLinks(ctx, field)
-			case "vatRate":
-				return ec.fieldContext_ServiceLineItem_vatRate(ctx, field)
-			case "startedAt":
-				return ec.fieldContext_ServiceLineItem_startedAt(ctx, field)
-			case "endedAt":
-				return ec.fieldContext_ServiceLineItem_endedAt(ctx, field)
-			case "name":
-				return ec.fieldContext_ServiceLineItem_name(ctx, field)
-			case "billed":
-				return ec.fieldContext_ServiceLineItem_billed(ctx, field)
-			case "id":
-				return ec.fieldContext_ServiceLineItem_id(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_ServiceLineItem_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_ServiceLineItem_updatedAt(ctx, field)
-			case "source":
-				return ec.fieldContext_ServiceLineItem_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_ServiceLineItem_sourceOfTruth(ctx, field)
-			case "appSource":
-				return ec.fieldContext_ServiceLineItem_appSource(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ServiceLineItem", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_serviceLineItemCreate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_serviceLineItemUpdate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_serviceLineItemUpdate(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().ServiceLineItemUpdate(rctx, fc.Args["input"].(model.ServiceLineItemUpdateInput))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRole == nil {
-				return nil, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				return nil, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.ServiceLineItem); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.ServiceLineItem`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.ServiceLineItem)
-	fc.Result = res
-	return ec.marshalNServiceLineItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐServiceLineItem(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_serviceLineItemUpdate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "metadata":
-				return ec.fieldContext_ServiceLineItem_metadata(ctx, field)
-			case "billingCycle":
-				return ec.fieldContext_ServiceLineItem_billingCycle(ctx, field)
-			case "comments":
-				return ec.fieldContext_ServiceLineItem_comments(ctx, field)
-			case "description":
-				return ec.fieldContext_ServiceLineItem_description(ctx, field)
-			case "parentId":
-				return ec.fieldContext_ServiceLineItem_parentId(ctx, field)
-			case "price":
-				return ec.fieldContext_ServiceLineItem_price(ctx, field)
-			case "quantity":
-				return ec.fieldContext_ServiceLineItem_quantity(ctx, field)
-			case "serviceEnded":
-				return ec.fieldContext_ServiceLineItem_serviceEnded(ctx, field)
-			case "serviceStarted":
-				return ec.fieldContext_ServiceLineItem_serviceStarted(ctx, field)
-			case "tax":
-				return ec.fieldContext_ServiceLineItem_tax(ctx, field)
-			case "createdBy":
-				return ec.fieldContext_ServiceLineItem_createdBy(ctx, field)
-			case "externalLinks":
-				return ec.fieldContext_ServiceLineItem_externalLinks(ctx, field)
-			case "vatRate":
-				return ec.fieldContext_ServiceLineItem_vatRate(ctx, field)
-			case "startedAt":
-				return ec.fieldContext_ServiceLineItem_startedAt(ctx, field)
-			case "endedAt":
-				return ec.fieldContext_ServiceLineItem_endedAt(ctx, field)
-			case "name":
-				return ec.fieldContext_ServiceLineItem_name(ctx, field)
-			case "billed":
-				return ec.fieldContext_ServiceLineItem_billed(ctx, field)
-			case "id":
-				return ec.fieldContext_ServiceLineItem_id(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_ServiceLineItem_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_ServiceLineItem_updatedAt(ctx, field)
-			case "source":
-				return ec.fieldContext_ServiceLineItem_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_ServiceLineItem_sourceOfTruth(ctx, field)
-			case "appSource":
-				return ec.fieldContext_ServiceLineItem_appSource(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ServiceLineItem", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_serviceLineItemUpdate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Mutation_social_Update(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_social_Update(ctx, field)
 	if err != nil {
@@ -102212,27 +101774,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "serviceLineItem_BulkUpdate":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_serviceLineItem_BulkUpdate(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "serviceLineItem_Close":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_serviceLineItem_Close(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "serviceLineItemCreate":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_serviceLineItemCreate(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "serviceLineItemUpdate":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_serviceLineItemUpdate(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
