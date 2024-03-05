@@ -19,4 +19,7 @@ build: bin/file-store-api test/graph/generated/generated.go
 bin/file-store-api:
 	go build -v -o bin/file-store-api
 
-all: clean build
+install:
+	go install gotest.tools/gotestsum@latest
+
+all: clean install build
