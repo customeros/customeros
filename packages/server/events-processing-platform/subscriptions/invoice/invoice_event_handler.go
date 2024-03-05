@@ -867,9 +867,9 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 		"InvoiceIssueDate":              invoiceEntity.CreatedAt.Format("02 Jan 2006"),
 		"InvoiceDueDate":                invoiceEntity.DueDate.Format("02 Jan 2006"),
 		"InvoiceCurrency":               invoiceEntity.Currency.String() + "" + invoiceEntity.Currency.Symbol(),
-		"InvoiceSubtotal":               fmt.Sprintf("%.2f", invoiceEntity.Amount),
-		"InvoiceTotal":                  fmt.Sprintf("%.2f", invoiceEntity.TotalAmount),
-		"InvoiceAmountDue":              fmt.Sprintf("%.2f", invoiceEntity.TotalAmount),
+		"InvoiceSubtotal":               utils.FormatAmount(invoiceEntity.Amount, 2),
+		"InvoiceTotal":                  utils.FormatAmount(invoiceEntity.TotalAmount, 2),
+		"InvoiceAmountDue":              utils.FormatAmount(invoiceEntity.TotalAmount, 2),
 		"InvoiceLineItems":              []map[string]string{},
 		"Note":                          invoiceEntity.Note,
 		"DomesticPaymentsBankInfo":      invoiceEntity.DomesticPaymentsBankInfo,
@@ -886,9 +886,9 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 			"InvoicePeriodStart": invoiceEntity.PeriodStartDate.Format("02 Jan 2006"),
 			"InvoicePeriodEnd":   invoiceEntity.PeriodEndDate.Format("02 Jan 2006"),
 			"Quantity":           fmt.Sprintf("%d", line.Quantity),
-			"UnitPrice":          invoiceEntity.Currency.Symbol() + fmt.Sprintf("%.2f", line.Price),
-			"Amount":             invoiceEntity.Currency.Symbol() + fmt.Sprintf("%.2f", line.Amount),
-			"Vat":                invoiceEntity.Currency.Symbol() + fmt.Sprintf("%.2f", line.Vat),
+			"UnitPrice":          invoiceEntity.Currency.Symbol() + utils.FormatAmount(line.Price, 2),
+			"Amount":             invoiceEntity.Currency.Symbol() + utils.FormatAmount(line.Amount, 2),
+			"Vat":                invoiceEntity.Currency.Symbol() + utils.FormatAmount(line.Vat, 2),
 		}
 
 		if invoiceHasVat {
