@@ -146,30 +146,27 @@ func (s *fileService) UploadSingleFile(userEmail, tenantName, basePath, fileId s
 			return nil, err
 		}
 
-		graphqlRequest.Var("basePath", "")
 		graphqlRequest.Var("cdnUrl", generateSignedURL(uploadedFileToCdn.Variants[0], s.cfg.Service.CloudflareImageUploadSignKey))
-	} else {
-
-		session, err := awsSes.NewSession(&aws.Config{Region: aws.String(s.cfg.AWS.Region)})
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		if basePath == "" {
-			basePath = "/GLOBAL"
-		}
-
-		err = uploadFileToS3(s.cfg, session, tenantName, basePath, fileId+"."+fileType.Extension, multipartFileHeader)
-		if err != nil {
-			log.Fatal(err)
-		}
-		if err != nil {
-			return nil, err
-		}
-
-		graphqlRequest.Var("basePath", basePath)
-		graphqlRequest.Var("cdnUrl", "")
 	}
+
+	session, err := awsSes.NewSession(&aws.Config{Region: aws.String(s.cfg.AWS.Region)})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if basePath == "" {
+		basePath = "/GLOBAL"
+	}
+
+	err = uploadFileToS3(s.cfg, session, tenantName, basePath, fileId+"."+fileType.Extension, multipartFileHeader)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	graphqlRequest.Var("basePath", basePath)
 
 	err = s.addHeadersToGraphRequest(graphqlRequest, tenantName, userEmail)
 	if err != nil {
@@ -344,6 +341,7 @@ func (s *fileService) getCosAttachmentById(userEmail, tenantName string, id stri
 				mimeType
 				fileName
 				basePath
+				cdnUrl
 				size
 			}
 		}`)
