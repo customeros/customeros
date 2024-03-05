@@ -1,3 +1,6 @@
+run: build
+	go run main.go
+
 generate:
 	export PATH="${PATH}:$(shell go env GOPATH)/bin";go generate ./...
 
