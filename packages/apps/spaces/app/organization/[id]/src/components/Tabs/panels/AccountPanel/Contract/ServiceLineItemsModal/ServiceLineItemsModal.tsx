@@ -70,7 +70,7 @@ interface SubscriptionServiceModalProps {
 const defaultValue = {
   name: 'Unnamed',
   quantity: 1,
-  price: 1,
+  price: 0,
   billed: BilledType.Monthly,
   type: 'RECURRING',
   isDeleted: false,

@@ -23,12 +23,8 @@ export const TenantBillingPanelDetailsForm = ({
   canPayWithDirectDebitACH,
   canPayWithDirectDebitSEPA,
   canPayWithDirectDebitBacs,
-  email,
-  bcc,
 }: {
   formId: string;
-  bcc?: string | null;
-  email?: string | null;
   canPayWithCard?: boolean;
   invoicingEnabled?: boolean;
   canPayWithDirectDebitACH?: boolean;
