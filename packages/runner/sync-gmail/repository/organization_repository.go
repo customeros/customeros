@@ -55,6 +55,7 @@ func (r *organizationRepository) CreateOrganization(ctx context.Context, tx neo4
 		"				org.sourceOfTruth=$sourceOfTruth, " +
 		"				org.appSource=$appSource, " +
 		"				org.hide=$hide, " +
+		"				org.isCustomer=$isCustomer, " +
 		"				org.onboardingStatus=$onboardingStatus, " +
 		"				org:%s " +
 		" RETURN org"
@@ -68,6 +69,7 @@ func (r *organizationRepository) CreateOrganization(ctx context.Context, tx neo4
 			"appSource":        appSource,
 			"now":              date,
 			"hide":             hide,
+			"isCustomer":       false,
 			"onboardingStatus": "NOT_APPLICABLE",
 		})
 	if err != nil {
