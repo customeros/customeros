@@ -8,6 +8,7 @@ require (
 	github.com/99designs/gqlgen v0.17.44
 	github.com/aws/aws-sdk-go v1.50.29
 	github.com/caarlos0/env/v6 v6.10.1
+	github.com/cloudflare/cloudflare-go v0.89.0
 	github.com/gin-contrib/cors v1.5.0
 	github.com/gin-gonic/gin v1.9.1
 	github.com/golang-jwt/jwt v3.2.2+incompatible
@@ -31,7 +32,6 @@ require (
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20230717121745-296ad89f973d // indirect
 	github.com/chenzhuoyu/iasm v0.9.1 // indirect
-	github.com/cloudflare/cloudflare-go v0.89.0 // indirect
 	github.com/coocood/freecache v1.2.4 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect

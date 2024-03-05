@@ -36,6 +36,11 @@ type MeetingParticipant interface {
 	IsMeetingParticipant()
 }
 
+type MetadataInterface interface {
+	IsMetadataInterface()
+	GetMetadata() *Metadata
+}
+
 type Node interface {
 	IsNode()
 	GetID() string
@@ -61,6 +66,13 @@ type SourceFields interface {
 	IsNode()
 	IsSourceFields()
 	GetID() string
+	GetSource() DataSource
+	GetSourceOfTruth() DataSource
+	GetAppSource() string
+}
+
+type SourceFieldsInterface interface {
+	IsSourceFieldsInterface()
 	GetSource() DataSource
 	GetSourceOfTruth() DataSource
 	GetAppSource() string
@@ -126,6 +138,7 @@ type Attachment struct {
 	ID            string     `json:"id"`
 	CreatedAt     time.Time  `json:"createdAt"`
 	BasePath      string     `json:"basePath"`
+	CdnURL        string     `json:"cdnUrl"`
 	FileName      string     `json:"fileName"`
 	MimeType      string     `json:"mimeType"`
 	Size          int64      `json:"size"`
@@ -140,11 +153,46 @@ func (this Attachment) GetID() string { return this.ID }
 type AttachmentInput struct {
 	ID        *string    `json:"id,omitempty"`
 	CreatedAt *time.Time `json:"createdAt,omitempty"`
+	CdnURL    string     `json:"cdnUrl"`
 	BasePath  string     `json:"basePath"`
 	FileName  string     `json:"fileName"`
 	MimeType  string     `json:"mimeType"`
 	Size      int64      `json:"size"`
 	AppSource string     `json:"appSource"`
+}
+
+type BillingDetails struct {
+	BillingCycle           *ContractBillingCycle `json:"billingCycle,omitempty"`
+	InvoicingStarted       *time.Time            `json:"invoicingStarted,omitempty"`
+	AddressLine1           *string               `json:"addressLine1,omitempty"`
+	AddressLine2           *string               `json:"addressLine2,omitempty"`
+	Locality               *string               `json:"locality,omitempty"`
+	Region                 *string               `json:"region,omitempty"`
+	Country                *string               `json:"country,omitempty"`
+	PostalCode             *string               `json:"postalCode,omitempty"`
+	OrganizationLegalName  *string               `json:"organizationLegalName,omitempty"`
+	BillingEmail           *string               `json:"billingEmail,omitempty"`
+	InvoiceNote            *string               `json:"invoiceNote,omitempty"`
+	CanPayWithCard         *bool                 `json:"canPayWithCard,omitempty"`
+	CanPayWithDirectDebit  *bool                 `json:"canPayWithDirectDebit,omitempty"`
+	CanPayWithBankTransfer *bool                 `json:"canPayWithBankTransfer,omitempty"`
+}
+
+type BillingDetailsInput struct {
+	BillingCycle           *ContractBillingCycle `json:"billingCycle,omitempty"`
+	InvoicingStarted       *time.Time            `json:"invoicingStarted,omitempty"`
+	AddressLine1           *string               `json:"addressLine1,omitempty"`
+	AddressLine2           *string               `json:"addressLine2,omitempty"`
+	Locality               *string               `json:"locality,omitempty"`
+	Region                 *string               `json:"region,omitempty"`
+	Country                *string               `json:"country,omitempty"`
+	PostalCode             *string               `json:"postalCode,omitempty"`
+	OrganizationLegalName  *string               `json:"organizationLegalName,omitempty"`
+	BillingEmail           *string               `json:"billingEmail,omitempty"`
+	InvoiceNote            *string               `json:"invoiceNote,omitempty"`
+	CanPayWithCard         *bool                 `json:"canPayWithCard,omitempty"`
+	CanPayWithDirectDebit  *bool                 `json:"canPayWithDirectDebit,omitempty"`
+	CanPayWithBankTransfer *bool                 `json:"canPayWithBankTransfer,omitempty"`
 }
 
 type BillingProfile struct {
@@ -406,78 +454,106 @@ func (this ContactsPage) GetTotalPages() int { return this.TotalPages }
 func (this ContactsPage) GetTotalElements() int64 { return this.TotalElements }
 
 type Contract struct {
+	Metadata              *Metadata             `json:"metadata"`
+	BillingDetails        *BillingDetails       `json:"billingDetails,omitempty"`
+	CommittedPeriods      *int64                `json:"committedPeriods,omitempty"`
+	ContractEnded         *time.Time            `json:"contractEnded,omitempty"`
+	ContractLineItems     []*ServiceLineItem    `json:"contractLineItems,omitempty"`
+	ContractName          string                `json:"contractName"`
+	ContractRenewalCycle  ContractRenewalCycle  `json:"contractRenewalCycle"`
+	ContractSigned        *time.Time            `json:"contractSigned,omitempty"`
+	ContractURL           *string               `json:"contractUrl,omitempty"`
+	Currency              *Currency             `json:"currency,omitempty"`
+	CreatedBy             *User                 `json:"createdBy,omitempty"`
+	ExternalLinks         []*ExternalSystem     `json:"externalLinks"`
+	BillingEnabled        bool                  `json:"billingEnabled"`
+	Opportunities         []*Opportunity        `json:"opportunities,omitempty"`
+	Owner                 *User                 `json:"owner,omitempty"`
+	ServiceStarted        *time.Time            `json:"serviceStarted,omitempty"`
+	ContractStatus        ContractStatus        `json:"contractStatus"`
+	Status                ContractStatus        `json:"status"`
+	ServiceStartedAt      *time.Time            `json:"serviceStartedAt,omitempty"`
+	Name                  string                `json:"name"`
+	SignedAt              *time.Time            `json:"signedAt,omitempty"`
+	RenewalCycle          ContractRenewalCycle  `json:"renewalCycle"`
+	OrganizationLegalName *string               `json:"organizationLegalName,omitempty"`
+	InvoiceEmail          *string               `json:"invoiceEmail,omitempty"`
 	ID                    string                `json:"id"`
 	CreatedAt             time.Time             `json:"createdAt"`
 	UpdatedAt             time.Time             `json:"updatedAt"`
-	ServiceStartedAt      *time.Time            `json:"serviceStartedAt,omitempty"`
-	SignedAt              *time.Time            `json:"signedAt,omitempty"`
-	EndedAt               *time.Time            `json:"endedAt,omitempty"`
-	Name                  string                `json:"name"`
-	RenewalCycle          ContractRenewalCycle  `json:"renewalCycle"`
-	RenewalPeriods        *int64                `json:"renewalPeriods,omitempty"`
-	Status                ContractStatus        `json:"status"`
-	ServiceLineItems      []*ServiceLineItem    `json:"serviceLineItems,omitempty"`
-	Opportunities         []*Opportunity        `json:"opportunities,omitempty"`
-	Owner                 *User                 `json:"owner,omitempty"`
-	CreatedBy             *User                 `json:"createdBy,omitempty"`
 	Source                DataSource            `json:"source"`
 	SourceOfTruth         DataSource            `json:"sourceOfTruth"`
 	AppSource             string                `json:"appSource"`
-	ExternalLinks         []*ExternalSystem     `json:"externalLinks"`
-	ContractURL           *string               `json:"contractUrl,omitempty"`
-	Currency              *Currency             `json:"currency,omitempty"`
-	InvoicingStartDate    *time.Time            `json:"invoicingStartDate,omitempty"`
+	RenewalPeriods        *int64                `json:"renewalPeriods,omitempty"`
+	EndedAt               *time.Time            `json:"endedAt,omitempty"`
+	ServiceLineItems      []*ServiceLineItem    `json:"serviceLineItems,omitempty"`
+	InvoiceNote           *string               `json:"invoiceNote,omitempty"`
 	BillingCycle          *ContractBillingCycle `json:"billingCycle,omitempty"`
+	InvoicingStartDate    *time.Time            `json:"invoicingStartDate,omitempty"`
 	AddressLine1          *string               `json:"addressLine1,omitempty"`
 	AddressLine2          *string               `json:"addressLine2,omitempty"`
+	Zip                   *string               `json:"zip,omitempty"`
 	Locality              *string               `json:"locality,omitempty"`
 	Country               *string               `json:"country,omitempty"`
-	Zip                   *string               `json:"zip,omitempty"`
-	OrganizationLegalName *string               `json:"organizationLegalName,omitempty"`
-	InvoiceEmail          *string               `json:"invoiceEmail,omitempty"`
-	InvoiceNote           *string               `json:"invoiceNote,omitempty"`
 }
 
-func (Contract) IsNode()            {}
-func (this Contract) GetID() string { return this.ID }
+func (Contract) IsMetadataInterface()        {}
+func (this Contract) GetMetadata() *Metadata { return this.Metadata }
 
 type ContractInput struct {
-	OrganizationID     string                        `json:"organizationId"`
-	Name               *string                       `json:"name,omitempty"`
-	RenewalCycle       *ContractRenewalCycle         `json:"renewalCycle,omitempty"`
-	RenewalPeriods     *int64                        `json:"renewalPeriods,omitempty"`
-	AppSource          *string                       `json:"appSource,omitempty"`
-	ContractURL        *string                       `json:"contractUrl,omitempty"`
-	ServiceStartedAt   *time.Time                    `json:"serviceStartedAt,omitempty"`
-	SignedAt           *time.Time                    `json:"signedAt,omitempty"`
-	ExternalReference  *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
-	Currency           *Currency                     `json:"currency,omitempty"`
-	InvoicingStartDate *time.Time                    `json:"invoicingStartDate,omitempty"`
-	BillingCycle       *ContractBillingCycle         `json:"billingCycle,omitempty"`
+	OrganizationID       string                        `json:"organizationId"`
+	ContractName         *string                       `json:"contractName,omitempty"`
+	ContractRenewalCycle *ContractRenewalCycle         `json:"contractRenewalCycle,omitempty"`
+	CommittedPeriods     *int64                        `json:"committedPeriods,omitempty"`
+	AppSource            *string                       `json:"appSource,omitempty"`
+	ContractURL          *string                       `json:"contractUrl,omitempty"`
+	ServiceStarted       *time.Time                    `json:"serviceStarted,omitempty"`
+	ContractSigned       *time.Time                    `json:"contractSigned,omitempty"`
+	Currency             *Currency                     `json:"currency,omitempty"`
+	BillingEnabled       *bool                         `json:"billingEnabled,omitempty"`
+	InvoicingStartDate   *time.Time                    `json:"invoicingStartDate,omitempty"`
+	ExternalReference    *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
+	BillingCycle         *ContractBillingCycle         `json:"billingCycle,omitempty"`
+	RenewalPeriods       *int64                        `json:"renewalPeriods,omitempty"`
+	RenewalCycle         *ContractRenewalCycle         `json:"renewalCycle,omitempty"`
+	SignedAt             *time.Time                    `json:"signedAt,omitempty"`
+	ServiceStartedAt     *time.Time                    `json:"serviceStartedAt,omitempty"`
+	Name                 *string                       `json:"name,omitempty"`
 }
 
 type ContractUpdateInput struct {
-	ContractID            string                `json:"contractId"`
-	Patch                 *bool                 `json:"patch,omitempty"`
-	Name                  *string               `json:"name,omitempty"`
-	ContractURL           *string               `json:"contractUrl,omitempty"`
-	RenewalCycle          *ContractRenewalCycle `json:"renewalCycle,omitempty"`
-	RenewalPeriods        *int64                `json:"renewalPeriods,omitempty"`
-	ServiceStartedAt      *time.Time            `json:"serviceStartedAt,omitempty"`
-	SignedAt              *time.Time            `json:"signedAt,omitempty"`
-	EndedAt               *time.Time            `json:"endedAt,omitempty"`
-	AppSource             *string               `json:"appSource,omitempty"`
-	Currency              *Currency             `json:"currency,omitempty"`
-	InvoicingStartDate    *time.Time            `json:"invoicingStartDate,omitempty"`
-	BillingCycle          *ContractBillingCycle `json:"billingCycle,omitempty"`
-	AddressLine1          *string               `json:"addressLine1,omitempty"`
-	AddressLine2          *string               `json:"addressLine2,omitempty"`
-	Locality              *string               `json:"locality,omitempty"`
-	Country               *string               `json:"country,omitempty"`
-	Zip                   *string               `json:"zip,omitempty"`
-	OrganizationLegalName *string               `json:"organizationLegalName,omitempty"`
-	InvoiceEmail          *string               `json:"invoiceEmail,omitempty"`
-	InvoiceNote           *string               `json:"invoiceNote,omitempty"`
+	ContractID             string                `json:"contractId"`
+	Patch                  *bool                 `json:"patch,omitempty"`
+	ContractName           *string               `json:"contractName,omitempty"`
+	ContractURL            *string               `json:"contractUrl,omitempty"`
+	ContractRenewalCycle   *ContractRenewalCycle `json:"contractRenewalCycle,omitempty"`
+	CommittedPeriods       *int64                `json:"committedPeriods,omitempty"`
+	ServiceStarted         *time.Time            `json:"serviceStarted,omitempty"`
+	ContractSigned         *time.Time            `json:"contractSigned,omitempty"`
+	ContractEnded          *time.Time            `json:"contractEnded,omitempty"`
+	Currency               *Currency             `json:"currency,omitempty"`
+	BillingDetails         *BillingDetailsInput  `json:"billingDetails,omitempty"`
+	AppSource              *string               `json:"appSource,omitempty"`
+	BillingEnabled         *bool                 `json:"billingEnabled,omitempty"`
+	CanPayWithCard         *bool                 `json:"canPayWithCard,omitempty"`
+	CanPayWithDirectDebit  *bool                 `json:"canPayWithDirectDebit,omitempty"`
+	CanPayWithBankTransfer *bool                 `json:"canPayWithBankTransfer,omitempty"`
+	InvoicingStartDate     *time.Time            `json:"invoicingStartDate,omitempty"`
+	AddressLine1           *string               `json:"addressLine1,omitempty"`
+	AddressLine2           *string               `json:"addressLine2,omitempty"`
+	Locality               *string               `json:"locality,omitempty"`
+	Country                *string               `json:"country,omitempty"`
+	Zip                    *string               `json:"zip,omitempty"`
+	BillingCycle           *ContractBillingCycle `json:"billingCycle,omitempty"`
+	InvoiceNote            *string               `json:"invoiceNote,omitempty"`
+	EndedAt                *time.Time            `json:"endedAt,omitempty"`
+	RenewalPeriods         *int64                `json:"renewalPeriods,omitempty"`
+	InvoiceEmail           *string               `json:"invoiceEmail,omitempty"`
+	OrganizationLegalName  *string               `json:"organizationLegalName,omitempty"`
+	RenewalCycle           *ContractRenewalCycle `json:"renewalCycle,omitempty"`
+	SignedAt               *time.Time            `json:"signedAt,omitempty"`
+	ServiceStartedAt       *time.Time            `json:"serviceStartedAt,omitempty"`
+	Name                   *string               `json:"name,omitempty"`
 }
 
 type Country struct {
@@ -636,9 +712,10 @@ type DashboardCustomerMap struct {
 }
 
 type DashboardGrossRevenueRetention struct {
-	GrossRevenueRetention float64                                   `json:"grossRevenueRetention"`
-	IncreasePercentage    string                                    `json:"increasePercentage"`
-	PerMonth              []*DashboardGrossRevenueRetentionPerMonth `json:"perMonth"`
+	GrossRevenueRetention   float64                                   `json:"grossRevenueRetention"`
+	IncreasePercentage      string                                    `json:"increasePercentage"`
+	IncreasePercentageValue float64                                   `json:"increasePercentageValue"`
+	PerMonth                []*DashboardGrossRevenueRetentionPerMonth `json:"perMonth"`
 }
 
 type DashboardGrossRevenueRetentionPerMonth struct {
@@ -689,9 +766,10 @@ type DashboardPeriodInput struct {
 }
 
 type DashboardRetentionRate struct {
-	RetentionRate      float64                           `json:"retentionRate"`
-	IncreasePercentage string                            `json:"increasePercentage"`
-	PerMonth           []*DashboardRetentionRatePerMonth `json:"perMonth"`
+	RetentionRate           float64                           `json:"retentionRate"`
+	IncreasePercentage      string                            `json:"increasePercentage"`
+	IncreasePercentageValue float64                           `json:"increasePercentageValue"`
+	PerMonth                []*DashboardRetentionRatePerMonth `json:"perMonth"`
 }
 
 type DashboardRetentionRatePerMonth struct {
@@ -1021,40 +1099,36 @@ type InteractionSessionParticipantInput struct {
 }
 
 type Invoice struct {
-	ID                            string           `json:"id"`
-	CreatedAt                     time.Time        `json:"createdAt"`
-	UpdatedAt                     time.Time        `json:"updatedAt"`
-	Source                        DataSource       `json:"source"`
-	SourceOfTruth                 DataSource       `json:"sourceOfTruth"`
-	AppSource                     string           `json:"appSource"`
+	Metadata                      *Metadata        `json:"metadata"`
 	Organization                  *Organization    `json:"organization"`
+	Contract                      *Contract        `json:"contract"`
 	DryRun                        bool             `json:"dryRun"`
-	Number                        string           `json:"number"`
-	PeriodStartDate               time.Time        `json:"periodStartDate"`
-	PeriodEndDate                 time.Time        `json:"periodEndDate"`
-	DueDate                       time.Time        `json:"dueDate"`
-	Amount                        float64          `json:"amount"`
-	Vat                           float64          `json:"vat"`
-	SubtotalAmount                float64          `json:"subtotalAmount"`
-	TotalAmount                   float64          `json:"totalAmount"`
+	Postpaid                      bool             `json:"postpaid"`
+	OffCycle                      bool             `json:"offCycle"`
+	AmountDue                     float64          `json:"amountDue"`
+	AmountPaid                    float64          `json:"amountPaid"`
+	AmountRemaining               float64          `json:"amountRemaining"`
+	InvoiceNumber                 string           `json:"invoiceNumber"`
+	InvoicePeriodStart            time.Time        `json:"invoicePeriodStart"`
+	InvoicePeriodEnd              time.Time        `json:"invoicePeriodEnd"`
+	InvoiceURL                    string           `json:"invoiceUrl"`
+	Due                           time.Time        `json:"due"`
 	Currency                      string           `json:"currency"`
 	RepositoryFileID              string           `json:"repositoryFileId"`
-	InvoiceLines                  []*InvoiceLine   `json:"invoiceLines"`
+	InvoiceLineItems              []*InvoiceLine   `json:"invoiceLineItems"`
 	Status                        *InvoiceStatus   `json:"status,omitempty"`
 	Note                          *string          `json:"note,omitempty"`
 	DomesticPaymentsBankInfo      *string          `json:"domesticPaymentsBankInfo,omitempty"`
 	InternationalPaymentsBankInfo *string          `json:"internationalPaymentsBankInfo,omitempty"`
 	Customer                      *InvoiceCustomer `json:"customer"`
 	Provider                      *InvoiceProvider `json:"provider"`
+	Paid                          bool             `json:"paid"`
+	Subtotal                      float64          `json:"subtotal"`
+	TaxDue                        float64          `json:"taxDue"`
 }
 
-func (Invoice) IsSourceFields()                   {}
-func (this Invoice) GetID() string                { return this.ID }
-func (this Invoice) GetSource() DataSource        { return this.Source }
-func (this Invoice) GetSourceOfTruth() DataSource { return this.SourceOfTruth }
-func (this Invoice) GetAppSource() string         { return this.AppSource }
-
-func (Invoice) IsNode() {}
+func (Invoice) IsMetadataInterface()        {}
+func (this Invoice) GetMetadata() *Metadata { return this.Metadata }
 
 type InvoiceCustomer struct {
 	Name            *string `json:"name,omitempty"`
@@ -1067,18 +1141,17 @@ type InvoiceCustomer struct {
 }
 
 type InvoiceLine struct {
-	ID          string    `json:"id"`
-	CreatedAt   time.Time `json:"createdAt"`
-	Name        string    `json:"name"`
+	Metadata    *Metadata `json:"metadata"`
+	Description string    `json:"description"`
 	Price       float64   `json:"price"`
 	Quantity    int       `json:"quantity"`
-	Amount      float64   `json:"amount"`
-	Vat         float64   `json:"vat"`
-	TotalAmount float64   `json:"totalAmount"`
+	Subtotal    float64   `json:"subtotal"`
+	TaxDue      float64   `json:"taxDue"`
+	Total       float64   `json:"total"`
 }
 
-func (InvoiceLine) IsNode()            {}
-func (this InvoiceLine) GetID() string { return this.ID }
+func (InvoiceLine) IsMetadataInterface()        {}
+func (this InvoiceLine) GetMetadata() *Metadata { return this.Metadata }
 
 type InvoiceLineInput struct {
 	ServiceLineItemID *string    `json:"serviceLineItemId,omitempty"`
@@ -1089,13 +1162,14 @@ type InvoiceLineInput struct {
 }
 
 type InvoiceProvider struct {
-	LogoURL         *string `json:"logoUrl,omitempty"`
-	Name            *string `json:"name,omitempty"`
-	AddressLine1    *string `json:"addressLine1,omitempty"`
-	AddressLine2    *string `json:"addressLine2,omitempty"`
-	AddressZip      *string `json:"addressZip,omitempty"`
-	AddressLocality *string `json:"addressLocality,omitempty"`
-	AddressCountry  *string `json:"addressCountry,omitempty"`
+	LogoURL              *string `json:"logoUrl,omitempty"`
+	LogoRepositoryFileID *string `json:"logoRepositoryFileId,omitempty"`
+	Name                 *string `json:"name,omitempty"`
+	AddressLine1         *string `json:"addressLine1,omitempty"`
+	AddressLine2         *string `json:"addressLine2,omitempty"`
+	AddressZip           *string `json:"addressZip,omitempty"`
+	AddressLocality      *string `json:"addressLocality,omitempty"`
+	AddressCountry       *string `json:"addressCountry,omitempty"`
 }
 
 type InvoiceSimulateInput struct {
@@ -1103,6 +1177,12 @@ type InvoiceSimulateInput struct {
 	PeriodStartDate *time.Time          `json:"periodStartDate,omitempty"`
 	PeriodEndDate   *time.Time          `json:"periodEndDate,omitempty"`
 	InvoiceLines    []*InvoiceLineInput `json:"invoiceLines"`
+}
+
+type InvoiceUpdateInput struct {
+	ID     string         `json:"id"`
+	Status *InvoiceStatus `json:"status,omitempty"`
+	Patch  bool           `json:"patch"`
 }
 
 type InvoicesPage struct {
@@ -1237,6 +1317,13 @@ type JobRoleUpdateInput struct {
 	Primary        *bool      `json:"primary,omitempty"`
 	Description    *string    `json:"description,omitempty"`
 	Company        *string    `json:"company,omitempty"`
+}
+
+type LastTouchpoint struct {
+	LastTouchPointAt              *time.Time          `json:"lastTouchPointAt,omitempty"`
+	LastTouchPointType            *LastTouchpointType `json:"lastTouchPointType,omitempty"`
+	LastTouchPointTimelineEventID *string             `json:"lastTouchPointTimelineEventId,omitempty"`
+	LastTouchPointTimelineEvent   TimelineEvent       `json:"lastTouchPointTimelineEvent,omitempty"`
 }
 
 type LinkOrganizationsInput struct {
@@ -1514,6 +1601,23 @@ func (this MeetingsPage) GetTotalPages() int { return this.TotalPages }
 // **Required.**
 func (this MeetingsPage) GetTotalElements() int64 { return this.TotalElements }
 
+type Metadata struct {
+	ID            string     `json:"id"`
+	Created       time.Time  `json:"created"`
+	LastUpdated   time.Time  `json:"lastUpdated"`
+	Source        DataSource `json:"source"`
+	SourceOfTruth DataSource `json:"sourceOfTruth"`
+	AppSource     string     `json:"appSource"`
+}
+
+func (Metadata) IsSourceFieldsInterface()          {}
+func (this Metadata) GetSource() DataSource        { return this.Source }
+func (this Metadata) GetSourceOfTruth() DataSource { return this.SourceOfTruth }
+func (this Metadata) GetAppSource() string         { return this.AppSource }
+
+func (Metadata) IsNode()            {}
+func (this Metadata) GetID() string { return this.ID }
+
 type Mutation struct {
 }
 
@@ -1632,90 +1736,104 @@ type OrgAccountDetails struct {
 }
 
 type Organization struct {
-	ID                            string                        `json:"id"`
+	Metadata                      *Metadata                     `json:"metadata"`
+	AccountDetails                *OrgAccountDetails            `json:"accountDetails,omitempty"`
+	Contracts                     []*Contract                   `json:"contracts,omitempty"`
 	CustomerOsID                  string                        `json:"customerOsId"`
-	ReferenceID                   *string                       `json:"referenceId,omitempty"`
+	CustomFields                  []*CustomField                `json:"customFields"`
+	CustomID                      *string                       `json:"customId,omitempty"`
+	Description                   *string                       `json:"description,omitempty"`
+	Domains                       []string                      `json:"domains"`
+	SlackChannelID                *string                       `json:"slackChannelId,omitempty"`
+	EmployeeGrowthRate            *string                       `json:"employeeGrowthRate,omitempty"`
+	Employees                     *int64                        `json:"employees,omitempty"`
+	Headquarters                  *string                       `json:"headquarters,omitempty"`
+	Industry                      *string                       `json:"industry,omitempty"`
+	IndustryGroup                 *string                       `json:"industryGroup,omitempty"`
+	IsCustomer                    *bool                         `json:"isCustomer,omitempty"`
+	LastFundingAmount             *string                       `json:"lastFundingAmount,omitempty"`
+	LastFundingRound              *FundingRound                 `json:"lastFundingRound,omitempty"`
+	LastTouchpoint                *LastTouchpoint               `json:"lastTouchpoint,omitempty"`
+	Locations                     []*Location                   `json:"locations"`
+	Logo                          *string                       `json:"logo,omitempty"`
+	Market                        *Market                       `json:"market,omitempty"`
+	Name                          string                        `json:"name"`
+	Notes                         *string                       `json:"notes,omitempty"`
+	Owner                         *User                         `json:"owner,omitempty"`
+	ParentCompanies               []*LinkedOrganization         `json:"parentCompanies"`
+	Public                        *bool                         `json:"public,omitempty"`
+	SocialMedia                   []*Social                     `json:"socialMedia"`
+	SubIndustry                   *string                       `json:"subIndustry,omitempty"`
+	Subsidiaries                  []*LinkedOrganization         `json:"subsidiaries"`
+	Tags                          []*Tag                        `json:"tags,omitempty"`
+	TargetAudience                *string                       `json:"targetAudience,omitempty"`
+	TimelineEvents                []TimelineEvent               `json:"timelineEvents"`
+	ValueProposition              *string                       `json:"valueProposition,omitempty"`
+	Website                       *string                       `json:"website,omitempty"`
+	YearFounded                   *int64                        `json:"yearFounded,omitempty"`
+	Hide                          bool                          `json:"hide"`
+	Contacts                      *ContactsPage                 `json:"contacts"`
+	JobRoles                      []*JobRole                    `json:"jobRoles"`
+	Emails                        []*Email                      `json:"emails"`
+	PhoneNumbers                  []*PhoneNumber                `json:"phoneNumbers"`
+	SuggestedMergeTo              []*SuggestedMergeOrganization `json:"suggestedMergeTo"`
+	FieldSets                     []*FieldSet                   `json:"fieldSets"`
+	EntityTemplate                *EntityTemplate               `json:"entityTemplate,omitempty"`
+	TimelineEventsTotalCount      int64                         `json:"timelineEventsTotalCount"`
+	ExternalLinks                 []*ExternalSystem             `json:"externalLinks"`
+	IssueSummaryByStatus          []*IssueSummaryByStatus       `json:"issueSummaryByStatus"`
+	Socials                       []*Social                     `json:"socials"`
+	IsPublic                      *bool                         `json:"isPublic,omitempty"`
+	Note                          *string                       `json:"note,omitempty"`
+	LogoURL                       *string                       `json:"logoUrl,omitempty"`
+	ID                            string                        `json:"id"`
 	CreatedAt                     time.Time                     `json:"createdAt"`
 	UpdatedAt                     time.Time                     `json:"updatedAt"`
-	Name                          string                        `json:"name"`
-	Description                   *string                       `json:"description,omitempty"`
-	Note                          *string                       `json:"note,omitempty"`
-	Domains                       []string                      `json:"domains"`
-	Website                       *string                       `json:"website,omitempty"`
-	Industry                      *string                       `json:"industry,omitempty"`
-	SubIndustry                   *string                       `json:"subIndustry,omitempty"`
-	IndustryGroup                 *string                       `json:"industryGroup,omitempty"`
-	TargetAudience                *string                       `json:"targetAudience,omitempty"`
-	ValueProposition              *string                       `json:"valueProposition,omitempty"`
-	IsPublic                      *bool                         `json:"isPublic,omitempty"`
-	IsCustomer                    *bool                         `json:"isCustomer,omitempty"`
-	Market                        *Market                       `json:"market,omitempty"`
-	Employees                     *int64                        `json:"employees,omitempty"`
-	YearFounded                   *int64                        `json:"yearFounded,omitempty"`
-	Headquarters                  *string                       `json:"headquarters,omitempty"`
-	EmployeeGrowthRate            *string                       `json:"employeeGrowthRate,omitempty"`
-	LogoURL                       *string                       `json:"logoUrl,omitempty"`
-	LastFundingRound              *FundingRound                 `json:"lastFundingRound,omitempty"`
-	LastFundingAmount             *string                       `json:"lastFundingAmount,omitempty"`
 	Source                        DataSource                    `json:"source"`
 	SourceOfTruth                 DataSource                    `json:"sourceOfTruth"`
 	AppSource                     string                        `json:"appSource"`
-	Locations                     []*Location                   `json:"locations"`
-	Socials                       []*Social                     `json:"socials"`
-	Contacts                      *ContactsPage                 `json:"contacts"`
-	JobRoles                      []*JobRole                    `json:"jobRoles"`
-	Notes                         *NotePage                     `json:"notes"`
-	Tags                          []*Tag                        `json:"tags,omitempty"`
-	Contracts                     []*Contract                   `json:"contracts,omitempty"`
-	Emails                        []*Email                      `json:"emails"`
-	PhoneNumbers                  []*PhoneNumber                `json:"phoneNumbers"`
-	Subsidiaries                  []*LinkedOrganization         `json:"subsidiaries"`
-	SubsidiaryOf                  []*LinkedOrganization         `json:"subsidiaryOf"`
-	SuggestedMergeTo              []*SuggestedMergeOrganization `json:"suggestedMergeTo"`
-	CustomFields                  []*CustomField                `json:"customFields"`
-	FieldSets                     []*FieldSet                   `json:"fieldSets"`
-	EntityTemplate                *EntityTemplate               `json:"entityTemplate,omitempty"`
-	TimelineEvents                []TimelineEvent               `json:"timelineEvents"`
-	TimelineEventsTotalCount      int64                         `json:"timelineEventsTotalCount"`
-	Owner                         *User                         `json:"owner,omitempty"`
-	ExternalLinks                 []*ExternalSystem             `json:"externalLinks"`
+	ReferenceID                   *string                       `json:"referenceId,omitempty"`
 	LastTouchPointAt              *time.Time                    `json:"lastTouchPointAt,omitempty"`
 	LastTouchPointType            *LastTouchpointType           `json:"lastTouchPointType,omitempty"`
 	LastTouchPointTimelineEventID *string                       `json:"lastTouchPointTimelineEventId,omitempty"`
 	LastTouchPointTimelineEvent   TimelineEvent                 `json:"lastTouchPointTimelineEvent,omitempty"`
-	IssueSummaryByStatus          []*IssueSummaryByStatus       `json:"issueSummaryByStatus"`
-	AccountDetails                *OrgAccountDetails            `json:"accountDetails,omitempty"`
+	SubsidiaryOf                  []*LinkedOrganization         `json:"subsidiaryOf"`
 }
 
 func (Organization) IsNotedEntity() {}
 
-func (Organization) IsNode()            {}
-func (this Organization) GetID() string { return this.ID }
+func (Organization) IsMetadataInterface()        {}
+func (this Organization) GetMetadata() *Metadata { return this.Metadata }
 
 type OrganizationInput struct {
 	// The name of the organization.
 	// **Required.**
-	ReferenceID        *string             `json:"referenceId,omitempty"`
+	CustomID           *string             `json:"customId,omitempty"`
 	Name               *string             `json:"name,omitempty"`
 	Description        *string             `json:"description,omitempty"`
-	Note               *string             `json:"note,omitempty"`
+	Notes              *string             `json:"notes,omitempty"`
 	Domains            []string            `json:"domains,omitempty"`
 	Website            *string             `json:"website,omitempty"`
 	Industry           *string             `json:"industry,omitempty"`
 	SubIndustry        *string             `json:"subIndustry,omitempty"`
 	IndustryGroup      *string             `json:"industryGroup,omitempty"`
-	IsPublic           *bool               `json:"isPublic,omitempty"`
+	Public             *bool               `json:"public,omitempty"`
 	IsCustomer         *bool               `json:"isCustomer,omitempty"`
 	CustomFields       []*CustomFieldInput `json:"customFields,omitempty"`
-	FieldSets          []*FieldSetInput    `json:"fieldSets,omitempty"`
-	TemplateID         *string             `json:"templateId,omitempty"`
 	Market             *Market             `json:"market,omitempty"`
-	LogoURL            *string             `json:"logoUrl,omitempty"`
+	Logo               *string             `json:"logo,omitempty"`
 	EmployeeGrowthRate *string             `json:"employeeGrowthRate,omitempty"`
 	Headquarters       *string             `json:"headquarters,omitempty"`
 	YearFounded        *int64              `json:"yearFounded,omitempty"`
 	Employees          *int64              `json:"employees,omitempty"`
+	SlackChannelID     *string             `json:"slackChannelId,omitempty"`
 	AppSource          *string             `json:"appSource,omitempty"`
+	FieldSets          []*FieldSetInput    `json:"fieldSets,omitempty"`
+	TemplateID         *string             `json:"templateId,omitempty"`
+	IsPublic           *bool               `json:"isPublic,omitempty"`
+	ReferenceID        *string             `json:"referenceId,omitempty"`
+	Note               *string             `json:"note,omitempty"`
+	LogoURL            *string             `json:"logoUrl,omitempty"`
 }
 
 type OrganizationPage struct {
@@ -1816,12 +1934,14 @@ type OrganizationPlanMilestoneItem struct {
 	Status    OnboardingPlanMilestoneItemStatus `json:"status"`
 	UpdatedAt time.Time                         `json:"updatedAt"`
 	Text      string                            `json:"text"`
+	UUID      string                            `json:"uuid"`
 }
 
 type OrganizationPlanMilestoneItemInput struct {
 	Status    OnboardingPlanMilestoneItemStatus `json:"status"`
 	UpdatedAt time.Time                         `json:"updatedAt"`
 	Text      string                            `json:"text"`
+	UUID      *string                           `json:"uuid,omitempty"`
 }
 
 type OrganizationPlanMilestoneReorderInput struct {
@@ -1878,19 +1998,18 @@ type OrganizationPlanUpdateInput struct {
 }
 
 type OrganizationUpdateInput struct {
-	ID          string  `json:"id"`
-	ReferenceID *string `json:"referenceId,omitempty"`
+	ID       string  `json:"id"`
+	CustomID *string `json:"customId,omitempty"`
 	// Set to true when partial update is needed. Empty or missing fields will not be ignored.
 	Patch              *bool         `json:"patch,omitempty"`
 	Name               *string       `json:"name,omitempty"`
 	Description        *string       `json:"description,omitempty"`
-	Note               *string       `json:"note,omitempty"`
-	Domains            []string      `json:"domains,omitempty"`
+	Notes              *string       `json:"notes,omitempty"`
 	Website            *string       `json:"website,omitempty"`
 	Industry           *string       `json:"industry,omitempty"`
 	SubIndustry        *string       `json:"subIndustry,omitempty"`
 	IndustryGroup      *string       `json:"industryGroup,omitempty"`
-	IsPublic           *bool         `json:"isPublic,omitempty"`
+	Public             *bool         `json:"public,omitempty"`
 	IsCustomer         *bool         `json:"isCustomer,omitempty"`
 	Market             *Market       `json:"market,omitempty"`
 	Employees          *int64        `json:"employees,omitempty"`
@@ -1898,10 +2017,16 @@ type OrganizationUpdateInput struct {
 	ValueProposition   *string       `json:"valueProposition,omitempty"`
 	LastFundingRound   *FundingRound `json:"lastFundingRound,omitempty"`
 	LastFundingAmount  *string       `json:"lastFundingAmount,omitempty"`
-	LogoURL            *string       `json:"logoUrl,omitempty"`
+	Logo               *string       `json:"logo,omitempty"`
 	EmployeeGrowthRate *string       `json:"employeeGrowthRate,omitempty"`
 	Headquarters       *string       `json:"headquarters,omitempty"`
 	YearFounded        *int64        `json:"yearFounded,omitempty"`
+	SlackChannelID     *string       `json:"slackChannelId,omitempty"`
+	IsPublic           *bool         `json:"isPublic,omitempty"`
+	LogoURL            *string       `json:"logoUrl,omitempty"`
+	Domains            []string      `json:"domains,omitempty"`
+	Note               *string       `json:"note,omitempty"`
+	ReferenceID        *string       `json:"referenceId,omitempty"`
 }
 
 type PageView struct {
@@ -2076,27 +2201,33 @@ type Result struct {
 }
 
 type ServiceLineItem struct {
-	ID            string            `json:"id"`
-	CreatedAt     time.Time         `json:"createdAt"`
-	UpdatedAt     time.Time         `json:"updatedAt"`
-	StartedAt     time.Time         `json:"startedAt"`
-	EndedAt       *time.Time        `json:"endedAt,omitempty"`
-	Name          string            `json:"name"`
-	Billed        BilledType        `json:"billed"`
-	Price         float64           `json:"price"`
-	Quantity      int64             `json:"quantity"`
-	Comments      string            `json:"comments"`
-	CreatedBy     *User             `json:"createdBy,omitempty"`
-	Source        DataSource        `json:"source"`
-	SourceOfTruth DataSource        `json:"sourceOfTruth"`
-	AppSource     string            `json:"appSource"`
-	ExternalLinks []*ExternalSystem `json:"externalLinks"`
-	ParentID      string            `json:"parentId"`
-	VatRate       float64           `json:"vatRate"`
+	Metadata       *Metadata         `json:"metadata"`
+	BillingCycle   BilledType        `json:"billingCycle"`
+	Comments       string            `json:"comments"`
+	Description    string            `json:"description"`
+	ParentID       string            `json:"parentId"`
+	Price          float64           `json:"price"`
+	Quantity       int64             `json:"quantity"`
+	ServiceEnded   *time.Time        `json:"serviceEnded,omitempty"`
+	ServiceStarted time.Time         `json:"serviceStarted"`
+	Tax            *Tax              `json:"tax"`
+	CreatedBy      *User             `json:"createdBy,omitempty"`
+	ExternalLinks  []*ExternalSystem `json:"externalLinks"`
+	VatRate        float64           `json:"vatRate"`
+	StartedAt      time.Time         `json:"startedAt"`
+	EndedAt        *time.Time        `json:"endedAt,omitempty"`
+	Name           string            `json:"name"`
+	Billed         BilledType        `json:"billed"`
+	ID             string            `json:"id"`
+	CreatedAt      time.Time         `json:"createdAt"`
+	UpdatedAt      time.Time         `json:"updatedAt"`
+	Source         DataSource        `json:"source"`
+	SourceOfTruth  DataSource        `json:"sourceOfTruth"`
+	AppSource      string            `json:"appSource"`
 }
 
-func (ServiceLineItem) IsNode()            {}
-func (this ServiceLineItem) GetID() string { return this.ID }
+func (ServiceLineItem) IsMetadataInterface()        {}
+func (this ServiceLineItem) GetMetadata() *Metadata { return this.Metadata }
 
 type ServiceLineItemBulkUpdateInput struct {
 	ServiceLineItems []*ServiceLineItemBulkUpdateItem `json:"serviceLineItems"`
@@ -2113,38 +2244,75 @@ type ServiceLineItemBulkUpdateItem struct {
 	VatRate                 *float64    `json:"vatRate,omitempty"`
 	Comments                *string     `json:"comments,omitempty"`
 	IsRetroactiveCorrection *bool       `json:"isRetroactiveCorrection,omitempty"`
+	ServiceStarted          *time.Time  `json:"serviceStarted,omitempty"`
 }
 
 type ServiceLineItemCloseInput struct {
-	ID      string     `json:"id"`
-	EndedAt *time.Time `json:"endedAt,omitempty"`
+	ID           string     `json:"id"`
+	EndedAt      *time.Time `json:"endedAt,omitempty"`
+	ServiceEnded *time.Time `json:"serviceEnded,omitempty"`
 }
 
 type ServiceLineItemInput struct {
 	ContractID        string                        `json:"contractId"`
-	Name              *string                       `json:"name,omitempty"`
-	Billed            *BilledType                   `json:"billed,omitempty"`
+	Description       *string                       `json:"description,omitempty"`
+	BillingCycle      *BilledType                   `json:"billingCycle,omitempty"`
 	Price             *float64                      `json:"price,omitempty"`
 	Quantity          *int64                        `json:"quantity,omitempty"`
-	VatRate           *float64                      `json:"vatRate,omitempty"`
+	Tax               *TaxInput                     `json:"tax,omitempty"`
 	AppSource         *string                       `json:"appSource,omitempty"`
-	ExternalReference *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
-	StartedAt         *time.Time                    `json:"startedAt,omitempty"`
+	ServiceStarted    *time.Time                    `json:"serviceStarted,omitempty"`
+	ServiceEnded      *time.Time                    `json:"serviceEnded,omitempty"`
+	VatRate           *float64                      `json:"vatRate,omitempty"`
+	Name              *string                       `json:"name,omitempty"`
+	Billed            *BilledType                   `json:"billed,omitempty"`
 	EndedAt           *time.Time                    `json:"endedAt,omitempty"`
+	StartedAt         *time.Time                    `json:"startedAt,omitempty"`
+	ExternalReference *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
 }
 
 type ServiceLineItemUpdateInput struct {
-	ServiceLineItemID       string                        `json:"serviceLineItemId"`
-	Name                    *string                       `json:"name,omitempty"`
-	Billed                  *BilledType                   `json:"billed,omitempty"`
+	ID                      *string                       `json:"id,omitempty"`
+	Description             *string                       `json:"description,omitempty"`
+	BillingCycle            *BilledType                   `json:"billingCycle,omitempty"`
 	Price                   *float64                      `json:"price,omitempty"`
 	Quantity                *int64                        `json:"quantity,omitempty"`
-	VatRate                 *float64                      `json:"vatRate,omitempty"`
+	Tax                     *TaxInput                     `json:"tax,omitempty"`
 	Comments                *string                       `json:"comments,omitempty"`
 	AppSource               *string                       `json:"appSource,omitempty"`
-	ExternalReference       *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
 	IsRetroactiveCorrection *bool                         `json:"isRetroactiveCorrection,omitempty"`
+	ServiceStarted          *time.Time                    `json:"serviceStarted,omitempty"`
+	ServiceEnded            *time.Time                    `json:"serviceEnded,omitempty"`
+	ServiceLineItemID       string                        `json:"serviceLineItemId"`
+	Name                    *string                       `json:"name,omitempty"`
+	VatRate                 *float64                      `json:"vatRate,omitempty"`
+	ExternalReference       *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
+	Billed                  *BilledType                   `json:"billed,omitempty"`
 }
+
+type SlackChannel struct {
+	Metadata     *Metadata     `json:"metadata"`
+	Organization *Organization `json:"organization,omitempty"`
+	ChannelID    string        `json:"channelId"`
+	ChannelName  string        `json:"channelName"`
+}
+
+type SlackChannelPage struct {
+	Content        []*SlackChannel `json:"content"`
+	TotalPages     int             `json:"totalPages"`
+	TotalElements  int64           `json:"totalElements"`
+	TotalAvailable int64           `json:"totalAvailable"`
+}
+
+func (SlackChannelPage) IsPages() {}
+
+// The total number of pages included in the query response.
+// **Required.**
+func (this SlackChannelPage) GetTotalPages() int { return this.TotalPages }
+
+// The total number of elements included in the query response.
+// **Required.**
+func (this SlackChannelPage) GetTotalElements() int64 { return this.TotalElements }
 
 type Social struct {
 	ID            string     `json:"id"`
@@ -2255,6 +2423,16 @@ type TagUpdateInput struct {
 	Name string `json:"name"`
 }
 
+type Tax struct {
+	SalesTax bool    `json:"salesTax"`
+	Vat      bool    `json:"vat"`
+	TaxRate  float64 `json:"taxRate"`
+}
+
+type TaxInput struct {
+	TaxRate float64 `json:"taxRate"`
+}
+
 type TenantBillableInfo struct {
 	WhitelistedOrganizations int64 `json:"whitelistedOrganizations"`
 	WhitelistedContacts      int64 `json:"whitelistedContacts"`
@@ -2280,6 +2458,14 @@ type TenantBillingProfile struct {
 	LegalName                     string     `json:"legalName"`
 	DomesticPaymentsBankInfo      string     `json:"domesticPaymentsBankInfo"`
 	InternationalPaymentsBankInfo string     `json:"internationalPaymentsBankInfo"`
+	VatNumber                     string     `json:"vatNumber"`
+	SendInvoicesFrom              string     `json:"sendInvoicesFrom"`
+	SendInvoicesBcc               string     `json:"sendInvoicesBcc"`
+	CanPayWithCard                bool       `json:"canPayWithCard"`
+	CanPayWithDirectDebitSepa     bool       `json:"canPayWithDirectDebitSEPA"`
+	CanPayWithDirectDebitAch      bool       `json:"canPayWithDirectDebitACH"`
+	CanPayWithDirectDebitBacs     bool       `json:"canPayWithDirectDebitBacs"`
+	CanPayWithPigeon              bool       `json:"canPayWithPigeon"`
 }
 
 func (TenantBillingProfile) IsSourceFields()                   {}
@@ -2302,6 +2488,14 @@ type TenantBillingProfileInput struct {
 	LegalName                     *string `json:"legalName,omitempty"`
 	DomesticPaymentsBankInfo      *string `json:"domesticPaymentsBankInfo,omitempty"`
 	InternationalPaymentsBankInfo *string `json:"internationalPaymentsBankInfo,omitempty"`
+	VatNumber                     string  `json:"vatNumber"`
+	SendInvoicesFrom              string  `json:"sendInvoicesFrom"`
+	SendInvoicesBcc               *string `json:"sendInvoicesBcc,omitempty"`
+	CanPayWithCard                bool    `json:"canPayWithCard"`
+	CanPayWithDirectDebitSepa     bool    `json:"canPayWithDirectDebitSEPA"`
+	CanPayWithDirectDebitAch      bool    `json:"canPayWithDirectDebitACH"`
+	CanPayWithDirectDebitBacs     bool    `json:"canPayWithDirectDebitBacs"`
+	CanPayWithPigeon              bool    `json:"canPayWithPigeon"`
 }
 
 type TenantBillingProfileUpdateInput struct {
@@ -2318,6 +2512,14 @@ type TenantBillingProfileUpdateInput struct {
 	LegalName                     *string `json:"legalName,omitempty"`
 	DomesticPaymentsBankInfo      *string `json:"domesticPaymentsBankInfo,omitempty"`
 	InternationalPaymentsBankInfo *string `json:"internationalPaymentsBankInfo,omitempty"`
+	VatNumber                     *string `json:"vatNumber,omitempty"`
+	SendInvoicesFrom              *string `json:"sendInvoicesFrom,omitempty"`
+	SendInvoicesBcc               *string `json:"sendInvoicesBcc,omitempty"`
+	CanPayWithCard                *bool   `json:"canPayWithCard,omitempty"`
+	CanPayWithDirectDebitSepa     *bool   `json:"canPayWithDirectDebitSEPA,omitempty"`
+	CanPayWithDirectDebitAch      *bool   `json:"canPayWithDirectDebitACH,omitempty"`
+	CanPayWithDirectDebitBacs     *bool   `json:"canPayWithDirectDebitBacs,omitempty"`
+	CanPayWithPigeon              *bool   `json:"canPayWithPigeon,omitempty"`
 }
 
 type TenantInput struct {
@@ -2326,16 +2528,18 @@ type TenantInput struct {
 }
 
 type TenantSettings struct {
-	LogoURL          string    `json:"logoUrl"`
-	DefaultCurrency  *Currency `json:"defaultCurrency,omitempty"`
-	InvoicingEnabled bool      `json:"invoicingEnabled"`
+	LogoRepositoryFileID *string   `json:"logoRepositoryFileId,omitempty"`
+	BaseCurrency         *Currency `json:"baseCurrency,omitempty"`
+	BillingEnabled       bool      `json:"billingEnabled"`
+	LogoURL              string    `json:"logoUrl"`
 }
 
 type TenantSettingsInput struct {
-	Patch            *bool     `json:"patch,omitempty"`
-	LogoURL          *string   `json:"logoUrl,omitempty"`
-	DefaultCurrency  *Currency `json:"defaultCurrency,omitempty"`
-	InvoicingEnabled *bool     `json:"invoicingEnabled,omitempty"`
+	Patch                *bool     `json:"patch,omitempty"`
+	LogoURL              *string   `json:"logoUrl,omitempty"`
+	LogoRepositoryFileID *string   `json:"logoRepositoryFileId,omitempty"`
+	BaseCurrency         *Currency `json:"baseCurrency,omitempty"`
+	BillingEnabled       *bool     `json:"billingEnabled,omitempty"`
 }
 
 type TimeRange struct {
@@ -2648,6 +2852,8 @@ const (
 	ComparisonOperatorGte        ComparisonOperator = "GTE"
 	ComparisonOperatorIn         ComparisonOperator = "IN"
 	ComparisonOperatorBetween    ComparisonOperator = "BETWEEN"
+	ComparisonOperatorIsNull     ComparisonOperator = "IS_NULL"
+	ComparisonOperatorIsEmpty    ComparisonOperator = "IS_EMPTY"
 )
 
 var AllComparisonOperator = []ComparisonOperator{
@@ -2658,11 +2864,13 @@ var AllComparisonOperator = []ComparisonOperator{
 	ComparisonOperatorGte,
 	ComparisonOperatorIn,
 	ComparisonOperatorBetween,
+	ComparisonOperatorIsNull,
+	ComparisonOperatorIsEmpty,
 }
 
 func (e ComparisonOperator) IsValid() bool {
 	switch e {
-	case ComparisonOperatorEq, ComparisonOperatorContains, ComparisonOperatorStartsWith, ComparisonOperatorLte, ComparisonOperatorGte, ComparisonOperatorIn, ComparisonOperatorBetween:
+	case ComparisonOperatorEq, ComparisonOperatorContains, ComparisonOperatorStartsWith, ComparisonOperatorLte, ComparisonOperatorGte, ComparisonOperatorIn, ComparisonOperatorBetween, ComparisonOperatorIsNull, ComparisonOperatorIsEmpty:
 		return true
 	}
 	return false
@@ -3046,6 +3254,9 @@ const (
 	DataSourceSalesforce     DataSource = "SALESFORCE"
 	DataSourceStripe         DataSource = "STRIPE"
 	DataSourceMixpanel       DataSource = "MIXPANEL"
+	DataSourceClose          DataSource = "CLOSE"
+	DataSourceOutlook        DataSource = "OUTLOOK"
+	DataSourceUnthread       DataSource = "UNTHREAD"
 )
 
 var AllDataSource = []DataSource{
@@ -3060,11 +3271,14 @@ var AllDataSource = []DataSource{
 	DataSourceSalesforce,
 	DataSourceStripe,
 	DataSourceMixpanel,
+	DataSourceClose,
+	DataSourceOutlook,
+	DataSourceUnthread,
 }
 
 func (e DataSource) IsValid() bool {
 	switch e {
-	case DataSourceNa, DataSourceOpenline, DataSourceWebscrape, DataSourceHubspot, DataSourceZendeskSupport, DataSourcePipedrive, DataSourceSLACk, DataSourceIntercom, DataSourceSalesforce, DataSourceStripe, DataSourceMixpanel:
+	case DataSourceNa, DataSourceOpenline, DataSourceWebscrape, DataSourceHubspot, DataSourceZendeskSupport, DataSourcePipedrive, DataSourceSLACk, DataSourceIntercom, DataSourceSalesforce, DataSourceStripe, DataSourceMixpanel, DataSourceClose, DataSourceOutlook, DataSourceUnthread:
 		return true
 	}
 	return false
@@ -3232,6 +3446,9 @@ const (
 	ExternalSystemTypeSalesforce     ExternalSystemType = "SALESFORCE"
 	ExternalSystemTypeStripe         ExternalSystemType = "STRIPE"
 	ExternalSystemTypeMixpanel       ExternalSystemType = "MIXPANEL"
+	ExternalSystemTypeClose          ExternalSystemType = "CLOSE"
+	ExternalSystemTypeOutlook        ExternalSystemType = "OUTLOOK"
+	ExternalSystemTypeUnthread       ExternalSystemType = "UNTHREAD"
 )
 
 var AllExternalSystemType = []ExternalSystemType{
@@ -3244,11 +3461,14 @@ var AllExternalSystemType = []ExternalSystemType{
 	ExternalSystemTypeSalesforce,
 	ExternalSystemTypeStripe,
 	ExternalSystemTypeMixpanel,
+	ExternalSystemTypeClose,
+	ExternalSystemTypeOutlook,
+	ExternalSystemTypeUnthread,
 }
 
 func (e ExternalSystemType) IsValid() bool {
 	switch e {
-	case ExternalSystemTypeHubspot, ExternalSystemTypeZendeskSupport, ExternalSystemTypeCalcom, ExternalSystemTypePipedrive, ExternalSystemTypeSLACk, ExternalSystemTypeIntercom, ExternalSystemTypeSalesforce, ExternalSystemTypeStripe, ExternalSystemTypeMixpanel:
+	case ExternalSystemTypeHubspot, ExternalSystemTypeZendeskSupport, ExternalSystemTypeCalcom, ExternalSystemTypePipedrive, ExternalSystemTypeSLACk, ExternalSystemTypeIntercom, ExternalSystemTypeSalesforce, ExternalSystemTypeStripe, ExternalSystemTypeMixpanel, ExternalSystemTypeClose, ExternalSystemTypeOutlook, ExternalSystemTypeUnthread:
 		return true
 	}
 	return false
@@ -3522,17 +3742,19 @@ const (
 	InvoiceStatusDraft InvoiceStatus = "DRAFT"
 	InvoiceStatusDue   InvoiceStatus = "DUE"
 	InvoiceStatusPaid  InvoiceStatus = "PAID"
+	InvoiceStatusVoid  InvoiceStatus = "VOID"
 )
 
 var AllInvoiceStatus = []InvoiceStatus{
 	InvoiceStatusDraft,
 	InvoiceStatusDue,
 	InvoiceStatusPaid,
+	InvoiceStatusVoid,
 }
 
 func (e InvoiceStatus) IsValid() bool {
 	switch e {
-	case InvoiceStatusDraft, InvoiceStatusDue, InvoiceStatusPaid:
+	case InvoiceStatusDraft, InvoiceStatusDue, InvoiceStatusPaid, InvoiceStatusVoid:
 		return true
 	}
 	return false
