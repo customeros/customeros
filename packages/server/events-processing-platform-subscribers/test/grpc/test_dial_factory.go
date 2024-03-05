@@ -6,14 +6,12 @@ import (
 	"net"
 
 	comlog "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/command"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventbuffer"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/server"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/server"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/service"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/test/bufconn"
 )
@@ -35,7 +33,6 @@ func (dfi TestDialFactoryImpl) GetEventsProcessingPlatformConn(repositories *rep
 	}
 	listener := bufconn.Listen(1024 * 1024)
 
-	grpcServer := grpc.NewServer()
 	appLogger := logger.NewExtendedAppLogger(&comlog.Config{
 		LogLevel: "debug",
 		DevMode:  false,
@@ -50,20 +47,9 @@ func (dfi TestDialFactoryImpl) GetEventsProcessingPlatformConn(repositories *rep
 		},
 	}, appLogger)
 
-	myServer.GrpcServer = grpcServer
 	myServer.Repositories = repositories
 	myServer.AggregateStore = aggregateStore
-	eventBufferWatcher := eventbuffer.NewEventBufferWatcher(repositories, appLogger, aggregateStore)
-	myServer.CommandHandlers = command.NewCommandHandlers(appLogger, &config.Config{}, aggregateStore, repositories, eventBufferWatcher)
-	myServer.Services = service.InitServices(&config.Config{}, repositories, aggregateStore, myServer.CommandHandlers, appLogger)
-
-	server.RegisterGrpcServices(myServer.GrpcServer, myServer.Services)
-
-	go func() {
-		if err := grpcServer.Serve(listener); err != nil {
-			log.Fatal(err)
-		}
-	}()
+	myServer.Services = service.InitServices(&config.Config{}, repositories, appLogger)
 
 	return grpc.DialContext(context.Background(), "", grpc.WithInsecure(),
 		grpc.WithContextDialer(func(ctx context.Context, target string) (net.Conn, error) {

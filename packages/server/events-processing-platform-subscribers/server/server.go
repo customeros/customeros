@@ -11,27 +11,26 @@ import (
 	"github.com/labstack/echo/v4"
 	commonconf "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
+	email_validation_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/email_validation"
+	graph_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/graph"
+	graph_low_prio_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/graph_low_prio"
+	interaction_event_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/interaction_event"
+	invoice_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/invoice"
+	location_validation_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/location_validation"
+	notifications_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/notifications"
+	organization_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/organization"
+	phone_number_validation_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/phone_number_validation"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/caches"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventbuffer"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore/store"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstroredb"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions"
-	email_validation_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/email_validation"
-	graph_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/graph"
-	graph_low_prio_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/graph_low_prio"
-	interaction_event_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/interaction_event"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/invoice"
-	location_validation_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/location_validation"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/notifications"
-	organization_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/organization"
-	phone_number_validation_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/phone_number_validation"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
@@ -43,12 +42,11 @@ const (
 )
 
 type Server struct {
-	Config          *config.Config
-	Log             logger.Logger
-	Repositories    *repository.Repositories
-	Services        *service.Services
-	CommandHandlers *command.CommandHandlers
-	AggregateStore  eventstore.AggregateStore
+	Config         *config.Config
+	Log            logger.Logger
+	Repositories   *repository.Repositories
+	Services       *service.Services
+	AggregateStore eventstore.AggregateStore
 
 	echo   *echo.Echo
 	doneCh chan struct{}
@@ -118,12 +116,10 @@ func (server *Server) Start(parentCtx context.Context) error {
 	eventBufferWatcher.Start(ctx)
 	defer eventBufferWatcher.Stop()
 
-	server.CommandHandlers = command.NewCommandHandlers(server.Log, server.Config, server.AggregateStore, server.Repositories, eventBufferWatcher)
-
 	//Server.runMetrics(cancel)
 	//Server.runHealthCheck(ctx)
 
-	server.Services = service.InitServices(server.Config, server.Repositories, server.AggregateStore, server.CommandHandlers, server.Log)
+	server.Services = service.InitServices(server.Config, server.Repositories, server.Log)
 
 	// Setting up gRPC client
 	df := grpc_client.NewDialFactory(server.Config)
@@ -133,6 +129,7 @@ func (server *Server) Start(parentCtx context.Context) error {
 	}
 	defer df.Close(gRPCconn)
 	grpcClients := grpc_client.InitGrpcClients(gRPCconn)
+
 	InitSubscribers(server, ctx, grpcClients, esdb, cancel, server.Services)
 
 	<-ctx.Done()
@@ -252,7 +249,7 @@ func InitSubscribers(server *Server, ctx context.Context, grpcClients *grpc_clie
 	}
 
 	if server.Config.Subscriptions.NotificationsSubscription.Enabled {
-		notificationsSubscriber := notifications.NewNotificationsSubscriber(server.Log, esdb, server.Repositories, grpcClients, server.Config)
+		notificationsSubscriber := notifications_subscription.NewNotificationsSubscriber(server.Log, esdb, server.Repositories, grpcClients, server.Config)
 		go func() {
 			err := notificationsSubscriber.Connect(ctx, notificationsSubscriber.ProcessEvents)
 			if err != nil {
@@ -263,7 +260,7 @@ func InitSubscribers(server *Server, ctx context.Context, grpcClients *grpc_clie
 	}
 
 	if server.Config.Subscriptions.InvoiceSubscription.Enabled {
-		invoiceSubscriber := invoice.NewInvoiceSubscriber(server.Log, esdb, server.Config, server.Repositories, grpcClients, services.FileStoreApiService, services.PostmarkProvider)
+		invoiceSubscriber := invoice_subscription.NewInvoiceSubscriber(server.Log, esdb, server.Config, server.Repositories, grpcClients, services.FileStoreApiService, services.PostmarkProvider)
 		go func() {
 			err := invoiceSubscriber.Connect(ctx, invoiceSubscriber.ProcessEvents)
 			if err != nil {

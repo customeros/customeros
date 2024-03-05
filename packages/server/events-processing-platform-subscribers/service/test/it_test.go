@@ -1,24 +1,23 @@
-package graph_low_prio
+package servicet
 
 import (
-	"context"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/grpc"
+	"golang.org/x/net/context"
 	"os"
 	"testing"
 )
 
-const tenantName = "ziggy"
-
 var testDatabase *test.TestDatabase
-var testLogger = test.SetupTestLogger()
-var testMockedGrpcClient = test.SetupMockedTestGrpcClient()
+var dialFactory *grpc.TestDialFactoryImpl
 
 func TestMain(m *testing.M) {
 	myDatabase, shutdown := test.SetupTestDatabase()
-	testDatabase = &myDatabase
-
 	defer shutdown()
+
+	testDatabase = &myDatabase
+	dialFactory = &grpc.TestDialFactoryImpl{}
 
 	os.Exit(m.Run())
 }
