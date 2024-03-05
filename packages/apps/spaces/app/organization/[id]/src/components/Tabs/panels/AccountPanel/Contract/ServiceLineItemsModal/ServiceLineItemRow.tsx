@@ -280,12 +280,6 @@ export const ServiceLineItemRow = ({
             id='service-line-template-date-picker'
             name='startDate'
             clearIcon={null}
-            disabled={
-              !!service?.serviceLineItemId &&
-              prevServiceLineItemData?.price === service.price &&
-              service.quantity === prevServiceLineItemData?.quantity
-            }
-            minDate={service?.serviceLineItemId ? new Date() : undefined}
             onChange={(event) => handleDateInputChange(event as DateInputValue)}
             defaultValue={service.serviceStarted}
             formatShortWeekday={(_, date) =>
