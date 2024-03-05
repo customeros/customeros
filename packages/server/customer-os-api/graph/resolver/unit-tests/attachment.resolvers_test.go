@@ -18,6 +18,7 @@ import (
 
 var (
 	ID        = "123"
+	CdnURL    = "test-url"
 	BasePath  = "/GLOBAL"
 	MimeType  = "text/plain"
 	FileName  = "readme.txt"
@@ -35,6 +36,7 @@ func TestMutationResolver_AttachmentCreate(t *testing.T) {
 		resolvers := resolver.Resolver{Services: &mockedServices}
 		ue := model.AttachmentInput{
 			BasePath:  BasePath,
+			CdnURL:    CdnURL,
 			MimeType:  MimeType,
 			FileName:  FileName,
 			Size:      int64(Size),
@@ -42,12 +44,13 @@ func TestMutationResolver_AttachmentCreate(t *testing.T) {
 		testAttachmentService.On("attachment_Create", mock.AnythingOfType("string")).Return(&ue)
 		q := `
 		 mutation {
-		   attachment_Create(input: {mimeType: "text/plain", fileName: "readme.txt", size: 123, basePath: "/GLOBAL", appSource: "test app"}) {
+		   attachment_Create(input: {mimeType: "text/plain", fileName: "readme.txt", size: 123, cdnUrl: "test-url", basePath: "/GLOBAL", appSource: "test app"}) {
 			 	id,
 				createdAt,
 				mimeType,
 				fileName,
 				size,
+				cdnUrl,
 				basePath,
 				source,
 				sourceOfTruth,
@@ -74,6 +77,8 @@ func TestMutationResolver_AttachmentCreate(t *testing.T) {
 		require.Equal(t, timePointer, attachment.CreatedAt)
 		require.Equal(t, "text/plain", attachment.MimeType)
 		require.Equal(t, "readme.txt", attachment.FileName)
+		require.Equal(t, "/GLOBAL", attachment.BasePath)
+		require.Equal(t, "test-url", attachment.CdnURL)
 		require.Equal(t, int64(123), attachment.Size)
 		require.Equal(t, model.DataSource("NA"), attachment.Source)
 		require.Equal(t, model.DataSource("NA"), attachment.SourceOfTruth)

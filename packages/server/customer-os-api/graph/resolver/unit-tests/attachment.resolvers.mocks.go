@@ -25,6 +25,8 @@ func (s *MockedAttachmentService) Create(ctx context.Context, newAnalysis *entit
 	return &entity.AttachmentEntity{
 		MimeType:  "text/plain",
 		FileName:  "readme.txt",
+		BasePath:  "/GLOBAL",
+		CdnUrl:    "test-url",
 		Size:      123,
 		CreatedAt: timePointer,
 	}, nil

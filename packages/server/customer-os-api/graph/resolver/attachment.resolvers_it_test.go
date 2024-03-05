@@ -21,6 +21,7 @@ func TestMutationResolver_AttachmentCreate(t *testing.T) {
 		client.Var("mimeType", "text/plain"),
 		client.Var("fileName", "readme.txt"),
 		client.Var("basePath", "/GLOBAL"),
+		client.Var("cdnUrl", "test-url"),
 		client.Var("size", 123),
 	)
 
@@ -31,6 +32,7 @@ func TestMutationResolver_AttachmentCreate(t *testing.T) {
 	}
 	err = decode.Decode(rawResponse.Data.(map[string]interface{}), &attachmentCreate)
 	require.Nil(t, err)
+	require.Equal(t, "test-url", attachmentCreate.Attachment_Create.CdnURL)
 	require.Equal(t, "/GLOBAL", attachmentCreate.Attachment_Create.BasePath)
 	require.Equal(t, "text/plain", attachmentCreate.Attachment_Create.MimeType)
 	require.Equal(t, "readme.txt", attachmentCreate.Attachment_Create.FileName)
