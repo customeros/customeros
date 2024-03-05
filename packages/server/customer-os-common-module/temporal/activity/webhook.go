@@ -11,11 +11,11 @@ import (
 	"go.temporal.io/sdk/activity"
 )
 
-func WebhookActivity(ctx context.Context, targetUrl, authHeaderName, authHeaderValue string, reqBody string, notifyFailure bool, notification *notifications.NovuNotification, provider notifications.NotificationProvider) error {
+func WebhookActivity(ctx context.Context, targetUrl, authHeaderName, authHeaderValue string, reqBody string, notifyFailure bool, notification *notifications.NovuNotification, apiKey string, retryLimit int32) error {
 	// after 7 attempts, this wraps up notifying user
 	defer func() {
-		if notifyFailure && activity.GetInfo(ctx).Attempt >= 7 {
-			NotifyUserActivity(notification, provider)
+		if notifyFailure && activity.GetInfo(ctx).Attempt >= retryLimit {
+			NotifyUserActivity(notification, apiKey)
 		}
 	}()
 	var data map[string]interface{}
