@@ -124,7 +124,7 @@ func (s *attachmentService) GetAttachmentById(ctx context.Context, id string) (*
 func (s *attachmentService) MapDbNodeToAttachmentEntity(node dbtype.Node) *entity.AttachmentEntity {
 	props := utils.GetPropsFromNode(node)
 	createdAt := utils.GetTimePropOrEpochStart(props, "createdAt")
-	analysisEntity := entity.AttachmentEntity{
+	attachmentEntity := entity.AttachmentEntity{
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
 		CreatedAt:     &createdAt,
 		FileName:      utils.GetStringPropOrEmpty(props, "fileName"),
@@ -136,7 +136,7 @@ func (s *attachmentService) MapDbNodeToAttachmentEntity(node dbtype.Node) *entit
 		Source:        neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth: neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
-	return &analysisEntity
+	return &attachmentEntity
 }
 
 func (s *attachmentService) convertDbNodesToAttachments(records []*utils.DbNodeAndId) entity.AttachmentEntities {

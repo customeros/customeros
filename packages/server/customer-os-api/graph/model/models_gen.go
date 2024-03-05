@@ -992,6 +992,7 @@ type GlobalCache struct {
 	MinARRForecastValue  float64     `json:"minARRForecastValue"`
 	MaxARRForecastValue  float64     `json:"maxARRForecastValue"`
 	ContractsExist       bool        `json:"contractsExist"`
+	CdnLogoURL           string      `json:"cdnLogoUrl"`
 }
 
 type InteractionEvent struct {

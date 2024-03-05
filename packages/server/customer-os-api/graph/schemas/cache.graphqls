@@ -11,4 +11,6 @@ type GlobalCache {
     minARRForecastValue: Float!
     maxARRForecastValue: Float!
     contractsExist: Boolean!
+
+    cdnLogoUrl: String!
 }

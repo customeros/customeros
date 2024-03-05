@@ -91,6 +91,7 @@ func CreateAttachment(ctx context.Context, driver *neo4j.DriverWithContext, tena
 		" a.createdAt=datetime({timezone: 'UTC'}), " +
 		" a.fileName=$fileName, " +
 		" a.mimeType=$mimeType, " +
+		" a.cdnUrl=$cdnUrl, " +
 		" a.basePath=$basePath, " +
 		" a.sourceOfTruth=$sourceOfTruth, " +
 		" a.appSource=$appSource " +
@@ -100,6 +101,7 @@ func CreateAttachment(ctx context.Context, driver *neo4j.DriverWithContext, tena
 		"id":            attachment.Id,
 		"fileName":      attachment.FileName,
 		"mimeType":      attachment.MimeType,
+		"cdnUrl":        attachment.CdnUrl,
 		"basePath":      attachment.BasePath,
 		"sourceOfTruth": attachment.SourceOfTruth,
 		"source":        attachment.Source,
