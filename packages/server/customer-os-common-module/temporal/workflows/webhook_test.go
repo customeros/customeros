@@ -45,7 +45,7 @@ func (s *UnitTestSuite) Test_WebhookWorkflow_ActivityFails() {
 		mock.Anything,
 		mock.Anything,
 	).Return(
-		func(ctx context.Context, targetUrl, authHeaderName, authHeaderValue string, reqBody string, notifyFailure bool, notification *notifications.NovuNotification, provider string, retryAttemps int32) error {
+		func(ctx context.Context, targetUrl, authHeaderName, authHeaderValue string, reqBody string, notifyFailure bool, notification *notifications.NovuNotification, provider string, retryAttempts int32) error {
 			return errors.New("WebhookActivityFailure")
 		})
 	workflowParams := WHWorkflowParam{
@@ -129,7 +129,8 @@ func (s *UnitTestSuite) Test_WebhookWorkflow_NotifyUserActivityCalled() {
 			s.NotNil(notification)
 			defer func() {
 				if notifyFailure && tempact.GetInfo(ctx).Attempt >= retryLimit {
-					s.mockNotifyUserActivity(notif, notification, "test_apikey", apiKey)
+					err := s.mockNotifyUserActivity(notif, notification, "test_apikey", apiKey)
+					s.Equal("NotificationActivityFailure", err.Error())
 				}
 			}()
 			return nil
@@ -156,5 +157,5 @@ func (s *UnitTestSuite) Test_WebhookWorkflow_NotifyUserActivityCalled() {
 func (s *UnitTestSuite) mockNotifyUserActivity(expectedNotification, notification *notifications.NovuNotification, expectedApiKey, apiKey string) error {
 	s.Equal(expectedNotification, notification)
 	s.Equal(expectedApiKey, apiKey)
-	return nil
+	return errors.New("NotificationActivityFailure")
 }

@@ -15,7 +15,10 @@ func WebhookActivity(ctx context.Context, targetUrl, authHeaderName, authHeaderV
 	// after 7 attempts, this wraps up notifying user
 	defer func() {
 		if notifyFailure && activity.GetInfo(ctx).Attempt >= retryLimit {
-			NotifyUserActivity(notification, apiKey)
+			err := NotifyUserActivity(notification, apiKey)
+			if err != nil {
+				fmt.Println("Error notifying user:", err)
+			}
 		}
 	}()
 	var data map[string]interface{}
