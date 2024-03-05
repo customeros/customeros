@@ -11,9 +11,6 @@ import (
 	"sort"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/aws_client"
-	common_notif "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/notifications"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data"
@@ -58,11 +55,9 @@ type InvoiceEventHandler struct {
 	grpcClients      *grpc_client.Clients
 	fsc              fsc.FileStoreApiService
 	postmarkProvider *notifications.PostmarkProvider
-	novuProvider     common_notif.NotificationProvider
 }
 
 func NewInvoiceEventHandler(log logger.Logger, repositories *repository.Repositories, cfg config.Config, grpcClients *grpc_client.Clients, fsc fsc.FileStoreApiService, postmarkProvider *notifications.PostmarkProvider) *InvoiceEventHandler {
-	s3 := aws_client.NewS3Client(&aws.Config{Region: aws.String("eu-west-1")})
 	return &InvoiceEventHandler{
 		log:              log,
 		repositories:     repositories,
@@ -70,7 +65,6 @@ func NewInvoiceEventHandler(log logger.Logger, repositories *repository.Reposito
 		grpcClients:      grpcClients,
 		fsc:              fsc,
 		postmarkProvider: postmarkProvider,
-		novuProvider:     common_notif.NewNovuNotificationProvider(log, cfg.Services.Novu.ApiKey, s3),
 	}
 }
 
@@ -800,7 +794,7 @@ func (h *InvoiceEventHandler) dispatchInvoiceFinalizedEvent(ctx context.Context,
 		webhookPayload,
 		h.repositories,
 		h.cfg,
-		h.novuProvider,
+		h.cfg.Services.Novu.ApiKey,
 		notifyFailure,
 	)
 	if err != nil {

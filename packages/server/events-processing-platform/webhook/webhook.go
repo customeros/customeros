@@ -18,7 +18,7 @@ import (
 	"go.temporal.io/sdk/temporal"
 )
 
-func DispatchWebhook(tenant string, event WebhookEvent, payload *InvoicePayload, db *repository.Repositories, cfg config.Config, notificationProvider notifications.NotificationProvider, failureNotify bool) error {
+func DispatchWebhook(tenant string, event WebhookEvent, payload *InvoicePayload, db *repository.Repositories, cfg config.Config, notificationProviderApiKey string, failureNotify bool) error {
 	if !cfg.Temporal.RunWorker {
 		return fmt.Errorf("temporal worker is not running")
 	}
@@ -71,14 +71,15 @@ func DispatchWebhook(tenant string, event WebhookEvent, payload *InvoicePayload,
 	}
 
 	workflowParams := workflows.WHWorkflowParam{
-		TargetUrl:            wh.WebhookUrl,
-		RequestBody:          string(requestBodyJSON),
-		AuthHeaderName:       wh.AuthHeaderName,
-		AuthHeaderValue:      wh.AuthHeaderValue,
-		RetryPolicy:          retryPolicy,
-		Notification:         notification,
-		NotificationProvider: notificationProvider,
-		NotifyFailure:        failureNotify,
+		TargetUrl:                  wh.WebhookUrl,
+		RequestBody:                string(requestBodyJSON),
+		AuthHeaderName:             wh.AuthHeaderName,
+		AuthHeaderValue:            wh.AuthHeaderValue,
+		RetryPolicy:                retryPolicy,
+		Notification:               notification,
+		NotificationProviderApiKey: notificationProviderApiKey,
+		NotifyFailure:              failureNotify,
+		NotifyAfterAttempts:        7,
 	}
 
 	// the workflow will run async, so we don't need to wait for it to finish
