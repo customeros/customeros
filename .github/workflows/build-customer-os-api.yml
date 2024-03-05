@@ -2,7 +2,7 @@ name: customer-os-api
 
 on:
   push:
-    branches: [ "otter", "alex/cos-2373-remove-deprecated-sli-grpaphql-properties" ]
+    branches: [ "otter" ]
     paths:
       - packages/server/customer-os-common-module/**
       - packages/server/customer-os-neo4j-repository/**
