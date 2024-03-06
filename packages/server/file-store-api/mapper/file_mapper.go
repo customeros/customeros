@@ -2,6 +2,7 @@ package mapper
 
 import (
 	"fmt"
+	graph_model "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model"
 	fs "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/model"
 )
@@ -22,16 +23,16 @@ func MapFileEntityToDTO(input *model.File, serviceUrl string) *fs.FileDTO {
 	return &file
 }
 
-func MapAttachmentResponseToFileEntity(input *model.Attachment) *model.File {
+func MapAttachmentResponseToFileEntity(input *graph_model.Attachment) *model.File {
 	if input == nil {
 		return nil
 	}
 	return &model.File{
-		ID:       input.Id,
+		ID:       input.ID,
 		FileName: input.FileName,
 		MimeType: input.MimeType,
 		BasePath: input.BasePath,
 		Size:     input.Size,
-		CdnUrl:   input.CdnUrl,
+		CdnUrl:   input.CdnURL,
 	}
 }

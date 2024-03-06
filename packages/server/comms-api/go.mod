@@ -4,12 +4,13 @@ go 1.21
 
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ./../customer-os-common-module
 
+replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk => ./../customer-os-api-sdk
+
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-api => ./../customer-os-api
 
 replace github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto => ./../events-processing-proto
 
 require (
-	github.com/99designs/gqlgen v0.17.44
 	github.com/DusanKasan/parsemail v1.2.0
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/emersion/go-message v0.18.0
@@ -19,13 +20,13 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/machinebox/graphql v0.2.2
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-api v0.0.0-00010101000000-000000000000
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk v0.0.0-00010101000000-000000000000
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20240207074840-2c0ad7517257
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240207074840-2c0ad7517257
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240207193037-052750975350
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/redis/go-redis/v9 v9.5.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.9.0
-	github.com/vektah/gqlparser/v2 v2.5.11
 	google.golang.org/api v0.168.0
 	google.golang.org/grpc v1.62.1
 	gorm.io/driver/postgres v1.5.6
@@ -35,6 +36,7 @@ require (
 require (
 	cloud.google.com/go/compute v1.23.4 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
+	github.com/99designs/gqlgen v0.17.44 // indirect
 	github.com/agnivade/levenshtein v1.1.1 // indirect
 	github.com/bytedance/sonic v1.11.2 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
@@ -72,7 +74,6 @@ require (
 	github.com/klauspost/cpuid/v2 v2.2.7 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
-	github.com/matryer/is v1.4.1 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
@@ -86,6 +87,7 @@ require (
 	github.com/uber/jaeger-client-go v2.30.0+incompatible // indirect
 	github.com/uber/jaeger-lib v2.4.1+incompatible // indirect
 	github.com/ugorji/go/codec v1.2.12 // indirect
+	github.com/vektah/gqlparser/v2 v2.5.11 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.49.0 // indirect
 	go.opentelemetry.io/otel v1.24.0 // indirect

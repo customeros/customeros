@@ -17,6 +17,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/h2non/filetype"
 	"github.com/machinebox/graphql"
+	graph_model "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/mapper"
@@ -216,7 +217,7 @@ func (s *fileService) DownloadSingleFile(userEmail, tenantName, id string, conte
 	// Get the object metadata to determine the file size and ETag
 	respHead, err := svc.HeadObject(&s3.HeadObjectInput{
 		Bucket: aws.String(s.cfg.AWS.Bucket),
-		Key:    aws.String(tenantName + byId.BasePath + "/" + attachment.Id + "." + extension),
+		Key:    aws.String(tenantName + byId.BasePath + "/" + attachment.ID + "." + extension),
 	})
 	if err != nil {
 		// Handle error
@@ -268,7 +269,7 @@ func (s *fileService) DownloadSingleFile(userEmail, tenantName, id string, conte
 	context.Header("Content-Type", fmt.Sprintf("%s", byId.MimeType))
 	resp, err := svc.GetObject(&s3.GetObjectInput{
 		Bucket: aws.String(s.cfg.AWS.Bucket),
-		Key:    aws.String(tenantName + byId.BasePath + "/" + attachment.Id + "." + extension),
+		Key:    aws.String(tenantName + byId.BasePath + "/" + attachment.ID + "." + extension),
 		Range:  aws.String("bytes=" + strconv.FormatInt(start, 10) + "-" + strconv.FormatInt(end, 10)),
 	})
 	if err != nil {
@@ -305,7 +306,7 @@ func (s *fileService) Base64Image(userEmail, tenantName string, id string) (*str
 	_, err = downloader.Download(aws.NewWriteAtBuffer(fileBytes),
 		&s3.GetObjectInput{
 			Bucket: aws.String(s.cfg.AWS.Bucket),
-			Key:    aws.String(attachment.Id),
+			Key:    aws.String(attachment.ID),
 		})
 	if err != nil {
 		return nil, err
@@ -334,7 +335,7 @@ func (s *fileService) Base64Image(userEmail, tenantName string, id string) (*str
 	return &base64Encoding, nil
 }
 
-func (s *fileService) getCosAttachmentById(userEmail, tenantName string, id string) (*model.Attachment, error) {
+func (s *fileService) getCosAttachmentById(userEmail, tenantName string, id string) (*graph_model.Attachment, error) {
 	graphqlRequest := graphql.NewRequest(
 		`query GetAttachment($id: ID!) {
 			attachment(id: $id) {
