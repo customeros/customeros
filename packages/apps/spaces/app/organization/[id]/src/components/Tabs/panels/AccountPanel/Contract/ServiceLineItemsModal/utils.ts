@@ -37,7 +37,7 @@ const update = ({ content, metadata, actionType, user }: UpdateInput) => ({
 
 export const getUpdateServiceEvents = (
   prev?: ServiceLineItem,
-  next?: ServiceLineItemUpdateInput | null,
+  next?: ServiceLineItemBulkUpdateItem | null,
   user?: string,
   // @ts-expect-error fixme later
   updateTimelineCache: (event: Action) => void,
@@ -63,7 +63,7 @@ export const getUpdateServiceEvents = (
     updateTimelineCache(event as Action);
   }
 
-  if (prev?.billed !== next?.billed) {
+  if (prev?.billingCycle !== next?.billed) {
     const event = update({
       metadata,
       user: user ?? '',
@@ -191,19 +191,21 @@ export const updateTimelineCacheAfterServiceLineItemChange = ({
   const changedItems = newServiceLineItems.filter((obj1) =>
     prevServiceLineItems.some(
       (obj2) =>
-        (obj1?.serviceLineItemId === obj2.id ||
+        (obj1?.serviceLineItemId === obj2.metadata.id ||
           obj2.parentId === obj1?.serviceLineItemId) &&
-        (obj2.name !== obj1?.name ||
+        (obj2.description !== obj1?.name ||
           obj1?.quantity !== obj2.quantity ||
           obj1?.price !== obj2.price ||
-          obj1?.billed !== obj2.billed),
+          obj1?.billed !== obj2.billingCycle),
     ),
   );
 
   if (changedItems.length) {
     changedItems.forEach((element) => {
       getUpdateServiceEvents(
-        prevServiceLineItems.find((e) => e.id === element?.serviceLineItemId),
+        prevServiceLineItems.find(
+          (e) => e.metadata.id === element?.serviceLineItemId,
+        ),
         element as ServiceLineItemUpdateInput,
         user,
         (event: Action) => updateTimelineCache(event, timelineQueryKey),
