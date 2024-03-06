@@ -3,6 +3,7 @@ run: build
 
 generate:
 	go run github.com/99designs/gqlgen generate
+	cd ../customer-os-api-sdk && make generate
 
 build: generate
 	go build -v
