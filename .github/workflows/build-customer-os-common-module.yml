@@ -1,4 +1,4 @@
-name: Build customer-os-common-module
+name: customer-os-common-module
 
 on:
   push:

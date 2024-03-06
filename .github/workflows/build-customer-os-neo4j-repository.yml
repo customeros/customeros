@@ -1,4 +1,4 @@
-name: Build customer-os-neo4j-repository
+name: customer-os-neo4j-repository
 
 on:
   push:
