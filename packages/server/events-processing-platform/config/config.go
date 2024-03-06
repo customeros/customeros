@@ -20,7 +20,6 @@ type Config struct {
 	Postgres           config.PostgresConfig
 	Jaeger             tracing.JaegerConfig
 	GRPC               GRPC
-	Subscriptions      Subscriptions
 	Services           Services
 	Utils              Utils
 	EventNotifications EventNotifications
@@ -31,112 +30,6 @@ type GRPC struct {
 	Port        string `env:"GRPC_PORT" envDefault:":5001" validate:"required"`
 	Development bool   `env:"GRPC_DEVELOPMENT" envDefault:"false"`
 	ApiKey      string `env:"GRPC_API_KEY" validate:"required"`
-}
-
-type Subscriptions struct {
-	Enabled                           bool `env:"SUBSCRIPTIONS_ENABLED" envDefault:"false"`
-	GraphSubscription                 GraphSubscription
-	EmailValidationSubscription       EmailValidationSubscription
-	PhoneNumberValidationSubscription PhoneNumberValidationSubscription
-	LocationValidationSubscription    LocationValidationSubscription
-	OrganizationSubscription          OrganizationSubscription
-	OrganizationWebscrapeSubscription OrganizationWebscrapeSubscription
-	InteractionEventSubscription      InteractionEventSubscription
-	ContractSubscription              ContractSubscription
-	NotificationsSubscription         NotificationsSubscription
-	InvoiceSubscription               InvoiceSubscription
-}
-
-type GraphSubscription struct {
-	Enabled          bool   `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_ENABLED" envDefault:"true"`
-	GroupName        string `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_GROUP_NAME" envDefault:"graph-v1" validate:"required"`
-	PoolSize         int    `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_POOL_SIZE" envDefault:"6" validate:"required,gte=0"`
-	BufferSizeClient uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_CLIENT_BUFFER_SIZE" envDefault:"5" validate:"required,gte=0"`
-}
-
-type EmailValidationSubscription struct {
-	Enabled          bool   `env:"EVENT_STORE_SUBSCRIPTIONS_EMAIL_VALIDATION_ENABLED" envDefault:"true"`
-	GroupName        string `env:"EVENT_STORE_SUBSCRIPTIONS_EMAIL_VALIDATION_GROUP_NAME" envDefault:"emailValidation-v1" validate:"required"`
-	Prefix           string `env:"EVENT_STORE_SUBSCRIPTIONS_EMAIL_PREFIX" envDefault:"email-" validate:"required"`
-	PoolSize         int    `env:"EVENT_STORE_SUBSCRIPTIONS_EMAIL_VALIDATION_POOL_SIZE" envDefault:"2" validate:"required,gte=0"`
-	BufferSizeClient uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_EMAIL_VALIDATION_CLIENT_BUFFER_SIZE" envDefault:"5" validate:"required,gte=0"`
-}
-
-type PhoneNumberValidationSubscription struct {
-	Enabled          bool   `env:"EVENT_STORE_SUBSCRIPTIONS_PHONE_NUMBER_VALIDATION_ENABLED" envDefault:"true"`
-	GroupName        string `env:"EVENT_STORE_SUBSCRIPTIONS_PHONE_NUMBER_VALIDATION_GROUP_NAME" envDefault:"phoneNumberValidation-v1" validate:"required"`
-	Prefix           string `env:"EVENT_STORE_SUBSCRIPTIONS_PHONE_NUMBER_PREFIX" envDefault:"phone_number-" validate:"required"`
-	PoolSize         int    `env:"EVENT_STORE_SUBSCRIPTIONS_PHONE_NUMBER_VALIDATION_POOL_SIZE" envDefault:"2" validate:"required,gte=0"`
-	BufferSizeClient uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_PHONE_NUMBER_VALIDATION_CLIENT_BUFFER_SIZE" envDefault:"5" validate:"required,gte=0"`
-}
-
-type LocationValidationSubscription struct {
-	Enabled          bool   `env:"EVENT_STORE_SUBSCRIPTIONS_LOCATION_VALIDATION_ENABLED" envDefault:"true"`
-	GroupName        string `env:"EVENT_STORE_SUBSCRIPTIONS_LOCATION_VALIDATION_GROUP_NAME" envDefault:"locationValidation-v1" validate:"required"`
-	Prefix           string `env:"EVENT_STORE_SUBSCRIPTIONS_LOCATION_PREFIX" envDefault:"location-" validate:"required"`
-	PoolSize         int    `env:"EVENT_STORE_SUBSCRIPTIONS_LOCATION_VALIDATION_POOL_SIZE" envDefault:"2" validate:"required,gte=0"`
-	BufferSizeClient uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_LOCATION_VALIDATION_CLIENT_BUFFER_SIZE" envDefault:"5" validate:"required,gte=0"`
-}
-
-type OrganizationSubscription struct {
-	Enabled                      bool   `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_ENABLED" envDefault:"true"`
-	GroupName                    string `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_GROUP_NAME" envDefault:"organization-v1" validate:"required"`
-	Prefix                       string `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_PREFIX" envDefault:"organization-" validate:"required"`
-	PoolSize                     int    `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_POOL_SIZE" envDefault:"2" validate:"required,gte=0"`
-	BufferSizeClient             uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_CLIENT_BUFFER_SIZE" envDefault:"4" validate:"required,gte=0"`
-	MessageTimeoutSec            int32  `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_MESSAGE_TIMEOUT" envDefault:"180" validate:"required,gte=0"`
-	CheckpointLowerBound         int32  `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_CHECKPOINT_LOWER_BOUND" envDefault:"10" validate:"required,gte=0"`
-	DeletePersistentSubscription bool   `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_DELETE_SUBSCRIPTION" envDefault:"false"`
-}
-
-type OrganizationWebscrapeSubscription struct {
-	Enabled                      bool   `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_WEBSCRAPE_ENABLED" envDefault:"true"`
-	GroupName                    string `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_WEBSCRAPE_GROUP_NAME" envDefault:"organizationWebscrape-v1" validate:"required"`
-	Prefix                       string `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_WEBSCRAPE_PREFIX" envDefault:"organization-" validate:"required"`
-	PoolSize                     int    `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_WEBSCRAPE_POOL_SIZE" envDefault:"2" validate:"required,gte=0"`
-	BufferSizeClient             uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_WEBSCRAPE_CLIENT_BUFFER_SIZE" envDefault:"2" validate:"required,gte=0"`
-	MessageTimeoutSec            int32  `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_WEBSCRAPE_MESSAGE_TIMEOUT" envDefault:"300" validate:"required,gte=0"`
-	CheckpointLowerBound         int32  `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_WEBSCRAPE_CHECKPOINT_LOWER_BOUND" envDefault:"4" validate:"required,gte=0"`
-	DeletePersistentSubscription bool   `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_WEBSCRAPE_DELETE_SUBSCRIPTION" envDefault:"false"`
-	StartPosition                uint64 `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_WEBSCRAPE_START_POSITION" envDefault:"0"`
-}
-
-type InteractionEventSubscription struct {
-	Enabled           bool   `env:"EVENT_STORE_SUBSCRIPTIONS_INTERACTION_EVENT_ENABLED" envDefault:"true"`
-	GroupName         string `env:"EVENT_STORE_SUBSCRIPTIONS_INTERACTION_EVENT_GROUP_NAME" envDefault:"interactionEvent-v1" validate:"required"`
-	Prefix            string `env:"EVENT_STORE_SUBSCRIPTIONS_INTERACTION_EVENT_PREFIX" envDefault:"interaction_event-" validate:"required"`
-	PoolSize          int    `env:"EVENT_STORE_SUBSCRIPTIONS_INTERACTION_EVENT_POOL_SIZE" envDefault:"1" validate:"required,gte=0"`
-	BufferSizeClient  uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_INTERACTION_EVENT_CLIENT_BUFFER_SIZE" envDefault:"5" validate:"required,gte=0"`
-	MessageTimeoutSec int32  `env:"EVENT_STORE_SUBSCRIPTIONS_INTERACTION_EVENT_MESSAGE_TIMEOUT" envDefault:"120" validate:"required,gte=0"`
-}
-
-type ContractSubscription struct {
-	Enabled           bool   `env:"EVENT_STORE_SUBSCRIPTIONS_CONTRACT_ENABLED" envDefault:"true"`
-	GroupName         string `env:"EVENT_STORE_SUBSCRIPTIONS_CONTRACT_GROUP_NAME" envDefault:"contract-v1" validate:"required"`
-	Prefix            string `env:"EVENT_STORE_SUBSCRIPTIONS_CONTRACT_PREFIX" envDefault:"contract-" validate:"required"`
-	PoolSize          int    `env:"EVENT_STORE_SUBSCRIPTIONS_CONTRACT_POOL_SIZE" envDefault:"1" validate:"required,gte=0"`
-	BufferSizeClient  uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_CONTRACT_CLIENT_BUFFER_SIZE" envDefault:"5" validate:"required,gte=0"`
-	MessageTimeoutSec int32  `env:"EVENT_STORE_SUBSCRIPTIONS_CONTRACT_MESSAGE_TIMEOUT" envDefault:"120" validate:"required,gte=0"`
-}
-
-type NotificationsSubscription struct {
-	Enabled          bool   `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_ENABLED" envDefault:"true"`
-	GroupName        string `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_GROUP_NAME" envDefault:"notifications-v2" validate:"required"`
-	PoolSize         int    `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_POOL_SIZE" envDefault:"4" validate:"required,gte=0"`
-	BufferSizeClient uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_CLIENT_BUFFER_SIZE" envDefault:"10" validate:"required,gte=0"`
-	StartPosition    uint64 `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_START_POSITION" envDefault:"0"`
-	IgnoreEvents     bool   `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_IGNORE_EVENTS" envDefault:"true"`
-	RedirectUrl      string `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_REDIRECT_URL" envDefault:"https://app.openline.dev"`
-}
-
-type InvoiceSubscription struct {
-	Enabled          bool   `env:"EVENT_STORE_INVOICE_NOTIFICATIONS_ENABLED" envDefault:"true"`
-	GroupName        string `env:"EVENT_STORE_INVOICE_NOTIFICATIONS_GROUP_NAME" envDefault:"invoice-v1" validate:"required"`
-	PoolSize         int    `env:"EVENT_STORE_INVOICE_NOTIFICATIONS_POOL_SIZE" envDefault:"4" validate:"required,gte=0"`
-	BufferSizeClient uint32 `env:"EVENT_STORE_INVOICE_NOTIFICATIONS_CLIENT_BUFFER_SIZE" envDefault:"10" validate:"required,gte=0"`
-	StartPosition    uint64 `env:"EVENT_STORE_INVOICE_NOTIFICATIONS_START_POSITION" envDefault:"0"`
-	IgnoreEvents     bool   `env:"EVENT_STORE_INVOICE_NOTIFICATIONS_IGNORE_EVENTS" envDefault:"false"`
-	PdfConverterUrl  string `env:"EVENT_STORE_INVOICE_NOTIFICATIONS_PDF_CONVERTER_URL" envDefault:"http://localhost:11006"`
 }
 
 type Services struct {
