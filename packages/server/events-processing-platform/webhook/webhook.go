@@ -69,6 +69,10 @@ func DispatchWebhook(tenant string, event WebhookEvent, payload *InvoicePayload,
 	if failureNotify {
 		notification = populateNotification(tenant, event.String(), wh)
 	}
+	notificationJSON, err := json.Marshal(notification)
+	if err != nil {
+		return fmt.Errorf("(webhook.DispatchWebhook) error marshalling notification obj: %v", err)
+	}
 
 	workflowParams := workflows.WHWorkflowParam{
 		TargetUrl:                  wh.WebhookUrl,
@@ -76,7 +80,7 @@ func DispatchWebhook(tenant string, event WebhookEvent, payload *InvoicePayload,
 		AuthHeaderName:             wh.AuthHeaderName,
 		AuthHeaderValue:            wh.AuthHeaderValue,
 		RetryPolicy:                retryPolicy,
-		Notification:               notification,
+		Notification:               string(notificationJSON),
 		NotificationProviderApiKey: notificationProviderApiKey,
 		NotifyFailure:              failureNotify,
 		NotifyAfterAttempts:        7,

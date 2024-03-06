@@ -3,7 +3,6 @@ package workflows
 import (
 	"time"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/notifications"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/temporal/activity"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
@@ -15,7 +14,7 @@ type WHWorkflowParam struct {
 	AuthHeaderName             string
 	AuthHeaderValue            string
 	RetryPolicy                *temporal.RetryPolicy
-	Notification               *notifications.NovuNotification
+	Notification               string
 	NotificationProviderApiKey string
 	NotifyFailure              bool
 	NotifyAfterAttempts        int32
