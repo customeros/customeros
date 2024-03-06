@@ -60,7 +60,7 @@ const ServiceItem = ({
         )}
         <Flex justifyContent='space-between' w='full'>
           <Text>
-            {![BilledType.Usage, BilledType.Once].includes(
+            {![BilledType.Usage, BilledType.None].includes(
               data.billingCycle,
             ) && (
               <>

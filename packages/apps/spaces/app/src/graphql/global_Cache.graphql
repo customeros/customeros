@@ -1,5 +1,6 @@
 query global_Cache {
   global_Cache {
+    cdnLogoUrl
     user {
       id
       emails {

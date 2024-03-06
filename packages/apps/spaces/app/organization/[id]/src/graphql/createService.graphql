@@ -1,5 +1,0 @@
-mutation createService($input: ServiceLineItemInput!) {
-    serviceLineItemCreate(input: $input) {
-        id
-    }
-}
