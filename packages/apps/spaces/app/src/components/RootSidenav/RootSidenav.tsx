@@ -16,6 +16,7 @@ import { GridItem } from '@ui/layout/Grid';
 import { Receipt } from '@ui/media/icons/Receipt';
 import { Bubbles } from '@ui/media/icons/Bubbles';
 import { LogOut01 } from '@ui/media/icons/LogOut01';
+import { Skeleton } from '@ui/presentation/Skeleton';
 import { Image as ChakraImage } from '@ui/media/Image';
 import { mockedTableDefs } from '@shared/util/tableDefs.mock';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
@@ -55,7 +56,7 @@ export const RootSidenav = () => {
       placeholderData: { tableViewDefs: { content: mockedTableDefs } },
     },
   );
-  const { data } = useGlobalCacheQuery(client);
+  const { data, isLoading } = useGlobalCacheQuery(client);
   const globalCache = data?.global_Cache;
   const myViews = tableViewDefsData?.tableViewDefs?.content ?? [];
 
@@ -69,7 +70,6 @@ export const RootSidenav = () => {
 
     router.push(`/${path}`);
   };
-
   const checkIsActive = (path: string, options?: { preset: string }) => {
     const [_pathName, _searchParams] = path.split('?');
     const presetParam = new URLSearchParams(searchParams?.toString()).get(
@@ -125,8 +125,6 @@ export const RootSidenav = () => {
       borderColor='gray.200'
     >
       <Flex
-        mb='4'
-        ml='3'
         tabIndex={0}
         role='button'
         cursor='pointer'
@@ -134,16 +132,43 @@ export const RootSidenav = () => {
         overflow='hidden'
         position='relative'
       >
-        <ChakraImage
-          width={136}
-          height={30}
-          w='136px'
-          h='30px'
-          alt='CustomerOS'
-          pointerEvents='none'
-          src={logoCustomerOs}
-          transition='opacity 0.25s ease-in-out'
-        />
+        {isLoading && <Skeleton w='180px' h='30px' mb='4' ml='3' />}
+        {data?.global_Cache?.cdnLogoUrl && (
+          <Flex
+            position='relative'
+            maxHeight={120}
+            width='full'
+            justifyContent='center'
+          >
+            <ChakraImage
+              alt='CustomerOS'
+              pointerEvents='none'
+              src={data.global_Cache.cdnLogoUrl}
+              transition='opacity 0.25s ease-in-out'
+              width={136}
+              height={40}
+              style={{
+                objectFit: 'contain',
+                maxHeight: '40px',
+                maxWidth: 'fit-content',
+              }}
+            />
+          </Flex>
+        )}
+        {!data?.global_Cache?.cdnLogoUrl && !isLoading && (
+          <ChakraImage
+            width={136}
+            height={30}
+            mb='4'
+            ml='3'
+            w='136px'
+            h='30px'
+            alt='CustomerOS'
+            pointerEvents='none'
+            src={logoCustomerOs}
+            transition='opacity 0.25s ease-in-out'
+          />
+        )}
       </Flex>
 
       <VStack spacing='2' w='full' mb='4'>
