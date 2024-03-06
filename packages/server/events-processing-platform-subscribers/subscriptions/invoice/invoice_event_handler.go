@@ -38,7 +38,7 @@ import (
 	"golang.org/x/net/context"
 )
 
-type RequestBodyInvoiceReady struct {
+type RequestBodyInvoiceFinalized struct {
 	Tenant                       string `json:"tenant"`
 	Currency                     string `json:"currency"`
 	AmountInSmallestCurrencyUnit int64  `json:"amountInSmallestCurrencyUnit"`
@@ -634,7 +634,7 @@ func (h *InvoiceEventHandler) onInvoicePdfGeneratedV1(ctx context.Context, evt e
 		return nil
 	}
 	// do not invoke invoice finalized webhook if it was already invoked
-	if invoiceEntity.InvoiceInternalFields.PaymentRequestedAt == nil {
+	if invoiceEntity.InvoiceInternalFields.InvoiceFinalizedSentAt == nil {
 		err = h.integrationAppInvoiceFinalizedWebhook(ctx, eventData.Tenant, *invoiceEntity)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -659,7 +659,7 @@ func (h *InvoiceEventHandler) integrationAppInvoiceFinalizedWebhook(ctx context.
 	span.SetTag(tracing.SpanTagTenant, tenant)
 	tracing.LogObjectAsJson(span, "invoice", invoice)
 
-	if h.cfg.EventNotifications.EndPoints.InvoiceReady == "" {
+	if h.cfg.EventNotifications.EndPoints.InvoiceFinalized == "" {
 		return nil
 	}
 
@@ -693,7 +693,7 @@ func (h *InvoiceEventHandler) integrationAppInvoiceFinalizedWebhook(ctx context.
 		return fmt.Errorf("error converting amount to smallest currency unit: %v", err.Error())
 	}
 
-	requestBody := RequestBodyInvoiceReady{
+	requestBody := RequestBodyInvoiceFinalized{
 		Tenant:                       tenant,
 		Currency:                     invoice.Currency.String(),
 		AmountInSmallestCurrencyUnit: amountInSmallestCurrencyUnit,
@@ -713,7 +713,7 @@ func (h *InvoiceEventHandler) integrationAppInvoiceFinalizedWebhook(ctx context.
 	client := &http.Client{}
 
 	// Create a POST request with headers and body
-	req, err := http.NewRequest("POST", h.cfg.EventNotifications.EndPoints.InvoiceReady, bytes.NewBuffer(requestBodyJSON))
+	req, err := http.NewRequest("POST", h.cfg.EventNotifications.EndPoints.InvoiceFinalized, bytes.NewBuffer(requestBodyJSON))
 	if err != nil {
 		return fmt.Errorf("error creating request: %v", err)
 	}
@@ -734,7 +734,7 @@ func (h *InvoiceEventHandler) integrationAppInvoiceFinalizedWebhook(ctx context.
 	}
 
 	// Request was successful
-	err = h.repositories.Neo4jRepositories.InvoiceWriteRepository.SetInvoicePaymentRequested(ctx, tenant, invoice.Id)
+	err = h.repositories.Neo4jRepositories.InvoiceWriteRepository.MarkInvoiceFinalizedEventSent(ctx, tenant, invoice.Id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error setting invoice payment requested for invoice %s: %s", invoice.Id, err.Error())

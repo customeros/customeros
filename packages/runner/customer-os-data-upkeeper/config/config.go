@@ -21,7 +21,8 @@ type Config struct {
 		Url    string `env:"PLATFORM_ADMIN_API_URL"`
 		ApiKey string `env:"PLATFORM_ADMIN_API_KEY"`
 	}
-	ProcessConfig ProcessConfig
+	ProcessConfig      ProcessConfig
+	EventNotifications EventNotifications
 }
 
 type EventsProcessingConfig struct {
@@ -34,6 +35,13 @@ type ProcessConfig struct {
 	WebScrapedOrganizationsPerCycle          int `env:"WEB_SCRAPED_ORGANIZATIONS_PER_CYCLE" envDefault:"200"`
 	DelaySendPayInvoiceNotificationInMinutes int `env:"DELAY_SEND_PAY_INVOICE_NOTIFICATION_IN_MINUTES" envDefault:"60"`
 	RetrySendPayInvoiceNotificationDays      int `env:"RETRY_SEND_PAY_INVOICE_NOTIFICATION_DAYS" envDefault:"5"`
+	DelayRequestPaymentLinkInMinutes         int `env:"DELAY_REQUEST_PAYMENT_LINK_IN_MINUTES" envDefault:"60"`
+}
+
+type EventNotifications struct {
+	EndPoints struct {
+		GeneratePaymentLinkUrl string `env:"INVOICE_GENERATE_PAYMENT_LINK_URL" envDefault:""`
+	}
 }
 
 func Load() *Config {

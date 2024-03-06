@@ -232,7 +232,7 @@ type Utils struct {
 
 type EventNotifications struct {
 	EndPoints struct {
-		InvoiceReady string `env:"INVOICE_READY_URL" envDefault:""`
+		InvoiceFinalized string `env:"INVOICE_READY_URL" envDefault:""`
 	}
 }
 

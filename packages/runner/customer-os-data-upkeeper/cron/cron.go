@@ -63,6 +63,13 @@ func StartCron(cont *container.Container) *cron.Cron {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "generateOffCycleInvoices", err.Error())
 	}
 
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleGenerateInvoicePaymentLink, func() {
+		lockAndRunJob(cont, invoiceGroup, generateInvoicePaymentLinks)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "generateInvoicePaymentLinks", err.Error())
+	}
+
 	err = c.AddFunc(cont.Cfg.Cron.CronScheduleSendPayInvoiceNotification, func() {
 		lockAndRunJob(cont, invoiceGroup, sendPayInvoiceNotifications)
 	})
@@ -124,6 +131,10 @@ func generateCycleInvoices(cont *container.Container) {
 
 func generateOffCycleInvoices(cont *container.Container) {
 	service.NewInvoiceService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).GenerateOffCycleInvoices()
+}
+
+func generateInvoicePaymentLinks(cont *container.Container) {
+	service.NewInvoiceService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).GenerateInvoicePaymentLinks()
 }
 
 func sendPayInvoiceNotifications(cont *container.Container) {
