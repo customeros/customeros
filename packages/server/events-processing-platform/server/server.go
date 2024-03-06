@@ -14,7 +14,6 @@ import (
 	"github.com/labstack/echo/v4"
 	commonconf "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -44,7 +43,6 @@ type Server struct {
 
 	echo   *echo.Echo
 	doneCh chan struct{}
-	caches caches.Cache
 	//	metrics            *metrics.ESMicroserviceMetrics
 }
 
@@ -53,7 +51,6 @@ func NewServer(cfg *config.Config, log logger.Logger) *Server {
 		Log:    log,
 		echo:   echo.New(),
 		doneCh: make(chan struct{}),
-		caches: caches.InitCaches(),
 	}
 }
 

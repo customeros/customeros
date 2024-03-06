@@ -8,7 +8,7 @@ import (
 
 	"github.com/Boostport/mjml-go"
 	novu "github.com/novuhq/go-novu/lib"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/aws_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/aws_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"

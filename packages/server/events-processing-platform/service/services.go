@@ -7,17 +7,12 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/notifications"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 )
 
 type Services struct {
 	FileStoreApiService fsc.FileStoreApiService
 	CommonServices      *commonService.Services
-
-	//notification servionces
-	//NovuProvider NotificationProvider
-	PostmarkProvider *notifications.PostmarkProvider
 
 	//GRPC services
 	ContactService            *contactService
@@ -48,8 +43,6 @@ func InitServices(cfg *config.Config, repositories *repository.Repositories, agg
 
 	services.FileStoreApiService = fsc.NewFileStoreApiService(&cfg.Services.FileStoreApiConfig)
 	services.CommonServices = commonService.InitServices(repositories.Drivers.GormDb, repositories.Drivers.Neo4jDriver)
-
-	services.PostmarkProvider = notifications.NewPostmarkProvider(log, repositories)
 
 	//GRPC services
 	services.ContactService = NewContactService(log, commandHandlers.Contact)

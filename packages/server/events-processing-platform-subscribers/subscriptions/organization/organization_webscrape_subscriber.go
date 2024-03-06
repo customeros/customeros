@@ -8,9 +8,9 @@ import (
 
 	aiConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/config"
 	ai "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/caches"
 	orgevts "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
