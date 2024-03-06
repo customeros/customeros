@@ -147,6 +147,8 @@ func (s *fileService) UploadSingleFile(userEmail, tenantName, basePath, fileId s
 		}
 
 		graphqlRequest.Var("cdnUrl", generateSignedURL(uploadedFileToCdn.Variants[0], s.cfg.Service.CloudflareImageUploadSignKey))
+	} else {
+		graphqlRequest.Var("cdnUrl", "")
 	}
 
 	session, err := awsSes.NewSession(&aws.Config{Region: aws.String(s.cfg.AWS.Region)})
