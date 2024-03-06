@@ -109,6 +109,20 @@ updates:
     rebase-strategy: "auto"
 
   - package-ecosystem: "gomod"
+    directory: "/packages/server/events-processing-platform-subscribers"
+    schedule:
+      interval: "daily"
+      time: "04:00"
+    open-pull-requests-limit: 3
+    labels:
+      - "gomod"
+      - "dependencies"
+      - "app/events-processing-platform-subscribers"
+    pull-request-branch-name:
+      separator: "-"
+    rebase-strategy: "auto"
+
+  - package-ecosystem: "gomod"
     directory: "/packages/runner/sync-tracked-data"
     schedule:
       interval: "daily"
