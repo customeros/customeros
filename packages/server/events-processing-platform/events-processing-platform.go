@@ -10,7 +10,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/temporal/worker"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/server"
@@ -37,11 +36,6 @@ func main() {
 	// Launch server goroutine
 	waitGroup.Add(1)
 	go startServer(ctx, cfg, appLogger, &waitGroup)
-
-	// Run Temporal worker
-	if cfg.Temporal.RunWorker {
-		go runTemporalWorker(cfg, appLogger, &waitGroup)
-	}
 
 	// Start a heartbeat
 	done := make(chan interface{})
@@ -85,16 +79,6 @@ func handleSignals(cancel context.CancelFunc, appLogger *logger.ExtendedLogger) 
 			appLogger.Info("Interrupt signal received. Shutting down...")
 			cancel()
 		}
-	}()
-}
-
-func runTemporalWorker(cfg *config.Config, logger *logger.ExtendedLogger, waitGroup *sync.WaitGroup) {
-	// Start it in the background
-	go func() {
-		if err := worker.RunWebhookWorker(cfg.Temporal.HostPort, cfg.Temporal.Namespace); err != nil {
-			logger.Error(err)
-		}
-		waitGroup.Done()
 	}()
 }
 

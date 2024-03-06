@@ -3,7 +3,7 @@ package notifications
 import (
 	"context"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/aws_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/aws_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/opentracing/opentracing-go"
 )
