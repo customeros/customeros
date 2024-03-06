@@ -31,7 +31,6 @@ import {
   GetContractsQuery,
   useGetContractsQuery,
 } from '@organization/src/graphql/getContracts.generated';
-import { ContractEndModal } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/EndContractModal';
 import { ContractSubtitle } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ContractSubtitle';
 import { useUpdatePanelModalStateContext } from '@organization/src/components/Tabs/panels/AccountPanel/context/AccountModalsContext';
 
@@ -344,7 +343,6 @@ export const ContractCard = ({
             noOfLines={1}
             lineHeight={1.4}
             display='inline'
-            w={isExpanded ? '235px' : '250px'}
             whiteSpace='nowrap'
           >
             {!isExpanded && state.values.name}
@@ -382,7 +380,16 @@ export const ContractCard = ({
               onClick={() => onOpen()}
             />
 
-            <ContractStatusSelect status={data.status} />
+            <ContractStatusSelect
+              status={data.status}
+              contractId={data.id}
+              renewsAt={data?.opportunities?.[0]?.renewedAt}
+              onUpdateContract={updateContract}
+              serviceStartedAt={data.serviceStartedAt}
+              organizationName={
+                data?.organizationLegalName || organizationName || 'Unnamed'
+              }
+            />
 
             {isExpanded && (
               <IconButton
@@ -427,15 +434,6 @@ export const ContractCard = ({
               inset='120% auto auto 0px'
               calendarIconHidden
               value={state.values.serviceStartedAt}
-            />
-            <DatePicker
-              label='Contract ends'
-              placeholder='End date'
-              minDate={state.values.serviceStartedAt}
-              formId={formId}
-              name='endedAt'
-              calendarIconHidden
-              value={state.values.endedAt}
             />
           </Flex>
           <Flex gap='4' flexGrow={0} mb={2}>

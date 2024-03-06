@@ -7,7 +7,6 @@ const { definePartsStyle, defineMultiStyleConfig } =
 const baseStyle = definePartsStyle(({ colorScheme }) => ({
   control: {
     borderColor: 'gray.300',
-    bg: `${colorScheme === 'primary' ? 'primary.600' : `${colorScheme}.500`}`,
     color: 'primary.600',
     _hover: {
       borderColor: 'primary.600',
@@ -20,6 +19,28 @@ const baseStyle = definePartsStyle(({ colorScheme }) => ({
     _disabled: {
       bg: 'gray.100',
       borderColor: 'gray.300',
+    },
+    _checked: {
+      bg: 'primary.50',
+      '&:before': {
+        content: '""',
+        display: 'block',
+        width: '50%',
+        height: '50%',
+        bg: 'primary.600',
+        borderRadius: 'full',
+      },
+      _hover: {
+        bg: 'primary.100',
+      },
+      _disabled: {
+        borderColor: 'gray.300',
+        bg: 'gray.100',
+        '&:before': {
+          content: '""',
+          bg: 'gray.300',
+        },
+      },
     },
   },
 }));
