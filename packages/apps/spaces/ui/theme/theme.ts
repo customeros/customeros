@@ -3,6 +3,7 @@ import { extendTheme } from '@chakra-ui/react';
 import { Input } from '@ui/form/Input/Input.theme';
 import { Button } from '@ui/form/Button/Button.theme';
 import { Avatar } from '@ui/media/Avatar/Avatar.theme';
+import { radioTheme } from '@ui/form/Radio/Radio.theme';
 import { Card } from '@ui/presentation/Card/Card.theme';
 import { TagTheme } from '@ui/presentation/Tag/Tag.theme';
 import { switchTheme } from '@ui/form/Switch/Switch.theme';
@@ -32,6 +33,7 @@ export const theme = extendTheme({
     Checkbox,
     Tooltip,
     Switch: switchTheme,
+    Radio: radioTheme,
   },
   styles: {
     global: () => ({
