@@ -459,6 +459,7 @@ func (s *invoiceService) GenerateInvoicePaymentLinks() {
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("error encoding JSON: %v", err)
+				continue
 			}
 
 			// Create an HTTP client
@@ -468,6 +469,7 @@ func (s *invoiceService) GenerateInvoicePaymentLinks() {
 			req, err := http.NewRequest("POST", s.cfg.EventNotifications.EndPoints.GeneratePaymentLinkUrl, bytes.NewBuffer(requestBodyJSON))
 			if err != nil {
 				tracing.TraceErr(span, err)
+				continue
 			}
 
 			// Set the content type header
@@ -478,7 +480,7 @@ func (s *invoiceService) GenerateInvoicePaymentLinks() {
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("error sending request: %v", err)
-				return
+				continue
 			}
 			defer resp.Body.Close()
 
