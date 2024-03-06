@@ -633,9 +633,9 @@ func (h *InvoiceEventHandler) onInvoicePdfGeneratedV1(ctx context.Context, evt e
 	if invoiceEntity.DryRun {
 		return nil
 	}
-	// do not invoke invoice ready webhook if it was already invoked
+	// do not invoke invoice finalized webhook if it was already invoked
 	if invoiceEntity.InvoiceInternalFields.PaymentRequestedAt == nil {
-		err = h.integrationAppInvoiceReadyWebhook(ctx, eventData.Tenant, *invoiceEntity)
+		err = h.integrationAppInvoiceFinalizedWebhook(ctx, eventData.Tenant, *invoiceEntity)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error invoking invoice ready webhook for invoice %s: %s", invoiceId, err.Error())
@@ -653,8 +653,8 @@ func (h *InvoiceEventHandler) onInvoicePdfGeneratedV1(ctx context.Context, evt e
 	return nil
 }
 
-func (h *InvoiceEventHandler) integrationAppInvoiceReadyWebhook(ctx context.Context, tenant string, invoice neo4jentity.InvoiceEntity) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.invokeInvoiceReadyWebhook")
+func (h *InvoiceEventHandler) integrationAppInvoiceFinalizedWebhook(ctx context.Context, tenant string, invoice neo4jentity.InvoiceEntity) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.integrationAppInvoiceFinalizedWebhook")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
 	tracing.LogObjectAsJson(span, "invoice", invoice)
@@ -676,11 +676,15 @@ func (h *InvoiceEventHandler) integrationAppInvoiceReadyWebhook(ctx context.Cont
 	}
 
 	// get stripe customer id for organization
-	stripeCustomerId, err := h.repositories.Neo4jRepositories.ExternalSystemReadRepository.GetFirstExternalIdForLinkedEntity(ctx, tenant, neo4jenum.Stripe.String(), organizationEntity.ID, neo4jutil.NodeLabelOrganization)
+	stripeCustomerIds, err := h.repositories.Neo4jRepositories.ExternalSystemReadRepository.GetAllExternalIdsForLinkedEntity(ctx, tenant, neo4jenum.Stripe.String(), organizationEntity.ID, neo4jutil.NodeLabelOrganization)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error getting stripe customer id for organization %s: %s", organizationEntity.ID, err.Error())
 		return err
+	}
+	identifiedStripeCustomerId := ""
+	if len(stripeCustomerIds) == 1 {
+		identifiedStripeCustomerId = stripeCustomerIds[0]
 	}
 
 	// convert amount to the smallest currency unit
@@ -693,7 +697,7 @@ func (h *InvoiceEventHandler) integrationAppInvoiceReadyWebhook(ctx context.Cont
 		Tenant:                       tenant,
 		Currency:                     invoice.Currency.String(),
 		AmountInSmallestCurrencyUnit: amountInSmallestCurrencyUnit,
-		StripeCustomerId:             stripeCustomerId,
+		StripeCustomerId:             identifiedStripeCustomerId,
 		InvoiceId:                    invoice.Id,
 		InvoiceDescription:           fmt.Sprintf("Invoice %s", invoice.Number),
 		CustomerOsId:                 organizationEntity.CustomerOsId,

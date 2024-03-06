@@ -12,11 +12,23 @@ import (
 
 type ExternalSystemReadRepository interface {
 	GetFirstExternalIdForLinkedEntity(ctx context.Context, tenant, externalSystemId, entityId, entityLabel string) (string, error)
+	GetAllExternalIdsForLinkedEntity(ctx context.Context, tenant, externalSystemId, entityId, entityLabel string) ([]string, error)
 }
 
 type externalSystemReadRepository struct {
 	driver   *neo4j.DriverWithContext
 	database string
+}
+
+func NewExternalSystemReadRepository(driver *neo4j.DriverWithContext, database string) ExternalSystemReadRepository {
+	return &externalSystemReadRepository{
+		driver:   driver,
+		database: database,
+	}
+}
+
+func (r *externalSystemReadRepository) prepareReadSession(ctx context.Context) neo4j.SessionWithContext {
+	return utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 }
 
 func (r *externalSystemReadRepository) GetFirstExternalIdForLinkedEntity(ctx context.Context, tenant, externalSystemId, entityId, entityLabel string) (string, error) {
@@ -28,7 +40,7 @@ func (r *externalSystemReadRepository) GetFirstExternalIdForLinkedEntity(ctx con
 	cypher := fmt.Sprintf(`
 		MATCH (:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(ext:ExternalSystem {id:$externalSystemId})
 		MATCH (entity:%s {id:$entityId})-[rel:IS_LINKED_WITH]->(ext)
-		RETURN rel.externalId`, entityLabel)
+		RETURN rel.externalId ORDER BY rel.syncDate`, entityLabel)
 	params := map[string]any{
 		"tenant":           tenant,
 		"externalSystemId": externalSystemId,
@@ -60,13 +72,38 @@ func (r *externalSystemReadRepository) GetFirstExternalIdForLinkedEntity(ctx con
 	}
 }
 
-func NewExternalSystemReadRepository(driver *neo4j.DriverWithContext, database string) ExternalSystemReadRepository {
-	return &externalSystemReadRepository{
-		driver:   driver,
-		database: database,
-	}
-}
+func (r *externalSystemReadRepository) GetAllExternalIdsForLinkedEntity(ctx context.Context, tenant, externalSystemId, entityId, entityLabel string) ([]string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemReadRepository.GetAllExternalIdsForLinkedEntity")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.LogFields(log.String("externalSystemId", externalSystemId), log.String("entityId", entityId), log.String("entityLabel", entityLabel))
 
-func (r *externalSystemReadRepository) prepareReadSession(ctx context.Context) neo4j.SessionWithContext {
-	return utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
+	cypher := fmt.Sprintf(`
+		MATCH (:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(ext:ExternalSystem {id:$externalSystemId})
+		MATCH (entity:%s {id:$entityId})-[rel:IS_LINKED_WITH]->(ext)
+		RETURN rel.externalId`, entityLabel)
+	params := map[string]any{
+		"tenant":           tenant,
+		"entityId":         entityId,
+		"externalSystemId": externalSystemId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return "", err
+		} else {
+			return utils.ExtractAllRecordsAsString(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	span.LogFields(log.Int("result.count", len(result.([]string))))
+	return result.([]string), nil
 }
