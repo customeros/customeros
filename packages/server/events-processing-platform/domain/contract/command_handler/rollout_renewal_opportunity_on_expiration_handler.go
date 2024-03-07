@@ -40,13 +40,13 @@ func (h *rolloutRenewalOpportunityOnExpirationCommandHandler) Handle(ctx context
 
 	for attempt := 0; attempt == 0 || attempt < h.cfg.RetriesOnOptimisticLockException; attempt++ {
 		// Load or initialize the contract aggregate
-		contractAggregate, err := aggregate.LoadContractAggregate(ctx, h.es, cmd.Tenant, cmd.GetObjectID())
+		contractAggregate, err := aggregate.LoadContractAggregate(ctx, h.es, cmd.Tenant, cmd.GetObjectID(), eventstore.LoadAggregateOptions{})
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
 		}
 
-		if aggregate.IsAggregateNotFound(contractAggregate) {
+		if eventstore.IsAggregateNotFound(contractAggregate) {
 			tracing.TraceErr(span, eventstore.ErrAggregateNotFound)
 			return eventstore.ErrAggregateNotFound
 		}

@@ -3,6 +3,7 @@ extend type Query {
     sort.By available options: ORGANIZATION, IS_CUSTOMER, DOMAIN, LOCATION, OWNER, LAST_TOUCHPOINT, RENEWAL_LIKELIHOOD, FORECAST_ARR, RENEWAL_DATE, ONBOARDING_STATUS
     """
     dashboardView_Organizations(pagination: Pagination!, where: Filter, sort: SortBy): OrganizationPage
+    dashboardView_Renewals(pagination: Pagination!, where: Filter, sort: SortBy): RenewalsPage
 
     dashboard_CustomerMap: [DashboardCustomerMap!]
     dashboard_MRRPerCustomer(period: DashboardPeriodInput): DashboardMRRPerCustomer
@@ -42,10 +43,12 @@ type DashboardMRRPerCustomerPerMonth {
 
 type DashboardGrossRevenueRetention {
     grossRevenueRetention: Float!
-    increasePercentage: String!
+    increasePercentage: String! @deprecated(reason: "Use increasePercentageValue instead")
+    increasePercentageValue: Float!
     perMonth: [DashboardGrossRevenueRetentionPerMonth]!
 }
 type DashboardGrossRevenueRetentionPerMonth {
+    year: Int!
     month: Int!
     percentage: Float!
 }
@@ -73,7 +76,8 @@ type DashboardRevenueAtRisk {
 
 type DashboardRetentionRate {
     retentionRate: Float!
-    increasePercentage: String!
+    increasePercentage: String! @deprecated(reason: "Use increasePercentageValue instead")
+    increasePercentageValue: Float!
     perMonth: [DashboardRetentionRatePerMonth]!
 }
 type DashboardRetentionRatePerMonth {
@@ -122,4 +126,17 @@ type DashboardOnboardingCompletionPerMonth {
     year: Int!
     month: Int!
     value: Float!
+}
+
+type RenewalsPage implements Pages {
+    content: [RenewalRecord!]!
+    totalPages: Int!
+    totalElements: Int64!
+    totalAvailable: Int64!
+}
+
+type RenewalRecord {
+    organization: Organization!
+    contract: Contract!
+    opportunity: Opportunity
 }

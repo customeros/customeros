@@ -166,7 +166,7 @@ func (b *contactBatcher) getContactsForJobRoles(ctx context.Context, keys datalo
 
 	// construct an output array of dataloader results
 	results := make([]*dataloader.Result, len(keys))
-	for jobRoleId, _ := range contactEntityByJobRoleId {
+	for jobRoleId := range contactEntityByJobRoleId {
 		if ix, ok := keyOrder[jobRoleId]; ok {
 			val := contactEntityByJobRoleId[jobRoleId]
 			results[ix] = &dataloader.Result{Data: &val, Error: nil}

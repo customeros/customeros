@@ -5,13 +5,15 @@ on:
     branches: [ "otter" ]
     paths:
       - packages/server/customer-os-common-module/**
+      - packages/server/customer-os-api-sdk/**
       - packages/server/file-store-api/**
-      - .github/workflows/build-filestore-api.yml
+      - .github/workflows/build-file-store-api.yml
   pull_request:
     paths:
       - packages/server/customer-os-common-module/**
+      - packages/server/customer-os-api-sdk/**
       - packages/server/file-store-api/**
-      - .github/workflows/build-filestore-api.yml
+      - .github/workflows/build-file-store-api.yml
   release:
     types: [ created, edited ]
 
@@ -26,7 +28,7 @@ permissions:
 
 defaults:
   run:
-    working-directory: ./packages/server/file-store-api
+      working-directory: ./packages/server/file-store-api
 
 jobs:
   test:
@@ -40,13 +42,14 @@ jobs:
           go-version: stable
 
       - name: Build
+        working-directory: ./packages/server/file-store-api
         run: make all
 
       - name: Configure Test Folders
         id: test-folders
         run: |
           test_folders=$(go list ./... | grep -v /gen | grep -v /test | paste -sd "," -)
-          echo "::set-output name=test_folders::$test_folders"
+          echo "{name}={test_folders}" >> $GITHUB_OUTPUT
 
       - name: Test
         run: gotestsum --junitfile unit-tests.xml -- -coverprofile=cover.out -coverpkg=${{ steps.test-folders.outputs.test_folders }} ./...
@@ -80,11 +83,14 @@ jobs:
         run: |
           mkdir tmp-sources
           mkdir tmp-sources/customer-os-common-module
+          mkdir tmp-sources/customer-os-api-sdk
           mkdir tmp-sources/file-store-api
           
           rsync -av --progress --exclude="tmp-sources" * tmp-sources/file-store-api
           cp .env tmp-sources/file-store-api/.env
+          
           cp -r ../customer-os-common-module/* tmp-sources/customer-os-common-module
+          cp -r ../customer-os-api-sdk/* tmp-sources/customer-os-api-sdk
           
           cp Dockerfile tmp-sources/Dockerfile
 
@@ -97,7 +103,7 @@ jobs:
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
-        uses: docker/metadata-action@v5.4.0
+        uses: docker/metadata-action@v5.5.1
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 

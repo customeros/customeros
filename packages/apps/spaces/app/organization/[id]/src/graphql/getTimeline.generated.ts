@@ -1,7 +1,6 @@
 // @ts-nocheck remove this when typscript-react-query plugin is fixed
 import * as Types from '../../../../src/types/__generated__/graphql.types';
 
-import type { InfiniteData } from '@tanstack/react-query';
 import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
 import {
@@ -13,6 +12,7 @@ import {
   useInfiniteQuery,
   UseQueryOptions,
   UseInfiniteQueryOptions,
+  InfiniteData,
 } from '@tanstack/react-query';
 
 function fetcher<TData, TVariables extends { [key: string]: any }>(
@@ -29,9 +29,9 @@ function fetcher<TData, TVariables extends { [key: string]: any }>(
     });
 }
 export type GetTimelineQueryVariables = Types.Exact<{
-  organizationId: Types.Scalars['ID'];
-  from: Types.Scalars['Time'];
-  size: Types.Scalars['Int'];
+  organizationId: Types.Scalars['ID']['input'];
+  from: Types.Scalars['Time']['input'];
+  size: Types.Scalars['Int']['input'];
 }>;
 
 export type GetTimelineQuery = {
@@ -70,8 +70,8 @@ export type GetTimelineQuery = {
             __typename?: 'Attachment';
             id: string;
             mimeType: string;
-            name: string;
-            extension: string;
+            fileName: string;
+            size: any;
           }>;
           issue?: {
             __typename?: 'Issue';
@@ -354,6 +354,7 @@ export type GetTimelineQuery = {
           issueStatus: string;
           externalLinks: Array<{
             __typename?: 'ExternalSystem';
+            type: Types.ExternalSystemType;
             externalId?: string | null;
             externalUrl?: string | null;
           }>;
@@ -824,8 +825,8 @@ export const GetTimelineDocument = `
         includes {
           id
           mimeType
-          name
-          extension
+          fileName
+          size
         }
         issue {
           externalLinks {
@@ -935,6 +936,7 @@ export const GetTimelineDocument = `
         createdAt
         description
         externalLinks {
+          type
           externalId
           externalUrl
         }
@@ -979,54 +981,78 @@ export const GetTimelineDocument = `
 }
     ${InteractionEventParticipantFragmentFragmentDoc}
 ${MeetingParticipantFragmentFragmentDoc}`;
+
 export const useGetTimelineQuery = <TData = GetTimelineQuery, TError = unknown>(
   client: GraphQLClient,
   variables: GetTimelineQueryVariables,
-  options?: UseQueryOptions<GetTimelineQuery, TError, TData>,
+  options?: Omit<
+    UseQueryOptions<GetTimelineQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseQueryOptions<GetTimelineQuery, TError, TData>['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useQuery<GetTimelineQuery, TError, TData>(
-    ['GetTimeline', variables],
-    fetcher<GetTimelineQuery, GetTimelineQueryVariables>(
+) => {
+  return useQuery<GetTimelineQuery, TError, TData>({
+    queryKey: ['GetTimeline', variables],
+    queryFn: fetcher<GetTimelineQuery, GetTimelineQueryVariables>(
       client,
       GetTimelineDocument,
       variables,
       headers,
     ),
-    options,
-  );
+    ...options,
+  });
+};
+
 useGetTimelineQuery.document = GetTimelineDocument;
 
 useGetTimelineQuery.getKey = (variables: GetTimelineQueryVariables) => [
   'GetTimeline',
   variables,
 ];
+
 export const useInfiniteGetTimelineQuery = <
-  TData = GetTimelineQuery,
+  TData = InfiniteData<GetTimelineQuery>,
   TError = unknown,
 >(
-  pageParamKey: keyof GetTimelineQueryVariables,
   client: GraphQLClient,
   variables: GetTimelineQueryVariables,
-  options?: UseInfiniteQueryOptions<GetTimelineQuery, TError, TData>,
+  options: Omit<
+    UseInfiniteQueryOptions<GetTimelineQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseInfiniteQueryOptions<
+      GetTimelineQuery,
+      TError,
+      TData
+    >['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useInfiniteQuery<GetTimelineQuery, TError, TData>(
-    ['GetTimeline.infinite', variables],
-    (metaData) =>
-      fetcher<GetTimelineQuery, GetTimelineQueryVariables>(
-        client,
-        GetTimelineDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-        headers,
-      )(),
-    options,
+) => {
+  return useInfiniteQuery<GetTimelineQuery, TError, TData>(
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ['GetTimeline.infinite', variables],
+        queryFn: (metaData) =>
+          fetcher<GetTimelineQuery, GetTimelineQueryVariables>(
+            client,
+            GetTimelineDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+            headers,
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
+};
 
 useInfiniteGetTimelineQuery.getKey = (variables: GetTimelineQueryVariables) => [
   'GetTimeline.infinite',
   variables,
 ];
+
 useGetTimelineQuery.fetcher = (
   client: GraphQLClient,
   variables: GetTimelineQueryVariables,
@@ -1040,7 +1066,7 @@ useGetTimelineQuery.fetcher = (
   );
 
 useGetTimelineQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: GetTimelineQueryVariables) =>
+  (queryClient: QueryClient, variables?: GetTimelineQueryVariables) =>
   (mutator: (cacheEntry: GetTimelineQuery) => GetTimelineQuery) => {
     const cacheKey = useGetTimelineQuery.getKey(variables);
     const previousEntries =
@@ -1051,7 +1077,7 @@ useGetTimelineQuery.mutateCacheEntry =
     return { previousEntries };
   };
 useInfiniteGetTimelineQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: GetTimelineQueryVariables) =>
+  (queryClient: QueryClient, variables?: GetTimelineQueryVariables) =>
   (
     mutator: (
       cacheEntry: InfiniteData<GetTimelineQuery>,

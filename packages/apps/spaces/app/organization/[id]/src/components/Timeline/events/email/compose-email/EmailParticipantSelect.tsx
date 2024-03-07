@@ -5,7 +5,7 @@ import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { emailRegex } from '@organization/src/components/Timeline/events/email/utils';
 
-import { EmailFormMultiCreatableSelect } from './EmailFormMultiCreatableSelect';
+import { EmailFormMultiCreatableSelect } from './EmailMultiCreatableSelect';
 interface EmailParticipantSelect {
   formId: string;
   entryType: string;

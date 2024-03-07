@@ -58,6 +58,10 @@ type Services struct {
 	ServiceLineItemService     ServiceLineItemService
 	OpportunityService         OpportunityService
 	MasterPlanService          MasterPlanService
+	BillingProfileService      BillingProfileService
+	InvoiceService             InvoiceService
+	OrganizationPlanService    OrganizationPlanService
+	SlackService               SlackService
 }
 
 func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *config.Config, commonServices *commonService.Services, commonAuthServices *commonAuthService.Services, grpcClients *grpc_client.Clients) *Services {
@@ -78,7 +82,7 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *confi
 		DomainService:              NewDomainService(log, repositories),
 		PageViewService:            NewPageViewService(log, repositories),
 		AttachmentService:          NewAttachmentService(log, repositories),
-		TenantService:              NewTenantService(log, repositories),
+		TenantService:              NewTenantService(log, repositories, grpcClients),
 		WorkspaceService:           NewWorkspaceService(log, repositories),
 		SocialService:              NewSocialService(log, repositories),
 		ExternalSystemService:      NewExternalSystemService(log, repositories),
@@ -89,6 +93,7 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *confi
 		LogEntryService:            NewLogEntryService(log, repositories),
 		CommentService:             NewCommentService(log, repositories),
 		MasterPlanService:          NewMasterPlanService(log, repositories, grpcClients),
+		OrganizationPlanService:    NewOrganizationPlanService(log, repositories, grpcClients),
 	}
 	services.IssueService = NewIssueService(log, repositories, &services)
 	services.PhoneNumberService = NewPhoneNumberService(log, repositories, grpcClients, &services)
@@ -108,6 +113,9 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *confi
 	services.ContractService = NewContractService(log, repositories, grpcClients, &services)
 	services.ServiceLineItemService = NewServiceLineItemService(log, repositories, grpcClients, &services)
 	services.OpportunityService = NewOpportunityService(log, repositories, grpcClients, &services)
+	services.BillingProfileService = NewBillingProfileService(log, repositories, grpcClients)
+	services.InvoiceService = NewInvoiceService(log, repositories, grpcClients, &services)
+	services.SlackService = NewSlackService(log, repositories, grpcClients, &services)
 
 	log.Info("Init cache service")
 	services.Cache = NewCacheService(&services)

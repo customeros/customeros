@@ -7,7 +7,7 @@ import { User02 } from '@ui/media/icons/User02';
 import { Select } from '@ui/form/SyncSelect/Select';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useGetUsersQuery } from '@organizations/graphql/getUsers.generated';
+import { useGetUsersQuery } from '@shared/graphql/getUsers.generated';
 import { useSetOrganizationOwnerMutation } from '@organizations/graphql/setOrganizationOwner.generated';
 import { useRemoveOrganizationOwnerMutation } from '@organizations/graphql/removeOrganizationOwner.generated';
 import {
@@ -56,7 +56,7 @@ export const OwnerInput = ({ id, owner, invalidateQuery }: OwnerProps) => {
       );
       const organization =
         queryClient.getQueryData<OrganizationQuery>(queryKey);
-      queryClient.cancelQueries(queryKey);
+      queryClient.cancelQueries({ queryKey });
       queryClient.setQueryData<OrganizationQuery>(queryKey, (oldData) => {
         if (!oldData || !oldData?.organization) return;
 
@@ -91,7 +91,7 @@ export const OwnerInput = ({ id, owner, invalidateQuery }: OwnerProps) => {
     onMutate: () => {
       const organization =
         queryClient.getQueryData<OrganizationQuery>(queryKey);
-      queryClient.cancelQueries(queryKey);
+      queryClient.cancelQueries({ queryKey });
       queryClient.setQueryData<OrganizationQuery>(queryKey, (oldData) => {
         if (!oldData || !oldData?.organization) return;
 
@@ -124,7 +124,7 @@ export const OwnerInput = ({ id, owner, invalidateQuery }: OwnerProps) => {
 
   const handleSelect = useCallback(
     (option: SelectOption) => {
-      if (!option) {
+      if (!option || !option.value) {
         removeOrganizationOwner.mutate({
           organizationId: id,
         });
@@ -142,7 +142,7 @@ export const OwnerInput = ({ id, owner, invalidateQuery }: OwnerProps) => {
     <Select
       isClearable
       value={value}
-      isLoading={setOrganizationOwner.isLoading}
+      isLoading={setOrganizationOwner.isPending}
       placeholder='Owner'
       backspaceRemovesValue
       onChange={handleSelect}

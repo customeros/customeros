@@ -95,7 +95,6 @@ func (s *masterPlanService) CreateMasterPlanMilestone(ctx context.Context, reque
 		return nil, grpcerr.ErrResponse(err)
 	}
 
-	// Return the ID of the newly created master plan
 	return &masterplanpb.MasterPlanMilestoneIdGrpcResponse{Id: milestoneId}, nil
 }
 
@@ -133,9 +132,51 @@ func (s *masterPlanService) UpdateMasterPlan(ctx context.Context, request *maste
 	return &masterplanpb.MasterPlanIdGrpcResponse{Id: request.MasterPlanId}, nil
 }
 
-func extractMasterPlanFieldsMask(fields []masterplanpb.MasterPlanMaskField) []string {
+func (s *masterPlanService) UpdateMasterPlanMilestone(ctx context.Context, request *masterplanpb.UpdateMasterPlanMilestoneGrpcRequest) (*masterplanpb.MasterPlanMilestoneIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "MasterPlanService.UpdateMasterPlanMilestone")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+
+	if request.MasterPlanId == "" {
+		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("masterPlanId"))
+	}
+	if request.MasterPlanMilestoneId == "" {
+		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("masterPlanMilestoneId"))
+	}
+
+	// Convert any protobuf timestamp to time.Time, if necessary
+	updatedAt := utils.TimestampProtoToTimePtr(request.UpdatedAt)
+
+	updateMasterPlanMilestoneCommand := command.NewUpdateMasterPlanMilestoneCommand(
+		request.MasterPlanId,
+		request.Tenant,
+		request.LoggedInUserId,
+		request.MasterPlanMilestoneId,
+		request.Name,
+		request.AppSource,
+		request.Order,
+		request.DurationHours,
+		request.Items,
+		request.Optional,
+		request.Retired,
+		updatedAt,
+		extractMasterPlanMilestoneFieldsMask(request.FieldsMask),
+	)
+
+	if err := s.masterPlanCommandHandlers.UpdateMasterPlanMilestone.Handle(ctx, updateMasterPlanMilestoneCommand); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(UpdateMasterPlanMilestone.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		return nil, grpcerr.ErrResponse(err)
+	}
+
+	// Return the ID of the newly created master plan
+	return &masterplanpb.MasterPlanMilestoneIdGrpcResponse{Id: request.MasterPlanMilestoneId}, nil
+}
+
+func extractMasterPlanFieldsMask(fields []masterplanpb.MasterPlanFieldMask) []string {
 	fieldsMask := make([]string, 0)
-	if fields == nil || len(fields) == 0 {
+	if len(fields) == 0 {
 		return fieldsMask
 	}
 	if containsMasterPlanMaskFieldAll(fields) {
@@ -143,20 +184,90 @@ func extractMasterPlanFieldsMask(fields []masterplanpb.MasterPlanMaskField) []st
 	}
 	for _, field := range fields {
 		switch field {
-		case masterplanpb.MasterPlanMaskField_MASTER_PLAN_PROPERTY_NAME:
+		case masterplanpb.MasterPlanFieldMask_MASTER_PLAN_PROPERTY_NAME:
 			fieldsMask = append(fieldsMask, event.FieldMaskName)
-		case masterplanpb.MasterPlanMaskField_MASTER_PLAN_PROPERTY_RETIRED:
+		case masterplanpb.MasterPlanFieldMask_MASTER_PLAN_PROPERTY_RETIRED:
 			fieldsMask = append(fieldsMask, event.FieldMaskRetired)
 		}
 	}
 	return utils.RemoveDuplicates(fieldsMask)
 }
 
-func containsMasterPlanMaskFieldAll(fields []masterplanpb.MasterPlanMaskField) bool {
+func containsMasterPlanMaskFieldAll(fields []masterplanpb.MasterPlanFieldMask) bool {
 	for _, field := range fields {
-		if field == masterplanpb.MasterPlanMaskField_MASTER_PLAN_PROPERTY_ALL {
+		if field == masterplanpb.MasterPlanFieldMask_MASTER_PLAN_PROPERTY_ALL {
 			return true
 		}
 	}
 	return false
+}
+
+func extractMasterPlanMilestoneFieldsMask(fields []masterplanpb.MasterPlanMilestoneFieldMask) []string {
+	fieldsMask := make([]string, 0)
+	if len(fields) == 0 {
+		return fieldsMask
+	}
+	if containsMasterPlanMilestoneMaskFieldAll(fields) {
+		return fieldsMask
+	}
+	for _, field := range fields {
+		switch field {
+		case masterplanpb.MasterPlanMilestoneFieldMask_MASTER_PLAN_MILESTONE_PROPERTY_NAME:
+			fieldsMask = append(fieldsMask, event.FieldMaskName)
+		case masterplanpb.MasterPlanMilestoneFieldMask_MASTER_PLAN_MILESTONE_PROPERTY_RETIRED:
+			fieldsMask = append(fieldsMask, event.FieldMaskRetired)
+		case masterplanpb.MasterPlanMilestoneFieldMask_MASTER_PLAN_MILESTONE_PROPERTY_ORDER:
+			fieldsMask = append(fieldsMask, event.FieldMaskOrder)
+		case masterplanpb.MasterPlanMilestoneFieldMask_MASTER_PLAN_MILESTONE_PROPERTY_OPTIONAL:
+			fieldsMask = append(fieldsMask, event.FieldMaskOptional)
+		case masterplanpb.MasterPlanMilestoneFieldMask_MASTER_PLAN_MILESTONE_PROPERTY_DURATION_HOURS:
+			fieldsMask = append(fieldsMask, event.FieldMaskDurationHours)
+		case masterplanpb.MasterPlanMilestoneFieldMask_MASTER_PLAN_MILESTONE_PROPERTY_ITEMS:
+			fieldsMask = append(fieldsMask, event.FieldMaskItems)
+		}
+	}
+	return utils.RemoveDuplicates(fieldsMask)
+}
+
+func containsMasterPlanMilestoneMaskFieldAll(fields []masterplanpb.MasterPlanMilestoneFieldMask) bool {
+	for _, field := range fields {
+		if field == masterplanpb.MasterPlanMilestoneFieldMask_MASTER_PLAN_MILESTONE_PROPERTY_ALL {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *masterPlanService) ReorderMasterPlanMilestones(ctx context.Context, request *masterplanpb.ReorderMasterPlanMilestonesGrpcRequest) (*masterplanpb.MasterPlanIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "MasterPlanService.ReorderMasterPlanMilestones")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+
+	if request.MasterPlanId == "" {
+		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("masterPlanId"))
+	}
+	if len(request.MasterPlanMilestoneIds) == 0 {
+		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("masterPlanMilestoneIds"))
+	}
+
+	// Convert any protobuf timestamp to time.Time, if necessary
+	updatedAt := utils.TimestampProtoToTimePtr(request.UpdatedAt)
+
+	reorderMasterPlanMilestonesCommand := command.NewReorderMasterPlanMilestonesCommand(
+		request.MasterPlanId,
+		request.Tenant,
+		request.LoggedInUserId,
+		request.AppSource,
+		request.MasterPlanMilestoneIds,
+		updatedAt,
+	)
+
+	if err := s.masterPlanCommandHandlers.ReorderMasterPlanMilestones.Handle(ctx, reorderMasterPlanMilestonesCommand); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(ReorderMasterPlanMilestones.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		return nil, grpcerr.ErrResponse(err)
+	}
+
+	return &masterplanpb.MasterPlanIdGrpcResponse{Id: request.MasterPlanId}, nil
 }

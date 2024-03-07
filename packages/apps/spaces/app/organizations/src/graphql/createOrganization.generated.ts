@@ -5,31 +5,21 @@ import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
 import { useMutation, UseMutationOptions } from '@tanstack/react-query';
 
-function fetcher<TData, TVariables extends { [key: string]: any }>(
-  client: GraphQLClient,
-  query: string,
-  variables?: TVariables,
-  requestHeaders?: RequestInit['headers'],
-) {
-  return async (): Promise<TData> =>
-    client.request({
-      document: query,
-      variables,
-      requestHeaders,
-    });
+function fetcher<TData, TVariables extends { [key: string]: any }>(client: GraphQLClient, query: string, variables?: TVariables, requestHeaders?: RequestInit['headers']) {
+  return async (): Promise<TData> => client.request({
+    document: query,
+    variables,
+    requestHeaders
+  });
 }
 export type CreateOrganizationMutationVariables = Types.Exact<{
   input: Types.OrganizationInput;
 }>;
 
-export type CreateOrganizationMutation = {
-  __typename?: 'Mutation';
-  organization_Create: {
-    __typename?: 'Organization';
-    id: string;
-    name: string;
-  };
-};
+
+export type CreateOrganizationMutation = { __typename?: 'Mutation', organization_Create: { __typename?: 'Organization', id: string, name: string } };
+
+
 
 export const CreateOrganizationDocument = `
     mutation createOrganization($input: OrganizationInput!) {
@@ -39,45 +29,25 @@ export const CreateOrganizationDocument = `
   }
 }
     `;
+
 export const useCreateOrganizationMutation = <
-  TError = unknown,
-  TContext = unknown,
->(
-  client: GraphQLClient,
-  options?: UseMutationOptions<
-    CreateOrganizationMutation,
-    TError,
-    CreateOrganizationMutationVariables,
-    TContext
-  >,
-  headers?: RequestInit['headers'],
-) =>
-  useMutation<
-    CreateOrganizationMutation,
-    TError,
-    CreateOrganizationMutationVariables,
-    TContext
-  >(
-    ['createOrganization'],
-    (variables?: CreateOrganizationMutationVariables) =>
-      fetcher<CreateOrganizationMutation, CreateOrganizationMutationVariables>(
-        client,
-        CreateOrganizationDocument,
-        variables,
-        headers,
-      )(),
-    options,
-  );
+      TError = unknown,
+      TContext = unknown
+    >(
+      client: GraphQLClient,
+      options?: UseMutationOptions<CreateOrganizationMutation, TError, CreateOrganizationMutationVariables, TContext>,
+      headers?: RequestInit['headers']
+    ) => {
+    
+    return useMutation<CreateOrganizationMutation, TError, CreateOrganizationMutationVariables, TContext>(
+      {
+    mutationKey: ['createOrganization'],
+    mutationFn: (variables?: CreateOrganizationMutationVariables) => fetcher<CreateOrganizationMutation, CreateOrganizationMutationVariables>(client, CreateOrganizationDocument, variables, headers)(),
+    ...options
+  }
+    )};
+
 useCreateOrganizationMutation.getKey = () => ['createOrganization'];
 
-useCreateOrganizationMutation.fetcher = (
-  client: GraphQLClient,
-  variables: CreateOrganizationMutationVariables,
-  headers?: RequestInit['headers'],
-) =>
-  fetcher<CreateOrganizationMutation, CreateOrganizationMutationVariables>(
-    client,
-    CreateOrganizationDocument,
-    variables,
-    headers,
-  );
+
+useCreateOrganizationMutation.fetcher = (client: GraphQLClient, variables: CreateOrganizationMutationVariables, headers?: RequestInit['headers']) => fetcher<CreateOrganizationMutation, CreateOrganizationMutationVariables>(client, CreateOrganizationDocument, variables, headers);

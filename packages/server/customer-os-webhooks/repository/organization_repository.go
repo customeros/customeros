@@ -12,11 +12,17 @@ import (
 )
 
 type OrganizationRepository interface {
+	// Deprecated
 	GetById(ctx context.Context, tenant, organizationId string) (*dbtype.Node, error)
+	// Deprecated
 	GetMatchedOrganizationId(ctx context.Context, tenant, externalSystem, externalId, customerOsId string, domains []string) (string, error)
+	// Deprecated
 	GetOrganizationIdById(ctx context.Context, tenant, id string) (string, error)
+	// Deprecated
 	GetOrganizationIdByExternalId(ctx context.Context, tenant, externalId, externalSystemId string) (string, error)
+	// Deprecated
 	GetOrganizationIdByDomain(ctx context.Context, tenant, domain string) (string, error)
+	// Deprecated
 	IsDomainUsedByOrganization(ctx context.Context, tenant, domain, skipOrganizationIds string) (bool, error)
 }
 
@@ -66,7 +72,9 @@ func (r *organizationRepository) GetMatchedOrganizationId(ctx context.Context, t
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := `MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})
+	query := `MATCH (t:Tenant {name:$tenant})
+				OPTIONAL MATCH (t)<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem}) 
+					WHERE $externalSystem <> ''
 				OPTIONAL MATCH (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o1:Organization)-[:IS_LINKED_WITH {externalId:$externalId}]->(e)
 				OPTIONAL MATCH (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o2:Organization {customerOsId:$customerOsId})
 					WHERE $customerOsId <> ''

@@ -1,16 +1,16 @@
 package mapper
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 )
 
-func MapExternalSystemReferenceInputToRelationship(input *model.ExternalSystemReferenceInput) *entity.ExternalSystemEntity {
+func MapExternalSystemReferenceInputToRelationship(input *model.ExternalSystemReferenceInput) *neo4jentity.ExternalSystemEntity {
 	if input == nil {
 		return nil
 	}
-	relationship := new(entity.ExternalSystemEntity)
+	relationship := new(neo4jentity.ExternalSystemEntity)
 	relationship.Relationship.ExternalId = input.ExternalID
 	relationship.Relationship.ExternalUrl = input.ExternalURL
 	relationship.Relationship.ExternalSource = input.ExternalSource
@@ -24,7 +24,7 @@ func MapExternalSystemReferenceInputToRelationship(input *model.ExternalSystemRe
 	return relationship
 }
 
-func MapEntityToExternalSystem(entity *entity.ExternalSystemEntity) *model.ExternalSystem {
+func MapEntityToExternalSystem(entity *neo4jentity.ExternalSystemEntity) *model.ExternalSystem {
 	return &model.ExternalSystem{
 		Type:           MapExternalSystemTypeToModel(entity.ExternalSystemId),
 		SyncDate:       entity.Relationship.SyncDate,
@@ -34,7 +34,7 @@ func MapEntityToExternalSystem(entity *entity.ExternalSystemEntity) *model.Exter
 	}
 }
 
-func MapEntitiesToExternalSystems(entities *entity.ExternalSystemEntities) []*model.ExternalSystem {
+func MapEntitiesToExternalSystems(entities *neo4jentity.ExternalSystemEntities) []*model.ExternalSystem {
 	var output []*model.ExternalSystem
 	for _, v := range *entities {
 		output = append(output, MapEntityToExternalSystem(&v))

@@ -6,14 +6,14 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
 
 type ActionReadRepository interface {
-	GetSingleAction(ctx context.Context, tenant, entityId string, entityType entity.EntityType, actionType entity.ActionType) (*dbtype.Node, error)
+	GetSingleAction(ctx context.Context, tenant, entityId string, entityType enum.EntityType, actionType enum.ActionType) (*dbtype.Node, error)
 }
 
 type actionReadRepository struct {
@@ -32,7 +32,7 @@ func (r *actionReadRepository) prepareReadSession(ctx context.Context) neo4j.Ses
 	return utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 }
 
-func (r *actionReadRepository) GetSingleAction(ctx context.Context, tenant, entityId string, entityType entity.EntityType, actionType entity.ActionType) (*dbtype.Node, error) {
+func (r *actionReadRepository) GetSingleAction(ctx context.Context, tenant, entityId string, entityType enum.EntityType, actionType enum.ActionType) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ActionReadRepository.GetSingleAction")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)

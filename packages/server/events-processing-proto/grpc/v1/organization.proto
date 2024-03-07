@@ -3,6 +3,7 @@ syntax = "proto3";
 import "google/protobuf/timestamp.proto";
 import "common/source.proto";
 import "common/external_system.proto";
+import "common/common.proto";
 
 option go_package = "api/grpc/v1/organization;organization_grpc_service";
 
@@ -30,6 +31,13 @@ enum OrganizationMaskField {
   ORGANIZATION_PROPERTY_LOGO_URL = 20;
   ORGANIZATION_PROPERTY_HEADQUARTERS = 21;
   ORGANIZATION_PROPERTY_EMPLOYEE_GROWTH_RATE = 22;
+  ORGANIZATION_PROPERTY_SLACK_CHANNEL_ID = 23;
+}
+
+enum BillingProfileFieldMask {
+  BILLING_PROFILE_PROPERTY_NONE = 0; // No property, ignored by the server
+  BILLING_PROFILE_PROPERTY_LEGAL_NAME = 2;
+  BILLING_PROFILE_PROPERTY_TAX_ID = 3;
 }
 
 message UpsertOrganizationGrpcRequest {
@@ -63,6 +71,7 @@ message UpsertOrganizationGrpcRequest {
   string headquarters = 33;
   string employeeGrowthRate = 34;
   optional int64 yearFounded = 35;
+  string slackChannelId = 36;
 }
 
 message UpdateOrganizationGrpcRequest {
@@ -87,9 +96,17 @@ message UpdateOrganizationGrpcRequest {
   string description = 19;
   string website = 20;
   int64 employees = 21;
+  string slackChannelId = 36;
 }
 
 message OrganizationIdGrpcRequest {
+  string tenant = 1;
+  string organizationId = 2;
+  string loggedInUserId = 3;
+  string appSource = 4;
+}
+
+message RefreshRenewalSummaryGrpcRequest {
   string tenant = 1;
   string organizationId = 2;
   string loggedInUserId = 3;
@@ -114,11 +131,48 @@ message LinkEmailToOrganizationGrpcRequest {
   string loggedInUserId = 6;
 }
 
+message LinkEmailToBillingProfileGrpcRequest {
+  string tenant = 1;
+  string organizationId = 2;
+  string billingProfileId = 3;
+  string emailId = 4;
+  string loggedInUserId = 5;
+  string appSource = 6;
+  bool primary = 7;
+}
+
+message UnlinkEmailFromBillingProfileGrpcRequest {
+  string tenant = 1;
+  string organizationId = 2;
+  string billingProfileId = 3;
+  string emailId = 4;
+  string loggedInUserId = 5;
+  string appSource = 6;
+}
+
 message LinkLocationToOrganizationGrpcRequest {
   string tenant = 1;
   string organizationId = 2;
   string locationId = 3;
   string loggedInUserId = 4;
+}
+
+message LinkLocationToBillingProfileGrpcRequest {
+  string tenant = 1;
+  string organizationId = 2;
+  string billingProfileId = 3;
+  string locationId = 4;
+  string loggedInUserId = 5;
+  string appSource = 6;
+}
+
+message UnlinkLocationFromBillingProfileGrpcRequest {
+  string tenant = 1;
+  string organizationId = 2;
+  string billingProfileId = 3;
+  string locationId = 4;
+  string loggedInUserId = 5;
+  string appSource = 6;
 }
 
 message LinkDomainToOrganizationGrpcRequest {
@@ -227,11 +281,39 @@ message UpdateOrganizationOwnerGrpcRequest {
   string appSource = 5;
 }
 
+message CreateBillingProfileGrpcRequest {
+  string tenant = 1;
+  string organizationId = 2;
+  string billingProfileId = 3;
+  string loggedInUserId = 4;
+  SourceFields sourceFields = 5;
+  google.protobuf.Timestamp createdAt = 6;
+  google.protobuf.Timestamp updatedAt = 7;
+  string legalName = 8;
+  string taxId = 9;
+}
+
+message UpdateBillingProfileGrpcRequest {
+  string tenant = 1;
+  string organizationId = 2;
+  string billingProfileId = 3;
+  string loggedInUserId = 4;
+  string appSource = 5;
+  google.protobuf.Timestamp updatedAt = 6;
+  string legalName = 7;
+  string taxId = 8;
+  repeated BillingProfileFieldMask fieldsMask = 9;
+}
+
 message OrganizationIdGrpcResponse {
   string id = 1;
 }
 
 message CustomFieldIdGrpcResponse {
+  string id = 1;
+}
+
+message BillingProfileIdGrpcResponse {
   string id = 1;
 }
 
@@ -246,7 +328,7 @@ service organizationGrpcService {
   rpc HideOrganization(OrganizationIdGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc ShowOrganization(OrganizationIdGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc RefreshLastTouchpoint(OrganizationIdGrpcRequest) returns (OrganizationIdGrpcResponse);
-  rpc RefreshRenewalSummary(OrganizationIdGrpcRequest) returns (OrganizationIdGrpcResponse);
+  rpc RefreshRenewalSummary(RefreshRenewalSummaryGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc RefreshArr(OrganizationIdGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc AddParentOrganization(AddParentOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc RemoveParentOrganization(RemoveParentOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
@@ -254,4 +336,10 @@ service organizationGrpcService {
   rpc UpdateOrganization(UpdateOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc AddSocial(AddSocialGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc UpdateOrganizationOwner(UpdateOrganizationOwnerGrpcRequest) returns (OrganizationIdGrpcResponse);
+  rpc CreateBillingProfile(CreateBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);
+  rpc UpdateBillingProfile(UpdateBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);
+  rpc LinkEmailToBillingProfile(LinkEmailToBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);
+  rpc UnlinkEmailFromBillingProfile(UnlinkEmailFromBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);
+  rpc LinkLocationToBillingProfile(LinkLocationToBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);
+  rpc UnlinkLocationFromBillingProfile(UnlinkLocationFromBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);
 }

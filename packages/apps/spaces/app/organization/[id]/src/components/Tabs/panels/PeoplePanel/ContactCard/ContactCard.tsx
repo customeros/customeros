@@ -1,8 +1,9 @@
 'use client';
 import { useParams } from 'next/navigation';
 import { useForm } from 'react-inverted-form';
-import { useRef, useState, MouseEvent } from 'react';
+import { useRef, useState, useEffect, MouseEvent } from 'react';
 
+import { useDeepCompareEffect } from 'rooks';
 import { useQueryClient } from '@tanstack/react-query';
 import formatDistanceToNow from 'date-fns/formatDistanceToNow';
 import differenceInCalendarMonths from 'date-fns/differenceInCalendarMonths';
@@ -24,6 +25,7 @@ import { FormAutoresizeTextarea } from '@ui/form/Textarea';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { Card, CardBody, CardHeader } from '@ui/presentation/Card';
+import { useContactCardMeta } from '@organization/src/state/ContactCardMeta.atom';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
 import { useUpdateContactMutation } from '@organization/src/graphql/updateContact.generated';
 import { useDeleteContactMutation } from '@organization/src/graphql/deleteContact.generated';
@@ -55,14 +57,21 @@ export const ContactCard = ({
   const organizationId = useParams()?.id as string;
   const queryClient = useQueryClient();
   const cardRef = useRef<HTMLDivElement>(null);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [{ expandedId, initialFocusedField }, setExpandedCardId] =
+    useContactCardMeta();
+  const isExpanded = expandedId === contact.id;
   const [roleIsFocused, setRoleIsFocused] = useState(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
   useOutsideClick({
     ref: cardRef,
-    handler: () => setIsExpanded(false),
+    handler: () => {
+      if (expandedId === contact.id) {
+        setExpandedCardId({ expandedId: undefined, initialFocusedField: null });
+      }
+    },
   });
-
+  const emailInputRef = useRef<HTMLInputElement | null>(null);
+  const nameInputRef = useRef<HTMLInputElement | null>(null);
   const data = ContactFormDto.toForm(contact);
 
   const formId = `contact-form-${data.id}`;
@@ -98,12 +107,31 @@ export const ContactCard = ({
 
   const toggle = (e: MouseEvent<HTMLDivElement>) => {
     if (['name', 'role', 'title'].includes((e.target as HTMLDivElement)?.id)) {
-      setIsExpanded(true);
+      setExpandedCardId({ expandedId: contact.id, initialFocusedField: null });
 
       return;
     }
-    setIsExpanded((prev) => !prev);
+    if (isExpanded) {
+      setExpandedCardId({ expandedId: undefined, initialFocusedField: null });
+    } else {
+      setExpandedCardId({ expandedId: contact.id, initialFocusedField: null });
+    }
   };
+
+  useEffect(() => {
+    if (expandedId === contact.id && initialFocusedField) {
+      if (initialFocusedField === 'name') {
+        nameInputRef.current?.focus();
+
+        return;
+      }
+      if (initialFocusedField === 'email') {
+        emailInputRef.current?.focus();
+
+        return;
+      }
+    }
+  }, [expandedId, initialFocusedField, emailInputRef]);
 
   const prevEmail = data.email;
   const prevPhoneNumberId = data.phoneId;
@@ -125,16 +153,41 @@ export const ContactCard = ({
       )} at ${organizationName}`;
   })();
 
-  const { state } = useForm<ContactForm>({
+  const { state, setDefaultValues } = useForm<ContactForm>({
     formId,
     defaultValues: data,
     stateReducer: (state, action, next) => {
+      if (
+        action.type === 'FIELD_CHANGE' &&
+        action.payload.name === 'timezone'
+      ) {
+        updateContact.mutate(
+          ContactFormDto.toDto(
+            { timezone: action.payload.value?.value },
+            data.id,
+          ),
+        );
+
+        return next;
+      }
       if (action.type === 'FIELD_BLUR') {
         switch (action.payload.name) {
-          case 'name':
-          case 'timezone':
+          case 'name': {
+            updateContact.mutate(
+              ContactFormDto.toDto(
+                { [action.payload.name]: action.payload.value },
+                data.id,
+              ),
+            );
+            break;
+          }
           case 'note': {
-            updateContact.mutate(ContactFormDto.toDto({ ...state.values }));
+            updateContact.mutate(
+              ContactFormDto.toDto(
+                { description: action.payload.value },
+                data.id,
+              ),
+            );
             break;
           }
           case 'title':
@@ -211,6 +264,10 @@ export const ContactCard = ({
     },
   });
 
+  useDeepCompareEffect(() => {
+    setDefaultValues(data);
+  }, [data]);
+
   const handleDelete = (e: MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
@@ -278,6 +335,7 @@ export const ContactCard = ({
               h='6'
               name='name'
               formId={formId}
+              ref={nameInputRef}
               placeholder='Name'
               color='gray.700'
               fontWeight='semibold'
@@ -331,7 +389,7 @@ export const ContactCard = ({
               id='confirm-button'
               position='absolute'
               aria-label='Delete contact'
-              isLoading={deleteContact.isLoading}
+              isLoading={deleteContact.isPending}
               onClick={toggleConfirmDelete}
               icon={<Icons.Trash1 boxSize='5' />}
             />
@@ -355,6 +413,7 @@ export const ContactCard = ({
               <FormInputGroup
                 formId={formId}
                 name='email'
+                ref={emailInputRef}
                 placeholder='Email'
                 leftElement={<Icons.Mail1 color='gray.500' />}
                 rightElement={
@@ -417,7 +476,7 @@ export const ContactCard = ({
         isOpen={isOpen}
         onClose={onClose}
         onConfirm={handleDelete}
-        isLoading={deleteContact.isLoading}
+        isLoading={deleteContact.isPending}
       />
     </>
   );

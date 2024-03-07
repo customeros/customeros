@@ -9,6 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/repository"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
@@ -19,6 +20,7 @@ import (
 
 type ContractService interface {
 	UpkeepContracts()
+	ResyncContract(ctx context.Context, tenant, contractId string)
 }
 
 type contractService struct {
@@ -81,17 +83,25 @@ func (s *contractService) updateContractStatuses(ctx context.Context, referenceT
 
 		//process contracts
 		for _, record := range records {
-			_, err = s.eventsProcessingClient.ContractClient.RefreshContractStatus(ctx, &contractpb.RefreshContractStatusGrpcRequest{
-				Tenant:    record.Tenant,
-				Id:        record.ContractId,
-				AppSource: constants.AppSourceDataUpkeeper,
+			_, err = CallEventsPlatformGRPCWithRetry[*contractpb.ContractIdGrpcResponse](func() (*contractpb.ContractIdGrpcResponse, error) {
+				return s.eventsProcessingClient.ContractClient.RefreshContractStatus(ctx, &contractpb.RefreshContractStatusGrpcRequest{
+					Tenant:    record.Tenant,
+					Id:        record.ContractId,
+					AppSource: constants.AppSourceDataUpkeeper,
+				})
 			})
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error refreshing contract status: %s", err.Error())
 				grpcErr, ok := status.FromError(err)
 				if ok && grpcErr.Code() == codes.NotFound && grpcErr.Message() == "aggregate not found" {
-					s.resyncContract(ctx, record.Tenant, record.ContractId)
+					s.ResyncContract(ctx, record.Tenant, record.ContractId)
+				}
+			} else {
+				err = s.repositories.Neo4jRepositories.ContractWriteRepository.MarkStatusRenewalRequested(ctx, record.Tenant, record.ContractId)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					s.log.Errorf("Error marking status renewal requested: %s", err.Error())
 				}
 			}
 		}
@@ -128,17 +138,25 @@ func (s *contractService) rolloutContractRenewals(ctx context.Context, reference
 
 		//process contracts
 		for _, record := range records {
-			_, err = s.eventsProcessingClient.ContractClient.RolloutRenewalOpportunityOnExpiration(ctx, &contractpb.RolloutRenewalOpportunityOnExpirationGrpcRequest{
-				Tenant:    record.Tenant,
-				Id:        record.ContractId,
-				AppSource: constants.AppSourceDataUpkeeper,
+			_, err = CallEventsPlatformGRPCWithRetry[*contractpb.ContractIdGrpcResponse](func() (*contractpb.ContractIdGrpcResponse, error) {
+				return s.eventsProcessingClient.ContractClient.RolloutRenewalOpportunityOnExpiration(ctx, &contractpb.RolloutRenewalOpportunityOnExpirationGrpcRequest{
+					Tenant:    record.Tenant,
+					Id:        record.ContractId,
+					AppSource: constants.AppSourceDataUpkeeper,
+				})
 			})
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error rollout renewal opportunity: %s", err.Error())
 				grpcErr, ok := status.FromError(err)
 				if ok && grpcErr.Code() == codes.NotFound && grpcErr.Message() == "aggregate not found" {
-					s.resyncContract(ctx, record.Tenant, record.ContractId)
+					s.ResyncContract(ctx, record.Tenant, record.ContractId)
+				}
+			} else {
+				err = s.repositories.Neo4jRepositories.ContractWriteRepository.MarkRolloutRenewalRequested(ctx, record.Tenant, record.ContractId)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					s.log.Errorf("Error marking renewal rollout requested: %s", err.Error())
 				}
 			}
 		}
@@ -175,10 +193,12 @@ func (s *contractService) closeEndedContractOpportunityRenewals(ctx context.Cont
 
 		//process renewal opportunities
 		for _, record := range records {
-			_, err = s.eventsProcessingClient.OpportunityClient.CloseLooseOpportunity(ctx, &opportunitypb.CloseLooseOpportunityGrpcRequest{
-				Tenant:    record.Tenant,
-				Id:        record.OpportunityId,
-				AppSource: constants.AppSourceDataUpkeeper,
+			_, err = CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
+				return s.eventsProcessingClient.OpportunityClient.CloseLooseOpportunity(ctx, &opportunitypb.CloseLooseOpportunityGrpcRequest{
+					Tenant:    record.Tenant,
+					Id:        record.OpportunityId,
+					AppSource: constants.AppSourceDataUpkeeper,
+				})
 			})
 			if err != nil {
 				tracing.TraceErr(span, err)
@@ -191,11 +211,11 @@ func (s *contractService) closeEndedContractOpportunityRenewals(ctx context.Cont
 	}
 }
 
-func (s *contractService) resyncContract(ctx context.Context, tenant, contractId string) {
+func (s *contractService) ResyncContract(ctx context.Context, tenant, contractId string) {
 	span, ctx := tracing.StartTracerSpan(ctx, "ContractService.resyncContract")
 	defer span.Finish()
 
-	contractDbNode, err := s.repositories.ContractRepository.GetContractById(ctx, tenant, contractId)
+	contractDbNode, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, tenant, contractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error getting contract {%s}: %s", contractId, err.Error())
@@ -205,27 +225,46 @@ func (s *contractService) resyncContract(ctx context.Context, tenant, contractId
 	props := utils.GetPropsFromNode(*contractDbNode)
 
 	request := contractpb.UpdateContractGrpcRequest{
-		Tenant:           tenant,
-		Id:               contractId,
-		Name:             utils.GetStringPropOrEmpty(props, "name"),
-		ContractUrl:      utils.GetStringPropOrEmpty(props, "contractUrl"),
-		ServiceStartedAt: utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(props, "serviceStartedAt")),
-		SignedAt:         utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(props, "signedAt")),
-		EndedAt:          utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(props, "endedAt")),
+		Tenant:             tenant,
+		Id:                 contractId,
+		Name:               utils.GetStringPropOrEmpty(props, "name"),
+		ContractUrl:        utils.GetStringPropOrEmpty(props, "contractUrl"),
+		ServiceStartedAt:   utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(props, "serviceStartedAt")),
+		SignedAt:           utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(props, "signedAt")),
+		EndedAt:            utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(props, "endedAt")),
+		Currency:           utils.GetStringPropOrEmpty(props, "currency"),
+		InvoicingStartDate: utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(props, "invoicingStartDate")),
 		SourceFields: &commonpb.SourceFields{
 			Source:    utils.GetStringPropOrEmpty(props, "sourceOfTruth"),
 			AppSource: constants.AppSourceDataUpkeeper,
 		},
 	}
+
 	switch utils.GetStringPropOrEmpty(props, "renewalCycle") {
-	case "MONTHLY":
+	case neo4jenum.RenewalCycleMonthlyRenewal.String():
 		request.RenewalCycle = contractpb.RenewalCycle_MONTHLY_RENEWAL
-	case "ANNUALLY":
+	case neo4jenum.RenewalCycleQuarterlyRenewal.String():
+		request.RenewalCycle = contractpb.RenewalCycle_QUARTERLY_RENEWAL
+	case neo4jenum.RenewalCycleAnnualRenewal.String():
 		request.RenewalCycle = contractpb.RenewalCycle_ANNUALLY_RENEWAL
 	default:
 		request.RenewalCycle = contractpb.RenewalCycle_NONE
 	}
-	_, err = s.eventsProcessingClient.ContractClient.UpdateContract(ctx, &request)
+
+	switch utils.GetStringPropOrEmpty(props, "billingCycle") {
+	case neo4jenum.BillingCycleMonthlyBilling.String():
+		request.BillingCycle = commonpb.BillingCycle_MONTHLY_BILLING
+	case neo4jenum.BillingCycleQuarterlyBilling.String():
+		request.BillingCycle = commonpb.BillingCycle_QUARTERLY_BILLING
+	case neo4jenum.BillingCycleAnnuallyBilling.String():
+		request.BillingCycle = commonpb.BillingCycle_ANNUALLY_BILLING
+	default:
+		request.BillingCycle = commonpb.BillingCycle_NONE_BILLING
+	}
+
+	_, err = CallEventsPlatformGRPCWithRetry[*contractpb.ContractIdGrpcResponse](func() (*contractpb.ContractIdGrpcResponse, error) {
+		return s.eventsProcessingClient.ContractClient.UpdateContract(ctx, &request)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error re-syncing contract {%s}: %s", contractId, err.Error())

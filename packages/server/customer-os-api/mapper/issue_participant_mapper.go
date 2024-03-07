@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"reflect"
 )
 
@@ -13,17 +13,17 @@ func MapEntityToIssueParticipant(issueParticipantEntity *entity.IssueParticipant
 		return nil
 	}
 	switch (*issueParticipantEntity).ParticipantLabel() {
-	case neo4jentity.NodeLabel_User:
+	case neo4jutil.NodeLabelUser:
 		userEntity := (*issueParticipantEntity).(*entity.UserEntity)
 		return model.UserParticipant{
 			UserParticipant: MapEntityToUser(userEntity),
 		}
-	case neo4jentity.NodeLabel_Contact:
+	case neo4jutil.NodeLabelContact:
 		contactEntity := (*issueParticipantEntity).(*entity.ContactEntity)
 		return model.ContactParticipant{
 			ContactParticipant: MapEntityToContact(contactEntity),
 		}
-	case neo4jentity.NodeLabel_Organization:
+	case neo4jutil.NodeLabelOrganization:
 		organizationEntity := (*issueParticipantEntity).(*entity.OrganizationEntity)
 		return model.OrganizationParticipant{
 			OrganizationParticipant: MapEntityToOrganization(organizationEntity),

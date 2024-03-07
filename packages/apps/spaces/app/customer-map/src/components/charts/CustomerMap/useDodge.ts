@@ -43,10 +43,14 @@ export const useDodge = <Datum>({
     .scaleTime()
     .domain(minMaxX)
     .range([marginLeft, width + marginRight]);
-  const rScale = d3
-    .scaleLinear()
-    .domain(minMaxR)
-    .range([LOW_R, isTopRadiusDecreased ? 20 : TOP_R]);
+
+  const rScale = (() => {
+    if (isTopRadiusDecreased) {
+      return d3.scaleLinear().domain(minMaxR).range([LOW_R, 20]).nice();
+    }
+
+    return d3.scaleSqrt().domain(minMaxR).range([LOW_R, TOP_R]).nice();
+  })();
 
   function transformData(input: CircleData<Datum>[]) {
     return dodge(input, {

@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/entity"
@@ -169,7 +170,7 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 		return NewFailedSyncStatus(reason)
 	}
 
-	if issueInput.OrganizationRequired && reporterLabel != entity.NodeLabel_Organization {
+	if issueInput.OrganizationRequired && reporterLabel != neo4jutil.NodeLabelOrganization {
 		reason = fmt.Sprintf("organization(s) not found for issue %s for tenant %s", issueInput.ExternalId, tenant)
 		s.log.Warnf("Skip issue sync: %v", reason)
 		span.LogFields(log.String("output", "skipped"))
@@ -180,7 +181,7 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 	syncMutex.Lock()
 	defer syncMutex.Unlock()
 	// Check if issue already exists
-	issueId, err := s.repositories.IssueRepository.GetMatchedIssueId(ctx, tenant, issueInput.ExternalSystem, issueInput.ExternalId)
+	issueId, err := s.repositories.Neo4jRepositories.IssueReadRepository.GetMatchedIssueId(ctx, tenant, issueInput.ExternalSystem, issueInput.ExternalId)
 	if err != nil {
 		failedSync = true
 		tracing.TraceErr(span, err)
@@ -219,19 +220,24 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 				SyncDate:         utils.ConvertTimeToTimestampPtr(&syncDate),
 			},
 		}
-		if reporterId != "" && reporterLabel == entity.NodeLabel_Organization {
+		if issueInput.GroupId != "" {
+			issueGrpcRequest.GroupId = &issueInput.GroupId
+		}
+		if reporterId != "" && reporterLabel == neo4jutil.NodeLabelOrganization {
 			issueGrpcRequest.ReportedByOrganizationId = &reporterId
 		}
 		if submitterId != "" {
 			switch submitterLabel {
-			case entity.NodeLabel_Organization:
+			case neo4jutil.NodeLabelOrganization:
 				issueGrpcRequest.SubmittedByOrganizationId = &submitterId
-			case entity.NodeLabel_User:
+			case neo4jutil.NodeLabelUser:
 				issueGrpcRequest.SubmittedByUserId = &submitterId
 			}
 		}
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = s.grpcClients.IssueClient.UpsertIssue(ctx, &issueGrpcRequest)
+		_, err = CallEventsPlatformGRPCWithRetry[*issuepb.IssueIdGrpcResponse](func() (*issuepb.IssueIdGrpcResponse, error) {
+			return s.grpcClients.IssueClient.UpsertIssue(ctx, &issueGrpcRequest)
+		})
 		if err != nil {
 			failedSync = true
 			tracing.TraceErr(span, err, log.String("grpcMethod", "UpsertIssue"))
@@ -241,11 +247,11 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 		// Wait for issue to be created in neo4j
 		if !failedSync && !matchingIssueExists {
 			for i := 1; i <= constants.MaxRetryCheckDataInNeo4jAfterEventRequest; i++ {
-				issue, findErr := s.repositories.IssueRepository.GetById(ctx, tenant, issueId)
+				issue, findErr := s.repositories.Neo4jRepositories.IssueReadRepository.GetById(ctx, tenant, issueId)
 				if issue != nil && findErr == nil {
 					break
 				}
-				time.Sleep(time.Duration(i*constants.TimeoutIntervalMs) * time.Millisecond)
+				time.Sleep(utils.BackOffExponentialDelay(i))
 			}
 		}
 	}
@@ -261,12 +267,14 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 				reason = fmt.Sprintf("failed finding follower for issue %s for tenant %s :%s", issueInput.ExternalId, tenant, err.Error())
 				s.log.Error(reason)
 			}
-			if followerId != "" && followerLabel == entity.NodeLabel_User && !utils.Contains(processedFollowerUserIds, followerId) {
-				_, err = s.grpcClients.IssueClient.AddUserFollower(ctx, &issuepb.AddUserFollowerToIssueGrpcRequest{
-					Tenant:    common.GetTenantFromContext(ctx),
-					IssueId:   issueId,
-					UserId:    followerId,
-					AppSource: utils.StringFirstNonEmpty(issueInput.AppSource, constants.AppSourceCustomerOsWebhooks),
+			if followerId != "" && followerLabel == neo4jutil.NodeLabelUser && !utils.Contains(processedFollowerUserIds, followerId) {
+				_, err = CallEventsPlatformGRPCWithRetry[*issuepb.IssueIdGrpcResponse](func() (*issuepb.IssueIdGrpcResponse, error) {
+					return s.grpcClients.IssueClient.AddUserFollower(ctx, &issuepb.AddUserFollowerToIssueGrpcRequest{
+						Tenant:    common.GetTenantFromContext(ctx),
+						IssueId:   issueId,
+						UserId:    followerId,
+						AppSource: utils.StringFirstNonEmpty(issueInput.AppSource, constants.AppSourceCustomerOsWebhooks),
+					})
 				})
 				processedFollowerUserIds = append(processedFollowerUserIds, followerId)
 				if err != nil {
@@ -288,12 +296,14 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 				reason = fmt.Sprintf("failed finding collaborator for issue %s for tenant %s :%s", issueInput.ExternalId, tenant, err.Error())
 				s.log.Error(reason)
 			}
-			if collaboratorId != "" && collaboratorLabel == entity.NodeLabel_User && !utils.Contains(processedFollowerUserIds, collaboratorId) {
-				_, err = s.grpcClients.IssueClient.AddUserFollower(ctx, &issuepb.AddUserFollowerToIssueGrpcRequest{
-					Tenant:    common.GetTenantFromContext(ctx),
-					IssueId:   issueId,
-					UserId:    collaboratorId,
-					AppSource: utils.StringFirstNonEmpty(issueInput.AppSource, constants.AppSourceCustomerOsWebhooks),
+			if collaboratorId != "" && collaboratorLabel == neo4jutil.NodeLabelUser && !utils.Contains(processedFollowerUserIds, collaboratorId) {
+				_, err = CallEventsPlatformGRPCWithRetry[*issuepb.IssueIdGrpcResponse](func() (*issuepb.IssueIdGrpcResponse, error) {
+					return s.grpcClients.IssueClient.AddUserFollower(ctx, &issuepb.AddUserFollowerToIssueGrpcRequest{
+						Tenant:    common.GetTenantFromContext(ctx),
+						IssueId:   issueId,
+						UserId:    collaboratorId,
+						AppSource: utils.StringFirstNonEmpty(issueInput.AppSource, constants.AppSourceCustomerOsWebhooks),
+					})
 				})
 				processedFollowerUserIds = append(processedFollowerUserIds, collaboratorId)
 				if err != nil {
@@ -315,11 +325,13 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 			s.log.Error(reason)
 		}
 		if assigneeId != "" {
-			_, err = s.grpcClients.IssueClient.AddUserAssignee(ctx, &issuepb.AddUserAssigneeToIssueGrpcRequest{
-				Tenant:    common.GetTenantFromContext(ctx),
-				IssueId:   issueId,
-				UserId:    assigneeId,
-				AppSource: utils.StringFirstNonEmpty(issueInput.AppSource, constants.AppSourceCustomerOsWebhooks),
+			_, err = CallEventsPlatformGRPCWithRetry[*issuepb.IssueIdGrpcResponse](func() (*issuepb.IssueIdGrpcResponse, error) {
+				return s.grpcClients.IssueClient.AddUserAssignee(ctx, &issuepb.AddUserAssigneeToIssueGrpcRequest{
+					Tenant:    common.GetTenantFromContext(ctx),
+					IssueId:   issueId,
+					UserId:    assigneeId,
+					AppSource: utils.StringFirstNonEmpty(issueInput.AppSource, constants.AppSourceCustomerOsWebhooks),
+				})
 			})
 			if err != nil {
 				tracing.TraceErr(span, err, log.String("grpcMethod", "AddUserAssignee"))
@@ -361,7 +373,7 @@ func (s *issueService) GetIdForReferencedIssue(ctx context.Context, tenant, exte
 	}
 
 	if issue.ReferencedByExternalId() {
-		return s.repositories.IssueRepository.GetIssueIdByExternalId(ctx, tenant, issue.ExternalId, externalSystemId)
+		return s.repositories.Neo4jRepositories.IssueReadRepository.GetIssueIdByExternalId(ctx, tenant, issue.ExternalId, externalSystemId)
 	}
 	return "", nil
 }

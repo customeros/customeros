@@ -1,8 +1,8 @@
 package event
 
 import (
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 	"github.com/pkg/errors"
@@ -27,8 +27,8 @@ func NewOpportunityCreateRenewalEvent(aggregate eventstore.Aggregate, contractId
 		UpdatedAt:         updatedAt,
 		Source:            source,
 		ContractId:        contractId,
-		InternalType:      string(model.OpportunityInternalTypeStringRenewal),
-		InternalStage:     string(model.OpportunityInternalStageStringOpen),
+		InternalType:      neo4jenum.OpportunityInternalTypeRenewal.String(),
+		InternalStage:     neo4jenum.OpportunityInternalStageOpen.String(),
 		RenewalLikelihood: renewalLikelihood,
 	}
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	entityDashboard "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity/dashboard"
@@ -12,10 +13,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"math"
-	"math/rand"
 	"time"
 )
 
@@ -26,8 +27,16 @@ type DashboardViewOrganizationsRequest struct {
 	Limit int
 }
 
+type DashboardViewRenewalsRequest struct {
+	Where *model.Filter
+	Sort  *model.SortBy
+	Page  int
+	Limit int
+}
+
 type DashboardService interface {
 	GetDashboardViewOrganizationsData(ctx context.Context, requestDetails DashboardViewOrganizationsRequest) (*utils.Pagination, error)
+	GetDashboardViewRenewalsData(ctx context.Context, requestDetails DashboardViewRenewalsRequest) (*utils.Pagination, error)
 
 	GetDashboardCustomerMapData(ctx context.Context) ([]*entityDashboard.DashboardCustomerMapData, error)
 	GetDashboardMRRPerCustomerData(ctx context.Context, start, end time.Time) (*entityDashboard.DashboardDashboardMRRPerCustomerData, error)
@@ -64,10 +73,10 @@ func (s *dashboardService) GetDashboardViewOrganizationsData(ctx context.Context
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Int("page", requestDetails.Page), log.Int("limit", requestDetails.Limit))
 	if requestDetails.Where != nil {
-		span.LogFields(log.Object("filter", *requestDetails.Where))
+		tracing.LogObjectAsJson(span, "where", *requestDetails.Where)
 	}
 	if requestDetails.Sort != nil {
-		span.LogFields(log.Object("sort", *requestDetails.Sort))
+		tracing.LogObjectAsJson(span, "sort", *requestDetails.Sort)
 	}
 
 	var paginatedResult = utils.Pagination{
@@ -88,6 +97,49 @@ func (s *dashboardService) GetDashboardViewOrganizationsData(ctx context.Context
 	}
 
 	paginatedResult.SetRows(&organizationEntities)
+	return &paginatedResult, nil
+}
+
+func (s *dashboardService) GetDashboardViewRenewalsData(ctx context.Context, requestDetails DashboardViewRenewalsRequest) (*utils.Pagination, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardService.GetDashboardViewRenewalsData")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Int("page", requestDetails.Page), log.Int("limit", requestDetails.Limit))
+	if requestDetails.Where != nil {
+		span.LogFields(log.Object("filter", *requestDetails.Where))
+	}
+	if requestDetails.Sort != nil {
+		span.LogFields(log.Object("sort", *requestDetails.Sort))
+	}
+
+	var paginatedResult = utils.Pagination{
+		Limit: requestDetails.Limit,
+		Page:  requestDetails.Page,
+	}
+
+	dbRecords, err := s.repositories.DashboardRepository.GetDashboardViewRenewalData(ctx, common.GetContext(ctx).Tenant, paginatedResult.GetSkip(), paginatedResult.GetLimit(), requestDetails.Where, requestDetails.Sort)
+	if err != nil {
+		return nil, err
+	}
+	paginatedResult.SetTotalRows(dbRecords.Count)
+
+	renewalRecordEntities := entity.RenewalsRecordEntities{}
+
+	for _, v := range dbRecords.Records {
+		renewalRecordEntity := entity.RenewalsRecordEntity{}
+		if v.Values[0] != nil {
+			renewalRecordEntity.Organization = *s.services.OrganizationService.mapDbNodeToOrganizationEntity(v.Values[0].(dbtype.Node))
+		}
+		if v.Values[1] != nil {
+			renewalRecordEntity.Contract = *mapper.MapDbNodeToContractEntity(utils.NodePtr(v.Values[1].(dbtype.Node)))
+		}
+		if v.Values[2] != nil {
+			renewalRecordEntity.Opportunity = *s.services.OpportunityService.mapDbNodeToOpportunityEntity(v.Values[2].(dbtype.Node))
+		}
+		renewalRecordEntities = append(renewalRecordEntities, renewalRecordEntity)
+	}
+
+	paginatedResult.SetRows(&renewalRecordEntities)
 	return &paginatedResult, nil
 }
 
@@ -142,6 +194,14 @@ func (s *dashboardService) GetDashboardMRRPerCustomerData(ctx context.Context, s
 
 	response := entityDashboard.DashboardDashboardMRRPerCustomerData{}
 
+	for _, month := range utils.GenerateYearMonths(start, end) {
+		response.Months = append(response.Months, &entityDashboard.DashboardDashboardMRRPerCustomerPerMonthData{
+			Year:  month.Year,
+			Month: int(month.Month),
+			Value: 0,
+		})
+	}
+
 	countCustomers, err := s.repositories.OrganizationRepository.CountCustomers(ctx, common.GetContext(ctx).Tenant)
 	if err != nil {
 		return nil, err
@@ -161,13 +221,11 @@ func (s *dashboardService) GetDashboardMRRPerCustomerData(ctx context.Context, s
 			amountPerMonth = amountPerMonth / float64(countCustomers)
 		}
 
-		newData := &entityDashboard.DashboardDashboardMRRPerCustomerPerMonthData{
-			Year:  int(year),
-			Month: int(month),
-			Value: amountPerMonth,
+		for _, monthData := range response.Months {
+			if monthData.Year == int(year) && monthData.Month == int(month) {
+				monthData.Value = amountPerMonth
+			}
 		}
-
-		response.Months = append(response.Months, newData)
 	}
 
 	currentMonth := 0.0
@@ -195,19 +253,59 @@ func (s *dashboardService) GetDashboardGrossRevenueRetentionData(ctx context.Con
 
 	response := entityDashboard.DashboardGrossRevenueRetentionData{}
 
-	response.GrossRevenueRetention = 85
-	response.IncreasePercentage = "+5%"
-
-	min := float64(0)
-	max := float64(1)
-	for i := 1; i <= 12; i++ {
+	for _, month := range utils.GenerateYearMonths(start, end) {
 		response.Months = append(response.Months, &entityDashboard.DashboardGrossRevenueRetentionPerMonthData{
-			Month:      i,
-			Percentage: rand.Float64()*(max-min) + min,
+			Year:       month.Year,
+			Month:      int(month.Month),
+			Percentage: 0,
 		})
 	}
 
+	data, err := s.repositories.DashboardRepository.GetDashboardGRRData(ctx, common.GetContext(ctx).Tenant, start, end)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, record := range data {
+		year, _ := record["year"].(int64)
+		month, _ := record["month"].(int64)
+		value, _ := record["value"].(float64)
+
+		for _, monthData := range response.Months {
+			if monthData.Year == int(year) && monthData.Month == int(month) {
+				if value > 100 {
+					monthData.Percentage = 100
+				} else {
+					monthData.Percentage = roundToTwoDecimalPlaces(value)
+				}
+			}
+		}
+	}
+
+	currentValue := 0.0
+	previousValue := 0.0
+
+	if len(response.Months) == 1 {
+		currentValue = response.Months[len(response.Months)-1].Percentage
+	} else if len(response.Months) > 1 {
+		currentValue = response.Months[len(response.Months)-1].Percentage
+		previousValue = response.Months[len(response.Months)-2].Percentage
+	}
+
+	if currentValue == 0 {
+		if previousValue == 0 {
+			response.GrossRevenueRetention = 0
+		} else {
+			response.GrossRevenueRetention = -100
+		}
+	} else {
+		response.GrossRevenueRetention = roundToTwoDecimalPlaces(currentValue)
+	}
+
+	response.IncreasePercentage = calculatePercentageChange(previousValue, currentValue)
+
 	return &response, nil
+
 }
 
 func (s *dashboardService) GetDashboardARRBreakdownData(ctx context.Context, start, end time.Time) (*entityDashboard.DashboardARRBreakdownData, error) {
@@ -218,6 +316,19 @@ func (s *dashboardService) GetDashboardARRBreakdownData(ctx context.Context, sta
 	span.LogFields(log.Object("end", end))
 
 	response := entityDashboard.DashboardARRBreakdownData{}
+
+	for _, month := range utils.GenerateYearMonths(start, end) {
+		response.Months = append(response.Months, &entityDashboard.DashboardARRBreakdownPerMonthData{
+			Year:            month.Year,
+			Month:           int(month.Month),
+			NewlyContracted: 0,
+			Renewals:        0,
+			Upsells:         0,
+			Downgrades:      0,
+			Cancellations:   0,
+			Churned:         0,
+		})
+	}
 
 	data, err := s.repositories.DashboardRepository.GetDashboardARRBreakdownData(ctx, common.GetContext(ctx).Tenant, start, end)
 	if err != nil {
@@ -234,18 +345,16 @@ func (s *dashboardService) GetDashboardARRBreakdownData(ctx context.Context, sta
 		cancellations, _ := record["cancellations"].(float64)
 		churned, _ := record["churned"].(float64)
 
-		newData := &entityDashboard.DashboardARRBreakdownPerMonthData{
-			Year:            int(year),
-			Month:           int(month),
-			NewlyContracted: newlyContracted,
-			Renewals:        renewals,
-			Upsells:         upsells,
-			Downgrades:      downgrades,
-			Cancellations:   cancellations,
-			Churned:         churned,
+		for _, monthData := range response.Months {
+			if monthData.Year == int(year) && monthData.Month == int(month) {
+				monthData.NewlyContracted = newlyContracted
+				monthData.Renewals = renewals
+				monthData.Upsells = upsells
+				monthData.Downgrades = downgrades
+				monthData.Cancellations = cancellations
+				monthData.Churned = churned
+			}
 		}
-
-		response.Months = append(response.Months, newData)
 	}
 
 	upsells, err := s.repositories.DashboardRepository.GetDashboardARRBreakdownUpsellsAndDowngradesData(ctx, common.GetContext(ctx).Tenant, "UPSELLS", start, end)
@@ -347,20 +456,13 @@ func (s *dashboardService) GetDashboardRetentionRateData(ctx context.Context, st
 
 	response := entityDashboard.DashboardRetentionRateData{}
 
-	current := start
-	for current.Before(end) || current.Equal(end) {
-		fmt.Println(current.Month(), current.Year())
-
-		newData := &entityDashboard.DashboardRetentionRatePerMonthData{
-			Year:       current.Year(),
-			Month:      int(current.Month()),
+	for _, month := range utils.GenerateYearMonths(start, end) {
+		response.Months = append(response.Months, &entityDashboard.DashboardRetentionRatePerMonthData{
+			Year:       month.Year,
+			Month:      int(month.Month),
 			RenewCount: 0,
 			ChurnCount: 0,
-		}
-
-		response.Months = append(response.Months, newData)
-
-		current = current.AddDate(0, 1, 0)
+		})
 	}
 
 	contractsRenewalsData, err := s.repositories.DashboardRepository.GetDashboardRetentionRateContractsRenewalsData(ctx, common.GetContext(ctx).Tenant, start, end)
@@ -446,6 +548,14 @@ func (s *dashboardService) GetDashboardNewCustomersData(ctx context.Context, sta
 
 	response := entityDashboard.DashboardNewCustomersData{}
 
+	for _, month := range utils.GenerateYearMonths(start, end) {
+		response.Months = append(response.Months, &entityDashboard.DashboardNewCustomerMonthData{
+			Year:  month.Year,
+			Month: int(month.Month),
+			Count: 0,
+		})
+	}
+
 	data, err := s.repositories.DashboardRepository.GetDashboardNewCustomersData(ctx, common.GetContext(ctx).Tenant, start, end)
 	if err != nil {
 		return nil, err
@@ -456,13 +566,11 @@ func (s *dashboardService) GetDashboardNewCustomersData(ctx context.Context, sta
 		month, _ := record["month"].(int64)
 		count, _ := record["count"].(int64)
 
-		newData := &entityDashboard.DashboardNewCustomerMonthData{
-			Year:  int(year),
-			Month: int(month),
-			Count: int(count),
+		for _, monthData := range response.Months {
+			if monthData.Year == int(year) && monthData.Month == int(month) {
+				monthData.Count = int(count)
+			}
 		}
-
-		response.Months = append(response.Months, newData)
 	}
 
 	currentMonthCount := 0
@@ -620,12 +728,12 @@ func ComputeNumbersDisplay(previousMonthCount, currentMonthCount float64) string
 	return PrintFloatValue(percentage, true) + "%"
 }
 
-func ComputePercentagesDisplay(previous, current float64) string {
+func ComputePercentagesDisplay(previous, current float64) float64 {
 	if math.IsNaN(current) {
-		return "0"
+		return float64(0)
 	}
 	if math.IsNaN(previous) {
-		return PrintFloatValue(current, true)
+		return current
 	}
 
 	diff := current - previous
@@ -637,7 +745,7 @@ func ComputePercentagesDisplay(previous, current float64) string {
 		diff = -100
 	}
 
-	return PrintFloatValue(diff, true)
+	return diff
 }
 
 func PrintFloatValue(number float64, withSign bool) string {

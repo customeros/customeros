@@ -89,7 +89,7 @@ func (s *attachmentService) Create(ctx context.Context, newAnalysis *entity.Atta
 func (s *attachmentService) createAttachmentInDBTxWork(ctx context.Context, newAttachment *entity.AttachmentEntity, source, sourceOfTruth neo4jentity.DataSource) func(tx neo4j.ManagedTransaction) (any, error) {
 	return func(tx neo4j.ManagedTransaction) (any, error) {
 		tenant := common.GetContext(ctx).Tenant
-		analysisDbNode, err := s.repositories.AttachmentRepository.Create(ctx, tx, tenant, *newAttachment, source, sourceOfTruth)
+		analysisDbNode, err := s.repositories.AttachmentRepository.Create(ctx, tx, tenant, newAttachment.Id, newAttachment.CdnUrl, newAttachment.BasePath, newAttachment.FileName, newAttachment.MimeType, newAttachment.Size, newAttachment.CreatedAt, source, sourceOfTruth, newAttachment.AppSource)
 		if err != nil {
 			return nil, err
 		}
@@ -124,18 +124,19 @@ func (s *attachmentService) GetAttachmentById(ctx context.Context, id string) (*
 func (s *attachmentService) MapDbNodeToAttachmentEntity(node dbtype.Node) *entity.AttachmentEntity {
 	props := utils.GetPropsFromNode(node)
 	createdAt := utils.GetTimePropOrEpochStart(props, "createdAt")
-	analysisEntity := entity.AttachmentEntity{
+	attachmentEntity := entity.AttachmentEntity{
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
 		CreatedAt:     &createdAt,
-		Name:          utils.GetStringPropOrEmpty(props, "name"),
+		FileName:      utils.GetStringPropOrEmpty(props, "fileName"),
 		MimeType:      utils.GetStringPropOrEmpty(props, "mimeType"),
-		Extension:     utils.GetStringPropOrEmpty(props, "extension"),
+		CdnUrl:        utils.GetStringPropOrEmpty(props, "cdnUrl"),
+		BasePath:      utils.GetStringPropOrEmpty(props, "basePath"),
 		Size:          utils.GetInt64PropOrZero(props, "size"),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
 		Source:        neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth: neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
-	return &analysisEntity
+	return &attachmentEntity
 }
 
 func (s *attachmentService) convertDbNodesToAttachments(records []*utils.DbNodeAndId) entity.AttachmentEntities {

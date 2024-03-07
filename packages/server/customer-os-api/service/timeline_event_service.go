@@ -10,7 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/exp/slices"
@@ -147,23 +147,23 @@ func (s *timelineEventService) convertDbNodesToTimelineEvents(dbNodes []*dbtype.
 }
 
 func (s *timelineEventService) convertDbNodeToTimelineEvent(dbNode *dbtype.Node) entity.TimelineEvent {
-	if slices.Contains(dbNode.Labels, neo4jentity.NodeLabel_PageView) {
+	if slices.Contains(dbNode.Labels, neo4jutil.NodeLabelPageView) {
 		return s.services.PageViewService.mapDbNodeToPageView(*dbNode)
-	} else if slices.Contains(dbNode.Labels, neo4jentity.NodeLabel_InteractionSession) {
+	} else if slices.Contains(dbNode.Labels, neo4jutil.NodeLabelInteractionSession) {
 		return s.services.InteractionSessionService.mapDbNodeToInteractionSessionEntity(*dbNode)
-	} else if slices.Contains(dbNode.Labels, neo4jentity.NodeLabel_Issue) {
+	} else if slices.Contains(dbNode.Labels, neo4jutil.NodeLabelIssue) {
 		return s.services.IssueService.mapDbNodeToIssue(*dbNode)
-	} else if slices.Contains(dbNode.Labels, neo4jentity.NodeLabel_Note) {
+	} else if slices.Contains(dbNode.Labels, neo4jutil.NodeLabelNote) {
 		return s.services.NoteService.mapDbNodeToNoteEntity(*dbNode)
-	} else if slices.Contains(dbNode.Labels, neo4jentity.NodeLabel_InteractionEvent) {
+	} else if slices.Contains(dbNode.Labels, neo4jutil.NodeLabelInteractionEvent) {
 		return s.services.InteractionEventService.mapDbNodeToInteractionEventEntity(*dbNode)
-	} else if slices.Contains(dbNode.Labels, neo4jentity.NodeLabel_Analysis) {
+	} else if slices.Contains(dbNode.Labels, neo4jutil.NodeLabelAnalysis) {
 		return s.services.AnalysisService.mapDbNodeToAnalysisEntity(*dbNode)
-	} else if slices.Contains(dbNode.Labels, neo4jentity.NodeLabel_Meeting) {
+	} else if slices.Contains(dbNode.Labels, neo4jutil.NodeLabelMeeting) {
 		return s.services.MeetingService.mapDbNodeToMeetingEntity(*dbNode)
-	} else if slices.Contains(dbNode.Labels, neo4jentity.NodeLabel_Action) {
+	} else if slices.Contains(dbNode.Labels, neo4jutil.NodeLabelAction) {
 		return s.services.ActionService.mapDbNodeToActionEntity(*dbNode)
-	} else if slices.Contains(dbNode.Labels, neo4jentity.NodeLabel_LogEntry) {
+	} else if slices.Contains(dbNode.Labels, neo4jutil.NodeLabelLogEntry) {
 		return s.services.LogEntryService.mapDbNodeToLogEntryEntity(dbNode)
 	}
 	return nil

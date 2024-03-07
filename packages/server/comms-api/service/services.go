@@ -4,6 +4,7 @@ import (
 	"github.com/machinebox/graphql"
 	c "github.com/openline-ai/openline-customer-os/packages/server/comms-api/config"
 	authService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/service"
+	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/redis/go-redis/v9"
 )
@@ -14,7 +15,7 @@ type Services struct {
 	MailService         MailService
 	CustomerOsService   CustomerOSService
 	RedisService        RedisService
-	FileStoreApiService FileStoreApiService
+	FileStoreApiService fsc.FileStoreApiService
 	CommonServices      *commonService.Services
 }
 
@@ -24,7 +25,7 @@ func InitServices(graphqlClient *graphql.Client, redisClient *redis.Client, cfg 
 	services := Services{
 		CustomerOsService:   cosService,
 		RedisService:        NewRedisService(redisClient, cfg),
-		FileStoreApiService: NewFileStoreApiService(cfg),
+		FileStoreApiService: fsc.NewFileStoreApiService(&cfg.FileStoreApiConfig),
 		CommonServices:      commonService.InitServices(db.GormDB, nil),
 	}
 

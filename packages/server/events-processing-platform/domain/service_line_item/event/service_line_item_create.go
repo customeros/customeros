@@ -10,36 +10,40 @@ import (
 )
 
 type ServiceLineItemCreateEvent struct {
-	Tenant     string             `json:"tenant" validate:"required"`
-	Billed     string             `json:"billed"`
-	Quantity   int64              `json:"quantity,omitempty"`
-	Price      float64            `json:"price"`
-	Name       string             `json:"name"`
-	ContractId string             `json:"contractId" validate:"required"`
-	ParentId   string             `json:"parentId" validate:"required"`
-	CreatedAt  time.Time          `json:"createdAt"`
-	UpdatedAt  time.Time          `json:"updatedAt"`
-	StartedAt  time.Time          `json:"startedAt"`
-	EndedAt    *time.Time         `json:"endedAt,omitempty"`
-	Source     commonmodel.Source `json:"source"`
-	Comments   string             `json:"comments"`
+	Tenant            string             `json:"tenant" validate:"required"`
+	Billed            string             `json:"billed"`
+	Quantity          int64              `json:"quantity,omitempty"`
+	Price             float64            `json:"price"`
+	Name              string             `json:"name"`
+	ContractId        string             `json:"contractId" validate:"required"`
+	ParentId          string             `json:"parentId" validate:"required"`
+	PreviousVersionId string             `json:"previousVersionId"`
+	CreatedAt         time.Time          `json:"createdAt"`
+	UpdatedAt         time.Time          `json:"updatedAt"`
+	StartedAt         time.Time          `json:"startedAt"`
+	EndedAt           *time.Time         `json:"endedAt,omitempty"`
+	Source            commonmodel.Source `json:"source"`
+	Comments          string             `json:"comments"`
+	VatRate           float64            `json:"vatRate"`
 }
 
-func NewServiceLineItemCreateEvent(aggregate eventstore.Aggregate, dataFields model.ServiceLineItemDataFields, source commonmodel.Source, createdAt, updatedAt, startedAt time.Time, endedAt *time.Time) (eventstore.Event, error) {
+func NewServiceLineItemCreateEvent(aggregate eventstore.Aggregate, dataFields model.ServiceLineItemDataFields, source commonmodel.Source, createdAt, updatedAt, startedAt time.Time, endedAt *time.Time, previousVersionId string) (eventstore.Event, error) {
 	eventData := ServiceLineItemCreateEvent{
-		Tenant:     aggregate.GetTenant(),
-		Billed:     dataFields.Billed.String(),
-		Quantity:   dataFields.Quantity,
-		Price:      dataFields.Price,
-		Name:       dataFields.Name,
-		ContractId: dataFields.ContractId,
-		ParentId:   dataFields.ParentId,
-		CreatedAt:  createdAt,
-		UpdatedAt:  updatedAt,
-		StartedAt:  startedAt,
-		EndedAt:    endedAt,
-		Source:     source,
-		Comments:   dataFields.Comments,
+		Tenant:            aggregate.GetTenant(),
+		Billed:            dataFields.Billed.String(),
+		Quantity:          dataFields.Quantity,
+		Price:             dataFields.Price,
+		Name:              dataFields.Name,
+		ContractId:        dataFields.ContractId,
+		ParentId:          dataFields.ParentId,
+		CreatedAt:         createdAt,
+		UpdatedAt:         updatedAt,
+		StartedAt:         startedAt,
+		EndedAt:           endedAt,
+		Source:            source,
+		Comments:          dataFields.Comments,
+		VatRate:           dataFields.VatRate,
+		PreviousVersionId: previousVersionId,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

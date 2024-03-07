@@ -1,0 +1,17 @@
+extend type Query {
+    slack_Channels(pagination: Pagination): SlackChannelPage! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+type SlackChannelPage implements Pages {
+    content: [SlackChannel!]!
+    totalPages: Int!
+    totalElements: Int64!
+    totalAvailable: Int64!
+}
+
+type SlackChannel {
+    metadata:              Metadata!
+    organization:          Organization @goField(forceResolver: true)
+    channelId:             String!
+    channelName:           String!
+}

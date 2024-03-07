@@ -1,6 +1,5 @@
 import { PropsWithChildren } from 'react';
 
-// @ts-expect-error types not available
 import { escapeForSlackWithMarkdown } from 'slack-to-html';
 
 import { Flex } from '@ui/layout/Flex';
@@ -38,7 +37,7 @@ export const SlackMessageCard: React.FC<SlackMessageCardProps> = ({
   const displayContent: string = (() => {
     const sanitizeContent = content.replace(/\n/g, '<br/>');
     const slack = escapeForSlackWithMarkdown(sanitizeContent);
-    const regex = /(@[\w]+)/g;
+    const regex = /(?<=^|\s)@(\w+)/g;
 
     return slack.replace(
       regex,

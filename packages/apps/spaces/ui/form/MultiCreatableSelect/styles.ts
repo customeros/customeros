@@ -59,11 +59,15 @@ export const multiCreatableSelectStyles = (
     my: '2px',
     borderRadius: 'md',
     color: 'gray.700',
-    bg: isSelected ? 'primary.50' : 'white',
+    bg: 'white',
     boxShadow: isFocused ? 'menuOptionsFocus' : 'none',
     fontSize: 'sm',
     justifyContent: 'space-between',
     _hover: { bg: isSelected ? 'primary.50' : 'gray.100' },
+    _selected: {
+      bg: 'primary.50',
+      color: 'primary.600',
+    },
   }),
   groupHeading: (props: CSSWithMultiValues) => ({
     ...props,

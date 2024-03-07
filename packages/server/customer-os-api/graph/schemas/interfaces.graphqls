@@ -17,6 +17,10 @@ interface Pages {
     totalElements: Int64!
 }
 
+interface MetadataInterface {
+    metadata: Metadata!
+}
+
 interface Node {
     id: ID!
 }
@@ -26,6 +30,12 @@ interface SourceFields implements Node {
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!
+}
+
+interface SourceFieldsInterface {
+    source:         DataSource!
+    sourceOfTruth:  DataSource!
+    appSource:      String!
 }
 
 interface ExtensibleEntity implements Node {

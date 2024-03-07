@@ -57,7 +57,7 @@ func TestMapPageViews(t *testing.T) {
 	if len(pageViews) != 2 {
 		t.Errorf("Expecting pageViews with 2 elements, received: %d elements", len(pageViews))
 	}
-	for i, _ := range []int{1, 2} {
+	for i := range []int{1, 2} {
 		if !reflect.DeepEqual(pageViews[i], &expectedPageView) {
 			t.Errorf("Expecting: %+v, received: %+v", expectedPageView, pageViews[i])
 		}

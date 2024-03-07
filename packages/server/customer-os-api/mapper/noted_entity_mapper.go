@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"reflect"
 )
 
 func MapEntityToNotedEntity(notedEntity *entity.NotedEntity) any {
 	switch (*notedEntity).NotedEntityLabel() {
-	case neo4jentity.NodeLabel_Organization:
+	case neo4jutil.NodeLabelOrganization:
 		return MapEntityToOrganization((*notedEntity).(*entity.OrganizationEntity))
-	case neo4jentity.NodeLabel_Contact:
+	case neo4jutil.NodeLabelContact:
 		return MapEntityToContact((*notedEntity).(*entity.ContactEntity))
 	}
 	fmt.Errorf("noted entity of type %s not identified", reflect.TypeOf(notedEntity))

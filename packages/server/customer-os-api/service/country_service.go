@@ -3,11 +3,12 @@ package service
 import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -34,7 +35,7 @@ func (s *countryService) GetCountriesForPhoneNumbers(ctx context.Context, ids []
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("ids", ids))
 
-	countryDbNodes, err := s.repositories.CountryRepository.GetAllForPhoneNumbers(ctx, ids)
+	countryDbNodes, err := s.repositories.Neo4jRepositories.CountryReadRepository.GetAllForPhoneNumbers(ctx, common.GetTenantFromContext(ctx), ids)
 	if err != nil {
 		return nil, err
 	}

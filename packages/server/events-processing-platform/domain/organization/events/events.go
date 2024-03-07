@@ -1,8 +1,9 @@
 package events
 
 import (
-	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	"time"
+
+	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -29,18 +30,25 @@ const (
 	//Deprecated
 	OrganizationRequestRenewalForecastV1 = "V1_ORGANIZATION_RECALCULATE_RENEWAL_FORECAST_REQUEST"
 	//Deprecated
-	OrganizationRequestNextCycleDateV1   = "V1_ORGANIZATION_RECALCULATE_NEXT_CYCLE_DATE_REQUEST"
-	OrganizationRequestScrapeByWebsiteV1 = "V1_ORGANIZATION_SCRAPE_BY_WEBSITE_REQUEST"
-	OrganizationHideV1                   = "V1_ORGANIZATION_HIDE"
-	OrganizationShowV1                   = "V1_ORGANIZATION_SHOW"
-	OrganizationRefreshLastTouchpointV1  = "V1_ORGANIZATION_REFRESH_LAST_TOUCHPOINT"
-	OrganizationUpsertCustomFieldV1      = "V1_ORGANIZATION_UPSERT_CUSTOM_FIELD"
-	OrganizationAddParentV1              = "V1_ORGANIZATION_ADD_PARENT"
-	OrganizationRemoveParentV1           = "V1_ORGANIZATION_REMOVE_PARENT"
-	OrganizationRefreshArrV1             = "V1_ORGANIZATION_REFRESH_ARR"
-	OrganizationRefreshRenewalSummaryV1  = "V1_ORGANIZATION_REFRESH_RENEWAL_SUMMARY"
-	OrganizationUpdateOnboardingStatusV1 = "V1_ORGANIZATION_UPDATE_ONBOARDING_STATUS"
-	OrganizationUpdateOwnerV1            = "V1_ORGANIZATION_UPDATE_OWNER"
+	OrganizationRequestNextCycleDateV1             = "V1_ORGANIZATION_RECALCULATE_NEXT_CYCLE_DATE_REQUEST"
+	OrganizationRequestScrapeByWebsiteV1           = "V1_ORGANIZATION_SCRAPE_BY_WEBSITE_REQUEST"
+	OrganizationHideV1                             = "V1_ORGANIZATION_HIDE"
+	OrganizationShowV1                             = "V1_ORGANIZATION_SHOW"
+	OrganizationRefreshLastTouchpointV1            = "V1_ORGANIZATION_REFRESH_LAST_TOUCHPOINT"
+	OrganizationUpsertCustomFieldV1                = "V1_ORGANIZATION_UPSERT_CUSTOM_FIELD"
+	OrganizationAddParentV1                        = "V1_ORGANIZATION_ADD_PARENT"
+	OrganizationRemoveParentV1                     = "V1_ORGANIZATION_REMOVE_PARENT"
+	OrganizationRefreshArrV1                       = "V1_ORGANIZATION_REFRESH_ARR"
+	OrganizationRefreshRenewalSummaryV1            = "V1_ORGANIZATION_REFRESH_RENEWAL_SUMMARY"
+	OrganizationUpdateOnboardingStatusV1           = "V1_ORGANIZATION_UPDATE_ONBOARDING_STATUS"
+	OrganizationUpdateOwnerNotificationV1          = "V1_ORGANIZATION_UPDATE_OWNER_NOTIFICATION"
+	OrganizationUpdateOwnerV1                      = "V1_ORGANIZATION_UPDATE_OWNER"
+	OrganizationCreateBillingProfileV1             = "V1_ORGANIZATION_CREATE_BILLING_PROFILE"
+	OrganizationUpdateBillingProfileV1             = "V1_ORGANIZATION_UPDATE_BILLING_PROFILE"
+	OrganizationEmailLinkToBillingProfileV1        = "V1_ORGANIZATION_EMAIL_LINK_TO_BILLING_PROFILE"
+	OrganizationEmailUnlinkFromBillingProfileV1    = "V1_ORGANIZATION_EMAIL_UNLINK_FROM_BILLING_PROFILE"
+	OrganizationLocationLinkToBillingProfileV1     = "V1_ORGANIZATION_LOCATION_LINK_TO_BILLING_PROFILE"
+	OrganizationLocationUnlinkFromBillingProfileV1 = "V1_ORGANIZATION_LOCATION_UNLINK_FROM_BILLING_PROFILE"
 )
 
 type OrganizationCreateEvent struct {
@@ -72,6 +80,7 @@ type OrganizationCreateEvent struct {
 	YearFounded        *int64                `json:"yearFounded,omitempty"`
 	Headquarters       string                `json:"headquarters,omitempty"`
 	EmployeeGrowthRate string                `json:"employeeGrowthRate,omitempty"`
+	SlackChannelId     string                `json:"slackChannelId,omitempty"`
 }
 
 func NewOrganizationCreateEvent(aggregate eventstore.Aggregate, organizationFields *model.OrganizationFields, createdAt, updatedAt time.Time) (eventstore.Event, error) {
@@ -103,6 +112,7 @@ func NewOrganizationCreateEvent(aggregate eventstore.Aggregate, organizationFiel
 		YearFounded:        organizationFields.OrganizationDataFields.YearFounded,
 		Headquarters:       organizationFields.OrganizationDataFields.Headquarters,
 		EmployeeGrowthRate: organizationFields.OrganizationDataFields.EmployeeGrowthRate,
+		SlackChannelId:     organizationFields.OrganizationDataFields.SlackChannelId,
 	}
 	if organizationFields.ExternalSystem.Available() {
 		eventData.ExternalSystem = organizationFields.ExternalSystem
@@ -491,6 +501,26 @@ func NewOrganizationOwnerUpdateEvent(aggregate eventstore.Aggregate, ownerUserId
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, OrganizationUpdateOwnerV1)
+	if err := event.SetJsonData(&eventData); err != nil {
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationOwnerUpdateEvent")
+	}
+	return event, nil
+}
+
+func NewOrganizationOwnerUpdateNotificationEvent(aggregate eventstore.Aggregate, ownerUserId, actorUserId, organizationId string, updatedAt time.Time) (eventstore.Event, error) {
+	eventData := OrganizationOwnerUpdateEvent{
+		Tenant:         aggregate.GetTenant(),
+		UpdatedAt:      updatedAt,
+		OwnerUserId:    ownerUserId,
+		OrganizationId: organizationId,
+		ActorUserId:    actorUserId,
+	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationOwnerUpdateEvent")
+	}
+
+	event := eventstore.NewBaseEvent(aggregate, OrganizationUpdateOwnerNotificationV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationOwnerUpdateEvent")
 	}

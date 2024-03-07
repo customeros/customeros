@@ -13,6 +13,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"golang.org/x/exp/slices"
 	"time"
 )
@@ -258,22 +259,22 @@ func (s *interactionSessionService) mapDbRelationshipToParticipantDetails(relati
 func (s *interactionSessionService) convertDbNodesToInteractionSessionParticipants(records []*utils.DbNodeWithRelationAndId) entity.InteractionSessionParticipants {
 	interactionEventParticipants := entity.InteractionSessionParticipants{}
 	for _, v := range records {
-		if slices.Contains(v.Node.Labels, neo4jentity.NodeLabel_Email) {
+		if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelEmail) {
 			participant := s.services.EmailService.mapDbNodeToEmailEntity(*v.Node)
 			participant.InteractionSessionParticipantDetails = s.mapDbRelationshipToParticipantDetails(*v.Relationship)
 			participant.DataloaderKey = v.LinkedNodeId
 			interactionEventParticipants = append(interactionEventParticipants, participant)
-		} else if slices.Contains(v.Node.Labels, neo4jentity.NodeLabel_PhoneNumber) {
+		} else if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelPhoneNumber) {
 			participant := s.services.PhoneNumberService.mapDbNodeToPhoneNumberEntity(*v.Node)
 			participant.InteractionSessionParticipantDetails = s.mapDbRelationshipToParticipantDetails(*v.Relationship)
 			participant.DataloaderKey = v.LinkedNodeId
 			interactionEventParticipants = append(interactionEventParticipants, participant)
-		} else if slices.Contains(v.Node.Labels, neo4jentity.NodeLabel_User) {
+		} else if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelUser) {
 			participant := s.services.UserService.mapDbNodeToUserEntity(*v.Node)
 			participant.InteractionSessionParticipantDetails = s.mapDbRelationshipToParticipantDetails(*v.Relationship)
 			participant.DataloaderKey = v.LinkedNodeId
 			interactionEventParticipants = append(interactionEventParticipants, participant)
-		} else if slices.Contains(v.Node.Labels, neo4jentity.NodeLabel_Contact) {
+		} else if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelContact) {
 			participant := s.services.ContactService.mapDbNodeToContactEntity(*v.Node)
 			participant.InteractionSessionParticipantDetails = s.mapDbRelationshipToParticipantDetails(*v.Relationship)
 			participant.DataloaderKey = v.LinkedNodeId

@@ -35,14 +35,14 @@ func (c *upsertOrganizationCommandHandler) Handle(ctx context.Context, cmd *comm
 		return validationError
 	}
 
-	organizationAggregate, err := aggregate.LoadOrganizationAggregate(ctx, c.es, cmd.Tenant, cmd.ObjectID)
+	organizationAggregate, err := aggregate.LoadOrganizationAggregate(ctx, c.es, cmd.Tenant, cmd.ObjectID, *eventstore.NewLoadAggregateOptions())
 	if err != nil {
 		return err
 	}
 
 	orgFields := command.UpsertOrganizationCommandToOrganizationFieldsStruct(cmd)
 
-	if aggregate.IsAggregateNotFound(organizationAggregate) {
+	if eventstore.IsAggregateNotFound(organizationAggregate) {
 		cmd.IsCreateCommand = true
 		if err = organizationAggregate.CreateOrganization(ctx, orgFields, cmd.LoggedInUserId); err != nil {
 			tracing.TraceErr(span, err)

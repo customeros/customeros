@@ -22,9 +22,12 @@ type Config struct {
 	}
 
 	Service struct {
-		CustomerOsAPI         string `env:"CUSTOMER_OS_API,required"`
-		CustomerOsAPIKey      string `env:"CUSTOMER_OS_API_KEY,required"`
-		FileStoreAPIJwtSecret string `env:"FILE_STORE_API_JWT_SECRET,required"`
+		CustomerOsAPI                  string `env:"CUSTOMER_OS_API,required"`
+		CustomerOsAPIKey               string `env:"CUSTOMER_OS_API_KEY,required"`
+		FileStoreAPIJwtSecret          string `env:"FILE_STORE_API_JWT_SECRET,required"`
+		CloudflareImageUploadAccountId string `env:"CLOUDFLARE_IMAGE_UPLOAD_ACCOUNT_ID" envDefault:""`
+		CloudflareImageUploadApiKey    string `env:"CLOUDFLARE_IMAGE_UPLOAD_API_KEY" envDefault:""`
+		CloudflareImageUploadSignKey   string `env:"CLOUDFLARE_IMAGE_UPLOAD_SIGN_KEY" envDefault:""`
 	}
 
 	Neo4j struct {

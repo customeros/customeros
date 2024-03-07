@@ -1,4 +1,4 @@
-import { useContext, createContext, PropsWithChildren } from 'react';
+import { useState, useContext, createContext, PropsWithChildren } from 'react';
 
 import { useDisclosure, UseDisclosureReturn } from '@ui/utils';
 
@@ -21,11 +21,10 @@ const modalDefaultState: UseDisclosureReturn = {
   getDisclosureProps: () => null,
 };
 
-const AddServiceModalContext = createContext<ModalContextMethods>({
-  modal: modalDefaultState,
-});
-const UpdateServiceModalContext = createContext<ModalContextMethods>({
-  modal: modalDefaultState,
+const UpdatePanelModalStateContext = createContext<{
+  setIsPanelModalOpen: (newState: boolean) => void;
+}>({
+  setIsPanelModalOpen: () => null,
 });
 const ARRInfoModalContext = createContext<ModalContextMethods>({
   modal: modalDefaultState,
@@ -39,11 +38,8 @@ const AccountPanelStateContext = createContext<AccountPanelState>({
   isModalOpen: false,
 });
 
-export const useAddServiceModalContext = () => {
-  return useContext(AddServiceModalContext);
-};
-export const useUpdateServiceModalContext = () => {
-  return useContext(UpdateServiceModalContext);
+export const useUpdatePanelModalStateContext = () => {
+  return useContext(UpdatePanelModalStateContext);
 };
 export const useARRInfoModalContext = () => {
   return useContext(ARRInfoModalContext);
@@ -58,18 +54,13 @@ export const useUpdateRenewalDetailsContext = () => {
 export const AccountModalsContextProvider = ({
   children,
 }: PropsWithChildren) => {
+  const [isPanelModalOpen, setIsPanelModalOpen] = useState<boolean>(false);
   const arrForecastInfoModal = useDisclosure({
     id: 'arr-forecast-info-modal',
   });
-  const addServiceModal = useDisclosure({
-    id: 'add-service-modal',
-  });
+
   const updateRenewalDetailsModal = useDisclosure({
     id: 'update-renewal-details-modal',
-  });
-
-  const updateServiceModal = useDisclosure({
-    id: 'update-service-modal',
   });
 
   return (
@@ -78,35 +69,28 @@ export const AccountModalsContextProvider = ({
         modal: arrForecastInfoModal,
       }}
     >
-      <UpdateServiceModalContext.Provider
+      <UpdatePanelModalStateContext.Provider
         value={{
-          modal: updateServiceModal,
+          setIsPanelModalOpen,
         }}
       >
-        <AddServiceModalContext.Provider
+        <UpdateRenewalDetailsContext.Provider
           value={{
-            modal: addServiceModal,
+            modal: updateRenewalDetailsModal,
           }}
         >
-          <UpdateRenewalDetailsContext.Provider
+          <AccountPanelStateContext.Provider
             value={{
-              modal: updateRenewalDetailsModal,
+              isModalOpen:
+                arrForecastInfoModal.isOpen ||
+                updateRenewalDetailsModal.isOpen ||
+                isPanelModalOpen,
             }}
           >
-            <AccountPanelStateContext.Provider
-              value={{
-                isModalOpen:
-                  arrForecastInfoModal.isOpen ||
-                  addServiceModal.isOpen ||
-                  updateRenewalDetailsModal.isOpen ||
-                  updateServiceModal.isOpen,
-              }}
-            >
-              {children}
-            </AccountPanelStateContext.Provider>
-          </UpdateRenewalDetailsContext.Provider>
-        </AddServiceModalContext.Provider>
-      </UpdateServiceModalContext.Provider>
+            {children}
+          </AccountPanelStateContext.Provider>
+        </UpdateRenewalDetailsContext.Provider>
+      </UpdatePanelModalStateContext.Provider>
     </ARRInfoModalContext.Provider>
   );
 };

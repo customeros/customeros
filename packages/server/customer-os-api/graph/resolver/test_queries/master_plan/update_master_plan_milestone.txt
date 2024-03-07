@@ -1,0 +1,12 @@
+mutation CreateMasterPlanMilestone($masterPlanId: ID!, $id: ID!) {
+masterPlanMilestone_Update(
+    input: {
+        masterPlanId: $masterPlanId
+        id: $id
+        name: "Updated milestone"
+        order: 10
+        optional: true
+    }) {
+    id
+  }
+}

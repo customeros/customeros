@@ -3,6 +3,7 @@ package aggregate
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/command"
@@ -71,7 +72,8 @@ func (a *OpportunityAggregate) createRenewalOpportunity(ctx context.Context, cmd
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.Tenant)
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "command", cmd)
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(cmd.CreatedAt, utils.Now())
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, createdAtNotNil)
@@ -79,7 +81,7 @@ func (a *OpportunityAggregate) createRenewalOpportunity(ctx context.Context, cmd
 
 	renewalLikelihood := cmd.RenewalLikelihood
 	if string(renewalLikelihood) == "" {
-		renewalLikelihood = model.RenewalLikelihoodStringHigh
+		renewalLikelihood = neo4jenum.RenewalLikelihoodHigh
 	}
 
 	createRenewalEvent, err := event.NewOpportunityCreateRenewalEvent(a, cmd.ContractId, string(renewalLikelihood), cmd.Source, createdAtNotNil, updatedAtNotNil)
@@ -105,12 +107,19 @@ func (a *OpportunityAggregate) updateRenewalOpportunityNextCycleDate(ctx context
 
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
 
+	// skip if no changes on aggregate
+	if a.Opportunity.RenewalDetails.RenewedAt != nil &&
+		cmd.RenewedAt != nil &&
+		a.Opportunity.RenewalDetails.RenewedAt.Equal(*cmd.RenewedAt) {
+		return nil
+	}
+
 	// if opportunity is not renewal or status is closed, return error
-	if a.Opportunity.InternalType != model.OpportunityInternalTypeStringRenewal {
+	if a.Opportunity.InternalType != neo4jenum.OpportunityInternalTypeRenewal.String() {
 		err := errors.New(constants.Validate + ": Opportunity is not renewal")
 		tracing.TraceErr(span, err)
 		return err
-	} else if a.Opportunity.InternalStage != model.OpportunityInternalStageStringOpen {
+	} else if a.Opportunity.InternalStage != neo4jenum.OpportunityInternalStageOpen.String() {
 		err := errors.New(constants.Validate + ": Opportunity is closed")
 		tracing.TraceErr(span, err)
 		return err
@@ -140,6 +149,14 @@ func (a *OpportunityAggregate) updateOpportunity(ctx context.Context, cmd *comma
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
 	cmd.Source.SetDefaultValues()
 
+	// skip if no changes on aggregate
+	// case 1 skip if only amount to be updated, but no changes
+	if cmd.FieldMaskContainsOnly([]string{model.FieldMaskAmount, model.FieldMaskMaxAmount}) &&
+		a.Opportunity.Amount == cmd.DataFields.Amount &&
+		a.Opportunity.MaxAmount == cmd.DataFields.MaxAmount {
+		return nil
+	}
+
 	updateEvent, err := event.NewOpportunityUpdateEvent(a, cmd.DataFields, cmd.Source.Source, cmd.ExternalSystem, updatedAtNotNil, cmd.FieldsMask)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -166,7 +183,7 @@ func (a *OpportunityAggregate) updateRenewalOpportunity(ctx context.Context, cmd
 
 	renewalLikelihood := cmd.RenewalLikelihood
 	if string(renewalLikelihood) == "" {
-		renewalLikelihood = model.RenewalLikelihoodStringHigh
+		renewalLikelihood = neo4jenum.RenewalLikelihoodHigh
 	}
 
 	updateRenewalEvent, err := event.NewOpportunityUpdateRenewalEvent(a, string(renewalLikelihood), cmd.Comments, cmd.LoggedInUserId, cmd.Source.Source, cmd.Amount, updatedAtNotNil, cmd.MaskFields, cmd.OwnerUserId)
@@ -189,6 +206,11 @@ func (a *OpportunityAggregate) closeWinOpportunity(ctx context.Context, cmd *com
 	span.SetTag(tracing.SpanTagTenant, a.Tenant)
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
+
+	// skip if opportunity is already closed won
+	if a.Opportunity.InternalStage == neo4jenum.OpportunityInternalStageClosedWon.String() {
+		return nil
+	}
 
 	now := utils.Now()
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, now)
@@ -214,6 +236,11 @@ func (a *OpportunityAggregate) closeLooseOpportunity(ctx context.Context, cmd *c
 	span.SetTag(tracing.SpanTagTenant, a.Tenant)
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
+
+	// skip if opportunity is already closed lost
+	if a.Opportunity.InternalStage == neo4jenum.OpportunityInternalStageClosedLost.String() {
+		return nil
+	}
 
 	now := utils.Now()
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, now)

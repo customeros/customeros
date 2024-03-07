@@ -19,7 +19,7 @@ function fetcher<TData, TVariables extends { [key: string]: any }>(
     });
 }
 export type AddContactEmailMutationVariables = Types.Exact<{
-  contactId: Types.Scalars['ID'];
+  contactId: Types.Scalars['ID']['input'];
   input: Types.EmailInput;
 }>;
 
@@ -40,6 +40,7 @@ export const AddContactEmailDocument = `
   }
 }
     `;
+
 export const useAddContactEmailMutation = <
   TError = unknown,
   TContext = unknown,
@@ -52,23 +53,25 @@ export const useAddContactEmailMutation = <
     TContext
   >,
   headers?: RequestInit['headers'],
-) =>
-  useMutation<
+) => {
+  return useMutation<
     AddContactEmailMutation,
     TError,
     AddContactEmailMutationVariables,
     TContext
-  >(
-    ['addContactEmail'],
-    (variables?: AddContactEmailMutationVariables) =>
+  >({
+    mutationKey: ['addContactEmail'],
+    mutationFn: (variables?: AddContactEmailMutationVariables) =>
       fetcher<AddContactEmailMutation, AddContactEmailMutationVariables>(
         client,
         AddContactEmailDocument,
         variables,
         headers,
       )(),
-    options,
-  );
+    ...options,
+  });
+};
+
 useAddContactEmailMutation.getKey = () => ['addContactEmail'];
 
 useAddContactEmailMutation.fetcher = (

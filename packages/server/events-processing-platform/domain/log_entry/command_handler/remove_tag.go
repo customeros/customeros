@@ -42,7 +42,7 @@ func (c *removeTagCommandHandler) Handle(ctx context.Context, command *cmd.Remov
 		return err
 	}
 
-	if aggregate.IsAggregateNotFound(logEntryAggregate) {
+	if eventstore.IsAggregateNotFound(logEntryAggregate) {
 		tracing.TraceErr(span, eventstore.ErrAggregateNotFound)
 		return eventstore.ErrAggregateNotFound
 	} else {

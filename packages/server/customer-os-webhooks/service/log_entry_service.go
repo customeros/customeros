@@ -236,7 +236,9 @@ func (s *logEntryService) sendLogEntryToEventStoreForLoggedOrganization(ctx cont
 	failedSync := false
 	reason := ""
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := s.grpcClients.LogEntryClient.UpsertLogEntry(ctx, request)
+	response, err := CallEventsPlatformGRPCWithRetry[*logentrypb.LogEntryIdGrpcResponse](func() (*logentrypb.LogEntryIdGrpcResponse, error) {
+		return s.grpcClients.LogEntryClient.UpsertLogEntry(ctx, request)
+	})
 	if err != nil {
 		failedSync = true
 		tracing.TraceErr(span, err, log.String("grpcMethod", "UpsertLogEntry"))
@@ -252,7 +254,7 @@ func (s *logEntryService) sendLogEntryToEventStoreForLoggedOrganization(ctx cont
 			if logEntry != nil && findErr == nil {
 				break
 			}
-			time.Sleep(time.Duration(i*constants.TimeoutIntervalMs) * time.Millisecond)
+			time.Sleep(utils.BackOffExponentialDelay(i))
 		}
 	}
 	return failedSync, reason

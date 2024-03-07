@@ -1,6 +1,7 @@
 package command_handler
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 )
@@ -11,9 +12,9 @@ type CommandHandlers struct {
 	RemoveTag      RemoveTagCommandHandler
 }
 
-func NewCommandHandlers(log logger.Logger, es eventstore.AggregateStore) *CommandHandlers {
+func NewCommandHandlers(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *CommandHandlers {
 	return &CommandHandlers{
-		UpsertLogEntry: NewUpsertLogEntryCommandHandler(log, es),
+		UpsertLogEntry: NewUpsertLogEntryCommandHandler(log, es, cfg.Utils),
 		AddTag:         NewAddTagCommandHandler(log, es),
 		RemoveTag:      NewRemoveTagCommandHandler(log, es),
 	}

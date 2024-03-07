@@ -11,6 +11,8 @@ import (
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	contactgrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	emailgrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
 	phonenumbergrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/phone_number"
@@ -21,10 +23,10 @@ import (
 )
 
 func TestMutationResolver_InteractionSessionCreate_Min(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	rawResponse, err := c.RawPost(getQuery("interaction_event/create_interaction_session_min"))
 	assertRawResponseSuccess(t, rawResponse, err)
@@ -48,10 +50,10 @@ func TestMutationResolver_InteractionSessionCreate_Min(t *testing.T) {
 }
 
 func TestMutationResolver_InteractionSessionCreateWithAttachment(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	now := time.Now().UTC()
 
@@ -59,9 +61,7 @@ func TestMutationResolver_InteractionSessionCreateWithAttachment(t *testing.T) {
 	attachmentId := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
 		Id:            "",
 		MimeType:      "text/plain",
-		Name:          "readme.txt",
-		Extension:     "txt",
-		Size:          123,
+		FileName:      "readme.txt",
 		Source:        "",
 		SourceOfTruth: "",
 		AppSource:     "",
@@ -89,14 +89,14 @@ func TestMutationResolver_InteractionSessionCreateWithAttachment(t *testing.T) {
 }
 
 func TestMutationResolver_InteractionSessionCreateWithPhone(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	mockContactCreation(ctx)
 
-	userId := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
+	userId := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{
 		FirstName: "Agent",
 		LastName:  "Smith",
 	})
@@ -151,10 +151,10 @@ func TestMutationResolver_InteractionSessionCreateWithPhone(t *testing.T) {
 }
 
 func TestMutationResolver_InteractionSessionCreate(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	rawResponse, err := c.RawPost(getQuery("interaction_event/create_interaction_session"),
 		client.Var("sessionIdentifier", "My Session Identifier"),
@@ -189,9 +189,9 @@ func TestMutationResolver_InteractionSessionCreate(t *testing.T) {
 }
 
 func TestMutationResolver_InteractionEventCreateWithAttachment(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	now := time.Now().UTC()
 
@@ -201,9 +201,7 @@ func TestMutationResolver_InteractionEventCreateWithAttachment(t *testing.T) {
 	attachmentId := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
 		Id:            "",
 		MimeType:      "text/plain",
-		Name:          "readme.txt",
-		Extension:     "txt",
-		Size:          123,
+		FileName:      "readme.txt",
 		Source:        "",
 		SourceOfTruth: "",
 		AppSource:     "",
@@ -232,10 +230,10 @@ func TestMutationResolver_InteractionEventCreateWithAttachment(t *testing.T) {
 }
 
 func TestMutationResolver_InteractionEventCreate_Min(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	mockContactCreation(ctx)
 
@@ -289,10 +287,10 @@ func TestMutationResolver_InteractionEventCreate_Min(t *testing.T) {
 }
 
 func TestMutationResolver_InteractionEventCreate_Email(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	mockContactCreation(ctx)
 
@@ -408,10 +406,10 @@ func TestMutationResolver_InteractionEventCreate_Email(t *testing.T) {
 }
 
 func TestMutationResolver_InteractionEventCreate_Meeting(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	now := time.Now().UTC()
 
@@ -491,14 +489,14 @@ func TestMutationResolver_InteractionEventCreate_Meeting(t *testing.T) {
 }
 
 func TestMutationResolver_InteractionEventCreate_Voice(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	mockContactCreation(ctx)
 
-	userId := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
+	userId := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{
 		FirstName: "Agent",
 		LastName:  "Smith",
 	})
@@ -604,9 +602,9 @@ func TestMutationResolver_InteractionEventCreate_Voice(t *testing.T) {
 }
 
 func TestQueryResolver_InteractionEvent(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	emailId := neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId, "some@email.com", false, "WORK")
@@ -691,9 +689,9 @@ func TestQueryResolver_InteractionEvent(t *testing.T) {
 }
 
 func TestQueryResolver_InteractionEvent_WithIssue(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	now := time.Now().UTC()
 	secAgo10 := now.Add(time.Duration(-10) * time.Second)
@@ -727,9 +725,9 @@ func TestQueryResolver_InteractionEvent_WithIssue(t *testing.T) {
 }
 
 func TestQueryResolver_InteractionEvent_ByEventIdentifier(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	emailId := neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId, "some@email.com", false, "WORK")
@@ -814,9 +812,9 @@ func TestQueryResolver_InteractionEvent_ByEventIdentifier(t *testing.T) {
 }
 
 func TestQueryResolver_InteractionSession(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	emailId := neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId, "some@email.com", false, "WORK")
@@ -896,9 +894,9 @@ func TestQueryResolver_InteractionSession(t *testing.T) {
 }
 
 func TestQueryResolver_InteractionSession_BySessionIdentifier(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	emailId := neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId, "some@email.com", false, "WORK")
@@ -966,9 +964,9 @@ func TestQueryResolver_InteractionSession_BySessionIdentifier(t *testing.T) {
 }
 
 func TestQueryResolver_Contact_WithTimelineEvents_InteractionEvents_With_InteractionSession(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	emailId := neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId, "some@email.com", false, "WORK")
@@ -1003,14 +1001,14 @@ func TestQueryResolver_Contact_WithTimelineEvents_InteractionEvents_With_Interac
 	analysis1 := neo4jt.CreateAnalysis(ctx, driver, tenantName, "This is a summary of the conversation", "text/plain", "SUMMARY", now)
 	neo4jt.AnalysisDescribes(ctx, driver, tenantName, analysis1, interactionEventId1, string(repository.LINKED_WITH_INTERACTION_EVENT))
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Email"))
-	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "InteractionEvent"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "InteractionSession"))
-	require.Equal(t, 6, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Analysis"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "ActionItem"))
-	require.Equal(t, 3, neo4jt.GetCountOfRelationships(ctx, driver, "PART_OF"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Email"))
+	require.Equal(t, 4, neo4jtest.GetCountOfNodes(ctx, driver, "InteractionEvent"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "InteractionSession"))
+	require.Equal(t, 6, neo4jtest.GetCountOfNodes(ctx, driver, "TimelineEvent"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Analysis"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "ActionItem"))
+	require.Equal(t, 3, neo4jtest.GetCountOfRelationships(ctx, driver, "PART_OF"))
 
 	rawResponse, err := c.RawPost(getQuery("interaction_event/get_interaction_events_with_session_in_timeline_event"),
 		client.Var("contactId", contactId),
@@ -1096,14 +1094,14 @@ func TestQueryResolver_Contact_WithTimelineEvents_InteractionEvents_With_Interac
 }
 
 func TestQueryResolver_Contact_WithTimelineEvents_InteractionEvents_With_MultipleParticipants(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "testOrg")
 
-	userId := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
+	userId := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{
 		FirstName: "Agent",
 		LastName:  "Smith",
 	})
@@ -1135,14 +1133,14 @@ func TestQueryResolver_Contact_WithTimelineEvents_InteractionEvents_With_Multipl
 	neo4jt.InteractionEventSentTo(ctx, driver, interactionEventId3, contactId, "TO")
 	neo4jt.InteractionEventSentTo(ctx, driver, interactionEventId3, organizationId, "COLLABORATOR")
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
-	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "Email"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"))
-	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "InteractionEvent"))
-	require.Equal(t, 4, neo4jt.GetCountOfRelationships(ctx, driver, "SENT_BY"))
-	require.Equal(t, 4, neo4jt.GetCountOfRelationships(ctx, driver, "SENT_TO"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Email"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "PhoneNumber"))
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "InteractionEvent"))
+	require.Equal(t, 4, neo4jtest.GetCountOfRelationships(ctx, driver, "SENT_BY"))
+	require.Equal(t, 4, neo4jtest.GetCountOfRelationships(ctx, driver, "SENT_TO"))
 
 	rawResponse, err := c.RawPost(getQuery("interaction_event/get_interaction_events_with_participants_in_timeline_event"),
 		client.Var("contactId", contactId),
@@ -1221,9 +1219,9 @@ func TestQueryResolver_Contact_WithTimelineEvents_InteractionEvents_With_Multipl
 }
 
 func TestQueryResolver_InteractionEvent_WithExternalLinks(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	interactionEventId := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "event1", "content", "text/plain", utils.StringPtr("slack"), utils.Now())
 

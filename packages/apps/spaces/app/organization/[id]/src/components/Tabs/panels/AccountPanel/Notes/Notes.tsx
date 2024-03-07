@@ -1,15 +1,20 @@
+'use client';
 import { useForm } from 'react-inverted-form';
-import { useRef, useState, useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
 
+import { useRemirror } from '@remirror/react';
+import { htmlToProsemirrorNode } from 'remirror';
+import { useDebounce, useWillUnmount } from 'rooks';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { Flex } from '@ui/layout/Flex';
 import { Heading } from '@ui/typography/Heading';
 import { Divider } from '@ui/presentation/Divider';
 import { Icons, FeaturedIcon } from '@ui/media/Icon';
-import { FormAutoresizeTextarea } from '@ui/form/Textarea';
 import { Card, CardBody, CardFooter } from '@ui/layout/Card';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { RichTextEditor } from '@ui/form/RichTextEditor/RichTextEditor';
+import { basicEditorExtensions } from '@ui/form/RichTextEditor/extensions';
 import { useUpdateOrganizationMutation } from '@shared/graphql/updateOrganization.generated';
 import { OrganizationAccountDetailsQuery } from '@organization/src/graphql/getAccountPanelDetails.generated';
 
@@ -23,10 +28,11 @@ interface NotesProps {
 
 export const Notes = ({ data, id }: NotesProps) => {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const [isFocused, setIsFocused] = useState(false);
   const queryClient = useQueryClient();
   const client = getGraphQLClient();
-
+  const remirrorProps = useRemirror({
+    extensions: basicEditorExtensions,
+  });
   const updateOrganization = useUpdateOrganizationMutation(client, {
     onSuccess: () => {
       timeoutRef.current = setTimeout(
@@ -36,17 +42,24 @@ export const Notes = ({ data, id }: NotesProps) => {
     },
   });
 
+  const updateNote = useDebounce((note) => {
+    updateOrganization.mutate({
+      input: NotesDTO.toPayload({ id, note }),
+    });
+  }, 800);
   const { setDefaultValues } = useForm({
     formId: 'account-notes-form',
     defaultValues: {
-      notes: data?.note ?? '',
+      notes: data?.note ?? '<p style=""></p>',
     },
-    stateReducer: (_, action, next) => {
+    stateReducer: (state, action, next) => {
+      if (action.type === 'FIELD_CHANGE') {
+        if (action.payload.value !== state.values.notes) {
+          updateNote(action.payload.value);
+        }
+      }
       if (action.type === 'FIELD_BLUR') {
-        setIsFocused(false);
-        updateOrganization.mutate({
-          input: NotesDTO.toPayload({ id, note: action.payload.value }),
-        });
+        updateNote.flush();
       }
 
       return next;
@@ -57,6 +70,20 @@ export const Notes = ({ data, id }: NotesProps) => {
     setDefaultValues({ notes: data?.note });
   }, [data?.note, data?.id]);
 
+  useEffect(() => {
+    if (data?.note) {
+      const prosemirrorNodeValue = htmlToProsemirrorNode({
+        schema: remirrorProps.state.schema,
+        content: `${data?.note}`,
+      });
+      remirrorProps.getContext()?.setContent(prosemirrorNodeValue);
+    }
+  }, [data?.note]);
+
+  useWillUnmount(() => {
+    updateNote.flush();
+  });
+
   return (
     <Card
       p='4'
@@ -64,8 +91,11 @@ export const Notes = ({ data, id }: NotesProps) => {
       size='lg'
       variant='outline'
       cursor='default'
-      boxShadow={isFocused ? 'md' : 'xs'}
+      boxShadow={'xs'}
       _hover={{
+        boxShadow: 'md',
+      }}
+      _focusWithin={{
         boxShadow: 'md',
       }}
       transition='all 0.2s ease-out'
@@ -80,13 +110,32 @@ export const Notes = ({ data, id }: NotesProps) => {
       </CardBody>
       <CardFooter as={Flex} flexDir='column' padding={0}>
         <Divider color='gray.200' my='4' />
-        <FormAutoresizeTextarea
-          name='notes'
-          formId='account-notes-form'
-          placeholder='Write some notes or anything related to this customer'
-          spellCheck={false}
-          onFocus={() => setIsFocused(true)}
-        />
+        <Flex
+          position='relative'
+          sx={{
+            '& .remirror-editor-wrapper': {
+              height: '100%',
+              minHeight: '100px',
+            },
+            '& .remirror-editor.ProseMirror': {
+              minHeight: '100px',
+            },
+            '& a': {
+              color: 'primary.600',
+            },
+            '& .test': {
+              maxWidth: '200px',
+            },
+          }}
+        >
+          <RichTextEditor
+            {...remirrorProps}
+            placeholder='Write some notes or anything related to this customer'
+            formId='account-notes-form'
+            name='notes'
+            showToolbar={false}
+          ></RichTextEditor>
+        </Flex>
       </CardFooter>
     </Card>
   );

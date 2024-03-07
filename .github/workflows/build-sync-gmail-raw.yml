@@ -5,11 +5,13 @@ on:
     branches: [ "otter" ]
     paths:
       - packages/server/customer-os-common-module/**
+      - packages/server/customer-os-common-auth/**
       - packages/runner/sync-gmail-raw/**
       - .github/workflows/build-sync-gmail-raw.yml
   pull_request:
     paths:
       - packages/server/customer-os-common-module/**
+      - packages/server/customer-os-common-auth/**
       - packages/runner/sync-gmail-raw/**
       - .github/workflows/build-sync-gmail-raw.yml
   release:
@@ -47,7 +49,7 @@ jobs:
         id: test-folders
         run: |
           test_folders=$(go list ./... | grep -v /gen | grep -v /test | paste -sd "," -)
-          echo "::set-output name=test_folders::$test_folders"
+          echo "{name}={test_folders}" >> $GITHUB_OUTPUT
 
       - name: Test
         run: gotestsum --junitfile unit-tests.xml -- -coverprofile=cover.out -coverpkg=${{ steps.test-folders.outputs.test_folders }} ./...
@@ -78,6 +80,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Prepare sources for docker build
+        run: |
+          mkdir tmp-sources
+          mkdir tmp-sources/customer-os-common-module
+          mkdir tmp-sources/customer-os-common-auth
+          mkdir tmp-sources/sync-gmail-raw
+          
+          rsync -av --progress --exclude="tmp-sources" * tmp-sources/sync-gmail-raw
+          cp .env tmp-sources/sync-gmail-raw/.env
+          cp -r ../../server/customer-os-common-module/* tmp-sources/customer-os-common-module
+          cp -r ../../server/customer-os-common-auth/* tmp-sources/customer-os-common-auth
+          
+          cp Dockerfile tmp-sources/Dockerfile
+
       - name: Log in to the Container registry
         uses: docker/login-action@v3.0.0
         with:
@@ -87,14 +103,14 @@ jobs:
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
-        uses: docker/metadata-action@v5.4.0
+        uses: docker/metadata-action@v5.5.1
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
       - name: Push Docker image
         uses: docker/build-push-action@v5.1.0
         with:
-          context: packages/runner/sync-gmail-raw/.
+          context: packages/runner/sync-gmail-raw/tmp-sources/.
           push: ${{ github.ref_name == 'otter' || github.event_name == 'release' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

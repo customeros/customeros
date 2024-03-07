@@ -19,10 +19,13 @@ type Services struct {
 }
 
 func InitServices(cfg *config.Config, db *gorm.DB, driver *neo4j.DriverWithContext, grpcClients *grpc_client.Clients) *Services {
-	return &Services{
+	services := Services{
 		GrpcClients:      grpcClients,
-		CommonServices:   commonService.InitServices(db, driver),
-		AuthServices:     authServices.InitServices(nil, db),
-		CustomerOsClient: NewCustomerOsClient(cfg),
+		CustomerOsClient: NewCustomerOsClient(cfg, driver),
 	}
+
+	services.CommonServices = commonService.InitServices(db, driver)
+	services.AuthServices = authServices.InitServices(nil, services.CommonServices, db)
+
+	return &services
 }

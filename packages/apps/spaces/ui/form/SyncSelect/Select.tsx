@@ -29,14 +29,17 @@ export interface SelectProps extends Props<any, any, any> {
 
 export const Select = forwardRef<SelectInstance, SelectProps>(
   ({ leftElement, chakraStyles, components: _components, ...props }, ref) => {
-    const Control = useCallback(({ children, ...rest }: ControlProps) => {
-      return (
-        <chakraComponents.Control {...rest}>
-          {leftElement}
-          {children}
-        </chakraComponents.Control>
-      );
-    }, []);
+    const Control = useCallback(
+      ({ children, ...rest }: ControlProps) => {
+        return (
+          <chakraComponents.Control {...rest}>
+            {leftElement}
+            {children}
+          </chakraComponents.Control>
+        );
+      },
+      [leftElement],
+    );
     const ClearIndicator = useCallback(
       ({ children, ...rest }: ClearIndicatorProps) => {
         const boxSize = (() => {
@@ -164,19 +167,25 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
               state,
             ),
           }),
-          option: (props, state) => ({
-            ...props,
-            my: '2px',
-            borderRadius: 'md',
-            color: 'gray.700',
-            noOfLines: 1,
-            // '-webkit-box-align': 'start',
-            WebkitBoxAlign: 'start',
-            bg: state.isSelected ? 'primary.50' : 'white',
-            boxShadow: state.isFocused ? 'menuOptionsFocus' : 'none',
-            _hover: { bg: state.isSelected ? 'primary.50' : 'gray.100' },
-            ...chakraStyles?.option?.(props, state),
-          }),
+          option: (props, state) => {
+            return {
+              ...props,
+              my: '2px',
+              borderRadius: 'md',
+              color: 'gray.700',
+              noOfLines: 1,
+              WebkitBoxAlign: 'start',
+              bg: state.isSelected ? 'gray.50' : 'white',
+              boxShadow: state.isFocused ? 'menuOptionsFocus' : 'none',
+              _hover: { bg: 'gray.50' },
+              _selected: {
+                bg: 'gray.50',
+                color: 'gray.700',
+                fontWeight: 'medium',
+              },
+              ...chakraStyles?.option?.(props, state),
+            };
+          },
           multiValue: (props, state) => ({
             ...props,
             bg: 'gray.50',

@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -17,18 +18,21 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 )
 
 const APP_SOURCE = "user-admin-api"
 
 func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services *service.Services) {
-
 	personalEmailProviders, err := services.CommonServices.CommonRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
 	if err != nil {
 		panic(err)
 	}
 
 	rg.POST("/signin", func(ginContext *gin.Context) {
+		contextWithTimeout, cancel := commonUtils.GetLongLivedContext(context.Background())
+		defer cancel()
+
 		log.Printf("Sign in User")
 		apiKey := ginContext.GetHeader("X-Openline-Api-Key")
 		if apiKey != config.Service.ApiKey {
@@ -76,10 +80,10 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 			return
 		}
 
+		// Handle Google provider
 		if signInRequest.Provider == "google" {
 			if isRequestEnablingOAuthSync(signInRequest) {
-				//TODO Move this logic to a service
-				var oauthToken, _ = services.AuthServices.OAuthTokenService.GetByPlayerIdAndProvider(signInRequest.OAuthToken.ProviderAccountId, signInRequest.Provider)
+				var oauthToken, _ = services.AuthServices.OAuthTokenService.GetByPlayerIdAndProvider(contextWithTimeout, signInRequest.OAuthToken.ProviderAccountId, signInRequest.Provider)
 				if oauthToken == nil {
 					oauthToken = &entity.OAuthTokenEntity{}
 				}
@@ -99,13 +103,53 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 				if isRequestEnablingGoogleCalendarSync(signInRequest) {
 					oauthToken.GoogleCalendarSyncEnabled = true
 				}
-				services.AuthServices.OAuthTokenService.Save(*oauthToken)
+				_, err := services.AuthServices.OAuthTokenService.Save(contextWithTimeout, *oauthToken)
+				if err != nil {
+					log.Printf("unable to save oauth token: %v", err.Error())
+					ginContext.JSON(http.StatusInternalServerError, gin.H{
+						"result": fmt.Sprintf("unable to save oauth token: %v", err.Error()),
+					})
+					return
+				}
 			}
+		} else if signInRequest.Provider == "azure-ad" {
+			var oauthToken, _ = services.AuthServices.OAuthTokenService.GetByPlayerIdAndProvider(contextWithTimeout, signInRequest.OAuthToken.ProviderAccountId, signInRequest.Provider)
+			if oauthToken == nil {
+				oauthToken = &entity.OAuthTokenEntity{}
+			}
+			oauthToken.Provider = signInRequest.Provider
+			oauthToken.TenantName = *tenantName
+			oauthToken.PlayerIdentityId = signInRequest.OAuthToken.ProviderAccountId
+			oauthToken.EmailAddress = signInRequest.Email
+			oauthToken.AccessToken = signInRequest.OAuthToken.AccessToken
+			oauthToken.RefreshToken = signInRequest.OAuthToken.RefreshToken
+			oauthToken.IdToken = signInRequest.OAuthToken.IdToken
+			oauthToken.ExpiresAt = signInRequest.OAuthToken.ExpiresAt
+			oauthToken.Scope = signInRequest.OAuthToken.Scope
+			oauthToken.NeedsManualRefresh = false
+			_, err := services.AuthServices.OAuthTokenService.Save(contextWithTimeout, *oauthToken)
+			if err != nil {
+				log.Printf("unable to save oauth token: %v", err.Error())
+				ginContext.JSON(http.StatusInternalServerError, gin.H{
+					"result": fmt.Sprintf("unable to save oauth token: %v", err.Error()),
+				})
+				return
+			}
+		} else {
+			log.Printf("Unsupported provider: %s", signInRequest.Provider)
+			ginContext.JSON(http.StatusBadRequest, gin.H{
+				"result": fmt.Sprintf("Unsupported provider: %s", signInRequest.Provider),
+			})
+			return
 		}
 
 		ginContext.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
-	rg.POST("/google/revoke", func(ginContext *gin.Context) {
+
+	rg.POST("/revoke", func(ginContext *gin.Context) {
+		contextWithTimeout, cancel := commonUtils.GetLongLivedContext(context.Background())
+		defer cancel()
+
 		log.Printf("revoke oauth token")
 
 		apiKey := ginContext.GetHeader("X-Openline-Api-Key")
@@ -126,30 +170,51 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 		}
 		log.Printf("parsed json: %v", revokeRequest)
 
-		var oauthToken, _ = services.AuthServices.OAuthTokenService.GetByPlayerIdAndProvider(revokeRequest.ProviderAccountId, "google")
-
-		var resp *http.Response
-		var err error
-
-		if oauthToken.RefreshToken != "" {
-			url := fmt.Sprintf("https://accounts.google.com/o/oauth2/revoke?token=%s", oauthToken.RefreshToken)
-			resp, err = http.Get(url)
-			if err != nil {
-				ginContext.JSON(http.StatusInternalServerError, gin.H{})
-				return
-			}
+		var provider string
+		switch revokeRequest.ProviderAccountId {
+		case "google":
+			provider = "google"
+		case "azure-ad":
+			provider = "azure-ad"
+		default:
+			log.Printf("Unsupported provider: %s", revokeRequest.ProviderAccountId)
+			ginContext.JSON(http.StatusBadRequest, gin.H{
+				"result": fmt.Sprintf("Unsupported provider: %s", revokeRequest.ProviderAccountId),
+			})
+			return
 		}
 
-		if resp == nil || resp.StatusCode == 200 {
-			err := services.AuthServices.OAuthTokenService.DeleteByPlayerIdAndProvider(revokeRequest.ProviderAccountId, "google")
-			if err != nil {
-				ginContext.JSON(http.StatusInternalServerError, gin.H{})
-				return
+		var oauthToken, _ = services.AuthServices.OAuthTokenService.GetByPlayerIdAndProvider(contextWithTimeout, revokeRequest.ProviderAccountId, provider)
+
+		if oauthToken.RefreshToken != "" {
+			// Handle revocation based on provider
+			var revocationURL string
+			switch provider {
+			case "google":
+				revocationURL = fmt.Sprintf("https://accounts.google.com/o/oauth2/revoke?token=%s", oauthToken.RefreshToken)
+			case "azure-ad":
+				revocationURL = fmt.Sprintf("https://graph.microsoft.com/v1.0/me/revokeSignInSessions")
 			}
-		} else {
-			if resp != nil && resp.StatusCode != 200 {
-				ginContext.JSON(http.StatusInternalServerError, gin.H{})
-				return
+
+			if revocationURL != "" {
+				resp, err := http.Get(revocationURL)
+				if err != nil {
+					ginContext.JSON(http.StatusInternalServerError, gin.H{})
+					return
+				}
+
+				if resp.StatusCode == http.StatusOK {
+					// Successfully revoked, delete the token
+					err := services.AuthServices.OAuthTokenService.DeleteByPlayerIdAndProvider(contextWithTimeout, revokeRequest.ProviderAccountId, provider)
+					if err != nil {
+						ginContext.JSON(http.StatusInternalServerError, gin.H{})
+						return
+					}
+				} else {
+					// Revocation failed
+					ginContext.JSON(http.StatusInternalServerError, gin.H{})
+					return
+				}
 			}
 		}
 
@@ -220,7 +285,15 @@ func getTenant(cosClient service.CustomerOsClient, personalEmailProvider []commo
 		}
 
 		if tenantName != nil {
+
 			log.Printf("GetTenant - Tenant identified using %s provider: %s", provider, *tenantName)
+
+			err = createWorkspaceInTenant(ginContext, cosClient, *tenantName, signInRequest.Provider, domain, APP_SOURCE)
+			if err != nil {
+				return nil, err
+			}
+			log.Printf("GetTenant - Workspace merged: %s", domain)
+
 			return tenantName, nil
 		}
 	}
@@ -237,14 +310,15 @@ func getTenant(cosClient service.CustomerOsClient, personalEmailProvider []commo
 		if err != nil {
 			return nil, err
 		}
-	}
 
-	if !isPersonalEmail {
-		err = createWorkspaceInTenant(ginContext, cosClient, *tenantName, signInRequest.Provider, domain, APP_SOURCE)
-		if err != nil {
-			return nil, err
+		if !isPersonalEmail {
+			err = createWorkspaceInTenant(ginContext, cosClient, *tenantName, signInRequest.Provider, domain, APP_SOURCE)
+			if err != nil {
+				return nil, err
+			}
+			log.Printf("GetTenant - Workspace merged: %s", domain)
 		}
-		log.Printf("GetTenant - Workspace merged: %s", domain)
+
 	}
 
 	return tenantName, nil
@@ -403,6 +477,14 @@ func initializeUser(services *service.Services, provider, providerAccountId, ten
 			return nil, err
 		}
 		log.Printf("Initialize user - user created: %v", userByEmail)
+
+		for attempt := 1; attempt <= 5; attempt++ {
+			checkUserByEmail, err := services.CustomerOsClient.GetUserByEmail(tenant, email)
+			if err == nil && checkUserByEmail.ID != "" {
+				break
+			}
+			time.Sleep(commonUtils.BackOffExponentialDelay(attempt))
+		}
 	} else {
 		if !playerExists {
 			err = services.CustomerOsClient.CreatePlayer(tenant, userByEmail.ID, providerAccountId, email, provider)

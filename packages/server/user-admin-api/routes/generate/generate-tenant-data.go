@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	issuepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/issue"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
@@ -14,12 +15,14 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"io/ioutil"
 	"net/http"
+	"os"
+	"time"
 )
 
 func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *service.Services) {
 	appSource := "user-admin-api"
 
-	rg.GET("/demo-tenant-users", func(context *gin.Context) {
+	rg.POST("/demo-tenant-users", func(context *gin.Context) {
 		apiKey := context.GetHeader("X-Openline-Api-Key")
 		if apiKey != config.Service.ApiKey {
 			context.JSON(http.StatusUnauthorized, gin.H{
@@ -40,20 +43,29 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *s
 
 		//users creation
 		for _, user := range sourceData.Users {
-			_, err := services.CustomerOsClient.CreateUser(&cosModel.UserInput{
-				FirstName: user.FirstName,
-				LastName:  user.LastName,
-				Email: cosModel.EmailInput{
-					Email: user.Email,
-				},
-				AppSource:       &appSource,
-				ProfilePhotoURL: user.ProfilePhotoURL,
-			}, tenant, []cosModel.Role{cosModel.RoleUser, cosModel.RoleOwner})
+			userResponse, err := services.CustomerOsClient.GetUserByEmail(tenant, user.Email)
 			if err != nil {
 				context.JSON(500, gin.H{
 					"error": err.Error(),
 				})
 				return
+			}
+			if userResponse == nil {
+				_, err := services.CustomerOsClient.CreateUser(&cosModel.UserInput{
+					FirstName: user.FirstName,
+					LastName:  user.LastName,
+					Email: cosModel.EmailInput{
+						Email: user.Email,
+					},
+					AppSource:       &appSource,
+					ProfilePhotoURL: user.ProfilePhotoURL,
+				}, tenant, []cosModel.Role{cosModel.RoleUser, cosModel.RoleOwner})
+				if err != nil {
+					context.JSON(500, gin.H{
+						"error": err.Error(),
+					})
+					return
+				}
 			}
 		}
 
@@ -62,7 +74,7 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *s
 		})
 	})
 
-	rg.GET("/demo-tenant-data", func(context *gin.Context) {
+	rg.POST("/demo-tenant-data", func(context *gin.Context) {
 
 		apiKey := context.GetHeader("X-Openline-Api-Key")
 		if apiKey != config.Service.ApiKey {
@@ -131,6 +143,40 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *s
 			})
 		}
 
+		//create tenant billingProfile
+		for _, tenantBillingProfile := range sourceData.TenantBillingProfiles {
+			tenantBillingProfileInput := cosModel.TenantBillingProfileInput{
+				LegalName:                     tenantBillingProfile.LegalName,
+				Email:                         tenantBillingProfile.Email,
+				AddressLine1:                  tenantBillingProfile.AddressLine1,
+				Locality:                      tenantBillingProfile.Locality,
+				Country:                       tenantBillingProfile.Country,
+				Zip:                           tenantBillingProfile.Zip,
+				DomesticPaymentsBankInfo:      tenantBillingProfile.DomesticPaymentsBankInfo,
+				InternationalPaymentsBankInfo: tenantBillingProfile.InternationalPaymentsBankInfo,
+				VatNumber:                     tenantBillingProfile.VatNumber,
+				SendInvoicesFrom:              tenantBillingProfile.SendInvoicesFrom,
+				CanPayWithCard:                tenantBillingProfile.CanPayWithCard,
+				CanPayWithDirectDebitSEPA:     tenantBillingProfile.CanPayWithDirectDebitSEPA,
+				CanPayWithDirectDebitACH:      tenantBillingProfile.CanPayWithDirectDebitACH,
+				CanPayWithDirectDebitBacs:     tenantBillingProfile.CanPayWithDirectDebitBacs,
+				CanPayWithPigeon:              tenantBillingProfile.CanPayWithPigeon,
+			}
+			tenantBillingProfileId, err := services.CustomerOsClient.CreateTenantBillingProfile(tenant, username, tenantBillingProfileInput)
+			if err != nil {
+				context.JSON(500, gin.H{
+					"error": err.Error(),
+				})
+				return
+			}
+			if tenantBillingProfileId == "" {
+				context.JSON(500, gin.H{
+					"error": "tenantBillingProfileId is nil",
+				})
+				return
+			}
+
+		}
 		//create orgs
 		for _, organization := range sourceData.Organizations {
 
@@ -145,20 +191,23 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *s
 					})
 					return
 				}
-				if organization.OnboardingStatusInput.Status != "" {
-					organizationOnboardingStatus := cosModel.OrganizationUpdateOnboardingStatus{
-						OrganizationId: organizationId,
-						Status:         organization.OnboardingStatusInput.Status,
-						Comments:       organization.OnboardingStatusInput.Comments,
-					}
-					_, err := services.CustomerOsClient.UpdateOrganizationOnboardingStatus(tenant, username, organizationOnboardingStatus)
-					if err != nil {
-						return
+				for _, onboardingStatusInput := range organization.OnboardingStatusInput {
+					if onboardingStatusInput.Status != "" {
+						organizationOnboardingStatus := cosModel.OrganizationUpdateOnboardingStatus{
+							OrganizationId: organizationId,
+							Status:         onboardingStatusInput.Status,
+							Comments:       onboardingStatusInput.Comments,
+						}
+						_, err := services.CustomerOsClient.UpdateOrganizationOnboardingStatus(tenant, username, organizationOnboardingStatus)
+						if err != nil {
+							return
+						}
 					}
 				}
 			}
 
 			//create Contracts with Service Lines in org
+
 			for _, contract := range organization.Contracts {
 				contractInput := cosModel.ContractInput{
 					OrganizationId:   organizationId,
@@ -176,7 +225,37 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *s
 					})
 					return
 				}
+				if contractId == "" {
+					context.JSON(500, gin.H{
+						"error": "contractId is nil",
+					})
+					return
+				}
 
+				waitForContractToExist(services, tenant, contractId)
+
+				contractUpdateInput := cosModel.ContractUpdateInput{
+					ContractId:            contractId,
+					Patch:                 true,
+					InvoicingStartDate:    contract.InvoicingStartDate,
+					BillingCycle:          contract.BillingCycle,
+					Currency:              contract.Currency,
+					AddressLine1:          contract.AddressLine1,
+					AddressLine2:          contract.AddressLine2,
+					Zip:                   contract.Zip,
+					Locality:              contract.Locality,
+					Country:               contract.Country,
+					OrganizationLegalName: contract.OrganizationLegalName,
+					InvoiceEmail:          contract.InvoiceEmail,
+					InvoiceNote:           contract.InvoiceNote,
+				}
+				contractId, err = services.CustomerOsClient.UpdateContract(tenant, username, contractUpdateInput)
+				if err != nil {
+					context.JSON(500, gin.H{
+						"error": err.Error(),
+					})
+					return
+				}
 				if contractId == "" {
 					context.JSON(500, gin.H{
 						"error": "contractId is nil",
@@ -221,6 +300,22 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *s
 						})
 						return
 					}
+
+					waitForServiceLineToExist(services, contractId, serviceLineId)
+				}
+
+				invoiceId, err := services.CustomerOsClient.DryRunNextInvoiceForContractInput(tenant, username, contractId)
+				if err != nil {
+					context.JSON(500, gin.H{
+						"error": err.Error(),
+					})
+					return
+				}
+				if invoiceId == "" {
+					context.JSON(500, gin.H{
+						"error": "tenantBillingProfileId is nil",
+					})
+					return
 				}
 			}
 
@@ -624,12 +719,93 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *s
 				}
 
 			}
-
 		}
+
+		for _, masterPlan := range sourceData.MasterPlans {
+			masterPlanId, err := services.CustomerOsClient.CreateMasterPlan(tenant, username, masterPlan.Name)
+			if err != nil {
+				context.JSON(500, gin.H{
+					"error": err.Error(),
+				})
+				return
+			}
+			if masterPlanId == "" {
+				context.JSON(500, gin.H{
+					"error": "masterPlanId is nil",
+				})
+				return
+			}
+			for _, milestone := range masterPlan.Milestones {
+				masterPlanMilestoneInput := cosModel.MasterPlanMilestoneInput{
+					MasterPlanId:  masterPlanId,
+					Name:          milestone.Name,
+					Order:         milestone.Order,
+					DurationHours: milestone.DurationHours,
+					Optional:      milestone.Optional,
+					Items:         milestone.Items,
+				}
+				masterPlanMilestoneId, err := services.CustomerOsClient.CreateMasterPlanMilestone(tenant, username, masterPlanMilestoneInput)
+				if err != nil {
+					context.JSON(500, gin.H{
+						"error": err.Error(),
+					})
+					return
+				}
+				if masterPlanMilestoneId == "" {
+					context.JSON(500, gin.H{
+						"error": "masterPlanMilestoneId is nil",
+					})
+					return
+				}
+			}
+		}
+
 		context.JSON(200, gin.H{
 			"tenant": "tenant initiated",
 		})
 	})
+}
+
+func waitForContractToExist(services *service.Services, tenant string, contractId string) {
+	var _ *dbtype.Node
+	var maxAttempts = 5
+	var attempt = 0
+
+	for attempt < maxAttempts {
+		var err error
+		_, err = services.CustomerOsClient.GetContractById(tenant, contractId)
+		if err != nil {
+			attempt++
+			time.Sleep(time.Second * 2)
+			if attempt == maxAttempts {
+				fmt.Println("Failed to create contracts.")
+				os.Exit(1)
+			}
+		} else {
+			break
+		}
+	}
+}
+
+func waitForServiceLineToExist(services *service.Services, contractId, serviceLineId string) {
+	var _ *dbtype.Node
+	var maxAttempts = 5
+	var attempt = 0
+
+	for attempt < maxAttempts {
+		var err error
+		_, err = services.CustomerOsClient.GetServiceLine(contractId, serviceLineId)
+		if err != nil {
+			attempt++
+			time.Sleep(time.Second * 2)
+			if attempt == maxAttempts {
+				fmt.Println("Failed to create service line.")
+				os.Exit(1)
+			}
+		} else {
+			break
+		}
+	}
 }
 
 func validateRequestAndGetFileBytes(context *gin.Context) (*SourceData, error) {

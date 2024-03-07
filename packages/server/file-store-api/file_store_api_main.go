@@ -9,11 +9,11 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/machinebox/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
+	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
 	commonRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/config/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/service"
@@ -85,10 +85,14 @@ func main() {
 	r.POST("/file",
 		jwtTennantUserService.GetJWTTenantUserEnhancer(),
 		commonservice.TenantUserContextEnhancer(commonservice.USERNAME_OR_TENANT, commonRepositoryContainer, commonservice.WithCache(commonCache)),
-		commonservice.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonservice.FILE_STORE_API, commonservice.WithCache(commonCache)),
+		commonservice.ApiKeyCheckerHTTP(commonRepositoryContainer.TenantWebhookApiKeyRepository, commonRepositoryContainer.AppKeyRepository, commonservice.FILE_STORE_API, commonservice.WithCache(commonCache)),
 		func(ctx *gin.Context) {
 			tenantName, _ := ctx.Keys["TenantName"].(string)
 			userEmail, _ := ctx.Keys["UserEmail"].(string)
+
+			cdnUpload := ctx.Request.FormValue("cdnUpload") == "true"
+			basePath := ctx.Request.FormValue("basePath")
+			fileId := ctx.Request.FormValue("fileId")
 
 			multipartFileHeader, err := ctx.FormFile("file")
 			if err != nil {
@@ -96,7 +100,7 @@ func main() {
 				return
 			}
 
-			fileEntity, err := services.FileService.UploadSingleFile(userEmail, tenantName, multipartFileHeader)
+			fileEntity, err := services.FileService.UploadSingleFile(userEmail, tenantName, basePath, fileId, multipartFileHeader, cdnUpload)
 			if err != nil {
 				ctx.AbortWithStatusJSON(500, map[string]string{"error": fmt.Sprintf("Error Uploading File %v", err)}) //todo
 				return
@@ -106,8 +110,8 @@ func main() {
 		})
 	r.GET("/file/:id",
 		jwtTennantUserService.GetJWTTenantUserEnhancer(),
-		commonservice.TenantUserContextEnhancer(commonservice.USERNAME, commonRepositoryContainer, commonservice.WithCache(commonCache)),
-		commonservice.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonservice.FILE_STORE_API, commonservice.WithCache(commonCache)),
+		commonservice.TenantUserContextEnhancer(commonservice.USERNAME_OR_TENANT, commonRepositoryContainer, commonservice.WithCache(commonCache)),
+		commonservice.ApiKeyCheckerHTTP(commonRepositoryContainer.TenantWebhookApiKeyRepository, commonRepositoryContainer.AppKeyRepository, commonservice.FILE_STORE_API, commonservice.WithCache(commonCache)),
 		func(ctx *gin.Context) {
 			tenantName, _ := ctx.Keys["TenantName"].(string)
 			userEmail, _ := ctx.Keys["UserEmail"].(string)
@@ -126,8 +130,8 @@ func main() {
 		})
 	r.GET("/file/:id/download",
 		jwtTennantUserService.GetJWTTenantUserEnhancer(),
-		commonservice.TenantUserContextEnhancer(commonservice.USERNAME, commonRepositoryContainer, commonservice.WithCache(commonCache)),
-		commonservice.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonservice.FILE_STORE_API, commonservice.WithCache(commonCache)),
+		commonservice.TenantUserContextEnhancer(commonservice.USERNAME_OR_TENANT, commonRepositoryContainer, commonservice.WithCache(commonCache)),
+		commonservice.ApiKeyCheckerHTTP(commonRepositoryContainer.TenantWebhookApiKeyRepository, commonRepositoryContainer.AppKeyRepository, commonservice.FILE_STORE_API, commonservice.WithCache(commonCache)),
 		func(ctx *gin.Context) {
 			tenantName, _ := ctx.Keys["TenantName"].(string)
 			userEmail, _ := ctx.Keys["UserEmail"].(string)
@@ -141,14 +145,11 @@ func main() {
 				ctx.AbortWithStatus(404)
 				return
 			}
-
-			//ctx.Header("Accept-Length", fmt.Sprintf("%d", len(bytes)))
-			//ctx.Writer.Write(bytes)
 		})
 	r.GET("/file/:id/base64",
 		jwtTennantUserService.GetJWTTenantUserEnhancer(),
-		commonservice.TenantUserContextEnhancer(commonservice.USERNAME, commonRepositoryContainer, commonservice.WithCache(commonCache)),
-		commonservice.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonservice.FILE_STORE_API, commonservice.WithCache(commonCache)),
+		commonservice.TenantUserContextEnhancer(commonservice.USERNAME_OR_TENANT, commonRepositoryContainer, commonservice.WithCache(commonCache)),
+		commonservice.ApiKeyCheckerHTTP(commonRepositoryContainer.TenantWebhookApiKeyRepository, commonRepositoryContainer.AppKeyRepository, commonservice.FILE_STORE_API, commonservice.WithCache(commonCache)),
 		func(ctx *gin.Context) {
 			tenantName, _ := ctx.Keys["TenantName"].(string)
 			userEmail, _ := ctx.Keys["UserEmail"].(string)
@@ -172,7 +173,7 @@ func main() {
 
 	r.GET("/jwt",
 		commonservice.TenantUserContextEnhancer(commonservice.USERNAME, commonRepositoryContainer, commonservice.WithCache(commonCache)),
-		commonservice.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonservice.FILE_STORE_API, commonservice.WithCache(commonCache)),
+		commonservice.ApiKeyCheckerHTTP(commonRepositoryContainer.TenantWebhookApiKeyRepository, commonRepositoryContainer.AppKeyRepository, commonservice.FILE_STORE_API, commonservice.WithCache(commonCache)),
 		func(ctx *gin.Context) {
 			jwtTennantUserService.MakeJWT(ctx)
 		})
@@ -202,6 +203,6 @@ func healthCheckHandler(c *gin.Context) {
 	c.JSON(200, gin.H{"status": "OK"})
 }
 
-func MapFileEntityToDTO(cfg *config.Config, fileEntity *model.File) *dto.File {
+func MapFileEntityToDTO(cfg *config.Config, fileEntity *model.File) *fsc.FileDTO {
 	return mapper.MapFileEntityToDTO(fileEntity, cfg.ApiServiceUrl)
 }

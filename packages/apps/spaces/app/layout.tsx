@@ -13,7 +13,10 @@ import { Providers } from './src/components/Providers/Providers';
 import './../styles/globals.scss';
 import './../styles/date-picker.scss';
 import './../styles/remirror-editor.scss';
+import 'filepond-plugin-image-preview/dist/filepond-plugin-image-preview.min.css';
+import 'filepond/dist/filepond.min.css';
 import 'react-toastify/dist/ReactToastify.css';
+import './../styles/filepond.scss';
 
 const barlow = localFont({
   src: [
@@ -37,7 +40,17 @@ export default async function RootLayout({
 }) {
   const session = await getServerSession();
 
-  const isProduction = process.env.NEXT_PUBLIC_PRODUCTION === 'true';
+  const env = {
+    PRODUCTION: process.env.NEXT_PUBLIC_PRODUCTION ?? '',
+    NOTIFICATION_PROD_APP_IDENTIFIER:
+      process.env.NEXT_PUBLIC_NOTIFICATION_PROD_APP_IDENTIFIER ?? '',
+    NOTIFICATION_TEST_APP_IDENTIFIER:
+      process.env.NEXT_PUBLIC_NOTIFICATION_TEST_APP_IDENTIFIER ?? '',
+    REALTIME_WS_PATH: process.env.REALTIME_WS_PATH ?? '',
+    REALTIME_WS_API_KEY: process.env.REALTIME_WS_API_KEY ?? '',
+  };
+
+  const isProduction = env.PRODUCTION === 'true';
 
   return (
     <>
@@ -129,7 +142,7 @@ export default async function RootLayout({
 
         <body className='scrollbar'>
           <ThemeProvider>
-            <Providers isProduction={isProduction}>
+            <Providers isProduction={isProduction} env={env}>
               {children}
               <ToastContainer
                 position='bottom-right'

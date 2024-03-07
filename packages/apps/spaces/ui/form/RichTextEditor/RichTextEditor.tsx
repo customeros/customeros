@@ -12,7 +12,6 @@ import React, {
 import { prosemirrorNodeToHtml } from 'remirror';
 import { ClickHandlerState } from '@remirror/extension-events';
 import {
-  Toolbar,
   Remirror,
   useCommands,
   ThemeProvider,
@@ -95,16 +94,7 @@ export const RichTextEditor: FC<
           hooks={hooks}
         >
           <FloatingLinkToolbar />
-          {showToolbar ? (
-            <Toolbar
-              height={'var(--chakra-sizes-8)'}
-              style={{ overflowX: 'visible' }}
-            >
-              {children}
-            </Toolbar>
-          ) : (
-            children
-          )}
+          {children}
         </Remirror>
       </ThemeProvider>
     );

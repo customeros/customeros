@@ -12,7 +12,9 @@ import (
 )
 
 type InteractionSessionRepository interface {
+	// Deprecated
 	GetInteractionSessionIdByExternalId(ctx context.Context, tenant, externalId, externalSystemId string) (string, error)
+	// Deprecated
 	GetById(ctx context.Context, tenant, interactionEventId string) (*dbtype.Node, error)
 }
 

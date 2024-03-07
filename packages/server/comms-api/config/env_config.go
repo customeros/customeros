@@ -2,6 +2,7 @@ package config
 
 import (
 	authConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/config"
+	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 )
@@ -10,8 +11,6 @@ type Config struct {
 	Service struct {
 		CustomerOsAPI    string `env:"CUSTOMER_OS_API,required"`
 		CustomerOsAPIKey string `env:"CUSTOMER_OS_API_KEY,required"`
-		FileStoreAPI     string `env:"FILE_STORE_API,required"`
-		FileStoreAPIKey  string `env:"FILE_STORE_API_KEY,required"`
 		ServerAddress    string `env:"COMMS_API_SERVER_ADDRESS,required"`
 		CorsUrl          string `env:"COMMS_API_CORS_URL,required"`
 	}
@@ -47,7 +46,8 @@ type Config struct {
 		Host   string `env:"REDIS_HOST,required"`
 		Scheme string `env:"REDIS_SCHEME,required"envDefault:"rediss"`
 	}
-	AuthConfig authConfig.Config
-	Jaeger     tracing.JaegerConfig
-	Logger     logger.Config
+	FileStoreApiConfig fsc.FileStoreApiConfig
+	AuthConfig         authConfig.Config
+	Jaeger             tracing.JaegerConfig
+	Logger             logger.Config
 }

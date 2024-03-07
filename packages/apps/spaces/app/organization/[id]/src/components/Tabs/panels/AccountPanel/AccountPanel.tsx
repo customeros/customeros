@@ -1,21 +1,40 @@
 'use client';
 
-import { useParams } from 'next/navigation';
 import React, { FC, PropsWithChildren } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 
-import { Box } from '@ui/layout/Box';
+import { produce } from 'immer';
+import { useSession } from 'next-auth/react';
+import { useQueryClient } from '@tanstack/react-query';
+
 import { Flex } from '@ui/layout/Flex';
-import { Contract } from '@graphql/types';
-import { Select } from '@ui/form/SyncSelect';
-import { ActivityHeart } from '@ui/media/icons/ActivityHeart';
+import { Button } from '@ui/form/Button';
+import { Text } from '@ui/typography/Text';
+import { Plus } from '@ui/media/icons/Plus';
+import { Spinner } from '@ui/feedback/Spinner';
+import { IconButton } from '@ui/form/IconButton';
+import { toastError } from '@ui/presentation/Toast';
+import { Skeleton } from '@ui/presentation/Skeleton';
+import { ChevronRight } from '@ui/media/icons/ChevronRight';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useGetContractsQuery } from '@organization/src/graphql/getContracts.generated';
-import { contractButtonSelect } from '@organization/src/components/Tabs/shared/contractSelectStyles';
-import { ARRForecast } from '@organization/src/components/Tabs/panels/AccountPanel/ARRForecast/ARRForecast';
+import { useCreateContractMutation } from '@organization/src/graphql/createContract.generated';
+import { useGetInvoicesCountQuery } from '@organization/src/graphql/getInvoicesCount.generated';
+import { Contracts } from '@organization/src/components/Tabs/panels/AccountPanel/Contracts/Contracts';
+import { RelationshipButton } from '@organization/src/components/Tabs/panels/AccountPanel/RelationshipButton';
+import {
+  GetContractsQuery,
+  useGetContractsQuery,
+} from '@organization/src/graphql/getContracts.generated';
+import {
+  User,
+  DataSource,
+  Organization,
+  ContractStatus,
+  ContractRenewalCycle,
+} from '@graphql/types';
 
 import { Notes } from './Notes';
 import { EmptyContracts } from './EmptyContracts';
-import { ContractCard } from './Contract/ContractCard';
 import { AccountPanelSkeleton } from './AccountPanelSkeleton';
 import { OrganizationPanel } from '../OrganizationPanel/OrganizationPanel';
 import {
@@ -25,14 +44,74 @@ import {
 
 const AccountPanelComponent = () => {
   const client = getGraphQLClient();
+  const queryClient = useQueryClient();
+  const { data: session } = useSession();
+
   const id = useParams()?.id as string;
+  const router = useRouter();
+  const queryKey = useGetContractsQuery.getKey({ id });
 
   const { isModalOpen } = useAccountPanelStateContext();
-  const { data, isInitialLoading } = useGetContractsQuery(client, {
+  const { data, isLoading } = useGetContractsQuery(client, {
     id,
   });
+  const { data: invoicesCountData, isFetching: isFetchingInvoicesCount } =
+    useGetInvoicesCountQuery(client, {
+      organizationId: id,
+    });
+  const createContract = useCreateContractMutation(client, {
+    onMutate: () => {
+      const contract = {
+        appSource: DataSource.Openline,
+        contractUrl: '',
+        createdAt: new Date().toISOString(),
+        createdBy: [session?.user] as unknown as User,
+        externalLinks: [],
+        renewalCycle: ContractRenewalCycle.None,
+        id: `created-contract-${Math.random().toString()}`,
+        name: `${
+          data?.organization?.name?.length
+            ? `${data?.organization?.name}'s`
+            : "Unnamed's"
+        } contract`,
+        owner: null,
+        source: DataSource.Openline,
+        sourceOfTruth: DataSource.Openline,
+        status: ContractStatus.Draft,
+        updatedAt: new Date().toISOString(),
+        serviceLineItems: [],
+        billingEnabled: false,
+      };
+      queryClient.cancelQueries({ queryKey });
+      queryClient.setQueryData<GetContractsQuery>(queryKey, (currentCache) => {
+        return produce(currentCache, (draft) => {
+          if (draft?.['organization']?.['contracts']) {
+            draft['organization']['contracts'] = [
+              ...(currentCache?.organization?.contracts || []),
+              contract,
+            ];
+          }
+        });
+      });
+      const previousEntries =
+        queryClient.getQueryData<GetContractsQuery>(queryKey);
 
-  if (isInitialLoading) {
+      return { previousEntries };
+    },
+
+    onError: (_, __, context) => {
+      queryClient.setQueryData(queryKey, context?.previousEntries);
+      toastError(
+        'Failed to create contract',
+        'create-new-contract-for-organization-error',
+      );
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey });
+    },
+  });
+
+  if (isLoading) {
     return <AccountPanelSkeleton />;
   }
 
@@ -45,119 +124,77 @@ const AccountPanelComponent = () => {
   }
 
   return (
-    <OrganizationPanel
-      title='Account'
-      withFade
-      actionItem={
-        <Box display='none'>
-          <Select
-            isSearchable={false}
-            isClearable={false}
-            isMulti={false}
-            value={{
-              label: 'Customer',
-              value: 'customer',
-            }}
-            options={[
-              {
-                label: 'Customer',
-                value: 'customer',
-              },
-              {
-                label: 'Prospect',
-                value: 'prospect',
-              },
-            ]}
-            chakraStyles={{
-              ...contractButtonSelect,
-              container: (props, state) => {
-                const isCustomer = state.getValue()[0]?.value === 'customer';
-
-                return {
-                  ...props,
-                  px: 2,
-                  pointerEvents: 'none',
-                  py: '1px',
-                  border: '1px solid',
-                  borderColor: isCustomer ? 'success.200' : 'gray.300',
-                  backgroundColor: isCustomer ? 'success.50' : 'transparent',
-                  color: isCustomer ? 'success.700' : 'gray.500',
-
-                  borderRadius: '2xl',
-                  fontSize: 'xs',
-                  maxHeight: '22px',
-
-                  '& > div': {
-                    p: 0,
-                    border: 'none',
-                    fontSize: 'xs',
-                    maxHeight: '22px',
-                    minH: 'auto',
-                  },
-                };
-              },
-              valueContainer: (props, state) => {
-                const isCustomer = state.getValue()[0]?.value === 'customer';
-
-                return {
-                  ...props,
-                  p: 0,
-                  border: 'none',
-                  fontSize: 'xs',
-                  maxHeight: '22px',
-                  minH: 'auto',
-                  color: isCustomer ? 'success.700' : 'gray.500',
-                };
-              },
-              singleValue: (props) => {
-                return {
-                  ...props,
-                  maxHeight: '22px',
-                  p: 0,
-                  minH: 'auto',
-                  color: 'inherit',
-                };
-              },
-              menuList: (props) => {
-                return {
-                  ...props,
-                  w: 'fit-content',
-                  left: '-32px',
-                };
+    <>
+      <OrganizationPanel
+        title='Account'
+        withFade
+        bottomActionItem={
+          <Button
+            borderRadius={0}
+            bg='gray.25'
+            p={7}
+            justifyContent='space-between'
+            alignItems='center'
+            rightIcon={<ChevronRight boxSize={4} color='gray.400' />}
+            variant='ghost'
+            _hover={{
+              bg: 'gray.25',
+              '& svg': {
+                color: 'gray.500',
               },
             }}
-            leftElement={<ActivityHeart color='success.500' mr='1' />}
-          />
-        </Box>
-      }
-      shouldBlockPanelScroll={isModalOpen}
-    >
-      {!!data?.organization?.contracts && (
-        <>
-          <ARRForecast
-            renewalSunnary={data?.organization?.accountDetails?.renewalSummary}
-            name={data?.organization?.name || ''}
-            isInitialLoading={isInitialLoading}
-          />
-          {data?.organization?.contracts.map((contract) => (
-            <Flex
-              key={`contract-card-${contract.id}`}
-              flexDir='column'
-              gap={4}
-              mb={4}
+            onClick={() => router.push(`?tab=invoices`)}
+          >
+            <Text
+              fontSize='sm'
+              fontWeight='semibold'
+              display='inline-flex'
+              alignItems='center'
             >
-              <ContractCard
-                organizationId={id}
-                organizationName={data?.organization?.name ?? ''}
-                data={(contract as Contract) ?? undefined}
-              />
-            </Flex>
-          ))}
-        </>
-      )}
-
-      <Notes id={id} data={data?.organization} />
-    </OrganizationPanel>
+              Invoices •{' '}
+              {isFetchingInvoicesCount ? (
+                <Skeleton height={3} width={2} ml={1} />
+              ) : (
+                invoicesCountData?.invoices.totalElements
+              )}
+            </Text>
+          </Button>
+        }
+        actionItem={
+          <Flex alignItems='center'>
+            <IconButton
+              color='gray.500'
+              mr={1}
+              variant='ghost'
+              isLoading={createContract.isPending}
+              isDisabled={createContract.isPending}
+              icon={createContract.isPending ? <Spinner /> : <Plus />}
+              size='xs'
+              aria-label='Create new contract'
+              onClick={() =>
+                createContract.mutate({
+                  input: {
+                    organizationId: id,
+                    name: `${
+                      data?.organization?.name?.length
+                        ? `${data?.organization?.name}'s`
+                        : "Unnamed's"
+                    } contract`,
+                  },
+                })
+              }
+            />
+            <RelationshipButton />
+          </Flex>
+        }
+        shouldBlockPanelScroll={isModalOpen}
+      >
+        <Contracts
+          isLoading={isLoading}
+          organization={data?.organization as Organization}
+        />
+      </OrganizationPanel>
+    </>
   );
 };
 

@@ -1,6 +1,7 @@
 package model
 
 type IssueDataFields struct {
+	GroupId                   *string
 	Subject                   string
 	Description               string
 	Status                    string

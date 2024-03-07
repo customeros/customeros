@@ -17,13 +17,14 @@ func GetPropertyDetailsByLookupName(T reflect.Type, lookupName string) (map[stri
 	for i := 0; i < T.NumField(); i++ {
 		structField := T.Field(i)
 
-		switch structField.Type.Kind() {
-		case reflect.Struct:
+		// if field is struct, but not time.Time, then recursively call this function
+		if structField.Type.Kind() == reflect.Struct &&
+			!(structField.Type.Name() == "Time" && structField.Type.PkgPath() == "time") {
 			m, _ := GetPropertyDetailsByLookupName(structField.Type, lookupName)
 			if m != nil {
 				return m, nil
 			}
-		default:
+		} else {
 			tag, ok := structField.Tag.Lookup(TagKey)
 			if ok {
 				tags := strings.Split(tag, ";")

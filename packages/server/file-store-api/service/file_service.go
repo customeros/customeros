@@ -2,16 +2,23 @@ package service
 
 import (
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	awsSes "github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/cloudflare/cloudflare-go"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/h2non/filetype"
 	"github.com/machinebox/graphql"
+	graph_model "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/model"
@@ -19,14 +26,21 @@ import (
 	"log"
 	"mime/multipart"
 	"net/http"
+	"net/url"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 )
 
+const (
+	SIGN_TOKEN_EXPIRATION = 60 * 60 * 24 * 365 * 99 // 99 years
+)
+
 type FileService interface {
 	GetById(userEmail, tenantName string, id string) (*model.File, error)
-	UploadSingleFile(userEmail, tenantName string, multipartFileHeader *multipart.FileHeader) (*model.File, error)
+	UploadSingleFile(userEmail, tenantName, basePath, fileId string, multipartFileHeader *multipart.FileHeader, cdnUpload bool) (*model.File, error)
 	DownloadSingleFile(userEmail, tenantName, id string, context *gin.Context, inline bool) (*model.File, error)
 	Base64Image(userEmail, tenantName string, id string) (*string, error)
 }
@@ -52,24 +66,90 @@ func (s *fileService) GetById(userEmail, tenantName string, id string) (*model.F
 	return mapper.MapAttachmentResponseToFileEntity(attachment), nil
 }
 
-func (s *fileService) UploadSingleFile(userEmail, tenantName string, multipartFileHeader *multipart.FileHeader) (*model.File, error) {
-	multipartFile, err := multipartFileHeader.Open()
+func (s *fileService) UploadSingleFile(userEmail, tenantName, basePath, fileId string, multipartFileHeader *multipart.FileHeader, cdnUpload bool) (*model.File, error) {
+	if fileId == "" {
+		fileId = uuid.New().String()
+	}
+
+	fileName, err := storeMultipartFileToTemp(fileId, multipartFileHeader)
 	if err != nil {
 		return nil, err
 	}
 
-	head := make([]byte, 1024)
-	_, err = multipartFile.Read(head)
+	file, err := os.Open(fileName)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	headBytes, err := utils.GetFileTypeHeadFromMultipart(file)
 	if err != nil {
 		return nil, err
 	}
 
-	//TODO docx is not recognized
-	//https://github.com/h2non/filetype/issues/121
-	kind, _ := filetype.Match(head)
-	if kind == filetype.Unknown {
+	fileType, err := utils.GetFileType(headBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	if fileType == filetype.Unknown {
 		fmt.Println("Unknown multipartFile type")
 		return nil, errors.New("Unknown multipartFile type")
+	}
+
+	graphqlRequest := graphql.NewRequest(
+		`mutation AttachmentCreate($id: ID, $cdnUrl: String!, $basePath: String!, $mimeType: String!, $size: Int64!, $fileName: String!, $appSource: String!) {
+			attachment_Create(input: {
+				id: $id	
+				cdnUrl: $cdnUrl	
+				basePath: $basePath	
+				mimeType: $mimeType	
+				fileName: $fileName
+				size: $size
+				appSource: $appSource
+			}) {
+				id
+				cdnUrl
+				basePath
+				mimeType
+				fileName
+				size
+			}
+		}`)
+
+	graphqlRequest.Var("id", fileId)
+	graphqlRequest.Var("mimeType", multipartFileHeader.Header.Get(http.CanonicalHeaderKey("Content-Type")))
+	graphqlRequest.Var("fileName", multipartFileHeader.Filename)
+	graphqlRequest.Var("size", multipartFileHeader.Size)
+	graphqlRequest.Var("appSource", "file-store-api")
+
+	if s.cfg.Service.CloudflareImageUploadApiKey != "" && s.cfg.Service.CloudflareImageUploadAccountId != "" && s.cfg.Service.CloudflareImageUploadSignKey != "" &&
+		cdnUpload && (fileType.Extension == "gif" || fileType.Extension == "png" || fileType.Extension == "jpg" || fileType.Extension == "jpeg") {
+
+		cloudflareApi, err := cloudflare.NewWithAPIToken(s.cfg.Service.CloudflareImageUploadApiKey)
+		if err != nil {
+			return nil, err
+		}
+
+		open, err := os.Open(fileName)
+		if err != nil {
+			return nil, err
+		}
+
+		readCloser := io.NopCloser(open)
+
+		uploadedFileToCdn, err := cloudflareApi.UploadImage(context.Background(), cloudflare.AccountIdentifier(s.cfg.Service.CloudflareImageUploadAccountId), cloudflare.UploadImageParams{
+			File:              readCloser,
+			Name:              fileId,
+			RequireSignedURLs: true,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		graphqlRequest.Var("cdnUrl", generateSignedURL(uploadedFileToCdn.Variants[0], s.cfg.Service.CloudflareImageUploadSignKey))
+	} else {
+		graphqlRequest.Var("cdnUrl", "")
 	}
 
 	session, err := awsSes.NewSession(&aws.Config{Region: aws.String(s.cfg.AWS.Region)})
@@ -77,28 +157,19 @@ func (s *fileService) UploadSingleFile(userEmail, tenantName string, multipartFi
 		log.Fatal(err)
 	}
 
-	graphqlRequest := graphql.NewRequest(
-		`mutation AttachmentCreate($mimeType: String!, $name: String!, $size: Int64!, $extension: String!, $appSource: String!) {
-			attachment_Create(input: {
-				mimeType: $mimeType	
-				name: $name
-				size: $size
-				extension: $extension
-				appSource: $appSource
-			}) {
-				id
-				createdAt
-				mimeType
-				name
-				size
-				extension
-			}
-		}`)
-	graphqlRequest.Var("mimeType", multipartFileHeader.Header.Get(http.CanonicalHeaderKey("Content-Type")))
-	graphqlRequest.Var("name", multipartFileHeader.Filename)
-	graphqlRequest.Var("size", multipartFileHeader.Size)
-	graphqlRequest.Var("extension", kind.Extension)
-	graphqlRequest.Var("appSource", "file-store-api")
+	if basePath == "" {
+		basePath = "/GLOBAL"
+	}
+
+	err = uploadFileToS3(s.cfg, session, tenantName, basePath, fileId+"."+fileType.Extension, multipartFileHeader)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	graphqlRequest.Var("basePath", basePath)
 
 	err = s.addHeadersToGraphRequest(graphqlRequest, tenantName, userEmail)
 	if err != nil {
@@ -112,14 +183,6 @@ func (s *fileService) UploadSingleFile(userEmail, tenantName string, multipartFi
 
 	var graphqlResponse model.AttachmentCreateResponse
 	if err := s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
-		return nil, err
-	}
-
-	err = uploadFileToS3(s.cfg, session, graphqlResponse.Attachment.Id, multipartFileHeader)
-	if err != nil {
-		log.Fatal(err)
-	}
-	if err != nil {
 		return nil, err
 	}
 
@@ -143,10 +206,18 @@ func (s *fileService) DownloadSingleFile(userEmail, tenantName, id string, conte
 
 	svc := s3.New(session)
 
+	extension := filepath.Ext(attachment.FileName)
+	if extension == "" {
+		fmt.Println("No file extension found.")
+	} else {
+		extension = extension[1:]
+		fmt.Println("File Extension:", extension)
+	}
+
 	// Get the object metadata to determine the file size and ETag
 	respHead, err := svc.HeadObject(&s3.HeadObjectInput{
 		Bucket: aws.String(s.cfg.AWS.Bucket),
-		Key:    aws.String(attachment.Id),
+		Key:    aws.String(tenantName + byId.BasePath + "/" + attachment.ID + "." + extension),
 	})
 	if err != nil {
 		// Handle error
@@ -191,14 +262,14 @@ func (s *fileService) DownloadSingleFile(userEmail, tenantName, id string, conte
 	}
 
 	if !inline {
-		context.Header("Content-Disposition", "attachment; filename="+byId.Name)
+		context.Header("Content-Disposition", "attachment; filename="+byId.FileName)
 	} else {
-		context.Header("Content-Disposition", "inline; filename="+byId.Name)
+		context.Header("Content-Disposition", "inline; filename="+byId.FileName)
 	}
-	context.Header("Content-Type", fmt.Sprintf("%s", byId.MIME))
+	context.Header("Content-Type", fmt.Sprintf("%s", byId.MimeType))
 	resp, err := svc.GetObject(&s3.GetObjectInput{
 		Bucket: aws.String(s.cfg.AWS.Bucket),
-		Key:    aws.String(attachment.Id),
+		Key:    aws.String(tenantName + byId.BasePath + "/" + attachment.ID + "." + extension),
 		Range:  aws.String("bytes=" + strconv.FormatInt(start, 10) + "-" + strconv.FormatInt(end, 10)),
 	})
 	if err != nil {
@@ -209,9 +280,6 @@ func (s *fileService) DownloadSingleFile(userEmail, tenantName, id string, conte
 	}
 	defer resp.Body.Close()
 
-	if int64(end-start+1) != byId.Length {
-		context.Status(http.StatusPartialContent)
-	}
 	// Serve the file contents
 	io.Copy(context.Writer, resp.Body)
 	return byId, nil
@@ -238,7 +306,7 @@ func (s *fileService) Base64Image(userEmail, tenantName string, id string) (*str
 	_, err = downloader.Download(aws.NewWriteAtBuffer(fileBytes),
 		&s3.GetObjectInput{
 			Bucket: aws.String(s.cfg.AWS.Bucket),
-			Key:    aws.String(attachment.Id),
+			Key:    aws.String(attachment.ID),
 		})
 	if err != nil {
 		return nil, err
@@ -267,16 +335,17 @@ func (s *fileService) Base64Image(userEmail, tenantName string, id string) (*str
 	return &base64Encoding, nil
 }
 
-func (s *fileService) getCosAttachmentById(userEmail, tenantName string, id string) (*model.Attachment, error) {
+func (s *fileService) getCosAttachmentById(userEmail, tenantName string, id string) (*graph_model.Attachment, error) {
 	graphqlRequest := graphql.NewRequest(
 		`query GetAttachment($id: ID!) {
 			attachment(id: $id) {
 				id
 				createdAt
 				mimeType
-				name
+				fileName
+				basePath
+				cdnUrl
 				size
-				extension
 			}
 		}`)
 	graphqlRequest.Var("id", id)
@@ -298,15 +367,25 @@ func (s *fileService) getCosAttachmentById(userEmail, tenantName string, id stri
 	return &graphqlResponse.Attachment, nil
 }
 
-func uploadFileToS3(cfg *config.Config, session *awsSes.Session, fileId string, multipartFile *multipart.FileHeader) error {
+func uploadFileToS3(cfg *config.Config, session *awsSes.Session, tenantName, basePath, fileId string, multipartFile *multipart.FileHeader) error {
 	fileStream, err := multipartFile.Open()
+	if err != nil {
+		return fmt.Errorf("uploadFileToS3: %w", err)
+	}
+
+	_, err = s3.New(session).PutObject(&s3.PutObjectInput{
+		Bucket:        aws.String(cfg.AWS.Bucket),
+		Key:           aws.String(tenantName + basePath + "/" + fileId),
+		ACL:           aws.String("private"),
+		ContentLength: aws.Int64(0),
+	})
 	if err != nil {
 		return fmt.Errorf("uploadFileToS3: %w", err)
 	}
 
 	_, err2 := s3.New(session).PutObject(&s3.PutObjectInput{
 		Bucket:               aws.String(cfg.AWS.Bucket),
-		Key:                  aws.String(fileId),
+		Key:                  aws.String(tenantName + basePath + "/" + fileId),
 		ACL:                  aws.String("private"),
 		Body:                 fileStream,
 		ContentLength:        aws.Int64(multipartFile.Size),
@@ -332,4 +411,56 @@ func (s *fileService) addHeadersToGraphRequest(req *graphql.Request, tenant stri
 func (s *fileService) contextWithTimeout() (context.Context, context.CancelFunc, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 1000*time.Second)
 	return ctx, cancel, nil
+}
+
+func storeMultipartFileToTemp(fileId string, multipartFileHeader *multipart.FileHeader) (string, error) {
+	file, err := os.CreateTemp("", fileId)
+	if err != nil {
+		return "", err
+	}
+	src, err := multipartFileHeader.Open()
+	if err != nil {
+		return "", err
+	}
+	defer src.Close()
+
+	_, err = io.Copy(file, src)
+	if err != nil {
+		return "", err
+	}
+
+	err = file.Close()
+	if err != nil {
+		return "", err
+	}
+
+	return file.Name(), nil
+}
+
+func generateSignedURL(imageDeliveryURL, key string) string {
+	// Parse the URL
+	parsedURL, err := url.Parse(imageDeliveryURL)
+	if err != nil {
+		return fmt.Sprintf("Error parsing URL: %v", err)
+	}
+
+	// Attach the expiration value to the URL
+	expiry := time.Now().Unix() + SIGN_TOKEN_EXPIRATION
+	q := parsedURL.Query()
+	q.Set("exp", fmt.Sprintf("%d", expiry))
+	parsedURL.RawQuery = q.Encode()
+
+	// Extract path and query from the URL
+	stringToSign := parsedURL.Path + "?" + parsedURL.RawQuery
+
+	// Generate the signature
+	mac := hmac.New(sha256.New, []byte(key))
+	mac.Write([]byte(stringToSign))
+	signature := hex.EncodeToString(mac.Sum(nil))
+
+	// Attach the signature to the URL
+	q.Set("sig", signature)
+	parsedURL.RawQuery = q.Encode()
+
+	return parsedURL.String()
 }

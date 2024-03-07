@@ -1,5 +1,6 @@
 package entity
 
+// Deprecated
 type InternalStage string
 
 const (

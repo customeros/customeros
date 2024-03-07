@@ -33,7 +33,7 @@ export const LogEntryTimelineAction: React.FC = () => {
           mt={2}
           p={6}
           pt={4}
-          bg={'white'}
+          bg='white'
           border='1px solid'
           borderColor='gray.100'
         >

@@ -24,23 +24,28 @@ type emailService struct {
 }
 
 type EmailService interface {
-	FindEmailForUser(tenant, userId string) (*entity.EmailEntity, error)
+	FindEmailsForUser(tenant, userId string) ([]*entity.EmailEntity, error)
 	ReadEmailFromGoogle(gmailService *gmail.Service, userId, providerMessageId string) (*EmailRawData, error)
 	ReadEmailsForUsername(gmailService *gmail.Service, gmailImportState *entity.UserGmailImportState) (*entity.UserGmailImportState, error)
 }
 
-func (s *emailService) FindEmailForUser(tenant, userId string) (*entity.EmailEntity, error) {
+func (s *emailService) FindEmailsForUser(tenant, userId string) ([]*entity.EmailEntity, error) {
 	ctx := context.Background()
 
-	email, err := s.repositories.EmailRepository.FindUserByEmail(ctx, tenant, userId)
+	emails, err := s.repositories.EmailRepository.FindEmailsForUser(ctx, tenant, userId)
 	if err != nil {
 		return nil, fmt.Errorf("unable to find user by email: %v", err)
 	}
-	if email == nil {
+	if emails == nil {
 		return nil, nil
 	}
 
-	return s.mapDbNodeToEmailEntity(*email), nil
+	emailsEntities := make([]*entity.EmailEntity, len(emails))
+	for i, email := range emails {
+		emailsEntities[i] = s.mapDbNodeToEmailEntity(*email)
+	}
+
+	return emailsEntities, nil
 }
 
 func (s *emailService) ReadEmailFromGoogle(gmailService *gmail.Service, username, providerMessageId string) (*EmailRawData, error) {

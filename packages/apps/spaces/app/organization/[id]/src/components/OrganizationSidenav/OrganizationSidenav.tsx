@@ -1,8 +1,8 @@
 'use client';
+import React from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 
 import { useLocalStorage } from 'usehooks-ts';
-import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { Flex } from '@ui/layout/Flex';
 import { Icons } from '@ui/media/Icon';
@@ -17,12 +17,12 @@ import { Trophy01 } from '@ui/media/icons/Trophy01';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { SidenavItem } from '@shared/components/RootSidenav/components/SidenavItem';
 import { useOrganizationQuery } from '@organization/src/graphql/organization.generated';
+import { NotificationCenter } from '@shared/components/Notifications/NotificationCenter';
 
 export const OrganizationSidenav = () => {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
-  const isOnboardingFeatureOn = useFeatureIsOn('onboarding-status');
 
   const [lastActivePosition, setLastActivePosition] = useLocalStorage(
     `customeros-player-last-position`,
@@ -86,6 +86,7 @@ export const OrganizationSidenav = () => {
           )}
           <Tooltip label={data?.organization?.name} placement='bottom'>
             <Text
+              maxW='150px'
               fontSize='lg'
               fontWeight='semibold'
               color='gray.700'
@@ -123,7 +124,7 @@ export const OrganizationSidenav = () => {
         />
         <SidenavItem
           label='Account'
-          isActive={checkIsActive('account')}
+          isActive={checkIsActive('account') || checkIsActive('invoices')}
           onClick={handleItemClick('account')}
           icon={
             <Icons.ActivityHeart
@@ -132,19 +133,17 @@ export const OrganizationSidenav = () => {
             />
           }
         />
-        {isOnboardingFeatureOn && (
-          <SidenavItem
-            label='Success'
-            isActive={checkIsActive('success')}
-            onClick={handleItemClick('success')}
-            icon={
-              <Trophy01
-                color={checkIsActive('success') ? 'gray.700' : 'gray.500'}
-                boxSize='5'
-              />
-            }
-          />
-        )}
+        <SidenavItem
+          label='Success'
+          isActive={checkIsActive('success')}
+          onClick={handleItemClick('success')}
+          icon={
+            <Trophy01
+              color={checkIsActive('success') ? 'gray.700' : 'gray.500'}
+              boxSize='5'
+            />
+          }
+        />
         <SidenavItem
           label='Issues'
           isActive={checkIsActive('issues')}
@@ -157,6 +156,21 @@ export const OrganizationSidenav = () => {
           }
         />
       </VStack>
+      <VStack
+        spacing='1'
+        flexDir='column'
+        flexWrap='initial'
+        flexGrow='1'
+        justifyContent='flex-end'
+        sx={{
+          '& > span': {
+            width: '100%',
+          },
+        }}
+      >
+        <NotificationCenter />
+      </VStack>
+      <Flex h='64px' />
     </GridItem>
   );
 };

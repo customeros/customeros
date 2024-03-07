@@ -3,6 +3,7 @@ import {
   Issue,
   Action,
   Meeting,
+  Invoice,
   LogEntry,
   InteractionEvent,
 } from '@graphql/types';
@@ -16,10 +17,14 @@ export type LogEntryWithAliases = LogEntry & {
 export type IssueWithAliases = Issue & {
   issueStatus: string;
 };
+export type InvoiceWithId = Invoice & {
+  id: string;
+};
 
 export type TimelineEvent =
   | InteractionEventWithDate
   | Meeting
   | Action
   | IssueWithAliases
+  | Pick<InvoiceWithId, 'id' | '__typename'>
   | LogEntryWithAliases;

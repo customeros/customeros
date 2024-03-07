@@ -16,6 +16,17 @@ RUN cd /workspace/build/customer-os-common-module && go mod download && go mod v
 COPY customer-os-common-module/. /workspace/build/customer-os-common-module/
 RUN cd /workspace/build/customer-os-common-module && go build
 
+#copy and build customer-os-api-sdk
+RUN mkdir /workspace/build/customer-os-api-sdk
+
+COPY customer-os-api-sdk/go.mod /workspace/build/customer-os-api-sdk/go.mod
+COPY customer-os-api-sdk/go.sum /workspace/build/customer-os-api-sdk/go.sum
+
+RUN cd /workspace/build/customer-os-api-sdk && go mod download && go mod verify
+
+COPY customer-os-api-sdk/. /workspace/build/customer-os-api-sdk/
+RUN cd /workspace/build/customer-os-api-sdk && go build
+
 #copy and build file storage api
 COPY file-store-api/go.mod /workspace/build/file-store-api/go.mod
 COPY file-store-api/go.sum /workspace/build/file-store-api/go.sum

@@ -71,7 +71,7 @@ func (a *ContactAggregate) updateContact(ctx context.Context, cmd *command.Upser
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
 
-	if aggregate.AllowCheckIfEventIsRedundant(cmd.Source.AppSource, cmd.LoggedInUserId) {
+	if aggregate.AllowCheckForNoChanges(cmd.Source.AppSource, cmd.LoggedInUserId) {
 		if a.Contact.SameData(cmd.DataFields, cmd.ExternalSystem) {
 			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
 			return nil
@@ -80,7 +80,7 @@ func (a *ContactAggregate) updateContact(ctx context.Context, cmd *command.Upser
 
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
 
-	updateEvent, err := event.NewContactUpdateEvent(a, cmd.Source.Source, cmd.DataFields, cmd.ExternalSystem, updatedAtNotNil)
+	updateEvent, err := event.NewContactUpdateEvent(a, cmd.Source.Source, cmd.DataFields, cmd.ExternalSystem, updatedAtNotNil, cmd.FieldsMask)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewContactUpdateEvent")
@@ -102,7 +102,7 @@ func (a *ContactAggregate) linkEmail(ctx context.Context, cmd *command.LinkEmail
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
 
-	if aggregate.AllowCheckIfEventIsRedundant(cmd.AppSource, cmd.LoggedInUserId) {
+	if aggregate.AllowCheckForNoChanges(cmd.AppSource, cmd.LoggedInUserId) {
 		if a.Contact.HasEmail(cmd.EmailId, cmd.Label, cmd.Primary) {
 			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
 			return nil
@@ -179,7 +179,7 @@ func (a *ContactAggregate) linkPhoneNumber(ctx context.Context, cmd *command.Lin
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
 
-	if aggregate.AllowCheckIfEventIsRedundant(cmd.AppSource, cmd.LoggedInUserId) {
+	if aggregate.AllowCheckForNoChanges(cmd.AppSource, cmd.LoggedInUserId) {
 		if a.Contact.HasPhoneNumber(cmd.PhoneNumberId, cmd.Label, cmd.Primary) {
 			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
 			return nil
@@ -256,7 +256,7 @@ func (a *ContactAggregate) linkLocation(ctx context.Context, cmd *command.LinkLo
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
 
-	if aggregate.AllowCheckIfEventIsRedundant(cmd.AppSource, cmd.LoggedInUserId) {
+	if aggregate.AllowCheckForNoChanges(cmd.AppSource, cmd.LoggedInUserId) {
 		if a.Contact.HasLocation(cmd.LocationId) {
 			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
 			return nil
@@ -287,7 +287,7 @@ func (a *ContactAggregate) linkOrganization(ctx context.Context, cmd *command.Li
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
 
-	if aggregate.AllowCheckIfEventIsRedundant(cmd.Source.AppSource, cmd.LoggedInUserId) {
+	if aggregate.AllowCheckForNoChanges(cmd.Source.AppSource, cmd.LoggedInUserId) {
 		if a.Contact.HasJobRoleInOrganization(cmd.OrganizationId, cmd.JobRoleFields) {
 			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
 			return nil

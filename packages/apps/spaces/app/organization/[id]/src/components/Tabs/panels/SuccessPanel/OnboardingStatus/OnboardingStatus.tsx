@@ -33,10 +33,14 @@ const labelMap: Record<OnboardingStatusEnum, string> = {
 };
 
 interface OnboardingStatusProps {
+  isLoading?: boolean;
   data?: OnboardingDetails | null;
 }
 
-export const OnboardingStatus = ({ data }: OnboardingStatusProps) => {
+export const OnboardingStatus = ({
+  data,
+  isLoading,
+}: OnboardingStatusProps) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [isFetching, setIsFetching] = useState(false);
 
@@ -50,6 +54,8 @@ export const OnboardingStatus = ({ data }: OnboardingStatusProps) => {
       () => '',
     )
     .otherwise(() => {
+      if (!data?.updatedAt) return '';
+
       const [value, unit] = getDifferenceFromNow(data?.updatedAt);
       if (value === '0' && unit === 'days') {
         const [value, unit] = getDifferenceInMinutesOrHours(data?.updatedAt);
@@ -111,7 +117,9 @@ export const OnboardingStatus = ({ data }: OnboardingStatusProps) => {
             <Text mr='1' fontWeight='semibold'>
               Onboarding
             </Text>
-            <Text color='gray.500'>{`${label} ${timeElapsed}`}</Text>
+            <Text color='gray.500'>{`${label} ${
+              isLoading ? '' : timeElapsed
+            }`}</Text>
           </Flex>
           {reason && (
             <Text

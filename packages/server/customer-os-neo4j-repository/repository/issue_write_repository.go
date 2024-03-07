@@ -17,6 +17,7 @@ type IssueCreateFields struct {
 	CreatedAt                 time.Time    `json:"createdAt"`
 	UpdatedAt                 time.Time    `json:"updatedAt"`
 	SourceFields              model.Source `json:"sourceFields"`
+	GroupId                   string       `json:"groupId"`
 	Subject                   string       `json:"subject"`
 	Description               string       `json:"description"`
 	Status                    string       `json:"status"`
@@ -27,6 +28,7 @@ type IssueCreateFields struct {
 }
 
 type IssueUpdateFields struct {
+	GroupId     string    `json:"groupId"`
 	Subject     string    `json:"subject"`
 	Description string    `json:"description"`
 	Status      string    `json:"status"`
@@ -42,6 +44,11 @@ type IssueWriteRepository interface {
 	RemoveUserAssignee(ctx context.Context, tenant, issueId, userId string, at time.Time) error
 	AddUserFollower(ctx context.Context, tenant, issueId, userId string, at time.Time) error
 	RemoveUserFollower(ctx context.Context, tenant, issueId, userId string, at time.Time) error
+
+	ReportedByOrganizationWithGroupId(ctx context.Context, tenant, organizationId, groupId string) error
+	RemoveReportedByOrganizationWithGroupId(ctx context.Context, tenant, organizationId, groupId string) error
+
+	LinkUnthreadIssuesToOrganizationByGroupId(ctx context.Context) error
 }
 
 type issueWriteRepository struct {
@@ -74,11 +81,13 @@ func (r *issueWriteRepository) Create(ctx context.Context, tenant, issueId strin
 								i.source=$source,
 								i.sourceOfTruth=$sourceOfTruth,
 								i.appSource=$appSource,
+								i.groupId=$groupId,
 								i.subject=$subject,
 								i.description=$description,	
 								i.status=$status,	
 								i.priority=$priority
 							ON MATCH SET 	
+								i.groupId = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.groupId is null OR i.groupId = '' THEN $groupId ELSE i.groupId END,
 								i.subject = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.subject is null OR i.subject = '' THEN $subject ELSE i.subject END,
 								i.description = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.description is null OR i.description = '' THEN $description ELSE i.description END,
 								i.status = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.status is null OR i.status = '' THEN $status ELSE i.status END,
@@ -110,6 +119,7 @@ func (r *issueWriteRepository) Create(ctx context.Context, tenant, issueId strin
 		"source":                    data.SourceFields.Source,
 		"sourceOfTruth":             data.SourceFields.SourceOfTruth,
 		"appSource":                 data.SourceFields.AppSource,
+		"groupId":                   data.GroupId,
 		"subject":                   data.Subject,
 		"description":               data.Description,
 		"status":                    data.Status,
@@ -138,6 +148,7 @@ func (r *issueWriteRepository) Update(ctx context.Context, tenant, issueId strin
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {id:$issueId})
 		 	SET	
+				i.groupId = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.groupId is null OR i.groupId = '' THEN $groupId ELSE i.groupId END,
 				i.subject = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.subject is null OR i.subject = '' THEN $subject ELSE i.subject END,
 				i.description = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.description is null OR i.description = '' THEN $description ELSE i.description END,
 				i.status = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.status is null OR i.status = '' THEN $status ELSE i.status END,
@@ -149,6 +160,7 @@ func (r *issueWriteRepository) Update(ctx context.Context, tenant, issueId strin
 		"tenant":        tenant,
 		"issueId":       issueId,
 		"updatedAt":     data.UpdatedAt,
+		"groupId":       data.GroupId,
 		"subject":       data.Subject,
 		"description":   data.Description,
 		"status":        data.Status,
@@ -266,6 +278,75 @@ func (r *issueWriteRepository) RemoveUserFollower(ctx context.Context, tenant, i
 		"updatedAt": at,
 		"userId":    userId,
 	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *issueWriteRepository) ReportedByOrganizationWithGroupId(ctx context.Context, tenant, organizationId, groupId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueWriteRepository.ReportedByOrganizationWithGroupId")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.LogFields(log.String("organizationId", organizationId))
+	span.LogFields(log.String("groupId", groupId))
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {id:$organizationId}) 
+			   OPTIONAL MATCH (t)<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {groupId:$groupId}) 
+			   MERGE (i)-[:REPORTED_BY]->(o)`
+	params := map[string]any{
+		"tenant":         tenant,
+		"organizationId": organizationId,
+		"groupId":        groupId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *issueWriteRepository) RemoveReportedByOrganizationWithGroupId(ctx context.Context, tenant, organizationId, groupId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueWriteRepository.RemoveReportedByOrganizationWithGroupId")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.LogFields(log.String("organizationId", organizationId))
+	span.LogFields(log.String("groupId", groupId))
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {id:$organizationId})<-[r:REPORTED_BY]-(i:Issue{groupId:$groupId}) 
+			   DELETE r`
+	params := map[string]any{
+		"tenant":         tenant,
+		"organizationId": organizationId,
+		"groupId":        groupId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *issueWriteRepository) LinkUnthreadIssuesToOrganizationByGroupId(ctx context.Context) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueWriteRepository.LinkUnthreadIssuesToOrganizationByGroupId")
+	defer span.Finish()
+
+	cypher := `match (t:Tenant)<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem{id:"unthread"})<-[:IS_LINKED_WITH]-(i:Issue)
+			   with t, i
+			   match (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization{slackChannelId: i.groupId})
+			   where not (i)-[:REPORTED_BY]->(o)
+			   MERGE (i)-[:REPORTED_BY]->(o)`
+	params := map[string]any{}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 

@@ -11,7 +11,7 @@ func buildSort(sortBy []*model.SortBy, T reflect.Type) (*utils.CypherSort, error
 	transformedSorting := new(utils.CypherSort)
 	if sortBy != nil {
 		for _, v := range sortBy {
-			orderBy := transformedSorting.NewSortRule(v.By, v.Direction.String(), *v.CaseSensitive, T)
+			orderBy := transformedSorting.NewSortRule(v.By, v.Direction.String(), utils.IfNotNilBool(v.CaseSensitive), T)
 			if !orderBy.IsValid() {
 				return nil, errors.New("Invalid sorting rule")
 			}

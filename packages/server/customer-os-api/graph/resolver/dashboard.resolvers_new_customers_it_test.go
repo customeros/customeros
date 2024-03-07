@@ -6,6 +6,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
@@ -14,9 +17,9 @@ import (
 func TestQueryResolver_Dashboard_New_Customers_No_Period_No_Data_In_DB(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_new_customers_no_period",
 		map[string]interface{}{})
@@ -40,9 +43,9 @@ func TestQueryResolver_Dashboard_New_Customers_No_Period_No_Data_In_DB(t *testin
 func TestQueryResolver_Dashboard_New_Customers_InvalidPeriod(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 
 	response := callGraphQLExpectError(t, "dashboard_view/dashboard_new_customers",
 		map[string]interface{}{
@@ -50,15 +53,15 @@ func TestQueryResolver_Dashboard_New_Customers_InvalidPeriod(t *testing.T) {
 			"end":   "2020-01-01T00:00:00.000Z",
 		})
 
-	require.Contains(t, "Failed to get the data for period", response.Message)
+	require.Contains(t, response.Message, "Failed to get the data for period")
 }
 
 func TestQueryResolver_Dashboard_New_Customers_PeriodIntervals(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 
 	assert_Dashboard_New_Customers_PeriodIntervals(t, "2020-01-01T00:00:00.000Z", "2020-01-31T00:00:00.000Z", 1)
 	assert_Dashboard_New_Customers_PeriodIntervals(t, "2020-01-01T00:00:00.000Z", "2020-01-01T00:00:00.000Z", 1)
@@ -88,20 +91,20 @@ func assert_Dashboard_New_Customers_PeriodIntervals(t *testing.T, start, end str
 func TestQueryResolver_Dashboard_New_Customers_Hidden_Organization(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		Hide: true,
 	})
 
 	contract1ServiceStartedAt := time.Date(2023, 7, 15, 23, 59, 59, 999, time.UTC)
-	neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
+	neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	})
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_new_customers",
 		map[string]interface{}{
@@ -130,20 +133,20 @@ func TestQueryResolver_Dashboard_New_Customers_Hidden_Organization(t *testing.T)
 func TestQueryResolver_Dashboard_New_Customers_Prospect(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		IsCustomer: false,
 	})
 
 	contract1ServiceStartedAt := time.Date(2023, 7, 15, 23, 59, 59, 999, time.UTC)
-	neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
+	neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	})
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_new_customers",
 		map[string]interface{}{
@@ -172,18 +175,18 @@ func TestQueryResolver_Dashboard_New_Customers_Prospect(t *testing.T) {
 func TestQueryResolver_Dashboard_New_Customers_ContractSignedBeforeMonth(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
 
 	contract1ServiceStartedAt := time.Date(2023, 6, 30, 23, 59, 59, 999, time.UTC)
-	neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
+	neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	})
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_new_customers",
 		map[string]interface{}{
@@ -212,18 +215,18 @@ func TestQueryResolver_Dashboard_New_Customers_ContractSignedBeforeMonth(t *test
 func TestQueryResolver_Dashboard_New_Customers_ContractSignedAfterMonth(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
 
 	contract1ServiceStartedAt := time.Date(2023, 8, 1, 0, 0, 0, 0, time.UTC)
-	neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
+	neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	})
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_new_customers",
 		map[string]interface{}{
@@ -252,18 +255,18 @@ func TestQueryResolver_Dashboard_New_Customers_ContractSignedAfterMonth(t *testi
 func TestQueryResolver_Dashboard_New_Customers_ContractSignedAtBeginningOfMonth(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
 
 	contract1ServiceStartedAt := time.Date(2023, 7, 1, 0, 0, 0, 0, time.UTC)
-	neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
+	neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	})
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_new_customers",
 		map[string]interface{}{
@@ -292,18 +295,18 @@ func TestQueryResolver_Dashboard_New_Customers_ContractSignedAtBeginningOfMonth(
 func TestQueryResolver_Dashboard_New_Customers_ContractSignedAtEndOfMonth(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
 
 	contract1ServiceStartedAt := time.Date(2023, 7, 31, 20, 59, 59, 999, time.UTC)
-	neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
+	neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	})
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_new_customers",
 		map[string]interface{}{
@@ -332,21 +335,21 @@ func TestQueryResolver_Dashboard_New_Customers_ContractSignedAtEndOfMonth(t *tes
 func TestQueryResolver_Dashboard_New_Customers_ContractSignedInMonth_EndedImmediately(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
 
 	contract1ServiceStartedAt := time.Date(2023, 7, 15, 0, 0, 0, 0, time.UTC)
 	contract1EndedAt := time.Date(2023, 7, 15, 0, 0, 0, 0, time.UTC)
-	neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusEnded,
+	neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusEnded,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 		EndedAt:          &contract1EndedAt,
 	})
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_new_customers",
 		map[string]interface{}{
@@ -375,21 +378,21 @@ func TestQueryResolver_Dashboard_New_Customers_ContractSignedInMonth_EndedImmedi
 func TestQueryResolver_Dashboard_New_Customers_ContractSignedInMonth_EndedAtEndOfMonth(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
 
 	contract1ServiceStartedAt := time.Date(2023, 7, 15, 0, 0, 0, 0, time.UTC)
 	contract1EndedAt := time.Date(2023, 7, 31, 23, 59, 59, 999, time.UTC)
-	neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusEnded,
+	neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusEnded,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 		EndedAt:          &contract1EndedAt,
 	})
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_new_customers",
 		map[string]interface{}{
@@ -418,21 +421,21 @@ func TestQueryResolver_Dashboard_New_Customers_ContractSignedInMonth_EndedAtEndO
 func TestQueryResolver_Dashboard_New_Customers_ContractSignedInMonth_EndedNextMonth(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
 
 	contract1ServiceStartedAt := time.Date(2023, 7, 15, 0, 0, 0, 0, time.UTC)
 	contract1EndedAt := time.Date(2023, 8, 1, 0, 0, 0, 0, time.UTC)
-	neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusEnded,
+	neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusEnded,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 		EndedAt:          &contract1EndedAt,
 	})
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_new_customers",
 		map[string]interface{}{
@@ -461,27 +464,27 @@ func TestQueryResolver_Dashboard_New_Customers_ContractSignedInMonth_EndedNextMo
 func TestQueryResolver_Dashboard_New_Customers_MultipleContractsSignedInMonth_SameOrganization(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
 
 	contract1ServiceStartedAt := time.Date(2023, 7, 15, 0, 0, 0, 0, time.UTC)
 	contract1EndedAt := time.Date(2024, 8, 1, 0, 0, 0, 0, time.UTC)
-	neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
+	neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ServiceStartedAt: &contract1ServiceStartedAt,
 		EndedAt:          &contract1EndedAt,
 	})
 
 	contract2ServiceStartedAt := time.Date(2023, 7, 20, 0, 0, 0, 0, time.UTC)
 	contract2EndedAt := time.Date(2024, 8, 1, 0, 0, 0, 0, time.UTC)
-	neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
+	neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ServiceStartedAt: &contract2ServiceStartedAt,
 		EndedAt:          &contract2EndedAt,
 	})
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_new_customers",
 		map[string]interface{}{
@@ -510,27 +513,27 @@ func TestQueryResolver_Dashboard_New_Customers_MultipleContractsSignedInMonth_Sa
 func TestQueryResolver_Dashboard_New_Customers_MultipleContractsSignedInDifferentMonths_SameOrganization(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
 
 	contract1ServiceStartedAt := time.Date(2023, 7, 15, 0, 0, 0, 0, time.UTC)
 	contract1EndedAt := time.Date(2024, 8, 1, 0, 0, 0, 0, time.UTC)
-	neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
+	neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ServiceStartedAt: &contract1ServiceStartedAt,
 		EndedAt:          &contract1EndedAt,
 	})
 
 	contract2ServiceStartedAt := time.Date(2023, 9, 20, 0, 0, 0, 0, time.UTC)
 	contract2EndedAt := time.Date(2024, 8, 1, 0, 0, 0, 0, time.UTC)
-	neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
+	neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ServiceStartedAt: &contract2ServiceStartedAt,
 		EndedAt:          &contract2EndedAt,
 	})
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_new_customers",
 		map[string]interface{}{
@@ -559,28 +562,28 @@ func TestQueryResolver_Dashboard_New_Customers_MultipleContractsSignedInDifferen
 func TestQueryResolver_Dashboard_New_Customers_MultipleContractsSignedInMonth_DifferentOrganization(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId1 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
 	orgId2 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
 
 	contract1ServiceStartedAt := time.Date(2023, 7, 15, 0, 0, 0, 0, time.UTC)
 	contract1EndedAt := time.Date(2024, 8, 1, 0, 0, 0, 0, time.UTC)
-	neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId1, entity.ContractEntity{
+	neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId1, neo4jentity.ContractEntity{
 		ServiceStartedAt: &contract1ServiceStartedAt,
 		EndedAt:          &contract1EndedAt,
 	})
 
 	contract2ServiceStartedAt := time.Date(2023, 7, 20, 0, 0, 0, 0, time.UTC)
 	contract2EndedAt := time.Date(2024, 8, 1, 0, 0, 0, 0, time.UTC)
-	neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId2, entity.ContractEntity{
+	neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId2, neo4jentity.ContractEntity{
 		ServiceStartedAt: &contract2ServiceStartedAt,
 		EndedAt:          &contract2EndedAt,
 	})
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_new_customers",
 		map[string]interface{}{
@@ -609,16 +612,16 @@ func TestQueryResolver_Dashboard_New_Customers_MultipleContractsSignedInMonth_Di
 func TestQueryResolver_Dashboard_New_Customers_GeneralCount1(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
 
 	// Contract 1: Signed on 01.04.2023 with a termination date in 2024
 	contract1ServiceStartedAt := time.Date(2023, 3, 1, 0, 0, 0, 0, time.UTC)
 	contract1EndedAt := time.Date(2024, 3, 1, 0, 0, 0, 0, time.UTC)
-	neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
+	neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ServiceStartedAt: &contract1ServiceStartedAt,
 		EndedAt:          &contract1EndedAt,
 	})
@@ -626,7 +629,7 @@ func TestQueryResolver_Dashboard_New_Customers_GeneralCount1(t *testing.T) {
 	// Contract 2: Signed on 01.04.2023 with a termination date in 2024
 	contract2ServiceStartedAt := time.Date(2023, 4, 1, 0, 0, 0, 0, time.UTC)
 	contract2EndedAt := time.Date(2024, 12, 31, 23, 59, 59, 0, time.UTC)
-	neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
+	neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ServiceStartedAt: &contract2ServiceStartedAt,
 		EndedAt:          &contract2EndedAt,
 	})
@@ -635,7 +638,7 @@ func TestQueryResolver_Dashboard_New_Customers_GeneralCount1(t *testing.T) {
 	for i := 0; i < 2; i++ {
 		contractServiceStartedAt := time.Date(2023, 6, 1, 0, 0, 0, 0, time.UTC)
 		contractEndedAt := time.Date(2023, 11, 30, 23, 59, 59, 0, time.UTC)
-		neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
+		neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 			ServiceStartedAt: &contractServiceStartedAt,
 			EndedAt:          &contractEndedAt,
 		})
@@ -645,7 +648,7 @@ func TestQueryResolver_Dashboard_New_Customers_GeneralCount1(t *testing.T) {
 	for i := 0; i < 2; i++ {
 		contractServiceStartedAt := time.Date(2023, 6, 1, 0, 0, 0, 0, time.UTC)
 		contractEndedAt := time.Date(2023, 12, 30, 23, 59, 59, 0, time.UTC)
-		neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
+		neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 			ServiceStartedAt: &contractServiceStartedAt,
 			EndedAt:          &contractEndedAt,
 		})
@@ -655,17 +658,17 @@ func TestQueryResolver_Dashboard_New_Customers_GeneralCount1(t *testing.T) {
 	for i := 0; i < 12; i++ {
 		contractServiceStartedAt := time.Date(2023, 9, 1, 0, 0, 0, 0, time.UTC)
 		contractEndedAt := time.Date(2024, 12, 31, 23, 59, 59, 0, time.UTC)
-		neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
+		neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 			ServiceStartedAt: &contractServiceStartedAt,
 			EndedAt:          &contractEndedAt,
 		})
 	}
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_new_customers",
 		map[string]interface{}{
-			"start": "2023-01-15T00:00:00.000Z",
+			"start": "2023-01-01T00:00:00.000Z",
 			"end":   "2023-12-01T00:00:00.000Z",
 		})
 
@@ -697,9 +700,9 @@ func TestQueryResolver_Dashboard_New_Customers_GeneralCount1(t *testing.T) {
 func TestQueryResolver_Dashboard_New_Customers_GeneralCount2(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
 
@@ -707,18 +710,18 @@ func TestQueryResolver_Dashboard_New_Customers_GeneralCount2(t *testing.T) {
 		for j := 1; j <= i*1; j++ {
 			contractServiceStartedAt := time.Date(2023, time.Month(i), 1, 0, 0, 0, 0, time.UTC)
 			contractEndedAt := time.Date(2024, 01, 31, 23, 59, 59, 0, time.UTC)
-			neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
+			neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 				ServiceStartedAt: &contractServiceStartedAt,
 				EndedAt:          &contractEndedAt,
 			})
 		}
 	}
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_new_customers",
 		map[string]interface{}{
-			"start": "2023-01-15T00:00:00.000Z",
+			"start": "2023-01-01T00:00:00.000Z",
 			"end":   "2023-12-01T00:00:00.000Z",
 		})
 

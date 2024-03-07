@@ -1,5 +1,8 @@
+import { useRef } from 'react';
+
 import { produce } from 'immer';
 import merge from 'lodash/merge';
+import { useWillUnmount } from 'rooks';
 import { InfiniteData, useQueryClient } from '@tanstack/react-query';
 
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
@@ -23,13 +26,14 @@ export const useAboutPanelMethods = ({ id }: UseAboutPanelMethodsOptions) => {
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
   const [organizationsMeta] = useOrganizationsMeta();
+  const timeout = useRef<NodeJS.Timeout>();
 
   const queryKey = useOrganizationQuery.getKey({ id });
   const organizationsQueryKey = useInfiniteGetOrganizationsQuery.getKey(
     organizationsMeta.getOrganization,
   );
 
-  const invalidateQuery = () => queryClient.invalidateQueries(queryKey);
+  const invalidateQuery = () => queryClient.invalidateQueries({ queryKey });
 
   const updateOrganization = useUpdateOrganizationMutation(client, {
     onMutate: ({ input }) => {
@@ -80,13 +84,21 @@ export const useAboutPanelMethods = ({ id }: UseAboutPanelMethodsOptions) => {
       );
     },
     onSettled: () => {
-      invalidateQuery();
-      queryClient.invalidateQueries(organizationsQueryKey);
+      if (timeout.current) clearTimeout(timeout.current);
+
+      timeout.current = setTimeout(() => {
+        invalidateQuery();
+        queryClient.invalidateQueries({ queryKey: organizationsQueryKey });
+      }, 1000);
     },
   });
 
   const addSocial = useAddSocialMutation(client, {
     onSuccess: invalidateQuery,
+  });
+
+  useWillUnmount(() => {
+    if (timeout.current) clearTimeout(timeout.current);
   });
 
   return { updateOrganization, addSocial, invalidateQuery };

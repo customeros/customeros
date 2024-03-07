@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -18,7 +17,7 @@ type AttachmentRepository interface {
 	LinkWithXXIncludesAttachmentInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, linkedWith LinkedWith, linkedNature *LinkedNature, attachmentId, includedById string) (*dbtype.Node, error)
 	UnlinkWithXXIncludesAttachmentInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, linkedWith LinkedWith, linkedNature *LinkedNature, attachmentId, includedById string) (*dbtype.Node, error)
 	GetAttachmentsForXX(ctx context.Context, tenant string, linkedWith LinkedWith, linkedNature *LinkedNature, ids []string) ([]*utils.DbNodeAndId, error)
-	Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, newAttachment entity.AttachmentEntity, source, sourceOfTruth neo4jentity.DataSource) (*dbtype.Node, error)
+	Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant, id, cdnUrl, basePath, fileName, mimeType string, size int64, createdAt *time.Time, source, sourceOfTruth neo4jentity.DataSource, appSource string) (*dbtype.Node, error)
 }
 
 type attachmentRepository struct {
@@ -120,24 +119,25 @@ func (r *attachmentRepository) GetAttachmentsForXX(ctx context.Context, tenant s
 	return result.([]*utils.DbNodeAndId), err
 }
 
-func (r *attachmentRepository) Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, newAttachment entity.AttachmentEntity, source, sourceOfTruth neo4jentity.DataSource) (*dbtype.Node, error) {
+func (r *attachmentRepository) Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant, id, cdnUrl, basePath, fileName, mimeType string, size int64, createdAt *time.Time, source, sourceOfTruth neo4jentity.DataSource, appSource string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AttachmentRepository.Create")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	var createdAt time.Time
-	createdAt = utils.Now()
-	if newAttachment.CreatedAt != nil {
-		createdAt = *newAttachment.CreatedAt
+	id = utils.NewUUIDIfEmpty(id)
+
+	if createdAt == nil {
+		createdAt = utils.NowPtr()
 	}
 
-	query := "MERGE (a:Attachment_%s {id:randomUUID()}) ON CREATE SET " +
+	query := "MERGE (a:Attachment_%s {id:$id}) ON CREATE SET " +
 		" a:Attachment, " +
 		" a.source=$source, " +
 		" a.createdAt=$createdAt, " +
-		" a.name=$name, " +
+		" a.cdnUrl=$cdnUrl, " +
+		" a.basePath=$basePath, " +
+		" a.fileName=$fileName, " +
 		" a.mimeType=$mimeType, " +
-		" a.extension=$extension, " +
 		" a.size=$size, " +
 		" a.sourceOfTruth=$sourceOfTruth, " +
 		" a.appSource=$appSource " +
@@ -149,13 +149,15 @@ func (r *attachmentRepository) Create(ctx context.Context, tx neo4j.ManagedTrans
 		map[string]interface{}{
 			"tenant":        tenant,
 			"source":        source,
-			"createdAt":     createdAt,
-			"name":          newAttachment.Name,
-			"mimeType":      newAttachment.MimeType,
-			"extension":     newAttachment.Extension,
-			"size":          newAttachment.Size,
+			"createdAt":     *createdAt,
+			"id":            id,
+			"cdnUrl":        cdnUrl,
+			"basePath":      basePath,
+			"fileName":      fileName,
+			"mimeType":      mimeType,
+			"size":          size,
 			"sourceOfTruth": sourceOfTruth,
-			"appSource":     newAttachment.AppSource,
+			"appSource":     appSource,
 		}); err != nil {
 		return nil, err
 	} else {

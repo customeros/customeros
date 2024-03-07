@@ -1,0 +1,22 @@
+query GetTenantBillingProfiles {
+  tenantBillingProfiles{
+    id
+    phone
+    addressLine1
+    addressLine2
+    addressLine3
+    locality
+    country
+    zip
+    legalName
+    domesticPaymentsBankInfo
+    internationalPaymentsBankInfo
+    vatNumber
+    sendInvoicesFrom
+    canPayWithCard
+    canPayWithDirectDebitSEPA
+    canPayWithDirectDebitACH
+    canPayWithDirectDebitBacs
+    canPayWithPigeon
+  }
+}

@@ -23,7 +23,6 @@ const (
 type OrganizationRepository interface {
 	CountOrganizations(ctx context.Context, tenant string) (int64, error)
 	CountCustomers(ctx context.Context, tenant string) (int64, error)
-	GetOrganizationById(ctx context.Context, tenant, organizationId string) (*dbtype.Node, error)
 	GetPaginatedOrganizations(ctx context.Context, tenant string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	GetPaginatedOrganizationsForContact(ctx context.Context, tenant, contactId string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	Archive(ctx context.Context, organizationId string) error
@@ -129,35 +128,6 @@ func (r *organizationRepository) CountCustomers(ctx context.Context, tenant stri
 		return 0, err
 	}
 	return dbRecord.(*db.Record).Values[0].(int64), nil
-}
-
-func (r *organizationRepository) GetOrganizationById(ctx context.Context, tenant, organizationId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetOrganizationById")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("organizationId", organizationId))
-
-	cypher := `MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) RETURN org`
-	params := map[string]any{
-		"organizationId": organizationId,
-		"tenant":         tenant,
-	}
-	span.LogFields(log.String("query", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
-
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-	dbRecord, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
-			return nil, err
-		} else {
-			return queryResult.Single(ctx)
-		}
-	})
-	if err != nil {
-		return nil, err
-	}
-	return utils.NodePtr(dbRecord.(*db.Record).Values[0].(dbtype.Node)), nil
 }
 
 func (r *organizationRepository) GetPaginatedOrganizations(ctx context.Context, tenant string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {
@@ -538,6 +508,16 @@ func (r *organizationRepository) MergeOrganizationRelationsInTx(ctx context.Cont
 
 	if _, err := tx.Run(ctx, matchQuery+
 		" WITH primary, merged "+
+		" MATCH (merged)-[rel:HAS_BILLING_PROFILE]->(n:BillingProfile) "+
+		" MERGE (primary)-[newRel:HAS_BILLING_PROFILE]->(n) "+
+		" ON CREATE SET newRel.mergedFrom = $mergedOrganizationId, "+
+		"				newRel.createdAt = $now "+
+		"			SET	rel.merged=true", params); err != nil {
+		return err
+	}
+
+	if _, err := tx.Run(ctx, matchQuery+
+		" WITH primary, merged "+
 		" MATCH (merged)-[rel:HAS_OPPORTUNITY]->(n:Opportunity) "+
 		" MERGE (primary)-[newRel:HAS_OPPORTUNITY]->(n) "+
 		" ON CREATE SET newRel.mergedFrom = $mergedOrganizationId, "+
@@ -786,7 +766,7 @@ func (r *organizationRepository) GetMinMaxRenewalForecastArr(ctx context.Context
 
 	cypher := `CALL { MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization) 
               RETURN min(o.renewalForecastArr) as min, max(o.renewalForecastArr) as max }
-		      RETURN min, max`
+		      RETURN toFloat(min), toFloat(max)`
 	params := map[string]any{
 		"tenant": common.GetTenantFromContext(ctx),
 	}

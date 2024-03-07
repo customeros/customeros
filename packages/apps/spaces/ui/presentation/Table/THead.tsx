@@ -22,11 +22,14 @@ interface THeadProps<
   InitialRefType extends { focus(): void } = HTMLButtonElement,
 > {
   id: string;
+  py?: string;
   title: string;
+  padding?: string;
   subTitle?: string;
   canSort?: boolean;
   canFilter?: boolean;
   isFiltered?: boolean;
+  borderTopColor?: string;
   isSorted?: string | boolean;
   filterWidth?: string | number;
   onToggleSort?: (e: unknown) => void;
@@ -46,6 +49,7 @@ const THead = <InitialRefType extends { focus(): void } = HTMLButtonElement>({
   filterWidth,
   onToggleSort,
   renderFilter,
+  py,
 }: THeadProps<InitialRefType>) => {
   const [isOpen, setIsOpen] = useTHeadState(id);
   const initialFocusRef = useRef<InitialRefType>(null);
@@ -81,6 +85,7 @@ const THead = <InitialRefType extends { focus(): void } = HTMLButtonElement>({
             align='center'
             border='1px solid'
             borderRadius='4px'
+            py={py ?? '0'}
             transition='opacity 0.2s ease-in-out'
             ml={(canSort && isOpen) || isSorted ? '0' : '3'}
             borderColor={isFiltered || isOpen ? 'gray.300' : 'transparent'}

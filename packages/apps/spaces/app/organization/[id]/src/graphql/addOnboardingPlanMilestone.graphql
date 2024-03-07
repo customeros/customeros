@@ -1,0 +1,5 @@
+mutation addOnboardingPlanMilestone($input: OrganizationPlanMilestoneInput!) {
+  organizationPlanMilestone_Create(input: $input) {
+    id
+  }
+}

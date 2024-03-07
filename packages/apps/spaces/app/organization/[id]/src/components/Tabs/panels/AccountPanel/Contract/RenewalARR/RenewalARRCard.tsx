@@ -1,14 +1,26 @@
-import React, { useState } from 'react';
+import { useParams } from 'next/navigation';
+import React, { useRef, useState, useEffect } from 'react';
+
+import { produce } from 'immer';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { FeaturedIcon } from '@ui/media/Icon';
 import { Heading } from '@ui/typography/Heading';
 import { DateTimeUtils } from '@spaces/utils/date';
+import { toastError } from '@ui/presentation/Toast';
 import { Card, CardHeader } from '@ui/presentation/Card';
+import { getDifferenceFromNow } from '@shared/util/date';
 import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
+import {
+  GetContractsQuery,
+  useGetContractsQuery,
+} from '@organization/src/graphql/getContracts.generated';
+import { useUpdateOpportunityRenewalMutation } from '@organization/src/graphql/updateOpportunityRenewal.generated';
 import {
   Opportunity,
   InternalStage,
@@ -27,6 +39,7 @@ interface RenewalARRCardProps {
   hasEnded: boolean;
   startedAt: string;
   opportunity: Opportunity;
+  currency?: string | null;
   renewCycle: ContractRenewalCycle;
 }
 export const RenewalARRCard = ({
@@ -34,27 +47,123 @@ export const RenewalARRCard = ({
   hasEnded,
   renewCycle,
   opportunity,
+  currency,
 }: RenewalARRCardProps) => {
+  const orgId = useParams()?.id as string;
+  const queryClient = useQueryClient();
+  const client = getGraphQLClient();
+
   const { modal } = useUpdateRenewalDetailsContext();
   const [isLocalOpen, setIsLocalOpen] = useState(false);
+
+  const getContractsQueryKey = useGetContractsQuery.getKey({
+    id: orgId,
+  });
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const updateOpportunityMutation = useUpdateOpportunityRenewalMutation(
+    client,
+    {
+      onMutate: ({ input }) => {
+        queryClient.cancelQueries({ queryKey: getContractsQueryKey });
+
+        queryClient.setQueryData<GetContractsQuery>(
+          getContractsQueryKey,
+          (currentCache) => {
+            if (!currentCache || !currentCache?.organization) return;
+
+            return produce(currentCache, (draft) => {
+              if (draft?.['organization']?.['contracts']) {
+                draft['organization']['contracts']?.map(
+                  (contractData, index) => {
+                    return (contractData.opportunities ?? []).map(
+                      (opportunity) => {
+                        const { opportunityId, ...rest } = input;
+                        if ((opportunity as Opportunity).id === opportunityId) {
+                          return {
+                            ...opportunity,
+                            ...rest,
+                            renewalUpdatedByUserAt: new Date().toISOString(),
+                          };
+                        }
+
+                        return opportunity;
+                      },
+                    );
+                  },
+                );
+              }
+            });
+          },
+        );
+        const previousEntries =
+          queryClient.getQueryData<GetContractsQuery>(getContractsQueryKey);
+
+        return { previousEntries };
+      },
+      onError: (_, __, context) => {
+        queryClient.setQueryData<GetContractsQuery>(
+          getContractsQueryKey,
+          context?.previousEntries,
+        );
+        toastError(
+          'Failed to update renewal details',
+          'update-renewal-details-error',
+        );
+      },
+      onSettled: () => {
+        modal.onClose?.();
+
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
+        timeoutRef.current = setTimeout(() => {
+          queryClient.invalidateQueries({ queryKey: getContractsQueryKey });
+        }, 900);
+      },
+    },
+  );
 
   const differenceInMonths = DateTimeUtils.differenceInMonths(
     new Date().toISOString(),
     startedAt,
   );
-
   const hasRenewed = startedAt
     ? renewCycle === ContractRenewalCycle.AnnualRenewal
       ? differenceInMonths > 12
       : differenceInMonths > 1
     : null;
 
-  const formattedMaxAmount = formatCurrency(opportunity.maxAmount ?? 0);
-  const formattedAmount = formatCurrency(hasEnded ? 0 : opportunity.amount);
+  const formattedMaxAmount = formatCurrency(
+    opportunity.maxAmount ?? 0,
+    2,
+    currency || 'USD',
+  );
+  const formattedAmount = formatCurrency(
+    hasEnded ? 0 : opportunity.amount,
+    2,
+    currency || 'USD',
+  );
 
-  const hasRewenewChanged = formattedMaxAmount !== formattedAmount;
+  const hasRewenewChanged = formattedMaxAmount !== formattedAmount; // should be also less
+
   const hasRenewalLikelihoodZero =
     opportunity?.renewalLikelihood === OpportunityRenewalLikelihood.ZeroRenewal;
+  const timeToRenewal = getDifferenceFromNow(opportunity.renewedAt).join(' ');
+
+  const showTimeToRenewal =
+    !hasEnded &&
+    opportunity.renewedAt &&
+    startedAt &&
+    !DateTimeUtils.isPast(opportunity.renewedAt);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <>
@@ -114,11 +223,9 @@ export const RenewalARRCard = ({
                   Renewal ARR
                 </Heading>
 
-                {!hasEnded && opportunity.renewedAt && startedAt && (
+                {showTimeToRenewal && (
                   <Text color='gray.500' ml={1} fontSize='sm'>
-                    {DateTimeUtils.timeAgo(opportunity.renewedAt, {
-                      addSuffix: true,
-                    })}
+                    {timeToRenewal}
                   </Text>
                 )}
               </Flex>
@@ -180,6 +287,7 @@ export const RenewalARRCard = ({
         </InfoDialog>
       ) : (
         <RenewalDetailsModal
+          updateOpportunityMutation={updateOpportunityMutation}
           isOpen={modal.isOpen && isLocalOpen}
           onClose={() => {
             modal.onClose();

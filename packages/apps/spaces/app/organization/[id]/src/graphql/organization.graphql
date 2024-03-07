@@ -18,6 +18,8 @@ query Organization($id: ID!) {
     referenceId
     customerOsId
     isCustomer
+    hide
+    slackChannelId
     socials {
       id
       url

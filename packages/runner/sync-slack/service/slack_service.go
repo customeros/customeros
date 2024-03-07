@@ -12,6 +12,7 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"github.com/slack-go/slack"
+	"strconv"
 	"time"
 )
 
@@ -22,8 +23,8 @@ type SlackService interface {
 	AuthTest(ctx context.Context, token string) (*slack.AuthTestResponse, error)
 	FetchUserIdsFromSlackChannel(ctx context.Context, token, channelId string) ([]string, error)
 	FetchUserInfo(ctx context.Context, token, userId string) (*slack.User, error)
-	FetchNewMessagesFromSlackChannel(ctx context.Context, token, channelId string, from, to time.Time) ([]slack.Message, error)
-	FetchMessagesFromSlackChannelWithReplies(ctx context.Context, token, channelId string, to time.Time, lookbackWindow int) ([]slack.Message, error)
+	FetchNewMessagesFromSlackChannel(ctx context.Context, tenant, token, channelId string, from, to time.Time) ([]slack.Message, error)
+	FetchMessagesFromSlackChannelWithReplies(ctx context.Context, tenant, token, channelId string, to time.Time, lookbackWindow int) ([]slack.Message, error)
 	FetchNewThreadMessages(ctx context.Context, token, channelId, parentTs string, from, to time.Time) ([]slack.Message, error)
 	GetMessagePermalink(ctx context.Context, token, channelId, messageTs string) (string, error)
 }
@@ -142,9 +143,10 @@ func (s *slackService) FetchUserInfo(ctx context.Context, token, userId string) 
 	return slackUser, nil
 }
 
-func (s *slackService) FetchNewMessagesFromSlackChannel(ctx context.Context, token, channelId string, from, to time.Time) ([]slack.Message, error) {
+func (s *slackService) FetchNewMessagesFromSlackChannel(ctx context.Context, tenant, token, channelId string, from, to time.Time) ([]slack.Message, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SlackService.FetchNewMessagesFromSlackChannel")
 	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.LogFields(log.String("channelId", channelId), log.Object("from", from), log.Object("to", to))
 
 	client := slack.New(token)
@@ -176,7 +178,14 @@ func (s *slackService) FetchNewMessagesFromSlackChannel(ctx context.Context, tok
 				return nil, err
 			}
 		} else {
-			messages = append(messages, page.Messages...)
+			for _, msg := range page.Messages {
+				// if message is before the "from" time skip it
+				messageTime, err := fromFloatTs(msg.Timestamp)
+				if err != nil && messageTime.Before(from) {
+					continue
+				}
+				messages = append(messages, msg)
+			}
 			cursor = page.ResponseMetaData.NextCursor
 			if page.HasMore == false || cursor == "" {
 				break // no more pages
@@ -194,9 +203,10 @@ func (s *slackService) FetchNewMessagesFromSlackChannel(ctx context.Context, tok
 	return messages, nil
 }
 
-func (s *slackService) FetchMessagesFromSlackChannelWithReplies(ctx context.Context, token, channelId string, to time.Time, lookbackWindow int) ([]slack.Message, error) {
+func (s *slackService) FetchMessagesFromSlackChannelWithReplies(ctx context.Context, tenant, token, channelId string, to time.Time, lookbackWindow int) ([]slack.Message, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SlackService.FetchMessagesFromSlackChannelWithReplies")
 	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.LogFields(log.String("channelId", channelId), log.Int("lookBackWindowDays", lookbackWindow), log.Object("to", to))
 
 	client := slack.New(token)
@@ -289,6 +299,11 @@ func (s *slackService) FetchNewThreadMessages(ctx context.Context, token, channe
 		} else {
 			for _, message := range pageMsgs {
 				if message.ThreadTimestamp != message.Timestamp {
+					// if message is before the "from" time skip it
+					messageTime, err := fromFloatTs(message.Timestamp)
+					if err == nil && messageTime.Before(from) {
+						continue
+					}
 					messages = append(messages, message)
 				}
 			}
@@ -305,6 +320,7 @@ func (s *slackService) FetchNewThreadMessages(ctx context.Context, token, channe
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
+	span.LogFields(log.Int("result.count", len(messages)))
 	return messages, nil
 }
 
@@ -349,4 +365,15 @@ func (s *slackService) GetMessagePermalink(ctx context.Context, token, channelId
 func toFloatTs(time time.Time) string {
 	timestampMcs := float64(time.UnixNano()) / 1e9
 	return fmt.Sprintf("%.3f", timestampMcs)
+}
+
+// fromFloatTs converts a float timestamp string back to a time.Time object.
+func fromFloatTs(tsStr string) (time.Time, error) {
+	tsFloat, err := strconv.ParseFloat(tsStr, 64)
+	if err != nil {
+		return time.Time{}, err
+	}
+	// Convert seconds back to nanoseconds for UnixNano
+	tsNano := int64(tsFloat * 1e9)
+	return time.Unix(0, tsNano), nil
 }

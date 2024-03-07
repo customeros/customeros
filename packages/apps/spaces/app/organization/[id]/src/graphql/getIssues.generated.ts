@@ -1,7 +1,6 @@
 // @ts-nocheck remove this when typscript-react-query plugin is fixed
 import * as Types from '../../../../src/types/__generated__/graphql.types';
 
-import type { InfiniteData } from '@tanstack/react-query';
 import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
 import {
@@ -13,6 +12,7 @@ import {
   useInfiniteQuery,
   UseQueryOptions,
   UseInfiniteQueryOptions,
+  InfiniteData,
 } from '@tanstack/react-query';
 
 function fetcher<TData, TVariables extends { [key: string]: any }>(
@@ -29,9 +29,9 @@ function fetcher<TData, TVariables extends { [key: string]: any }>(
     });
 }
 export type GetIssuesQueryVariables = Types.Exact<{
-  organizationId: Types.Scalars['ID'];
-  from: Types.Scalars['Time'];
-  size: Types.Scalars['Int'];
+  organizationId: Types.Scalars['ID']['input'];
+  from: Types.Scalars['Time']['input'];
+  size: Types.Scalars['Int']['input'];
 }>;
 
 export type GetIssuesQuery = {
@@ -51,6 +51,7 @@ export type GetIssuesQuery = {
           subject?: string | null;
           status: string;
           appSource: string;
+          source: Types.DataSource;
           updatedAt: any;
           createdAt: any;
           externalLinks: Array<{
@@ -142,6 +143,7 @@ export const GetIssuesDocument = `
         subject
         status
         appSource
+        source
         updatedAt
         externalLinks {
           externalId
@@ -159,54 +161,75 @@ export const GetIssuesDocument = `
   }
 }
     ${InteractionEventParticipantFragmentFragmentDoc}`;
+
 export const useGetIssuesQuery = <TData = GetIssuesQuery, TError = unknown>(
   client: GraphQLClient,
   variables: GetIssuesQueryVariables,
-  options?: UseQueryOptions<GetIssuesQuery, TError, TData>,
+  options?: Omit<UseQueryOptions<GetIssuesQuery, TError, TData>, 'queryKey'> & {
+    queryKey?: UseQueryOptions<GetIssuesQuery, TError, TData>['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useQuery<GetIssuesQuery, TError, TData>(
-    ['GetIssues', variables],
-    fetcher<GetIssuesQuery, GetIssuesQueryVariables>(
+) => {
+  return useQuery<GetIssuesQuery, TError, TData>({
+    queryKey: ['GetIssues', variables],
+    queryFn: fetcher<GetIssuesQuery, GetIssuesQueryVariables>(
       client,
       GetIssuesDocument,
       variables,
       headers,
     ),
-    options,
-  );
+    ...options,
+  });
+};
+
 useGetIssuesQuery.document = GetIssuesDocument;
 
 useGetIssuesQuery.getKey = (variables: GetIssuesQueryVariables) => [
   'GetIssues',
   variables,
 ];
+
 export const useInfiniteGetIssuesQuery = <
-  TData = GetIssuesQuery,
+  TData = InfiniteData<GetIssuesQuery>,
   TError = unknown,
 >(
-  pageParamKey: keyof GetIssuesQueryVariables,
   client: GraphQLClient,
   variables: GetIssuesQueryVariables,
-  options?: UseInfiniteQueryOptions<GetIssuesQuery, TError, TData>,
+  options: Omit<
+    UseInfiniteQueryOptions<GetIssuesQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseInfiniteQueryOptions<
+      GetIssuesQuery,
+      TError,
+      TData
+    >['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useInfiniteQuery<GetIssuesQuery, TError, TData>(
-    ['GetIssues.infinite', variables],
-    (metaData) =>
-      fetcher<GetIssuesQuery, GetIssuesQueryVariables>(
-        client,
-        GetIssuesDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-        headers,
-      )(),
-    options,
+) => {
+  return useInfiniteQuery<GetIssuesQuery, TError, TData>(
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ['GetIssues.infinite', variables],
+        queryFn: (metaData) =>
+          fetcher<GetIssuesQuery, GetIssuesQueryVariables>(
+            client,
+            GetIssuesDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+            headers,
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
+};
 
 useInfiniteGetIssuesQuery.getKey = (variables: GetIssuesQueryVariables) => [
   'GetIssues.infinite',
   variables,
 ];
+
 useGetIssuesQuery.fetcher = (
   client: GraphQLClient,
   variables: GetIssuesQueryVariables,
@@ -220,7 +243,7 @@ useGetIssuesQuery.fetcher = (
   );
 
 useGetIssuesQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: GetIssuesQueryVariables) =>
+  (queryClient: QueryClient, variables?: GetIssuesQueryVariables) =>
   (mutator: (cacheEntry: GetIssuesQuery) => GetIssuesQuery) => {
     const cacheKey = useGetIssuesQuery.getKey(variables);
     const previousEntries = queryClient.getQueryData<GetIssuesQuery>(cacheKey);
@@ -230,7 +253,7 @@ useGetIssuesQuery.mutateCacheEntry =
     return { previousEntries };
   };
 useInfiniteGetIssuesQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: GetIssuesQueryVariables) =>
+  (queryClient: QueryClient, variables?: GetIssuesQueryVariables) =>
   (
     mutator: (
       cacheEntry: InfiniteData<GetIssuesQuery>,

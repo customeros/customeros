@@ -6,6 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -13,7 +14,7 @@ import (
 func TestQueryResolver_BillableInfo(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	whiteOrg1 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		Hide: false,
@@ -27,7 +28,7 @@ func TestQueryResolver_BillableInfo(t *testing.T) {
 	whiteContact1 := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	neo4jt.LinkContactWithOrganization(ctx, driver, whiteContact1, whiteOrg1)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 3, "Contact": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 3, "Contact": 1})
 
 	rawResponse := callGraphQL(t, "tenant/get_billable_info", map[string]interface{}{})
 

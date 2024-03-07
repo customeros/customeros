@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"reflect"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
@@ -26,7 +27,10 @@ import (
 type OrganizationService interface {
 	CountOrganizations(ctx context.Context, tenant string) (int64, error)
 	GetOrganizationsForJobRoles(ctx context.Context, jobRoleIds []string) (*entity.OrganizationEntities, error)
+	GetOrganizationsForInvoices(ctx context.Context, invoiceIds []string) (*entity.OrganizationEntities, error)
+	GetOrganizationsForSlackChannels(ctx context.Context, slackChannelIds []string) (*entity.OrganizationEntities, error)
 	GetById(ctx context.Context, organizationId string) (*entity.OrganizationEntity, error)
+	GetByCustomerOsId(ctx context.Context, customerOsId string) (*entity.OrganizationEntity, error)
 	ExistsById(ctx context.Context, organizationId string) (bool, error)
 	FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	GetOrganizationsForContact(ctx context.Context, contactId string, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
@@ -95,7 +99,7 @@ func (s *organizationService) ExistsById(ctx context.Context, organizationId str
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("organizationId", organizationId))
 
-	return s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), organizationId, neo4jentity.NodeLabel_Organization)
+	return s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), organizationId, neo4jutil.NodeLabelOrganization)
 }
 
 func (s *organizationService) FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {
@@ -192,10 +196,27 @@ func (s *organizationService) GetById(ctx context.Context, organizationId string
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("organizationId", organizationId))
 
-	dbNode, err := s.repositories.OrganizationRepository.GetOrganizationById(ctx, common.GetTenantFromContext(ctx), organizationId)
+	dbNode, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, common.GetTenantFromContext(ctx), organizationId)
 	if err != nil {
-		wrappedErr := errors.Wrap(err, fmt.Sprintf("Organization with id {%s} not found", organizationId))
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	return s.mapDbNodeToOrganizationEntity(*dbNode), nil
+}
+
+func (s *organizationService) GetByCustomerOsId(ctx context.Context, customerOsId string) (*entity.OrganizationEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetByCustomerOsId")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("customerOsId", customerOsId))
+
+	dbNode, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByCustomerOsId(ctx, common.GetTenantFromContext(ctx), customerOsId)
+	if err != nil {
+		wrappedErr := errors.Wrap(err, fmt.Sprintf("Organization with customerOsId {%s} not found", customerOsId))
 		return nil, wrappedErr
+	}
+	if dbNode == nil {
+		return nil, nil
 	}
 	return s.mapDbNodeToOrganizationEntity(*dbNode), nil
 }
@@ -254,7 +275,38 @@ func (s *organizationService) Merge(ctx context.Context, primaryOrganizationId, 
 		return nil, nil
 	})
 
+	// Update last touchpoint
 	s.UpdateLastTouchpoint(ctx, primaryOrganizationId)
+
+	// Refresh forecast ARR
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err = CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+		return s.grpcClients.OrganizationClient.RefreshArr(ctx, &organizationpb.OrganizationIdGrpcRequest{
+			Tenant:         common.GetTenantFromContext(ctx),
+			OrganizationId: primaryOrganizationId,
+			LoggedInUserId: common.GetUserIdFromContext(ctx),
+			AppSource:      constants.AppSourceCustomerOsApi,
+		})
+	})
+	if err != nil {
+		s.log.Errorf("error sending event to events-platform: {%s}", err.Error())
+		tracing.TraceErr(span, err, log.String("grpcMethod", "RefreshArr"))
+	}
+
+	// Refresh renewal likelihood
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err = CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+		return s.grpcClients.OrganizationClient.RefreshRenewalSummary(ctx, &organizationpb.RefreshRenewalSummaryGrpcRequest{
+			Tenant:         common.GetTenantFromContext(ctx),
+			OrganizationId: primaryOrganizationId,
+			LoggedInUserId: common.GetUserIdFromContext(ctx),
+			AppSource:      constants.AppSourceCustomerOsApi,
+		})
+	})
+	if err != nil {
+		s.log.Errorf("error sending event to events-platform: {%s}", err.Error())
+		tracing.TraceErr(span, err, log.String("grpcMethod", "RefreshRenewalSummary"))
+	}
 
 	return err
 }
@@ -319,7 +371,7 @@ func (s *organizationService) AddSubsidiary(ctx context.Context, parentOrganizat
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("parentOrganizationId", parentOrganizationId), log.String("subOrganizationId", subOrganizationId), log.String("subsidiaryType", subsidiaryType))
 
-	parentExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), parentOrganizationId, neo4jentity.NodeLabel_Organization)
+	parentExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), parentOrganizationId, neo4jutil.NodeLabelOrganization)
 	if err != nil {
 		s.log.Errorf("error checking if parent organization exists: {%v}", err.Error())
 		tracing.TraceErr(span, err)
@@ -332,7 +384,7 @@ func (s *organizationService) AddSubsidiary(ctx context.Context, parentOrganizat
 		return err
 	}
 
-	subExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), subOrganizationId, neo4jentity.NodeLabel_Organization)
+	subExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), subOrganizationId, neo4jutil.NodeLabelOrganization)
 	if err != nil {
 		s.log.Errorf("error checking if sub organization exists: {%v}", err.Error())
 		tracing.TraceErr(span, err)
@@ -345,14 +397,33 @@ func (s *organizationService) AddSubsidiary(ctx context.Context, parentOrganizat
 		return err
 	}
 
+	// fetch existing subsidiaries of the parent organization
+	existingSubsidiaries, err := s.GetSubsidiariesForOrganizations(ctx, []string{parentOrganizationId})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("error fetching existing subsidiaries: {%v}", err.Error())
+		return err
+	}
+	for _, subsidiary := range *existingSubsidiaries {
+		if subsidiary.ID != subOrganizationId {
+			err = s.RemoveSubsidiary(ctx, parentOrganizationId, subsidiary.ID)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("error removing existing subsidiary: {%v}", err.Error())
+			}
+		}
+	}
+
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = s.grpcClients.OrganizationClient.AddParentOrganization(ctx, &organizationpb.AddParentOrganizationGrpcRequest{
-		Tenant:               common.GetTenantFromContext(ctx),
-		OrganizationId:       subOrganizationId,
-		ParentOrganizationId: parentOrganizationId,
-		Type:                 subsidiaryType,
-		LoggedInUserId:       common.GetUserIdFromContext(ctx),
-		AppSource:            constants.AppSourceCustomerOsApi,
+	_, err = CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+		return s.grpcClients.OrganizationClient.AddParentOrganization(ctx, &organizationpb.AddParentOrganizationGrpcRequest{
+			Tenant:               common.GetTenantFromContext(ctx),
+			OrganizationId:       subOrganizationId,
+			ParentOrganizationId: parentOrganizationId,
+			Type:                 subsidiaryType,
+			LoggedInUserId:       common.GetUserIdFromContext(ctx),
+			AppSource:            constants.AppSourceCustomerOsApi,
+		})
 	})
 	if err != nil {
 		s.log.Errorf("error sending event to events-platform: {%v}", err.Error())
@@ -367,7 +438,7 @@ func (s *organizationService) RemoveSubsidiary(ctx context.Context, parentOrgani
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("parentOrganizationId", parentOrganizationId), log.String("subOrganizationId", subOrganizationId))
 
-	parentExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), parentOrganizationId, neo4jentity.NodeLabel_Organization)
+	parentExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), parentOrganizationId, neo4jutil.NodeLabelOrganization)
 	if err != nil {
 		s.log.Errorf("error checking if parent organization exists: {%v}", err.Error())
 		tracing.TraceErr(span, err)
@@ -380,7 +451,7 @@ func (s *organizationService) RemoveSubsidiary(ctx context.Context, parentOrgani
 		return err
 	}
 
-	subExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), subOrganizationId, neo4jentity.NodeLabel_Organization)
+	subExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), subOrganizationId, neo4jutil.NodeLabelOrganization)
 	if err != nil {
 		s.log.Errorf("error checking if sub organization exists: {%v}", err.Error())
 		tracing.TraceErr(span, err)
@@ -394,12 +465,14 @@ func (s *organizationService) RemoveSubsidiary(ctx context.Context, parentOrgani
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = s.grpcClients.OrganizationClient.RemoveParentOrganization(ctx, &organizationpb.RemoveParentOrganizationGrpcRequest{
-		Tenant:               common.GetTenantFromContext(ctx),
-		OrganizationId:       subOrganizationId,
-		ParentOrganizationId: parentOrganizationId,
-		LoggedInUserId:       common.GetUserIdFromContext(ctx),
-		AppSource:            constants.AppSourceCustomerOsApi,
+	_, err = CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+		return s.grpcClients.OrganizationClient.RemoveParentOrganization(ctx, &organizationpb.RemoveParentOrganizationGrpcRequest{
+			Tenant:               common.GetTenantFromContext(ctx),
+			OrganizationId:       subOrganizationId,
+			ParentOrganizationId: parentOrganizationId,
+			LoggedInUserId:       common.GetUserIdFromContext(ctx),
+			AppSource:            constants.AppSourceCustomerOsApi,
+		})
 	})
 	if err != nil {
 		s.log.Errorf("error sending event to events-platform: {%v}", err.Error())
@@ -457,13 +530,13 @@ func (s *organizationService) GetMinMaxRenewalForecastArr(ctx context.Context) (
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	min, max, err := s.repositories.OrganizationRepository.GetMinMaxRenewalForecastArr(ctx)
+	minArr, maxArr, err := s.repositories.OrganizationRepository.GetMinMaxRenewalForecastArr(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error getting min and max renewal forecast ARR: %s", err.Error())
 		return 0, 0, err
 	}
-	return min, max, nil
+	return minArr, maxArr, nil
 }
 
 func (s *organizationService) ReplaceOwner(ctx context.Context, organizationID, userID string) (*entity.OrganizationEntity, error) {
@@ -481,13 +554,15 @@ func (s *organizationService) ReplaceOwner(ctx context.Context, organizationID, 
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := s.grpcClients.OrganizationClient.UpdateOrganizationOwner(ctx, ownerUpdateReq)
+	_, err := CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+		return s.grpcClients.OrganizationClient.UpdateOrganizationOwner(ctx, ownerUpdateReq)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 	// get org node back from db to keep function signature the same
-	dbNode, err := s.repositories.OrganizationRepository.GetOrganizationById(ctx, common.GetTenantFromContext(ctx), organizationID)
+	dbNode, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, common.GetTenantFromContext(ctx), organizationID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -717,11 +792,13 @@ func (s *organizationService) updateLastTouchpoint(ctx context.Context, organiza
 	span.LogFields(log.String("organizationID", organizationID))
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := s.grpcClients.OrganizationClient.RefreshLastTouchpoint(ctx, &organizationpb.OrganizationIdGrpcRequest{
-		Tenant:         common.GetTenantFromContext(ctx),
-		OrganizationId: organizationID,
-		LoggedInUserId: common.GetUserIdFromContext(ctx),
-		AppSource:      constants.AppSourceCustomerOsApi,
+	_, err := CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+		return s.grpcClients.OrganizationClient.RefreshLastTouchpoint(ctx, &organizationpb.OrganizationIdGrpcRequest{
+			Tenant:         common.GetTenantFromContext(ctx),
+			OrganizationId: organizationID,
+			LoggedInUserId: common.GetUserIdFromContext(ctx),
+			AppSource:      constants.AppSourceCustomerOsApi,
+		})
 	})
 	if err != nil {
 		s.log.Errorf("error sending event to events-platform: {%v}", err.Error())
@@ -774,6 +851,7 @@ func (s *organizationService) mapDbNodeToOrganizationEntity(node dbtype.Node) *e
 		YearFounded:        utils.GetInt64PropOrNil(props, "yearFounded"),
 		LogoUrl:            utils.GetStringPropOrEmpty(props, "logoUrl"),
 		EmployeeGrowthRate: utils.GetStringPropOrEmpty(props, "employeeGrowthRate"),
+		SlackChannelId:     utils.GetStringPropOrEmpty(props, "slackChannelId"),
 		CreatedAt:          utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:          utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		Source:             neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
@@ -809,4 +887,42 @@ func (s *organizationService) addSuggestedMergeRelationshipToOrganizationEntity(
 	organizationEntity.SuggestedMerge.SuggestedBy = utils.GetStringPropOrNil(props, "suggestedBy")
 	organizationEntity.SuggestedMerge.SuggestedAt = utils.GetTimePropOrNil(props, "suggestedAt")
 	organizationEntity.SuggestedMerge.Confidence = utils.GetFloatPropOrNil(props, "confidence")
+}
+
+func (s *organizationService) GetOrganizationsForInvoices(ctx context.Context, invoiceIds []string) (*entity.OrganizationEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetOrganizationsForInvoices")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("invoiceIds", invoiceIds))
+
+	organizations, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetAllForInvoices(ctx, common.GetTenantFromContext(ctx), invoiceIds)
+	if err != nil {
+		return nil, err
+	}
+	organizationEntities := make(entity.OrganizationEntities, 0, len(organizations))
+	for _, v := range organizations {
+		organizationEntity := s.mapDbNodeToOrganizationEntity(*v.Node)
+		organizationEntity.DataloaderKey = v.LinkedNodeId
+		organizationEntities = append(organizationEntities, *organizationEntity)
+	}
+	return &organizationEntities, nil
+}
+
+func (s *organizationService) GetOrganizationsForSlackChannels(ctx context.Context, slackChannelIds []string) (*entity.OrganizationEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetOrganizationsForSlackChannels")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("slackChannelIds", slackChannelIds))
+
+	organizations, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetAllForSlackChannels(ctx, common.GetTenantFromContext(ctx), slackChannelIds)
+	if err != nil {
+		return nil, err
+	}
+	organizationEntities := make(entity.OrganizationEntities, 0, len(organizations))
+	for _, v := range organizations {
+		organizationEntity := s.mapDbNodeToOrganizationEntity(*v.Node)
+		organizationEntity.DataloaderKey = v.LinkedNodeId
+		organizationEntities = append(organizationEntities, *organizationEntity)
+	}
+	return &organizationEntities, nil
 }

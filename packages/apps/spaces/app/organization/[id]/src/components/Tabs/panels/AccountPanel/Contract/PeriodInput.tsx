@@ -28,7 +28,7 @@ export const FormPeriodInput = ({
   const { value, ...inputProps } = getInputProps();
 
   return (
-    <FormControl w='calc(50% - 8px)'>
+    <FormControl>
       <FormLabel fontWeight={600} color='gray.700' fontSize='sm' mb={-1}>
         {label}
       </FormLabel>

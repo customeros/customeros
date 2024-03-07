@@ -1,20 +1,25 @@
 'use client';
+import React from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { useLocalStorage } from 'usehooks-ts';
+import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { Flex } from '@ui/layout/Flex';
 import { Icons } from '@ui/media/Icon';
 import { VStack } from '@ui/layout/Stack';
 import { GridItem } from '@ui/layout/Grid';
 import { Text } from '@ui/typography/Text';
+import { Map01 } from '@ui/media/icons/Map01';
 import { IconButton } from '@ui/form/IconButton';
 import { Receipt } from '@ui/media/icons/Receipt';
 import { SidenavItem } from '@shared/components/RootSidenav/components/SidenavItem';
+import { NotificationCenter } from '@shared/components/Notifications/NotificationCenter';
 
 export const SettingsSidenav = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const isMasterPlansEnabled = useFeatureIsOn('settings-master-plans-view');
   const [lastActivePosition, setLastActivePosition] = useLocalStorage(
     `customeros-player-last-position`,
     { ['settings']: 'oauth', root: 'organization' },
@@ -97,7 +102,35 @@ export const SettingsSidenav = () => {
             />
           }
         />
+        {isMasterPlansEnabled && (
+          <SidenavItem
+            label='Master plans'
+            isActive={checkIsActive('master-plans')}
+            onClick={handleItemClick('master-plans')}
+            icon={
+              <Map01
+                color={checkIsActive('master-plans') ? 'gray.700' : 'gray.500'}
+                boxSize='5'
+              />
+            }
+          />
+        )}
       </VStack>
+      <VStack
+        spacing='1'
+        flexDir='column'
+        flexWrap='initial'
+        flexGrow='1'
+        justifyContent='flex-end'
+        sx={{
+          '& > span': {
+            width: '100%',
+          },
+        }}
+      >
+        <NotificationCenter />
+      </VStack>
+      <Flex h='64px' />
     </GridItem>
   );
 };

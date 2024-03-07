@@ -2,17 +2,17 @@ package utils
 
 import (
 	"encoding/json"
-	"fmt"
+	"math/rand"
+	"net/url"
+	"reflect"
+	"runtime"
+	"strings"
+	"time"
+
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/publicsuffix"
-	"net/url"
-	"reflect"
-	"runtime"
-	"strconv"
-	"strings"
-	"time"
 )
 
 type Pair[T, U any] struct {
@@ -222,26 +222,6 @@ func GetFunctionName() string {
 	return fullName
 }
 
-func ParseStringToFloat(input string) *float64 {
-	if input == "" {
-		return nil
-	}
-
-	parsedFloat, err := strconv.ParseFloat(input, 64)
-	if err != nil {
-		fmt.Printf("Error parsing string to float: %v\n", err)
-		return nil
-	}
-	return &parsedFloat
-}
-
-func FloatToString(num *float64) string {
-	if num == nil {
-		return ""
-	}
-	return fmt.Sprintf("%f", *num)
-}
-
 func FirstNotEmpty(input ...string) *string {
 	for _, item := range input {
 		if item != "" {
@@ -274,39 +254,6 @@ func ExtractAfterColon(s string) string {
 	}
 	// Return substring after colon
 	return s[idx+1:]
-}
-
-func Float64PtrEquals(a, b *float64) bool {
-	if a == nil && b == nil {
-		return true
-	}
-	if a != nil && b != nil {
-		return *a == *b
-	}
-	return false
-}
-
-func FormatCurrencyAmount(value float64) string {
-	// Format to 2 decimals
-	str := fmt.Sprintf("%.2f", value)
-
-	// Split into parts
-	parts := strings.Split(str, ".")
-	intPart := parts[0]
-	fracPart := parts[1]
-
-	// Trim trailing zeros
-	fracPart = strings.TrimRight(fracPart, "0")
-
-	// Add commas to int
-	intPartFormatted := addThousandSeparators(intPart)
-
-	// Join parts
-	if fracPart != "" {
-		return intPartFormatted + "." + fracPart
-	} else {
-		return intPartFormatted
-	}
 }
 
 // Helper to add commas to an integer string
@@ -390,4 +337,34 @@ func IsValidTLD(input string) bool {
 
 func IsEmptyString(s *string) bool {
 	return s == nil || *s == ""
+}
+
+func GenerateRandomStringFromCharset(length int, charset string) string {
+	// Create a new source based on the current time's Unix timestamp (in nanoseconds)
+	source := rand.NewSource(time.Now().UnixNano())
+	// Initialize a random number generator (RNG) with the source
+	rng := rand.New(source)
+
+	var output string
+	for i := 0; i < length; i++ {
+		randChar := charset[rng.Intn(len(charset))]
+		output += string(randChar)
+	}
+	return output
+}
+
+func ExtractName(email string) string {
+	atIndex := strings.Index(email, "@")
+	if atIndex == -1 {
+		return ""
+	}
+
+	name := strings.TrimSpace(email[:atIndex])
+	return name
+}
+
+func EnforceSingleValue(slice []string, value string) {
+	for i := range slice {
+		slice[i] = value
+	}
 }

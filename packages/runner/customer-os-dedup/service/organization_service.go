@@ -273,7 +273,7 @@ func (s *organizationService) getOrganizationDetailsAsString(ctx context.Context
     valueProposition
     lastFundingRound
     lastFundingAmount
-    isPublic
+    public
     market
     employees
     socials {
@@ -325,10 +325,6 @@ func (s *organizationService) getOrganizationDetailsAsString(ctx context.Context
       externalId
       externalUrl
       externalSource
-    }
-    healthIndicator {
-      id
-      name
     }
     locations {
       rawAddress

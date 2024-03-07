@@ -10,23 +10,23 @@ import (
 )
 
 type OpportunityCreateEvent struct {
-	Tenant            string                               `json:"tenant" validate:"required"`
-	Name              string                               `json:"name"`
-	Amount            float64                              `json:"amount"`
-	InternalType      model.OpportunityInternalTypeString  `json:"internalType"`
-	ExternalType      string                               `json:"externalType"`
-	InternalStage     model.OpportunityInternalStageString `json:"internalStage"`
-	ExternalStage     string                               `json:"externalStage"`
-	EstimatedClosedAt *time.Time                           `json:"estimatedClosedAt,omitempty"`
-	OwnerUserId       string                               `json:"ownerUserId"`
-	CreatedByUserId   string                               `json:"createdByUserId"`
-	CreatedAt         time.Time                            `json:"createdAt"`
-	UpdatedAt         time.Time                            `json:"updatedAt"`
-	Source            commonmodel.Source                   `json:"source"`
-	ExternalSystem    commonmodel.ExternalSystem           `json:"externalSystem,omitempty"`
-	OrganizationId    string                               `json:"organizationId" validate:"required"`
-	GeneralNotes      string                               `json:"generalNotes"`
-	NextSteps         string                               `json:"nextSteps"`
+	Tenant            string                     `json:"tenant" validate:"required"`
+	Name              string                     `json:"name"`
+	Amount            float64                    `json:"amount"`
+	InternalType      string                     `json:"internalType"`
+	ExternalType      string                     `json:"externalType"`
+	InternalStage     string                     `json:"internalStage"`
+	ExternalStage     string                     `json:"externalStage"`
+	EstimatedClosedAt *time.Time                 `json:"estimatedClosedAt,omitempty"`
+	OwnerUserId       string                     `json:"ownerUserId"`
+	CreatedByUserId   string                     `json:"createdByUserId"`
+	CreatedAt         time.Time                  `json:"createdAt"`
+	UpdatedAt         time.Time                  `json:"updatedAt"`
+	Source            commonmodel.Source         `json:"source"`
+	ExternalSystem    commonmodel.ExternalSystem `json:"externalSystem,omitempty"`
+	OrganizationId    string                     `json:"organizationId" validate:"required"`
+	GeneralNotes      string                     `json:"generalNotes"`
+	NextSteps         string                     `json:"nextSteps"`
 }
 
 func NewOpportunityCreateEvent(aggregate eventstore.Aggregate, dataFields model.OpportunityDataFields, source commonmodel.Source, externalSystem commonmodel.ExternalSystem, createdAt, updatedAt time.Time) (eventstore.Event, error) {
@@ -34,9 +34,9 @@ func NewOpportunityCreateEvent(aggregate eventstore.Aggregate, dataFields model.
 		Tenant:            aggregate.GetTenant(),
 		Name:              dataFields.Name,
 		Amount:            dataFields.Amount,
-		InternalType:      dataFields.InternalType.StringValue(),
+		InternalType:      string(dataFields.InternalType.StringEnumValue()),
 		ExternalType:      dataFields.ExternalType,
-		InternalStage:     dataFields.InternalStage.StringValue(),
+		InternalStage:     string(dataFields.InternalStage.StringEnumValue()),
 		ExternalStage:     dataFields.ExternalStage,
 		EstimatedClosedAt: dataFields.EstimatedClosedAt,
 		OwnerUserId:       dataFields.OwnerUserId,

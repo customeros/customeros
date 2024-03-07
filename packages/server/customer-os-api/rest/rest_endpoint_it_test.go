@@ -2,7 +2,6 @@ package rest
 
 import (
 	"context"
-	"database/sql"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
@@ -12,6 +11,7 @@ import (
 	commonAuthService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/testcontainers/testcontainers-go"
 	"gorm.io/gorm"
 	"log"
@@ -25,7 +25,6 @@ var (
 
 	postgresContainer testcontainers.Container
 	postgresGormDB    *gorm.DB
-	postgresSqlDB     *sql.DB
 	serviceContainer  *service.Services
 )
 
@@ -41,7 +40,7 @@ func TestMain(m *testing.M) {
 		neo4jt.Terminate(dbContainer, ctx)
 	}(neo4jContainer, *driver, context.Background())
 
-	postgresContainer, postgresGormDB, postgresSqlDB = postgres.InitTestDB()
+	postgresContainer, postgresGormDB, _ = postgres.InitTestDB()
 	defer func(postgresContainer testcontainers.Container, ctx context.Context) {
 		err := postgresContainer.Terminate(ctx)
 		if err != nil {
@@ -57,7 +56,7 @@ func TestMain(m *testing.M) {
 func tearDownTestCase(ctx context.Context) func(tb testing.TB) {
 	return func(tb testing.TB) {
 		tb.Logf("Teardown test %v, cleaning neo4j DB", tb.Name())
-		neo4jt.CleanupAllData(ctx, driver)
+		neo4jtest.CleanupAllData(ctx, driver)
 	}
 }
 
@@ -68,7 +67,7 @@ func prepareClient() {
 	})
 	appLogger.InitLogger()
 	commonServices := commonService.InitServices(postgresGormDB, driver)
-	commonAuthServices := commonAuthService.InitServices(nil, postgresGormDB)
+	commonAuthServices := commonAuthService.InitServices(nil, commonServices, postgresGormDB)
 	serviceContainer = service.InitServices(appLogger, driver, &config.Config{}, commonServices, commonAuthServices, nil)
 	dataloader.NewDataLoader(serviceContainer)
 	log.Printf("%v", serviceContainer)

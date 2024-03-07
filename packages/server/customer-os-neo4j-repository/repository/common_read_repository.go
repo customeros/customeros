@@ -12,6 +12,8 @@ import (
 
 type CommonReadRepository interface {
 	ExistsById(ctx context.Context, tenant, id, label string) (bool, error)
+	ExistsByIdLinkedTo(ctx context.Context, tenant, id, label, linkedToId, linkedToLabel, linkRelationship string) (bool, error)
+	ExistsByIdLinkedFrom(ctx context.Context, tenant, id, label, linkedFromId, linkedFromLabel, linkRelationship string) (bool, error)
 }
 
 type commonReadRepository struct {
@@ -39,6 +41,78 @@ func (r *commonReadRepository) ExistsById(ctx context.Context, tenant, id, label
 	cypher := fmt.Sprintf(`MATCH (n:%s {id:$id}) WHERE n:%s_%s RETURN n.id LIMIT 1`, label, label, tenant)
 	params := map[string]any{
 		"id": id,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return false, err
+		} else {
+			return queryResult.Next(ctx), nil
+		}
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return false, err
+	}
+	span.LogFields(log.Bool("result.exists", result.(bool)))
+	return result.(bool), err
+}
+
+func (r *commonReadRepository) ExistsByIdLinkedTo(ctx context.Context, tenant, id, label, linkedToId, linkedToLabel, linkRelationship string) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonReadRepository.ExistsById")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.LogFields(log.String("id", id), log.String("label", label), log.String("linkedToId", linkedToId), log.String("linkedToLabel", linkedToLabel), log.String("linkRelationship", linkRelationship))
+
+	cypher := fmt.Sprintf(`MATCH (n:%s {id:$id})-`, label)
+	if linkRelationship != "" {
+		cypher += fmt.Sprintf(`[:%s]`, linkRelationship)
+	}
+	cypher += fmt.Sprintf(`->(m:%s {id:$linkedToId}) WHERE n:%s_%s RETURN n.id LIMIT 1`, linkedToLabel, label, tenant)
+	params := map[string]any{
+		"id":         id,
+		"linkedToId": linkedToId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return false, err
+		} else {
+			return queryResult.Next(ctx), nil
+		}
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return false, err
+	}
+	span.LogFields(log.Bool("result.exists", result.(bool)))
+	return result.(bool), err
+}
+
+func (r *commonReadRepository) ExistsByIdLinkedFrom(ctx context.Context, tenant, id, label, linkedFromId, linkedFromLabel, linkRelationship string) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonReadRepository.ExistsById")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.LogFields(log.String("id", id), log.String("label", label), log.String("linkedFromId", linkedFromId), log.String("linkedFromLabel", linkedFromLabel), log.String("linkRelationship", linkRelationship))
+
+	cypher := fmt.Sprintf(`MATCH (n:%s {id:$id})<-`, label)
+	if linkRelationship != "" {
+		cypher += fmt.Sprintf(`[:%s]`, linkRelationship)
+	}
+	cypher += fmt.Sprintf(`-(m:%s {id:$linkedFromId}) WHERE n:%s_%s RETURN n.id LIMIT 1`, linkedFromLabel, label, tenant)
+	params := map[string]any{
+		"id":           id,
+		"linkedFromId": linkedFromId,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

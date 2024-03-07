@@ -1,6 +1,7 @@
 package aggregate
 
 import (
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -91,8 +92,8 @@ func (a *OpportunityAggregate) onRenewalOpportunityCreate(evt eventstore.Event) 
 	a.Opportunity.ID = a.ID
 	a.Opportunity.Tenant = a.Tenant
 	a.Opportunity.ContractId = eventData.ContractId
-	a.Opportunity.InternalType = model.OpportunityInternalTypeStringRenewal
-	a.Opportunity.InternalStage = model.OpportunityInternalStageStringDecode(eventData.InternalStage)
+	a.Opportunity.InternalType = neo4jenum.OpportunityInternalTypeRenewal.String()
+	a.Opportunity.InternalStage = eventData.InternalStage
 	a.Opportunity.CreatedAt = eventData.CreatedAt
 	a.Opportunity.UpdatedAt = eventData.UpdatedAt
 	a.Opportunity.Source = eventData.Source
@@ -197,7 +198,7 @@ func (a *OpportunityAggregate) onOpportunityCloseWin(evt eventstore.Event) error
 	if err := evt.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
-	a.Opportunity.InternalStage = model.OpportunityInternalStageStringClosedWon
+	a.Opportunity.InternalStage = neo4jenum.OpportunityInternalStageClosedWon.String()
 	a.Opportunity.ClosedAt = &eventData.ClosedAt
 	a.Opportunity.UpdatedAt = eventData.UpdatedAt
 	return nil
@@ -208,7 +209,7 @@ func (a *OpportunityAggregate) onOpportunityCloseLoose(evt eventstore.Event) err
 	if err := evt.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
-	a.Opportunity.InternalStage = model.OpportunityInternalStageStringClosedLost
+	a.Opportunity.InternalStage = neo4jenum.OpportunityInternalStageClosedLost.String()
 	a.Opportunity.ClosedAt = &eventData.ClosedAt
 	a.Opportunity.UpdatedAt = eventData.UpdatedAt
 	return nil

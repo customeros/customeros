@@ -6,6 +6,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -13,116 +16,119 @@ import (
 func TestQueryResolver_Dashboard_Customer_Map_No_Data_In_DB(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
 
 	var dashboardReport struct {
-		Dashboard_NewCustomers []model.DashboardCustomerMap
+		Dashboard_CustomerMap []model.DashboardCustomerMap
 	}
 
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 0, len(dashboardReport.Dashboard_NewCustomers))
+	require.Equal(t, 0, len(dashboardReport.Dashboard_CustomerMap))
 }
 
 func TestQueryResolver_Dashboard_Customer_Map_Empty_Contract(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
 
-	neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{})
+	neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
 
 	var dashboardReport struct {
-		Dashboard_NewCustomers []model.DashboardCustomerMap
+		Dashboard_CustomerMap []model.DashboardCustomerMap
 	}
 
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 0, len(dashboardReport.Dashboard_NewCustomers))
+	require.Equal(t, 0, len(dashboardReport.Dashboard_CustomerMap))
 }
 
 func TestQueryResolver_Dashboard_Customer_Map_Draft_Contract(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
 
-	contract1ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
-	contractId := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	contract1ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
+	contractId := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusDraft,
 		ServiceStartedAt: &contract1ServiceStartedAt,
-	}, entity.OpportunityEntity{
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
+	}, neo4jentity.OpportunityEntity{
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		InternalStage:     neo4jenum.InternalStageOpen,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
 	})
-	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
 
 	var dashboardReport struct {
-		Dashboard_NewCustomers []model.DashboardCustomerMap
+		Dashboard_CustomerMap []model.DashboardCustomerMap
 	}
 
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 0, len(dashboardReport.Dashboard_NewCustomers))
+	require.Equal(t, 1, len(dashboardReport.Dashboard_CustomerMap))
+	require.Equal(t, orgId, dashboardReport.Dashboard_CustomerMap[0].Organization.ID)
+	require.Equal(t, float64(12), dashboardReport.Dashboard_CustomerMap[0].Arr)
 }
 
 func TestQueryResolver_Dashboard_Customer_Map_Hidden_Organization_With_Contract(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		Hide:       true,
 		IsCustomer: true,
 	})
 
-	contract1ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
-	contractId := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	contract1ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
+	contractId := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
-	}, entity.OpportunityEntity{
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
+	}, neo4jentity.OpportunityEntity{
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
 	})
-	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -140,31 +146,31 @@ func TestQueryResolver_Dashboard_Customer_Map_Hidden_Organization_With_Contract(
 func TestQueryResolver_Dashboard_Customer_Map_Prospect_Organization_With_Contract(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		Hide:       false,
 		IsCustomer: false,
 	})
 
-	contract1ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
-	contractId := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	contract1ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
+	contractId := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
-	}, entity.OpportunityEntity{
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
+	}, neo4jentity.OpportunityEntity{
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
 	})
-	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -182,30 +188,30 @@ func TestQueryResolver_Dashboard_Customer_Map_Prospect_Organization_With_Contrac
 func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_High_Should_Be_OK_State(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		IsCustomer: true,
 	})
 
-	contract1ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
-	contractId := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	contract1ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
+	contractId := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
-	}, entity.OpportunityEntity{
-		InternalStage:     entity.InternalStageOpen,
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
+	}, neo4jentity.OpportunityEntity{
+		InternalStage:     neo4jenum.InternalStageOpen,
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
 	})
-	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -229,30 +235,30 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_
 func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_Medium_Should_Be_AT_RISK_State(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		IsCustomer: true,
 	})
 
-	contract1ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
-	contractId := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	contract1ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
+	contractId := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
-	}, entity.OpportunityEntity{
-		InternalStage:     entity.InternalStageOpen,
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodMedium,
+	}, neo4jentity.OpportunityEntity{
+		InternalStage:     neo4jenum.InternalStageOpen,
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
 	})
-	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -276,30 +282,30 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_
 func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_Low_Should_Be_AT_RISK_State(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		IsCustomer: true,
 	})
 
-	contract1ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
-	contractId := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	contract1ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
+	contractId := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
-	}, entity.OpportunityEntity{
-		InternalStage:     entity.InternalStageOpen,
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodLow,
+	}, neo4jentity.OpportunityEntity{
+		InternalStage:     neo4jenum.InternalStageOpen,
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodLow,
 	})
-	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -323,30 +329,30 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_
 func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_Zero_Should_Be_AT_RISK_State(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		IsCustomer: true,
 	})
 
-	contract1ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
-	contractId := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	contract1ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
+	contractId := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
-	}, entity.OpportunityEntity{
-		InternalStage:     entity.InternalStageOpen,
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodZero,
+	}, neo4jentity.OpportunityEntity{
+		InternalStage:     neo4jenum.InternalStageOpen,
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodZero,
 	})
-	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -370,28 +376,28 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_
 func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_No_Recurring_Revenue(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		IsCustomer: true,
 	})
 
-	contract1ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
-	insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	contract1ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
+	neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
-	}, entity.OpportunityEntity{
-		InternalStage:     entity.InternalStageOpen,
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodZero,
+	}, neo4jentity.OpportunityEntity{
+		InternalStage:     neo4jenum.InternalStageOpen,
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodZero,
 	})
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -409,33 +415,33 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_
 func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_Closed_SLI_AT_RISK_State(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		IsCustomer: true,
 	})
 
-	contract1ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
-	contractId := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	contract1ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
+	contractId := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
-	}, entity.OpportunityEntity{
-		InternalStage:     entity.InternalStageOpen,
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodZero,
+	}, neo4jentity.OpportunityEntity{
+		InternalStage:     neo4jenum.InternalStageOpen,
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodZero,
 	})
 
-	sliStartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
-	sliEndedAt := neo4jt.FirstTimeOfMonth(2023, 8)
-	insertServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 1, sliStartedAt, sliEndedAt)
+	sliStartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
+	sliEndedAt := neo4jtest.FirstTimeOfMonth(2023, 8)
+	neo4jtest.InsertServiceLineItemEnded(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, sliStartedAt, sliEndedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -453,32 +459,32 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_
 func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Closed_Contract_Should_Be_CHURNED_State(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		IsCustomer: true,
 	})
 
-	contract1ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
-	contract1ServiceEndedAt := neo4jt.FirstTimeOfMonth(2023, 8)
-	contractId := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusEnded,
+	contract1ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
+	contract1ServiceEndedAt := neo4jtest.FirstTimeOfMonth(2023, 8)
+	contractId := neo4jtest.InsertContractWithOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusEnded,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 		EndedAt:          &contract1ServiceEndedAt,
-	}, entity.OpportunityEntity{
-		InternalStage:     entity.InternalStageOpen,
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodMedium,
+	}, neo4jentity.OpportunityEntity{
+		InternalStage:     neo4jenum.InternalStageOpen,
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
 	})
-	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -502,38 +508,38 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Closed_Contrac
 func TestQueryResolver_Dashboard_Customer_Map_Organization_1_Contract_2_Opportunities_Should_Be_OK(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		IsCustomer: true,
 	})
 
-	contract1ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
-	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	contract1ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	})
-	neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, entity.OpportunityEntity{
-		InternalStage:     entity.InternalStageClosedWon,
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodMedium,
+	neo4jtest.CreateOpportunityForContract(ctx, driver, tenantName, contractId, neo4jentity.OpportunityEntity{
+		InternalStage:     neo4jenum.InternalStageClosedWon,
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
 	})
-	opId := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, entity.OpportunityEntity{
-		InternalStage:     entity.InternalStageOpen,
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
+	opId := neo4jtest.CreateOpportunityForContract(ctx, driver, tenantName, contractId, neo4jentity.OpportunityEntity{
+		InternalStage:     neo4jenum.InternalStageOpen,
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
 	})
-	neo4jt.ActiveRenewalOpportunityForContract(ctx, driver, tenantName, contractId, opId)
+	neo4jtest.ActiveRenewalOpportunityForContract(ctx, driver, tenantName, contractId, opId)
 
-	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -557,43 +563,43 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_1_Contract_2_Opportun
 func TestQueryResolver_Dashboard_Customer_Map_Organization_1_Contract_3_Opportunities_Should_Be_OK(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		IsCustomer: true,
 	})
 
-	contract1ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
-	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	contract1ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	})
-	neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, entity.OpportunityEntity{
-		InternalStage:     entity.InternalStageClosedLost,
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodZero,
+	neo4jtest.CreateOpportunityForContract(ctx, driver, tenantName, contractId, neo4jentity.OpportunityEntity{
+		InternalStage:     neo4jenum.InternalStageClosedLost,
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodZero,
 	})
-	neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, entity.OpportunityEntity{
-		InternalStage:     entity.InternalStageClosedWon,
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodMedium,
+	neo4jtest.CreateOpportunityForContract(ctx, driver, tenantName, contractId, neo4jentity.OpportunityEntity{
+		InternalStage:     neo4jenum.InternalStageClosedWon,
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
 	})
-	opId := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, entity.OpportunityEntity{
-		InternalStage:     entity.InternalStageOpen,
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
+	opId := neo4jtest.CreateOpportunityForContract(ctx, driver, tenantName, contractId, neo4jentity.OpportunityEntity{
+		InternalStage:     neo4jenum.InternalStageOpen,
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
 	})
-	neo4jt.ActiveRenewalOpportunityForContract(ctx, driver, tenantName, contractId, opId)
+	neo4jtest.ActiveRenewalOpportunityForContract(ctx, driver, tenantName, contractId, opId)
 
-	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 3})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 3})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -617,38 +623,38 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_1_Contract_3_Opportun
 func TestQueryResolver_Dashboard_Customer_Map_Organization_1_Contract_2_Opportunities_Should_Be_At_Risk(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		IsCustomer: true,
 	})
 
-	contract1ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
-	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	contract1ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	})
-	neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, entity.OpportunityEntity{
-		InternalStage:     entity.InternalStageClosedWon,
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
+	neo4jtest.CreateOpportunityForContract(ctx, driver, tenantName, contractId, neo4jentity.OpportunityEntity{
+		InternalStage:     neo4jenum.InternalStageClosedWon,
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
 	})
-	opId := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, entity.OpportunityEntity{
-		InternalStage:     entity.InternalStageOpen,
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodMedium,
+	opId := neo4jtest.CreateOpportunityForContract(ctx, driver, tenantName, contractId, neo4jentity.OpportunityEntity{
+		InternalStage:     neo4jenum.InternalStageOpen,
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
 	})
-	neo4jt.ActiveRenewalOpportunityForContract(ctx, driver, tenantName, contractId, opId)
+	neo4jtest.ActiveRenewalOpportunityForContract(ctx, driver, tenantName, contractId, opId)
 
-	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -672,40 +678,40 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_1_Contract_2_Opportun
 func TestQueryResolver_Dashboard_Customer_Map_Organization_1_Contract_2_Opportunities_Should_Be_Churned(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		IsCustomer: true,
 	})
 
-	contract1ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
-	contract1ServiceEndedAt := neo4jt.FirstTimeOfMonth(2023, 8)
-	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusEnded,
+	contract1ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
+	contract1ServiceEndedAt := neo4jtest.FirstTimeOfMonth(2023, 8)
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusEnded,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 		EndedAt:          &contract1ServiceEndedAt,
 	})
-	neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, entity.OpportunityEntity{
-		InternalStage:     entity.InternalStageClosedWon,
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
+	neo4jtest.CreateOpportunityForContract(ctx, driver, tenantName, contractId, neo4jentity.OpportunityEntity{
+		InternalStage:     neo4jenum.InternalStageClosedWon,
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
 	})
-	opId := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, entity.OpportunityEntity{
-		InternalStage:     entity.InternalStageOpen,
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodMedium,
+	opId := neo4jtest.CreateOpportunityForContract(ctx, driver, tenantName, contractId, neo4jentity.OpportunityEntity{
+		InternalStage:     neo4jenum.InternalStageOpen,
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
 	})
-	neo4jt.ActiveRenewalOpportunityForContract(ctx, driver, tenantName, contractId, opId)
+	neo4jtest.ActiveRenewalOpportunityForContract(ctx, driver, tenantName, contractId, opId)
 
-	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -729,42 +735,42 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_1_Contract_2_Opportun
 func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts_High_Should_Be_OK_State(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		IsCustomer: true,
 	})
 
 	//contract 1
-	contract1ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
-	contractId := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	contract1ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
+	contractId := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
-	}, entity.OpportunityEntity{
-		InternalStage:     entity.InternalStageOpen,
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
+	}, neo4jentity.OpportunityEntity{
+		InternalStage:     neo4jenum.InternalStageOpen,
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
 	})
-	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
 	//contract 2
-	contract2ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 8)
-	contract2Id := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	contract2ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 8)
+	contract2Id := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2ServiceStartedAt,
-	}, entity.OpportunityEntity{
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
+	}, neo4jentity.OpportunityEntity{
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
 	})
-	insertServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contract2Id, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -788,42 +794,42 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts
 func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts_One_HIGH_One_MEDIUM_Should_Be_AT_RISK_State(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		IsCustomer: true,
 	})
 
 	//contract 1
-	contract1ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
-	contractId := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	contract1ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
+	contractId := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
-	}, entity.OpportunityEntity{
-		InternalStage:     entity.InternalStageOpen,
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
+	}, neo4jentity.OpportunityEntity{
+		InternalStage:     neo4jenum.InternalStageOpen,
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
 	})
-	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
 	//contract 2
-	contract2ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 8)
-	contract2Id := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	contract2ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 8)
+	contract2Id := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2ServiceStartedAt,
-	}, entity.OpportunityEntity{
-		InternalStage:     entity.InternalStageOpen,
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodMedium,
+	}, neo4jentity.OpportunityEntity{
+		InternalStage:     neo4jenum.InternalStageOpen,
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
 	})
-	insertServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 12, 1, contract2ServiceStartedAt)
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contract2Id, neo4jenum.BilledTypeAnnually, 12, 1, contract2ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -847,40 +853,40 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts
 func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts_One_HIGH_One_LOW_Should_Be_AT_RISK_State(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
 
 	//contract 1
-	contract1ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
-	contractId := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	contract1ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
+	contractId := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
-	}, entity.OpportunityEntity{
-		InternalStage:     entity.InternalStageOpen,
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
+	}, neo4jentity.OpportunityEntity{
+		InternalStage:     neo4jenum.InternalStageOpen,
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
 	})
-	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
 	//contract 2
-	contract2ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 8)
-	contract2Id := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	contract2ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 8)
+	contract2Id := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2ServiceStartedAt,
-	}, entity.OpportunityEntity{
-		InternalStage:     entity.InternalStageOpen,
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodLow,
+	}, neo4jentity.OpportunityEntity{
+		InternalStage:     neo4jenum.InternalStageOpen,
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodLow,
 	})
-	insertServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contract2Id, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -904,40 +910,40 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts
 func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts_One_HIGH_One_ZERO_Should_Be_AT_RISK_State(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
 
 	//contract 1
-	contract1ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
-	contractId := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	contract1ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
+	contractId := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
-	}, entity.OpportunityEntity{
-		InternalStage:     entity.InternalStageOpen,
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
+	}, neo4jentity.OpportunityEntity{
+		InternalStage:     neo4jenum.InternalStageOpen,
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
 	})
-	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
 	//contract 2
-	contract2ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 8)
-	contract2Id := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	contract2ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 8)
+	contract2Id := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2ServiceStartedAt,
-	}, entity.OpportunityEntity{
-		InternalStage:     entity.InternalStageOpen,
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodZero,
+	}, neo4jentity.OpportunityEntity{
+		InternalStage:     neo4jenum.InternalStageOpen,
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodZero,
 	})
-	insertServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contract2Id, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -961,38 +967,38 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts
 func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts_One_MEDIUM_One_LOW_Should_Be_AT_RISK_State(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
 
 	//contract 1
-	contract1ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
-	contractId := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	contract1ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
+	contractId := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
-	}, entity.OpportunityEntity{
-		InternalStage:     entity.InternalStageOpen,
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodMedium,
+	}, neo4jentity.OpportunityEntity{
+		InternalStage:     neo4jenum.InternalStageOpen,
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
 	})
-	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
 	//contract 2
-	contract2ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 8)
-	contract2Id := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	contract2ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 8)
+	contract2Id := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2ServiceStartedAt,
-	}, entity.OpportunityEntity{
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodLow,
+	}, neo4jentity.OpportunityEntity{
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodLow,
 	})
-	insertServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contract2Id, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -1016,41 +1022,41 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts
 func TestQueryResolver_Dashboard_Customer_Map_Organization_With_First_Live_Second_Closed_Contract_Live_HIGH_Should_Be_OK_State(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
 
 	//contract 1
-	contract1ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
-	contract1Id := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	contract1ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
+	contract1Id := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
-	}, entity.OpportunityEntity{
-		InternalStage:     entity.InternalStageOpen,
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
+	}, neo4jentity.OpportunityEntity{
+		InternalStage:     neo4jenum.InternalStageOpen,
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
 	})
-	insertServiceLineItem(ctx, driver, contract1Id, entity.BilledTypeAnnually, 100, 1, contract1ServiceStartedAt)
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contract1Id, neo4jenum.BilledTypeAnnually, 100, 1, contract1ServiceStartedAt)
 
 	//contract 2
-	contract2ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
-	contract2ServiceEndedAt := neo4jt.FirstTimeOfMonth(2023, 8)
-	contractId := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusEnded,
+	contract2ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
+	contract2ServiceEndedAt := neo4jtest.FirstTimeOfMonth(2023, 8)
+	contractId := neo4jtest.InsertContractWithOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusEnded,
 		ServiceStartedAt: &contract2ServiceStartedAt,
 		EndedAt:          &contract2ServiceEndedAt,
-	}, entity.OpportunityEntity{
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodMedium,
+	}, neo4jentity.OpportunityEntity{
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
 	})
-	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 1, contract2ServiceEndedAt)
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract2ServiceEndedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -1074,42 +1080,42 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_First_Live_Secon
 func TestQueryResolver_Dashboard_Customer_Map_Organization_With_First_Closed_Second_Live_Contract_Live_HIGH_Should_Be_OK_State(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
 
 	//contract 1
-	contract1ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
-	contract1ServiceEndedAt := neo4jt.FirstTimeOfMonth(2023, 8)
-	contractId := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusEnded,
+	contract1ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
+	contract1ServiceEndedAt := neo4jtest.FirstTimeOfMonth(2023, 8)
+	contractId := neo4jtest.InsertContractWithOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusEnded,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 		EndedAt:          &contract1ServiceEndedAt,
-	}, entity.OpportunityEntity{
-		InternalStage:     entity.InternalStageOpen,
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodMedium,
+	}, neo4jentity.OpportunityEntity{
+		InternalStage:     neo4jenum.InternalStageOpen,
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
 	})
-	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
 	//contract 2
-	contract2ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 8)
-	contract2Id := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	contract2ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 8)
+	contract2Id := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2ServiceStartedAt,
-	}, entity.OpportunityEntity{
-		InternalStage:     entity.InternalStageOpen,
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
+	}, neo4jentity.OpportunityEntity{
+		InternalStage:     neo4jenum.InternalStageOpen,
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
 	})
-	insertServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 100, 1, contract1ServiceStartedAt)
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contract2Id, neo4jenum.BilledTypeAnnually, 100, 1, contract1ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -1133,42 +1139,42 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_First_Closed_Sec
 func TestQueryResolver_Dashboard_Customer_Map_Organization_With_First_Live_Second_Closed_Contract_Live_MEDIUM_Should_Be_AT_RISK_State(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
 
 	//contract 1
-	contract1ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
-	contract1ServiceEndedAt := neo4jt.FirstTimeOfMonth(2023, 8)
-	contractId := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusEnded,
+	contract1ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
+	contract1ServiceEndedAt := neo4jtest.FirstTimeOfMonth(2023, 8)
+	contractId := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusEnded,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 		EndedAt:          &contract1ServiceEndedAt,
-	}, entity.OpportunityEntity{
-		InternalStage:     entity.InternalStageOpen,
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
+	}, neo4jentity.OpportunityEntity{
+		InternalStage:     neo4jenum.InternalStageOpen,
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
 	})
-	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
 	//contract 2
-	contract2ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 8)
-	contract2Id := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	contract2ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 8)
+	contract2Id := neo4jtest.InsertContractWithOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2ServiceStartedAt,
-	}, entity.OpportunityEntity{
-		InternalStage:     entity.InternalStageOpen,
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodMedium,
+	}, neo4jentity.OpportunityEntity{
+		InternalStage:     neo4jenum.InternalStageOpen,
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
 	})
-	insertServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 100, 1, contract1ServiceStartedAt)
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contract2Id, neo4jenum.BilledTypeAnnually, 100, 1, contract1ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -1192,44 +1198,44 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_First_Live_Secon
 func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_2_Closed_Contracts_Should_Be_CHURNED_1(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
 
 	//contract 1
-	contract1ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
-	contract1ServiceEndedAt := neo4jt.FirstTimeOfMonth(2023, 8)
-	contractId := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusEnded,
+	contract1ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
+	contract1ServiceEndedAt := neo4jtest.FirstTimeOfMonth(2023, 8)
+	contractId := neo4jtest.InsertContractWithOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusEnded,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 		EndedAt:          &contract1ServiceEndedAt,
-	}, entity.OpportunityEntity{
-		InternalStage:     entity.InternalStageOpen,
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
+	}, neo4jentity.OpportunityEntity{
+		InternalStage:     neo4jenum.InternalStageOpen,
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
 	})
-	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
 	//contract 2
-	contract2ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 8)
-	contract2ServiceEndedAt := neo4jt.FirstTimeOfMonth(2023, 9)
-	contract2Id := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusEnded,
+	contract2ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 8)
+	contract2ServiceEndedAt := neo4jtest.FirstTimeOfMonth(2023, 9)
+	contract2Id := neo4jtest.InsertContractWithOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusEnded,
 		ServiceStartedAt: &contract2ServiceStartedAt,
 		EndedAt:          &contract2ServiceEndedAt,
-	}, entity.OpportunityEntity{
-		InternalStage:     entity.InternalStageOpen,
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodMedium,
+	}, neo4jentity.OpportunityEntity{
+		InternalStage:     neo4jenum.InternalStageOpen,
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
 	})
-	insertServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 100, 1, contract2ServiceStartedAt)
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contract2Id, neo4jenum.BilledTypeAnnually, 100, 1, contract2ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -1253,44 +1259,44 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_2_Closed_Con
 func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_2_Closed_Contracts_Should_Be_CHURNED_2(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
 
 	//contract 1
-	contract1ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 8)
-	contract1ServiceEndedAt := neo4jt.FirstTimeOfMonth(2023, 9)
-	contractId := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusEnded,
+	contract1ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 8)
+	contract1ServiceEndedAt := neo4jtest.FirstTimeOfMonth(2023, 9)
+	contractId := neo4jtest.InsertContractWithOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusEnded,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 		EndedAt:          &contract1ServiceEndedAt,
-	}, entity.OpportunityEntity{
-		InternalStage:     entity.InternalStageOpen,
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
+	}, neo4jentity.OpportunityEntity{
+		InternalStage:     neo4jenum.InternalStageOpen,
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
 	})
-	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
 	//contract 2
-	contract2ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
-	contract2ServiceEndedAt := neo4jt.FirstTimeOfMonth(2023, 8)
-	contract2Id := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusEnded,
+	contract2ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
+	contract2ServiceEndedAt := neo4jtest.FirstTimeOfMonth(2023, 8)
+	contract2Id := neo4jtest.InsertContractWithOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusEnded,
 		ServiceStartedAt: &contract2ServiceStartedAt,
 		EndedAt:          &contract2ServiceEndedAt,
-	}, entity.OpportunityEntity{
-		InternalStage:     entity.InternalStageOpen,
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodMedium,
+	}, neo4jentity.OpportunityEntity{
+		InternalStage:     neo4jenum.InternalStageOpen,
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
 	})
-	insertServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 100, 1, contract2ServiceStartedAt)
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contract2Id, neo4jenum.BilledTypeAnnually, 100, 1, contract2ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -1314,47 +1320,47 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_2_Closed_Con
 func TestQueryResolver_Dashboard_Customer_Map_Two_Organizations_With_1_Contract_Each(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	//org 1
 	org1Id := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		IsCustomer: true,
 	})
-	contract1ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
-	contractId := insertContractWithActiveRenewalOpportunity(ctx, driver, org1Id, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	contract1ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
+	contractId := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, org1Id, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
-	}, entity.OpportunityEntity{
-		InternalStage:     entity.InternalStageOpen,
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
+	}, neo4jentity.OpportunityEntity{
+		InternalStage:     neo4jenum.InternalStageOpen,
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
 	})
-	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
 	//org 2
 	org2Id := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		IsCustomer: true,
 	})
-	contract2ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
-	contract2ServiceEndedAt := neo4jt.FirstTimeOfMonth(2023, 7)
-	contract2Id := insertContractWithOpportunity(ctx, driver, org2Id, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusEnded,
+	contract2ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 6)
+	contract2ServiceEndedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
+	contract2Id := neo4jtest.InsertContractWithOpportunity(ctx, driver, tenantName, org2Id, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusEnded,
 		ServiceStartedAt: &contract2ServiceStartedAt,
 		EndedAt:          &contract2ServiceEndedAt,
-	}, entity.OpportunityEntity{
-		InternalStage:     entity.InternalStageOpen,
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
+	}, neo4jentity.OpportunityEntity{
+		InternalStage:     neo4jenum.InternalStageOpen,
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
 	})
-	insertServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 10, 1, contract2ServiceStartedAt)
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contract2Id, neo4jenum.BilledTypeAnnually, 10, 1, contract2ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -1385,69 +1391,69 @@ func TestQueryResolver_Dashboard_Customer_Map_Two_Organizations_With_1_Contract_
 func TestQueryResolver_Dashboard_Customer_Map_Two_Organizations_With_2_Contracts_Each(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	//org 1
 	org1Id := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		IsCustomer: true,
 	})
-	contract1ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 8)
-	contract1EndedAt := neo4jt.FirstTimeOfMonth(2023, 9)
-	contract1Id := insertContractWithOpportunity(ctx, driver, org1Id, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusEnded,
+	contract1ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 8)
+	contract1EndedAt := neo4jtest.FirstTimeOfMonth(2023, 9)
+	contract1Id := neo4jtest.InsertContractWithOpportunity(ctx, driver, tenantName, org1Id, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusEnded,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 		EndedAt:          &contract1EndedAt,
-	}, entity.OpportunityEntity{
-		InternalStage:     entity.InternalStageOpen,
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
+	}, neo4jentity.OpportunityEntity{
+		InternalStage:     neo4jenum.InternalStageOpen,
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
 	})
-	insertServiceLineItem(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contract1Id, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
-	contract2Id := insertContractWithActiveRenewalOpportunity(ctx, driver, org1Id, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	contract2Id := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, org1Id, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
-	}, entity.OpportunityEntity{
-		InternalStage:     entity.InternalStageOpen,
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
+	}, neo4jentity.OpportunityEntity{
+		InternalStage:     neo4jenum.InternalStageOpen,
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
 	})
-	insertServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 24, 1, contract1ServiceStartedAt)
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contract2Id, neo4jenum.BilledTypeAnnually, 24, 1, contract1ServiceStartedAt)
 
 	//org 2
 	org2Id := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		IsCustomer: true,
 	})
-	contract2ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 5)
-	contract2ServiceEndedAt := neo4jt.FirstTimeOfMonth(2023, 6)
-	contract3Id := insertContractWithActiveRenewalOpportunity(ctx, driver, org2Id, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	contract2ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 5)
+	contract2ServiceEndedAt := neo4jtest.FirstTimeOfMonth(2023, 6)
+	contract3Id := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, org2Id, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2ServiceStartedAt,
-	}, entity.OpportunityEntity{
-		InternalStage:     entity.InternalStageOpen,
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodMedium,
+	}, neo4jentity.OpportunityEntity{
+		InternalStage:     neo4jenum.InternalStageOpen,
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
 	})
-	insertServiceLineItem(ctx, driver, contract3Id, entity.BilledTypeAnnually, 15, 1, contract2ServiceStartedAt)
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contract3Id, neo4jenum.BilledTypeAnnually, 15, 1, contract2ServiceStartedAt)
 
-	contract4Id := insertContractWithOpportunity(ctx, driver, org2Id, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusEnded,
+	contract4Id := neo4jtest.InsertContractWithOpportunity(ctx, driver, tenantName, org2Id, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusEnded,
 		ServiceStartedAt: &contract2ServiceStartedAt,
 		EndedAt:          &contract2ServiceEndedAt,
-	}, entity.OpportunityEntity{
-		InternalStage:     entity.InternalStageOpen,
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
+	}, neo4jentity.OpportunityEntity{
+		InternalStage:     neo4jenum.InternalStageOpen,
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
 	})
-	insertServiceLineItem(ctx, driver, contract4Id, entity.BilledTypeAnnually, 10, 1, contract2ServiceStartedAt)
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contract4Id, neo4jenum.BilledTypeAnnually, 10, 1, contract2ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 4})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 4})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 4})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 4})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 4})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 4})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -1478,30 +1484,30 @@ func TestQueryResolver_Dashboard_Customer_Map_Two_Organizations_With_2_Contracts
 func TestQueryResolver_Dashboard_Customer_Map_Annually_SLI(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		IsCustomer: true,
 	})
 
-	contract1ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
-	contractId := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	contract1ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
+	contractId := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
-	}, entity.OpportunityEntity{
-		InternalStage:     entity.InternalStageOpen,
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodLow,
+	}, neo4jentity.OpportunityEntity{
+		InternalStage:     neo4jenum.InternalStageOpen,
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodLow,
 	})
-	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -1525,30 +1531,30 @@ func TestQueryResolver_Dashboard_Customer_Map_Annually_SLI(t *testing.T) {
 func TestQueryResolver_Dashboard_Customer_Map_Quarterly_SLI(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		IsCustomer: true,
 	})
 
-	contract1ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
-	contractId := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	contract1ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
+	contractId := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
-	}, entity.OpportunityEntity{
-		InternalStage:     entity.InternalStageOpen,
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodLow,
+	}, neo4jentity.OpportunityEntity{
+		InternalStage:     neo4jenum.InternalStageOpen,
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodLow,
 	})
-	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeQuarterly, 12, 1, contract1ServiceStartedAt)
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeQuarterly, 12, 1, contract1ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -1572,30 +1578,30 @@ func TestQueryResolver_Dashboard_Customer_Map_Quarterly_SLI(t *testing.T) {
 func TestQueryResolver_Dashboard_Customer_Map_Monthly_SLI(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		IsCustomer: true,
 	})
 
-	contract1ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
-	contractId := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	contract1ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
+	contractId := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
-	}, entity.OpportunityEntity{
-		InternalStage:     entity.InternalStageOpen,
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: entity.OpportunityRenewalLikelihoodLow,
+	}, neo4jentity.OpportunityEntity{
+		InternalStage:     neo4jenum.InternalStageOpen,
+		InternalType:      neo4jenum.InternalTypeRenewal,
+		RenewalLikelihood: neo4jenum.RenewalLikelihoodLow,
 	})
-	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeMonthly, 12, 1, contract1ServiceStartedAt)
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeMonthly, 12, 1, contract1ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})

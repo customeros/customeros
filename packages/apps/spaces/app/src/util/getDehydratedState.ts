@@ -4,16 +4,23 @@ import getQueryClient from '@shared/util/getQueryClient';
 
 import { getServerGraphQLClient } from './getServerGraphQLClient';
 
-// eslint-disable-next-line
-export async function getDehydratedState(hook: any, variables?: any) {
+export async function getDehydratedState(
+  // eslint-disable-next-line
+  hook: any,
+  // eslint-disable-next-line
+  options?: { variables?: any; fetcher?: any },
+) {
   const queryClient = getQueryClient();
   const graphQLClient = getServerGraphQLClient();
 
   try {
-    await queryClient.prefetchQuery(
-      hook.getKey(variables),
-      hook.fetcher(graphQLClient, variables),
-    );
+    await queryClient.prefetchQuery({
+      queryKey: hook.getKey(options?.variables),
+      queryFn: (options?.fetcher ? options.fetcher : hook.fetcher)(
+        graphQLClient,
+        options?.variables,
+      ),
+    });
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('getDehydratedState: ', error);

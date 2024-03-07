@@ -6,16 +6,16 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
 
 type TagRepository interface {
-	Merge(ctx context.Context, tenant string, tag entity.TagEntity) (*dbtype.Node, error)
-	Update(ctx context.Context, tenant string, tag entity.TagEntity) (*dbtype.Node, error)
+	Merge(ctx context.Context, tenant string, tag neo4jentity.TagEntity) (*dbtype.Node, error)
+	Update(ctx context.Context, tenant string, tag neo4jentity.TagEntity) (*dbtype.Node, error)
 	UnlinkAndDelete(ctx context.Context, tenant string, tagId string) error
 	GetAll(ctx context.Context, tenant string) ([]*dbtype.Node, error)
 	GetForContact(ctx context.Context, tenant, contactId string) ([]*dbtype.Node, error)
@@ -24,7 +24,6 @@ type TagRepository interface {
 	GetForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeWithRelationAndId, error)
 	GetForLogEntries(ctx context.Context, tenant string, logEntryIds []string) ([]*utils.DbNodeWithRelationAndId, error)
 	GetById(ctx context.Context, tagId string) (*dbtype.Node, error)
-	GetByName(ctx context.Context, tagName string) (*dbtype.Node, error)
 }
 
 type tagRepository struct {
@@ -37,7 +36,7 @@ func NewTagRepository(driver *neo4j.DriverWithContext) TagRepository {
 	}
 }
 
-func (r *tagRepository) Merge(ctx context.Context, tenant string, tag entity.TagEntity) (*dbtype.Node, error) {
+func (r *tagRepository) Merge(ctx context.Context, tenant string, tag neo4jentity.TagEntity) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TagRepository.Merge")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -75,7 +74,7 @@ func (r *tagRepository) Merge(ctx context.Context, tenant string, tag entity.Tag
 	}
 }
 
-func (r *tagRepository) Update(ctx context.Context, tenant string, tag entity.TagEntity) (*dbtype.Node, error) {
+func (r *tagRepository) Update(ctx context.Context, tenant string, tag neo4jentity.TagEntity) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TagRepository.Update")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -304,35 +303,6 @@ func (r *tagRepository) GetById(ctx context.Context, tagId string) (*dbtype.Node
 			map[string]any{
 				"tenant": common.GetTenantFromContext(ctx),
 				"id":     tagId,
-			}); err != nil {
-			return nil, err
-		} else {
-			return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
-		}
-	}); err != nil {
-		return nil, err
-	} else {
-		return result.(*dbtype.Node), nil
-	}
-}
-
-func (r *tagRepository) GetByName(ctx context.Context, tagName string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "LogEntryRepository.GetByName")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("tagName", tagName))
-
-	query := `MATCH (t:Tenant {name:$tenant})<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {name:$name}) return tag limit 1`
-	span.LogFields(log.String("query", query))
-
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	if result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, query,
-			map[string]any{
-				"tenant": common.GetTenantFromContext(ctx),
-				"name":   tagName,
 			}); err != nil {
 			return nil, err
 		} else {

@@ -12,8 +12,8 @@ import { Button } from '@ui/form/Button';
 import { FeaturedIcon } from '@ui/media/Icon';
 import { Star06 } from '@ui/media/icons/Star06';
 import { Heading } from '@ui/typography/Heading';
+import { toastError } from '@ui/presentation/Toast';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { toastError, toastSuccess } from '@ui/presentation/Toast';
 import { useCreateContractMutation } from '@organization/src/graphql/createContract.generated';
 import {
   User,
@@ -21,6 +21,7 @@ import {
   ContractStatus,
   ContractRenewalCycle,
 } from '@graphql/types';
+import { RelationshipButton } from '@organization/src/components/Tabs/panels/AccountPanel/RelationshipButton';
 import {
   GetContractsQuery,
   useGetContractsQuery,
@@ -54,6 +55,7 @@ export const EmptyContracts: FC<PropsWithChildren<{ name: string }>> = ({
         status: ContractStatus.Draft,
         updatedAt: new Date().toISOString(),
         serviceLineItems: [],
+        billingEnabled: false,
       };
       queryClient.cancelQueries({ queryKey });
       queryClient.setQueryData<GetContractsQuery>(queryKey, (currentCache) => {
@@ -68,13 +70,6 @@ export const EmptyContracts: FC<PropsWithChildren<{ name: string }>> = ({
 
       return { previousEntries };
     },
-
-    onSuccess: (_, variables) => {
-      toastSuccess(
-        'Contract created',
-        `${variables?.input?.organizationId}-contract-created`,
-      );
-    },
     onError: (_, __, context) => {
       queryClient.setQueryData(queryKey, context?.previousEntries);
       toastError(
@@ -83,25 +78,12 @@ export const EmptyContracts: FC<PropsWithChildren<{ name: string }>> = ({
       );
     },
     onSettled: () => {
-      queryClient.invalidateQueries(queryKey);
+      queryClient.invalidateQueries({ queryKey });
     },
   });
 
   return (
-    <OrganizationPanel
-      title='Account'
-      actionItem={
-        <Button
-          size='xs'
-          variant='outline'
-          type='button'
-          isDisabled
-          borderRadius='16px'
-        >
-          Prospect
-        </Button>
-      }
-    >
+    <OrganizationPanel title='Account' actionItem={<RelationshipButton />}>
       <Flex
         my={4}
         w='full'
@@ -120,12 +102,13 @@ export const EmptyContracts: FC<PropsWithChildren<{ name: string }>> = ({
         <Button
           fontSize='sm'
           size='sm'
-          isLoading={createContract.status === 'loading'}
-          loadingText='Creating contract...'
+          isLoading={createContract.isPending}
+          isDisabled={createContract.isPending}
           colorScheme='primary'
           mt={6}
           variant='outline'
           width='fit-content'
+          loadingText='Creating contract...'
           onClick={() =>
             createContract.mutate({
               input: {

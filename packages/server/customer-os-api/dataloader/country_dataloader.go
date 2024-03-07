@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"github.com/graph-gophers/dataloader"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"reflect"
@@ -49,7 +49,7 @@ func (b *countryBatcher) getCountriesForPhoneNumbers(ctx context.Context, keys d
 
 	// construct an output array of dataloader results
 	results := make([]*dataloader.Result, len(keys))
-	for phoneNumberId, _ := range countryEntityByPhoneNumberId {
+	for phoneNumberId := range countryEntityByPhoneNumberId {
 		if ix, ok := keyOrder[phoneNumberId]; ok {
 			val := countryEntityByPhoneNumberId[phoneNumberId]
 			results[ix] = &dataloader.Result{Data: &val, Error: nil}

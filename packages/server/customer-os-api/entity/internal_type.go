@@ -1,5 +1,6 @@
 package entity
 
+// Deprecated
 type InternalType string
 
 const (

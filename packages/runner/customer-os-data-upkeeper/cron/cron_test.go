@@ -23,8 +23,15 @@ func TestStartCron(t *testing.T) {
 	// Arrange
 	cfg := config.Config{
 		Cron: cron_config.Config{
-			CronScheduleUpdateContract:        "0 0 */1 * * *",
-			CronScheduleWebScrapeOrganization: "0 0 */1 * * *",
+			CronScheduleUpdateContract:             "0 0 */1 * * *",
+			CronScheduleWebScrapeOrganization:      "0 0 */1 * * *",
+			CronScheduleGenerateInvoice:            "0 0 */1 * * *",
+			CronScheduleGenerateOffCycleInvoice:    "0 0 */1 * * *",
+			CronScheduleSendPayInvoiceNotification: "0 0 */1 * * *",
+			CronScheduleRefreshLastTouchpoint:      "0 0 */1 * * *",
+			CronScheduleGetCurrencyRatesECB:        "0 0 */1 * * *",
+			CronScheduleLinkUnthreadIssues:         "0 0 */1 * * *",
+			CronScheduleGenerateInvoicePaymentLink: "0 0 */1 * * *",
 		},
 	}
 

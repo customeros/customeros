@@ -3,6 +3,7 @@ package entity
 import (
 	"fmt"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"time"
 )
 
@@ -45,11 +46,11 @@ func (UserEntity) IsIssueParticipant() {}
 func (UserEntity) IsMeetingParticipant() {}
 
 func (UserEntity) ParticipantLabel() string {
-	return neo4jentity.NodeLabel_User
+	return neo4jutil.NodeLabelUser
 }
 
 func (UserEntity) MeetingParticipantLabel() string {
-	return neo4jentity.NodeLabel_User
+	return neo4jutil.NodeLabelUser
 }
 
 func (user UserEntity) GetDataloaderKey() string {
@@ -58,7 +59,7 @@ func (user UserEntity) GetDataloaderKey() string {
 
 func (UserEntity) Labels(tenant string) []string {
 	return []string{
-		neo4jentity.NodeLabel_User,
-		neo4jentity.NodeLabel_User + "_" + tenant,
+		neo4jutil.NodeLabelUser,
+		neo4jutil.NodeLabelUser + "_" + tenant,
 	}
 }

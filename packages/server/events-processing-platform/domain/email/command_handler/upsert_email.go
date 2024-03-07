@@ -44,7 +44,7 @@ func (h *upsertEmailCommandHandler) Handle(ctx context.Context, cmd *command.Ups
 		return err
 	}
 
-	if aggregate.IsAggregateNotFound(emailAggregate) {
+	if eventstore.IsAggregateNotFound(emailAggregate) {
 		cmd.IsCreateCommand = true
 	}
 	if err = emailAggregate.HandleCommand(ctx, cmd); err != nil {

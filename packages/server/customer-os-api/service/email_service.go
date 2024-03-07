@@ -13,12 +13,12 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	commongrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
-	emailgrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
+	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"strings"
-	"time"
 )
 
 type EmailService interface {
@@ -307,29 +307,24 @@ func (s *emailService) CreateEmailAddressByEvents(ctx context.Context, email, ap
 	if emailEntity == nil {
 		// email address not exist, create new one
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		response, err := s.grpcClients.EmailClient.UpsertEmail(ctx, &emailgrpc.UpsertEmailGrpcRequest{
-			Tenant:   common.GetTenantFromContext(ctx),
-			RawEmail: email,
-			SourceFields: &commongrpc.SourceFields{
-				Source:    string(neo4jentity.DataSourceOpenline),
-				AppSource: utils.StringFirstNonEmpty(appSource, constants.AppSourceCustomerOsApi),
-			},
-			LoggedInUserId: common.GetUserIdFromContext(ctx),
+		response, err := CallEventsPlatformGRPCWithRetry[*emailpb.EmailIdGrpcResponse](func() (*emailpb.EmailIdGrpcResponse, error) {
+			return s.grpcClients.EmailClient.UpsertEmail(ctx, &emailpb.UpsertEmailGrpcRequest{
+				Tenant:   common.GetTenantFromContext(ctx),
+				RawEmail: email,
+				SourceFields: &commongrpc.SourceFields{
+					Source:    string(neo4jentity.DataSourceOpenline),
+					AppSource: utils.StringFirstNonEmpty(appSource, constants.AppSourceCustomerOsApi),
+				},
+				LoggedInUserId: common.GetUserIdFromContext(ctx),
+			})
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error from events processing %s", err.Error())
 			return "", err
 		}
-		for i := 1; i <= constants.MaxRetriesCheckDataInNeo4jAfterEventRequest; i++ {
-			emailEntity, findEmailErr := s.GetById(ctx, response.Id)
-			if emailEntity != nil && findEmailErr == nil {
-				span.LogFields(log.Bool("emailSavedInGraphDb", true))
-				break
-			}
-			time.Sleep(utils.BackOffIncrementalDelay(i))
-		}
-		span.LogFields(log.String("createdEmailId", response.Id))
+
+		WaitForNodeCreatedInNeo4j(ctx, s.repositories, response.Id, neo4jutil.NodeLabelEmail, span)
 		return response.Id, nil
 	} else {
 		return emailEntity.Id, nil

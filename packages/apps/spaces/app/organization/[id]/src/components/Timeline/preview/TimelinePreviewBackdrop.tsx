@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, PropsWithChildren } from 'react';
+import { useState, useEffect, PropsWithChildren } from 'react';
 
 import { Flex } from '@ui/layout/Flex';
 import { Card } from '@ui/presentation/Card';
@@ -16,7 +16,6 @@ export const TimelinePreviewBackdrop = ({
   children,
   onCloseModal,
 }: TimelinePreviewBackdropProps) => {
-  const mouseTarget = useRef<string | null>(null);
   const [isMounted, setIsMounted] = useState(false); // needed for delaying the backdrop filter
   const { isModalOpen, modalContent } = useTimelineEventPreviewStateContext();
   const { closeModal } = useTimelineEventPreviewMethodsContext();
@@ -41,19 +40,18 @@ export const TimelinePreviewBackdrop = ({
       backdropFilter='blur(3px)'
       justify='center'
       id='timeline-preview-backdrop'
-      background={isMounted ? 'rgba(16, 24, 40, 0.45)' : 'rgba(16, 24, 40, 0)'}
+      background={isMounted ? 'rgba(16, 24, 40, 0.25)' : 'rgba(16, 24, 40, 0)'}
       align='center'
       transition='all 0.1s linear'
       onMouseDown={(e) => {
         e.stopPropagation();
-        mouseTarget.current = e.currentTarget.id;
       }}
-      onMouseUp={() => {
-        if (mouseTarget?.current === 'timeline-preview-backdrop') {
+      onMouseUp={(e) => {
+        const target = e.target as HTMLDivElement;
+        if (!target) return;
+        if (target.id === 'timeline-preview-backdrop') {
           closeModal();
           onCloseModal?.();
-        } else {
-          mouseTarget.current = null;
         }
       }}
     >
@@ -63,7 +61,8 @@ export const TimelinePreviewBackdrop = ({
           position: 'absolute',
           marginInline: 'auto',
           top: '1rem',
-          width: '544px',
+          width: modalContent?.__typename === 'Invoice' ? '650px' : '544px',
+          height: modalContent?.__typename === 'Invoice' ? '90vh' : 'auto',
           minWidth: '544px',
         }}
       >
@@ -72,7 +71,8 @@ export const TimelinePreviewBackdrop = ({
           position='absolute'
           mx='auto'
           top='4'
-          w='544px'
+          w={modalContent?.__typename === 'Invoice' ? '650px' : '544px'}
+          h={modalContent?.__typename === 'Invoice' ? '90vh' : 'auto'}
           minW='544px'
           cursor='default'
           id='timeline-preview-card'

@@ -69,13 +69,15 @@ func (s *organizationService) SyncOrganizations(ctx context.Context, organizatio
 
 	// pre-validate organization input before syncing
 	for _, org := range organizations {
-		if org.ExternalSystem == "" {
+		if org.ExternalSystem == "" && org.Source == "" {
 			tracing.TraceErr(span, errors.ErrMissingExternalSystem)
 			return SyncResult{}, errors.ErrMissingExternalSystem
 		}
-		if !neo4jentity.IsValidDataSource(strings.ToLower(org.ExternalSystem)) {
-			tracing.TraceErr(span, errors.ErrExternalSystemNotAccepted, log.String("externalSystem", org.ExternalSystem))
-			return SyncResult{}, errors.ErrExternalSystemNotAccepted
+		if org.ExternalSystem != "" {
+			if !neo4jentity.IsValidDataSource(strings.ToLower(org.ExternalSystem)) {
+				tracing.TraceErr(span, errors.ErrExternalSystemNotAccepted, log.String("externalSystem", org.ExternalSystem))
+				return SyncResult{}, errors.ErrExternalSystemNotAccepted
+			}
 		}
 	}
 
@@ -183,13 +185,15 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 	}
 
 	// Merge external system neo4j node
-	err := s.services.ExternalSystemService.MergeExternalSystem(ctx, tenant, orgInput.ExternalSystem)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		reason = fmt.Sprintf("failed merging external system %s for tenant %s :%s", orgInput.ExternalSystem, tenant, err.Error())
-		s.log.Error(reason)
-		span.LogFields(log.String("output", "failed"))
-		return NewFailedSyncStatus(reason)
+	if orgInput.ExternalSystem != "" {
+		err := s.services.ExternalSystemService.MergeExternalSystem(ctx, tenant, orgInput.ExternalSystem)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			reason = fmt.Sprintf("failed merging external system %s for tenant %s :%s", orgInput.ExternalSystem, tenant, err.Error())
+			s.log.Error(reason)
+			span.LogFields(log.String("output", "failed"))
+			return NewFailedSyncStatus(reason)
+		}
 	}
 
 	// Remove personal email provider domains from organization domains
@@ -245,6 +249,27 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 			if orgInput.Name != "" {
 				fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NAME)
 			}
+		} else {
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NAME)
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_DESCRIPTION)
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_WEBSITE)
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_INDUSTRY)
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_SUB_INDUSTRY)
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_INDUSTRY_GROUP)
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_IS_PUBLIC)
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_IS_CUSTOMER)
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_EMPLOYEES)
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_MARKET)
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_TARGET_AUDIENCE)
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_VALUE_PROPOSITION)
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_LAST_FUNDING_ROUND)
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_LAST_FUNDING_AMOUNT)
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NOTE)
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_REFERENCE_ID)
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_LOGO_URL)
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_YEAR_FOUNDED)
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_HEADQUARTERS)
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_EMPLOYEE_GROWTH_RATE)
 		}
 
 		// Create new organization id if not found
@@ -254,7 +279,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 
 		// Create or update organization
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = s.grpcClients.OrganizationClient.UpsertOrganization(ctx, &organizationpb.UpsertOrganizationGrpcRequest{
+		upsertOrganizationGrpcRequest := organizationpb.UpsertOrganizationGrpcRequest{
 			Tenant:             tenant,
 			Id:                 organizationId,
 			LoggedInUserId:     "",
@@ -282,18 +307,24 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 			Headquarters:       orgInput.Headquarters,
 			EmployeeGrowthRate: orgInput.EmployeeGrowthRate,
 			SourceFields: &commonpb.SourceFields{
-				Source:    orgInput.ExternalSystem,
+				Source:    utils.StringFirstNonEmpty(orgInput.ExternalSystem, orgInput.Source),
 				AppSource: appSource,
 			},
 			FieldsMask: fieldsMask,
-			ExternalSystemFields: &commonpb.ExternalSystemFields{
+		}
+
+		if orgInput.ExternalSystem != "" {
+			upsertOrganizationGrpcRequest.ExternalSystemFields = &commonpb.ExternalSystemFields{
 				ExternalSystemId: orgInput.ExternalSystem,
 				ExternalId:       orgInput.ExternalId,
 				ExternalUrl:      orgInput.ExternalUrl,
 				ExternalIdSecond: orgInput.ExternalIdSecond,
 				ExternalSource:   orgInput.ExternalSourceEntity,
 				SyncDate:         utils.ConvertTimeToTimestampPtr(&syncDate),
-			},
+			}
+		}
+		_, err = CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+			return s.grpcClients.OrganizationClient.UpsertOrganization(ctx, &upsertOrganizationGrpcRequest)
 		})
 		if err != nil {
 			failedSync = true
@@ -308,7 +339,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 				if organization != nil && findErr == nil {
 					break
 				}
-				time.Sleep(time.Duration(i*constants.TimeoutIntervalMs) * time.Millisecond)
+				time.Sleep(utils.BackOffExponentialDelay(i))
 			}
 		}
 	}
@@ -322,11 +353,13 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 				continue
 			}
 			if !domainInUse {
-				_, err = s.grpcClients.OrganizationClient.LinkDomainToOrganization(ctx, &organizationpb.LinkDomainToOrganizationGrpcRequest{
-					Tenant:         common.GetTenantFromContext(ctx),
-					OrganizationId: organizationId,
-					Domain:         domain,
-					AppSource:      appSource,
+				_, err = CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+					return s.grpcClients.OrganizationClient.LinkDomainToOrganization(ctx, &organizationpb.LinkDomainToOrganizationGrpcRequest{
+						Tenant:         common.GetTenantFromContext(ctx),
+						OrganizationId: organizationId,
+						Domain:         domain,
+						AppSource:      appSource,
+					})
 				})
 				if err != nil {
 					tracing.TraceErr(span, err, log.String("grpcFunction", "LinkDomainToOrganization"))
@@ -337,12 +370,14 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 	if !failedSync && orgInput.IsSubOrg() {
 		parentOrganizationId, _ := s.GetIdForReferencedOrganization(ctx, tenant, orgInput.ExternalSystem, orgInput.ParentOrganization.Organization)
 		if parentOrganizationId != "" {
-			_, err = s.grpcClients.OrganizationClient.AddParentOrganization(ctx, &organizationpb.AddParentOrganizationGrpcRequest{
-				Tenant:               common.GetTenantFromContext(ctx),
-				OrganizationId:       organizationId,
-				ParentOrganizationId: parentOrganizationId,
-				Type:                 orgInput.ParentOrganization.Type,
-				AppSource:            appSource,
+			_, err = CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+				return s.grpcClients.OrganizationClient.AddParentOrganization(ctx, &organizationpb.AddParentOrganizationGrpcRequest{
+					Tenant:               common.GetTenantFromContext(ctx),
+					OrganizationId:       organizationId,
+					ParentOrganizationId: parentOrganizationId,
+					Type:                 orgInput.ParentOrganization.Type,
+					AppSource:            appSource,
+				})
 			})
 			if err != nil {
 				failedSync = true
@@ -364,10 +399,12 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 			}
 			// Link email to organization
 			if emailId != "" {
-				_, err = s.grpcClients.OrganizationClient.LinkEmailToOrganization(ctx, &organizationpb.LinkEmailToOrganizationGrpcRequest{
-					Tenant:         common.GetTenantFromContext(ctx),
-					OrganizationId: organizationId,
-					EmailId:        emailId,
+				_, err = CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+					return s.grpcClients.OrganizationClient.LinkEmailToOrganization(ctx, &organizationpb.LinkEmailToOrganizationGrpcRequest{
+						Tenant:         common.GetTenantFromContext(ctx),
+						OrganizationId: organizationId,
+						EmailId:        emailId,
+					})
 				})
 				if err != nil {
 					tracing.TraceErr(span, err, log.String("grpcFunction", "LinkEmailToOrganization"))
@@ -390,12 +427,14 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 				}
 				// Link phone number to organization
 				if phoneNumberId != "" {
-					_, err = s.grpcClients.OrganizationClient.LinkPhoneNumberToOrganization(ctx, &organizationpb.LinkPhoneNumberToOrganizationGrpcRequest{
-						Tenant:         common.GetTenantFromContext(ctx),
-						OrganizationId: organizationId,
-						PhoneNumberId:  phoneNumberId,
-						Primary:        phoneNumberDtls.Primary,
-						Label:          phoneNumberDtls.Label,
+					_, err = CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+						return s.grpcClients.OrganizationClient.LinkPhoneNumberToOrganization(ctx, &organizationpb.LinkPhoneNumberToOrganizationGrpcRequest{
+							Tenant:         common.GetTenantFromContext(ctx),
+							OrganizationId: organizationId,
+							PhoneNumberId:  phoneNumberId,
+							Primary:        phoneNumberDtls.Primary,
+							Label:          phoneNumberDtls.Label,
+						})
 					})
 					if err != nil {
 						failedSync = true
@@ -429,10 +468,12 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 
 			// Link location to organization
 			if locationId != "" {
-				_, err = s.grpcClients.OrganizationClient.LinkLocationToOrganization(ctx, &organizationpb.LinkLocationToOrganizationGrpcRequest{
-					Tenant:         common.GetTenantFromContext(ctx),
-					OrganizationId: organizationId,
-					LocationId:     locationId,
+				_, err = CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+					return s.grpcClients.OrganizationClient.LinkLocationToOrganization(ctx, &organizationpb.LinkLocationToOrganizationGrpcRequest{
+						Tenant:         common.GetTenantFromContext(ctx),
+						OrganizationId: organizationId,
+						LocationId:     locationId,
+					})
 				})
 				if err != nil {
 					failedSync = true
@@ -496,7 +537,7 @@ func (s *organizationService) mapDbNodeToOrganizationEntity(dbNode dbtype.Node) 
 			UpdatedById:     utils.GetStringPropOrNil(props, "renewalForecastUpdatedBy"),
 			UpdatedAt:       utils.GetTimePropOrNil(props, "renewalForecastUpdatedAt"),
 		},
-		BillingDetails: entity.BillingDetails{
+		ContractBillingDetailsModal: entity.ContractBillingDetailsModal{
 			Amount:            utils.GetFloatPropOrNil(props, "billingDetailsAmount"),
 			Frequency:         utils.GetStringPropOrEmpty(props, "billingDetailsFrequency"),
 			RenewalCycle:      utils.GetStringPropOrEmpty(props, "billingDetailsRenewalCycle"),

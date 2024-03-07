@@ -1,0 +1,8 @@
+mutation UnlinkLocation($organizationId :ID!, $billingProfileId: ID!, $locationId: ID!) {
+billingProfile_UnlinkLocation(
+    input: {
+        organizationId: $organizationId
+        billingProfileId: $billingProfileId
+        locationId: $locationId
+    })
+}

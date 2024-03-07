@@ -14,6 +14,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/exp/slices"
@@ -55,14 +56,14 @@ type MeetingCreateData struct {
 	CreatedBy         []MeetingParticipant
 	AttendedBy        []MeetingParticipant
 	NoteInput         *model.NoteInput
-	ExternalReference *entity.ExternalSystemEntity
+	ExternalReference *neo4jentity.ExternalSystemEntity
 }
 
 type MeetingUpdateData struct {
 	MeetingEntity     *entity.MeetingEntity
 	NoteEntity        *entity.NoteEntity
 	Meeting           *string
-	ExternalReference *entity.ExternalSystemEntity
+	ExternalReference *neo4jentity.ExternalSystemEntity
 }
 
 type meetingService struct {
@@ -116,7 +117,7 @@ func (s *meetingService) Update(ctx context.Context, input *MeetingUpdateData) (
 		meetingDbNode, err := s.repositories.MeetingRepository.Update(ctx, tx, common.GetTenantFromContext(ctx), input.MeetingEntity)
 		tenant := common.GetContext(ctx).Tenant
 		if input.ExternalReference != nil {
-			err := s.repositories.ExternalSystemRepository.LinkNodeWithExternalSystemInTx(ctx, tx, tenant, input.MeetingEntity.Id, entity.ExternalNodeMeeting, *input.ExternalReference)
+			err := s.repositories.ExternalSystemRepository.LinkNodeWithExternalSystemInTx(ctx, tx, tenant, input.MeetingEntity.Id, neo4jutil.NodeLabelMeeting, *input.ExternalReference)
 			if err != nil {
 				return nil, err
 			}
@@ -270,7 +271,7 @@ func (s *meetingService) createMeetingInDBTxWork(ctx context.Context, newMeeting
 		}
 
 		if newMeeting.ExternalReference != nil {
-			err := s.repositories.ExternalSystemRepository.LinkNodeWithExternalSystemInTx(ctx, tx, tenant, meetingId, entity.ExternalNodeMeeting, *newMeeting.ExternalReference)
+			err := s.repositories.ExternalSystemRepository.LinkNodeWithExternalSystemInTx(ctx, tx, tenant, meetingId, neo4jutil.NodeLabelMeeting, *newMeeting.ExternalReference)
 			if err != nil {
 				return nil, err
 			}
@@ -447,19 +448,19 @@ func (s *meetingService) FindAll(ctx context.Context, externalSystemID string, e
 func (s *meetingService) convertDbNodesToMeetingParticipants(records []*utils.DbNodeWithRelationAndId) entity.MeetingParticipants {
 	meetingParticipants := entity.MeetingParticipants{}
 	for _, v := range records {
-		if slices.Contains(v.Node.Labels, neo4jentity.NodeLabel_User) {
+		if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelUser) {
 			participant := s.services.UserService.mapDbNodeToUserEntity(*v.Node)
 			participant.DataloaderKey = v.LinkedNodeId
 			meetingParticipants = append(meetingParticipants, participant)
-		} else if slices.Contains(v.Node.Labels, neo4jentity.NodeLabel_Contact) {
+		} else if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelContact) {
 			participant := s.services.ContactService.mapDbNodeToContactEntity(*v.Node)
 			participant.DataloaderKey = v.LinkedNodeId
 			meetingParticipants = append(meetingParticipants, participant)
-		} else if slices.Contains(v.Node.Labels, neo4jentity.NodeLabel_Organization) {
+		} else if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelOrganization) {
 			participant := s.services.OrganizationService.mapDbNodeToOrganizationEntity(*v.Node)
 			participant.DataloaderKey = v.LinkedNodeId
 			meetingParticipants = append(meetingParticipants, participant)
-		} else if slices.Contains(v.Node.Labels, neo4jentity.NodeLabel_Email) {
+		} else if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelEmail) {
 			participant := s.services.EmailService.mapDbNodeToEmailEntity(*v.Node)
 			participant.DataloaderKey = v.LinkedNodeId
 			meetingParticipants = append(meetingParticipants, participant)

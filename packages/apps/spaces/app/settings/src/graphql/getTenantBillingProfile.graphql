@@ -1,0 +1,21 @@
+query TenantBillingProfile($id: ID!) {
+    tenantBillingProfile(id: $id ) {
+        id
+        addressLine1
+        addressLine2
+        addressLine3
+        locality
+        zip
+        legalName
+        domesticPaymentsBankInfo
+        internationalPaymentsBankInfo
+        country
+        vatNumber
+        sendInvoicesFrom
+        canPayWithDirectDebitACH
+        canPayWithDirectDebitSEPA
+        canPayWithDirectDebitBacs
+        canPayWithCard
+        canPayWithPigeon
+    }
+}

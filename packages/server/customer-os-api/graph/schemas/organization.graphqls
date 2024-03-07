@@ -1,6 +1,7 @@
 extend type Query {
     organizations(pagination: Pagination, where: Filter, sort: [SortBy!]): OrganizationPage! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization(id: ID!): Organization @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_ByCustomerOsId(customerOsId: String!): Organization @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_DistinctOwners: [User!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
@@ -28,63 +29,78 @@ type LinkedOrganization {
     type: String
 }
 
-type Organization implements Node {
-    id: ID!
-    customerOsId: String!
-    referenceId: String
-    createdAt:   Time!
-    updatedAt:   Time!
-    name:        String!
-    description: String
-    note:        String
-    domains:     [String!]! @goField(forceResolver: true)
-    website:     String
-    industry:    String
-    subIndustry: String
-    industryGroup: String
-    targetAudience: String
-    valueProposition: String
-    isPublic:    Boolean
-    isCustomer:  Boolean
-    market:      Market
-    employees:   Int64
-    yearFounded: Int64
-    headquarters: String
-    employeeGrowthRate: String
-    logoUrl:      String
-    lastFundingRound: FundingRound
-    lastFundingAmount: String
-    source: DataSource!
-    sourceOfTruth: DataSource!
-    appSource: String!
-    locations: [Location!]! @goField(forceResolver: true)
-    socials: [Social!]! @goField(forceResolver: true)
+type Organization implements MetadataInterface {
+    metadata:               Metadata!
+    accountDetails:         OrgAccountDetails
+    contracts:              [Contract!] @goField(forceResolver: true)
+    customerOsId:           String!
+    customFields:           [CustomField!]! @goField(forceResolver: true)
+    customId:               String
+    description:            String
+    domains:                [String!]! @goField(forceResolver: true)
+    slackChannelId:         String
+    employeeGrowthRate:     String
+    employees:              Int64
+    headquarters:           String
+    industry:               String
+    industryGroup:          String
+    isCustomer:             Boolean
+    lastFundingAmount:      String
+    lastFundingRound:       FundingRound
+    lastTouchpoint:         LastTouchpoint
+    locations:              [Location!]! @goField(forceResolver: true)
+    logo:                   String
+    market:                 Market
+    name:                   String!
+    notes:                  String
+    owner:                  User @goField(forceResolver: true)
+    parentCompanies:        [LinkedOrganization!]! @goField(forceResolver: true)
+    public:                 Boolean
+    socialMedia:            [Social!]! @goField(forceResolver: true)
+    subIndustry:            String
+    subsidiaries:           [LinkedOrganization!]! @goField(forceResolver: true)
+    tags:                   [Tag!] @goField(forceResolver: true)
+    targetAudience:         String
+    timelineEvents(from: Time, size: Int!, timelineEventTypes: [TimelineEventType!]): [TimelineEvent!]! @goField(forceResolver: true)
+    valueProposition:       String
+    website:                String
+    yearFounded:            Int64
+
+    hide:                   Boolean!
     contacts(pagination: Pagination, where: Filter, sort: [SortBy!]): ContactsPage! @goField(forceResolver: true)
     jobRoles: [JobRole!]! @goField(forceResolver: true)
-    notes(pagination: Pagination): NotePage! @goField(forceResolver: true)
-    tags: [Tag!] @goField(forceResolver: true)
-    contracts: [Contract!] @goField(forceResolver: true)
     emails: [Email!]! @goField(forceResolver: true)
     phoneNumbers: [PhoneNumber!]! @goField(forceResolver: true)
-    subsidiaries: [LinkedOrganization!]! @goField(forceResolver: true)
-    subsidiaryOf: [LinkedOrganization!]! @goField(forceResolver: true)
     suggestedMergeTo: [SuggestedMergeOrganization!]! @goField(forceResolver: true)
-    customFields: [CustomField!]! @goField(forceResolver: true)
     fieldSets: [FieldSet!]! @goField(forceResolver: true)
     entityTemplate: EntityTemplate @goField(forceResolver: true)
-    timelineEvents(from: Time, size: Int!, timelineEventTypes: [TimelineEventType!]): [TimelineEvent!]! @goField(forceResolver: true)
     timelineEventsTotalCount(timelineEventTypes: [TimelineEventType!]): Int64! @goField(forceResolver: true)
-    owner: User @goField(forceResolver: true)
     externalLinks: [ExternalSystem!]! @goField(forceResolver: true)
+    issueSummaryByStatus: [IssueSummaryByStatus!]! @goField(forceResolver: true)
 
+    socials: [Social!]! @goField(forceResolver: true) @deprecated(reason: "Use socialMedia")
+    isPublic:    Boolean @deprecated(reason: "Use public")
+    note:        String @deprecated(reason: "Use notes")
+    logoUrl:                String @deprecated(reason: "Use logo")
+    id: ID! @deprecated(reason: "Use metadata.id")
+    createdAt:   Time! @deprecated(reason: "Use metadata.created")
+    updatedAt:   Time! @deprecated(reason: "Use metadata.lastUpdated")
+    source: DataSource! @deprecated(reason: "Use metadata.source")
+    sourceOfTruth: DataSource! @deprecated(reason: "Use metadata.sourceOfTruth")
+    appSource: String! @deprecated(reason: "Use metadata.appSource")
+    referenceId: String @deprecated(reason: "Use customId")
+    lastTouchPointAt: Time @deprecated(reason: "Use lastTouchpoint")
+    lastTouchPointType: LastTouchpointType @deprecated(reason: "Use lastTouchpoint")
+    lastTouchPointTimelineEventId: ID #we need this in order to use the dataloader for the lastTouchPointTimelineEvent if asked @deprecated(reason: "Use lastTouchpoint")
+    lastTouchPointTimelineEvent: TimelineEvent @goField(forceResolver: true) @deprecated(reason: "Use lastTouchpoint")
+    subsidiaryOf: [LinkedOrganization!]! @goField(forceResolver: true) @deprecated(reason: "Use parentCompany")
+}
+
+type LastTouchpoint {
     lastTouchPointAt: Time
     lastTouchPointType: LastTouchpointType
     lastTouchPointTimelineEventId: ID #we need this in order to use the dataloader for the lastTouchPointTimelineEvent if asked
     lastTouchPointTimelineEvent: TimelineEvent @goField(forceResolver: true)
-
-    issueSummaryByStatus: [IssueSummaryByStatus!]! @goField(forceResolver: true)
-
-    accountDetails: OrgAccountDetails
 }
 
 type OrgAccountDetails {
@@ -117,45 +133,50 @@ input OrganizationInput {
     The name of the organization.
     **Required.**
     """
-    referenceId:   String
+    customId:      String
     name:          String
     description:   String
-    note:          String
+    notes:         String
     domains:       [String!]
     website:       String
     industry:      String
     subIndustry:   String
     industryGroup: String
-    isPublic:      Boolean
+    public:        Boolean
     isCustomer:    Boolean
     customFields:  [CustomFieldInput!]
-    fieldSets:     [FieldSetInput!] @deprecated
-    templateId:    ID @deprecated
     market:        Market
-    logoUrl:            String
+    logo:               String
     employeeGrowthRate: String
     headquarters:       String
     yearFounded:        Int64
     employees:     Int64
+    slackChannelId:     String
     appSource:     String
+
+    fieldSets:     [FieldSetInput!] @deprecated
+    templateId:    ID @deprecated
+    isPublic:      Boolean @deprecated(reason: "Use public")
+    referenceId:   String @deprecated(reason: "Use customId")
+    note:          String @deprecated(reason: "Use notes")
+    logoUrl:       String @deprecated(reason: "Use logo")
 }
 
 input OrganizationUpdateInput {
-    id: ID!
-    referenceId: String
+    id:                 ID!
+    customId:           String
     """
     Set to true when partial update is needed. Empty or missing fields will not be ignored.
     """
-    patch:              Boolean
+    patch:              Boolean @deprecated(reason: "all updates are patched now")
     name:               String
     description:        String
-    note:               String
-    domains:            [String!] @deprecated(reason: "to be implemented in separate mutation, add and remove by domain")
+    notes:              String
     website:            String
     industry:           String
     subIndustry:        String
     industryGroup:      String
-    isPublic:           Boolean
+    public:             Boolean
     isCustomer:         Boolean
     market:             Market
     employees:          Int64
@@ -163,10 +184,17 @@ input OrganizationUpdateInput {
     valueProposition:   String
     lastFundingRound:   FundingRound
     lastFundingAmount:  String
-    logoUrl:            String
+    logo:               String
     employeeGrowthRate: String
     headquarters:       String
     yearFounded:        Int64
+    slackChannelId:     String
+
+    isPublic:           Boolean @deprecated(reason: "Use public")
+    logoUrl:            String @deprecated(reason: "Use logo")
+    domains:            [String!] @deprecated(reason: "to be implemented in separate mutation, add and remove by domain")
+    note:               String @deprecated(reason: "Use notes")
+    referenceId: String @deprecated(reason: "Use customId")
 }
 
 input LinkOrganizationsInput {

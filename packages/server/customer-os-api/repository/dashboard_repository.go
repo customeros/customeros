@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
@@ -36,10 +37,13 @@ const (
 	SearchSortParamOwner              = "OWNER"
 	SearchSortParamLastTouchpointAt   = "LAST_TOUCHPOINT_AT"
 	SearchSortParamLastTouchpointType = "LAST_TOUCHPOINT_TYPE"
+	SearchSortParamRenewalCycle       = "RENEWAL_CYCLE"
+	SearchParamExternalId             = "EXTERNAL_ID"
 )
 
 type DashboardRepository interface {
 	GetDashboardViewOrganizationData(ctx context.Context, tenant string, skip, limit int, where *model.Filter, sort *model.SortBy) (*utils.DbNodesWithTotalCount, error)
+	GetDashboardViewRenewalData(ctx context.Context, tenant string, skip, limit int, where *model.Filter, sort *model.SortBy) (*utils.RecordsWithTotalCount, error)
 	GetDashboardNewCustomersData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error)
 	GetDashboardCustomerMapData(ctx context.Context, tenant string) ([]map[string]interface{}, error)
 	GetDashboardRevenueAtRiskData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error)
@@ -52,6 +56,7 @@ type DashboardRepository interface {
 	GetDashboardRetentionRateContractsChurnedData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error)
 	GetDashboardAverageTimeToOnboardPerMonth(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error)
 	GetDashboardOnboardingCompletionPerMonth(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error)
+	GetDashboardGRRData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error)
 }
 
 type dashboardRepository struct {
@@ -115,6 +120,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 
 	ownerId := []string{}
 	ownerIncludeEmpty := true
+	externalId := ""
 
 	//ORGANIZATION, EMAIL, COUNTRY, REGION, LOCALITY
 	//region organization filters
@@ -162,6 +168,8 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 			} else if filter.Filter.Property == SearchSortParamOwnerId {
 				ownerId = *filter.Filter.Value.ArrayStr
 				ownerIncludeEmpty = *filter.Filter.IncludeEmpty
+			} else if filter.Filter.Property == SearchParamExternalId {
+				externalId = *filter.Filter.Value.Str
 			} else if filter.Filter.Property == SearchSortParamIsCustomer && filter.Filter.Value.ArrayBool != nil && len(*filter.Filter.Value.ArrayBool) >= 1 {
 				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("isCustomer", *filter.Filter.Value.ArrayBool, utils.IN, false))
 			} else if filter.Filter.Property == SearchSortParamRenewalLikelihood && filter.Filter.Value.ArrayStr != nil && len(*filter.Filter.Value.ArrayStr) >= 1 {
@@ -207,10 +215,11 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		params := map[string]any{
-			"tenant":  tenant,
-			"ownerId": ownerId,
-			"skip":    skip,
-			"limit":   limit,
+			"tenant":     tenant,
+			"ownerId":    ownerId,
+			"externalId": externalId,
+			"skip":       skip,
+			"limit":      limit,
 		}
 
 		utils.MergeMapToMap(organizationFilterParams, params)
@@ -227,6 +236,9 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		}
 		if locationFilterCypher != "" {
 			countQuery += ` MATCH (o)-[:ASSOCIATED_WITH]->(l:Location) WITH *`
+		}
+		if externalId != "" {
+			countQuery += ` MATCH (o)-[:IS_LINKED_WITH {externalId:$externalId}]->(ext:ExternalSystem) WITH *`
 		}
 		countQuery += ` WHERE o.hide = false `
 
@@ -272,6 +284,9 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		query := `MATCH (o:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
 		if len(ownerId) > 0 {
 			query += fmt.Sprintf(` OPTIONAL MATCH (o)<-[:OWNS]-(owner:User) WITH *`)
+		}
+		if externalId != "" {
+			query += ` MATCH (o)-[:IS_LINKED_WITH {externalId:$externalId}]->(ext:ExternalSystem) WITH *`
 		}
 		query += fmt.Sprintf(` OPTIONAL MATCH (o)-[:HAS_DOMAIN]->(d:Domain) WITH *`)
 		query += fmt.Sprintf(` OPTIONAL MATCH (o)-[:HAS]->(e:Email_%s) WITH *`, tenant)
@@ -377,7 +392,11 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		cypherSort := utils.CypherSort{}
 		if sort != nil {
 			if sort.By == SearchSortParamName {
-				query += " ORDER BY NAME_FOR_SORTING " + string(sort.Direction)
+				if sort.CaseSensitive != nil && *sort.CaseSensitive {
+					query += " ORDER BY NAME_FOR_SORTING " + string(sort.Direction)
+				} else {
+					query += " ORDER BY toLower(NAME_FOR_SORTING) " + string(sort.Direction)
+				}
 			} else if sort.By == SearchSortParamOrganization {
 				cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.OrganizationEntity{})).WithCoalesce().WithAlias("parent")
 				cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.OrganizationEntity{})).WithCoalesce()
@@ -407,7 +426,11 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 				cypherSort.NewSortRule("LOCALITY", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.LocationEntity{}))
 				query += string(cypherSort.SortingCypherFragment("l"))
 			} else if sort.By == "OWNER" {
-				query += " ORDER BY OWNER_FIRST_NAME_FOR_SORTING " + string(sort.Direction) + ", OWNER_LAST_NAME_FOR_SORTING " + string(sort.Direction)
+				if sort.CaseSensitive != nil && *sort.CaseSensitive {
+					query += " ORDER BY OWNER_FIRST_NAME_FOR_SORTING " + string(sort.Direction) + ", OWNER_LAST_NAME_FOR_SORTING " + string(sort.Direction)
+				} else {
+					query += " ORDER BY toLower(OWNER_FIRST_NAME_FOR_SORTING) " + string(sort.Direction) + ", toLower(OWNER_LAST_NAME_FOR_SORTING) " + string(sort.Direction)
+				}
 			} else if sort.By == SearchSortParamLastTouchpointAt {
 				cypherSort.NewSortRule("LAST_TOUCHPOINT_AT", sort.Direction.String(), false, reflect.TypeOf(entity.OrganizationEntity{}))
 				query += string(cypherSort.SortingCypherFragment("o"))
@@ -441,6 +464,376 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		dbNodesWithTotalCount.Nodes = append(dbNodesWithTotalCount.Nodes, utils.NodePtr(v.Values[0].(neo4j.Node)))
 	}
 	return dbNodesWithTotalCount, nil
+}
+
+func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, tenant string, skip, limit int, where *model.Filter, sort *model.SortBy) (*utils.RecordsWithTotalCount, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardViewRenewalData")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.Int("skip", skip), log.Int("limit", limit))
+	tracing.LogObjectAsJson(span, "where", where)
+	tracing.LogObjectAsJson(span, "sort", sort)
+
+	dbRecordsWithTotalCount := new(utils.RecordsWithTotalCount)
+
+	organizationFilterCypher, organizationFilterParams := "", make(map[string]interface{})
+	contractFilterCypher, contractFilterParams := "", make(map[string]interface{})
+	opportunityFilterCypher, opportunityFilterParams := "", make(map[string]interface{})
+	emailFilterCypher, emailFilterParams := "", make(map[string]interface{})
+	locationFilterCypher, locationFilterParams := "", make(map[string]interface{})
+
+	ownerId := []string{}
+	ownerIncludeEmpty := true
+
+	//ORGANIZATION, EMAIL, COUNTRY, REGION, LOCALITY
+	//region organization & contract filters
+	if where != nil {
+		organizationFilter := new(utils.CypherFilter)
+		organizationFilter.Negate = false
+		organizationFilter.LogicalOperator = utils.AND
+		organizationFilter.Filters = make([]*utils.CypherFilter, 0)
+
+		emailFilter := new(utils.CypherFilter)
+		emailFilter.Negate = false
+		emailFilter.LogicalOperator = utils.OR
+		emailFilter.Filters = make([]*utils.CypherFilter, 0)
+
+		locationFilter := new(utils.CypherFilter)
+		locationFilter.Negate = false
+		locationFilter.LogicalOperator = utils.OR
+		locationFilter.Filters = make([]*utils.CypherFilter, 0)
+
+		contractFilter := new(utils.CypherFilter)
+		contractFilter.Negate = false
+		contractFilter.LogicalOperator = utils.AND
+		contractFilter.Filters = make([]*utils.CypherFilter, 0)
+
+		opportunityFilter := new(utils.CypherFilter)
+		opportunityFilter.Negate = false
+		opportunityFilter.LogicalOperator = utils.AND
+		opportunityFilter.Filters = make([]*utils.CypherFilter, 0)
+
+		for _, filter := range where.And {
+			if filter.Filter.Property == SearchSortParamOrganization {
+				orFilter := utils.CypherFilter{}
+				orFilter.LogicalOperator = utils.OR
+				orFilter.Details = new(utils.CypherFilterItem)
+
+				orFilter.Filters = append(orFilter.Filters, createStringCypherFilter("name", *filter.Filter.Value.Str, utils.CONTAINS))
+				orFilter.Filters = append(orFilter.Filters, createStringCypherFilter("website", *filter.Filter.Value.Str, utils.CONTAINS))
+				orFilter.Filters = append(orFilter.Filters, createStringCypherFilter("customerOsId", *filter.Filter.Value.Str, utils.CONTAINS))
+				orFilter.Filters = append(orFilter.Filters, createStringCypherFilter("referenceId", *filter.Filter.Value.Str, utils.CONTAINS))
+
+				organizationFilter.Filters = append(organizationFilter.Filters, &orFilter)
+			} else if filter.Filter.Property == SearchSortParamName {
+				organizationFilter.Filters = append(organizationFilter.Filters, createStringCypherFilterWithValueOrEmpty(filter.Filter, "name"))
+			} else if filter.Filter.Property == SearchSortParamWebsite {
+				organizationFilter.Filters = append(organizationFilter.Filters, createStringCypherFilterWithValueOrEmpty(filter.Filter, "website"))
+			} else if filter.Filter.Property == SearchSortParamEmail {
+				emailFilter.Filters = append(emailFilter.Filters, createStringCypherFilter("email", *filter.Filter.Value.Str, utils.CONTAINS))
+				emailFilter.Filters = append(emailFilter.Filters, createStringCypherFilter("rawEmail", *filter.Filter.Value.Str, utils.CONTAINS))
+			} else if filter.Filter.Property == SearchSortParamCountry {
+				locationFilter.Filters = append(locationFilter.Filters, createStringCypherFilter("country", *filter.Filter.Value.Str, utils.EQUALS))
+			} else if filter.Filter.Property == SearchSortParamRegion {
+				locationFilter.Filters = append(locationFilter.Filters, createStringCypherFilter("region", *filter.Filter.Value.Str, utils.EQUALS))
+			} else if filter.Filter.Property == SearchSortParamLocality {
+				locationFilter.Filters = append(locationFilter.Filters, createStringCypherFilter("locality", *filter.Filter.Value.Str, utils.EQUALS))
+			} else if filter.Filter.Property == SearchSortParamOwnerId {
+				ownerId = *filter.Filter.Value.ArrayStr
+				ownerIncludeEmpty = *filter.Filter.IncludeEmpty
+			} else if filter.Filter.Property == SearchSortParamIsCustomer && filter.Filter.Value.ArrayBool != nil && len(*filter.Filter.Value.ArrayBool) >= 1 {
+				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("isCustomer", *filter.Filter.Value.ArrayBool, utils.IN, false))
+			} else if filter.Filter.Property == SearchSortParamRenewalLikelihood && filter.Filter.Value.ArrayStr != nil && len(*filter.Filter.Value.ArrayStr) >= 1 {
+				renewalLikelihoodValues := make([]string, 0)
+				for _, v := range *filter.Filter.Value.ArrayStr {
+					renewalLikelihoodValues = append(renewalLikelihoodValues, mapper.MapOpportunityRenewalLikelihoodFromString(&v))
+				}
+				opportunityFilter.Filters = append(opportunityFilter.Filters, createCypherFilter("renewalLikelihood", renewalLikelihoodValues, utils.IN, false))
+			} else if filter.Filter.Property == SearchSortParamOnboardingStatus && filter.Filter.Value.ArrayStr != nil && len(*filter.Filter.Value.ArrayStr) >= 1 {
+				onboardingStatusValues := make([]string, 0)
+				for _, v := range *filter.Filter.Value.ArrayStr {
+					onboardingStatusValues = append(onboardingStatusValues, mapper.MapOnboardingStatusFromString(&v))
+				}
+				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("onboardingStatus", onboardingStatusValues, utils.IN, false))
+			} else if filter.Filter.Property == SearchSortParamRenewalCycleNext && filter.Filter.Value.Time != nil {
+				opportunityFilter.Filters = append(opportunityFilter.Filters, createCypherFilter("renewedAt", *filter.Filter.Value.Time, utils.LTE, false))
+			} else if filter.Filter.Property == SearchSortParamRenewalDate && filter.Filter.Value.Time != nil {
+				opportunityFilter.Filters = append(opportunityFilter.Filters, createCypherFilter("renewedAt", *filter.Filter.Value.Time, utils.LTE, false))
+			} else if filter.Filter.Property == SearchSortParamForecastArr && filter.Filter.Value.ArrayInt != nil && len(*filter.Filter.Value.ArrayInt) == 2 {
+				opportunityFilter.Filters = append(opportunityFilter.Filters, createCypherFilter("maxAmount", (*filter.Filter.Value.ArrayInt)[0], utils.GTE, false))
+				opportunityFilter.Filters = append(opportunityFilter.Filters, createCypherFilter("maxAmount", (*filter.Filter.Value.ArrayInt)[1], utils.LTE, false))
+			} else if filter.Filter.Property == SearchSortParamLastTouchpointAt && filter.Filter.Value.Time != nil {
+				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("lastTouchpointAt", *filter.Filter.Value.Time, utils.GTE, false))
+			} else if filter.Filter.Property == SearchSortParamLastTouchpointType && filter.Filter.Value.ArrayStr != nil {
+				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("lastTouchpointType", *filter.Filter.Value.ArrayStr, utils.IN, false))
+			} else if filter.Filter.Property == SearchSortParamRenewalCycle {
+				contractFilter.Filters = append(contractFilter.Filters, createStringCypherFilter("renewalCycle", *filter.Filter.Value.Str, utils.EQUALS))
+			}
+		}
+
+		if len(organizationFilter.Filters) > 0 {
+			organizationFilterCypher, organizationFilterParams = organizationFilter.BuildCypherFilterFragmentWithParamName("o", "o_param_")
+		}
+		if len(emailFilter.Filters) > 0 {
+			emailFilterCypher, emailFilterParams = emailFilter.BuildCypherFilterFragmentWithParamName("e", "e_param_")
+		}
+		if len(locationFilter.Filters) > 0 {
+			locationFilterCypher, locationFilterParams = locationFilter.BuildCypherFilterFragmentWithParamName("l", "l_param_")
+		}
+		if len(contractFilter.Filters) > 0 {
+			contractFilterCypher, contractFilterParams = contractFilter.BuildCypherFilterFragmentWithParamName("contract", "contract_param_")
+		}
+		if len(opportunityFilter.Filters) > 0 {
+			opportunityFilterCypher, opportunityFilterParams = opportunityFilter.BuildCypherFilterFragmentWithParamName("op", "opportunity_param_")
+		}
+	}
+
+	//endregion
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		params := map[string]any{
+			"tenant":  tenant,
+			"ownerId": ownerId,
+			"skip":    skip,
+			"limit":   limit,
+		}
+
+		utils.MergeMapToMap(organizationFilterParams, params)
+		utils.MergeMapToMap(emailFilterParams, params)
+		utils.MergeMapToMap(locationFilterParams, params)
+		utils.MergeMapToMap(contractFilterParams, params)
+		utils.MergeMapToMap(opportunityFilterParams, params)
+
+		//region count query
+		countQuery := `MATCH (t:Tenant {name: $tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)
+					 MATCH (o)-[:HAS_CONTRACT]->(contract:Contract)-[:CONTRACT_BELONGS_TO_TENANT]->(t)
+					 MATCH (contract)-[:ACTIVE_RENEWAL]->(op:Opportunity) `
+		if len(ownerId) > 0 {
+			countQuery += ` OPTIONAL MATCH (op)<-[:OWNS]-(owner:User) WITH *`
+		}
+		if emailFilterCypher != "" {
+			countQuery += ` MATCH (o)-[:HAS]->(e:Email) WITH *`
+		}
+		if locationFilterCypher != "" {
+			countQuery += ` MATCH (o)-[:ASSOCIATED_WITH]->(l:Location) WITH *`
+		}
+		if contractFilterCypher != "" {
+			countQuery += ` MATCH (o)-[:HAS_CONTRACT]->(contract:Contract) WITH *`
+		}
+		if opportunityFilterCypher != "" {
+			countQuery += ` MATCH (contract)-[:ACTIVE_RENEWAL]->(op:Opportunity) WITH *`
+		}
+		countQuery += ` WHERE o.hide = false `
+
+		if organizationFilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" || contractFilterCypher != "" || opportunityFilterCypher != "" || len(ownerId) > 0 {
+			countQuery += " AND "
+		}
+
+		countQueryParts := []string{}
+		if organizationFilterCypher != "" {
+			countQueryParts = append(countQueryParts, organizationFilterCypher)
+		}
+		if len(ownerId) > 0 {
+			if ownerIncludeEmpty {
+				countQueryParts = append(countQueryParts, fmt.Sprintf(` (owner.id IN $ownerId OR owner.id IS NULL) `))
+			} else {
+				countQueryParts = append(countQueryParts, fmt.Sprintf(` owner.id IN $ownerId `))
+			}
+		}
+		if emailFilterCypher != "" {
+			countQueryParts = append(countQueryParts, emailFilterCypher)
+		}
+		if locationFilterCypher != "" {
+			countQueryParts = append(countQueryParts, locationFilterCypher)
+		}
+		if contractFilterCypher != "" {
+			countQueryParts = append(countQueryParts, contractFilterCypher)
+		}
+		if opportunityFilterCypher != "" {
+			countQueryParts = append(countQueryParts, opportunityFilterCypher)
+		}
+
+		countQuery = countQuery + strings.Join(countQueryParts, " AND ") + fmt.Sprintf(` RETURN count(distinct(contract))`)
+
+		span.LogFields(log.String("countQuery", countQuery))
+
+		countQueryResult, err := tx.Run(ctx, countQuery, params)
+		if err != nil {
+			return nil, err
+		}
+
+		countRecord, err := countQueryResult.Single(ctx)
+		if err != nil {
+			return nil, err
+		}
+		dbRecordsWithTotalCount.Count = countRecord.Values[0].(int64)
+		//endregion
+
+		//region query to fetch data
+		query := `MATCH (t:Tenant {name: $tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)
+					 MATCH (o)-[:HAS_CONTRACT]->(contract:Contract)-[:CONTRACT_BELONGS_TO_TENANT]->(t)
+					 MATCH (contract)-[:ACTIVE_RENEWAL]->(op:Opportunity)
+					 `
+
+		query += fmt.Sprintf(` OPTIONAL MATCH (op)<-[:OWNS]-(owner:User) WITH *`)
+
+		query += ` WHERE (o.hide = false) `
+
+		if organizationFilterCypher != "" || contractFilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" || len(ownerId) > 0 {
+			query += " AND "
+		}
+
+		queryParts := []string{}
+		if organizationFilterCypher != "" {
+			queryParts = append(queryParts, organizationFilterCypher)
+		}
+		if len(ownerId) > 0 {
+			if ownerIncludeEmpty {
+				queryParts = append(queryParts, fmt.Sprintf(` (owner.id IN $ownerId OR owner.id IS NULL) `))
+			} else {
+				queryParts = append(queryParts, fmt.Sprintf(` owner.id IN $ownerId `))
+			}
+		}
+		if emailFilterCypher != "" {
+			queryParts = append(queryParts, emailFilterCypher)
+		}
+		if locationFilterCypher != "" {
+			queryParts = append(queryParts, locationFilterCypher)
+		}
+		if contractFilterCypher != "" {
+			queryParts = append(queryParts, contractFilterCypher)
+		}
+
+		//endregion
+		query = query + strings.Join(queryParts, " AND ")
+
+		// sort region
+		aliases := " o, contract, op, owner"
+		query += " WITH o, contract, op, owner "
+		if sort != nil && sort.By == SearchSortParamOwner {
+			if sort.Direction == model.SortingDirectionAsc {
+				query += ", CASE WHEN owner.firstName <> \"\" and not owner.firstName is null THEN owner.firstName ELSE 'ZZZZZZZZZZZZZZZZZZZ' END as OWNER_FIRST_NAME_FOR_SORTING "
+				query += ", CASE WHEN owner.lastName <> \"\" and not owner.lastName is null THEN owner.lastName ELSE 'ZZZZZZZZZZZZZZZZZZZ' END as OWNER_LAST_NAME_FOR_SORTING "
+			} else {
+				query += ", CASE WHEN owner.firstName <> \"\" and not owner.firstName is null THEN owner.firstName ELSE 'AAAAAAAAAAAAAAAAAAA' END as OWNER_FIRST_NAME_FOR_SORTING "
+				query += ", CASE WHEN owner.lastName <> \"\" and not owner.lastName is null THEN owner.lastName ELSE 'AAAAAAAAAAAAAAAAAAA' END as OWNER_LAST_NAME_FOR_SORTING "
+			}
+			aliases += ", OWNER_FIRST_NAME_FOR_SORTING, OWNER_LAST_NAME_FOR_SORTING "
+		}
+		if sort != nil && sort.By == SearchSortParamName {
+			if sort.Direction == model.SortingDirectionAsc {
+				query += ", CASE WHEN o.name <> \"\" and not o.name is null THEN o.name ELSE 'ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ' END as NAME_FOR_SORTING "
+			} else {
+				query += ", o.name as NAME_FOR_SORTING "
+			}
+			aliases += ", NAME_FOR_SORTING "
+		}
+		if sort != nil && sort.By == SearchSortParamRenewalLikelihood {
+			if sort.Direction == model.SortingDirectionAsc {
+				query += ", CASE WHEN op.renewalLikelihood IS NOT NULL THEN op.renewalLikelihood ELSE 9999 END as RENEWAL_LIKELIHOOD_FOR_SORTING "
+			} else {
+				query += ", CASE WHEN op.renewalLikelihood IS NOT NULL THEN op.renewalLikelihood ELSE -1 END as RENEWAL_LIKELIHOOD_FOR_SORTING "
+			}
+			aliases += ", RENEWAL_LIKELIHOOD_FOR_SORTING "
+		}
+		if sort != nil && sort.By == SearchSortParamRenewalCycleNext {
+			if sort.Direction == model.SortingDirectionAsc {
+				query += ", CASE WHEN op.renewedAt IS NOT NULL THEN date(op.renewedAt) ELSE date('2100-01-01') END as RENEWAL_CYCLE_NEXT_FOR_SORTING "
+			} else {
+				query += ", CASE WHEN op.renewedAt IS NOT NULL THEN date(op.renewedAt) ELSE date('1900-01-01') END as RENEWAL_CYCLE_NEXT_FOR_SORTING "
+			}
+			aliases += ", RENEWAL_CYCLE_NEXT_FOR_SORTING "
+		}
+		if sort != nil && sort.By == SearchSortParamRenewalDate {
+			if sort.Direction == model.SortingDirectionAsc {
+				query += ", CASE WHEN op.renewedAt IS NOT NULL THEN date(op.renewedAt) ELSE date('2100-01-01') END as RENEWAL_DATE_FOR_SORTING "
+			} else {
+				query += ", CASE WHEN op.renewedAt IS NOT NULL THEN date(op.renewedAt) ELSE date('1900-01-01') END as RENEWAL_DATE_FOR_SORTING "
+			}
+			aliases += ", RENEWAL_DATE_FOR_SORTING "
+		}
+		if sort != nil && sort.By == SearchSortParamOnboardingStatus {
+			if sort.Direction == model.SortingDirectionAsc {
+				query += ", CASE WHEN o.onboardingStatusOrder IS NOT NULL THEN o.onboardingStatusOrder ELSE 9999 END as ONBOARDING_STATUS_FOR_SORTING "
+				query += ", o.onboardingUpdatedAt AS ONBOARDING_UPDATED_AT_FOR_SORTING "
+			} else {
+				query += ", CASE WHEN o.onboardingStatusOrder IS NOT NULL THEN o.onboardingStatusOrder ELSE -1 END as ONBOARDING_STATUS_FOR_SORTING "
+				query += ", o.onboardingUpdatedAt AS ONBOARDING_UPDATED_AT_FOR_SORTING "
+			}
+			aliases += ", ONBOARDING_STATUS_FOR_SORTING, ONBOARDING_UPDATED_AT_FOR_SORTING "
+		}
+		if sort != nil && sort.By == SearchSortParamForecastArr {
+			if sort.Direction == model.SortingDirectionAsc {
+				query += ", CASE WHEN op.maxAmount <> \"\" and op.maxAmount IS NOT NULL THEN op.maxAmount ELSE 9999999999999999 END as FORECAST_ARR_FOR_SORTING "
+			} else {
+				query += ", CASE WHEN op.maxAmount <> \"\" and op.maxAmount IS NOT NULL THEN op.maxAmount ELSE 0 END as FORECAST_ARR_FOR_SORTING "
+			}
+			aliases += ", FORECAST_ARR_FOR_SORTING "
+		}
+		if sort != nil && sort.By == SearchSortParamOrganization {
+			query += " OPTIONAL MATCH (o)-[:SUBSIDIARY_OF]->(parent:Organization) WITH "
+			query += aliases + ", parent "
+		}
+
+		cypherSort := utils.CypherSort{}
+		if sort != nil {
+			if sort.By == SearchSortParamName {
+				query += " ORDER BY NAME_FOR_SORTING " + string(sort.Direction)
+			} else if sort.By == SearchSortParamOrganization {
+				cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.OrganizationEntity{})).WithCoalesce().WithAlias("parent")
+				cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.OrganizationEntity{})).WithCoalesce()
+				cypherSort.NewSortRule("NAME", sort.Direction.String(), true, reflect.TypeOf(entity.OrganizationEntity{})).WithAlias("parent").WithDescending()
+				cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.OrganizationEntity{}))
+				query += string(cypherSort.SortingCypherFragment("o"))
+			} else if sort.By == SearchSortParamForecastArr {
+				query += " ORDER BY FORECAST_ARR_FOR_SORTING " + string(sort.Direction)
+			} else if sort.By == SearchSortParamRenewalLikelihood {
+				query += " ORDER BY RENEWAL_LIKELIHOOD_FOR_SORTING " + string(sort.Direction)
+			} else if sort.By == SearchSortParamOnboardingStatus {
+				query += " ORDER BY ONBOARDING_STATUS_FOR_SORTING " + string(sort.Direction) +
+					", ONBOARDING_UPDATED_AT_FOR_SORTING " + string(sort.Direction)
+			} else if sort.By == SearchSortParamRenewalCycleNext {
+				query += " ORDER BY RENEWAL_CYCLE_NEXT_FOR_SORTING " + string(sort.Direction)
+			} else if sort.By == SearchSortParamRenewalDate {
+				query += " ORDER BY RENEWAL_DATE_FOR_SORTING " + string(sort.Direction)
+			} else if sort.By == SearchSortParamLastTouchpoint {
+				cypherSort.NewSortRule("LAST_TOUCHPOINT_AT", sort.Direction.String(), false, reflect.TypeOf(entity.OrganizationEntity{}))
+				query += string(cypherSort.SortingCypherFragment("o"))
+			} else if sort.By == "OWNER" {
+				query += " ORDER BY OWNER_FIRST_NAME_FOR_SORTING " + string(sort.Direction) + ", OWNER_LAST_NAME_FOR_SORTING " + string(sort.Direction)
+			} else if sort.By == SearchSortParamLastTouchpointAt {
+				cypherSort.NewSortRule("LAST_TOUCHPOINT_AT", sort.Direction.String(), false, reflect.TypeOf(entity.OrganizationEntity{}))
+				query += string(cypherSort.SortingCypherFragment("o"))
+			} else if sort.By == SearchSortParamLastTouchpointType {
+				cypherSort.NewSortRule("LAST_TOUCHPOINT_TYPE", sort.Direction.String(), false, reflect.TypeOf(entity.OrganizationEntity{}))
+				query += string(cypherSort.SortingCypherFragment("o"))
+			}
+		} else {
+			cypherSort.NewSortRule("UPDATED_AT", string(model.SortingDirectionDesc), false, reflect.TypeOf(entity.OrganizationEntity{}))
+			query += string(cypherSort.SortingCypherFragment("o"))
+		}
+		// end sort region
+		query += fmt.Sprintf(` RETURN o, contract, op `)
+		query += fmt.Sprintf(` SKIP $skip LIMIT $limit`)
+
+		span.LogFields(log.Object("query", query))
+		tracing.LogObjectAsJson(span, "params", params)
+
+		queryResult, err := tx.Run(ctx, query, params)
+		if err != nil {
+			return nil, err
+		} else {
+			return queryResult.Collect(ctx)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	dbRecordsWithTotalCount.Records = dbRecords.([]*db.Record)
+	//each record will contain three nodes, organization, contract and opportunity
+	return dbRecordsWithTotalCount, nil
 }
 
 func (r *dashboardRepository) GetDashboardNewCustomersData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error) {
@@ -546,7 +939,7 @@ func (r *dashboardRepository) GetDashboardCustomerMapData(ctx context.Context, t
 					WITH o.id AS oid,
 						COLLECT(DISTINCT CASE
 							WHEN c.status = 'ENDED' THEN 'CHURNED'
-							WHEN c.status = 'LIVE' AND 'ACTIVE_RENEWAL' in relTypes AND op.renewalLikelihood = 'HIGH' THEN 'OK'
+							WHEN c.status IN ['LIVE','DRAFT'] AND 'ACTIVE_RENEWAL' in relTypes AND op.renewalLikelihood = 'HIGH' THEN 'OK'
 							ELSE 'AT_RISK'
 						END) AS statuses,
 						COLLECT(DISTINCT { serviceStartedAt: c.serviceStartedAt }) AS contractsStartedAt
@@ -574,7 +967,7 @@ func (r *dashboardRepository) GetDashboardCustomerMapData(ctx context.Context, t
 					
 					WITH oid, oldestServiceStartedAt, status, CASE WHEN status = 'CHURNED' THEN [contractsDetails[0]]
 						ELSE REDUCE(a = [], c IN contractsDetails | 
-							CASE WHEN c.cStatus = 'LIVE' THEN a + c ELSE a END
+							CASE WHEN c.cStatus IN ['LIVE','DRAFT'] THEN a + c ELSE a END
 						) END AS contracts
 					
 					WITH oid, oldestServiceStartedAt, status, REDUCE(s = [], c IN contracts | 
@@ -1049,7 +1442,7 @@ func (r *dashboardRepository) GetDashboardARRBreakdownRenewalsData(ctx context.C
 					WITH year, month, beginOfMonth, endOfMonth, cssa, crc, crp, pp, LAST(versions) AS lastSliVersion
 					WITH year, month, beginOfMonth, endOfMonth, cssa, crc, crp, pp, lastSliVersion
 					WHERE
-						CASE WHEN crc = 'ANNUALLY' THEN (CASE WHEN crp IS NULL THEN cssa.MONTH = beginOfMonth.MONTH ELSE cssa.MONTH = beginOfMonth.MONTH AND (beginOfMonth.YEAR - cssa.YEAR) %s = 0 END) ELSE 1 = 1 END AND
+						CASE WHEN crc = 'ANNUALLY' THEN (CASE WHEN crp IS NULL THEN cssa.YEAR < beginOfMonth.YEAR AND cssa.MONTH = beginOfMonth.MONTH ELSE cssa.YEAR < beginOfMonth.YEAR AND cssa.MONTH = beginOfMonth.MONTH AND (beginOfMonth.YEAR - cssa.YEAR) %s = 0 END) ELSE 1 = 1 END AND
 						CASE WHEN crc = 'QUARTERLY' THEN
 							(lastSliVersion.billed IN ['MONTHLY', 'QUARTERLY'] AND beginOfMonth.MONTH IN [cssa.MONTH - 9, cssa.MONTH - 6, cssa.MONTH - 3, cssa.MONTH, cssa.MONTH + 3, cssa.MONTH + 6, cssa.MONTH + 9]) OR
 							(lastSliVersion.billed = 'ANNUALLY' AND beginOfMonth.MONTH = cssa.MONTH)
@@ -1531,4 +1924,123 @@ func getCorrectValueType(valueToExtract any) float64 {
 	}
 
 	return v
+}
+
+func (r *dashboardRepository) GetDashboardGRRData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardRetentionRateContractsRenewalsData")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.Object("startDate", startDate), log.Object("endDate", endDate))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(
+			`
+					WITH $startDate AS startDate, $endDate AS endDate
+					WITH startDate.year AS startYear, startDate.month AS startMonth, endDate.year AS endYear, endDate.month AS endMonth
+					WITH RANGE(startYear * 12 + startMonth - 1, endYear * 12 + endMonth - 1) AS monthsRange
+					UNWIND monthsRange AS monthsSinceEpoch
+					WITH datetime({
+						year: monthsSinceEpoch / 12,
+						month: monthsSinceEpoch %s,
+						day: 1
+					}) AS currentDate
+					WITH currentDate,
+											 datetime({
+												 year: currentDate.year,
+												 month: currentDate.month,
+												 day: 1,
+												 hour: 0,
+												 minute: 0,
+												 second: 0,
+												 nanosecond: 0o00000000
+											 }) as beginOfMonth,
+						 currentDate + duration({months: 1}) - duration({nanoseconds: 1}) as endOfMonth,
+						 currentDate + duration({months: 1}) AS startOfNextMonth
+					WITH currentDate.year AS year, currentDate.month AS month, beginOfMonth, endOfMonth, startOfNextMonth
+										OPTIONAL MATCH (t:Tenant {name: $tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract_%s)-[:HAS_SERVICE]->(sli:ServiceLineItem_%s)
+					WITH year, month, beginOfMonth, endOfMonth, startOfNextMonth, c.id as cid, c.endedAt as cEndedAt, sli.parentId as sp, sli
+					ORDER BY sli.startedAt ASC
+					WHERE c.serviceStartedAt IS NOT NULL
+					  AND sli.startedAt < startOfNextMonth
+					  AND (sli.billed = 'MONTHLY' OR sli.billed = 'QUARTERLY' OR sli.billed = 'ANNUALLY')
+					WITH year, month, beginOfMonth, endOfMonth, startOfNextMonth, cid, cEndedAt,
+						 COLLECT({
+							 sliId: sli.id,
+							 sliV1: CASE WHEN sli.id = sli.parentId THEN TRUE ELSE FALSE END,
+							 sliStartedAt: sli.startedAt,
+							 sliEndedAt: sli.endedAt,
+							 amount: CASE 
+											   WHEN sli.billed = 'MONTHLY' THEN sli.price * sli.quantity 
+											   ELSE CASE 
+													  WHEN sli.billed = 'QUARTERLY' THEN  sli.price * sli.quantity / 3 
+													  ELSE CASE 
+															 WHEN sli.billed = 'ANNUALLY' THEN sli.price * sli.quantity / 12 
+															 ELSE 0 
+														   END 
+													END 
+											 END
+						 }) as sliPerContract
+					WITH year, month, beginOfMonth, endOfMonth, cid, cEndedAt, startOfNextMonth,
+						 REDUCE(s = [], sliItem in sliPerContract | [
+											CASE WHEN sliItem.sliV1 = true AND sliItem.sliStartedAt < beginOfMonth - duration({months: 10}) THEN sliItem.amount ELSE 0 END,
+											CASE WHEN sliItem.sliV1 = true AND sliItem.sliStartedAt < beginOfMonth - duration({months: 9}) THEN sliItem.amount ELSE 0 END,
+											CASE WHEN sliItem.sliV1 = true AND sliItem.sliStartedAt < beginOfMonth - duration({months: 8}) THEN sliItem.amount ELSE 0 END,
+											CASE WHEN sliItem.sliV1 = true AND sliItem.sliStartedAt < beginOfMonth - duration({months: 7}) THEN sliItem.amount ELSE 0 END,
+											CASE WHEN sliItem.sliV1 = true AND sliItem.sliStartedAt < beginOfMonth - duration({months: 6}) THEN sliItem.amount ELSE 0 END,
+											CASE WHEN sliItem.sliV1 = true AND sliItem.sliStartedAt < beginOfMonth - duration({months: 5}) THEN sliItem.amount ELSE 0 END,
+											CASE WHEN sliItem.sliV1 = true AND sliItem.sliStartedAt < beginOfMonth - duration({months: 4}) THEN sliItem.amount ELSE 0 END,
+											CASE WHEN sliItem.sliV1 = true AND sliItem.sliStartedAt < beginOfMonth - duration({months: 3}) THEN sliItem.amount ELSE 0 END,
+											CASE WHEN sliItem.sliV1 = true AND sliItem.sliStartedAt < beginOfMonth - duration({months: 2}) THEN sliItem.amount ELSE 0 END,
+											CASE WHEN sliItem.sliV1 = true AND sliItem.sliStartedAt < beginOfMonth - duration({months: 1}) THEN sliItem.amount ELSE 0 END,
+											CASE WHEN sliItem.sliV1 = true AND sliItem.sliStartedAt < beginOfMonth - duration({months: 0}) THEN sliItem.amount ELSE 0 END,
+											CASE WHEN sliItem.sliV1 = true AND sliItem.sliStartedAt < beginOfMonth + duration({months: 1}) - duration({nanoseconds: 1}) THEN sliItem.amount ELSE 0 END
+						 ]) as sliActivePerContract,
+						 REDUCE(s = [], sliItem in sliPerContract | 
+							 CASE WHEN sliItem.sliStartedAt < startOfNextMonth  AND (sliItem.sliEndedAt IS NULL or sliItem.sliEndedAt > endOfMonth) AND (cEndedAt IS NULL OR cEndedAt >= beginOfMonth ) THEN s + sliItem ELSE s END
+						 ) as sliActiveInCurrentMonth
+					WITH year, month, beginOfMonth, endOfMonth, cid, sliActivePerContract, sliActiveInCurrentMonth, 
+					REDUCE(acc = null, i IN RANGE(0, 11) |
+						CASE WHEN sliActivePerContract[i] > 0 AND acc IS NULL THEN sliActivePerContract[i] ELSE acc END
+					) AS baseline, 
+					REDUCE(acc = 0, i IN sliActiveInCurrentMonth | acc + i.amount ) AS currentAmount
+					WITH year, month, cid, baseline, currentAmount
+					with year, month, SUM(baseline) as baselineValue, SUM(currentAmount) as currentValue
+					return year, month, CASE WHEN baselineValue <> 0 THEN (currentValue / baselineValue) * 100 ELSE 0 END AS grossRevenueRetentionRate
+					`, "% 12 + 1", tenant, tenant),
+			map[string]any{
+				"tenant":    tenant,
+				"startDate": startDate,
+				"endDate":   endDate,
+			})
+		if err != nil {
+			return nil, err
+		}
+
+		return queryResult.Collect(ctx)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	var results []map[string]interface{}
+	if dbRecords != nil {
+		for _, v := range dbRecords.([]*neo4j.Record) {
+			year := v.Values[0].(int64)
+			month := v.Values[1].(int64)
+			value := getCorrectValueType(v.Values[2])
+			record := map[string]interface{}{
+				"year":  year,
+				"month": month,
+				"value": value,
+			}
+
+			results = append(results, record)
+		}
+	}
+
+	return results, nil
 }

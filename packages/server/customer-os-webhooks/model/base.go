@@ -21,6 +21,8 @@ type BaseData struct {
 	UpdatedAt            *time.Time `json:"updatedAtTime,omitempty"`
 	SyncId               string     `json:"syncId,omitempty"`
 	AppSource            string     `json:"appSource,omitempty"`
+	Source               string     `json:"source,omitempty"` // used if ExternalSystem is empty
+	UpdateOnly           bool       `json:"updateOnly"`
 }
 
 func (b *BaseData) SetCreatedAt() {
@@ -51,6 +53,10 @@ func (b *BaseData) SetTimes() {
 }
 
 func (b *BaseData) Normalize() {
-	b.ExternalSystem = strings.ToLower(strings.TrimSpace(b.ExternalSystem))
-	b.ExternalId = strings.TrimSpace(b.ExternalId)
+	if b.ExternalSystem != "" {
+		b.ExternalSystem = strings.ToLower(strings.TrimSpace(b.ExternalSystem))
+	}
+	if b.ExternalId != "" {
+		b.ExternalId = strings.TrimSpace(b.ExternalId)
+	}
 }

@@ -19,10 +19,14 @@ type MasterPlanUpdateEvent struct {
 func NewMasterPlanUpdateEvent(aggregate eventstore.Aggregate, name string, retired bool, updatedAt time.Time, fieldsMask []string) (eventstore.Event, error) {
 	eventData := MasterPlanUpdateEvent{
 		Tenant:     aggregate.GetTenant(),
-		Name:       name,
 		UpdatedAt:  updatedAt,
-		Retired:    retired,
 		FieldsMask: fieldsMask,
+	}
+	if eventData.UpdateName() {
+		eventData.Name = name
+	}
+	if eventData.UpdateRetired() {
+		eventData.Retired = retired
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

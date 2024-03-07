@@ -44,7 +44,7 @@ func (c *upsertUserCommandHandler) Handle(ctx context.Context, cmd *command.Upse
 		return err
 	}
 
-	if aggregate.IsAggregateNotFound(userAggregate) {
+	if eventstore.IsAggregateNotFound(userAggregate) {
 		cmd.IsCreateCommand = true
 	}
 	if err = userAggregate.HandleCommand(ctx, cmd); err != nil {

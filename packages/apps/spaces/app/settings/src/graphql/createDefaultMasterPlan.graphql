@@ -1,0 +1,6 @@
+mutation createDefaultMasterPlan($input: MasterPlanInput!) {
+  masterPlan_CreateDefault(input: $input) {
+    id
+    name
+  }
+}

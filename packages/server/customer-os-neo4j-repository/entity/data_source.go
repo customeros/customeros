@@ -15,6 +15,9 @@ const (
 	DataSourceSalesforce     DataSource = "salesforce"
 	DataSourceStripe         DataSource = "stripe"
 	DataSourceMixpanel       DataSource = "mixpanel"
+	DataSourceClose          DataSource = "close"
+	DataSourceOutlook        DataSource = "outlook"
+	DataSourceUnthread       DataSource = "unthread"
 )
 
 var AllDataSource = []DataSource{
@@ -28,6 +31,9 @@ var AllDataSource = []DataSource{
 	DataSourceSalesforce,
 	DataSourceStripe,
 	DataSourceMixpanel,
+	DataSourceClose,
+	DataSourceOutlook,
+	DataSourceUnthread,
 }
 
 func (ds DataSource) String() string {

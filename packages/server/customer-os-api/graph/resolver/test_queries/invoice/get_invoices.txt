@@ -1,0 +1,23 @@
+query GetInvoice($page: Int!, $limit: Int!) {
+  invoices(pagination: {page: $page, limit: $limit}
+              where: {AND:[
+                            {filter: {property:"NUMBER" value:"1" operation:CONTAINS}}
+                            {filter: {property:"DRY_RUN" value:false operation:EQ}}
+                          ]
+                     }
+              sort:[{by: "NUMBER" direction:ASC }]
+  )
+  {
+      totalPages
+      totalElements
+      content {
+        metadata {
+            id
+        }
+        invoiceNumber
+        invoiceLineItems {
+            description
+        }
+      }
+  }
+}

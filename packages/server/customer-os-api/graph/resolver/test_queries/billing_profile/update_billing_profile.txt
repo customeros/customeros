@@ -1,0 +1,8 @@
+mutation UpdateBillingProfile($organizationId :ID!, $billingProfileId: ID!) {
+billingProfile_Update(
+    input: {
+        organizationId: $organizationId
+        billingProfileId: $billingProfileId
+        legalName: "New name"
+    })
+}

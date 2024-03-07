@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// Deprecated
 type OpportunityEntity struct {
 	Id                     string
 	Name                   string
@@ -32,21 +33,5 @@ type OpportunityEntity struct {
 	DataloaderKey string
 }
 
-type OpportunityRenewalEntity struct {
-	Id                     string
-	Name                   string
-	CreatedAt              time.Time
-	UpdatedAt              time.Time
-	Amount                 float64
-	RenewalLikelihood      OpportunityRenewalLikelihood
-	RenewalUpdatedByUserId string
-	RenewalUpdatedByUserAt time.Time
-	Comments               string
-	Source                 neo4jentity.DataSource
-	SourceOfTruth          neo4jentity.DataSource
-	AppSource              string
-
-	DataloaderKey string
-}
-
+// Deprecated
 type OpportunityEntities []OpportunityEntity

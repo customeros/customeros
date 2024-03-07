@@ -36,6 +36,7 @@ const config: CodegenConfig = {
         exposeFetcher: true,
         addInfiniteQuery: true,
         fetcher: 'graphql-request',
+        reactQueryVersion: 5,
       },
       presetConfig: {
         baseTypesPath: 'app/src/types/__generated__/graphql.types.ts',

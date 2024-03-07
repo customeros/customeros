@@ -41,6 +41,18 @@ type CreateTenantResponse struct {
 	Tenant string `json:"tenant_Merge"`
 }
 
+type TenantAddBillingProfileResponse struct {
+	TenantBillingProfileAdd struct {
+		Id string `json:"id"`
+	} `json:"tenant_AddBillingProfile"`
+}
+
+type NextInvoiceDryRunForContractResponse struct {
+	Invoice struct {
+		Id string `json:"id"`
+	} `json:"invoice_NextDryRunForContract"`
+}
+
 type CreateOrganizationResponse struct {
 	OrganizationCreate struct {
 		Id string `json:"id"`
@@ -59,10 +71,29 @@ type CreateContractResponse struct {
 	} `json:"contract_Create"`
 }
 
-type CreateServiceLineItemResponse struct {
-	ServiceLineItemCreate struct {
+type UpdateContractResponse struct {
+	ContractUpdate struct {
 		Id string `json:"id"`
-	} `json:"serviceLineItemCreate"`
+	} `json:"contract_Update"`
+}
+
+type CreateServiceLineItemResponse struct {
+	ContractLineItemCreate struct {
+		Metadata struct {
+			Id string `json:"id"`
+		} `json:"metadata"`
+	} `json:"contractLineItem_Create"`
+}
+
+type CreateMasterPlanResponse struct {
+	MasterPlanCreate struct {
+		Id string `json:"id"`
+	} `json:"masterPlan_Create"`
+}
+type CreateMasterPlanMilestoneResponse struct {
+	MasterPlanMilestoneCreate struct {
+		Id string `json:"id"`
+	} `json:"masterPlanMilestone_Create"`
 }
 
 type CreateMeetingResponse struct {

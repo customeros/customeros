@@ -12,8 +12,8 @@ type MasterPlanMilestoneCreateEvent struct {
 	Tenant        string             `json:"tenant" validate:"required"`
 	MilestoneId   string             `json:"milestoneId" validate:"required"`
 	Name          string             `json:"name"`
-	Order         int64              `json:"order"`
-	DurationHours int64              `json:"durationHours"`
+	Order         int64              `json:"order" validate:"gte=0"`
+	DurationHours int64              `json:"durationHours" validate:"gte=0"`
 	CreatedAt     time.Time          `json:"createdAt"`
 	Items         []string           `json:"items"`
 	SourceFields  commonmodel.Source `json:"sourceFields"`

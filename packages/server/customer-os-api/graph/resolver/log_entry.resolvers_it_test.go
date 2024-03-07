@@ -7,15 +7,17 @@ import (
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
 )
 
 func TestQueryResolver_LogEntry(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	secAgo60 := utils.Now().Add(-60 * time.Second)
 	secAgo30 := utils.Now().Add(-30 * time.Second)
@@ -26,22 +28,26 @@ func TestQueryResolver_LogEntry(t *testing.T) {
 		ContentType: "text/plain",
 	})
 
-	tagId1 := neo4jt.CreateTag(ctx, driver, tenantName, "red")
-	tagId2 := neo4jt.CreateTag(ctx, driver, tenantName, "blue")
+	tagId1 := neo4jtest.CreateTag(ctx, driver, tenantName, neo4jentity.TagEntity{
+		Name: "red",
+	})
+	tagId2 := neo4jtest.CreateTag(ctx, driver, tenantName, neo4jentity.TagEntity{
+		Name: "blue",
+	})
 
 	neo4jt.TagLogEntry(ctx, driver, logEntryId, tagId1, &secAgo30)
 	neo4jt.TagLogEntry(ctx, driver, logEntryId, tagId2, nil)
 
-	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	userId := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
 	neo4jt.LogEntryCreatedByUser(ctx, driver, logEntryId, userId)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
 		"Organization": 1,
 		"LogEntry":     1,
 		"Tag":          2,
 		"User":         1,
 	})
-	assertNeo4jRelationCount(ctx, t, driver, map[string]int{
+	neo4jtest.AssertNeo4jRelationCount(ctx, t, driver, map[string]int{
 		"TAGGED":     2,
 		"LOGGED":     1,
 		"CREATED_BY": 1,

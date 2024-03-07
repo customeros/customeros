@@ -12,6 +12,17 @@ import (
 const customLayout1 = "2006-01-02 15:04:05"
 const customLayout2 = "2006-01-02T15:04:05.000-0700"
 const customLayout3 = "2006-01-02T15:04:05-07:00"
+const customLayout4 = "Mon, 2 Jan 2006 15:04:05 -0700 (MST)"
+const customLayout5 = "Mon, 2 Jan 2006 15:04:05 MST"
+const customLayout6 = "Mon, 2 Jan 2006 15:04:05 -0700"
+const customLayout7 = "Mon, 2 Jan 2006 15:04:05 +0000 (GMT)"
+const customLayout8 = "Mon, 2 Jan 2006 15:04:05 -0700 (MST)"
+const customLayout9 = "2 Jan 2006 15:04:05 -0700"
+
+type YearMonth struct {
+	Year  int
+	Month time.Month
+}
 
 func ZeroTime() time.Time {
 	return time.Time{}
@@ -51,16 +62,14 @@ func UnmarshalDateTime(input string) (*time.Time, error) {
 	}
 
 	// Try custom layouts
-	t, err = time.Parse(customLayout1, input)
-	if err == nil {
-		return &t, nil
-	}
+	customLayouts := []string{customLayout1, customLayout2, customLayout4, customLayout5, customLayout6, customLayout7, customLayout8, customLayout9}
 
-	t, err = time.Parse(customLayout2, input)
-	if err == nil {
-		return &t, nil
+	for _, layout := range customLayouts {
+		t, err = time.Parse(layout, input)
+		if err == nil {
+			return &t, nil
+		}
 	}
-
 	inputForLayout3 := input
 	if !strings.Contains(input, "[UTC]") {
 		index := strings.Index(input, "[")
@@ -75,6 +84,14 @@ func UnmarshalDateTime(input string) (*time.Time, error) {
 	}
 
 	return nil, errors.New(fmt.Sprintf("cannot parse input as date time %s", input))
+}
+
+func TimestampProtoToTime(pbTime *timestamppb.Timestamp) time.Time {
+	if pbTime == nil {
+		return ZeroTime()
+	}
+	t := pbTime.AsTime()
+	return t
 }
 
 func TimestampProtoToTimePtr(pbTime *timestamppb.Timestamp) *time.Time {
@@ -126,4 +143,58 @@ func BackOffIncrementalDelay(attempt int) time.Duration {
 		return maxDelay
 	}
 	return delay
+}
+
+func FirstTimeOfMonth(year, month int) time.Time {
+	return time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
+}
+
+func MiddleTimeOfMonth(year, month int) time.Time {
+	return FirstTimeOfMonth(year, month).AddDate(0, 0, 15)
+}
+
+func LastTimeOfMonth(year, month int) time.Time {
+	return FirstTimeOfMonth(year, month).AddDate(0, 1, 0).Add(-time.Nanosecond)
+}
+
+func LastDayOfMonth(year, month int) time.Time {
+	return FirstTimeOfMonth(year, month).AddDate(0, 1, 0).Add(-time.Hour * 24)
+}
+
+func StartOfDayInUTC(t time.Time) time.Time {
+	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, time.UTC)
+}
+
+func EndOfDayInUTC(t time.Time) time.Time {
+	return time.Date(t.Year(), t.Month(), t.Day(), 23, 59, 59, 999999999, time.UTC)
+}
+
+func AddOneMonthFallbackToLastDayOfMonth(date time.Time) time.Time {
+	// Calculate the next month
+	nextMonth := date.AddDate(0, 1, 0)
+
+	for i := 0; i < 4; i++ {
+		if date.Day()-nextMonth.Day() > 27 {
+			// Decrease the day by 1
+			nextMonth = nextMonth.AddDate(0, 0, -1)
+		}
+	}
+
+	// Keep the same day
+	return nextMonth
+}
+
+func GenerateYearMonths(start, end time.Time) []YearMonth {
+	yearMonths := []YearMonth{}
+
+	// Set the day to the 15th of the month for the start date
+	start = time.Date(start.Year(), start.Month(), 15, 0, 0, 0, 0, start.Location())
+	end = time.Date(end.Year(), end.Month(), 16, 0, 0, 0, 0, end.Location())
+	current := start
+	for current.Before(end) || current.Equal(end) {
+		yearMonths = append(yearMonths, YearMonth{Year: current.Year(), Month: current.Month()})
+		current = current.AddDate(0, 1, 0)
+	}
+
+	return yearMonths
 }

@@ -44,7 +44,7 @@ func (h *upsertPhoneNumberHandler) Handle(ctx context.Context, cmd *command.Upse
 		return err
 	}
 
-	if aggregate.IsAggregateNotFound(phoneNumberAggregate) {
+	if eventstore.IsAggregateNotFound(phoneNumberAggregate) {
 		cmd.IsCreateCommand = true
 	}
 	if err = phoneNumberAggregate.HandleCommand(ctx, cmd); err != nil {

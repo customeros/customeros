@@ -1,9 +1,10 @@
 package model
 
 import (
+	"time"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
-	"time"
 )
 
 // ServiceLineItem represents the state of a service line item aggregate.
@@ -12,7 +13,7 @@ type ServiceLineItem struct {
 	ContractId string             `json:"contractId"`
 	ParentId   string             `json:"parentId"`
 	Billed     string             `json:"billed"`
-	Quantity   int64              `json:"quantity"` // Relevant only for Subscription type
+	Quantity   int64              `json:"quantity"`
 	Price      float64            `json:"price"`
 	Name       string             `json:"name"`
 	Comments   string             `json:"comments,omitempty"`
@@ -23,17 +24,19 @@ type ServiceLineItem struct {
 	Source     commonmodel.Source `json:"source"`
 	IsDeleted  bool               `json:"isDeleted"`
 	IsCanceled bool               `json:"isCanceled"`
+	VatRate    float64            `json:"vatRate"`
 }
 
 // ServiceLineItemDataFields contains all the fields that may be used to create or update a service line item.
 type ServiceLineItemDataFields struct {
 	Billed     BilledType `json:"billed"`
-	Quantity   int64      `json:"quantity"` // Relevant only for Subscription type
+	Quantity   int64      `json:"quantity"`
 	Price      float64    `json:"price"`
 	Name       string     `json:"name"`
 	ContractId string     `json:"contractId"`
 	ParentId   string     `json:"parentId"`
 	Comments   string     `json:"comments,omitempty"`
+	VatRate    float64    `json:"vatRate"`
 }
 
 func (sli ServiceLineItem) IsEnded() bool {
@@ -44,7 +47,8 @@ func (sli ServiceLineItem) IsEnded() bool {
 type BilledType int32
 
 const (
-	MonthlyBilled BilledType = iota
+	NoneBilled BilledType = iota
+	MonthlyBilled
 	AnnuallyBilled
 	OnceBilled  // For One-Time
 	UsageBilled // For Usage-Based
@@ -52,7 +56,7 @@ const (
 )
 
 func (bt BilledType) String() string {
-	return [...]string{string(MonthlyBilledString), string(AnnuallyBilledString), string(OnceBilledString), string(UsageBilledString), string(QuarterlyBilledString)}[bt]
+	return [...]string{string(NoneBilled), string(MonthlyBilledString), string(AnnuallyBilledString), string(OnceBilledString), string(UsageBilledString), string(QuarterlyBilledString)}[bt]
 }
 
 func (bt BilledType) IsOneTime() bool {
@@ -70,6 +74,7 @@ func (bt BilledType) IsRecurrent() bool {
 type BilledString string
 
 const (
+	NoneBilledString      BilledString = ""
 	MonthlyBilledString   BilledString = "MONTHLY"
 	QuarterlyBilledString BilledString = "QUARTERLY"
 	AnnuallyBilledString  BilledString = "ANNUALLY"

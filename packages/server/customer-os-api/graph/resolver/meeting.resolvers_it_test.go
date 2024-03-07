@@ -7,10 +7,13 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
+	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/stretchr/testify/require"
 	"log"
 	"testing"
@@ -20,8 +23,8 @@ import (
 func TestMutationResolver_Meeting(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 	neo4jt.CreateContactWithId(ctx, driver, tenantName, testContactId, entity.ContactEntity{
 		Prefix:        "MR",
 		FirstName:     "first",
@@ -31,6 +34,15 @@ func TestMutationResolver_Meeting(t *testing.T) {
 	})
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "test organization")
 	neo4jt.CreateCalComExternalSystem(ctx, driver, tenantName)
+
+	organizationServiceCallbacks := events_platform.MockOrganizationServiceCallbacks{
+		RefreshLastTouchpoint: func(context context.Context, org *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+			return &organizationpb.OrganizationIdGrpcResponse{
+				Id: organizationId,
+			}, nil
+		},
+	}
+	events_platform.SetOrganizationCallbacks(&organizationServiceCallbacks)
 
 	// create meeting
 	createRawResponse, err := c.RawPost(getQuery("meeting/create_meeting"),
@@ -182,13 +194,13 @@ func TestMutationResolver_Meeting(t *testing.T) {
 	require.Equal(t, "OPENLINE", meeting.Meeting_Update.SourceOfTruth)
 	require.Equal(t, "CANCELED", meeting.Meeting_Update.Status)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Analysis"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Note"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Note_"+tenantName))
-	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent"))
-	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent_"+tenantName))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Analysis"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Note"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Note_"+tenantName))
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "TimelineEvent"))
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "TimelineEvent_"+tenantName))
 
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Meeting", "Meeting_" + tenantName,
+	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Meeting", "Meeting_" + tenantName,
 		"Note", "Note_" + tenantName, "Analysis", "Analysis_" + tenantName,
 		"Contact", "Contact_" + tenantName, "ExternalSystem", "ExternalSystem_" + tenantName, "TimelineEvent", "TimelineEvent_" + tenantName,
 		"User", "User_" + tenantName, "Organization", "Organization_" + tenantName,
@@ -198,9 +210,9 @@ func TestMutationResolver_Meeting(t *testing.T) {
 func TestMutationResolver_MergeContactsWithMeetings(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	testUserId := "test_user_id"
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 	testContactId1 := "test_contact_id_1"
 	neo4jt.CreateContactWithId(ctx, driver, tenantName, testContactId1, entity.ContactEntity{
 		Prefix:        "MR",
@@ -276,15 +288,13 @@ func TestMutationResolver_AddAttachmentToMeeting(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	meetingId := neo4jt.CreateMeeting(ctx, driver, tenantName, "Meeting", time.Now().UTC())
 
 	attachmentId := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
-		MimeType:  "text/plain",
-		Name:      "readme.txt",
-		Extension: "txt",
-		Size:      123,
+		MimeType: "text/plain",
+		FileName: "readme.txt",
 	})
 
 	rawResponse, err := c.RawPost(getQuery("meeting/add_attachment_to_meeting"),
@@ -292,9 +302,9 @@ func TestMutationResolver_AddAttachmentToMeeting(t *testing.T) {
 		client.Var("attachmentId", attachmentId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Meeting"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Attachment"))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "INCLUDES"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Meeting"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Attachment"))
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "INCLUDES"))
 
 	var meeting struct {
 		Meeting_LinkAttachment model.Meeting
@@ -312,22 +322,18 @@ func TestMutationResolver_RemoveAttachmentFromMeeting(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	meetingId := neo4jt.CreateMeeting(ctx, driver, tenantName, "Meeting", time.Now().UTC())
 
 	attachmentId1 := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
-		MimeType:  "text/plain",
-		Name:      "readme1.txt",
-		Extension: "txt",
-		Size:      1,
+		MimeType: "text/plain",
+		FileName: "readme1.txt",
 	})
 
 	attachmentId2 := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
-		MimeType:  "text/plain",
-		Name:      "readme2.txt",
-		Extension: "txt",
-		Size:      2,
+		MimeType: "text/plain",
+		FileName: "readme2.txt",
 	})
 
 	addAttachment1Response, err := c.RawPost(getQuery("meeting/add_attachment_to_meeting"),
@@ -340,18 +346,18 @@ func TestMutationResolver_RemoveAttachmentFromMeeting(t *testing.T) {
 		client.Var("attachmentId", attachmentId2))
 	assertRawResponseSuccess(t, addAttachment2Response, err)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Meeting"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Attachment"))
-	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "INCLUDES"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Meeting"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Attachment"))
+	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "INCLUDES"))
 
 	removeAttachmentResponse, err := c.RawPost(getQuery("meeting/remove_attachment_from_meeting"),
 		client.Var("meetingId", meetingId),
 		client.Var("attachmentId", attachmentId2))
 	assertRawResponseSuccess(t, removeAttachmentResponse, err)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Meeting"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Attachment"))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "INCLUDES"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Meeting"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Attachment"))
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "INCLUDES"))
 
 	var meeting struct {
 		Meeting_UnlinkAttachment model.Meeting
@@ -369,15 +375,13 @@ func TestMutationResolver_AddRecordingToMeeting(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	meetingId := neo4jt.CreateMeeting(ctx, driver, tenantName, "Meeting", time.Now().UTC())
 
 	attachmentId := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
-		MimeType:  "text/plain",
-		Name:      "readme.txt",
-		Extension: "txt",
-		Size:      123,
+		MimeType: "text/plain",
+		FileName: "readme.txt",
 	})
 
 	rawResponse, err := c.RawPost(getQuery("meeting/add_recording_to_meeting"),
@@ -385,9 +389,9 @@ func TestMutationResolver_AddRecordingToMeeting(t *testing.T) {
 		client.Var("attachmentId", attachmentId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Meeting"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Attachment"))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "INCLUDES {nature: \"Recording\"}"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Meeting"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Attachment"))
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "INCLUDES {nature: \"Recording\"}"))
 
 	var meeting struct {
 		Meeting_LinkRecording model.Meeting
@@ -405,50 +409,46 @@ func TestMutationResolver_RemoveRecordingFromMeeting(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	meetingId := neo4jt.CreateMeeting(ctx, driver, tenantName, "Meeting", time.Now().UTC())
 
 	attachmentId1 := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
-		MimeType:  "text/plain",
-		Name:      "readme1.txt",
-		Extension: "txt",
-		Size:      1,
+		MimeType: "text/plain",
+		FileName: "readme1.txt",
 	})
 
 	attachmentId2 := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
-		MimeType:  "text/plain",
-		Name:      "readme2.txt",
-		Extension: "txt",
-		Size:      2,
+		MimeType: "text/plain",
+		FileName: "readme2.txt",
 	})
 
 	addAttachment1Response, err := c.RawPost(getQuery("meeting/add_recording_to_meeting"),
 		client.Var("meetingId", meetingId),
 		client.Var("attachmentId", attachmentId1))
 	assertRawResponseSuccess(t, addAttachment1Response, err)
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Meeting"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Attachment"))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "INCLUDES {nature: \"Recording\"}"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Meeting"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Attachment"))
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "INCLUDES {nature: \"Recording\"}"))
 
 	addAttachment2Response, err := c.RawPost(getQuery("meeting/add_attachment_to_meeting"),
 		client.Var("meetingId", meetingId),
 		client.Var("attachmentId", attachmentId2))
 	assertRawResponseSuccess(t, addAttachment2Response, err)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Meeting"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Attachment"))
-	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "INCLUDES"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Meeting"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Attachment"))
+	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "INCLUDES"))
 
 	removeAttachmentResponse, err := c.RawPost(getQuery("meeting/remove_recording_from_meeting"),
 		client.Var("meetingId", meetingId),
 		client.Var("attachmentId", attachmentId1))
 	assertRawResponseSuccess(t, removeAttachmentResponse, err)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Meeting"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Attachment"))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "INCLUDES"))
-	require.Equal(t, 0, neo4jt.GetCountOfRelationships(ctx, driver, "INCLUDES {nature: \"Recording\"}"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Meeting"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Attachment"))
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "INCLUDES"))
+	require.Equal(t, 0, neo4jtest.GetCountOfRelationships(ctx, driver, "INCLUDES {nature: \"Recording\"}"))
 
 	var meeting struct {
 		Meeting_UnlinkRecording model.Meeting
@@ -467,7 +467,7 @@ func TestMutationResolver_AddAndRemoveContactAttendeeToMeeting(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	meetingId := neo4jt.CreateMeeting(ctx, driver, tenantName, "Meeting", time.Now().UTC())
 
@@ -497,9 +497,9 @@ func TestMutationResolver_AddAndRemoveContactAttendeeToMeeting(t *testing.T) {
 		}))
 	assertRawResponseSuccess(t, addAttendeeToMeeting2, err)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Meeting"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
-	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "ATTENDED_BY"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Meeting"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "ATTENDED_BY"))
 
 	rawResponseRemove, err := c.RawPost(getQuery("meeting/remove_attendee_from_meeting"),
 		client.Var("meetingId", meetingId),
@@ -508,9 +508,9 @@ func TestMutationResolver_AddAndRemoveContactAttendeeToMeeting(t *testing.T) {
 		}))
 	assertRawResponseSuccess(t, rawResponseRemove, err)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Meeting"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "ATTENDED_BY"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Meeting"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "ATTENDED_BY"))
 
 	var meeting struct {
 		Meeting_UnlinkAttendedBy struct {
@@ -536,12 +536,13 @@ func TestMutationResolver_AddAndRemoveUserAttendeeToMeeting(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	meetingId := neo4jt.CreateMeeting(ctx, driver, tenantName, "Meeting", time.Now().UTC())
 
 	userId1 := uuid.New().String()
-	neo4jt.CreateUserWithId(ctx, driver, tenantName, userId1, entity.UserEntity{
+	neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{
+		Id:        userId1,
 		FirstName: "a",
 		LastName:  "b",
 	})
@@ -553,9 +554,10 @@ func TestMutationResolver_AddAndRemoveUserAttendeeToMeeting(t *testing.T) {
 	assertRawResponseSuccess(t, rawResponse1, err)
 
 	userId2 := uuid.New().String()
-	neo4jt.CreateUserWithId(ctx, driver, tenantName, userId2, entity.UserEntity{
-		FirstName: "c",
-		LastName:  "d",
+	neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{
+		Id:        userId2,
+		FirstName: "a",
+		LastName:  "b",
 	})
 	rawResponse2, err := c.RawPost(getQuery("meeting/add_attendee_to_meeting"),
 		client.Var("meetingId", meetingId),
@@ -564,9 +566,9 @@ func TestMutationResolver_AddAndRemoveUserAttendeeToMeeting(t *testing.T) {
 		}))
 	assertRawResponseSuccess(t, rawResponse2, err)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Meeting"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "User"))
-	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "ATTENDED_BY"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Meeting"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "ATTENDED_BY"))
 
 	rawResponseRemove, err := c.RawPost(getQuery("meeting/remove_attendee_from_meeting"),
 		client.Var("meetingId", meetingId),
@@ -575,9 +577,9 @@ func TestMutationResolver_AddAndRemoveUserAttendeeToMeeting(t *testing.T) {
 		}))
 	assertRawResponseSuccess(t, rawResponseRemove, err)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Meeting"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "User"))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "ATTENDED_BY"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Meeting"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "ATTENDED_BY"))
 
 	var meeting struct {
 		Meeting_UnlinkAttendedBy struct {
@@ -602,11 +604,11 @@ func TestMutationResolver_AddAndRemoveUserAttendeeToMeeting(t *testing.T) {
 func TestQueryResolver_Contact_WithMultipleMeetingsInTimelineEvents(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	secondContactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	userId := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
 
 	neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId, "contact1@openline.ai", true, "WORK")
 	neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, secondContactId, "contact2@openline.ai", true, "WORK")
@@ -626,10 +628,10 @@ func TestQueryResolver_Contact_WithMultipleMeetingsInTimelineEvents(t *testing.T
 	neo4jt.MeetingAttendedBy(ctx, driver, meetingId2, contactId)
 	neo4jt.MeetingAttendedBy(ctx, driver, meetingId2, secondContactId)
 
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Meeting"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "TimelineEvent"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Meeting"))
 
 	rawResponse, err := c.RawPost(getQuery("meeting/get_multiple_meetings_in_timeline"),
 		client.Var("contactId", contactId),
@@ -647,9 +649,9 @@ func TestQueryResolver_Contact_WithMultipleMeetingsInTimelineEvents(t *testing.T
 func TestMutationResolver_GetMeetings(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	testUserId := "test_user_id"
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 	testContactId1 := "test_contact_id_1"
 	neo4jt.CreateCalComExternalSystem(ctx, driver, tenantName)
 	neo4jt.AddEmailTo(ctx, driver, entity.USER, tenantName, testUserId, "test-user-email", true, "MAIN")
@@ -735,9 +737,9 @@ func TestMutationResolver_GetMeetings(t *testing.T) {
 func TestMutationResolver_GetMeetingsWithExternalId(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	testUserId := "test_user_id"
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 	testContactId1 := "test_contact_id_1"
 	neo4jt.CreateCalComExternalSystem(ctx, driver, tenantName)
 	neo4jt.AddEmailTo(ctx, driver, entity.USER, tenantName, testUserId, "test-user-email", true, "MAIN")

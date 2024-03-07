@@ -1,8 +1,10 @@
 package mapper
 
 import (
+	"fmt"
 	entityDashboard "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity/dashboard"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
 func MapDashboardNewCustomersData(newCustomersData *entityDashboard.DashboardNewCustomersData) *model.DashboardNewCustomers {
@@ -31,12 +33,15 @@ func MapDashboardRetentionRateData(retentionRateData *entityDashboard.DashboardR
 	if retentionRateData == nil {
 		return nil
 	}
-	return &model.DashboardRetentionRate{
-		RetentionRate:      retentionRateData.RetentionRate,
-		IncreasePercentage: retentionRateData.IncreasePercentage,
-		PerMonth:           MapDashboardRetentionRatePerMonthData(retentionRateData.Months),
+	retentionRateModel := model.DashboardRetentionRate{
+		RetentionRate:           utils.TruncateFloat64(retentionRateData.RetentionRate, 1),
+		IncreasePercentageValue: utils.TruncateFloat64(retentionRateData.IncreasePercentage, 1),
+		IncreasePercentage:      fmt.Sprintf("%.1f", utils.TruncateFloat64(retentionRateData.IncreasePercentage, 1)),
+		PerMonth:                MapDashboardRetentionRatePerMonthData(retentionRateData.Months),
 	}
+	return &retentionRateModel
 }
+
 func MapDashboardRetentionRatePerMonthData(months []*entityDashboard.DashboardRetentionRatePerMonthData) []*model.DashboardRetentionRatePerMonth {
 	var result []*model.DashboardRetentionRatePerMonth
 	for _, month := range months {
@@ -55,8 +60,8 @@ func MapDashboardRevenueAtRiskData(retentionRateData *entityDashboard.DashboardR
 		return nil
 	}
 	return &model.DashboardRevenueAtRisk{
-		HighConfidence: retentionRateData.HighConfidence,
-		AtRisk:         retentionRateData.AtRisk,
+		HighConfidence: utils.TruncateFloat64(retentionRateData.HighConfidence, 1),
+		AtRisk:         utils.TruncateFloat64(retentionRateData.AtRisk, 1),
 	}
 }
 
@@ -65,11 +70,12 @@ func MapDashboardARRBreakdownData(retentionRateData *entityDashboard.DashboardAR
 		return nil
 	}
 	return &model.DashboardARRBreakdown{
-		ArrBreakdown:       retentionRateData.ArrBreakdown,
+		ArrBreakdown:       utils.TruncateFloat64(retentionRateData.ArrBreakdown, 1),
 		IncreasePercentage: retentionRateData.IncreasePercentage,
 		PerMonth:           MapDashboardARRBreakdownPerMonthData(retentionRateData.Months),
 	}
 }
+
 func MapDashboardARRBreakdownPerMonthData(months []*entityDashboard.DashboardARRBreakdownPerMonthData) []*model.DashboardARRBreakdownPerMonth {
 	var result []*model.DashboardARRBreakdownPerMonth
 	for _, month := range months {
@@ -92,15 +98,17 @@ func MapDashboardGrossRevenueRetentionData(grossRevenueRetentionData *entityDash
 		return nil
 	}
 	return &model.DashboardGrossRevenueRetention{
-		GrossRevenueRetention: grossRevenueRetentionData.GrossRevenueRetention,
-		IncreasePercentage:    grossRevenueRetentionData.IncreasePercentage,
-		PerMonth:              MapDashboardGrossRevenueRetentionPerMonthData(grossRevenueRetentionData.Months),
+		GrossRevenueRetention:   utils.TruncateFloat64(grossRevenueRetentionData.GrossRevenueRetention, 1),
+		IncreasePercentageValue: utils.TruncateFloat64(grossRevenueRetentionData.IncreasePercentage, 1),
+		IncreasePercentage:      fmt.Sprintf("%.1f", utils.TruncateFloat64(grossRevenueRetentionData.IncreasePercentage, 1)),
+		PerMonth:                MapDashboardGrossRevenueRetentionPerMonthData(grossRevenueRetentionData.Months),
 	}
 }
 func MapDashboardGrossRevenueRetentionPerMonthData(months []*entityDashboard.DashboardGrossRevenueRetentionPerMonthData) []*model.DashboardGrossRevenueRetentionPerMonth {
 	var result []*model.DashboardGrossRevenueRetentionPerMonth
 	for _, month := range months {
 		result = append(result, &model.DashboardGrossRevenueRetentionPerMonth{
+			Year:       month.Year,
 			Month:      month.Month,
 			Percentage: month.Percentage,
 		})

@@ -1,60 +1,81 @@
 query getContracts($id: ID!) {
-  organization(id: $id) {
-    id
-    name
-    note
-    accountDetails {
-      renewalSummary {
-        arrForecast
-        maxArrForecast
-        renewalLikelihood
-      }
-    }
-    contracts {
-      id
-      name
-      createdAt
-      serviceStartedAt
-      signedAt
-      endedAt
-      renewalCycle
-      renewalPeriods
-      status
-      contractUrl
-      opportunities {
+    organization(id: $id) {
         id
-        comments
-        internalStage
-        internalType
-        amount
-        maxAmount
         name
-        renewalLikelihood
-        renewalUpdatedByUserId
-        renewalUpdatedByUserAt
-        renewedAt
-        owner {
-          id
-          firstName
-          lastName
-          name
+        note
+        accountDetails {
+            renewalSummary {
+                arrForecast
+                maxArrForecast
+                renewalLikelihood
+            }
         }
-      }
-      serviceLineItems {
-        id
-        createdAt
-        updatedAt
-        name
-        billed
-        price
-        quantity
-        source
-        comments
-        sourceOfTruth
-        appSource
-        endedAt
-        parentId
-      }
+        contracts {
+            id
+            name
+            createdAt
+            serviceStartedAt
+            signedAt
+            endedAt
+            renewalCycle
+            renewalPeriods
+            status
+            contractUrl
+            billingCycle
+            billingEnabled
+            invoicingStartDate
+            currency
+            organizationLegalName
+            addressLine1
+            addressLine2
+            locality
+            country
+            zip
+            invoiceEmail
+            invoiceNote
+            opportunities {
+                id
+                comments
+                internalStage
+                internalType
+                amount
+                maxAmount
+                name
+                renewalLikelihood
+                renewalUpdatedByUserId
+                renewalUpdatedByUserAt
+                renewedAt
+
+                owner {
+                    id
+                    firstName
+                    lastName
+                    name
+                }
+            }
+            contractLineItems {
+                metadata {
+                    id
+                    created
+                    lastUpdated
+                    source
+                    appSource
+                    sourceOfTruth
+                }
+                description
+                billingCycle
+                price
+                quantity
+                comments
+                serviceEnded
+                parentId
+                serviceStarted
+                tax {
+                    salesTax
+                    vat
+                    taxRate
+                }
+            }
+        }
     }
-  }
 }

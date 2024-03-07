@@ -95,7 +95,7 @@ func TestMapSessions(t *testing.T) {
 	if len(sessions) != 2 {
 		t.Errorf("Expecting sessions with 2 elements, received: %d elements", len(sessions))
 	}
-	for i, _ := range []int{1, 2} {
+	for i := range []int{1, 2} {
 		if !reflect.DeepEqual(sessions[i], &expectedSession) {
 			t.Errorf("Expecting: %+v, received: %+v", expectedSession, sessions[i])
 		}

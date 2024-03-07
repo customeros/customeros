@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"log"
 	"time"
@@ -11,16 +12,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
-
-// Deprecated, use neo4jtest.CleanupAllData instead
-func CleanupAllData(ctx context.Context, driver *neo4j.DriverWithContext) {
-	neo4jtest.ExecuteWriteQuery(ctx, driver, `MATCH (n) DETACH DELETE n`, map[string]any{})
-}
 
 func CreateFullTextBasicSearchIndexes(ctx context.Context, driver *neo4j.DriverWithContext, tenant string) {
 	query := fmt.Sprintf("DROP INDEX basicSearchStandard_location_terms IF EXISTS")
@@ -33,31 +28,12 @@ func CreateFullTextBasicSearchIndexes(ctx context.Context, driver *neo4j.DriverW
 	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{})
 }
 
-// Deprecated, use neo4jtest.CreateTenant instead
-func CreateTenant(ctx context.Context, driver *neo4j.DriverWithContext, tenant string) {
-	query := `MERGE (t:Tenant {name:$tenant})`
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"tenant": tenant,
-	})
-}
-
-func CreateWorkspace(ctx context.Context, driver *neo4j.DriverWithContext, workspace string, provider string, tenant string) {
-	query := `MATCH (t:Tenant {name: $tenant})
-			  MERGE (t)-[:HAS_WORKSPACE]->(w:Workspace {name:$workspace, provider:$provider})`
-
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"tenant":    tenant,
-		"provider":  provider,
-		"workspace": workspace,
-	})
-}
-
 func CreateHubspotExternalSystem(ctx context.Context, driver *neo4j.DriverWithContext, tenant string) {
 	query := `MATCH (t:Tenant {name:$tenant})
 			MERGE (e:ExternalSystem {id:$externalSystemId})-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]->(t)`
 	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tenant":           tenant,
-		"externalSystemId": string(entity.Hubspot),
+		"externalSystemId": string(neo4jenum.Hubspot),
 	})
 }
 
@@ -67,7 +43,7 @@ func CreateSlackExternalSystem(ctx context.Context, driver *neo4j.DriverWithCont
 			SET e.externalSource=$externalSource`
 	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tenant":           tenant,
-		"externalSystemId": string(entity.Slack),
+		"externalSystemId": string(neo4jenum.Slack),
 		"externalSource":   "Slack",
 	})
 }
@@ -82,11 +58,11 @@ func CreateCalComExternalSystem(ctx context.Context, driver *neo4j.DriverWithCon
 }
 
 func LinkWithHubspotExternalSystem(ctx context.Context, driver *neo4j.DriverWithContext, entityId, externalId string, externalUrl, externalSource *string, syncDate time.Time) {
-	LinkWithExternalSystem(ctx, driver, entityId, externalId, string(entity.Hubspot), externalUrl, externalSource, syncDate)
+	LinkWithExternalSystem(ctx, driver, entityId, externalId, string(neo4jenum.Hubspot), externalUrl, externalSource, syncDate)
 }
 
 func LinkWithSlackExternalSystem(ctx context.Context, driver *neo4j.DriverWithContext, entityId, externalId string, externalUrl, externalSource *string, syncDate time.Time) {
-	LinkWithExternalSystem(ctx, driver, entityId, externalId, string(entity.Slack), externalUrl, externalSource, syncDate)
+	LinkWithExternalSystem(ctx, driver, entityId, externalId, string(neo4jenum.Slack), externalUrl, externalSource, syncDate)
 }
 
 func LinkWithExternalSystem(ctx context.Context, driver *neo4j.DriverWithContext, entityId, externalId, externalSystemId string, externalUrl, externalSource *string, syncDate time.Time) {
@@ -103,29 +79,6 @@ func LinkWithExternalSystem(ctx context.Context, driver *neo4j.DriverWithContext
 	})
 }
 
-func CreateDefaultUser(ctx context.Context, driver *neo4j.DriverWithContext, tenant string) string {
-	return CreateUser(ctx, driver, tenant, entity.UserEntity{
-		FirstName:     "first",
-		LastName:      "last",
-		Source:        "openline",
-		SourceOfTruth: "openline",
-	})
-}
-
-// Deprecated, create method in neo4jtest package instead
-func CreateDefaultUserWithId(ctx context.Context, driver *neo4j.DriverWithContext, tenant, userId string) string {
-	return CreateUserWithId(ctx, driver, tenant, userId, entity.UserEntity{
-		FirstName:     "first",
-		LastName:      "last",
-		Source:        "openline",
-		SourceOfTruth: "openline",
-	})
-}
-
-func CreateUser(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, user entity.UserEntity) string {
-	return CreateUserWithId(ctx, driver, tenant, "", user)
-}
-
 func CreateAttachment(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, attachment entity.AttachmentEntity) string {
 	if len(attachment.Id) == 0 {
 		attachmentUuid, _ := uuid.NewRandom()
@@ -136,55 +89,25 @@ func CreateAttachment(ctx context.Context, driver *neo4j.DriverWithContext, tena
 		" a.id=$id, " +
 		" a.source=$source, " +
 		" a.createdAt=datetime({timezone: 'UTC'}), " +
-		" a.name=$name, " +
+		" a.fileName=$fileName, " +
 		" a.mimeType=$mimeType, " +
-		" a.extension=$extension, " +
-		" a.size=$size, " +
+		" a.cdnUrl=$cdnUrl, " +
+		" a.basePath=$basePath, " +
 		" a.sourceOfTruth=$sourceOfTruth, " +
 		" a.appSource=$appSource " +
 		" RETURN a"
 	neo4jtest.ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant), map[string]any{
 		"tenant":        tenant,
 		"id":            attachment.Id,
-		"name":          attachment.Name,
+		"fileName":      attachment.FileName,
 		"mimeType":      attachment.MimeType,
-		"size":          attachment.Size,
-		"extension":     attachment.Extension,
+		"cdnUrl":        attachment.CdnUrl,
+		"basePath":      attachment.BasePath,
 		"sourceOfTruth": attachment.SourceOfTruth,
 		"source":        attachment.Source,
 		"appSource":     attachment.AppSource,
 	})
 	return attachment.Id
-}
-
-func CreateUserWithId(ctx context.Context, driver *neo4j.DriverWithContext, tenant, userId string, user entity.UserEntity) string {
-	userId = utils.NewUUIDIfEmpty(userId)
-	query := `MATCH (t:Tenant {name:$tenant})
-			MERGE (u:User {id: $userId})-[:USER_BELONGS_TO_TENANT]->(t)
-			SET u:User_%s, 
-				u.roles=$roles,
-				u.internal=$internal,
-				u.bot=$bot,
-				u.firstName=$firstName,
-				u.lastName=$lastName,
-				u.profilePhotoUrl=$profilePhotoUrl,
-				u.createdAt=$now,
-				u.source=$source,
-				u.sourceOfTruth=$sourceOfTruth`
-	neo4jtest.ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant), map[string]any{
-		"tenant":          tenant,
-		"userId":          userId,
-		"firstName":       user.FirstName,
-		"lastName":        user.LastName,
-		"source":          user.Source,
-		"sourceOfTruth":   user.SourceOfTruth,
-		"roles":           user.Roles,
-		"internal":        user.Internal,
-		"bot":             user.Bot,
-		"profilePhotoUrl": user.ProfilePhotoUrl,
-		"now":             utils.Now(),
-	})
-	return userId
 }
 
 func CreateDefaultPlayer(ctx context.Context, driver *neo4j.DriverWithContext, authId, provider string) string {
@@ -408,6 +331,7 @@ func CreateEmail(ctx context.Context, driver *neo4j.DriverWithContext, tenant st
 	return emailId
 }
 
+// Deprecated
 func AddEmailTo(ctx context.Context, driver *neo4j.DriverWithContext, entityType entity.EntityType, tenant, entityId, email string, primary bool, label string) string {
 	query := ""
 
@@ -584,22 +508,7 @@ func AddSetTemplateToEntity(ctx context.Context, driver *neo4j.DriverWithContext
 	return templateId.String()
 }
 
-func CreateTag(ctx context.Context, driver *neo4j.DriverWithContext, tenant, tagName string) string {
-	var tagId, _ = uuid.NewRandom()
-	query := `MATCH (t:Tenant {name:$tenant})
-			MERGE (t)<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {id:$id})
-			ON CREATE SET tag.name=$name, tag.source=$source, tag.appSource=$appSource, tag.createdAt=$now, tag.updatedAt=$now`
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"id":        tagId.String(),
-		"tenant":    tenant,
-		"name":      tagName,
-		"source":    "openline",
-		"appSource": "test",
-		"now":       utils.Now(),
-	})
-	return tagId.String()
-}
-
+// Deprecated
 func CreateIssue(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, issue entity.IssueEntity) string {
 	var issueId, _ = uuid.NewRandom()
 	query := `MATCH (t:Tenant {name:$tenant})
@@ -632,6 +541,7 @@ func CreateIssue(ctx context.Context, driver *neo4j.DriverWithContext, tenant st
 	return issueId.String()
 }
 
+// Deprecated
 func IssueReportedBy(ctx context.Context, driver *neo4j.DriverWithContext, issueId, entityId string) {
 	query := `MATCH (e:Organization|User|Contact {id:$entityId}), (i:Issue {id:$issueId})
 			MERGE (e)<-[:REPORTED_BY]-(i)`
@@ -650,6 +560,7 @@ func IssueSubmittedBy(ctx context.Context, driver *neo4j.DriverWithContext, issu
 	})
 }
 
+// Deprecated
 func IssueFollowedBy(ctx context.Context, driver *neo4j.DriverWithContext, issueId, entityId string) {
 	query := `MATCH (e:Organization|User|Contact {id:$entityId}), (i:Issue {id:$issueId})
 			MERGE (e)<-[:FOLLOWED_BY]-(i)`
@@ -766,6 +677,7 @@ func LinkSuggestedMerge(ctx context.Context, driver *neo4j.DriverWithContext, pr
 	})
 }
 
+// Deprecated
 func CreateOrg(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, organization entity.OrganizationEntity) string {
 	var organizationId, _ = uuid.NewRandom()
 	now := time.Now().UTC()
@@ -1473,37 +1385,6 @@ func InteractionEventRepliesToInteractionEvent(ctx context.Context, driver *neo4
 	})
 }
 
-func CreateCountry(ctx context.Context, driver *neo4j.DriverWithContext, codeA2, codeA3, name, phoneCode string) {
-	query := `MERGE (c:Country{codeA3: $codeA3}) 
-				ON CREATE SET 
-					c.phoneCode = $phoneCode,
-					c.codeA2 = $codeA2,
-					c.name = $name, 
-					c.createdAt = $now, 
-					c.updatedAt = $now`
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"codeA2":    codeA2,
-		"codeA3":    codeA3,
-		"phoneCode": phoneCode,
-		"name":      name,
-		"now":       utils.Now(),
-	})
-}
-
-func CreateCountryWith(ctx context.Context, driver *neo4j.DriverWithContext, id, countryCodeA3, name string) {
-	var countryId = id
-	if countryId == "" {
-		countryUuid, _ := uuid.NewRandom()
-		countryId = countryUuid.String()
-	}
-	query := "MERGE (c:Country{codeA3: $countryCodeA3}) ON CREATE SET c.id = $countryId, c.name = $name, c.createdAt = datetime({timezone: 'UTC'}), c.updatedAt = datetime({timezone: 'UTC'})"
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"countryId":     countryId,
-		"countryCodeA3": countryCodeA3,
-		"name":          name,
-	})
-}
-
 func CreateState(ctx context.Context, driver *neo4j.DriverWithContext, countryCodeA3, name, code string) {
 	query := "MATCH (c:Country{codeA3: $countryCodeA3}) MERGE (c)<-[:BELONGS_TO_COUNTRY]-(az:State { code: $code }) ON CREATE SET az.id = randomUUID(), az.name = $name, az.createdAt = datetime({timezone: 'UTC'}), az.updatedAt = datetime({timezone: 'UTC'})"
 	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
@@ -1601,105 +1482,7 @@ func CreateActionForOrganizationWithProperties(ctx context.Context, driver *neo4
 	return actionId.String()
 }
 
-func CreateContractForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, orgId string, contract entity.ContractEntity) string {
-	contractId := utils.NewUUIDIfEmpty(contract.Id)
-	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}), (o:Organization {id:$orgId})
-				MERGE (t)<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$id})<-[:HAS_CONTRACT]-(o)
-				SET 
-					c:Contract_%s,
-					c.name=$name,
-					c.contractUrl=$contractUrl,
-					c.source=$source,
-					c.sourceOfTruth=$sourceOfTruth,
-					c.appSource=$appSource,
-					c.status=$status,
-					c.renewalCycle=$renewalCycle,
-					c.renewalPeriods=$renewalPeriods,
-					c.signedAt=$signedAt,
-					c.serviceStartedAt=$serviceStartedAt,
-					c.endedAt=$endedAt,
-					c.createdAt=$createdAt,
-					c.updatedAt=$updatedAt
-				`, tenant)
-
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"id":               contractId,
-		"orgId":            orgId,
-		"tenant":           tenant,
-		"name":             contract.Name,
-		"contractUrl":      contract.ContractUrl,
-		"source":           contract.Source,
-		"sourceOfTruth":    contract.SourceOfTruth,
-		"appSource":        contract.AppSource,
-		"status":           contract.ContractStatus,
-		"renewalCycle":     contract.RenewalCycle,
-		"renewalPeriods":   contract.RenewalPeriods,
-		"signedAt":         utils.TimePtrFirstNonNilNillableAsAny(contract.SignedAt),
-		"serviceStartedAt": utils.TimePtrFirstNonNilNillableAsAny(contract.ServiceStartedAt),
-		"endedAt":          utils.TimePtrFirstNonNilNillableAsAny(contract.EndedAt),
-		"createdAt":        contract.CreatedAt,
-		"updatedAt":        contract.UpdatedAt,
-	})
-	return contractId
-}
-
-func CreateServiceLineItemForContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId string, serviceLineItem entity.ServiceLineItemEntity) string {
-	serviceLineItemId := utils.NewUUIDIfEmpty(serviceLineItem.ID)
-	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}), (c:Contract {id:$contractId})
-				MERGE (t)<-[:CONTRACT_BELONGS_TO_TENANT]-(sli:ServiceLineItem {id:$id})<-[:HAS_SERVICE]-(c)
-				SET 
-					sli:ServiceLineItem_%s,
-					sli.name=$name,
-					sli.source=$source,
-					sli.sourceOfTruth=$sourceOfTruth,
-					sli.appSource=$appSource,
-					sli.isCanceled=$isCanceled,	
-					sli.billed=$billed,	
-					sli.quantity=$quantity,	
-					sli.price=$price,
-					sli.previousBilled=$previousBilled,	
-					sli.previousQuantity=$previousQuantity,	
-					sli.previousPrice=$previousPrice,
-                    sli.comments=$comments,
-					sli.startedAt=$startedAt,
-					sli.endedAt=$endedAt,
-					sli.createdAt=$createdAt,
-					sli.updatedAt=$updatedAt,
-	                sli.parentId=$parentId
-				`, tenant)
-
-	params := map[string]any{
-		"id":               serviceLineItemId,
-		"contractId":       contractId,
-		"tenant":           tenant,
-		"name":             serviceLineItem.Name,
-		"source":           serviceLineItem.Source,
-		"sourceOfTruth":    serviceLineItem.SourceOfTruth,
-		"appSource":        serviceLineItem.AppSource,
-		"isCanceled":       serviceLineItem.IsCanceled,
-		"billed":           serviceLineItem.Billed,
-		"quantity":         serviceLineItem.Quantity,
-		"price":            serviceLineItem.Price,
-		"previousBilled":   serviceLineItem.PreviousBilled,
-		"previousQuantity": serviceLineItem.PreviousQuantity,
-		"previousPrice":    serviceLineItem.PreviousPrice,
-		"startedAt":        serviceLineItem.StartedAt,
-		"comments":         serviceLineItem.Comments,
-		"createdAt":        serviceLineItem.CreatedAt,
-		"updatedAt":        serviceLineItem.UpdatedAt,
-		"parentId":         serviceLineItem.ParentID,
-	}
-
-	if serviceLineItem.EndedAt != nil {
-		params["endedAt"] = *serviceLineItem.EndedAt
-	} else {
-		params["endedAt"] = nil
-	}
-
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, params)
-	return serviceLineItemId
-}
-
+// Deprecated
 func CreateOpportunityForContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId string, opportunity entity.OpportunityEntity) string {
 	opportunityId := utils.NewUUIDIfEmpty(opportunity.Id)
 	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}), (c:Contract {id:$contractId})
@@ -1756,6 +1539,7 @@ func CreateOpportunityForContract(ctx context.Context, driver *neo4j.DriverWithC
 	return opportunityId
 }
 
+// Deprecated
 func ActiveRenewalOpportunityForContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId, opportunityId string) string {
 	query := fmt.Sprintf(`
 				MATCH (c:Contract_%s {id:$contractId}), (op:Opportunity_%s {id:$opportunityId})
@@ -1778,6 +1562,7 @@ func OpportunityCreatedBy(ctx context.Context, driver *neo4j.DriverWithContext, 
 	})
 }
 
+// Deprecated
 func OpportunityOwnedBy(ctx context.Context, driver *neo4j.DriverWithContext, opportunityId, entityId string) {
 	query := `MATCH (e:User {id:$entityId}), (op:Opportunity {id:$opportunityId})
 			MERGE (e)-[:OWNS]->(op)`
@@ -1787,56 +1572,8 @@ func OpportunityOwnedBy(ctx context.Context, driver *neo4j.DriverWithContext, op
 	})
 }
 
-func GetCountOfNodes(ctx context.Context, driver *neo4j.DriverWithContext, nodeLabel string) int {
-	query := fmt.Sprintf(`MATCH (n:%s) RETURN count(n)`, nodeLabel)
-	result := neo4jtest.ExecuteReadQueryWithSingleReturn(ctx, driver, query, map[string]any{})
-	return int(result.(*db.Record).Values[0].(int64))
-}
-
-func GetCountOfRelationships(ctx context.Context, driver *neo4j.DriverWithContext, relationship string) int {
-	query := fmt.Sprintf(`MATCH (a)-[r:%s]-(b) RETURN count(distinct r)`, relationship)
-	result := neo4jtest.ExecuteReadQueryWithSingleReturn(ctx, driver, query, map[string]any{})
-	return int(result.(*db.Record).Values[0].(int64))
-}
-
-func GetRelationship(ctx context.Context, driver *neo4j.DriverWithContext, fromNodeId, toNodeId string) (*dbtype.Relationship, error) {
-	session := utils.NewNeo4jReadSession(ctx, *driver)
-	defer session.Close(ctx)
-
-	queryResult, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		result, err := tx.Run(ctx, `MATCH (n {id:$fromNodeId})-[rel]->(m {id:$toNodeId}) RETURN rel limit 1`,
-			map[string]interface{}{
-				"fromNodeId": fromNodeId,
-				"toNodeId":   toNodeId,
-			})
-		record, err := result.Single(ctx)
-		if err != nil {
-			return nil, err
-		}
-		return record.Values[0], nil
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	node := queryResult.(dbtype.Relationship)
-	return &node, nil
-}
-
 func GetTotalCountOfNodes(ctx context.Context, driver *neo4j.DriverWithContext) int {
 	query := `MATCH (n) RETURN count(n)`
 	result := neo4jtest.ExecuteReadQueryWithSingleReturn(ctx, driver, query, map[string]any{})
 	return int(result.(*db.Record).Values[0].(int64))
-}
-
-func FirstTimeOfMonth(year, month int) time.Time {
-	return time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
-}
-
-func MiddleTimeOfMonth(year, month int) time.Time {
-	return FirstTimeOfMonth(year, month).AddDate(0, 0, 15)
-}
-
-func LastTimeOfMonth(year, month int) time.Time {
-	return FirstTimeOfMonth(year, month).AddDate(0, 1, 0).Add(-time.Nanosecond)
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
@@ -12,6 +13,7 @@ import (
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	interactionsessionpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/interaction_session"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"time"
 )
@@ -60,38 +62,42 @@ func (s *interactionSessionService) MergeInteractionSession(ctx context.Context,
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := s.grpcClients.InteractionSessionClient.UpsertInteractionSession(ctx, &interactionsessionpb.UpsertInteractionSessionGrpcRequest{
-		Tenant: tenant,
-		Id:     interactionSessionId,
-		SourceFields: &commonpb.SourceFields{
-			Source:    externalSystem,
-			AppSource: utils.StringFirstNonEmpty(interactionSessionInput.AppSource, constants.AppSourceCustomerOsWebhooks),
-		},
-		ExternalSystemFields: &commonpb.ExternalSystemFields{
-			ExternalSystemId: externalSystem,
-			ExternalId:       interactionSessionInput.ExternalId,
-			ExternalUrl:      interactionSessionInput.ExternalUrl,
-			ExternalIdSecond: interactionSessionInput.ExternalIdSecond,
-			ExternalSource:   interactionSessionInput.ExternalSourceEntity,
-			SyncDate:         utils.ConvertTimeToTimestampPtr(&syncDate),
-		},
-		Identifier:  interactionSessionInput.Identifier,
-		Channel:     interactionSessionInput.Channel,
-		ChannelData: interactionSessionInput.ChannelData,
-		Status:      interactionSessionInput.Status,
-		Type:        interactionSessionInput.Type,
-		Name:        interactionSessionInput.Name,
+	response, err := CallEventsPlatformGRPCWithRetry[*interactionsessionpb.InteractionSessionIdGrpcResponse](func() (*interactionsessionpb.InteractionSessionIdGrpcResponse, error) {
+		return s.grpcClients.InteractionSessionClient.UpsertInteractionSession(ctx, &interactionsessionpb.UpsertInteractionSessionGrpcRequest{
+			Tenant: tenant,
+			Id:     interactionSessionId,
+			SourceFields: &commonpb.SourceFields{
+				Source:    externalSystem,
+				AppSource: utils.StringFirstNonEmpty(interactionSessionInput.AppSource, constants.AppSourceCustomerOsWebhooks),
+			},
+			ExternalSystemFields: &commonpb.ExternalSystemFields{
+				ExternalSystemId: externalSystem,
+				ExternalId:       interactionSessionInput.ExternalId,
+				ExternalUrl:      interactionSessionInput.ExternalUrl,
+				ExternalIdSecond: interactionSessionInput.ExternalIdSecond,
+				ExternalSource:   interactionSessionInput.ExternalSourceEntity,
+				SyncDate:         utils.ConvertTimeToTimestampPtr(&syncDate),
+			},
+			Identifier:  interactionSessionInput.Identifier,
+			Channel:     interactionSessionInput.Channel,
+			ChannelData: interactionSessionInput.ChannelData,
+			Status:      interactionSessionInput.Status,
+			Type:        interactionSessionInput.Type,
+			Name:        interactionSessionInput.Name,
+		})
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return "", errors.Wrap(err, "UpsertInteractionSessionGrpcRequest")
 	}
 	for i := 1; i <= constants.MaxRetryCheckDataInNeo4jAfterEventRequest; i++ {
-		issue, findErr := s.repositories.InteractionSessionRepository.GetById(ctx, tenant, response.Id)
-		if issue != nil && findErr == nil {
+		// check if the interaction session is saved in db and is linked to external system
+		found, findErr := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsByIdLinkedTo(ctx, tenant, response.Id, neo4jutil.NodeLabelInteractionSession, externalSystem, neo4jutil.NodeLabelExternalSystem, "IS_LINKED_WITH")
+		if found && findErr == nil {
 			break
 		}
-		time.Sleep(time.Duration(i*constants.TimeoutIntervalMs) * time.Millisecond)
+		time.Sleep(utils.BackOffIncrementalDelay(i))
 	}
+	span.LogFields(log.String("response.InteractionSessionId", response.Id))
 	return response.Id, nil
 }

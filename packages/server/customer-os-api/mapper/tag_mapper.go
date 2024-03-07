@@ -2,14 +2,13 @@ package mapper
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 )
 
-func MapTagInputToEntity(input model.TagInput) *entity.TagEntity {
-	tagEntity := entity.TagEntity{
+func MapTagInputToEntity(input model.TagInput) *neo4jentity.TagEntity {
+	tagEntity := neo4jentity.TagEntity{
 		Name:          input.Name,
 		Source:        neo4jentity.DataSourceOpenline,
 		SourceOfTruth: neo4jentity.DataSourceOpenline,
@@ -18,15 +17,15 @@ func MapTagInputToEntity(input model.TagInput) *entity.TagEntity {
 	return &tagEntity
 }
 
-func MapTagUpdateInputToEntity(input model.TagUpdateInput) *entity.TagEntity {
-	tagEntity := entity.TagEntity{
+func MapTagUpdateInputToEntity(input model.TagUpdateInput) *neo4jentity.TagEntity {
+	tagEntity := neo4jentity.TagEntity{
 		Id:   input.ID,
 		Name: input.Name,
 	}
 	return &tagEntity
 }
 
-func MapEntityToTag(entity entity.TagEntity) *model.Tag {
+func MapEntityToTag(entity neo4jentity.TagEntity) *model.Tag {
 	return &model.Tag{
 		ID:        entity.Id,
 		Name:      entity.Name,
@@ -37,7 +36,7 @@ func MapEntityToTag(entity entity.TagEntity) *model.Tag {
 	}
 }
 
-func MapEntitiesToTags(entities *entity.TagEntities) []*model.Tag {
+func MapEntitiesToTags(entities *neo4jentity.TagEntities) []*model.Tag {
 	var tags []*model.Tag
 	for _, tagEntity := range *entities {
 		tags = append(tags, MapEntityToTag(tagEntity))

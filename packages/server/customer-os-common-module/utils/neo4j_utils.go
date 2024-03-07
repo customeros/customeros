@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/log"
 	"github.com/pkg/errors"
@@ -20,6 +21,11 @@ func CypherPtr(cypher Cypher) *Cypher {
 type PairDbNodesWithTotalCount struct {
 	Pairs []*Pair[*dbtype.Node, *dbtype.Node]
 	Count int64
+}
+
+type RecordsWithTotalCount struct {
+	Records []*db.Record
+	Count   int64
 }
 
 type DbNodesWithTotalCount struct {
@@ -48,6 +54,11 @@ type DbNodeAndRelation struct {
 type DbNodeAndId struct {
 	Node         *dbtype.Node
 	LinkedNodeId string
+}
+
+type DbNodeAndTenant struct {
+	Node   *dbtype.Node
+	Tenant string
 }
 
 type DbPropsAndId struct {
@@ -134,7 +145,7 @@ func newNeo4jSession(ctx context.Context, driver neo4j.DriverWithContext, access
 		}
 	}
 	if err != nil {
-		zap.L().Sugar().Fatalf("(VerifyConnectivity) Failed to verify connectivity: %s", err.Error())
+		zap.L().Sugar().Fatalf("(VerifyConnectivity) Failed to verify connectivity after all attempts: %s", err.Error())
 	}
 	return nil
 }
@@ -220,6 +231,24 @@ func ExtractAllRecordsAsDbNodeAndId(ctx context.Context, result neo4j.ResultWith
 		element := new(DbNodeAndId)
 		element.Node = NodePtr(v.Values[0].(neo4j.Node))
 		element.LinkedNodeId = v.Values[1].(string)
+		output = append(output, element)
+	}
+	return output, nil
+}
+
+func ExtractAllRecordsAsDbNodeAndTenant(ctx context.Context, result neo4j.ResultWithContext, err error) ([]*DbNodeAndTenant, error) {
+	if err != nil {
+		return nil, err
+	}
+	records, err := result.Collect(ctx)
+	if err != nil {
+		return nil, err
+	}
+	output := make([]*DbNodeAndTenant, 0)
+	for _, v := range records {
+		element := new(DbNodeAndTenant)
+		element.Node = NodePtr(v.Values[0].(neo4j.Node))
+		element.Tenant = v.Values[1].(string)
 		output = append(output, element)
 	}
 	return output, nil
@@ -461,16 +490,25 @@ func GetBoolPropOrNil(props map[string]any, key string) *bool {
 
 func GetFloatPropOrNil(props map[string]any, key string) *float64 {
 	if props[key] != nil {
-		f := props[key].(float64)
-		return &f
+		switch v := props[key].(type) {
+		case float64:
+			return &v
+		case int64:
+			f := float64(v)
+			return &f
+		}
 	}
 	return nil
 }
 
 func GetFloatPropOrZero(props map[string]any, key string) float64 {
 	if props[key] != nil {
-		f := props[key].(float64)
-		return f
+		switch v := props[key].(type) {
+		case float64:
+			return v
+		case int64:
+			return float64(v)
+		}
 	}
 	return float64(0)
 }
@@ -508,6 +546,9 @@ func GetTimePropOrNil(props map[string]any, key string) *time.Time {
 		switch v := props[key].(type) {
 		case time.Time:
 			return &v
+		case neo4j.Date:
+			t := v.Time()
+			return &t
 		case string:
 			t, _ := UnmarshalDateTime(v)
 			if t != nil {
@@ -547,17 +588,20 @@ func ExecuteQueryInTx(ctx context.Context, tx neo4j.ManagedTransaction, query st
 	return err
 }
 
-func ExecuteQuery(ctx context.Context, driver neo4j.DriverWithContext, database, cypher string, params map[string]any) (*neo4j.EagerResult, error) {
+func ExecuteQuery(ctx context.Context, driver neo4j.DriverWithContext, database, cypher string, params map[string]any, traceError func(err error)) (*neo4j.EagerResult, error) {
 	sugarLogger := zap.L().With(zap.String("database", database)).Sugar()
 	sugarLogger.Infof("(ExecuteQuery): %s", cypher)
 
 	if err := ctx.Err(); errors.Is(err, context.Canceled) {
+		traceError(err)
 		sugarLogger.Errorf("(newNeo4 - ExecuteQuery) Context is cancelled by calling the cancel function: %s", err.Error())
 		panic(err)
 	} else if errors.Is(err, context.DeadlineExceeded) {
+		traceError(err)
 		sugarLogger.Errorf("(newNeo4 - ExecuteQuery) Context is cancelled by deadline exceeded: %s", err.Error())
 		panic(err)
 	} else if err != nil {
+		traceError(err)
 		sugarLogger.Errorf("(newNeo4 - ExecuteQuery) Context is cancelled by another error: %s", err.Error())
 		panic(err)
 	}
@@ -569,4 +613,11 @@ func ExecuteQuery(ctx context.Context, driver neo4j.DriverWithContext, database,
 		neo4j.EagerResultTransformer,
 		neo4j.ExecuteQueryWithDatabase(database),
 		neo4j.ExecuteQueryWithBoltLogger(neo4j.ConsoleBoltLogger()))
+}
+
+func ToNeo4jDateAsAny(t *time.Time) any {
+	if t == nil {
+		return nil
+	}
+	return neo4j.DateOf(*t)
 }

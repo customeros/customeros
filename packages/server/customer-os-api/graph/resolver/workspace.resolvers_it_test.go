@@ -3,8 +3,8 @@ package resolver
 import (
 	"context"
 	"github.com/99designs/gqlgen/client"
-	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
 	"log"
 	"testing"
@@ -13,9 +13,9 @@ import (
 func TestMutationResolver_WorkspaceMergeToTenant(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateTenant(ctx, driver, "other")
-	neo4jt.CreateWorkspace(ctx, driver, "testworkspace2", "testprovider", "other")
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, "other")
+	neo4jtest.CreateWorkspace(ctx, driver, "testworkspace2", "testprovider", "other")
 
 	rawResponse, err := cAdmin.RawPost(getQuery("workspace/merge_to_tenant"),
 		client.Var("name", "testworkspace"),
@@ -98,9 +98,9 @@ func TestMutationResolver_WorkspaceMergeToTenant(t *testing.T) {
 func TestMutationResolver_WorkspaceMerge(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateTenant(ctx, driver, "other")
-	neo4jt.CreateWorkspace(ctx, driver, "testworkspace2", "testprovider", "other")
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, "other")
+	neo4jtest.CreateWorkspace(ctx, driver, "testworkspace2", "testprovider", "other")
 
 	rawResponse, err := cOwner.RawPost(getQuery("workspace/merge"),
 		client.Var("name", "testworkspace"),
@@ -178,9 +178,9 @@ func TestMutationResolver_WorkspaceMerge(t *testing.T) {
 func TestMutationResolver_WorkspaceMergeToTenantAccessControlled(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateTenant(ctx, driver, "other")
-	neo4jt.CreateWorkspace(ctx, driver, "testworkspace2", "testprovider", "other")
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, "other")
+	neo4jtest.CreateWorkspace(ctx, driver, "testworkspace2", "testprovider", "other")
 
 	rawResponse, err := c.RawPost(getQuery("workspace/merge_to_tenant"),
 		client.Var("name", "testworkspace"),

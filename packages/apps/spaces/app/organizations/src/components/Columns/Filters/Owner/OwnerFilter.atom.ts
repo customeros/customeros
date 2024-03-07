@@ -1,6 +1,8 @@
 import { atom, selector, useRecoilState } from 'recoil';
 
-interface OwnerFilterState {
+import { makeServerToAtomMapper } from '../shared/makeServerToAtomMapper';
+
+export interface OwnerFilterState {
   value: string[];
   isActive: boolean;
   showEmpty: boolean;
@@ -33,3 +35,20 @@ export const OwnerFilterSelector = selector({
 export const useOwnerFilter = () => {
   return useRecoilState(OwnerFilterAtom);
 };
+
+/**
+ * Used for mapping server-side Filter data to client-side atom OwnerFilterState
+ */
+export const mapOwnerToAtom = makeServerToAtomMapper<OwnerFilterState>(
+  {
+    filter: {
+      property: 'OWNER_ID',
+    },
+  },
+  ({ filter }) => ({
+    isActive: true,
+    value: filter?.value,
+    showEmpty: filter?.includeEmpty ?? false,
+  }),
+  defaultState,
+);

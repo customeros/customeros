@@ -17,6 +17,7 @@ interface FormInputGroupProps extends InputGroupProps {
   name: string;
   formId: string;
   label?: string;
+  autoFocus?: boolean;
   isLabelVisible?: boolean;
   leftElement?: React.ReactNode;
   rightElement?: React.ReactNode;
@@ -30,6 +31,7 @@ export const FormInputGroup = forwardRef((props: FormInputGroupProps, ref) => {
     isLabelVisible,
     leftElement,
     rightElement,
+    autoFocus,
     ...rest
   } = props;
   const { getInputProps } = useField(name, formId);
@@ -43,11 +45,18 @@ export const FormInputGroup = forwardRef((props: FormInputGroupProps, ref) => {
           <FormLabel>{label}</FormLabel>
         </VisuallyHidden>
       )}
-      <InputGroup ref={ref} {...rest}>
+      <InputGroup {...rest}>
         {leftElement && (
           <InputLeftElement w='4'>{leftElement}</InputLeftElement>
         )}
-        <Input {...getInputProps()} pl='30px' autoComplete='off' {...rest} />
+        <Input
+          ref={ref}
+          {...getInputProps()}
+          pl='30px'
+          autoComplete='off'
+          {...rest}
+          autoFocus={autoFocus}
+        />
         {rightElement && <InputRightElement>{rightElement}</InputRightElement>}
       </InputGroup>
     </FormControl>

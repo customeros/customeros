@@ -2,6 +2,7 @@ package aggregate
 
 import (
 	"strings"
+	"time"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
@@ -9,6 +10,8 @@ import (
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
+	orgplanevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/events"
+	orgplanmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/pkg/errors"
 )
@@ -22,6 +25,10 @@ type OrganizationAggregate struct {
 	Organization *model.Organization
 }
 
+type OrganizationTempAggregate struct {
+	*aggregate.CommonTenantIdTempAggregate
+}
+
 func NewOrganizationAggregateWithTenantAndID(tenant, id string) *OrganizationAggregate {
 	organizationAggregate := OrganizationAggregate{}
 	organizationAggregate.CommonTenantIdAggregate = aggregate.NewCommonAggregateWithTenantAndId(OrganizationAggregateType, tenant, id)
@@ -30,6 +37,14 @@ func NewOrganizationAggregateWithTenantAndID(tenant, id string) *OrganizationAgg
 	organizationAggregate.Tenant = tenant
 
 	return &organizationAggregate
+}
+
+func NewOrganizationTempAggregateWithTenantAndID(tenant, id string) *OrganizationTempAggregate {
+	organizationTempAggregate := OrganizationTempAggregate{}
+	organizationTempAggregate.CommonTenantIdTempAggregate = aggregate.NewCommonTempAggregateWithTenantAndId(OrganizationAggregateType, tenant, id)
+	organizationTempAggregate.Tenant = tenant
+
+	return &organizationTempAggregate
 }
 
 func (a *OrganizationAggregate) When(event eventstore.Event) error {
@@ -63,6 +78,18 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 		return a.onOnboardingStatusUpdate(event)
 	case events.OrganizationUpdateOwnerV1:
 		return a.onOrganizationOwnerUpdate(event)
+	case events.OrganizationCreateBillingProfileV1:
+		return a.onCreateBillingProfile(event)
+	case events.OrganizationUpdateBillingProfileV1:
+		return a.onUpdateBillingProfile(event)
+	case events.OrganizationEmailLinkToBillingProfileV1:
+		return a.onEmailLinkToBillingProfile(event)
+	case events.OrganizationEmailUnlinkFromBillingProfileV1:
+		return a.onEmailUnlinkFromBillingProfile(event)
+	case events.OrganizationLocationLinkToBillingProfileV1:
+		return a.onLocationLinkToBillingProfile(event)
+	case events.OrganizationLocationUnlinkFromBillingProfileV1:
+		return a.onLocationUnlinkFromBillingProfile(event)
 	case events.OrganizationUpdateRenewalLikelihoodV1,
 		events.OrganizationUpdateRenewalForecastV1,
 		events.OrganizationUpdateBillingDetailsV1,
@@ -71,8 +98,19 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 		events.OrganizationRefreshLastTouchpointV1,
 		events.OrganizationRefreshArrV1,
 		events.OrganizationRefreshRenewalSummaryV1,
-		events.OrganizationRequestScrapeByWebsiteV1:
+		events.OrganizationRequestScrapeByWebsiteV1,
+		events.OrganizationUpdateOwnerNotificationV1:
 		return nil
+	case orgplanevents.OrganizationPlanCreateV1:
+		return a.onOrganizationPlanCreate(event)
+	case orgplanevents.OrganizationPlanUpdateV1:
+		return a.onOrganizationPlanUpdate(event)
+	case orgplanevents.OrganizationPlanMilestoneCreateV1:
+		return a.onOrganizationPlanMilestoneCreate(event)
+	case orgplanevents.OrganizationPlanMilestoneUpdateV1:
+		return a.onOrganizationPlanMilestoneUpdate(event)
+	case orgplanevents.OrganizationPlanMilestoneReorderV1:
+		return a.onOrganizationPlanMilestoneReorder(event)
 	default:
 		err := eventstore.ErrInvalidEventType
 		err.EventType = event.GetEventType()
@@ -115,6 +153,7 @@ func (a *OrganizationAggregate) onOrganizationCreate(event eventstore.Event) err
 	a.Organization.YearFounded = eventData.YearFounded
 	a.Organization.Headquarters = eventData.Headquarters
 	a.Organization.EmployeeGrowthRate = eventData.EmployeeGrowthRate
+	a.Organization.SlackChannelId = eventData.SlackChannelId
 	a.Organization.LogoUrl = eventData.LogoUrl
 	return nil
 }
@@ -131,6 +170,9 @@ func (a *OrganizationAggregate) onOrganizationUpdate(event eventstore.Event) err
 	}
 	a.Organization.UpdatedAt = eventData.UpdatedAt
 
+	if !eventData.Hide {
+		a.Organization.Hide = false
+	}
 	if eventData.Source != a.Organization.Source.SourceOfTruth && a.Organization.Source.SourceOfTruth == constants.SourceOpenline {
 		if a.Organization.Name == "" && eventData.UpdateName() {
 			a.Organization.Name = eventData.Name
@@ -186,132 +228,78 @@ func (a *OrganizationAggregate) onOrganizationUpdate(event eventstore.Event) err
 		if a.Organization.EmployeeGrowthRate == "" && eventData.UpdateEmployeeGrowthRate() {
 			a.Organization.EmployeeGrowthRate = eventData.EmployeeGrowthRate
 		}
+		if a.Organization.SlackChannelId == "" && eventData.UpdateSlackChannelId() {
+			a.Organization.SlackChannelId = eventData.SlackChannelId
+		}
 		if a.Organization.LogoUrl == "" && eventData.UpdateLogoUrl() {
 			a.Organization.LogoUrl = eventData.LogoUrl
 		}
 	} else {
-		if !eventData.IgnoreEmptyFields {
-			if eventData.UpdateIsPublic() {
-				a.Organization.IsPublic = eventData.IsPublic
-			}
-			if eventData.UpdateIsCustomer() {
-				a.Organization.IsCustomer = eventData.IsCustomer
-			}
-			if eventData.UpdateHide() {
-				a.Organization.Hide = eventData.Hide
-			}
-			if eventData.UpdateName() {
-				a.Organization.Name = eventData.Name
-			}
-			if eventData.UpdateDescription() {
-				a.Organization.Description = eventData.Description
-			}
-			if eventData.UpdateWebsite() {
-				a.Organization.Website = eventData.Website
-			}
-			if eventData.UpdateIndustry() {
-				a.Organization.Industry = eventData.Industry
-			}
-			if eventData.UpdateSubIndustry() {
-				a.Organization.SubIndustry = eventData.SubIndustry
-			}
-			if eventData.UpdateIndustryGroup() {
-				a.Organization.IndustryGroup = eventData.IndustryGroup
-			}
-			if eventData.UpdateTargetAudience() {
-				a.Organization.TargetAudience = eventData.TargetAudience
-			}
-			if eventData.UpdateValueProposition() {
-				a.Organization.ValueProposition = eventData.ValueProposition
-			}
-			if eventData.UpdateLastFundingRound() {
-				a.Organization.LastFundingRound = eventData.LastFundingRound
-			}
-			if eventData.UpdateLastFundingAmount() {
-				a.Organization.LastFundingAmount = eventData.LastFundingAmount
-			}
-			if eventData.UpdateReferenceId() {
-				a.Organization.ReferenceId = eventData.ReferenceId
-			}
-			if eventData.UpdateNote() {
-				a.Organization.Note = eventData.Note
-			}
-			if eventData.UpdateEmployees() {
-				a.Organization.Employees = eventData.Employees
-			}
-			if eventData.UpdateMarket() {
-				a.Organization.Market = eventData.Market
-			}
-			if eventData.UpdateYearFounded() {
-				a.Organization.YearFounded = eventData.YearFounded
-			}
-			if eventData.UpdateHeadquarters() {
-				a.Organization.Headquarters = eventData.Headquarters
-			}
-			if eventData.UpdateEmployeeGrowthRate() {
-				a.Organization.EmployeeGrowthRate = eventData.EmployeeGrowthRate
-			}
-			if eventData.UpdateLogoUrl() {
-				a.Organization.LogoUrl = eventData.LogoUrl
-			}
-		} else {
-			if eventData.Name != "" {
-				a.Organization.Name = eventData.Name
-			}
-			if eventData.Description != "" {
-				a.Organization.Description = eventData.Description
-			}
-			if eventData.Website != "" {
-				a.Organization.Website = eventData.Website
-			}
-			if eventData.Industry != "" {
-				a.Organization.Industry = eventData.Industry
-			}
-			if eventData.SubIndustry != "" {
-				a.Organization.SubIndustry = eventData.SubIndustry
-			}
-			if eventData.IndustryGroup != "" {
-				a.Organization.IndustryGroup = eventData.IndustryGroup
-			}
-			if eventData.TargetAudience != "" {
-				a.Organization.TargetAudience = eventData.TargetAudience
-			}
-			if eventData.ValueProposition != "" {
-				a.Organization.ValueProposition = eventData.ValueProposition
-			}
-			if eventData.LastFundingRound != "" {
-				a.Organization.LastFundingRound = eventData.LastFundingRound
-			}
-			if eventData.LastFundingAmount != "" {
-				a.Organization.LastFundingAmount = eventData.LastFundingAmount
-			}
-			if eventData.ReferenceId != "" {
-				a.Organization.ReferenceId = eventData.ReferenceId
-			}
-			if eventData.Note != "" {
-				a.Organization.Note = eventData.Note
-			}
-			if eventData.Employees != 0 {
-				a.Organization.Employees = eventData.Employees
-			}
-			if eventData.Market != "" {
-				a.Organization.Market = eventData.Market
-			}
-			if eventData.IsCustomer {
-				a.Organization.IsCustomer = eventData.IsCustomer
-			}
-			if eventData.YearFounded != nil {
-				a.Organization.YearFounded = eventData.YearFounded
-			}
-			if eventData.Headquarters != "" {
-				a.Organization.Headquarters = eventData.Headquarters
-			}
-			if eventData.EmployeeGrowthRate != "" {
-				a.Organization.EmployeeGrowthRate = eventData.EmployeeGrowthRate
-			}
-			if eventData.LogoUrl != "" {
-				a.Organization.LogoUrl = eventData.LogoUrl
-			}
+		if eventData.UpdateIsPublic() {
+			a.Organization.IsPublic = eventData.IsPublic
+		}
+		if eventData.UpdateIsCustomer() {
+			a.Organization.IsCustomer = eventData.IsCustomer
+		}
+		if eventData.UpdateHide() {
+			a.Organization.Hide = eventData.Hide
+		}
+		if eventData.UpdateName() {
+			a.Organization.Name = eventData.Name
+		}
+		if eventData.UpdateDescription() {
+			a.Organization.Description = eventData.Description
+		}
+		if eventData.UpdateWebsite() {
+			a.Organization.Website = eventData.Website
+		}
+		if eventData.UpdateIndustry() {
+			a.Organization.Industry = eventData.Industry
+		}
+		if eventData.UpdateSubIndustry() {
+			a.Organization.SubIndustry = eventData.SubIndustry
+		}
+		if eventData.UpdateIndustryGroup() {
+			a.Organization.IndustryGroup = eventData.IndustryGroup
+		}
+		if eventData.UpdateTargetAudience() {
+			a.Organization.TargetAudience = eventData.TargetAudience
+		}
+		if eventData.UpdateValueProposition() {
+			a.Organization.ValueProposition = eventData.ValueProposition
+		}
+		if eventData.UpdateLastFundingRound() {
+			a.Organization.LastFundingRound = eventData.LastFundingRound
+		}
+		if eventData.UpdateLastFundingAmount() {
+			a.Organization.LastFundingAmount = eventData.LastFundingAmount
+		}
+		if eventData.UpdateReferenceId() {
+			a.Organization.ReferenceId = eventData.ReferenceId
+		}
+		if eventData.UpdateNote() {
+			a.Organization.Note = eventData.Note
+		}
+		if eventData.UpdateEmployees() {
+			a.Organization.Employees = eventData.Employees
+		}
+		if eventData.UpdateMarket() {
+			a.Organization.Market = eventData.Market
+		}
+		if eventData.UpdateYearFounded() {
+			a.Organization.YearFounded = eventData.YearFounded
+		}
+		if eventData.UpdateHeadquarters() {
+			a.Organization.Headquarters = eventData.Headquarters
+		}
+		if eventData.UpdateEmployeeGrowthRate() {
+			a.Organization.EmployeeGrowthRate = eventData.EmployeeGrowthRate
+		}
+		if eventData.UpdateSlackChannelId() {
+			a.Organization.SlackChannelId = eventData.SlackChannelId
+		}
+		if eventData.UpdateLogoUrl() {
+			a.Organization.LogoUrl = eventData.LogoUrl
 		}
 	}
 	if eventData.ExternalSystem.Available() {
@@ -503,5 +491,324 @@ func (a *OrganizationAggregate) onOrganizationOwnerUpdate(event eventstore.Event
 	}
 
 	// do nothing
+	return nil
+}
+
+func (a *OrganizationAggregate) onCreateBillingProfile(event eventstore.Event) error {
+	var eventData events.BillingProfileCreateEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+
+	if a.Organization.BillingProfiles == nil {
+		a.Organization.BillingProfiles = make(map[string]model.BillingProfile)
+	}
+
+	a.Organization.BillingProfiles[eventData.BillingProfileId] = model.BillingProfile{
+		Id:           eventData.BillingProfileId,
+		LegalName:    eventData.LegalName,
+		TaxId:        eventData.TaxId,
+		CreatedAt:    eventData.CreatedAt,
+		UpdatedAt:    eventData.UpdatedAt,
+		SourceFields: eventData.SourceFields,
+	}
+
+	return nil
+}
+
+func (a *OrganizationAggregate) onUpdateBillingProfile(event eventstore.Event) error {
+	var eventData events.BillingProfileUpdateEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+
+	if a.Organization.BillingProfiles == nil {
+		a.Organization.BillingProfiles = make(map[string]model.BillingProfile)
+	}
+	billingProfile, ok := a.Organization.BillingProfiles[eventData.BillingProfileId]
+	if !ok {
+		a.Organization.BillingProfiles[eventData.BillingProfileId] = model.BillingProfile{}
+		billingProfile = a.Organization.BillingProfiles[eventData.BillingProfileId]
+	}
+
+	if eventData.UpdateLegalName() {
+		billingProfile.LegalName = eventData.LegalName
+	}
+	if eventData.UpdateTaxId() {
+		billingProfile.TaxId = eventData.TaxId
+	}
+	billingProfile.UpdatedAt = eventData.UpdatedAt
+	a.Organization.BillingProfiles[eventData.BillingProfileId] = billingProfile
+
+	return nil
+}
+
+func (a *OrganizationAggregate) onEmailLinkToBillingProfile(event eventstore.Event) error {
+	var eventData events.LinkEmailToBillingProfileEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	if a.Organization.BillingProfiles == nil {
+		a.Organization.BillingProfiles = make(map[string]model.BillingProfile)
+	}
+	billingProfile, ok := a.Organization.BillingProfiles[eventData.BillingProfileId]
+	if !ok {
+		a.Organization.BillingProfiles[eventData.BillingProfileId] = model.BillingProfile{}
+		billingProfile = a.Organization.BillingProfiles[eventData.BillingProfileId]
+	}
+
+	if eventData.Primary {
+		billingProfile.PrimaryEmailId = eventData.EmailId
+		billingProfile.EmailIds = utils.RemoveFromList(billingProfile.EmailIds, eventData.EmailId)
+	} else {
+		billingProfile.EmailIds = utils.AddToListIfNotExists(billingProfile.EmailIds, eventData.EmailId)
+		if billingProfile.PrimaryEmailId == eventData.EmailId {
+			billingProfile.PrimaryEmailId = ""
+		}
+	}
+	billingProfile.UpdatedAt = eventData.UpdatedAt
+	a.Organization.BillingProfiles[eventData.BillingProfileId] = billingProfile
+
+	return nil
+}
+
+func (a *OrganizationAggregate) onEmailUnlinkFromBillingProfile(event eventstore.Event) error {
+	var eventData events.UnlinkEmailFromBillingProfileEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	if a.Organization.BillingProfiles == nil {
+		a.Organization.BillingProfiles = make(map[string]model.BillingProfile)
+	}
+	billingProfile, ok := a.Organization.BillingProfiles[eventData.BillingProfileId]
+	if !ok {
+		a.Organization.BillingProfiles[eventData.BillingProfileId] = model.BillingProfile{}
+		billingProfile = a.Organization.BillingProfiles[eventData.BillingProfileId]
+	}
+	if billingProfile.PrimaryEmailId == eventData.EmailId {
+		billingProfile.PrimaryEmailId = ""
+	}
+	billingProfile.EmailIds = utils.RemoveFromList(billingProfile.EmailIds, eventData.EmailId)
+	billingProfile.UpdatedAt = eventData.UpdatedAt
+	a.Organization.BillingProfiles[eventData.BillingProfileId] = billingProfile
+
+	return nil
+}
+
+func (a *OrganizationAggregate) onLocationLinkToBillingProfile(event eventstore.Event) error {
+	var eventData events.LinkLocationToBillingProfileEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	if a.Organization.BillingProfiles == nil {
+		a.Organization.BillingProfiles = make(map[string]model.BillingProfile)
+	}
+	billingProfile, ok := a.Organization.BillingProfiles[eventData.BillingProfileId]
+	if !ok {
+		a.Organization.BillingProfiles[eventData.BillingProfileId] = model.BillingProfile{}
+		billingProfile = a.Organization.BillingProfiles[eventData.BillingProfileId]
+	}
+
+	billingProfile.LocationIds = utils.AddToListIfNotExists(billingProfile.LocationIds, eventData.LocationId)
+	billingProfile.UpdatedAt = eventData.UpdatedAt
+	a.Organization.BillingProfiles[eventData.BillingProfileId] = billingProfile
+
+	return nil
+}
+
+func (a *OrganizationAggregate) onLocationUnlinkFromBillingProfile(event eventstore.Event) error {
+	var eventData events.UnlinkLocationFromBillingProfileEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	if a.Organization.BillingProfiles == nil {
+		a.Organization.BillingProfiles = make(map[string]model.BillingProfile)
+	}
+	billingProfile, ok := a.Organization.BillingProfiles[eventData.BillingProfileId]
+	if !ok {
+		a.Organization.BillingProfiles[eventData.BillingProfileId] = model.BillingProfile{}
+		billingProfile = a.Organization.BillingProfiles[eventData.BillingProfileId]
+	}
+	billingProfile.LocationIds = utils.RemoveFromList(billingProfile.LocationIds, eventData.LocationId)
+	billingProfile.UpdatedAt = eventData.UpdatedAt
+	a.Organization.BillingProfiles[eventData.BillingProfileId] = billingProfile
+
+	return nil
+}
+
+func (a *OrganizationAggregate) onOrganizationPlanCreate(event eventstore.Event) error {
+	var eventData orgplanevents.OrganizationPlanCreateEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+
+	if a.Organization.OrganizationPlans == nil {
+		a.Organization.OrganizationPlans = map[string]orgplanmodel.OrganizationPlan{}
+	}
+
+	a.Organization.OrganizationPlans[eventData.OrganizationPlanId] = orgplanmodel.OrganizationPlan{
+		ID:           eventData.OrganizationPlanId,
+		Name:         eventData.Name,
+		SourceFields: eventData.SourceFields,
+		CreatedAt:    eventData.CreatedAt,
+		UpdatedAt:    eventData.CreatedAt,
+		MasterPlanId: eventData.MasterPlanId,
+	}
+
+	return nil
+}
+
+func (a *OrganizationAggregate) onOrganizationPlanUpdate(event eventstore.Event) error {
+	var eventData orgplanevents.OrganizationPlanUpdateEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+
+	if a.Organization.OrganizationPlans == nil {
+		a.Organization.OrganizationPlans = map[string]orgplanmodel.OrganizationPlan{}
+	}
+
+	op := orgplanmodel.OrganizationPlan{
+		ID:        eventData.OrganizationPlanId,
+		Name:      eventData.Name,
+		UpdatedAt: eventData.UpdatedAt,
+	}
+
+	a.Organization.OrganizationPlans[eventData.OrganizationPlanId] = op
+
+	return nil
+}
+
+func (a *OrganizationAggregate) onOrganizationPlanMilestoneCreate(event eventstore.Event) error {
+	var eventData orgplanevents.OrganizationPlanMilestoneCreateEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+
+	if a.Organization.OrganizationPlans == nil {
+		a.Organization.OrganizationPlans = map[string]orgplanmodel.OrganizationPlan{}
+	}
+
+	mstone := orgplanmodel.OrganizationPlanMilestone{
+		ID:        eventData.MilestoneId,
+		Name:      eventData.Name,
+		Order:     eventData.Order,
+		CreatedAt: eventData.CreatedAt,
+		DueDate:   eventData.DueDate,
+		UpdatedAt: eventData.CreatedAt,
+		Optional:  eventData.Optional,
+		Items:     convertMilestoneItemsToObject(eventData.Items),
+	}
+
+	if a.Organization.OrganizationPlans[eventData.OrganizationPlanId].Milestones == nil {
+		// First we get a "copy" of the entry; doing this because we can't modify the map entry directly
+		if entry, ok := a.Organization.OrganizationPlans[eventData.OrganizationPlanId]; ok {
+
+			// Then we modify the copy
+			entry.Milestones = make(map[string]orgplanmodel.OrganizationPlanMilestone)
+
+			// Then we reassign map entry
+			a.Organization.OrganizationPlans[eventData.OrganizationPlanId] = entry
+		}
+	}
+	a.Organization.OrganizationPlans[eventData.OrganizationPlanId].Milestones[mstone.ID] = mstone
+
+	return nil
+}
+
+func convertMilestoneItemsToObject(items []string) []orgplanmodel.OrganizationPlanMilestoneItem {
+	milestoneItems := make([]orgplanmodel.OrganizationPlanMilestoneItem, len(items))
+	for i, item := range items {
+		milestoneItems[i] = orgplanmodel.OrganizationPlanMilestoneItem{
+			Text:      item,
+			UpdatedAt: time.Now(),
+			Status:    orgplanmodel.TaskNotDone.String(),
+		}
+	}
+	return milestoneItems
+}
+
+func (a *OrganizationAggregate) onOrganizationPlanMilestoneUpdate(evt eventstore.Event) error {
+	var eventData orgplanevents.OrganizationPlanMilestoneUpdateEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+
+	if a.Organization.OrganizationPlans == nil {
+		a.Organization.OrganizationPlans = map[string]orgplanmodel.OrganizationPlan{}
+	}
+
+	if a.Organization.OrganizationPlans[eventData.OrganizationPlanId].Milestones == nil {
+		// First we get a "copy" of the entry; doing this because we can't modify the map entry directly
+		if entry, ok := a.Organization.OrganizationPlans[eventData.OrganizationPlanId]; ok {
+
+			// Then we modify the copy
+			entry.Milestones = make(map[string]orgplanmodel.OrganizationPlanMilestone)
+
+			// Then we reassign map entry
+			a.Organization.OrganizationPlans[eventData.OrganizationPlanId] = entry
+		}
+	}
+	if _, ok := a.Organization.OrganizationPlans[eventData.OrganizationPlanId].Milestones[eventData.MilestoneId]; !ok {
+		a.Organization.OrganizationPlans[eventData.OrganizationPlanId].Milestones[eventData.MilestoneId] = orgplanmodel.OrganizationPlanMilestone{
+			ID: eventData.MilestoneId,
+		}
+	}
+	milestone := a.Organization.OrganizationPlans[eventData.OrganizationPlanId].Milestones[eventData.MilestoneId]
+	if eventData.UpdateName() {
+		milestone.Name = eventData.Name
+	}
+	if eventData.UpdateOrder() {
+		milestone.Order = eventData.Order
+	}
+	if eventData.UpdateDueDate() {
+		milestone.DueDate = eventData.DueDate
+	}
+	if eventData.UpdateItems() {
+		milestone.Items = eventData.Items
+	}
+	if eventData.UpdateOptional() {
+		milestone.Optional = eventData.Optional
+	}
+	if eventData.UpdateRetired() {
+		milestone.Retired = eventData.Retired
+	}
+	if eventData.UpdateStatusDetails() {
+		milestone.StatusDetails = eventData.StatusDetails
+	}
+
+	a.Organization.OrganizationPlans[eventData.OrganizationPlanId].Milestones[milestone.ID] = milestone
+
+	return nil
+}
+
+func (a *OrganizationAggregate) onOrganizationPlanMilestoneReorder(evt eventstore.Event) error {
+	var eventData orgplanevents.OrganizationPlanMilestoneReorderEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+
+	if a.Organization.OrganizationPlans == nil {
+		a.Organization.OrganizationPlans = map[string]orgplanmodel.OrganizationPlan{}
+	}
+
+	if a.Organization.OrganizationPlans[eventData.OrganizationPlanId].Milestones == nil {
+		// First we get a "copy" of the entry; doing this because we can't modify the map entry directly
+		if entry, ok := a.Organization.OrganizationPlans[eventData.OrganizationPlanId]; ok {
+
+			// Then we modify the copy
+			entry.Milestones = make(map[string]orgplanmodel.OrganizationPlanMilestone)
+
+			// Then we reassign map entry
+			a.Organization.OrganizationPlans[eventData.OrganizationPlanId] = entry
+		}
+	}
+	for i, milestoneId := range eventData.MilestoneIds {
+		if milestone, ok := a.Organization.OrganizationPlans[eventData.OrganizationPlanId].Milestones[milestoneId]; ok {
+			milestone.Order = int64(i)
+			a.Organization.OrganizationPlans[eventData.OrganizationPlanId].Milestones[milestoneId] = milestone
+		}
+	}
+
 	return nil
 }

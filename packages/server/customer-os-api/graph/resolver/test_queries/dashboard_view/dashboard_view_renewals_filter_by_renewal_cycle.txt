@@ -1,0 +1,30 @@
+query dashboardView_Renewals($page: Int!, $limit: Int!, $searchTerm: Any!) {
+  dashboardView_Renewals(
+  pagination: { page: $page, limit: $limit },
+  where: {
+     AND: [
+         {
+              filter: {
+                              property: "RENEWAL_CYCLE",
+                              operation: EQ,
+                              value: $searchTerm
+                          }
+         }
+     ]
+    },
+    sort: {by: "NAME"}) {
+    content {
+             organization{
+                id
+       } contract{
+       id
+       renewalCycle
+       } opportunity{
+       id
+       }
+       }
+     totalPages
+     totalAvailable
+     totalElements
+  }
+}
