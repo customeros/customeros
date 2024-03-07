@@ -2170,6 +2170,31 @@ type PlayerUser struct {
 type Query struct {
 }
 
+type Reminder struct {
+	Metadata  *Metadata `json:"metadata"`
+	Content   string    `json:"content"`
+	Owner     *User     `json:"owner"`
+	DueDate   time.Time `json:"dueDate"`
+	Dismissed bool      `json:"dismissed"`
+}
+
+func (Reminder) IsMetadataInterface()        {}
+func (this Reminder) GetMetadata() *Metadata { return this.Metadata }
+
+type ReminderInput struct {
+	Content        string    `json:"content"`
+	DueDate        time.Time `json:"dueDate"`
+	OrganizationID string    `json:"organizationId"`
+	UserID         string    `json:"userId"`
+}
+
+type ReminderUpdateInput struct {
+	ID        string     `json:"id"`
+	Content   *string    `json:"content,omitempty"`
+	DueDate   *time.Time `json:"dueDate,omitempty"`
+	Dismissed *bool      `json:"dismissed,omitempty"`
+}
+
 type RenewalRecord struct {
 	Organization *Organization `json:"organization"`
 	Contract     *Contract     `json:"contract"`

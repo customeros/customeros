@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
@@ -29,6 +30,7 @@ type UserRepository interface {
 	GetDistinctOrganizationOwners(ctx context.Context, tenant string) ([]*dbtype.Node, error)
 	GetUsers(ctx context.Context, tenant string, ids []string) ([]*dbtype.Node, error)
 	GetOwnerForContract(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contractId string) (*dbtype.Node, error)
+	GetOwnerForReminder(ctx context.Context, tx neo4j.ManagedTransaction, tenant, reminderId string) (*dbtype.Node, error)
 }
 
 type userRepository struct {
@@ -523,6 +525,31 @@ func (r *userRepository) GetOwnerForContract(parentCtx context.Context, tx neo4j
 		map[string]any{
 			"tenant":     tenant,
 			"contractId": contractId,
+		}); err != nil {
+		return nil, err
+	} else {
+		dbRecords, err := queryResult.Collect(ctx)
+		if err != nil {
+			return nil, err
+		} else if len(dbRecords) == 0 {
+			return nil, nil
+		} else {
+			return utils.NodePtr(dbRecords[0].Values[0].(dbtype.Node)), nil
+		}
+	}
+}
+
+func (r *userRepository) GetOwnerForReminder(parentCtx context.Context, tx neo4j.ManagedTransaction, tenant, reminderId string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserRepository.GetOwnerForReminder")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	if queryResult, err := tx.Run(ctx, `
+			MATCH (t:Tenant {name:$tenant})<-[:REMINDER_BELONGS_TO_TENANT]-(r:Reminder {id:$reminderId})<-[:REMINDER_BELONGS_TO_USER]-(u:User)
+			RETURN u`,
+		map[string]any{
+			"tenant":     tenant,
+			"reminderId": reminderId,
 		}); err != nil {
 		return nil, err
 	} else {

@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 	"fmt"
+	"reflect"
+
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
@@ -23,7 +25,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	"reflect"
 )
 
 type UserService interface {
@@ -47,6 +48,7 @@ type UserService interface {
 	GetUserAuthorsForComments(ctx context.Context, commentIds []string) (*entity.UserEntities, error)
 	GetUsers(ctx context.Context, userIds []string) (*entity.UserEntities, error)
 	GetDistinctOrganizationOwners(ctx context.Context) (*entity.UserEntities, error)
+	GetReminderOwner(ctx context.Context, reminderId string) (*entity.UserEntity, error)
 	AddRole(ctx context.Context, userId string, role model.Role) (*entity.UserEntity, error)
 	AddRoleInTenant(ctx context.Context, userId string, tenant string, role model.Role) (*entity.UserEntity, error)
 	RemoveRole(ctx context.Context, userId string, role model.Role) (*entity.UserEntity, error)
@@ -725,6 +727,26 @@ func (s *userService) GetContractOwner(parentCtx context.Context, contractId str
 
 	ownerDbNode, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		return s.repositories.UserRepository.GetOwnerForContract(ctx, tx, common.GetContext(ctx).Tenant, contractId)
+	})
+	if err != nil {
+		return nil, err
+	} else if ownerDbNode.(*dbtype.Node) == nil {
+		return nil, nil
+	} else {
+		return s.mapDbNodeToUserEntity(*ownerDbNode.(*dbtype.Node)), nil
+	}
+}
+
+func (s *userService) GetReminderOwner(ctx context.Context, reminderId string) (*entity.UserEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.GetReminderOwner")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	session := utils.NewNeo4jReadSession(ctx, s.getNeo4jDriver())
+	defer session.Close(ctx)
+
+	ownerDbNode, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		return s.repositories.UserRepository.GetOwnerForReminder(ctx, tx, common.GetContext(ctx).Tenant, reminderId)
 	})
 	if err != nil {
 		return nil, err

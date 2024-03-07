@@ -1,0 +1,31 @@
+extend type Mutation {
+    reminder_Create(input: ReminderInput!): Reminder!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+    reminder_Update(input: ReminderUpdateInput!): Reminder!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+extend type Query {
+    reminder(id: ID!): Reminder! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    remindersForOrganization(organizationId: ID!): [Reminder!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+type Reminder implements MetadataInterface {
+    metadata:           Metadata!
+    content:            String!
+    owner:              User! @goField(forceResolver: true)
+    dueDate:            Time!
+    dismissed:          Boolean!
+}
+
+input ReminderInput {
+    content:            String!
+    dueDate:            Time!
+    organizationId:     ID!
+    userId:             ID!
+}
+
+input ReminderUpdateInput {
+    id:                 ID!
+    content:            String
+    dueDate:            Time
+    dismissed:          Boolean
+}
