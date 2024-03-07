@@ -10,6 +10,7 @@ import (
 	awsSes "github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/notifications"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -144,9 +145,6 @@ func (np *PostmarkProvider) LoadEmailContent(workflowId, fileExtension string, t
 	}
 
 	emailTemplate := np.FillTemplate(rawEmailTemplate, templateData)
-	if err != nil {
-		return "", err
-	}
 
 	return emailTemplate, nil
 }
@@ -154,11 +152,11 @@ func (np *PostmarkProvider) LoadEmailContent(workflowId, fileExtension string, t
 func (np *PostmarkProvider) GetFileName(workflowId, fileExtension string) string {
 	var fileName string
 	switch workflowId {
-	case WorkflowInvoicePaid:
+	case notifications.WorkflowInvoicePaid:
 		fileName = "invoice.paid." + fileExtension
-	case WorkflowInvoiceReady:
+	case notifications.WorkflowInvoiceReady:
 		fileName = "invoice.ready." + fileExtension
-	case WorkflowInvoiceVoided:
+	case notifications.WorkflowInvoiceVoided:
 		fileName = "invoice.voided." + fileExtension
 	}
 	return fileName

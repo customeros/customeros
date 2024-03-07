@@ -25,7 +25,7 @@ func NewGoogleServiceAccountKeyRepository(gormDb *gorm.DB) *GoogleServiceAccount
 }
 
 func (repo *GoogleServiceAccountKeyRepositoryImpl) GetApiKeyByTenantService(ctx context.Context, tenantName, serviceId string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GoogleServiceAccountKeyRepository.GetApiKeyByTenantService")
+	span, _ := opentracing.StartSpanFromContext(ctx, "GoogleServiceAccountKeyRepository.GetApiKeyByTenantService")
 	defer span.Finish()
 	span.LogFields(log.String("tenantName", tenantName), log.String("serviceId", serviceId))
 

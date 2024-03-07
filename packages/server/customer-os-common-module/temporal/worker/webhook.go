@@ -21,15 +21,16 @@ func RunWebhookWorker(hostPort, namespace string) error {
 	}
 	defer temporalClient.Close()
 	// Create a new Worker
-	yourWorker := worker.New(temporalClient, workflows.WEBHOOK_CALLS_TASK_QUEUE, worker.Options{
+	wrkr := worker.New(temporalClient, workflows.WEBHOOK_CALLS_TASK_QUEUE, worker.Options{
 		// MaxConcurrentSessionExecutionSize: 10,
 	})
 	// Register Workflows
-	yourWorker.RegisterWorkflow(workflows.WebhookWorkflow)
+	wrkr.RegisterWorkflow(workflows.WebhookWorkflow)
 	// Register Activities
-	yourWorker.RegisterActivity(activity.WebhookActivity)
+	wrkr.RegisterActivity(activity.WebhookActivity)
+	wrkr.RegisterActivity(activity.NotifyUserActivity)
 	// Start the Worker Process
-	err = yourWorker.Run(worker.InterruptCh())
+	err = wrkr.Run(worker.InterruptCh())
 	if err != nil {
 		return fmt.Errorf("unable to start the Worker Process: %v", err)
 	}

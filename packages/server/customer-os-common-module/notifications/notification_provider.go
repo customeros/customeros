@@ -3,8 +3,8 @@ package notifications
 import (
 	"context"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/aws_client"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/aws_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/opentracing/opentracing-go"
 )
 
@@ -15,7 +15,23 @@ const (
 	WorkflowInvoicePaid                     = "invoice-paid"
 	WorkflowInvoiceReady                    = "invoice-ready"
 	WorkflowInvoiceVoided                   = "invoice-voided"
+	WorkflowFailedWebhook                   = "failed-webhook"
 )
+
+var REQUIRED_TEMPLATE_VALUES = map[string][]string{
+	WorkflowIdOrgOwnerUpdateEmail: {
+		"{{userFirstName}}",
+		"{{actorFirstName}}",
+		"{{actorLastName}}",
+		"{{orgName}}",
+		"{{orgLink}}",
+	},
+	WorkflowFailedWebhook: {
+		"{{userFirstName}}",
+		"{{webhookName}}",
+		"{{webhookUrl}}",
+	},
+}
 
 type NotifiableUser struct {
 	FirstName    string `json:"firstName"`

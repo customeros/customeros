@@ -13,6 +13,11 @@ type TenantWebhook struct {
 	Event           string    `gorm:"column:event;type:varchar(255);NOT NULL" json:"event" binding:"required"`
 	AuthHeaderName  string    `gorm:"column:auth_header_name;type:varchar(255)" json:"authHeaderName"`
 	AuthHeaderValue string    `gorm:"column:auth_header_value;type:varchar(255)" json:"authHeaderValue"`
+	// data for notifying user if webhook fails
+	UserId        string `gorm:"column:user_id;type:varchar(255)" json:"userId"`
+	UserFirstName string `gorm:"column:user_first_name;type:varchar(255)" json:"userFirstName"`
+	UserLastName  string `gorm:"column:user_last_name;type:varchar(255)" json:"userLastName"`
+	UserEmail     string `gorm:"column:user_email;type:varchar(255)" json:"userEmail"`
 }
 
 func (TenantWebhook) TableName() string {
