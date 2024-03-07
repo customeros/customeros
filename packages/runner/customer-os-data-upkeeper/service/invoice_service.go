@@ -416,7 +416,8 @@ func (s *invoiceService) GenerateInvoicePaymentLinks() {
 			// continue as normal
 		}
 
-		records, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoicesForPaymentLinkRequest(ctx, s.cfg.ProcessConfig.DelayRequestPaymentLinkInMinutes, referenceTime)
+		records, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoicesForPaymentLinkRequest(
+			ctx, s.cfg.ProcessConfig.DelayRequestPaymentLinkInMinutes, s.cfg.ProcessConfig.RequestPaymentLinkLookBackWindowInDays, referenceTime)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting invoices for payment links generation: %v", err)
