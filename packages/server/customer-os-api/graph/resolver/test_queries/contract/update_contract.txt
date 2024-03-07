@@ -24,8 +24,10 @@ contract_Update(
         canPayWithCard: true
         canPayWithDirectDebit: true
         canPayWithBankTransfer: true
-        payOnline: true
-        payAutomatically: true
+        billingDetails: {
+            payOnline: true
+            payAutomatically: true
+        }
     }
   ) {
     id
