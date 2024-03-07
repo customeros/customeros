@@ -556,3 +556,22 @@ func MapDbNodeToSocialEntity(dbNode *dbtype.Node) *entity.SocialEntity {
 	}
 	return &social
 }
+
+func MapDbNodeToReminderEntity(dbNode *dbtype.Node) *entity.ReminderEntity {
+	if dbNode == nil {
+		return &entity.ReminderEntity{}
+	}
+	props := utils.GetPropsFromNode(*dbNode)
+	reminder := entity.ReminderEntity{
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		Content:       utils.GetStringPropOrEmpty(props, "content"),
+		DueDate:       utils.GetTimePropOrEpochStart(props, "dueDate"),
+		Dismissed:     utils.GetBoolPropOrFalse(props, "dismissed"),
+		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+	}
+	return &reminder
+}
