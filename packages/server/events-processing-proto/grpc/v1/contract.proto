@@ -41,6 +41,8 @@ enum ContractFieldMask {
   CONTRACT_FIELD_CAN_PAY_WITH_DIRECT_DEBIT = 21;
   CONTRACT_FIELD_CAN_PAY_WITH_BANK_TRANSFER = 22;
   CONTRACT_FIELD_INVOICING_ENABLED = 23;
+  CONTRACT_FIELD_PAY_ONLINE = 24;
+  CONTRACT_FIELD_PAY_AUTOMATICALLY = 25;
 }
 
 // CreateContract request message
@@ -63,6 +65,8 @@ message CreateContractGrpcRequest {
   google.protobuf.Timestamp invoicingStartDate = 17;
   string currency = 18;
   bool invoicingEnabled = 19;
+  bool payOnline = 20;
+  bool payAutomatically = 21;
 }
 
 message UpdateContractGrpcRequest {
@@ -96,6 +100,8 @@ message UpdateContractGrpcRequest {
   bool canPayWithDirectDebit = 28;
   bool canPayWithBankTransfer = 29;
   bool invoicingEnabled = 30;
+  bool payOnline = 31;
+  bool payAutomatically = 32;
 }
 
 message RolloutRenewalOpportunityOnExpirationGrpcRequest {

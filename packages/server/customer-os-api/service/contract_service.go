@@ -101,7 +101,9 @@ func (s *contractService) createContractWithEvents(ctx context.Context, contract
 			Source:    string(contractDetails.Source),
 			AppSource: contractDetails.AppSource,
 		},
-		RenewalPeriods: contractDetails.ContractEntity.RenewalPeriods,
+		RenewalPeriods:   contractDetails.ContractEntity.RenewalPeriods,
+		PayOnline:        true,
+		PayAutomatically: true,
 	}
 
 	// prepare renewal cycle
@@ -246,6 +248,8 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 		if input.BillingDetails.InvoiceNote != nil {
 			contractUpdateRequest.InvoiceNote = *input.BillingDetails.InvoiceNote
 		}
+		contractUpdateRequest.PayOnline = utils.IfNotNilBool(input.BillingDetails.PayOnline)
+		contractUpdateRequest.PayAutomatically = utils.IfNotNilBool(input.BillingDetails.PayAutomatically)
 	}
 	if input.CommittedPeriods != nil {
 		contractUpdateRequest.RenewalPeriods = input.CommittedPeriods
@@ -431,6 +435,12 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 		}
 		if input.CanPayWithBankTransfer != nil || (input.BillingDetails != nil && input.BillingDetails.CanPayWithBankTransfer != nil) {
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_CAN_PAY_WITH_BANK_TRANSFER)
+		}
+		if input.BillingDetails != nil && input.BillingDetails.PayOnline != nil {
+			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_PAY_ONLINE)
+		}
+		if input.BillingDetails != nil && input.BillingDetails.PayAutomatically != nil {
+			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_PAY_AUTOMATICALLY)
 		}
 		if input.BillingEnabled != nil {
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_INVOICING_ENABLED)

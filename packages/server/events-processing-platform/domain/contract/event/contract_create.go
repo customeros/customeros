@@ -29,6 +29,8 @@ type ContractCreateEvent struct {
 	Currency           string                     `json:"currency"`
 	BillingCycle       string                     `json:"billingCycle"`
 	InvoicingEnabled   bool                       `json:"invoicingEnabled"`
+	PayOnline          bool                       `json:"payOnline,omitempty"`
+	PayAutomatically   bool                       `json:"payAutomatically,omitempty"`
 }
 
 func NewContractCreateEvent(aggregate eventstore.Aggregate, dataFields model.ContractDataFields, source commonmodel.Source, externalSystem commonmodel.ExternalSystem, createdAt, updatedAt time.Time) (eventstore.Event, error) {
@@ -47,6 +49,8 @@ func NewContractCreateEvent(aggregate eventstore.Aggregate, dataFields model.Con
 		BillingCycle:       dataFields.BillingCycle,
 		InvoicingStartDate: utils.ToDatePtr(dataFields.InvoicingStartDate),
 		InvoicingEnabled:   dataFields.InvoicingEnabled,
+		PayOnline:          dataFields.PayOnline,
+		PayAutomatically:   dataFields.PayAutomatically,
 		CreatedAt:          createdAt,
 		UpdatedAt:          updatedAt,
 		Source:             source,

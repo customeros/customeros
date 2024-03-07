@@ -36,6 +36,8 @@ func MapEntityToContract(entity *neo4jentity.ContractEntity) *model.Contract {
 			CanPayWithCard:         utils.ToPtr(entity.CanPayWithCard),
 			CanPayWithDirectDebit:  utils.ToPtr(entity.CanPayWithDirectDebit),
 			CanPayWithBankTransfer: utils.ToPtr(entity.CanPayWithBankTransfer),
+			PayOnline:              utils.ToPtr(entity.PayOnline),
+			PayAutomatically:       utils.ToPtr(entity.PayAutomatically),
 		},
 		CommittedPeriods:     entity.RenewalPeriods,
 		ContractEnded:        entity.EndedAt,

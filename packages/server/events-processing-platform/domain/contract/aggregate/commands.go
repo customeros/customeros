@@ -161,6 +161,8 @@ func (a *ContractAggregate) updateContract(ctx context.Context, request *contrac
 		CanPayWithCard:         request.CanPayWithCard,
 		CanPayWithDirectDebit:  request.CanPayWithDirectDebit,
 		CanPayWithBankTransfer: request.CanPayWithBankTransfer,
+		PayOnline:              request.PayOnline,
+		PayAutomatically:       request.PayAutomatically,
 		InvoicingEnabled:       request.InvoicingEnabled,
 	}
 	fieldsMask := extractFieldsMask(request.FieldsMask)
@@ -336,6 +338,10 @@ func extractFieldsMask(requestFieldsMask []contractpb.ContractFieldMask) []strin
 			fieldsMask = append(fieldsMask, event.FieldMaskCanPayWithDirectDebit)
 		case contractpb.ContractFieldMask_CONTRACT_FIELD_CAN_PAY_WITH_BANK_TRANSFER:
 			fieldsMask = append(fieldsMask, event.FieldMaskCanPayWithBankTransfer)
+		case contractpb.ContractFieldMask_CONTRACT_FIELD_PAY_ONLINE:
+			fieldsMask = append(fieldsMask, event.FieldMaskPayOnline)
+		case contractpb.ContractFieldMask_CONTRACT_FIELD_PAY_AUTOMATICALLY:
+			fieldsMask = append(fieldsMask, event.FieldMaskPayAutomatically)
 		}
 	}
 	fieldsMask = utils.RemoveDuplicates(fieldsMask)

@@ -33,6 +33,8 @@ type ContractCreateFields struct {
 	Currency           neo4jenum.Currency     `json:"currency"`
 	InvoicingStartDate *time.Time             `json:"invoicingStartDate,omitempty"`
 	InvoicingEnabled   bool                   `json:"invoicingEnabled"`
+	PayOnline          bool                   `json:"payOnline"`
+	PayAutomatically   bool                   `json:"payAutomatically"`
 }
 
 type ContractUpdateFields struct {
@@ -59,6 +61,8 @@ type ContractUpdateFields struct {
 	InvoiceEmail                 string                 `json:"invoiceEmail"`
 	InvoiceNote                  string                 `json:"invoiceNote"`
 	InvoicingEnabled             bool                   `json:"invoicingEnabled"`
+	PayOnline                    bool                   `json:"payOnline"`
+	PayAutomatically             bool                   `json:"payAutomatically"`
 	UpdateName                   bool                   `json:"updateName"`
 	UpdateContractUrl            bool                   `json:"updateContractUrl"`
 	UpdateStatus                 bool                   `json:"updateStatus"`
@@ -83,6 +87,8 @@ type ContractUpdateFields struct {
 	UpdateCanPayWithDirectDebit  bool                   `json:"updateCanPayWithDirectDebit"`
 	UpdateCanPayWithBankTransfer bool                   `json:"updateCanPayWithBankTransfer"`
 	UpdateInvoicingEnabled       bool                   `json:"updateInvoicingEnabled"`
+	UpdatePayOnline              bool                   `json:"updatePayOnline"`
+	UpdatePayAutomatically       bool                   `json:"updatePayAutomatically"`
 }
 
 type ContractWriteRepository interface {
@@ -137,7 +143,9 @@ func (r *contractWriteRepository) CreateForOrganization(ctx context.Context, ten
 								ct.currency=$currency,
 								ct.billingCycle=$billingCycle,
 								ct.invoicingStartDate=$invoicingStartDate,
-								ct.invoicingEnabled=$invoicingEnabled
+								ct.invoicingEnabled=$invoicingEnabled,
+								ct.payOnline=$payOnline,
+								ct.payAutomatically=$payAutomatically
 							WITH ct, t
 							OPTIONAL MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$createdByUserId}) 
 							WHERE $createdByUserId <> ""
@@ -165,6 +173,8 @@ func (r *contractWriteRepository) CreateForOrganization(ctx context.Context, ten
 		"billingCycle":       data.BillingCycle.String(),
 		"invoicingStartDate": utils.ToNeo4jDateAsAny(data.InvoicingStartDate),
 		"invoicingEnabled":   data.InvoicingEnabled,
+		"payOnline":          data.PayOnline,
+		"payAutomatically":   data.PayAutomatically,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -290,6 +300,14 @@ func (r *contractWriteRepository) UpdateAndReturn(ctx context.Context, tenant, c
 	if data.UpdateInvoicingEnabled {
 		cypher += `, ct.invoicingEnabled=$invoicingEnabled `
 		params["invoicingEnabled"] = data.InvoicingEnabled
+	}
+	if data.UpdatePayOnline {
+		cypher += `, ct.payOnline=$payOnline `
+		params["payOnline"] = data.PayOnline
+	}
+	if data.UpdatePayAutomatically {
+		cypher += `, ct.payAutomatically=$payAutomatically `
+		params["payAutomatically"] = data.PayAutomatically
 	}
 	cypher += ` RETURN ct`
 

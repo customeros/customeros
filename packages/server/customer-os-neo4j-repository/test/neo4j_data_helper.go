@@ -664,7 +664,9 @@ func CreateContractForOrganization(ctx context.Context, driver *neo4j.DriverWith
 					c.canPayWithCard=$canPayWithCard,
 					c.canPayWithDirectDebit=$canPayWithDirectDebit,
 					c.canPayWithBankTransfer=$canPayWithBankTransfer,
-					c.invoicingEnabled=$invoicingEnabled
+					c.invoicingEnabled=$invoicingEnabled,
+					c.payOnline=$payOnline,
+					c.payAutomatically=$payAutomatically
 				`, tenant)
 
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
@@ -700,6 +702,8 @@ func CreateContractForOrganization(ctx context.Context, driver *neo4j.DriverWith
 		"canPayWithDirectDebit":  contract.CanPayWithDirectDebit,
 		"canPayWithBankTransfer": contract.CanPayWithBankTransfer,
 		"invoicingEnabled":       contract.InvoicingEnabled,
+		"payOnline":              contract.PayOnline,
+		"payAutomatically":       contract.PayAutomatically,
 	})
 	return contractId
 }

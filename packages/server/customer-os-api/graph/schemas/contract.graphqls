@@ -55,6 +55,7 @@ type Contract implements MetadataInterface {
 type BillingDetails {
     billingCycle:           ContractBillingCycle
     invoicingStarted:       Time
+    nextInvoicing:          Time
     addressLine1:           String
     addressLine2:           String
     locality:               String
@@ -67,7 +68,8 @@ type BillingDetails {
     canPayWithCard:         Boolean
     canPayWithDirectDebit:  Boolean
     canPayWithBankTransfer: Boolean
-    nextInvoicing:          Time
+    payOnline :             Boolean
+    payAutomatically:       Boolean
 }
 
 input ContractInput {
@@ -143,6 +145,8 @@ input BillingDetailsInput {
     canPayWithCard:         Boolean
     canPayWithDirectDebit:  Boolean
     canPayWithBankTransfer: Boolean
+    payOnline :             Boolean
+    payAutomatically:       Boolean
 }
 
 enum ContractRenewalCycle {

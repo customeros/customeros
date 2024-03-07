@@ -39,6 +39,8 @@ type ContractEntity struct {
 	CanPayWithDirectDebit           bool
 	CanPayWithBankTransfer          bool
 	InvoicingEnabled                bool
+	PayOnline                       bool
+	PayAutomatically                bool
 }
 
 type ContractEntities []ContractEntity

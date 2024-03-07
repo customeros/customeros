@@ -19,6 +19,8 @@ query GetContract($contractId: ID!) {
         canPayWithCard
         canPayWithDirectDebit
         canPayWithBankTransfer
+        payOnline
+        payAutomatically
     }
     committedPeriods
     contractEnded
