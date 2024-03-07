@@ -3161,7 +3161,7 @@
     "@highlight-run/opentelemetry-sdk-workers" "1.0.4"
     "@opentelemetry/resources" "1.17.0"
 
-"@highlight-run/next@^7.2.5":
+"@highlight-run/next@^7.4.0":
   version "7.4.0"
   resolved "https://registry.yarnpkg.com/@highlight-run/next/-/next-7.4.0.tgz#e98825b6ba84ec99da3e54531c38387d29c3d77b"
   integrity sha512-359VgpB+YBaynLv3jQV7rBkJTIpcmVmQz0njVUNTUkyV1Pr8Nvrdbr7FQKIIiZc06c8B8zM7Y5Jo9Hc0ogDAkA==
@@ -11739,6 +11739,11 @@ js-convert-case@^4.2.0:
   version "4.2.0"
   resolved "https://registry.yarnpkg.com/js-convert-case/-/js-convert-case-4.2.0.tgz#d153b457974a865586d7b031793145c2143ea882"
   integrity sha512-i4mHCxiBNj6ajjMnZnC70qAOMA8gb+YgYipy2VR7a+Q5EBgEQ2/SgSAUBdNEyObk++B4AIUiFWeDEX2ggOd8cQ==
+
+js-cookie@^3.0.5:
+  version "3.0.5"
+  resolved "https://registry.yarnpkg.com/js-cookie/-/js-cookie-3.0.5.tgz#0b7e2fd0c01552c58ba86e0841f94dc2557dcdbc"
+  integrity sha512-cEiJEAEoIbWfCZYKWhVwFuvPX1gETRYPw6LlaTKoxD3s2AkXzkCjnp6h0V77ozyqj0jakteJ4YqDJT830+lVGw==
 
 js-levenshtein@^1.1.6:
   version "1.1.6"
