@@ -129,8 +129,9 @@ func (h *InvoiceEventHandler) fillCycleInvoice(ctx context.Context, tenant, cont
 	var invoiceLines []*invoicepb.InvoiceLine
 
 	referenceTime := invoiceEntity.PeriodStartDate
+	periodEndTime := utils.EndOfDayInUTC(invoiceEntity.PeriodEndDate)
 	if invoiceEntity.Postpaid {
-		referenceTime = utils.EndOfDayInUTC(invoiceEntity.PeriodEndDate)
+		referenceTime = periodEndTime
 	}
 	for _, sliEntity := range sliEntities {
 		// skip for now usage SLIs
@@ -146,11 +147,15 @@ func (h *InvoiceEventHandler) fillCycleInvoice(ctx context.Context, tenant, cont
 			continue
 		}
 		// skip SLI if not active on the reference time
-		if !sliEntity.IsActiveAt(referenceTime) {
+		if sliEntity.IsRecurrent() && !sliEntity.IsActiveAt(referenceTime) {
+			continue
+		}
+		// skip ONE TIME SLI if started after the end period
+		if sliEntity.IsOneTime() && sliEntity.StartedAt.After(periodEndTime) {
 			continue
 		}
 
-		if sliEntity.Quantity <= 0 {
+		if sliEntity.Quantity <= 0 || sliEntity.Price <= 0 {
 			continue
 		}
 
@@ -169,9 +174,6 @@ func (h *InvoiceEventHandler) fillCycleInvoice(ctx context.Context, tenant, cont
 				continue
 			}
 			quantity := sliEntity.Quantity
-			if sliEntity.Quantity <= 0 {
-				quantity = 1
-			}
 			calculatedSLIAmount = utils.TruncateFloat64(float64(quantity)*sliEntity.Price, 2)
 			calculatedSLIVat = utils.TruncateFloat64(calculatedSLIAmount*sliEntity.VatRate/100, 2)
 			invoiceLineCalculationsReady = true
@@ -262,6 +264,9 @@ func (h *InvoiceEventHandler) fillOffCyclePrepaidInvoice(ctx context.Context, te
 		}
 		// One time invoiced SLIs are not applicable
 		if sliEntity.Billed == neo4jenum.BilledTypeOnce {
+			if sliEntity.Quantity <= 0 || sliEntity.Price <= 0 {
+				continue
+			}
 			ilDbNodeAndInvoiceId, err := h.repositories.Neo4jRepositories.InvoiceLineReadRepository.GetLatestInvoiceLineWithInvoiceIdByServiceLineItemParentId(ctx, tenant, sliEntity.ParentID)
 			if err != nil {
 				tracing.TraceErr(span, err)
@@ -272,11 +277,6 @@ func (h *InvoiceEventHandler) fillOffCyclePrepaidInvoice(ctx context.Context, te
 				continue
 			}
 		}
-
-		if sliEntity.Quantity <= 0 {
-			continue
-		}
-
 		filteredSliEntities = append(filteredSliEntities, sliEntity)
 	}
 	// sort SLIs by startedAt
