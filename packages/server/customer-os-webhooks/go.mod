@@ -15,7 +15,7 @@ require (
 	github.com/cenkalti/backoff/v4 v4.2.1
 	github.com/coocood/freecache v1.2.4
 	github.com/docker/docker v25.0.3+incompatible
-	github.com/gin-contrib/cors v1.5.0
+	github.com/gin-contrib/cors v1.6.0
 	github.com/gin-contrib/zap v1.1.0
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-playground/validator/v10 v10.19.0
@@ -32,7 +32,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 	github.com/testcontainers/testcontainers-go v0.29.1
 	google.golang.org/grpc v1.62.1
-	google.golang.org/protobuf v1.32.0
+	google.golang.org/protobuf v1.33.0
 	gorm.io/driver/postgres v1.5.6
 	gorm.io/gorm v1.25.7-0.20240204074919-46816ad31dde
 )
