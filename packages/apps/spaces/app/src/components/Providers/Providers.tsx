@@ -1,64 +1,66 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { RecoilRoot } from 'recoil';
-import { QueryClient } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
+// import { compress, decompress } from 'lz-string';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+// import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
+// import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister';
 
-import { createIDBPersister } from '@shared/util/indexedDBPersister';
-import { AnalyticsProvider } from '@shared/components/Providers/AnalyticsProvider';
-
+import { Env, EnvProvider } from './EnvProvider';
 import { NextAuthProvider } from './SessionProvider';
+import { AnalyticsProvider } from './AnalyticsProvider';
+import { PhoenixSocketProvider } from './SocketProvider';
 import { GrowthbookProvider } from './GrowthbookProvider';
+import { IntegrationsProvider } from './IntegrationsProvider';
 import { NotificationsProvider } from './NotificationsProvider';
 interface ProvidersProps {
+  env: Env;
   isProduction?: boolean;
   children: React.ReactNode;
-  sessionEmail?: string | null;
 }
 
-const hostname =
-  typeof window !== 'undefined' ? window?.location?.hostname : 'platform';
-
-export const Providers = ({
-  children,
-  sessionEmail,
-  isProduction,
-}: ProvidersProps) => {
-  const [persister] = useState(() =>
-    createIDBPersister(`${sessionEmail ?? 'cos'}-${hostname}`),
-  );
-
+export const Providers = ({ env, children, isProduction }: ProvidersProps) => {
   const [queryClient] = useState(
     () =>
       new QueryClient({
         defaultOptions: {
           queries: {
-            cacheTime: 1000 * 60 * 60 * 24, // 24 hours
+            gcTime: 1000 * 60 * 60 * 24, // 24 hours
           },
         },
       }),
   );
 
+  useEffect(() => {
+    // Temporary: should be removed after a few weeks
+    if (typeof window === 'undefined') return;
+    localStorage.removeItem('REACT_QUERY_OFFLINE_CACHE');
+    indexedDB.deleteDatabase('keyval-store');
+  }, []);
+
   return (
-    <PersistQueryClientProvider
-      client={queryClient}
-      persistOptions={{ persister }}
-    >
-      <ReactQueryDevtools initialIsOpen={false} position='bottom-right' />
-      <RecoilRoot>
-        <NextAuthProvider>
-          <GrowthbookProvider>
-            <NotificationsProvider isProduction={isProduction}>
-              <AnalyticsProvider isProduction={isProduction}>
-                {children}
-              </AnalyticsProvider>
-            </NotificationsProvider>
-          </GrowthbookProvider>
-        </NextAuthProvider>
-      </RecoilRoot>
-    </PersistQueryClientProvider>
+    <EnvProvider env={env}>
+      <QueryClientProvider client={queryClient}>
+        <ReactQueryDevtools initialIsOpen={false} position='bottom' />
+        <PhoenixSocketProvider>
+          <RecoilRoot>
+            <NextAuthProvider>
+              <IntegrationsProvider>
+                <GrowthbookProvider>
+                  <NotificationsProvider isProduction={isProduction}>
+                    <AnalyticsProvider isProduction={isProduction}>
+                      {children}
+                    </AnalyticsProvider>
+                  </NotificationsProvider>
+                </GrowthbookProvider>
+              </IntegrationsProvider>
+            </NextAuthProvider>
+          </RecoilRoot>
+        </PhoenixSocketProvider>
+      </QueryClientProvider>
+    </EnvProvider>
   );
 };

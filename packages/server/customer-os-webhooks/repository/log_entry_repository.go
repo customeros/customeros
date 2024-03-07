@@ -13,7 +13,9 @@ import (
 )
 
 type LogEntryRepository interface {
+	// Deprecated
 	GetById(ctx context.Context, tenant, logEntryId string) (*dbtype.Node, error)
+	// Deprecated
 	GetMatchedLogEntryId(ctx context.Context, tenant, externalSystem, externalId string) (string, error)
 }
 

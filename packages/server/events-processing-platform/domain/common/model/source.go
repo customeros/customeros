@@ -30,6 +30,15 @@ func (s *Source) FromGrpc(grpcSource *grpccommon.SourceFields) {
 	s.AppSource = grpcSource.AppSource
 }
 
+func SourceFromGrpc(grpcSource *grpccommon.SourceFields) Source {
+	s := Source{}
+	s.Source = grpcSource.Source
+	s.SourceOfTruth = comutils.StringFirstNonEmpty(grpcSource.SourceOfTruth, grpcSource.Source)
+	s.AppSource = grpcSource.AppSource
+	s.SetDefaultValues()
+	return s
+}
+
 func (s *Source) SetDefaultValues() {
 	if s.Source == "" {
 		s.Source = constants.SourceOpenline

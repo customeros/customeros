@@ -103,7 +103,15 @@ export const ParticipantsSelectGroup = ({
               </Text>
               <Text color='gray.500' noOfLines={1}>
                 {!!to?.length && (
-                  <>{to?.map((email) => email.value).join(', ')}</>
+                  <>
+                    {to
+                      ?.map((email) =>
+                        email?.value
+                          ? email.value
+                          : `⚠️ ${email.label} [invalid email]`,
+                      )
+                      .join(', ')}
+                  </>
                 )}
               </Text>
             </Flex>

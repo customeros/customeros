@@ -5,6 +5,16 @@ import (
 	"strings"
 )
 
+func JoinNonEmpty(delimiter string, strs ...string) string {
+	var nonEmptyStrs []string
+	for _, s := range strs {
+		if len(s) > 0 {
+			nonEmptyStrs = append(nonEmptyStrs, s)
+		}
+	}
+	return strings.Join(nonEmptyStrs, delimiter)
+}
+
 func StringFirstNonEmpty(strs ...string) string {
 	for _, s := range strs {
 		if len(s) > 0 {

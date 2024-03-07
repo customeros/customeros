@@ -35,7 +35,7 @@ func (c *linkPhoneNumberCommandHandler) Handle(ctx context.Context, cmd *command
 		return validationError
 	}
 
-	organizationAggregate, err := aggregate.LoadOrganizationAggregate(ctx, c.es, cmd.Tenant, cmd.ObjectID)
+	organizationAggregate, err := aggregate.LoadOrganizationAggregate(ctx, c.es, cmd.Tenant, cmd.ObjectID, *eventstore.NewLoadAggregateOptions())
 	if err != nil {
 		return err
 	}

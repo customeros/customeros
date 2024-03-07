@@ -10,22 +10,25 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"testing"
 	"time"
 )
 
 func TestMutationResolver_ContractCreate(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
+	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := uuid.New().String()
 	calledCreateContract := false
 
@@ -39,6 +42,7 @@ func TestMutationResolver_ContractCreate(t *testing.T) {
 			require.Equal(t, "Contract 1", contract.Name)
 			require.Equal(t, "https://contract.com", contract.ContractUrl)
 			require.Equal(t, contractpb.RenewalCycle_MONTHLY_RENEWAL, contract.RenewalCycle)
+			require.Equal(t, "USD", contract.Currency)
 			require.Equal(t, int64(7), *contract.RenewalPeriods)
 			expectedServiceStartedAt, err := time.Parse(time.RFC3339, "2019-01-01T00:00:00Z")
 			if err != nil {
@@ -50,8 +54,9 @@ func TestMutationResolver_ContractCreate(t *testing.T) {
 				t.Fatalf("Failed to parse expected timestamp: %v", err)
 			}
 			require.Equal(t, timestamppb.New(expectedSignedAt), contract.SignedAt)
+
 			calledCreateContract = true
-			neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
+			neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 				Id: contractId,
 			})
 			return &contractpb.ContractIdGrpcResponse{
@@ -79,13 +84,13 @@ func TestMutationResolver_ContractCreate(t *testing.T) {
 }
 
 func TestMutationResolver_ContractUpdate(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
-	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{})
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
+	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
 	calledUpdateContract := false
 
 	contractServiceCallbacks := events_platform.MockContractServiceCallbacks{
@@ -114,6 +119,20 @@ func TestMutationResolver_ContractUpdate(t *testing.T) {
 				t.Fatalf("Failed to parse expected timestamp: %v", err)
 			}
 			require.Equal(t, timestamppb.New(expectedEndedAt), contract.EndedAt)
+			require.Equal(t, commonpb.BillingCycle_ANNUALLY_BILLING, contract.BillingCycle)
+			require.Equal(t, "USD", contract.Currency)
+			require.Equal(t, "test address line 1", contract.AddressLine1)
+			require.Equal(t, "test address line 2", contract.AddressLine2)
+			require.Equal(t, "test locality", contract.Locality)
+			require.Equal(t, "test country", contract.Country)
+			require.Equal(t, "test zip", contract.Zip)
+			require.Equal(t, "test organization legal name", contract.OrganizationLegalName)
+			require.Equal(t, "test invoice email", contract.InvoiceEmail)
+			require.Equal(t, "test invoice note", contract.InvoiceNote)
+			require.Equal(t, true, contract.CanPayWithCard)
+			require.Equal(t, true, contract.CanPayWithDirectDebit)
+			require.Equal(t, true, contract.CanPayWithBankTransfer)
+			require.Equal(t, 20, len(contract.FieldsMask))
 			calledUpdateContract = true
 			return &contractpb.ContractIdGrpcResponse{
 				Id: contractId,
@@ -139,44 +158,114 @@ func TestMutationResolver_ContractUpdate(t *testing.T) {
 	require.True(t, calledUpdateContract)
 }
 
+func TestMutationResolver_ContractUpdate_NullDateFields(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
+	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
+	calledUpdateContract := false
+
+	contractServiceCallbacks := events_platform.MockContractServiceCallbacks{
+		UpdateContract: func(context context.Context, contract *contractpb.UpdateContractGrpcRequest) (*contractpb.ContractIdGrpcResponse, error) {
+			require.Equal(t, tenantName, contract.Tenant)
+			require.Equal(t, contractId, contract.Id)
+			require.Equal(t, testUserId, contract.LoggedInUserId)
+			require.Equal(t, string(neo4jentity.DataSourceOpenline), contract.SourceFields.Source)
+			require.Equal(t, "customer-os-api", contract.SourceFields.AppSource)
+
+			require.Nil(t, contract.SignedAt)
+			require.Nil(t, contract.ServiceStartedAt)
+			require.Nil(t, contract.EndedAt)
+			require.Nil(t, contract.InvoicingStartDate)
+
+			require.Equal(t, 4, len(contract.FieldsMask))
+			calledUpdateContract = true
+			return &contractpb.ContractIdGrpcResponse{
+				Id: contractId,
+			}, nil
+		},
+	}
+	events_platform.SetContractCallbacks(&contractServiceCallbacks)
+
+	rawResponse := callGraphQL(t, "contract/update_contract_null_dates", map[string]interface{}{
+		"contractId": contractId,
+	})
+
+	var contractStruct struct {
+		Contract_Update model.Contract
+	}
+
+	require.Nil(t, rawResponse.Errors)
+	err := decode.Decode(rawResponse.Data.(map[string]any), &contractStruct)
+	require.Nil(t, err)
+	contract := contractStruct.Contract_Update
+	require.Equal(t, contractId, contract.ID)
+	require.Nil(t, contract.SignedAt)
+	require.Nil(t, contract.ServiceStartedAt)
+	require.Nil(t, contract.EndedAt)
+	require.Nil(t, contract.InvoicingStartDate)
+
+	require.True(t, calledUpdateContract)
+}
+
 func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	now := utils.Now()
 	yesterday := now.Add(time.Duration(-24) * time.Hour)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
-	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{})
+	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		AddressLine1:           "address line 1",
+		AddressLine2:           "address line 2",
+		Zip:                    "zip",
+		Locality:               "locality",
+		Country:                "country",
+		OrganizationLegalName:  "organization legal name",
+		InvoiceEmail:           "invoice email",
+		InvoiceNote:            "invoice note",
+		BillingCycle:           neo4jenum.BillingCycleMonthlyBilling,
+		InvoicingStartDate:     &now,
+		InvoicingEnabled:       true,
+		CanPayWithCard:         true,
+		CanPayWithDirectDebit:  true,
+		CanPayWithBankTransfer: true,
+	})
 
-	serviceLineItemId1 := neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
+	serviceLineItemId1 := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
 		Name:      "service line item 1",
 		CreatedAt: yesterday,
 		UpdatedAt: yesterday,
-		Billed:    entity.BilledTypeAnnually,
+		Billed:    neo4jenum.BilledTypeAnnually,
 		Price:     13,
 		Quantity:  2,
 		Source:    neo4jentity.DataSourceOpenline,
 		AppSource: "test1",
+		VatRate:   0.1,
 	})
-	serviceLineItemId2 := neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
+	serviceLineItemId2 := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
 		Name:      "service line item 2",
 		CreatedAt: now,
 		UpdatedAt: now,
-		Billed:    entity.BilledTypeUsage,
+		Billed:    neo4jenum.BilledTypeUsage,
 		Price:     255,
 		Quantity:  23,
 		Source:    neo4jentity.DataSourceOpenline,
 		AppSource: "test2",
+		VatRate:   0.2,
 	})
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
 		"Organization":    1,
 		"Contract":        1,
 		"ServiceLineItem": 2,
 	})
-	assertRelationship(ctx, t, driver, contractId, "HAS_SERVICE", serviceLineItemId1)
-	assertRelationship(ctx, t, driver, contractId, "HAS_SERVICE", serviceLineItemId2)
+	neo4jtest.AssertRelationship(ctx, t, driver, contractId, "HAS_SERVICE", serviceLineItemId1)
+	neo4jtest.AssertRelationship(ctx, t, driver, contractId, "HAS_SERVICE", serviceLineItemId2)
 
 	rawResponse := callGraphQL(t, "contract/get_contract_with_service_line_items",
 		map[string]interface{}{"contractId": contractId})
@@ -190,41 +279,60 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 
 	contract := contractStruct.Contract
 	require.NotNil(t, contract)
-	require.Equal(t, 2, len(contract.ServiceLineItems))
+	require.Equal(t, contractId, contract.Metadata.ID)
+	require.True(t, contract.BillingEnabled)
 
-	firstServiceLineItem := contract.ServiceLineItems[0]
-	require.Equal(t, serviceLineItemId1, firstServiceLineItem.ID)
-	require.Equal(t, "service line item 1", firstServiceLineItem.Name)
-	require.Equal(t, yesterday, firstServiceLineItem.CreatedAt)
-	require.Equal(t, yesterday, firstServiceLineItem.UpdatedAt)
-	require.Equal(t, model.BilledTypeAnnually, firstServiceLineItem.Billed)
-	require.Equal(t, float64(13), firstServiceLineItem.Price)
-	require.Equal(t, int64(2), firstServiceLineItem.Quantity)
-	require.Equal(t, model.DataSourceOpenline, firstServiceLineItem.Source)
-	require.Equal(t, "test1", firstServiceLineItem.AppSource)
+	billingDetails := contract.BillingDetails
+	require.Equal(t, "address line 1", *billingDetails.AddressLine1)
+	require.Equal(t, "address line 2", *billingDetails.AddressLine2)
+	require.Equal(t, "zip", *billingDetails.PostalCode)
+	require.Equal(t, "locality", *billingDetails.Locality)
+	require.Equal(t, "country", *billingDetails.Country)
+	require.Equal(t, "organization legal name", *billingDetails.OrganizationLegalName)
+	require.Equal(t, "invoice email", *billingDetails.BillingEmail)
+	require.Equal(t, "invoice note", *billingDetails.InvoiceNote)
+	require.Equal(t, model.ContractBillingCycleMonthlyBilling, *billingDetails.BillingCycle)
+	require.True(t, *billingDetails.CanPayWithCard)
+	require.True(t, *billingDetails.CanPayWithDirectDebit)
+	require.True(t, *billingDetails.CanPayWithBankTransfer)
 
-	secondServiceLineItem := contract.ServiceLineItems[1]
-	require.Equal(t, serviceLineItemId2, secondServiceLineItem.ID)
-	require.Equal(t, "service line item 2", secondServiceLineItem.Name)
-	require.Equal(t, now, secondServiceLineItem.CreatedAt)
-	require.Equal(t, now, secondServiceLineItem.UpdatedAt)
-	require.Equal(t, model.BilledTypeUsage, secondServiceLineItem.Billed)
-	require.Equal(t, float64(255), secondServiceLineItem.Price)
-	require.Equal(t, int64(23), secondServiceLineItem.Quantity)
-	require.Equal(t, model.DataSourceOpenline, secondServiceLineItem.Source)
-	require.Equal(t, "test2", secondServiceLineItem.AppSource)
+	require.Equal(t, 2, len(contract.ContractLineItems))
+
+	firstContractLineItem := contract.ContractLineItems[0]
+	require.Equal(t, serviceLineItemId1, firstContractLineItem.Metadata.ID)
+	require.Equal(t, "service line item 1", firstContractLineItem.Description)
+	require.Equal(t, yesterday, firstContractLineItem.Metadata.Created)
+	require.Equal(t, yesterday, firstContractLineItem.Metadata.LastUpdated)
+	require.Equal(t, model.BilledTypeAnnually, firstContractLineItem.BillingCycle)
+	require.Equal(t, float64(13), firstContractLineItem.Price)
+	require.Equal(t, int64(2), firstContractLineItem.Quantity)
+	require.Equal(t, model.DataSourceOpenline, firstContractLineItem.Metadata.Source)
+	require.Equal(t, "test1", firstContractLineItem.Metadata.AppSource)
+	require.Equal(t, 0.1, firstContractLineItem.Tax.TaxRate)
+
+	secondContractLineItem := contract.ContractLineItems[1]
+	require.Equal(t, serviceLineItemId2, secondContractLineItem.Metadata.ID)
+	require.Equal(t, "service line item 2", secondContractLineItem.Description)
+	require.Equal(t, now, secondContractLineItem.Metadata.Created)
+	require.Equal(t, now, secondContractLineItem.Metadata.LastUpdated)
+	require.Equal(t, model.BilledTypeUsage, secondContractLineItem.BillingCycle)
+	require.Equal(t, float64(255), secondContractLineItem.Price)
+	require.Equal(t, int64(23), secondContractLineItem.Quantity)
+	require.Equal(t, model.DataSourceOpenline, secondContractLineItem.Metadata.Source)
+	require.Equal(t, "test2", secondContractLineItem.Metadata.AppSource)
+	require.Equal(t, 0.2, secondContractLineItem.Tax.TaxRate)
 }
 
 func TestQueryResolver_Contract_WithOpportunities(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	now := utils.Now()
 	yesterday := now.Add(time.Duration(-24) * time.Hour)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
-	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{})
+	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
 
 	opportunityId1 := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, entity.OpportunityEntity{
 		Name:          "oppo 1",
@@ -255,7 +363,7 @@ func TestQueryResolver_Contract_WithOpportunities(t *testing.T) {
 		"Contract":     1,
 		"Opportunity":  2,
 	})
-	assertRelationship(ctx, t, driver, contractId, "HAS_OPPORTUNITY", opportunityId1)
+	neo4jtest.AssertRelationship(ctx, t, driver, contractId, "HAS_OPPORTUNITY", opportunityId1)
 
 	rawResponse := callGraphQL(t, "contract/get_contract_with_opportunities",
 		map[string]interface{}{"contractId": contractId})
@@ -296,4 +404,42 @@ func TestQueryResolver_Contract_WithOpportunities(t *testing.T) {
 	require.Equal(t, "test notes 2", secondOpportunity.GeneralNotes)
 	require.Equal(t, "test comments 2", secondOpportunity.Comments)
 	require.Equal(t, "test2", secondOpportunity.AppSource)
+}
+
+func TestMutationResolver_ContractDelete(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
+
+	calledDeleteContractEvent := false
+
+	contractCallbacks := events_platform.MockContractServiceCallbacks{
+		SoftDeleteContract: func(context context.Context, contract *contractpb.SoftDeleteContractGrpcRequest) (*emptypb.Empty, error) {
+			require.Equal(t, tenantName, contract.Tenant)
+			require.Equal(t, contractId, contract.Id)
+			require.Equal(t, testUserId, contract.LoggedInUserId)
+			require.Equal(t, constants.AppSourceCustomerOsApi, constants.AppSourceCustomerOsApi)
+			calledDeleteContractEvent = true
+			return &emptypb.Empty{}, nil
+		},
+	}
+	events_platform.SetContractCallbacks(&contractCallbacks)
+
+	rawResponse := callGraphQL(t, "contract/delete_contract", map[string]interface{}{
+		"contractId": contractId,
+	})
+
+	var response struct {
+		Contract_Delete model.DeleteResponse
+	}
+
+	require.Nil(t, rawResponse.Errors)
+	err := decode.Decode(rawResponse.Data.(map[string]any), &response)
+	require.Nil(t, err)
+	require.True(t, response.Contract_Delete.Accepted)
+	require.False(t, response.Contract_Delete.Completed)
+	require.True(t, calledDeleteContractEvent)
 }

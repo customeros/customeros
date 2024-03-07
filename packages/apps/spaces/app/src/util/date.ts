@@ -1,31 +1,43 @@
+import set from 'date-fns/set';
 import differenceInDays from 'date-fns/differenceInDays';
+import differenceInYears from 'date-fns/differenceInYears';
 import differenceInWeeks from 'date-fns/differenceInWeeks';
 import differenceInHours from 'date-fns/differenceInHours';
 import differenceInMonths from 'date-fns/differenceInMonths';
 import differenceInMinutes from 'date-fns/differenceInMinutes';
 
 export function getDifferenceFromNow(targetDate: string) {
-  const now = new Date();
-  const next = new Date(targetDate);
+  const now = set(new Date(), { hours: 0, minutes: 0, seconds: 0 });
+  const next = set(new Date(targetDate), { hours: 0, minutes: 0, seconds: 1 });
 
+  const years = differenceInYears(next, now);
   const months = differenceInMonths(next, now);
+  const monthsAfterYears = months - years * 12;
   const weeks = differenceInWeeks(next, now);
   const days = differenceInDays(next, now);
 
-  if (days === 0) return ['0', 'days'];
+  if (days === 0) return ['', 'today'];
+  if (days === 1) return ['1', 'day'];
+  if (days < 7) return [`${days}`, 'days'];
 
-  if (days === 1) return [days, 'day'];
-  if (days < 7 && days !== 1) return [days, 'days'];
+  if (weeks === 1) return ['1', 'week'];
+  if (weeks < 4) return [`${weeks}`, 'weeks'];
 
-  if (weeks === 1) return [weeks, 'week'];
-  if (weeks <= 4 && weeks !== 1 && months === 0) return [weeks, 'weeks'];
-  if (weeks % 4 === 0 && weeks / 4 !== 1) return [weeks / 4, 'months'];
+  if (years === 0) {
+    if (monthsAfterYears === 1) return ['1', 'month'];
 
-  if (months === 1 && weeks % 4 === 0) return [months, 'month'];
+    return [months, 'months'];
+  }
 
-  const roundedMonths = weeks % 4 > 2 ? months + 1 : months;
+  if (years === 1) {
+    if (monthsAfterYears === 0) return ['1', 'year'];
 
-  return [roundedMonths, 'months'];
+    return ['1', 'year', `${monthsAfterYears}`, 'months'];
+  }
+
+  if (monthsAfterYears === 0) return [`${years}`, 'years'];
+
+  return [`${years}`, 'years', `${monthsAfterYears}`, 'months'];
 }
 
 export function getDifferenceInMinutesOrHours(targetDate: string) {

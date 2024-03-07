@@ -1,0 +1,33 @@
+query organizationOnboardingPlans($organizationId: ID!) {
+  organizationPlansForOrganization(organizationId: $organizationId) {
+    id
+    name
+    retired
+    masterPlanId
+    createdAt
+    milestones {
+      id
+      name
+      order
+      dueDate
+      optional
+      items {
+        uuid
+        status
+        text
+        updatedAt
+      }
+      retired
+      statusDetails {
+        updatedAt
+        status
+        text
+      }
+    }
+    statusDetails {
+      updatedAt
+      status
+      text
+    }
+  }
+}

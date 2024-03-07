@@ -29,7 +29,7 @@ export const useOrganizationsPageMethods = () => {
   const createOrganization = useCreateOrganizationMutation(client, {
     onMutate: () => {
       const pageIndex = organizationsMeta.getOrganization.pagination.page - 1;
-      queryClient.cancelQueries(queryKey);
+      queryClient.cancelQueries({ queryKey });
 
       const previousEntries =
         queryClient.getQueryData<InfiniteData<GetOrganizationsQuery>>(queryKey);
@@ -81,14 +81,14 @@ export const useOrganizationsPageMethods = () => {
       push(`/organization/${id}`);
     },
     onSettled: () => {
-      queryClient.invalidateQueries(queryKey);
+      queryClient.invalidateQueries({ queryKey });
     },
   });
 
   const hideOrganizations = useHideOrganizationsMutation(client, {
     onMutate: ({ ids }) => {
       const pageIndex = organizationsMeta.getOrganization.pagination.page - 1;
-      queryClient.cancelQueries(queryKey);
+      queryClient.cancelQueries({ queryKey });
 
       const previousEntries =
         queryClient.getQueryData<InfiniteData<GetOrganizationsQuery>>(queryKey);
@@ -136,13 +136,13 @@ export const useOrganizationsPageMethods = () => {
       );
     },
     onSettled: () => {
-      queryClient.invalidateQueries(queryKey);
+      queryClient.invalidateQueries({ queryKey });
     },
   });
 
   const mergeOrganizations = useMergeOrganizationsMutation(client, {
     onMutate: ({ primaryOrganizationId, mergedOrganizationIds }) => {
-      queryClient.cancelQueries(queryKey);
+      queryClient.cancelQueries({ queryKey });
 
       const previousEntries =
         queryClient.getQueryData<InfiniteData<GetOrganizationsQuery>>(queryKey);
@@ -200,7 +200,7 @@ export const useOrganizationsPageMethods = () => {
       );
     },
     onSettled: () => {
-      queryClient.invalidateQueries(queryKey);
+      queryClient.invalidateQueries({ queryKey });
     },
   });
 

@@ -265,34 +265,15 @@ Updates data fields associated with an existing customer record in customerOS.
 **An `update` object.**
 """
 input ContactUpdateInput {
-
-    """
-    The unique ID associated with the contact in customerOS.
-    **Required.**
-    """
-    id: ID!
-
-    "The prefix associate with the contact in customerOS."
-    prefix: String
-
-    """
-    The first name of the contact in customerOS.
-    """
-    firstName: String
-    name: String
-    description: String
-    timezone: String
-    profilePhotoUrl: String
-
-    """
-    The last name of the contact in customerOS.
-    """
-    lastName: String
-
-    label: String @deprecated(reason: "Use `tags` instead")
-
-    "Id of the contact owner (user)"
-    ownerId: ID @deprecated(reason: "Not supported in update flow yet")
+    id:                 ID!
+    patch:              Boolean
+    firstName:          String
+    lastName:           String
+    name:               String
+    prefix:             String
+    description:        String
+    timezone:           String
+    profilePhotoUrl:    String
 }
 
 input ContactTagInput {

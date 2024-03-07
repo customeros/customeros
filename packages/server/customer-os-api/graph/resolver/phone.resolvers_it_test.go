@@ -10,6 +10,7 @@ import (
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/stretchr/testify/require"
@@ -23,7 +24,12 @@ func TestMutationResolver_PhoneNumberMergeToContact(t *testing.T) {
 
 	// Create a default contact
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	neo4jt.CreateCountry(ctx, driver, "US", "USA", "United States", "1")
+	neo4jtest.CreateCountry(ctx, driver, neo4jentity.CountryEntity{
+		Name:      "United States",
+		CodeA2:    "US",
+		CodeA3:    "USA",
+		PhoneCode: "1",
+	})
 
 	rawResponse, err := c.RawPost(getQuery("phone_number/merge_phone_number_to_contact"),
 		client.Var("contactId", contactId),
@@ -123,7 +129,12 @@ func TestMutationResolver_PhoneNumberUpdateInContact_ReplacePhoneNumber(t *testi
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	// Create a default contact and phone number
-	neo4jt.CreateCountry(ctx, driver, "US", "USA", "United States", "1")
+	neo4jtest.CreateCountry(ctx, driver, neo4jentity.CountryEntity{
+		Name:      "United States",
+		CodeA2:    "US",
+		CodeA3:    "USA",
+		PhoneCode: "1",
+	})
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	phoneNumberId := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, contactId, "+1234567890", false, "WORK")
 
@@ -394,7 +405,7 @@ func TestMutationResolver_PhoneNumberMergeToUser(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	userId := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
 
 	rawResponse, err := c.RawPost(getQuery("phone_number/merge_phone_number_to_user"),
 		client.Var("userId", userId),
@@ -444,7 +455,7 @@ func TestMutationResolver_PhoneNumberUpdateInUser(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	userId := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
 	phoneNumberId := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, userId, "+1234567890", false, "WORK")
 
 	// Make the RawPost request and check for errors
@@ -484,7 +495,7 @@ func TestMutationResolver_PhoneNumberUpdateInUser_ReplacePhoneNumber(t *testing.
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	userId := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
 	phoneNumberId := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, userId, "+1234567890", false, "WORK")
 
 	// Make the RawPost request and check for errors
@@ -538,11 +549,11 @@ func TestQueryResolver_GetPhoneNumber_WithParentOwners(t *testing.T) {
 	})
 	organizationId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "test org1")
 	organizationId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "test org2")
-	userId1 := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
+	userId1 := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{
 		FirstName: "a",
 		LastName:  "b",
 	})
-	userId2 := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
+	userId2 := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{
 		FirstName: "c",
 		LastName:  "d",
 	})
@@ -599,7 +610,7 @@ func TestQueryResolver_GetPhoneNumber_ById(t *testing.T) {
 	})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"PhoneNumber": 1, "PhoneNumber_" + tenantName: 1})
-	assertNeo4jRelationCount(ctx, t, driver, map[string]int{"PHONE_NUMBER_BELONGS_TO_TENANT": 1})
+	neo4jtest.AssertNeo4jRelationCount(ctx, t, driver, map[string]int{"PHONE_NUMBER_BELONGS_TO_TENANT": 1})
 
 	// Make the RawPost request and check for errors
 	rawResponse := callGraphQL(t, "phone_number/get_phone_number", map[string]interface{}{"phoneNumberId": phoneNumberId})

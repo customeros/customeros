@@ -2,16 +2,15 @@ package aggregate
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"github.com/pkg/errors"
-	"strings"
 )
 
 func GetInteractionEventObjectID(aggregateID string, tenant string) string {
-	return strings.ReplaceAll(aggregateID, string(InteractionEventAggregateType)+"-"+tenant+"-", "")
+	return aggregate.GetAggregateObjectID(aggregateID, tenant, InteractionEventAggregateType)
 }
 
 func LoadInteractionEventAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string) (*InteractionEventAggregate, error) {
@@ -21,18 +20,8 @@ func LoadInteractionEventAggregate(ctx context.Context, eventStore eventstore.Ag
 
 	interactionEventAggregate := NewInteractionEventAggregateWithTenantAndID(tenant, objectID)
 
-	err := eventStore.Exists(ctx, interactionEventAggregate.GetID())
+	err := aggregate.LoadAggregate(ctx, eventStore, interactionEventAggregate, *eventstore.NewLoadAggregateOptions())
 	if err != nil {
-		if !errors.Is(err, eventstore.ErrAggregateNotFound) {
-			tracing.TraceErr(span, err)
-			return nil, err
-		} else {
-			span.LogFields(log.Bool("AggregateExists", false))
-			return interactionEventAggregate, nil
-		}
-	}
-
-	if err = eventStore.Load(ctx, interactionEventAggregate); err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}

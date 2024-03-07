@@ -53,13 +53,15 @@ func (s *emailService) CreateEmail(ctx context.Context, email, source, appSource
 	if emailEntity == nil {
 		// email address not exist, create new one
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		response, err := s.grpcClients.EmailClient.UpsertEmail(ctx, &emailpb.UpsertEmailGrpcRequest{
-			Tenant:   common.GetTenantFromContext(ctx),
-			RawEmail: email,
-			SourceFields: &commonpb.SourceFields{
-				Source:    source,
-				AppSource: utils.StringFirstNonEmpty(appSource, constants.AppSourceCustomerOsWebhooks),
-			},
+		response, err := CallEventsPlatformGRPCWithRetry[*emailpb.EmailIdGrpcResponse](func() (*emailpb.EmailIdGrpcResponse, error) {
+			return s.grpcClients.EmailClient.UpsertEmail(ctx, &emailpb.UpsertEmailGrpcRequest{
+				Tenant:   common.GetTenantFromContext(ctx),
+				RawEmail: email,
+				SourceFields: &commonpb.SourceFields{
+					Source:    source,
+					AppSource: utils.StringFirstNonEmpty(appSource, constants.AppSourceCustomerOsWebhooks),
+				},
+			})
 		})
 		if err != nil {
 			tracing.TraceErr(span, err, log.String("grpcMethod", "UpsertEmail"))
@@ -72,7 +74,7 @@ func (s *emailService) CreateEmail(ctx context.Context, email, source, appSource
 			if emailEntity != nil && findEmailErr == nil {
 				break
 			}
-			time.Sleep(time.Duration(i*constants.TimeoutIntervalMs) * time.Millisecond)
+			time.Sleep(utils.BackOffExponentialDelay(i))
 		}
 		span.LogFields(log.String("createdEmailId", response.Id))
 		return response.Id, nil

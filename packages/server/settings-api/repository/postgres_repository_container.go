@@ -4,6 +4,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	authRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/repository"
 	commonRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/repository/entity"
 	"gorm.io/gorm"
 )
 
@@ -19,6 +20,11 @@ func InitRepositories(db *gorm.DB, driver *neo4j.DriverWithContext) *PostgresRep
 		CommonRepositories:       commonRepository.InitRepositories(db, driver),
 		AuthRepositories:         authRepository.InitRepositories(db),
 		TenantSettingsRepository: NewTenantSettingsRepository(db),
+	}
+
+	err := db.AutoMigrate(entity.TenantSettings{})
+	if err != nil {
+		panic(err)
 	}
 
 	return p

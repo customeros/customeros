@@ -1,0 +1,42 @@
+---
+title: Getting Started
+description: CustomerOS API Getting Started guide
+layout: ../../../layouts/docs.astro
+lang: en
+isMdx: true
+---
+
+import Callout from "../../../components/docs/callout.tsx";
+
+## Authentication
+
+Use of the CustomerOS GraphQL API and webhooks require a CustomerOS API Key in order to make authenticated requests.
+
+As our API is currently in `Beta`, please reach out to [developers@customeros.ai][devemail] to receive your API key.
+
+The API key will be passed as a `X-CUSTOMER-OS-API-KEY` value in the header of all requests.
+
+## CustomerOS GraphQL API
+
+The CustomerOS GraphQL API provides all the functionality of CustomerOS in a single public endpoint:
+
+```terminal
+POST https://api.customeros.ai
+```
+
+You can access the GraphQL API via our hosted GraphiQL web app, curl, or any HTTP client:
+
+- [Use the GraphiQL app][graphiql]
+
+<Callout type="info">
+The CustomerOS GraphQL API only accepts POST requests.  Other HTTP methods, such as GET or PUT, will return a `400 Bad request` or `406 Not acceptable` response.
+</Callout>
+
+## Rate Limiting
+
+We rate limit API calls to 1000 per minute. If you exceed this limit, you will receive a 429 response. If you need an increased limit, please contact the CustomerOS team.
+
+/* References */
+
+[devemail]: mailto:developers@customeros.ai
+[graphiql]: https://api.customeros.ai

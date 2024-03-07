@@ -4,17 +4,24 @@ import (
 	"context"
 	"github.com/99designs/gqlgen/client"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
 
 func TestQueryResolver_GCliSearch(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateFullTextBasicSearchIndexes(ctx, driver, tenantName)
 
-	neo4jt.CreateCountry(ctx, driver, "US", "USA", "United States", "1")
+	neo4jtest.CreateCountry(ctx, driver, neo4jentity.CountryEntity{
+		Id:        "1",
+		Name:      "United States",
+		CodeA2:    "US",
+		CodeA3:    "USA",
+		PhoneCode: "1",
+	})
 
 	neo4jt.CreateContactWith(ctx, driver, tenantName, "c", "1")
 

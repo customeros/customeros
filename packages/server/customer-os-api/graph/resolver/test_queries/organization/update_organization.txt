@@ -1,0 +1,8 @@
+mutation UpdateOrganization($input: OrganizationUpdateInput!) {
+  organization_Update(input: $input) {
+    metadata {
+        id
+    }
+    slackChannelId
+  }
+}

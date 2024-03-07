@@ -43,7 +43,7 @@ func (h *upsertLocationHandler) Handle(ctx context.Context, cmd *command.UpsertL
 		return err
 	}
 
-	if aggregate.IsAggregateNotFound(locationAggregate) {
+	if eventstore.IsAggregateNotFound(locationAggregate) {
 		cmd.IsCreateCommand = true
 	}
 

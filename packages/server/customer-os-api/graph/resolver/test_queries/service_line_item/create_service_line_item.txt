@@ -1,15 +1,20 @@
 mutation CreateServiceLineItem($contractId: ID!) {
-serviceLineItemCreate(
+contractLineItem_Create(
     input: {
       contractId: $contractId
-      name: "Service Line Item 1"
-      billed: MONTHLY
+      description: "Service Line Item 1"
+      billingCycle: MONTHLY
       price: 30
       quantity: 2
+      tax: {
+        taxRate: 20
+      }
     }
   ) {
-    id
-    name
+    metadata {
+      id
+    }
+    description
     parentId
   }
 }

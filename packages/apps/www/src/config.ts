@@ -88,12 +88,41 @@ export const SIDEBAR: Sidebar = {
     Integrations: [
       { text: "Integrations", link: "en/integrations" },
     ],
-    APIs: [
+    "API Overview": [
       { text: "Getting Started", link: "en/api/getting-started" },
-      { text: "CustomerOS Contact & Org APIs", link: "en/api/customer-apis" },
-      { text: "CustomerOS Admin APIs", link: "en/api/admin-apis" },
-      { text: "Email Reachability API", link: "en/api/email-reachability" },
-      { text: "Domain Info API", link: "en/api/domain-info" },
+      { text: "Webhooks", link: "en/api/webhooks"},
+    ],
+    "Contracts API": [
+      { text: "Query: Contracts", link: "en/api/contract-query"},
+      { text: "Mutation: Update Contracts", link: "en/api/update-contract-mutation"},
+      { text: "Mutation: Create ContractLineItem", link: "en/api/create-contract-line-item-mutation"},
+      { text: "Mutation: Update ContractLineItem", link: "en/api/update-contract-line-item-mutation"},
+      { text: "Contract Events", link: "en/api/contract-events"},
+    ],
+    "Invoices API": [
+      { text: "Query: Invoice", link: "en/api/invoice-query"},
+      { text: "Mutation: Update Invoice", link: "en/api/update-invoice-mutation"},
+      { text: "Invoice Events", link: "en/api/invoice-events"},
+    ],
+    "Organizations API": [
+      { text: "API Reference", link: "en/api/organization-api"},
+      { text: "Organization Events", link: "en/api/organization-events"},
+    ],
+    "API Data Objects": [
+      { text: "billingDetails", link: "en/api/objects/billing-details"},
+      { text: "contract", link: "en/api/objects/contract"},
+      { text: "contractLineItems", link: "en/api/objects/contract-line-items"},
+      { text: "customFieldTemplate", link: "en/api/objects/custom-field-template"},
+      { text: "customFields", link: "en/api/objects/custom-fields"},
+      { text: "email", link: "en/api/objects/email"},
+      { text: "externalLinks", link: "en/api/objects/external-links"},
+      { text: "invoice", link: "en/api/objects/invoice"},
+      { text: "invoicelineItems", link: "en/api/objects/invoice-line-items"},
+      { text: "jobRole", link: "en/api/objects/job-role"},
+      { text: "metadata", link: "en/api/objects/metadata"},
+      { text: "opportunities", link: "en/api/objects/opportunities"},
+      { text: "organization", link: "en/api/objects/organization"},
+      { text: "tax", link: "en/api/objects/invoice-tax"},
     ],
     CLI: [
       { text: "Getting Started", link: "en/cli/getting-started" },

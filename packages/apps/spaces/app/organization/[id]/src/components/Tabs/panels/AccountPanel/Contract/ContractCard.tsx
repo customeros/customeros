@@ -2,12 +2,14 @@ import { useForm } from 'react-inverted-form';
 import React, { useRef, useState, useEffect } from 'react';
 
 import { produce } from 'immer';
-import { debounce } from 'lodash';
 import { useQueryClient } from '@tanstack/react-query';
+import { useDebounce, useDeepCompareEffect } from 'rooks';
 
 import { Flex } from '@ui/layout/Flex';
+import { useDisclosure } from '@ui/utils';
 import { FormInput } from '@ui/form/Input';
 import { Check } from '@ui/media/icons/Check';
+import { File02 } from '@ui/media/icons/File02';
 import { Edit03 } from '@ui/media/icons/Edit03';
 import { FormSelect } from '@ui/form/SyncSelect';
 import { IconButton } from '@ui/form/IconButton';
@@ -18,21 +20,28 @@ import { toastError } from '@ui/presentation/Toast';
 import { DatePicker } from '@ui/form/DatePicker/DatePicker';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { Card, CardBody, CardFooter, CardHeader } from '@ui/presentation/Card';
-import { Contract, ContractStatus, ContractUpdateInput } from '@graphql/types';
 import { useUpdateContractMutation } from '@organization/src/graphql/updateContract.generated';
+import {
+  Contract,
+  ContractStatus,
+  ContractUpdateInput,
+  ContractRenewalCycle,
+} from '@graphql/types';
 import {
   GetContractsQuery,
   useGetContractsQuery,
 } from '@organization/src/graphql/getContracts.generated';
 import { ContractSubtitle } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ContractSubtitle';
+import { useUpdatePanelModalStateContext } from '@organization/src/components/Tabs/panels/AccountPanel/context/AccountModalsContext';
 
-import { UrlInput } from './UrlInput';
 import { Services } from './Services/Services';
 import { FormPeriodInput } from './PeriodInput';
-import { billingFrequencyOptions } from '../utils';
 import { RenewalARRCard } from './RenewalARR/RenewalARRCard';
+import { ServiceLineItemsModal } from './ServiceLineItemsModal';
 import { ContractDTO, TimeToRenewalForm } from './Contract.dto';
+import { ContractBillingDetailsModal } from './ContractBillingDetailsModal';
 import { ContractStatusSelect } from './contractStatuses/ContractStatusSelect';
+import { billingFrequencyOptions, contractBillingCycleOptions } from '../utils';
 
 interface ContractCardProps {
   data: Contract;
@@ -50,10 +59,32 @@ export const ContractCard = ({
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isExpanded, setIsExpanded] = useState(!data?.signedAt);
   const formId = `contract-form-${data.id}`;
+  const { setIsPanelModalOpen } = useUpdatePanelModalStateContext();
+  const { onOpen, onClose, isOpen } = useDisclosure({
+    id: 'billing-details-modal',
+  });
+  const {
+    onOpen: onServiceLineItemsOpen,
+    onClose: onServiceLineItemClose,
+    isOpen: isServceItemsModalOpen,
+  } = useDisclosure({
+    id: 'service-line-items-modal',
+  });
 
   const client = getGraphQLClient();
+
+  // this is needed to block scroll on safari when modal is open, scrollbar overflow issue
+  useEffect(() => {
+    if (isOpen || isServceItemsModalOpen) {
+      setIsPanelModalOpen(true);
+    }
+    if (!isOpen && !isServceItemsModalOpen) {
+      setIsPanelModalOpen(false);
+    }
+  }, [isOpen, isServceItemsModalOpen]);
+
   const updateContract = useUpdateContractMutation(client, {
-    onMutate: ({ input }) => {
+    onMutate: ({ input: { patch, contractId, ...input } }) => {
       queryClient.cancelQueries({ queryKey });
       queryClient.setQueryData<GetContractsQuery>(queryKey, (currentCache) => {
         return produce(currentCache, (draft) => {
@@ -66,8 +97,15 @@ export const ContractCard = ({
               if (index !== updatedContractIndex) {
                 return contractData;
               }
+              const result = Object.entries(input).find(
+                ([_, value]) => value === '0001-01-01T00:00:00.000000Z',
+              );
 
-              return { ...input };
+              return {
+                ...contractData,
+                ...input,
+                ...(result ? { [result[0]]: null } : {}),
+              };
             });
           }
         });
@@ -100,45 +138,47 @@ export const ContractCard = ({
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
+
       timeoutRef.current = setTimeout(() => {
-        queryClient.invalidateQueries(queryKey);
-        queryClient.invalidateQueries(['GetTimeline.infinite']);
-      }, 800);
+        queryClient.invalidateQueries({ queryKey });
+
+        queryClient.invalidateQueries({ queryKey: ['GetTimeline.infinite'] });
+      }, 1000);
     },
   });
 
-  const updateContractDebounced = debounce(
+  const updateContractDebounced = useDebounce(
     (variables: { input: ContractUpdateInput }) => {
       updateContract.mutate({
         ...variables,
+        input: {
+          ...variables.input,
+          patch: true,
+        },
       });
     },
-    300,
+    500,
   );
-
   const defaultValues = ContractDTO.toForm({
     organizationName,
     ...(data ?? {}),
   });
-
   const { setDefaultValues, state } = useForm<TimeToRenewalForm>({
     formId,
     defaultValues,
+    debug: true,
     stateReducer: (state, action, next) => {
       if (action.type === 'FIELD_CHANGE') {
         switch (action.payload.name) {
           case 'renewalPeriods':
             return next;
           case 'name': {
-            updateContractDebounced({
-              input: {
+            updateContractDebounced(
+              ContractDTO.toPayload({
                 contractId: data.id,
-                ...ContractDTO.toPayload({
-                  ...state.values,
-                  [action.payload.name]: action.payload.value,
-                }),
-              },
-            });
+                name: action.payload.value,
+              }),
+            );
 
             return next;
           }
@@ -149,16 +189,16 @@ export const ContractCard = ({
               renewalPeriods = '2';
             }
 
-            updateContract.mutate({
-              input: {
+            updateContract.mutate(
+              ContractDTO.toPayload({
                 contractId: data.id,
-                ...ContractDTO.toPayload({
-                  ...state.values,
-                  renewalCycle: action.payload.value,
-                  renewalPeriods,
-                }),
-              },
-            });
+                renewalCycle:
+                  state.values.renewalCycle?.value === 'MULTI_YEAR'
+                    ? ContractRenewalCycle.AnnualRenewal
+                    : state.values.renewalCycle?.value,
+                renewalPeriods,
+              }),
+            );
 
             return {
               ...next,
@@ -168,19 +208,45 @@ export const ContractCard = ({
               },
             };
           }
+          case 'serviceStartedAt':
+          case 'endedAt':
+          case 'invoicingStartDate':
+            updateContract.mutate(
+              ContractDTO.toPayload({
+                contractId: data.id,
+                [action.payload.name]: action.payload.value
+                  ? action.payload.value
+                  : '0001-01-01T00:00:00.000000Z',
+              }),
+            );
+
+            return {
+              ...next,
+              values: {
+                ...next.values,
+                [action.payload.name]: action.payload.value ?? null,
+              },
+            };
+          case 'billingCycle':
+          case 'billingEnabled':
+            updateContract.mutate(
+              ContractDTO.toPayload({
+                contractId: data.id,
+                [action.payload.name]: action.payload.value?.value,
+              }),
+            );
+
+            return next;
           case 'contractUrl':
+            updateContractDebounced(
+              ContractDTO.toPayload({
+                contractId: data.id,
+                contractUrl: action.payload.value,
+              }),
+            );
+
             return next;
           default: {
-            updateContract.mutate({
-              input: {
-                contractId: data.id,
-                ...ContractDTO.toPayload({
-                  ...state.values,
-                  [action.payload.name]: action.payload.value,
-                }),
-              },
-            });
-
             return next;
           }
         }
@@ -188,15 +254,17 @@ export const ContractCard = ({
 
       if (action.type === 'FIELD_BLUR') {
         if (action.payload.name === 'renewalPeriods') {
-          updateContract.mutate({
-            input: {
+          updateContract.mutate(
+            ContractDTO.toPayload({
               contractId: data.id,
-              ...ContractDTO.toPayload({
-                ...state.values,
-                [action.payload.name]: action.payload.value,
-              }),
-            },
-          });
+              renewalPeriods:
+                state.values?.renewalCycle?.value === 'MULTI_YEAR'
+                  ? parseInt(action.payload?.value || '2')
+                  : action.payload?.value
+                  ? parseInt(action.payload?.value)
+                  : undefined,
+            }),
+          );
 
           return {
             ...next,
@@ -212,21 +280,16 @@ export const ContractCard = ({
     },
   });
 
-  useEffect(() => {
+  useDeepCompareEffect(() => {
     setDefaultValues(defaultValues);
-  }, [
-    defaultValues.signedAt?.toISOString(),
-    defaultValues.renewalCycle,
-    defaultValues.endedAt?.toISOString(),
-    defaultValues.serviceStartedAt?.toISOString(),
-  ]);
+  }, [defaultValues]);
 
   useEffect(() => {
     return () => {
-      updateContractDebounced.flush();
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
+      updateContractDebounced.flush();
     };
   }, []);
 
@@ -280,7 +343,6 @@ export const ContractCard = ({
             noOfLines={1}
             lineHeight={1.4}
             display='inline'
-            w={isExpanded ? '235px' : '250px'}
             whiteSpace='nowrap'
           >
             {!isExpanded && state.values.name}
@@ -309,14 +371,25 @@ export const ContractCard = ({
                 id='edit-contract-icon'
               />
             )}
-            <UrlInput
-              formId={formId}
-              url={data?.contractUrl}
-              contractId={data?.id}
-              onSubmit={updateContract.mutate}
+
+            <IconButton
+              aria-label='Edit billing details'
+              size='xs'
+              variant='ghost'
+              icon={<File02 color='gray.400' />}
+              onClick={() => onOpen()}
             />
 
-            <ContractStatusSelect status={data.status} />
+            <ContractStatusSelect
+              status={data.status}
+              contractId={data.id}
+              renewsAt={data?.opportunities?.[0]?.renewedAt}
+              onUpdateContract={updateContract}
+              serviceStartedAt={data.serviceStartedAt}
+              organizationName={
+                data?.organizationLegalName || organizationName || 'Unnamed'
+              }
+            />
 
             {isExpanded && (
               <IconButton
@@ -354,53 +427,67 @@ export const ContractCard = ({
         <CardBody as={Flex} p='0' flexDir='column' w='full'>
           <Flex gap='4' mb={2} flexGrow={0}>
             <DatePicker
-              label='Contract signed'
-              placeholder='Signed date'
-              formId={formId}
-              name='signedAt'
-              inset='120% auto auto 0px'
-              calendarIconHidden
-            />
-            <DatePicker
-              label='Contract ends'
-              placeholder='End date'
-              minDate={state.values.serviceStartedAt}
-              formId={formId}
-              name='endedAt'
-              calendarIconHidden
-            />
-          </Flex>
-          <Flex
-            gap='4'
-            flexGrow={0}
-            mb={state.values.renewalCycle?.value === 'MULTI_YEAR' ? '2' : '0'}
-          >
-            <DatePicker
               label='Service starts'
-              placeholder='Start date'
+              placeholder='Service starts date'
               formId={formId}
               name='serviceStartedAt'
               inset='120% auto auto 0px'
-              maxDate={state.values.endedAt}
               calendarIconHidden
+              value={state.values.serviceStartedAt}
             />
+          </Flex>
+          <Flex gap='4' flexGrow={0} mb={2}>
             <FormSelect
-              label='Renewal cycle'
-              placeholder='Renewal cycle'
+              label='Contract renews'
+              placeholder='Contract renews'
               isLabelVisible
               name='renewalCycle'
               formId={formId}
               options={billingFrequencyOptions}
             />
+            {state.values.renewalCycle?.value === 'MULTI_YEAR' && (
+              <FormPeriodInput
+                formId={formId}
+                label='Renews every'
+                name='renewalPeriods'
+                placeholder='Renews every'
+              />
+            )}
           </Flex>
-          {state.values.renewalCycle?.value === 'MULTI_YEAR' && (
-            <FormPeriodInput
+          <Flex gap='4' flexGrow={0} mb={2}>
+            <DatePicker
+              label='Invoicing starts'
+              placeholder='Invoicing starts'
+              minDate={state.values.serviceStartedAt}
               formId={formId}
-              label='Renews every'
-              name='renewalPeriods'
-              placeholder='Renews every'
+              name='invoicingStartDate'
+              inset='120% auto auto 0px'
+              calendarIconHidden
+              value={state.values.invoicingStartDate}
             />
-          )}
+
+            <FormSelect
+              label='Billing period'
+              placeholder='Billing period'
+              isLabelVisible
+              name='billingCycle'
+              formId={formId}
+              options={contractBillingCycleOptions}
+            />
+          </Flex>
+          <Flex gap='4' flexGrow={0} mb={2}>
+            <FormSelect
+              label='Billing is'
+              placeholder='Enable billing'
+              isLabelVisible
+              name='billingEnabled'
+              formId={formId}
+              options={[
+                { label: 'Enabled', value: true },
+                { label: 'Disabled', value: false },
+              ]}
+            />
+          </Flex>
         </CardBody>
       )}
       <CardFooter p='0' mt={1} w='full' flexDir='column'>
@@ -415,15 +502,34 @@ export const ContractCard = ({
               hasEnded={data.status === ContractStatus.Ended}
               startedAt={data.serviceStartedAt}
               renewCycle={data.renewalCycle}
+              currency={data.currency}
               opportunity={data.opportunities?.[0]}
             />
           )}
         </Collapse>
-
         <Services
+          data={data?.contractLineItems}
+          currency={data?.currency}
+          onModalOpen={onServiceLineItemsOpen}
+        />
+
+        <ContractBillingDetailsModal
+          isOpen={isOpen}
           contractId={data.id}
-          data={data?.serviceLineItems}
+          onClose={onClose}
+          organizationName={organizationName}
+          notes={data?.invoiceNote}
+        />
+
+        <ServiceLineItemsModal
+          isOpen={isServceItemsModalOpen}
+          contractId={data.id}
+          onClose={onServiceLineItemClose}
           contractName={data.name}
+          currency={data.currency}
+          contractLineItems={data?.contractLineItems ?? []}
+          organizationName={organizationName}
+          notes={data?.invoiceNote}
         />
       </CardFooter>
     </Card>

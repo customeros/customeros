@@ -8,16 +8,13 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type TenantRepository interface {
-	Merge(ctx context.Context, tenant entity.TenantEntity) (*dbtype.Node, error)
-	GetForWorkspace(ctx context.Context, workspaceEntity entity.WorkspaceEntity) (*dbtype.Node, error)
-	GetForUserEmail(ctx context.Context, email string) (*dbtype.Node, error)
+	Merge(ctx context.Context, tenant neo4jentity.TenantEntity) (*dbtype.Node, error)
 	LinkWithWorkspace(ctx context.Context, tenant string, workspace entity.WorkspaceEntity) (bool, error)
-	GetByName(ctx context.Context, tenant string) (*dbtype.Node, error)
 }
 
 type tenantRepository struct {
@@ -65,7 +62,7 @@ func (r *tenantRepository) LinkWithWorkspace(ctx context.Context, tenant string,
 	return true, nil
 }
 
-func (r *tenantRepository) Merge(ctx context.Context, tenant entity.TenantEntity) (*dbtype.Node, error) {
+func (r *tenantRepository) Merge(ctx context.Context, tenant neo4jentity.TenantEntity) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantRepository.Merge")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -73,131 +70,37 @@ func (r *tenantRepository) Merge(ctx context.Context, tenant entity.TenantEntity
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := "MERGE (t:Tenant {name:$name}) " +
-		" ON CREATE SET " +
-		"  t.id=randomUUID(), " +
-		"  t.createdAt=$now, " +
-		"  t.updatedAt=$now, " +
-		"  t.source=$source, " +
-		"  t.appSource=$appSource " +
-		" RETURN t"
+	cypher := `MERGE (t:Tenant {name:$name}) 
+		 ON CREATE SET 
+		  t.id=randomUUID(), 
+		  t.createdAt=$now, 
+		  t.updatedAt=$now, 
+		  t.source=$source, 
+		  t.appSource=$appSource
+		WITH t
+		MERGE (t)-[:HAS_SETTINGS]->(ts:TenantSettings {tenant:$name})
+		ON CREATE SET
+			ts.id=randomUUID(),
+		  	ts.createdAt=$now,
+			ts.updatedAt=$now,
+			ts.invoicingEnabled=$invoicingEnabled,
+			ts.invoicingPostpaid=$invoicingPostpaid
+		 RETURN t`
+	params := map[string]any{
+		"name":              tenant.Name,
+		"source":            tenant.Source,
+		"appSource":         tenant.AppSource,
+		"now":               utils.Now(),
+		"invoicingEnabled":  false,
+		"invoicingPostpaid": false,
+	}
 
 	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, query,
-			map[string]any{
-				"name":      tenant.Name,
-				"source":    tenant.Source,
-				"appSource": tenant.AppSource,
-				"now":       utils.Now(),
-			})
+		queryResult, err := tx.Run(ctx, cypher, params)
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	}); err != nil {
 		return nil, err
 	} else {
 		return result.(*dbtype.Node), nil
 	}
-}
-
-func (r *tenantRepository) GetByName(ctx context.Context, tenant string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantRepository.GetByName")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	query := `MATCH (t:Tenant {name:$name}) RETURN t`
-	span.LogFields(log.String("query", query))
-
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, query,
-			map[string]any{
-				"name": tenant,
-			})
-		return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
-	})
-
-	if err != nil {
-		return nil, err
-	}
-	convertedResult, isOk := result.([]*dbtype.Node)
-	if !isOk {
-		return nil, errors.New("GetByName: cannot convert result")
-	}
-	if len(convertedResult) == 0 {
-		return nil, nil
-	}
-	return convertedResult[0], err
-}
-
-func (r *tenantRepository) GetForWorkspace(ctx context.Context, workspaceEntity entity.WorkspaceEntity) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantRepository.GetForWorkspace")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, `
-			MATCH (t:Tenant)-[:HAS_WORKSPACE]->(w:Workspace)
-			WHERE w.name=$name AND w.provider=$provider
-			RETURN DISTINCT t LIMIT 1`,
-			map[string]any{
-				"name":     workspaceEntity.Name,
-				"provider": workspaceEntity.Provider,
-			}); err != nil {
-			return nil, err
-		} else {
-			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
-		}
-	})
-	if err != nil {
-		return nil, err
-	}
-	convertedResult, isOk := result.([]*dbtype.Node)
-	if !isOk {
-		return nil, errors.New("GetForWorkspace: cannot convert result")
-	}
-	if len(convertedResult) == 0 {
-		return nil, nil
-	}
-	return convertedResult[0], err
-}
-
-func (r *tenantRepository) GetForUserEmail(ctx context.Context, email string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantRepository.GetForUserEmail")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("email", email))
-
-	query := `MATCH (t:Tenant)<-[:USER_BELONGS_TO_TENANT]-(:User)-[:HAS]->(e:Email)
-		WHERE e.email=$email OR e.rawEmail=$email
-		RETURN DISTINCT t order by t.createdAt ASC LIMIT 1`
-	span.LogFields(log.String("query", query))
-
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, query,
-			map[string]any{
-				"email": email,
-			}); err != nil {
-			return nil, err
-		} else {
-			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
-		}
-	})
-	if err != nil {
-		return nil, err
-	}
-	convertedResult, isOk := result.([]*dbtype.Node)
-	if !isOk {
-		return nil, errors.New("GetForUserEmail: cannot convert result")
-	}
-	if len(convertedResult) == 0 {
-		return nil, nil
-	}
-	return convertedResult[0], err
 }

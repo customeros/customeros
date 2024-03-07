@@ -71,18 +71,36 @@ func (c *Contact) HasPhoneNumber(phoneNumberId, label string, primary bool) bool
 }
 
 func (c *Contact) SameData(fields ContactDataFields, externalSystem commonmodel.ExternalSystem) bool {
+	if !externalSystem.Available() {
+		return false
+	}
+
 	if externalSystem.Available() && !c.HasExternalSystem(externalSystem) {
 		return false
 	}
-	if c.Name == fields.Name &&
-		c.FirstName == fields.FirstName &&
-		c.LastName == fields.LastName &&
-		c.Prefix == fields.Prefix &&
-		c.Description == fields.Description &&
-		c.Timezone == fields.Timezone &&
-		c.ProfilePhotoUrl == fields.ProfilePhotoUrl {
-		return true
+
+	if c.Source.SourceOfTruth == externalSystem.ExternalSystemId {
+		if c.Name == fields.Name &&
+			c.FirstName == fields.FirstName &&
+			c.LastName == fields.LastName &&
+			c.Prefix == fields.Prefix &&
+			c.Description == fields.Description &&
+			c.Timezone == fields.Timezone &&
+			c.ProfilePhotoUrl == fields.ProfilePhotoUrl {
+			return true
+		}
+	} else {
+		if (c.Name != "" || c.Name == fields.Name) &&
+			(c.FirstName != "" || c.FirstName == fields.FirstName) &&
+			(c.LastName != "" || c.LastName == fields.LastName) &&
+			(c.Prefix != "" || c.Prefix == fields.Prefix) &&
+			(c.Description != "" || c.Description == fields.Description) &&
+			(c.Timezone != "" || c.Timezone == fields.Timezone) &&
+			(c.ProfilePhotoUrl != "" || c.ProfilePhotoUrl == fields.ProfilePhotoUrl) {
+			return true
+		}
 	}
+
 	return false
 }
 

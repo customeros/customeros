@@ -1,20 +1,19 @@
 'use client';
 import { useParams } from 'next/navigation';
 import { useForm } from 'react-inverted-form';
-import { useEffect, useCallback } from 'react';
 
-import debounce from 'lodash/debounce';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
+import { useDebounce, useWillUnmount, useDeepCompareEffect } from 'rooks';
 
 import { Box } from '@ui/layout/Box';
 import { Flex } from '@ui/layout/Flex';
 import { Icons } from '@ui/media/Icon';
 import { Tag } from '@ui/presentation/Tag';
 import { Text } from '@ui/typography/Text';
-import { FormInput } from '@ui/form/Input';
 import { Tooltip } from '@ui/overlay/Tooltip';
 import { Organization } from '@graphql/types';
 import { FormSelect } from '@ui/form/SyncSelect';
+import { FormUrlInput } from '@ui/form/UrlInput';
 import { VStack, HStack } from '@ui/layout/Stack';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea';
 import { FormNumberInputGroup } from '@ui/form/InputGroup';
@@ -25,8 +24,8 @@ import { useOrganizationQuery } from '@organization/src/graphql/organization.gen
 import { Branches } from '@organization/src/components/Tabs/panels/AboutPanel/branches/Branches';
 import { OwnerInput } from '@organization/src/components/Tabs/panels/AboutPanel/owner/OwnerInput';
 import { ParentOrgInput } from '@organization/src/components/Tabs/panels/AboutPanel/branches/ParentOrgInput';
+import { OrganizationNameInput } from '@organization/src/components/Tabs/panels/AboutPanel/OrganizationNameInput';
 
-import { FormUrlInput } from './FormUrlInput';
 import { FormSocialInput } from '../../shared/FormSocialInput';
 import { useAboutPanelMethods } from './hooks/useAboutPanelMethods';
 import {
@@ -49,13 +48,15 @@ export const AboutPanel = () => {
   const client = getGraphQLClient();
   const id = useParams()?.id as string;
   const [_, copyToClipboard] = useCopyToClipboard();
-  const { data } = useOrganizationQuery(client, { id });
+  const { data, isLoading } = useOrganizationQuery(client, { id });
+
   const showParentRelationshipSelector = useFeatureIsOn(
     'show-parent-relationship-selector',
   );
   const parentRelationshipReadOnly = useFeatureIsOn(
     'parent-relationship-selector-read-only',
   );
+  const orgNameReadOnly = useFeatureIsOn('org-name-readonly');
   const { updateOrganization, addSocial, invalidateQuery } =
     useAboutPanelMethods({ id });
 
@@ -75,12 +76,9 @@ export const AboutPanel = () => {
     });
   };
 
-  const debouncedMutatOrganization = useCallback(
-    debounce(mutateOrganization, 300),
-    [updateOrganization.mutate],
-  );
+  const debouncedMutateOrganization = useDebounce(mutateOrganization, 500);
 
-  useForm<OrganizationAboutForm>({
+  const { setDefaultValues } = useForm<OrganizationAboutForm>({
     formId: 'organization-about',
     defaultValues,
     stateReducer: (state, action, next) => {
@@ -108,7 +106,8 @@ export const AboutPanel = () => {
             ) {
               return next;
             }
-            debouncedMutatOrganization(state.values, {
+            debouncedMutateOrganization.cancel();
+            debouncedMutateOrganization(state.values, {
               [action.payload.name]: trimmedValue,
             });
             break;
@@ -118,15 +117,38 @@ export const AboutPanel = () => {
         }
       }
 
+      if (action.type === 'FIELD_BLUR') {
+        if (action.payload.name === 'name') {
+          const trimmedValue = (action.payload?.value || '')?.trim();
+          if (!trimmedValue?.length) {
+            mutateOrganization(state.values, {
+              name: 'Unnamed',
+            });
+
+            return {
+              ...next,
+              values: {
+                ...next.values,
+                name: 'Unnamed',
+              },
+            };
+          } else {
+            debouncedMutateOrganization.flush();
+          }
+        }
+      }
+
       return next;
     },
   });
 
-  useEffect(() => {
-    return () => {
-      debouncedMutatOrganization.flush();
-    };
-  }, []); // empty array so it runs just once
+  useDeepCompareEffect(() => {
+    setDefaultValues(defaultValues);
+  }, [defaultValues]);
+
+  useWillUnmount(() => {
+    debouncedMutateOrganization.flush();
+  });
 
   const handleAddSocial = ({
     newValue,
@@ -164,16 +186,11 @@ export const AboutPanel = () => {
         w='full'
       >
         <Flex align='center'>
-          <FormInput
-            name='name'
-            fontSize='lg'
-            autoComplete='off'
-            fontWeight='semibold'
-            variant='unstyled'
-            borderRadius='unset'
-            placeholder='Company name'
-            formId='organization-about'
+          <OrganizationNameInput
+            orgNameReadOnly={orgNameReadOnly}
+            isLoading={isLoading}
           />
+
           {data?.organization?.referenceId && (
             <Box h='full' ml='4'>
               <Tooltip label={'Copy ID'}>

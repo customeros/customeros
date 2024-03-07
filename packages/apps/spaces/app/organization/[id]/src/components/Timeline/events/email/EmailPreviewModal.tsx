@@ -10,8 +10,10 @@ import { useSession } from 'next-auth/react';
 import { useRemirror } from '@remirror/react';
 import { htmlToProsemirrorNode } from 'remirror';
 
+import { Box } from '@ui/layout/Box';
 import { Flex } from '@ui/layout/Flex';
 import { useDisclosure } from '@ui/utils';
+import { Send03 } from '@ui/media/icons/Send03';
 import { CardBody } from '@ui/presentation/Card';
 import { InteractionEvent } from '@graphql/types';
 import { basicEditorExtensions } from '@ui/form/RichTextEditor/extensions';
@@ -223,6 +225,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
       session?.user,
     );
   };
+
   const filteredParticipants = useMemo(
     () => ({
       to: state.values.to?.filter((e) => !!e.value || !!e?.label),
@@ -297,6 +300,27 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
           onClose={onClose}
           onConfirm={handleExitEditorAndCleanData}
           isLoading={false}
+        />
+
+        <ConfirmDeleteDialog
+          colorScheme='primary'
+          label={`Send this email?`}
+          description={`You have typed an unsent email. Do you want to send it, or discard it?`}
+          confirmButtonLabel='Send'
+          cancelButtonLabel='Discard'
+          isOpen={isOpen}
+          onClose={handleExitEditorAndCleanData}
+          onConfirm={handleSubmit}
+          isLoading={false}
+          icon={
+            <Box>
+              <Send03
+                color='primary.700'
+                boxSize='inherit'
+                verticalAlign='initial'
+              />
+            </Box>
+          }
         />
       </Flex>
     </TimelinePreviewBackdrop>

@@ -1,16 +1,21 @@
 import { FC, PropsWithChildren } from 'react';
 
+import { match } from 'ts-pattern';
+import { escapeForSlackWithMarkdown } from 'slack-to-html';
+
 import { Flex } from '@ui/layout/Flex';
 import { Avatar } from '@ui/media/Avatar';
 import { Text } from '@ui/typography/Text';
 import { User01 } from '@ui/media/icons/User01';
 import { DateTimeUtils } from '@spaces/utils/date';
+import { ExternalSystemType } from '@graphql/types';
 import { Card, CardBody } from '@ui/presentation/Card';
 import { HtmlContentRenderer } from '@ui/presentation/HtmlContentRenderer';
 
 interface IssueCommentCardProps extends PropsWithChildren {
   name: string;
   date: string;
+  type?: string;
   content: string;
   isPrivate?: boolean;
   iscustomer?: boolean;
@@ -21,6 +26,7 @@ interface IssueCommentCardProps extends PropsWithChildren {
 export const IssueCommentCard: FC<IssueCommentCardProps> = ({
   name,
   date,
+  type,
   content,
   isPrivate,
   iscustomer,
@@ -66,7 +72,18 @@ export const IssueCommentCard: FC<IssueCommentCardProps> = ({
                   </Text>
                 </Flex>
               </Flex>
-              <HtmlContentRenderer htmlContent={content} />
+              {match(type)
+                .with(ExternalSystemType.Slack, () => (
+                  <Text
+                    className='slack-container'
+                    dangerouslySetInnerHTML={{
+                      __html: escapeForSlackWithMarkdown(content),
+                    }}
+                  />
+                ))
+                .otherwise(() => (
+                  <HtmlContentRenderer htmlContent={content} />
+                ))}
             </Flex>
           </Flex>
         </CardBody>

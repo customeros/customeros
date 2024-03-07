@@ -60,7 +60,6 @@ type OrganizationData struct {
 	// Note: for sub-orgs this property is ignored
 	DomainRequired bool `json:"domainRequired"`
 	Whitelisted    bool `json:"whitelisted"`
-	UpdateOnly     bool `json:"updateOnly"`
 }
 
 func (o *OrganizationData) HasDomains() bool {

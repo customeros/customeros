@@ -4,10 +4,13 @@ import (
 	"context"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/models"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -17,14 +20,16 @@ import (
 
 type userService struct {
 	userpb.UnimplementedUserGrpcServiceServer
-	log          logger.Logger
-	userCommands *command_handler.CommandHandlers
+	log                logger.Logger
+	userCommands       *command_handler.CommandHandlers
+	userRequestHandler user.UserRequestHandler
 }
 
-func NewUserService(log logger.Logger, userCommands *command_handler.CommandHandlers) *userService {
+func NewUserService(log logger.Logger, aggregateStore eventstore.AggregateStore, cfg *config.Config, userCommands *command_handler.CommandHandlers) *userService {
 	return &userService{
-		log:          log,
-		userCommands: userCommands,
+		log:                log,
+		userCommands:       userCommands,
+		userRequestHandler: user.NewUserRequestHandler(log, aggregateStore, cfg.Utils),
 	}
 }
 
@@ -111,15 +116,13 @@ func (s *userService) LinkPhoneNumberToUser(ctx context.Context, request *userpb
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "UserService.LinkPhoneNumberToUser")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
+	tracing.LogObjectAsJson(span, "request", request)
 
-	cmd := command.NewLinkPhoneNumberCommand(request.UserId, request.Tenant, request.LoggedInUserId, request.PhoneNumberId, request.Label, request.Primary)
-	if err := s.userCommands.LinkPhoneNumberCommand.Handle(ctx, cmd); err != nil {
+	if _, err := s.userRequestHandler.HandleWithRetry(ctx, request.Tenant, request.UserId, false, request); err != nil {
+		tracing.TraceErr(span, err)
 		s.log.Errorf("(LinkPhoneNumberToUser.Handle) tenant:{%s}, user ID: {%s}, err: {%v}", request.Tenant, request.UserId, err)
-		return nil, s.errResponse(err)
+		return nil, grpcerr.ErrResponse(err)
 	}
-
-	s.log.Infof("Linked phone number {%s} to user {%s}", request.PhoneNumberId, request.UserId)
 
 	return &userpb.UserIdGrpcResponse{Id: request.UserId}, nil
 }
@@ -128,15 +131,13 @@ func (s *userService) LinkEmailToUser(ctx context.Context, request *userpb.LinkE
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "UserService.LinkEmailToUser")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	span.LogFields(log.Object("request", request))
+	tracing.LogObjectAsJson(span, "request", request)
 
-	cmd := command.NewLinkEmailCommand(request.UserId, request.Tenant, request.LoggedInUserId, request.EmailId, request.Label, request.AppSource, request.Primary)
-	if err := s.userCommands.LinkEmailCommand.Handle(ctx, cmd); err != nil {
+	if _, err := s.userRequestHandler.HandleWithRetry(ctx, request.Tenant, request.UserId, false, request); err != nil {
+		tracing.TraceErr(span, err)
 		s.log.Errorf("(LinkEmailToUser.Handle) tenant:{%s}, user ID: {%s}, err: {%v}", request.Tenant, request.UserId, err)
-		return nil, s.errResponse(err)
+		return nil, grpcerr.ErrResponse(err)
 	}
-
-	s.log.Infof("Linked email {%s} to user {%s}", request.EmailId, request.UserId)
 
 	return &userpb.UserIdGrpcResponse{Id: request.UserId}, nil
 }

@@ -14,7 +14,9 @@ import (
 )
 
 type CommentRepository interface {
+	// Deprecated
 	GetById(ctx context.Context, commentId string) (*dbtype.Node, error)
+	// Deprecated
 	GetMatchedCommentId(ctx context.Context, externalSystem, externalId string) (string, error)
 }
 

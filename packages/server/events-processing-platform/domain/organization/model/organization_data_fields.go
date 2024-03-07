@@ -28,6 +28,7 @@ type OrganizationDataFields struct {
 	Headquarters       string
 	EmployeeGrowthRate string
 	LogoUrl            string
+	SlackChannelId     string
 }
 
 type OrganizationFields struct {

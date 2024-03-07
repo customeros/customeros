@@ -1,29 +1,32 @@
 package mapper
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 )
 
-var externalSystemTypeByModel = map[model.ExternalSystemType]entity.ExternalSystemId{
-	model.ExternalSystemTypeHubspot:        entity.Hubspot,
-	model.ExternalSystemTypeZendeskSupport: entity.ZendeskSupport,
-	model.ExternalSystemTypeCalcom:         entity.CalCom,
-	model.ExternalSystemTypePipedrive:      entity.Pipedrive,
-	model.ExternalSystemTypeSLACk:          entity.Slack,
-	model.ExternalSystemTypeIntercom:       entity.Intercom,
-	model.ExternalSystemTypeSalesforce:     entity.Salesforce,
-	model.ExternalSystemTypeStripe:         entity.Stripe,
-	model.ExternalSystemTypeMixpanel:       entity.Mixpanel,
+var externalSystemTypeByModel = map[model.ExternalSystemType]neo4jenum.ExternalSystemId{
+	model.ExternalSystemTypeHubspot:        neo4jenum.Hubspot,
+	model.ExternalSystemTypeZendeskSupport: neo4jenum.ZendeskSupport,
+	model.ExternalSystemTypeCalcom:         neo4jenum.CalCom,
+	model.ExternalSystemTypePipedrive:      neo4jenum.Pipedrive,
+	model.ExternalSystemTypeSLACk:          neo4jenum.Slack,
+	model.ExternalSystemTypeIntercom:       neo4jenum.Intercom,
+	model.ExternalSystemTypeSalesforce:     neo4jenum.Salesforce,
+	model.ExternalSystemTypeStripe:         neo4jenum.Stripe,
+	model.ExternalSystemTypeMixpanel:       neo4jenum.Mixpanel,
+	model.ExternalSystemTypeClose:          neo4jenum.Close,
+	model.ExternalSystemTypeOutlook:        neo4jenum.Outlook,
+	model.ExternalSystemTypeUnthread:       neo4jenum.Unthread,
 }
 
 var externalSystemTypeByValue = utils.ReverseMap(externalSystemTypeByModel)
 
-func MapExternalSystemTypeFromModel(input model.ExternalSystemType) entity.ExternalSystemId {
+func MapExternalSystemTypeFromModel(input model.ExternalSystemType) neo4jenum.ExternalSystemId {
 	return externalSystemTypeByModel[input]
 }
 
-func MapExternalSystemTypeToModel(input entity.ExternalSystemId) model.ExternalSystemType {
+func MapExternalSystemTypeToModel(input neo4jenum.ExternalSystemId) model.ExternalSystemType {
 	return externalSystemTypeByValue[input]
 }

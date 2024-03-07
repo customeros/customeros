@@ -3,6 +3,7 @@ package resolver
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"github.com/99designs/gqlgen/client"
 	"github.com/99designs/gqlgen/graphql/handler"
@@ -18,7 +19,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/postgres"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	commonAuthService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
@@ -88,7 +88,7 @@ func prepareClient() {
 	appLogger.InitLogger()
 
 	commonServices := commonService.InitServices(postgresGormDB, driver)
-	commonAuthServices := commonAuthService.InitServices(nil, postgresGormDB)
+	commonAuthServices := commonAuthService.InitServices(nil, commonServices, postgresGormDB)
 	testDialFactory := events_platform.NewTestDialFactory()
 	gRPCconn, _ := testDialFactory.GetEventsProcessingPlatformConn()
 	services = service.InitServices(appLogger, driver, &config.Config{}, commonServices, commonAuthServices, grpc_client.InitClients(gRPCconn))
@@ -164,22 +164,6 @@ func assertRawResponseError(t *testing.T, response *client.Response, err error) 
 	require.NotNil(t, response.Errors)
 }
 
-// Deprecated, use neo4jtest.AssertNeo4jRelationCount instead
-func assertNeo4jRelationCount(ctx context.Context, t *testing.T, driver *neo4j.DriverWithContext, relations map[string]int) {
-	for name, expectedCount := range relations {
-		actualCount := neo4jtest.GetCountOfRelationships(ctx, driver, name)
-		require.Equal(t, expectedCount, actualCount, "Unexpected count for relationship: "+name)
-	}
-}
-
-// Deprecated, use neo4jtest.AssertRelationship instead
-func assertRelationship(ctx context.Context, t *testing.T, driver *neo4j.DriverWithContext, fromNodeId, relationshipType, toNodeId string) {
-	rel, err := neo4jt.GetRelationship(ctx, driver, fromNodeId, toNodeId)
-	require.Nil(t, err)
-	require.NotNil(t, rel)
-	require.Equal(t, relationshipType, rel.Type)
-}
-
 func callGraphQL(t *testing.T, queryLocation string, vars map[string]interface{}) (rawResponse *client.Response) {
 	// Transform map into var args of options
 	options := make([]client.Option, 0, len(vars))
@@ -206,14 +190,12 @@ func callGraphQLExpectError(t *testing.T, queryLocation string, vars map[string]
 	require.Nil(t, err)
 	assertRawResponseError(t, rawResponse, err)
 
-	var rr struct {
-		GraphQlErrorResponse GraphQlErrorResponse
-	}
+	var rr []GraphQlErrorResponse
 
-	err = decode.Decode(rawResponse.Data.(map[string]any), &rr)
+	err = json.Unmarshal(rawResponse.Errors, &rr)
 	require.Nil(t, err)
 
-	return rr.GraphQlErrorResponse
+	return rr[0]
 }
 
 type GraphQlErrorResponse struct {

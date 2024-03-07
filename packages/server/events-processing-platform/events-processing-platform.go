@@ -3,14 +3,16 @@ package main
 import (
 	"context"
 	"flag"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/server"
 	"log"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
+	"time"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/server"
 )
 
 func main() {
@@ -34,6 +36,13 @@ func main() {
 	// Launch server goroutine
 	waitGroup.Add(1)
 	go startServer(ctx, cfg, appLogger, &waitGroup)
+
+	// Start a heartbeat
+	done := make(chan interface{})
+	defer close(done)
+	const timeout = time.Second
+	heartbeat := Heartbeat(done, timeout)
+	go logHeartbeat(heartbeat, appLogger)
 
 	// Propagate cancel signal
 	go handleSignals(cancel, appLogger)
@@ -71,6 +80,43 @@ func handleSignals(cancel context.CancelFunc, appLogger *logger.ExtendedLogger) 
 			cancel()
 		}
 	}()
+}
+
+func Heartbeat(
+	done <-chan interface{},
+	pulseInterval time.Duration,
+	nums ...int,
+) <-chan int {
+	heartbeat := make(chan int, 1)
+	go func() {
+		defer close(heartbeat)
+
+		time.Sleep(2 * time.Second)
+
+		pulse := time.Tick(pulseInterval)
+		for {
+			select {
+			case <-done:
+				return
+			case <-pulse:
+				select {
+				case heartbeat <- 1:
+				default:
+				}
+			}
+		}
+	}()
+
+	return heartbeat
+}
+
+func logHeartbeat(heartbeat <-chan int, logger *logger.ExtendedLogger) {
+	for {
+		if _, ok := <-heartbeat; !ok {
+			return
+		}
+		logger.Debug("pulse")
+	}
 }
 
 func initLogger(cfg *config.Config) *logger.ExtendedLogger {

@@ -15,6 +15,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
@@ -23,12 +24,11 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"reflect"
-	"time"
 )
 
 type ContactService interface {
 	Create(ctx context.Context, contact *ContactCreateData) (string, error)
-	Update(ctx context.Context, contactUpdateData *ContactUpdateData) (string, error)
+	Update(ctx context.Context, input model.ContactUpdateInput) (string, error)
 	GetById(ctx context.Context, id string) (*entity.ContactEntity, error)
 	GetFirstContactByEmail(ctx context.Context, email string) (*entity.ContactEntity, error)
 	GetFirstContactByPhoneNumber(ctx context.Context, phoneNumber string) (*entity.ContactEntity, error)
@@ -55,7 +55,7 @@ type ContactCreateData struct {
 	ContactEntity     *entity.ContactEntity
 	EmailEntity       *entity.EmailEntity
 	PhoneNumberEntity *entity.PhoneNumberEntity
-	ExternalReference *entity.ExternalSystemEntity
+	ExternalReference *neo4jentity.ExternalSystemEntity
 	Source            neo4jentity.DataSource
 	AppSource         string
 }
@@ -63,10 +63,6 @@ type ContactCreateData struct {
 type CustomerContactCreateData struct {
 	ContactEntity *entity.ContactEntity
 	EmailEntity   *entity.EmailEntity
-}
-
-type ContactUpdateData struct {
-	ContactEntity *entity.ContactEntity
 }
 
 type contactService struct {
@@ -155,15 +151,12 @@ func (s *contactService) createContactWithEvents(ctx context.Context, contactDet
 		}
 	}
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := s.grpcClients.ContactClient.UpsertContact(ctx, &upsertContactRequest)
-	for i := 1; i <= constants.MaxRetriesCheckDataInNeo4jAfterEventRequest; i++ {
-		user, findErr := s.GetById(ctx, response.Id)
-		if user != nil && findErr == nil {
-			span.LogFields(log.Bool("contactSavedInGraphDb", true))
-			break
-		}
-		time.Sleep(utils.BackOffIncrementalDelay(i))
-	}
+	response, err := CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
+		return s.grpcClients.ContactClient.UpsertContact(ctx, &upsertContactRequest)
+	})
+
+	WaitForNodeCreatedInNeo4j(ctx, s.repositories, response.Id, neo4jutil.NodeLabelContact, span)
+
 	return response.Id, err
 }
 
@@ -178,14 +171,16 @@ func (s *contactService) linkEmailByEvents(ctx context.Context, contactId, appSo
 	}
 	if emailId != "" {
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = s.grpcClients.ContactClient.LinkEmailToContact(ctx, &contactpb.LinkEmailToContactGrpcRequest{
-			Tenant:         common.GetTenantFromContext(ctx),
-			LoggedInUserId: common.GetUserIdFromContext(ctx),
-			ContactId:      contactId,
-			EmailId:        emailId,
-			Primary:        emailEntity.Primary,
-			Label:          emailEntity.Label,
-			AppSource:      appSource,
+		_, err = CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
+			return s.grpcClients.ContactClient.LinkEmailToContact(ctx, &contactpb.LinkEmailToContactGrpcRequest{
+				Tenant:         common.GetTenantFromContext(ctx),
+				LoggedInUserId: common.GetUserIdFromContext(ctx),
+				ContactId:      contactId,
+				EmailId:        emailId,
+				Primary:        emailEntity.Primary,
+				Label:          emailEntity.Label,
+				AppSource:      appSource,
+			})
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -205,14 +200,16 @@ func (s *contactService) linkPhoneNumberByEvents(ctx context.Context, contactId,
 	}
 	if phoneNumberId != "" {
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = s.grpcClients.ContactClient.LinkPhoneNumberToContact(ctx, &contactpb.LinkPhoneNumberToContactGrpcRequest{
-			Tenant:         common.GetTenantFromContext(ctx),
-			LoggedInUserId: common.GetUserIdFromContext(ctx),
-			ContactId:      contactId,
-			PhoneNumberId:  phoneNumberId,
-			Primary:        phoneNumberEntity.Primary,
-			Label:          phoneNumberEntity.Label,
-			AppSource:      appSource,
+		_, err = CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
+			return s.grpcClients.ContactClient.LinkPhoneNumberToContact(ctx, &contactpb.LinkPhoneNumberToContactGrpcRequest{
+				Tenant:         common.GetTenantFromContext(ctx),
+				LoggedInUserId: common.GetUserIdFromContext(ctx),
+				ContactId:      contactId,
+				PhoneNumberId:  phoneNumberId,
+				Primary:        phoneNumberEntity.Primary,
+				Label:          phoneNumberEntity.Label,
+				AppSource:      appSource,
+			})
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -221,51 +218,76 @@ func (s *contactService) linkPhoneNumberByEvents(ctx context.Context, contactId,
 	}
 }
 
-func (s *contactService) Update(ctx context.Context, contactUpdateData *ContactUpdateData) (string, error) {
+func (s *contactService) Update(ctx context.Context, input model.ContactUpdateInput) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.Update")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("contactUpdateData", contactUpdateData))
+	tracing.LogObjectAsJson(span, "input", input)
 
-	if contactUpdateData.ContactEntity == nil {
-		err := fmt.Errorf("(ContactService.Update) contact entity is nil")
-		s.log.Error(err.Error())
-		tracing.TraceErr(span, err)
-		return "", err
-	} else if contactUpdateData.ContactEntity.Id == "" {
+	if input.ID == "" {
 		err := fmt.Errorf("(ContactService.Update) contact id is missing")
 		s.log.Error(err.Error())
 		tracing.TraceErr(span, err)
 		return "", err
 	}
 
-	currentContactEntity, err := s.GetById(ctx, contactUpdateData.ContactEntity.Id)
+	currentContactEntity, err := s.GetById(ctx, input.ID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Error(err)
 		return "", err
 	}
 
-	contactDetails := *contactUpdateData.ContactEntity
-
 	upsertContactRequest := contactpb.UpsertContactGrpcRequest{
 		Tenant: common.GetTenantFromContext(ctx),
 		SourceFields: &commonpb.SourceFields{
 			Source:    string(neo4jentity.DataSourceOpenline),
-			AppSource: utils.StringFirstNonEmpty(contactDetails.AppSource, constants.AppSourceCustomerOsApi),
+			AppSource: constants.AppSourceCustomerOsApi,
 		},
 		LoggedInUserId:  common.GetUserIdFromContext(ctx),
-		Id:              contactDetails.Id,
-		Prefix:          contactDetails.Prefix,
-		Name:            contactDetails.Name,
-		FirstName:       contactDetails.FirstName,
-		LastName:        contactDetails.LastName,
-		Description:     contactDetails.Description,
-		Timezone:        contactDetails.Timezone,
-		ProfilePhotoUrl: utils.StringFirstNonEmpty(contactDetails.ProfilePhotoUrl, currentContactEntity.ProfilePhotoUrl),
+		Id:              input.ID,
+		Prefix:          utils.IfNotNilString(input.Prefix),
+		Name:            utils.IfNotNilString(input.Name),
+		FirstName:       utils.IfNotNilString(input.FirstName),
+		LastName:        utils.IfNotNilString(input.LastName),
+		Description:     utils.IfNotNilString(input.Description),
+		Timezone:        utils.IfNotNilString(input.Timezone),
+		ProfilePhotoUrl: utils.StringFirstNonEmpty(utils.IfNotNilString(input.ProfilePhotoURL), currentContactEntity.ProfilePhotoUrl),
 	}
+	if input.Patch != nil && *input.Patch {
+		var fieldsMask []contactpb.ContactFieldMask
+		if input.FirstName != nil {
+			fieldsMask = append(fieldsMask, contactpb.ContactFieldMask_CONTACT_FIELD_FIRST_NAME)
+		}
+		if input.LastName != nil {
+			fieldsMask = append(fieldsMask, contactpb.ContactFieldMask_CONTACT_FIELD_LAST_NAME)
+		}
+		if input.Prefix != nil {
+			fieldsMask = append(fieldsMask, contactpb.ContactFieldMask_CONTACT_FIELD_PREFIX)
+		}
+		if input.Name != nil {
+			fieldsMask = append(fieldsMask, contactpb.ContactFieldMask_CONTACT_FIELD_NAME)
+		}
+		if input.Description != nil {
+			fieldsMask = append(fieldsMask, contactpb.ContactFieldMask_CONTACT_FIELD_DESCRIPTION)
+		}
+		if input.Timezone != nil {
+			fieldsMask = append(fieldsMask, contactpb.ContactFieldMask_CONTACT_FIELD_TIMEZONE)
+		}
+		if input.ProfilePhotoURL != nil {
+			fieldsMask = append(fieldsMask, contactpb.ContactFieldMask_CONTACT_FIELD_PROFILE_PHOTO_URL)
+		}
+		if len(fieldsMask) == 0 {
+			span.LogFields(log.String("result", "No fields to update"))
+			return input.ID, nil
+		}
+		upsertContactRequest.FieldsMask = fieldsMask
+	}
+
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := s.grpcClients.ContactClient.UpsertContact(ctx, &upsertContactRequest)
+	response, err := CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
+		return s.grpcClients.ContactClient.UpsertContact(ctx, &upsertContactRequest)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Error("Error from events processing: %s", err.Error())
@@ -604,12 +626,14 @@ func (s *contactService) CustomerContactCreate(ctx context.Context, data *Custom
 	contextWithTimeout, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	contactId, err := s.grpcClients.ContactClient.UpsertContact(contextWithTimeout, contactCreateRequest)
+	response, err := CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
+		return s.grpcClients.ContactClient.UpsertContact(contextWithTimeout, contactCreateRequest)
+	})
 	if err != nil {
 		s.log.Errorf("(%s) Failed to call method: {%v}", utils.GetFunctionName(), err.Error())
 		return nil, err
 	}
-	result.ID = contactId.Id
+	result.ID = response.Id
 
 	if data.EmailEntity != nil {
 		emailCreate := &emailpb.UpsertEmailGrpcRequest{
@@ -624,7 +648,9 @@ func (s *contactService) CustomerContactCreate(ctx context.Context, data *Custom
 		if data.ContactEntity.CreatedAt != nil {
 			emailCreate.CreatedAt = timestamppb.New(*data.ContactEntity.CreatedAt)
 		}
-		emailId, err := s.grpcClients.EmailClient.UpsertEmail(contextWithTimeout, emailCreate)
+		emailId, err := CallEventsPlatformGRPCWithRetry[*emailpb.EmailIdGrpcResponse](func() (*emailpb.EmailIdGrpcResponse, error) {
+			return s.grpcClients.EmailClient.UpsertEmail(contextWithTimeout, emailCreate)
+		})
 		if err != nil {
 			s.log.Errorf("(%s) Failed to call method: {%v}", utils.GetFunctionName(), err.Error())
 			return nil, err
@@ -633,13 +659,15 @@ func (s *contactService) CustomerContactCreate(ctx context.Context, data *Custom
 		result.Email = &model.CustomerEmail{
 			ID: emailId.Id,
 		}
-		_, err = s.grpcClients.ContactClient.LinkEmailToContact(contextWithTimeout, &contactpb.LinkEmailToContactGrpcRequest{
-			Primary:   data.EmailEntity.Primary,
-			Label:     data.EmailEntity.Label,
-			ContactId: contactId.Id,
-			EmailId:   emailId.Id,
-			Tenant:    common.GetTenantFromContext(ctx),
-			AppSource: data.ContactEntity.AppSource,
+		_, err = CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
+			return s.grpcClients.ContactClient.LinkEmailToContact(contextWithTimeout, &contactpb.LinkEmailToContactGrpcRequest{
+				Primary:   data.EmailEntity.Primary,
+				Label:     data.EmailEntity.Label,
+				ContactId: response.Id,
+				EmailId:   emailId.Id,
+				Tenant:    common.GetTenantFromContext(ctx),
+				AppSource: data.ContactEntity.AppSource,
+			})
 		})
 		if err != nil {
 			s.log.Errorf("(%s) Failed to call method: {%v}", utils.GetFunctionName(), err.Error())

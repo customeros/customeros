@@ -13,6 +13,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	"github.com/opentracing/opentracing-go"
@@ -25,6 +26,7 @@ type OpportunityService interface {
 	UpdateRenewal(ctx context.Context, opportunityId string, renewalLikelihood entity.OpportunityRenewalLikelihood, amount *float64, comments *string, ownerUserId *string, appSource string) error
 	GetById(ctx context.Context, id string) (*entity.OpportunityEntity, error)
 	GetOpportunitiesForContracts(ctx context.Context, contractIds []string) (*entity.OpportunityEntities, error)
+	mapDbNodeToOpportunityEntity(node dbtype.Node) *entity.OpportunityEntity
 }
 type opportunityService struct {
 	log          logger.Logger
@@ -121,7 +123,7 @@ func (s *opportunityService) Update(ctx context.Context, opportunity *entity.Opp
 		return err
 	}
 
-	opportunityExists, _ := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), opportunity.Id, neo4jentity.NodeLabelOpportunity)
+	opportunityExists, _ := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), opportunity.Id, neo4jutil.NodeLabelOpportunity)
 	if !opportunityExists {
 		err := fmt.Errorf("(OpportunityService.Update) opportunity with id {%s} not found", opportunity.Id)
 		s.log.Error(err.Error())
@@ -147,7 +149,9 @@ func (s *opportunityService) Update(ctx context.Context, opportunity *entity.Opp
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := s.grpcClients.OpportunityClient.UpdateOpportunity(ctx, &opportunityUpdateRequest)
+	_, err := CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
+		return s.grpcClients.OpportunityClient.UpdateOpportunity(ctx, &opportunityUpdateRequest)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
@@ -170,7 +174,7 @@ func (s *opportunityService) UpdateRenewal(ctx context.Context, opportunityId st
 		return err
 	}
 
-	opportunityExists, _ := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), opportunityId, neo4jentity.NodeLabelOpportunity)
+	opportunityExists, _ := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), opportunityId, neo4jutil.NodeLabelOpportunity)
 	if !opportunityExists {
 		err := fmt.Errorf("(OpportunityService.UpdateRenewal) opportunity with id {%s} not found", opportunityId)
 		s.log.Error(err.Error())
@@ -214,7 +218,9 @@ func (s *opportunityService) UpdateRenewal(ctx context.Context, opportunityId st
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := s.grpcClients.OpportunityClient.UpdateRenewalOpportunity(ctx, &opportunityRenewalUpdateRequest)
+	_, err := CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
+		return s.grpcClients.OpportunityClient.UpdateRenewalOpportunity(ctx, &opportunityRenewalUpdateRequest)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())

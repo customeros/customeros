@@ -2,59 +2,79 @@ extend type Query {
     serviceLineItem(id: ID!): ServiceLineItem!
 }
 extend type Mutation {
-    serviceLineItemCreate(input: ServiceLineItemInput!): ServiceLineItem! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    serviceLineItemUpdate(input: ServiceLineItemUpdateInput!): ServiceLineItem! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    contractLineItem_Create(input: ServiceLineItemInput!): ServiceLineItem! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    contractLineItem_Update(input: ServiceLineItemUpdateInput!): ServiceLineItem! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    contractLineItem_Close(input: ServiceLineItemCloseInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
+
     serviceLineItem_Delete(id: ID!): DeleteResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    serviceLineItem_Close(input: ServiceLineItemCloseInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    serviceLineItem_BulkUpdate(input: ServiceLineItemBulkUpdateInput!): [ID!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
-type ServiceLineItem implements Node {
-    id:                 ID!
-    createdAt:          Time!
-    updatedAt:          Time!
-    startedAt:          Time!
-    endedAt:            Time
-    name:               String!
-    billed:             BilledType!
+type ServiceLineItem implements MetadataInterface {
+    metadata:           Metadata!
+    billingCycle:       BilledType!
+    comments:           String!
+    description:        String!
+    parentId:           ID!
     price:              Float!
     quantity:           Int64!
-    comments:           String!
+    serviceEnded:       Time
+    serviceStarted:     Time!
+    tax:                Tax!
     createdBy:          User @goField(forceResolver: true)
-    source:             DataSource!
-    sourceOfTruth:      DataSource!
-    appSource:          String!
     externalLinks:      [ExternalSystem!]! @goField(forceResolver: true)
-    parentId:           ID!
 }
 
 input ServiceLineItemInput {
     contractId:         ID!
-    name:               String
-    billed:             BilledType
+    description:        String
+    billingCycle:       BilledType
     price:              Float
     quantity:           Int64
+    tax:                TaxInput
     appSource:          String
-    externalReference:  ExternalSystemReferenceInput
-    startedAt:          Time
-    endedAt:            Time
+    serviceStarted:     Time
+    serviceEnded:       Time
 }
 
 input ServiceLineItemUpdateInput {
-    serviceLineItemId:  ID!
-    name:               String
-    billed:             BilledType
-    price:              Float
-    quantity:           Int64
-    comments:           String
-    appSource:          String
-    externalReference:  ExternalSystemReferenceInput
+    id:                         ID
+    description:                String
+    billingCycle:               BilledType
+    price:                      Float
+    quantity:                   Int64
+    tax:                        TaxInput
+    comments:                   String
+    appSource:                  String
+    isRetroactiveCorrection:    Boolean
+    serviceStarted:             Time
+    serviceEnded:               Time
+}
+
+input ServiceLineItemBulkUpdateInput {
+    serviceLineItems:   [ServiceLineItemBulkUpdateItem]!
+    contractId:         ID!
+    invoiceNote:        String
+}
+
+input ServiceLineItemBulkUpdateItem {
+    serviceLineItemId:       ID
+    name:                    String
+    billed:                  BilledType
+    price:                   Float
+    quantity:                Int64
+    vatRate:                 Float
+    comments:                String
     isRetroactiveCorrection: Boolean
+    serviceStarted:          Time
 }
 
 input ServiceLineItemCloseInput {
-    id:         ID!
-    endedAt:    Time
+    id:             ID!
+    endedAt:        Time
+    serviceEnded:   Time
 }
+
 
 enum BilledType {
     NONE
@@ -63,4 +83,8 @@ enum BilledType {
     ANNUALLY
     ONCE
     USAGE
+}
+
+input TaxInput {
+    taxRate:    Float!
 }

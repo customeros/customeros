@@ -1,0 +1,3 @@
+mutation SimulateInvoice($invoice: InvoiceSimulateInput!) {
+    invoice_Simulate(input: $invoice)
+}

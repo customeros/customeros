@@ -1,6 +1,8 @@
 import { atom, selector, useRecoilState } from 'recoil';
 
-interface RelationshipFilterState {
+import { makeServerToAtomMapper } from '../shared/makeServerToAtomMapper';
+
+export interface RelationshipFilterState {
   value: boolean[];
   isActive: boolean;
 }
@@ -23,3 +25,20 @@ export const RelationshipFilterSelector = selector({
 export const useRelationshipFilter = () => {
   return useRecoilState(RelationshipFilterAtom);
 };
+
+/**
+ * Used for mapping server-side Filter data to client-side atom RelationshipFilterState
+ */
+export const mapRelationshipToAtom =
+  makeServerToAtomMapper<RelationshipFilterState>(
+    {
+      filter: {
+        property: 'IS_CUSTOMER',
+      },
+    },
+    ({ filter }) => ({
+      isActive: true,
+      value: filter?.value,
+    }),
+    defaultState,
+  );

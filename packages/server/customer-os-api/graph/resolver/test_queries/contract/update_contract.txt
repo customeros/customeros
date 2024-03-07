@@ -1,6 +1,7 @@
 mutation UpdateContract($contractId: ID!) {
 contract_Update(
     input: {
+        patch: true
         contractId: $contractId
         name: "Updated Contract"
         renewalCycle: ANNUAL_RENEWAL
@@ -10,6 +11,19 @@ contract_Update(
         signedAt: "2019-02-01T00:00:00Z"
         endedAt: "2019-03-01T00:00:00Z"
         appSource: "test app source"
+        addressLine1: "test address line 1"
+        addressLine2: "test address line 2"
+        locality: "test locality"
+        country: "test country"
+        zip: "test zip"
+        organizationLegalName: "test organization legal name"
+        invoiceEmail: "test invoice email"
+        invoiceNote: "test invoice note"
+        billingCycle: ANNUAL_BILLING
+        currency: USD
+        canPayWithCard: true
+        canPayWithDirectDebit: true
+        canPayWithBankTransfer: true
     }
   ) {
     id

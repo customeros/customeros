@@ -4,6 +4,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	commonAuthService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/config"
@@ -33,6 +34,8 @@ type Services struct {
 	InteractionEventService   InteractionEventService
 	InteractionSessionService InteractionSessionService
 	CommentService            CommentService
+	InvoiceService            InvoiceService
+	SyncEmailService          SyncEmailService
 }
 
 func InitServices(log logger.Logger,
@@ -65,5 +68,7 @@ func InitServices(log logger.Logger,
 	services.FinderService = NewFinderService(log, repositories, &services)
 	services.InteractionEventService = NewInteractionEventService(log, repositories, grpcClients, &services)
 	services.CommentService = NewCommentService(log, repositories, grpcClients, &services)
+	services.InvoiceService = NewInvoiceService(log, repositories, grpcClients, &services)
+	services.SyncEmailService = NewSyncEmailService(log, repositories, grpcClients, &services, cache, []commonEntity.PersonalEmailProvider{})
 	return &services
 }

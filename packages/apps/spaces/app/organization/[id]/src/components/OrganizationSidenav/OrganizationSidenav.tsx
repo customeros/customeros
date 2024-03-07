@@ -86,6 +86,7 @@ export const OrganizationSidenav = () => {
           )}
           <Tooltip label={data?.organization?.name} placement='bottom'>
             <Text
+              maxW='150px'
               fontSize='lg'
               fontWeight='semibold'
               color='gray.700'
@@ -123,7 +124,7 @@ export const OrganizationSidenav = () => {
         />
         <SidenavItem
           label='Account'
-          isActive={checkIsActive('account')}
+          isActive={checkIsActive('account') || checkIsActive('invoices')}
           onClick={handleItemClick('account')}
           icon={
             <Icons.ActivityHeart

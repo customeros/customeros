@@ -1,0 +1,8 @@
+query GetTenantSettings {
+  tenantSettings{
+    logoUrl
+    logoRepositoryFileId
+    billingEnabled
+    baseCurrency
+  }
+}

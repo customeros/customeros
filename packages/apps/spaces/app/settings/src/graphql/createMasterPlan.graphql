@@ -1,0 +1,6 @@
+mutation createMasterPlan($input: MasterPlanInput!) {
+  masterPlan_Create(input: $input) {
+    id
+    name
+  }
+}

@@ -1,1 +1,2 @@
-export * from './KMenu';
+'use client';
+export { KMenu } from './KMenu';

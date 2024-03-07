@@ -13,6 +13,7 @@ import { Text } from '@ui/typography/Text';
 import { Delete } from '@ui/media/icons/Delete';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { Calendar } from '@ui/media/icons/Calendar';
+type DateInputValue = null | string | number | Date;
 
 interface DatePickerProps extends ReactDatePickerProps {
   name: string;
@@ -23,8 +24,6 @@ interface DatePickerProps extends ReactDatePickerProps {
   calendarIconHidden?: boolean;
 }
 
-type DateInputValue = null | string | number | Date;
-
 export const DatePicker: React.FC<DatePickerProps> = ({
   label,
   name,
@@ -32,23 +31,16 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   placeholder,
   calendarIconHidden,
   inset,
+  value,
 }) => {
   const { getInputProps } = useField(name, formId);
-  const { id, onChange, value } = getInputProps();
+  const { id, onChange } = getInputProps();
   const handleDateInputChange = (data?: DateInputValue) => {
     if (!data) return onChange(null);
     const date = new Date(data);
 
-    const normalizedDate = new Date(
-      Date.UTC(
-        date.getFullYear(),
-        date.getMonth(),
-        date.getDate(),
-        date.getHours(),
-        date.getMinutes(),
-        date.getSeconds(),
-      ),
-    );
+    const normalizedDate = new Date(DateTimeUtils.toISOMidnight(date));
+
     onChange(normalizedDate);
   };
 
@@ -75,6 +67,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
       >
         <ReactDatePicker
           id={id}
+          name={name}
           clearIcon={value && <Delete color='gray.500' height='1rem' />}
           onChange={(val) => handleDateInputChange(val as DateInputValue)}
           defaultValue={value}
@@ -98,7 +91,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
               <Text color={value ? 'gray.700' : 'gray.400'} role='button'>
                 {value
                   ? DateTimeUtils.format(
-                      value.toISOString(),
+                      (value as Date)?.toISOString(),
                       DateTimeUtils.dateWithAbreviatedMonth,
                     )
                   : `${placeholder ? placeholder : 'Start date'}`}

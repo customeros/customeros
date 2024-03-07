@@ -1,8 +1,10 @@
 syntax = "proto3";
 
+import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 import "common/source.proto";
 import "common/external_system.proto";
+import "common/billing_cycle.proto";
 
 option go_package = "api/grpc/v1/contract;contract_grpc_service";
 
@@ -12,6 +14,33 @@ enum RenewalCycle {
   MONTHLY_RENEWAL = 1;
   ANNUALLY_RENEWAL = 2;
   QUARTERLY_RENEWAL = 3;
+}
+
+enum ContractFieldMask {
+  CONTRACT_FIELD_NONE = 0; // No property, ignored by the server
+  CONTRACT_FIELD_NAME = 1;
+  CONTRACT_FIELD_SERVICE_STARTED_AT = 2;
+  CONTRACT_FIELD_SIGNED_AT = 3;
+  CONTRACT_FIELD_ENDED_AT = 4;
+  CONTRACT_FIELD_RENEWAL_CYCLE = 5;
+  CONTRACT_FIELD_CONTRACT_URL = 6;
+  CONTRACT_FIELD_RENEWAL_PERIODS = 7;
+  CONTRACT_FIELD_BILLING_CYCLE = 8;
+  CONTRACT_FIELD_INVOICING_START_DATE = 9;
+  CONTRACT_FIELD_CURRENCY = 10;
+  CONTRACT_FIELD_ADDRESS_LINE_1 = 11;
+  CONTRACT_FIELD_ADDRESS_LINE_2 = 12;
+  CONTRACT_FIELD_LOCALITY = 13;
+  CONTRACT_FIELD_COUNTRY = 14;
+  CONTRACT_FIELD_ZIP = 15;
+  CONTRACT_FIELD_ORGANIZATION_LEGAL_NAME = 16;
+  CONTRACT_FIELD_INVOICE_EMAIL = 17;
+  CONTRACT_FIELD_INVOICE_NOTE = 18;
+  CONTRACT_FIELD_NEXT_INVOICE_DATE = 19; // to update next invoice date field mask must be specified explicitly
+  CONTRACT_FIELD_CAN_PAY_WITH_CARD = 20;
+  CONTRACT_FIELD_CAN_PAY_WITH_DIRECT_DEBIT = 21;
+  CONTRACT_FIELD_CAN_PAY_WITH_BANK_TRANSFER = 22;
+  CONTRACT_FIELD_INVOICING_ENABLED = 23;
 }
 
 // CreateContract request message
@@ -30,6 +59,10 @@ message CreateContractGrpcRequest {
   ExternalSystemFields externalSystemFields = 13;
   string contractUrl = 14;
   optional int64 renewalPeriods = 15; // applicable only for yearly renewal
+  BillingCycle billingCycle = 16;
+  google.protobuf.Timestamp invoicingStartDate = 17;
+  string currency = 18;
+  bool invoicingEnabled = 19;
 }
 
 message UpdateContractGrpcRequest {
@@ -46,6 +79,23 @@ message UpdateContractGrpcRequest {
   ExternalSystemFields externalSystemFields = 11;
   string contractUrl = 12;
   optional int64 renewalPeriods = 13; // applicable only for yearly renewal
+  BillingCycle billingCycle = 14;
+  google.protobuf.Timestamp invoicingStartDate = 15;
+  string currency = 16;
+  string addressLine1 = 17;
+  string addressLine2 = 18;
+  string locality = 19;
+  string country = 20;
+  string zip = 21;
+  string organizationLegalName = 22;
+  string invoiceEmail = 23;
+  repeated ContractFieldMask fieldsMask = 24;
+  string invoiceNote = 25;
+  google.protobuf.Timestamp nextInvoiceDate = 26;
+  bool canPayWithCard = 27;
+  bool canPayWithDirectDebit = 28;
+  bool canPayWithBankTransfer = 29;
+  bool invoicingEnabled = 30;
 }
 
 message RolloutRenewalOpportunityOnExpirationGrpcRequest {
@@ -56,6 +106,14 @@ message RolloutRenewalOpportunityOnExpirationGrpcRequest {
 }
 
 message RefreshContractStatusGrpcRequest {
+  string id = 1;
+  string tenant = 2;
+  string loggedInUserId = 3;
+  string appSource = 4;
+}
+
+// Permanently delete contract request
+message SoftDeleteContractGrpcRequest {
   string id = 1;
   string tenant = 2;
   string loggedInUserId = 3;
@@ -73,4 +131,5 @@ service ContractGrpcService {
   rpc UpdateContract(UpdateContractGrpcRequest) returns (ContractIdGrpcResponse);
   rpc RolloutRenewalOpportunityOnExpiration(RolloutRenewalOpportunityOnExpirationGrpcRequest) returns (ContractIdGrpcResponse);
   rpc RefreshContractStatus(RefreshContractStatusGrpcRequest) returns (ContractIdGrpcResponse);
+  rpc SoftDeleteContract(SoftDeleteContractGrpcRequest) returns (google.protobuf.Empty);
 }

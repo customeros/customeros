@@ -3,6 +3,7 @@ package entity
 import (
 	"fmt"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"time"
 )
 
@@ -84,16 +85,16 @@ func (ActionEntity) IsTimelineEvent() {
 }
 
 func (ActionEntity) TimelineEventLabel() string {
-	return neo4jentity.NodeLabelAction
+	return neo4jutil.NodeLabelAction
 }
 
 type ActionEntities []ActionEntity
 
 func (action ActionEntity) Labels(tenant string) []string {
 	return []string{
-		neo4jentity.NodeLabelAction,
-		neo4jentity.NodeLabelAction + "_" + tenant,
-		neo4jentity.NodeLabelTimelineEvent,
-		neo4jentity.NodeLabelTimelineEvent + "_" + tenant,
+		neo4jutil.NodeLabelAction,
+		neo4jutil.NodeLabelAction + "_" + tenant,
+		neo4jutil.NodeLabelTimelineEvent,
+		neo4jutil.NodeLabelTimelineEvent + "_" + tenant,
 	}
 }

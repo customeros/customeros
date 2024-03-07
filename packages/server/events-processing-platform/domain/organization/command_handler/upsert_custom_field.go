@@ -35,12 +35,12 @@ func (c *upsertCustomFieldCommandHandler) Handle(ctx context.Context, cmd *comma
 		return validationError
 	}
 
-	organizationAggregate, err := aggregate.LoadOrganizationAggregate(ctx, c.es, cmd.Tenant, cmd.ObjectID)
+	organizationAggregate, err := aggregate.LoadOrganizationAggregate(ctx, c.es, cmd.Tenant, cmd.ObjectID, *eventstore.NewLoadAggregateOptions())
 	if err != nil {
 		return err
 	}
 
-	if aggregate.IsAggregateNotFound(organizationAggregate) {
+	if eventstore.IsAggregateNotFound(organizationAggregate) {
 		tracing.TraceErr(span, eventstore.ErrAggregateNotFound)
 		return eventstore.ErrAggregateNotFound
 	} else {

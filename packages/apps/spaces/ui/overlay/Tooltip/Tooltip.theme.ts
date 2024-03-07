@@ -7,5 +7,6 @@ export const Tooltip = defineStyleConfig({
     boxShadow: 'lg',
     fontSize: 'md',
     borderRadius: 'md',
+    alignItems: 'center',
   },
 });

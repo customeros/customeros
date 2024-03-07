@@ -201,7 +201,7 @@ export const OnboardingStatusModal = ({
             options={options}
             openMenuOnFocus
             ref={initialFocusRef}
-            isDisabled={updateOnboardingStatus.isLoading}
+            isDisabled={updateOnboardingStatus.isPending}
             components={{
               Option: ({
                 data,
@@ -229,7 +229,7 @@ export const OnboardingStatusModal = ({
                 formId={formId}
                 name='comments'
                 spellCheck='false'
-                isDisabled={updateOnboardingStatus.isLoading}
+                isDisabled={updateOnboardingStatus.isPending}
                 placeholder={`What is the reason for changing the onboarding status?`}
               />
             </Box>
@@ -240,7 +240,7 @@ export const OnboardingStatusModal = ({
             w='full'
             variant='outline'
             onClick={onClose}
-            isDisabled={updateOnboardingStatus.isLoading}
+            isDisabled={updateOnboardingStatus.isPending}
           >
             Cancel
           </Button>
@@ -250,7 +250,7 @@ export const OnboardingStatusModal = ({
             type='submit'
             variant='outline'
             colorScheme='primary'
-            isLoading={updateOnboardingStatus.isLoading}
+            isLoading={updateOnboardingStatus.isPending}
           >
             Update status
           </Button>

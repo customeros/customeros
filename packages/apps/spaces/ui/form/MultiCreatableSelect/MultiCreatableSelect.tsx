@@ -112,7 +112,7 @@ export const MultiCreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
         Option: (props?.Option || Option) as ComponentType<OptionProps>,
         ..._components,
       }),
-      [Control, MultiValueLabel, _components],
+      [Control, MultiValueLabel, _components, MultiValue],
     );
 
     return (

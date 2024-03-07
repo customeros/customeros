@@ -27,7 +27,8 @@ export const PreviewTags: React.FC<{
   const updateLogEntryTags = useResetLogEntryTagsMutation(client, {
     onSuccess: () => {
       timeoutRef.current = setTimeout(
-        () => queryClient.invalidateQueries(['GetTimeline.infinite']),
+        () =>
+          queryClient.invalidateQueries({ queryKey: ['GetTimeline.infinite'] }),
         500,
       );
     },

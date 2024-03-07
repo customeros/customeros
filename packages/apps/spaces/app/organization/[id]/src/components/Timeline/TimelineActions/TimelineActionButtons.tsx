@@ -2,6 +2,7 @@ import React, { FC, useRef, useState, useEffect } from 'react';
 
 import { Box } from '@ui/layout/Box';
 import { Button } from '@ui/form/Button';
+import { Send03 } from '@ui/media/icons/Send03';
 import { Mail01 } from '@ui/media/icons/Mail01';
 import { ButtonGroup } from '@ui/form/ButtonGroup';
 import { MessageChatSquare } from '@ui/media/icons/MessageChatSquare';
@@ -21,14 +22,13 @@ export const TimelineActionButtons: FC<{ invalidateQuery: () => void }> = ({
   const {
     checkCanExitSafely,
     showLogEntryConfirmationDialog,
-    closeConfirmationDialog: closeLogEntryConfirmationDialog,
     handleExitEditorAndCleanData: handleExitLogEntryEditorAndCleanData,
     onCreateLogEntry,
   } = useTimelineActionLogEntryContext();
   const {
     checkCanExitSafely: checkCanExitEmailSafely,
     showConfirmationDialog: showEmailConfirmationDialog,
-    closeConfirmationDialog: closeEmailConfirmationDialog,
+    onCreateEmail,
     handleExitEditorAndCleanData: handleExitEmailEditorAndCleanData,
   } = useTimelineActionEmailContext();
   const { openedEditor, showEditor } = useTimelineActionContext();
@@ -80,7 +80,7 @@ export const TimelineActionButtons: FC<{ invalidateQuery: () => void }> = ({
 
     showEditor(openOnConfirm);
   };
-  const handleConfirm = () => {
+  const handleConfirmLogEntry = () => {
     onCreateLogEntry({
       onSuccess: () => {
         handleExitLogEntryEditorAndCleanData();
@@ -94,12 +94,12 @@ export const TimelineActionButtons: FC<{ invalidateQuery: () => void }> = ({
     });
   };
 
-  const handleCloseConfirmationModal = () => {
-    setOpenOnConfirm(null);
-
-    return showEmailConfirmationDialog
-      ? closeEmailConfirmationDialog()
-      : closeLogEntryConfirmationDialog();
+  const handleConfirmEmail = () => {
+    const handleSuccess = () => {
+      handleExitEmailEditorAndCleanData();
+      showEditor(openOnConfirm);
+    };
+    onCreateEmail(handleSuccess);
   };
 
   return (
@@ -137,13 +137,24 @@ export const TimelineActionButtons: FC<{ invalidateQuery: () => void }> = ({
       </Button>
 
       <ConfirmDeleteDialog
-        label={`Discard this email?`}
-        description={`Saving draft log entries is not possible at the moment. Would you like to continue to discard this email?`}
-        confirmButtonLabel={`Discard email`}
+        colorScheme='primary'
+        label={`Send this email?`}
+        description={`You have typed an unsent email. Do you want to send it, or discard it?`}
+        confirmButtonLabel='Send'
+        cancelButtonLabel='Discard'
         isOpen={showEmailConfirmationDialog}
-        onClose={handleCloseConfirmationModal}
-        onConfirm={handleDiscard}
+        onClose={handleDiscard}
+        onConfirm={handleConfirmEmail}
         isLoading={false}
+        icon={
+          <Box>
+            <Send03
+              color='primary.700'
+              boxSize='inherit'
+              verticalAlign='initial'
+            />
+          </Box>
+        }
       />
 
       <ConfirmDeleteDialog
@@ -154,7 +165,7 @@ export const TimelineActionButtons: FC<{ invalidateQuery: () => void }> = ({
         cancelButtonLabel='Discard'
         isOpen={showLogEntryConfirmationDialog}
         onClose={handleDiscard}
-        onConfirm={handleConfirm}
+        onConfirm={handleConfirmLogEntry}
         isLoading={false}
         icon={
           <Box>

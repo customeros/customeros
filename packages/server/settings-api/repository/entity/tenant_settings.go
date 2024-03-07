@@ -4,8 +4,6 @@ type TenantSettings struct {
 	ID         string `gorm:"primary_key;type:uuid;default:gen_random_uuid()"`
 	TenantName string `gorm:"column:tenant_name;type:varchar(255);NOT NULL" binding:"required"`
 
-	HubspotPrivateAppKey *string `gorm:"column:hubspot_private_app_key;type:varchar(255);" binding:"required"`
-
 	SmartSheetId          *string `gorm:"column:smart_sheet_id;type:varchar(255);" binding:"required"`
 	SmartSheetAccessToken *string `gorm:"column:smart_sheet_access_token;type:varchar(255);"  binding:"required"`
 
@@ -191,10 +189,6 @@ type TenantSettings struct {
 	RecurlyApiKey *string `gorm:"column:recurly_api_key;type:varchar(255);" binding:"required"`
 
 	RetentlyApiToken *string `gorm:"column:retently_api_token;type:varchar(255);" binding:"required"`
-
-	SalesforceClientId     *string `gorm:"column:salesforce_client_id;type:varchar(255);" binding:"required"`
-	SalesforceClientSecret *string `gorm:"column:salesforce_client_secret;type:varchar(255);" binding:"required"`
-	SalesforceRefreshToken *string `gorm:"column:salesforce_refresh_token;type:varchar(255);" binding:"required"`
 
 	SalesloftApiKey *string `gorm:"column:salesloft_api_key;type:varchar(255);" binding:"required"`
 

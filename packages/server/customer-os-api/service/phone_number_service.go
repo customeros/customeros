@@ -13,12 +13,12 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	phonenumpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/phone_number"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"strings"
-	"time"
 )
 
 type PhoneNumberService interface {
@@ -67,29 +67,24 @@ func (s *phoneNumberService) CreatePhoneNumberByEvents(ctx context.Context, phon
 	if phoneNumberEntity == nil {
 		// phone number not exist, create new one
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		response, err := s.grpcClients.PhoneNumberClient.UpsertPhoneNumber(ctx, &phonenumpb.UpsertPhoneNumberGrpcRequest{
-			Tenant:      common.GetTenantFromContext(ctx),
-			PhoneNumber: phoneNumber,
-			SourceFields: &commonpb.SourceFields{
-				Source:    string(neo4jentity.DataSourceOpenline),
-				AppSource: utils.StringFirstNonEmpty(appSource, constants.AppSourceCustomerOsApi),
-			},
-			LoggedInUserId: common.GetUserIdFromContext(ctx),
+		response, err := CallEventsPlatformGRPCWithRetry[*phonenumpb.PhoneNumberIdGrpcResponse](func() (*phonenumpb.PhoneNumberIdGrpcResponse, error) {
+			return s.grpcClients.PhoneNumberClient.UpsertPhoneNumber(ctx, &phonenumpb.UpsertPhoneNumberGrpcRequest{
+				Tenant:      common.GetTenantFromContext(ctx),
+				PhoneNumber: phoneNumber,
+				SourceFields: &commonpb.SourceFields{
+					Source:    string(neo4jentity.DataSourceOpenline),
+					AppSource: utils.StringFirstNonEmpty(appSource, constants.AppSourceCustomerOsApi),
+				},
+				LoggedInUserId: common.GetUserIdFromContext(ctx),
+			})
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error from events processing %s", err.Error())
 			return "", err
 		}
-		for i := 1; i <= constants.MaxRetriesCheckDataInNeo4jAfterEventRequest; i++ {
-			phoneNumberEntity, findPhoneNumberErr := s.GetById(ctx, response.Id)
-			if phoneNumberEntity != nil && findPhoneNumberErr == nil {
-				span.LogFields(log.Bool("phoneNumberSavedInGraphDb", true))
-				break
-			}
-			time.Sleep(utils.BackOffIncrementalDelay(i))
-		}
-		span.LogFields(log.String("output - createdPhoneNumberId", response.Id))
+
+		WaitForNodeCreatedInNeo4j(ctx, s.repositories, response.Id, neo4jutil.NodeLabelPhoneNumber, span)
 		return response.Id, nil
 	} else {
 		return phoneNumberEntity.Id, nil

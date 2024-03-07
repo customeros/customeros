@@ -1,0 +1,23 @@
+query dashboardView_Renewals($page: Int!, $limit: Int!, $sortBy: String!, $sortDir: SortingDirection!) {
+  dashboardView_Renewals(
+  pagination: { page: $page, limit: $limit },
+    sort: {by: $sortBy, direction: $sortDir}) {
+    content {
+          organization{
+             id
+    } contract{
+    id
+    name
+    } opportunity{
+    id
+    maxAmount
+      owner {
+                            id
+                        }
+    }
+    }
+    totalPages
+    totalAvailable
+    totalElements
+  }
+}

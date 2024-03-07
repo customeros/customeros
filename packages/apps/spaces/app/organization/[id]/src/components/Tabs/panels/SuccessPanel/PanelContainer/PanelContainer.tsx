@@ -16,6 +16,7 @@ export const PanelContainer = ({
   title,
   bgImage,
   children,
+  actionItem,
   withFade = false,
   ...props
 }: PanelContainerProps) => {
@@ -42,6 +43,8 @@ export const PanelContainer = ({
         <Text fontSize='lg' color='gray.700' fontWeight='semibold'>
           {title}
         </Text>
+
+        {actionItem}
       </Flex>
 
       <VStack

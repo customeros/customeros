@@ -2,33 +2,18 @@ package aggregate
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"github.com/pkg/errors"
-	"strings"
 )
 
-func GetContractObjectID(aggregateID string, tenant string) string {
-	if tenant == "" {
-		return getContractObjectUUID(aggregateID)
-	}
-	return strings.ReplaceAll(aggregateID, string(ContractAggregateType)+"-"+tenant+"-", "")
+func GetContractObjectID(aggregateID, tenant string) string {
+	return aggregate.GetAggregateObjectID(aggregateID, tenant, ContractAggregateType)
 }
 
-// Use this method when tenant is not known
-func getContractObjectUUID(aggregateID string) string {
-	parts := strings.Split(aggregateID, "-")
-	fullUUID := parts[len(parts)-5] + "-" + parts[len(parts)-4] + "-" + parts[len(parts)-3] + "-" + parts[len(parts)-2] + "-" + parts[len(parts)-1]
-	return fullUUID
-}
-
-func IsAggregateNotFound(aggregate eventstore.Aggregate) bool {
-	return aggregate.GetVersion() < 0
-}
-
-func LoadContractAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string) (*ContractAggregate, error) {
+func LoadContractAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string, options eventstore.LoadAggregateOptions) (*ContractAggregate, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LoadContractAggregate")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
@@ -36,20 +21,28 @@ func LoadContractAggregate(ctx context.Context, eventStore eventstore.AggregateS
 
 	contractAggregate := NewContractAggregateWithTenantAndID(tenant, objectID)
 
-	err := eventStore.Exists(ctx, contractAggregate.GetID())
+	err := aggregate.LoadAggregate(ctx, eventStore, contractAggregate, options)
 	if err != nil {
-		if !errors.Is(err, eventstore.ErrAggregateNotFound) {
-			tracing.TraceErr(span, err)
-			return nil, err
-		} else {
-			return contractAggregate, nil
-		}
-	}
-
-	if err = eventStore.Load(ctx, contractAggregate); err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
 	return contractAggregate, nil
+}
+
+func LoadContractTempAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string) (*ContractTempAggregate, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "LoadContractTempAggregate")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.LogFields(log.String("ObjectID", objectID))
+
+	contractTempAggregate := NewContractTempAggregateWithTenantAndID(tenant, objectID)
+
+	err := aggregate.LoadAggregate(ctx, eventStore, contractTempAggregate, eventstore.LoadAggregateOptions{SkipLoadEvents: true})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return contractTempAggregate, nil
 }

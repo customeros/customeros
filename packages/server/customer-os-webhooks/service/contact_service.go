@@ -188,29 +188,31 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 
 		// Create or update contact
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = s.grpcClients.ContactClient.UpsertContact(ctx, &contactpb.UpsertContactGrpcRequest{
-			Tenant:          tenant,
-			Id:              contactId,
-			Name:            contactInput.Name,
-			FirstName:       contactInput.FirstName,
-			LastName:        contactInput.LastName,
-			Description:     contactInput.Description,
-			Timezone:        contactInput.Timezone,
-			ProfilePhotoUrl: contactInput.ProfilePhotoUrl,
-			CreatedAt:       utils.ConvertTimeToTimestampPtr(contactInput.CreatedAt),
-			UpdatedAt:       utils.ConvertTimeToTimestampPtr(contactInput.UpdatedAt),
-			SourceFields: &commonpb.SourceFields{
-				Source:    contactInput.ExternalSystem,
-				AppSource: appSource,
-			},
-			ExternalSystemFields: &commonpb.ExternalSystemFields{
-				ExternalSystemId: contactInput.ExternalSystem,
-				ExternalId:       contactInput.ExternalId,
-				ExternalUrl:      contactInput.ExternalUrl,
-				ExternalIdSecond: contactInput.ExternalIdSecond,
-				ExternalSource:   contactInput.ExternalSourceEntity,
-				SyncDate:         utils.ConvertTimeToTimestampPtr(&syncDate),
-			},
+		_, err = CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
+			return s.grpcClients.ContactClient.UpsertContact(ctx, &contactpb.UpsertContactGrpcRequest{
+				Tenant:          tenant,
+				Id:              contactId,
+				Name:            contactInput.Name,
+				FirstName:       contactInput.FirstName,
+				LastName:        contactInput.LastName,
+				Description:     contactInput.Description,
+				Timezone:        contactInput.Timezone,
+				ProfilePhotoUrl: contactInput.ProfilePhotoUrl,
+				CreatedAt:       utils.ConvertTimeToTimestampPtr(contactInput.CreatedAt),
+				UpdatedAt:       utils.ConvertTimeToTimestampPtr(contactInput.UpdatedAt),
+				SourceFields: &commonpb.SourceFields{
+					Source:    contactInput.ExternalSystem,
+					AppSource: appSource,
+				},
+				ExternalSystemFields: &commonpb.ExternalSystemFields{
+					ExternalSystemId: contactInput.ExternalSystem,
+					ExternalId:       contactInput.ExternalId,
+					ExternalUrl:      contactInput.ExternalUrl,
+					ExternalIdSecond: contactInput.ExternalIdSecond,
+					ExternalSource:   contactInput.ExternalSourceEntity,
+					SyncDate:         utils.ConvertTimeToTimestampPtr(&syncDate),
+				},
+			})
 		})
 		if err != nil {
 			failedSync = true
@@ -225,7 +227,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 				if contact != nil && findErr == nil {
 					break
 				}
-				time.Sleep(time.Duration(i*constants.TimeoutIntervalMs) * time.Millisecond)
+				time.Sleep(utils.BackOffExponentialDelay(i))
 			}
 		}
 	}
@@ -240,12 +242,14 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 		}
 		// Link email to contact
 		if !failedSync {
-			_, err = s.grpcClients.ContactClient.LinkEmailToContact(ctx, &contactpb.LinkEmailToContactGrpcRequest{
-				Tenant:    common.GetTenantFromContext(ctx),
-				ContactId: contactId,
-				EmailId:   emailId,
-				Primary:   true,
-				AppSource: appSource,
+			_, err = CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
+				return s.grpcClients.ContactClient.LinkEmailToContact(ctx, &contactpb.LinkEmailToContactGrpcRequest{
+					Tenant:    common.GetTenantFromContext(ctx),
+					ContactId: contactId,
+					EmailId:   emailId,
+					Primary:   true,
+					AppSource: appSource,
+				})
 			})
 			if err != nil {
 				failedSync = true
@@ -267,12 +271,14 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 			}
 			// Link email to contact
 			if !failedSync {
-				_, err = s.grpcClients.ContactClient.LinkEmailToContact(ctx, &contactpb.LinkEmailToContactGrpcRequest{
-					Tenant:    common.GetTenantFromContext(ctx),
-					ContactId: contactId,
-					EmailId:   emailId,
-					Primary:   false,
-					AppSource: appSource,
+				_, err = CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
+					return s.grpcClients.ContactClient.LinkEmailToContact(ctx, &contactpb.LinkEmailToContactGrpcRequest{
+						Tenant:    common.GetTenantFromContext(ctx),
+						ContactId: contactId,
+						EmailId:   emailId,
+						Primary:   false,
+						AppSource: appSource,
+					})
 				})
 				if err != nil {
 					failedSync = true
@@ -287,15 +293,17 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 	if !failedSync {
 		for orgId, referencedOrganization := range identifiedOrganizations {
 			// Link contact to organization
-			_, err = s.grpcClients.ContactClient.LinkWithOrganization(ctx, &contactpb.LinkWithOrganizationGrpcRequest{
-				Tenant:         common.GetTenantFromContext(ctx),
-				ContactId:      contactId,
-				OrganizationId: orgId,
-				JobTitle:       referencedOrganization.JobTitle,
-				SourceFields: &commonpb.SourceFields{
-					Source:    contactInput.ExternalSystem,
-					AppSource: appSource,
-				},
+			_, err = CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
+				return s.grpcClients.ContactClient.LinkWithOrganization(ctx, &contactpb.LinkWithOrganizationGrpcRequest{
+					Tenant:         common.GetTenantFromContext(ctx),
+					ContactId:      contactId,
+					OrganizationId: orgId,
+					JobTitle:       referencedOrganization.JobTitle,
+					SourceFields: &commonpb.SourceFields{
+						Source:    contactInput.ExternalSystem,
+						AppSource: appSource,
+					},
+				})
 			})
 			if err != nil {
 				failedSync = true
@@ -319,13 +327,15 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 				}
 				// Link phone number to contact
 				if phoneNumberId != "" {
-					_, err = s.grpcClients.ContactClient.LinkPhoneNumberToContact(ctx, &contactpb.LinkPhoneNumberToContactGrpcRequest{
-						Tenant:        common.GetTenantFromContext(ctx),
-						ContactId:     contactId,
-						PhoneNumberId: phoneNumberId,
-						Primary:       phoneNumberDtls.Primary,
-						Label:         phoneNumberDtls.Label,
-						AppSource:     appSource,
+					_, err = CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
+						return s.grpcClients.ContactClient.LinkPhoneNumberToContact(ctx, &contactpb.LinkPhoneNumberToContactGrpcRequest{
+							Tenant:        common.GetTenantFromContext(ctx),
+							ContactId:     contactId,
+							PhoneNumberId: phoneNumberId,
+							Primary:       phoneNumberDtls.Primary,
+							Label:         phoneNumberDtls.Label,
+							AppSource:     appSource,
+						})
 					})
 					if err != nil {
 						failedSync = true
@@ -358,11 +368,13 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 
 			// Link location to contact
 			if locationId != "" {
-				_, err = s.grpcClients.ContactClient.LinkLocationToContact(ctx, &contactpb.LinkLocationToContactGrpcRequest{
-					Tenant:     common.GetTenantFromContext(ctx),
-					ContactId:  contactId,
-					LocationId: locationId,
-					AppSource:  appSource,
+				_, err = CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
+					return s.grpcClients.ContactClient.LinkLocationToContact(ctx, &contactpb.LinkLocationToContactGrpcRequest{
+						Tenant:     common.GetTenantFromContext(ctx),
+						ContactId:  contactId,
+						LocationId: locationId,
+						AppSource:  appSource,
+					})
 				})
 				if err != nil {
 					failedSync = true

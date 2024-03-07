@@ -22,6 +22,10 @@ export const Input = helpers.defineMultiStyleConfig({
           borderColor: 'primary.500',
           boxShadow: 'unset',
         },
+        _invalid: {
+          boxShadow: 'unset',
+          borderColor: 'error.500 !important',
+        },
       },
     },
   },

@@ -3,22 +3,22 @@ package dataloader
 import (
 	"context"
 	"github.com/graph-gophers/dataloader"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"reflect"
 )
 
-func (i *Loaders) GetServiceLineItemsForContract(ctx context.Context, contractId string) (*entity.ServiceLineItemEntities, error) {
+func (i *Loaders) GetServiceLineItemsForContract(ctx context.Context, contractId string) (*neo4jentity.ServiceLineItemEntities, error) {
 	thunk := i.ServiceLineItemsForContract.Load(ctx, dataloader.StringKey(contractId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.ServiceLineItemEntities)
+	resultObj := result.(neo4jentity.ServiceLineItemEntities)
 	return &resultObj, nil
 }
 
@@ -43,12 +43,12 @@ func (b *serviceLineItemBatcher) getServiceLineItemsForContracts(ctx context.Con
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	serviceLineItemEntitiesByContractId := make(map[string]entity.ServiceLineItemEntities)
+	serviceLineItemEntitiesByContractId := make(map[string]neo4jentity.ServiceLineItemEntities)
 	for _, val := range *serviceLineItemEntitiesPtr {
 		if list, ok := serviceLineItemEntitiesByContractId[val.DataloaderKey]; ok {
 			serviceLineItemEntitiesByContractId[val.DataloaderKey] = append(list, val)
 		} else {
-			serviceLineItemEntitiesByContractId[val.DataloaderKey] = entity.ServiceLineItemEntities{val}
+			serviceLineItemEntitiesByContractId[val.DataloaderKey] = neo4jentity.ServiceLineItemEntities{val}
 		}
 	}
 
@@ -61,10 +61,10 @@ func (b *serviceLineItemBatcher) getServiceLineItemsForContracts(ctx context.Con
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.ServiceLineItemEntities{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: neo4jentity.ServiceLineItemEntities{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(entity.ServiceLineItemEntities{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.ServiceLineItemEntities{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}

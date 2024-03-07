@@ -19,7 +19,7 @@ func TestMutationResolver_NoteCreateForContact(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 
 	rawResponse, err := c.RawPost(getQuery("note/create_note_for_contact"),
@@ -64,7 +64,7 @@ func TestMutationResolver_NoteCreateForOrganization(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "test org")
 
 	rawResponse, err := c.RawPost(getQuery("note/create_note_for_organization"),
@@ -113,9 +113,7 @@ func TestMutationResolver_AddAttachmentToNote(t *testing.T) {
 	attachmentId := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
 		Id:            "",
 		MimeType:      "text/plain",
-		Name:          "readme.txt",
-		Extension:     "txt",
-		Size:          123,
+		FileName:      "readme.txt",
 		Source:        "",
 		SourceOfTruth: "",
 		AppSource:     "",
@@ -149,9 +147,7 @@ func TestMutationResolver_RemoveAttachmentFromNote(t *testing.T) {
 	attachmentId := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
 		Id:            "",
 		MimeType:      "text/plain",
-		Name:          "readme.txt",
-		Extension:     "txt",
-		Size:          123,
+		FileName:      "readme.txt",
 		Source:        "",
 		SourceOfTruth: "",
 		AppSource:     "",
@@ -264,62 +260,4 @@ func TestMutationResolver_NoteDelete(t *testing.T) {
 
 	// Check the labels on the nodes in the Neo4j database
 	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName})
-}
-
-func TestQueryResolver_GetNote_WithNotedEntities(t *testing.T) {
-	ctx := context.TODO()
-	defer tearDownTestCase(ctx)(t)
-
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "test org")
-	noteId := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "Note content", "text/plain", utils.Now())
-	neo4jt.LinkNoteWithOrganization(ctx, driver, noteId, organizationId)
-
-	rawResponse, err := c.RawPost(getQuery("note/get_note_with_noted_entities_via_organization_query"),
-		client.Var("organizationId", organizationId))
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	organization := rawResponse.Data.(map[string]interface{})["organization"]
-	require.Equal(t, organizationId, organization.(map[string]interface{})["id"])
-
-	note := organization.(map[string]interface{})["notes"].(map[string]interface{})["content"].([]interface{})[0]
-
-	var notedContact, notedOrganization interface{}
-
-	require.Equal(t, noteId, note.(map[string]interface{})["id"])
-	require.NotNil(t, note.(map[string]interface{})["createdAt"])
-	require.NotNil(t, note.(map[string]interface{})["updatedAt"])
-
-	if note.(map[string]interface{})["noted"].([]interface{})[0].(map[string]interface{})["__typename"] == "Contact" {
-		notedContact = note.(map[string]interface{})["noted"].([]interface{})[0]
-	} else if note.(map[string]interface{})["noted"].([]interface{})[1].(map[string]interface{})["__typename"] == "Contact" {
-		notedContact = note.(map[string]interface{})["noted"].([]interface{})[1]
-	}
-	if note.(map[string]interface{})["noted"].([]interface{})[0].(map[string]interface{})["__typename"] == "Organization" {
-		notedOrganization = note.(map[string]interface{})["noted"].([]interface{})[0]
-	} else if note.(map[string]interface{})["noted"].([]interface{})[1].(map[string]interface{})["__typename"] == "Organization" {
-		notedOrganization = note.(map[string]interface{})["noted"].([]interface{})[1]
-	}
-
-	require.Equal(t, "Contact", notedContact.(map[string]interface{})["__typename"])
-	require.Equal(t, "Organization", notedOrganization.(map[string]interface{})["__typename"])
-
-	require.Equal(t, contactId, notedContact.(map[string]interface{})["id"])
-	require.Equal(t, "first", notedContact.(map[string]interface{})["firstName"])
-	require.Equal(t, "last", notedContact.(map[string]interface{})["lastName"])
-	require.Equal(t, organizationId, notedOrganization.(map[string]interface{})["id"])
-	require.Equal(t, "test org", notedOrganization.(map[string]interface{})["name"])
-
-	// Check the number of nodes and relationships in the Neo4j database
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Contact"))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Note"))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Note_"+tenantName))
-	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "NOTED"))
-
-	// Check the labels on the nodes in the Neo4j database
-	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName,
-		"Organization", "Organization_" + tenantName, "Note", "Note_" + tenantName,
-		"TimelineEvent", "TimelineEvent_" + tenantName})
 }

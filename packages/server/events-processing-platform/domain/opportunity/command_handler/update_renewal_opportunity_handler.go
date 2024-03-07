@@ -55,7 +55,7 @@ func (h *updateRenewalOpportunityCommandHandler) Handle(ctx context.Context, cmd
 			return err
 		}
 
-		if aggregate.IsAggregateNotFound(opportunityAggregate) {
+		if eventstore.IsAggregateNotFound(opportunityAggregate) {
 			tracing.TraceErr(span, eventstore.ErrAggregateNotFound)
 			return eventstore.ErrAggregateNotFound
 		}

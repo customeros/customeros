@@ -33,15 +33,13 @@ func SetupTestLogger() logger.Logger {
 }
 
 func SetupTestDatabase() (TestDatabase, func()) {
-	log := SetupTestLogger()
-
 	testDBs := TestDatabase{}
 
 	testDBs.Neo4jContainer, testDBs.Driver = neo4jtest.InitTestNeo4jDB()
 
 	postgresContainer, postgresGormDB, _ := postgrest.InitTestDB()
 	testDBs.GormDB = postgresGormDB
-	testDBs.Repositories = repository.InitRepos(testDBs.Driver, "neo4j", postgresGormDB, log)
+	testDBs.Repositories = repository.InitRepos(testDBs.Driver, "neo4j", postgresGormDB)
 
 	shutdown := func() {
 		neo4jtest.CloseDriver(*testDBs.Driver)
@@ -54,7 +52,7 @@ func SetupTestDatabase() (TestDatabase, func()) {
 func SetupMockedTestGrpcClient() *grpc_client.Clients {
 	testDialFactory := mocked_grpc.NewMockedTestDialFactory()
 	grpcConn, _ := testDialFactory.GetEventsProcessingPlatformConn()
-	return grpc_client.InitClients(grpcConn)
+	return grpc_client.InitGrpcClients(grpcConn)
 }
 
 func AssertRecentTime(t *testing.T, checkTime time.Time) {

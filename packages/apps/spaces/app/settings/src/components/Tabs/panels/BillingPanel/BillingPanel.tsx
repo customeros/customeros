@@ -1,90 +1,470 @@
 'use client';
 
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
-import { FeaturedIcon } from '@ui/media/Icon';
-import { Heading } from '@ui/typography/Heading';
-import { Users03 } from '@ui/media/icons/Users03';
-import { Divider } from '@ui/presentation/Divider';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { Card, CardBody, CardHeader, CardFooter } from '@ui/layout/Card';
+import { useForm } from 'react-inverted-form';
+import React, { useMemo, useState, useEffect } from 'react';
 
-import { useGetBillableInfoQuery } from '../../../../graphql/getTenantBillableInfo.generated';
+import { produce } from 'immer';
+import { useQueryClient } from '@tanstack/react-query';
+import { useDebounce, useDeepCompareEffect } from 'rooks';
+import { useUpdateTenantSettingsMutation } from '@settings/graphql/updateTenantSettings.generated';
+import { useTenantBillingProfilesQuery } from '@settings/graphql/getTenantBillingProfiles.generated';
+import { useCreateBillingProfileMutation } from '@settings/graphql/createTenantBillingProfile.generated';
+import { useTenantUpdateBillingProfileMutation } from '@settings/graphql/updateTenantBillingProfile.generated';
+import {
+  validateEmail,
+  validateEmailLocalPart,
+} from '@settings/components/Tabs/panels/BillingPanel/utils';
+import {
+  TenantSettingsQuery,
+  useTenantSettingsQuery,
+} from '@settings/graphql/getTenantSettings.generated';
+
+import { Box } from '@ui/layout/Box';
+import { Flex } from '@ui/layout/Flex';
+import { Button } from '@ui/form/Button';
+import { Text } from '@ui/typography/Text';
+import { IconButton } from '@ui/form/IconButton';
+import { Heading } from '@ui/typography/Heading';
+import { DotsVertical } from '@ui/media/icons/DotsVertical';
+import { SlashOctagon } from '@ui/media/icons/SlashOctagon';
+import { Invoice } from '@shared/components/Invoice/Invoice';
+import { Card, CardBody, CardHeader } from '@ui/layout/Card';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu';
+import {
+  DataSource,
+  InvoiceLine,
+  TenantBillingProfile,
+  TenantBillingProfileUpdateInput,
+} from '@graphql/types';
+
+import { TenantBillingPanelDetailsForm } from './components';
+import { TenantBillingDetailsDto } from './TenantBillingProfile.dto';
 
 export const BillingPanel = () => {
   const client = getGraphQLClient();
-  const { data } = useGetBillableInfoQuery(client);
+  const queryClient = useQueryClient();
+
+  const { data, isFetchedAfterMount } = useTenantBillingProfilesQuery(client);
+  const [isInvoiceProviderFocused, setIsInvoiceProviderFocused] =
+    useState<boolean>(false);
+  const [isInvoiceProviderDetailsHovered, setIsInvoiceProviderDetailsHovered] =
+    useState<boolean>(false);
+
+  const tenantBillingProfileId = data?.tenantBillingProfiles?.[0]?.id ?? '';
+  const queryKey = useTenantBillingProfilesQuery.getKey();
+  const settingsQueryKey = useTenantSettingsQuery.getKey();
+
+  const createBillingProfileMutation = useCreateBillingProfileMutation(client, {
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey });
+    },
+  });
+  const { data: tenantSettingsData } = useTenantSettingsQuery(client);
+
+  const updateTenantSettingsMutation = useUpdateTenantSettingsMutation(client, {
+    onMutate: ({ input: { ...newSettings } }) => {
+      queryClient.cancelQueries({ queryKey: settingsQueryKey });
+      const previousEntries =
+        queryClient.getQueryData<TenantSettingsQuery>(settingsQueryKey);
+      queryClient.setQueryData(settingsQueryKey, {
+        tenantSettings: {
+          ...(previousEntries?.tenantSettings ?? {}),
+          ...newSettings,
+        },
+      });
+
+      return { previousSettings: previousEntries };
+    },
+    onError: (err, newSettings, context) => {
+      queryClient.setQueryData(settingsQueryKey, context?.previousSettings);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: settingsQueryKey });
+    },
+  });
+  const updateBillingProfileMutation = useTenantUpdateBillingProfileMutation(
+    client,
+    {
+      onMutate: ({ input: { patch, ...restInput } }) => {
+        queryClient.cancelQueries({ queryKey });
+
+        useTenantBillingProfilesQuery.mutateCacheEntry(queryClient)(
+          (cacheEntry) => {
+            return produce(cacheEntry, (draft) => {
+              const selectedProfile = draft?.tenantBillingProfiles?.findIndex(
+                (profileId) =>
+                  profileId.id === data?.tenantBillingProfiles?.[0]?.id,
+              );
+              if (
+                selectedProfile >= 0 &&
+                draft?.tenantBillingProfiles?.[selectedProfile]
+              ) {
+                draft.tenantBillingProfiles[selectedProfile] = {
+                  ...draft.tenantBillingProfiles[selectedProfile],
+                  ...(restInput as TenantBillingProfile),
+                };
+              }
+            });
+          },
+        );
+      },
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey });
+      },
+    },
+  );
+  const formId = 'tenant-billing-profile-form';
+  const invoicePreviewStaticData = useMemo(
+    () => ({
+      status: 'Preview',
+      invoiceNumber: 'INV-003',
+      lines: [
+        {
+          subtotal: 100,
+          createdAt: new Date().toISOString(),
+          metadata: {
+            id: 'dummy-id',
+            created: new Date().toISOString(),
+            lastUpdated: new Date().toISOString(),
+            source: DataSource.Openline,
+            sourceOfTruth: DataSource.Openline,
+            appSource: DataSource.Openline,
+          },
+          description: 'Professional tier',
+          price: 50,
+          quantity: 2,
+          total: 100,
+          taxDue: 0,
+        } as InvoiceLine,
+      ],
+      tax: 0,
+      note: '',
+      total: 100,
+      dueDate: new Date().toISOString(),
+      subtotal: 100,
+      issueDate: new Date().toISOString(),
+      billedTo: {
+        addressLine1: '29 Maple Lane',
+        addressLine2: 'Springfield, Haven County',
+        locality: 'San Francisco',
+        zip: '89302',
+        country: 'United States',
+        email: 'invoices@acme.com',
+        name: 'Acme Corp.',
+      },
+    }),
+    [],
+  );
+
+  const defaultValues = new TenantBillingDetailsDto(
+    data?.tenantBillingProfiles?.[0] as TenantBillingProfile,
+  );
+
+  const handleUpdateData = useDebounce(
+    (d: Partial<TenantBillingProfileUpdateInput>) => {
+      updateBillingProfileMutation.mutate({
+        input: {
+          id: tenantBillingProfileId,
+          patch: true,
+          ...d,
+        },
+      });
+    },
+    2500,
+  );
+
+  const { state, setDefaultValues } = useForm({
+    formId,
+    defaultValues,
+    stateReducer: (state, action, next) => {
+      const getStateAfterValidation = () => {
+        return produce(next, (draft) => {
+          const sendInvoiceFromError = validateEmailLocalPart(
+            draft.values.sendInvoicesFrom,
+          );
+          const bccError = validateEmail(draft.values.sendInvoicesBcc);
+          // we do it like this so that if the email is valid, we reset the states.
+          draft.fields.sendInvoicesFrom.meta.hasError = !!sendInvoiceFromError;
+          draft.fields.sendInvoicesFrom.error = sendInvoiceFromError ?? '';
+
+          draft.fields.sendInvoicesBcc.meta.hasError = !!bccError;
+          draft.fields.sendInvoicesBcc.error = bccError ?? '';
+        });
+      };
+      if (action.type === 'FIELD_CHANGE') {
+        switch (action.payload.name) {
+          case 'canPayWithDirectDebitSEPA':
+          case 'canPayWithDirectDebitACH':
+          case 'canPayWithDirectDebitBacs':
+          case 'canPayWithCard':
+          case 'canPayWithPigeon': {
+            updateBillingProfileMutation.mutate({
+              input: {
+                id: tenantBillingProfileId,
+                patch: true,
+                [action.payload.name]: action.payload.value,
+              },
+            });
+
+            return next;
+          }
+          case 'country': {
+            updateBillingProfileMutation.mutate({
+              input: {
+                id: tenantBillingProfileId,
+                patch: true,
+                [action.payload.name]: action.payload.value?.value,
+              },
+            });
+
+            return next;
+          }
+          case 'sendInvoicesBcc':
+          case 'vatNumber':
+          case 'legalName':
+          case 'addressLine1':
+          case 'addressLine2':
+          case 'addressLine3':
+          case 'zip':
+          case 'locality': {
+            handleUpdateData.cancel();
+            handleUpdateData({
+              [action.payload.name]: action.payload.value,
+            });
+
+            return next;
+          }
+
+          case 'sendInvoicesFrom': {
+            handleUpdateData.cancel();
+
+            handleUpdateData({
+              [action.payload
+                .name]: `${action.payload.value}@invoices.customeros.ai`,
+            });
+
+            return getStateAfterValidation();
+          }
+          default:
+            return next;
+        }
+      }
+
+      if (action.type === 'FIELD_BLUR') {
+        setIsInvoiceProviderFocused(false);
+        switch (action.payload.name) {
+          case 'vatNumber':
+          case 'legalName':
+          case 'addressLine1':
+          case 'addressLine2':
+          case 'addressLine3':
+          case 'zip':
+          case 'locality': {
+            handleUpdateData.flush();
+
+            return next;
+          }
+          case 'sendInvoicesFrom': {
+            const trimmedValue = (action.payload?.value || '')?.trim();
+            if (!trimmedValue?.length && state.values?.legalName?.length) {
+              handleUpdateData.cancel();
+              const newEmail = `${state.values.legalName
+                .split(' ')
+                .join('-')
+                .toLowerCase()}@invoices.customeros.ai`;
+
+              updateBillingProfileMutation.mutate({
+                input: {
+                  id: tenantBillingProfileId,
+                  patch: true,
+                  sendInvoicesFrom: newEmail,
+                },
+              });
+
+              return {
+                ...next,
+                values: {
+                  ...next.values,
+                  sendInvoicesFrom: `${state.values.legalName
+                    .split(' ')
+                    .join('-')
+                    .toLowerCase()}`,
+                },
+              };
+            } else {
+              handleUpdateData.flush();
+            }
+
+            return getStateAfterValidation();
+          }
+          default:
+            return next;
+        }
+      }
+
+      if (action.type === 'SET_DEFAULT_VALUES') {
+        return getStateAfterValidation();
+      }
+
+      return next;
+    },
+  });
+
+  useEffect(() => {
+    return handleUpdateData.flush();
+  }, []);
+
+  useEffect(() => {
+    if (isFetchedAfterMount && !data?.tenantBillingProfiles?.length) {
+      createBillingProfileMutation.mutate({
+        input: {
+          canPayWithDirectDebitACH: false,
+          canPayWithDirectDebitSEPA: false,
+          canPayWithDirectDebitBacs: false,
+          canPayWithCard: false,
+          canPayWithPigeon: false,
+          sendInvoicesFrom: '',
+          vatNumber: '',
+        },
+      });
+    }
+  }, [isFetchedAfterMount, data]);
+
+  useDeepCompareEffect(() => {
+    setDefaultValues(defaultValues);
+  }, [defaultValues]);
+
+  const handleToggleInvoices = () => {
+    updateTenantSettingsMutation.mutate({
+      input: {
+        patch: true,
+        billingEnabled: !tenantSettingsData?.tenantSettings?.billingEnabled,
+      },
+    });
+  };
 
   return (
-    <Card
-      flex='1'
-      w='full'
-      h='100vh'
-      bg='#FCFCFC'
-      borderRadius='2xl'
-      flexDirection='column'
-      boxShadow='none'
-      background='gray.25'
-    >
-      <CardHeader px='6' pb='0' pt='4'>
-        <Heading as='h1' fontSize='lg' color='gray.700'>
-          <b>Billing</b>
-        </Heading>
-      </CardHeader>
-      <CardBody px='6' w='full'>
-        <Card
-          p='4'
-          w='full'
-          maxW='23.5rem'
-          size='lg'
-          variant='outline'
-          cursor='default'
-          boxShadow='xs'
-          _hover={{
-            boxShadow: 'md',
-          }}
-          transition='all 0.2s ease-out'
+    <Flex>
+      <Card
+        flex='1'
+        w='full'
+        h='100vh'
+        bg='#FCFCFC'
+        flexDirection='column'
+        boxShadow='none'
+        background='gray.25'
+        maxW={400}
+        minW={400}
+        borderRight='1px solid'
+        borderColor='gray.300'
+        overflowY='scroll'
+        borderRadius='none'
+        pr={0}
+      >
+        <CardHeader
+          px='6'
+          pb='0'
+          pt='4'
+          as={Flex}
+          alignItems='center'
+          justifyContent='space-between'
         >
-          <CardBody as={Flex} p='0' align='center'>
-            <FeaturedIcon size='md' minW='10' colorScheme='gray'>
-              <Users03 />
-            </FeaturedIcon>
-            <Flex
-              ml='5'
-              w='full'
-              align='center'
-              columnGap={4}
-              justify='space-between'
-            >
-              <Heading
+          <Heading as='h1' fontSize='lg' color='gray.700' pt={1}>
+            <b>Billing</b>
+          </Heading>
+
+          {tenantSettingsData?.tenantSettings.billingEnabled && (
+            <Menu>
+              <MenuButton
+                as={IconButton}
+                size='xs'
+                aria-label='Options'
+                icon={<DotsVertical />}
+                variant='outline'
+                border='none'
+              />
+              <MenuList>
+                <MenuItem
+                  alignItems='center'
+                  color='gray.700'
+                  onClick={handleToggleInvoices}
+                >
+                  <SlashOctagon marginRight={1} color='gray.500' /> Disable
+                  Customer billing
+                </MenuItem>
+              </MenuList>
+            </Menu>
+          )}
+        </CardHeader>
+
+        {!tenantSettingsData?.tenantSettings.billingEnabled && (
+          <CardBody
+            as={Flex}
+            flexDir='column'
+            px='6'
+            w='full'
+            gap={4}
+            opacity={tenantSettingsData?.tenantSettings.billingEnabled ? 0 : 1}
+          >
+            <Text fontSize='sm'>
+              Master your revenue lifecycle from contract to cash by enabling
+              customer billing for your customers.
+            </Text>
+
+            <Box as='ul' pl={6} fontSize='sm'>
+              <li>
+                Automatically send customer invoices based on their contract
+                service line items
+              </li>
+              <li>Let customers pay using a connected payment provider</li>
+            </Box>
+            <Flex alignItems='center'>
+              <Button
+                colorScheme='primary'
+                variant='outline'
                 size='sm'
-                whiteSpace='nowrap'
-                fontWeight='semibold'
-                color='gray.700'
-                mr={2}
+                onClick={handleToggleInvoices}
               >
-                Contacts
-              </Heading>
+                Enable invoicing
+              </Button>
             </Flex>
           </CardBody>
+        )}
 
-          <CardFooter p='0' as={Flex} flexDir='column'>
-            <Divider mt='4' mb='2' />
-            <Flex justify='space-between' align='center'>
-              <Text color='gray.700'>Synced (no charge)</Text>
-              <Text color='gray.700'>
-                {data?.billableInfo.greylistedContacts ?? 0}
-              </Text>
-            </Flex>
-            <Flex justify='space-between' align='center'>
-              <Text color='gray.700'>Active (billed)</Text>
-              <Text color='gray.700' fontWeight='semibold'>
-                {data?.billableInfo.whitelistedContacts ?? 0}
-              </Text>
-            </Flex>
-          </CardFooter>
-        </Card>
-      </CardBody>
-    </Card>
+        {tenantSettingsData?.tenantSettings.billingEnabled && (
+          <TenantBillingPanelDetailsForm
+            formId={formId}
+            canPayWithCard={state.values.canPayWithCard}
+            invoicingEnabled={tenantSettingsData?.tenantSettings.billingEnabled}
+            canPayWithDirectDebitACH={state.values.canPayWithDirectDebitACH}
+            canPayWithDirectDebitSEPA={state.values.canPayWithDirectDebitSEPA}
+            canPayWithDirectDebitBacs={state.values.canPayWithDirectDebitBacs}
+            setIsInvoiceProviderFocused={setIsInvoiceProviderFocused}
+            setIsInvoiceProviderDetailsHovered={
+              setIsInvoiceProviderDetailsHovered
+            }
+          />
+        )}
+      </Card>
+      <Box borderRight='1px solid' borderColor='gray.300' maxH='100vh'>
+        <Invoice
+          isInvoiceProviderFocused={
+            isInvoiceProviderFocused || isInvoiceProviderDetailsHovered
+          }
+          from={{
+            addressLine1: state.values.addressLine1 ?? '',
+            addressLine2: state.values.addressLine2 ?? '',
+            locality: state.values.locality ?? '',
+            zip: state.values.zip ?? '',
+            country: state?.values?.country?.label ?? '',
+            email: state?.values?.email ?? '',
+            name: state.values?.legalName ?? '',
+            vatNumber: state.values?.vatNumber ?? '',
+          }}
+          {...invoicePreviewStaticData}
+        />
+      </Box>
+    </Flex>
   );
 };

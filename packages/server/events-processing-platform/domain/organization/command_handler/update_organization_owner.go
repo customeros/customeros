@@ -2,12 +2,16 @@ package command_handler
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
+	commonaggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventbuffer"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -24,11 +28,12 @@ type UpdateOrganizationOwnerCommandHandler interface {
 type updateOrganizationOwnerCommandHandler struct {
 	log logger.Logger
 	es  eventstore.AggregateStore
+	ebw *eventbuffer.EventBufferWatcher
 	cfg config.Utils
 }
 
-func NewUpdateOrganizationOwnerCommandHandler(log logger.Logger, es eventstore.AggregateStore, cfg config.Utils) UpdateOrganizationOwnerCommandHandler {
-	return &updateOrganizationOwnerCommandHandler{log: log, es: es, cfg: cfg}
+func NewUpdateOrganizationOwnerCommandHandler(log logger.Logger, es eventstore.AggregateStore, cfg config.Utils, ebw *eventbuffer.EventBufferWatcher) UpdateOrganizationOwnerCommandHandler {
+	return &updateOrganizationOwnerCommandHandler{log: log, es: es, cfg: cfg, ebw: ebw}
 }
 
 func (h *updateOrganizationOwnerCommandHandler) Handle(ctx context.Context, cmd *command.UpdateOrganizationOwnerCommand) error {
@@ -43,7 +48,7 @@ func (h *updateOrganizationOwnerCommandHandler) Handle(ctx context.Context, cmd 
 	}
 
 	for attempt := 0; attempt == 0 || attempt < h.cfg.RetriesOnOptimisticLockException; attempt++ {
-		organizationAggregate, err := aggregate.LoadOrganizationAggregate(ctx, h.es, cmd.Tenant, cmd.ObjectID)
+		organizationAggregate, err := aggregate.LoadOrganizationAggregate(ctx, h.es, cmd.Tenant, cmd.ObjectID, *eventstore.NewLoadAggregateOptions())
 		if err != nil {
 			return err
 		}
@@ -52,6 +57,17 @@ func (h *updateOrganizationOwnerCommandHandler) Handle(ctx context.Context, cmd 
 			return err
 		}
 
+		// create notification event Park it in the event buffer for notifications
+		event, err := createNotificationEvent(ctx, cmd, organizationAggregate)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+
+		eventBufferUUID := fmt.Sprintf("%s-%s", cmd.ActorUserId, cmd.OrganizationId)
+		h.ebw.Park(ctx, *event, cmd.Tenant, eventBufferUUID, time.Now().UTC().Add(time.Second*30))
+
+		// Save the aggregate to the event store
 		err = h.es.Save(ctx, organizationAggregate)
 		if err == nil {
 			return nil // Save successful
@@ -77,4 +93,27 @@ func (h *updateOrganizationOwnerCommandHandler) Handle(ctx context.Context, cmd 
 	err := errors.New("reached maximum number of retries")
 	tracing.TraceErr(span, err)
 	return err
+}
+
+func createNotificationEvent(ctx context.Context, cmd *command.UpdateOrganizationOwnerCommand, aggregate *aggregate.OrganizationAggregate) (*eventstore.Event, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "createNotificationEvent")
+	defer span.Finish()
+	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "command", cmd)
+
+	updatedAt := utils.Now()
+
+	event, err := events.NewOrganizationOwnerUpdateNotificationEvent(aggregate, cmd.OwnerUserId, cmd.ActorUserId, cmd.OrganizationId, updatedAt)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, errors.Wrap(err, "NewOrganizationOwnerUpdateNotificationEvent")
+	}
+
+	commonaggregate.EnrichEventWithMetadataExtended(&event, span, commonaggregate.EventMetadata{
+		Tenant: aggregate.GetTenant(),
+		UserId: cmd.LoggedInUserId,
+		App:    cmd.AppSource,
+	})
+
+	return &event, nil
 }

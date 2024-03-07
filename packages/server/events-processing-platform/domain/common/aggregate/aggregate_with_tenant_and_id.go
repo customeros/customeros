@@ -1,7 +1,6 @@
 package aggregate
 
 import (
-	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"strings"
 )
@@ -30,15 +29,6 @@ func (ca *CommonTenantIdAggregate) setWhen(when func(event eventstore.Event) err
 
 func GetAggregateWithTenantAndIdObjectID(aggregateID string, aggregateType eventstore.AggregateType, tenant string) string {
 	return strings.ReplaceAll(aggregateID, string(aggregateType)+"-"+tenant+"-", "")
-}
-
-func LoadCommonAggregateWithTenantAndId(ctx context.Context, eventStore eventstore.AggregateStore, aggregateType eventstore.AggregateType, tenant, objectID string) (*CommonTenantIdAggregate, error) {
-	aggregate := NewCommonAggregateWithTenantAndId(aggregateType, tenant, objectID)
-	err := eventStore.Load(ctx, aggregate)
-	if err != nil {
-		return nil, err
-	}
-	return aggregate, nil
 }
 
 func NewCommonAggregate(aggregateType eventstore.AggregateType) *CommonTenantIdAggregate {

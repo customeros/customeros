@@ -5,14 +5,14 @@ on:
     branches: [ "otter" ]
     paths:
       - packages/server/customer-os-common-module/**
+      - packages/server/customer-os-api-sdk/**
       - packages/server/comms-api/**
-      - packages/server/customer-os-api/graph/schemas/**
       - .github/workflows/build-comms-api.yml
   pull_request:
     paths:
       - packages/server/customer-os-common-module/**
+      - packages/server/customer-os-api-sdk/**
       - packages/server/comms-api/**
-      - packages/server/customer-os-api/graph/schemas/**
       - .github/workflows/build-comms-api.yml
   release:
     types: [created, edited]
@@ -50,7 +50,7 @@ jobs:
         id: test-folders
         run: |
           test_folders=$(go list ./... | grep -v /gen | grep -v /test | paste -sd "," -)
-          echo "::set-output name=test_folders::$test_folders"
+          echo "{name}={test_folders}" >> $GITHUB_OUTPUT
 
       - name: Test
         run: |
@@ -92,7 +92,7 @@ jobs:
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
-        uses: docker/metadata-action@v5.4.0
+        uses: docker/metadata-action@v5.5.1
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 

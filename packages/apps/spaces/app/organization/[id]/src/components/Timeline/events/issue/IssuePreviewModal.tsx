@@ -98,6 +98,7 @@ export const IssuePreviewModal: FC = () => {
         name={issue.subject ?? ''}
         onClose={closeModal}
         copyLabel='Copy link'
+        parse='slack'
       />
 
       <CardBody
@@ -134,7 +135,9 @@ export const IssuePreviewModal: FC = () => {
             fontWeight='normal'
             minHeight={6}
           >
-            <TagLabel textTransform='capitalize'>{issue.issueStatus}</TagLabel>
+            <TagLabel textTransform='capitalize'>
+              {issue.issueStatus.replaceAll('_', ' ').replaceAll('-', ' ')}
+            </TagLabel>
           </Tag>
           <Tag
             size='sm'
@@ -245,8 +248,9 @@ export const IssuePreviewModal: FC = () => {
                     key={c.id}
                     name={name}
                     date={c.createdAt}
-                    content={c.content ?? ''}
                     iscustomer={isCustomer}
+                    content={c.content ?? ''}
+                    type={issue?.externalLinks?.[0]?.type}
                     isPrivate={c.__typename === 'Comment'}
                   />
                 );

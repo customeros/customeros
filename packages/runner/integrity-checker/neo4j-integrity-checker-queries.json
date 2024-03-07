@@ -10,7 +10,12 @@
     },
     {
       "name": "Check for nodes missing link with tenant",
-      "query": "MATCH (n:Organization|Contact|Email|PhoneNumber|Location|Tag|User|MergedContact|MergedOrganization|Issue|Workspace|EntityTemplate) where not (n)--(:Tenant) return count(n)"
+      "query": "WITH [\"Tenant\",\"InteractionSession\",\"JobRole\",\"Domain\",\"Social\",\"TimelineEvent\",\"CustomField\",\"AlternateOrganization\",\"Calendar\",\"ServiceLineItem\",\"Opportunity\",\"OrganizationPlanMilestone\",\"MasterPlanMilestone\",\"InvoiceLine\",\"Attachment\",\"Player\",\"AlternateContact\",\"TechnicalNode\",\"AlternateCustomField\",\"Comment\",\"AlternateUser\",\"Country\",\"State\",\"Meeting\"] as labels MATCH (n) WHERE NOT ANY(label in labels(n) WHERE label IN labels) AND NOT (n)--(:Tenant)  RETURN count(n)"
+    },
+    {
+      "name": "Check for nodes missing mandatory links",
+      "query": "CALL {\n     MATCH (n:InvoiceLine) WHERE NOT (n)<-[:HAS_INVOICE_LINE]-(:Invoice) RETURN count(n) as cnt\n     UNION ALL\n     MATCH (n:Invoice) WHERE NOT (n)<-[:HAS_INVOICE]-(:Contract|DeletedContract) RETURN count(n) as cnt\n     UNION ALL\n     MATCH (n:ServiceLineItem) WHERE NOT (n)<-[:HAS_SERVICE]-(:Contract|DeletedContract) RETURN count(n) as cnt\n     UNION ALL\n     MATCH (n:Contract) WHERE NOT (n)<-[:HAS_CONTRACT]-(:Organization) RETURN count(n) as cnt\n} RETURN sum(cnt)",
+      "description": "Checks: 1 - Invoice line without invoice. 2 - Invoice without contract/deleted contract. 3 - Service line item without contract/deleted contract. 4 - Contract without organization."
     },
     {
       "name": "Check organization nodes labels",
@@ -22,7 +27,7 @@
     },
     {
       "name": "Check email nodes labels",
-      "query": "MATCH (t:Tenant)<-[:EMAIL_BELONGS_TO_TENANT]-(n:Email) WHERE size(labels(n)) <> 2 OR NOT 'Email_'+t.name in labels(n) return count(n)"
+      "query": "MATCH (t:Tenant)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(n:Email) WHERE size(labels(n)) <> 2 OR NOT 'Email_'+t.name in labels(n) return count(n)"
     },
     {
       "name": "Check phone number nodes labels",
@@ -45,12 +50,16 @@
       "query": "MATCH (t1:Tenant)--(n:User|Contact|Organization)--(:PhoneNumber)--(t2:Tenant) where t1.name <> t2.name return count(n)"
     },
     {
-      "name": "Check singe TenantMetadata per tenant",
+      "name": "Check single TenantMetadata per tenant",
       "query": "match (t:Tenant)-->(tm:TenantMetadata) with t, count(tm) as countMetadata where countMetadata > 1 return count(t)"
     },
     {
+      "name": "Check single TenantSettings per Tenant",
+      "query": "MATCH (t:Tenant)-->(ts:TenantSettings) with t, count(ts) as cnt where cnt > 1 return count(t)"
+    },
+    {
       "name": "Check orphan nodes",
-      "query": "MATCH (n) WHERE NOT (n)--() AND NOT n:Country AND NOT n:Domain AND NOT n:TechnicalNode return count(n)"
+      "query": "MATCH (n) WHERE NOT (n)--() AND NOT n:Country AND NOT n:Domain AND NOT n:TechnicalNode AND NOT n:Attachment return count(n)"
     },
     {
       "name": "Check emails not shared between users",
@@ -66,8 +75,8 @@
     },
     {
       "name": "Check organization missing properties",
-      "query": "CALL {MATCH (n:Organization) WHERE n.hide IS NULL RETURN count(n) as cnt } return sum(cnt)",
-      "description": "Checks: 1 - Organization with missing hide property."
+      "query": "CALL {MATCH (n:Organization) WHERE (n.hide IS NULL OR n.isCustomer IS NULL) RETURN count(n) as cnt } return sum(cnt)",
+      "description": "Checks: 1 - Organization with missing boolean properties."
     },
     {
       "name": "Check duplicate values",
@@ -80,7 +89,7 @@
     },
     {
       "name": "Check source fields",
-      "query": "MATCH (n:User|Contact|Email|PhoneNumber|Organization|Issue|Comment|Contract|Opportunity|ServiceLineItem|MasterPlan|MasterPlanMilestone) WHERE n.source IS NULL OR n.sourceOfTruth IS NULL OR n.appSource IS NULL OR n.source = '' OR n.sourceOfTruth = '' or n.appSource = '' RETURN count(n)"
+      "query": "WITH [\"Tenant\",\"ExternalSystem\",\"Domain\",\"InteractionSession\",\"AlternateOrganization\",\"Action\",\"TenantSettings\",\"MergedOrganization\",\"AlternateContact\",\"TechnicalNode\",\"CustomField\",\"AlternateCustomField\",\"TenantMetadata\",\"AlternateUser\",\"Tag\",\"CustomFieldTemplate\",\"State\",\"Player\"] as labels\nMATCH (n) WHERE NOT ANY(label in labels(n) WHERE label IN labels) \nWITH n \nWHERE n.source IS NULL OR n.sourceOfTruth IS NULL OR n.appSource IS NULL OR n.source = '' OR n.sourceOfTruth = '' or n.appSource = ''\nRETURN count(n)"
     },
     {
       "name": "Check for comments without parent",
@@ -105,14 +114,14 @@
       "description": "Checks: 1 - Contract with wrong status and endedAt date. 2 - Contract with wrong status and serviceStartedAt date."
     },
     {
-      "name": "Check service line items data consistency",
-      "query": "CALL {\n    MATCH (sli:ServiceLineItem)<-[:HAS_SERVICE]-(c:Contract) WITH sli, count(c) AS sizeContracts WHERE sizeContracts <> 1 RETURN count(sli) AS cnt \n    UNION ALL \n    MATCH (sli:ServiceLineItem) WHERE sli.endedAt < sli.startedAt RETURN count(sli) as cnt \n    UNION ALL \n    MATCH (sli:ServiceLineItem) WHERE sli.createdAt is null OR sli.updatedAt is null OR sli.startedAt is null OR sli.billed is null OR sli.billed = '' OR sli.parentId is null OR sli.parentId = '' return count(sli) as cnt \n    UNION ALL \n    MATCH (sli:ServiceLineItem) WHERE sli.billed IS NOT NULL AND NOT sli.billed IN ['','MONTHLY','ANNUALLY','QUARTERLY', 'USAGE','ONCE'] RETURN count(sli) as cnt\n    UNION ALL\n    MATCH (sli:ServiceLineItem) WHERE apoc.meta.cypher.type(sli.price) <> 'FLOAT' RETURN count(sli) as cnt\n    UNION ALL\n    MATCH (sli:ServiceLineItem) WHERE apoc.meta.cypher.type(sli.quantity) <> 'INTEGER' RETURN count(sli) as cnt\n} RETURN sum(cnt)",
-      "description": "Checks: 1 - Service line item with wrong number of contracts. 2 - Service line item with wrong endedAt date. 3 - Service line item with missing properties. 4 - Service line item with wrong billed value. 5 - Service line item with wrong price type. 6 - Service line item with wrong quantity type."
+      "name": "Check ServiceLineItem data consistency",
+      "query": "CALL {\n    MATCH (sli:ServiceLineItem)<-[:HAS_SERVICE]-(c:Contract) WITH sli, count(c) AS sizeContracts WHERE sizeContracts <> 1 RETURN count(sli) AS cnt \n    UNION ALL \n    MATCH (sli:ServiceLineItem) WHERE sli.endedAt < sli.startedAt RETURN count(sli) as cnt \n    UNION ALL \n    MATCH (sli:ServiceLineItem) WHERE sli.createdAt is null OR sli.updatedAt is null OR sli.startedAt is null OR sli.billed is null OR sli.billed = '' OR sli.parentId is null OR sli.parentId = '' return count(sli) as cnt \n    UNION ALL \n    MATCH (sli:ServiceLineItem) WHERE sli.billed IS NOT NULL AND NOT sli.billed IN ['','MONTHLY','ANNUALLY','QUARTERLY', 'USAGE','ONCE'] RETURN count(sli) as cnt\n    UNION ALL\n    MATCH (sli:ServiceLineItem) WHERE apoc.meta.cypher.type(sli.price) <> 'FLOAT' RETURN count(sli) as cnt\n    UNION ALL\n    MATCH (sli:ServiceLineItem) WHERE apoc.meta.cypher.type(sli.quantity) <> 'INTEGER' RETURN count(sli) as cnt\n    UNION ALL\n    MATCH (sli:ServiceLineItem) WHERE sli.endedAt IS NULL WITH sli.parentId AS parent, count(sli) AS size WHERE size > 1 RETURN count(parent) as cnt\n    UNION ALL \n    MATCH (sli:ServiceLineItem) WHERE sli.endedAt IS NOT NULL WITH sli.parentId AS parent, sli.endedAt AS endedAt, count(sli) AS size WHERE size > 1 RETURN count(parent) as cnt\n    UNION ALL\n    MATCH (sli:ServiceLineItem) WITH sli.parentId AS parent, sli.startedAt AS startedAt, count(sli) AS size WHERE size > 1 RETURN count(parent) as cnt\n    UNION ALL\n    MATCH (sli:ServiceLineItem) WHERE sli.endedAt IS NOT NULL MATCH (other:ServiceLineItem {parentId:sli.parentId}) WHERE sli.id <> other.id AND sli.startedAt < other.startedAt WITH sli.parentId AS parent, sli.endedAt AS currentEnd, collect(other.startedAt) AS otherStarts WHERE size(otherStarts)>0 AND NOT currentEnd IN (otherStarts) RETURN count(parent) AS cnt\n} RETURN sum(cnt)",
+      "description": "Checks: 1 - Service line item with wrong number of contracts. 2 - Service line item with wrong endedAt date. 3 - Service line item with missing properties. 4 - Service line item with wrong billed value. 5 - Service line item with wrong price type. 6 - Service line item with wrong quantity type. 7 - Multiple active versions per single parent. 8 - Multiple versions with same end date. 9 - Multiple versions with same start date. 10 - End date not matching start date of other versions."
     },
     {
       "name": "Check organization derived data consistency",
-      "query": "CALL {\n     MATCH (org:Organization) WHERE org.derivedNextRenewalAt < datetime()-duration({minutes: 30}) RETURN count(org) as cnt\n     UNION ALL\n     MATCH (org:Organization) WHERE org.derivedRenewalLikelihood IS NOT NULL AND NOT org.derivedRenewalLikelihood IN ['','ZERO','LOW','MEDIUM','HIGH'] RETURN count(org) as cnt\n} RETURN sum(cnt)",
-      "description": "Checks: 1 - Organizations with wrong derivedNextRenewalAt date. 2 - Organizations with wrong derivedRenewalLikelihood value."
+      "query": "CALL {\n     MATCH (org:Organization) WHERE org.derivedNextRenewalAt < datetime()-duration({minutes: 30}) RETURN count(org) as cnt\n     UNION ALL\n     MATCH (org:Organization) WHERE org.derivedRenewalLikelihood IS NOT NULL AND NOT org.derivedRenewalLikelihood IN ['','ZERO','LOW','MEDIUM','HIGH'] RETURN count(org) as cnt\n     UNION ALL\n     MATCH (org:Organization) WHERE org.derivedRenewalLikelihood IS NULL AND NOT org.derivedRenewalLikelihood IS NULL RETURN count(org) as cnt\n     UNION ALL MATCH (org:Organization)--(c:Contract)-[:ACTIVE_RENEWAL]->(op:RenewalOpportunity) WHERE (org.renewalForecastMaxArr IS NULL OR org.renewalForecastMaxArr = 0) AND (op.maxAmount > 0) return count(org) AS cnt\n} RETURN sum(cnt)",
+      "description": "Checks: 1 - Organizations with wrong derivedNextRenewalAt date. 2 - Organizations with wrong derivedRenewalLikelihood value. 3 - Organization with renewal likelihood but without renewal date. 4 - Organizations with missing ARR"
     },
     {
       "name": "Check organization data consistency",
@@ -123,6 +132,21 @@
       "name": "Check renewal opportunity data consistency",
       "query": "CALL {\n     MATCH (op:RenewalOpportunity) WHERE op.renewedAt < datetime()-duration({minutes: 30}) AND op.internalStage = 'OPEN' RETURN count(op) as cnt\n     UNION ALL\n     MATCH (op:RenewalOpportunity) WHERE op.renewalLikelihood IS NOT NULL AND NOT op.renewalLikelihood IN ['','ZERO','LOW','MEDIUM','HIGH'] RETURN count(op) as cnt\n} RETURN sum(cnt)",
       "description": "Checks: 1 - Renewal opportunity with wrong renewedAt date and open internal stage. 2 - Renewal opportunity with wrong renewalLikelihood value."
+    },
+    {
+      "name": "Check contract and invoice link consistency",
+      "query": "CALL {\n    MATCH (c:Contract)-[:HAS_INVOICE]->(i:Invoice) WHERE i.dryRun = false AND date(coalesce(c.nextInvoiceDate, c.invoicingStartDate, datetime())) <= date(i.periodEndDate) RETURN count(i) as cnt\n    UNION ALL\n    MATCH (c:Contract)--(t:Tenant)--(ts:TenantSettings) WHERE (ts.invoicingPostpaid = false OR ts.invoicingPostpaid IS NULL) AND c.techInvoicingStartedAt IS NOT NULL WITH c OPTIONAL MATCH (c)-[:HAS_INVOICE]->(i:Invoice) WHERE i.dryRun = false and i.createdAt > c.techInvoicingStartedAt-duration({hours: 1}) WITH i,c WHERE i IS NULL RETURN count(c) as cnt\n    UNION ALL\n    MATCH (c:Contract)--(t:Tenant)--(ts:TenantSettings) WHERE ts.invoicingPostpaid = true AND c.techInvoicingStartedAt IS NOT NULL AND coalesce(c.nextInvoiceDate, c.invoicingStartDate)+duration({days: CASE WHEN c.billingCycle='MONTHLY' THEN 31 ELSE CASE WHEN c.billingCycle='QUARTERLY' THEN 92 ELSE CASE WHEN c.billingCycle='ANNUALLY' THEN 366 ELSE 0 END END END}) < c.techInvoicingStartedAt WITH c OPTIONAL MATCH (c)-[:HAS_INVOICE]->(i:Invoice) WHERE i.dryRun = FALSE AND i.createdAt > c.techInvoicingStartedAt-duration({hours: 1}) WITH i,c WHERE i IS NULL RETURN count(c) as cnt\n} RETURN sum(cnt)",
+      "description": "Checks: 1 - Check that contract next invoice date is not before invoice period end date. 2 - Check that prepaid contract with techInvoicingStartedAt date has non dry run invoice. 3 - Check that postpaid contract with techInvoicingStartedAt date has non dry run invoice."
+    },
+    {
+      "name": "Check invoices",
+      "query": "CALL {\n    MATCH (i:Invoice) WHERE i.dryRun IS NULL OR i.periodEndDate IS NULL OR i.periodStartDate IS NULL OR i.currency IS NULL RETURN count(i) AS cnt\n    UNION ALL\n    MATCH (i:Invoice) WHERE i.dryRun = false AND i.status = 'DRAFT' AND duration.between(i.createdAt, datetime()).minutes > 5 RETURN count(i) AS cnt\n} RETURN sum(cnt)",
+      "description": "Checks: 1 - Mandatory invoice properties. 2 - Invoices stuck in draft status > 5 minutes."
+    },
+    {
+      "name": "Check invoice lines",
+      "query": "CALL {MATCH (n:InvoiceLine) WHERE (n.billedType IS NULL OR n.billedType = \"\") RETURN count(n) as cnt } return sum(cnt)",
+      "description": "Checks: 1 - Invoice lines missing mandatory properties."
     }
   ]
 }

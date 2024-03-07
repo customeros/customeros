@@ -1,4 +1,4 @@
-import { useRef, useMemo, useState, useCallback } from 'react';
+import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 
 import { produce } from 'immer';
 import { InfiniteData, useQueryClient } from '@tanstack/react-query';
@@ -11,8 +11,8 @@ import { IconButton } from '@ui/form/IconButton';
 import { Select } from '@ui/form/SyncSelect/Select';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { useGetUsersQuery } from '@shared/graphql/getUsers.generated';
 import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
-import { useGetUsersQuery } from '@organizations/graphql/getUsers.generated';
 import { useSetOrganizationOwnerMutation } from '@organizations/graphql/setOrganizationOwner.generated';
 import { useRemoveOrganizationOwnerMutation } from '@organizations/graphql/removeOrganizationOwner.generated';
 import {
@@ -39,24 +39,16 @@ export const OwnerCell = ({ id, owner }: OwnerProps) => {
   const { getOrganization, getUsers } = organizationsMeta;
   const queryKey = useInfiniteGetOrganizationsQuery.getKey(getOrganization);
 
-  const { data } = useGetUsersQuery(
+  const { data, isSuccess } = useGetUsersQuery(
     client,
     {
       pagination: {
         limit: 1000,
-        page: 1,
+        page: 0,
       },
     },
     {
       enabled: !getUsers.hasFetched,
-      onSuccess: () => {
-        if (getUsers.hasFetched) return;
-        setOrganizationsMeta(
-          produce(organizationsMeta, (draft) => {
-            draft.getUsers.hasFetched = true;
-          }),
-        );
-      },
     },
   );
 
@@ -79,7 +71,7 @@ export const OwnerCell = ({ id, owner }: OwnerProps) => {
       const previousEntries =
         queryClient.getQueryData<InfiniteData<GetOrganizationsQuery>>(queryKey);
 
-      queryClient.cancelQueries(queryKey);
+      queryClient.cancelQueries({ queryKey });
       queryClient.setQueryData<InfiniteData<GetOrganizationsQuery>>(
         queryKey,
         (old) => {
@@ -135,7 +127,7 @@ export const OwnerCell = ({ id, owner }: OwnerProps) => {
         clearTimeout(addTimeoutRef.current);
       }
       addTimeoutRef.current = setTimeout(() => {
-        queryClient.invalidateQueries(queryKey);
+        queryClient.invalidateQueries({ queryKey });
       }, 1000);
       setIsEditing(false);
     },
@@ -146,7 +138,7 @@ export const OwnerCell = ({ id, owner }: OwnerProps) => {
       const previousEntries =
         queryClient.getQueryData<InfiniteData<GetOrganizationsQuery>>(queryKey);
 
-      queryClient.cancelQueries(queryKey);
+      queryClient.cancelQueries({ queryKey });
       queryClient.setQueryData<InfiniteData<GetOrganizationsQuery>>(
         queryKey,
         (old) => {
@@ -180,7 +172,7 @@ export const OwnerCell = ({ id, owner }: OwnerProps) => {
         clearTimeout(removeTimeoutRef.current);
       }
       removeTimeoutRef.current = setTimeout(() => {
-        queryClient.invalidateQueries(queryKey);
+        queryClient.invalidateQueries({ queryKey });
       }, 1000);
 
       setIsEditing(false);
@@ -189,7 +181,7 @@ export const OwnerCell = ({ id, owner }: OwnerProps) => {
 
   const handleSelect = useCallback(
     (option: SelectOption) => {
-      if (!option && !!prevSelection) {
+      if ((!option || !option.value) && !!prevSelection) {
         removeOrganizationOwner.mutate({
           organizationId: id,
         });
@@ -204,6 +196,15 @@ export const OwnerCell = ({ id, owner }: OwnerProps) => {
     },
     [prevSelection, owner, removeOrganizationOwner, setOrganizationOwner, id],
   );
+
+  useEffect(() => {
+    if (getUsers.hasFetched) return;
+    setOrganizationsMeta(
+      produce(organizationsMeta, (draft) => {
+        draft.getUsers.hasFetched = true;
+      }),
+    );
+  }, [isSuccess]);
 
   if (!isEditing) {
     return (
@@ -248,7 +249,7 @@ export const OwnerCell = ({ id, owner }: OwnerProps) => {
       isClearable
       value={value}
       isLoading={
-        setOrganizationOwner.isLoading || removeOrganizationOwner.isLoading
+        setOrganizationOwner.isPending || removeOrganizationOwner.isPending
       }
       variant='unstyled'
       placeholder='Owner'

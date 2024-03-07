@@ -11,7 +11,7 @@ export const AvatarHeader = () => {
   const { createOrganization } = useOrganizationsPageMethods();
 
   const handleCreateOrganization = () => {
-    createOrganization.mutate({ input: { name: '' } });
+    createOrganization.mutate({ input: { name: 'Unnamed' } });
   };
 
   return (
@@ -25,7 +25,7 @@ export const AvatarHeader = () => {
           variant='ghost'
           aria-label='create organization'
           onClick={handleCreateOrganization}
-          isLoading={createOrganization.isLoading}
+          isLoading={createOrganization.isPending}
           icon={<Plus color='gray.400' boxSize='5' />}
           visibility={enableFeature ? 'visible' : 'hidden'}
         />

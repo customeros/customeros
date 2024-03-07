@@ -1,0 +1,191 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import "common/source.proto";
+import "common/billing_type.proto";
+import "common/billing_cycle.proto";
+
+option go_package = "api/grpc/v1/invoice;invoice_grpc_service";
+
+enum InvoiceStatus {
+  INVOICE_STATUS_NONE = 0;
+  INVOICE_STATUS_DRAFT = 1;
+  INVOICE_STATUS_DUE = 2;
+  INVOICE_STATUS_PAID = 3;
+  INVOICE_STATUS_VOID = 4;
+}
+
+enum InvoiceFieldMask {
+  INVOICE_FIELD_NONE = 0; // No property, ignored by the server
+  INVOICE_FIELD_STATUS = 1;
+  INVOICE_FIELD_PAYMENT_LINK = 2;
+}
+
+message NewInvoiceForContractRequest {
+  string tenant = 1; // mandatory
+  string loggedInUserId = 2;
+  string contractId = 3; // mandatory
+  bool dryRun = 5;
+  google.protobuf.Timestamp createdAt = 7;
+  SourceFields sourceFields = 8;
+  google.protobuf.Timestamp invoicePeriodStart = 9; // mandatory
+  google.protobuf.Timestamp invoicePeriodEnd = 10; // mandatory
+  string currency = 11; // mandatory
+  BillingCycle billingCycle = 12;
+  string note = 13;
+  bool offCycle = 14;
+  bool postpaid = 15;
+}
+
+message FillInvoiceRequest {
+  string tenant = 1;
+  string loggedInUserId = 2;
+  string invoiceId = 3;
+  double amount = 4;
+  double vat = 5;
+  double subtotal = 6 [deprecated = true];
+  double total = 7;
+  repeated InvoiceLine invoiceLines = 8;
+  google.protobuf.Timestamp updatedAt = 9;
+  string appSource = 10;
+  InvoiceStatus status = 11;
+  string Note = 12;
+  string DomesticPaymentsBankInfo = 13;
+  string InternationalPaymentsBankInfo = 14;
+  FillInvoiceCustomer Customer = 15;
+  FillInvoiceProvider Provider = 16;
+}
+
+message FillInvoiceCustomer {
+  string Name = 1;
+  string AddressLine1 = 2;
+  string AddressLine2 = 3;
+  string Zip = 4;
+  string Locality = 5;
+  string Country = 6;
+  string Email = 7;
+}
+
+message FillInvoiceProvider {
+  string Name = 2;
+  string Email = 3;
+  string AddressLine1 = 4;
+  string AddressLine2 = 5;
+  string Zip = 6;
+  string Locality = 7;
+  string Country = 8;
+  string LogoRepositoryFileId = 9;
+}
+
+message InvoiceLine {
+  string serviceLineItemId = 1;
+  string name = 2;
+  double price = 3;
+  int64 quantity = 4;
+  double amount = 5;
+  double vat = 6;
+  double total = 7;
+  BilledType billedType = 8;
+  string serviceLineItemParentId = 9;
+}
+
+message GenerateInvoicePdfRequest {
+  string tenant = 1;
+  string loggedInUserId = 2;
+  string invoiceId = 3;
+  string appSource = 4;
+}
+
+message PayInvoiceRequest {
+  string tenant = 1;
+  string loggedInUserId = 2;
+  string invoiceId = 3;
+  google.protobuf.Timestamp updatedAt = 4;
+  SourceFields sourceFields = 5;
+}
+
+message PdfGeneratedInvoiceRequest {
+  string tenant = 1;
+  string loggedInUserId = 2;
+  string invoiceId = 3;
+  string repositoryFileId = 4;
+  google.protobuf.Timestamp updatedAt = 5;
+  string appSource = 6;
+}
+
+message SimulateInvoiceRequest {
+  string tenant = 1;
+  string loggedInUserId = 2;
+  string contractId = 3;
+  google.protobuf.Timestamp date = 4;
+  repeated DryRunServiceLineItem dryRunServiceLineItems = 6;
+  google.protobuf.Timestamp createdAt = 7;
+  SourceFields sourceFields = 8;
+}
+
+message DryRunServiceLineItem {
+  string serviceLineItemId = 1;
+  string name = 3;
+  BilledType billed = 4;
+  double price = 5;
+  int64 quantity = 6;
+}
+
+message UpdateInvoiceRequest {
+  string tenant = 1;
+  string loggedInUserId = 2;
+  string invoiceId = 3;
+  google.protobuf.Timestamp updatedAt = 4;
+  string appSource = 5;
+  InvoiceStatus status = 6;
+  repeated InvoiceFieldMask fieldsMask = 7;
+  string paymentLink = 8;
+}
+
+message PayInvoiceNotificationRequest {
+  string tenant = 1;
+  string invoiceId = 2;
+  string loggedInUserId = 3;
+  string appSource = 4;
+}
+
+message RequestFillInvoiceRequest {
+  string tenant = 1;
+  string invoiceId = 2;
+  string contractId = 3;
+  string loggedInUserId = 4;
+  string appSource = 5;
+}
+
+message PermanentlyDeleteDraftInvoiceRequest {
+  string tenant = 1;
+  string invoiceId = 2;
+  string loggedInUserId = 3;
+  string appSource = 4;
+}
+
+message VoidInvoiceRequest {
+  string tenant = 1;
+  string invoiceId = 2;
+  string loggedInUserId = 3;
+  string appSource = 4;
+  google.protobuf.Timestamp updatedAt = 5;
+}
+
+message InvoiceIdResponse {
+  string id = 1;
+}
+
+service InvoiceGrpcService {
+  rpc NewInvoiceForContract(NewInvoiceForContractRequest) returns (InvoiceIdResponse);
+  rpc FillInvoice(FillInvoiceRequest) returns (InvoiceIdResponse);
+  rpc GenerateInvoicePdf(GenerateInvoicePdfRequest) returns (InvoiceIdResponse);
+  rpc PdfGeneratedInvoice(PdfGeneratedInvoiceRequest) returns (InvoiceIdResponse);
+  rpc PayInvoice(PayInvoiceRequest) returns (InvoiceIdResponse);
+  rpc SimulateInvoice(SimulateInvoiceRequest) returns (InvoiceIdResponse);
+  rpc UpdateInvoice(UpdateInvoiceRequest) returns (InvoiceIdResponse);
+  rpc PayInvoiceNotification(PayInvoiceNotificationRequest) returns (InvoiceIdResponse);
+  rpc RequestFillInvoice(RequestFillInvoiceRequest) returns (InvoiceIdResponse);
+  rpc PermanentlyDeleteDraftInvoice(PermanentlyDeleteDraftInvoiceRequest) returns (InvoiceIdResponse);
+  rpc VoidInvoice(VoidInvoiceRequest) returns (InvoiceIdResponse);
+}

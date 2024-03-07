@@ -71,6 +71,13 @@ func (a *InteractionEventAggregate) updateInteractionEvent(ctx context.Context, 
 		source = a.InteractionEvent.Source.Source
 	}
 
+	if aggregate.AllowCheckForNoChanges(cmd.Source.AppSource, cmd.LoggedInUserId) {
+		if a.InteractionEvent.SameData(cmd.DataFields, cmd.ExternalSystem) {
+			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
+			return nil
+		}
+	}
+
 	updateEvent, err := event.NewInteractionEventUpdateEvent(a, cmd.DataFields, cmd.Source.Source, cmd.ExternalSystem, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)

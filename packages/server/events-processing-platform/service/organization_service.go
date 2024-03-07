@@ -3,6 +3,9 @@ package service
 import (
 	"context"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -21,14 +24,16 @@ import (
 
 type organizationService struct {
 	organizationpb.UnimplementedOrganizationGrpcServiceServer
-	log                  logger.Logger
-	organizationCommands *command_handler.CommandHandlers
+	log                        logger.Logger
+	organizationCommands       *command_handler.CommandHandlers
+	organizationRequestHandler organization.OrganizationRequestHandler
 }
 
-func NewOrganizationService(log logger.Logger, organizationCommands *command_handler.CommandHandlers) *organizationService {
+func NewOrganizationService(log logger.Logger, organizationCommands *command_handler.CommandHandlers, aggregateStore eventstore.AggregateStore, cfg *config.Config) *organizationService {
 	return &organizationService{
-		log:                  log,
-		organizationCommands: organizationCommands,
+		log:                        log,
+		organizationCommands:       organizationCommands,
+		organizationRequestHandler: organization.NewOrganizationRequestHandler(log, aggregateStore, cfg.Utils),
 	}
 }
 
@@ -62,6 +67,7 @@ func (s *organizationService) UpsertOrganization(ctx context.Context, request *o
 		Headquarters:       request.Headquarters,
 		YearFounded:        request.YearFounded,
 		EmployeeGrowthRate: request.EmployeeGrowthRate,
+		SlackChannelId:     request.SlackChannelId,
 	}
 	sourceFields := commonmodel.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
@@ -214,7 +220,7 @@ func (s *organizationService) RefreshLastTouchpoint(ctx context.Context, request
 	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }
 
-func (s *organizationService) RefreshRenewalSummary(ctx context.Context, request *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+func (s *organizationService) RefreshRenewalSummary(ctx context.Context, request *organizationpb.RefreshRenewalSummaryGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.RefreshRenewalSummary")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
@@ -226,10 +232,10 @@ func (s *organizationService) RefreshRenewalSummary(ctx context.Context, request
 		return nil, status.Error(codes.Canceled, "Context canceled")
 	}
 
-	cmd := command.NewRefreshRenewalSummaryCommand(request.Tenant, request.OrganizationId, request.LoggedInUserId, request.AppSource)
-	if err := s.organizationCommands.RefreshRenewalSummary.Handle(ctx, cmd); err != nil {
+	_, err := s.organizationRequestHandler.HandleTempWithRetry(ctx, request.Tenant, request.OrganizationId, request)
+	if err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("Failed to refresh renewal summary for organization with id  %s in tenant %s, err: %s", request.OrganizationId, request.Tenant, err.Error())
+		s.log.Errorf("Failed to refresh renewal summary for organization with id {%s} for tenant {%s}, err: %s", request.OrganizationId, request.Tenant, err.Error())
 		return nil, s.errResponse(err)
 	}
 
@@ -494,6 +500,8 @@ func extractOrganizationMaskFields(requestMaskFields []organizationpb.Organizati
 			fieldsMask = append(fieldsMask, model.FieldMaskYearFounded)
 		case organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_EMPLOYEE_GROWTH_RATE:
 			fieldsMask = append(fieldsMask, model.FieldMaskEmployeeGrowthRate)
+		case organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_SLACK_CHANNEL_ID:
+			fieldsMask = append(fieldsMask, model.FieldMaskSlackChannelId)
 		}
 	}
 	return utils.RemoveDuplicates(fieldsMask)
@@ -506,4 +514,106 @@ func containsOrganizationMaskFieldAll(fields []organizationpb.OrganizationMaskFi
 		}
 	}
 	return false
+}
+
+func (s *organizationService) CreateBillingProfile(ctx context.Context, request *organizationpb.CreateBillingProfileGrpcRequest) (*organizationpb.BillingProfileIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.CreateBillingProfile")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+	span.SetTag(tracing.SpanTagEntityId, request.OrganizationId)
+
+	result, err := s.organizationRequestHandler.HandleWithRetry(ctx, request.Tenant, request.OrganizationId, request)
+	billingProfileId := ""
+	if result != nil {
+		billingProfileId = result.(string)
+	}
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(CreateBillingProfile) tenant:{%s}, organization id: {%s}, err: %s", request.Tenant, request.OrganizationId, err.Error())
+		return &organizationpb.BillingProfileIdGrpcResponse{Id: billingProfileId}, s.errResponse(err)
+	}
+
+	return &organizationpb.BillingProfileIdGrpcResponse{Id: billingProfileId}, nil
+}
+
+func (s *organizationService) UpdateBillingProfile(ctx context.Context, request *organizationpb.UpdateBillingProfileGrpcRequest) (*organizationpb.BillingProfileIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.UpdateBillingProfile")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+	span.SetTag(tracing.SpanTagEntityId, request.OrganizationId)
+
+	_, err := s.organizationRequestHandler.HandleWithRetry(ctx, request.Tenant, request.OrganizationId, request)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(UpdateBillingProfile) tenant:{%s}, organization id: {%s}, err: %s", request.Tenant, request.OrganizationId, err.Error())
+		return &organizationpb.BillingProfileIdGrpcResponse{Id: request.BillingProfileId}, s.errResponse(err)
+	}
+
+	return &organizationpb.BillingProfileIdGrpcResponse{Id: request.BillingProfileId}, nil
+}
+
+func (s *organizationService) LinkEmailToBillingProfile(ctx context.Context, request *organizationpb.LinkEmailToBillingProfileGrpcRequest) (*organizationpb.BillingProfileIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.LinkEmailToBillingProfile")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+
+	_, err := s.organizationRequestHandler.HandleWithRetry(ctx, request.Tenant, request.OrganizationId, request)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(LinkEmailToBillingProfile) tenant:{%s}, organization id: {%s}, err: %s", request.Tenant, request.OrganizationId, err.Error())
+		return &organizationpb.BillingProfileIdGrpcResponse{Id: request.BillingProfileId}, s.errResponse(err)
+	}
+
+	return &organizationpb.BillingProfileIdGrpcResponse{Id: request.BillingProfileId}, nil
+}
+
+func (s *organizationService) UnlinkEmailFromBillingProfile(ctx context.Context, request *organizationpb.UnlinkEmailFromBillingProfileGrpcRequest) (*organizationpb.BillingProfileIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.UnlinkEmailFromBillingProfile")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+
+	_, err := s.organizationRequestHandler.HandleWithRetry(ctx, request.Tenant, request.OrganizationId, request)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(UnlinkEmailFromBillingProfile) tenant:{%s}, organization id: {%s}, err: %s", request.Tenant, request.OrganizationId, err.Error())
+		return &organizationpb.BillingProfileIdGrpcResponse{Id: request.BillingProfileId}, s.errResponse(err)
+	}
+
+	return &organizationpb.BillingProfileIdGrpcResponse{Id: request.BillingProfileId}, nil
+}
+
+func (s *organizationService) LinkLocationToBillingProfile(ctx context.Context, request *organizationpb.LinkLocationToBillingProfileGrpcRequest) (*organizationpb.BillingProfileIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.LinkLocationToBillingProfile")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+
+	_, err := s.organizationRequestHandler.HandleWithRetry(ctx, request.Tenant, request.OrganizationId, request)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(LinkLocationToBillingProfile) tenant:{%s}, organization id: {%s}, err: %s", request.Tenant, request.OrganizationId, err.Error())
+		return &organizationpb.BillingProfileIdGrpcResponse{Id: request.BillingProfileId}, s.errResponse(err)
+	}
+
+	return &organizationpb.BillingProfileIdGrpcResponse{Id: request.BillingProfileId}, nil
+}
+
+func (s *organizationService) UnlinkLocationFromBillingProfile(ctx context.Context, request *organizationpb.UnlinkLocationFromBillingProfileGrpcRequest) (*organizationpb.BillingProfileIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.UnlinkLocationFromBillingProfile")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+
+	_, err := s.organizationRequestHandler.HandleWithRetry(ctx, request.Tenant, request.OrganizationId, request)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(UnlinkLocationFromBillingProfile) tenant:{%s}, organization id: {%s}, err: %s", request.Tenant, request.OrganizationId, err.Error())
+		return &organizationpb.BillingProfileIdGrpcResponse{Id: request.BillingProfileId}, s.errResponse(err)
+	}
+
+	return &organizationpb.BillingProfileIdGrpcResponse{Id: request.BillingProfileId}, nil
 }

@@ -11,6 +11,7 @@ import (
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	contactgrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	emailgrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
@@ -22,10 +23,10 @@ import (
 )
 
 func TestMutationResolver_InteractionSessionCreate_Min(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	rawResponse, err := c.RawPost(getQuery("interaction_event/create_interaction_session_min"))
 	assertRawResponseSuccess(t, rawResponse, err)
@@ -49,10 +50,10 @@ func TestMutationResolver_InteractionSessionCreate_Min(t *testing.T) {
 }
 
 func TestMutationResolver_InteractionSessionCreateWithAttachment(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	now := time.Now().UTC()
 
@@ -60,9 +61,7 @@ func TestMutationResolver_InteractionSessionCreateWithAttachment(t *testing.T) {
 	attachmentId := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
 		Id:            "",
 		MimeType:      "text/plain",
-		Name:          "readme.txt",
-		Extension:     "txt",
-		Size:          123,
+		FileName:      "readme.txt",
 		Source:        "",
 		SourceOfTruth: "",
 		AppSource:     "",
@@ -90,14 +89,14 @@ func TestMutationResolver_InteractionSessionCreateWithAttachment(t *testing.T) {
 }
 
 func TestMutationResolver_InteractionSessionCreateWithPhone(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	mockContactCreation(ctx)
 
-	userId := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
+	userId := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{
 		FirstName: "Agent",
 		LastName:  "Smith",
 	})
@@ -152,10 +151,10 @@ func TestMutationResolver_InteractionSessionCreateWithPhone(t *testing.T) {
 }
 
 func TestMutationResolver_InteractionSessionCreate(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	rawResponse, err := c.RawPost(getQuery("interaction_event/create_interaction_session"),
 		client.Var("sessionIdentifier", "My Session Identifier"),
@@ -190,7 +189,7 @@ func TestMutationResolver_InteractionSessionCreate(t *testing.T) {
 }
 
 func TestMutationResolver_InteractionEventCreateWithAttachment(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -202,9 +201,7 @@ func TestMutationResolver_InteractionEventCreateWithAttachment(t *testing.T) {
 	attachmentId := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
 		Id:            "",
 		MimeType:      "text/plain",
-		Name:          "readme.txt",
-		Extension:     "txt",
-		Size:          123,
+		FileName:      "readme.txt",
 		Source:        "",
 		SourceOfTruth: "",
 		AppSource:     "",
@@ -233,10 +230,10 @@ func TestMutationResolver_InteractionEventCreateWithAttachment(t *testing.T) {
 }
 
 func TestMutationResolver_InteractionEventCreate_Min(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	mockContactCreation(ctx)
 
@@ -290,10 +287,10 @@ func TestMutationResolver_InteractionEventCreate_Min(t *testing.T) {
 }
 
 func TestMutationResolver_InteractionEventCreate_Email(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	mockContactCreation(ctx)
 
@@ -409,10 +406,10 @@ func TestMutationResolver_InteractionEventCreate_Email(t *testing.T) {
 }
 
 func TestMutationResolver_InteractionEventCreate_Meeting(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	now := time.Now().UTC()
 
@@ -492,14 +489,14 @@ func TestMutationResolver_InteractionEventCreate_Meeting(t *testing.T) {
 }
 
 func TestMutationResolver_InteractionEventCreate_Voice(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	mockContactCreation(ctx)
 
-	userId := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
+	userId := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{
 		FirstName: "Agent",
 		LastName:  "Smith",
 	})
@@ -605,7 +602,7 @@ func TestMutationResolver_InteractionEventCreate_Voice(t *testing.T) {
 }
 
 func TestQueryResolver_InteractionEvent(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -692,7 +689,7 @@ func TestQueryResolver_InteractionEvent(t *testing.T) {
 }
 
 func TestQueryResolver_InteractionEvent_WithIssue(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -728,7 +725,7 @@ func TestQueryResolver_InteractionEvent_WithIssue(t *testing.T) {
 }
 
 func TestQueryResolver_InteractionEvent_ByEventIdentifier(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -815,7 +812,7 @@ func TestQueryResolver_InteractionEvent_ByEventIdentifier(t *testing.T) {
 }
 
 func TestQueryResolver_InteractionSession(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -897,7 +894,7 @@ func TestQueryResolver_InteractionSession(t *testing.T) {
 }
 
 func TestQueryResolver_InteractionSession_BySessionIdentifier(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -967,7 +964,7 @@ func TestQueryResolver_InteractionSession_BySessionIdentifier(t *testing.T) {
 }
 
 func TestQueryResolver_Contact_WithTimelineEvents_InteractionEvents_With_InteractionSession(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -1097,14 +1094,14 @@ func TestQueryResolver_Contact_WithTimelineEvents_InteractionEvents_With_Interac
 }
 
 func TestQueryResolver_Contact_WithTimelineEvents_InteractionEvents_With_MultipleParticipants(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "testOrg")
 
-	userId := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
+	userId := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{
 		FirstName: "Agent",
 		LastName:  "Smith",
 	})
@@ -1222,7 +1219,7 @@ func TestQueryResolver_Contact_WithTimelineEvents_InteractionEvents_With_Multipl
 }
 
 func TestQueryResolver_InteractionEvent_WithExternalLinks(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 

@@ -25,7 +25,7 @@ import (
 )
 
 func TestQueryResolver_ContactByEmail(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	otherTenant := "other"
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
@@ -49,7 +49,7 @@ func TestQueryResolver_ContactByEmail(t *testing.T) {
 }
 
 func TestQueryResolver_ContactByPhone(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	otherTenant := "other"
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
@@ -73,10 +73,10 @@ func TestQueryResolver_ContactByPhone(t *testing.T) {
 }
 
 func TestMutationResolver_ContactCreate_Min(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 	createdContactId := uuid.New().String()
 
 	calledCreateContact, calledCreateEmail, calledCreatePhoneNumber := false, false, false
@@ -139,10 +139,10 @@ func TestMutationResolver_ContactCreate_Min(t *testing.T) {
 }
 
 func TestMutationResolver_ContactCreate(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	createdContactId := uuid.New().String()
 	createdEmailId := uuid.New().String()
@@ -264,11 +264,11 @@ func TestMutationResolver_ContactCreate(t *testing.T) {
 }
 
 func TestMutationResolver_CustomerContactCreate(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateTenant(ctx, driver, "otherTenant")
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	timeNow := time.Now().UTC()
 
@@ -341,7 +341,7 @@ func TestMutationResolver_CustomerContactCreate(t *testing.T) {
 }
 
 func TestMutationResolver_ContactUpdate(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	contactId := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
@@ -368,6 +368,7 @@ func TestMutationResolver_ContactUpdate(t *testing.T) {
 			require.Equal(t, string(neo4jentity.DataSourceOpenline), contact.SourceFields.Source)
 			require.Equal(t, tenantName, contact.Tenant)
 			require.Equal(t, testUserId, contact.LoggedInUserId)
+			require.Equal(t, 7, len(contact.FieldsMask))
 			return &contactgrpc.ContactIdGrpcResponse{
 				Id: contactId,
 			}, nil
@@ -387,7 +388,7 @@ func TestMutationResolver_ContactUpdate(t *testing.T) {
 }
 
 func TestQueryResolver_Contact_WithJobRoles_ById(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
@@ -459,11 +460,11 @@ func TestQueryResolver_Contact_WithJobRoles_ById(t *testing.T) {
 }
 
 func TestQueryResolver_Contact_WithNotes_ById(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	userId := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
 	noteId1 := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "note1", "text/plain", utils.Now())
 	noteId2 := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "note2", "text/plain", utils.Now())
 	neo4jt.NoteCreatedByUser(ctx, driver, noteId1, userId)
@@ -511,11 +512,11 @@ func TestQueryResolver_Contact_WithNotes_ById(t *testing.T) {
 }
 
 func TestQueryResolver_Contact_WithNotes_ById_Time_Range(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	userId := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
 	noteId1 := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "note1", "text/plain", utils.Now())
 	noteId2 := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "note2", "text/plain", utils.Now())
 	neo4jt.NoteCreatedByUser(ctx, driver, noteId1, userId)
@@ -597,14 +598,32 @@ func TestQueryResolver_Contact_WithNotes_ById_Time_Range(t *testing.T) {
 }
 
 func TestQueryResolver_Contact_WithTags_ById(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	contactId2 := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	tagId1 := neo4jt.CreateTag(ctx, driver, tenantName, "tag1")
-	tagId2 := neo4jt.CreateTag(ctx, driver, tenantName, "tag2")
-	tagId3 := neo4jt.CreateTag(ctx, driver, tenantName, "tag3")
+	tagId1 := neo4jtest.CreateTag(ctx, driver, tenantName, neo4jentity.TagEntity{
+		Name:      "tag1",
+		CreatedAt: utils.Now(),
+		UpdatedAt: utils.Now(),
+		Source:    neo4jentity.DataSourceOpenline,
+		AppSource: "test",
+	})
+	tagId2 := neo4jtest.CreateTag(ctx, driver, tenantName, neo4jentity.TagEntity{
+		Name:      "tag2",
+		CreatedAt: utils.Now(),
+		UpdatedAt: utils.Now(),
+		Source:    neo4jentity.DataSourceOpenline,
+		AppSource: "test",
+	})
+	tagId3 := neo4jtest.CreateTag(ctx, driver, tenantName, neo4jentity.TagEntity{
+		Name:      "tag3",
+		CreatedAt: utils.Now(),
+		UpdatedAt: utils.Now(),
+		Source:    neo4jentity.DataSourceOpenline,
+		AppSource: "test",
+	})
 	neo4jt.TagContact(ctx, driver, contactId, tagId1)
 	neo4jt.TagContact(ctx, driver, contactId, tagId2)
 	neo4jt.TagContact(ctx, driver, contactId2, tagId3)
@@ -636,7 +655,7 @@ func TestQueryResolver_Contact_WithTags_ById(t *testing.T) {
 }
 
 func TestQueryResolver_Contact_WithLocations_ById(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
@@ -746,7 +765,7 @@ func TestQueryResolver_Contact_WithLocations_ById(t *testing.T) {
 }
 
 func TestQueryResolver_Contacts_SortByTitleAscFirstNameAscLastNameDesc(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -791,7 +810,7 @@ func TestQueryResolver_Contacts_SortByTitleAscFirstNameAscLastNameDesc(t *testin
 }
 
 func TestQueryResolver_Contact_BasicFilters_FindContactWithLetterAInName(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -840,13 +859,13 @@ func TestQueryResolver_Contact_BasicFilters_FindContactWithLetterAInName(t *test
 }
 
 func TestQueryResolver_Contact_WithTimelineEvents(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	contactId2 := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
 
 	now := time.Now().UTC()
 	secAgo1 := now.Add(time.Duration(-1) * time.Second)
@@ -973,7 +992,7 @@ func TestQueryResolver_Contact_WithTimelineEvents(t *testing.T) {
 }
 
 func TestQueryResolver_Contact_WithTimelineEvents_FilterByType(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -1018,12 +1037,12 @@ func TestQueryResolver_Contact_WithTimelineEvents_FilterByType(t *testing.T) {
 }
 
 func TestQueryResolver_Contact_WithTimelineEventsTotalCount(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
 
 	now := time.Now().UTC()
 
@@ -1069,7 +1088,7 @@ func TestQueryResolver_Contact_WithTimelineEventsTotalCount(t *testing.T) {
 }
 
 func TestQueryResolver_Contact_WithOrganizations_ById(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
@@ -1108,15 +1127,14 @@ func TestQueryResolver_Contact_WithOrganizations_ById(t *testing.T) {
 }
 
 func TestMutationResolver_ContactAddTagByID(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	tagId1 := neo4jt.CreateTag(ctx, driver, tenantName, "tag1")
-	tagId2 := neo4jt.CreateTag(ctx, driver, tenantName, "tag2")
+	tagId1 := neo4jtest.CreateTag(ctx, driver, tenantName, neo4jentity.TagEntity{Name: "tag1"})
+	tagId2 := neo4jtest.CreateTag(ctx, driver, tenantName, neo4jentity.TagEntity{Name: "tag2"})
 	neo4jt.TagContact(ctx, driver, contactId, tagId1)
-	time.Sleep(100 * time.Millisecond)
 
 	rawResponse := callGraphQL(t, "contact/add_tag_to_contact", map[string]interface{}{"contactId": contactId, "tagId": tagId2})
 
@@ -1142,13 +1160,17 @@ func TestMutationResolver_ContactAddTagByID(t *testing.T) {
 }
 
 func TestMutationResolver_ContactRemoveTagByID(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	tagId1 := neo4jt.CreateTag(ctx, driver, tenantName, "tag1")
-	tagId2 := neo4jt.CreateTag(ctx, driver, tenantName, "tag2")
+	tagId1 := neo4jtest.CreateTag(ctx, driver, tenantName, neo4jentity.TagEntity{
+		Name: "tag1",
+	})
+	tagId2 := neo4jtest.CreateTag(ctx, driver, tenantName, neo4jentity.TagEntity{
+		Name: "tag2",
+	})
 	neo4jt.TagContact(ctx, driver, contactId, tagId1)
 	neo4jt.TagContact(ctx, driver, contactId, tagId2)
 
@@ -1176,7 +1198,7 @@ func TestMutationResolver_ContactRemoveTagByID(t *testing.T) {
 }
 
 func TestMutationResolver_ContactAddOrganizationByID(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -1217,7 +1239,7 @@ func TestMutationResolver_ContactAddOrganizationByID(t *testing.T) {
 }
 
 func TestMutationResolver_ContactRemoveOrganizationByID(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -1254,7 +1276,7 @@ func TestMutationResolver_ContactRemoveOrganizationByID(t *testing.T) {
 }
 
 func TestMutationResolver_ContactAddNewLocation(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -1285,7 +1307,7 @@ func TestMutationResolver_ContactAddNewLocation(t *testing.T) {
 }
 
 func TestMutationResolver_ContactAddSocial(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -1319,7 +1341,7 @@ func TestMutationResolver_ContactAddSocial(t *testing.T) {
 }
 
 func TestQueryResolver_Contact_WithSocials(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)

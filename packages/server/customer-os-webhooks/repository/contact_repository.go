@@ -12,10 +12,15 @@ import (
 )
 
 type ContactRepository interface {
+	// Deprecated
 	GetById(ctx context.Context, tenant, contactId string) (*dbtype.Node, error)
+	// Deprecated
 	GetMatchedContactId(ctx context.Context, tenant, externalSystem, externalId string, emails []string) (string, error)
+	// Deprecated
 	GetContactIdById(ctx context.Context, tenant, id string) (string, error)
+	// Deprecated
 	GetContactIdByExternalId(ctx context.Context, tenant, externalId, externalSystemId string) (string, error)
+	// Deprecated
 	GetJobRoleId(ctx context.Context, tenant, contactId, organizationId string) (string, error)
 }
 

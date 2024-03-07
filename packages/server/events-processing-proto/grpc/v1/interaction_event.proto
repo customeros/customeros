@@ -27,12 +27,30 @@ message UpsertInteractionEventGrpcRequest {
   repeated Receiver receivers = 18;
 }
 
+message ReplaceSummaryGrpcRequest {
+  string tenant = 1;
+  string interactionEventId = 2;
+  string loggedInUserId = 3;
+  string summary = 4;
+  string contentType = 5;
+  string appSource = 6;
+}
+
+message ReplaceActionItemsGrpcRequest {
+  string tenant = 1;
+  string interactionEventId = 2;
+  string loggedInUserId = 3;
+  repeated string actionItems = 4;
+  string appSource = 5;
+}
+
 message Participant {
   string id = 1;
   oneof participantType {
     User user = 2;
     Contact contact = 3;
     Organization organization = 4;
+    JobRole jobRole = 5;
   }
 }
 
@@ -46,6 +64,10 @@ message Contact {
 
 message Organization {
   // Fields specific to Organization, if any.
+}
+
+message JobRole {
+  // Fields specific to JobRole, if any.
 }
 
 message Sender {
@@ -78,4 +100,6 @@ service interactionEventGrpcService {
   rpc RequestGenerateSummary(RequestGenerateSummaryGrpcRequest) returns (InteractionEventIdGrpcResponse);
   rpc RequestGenerateActionItems(RequestGenerateActionItemsGrpcRequest) returns (InteractionEventIdGrpcResponse);
   rpc UpsertInteractionEvent(UpsertInteractionEventGrpcRequest) returns (InteractionEventIdGrpcResponse);
+  rpc ReplaceSummary(ReplaceSummaryGrpcRequest) returns (InteractionEventIdGrpcResponse);
+  rpc ReplaceActionItems(ReplaceActionItemsGrpcRequest) returns (InteractionEventIdGrpcResponse);
 }

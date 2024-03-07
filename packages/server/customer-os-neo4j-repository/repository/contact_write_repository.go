@@ -27,15 +27,22 @@ type ContactCreateFields struct {
 }
 
 type ContactUpdateFields struct {
-	FirstName       string    `json:"firstName"`
-	LastName        string    `json:"lastName"`
-	Prefix          string    `json:"prefix"`
-	Description     string    `json:"description"`
-	Timezone        string    `json:"timezone"`
-	ProfilePhotoUrl string    `json:"profilePhotoUrl"`
-	Name            string    `json:"name"`
-	UpdatedAt       time.Time `json:"updatedAt"`
-	Source          string    `json:"source"`
+	FirstName             string    `json:"firstName"`
+	LastName              string    `json:"lastName"`
+	Prefix                string    `json:"prefix"`
+	Description           string    `json:"description"`
+	Timezone              string    `json:"timezone"`
+	ProfilePhotoUrl       string    `json:"profilePhotoUrl"`
+	Name                  string    `json:"name"`
+	UpdatedAt             time.Time `json:"updatedAt"`
+	Source                string    `json:"source"`
+	UpdateFirstName       bool      `json:"updateFirstName"`
+	UpdateLastName        bool      `json:"updateLastName"`
+	UpdateName            bool      `json:"updateName"`
+	UpdatePrefix          bool      `json:"updatePrefix"`
+	UpdateDescription     bool      `json:"updateDescription"`
+	UpdateTimezone        bool      `json:"updateTimezone"`
+	UpdateProfilePhotoUrl bool      `json:"updateProfilePhotoUrl"`
 }
 
 type ContactWriteRepository interface {
@@ -139,31 +146,47 @@ func (r *contactWriteRepository) UpdateContact(ctx context.Context, tenant, cont
 	span.SetTag(tracing.SpanTagEntityId, contactId)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact:Contact_%s {id:$id})
-		 SET	c.name = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR c.name is null OR c.name = '' THEN $name ELSE c.name END,
-				c.firstName = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR c.firstName is null OR c.firstName = '' THEN $firstName ELSE c.firstName END,
-				c.lastName = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR c.lastName is null OR c.lastName = '' THEN $lastName ELSE c.lastName END,
-				c.timezone = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR c.timezone is null OR c.timezone = '' THEN $timezone ELSE c.timezone END,
-				c.profilePhotoUrl = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR c.profilePhotoUrl is null OR c.profilePhotoUrl = '' THEN $profilePhotoUrl ELSE c.profilePhotoUrl END,
-				c.prefix = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR c.prefix is null OR c.prefix = '' THEN $prefix ELSE c.prefix END,
-				c.description = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR c.description is null OR c.description = '' THEN $description ELSE c.description END,
-				c.updatedAt = $updatedAt,
+		 SET	c.updatedAt = $updatedAt,
 				c.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE c.sourceOfTruth END,
 				c.syncedWithEventStore = true`, tenant)
 
 	params := map[string]any{
-		"id":              contactId,
-		"tenant":          tenant,
-		"firstName":       data.FirstName,
-		"lastName":        data.LastName,
-		"prefix":          data.Prefix,
-		"description":     data.Description,
-		"timezone":        data.Timezone,
-		"profilePhotoUrl": data.ProfilePhotoUrl,
-		"name":            data.Name,
-		"updatedAt":       data.UpdatedAt,
-		"sourceOfTruth":   data.Source,
-		"overwrite":       data.Source == constants.SourceOpenline,
+		"id":            contactId,
+		"tenant":        tenant,
+		"updatedAt":     data.UpdatedAt,
+		"sourceOfTruth": data.Source,
+		"overwrite":     data.Source == constants.SourceOpenline,
 	}
+
+	if data.UpdateFirstName {
+		cypher += ", c.firstName = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR c.firstName is null OR c.firstName = '' THEN $firstName ELSE c.firstName END"
+		params["firstName"] = data.FirstName
+	}
+	if data.UpdateLastName {
+		cypher += ", c.lastName = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR c.lastName is null OR c.lastName = '' THEN $lastName ELSE c.lastName END"
+		params["lastName"] = data.LastName
+	}
+	if data.UpdateName {
+		cypher += ", c.name = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR c.name is null OR c.name = '' THEN $name ELSE c.name END"
+		params["name"] = data.Name
+	}
+	if data.UpdatePrefix {
+		cypher += ", c.prefix = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR c.prefix is null OR c.prefix = '' THEN $prefix ELSE c.prefix END"
+		params["prefix"] = data.Prefix
+	}
+	if data.UpdateDescription {
+		cypher += ", c.description = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR c.description is null OR c.description = '' THEN $description ELSE c.description END"
+		params["description"] = data.Description
+	}
+	if data.UpdateTimezone {
+		cypher += ", c.timezone = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR c.timezone is null OR c.timezone = '' THEN $timezone ELSE c.timezone END"
+		params["timezone"] = data.Timezone
+	}
+	if data.UpdateProfilePhotoUrl {
+		cypher += ", c.profilePhotoUrl = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR c.profilePhotoUrl is null OR c.profilePhotoUrl = '' THEN $profilePhotoUrl ELSE c.profilePhotoUrl END"
+		params["profilePhotoUrl"] = data.ProfilePhotoUrl
+	}
+
 	span.LogFields(log.String("query", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 

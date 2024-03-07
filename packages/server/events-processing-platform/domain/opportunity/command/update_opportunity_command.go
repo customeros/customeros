@@ -1,6 +1,7 @@
 package command
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -25,4 +26,16 @@ func NewUpdateOpportunityCommand(opportunityId, tenant, loggedInUserId string, d
 		DataFields:     dataFields,
 		FieldsMask:     fieldsMask,
 	}
+}
+
+func (c *UpdateOpportunityCommand) FieldMaskContainsOnly(fieldMasks []string) bool {
+	if len(c.FieldsMask) != len(fieldMasks) {
+		return false
+	}
+	for _, fieldMask := range fieldMasks {
+		if !utils.Contains(c.FieldsMask, fieldMask) {
+			return false
+		}
+	}
+	return true
 }

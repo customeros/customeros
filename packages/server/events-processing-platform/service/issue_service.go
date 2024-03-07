@@ -36,6 +36,7 @@ func (s *issueService) UpsertIssue(ctx context.Context, request *issuepb.UpsertI
 	issueId := strings.TrimSpace(utils.NewUUIDIfEmpty(request.Id))
 
 	dataFields := model.IssueDataFields{
+		GroupId:                   request.GroupId,
 		Subject:                   request.Subject,
 		Description:               request.Description,
 		Status:                    request.Status,

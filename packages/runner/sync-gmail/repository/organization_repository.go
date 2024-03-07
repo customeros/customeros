@@ -13,8 +13,6 @@ type OrganizationRepository interface {
 	GetOrganizationWithDomain(ctx context.Context, tx neo4j.ManagedTransaction, tenant, domainId string) (*dbtype.Node, error)
 	CreateOrganization(ctx context.Context, tx neo4j.ManagedTransaction, tenant, name, source, sourceOfTruth, appSource string, date time.Time, hide bool) (*dbtype.Node, error)
 	LinkDomainToOrganization(ctx context.Context, tx neo4j.ManagedTransaction, tenant, domainName, organizationId string) error
-	GetOrganizationsLinkedToEmailsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, emailIdList []string) ([]string, error)
-	UpdateLastTouchpointInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId string, touchpointAt time.Time, touchpointId string) error
 }
 
 type organizationRepository struct {
@@ -57,6 +55,7 @@ func (r *organizationRepository) CreateOrganization(ctx context.Context, tx neo4
 		"				org.sourceOfTruth=$sourceOfTruth, " +
 		"				org.appSource=$appSource, " +
 		"				org.hide=$hide, " +
+		"				org.isCustomer=$isCustomer, " +
 		"				org.onboardingStatus=$onboardingStatus, " +
 		"				org:%s " +
 		" RETURN org"
@@ -70,6 +69,7 @@ func (r *organizationRepository) CreateOrganization(ctx context.Context, tx neo4
 			"appSource":        appSource,
 			"now":              date,
 			"hide":             hide,
+			"isCustomer":       false,
 			"onboardingStatus": "NOT_APPLICABLE",
 		})
 	if err != nil {
@@ -93,41 +93,5 @@ func (r *organizationRepository) LinkDomainToOrganization(ctx context.Context, t
 		"domainName":     domainName,
 		"organizationId": organizationId,
 	})
-	return err
-}
-
-func (r *organizationRepository) GetOrganizationsLinkedToEmailsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, emailIdList []string) ([]string, error) {
-	query := "match (e:Email_%s)-[:HAS]-(c:Contact)-[:WORKS_AS]-(j:JobRole)-[:ROLE_IN]-(o:Organization) " +
-		" where e.id in $emailIdList " +
-		" return distinct(o.id)"
-
-	queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
-		map[string]interface{}{
-			"tenant":      tenant,
-			"emailIdList": emailIdList,
-		})
-	if err != nil {
-		return nil, err
-	}
-	result, err := utils.ExtractAllRecordsAsString(ctx, queryResult, err)
-	if err != nil {
-		return nil, err
-	} else {
-		return result, nil
-	}
-}
-
-func (r *organizationRepository) UpdateLastTouchpointInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId string, touchpointAt time.Time, touchpointId string) error {
-	query := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
-		 SET org.lastTouchpointAt=$touchpointAt, org.lastTouchpointId=$touchpointId`
-
-	_, err := tx.Run(ctx, query,
-		map[string]any{
-			"tenant":         tenant,
-			"organizationId": organizationId,
-			"touchpointAt":   touchpointAt,
-			"touchpointId":   touchpointId,
-		})
-
 	return err
 }

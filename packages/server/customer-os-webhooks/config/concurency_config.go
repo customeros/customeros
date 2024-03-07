@@ -8,4 +8,5 @@ type ConcurrencyConfig struct {
 	CommentSyncConcurrency          int `env:"COMMENT_SYNC_CONCURRENCY" envDefault:"1" validate:"required,min=1,max=100"`
 	LogEntrySyncConcurrency         int `env:"LOG_ENTRY_SYNC_CONCURRENCY" envDefault:"1" validate:"required,min=1,max=100"`
 	InteractionEventSyncConcurrency int `env:"INTERACTION_EVENT_SYNC_CONCURRENCY" envDefault:"1" validate:"required,min=1,max=100"`
+	InvoiceSyncConcurrency          int `env:"INVOICE_SYNC_CONCURRENCY" envDefault:"1" validate:"required,min=1,max=100"`
 }

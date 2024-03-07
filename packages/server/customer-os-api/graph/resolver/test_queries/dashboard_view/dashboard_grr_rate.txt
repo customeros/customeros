@@ -4,6 +4,7 @@ query GetDashboard_GrossRevenueRetention ($start: Time!, $end: Time!) {
      ) {
     grossRevenueRetention
     increasePercentage
+    increasePercentageValue
     perMonth {
       year
       month

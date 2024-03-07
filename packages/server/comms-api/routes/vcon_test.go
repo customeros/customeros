@@ -6,8 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/test/graph/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/test/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"log"
@@ -22,8 +22,6 @@ var myVconConfig = &config.Config{
 	Service: struct {
 		CustomerOsAPI    string `env:"CUSTOMER_OS_API,required"`
 		CustomerOsAPIKey string `env:"CUSTOMER_OS_API_KEY,required"`
-		FileStoreAPI     string `env:"FILE_STORE_API,required"`
-		FileStoreAPIKey  string `env:"FILE_STORE_API_KEY,required"`
 		ServerAddress    string `env:"COMMS_API_SERVER_ADDRESS,required"`
 		CorsUrl          string `env:"COMMS_API_CORS_URL,required"`
 	}{CustomerOsAPIKey: "my-key"},
@@ -43,7 +41,7 @@ const POST_TRANSCRIBE_AS_FIRST_EVENT = `{"vcon":"","uuid":"6a50a92a-7322-4988-a8
 func Test_invalidApiKey(t *testing.T) {
 	vconRouter := gin.Default()
 
-	_, client, resolver := utils.NewWebServer(t)
+	_, client, resolver := test.NewGraphQlMockedServer(t)
 	customerOs := service.NewCustomerOSService(client, myVconConfig)
 	route := vconRouter.Group("/")
 
@@ -107,7 +105,7 @@ func Test_invalidApiKey(t *testing.T) {
 func Test_vConDialogEvent(t *testing.T) {
 	vconRouter := gin.Default()
 
-	_, client, resolver := utils.NewWebServer(t)
+	_, client, resolver := test.NewGraphQlMockedServer(t)
 	customerOs := service.NewCustomerOSService(client, myVconConfig)
 	route := vconRouter.Group("/")
 	reachedSessionCreate := false
@@ -228,7 +226,7 @@ func Test_vConDialogEvent(t *testing.T) {
 func Test_vConDialogEventInExistingSession(t *testing.T) {
 	vconRouter := gin.Default()
 
-	_, client, resolver := utils.NewWebServer(t)
+	_, client, resolver := test.NewGraphQlMockedServer(t)
 	customerOs := service.NewCustomerOSService(client, myVconConfig)
 	route := vconRouter.Group("/")
 	reachedSessionCreate := false
@@ -335,7 +333,7 @@ func Test_vConDialogEventInExistingSession(t *testing.T) {
 func Test_vConAnalysisEventInExistingSession(t *testing.T) {
 	vconRouter := gin.Default()
 
-	_, client, resolver := utils.NewWebServer(t)
+	_, client, resolver := test.NewGraphQlMockedServer(t)
 	customerOs := service.NewCustomerOSService(client, myVconConfig)
 	route := vconRouter.Group("/")
 	reachedSessionCreate := false
@@ -407,7 +405,7 @@ func Test_vConAnalysisEventInExistingSession(t *testing.T) {
 func Test_vConAnalysisAsFirstEvent(t *testing.T) {
 	vconRouter := gin.Default()
 
-	_, client, resolver := utils.NewWebServer(t)
+	_, client, resolver := test.NewGraphQlMockedServer(t)
 	customerOs := service.NewCustomerOSService(client, myVconConfig)
 	route := vconRouter.Group("/")
 	reachedSessionCreate := false

@@ -1,7 +1,6 @@
 // @ts-nocheck remove this when typscript-react-query plugin is fixed
 import * as Types from '../../../../src/types/__generated__/graphql.types';
 
-import type { InfiniteData } from '@tanstack/react-query';
 import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
 import {
@@ -9,6 +8,7 @@ import {
   useInfiniteQuery,
   UseQueryOptions,
   UseInfiniteQueryOptions,
+  InfiniteData,
 } from '@tanstack/react-query';
 
 function fetcher<TData, TVariables extends { [key: string]: any }>(
@@ -25,7 +25,7 @@ function fetcher<TData, TVariables extends { [key: string]: any }>(
     });
 }
 export type GetContractsQueryVariables = Types.Exact<{
-  id: Types.Scalars['ID'];
+  id: Types.Scalars['ID']['input'];
 }>;
 
 export type GetContractsQuery = {
@@ -56,6 +56,18 @@ export type GetContractsQuery = {
       renewalPeriods?: any | null;
       status: Types.ContractStatus;
       contractUrl?: string | null;
+      billingCycle?: Types.ContractBillingCycle | null;
+      billingEnabled: boolean;
+      invoicingStartDate?: any | null;
+      currency?: Types.Currency | null;
+      organizationLegalName?: string | null;
+      addressLine1?: string | null;
+      addressLine2?: string | null;
+      locality?: string | null;
+      country?: string | null;
+      zip?: string | null;
+      invoiceEmail?: string | null;
+      invoiceNote?: string | null;
       opportunities?: Array<{
         __typename?: 'Opportunity';
         id: string;
@@ -77,21 +89,31 @@ export type GetContractsQuery = {
           name?: string | null;
         } | null;
       }> | null;
-      serviceLineItems?: Array<{
+      contractLineItems?: Array<{
         __typename?: 'ServiceLineItem';
-        id: string;
-        createdAt: any;
-        updatedAt: any;
-        name: string;
-        billed: Types.BilledType;
+        description: string;
+        billingCycle: Types.BilledType;
         price: number;
         quantity: any;
-        source: Types.DataSource;
         comments: string;
-        sourceOfTruth: Types.DataSource;
-        appSource: string;
-        endedAt?: any | null;
+        serviceEnded?: any | null;
         parentId: string;
+        serviceStarted: any;
+        metadata: {
+          __typename?: 'Metadata';
+          id: string;
+          created: any;
+          lastUpdated: any;
+          source: Types.DataSource;
+          appSource: string;
+          sourceOfTruth: Types.DataSource;
+        };
+        tax: {
+          __typename?: 'Tax';
+          salesTax: boolean;
+          vat: boolean;
+          taxRate: number;
+        };
       }> | null;
     }> | null;
   } | null;
@@ -121,6 +143,18 @@ export const GetContractsDocument = `
       renewalPeriods
       status
       contractUrl
+      billingCycle
+      billingEnabled
+      invoicingStartDate
+      currency
+      organizationLegalName
+      addressLine1
+      addressLine2
+      locality
+      country
+      zip
+      invoiceEmail
+      invoiceNote
       opportunities {
         id
         comments
@@ -140,75 +174,107 @@ export const GetContractsDocument = `
           name
         }
       }
-      serviceLineItems {
-        id
-        createdAt
-        updatedAt
-        name
-        billed
+      contractLineItems {
+        metadata {
+          id
+          created
+          lastUpdated
+          source
+          appSource
+          sourceOfTruth
+        }
+        description
+        billingCycle
         price
         quantity
-        source
         comments
-        sourceOfTruth
-        appSource
-        endedAt
+        serviceEnded
         parentId
+        serviceStarted
+        tax {
+          salesTax
+          vat
+          taxRate
+        }
       }
     }
   }
 }
     `;
+
 export const useGetContractsQuery = <
   TData = GetContractsQuery,
   TError = unknown,
 >(
   client: GraphQLClient,
   variables: GetContractsQueryVariables,
-  options?: UseQueryOptions<GetContractsQuery, TError, TData>,
+  options?: Omit<
+    UseQueryOptions<GetContractsQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseQueryOptions<GetContractsQuery, TError, TData>['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useQuery<GetContractsQuery, TError, TData>(
-    ['getContracts', variables],
-    fetcher<GetContractsQuery, GetContractsQueryVariables>(
+) => {
+  return useQuery<GetContractsQuery, TError, TData>({
+    queryKey: ['getContracts', variables],
+    queryFn: fetcher<GetContractsQuery, GetContractsQueryVariables>(
       client,
       GetContractsDocument,
       variables,
       headers,
     ),
-    options,
-  );
+    ...options,
+  });
+};
+
 useGetContractsQuery.document = GetContractsDocument;
 
 useGetContractsQuery.getKey = (variables: GetContractsQueryVariables) => [
   'getContracts',
   variables,
 ];
+
 export const useInfiniteGetContractsQuery = <
-  TData = GetContractsQuery,
+  TData = InfiniteData<GetContractsQuery>,
   TError = unknown,
 >(
-  pageParamKey: keyof GetContractsQueryVariables,
   client: GraphQLClient,
   variables: GetContractsQueryVariables,
-  options?: UseInfiniteQueryOptions<GetContractsQuery, TError, TData>,
+  options: Omit<
+    UseInfiniteQueryOptions<GetContractsQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseInfiniteQueryOptions<
+      GetContractsQuery,
+      TError,
+      TData
+    >['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useInfiniteQuery<GetContractsQuery, TError, TData>(
-    ['getContracts.infinite', variables],
-    (metaData) =>
-      fetcher<GetContractsQuery, GetContractsQueryVariables>(
-        client,
-        GetContractsDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-        headers,
-      )(),
-    options,
+) => {
+  return useInfiniteQuery<GetContractsQuery, TError, TData>(
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ['getContracts.infinite', variables],
+        queryFn: (metaData) =>
+          fetcher<GetContractsQuery, GetContractsQueryVariables>(
+            client,
+            GetContractsDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+            headers,
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
+};
 
 useInfiniteGetContractsQuery.getKey = (
   variables: GetContractsQueryVariables,
 ) => ['getContracts.infinite', variables];
+
 useGetContractsQuery.fetcher = (
   client: GraphQLClient,
   variables: GetContractsQueryVariables,
@@ -222,7 +288,7 @@ useGetContractsQuery.fetcher = (
   );
 
 useGetContractsQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: GetContractsQueryVariables) =>
+  (queryClient: QueryClient, variables?: GetContractsQueryVariables) =>
   (mutator: (cacheEntry: GetContractsQuery) => GetContractsQuery) => {
     const cacheKey = useGetContractsQuery.getKey(variables);
     const previousEntries =
@@ -233,7 +299,7 @@ useGetContractsQuery.mutateCacheEntry =
     return { previousEntries };
   };
 useInfiniteGetContractsQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: GetContractsQueryVariables) =>
+  (queryClient: QueryClient, variables?: GetContractsQueryVariables) =>
   (
     mutator: (
       cacheEntry: InfiniteData<GetContractsQuery>,

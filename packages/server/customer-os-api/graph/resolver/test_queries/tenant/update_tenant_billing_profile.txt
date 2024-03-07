@@ -1,0 +1,27 @@
+mutation UpdateBillingProfile($id: ID!) {
+tenant_UpdateBillingProfile(
+    input: {
+        id: $id
+        patch: true
+        phone: "phone"
+        addressLine1: "addressLine1"
+        addressLine2: "addressLine2"
+        addressLine3: "addressLine3"
+        locality: "locality"
+        country: "country"
+        zip: "zip"
+        legalName: "legalName"
+        domesticPaymentsBankInfo: "domesticPaymentsBankInfo"
+        internationalPaymentsBankInfo: "internationalPaymentsBankInfo"
+        vatNumber: "vatNumber"
+        sendInvoicesFrom: "sendInvoicesFrom"
+        sendInvoicesBcc: "sendInvoicesBcc"
+        canPayWithCard: true
+        canPayWithDirectDebitSEPA: true
+        canPayWithDirectDebitACH: true
+        canPayWithDirectDebitBacs: true
+        canPayWithPigeon: true
+    }) {
+    id
+  }
+}

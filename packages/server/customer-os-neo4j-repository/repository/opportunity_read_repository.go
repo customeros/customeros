@@ -6,7 +6,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -78,7 +78,7 @@ func (r *opportunityReadRepository) GetOpenRenewalOpportunityForContract(ctx con
 	params := map[string]any{
 		"tenant":        tenant,
 		"contractId":    contractId,
-		"internalStage": entity.OpportunityInternalStageOpen.String(),
+		"internalStage": enum.OpportunityInternalStageOpen.String(),
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -114,7 +114,7 @@ func (r *opportunityReadRepository) GetOpenRenewalOpportunitiesForOrganization(c
 	params := map[string]any{
 		"tenant":         tenant,
 		"organizationId": organizationId,
-		"internalStage":  entity.OpportunityInternalStageOpen.String(),
+		"internalStage":  enum.OpportunityInternalStageOpen.String(),
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

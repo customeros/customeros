@@ -117,7 +117,7 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
   return (
     <>
       <AnimatePresence initial={false}>
-        <Flex alignItems='center' ref={scope}>
+        <Flex alignItems='baseline' ref={scope}>
           {!selectedTags?.length && (
             <>
               <Text color='gray.500' mr={2} whiteSpace='nowrap'>

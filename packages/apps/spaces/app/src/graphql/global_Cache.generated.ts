@@ -1,7 +1,6 @@
 // @ts-nocheck remove this when typscript-react-query plugin is fixed
 import * as Types from '../types/__generated__/graphql.types';
 
-import type { InfiniteData } from '@tanstack/react-query';
 import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
 import {
@@ -9,6 +8,7 @@ import {
   useInfiniteQuery,
   UseQueryOptions,
   UseInfiniteQueryOptions,
+  InfiniteData,
 } from '@tanstack/react-query';
 
 function fetcher<TData, TVariables extends { [key: string]: any }>(
@@ -30,6 +30,7 @@ export type GlobalCacheQuery = {
   __typename?: 'Query';
   global_Cache: {
     __typename?: 'GlobalCache';
+    cdnLogoUrl: string;
     isGoogleActive: boolean;
     isGoogleTokenExpired: boolean;
     isOwner: boolean;
@@ -66,6 +67,7 @@ export type GlobalCacheQuery = {
 export const GlobalCacheDocument = `
     query global_Cache {
   global_Cache {
+    cdnLogoUrl
     user {
       id
       emails {
@@ -95,54 +97,80 @@ export const GlobalCacheDocument = `
   }
 }
     `;
+
 export const useGlobalCacheQuery = <TData = GlobalCacheQuery, TError = unknown>(
   client: GraphQLClient,
   variables?: GlobalCacheQueryVariables,
-  options?: UseQueryOptions<GlobalCacheQuery, TError, TData>,
+  options?: Omit<
+    UseQueryOptions<GlobalCacheQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseQueryOptions<GlobalCacheQuery, TError, TData>['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useQuery<GlobalCacheQuery, TError, TData>(
-    variables === undefined ? ['global_Cache'] : ['global_Cache', variables],
-    fetcher<GlobalCacheQuery, GlobalCacheQueryVariables>(
+) => {
+  return useQuery<GlobalCacheQuery, TError, TData>({
+    queryKey:
+      variables === undefined ? ['global_Cache'] : ['global_Cache', variables],
+    queryFn: fetcher<GlobalCacheQuery, GlobalCacheQueryVariables>(
       client,
       GlobalCacheDocument,
       variables,
       headers,
     ),
-    options,
-  );
+    ...options,
+  });
+};
+
 useGlobalCacheQuery.document = GlobalCacheDocument;
 
 useGlobalCacheQuery.getKey = (variables?: GlobalCacheQueryVariables) =>
   variables === undefined ? ['global_Cache'] : ['global_Cache', variables];
+
 export const useInfiniteGlobalCacheQuery = <
-  TData = GlobalCacheQuery,
+  TData = InfiniteData<GlobalCacheQuery>,
   TError = unknown,
 >(
-  pageParamKey: keyof GlobalCacheQueryVariables,
   client: GraphQLClient,
-  variables?: GlobalCacheQueryVariables,
-  options?: UseInfiniteQueryOptions<GlobalCacheQuery, TError, TData>,
+  variables: GlobalCacheQueryVariables,
+  options: Omit<
+    UseInfiniteQueryOptions<GlobalCacheQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseInfiniteQueryOptions<
+      GlobalCacheQuery,
+      TError,
+      TData
+    >['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useInfiniteQuery<GlobalCacheQuery, TError, TData>(
-    variables === undefined
-      ? ['global_Cache.infinite']
-      : ['global_Cache.infinite', variables],
-    (metaData) =>
-      fetcher<GlobalCacheQuery, GlobalCacheQueryVariables>(
-        client,
-        GlobalCacheDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-        headers,
-      )(),
-    options,
+) => {
+  return useInfiniteQuery<GlobalCacheQuery, TError, TData>(
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          optionsQueryKey ?? variables === undefined
+            ? ['global_Cache.infinite']
+            : ['global_Cache.infinite', variables],
+        queryFn: (metaData) =>
+          fetcher<GlobalCacheQuery, GlobalCacheQueryVariables>(
+            client,
+            GlobalCacheDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+            headers,
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
+};
 
 useInfiniteGlobalCacheQuery.getKey = (variables?: GlobalCacheQueryVariables) =>
   variables === undefined
     ? ['global_Cache.infinite']
     : ['global_Cache.infinite', variables];
+
 useGlobalCacheQuery.fetcher = (
   client: GraphQLClient,
   variables?: GlobalCacheQueryVariables,
@@ -156,7 +184,7 @@ useGlobalCacheQuery.fetcher = (
   );
 
 useGlobalCacheQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: GlobalCacheQueryVariables) =>
+  (queryClient: QueryClient, variables?: GlobalCacheQueryVariables) =>
   (mutator: (cacheEntry: GlobalCacheQuery) => GlobalCacheQuery) => {
     const cacheKey = useGlobalCacheQuery.getKey(variables);
     const previousEntries =
@@ -167,7 +195,7 @@ useGlobalCacheQuery.mutateCacheEntry =
     return { previousEntries };
   };
 useInfiniteGlobalCacheQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: GlobalCacheQueryVariables) =>
+  (queryClient: QueryClient, variables?: GlobalCacheQueryVariables) =>
   (
     mutator: (
       cacheEntry: InfiniteData<GlobalCacheQuery>,

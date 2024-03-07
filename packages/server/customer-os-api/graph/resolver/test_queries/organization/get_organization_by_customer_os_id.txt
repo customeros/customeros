@@ -1,0 +1,7 @@
+query GetOrganization($customerOsId: String!){
+  organization_ByCustomerOsId(customerOsId: $customerOsId) {
+    id
+    customerOsId
+    name
+  }
+}

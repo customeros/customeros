@@ -123,6 +123,7 @@ export const IntegrationsPanel = () => {
         position='relative'
         background='gray.25'
         maxHeight='calc(100vh - 1rem)'
+        maxW='50%'
       >
         <CardHeader px={6} pb={1}>
           <Heading as='h1' fontSize='2xl'>

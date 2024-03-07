@@ -69,7 +69,7 @@ func (server *server) Run(parentCtx context.Context) error {
 
 	// Setting up Postgres repositories
 	commonServices := commonservice.InitServices(postgresDb.GormDB, &neo4jDriver)
-	commonAuthServices := commonAuthService.InitServices(nil, postgresDb.GormDB)
+	commonAuthServices := commonAuthService.InitServices(nil, commonServices, postgresDb.GormDB)
 
 	// Setting up gRPC client
 	df := grpc_client.NewDialFactory(server.cfg)
@@ -112,6 +112,9 @@ func (server *server) Run(parentCtx context.Context) error {
 	route.AddIssueRoutes(ctx, r, serviceContainer, server.log, commonCache)
 	route.AddInteractionEventRoutes(ctx, r, serviceContainer, server.log, commonCache)
 	route.AddCommentRoutes(ctx, r, serviceContainer, server.log, commonCache)
+	route.AddInvoiceRoutes(ctx, r, serviceContainer, server.log, commonCache)
+	route.AddSyncEmailRoutes(ctx, r, serviceContainer, server.log, commonCache)
+	route.AddSlackRoutes(ctx, r, serviceContainer, server.log, commonCache)
 
 	r.GET("/health", HealthCheckHandler)
 	r.GET("/readiness", ReadinessHandler)

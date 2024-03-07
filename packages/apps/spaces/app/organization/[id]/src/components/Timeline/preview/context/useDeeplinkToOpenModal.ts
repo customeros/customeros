@@ -71,7 +71,8 @@ export const useDeepLinkToOpenModal = ({
 
   useEffect(() => {
     const eventId = searchParams?.get('events');
-    if (eventId && !modalContent) {
+    const invoiceId = searchParams?.get('invoice');
+    if (eventId && !modalContent && !invoiceId) {
       const selectedEvent = handleFindTimelineEventInCache(eventId);
 
       if (!selectedEvent) {
@@ -85,6 +86,14 @@ export const useDeepLinkToOpenModal = ({
         return;
       }
       setModalContent(selectedEvent as TimelineEvent);
+      setIsModalOpen(true);
+    }
+
+    if (invoiceId) {
+      setModalContent({
+        id: invoiceId,
+        __typename: 'Invoice',
+      } as TimelineEvent);
       setIsModalOpen(true);
     }
 

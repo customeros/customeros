@@ -1,17 +1,53 @@
 query GetContract($contractId: ID!) {
   contract(id: $contractId) {
-    id
-    serviceLineItems {
-      id
-      createdAt
-      updatedAt
-      name
-      billed
+    metadata {
+        id
+    }
+    billingDetails {
+        billingCycle
+        invoicingStarted
+        addressLine1
+        addressLine2
+        locality
+        region
+        country
+        postalCode
+        organizationLegalName
+        billingEmail
+        invoiceNote
+        canPayWithCard
+        canPayWithDirectDebit
+        canPayWithBankTransfer
+    }
+    committedPeriods
+    contractEnded
+    contractName
+    contractRenewalCycle
+    contractSigned
+    contractUrl
+    currency
+    billingEnabled
+    serviceStarted
+    contractStatus
+    contractLineItems {
+      metadata {
+        id
+        created
+        lastUpdated
+        source
+        sourceOfTruth
+        appSource
+      }
+      description
+      billingCycle
       price
       quantity
-      source
-      sourceOfTruth
-      appSource
+      tax {
+        taxRate
+      }
+    }
+    createdBy {
+        id
     }
   }
 }

@@ -7,6 +7,11 @@ import { signIn, useSession } from 'next-auth/react';
 import { useQueryClient } from '@tanstack/react-query';
 import { RevokeAccess } from 'services/admin/userAdminService';
 import {
+  useConnections,
+  useIntegrations,
+  useIntegrationApp,
+} from '@integration-app/react';
+import {
   GetSlackSettings,
   GetGoogleSettings,
   SlackSettingsInterface,
@@ -20,6 +25,7 @@ import { Text } from '@ui/typography/Text';
 import { Spinner } from '@ui/feedback/Spinner';
 import { Heading } from '@ui/typography/Heading';
 import { FormLabel } from '@ui/form/FormElement';
+import { Outlook } from '@ui/media/logos/Outlook';
 import { HStack, VStack } from '@ui/layout/Stack';
 import { Divider } from '@ui/presentation/Divider';
 import { Card, CardBody, CardHeader } from '@ui/layout/Card';
@@ -27,11 +33,41 @@ import { toastError, toastSuccess } from '@ui/presentation/Toast';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 
 export const AuthPanel = () => {
+  const iApp = useIntegrationApp();
+  const { items: iIntegrations } = useIntegrations();
+  const { items: iConnections, refresh, loading } = useConnections();
   const router = useRouter();
   const { data: session } = useSession();
   const queryClient = useQueryClient();
-
   const queryParams = useSearchParams();
+
+  const outlookConnection = iConnections.find(
+    (o) => o?.integration?.key === 'microsoft-outlook',
+  );
+
+  const handleOutlookToggle = async () => {
+    const outlookIntegration = iIntegrations.find(
+      (o) => o.key === 'microsoft-outlook',
+    );
+
+    if (!outlookIntegration) {
+      toastError(
+        'Microsoft Outlook integration not available',
+        'get-intergration-data',
+      );
+
+      return;
+    }
+
+    try {
+      await iApp
+        .integration(outlookIntegration.key)
+        .open({ showPoweredBy: false });
+      await refresh();
+    } catch (err) {
+      toastError('Integration failed', 'get-intergration-data');
+    }
+  };
 
   useEffect(() => {
     if (
@@ -117,7 +153,9 @@ export const AuthPanel = () => {
             .then((res: OAuthUserSettingsInterface) => {
               setGoogleSettings(res);
               setGoogleSettingsLoading(false);
-              queryClient.invalidateQueries(useGlobalCacheQuery.getKey());
+              queryClient.invalidateQueries({
+                queryKey: useGlobalCacheQuery.getKey(),
+              });
             })
             .catch(() => {
               setGoogleSettingsLoading(false);
@@ -196,6 +234,7 @@ export const AuthPanel = () => {
         boxShadow='none'
         position='relative'
         background='gray.25'
+        maxW='50%'
       >
         <CardHeader px={6} pb={2}>
           <Flex gap='1' align='center' mb='2'>
@@ -231,6 +270,53 @@ export const AuthPanel = () => {
                   isChecked={googleSettings.gmailSyncEnabled}
                   colorScheme='green'
                   onChange={(event) => handleSyncGoogleToggle(event)}
+                />
+              )}
+            </HStack>
+          </Flex>
+        </CardBody>
+      </Card>
+
+      <Card
+        bg='#FCFCFC'
+        borderRadius='2xl'
+        flexDirection='column'
+        boxShadow='none'
+        position='relative'
+        background='gray.25'
+        maxW='50%'
+      >
+        <CardHeader px={6} pb={2}>
+          <Flex gap='1' align='center' mb='2'>
+            <Outlook boxSize='6' />
+            <Heading as='h1' fontSize='lg' color='gray.700'>
+              Microsoft Outlook
+            </Heading>
+          </Flex>
+          <Divider></Divider>
+        </CardHeader>
+
+        <CardBody padding={6} pr={0} pt={0} position='unset'>
+          <Text noOfLines={2} mt={2} mb={3}>
+            Enable OAuth Integration to get access to your microsoft outlook
+            emails
+          </Text>
+          <Flex direction={'column'} gap={2} width={'250px'}>
+            <HStack>
+              <VStack alignItems={'start'}>
+                <Flex gap='1' align='center'>
+                  <Outlook boxSize='6' />
+                  <FormLabel mb='0'>Sync Microsoft Outlook</FormLabel>
+                </Flex>
+              </VStack>
+
+              {loading ? (
+                <Spinner size='sm' color='green.500' />
+              ) : (
+                <Switch
+                  colorScheme='green'
+                  onChange={handleOutlookToggle}
+                  defaultChecked={!!outlookConnection}
                 />
               )}
             </HStack>

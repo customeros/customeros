@@ -42,10 +42,11 @@ func (a *ServiceLineItemAggregate) createServiceLineItem(ctx context.Context, cm
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
 
-	// If the service line item is one-time, set licenses to 0
-	if !cmd.DataFields.Billed.IsRecurrent() {
-		cmd.DataFields.Quantity = 0
+	// Adjust vat rate
+	if cmd.DataFields.VatRate < 0 {
+		cmd.DataFields.VatRate = 0
 	}
+	cmd.DataFields.VatRate = utils.TruncateFloat64(cmd.DataFields.VatRate, 2)
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(cmd.CreatedAt, utils.Now())
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, createdAtNotNil)
@@ -57,6 +58,11 @@ func (a *ServiceLineItemAggregate) createServiceLineItem(ctx context.Context, cm
 		return err
 	}
 
+	// if this is parent service line item, set startedAt to start of day in UTC
+	if cmd.DataFields.ParentId == GetServiceLineItemObjectID(a.GetID(), a.Tenant) {
+		startedAtNotNil = utils.StartOfDayInUTC(startedAtNotNil)
+	}
+
 	createEvent, err := event.NewServiceLineItemCreateEvent(
 		a,
 		cmd.DataFields,
@@ -65,6 +71,7 @@ func (a *ServiceLineItemAggregate) createServiceLineItem(ctx context.Context, cm
 		updatedAtNotNil,
 		startedAtNotNil,
 		cmd.EndedAt,
+		cmd.PreviousVersionId,
 	)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -99,12 +106,19 @@ func (a *ServiceLineItemAggregate) updateServiceLineItem(ctx context.Context, cm
 		return errors.New(constants.FieldValidation + ": cannot change billed type from 'once' to a frequency-based option or vice versa")
 	}
 
+	// Adjust vat rate
+	if cmd.DataFields.VatRate < 0 {
+		cmd.DataFields.VatRate = 0
+	}
+	cmd.DataFields.VatRate = utils.TruncateFloat64(cmd.DataFields.VatRate, 2)
+
 	// Prepare the data for the update event
 	updateEvent, err := event.NewServiceLineItemUpdateEvent(
 		a,
 		cmd.DataFields,
 		cmd.Source,
 		updatedAtNotNil,
+		cmd.StartedAt,
 	)
 	if err != nil {
 		tracing.TraceErr(span, err)

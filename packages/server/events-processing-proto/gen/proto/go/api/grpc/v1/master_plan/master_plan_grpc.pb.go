@@ -26,6 +26,7 @@ type MasterPlanGrpcServiceClient interface {
 	UpdateMasterPlan(ctx context.Context, in *UpdateMasterPlanGrpcRequest, opts ...grpc.CallOption) (*MasterPlanIdGrpcResponse, error)
 	CreateMasterPlanMilestone(ctx context.Context, in *CreateMasterPlanMilestoneGrpcRequest, opts ...grpc.CallOption) (*MasterPlanMilestoneIdGrpcResponse, error)
 	UpdateMasterPlanMilestone(ctx context.Context, in *UpdateMasterPlanMilestoneGrpcRequest, opts ...grpc.CallOption) (*MasterPlanMilestoneIdGrpcResponse, error)
+	ReorderMasterPlanMilestones(ctx context.Context, in *ReorderMasterPlanMilestonesGrpcRequest, opts ...grpc.CallOption) (*MasterPlanIdGrpcResponse, error)
 }
 
 type masterPlanGrpcServiceClient struct {
@@ -72,6 +73,15 @@ func (c *masterPlanGrpcServiceClient) UpdateMasterPlanMilestone(ctx context.Cont
 	return out, nil
 }
 
+func (c *masterPlanGrpcServiceClient) ReorderMasterPlanMilestones(ctx context.Context, in *ReorderMasterPlanMilestonesGrpcRequest, opts ...grpc.CallOption) (*MasterPlanIdGrpcResponse, error) {
+	out := new(MasterPlanIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/MasterPlanGrpcService/ReorderMasterPlanMilestones", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MasterPlanGrpcServiceServer is the server API for MasterPlanGrpcService service.
 // All implementations should embed UnimplementedMasterPlanGrpcServiceServer
 // for forward compatibility
@@ -80,6 +90,7 @@ type MasterPlanGrpcServiceServer interface {
 	UpdateMasterPlan(context.Context, *UpdateMasterPlanGrpcRequest) (*MasterPlanIdGrpcResponse, error)
 	CreateMasterPlanMilestone(context.Context, *CreateMasterPlanMilestoneGrpcRequest) (*MasterPlanMilestoneIdGrpcResponse, error)
 	UpdateMasterPlanMilestone(context.Context, *UpdateMasterPlanMilestoneGrpcRequest) (*MasterPlanMilestoneIdGrpcResponse, error)
+	ReorderMasterPlanMilestones(context.Context, *ReorderMasterPlanMilestonesGrpcRequest) (*MasterPlanIdGrpcResponse, error)
 }
 
 // UnimplementedMasterPlanGrpcServiceServer should be embedded to have forward compatible implementations.
@@ -97,6 +108,9 @@ func (UnimplementedMasterPlanGrpcServiceServer) CreateMasterPlanMilestone(contex
 }
 func (UnimplementedMasterPlanGrpcServiceServer) UpdateMasterPlanMilestone(context.Context, *UpdateMasterPlanMilestoneGrpcRequest) (*MasterPlanMilestoneIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateMasterPlanMilestone not implemented")
+}
+func (UnimplementedMasterPlanGrpcServiceServer) ReorderMasterPlanMilestones(context.Context, *ReorderMasterPlanMilestonesGrpcRequest) (*MasterPlanIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ReorderMasterPlanMilestones not implemented")
 }
 
 // UnsafeMasterPlanGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -182,6 +196,24 @@ func _MasterPlanGrpcService_UpdateMasterPlanMilestone_Handler(srv interface{}, c
 	return interceptor(ctx, in, info, handler)
 }
 
+func _MasterPlanGrpcService_ReorderMasterPlanMilestones_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReorderMasterPlanMilestonesGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MasterPlanGrpcServiceServer).ReorderMasterPlanMilestones(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/MasterPlanGrpcService/ReorderMasterPlanMilestones",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MasterPlanGrpcServiceServer).ReorderMasterPlanMilestones(ctx, req.(*ReorderMasterPlanMilestonesGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // MasterPlanGrpcService_ServiceDesc is the grpc.ServiceDesc for MasterPlanGrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -204,6 +236,10 @@ var MasterPlanGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateMasterPlanMilestone",
 			Handler:    _MasterPlanGrpcService_UpdateMasterPlanMilestone_Handler,
+		},
+		{
+			MethodName: "ReorderMasterPlanMilestones",
+			Handler:    _MasterPlanGrpcService_ReorderMasterPlanMilestones_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

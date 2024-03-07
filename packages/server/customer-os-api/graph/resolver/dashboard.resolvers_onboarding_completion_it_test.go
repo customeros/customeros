@@ -48,7 +48,7 @@ func TestQueryResolver_Dashboard_OnboardingCompletion_InvalidPeriod(t *testing.T
 			"end":   "2020-01-01T00:00:00.000Z",
 		})
 
-	require.Contains(t, "Failed to get the data for period", response.Message)
+	require.Contains(t, response.Message, "Failed to get the data for period")
 }
 
 func TestQueryResolver_Dashboard_OnboardingCompletion_SingleMonth_OneCompleted_OneNotCompleted(t *testing.T) {

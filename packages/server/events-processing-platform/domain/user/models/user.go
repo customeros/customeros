@@ -46,28 +46,55 @@ func (u *User) String() string {
 	return fmt.Sprintf("User{ID: %s, Name: %s, FirstName: %s, LastName: %s, Source: %s, CreatedAt: %s, UpdatedAt: %s, PhoneNumbers: %v, Emails: %v}", u.ID, u.Name, u.FirstName, u.LastName, u.Source, u.CreatedAt, u.UpdatedAt, u.PhoneNumbers, u.Emails)
 }
 
-func (u *User) HasEmail(emailId, label string, primary bool) bool {
+func (u *User) HasEmail(emailId, label string) bool {
 	if len(u.Emails) == 0 {
 		return false
 	}
 	if email, ok := u.Emails[emailId]; ok {
-		return email.Label == label && email.Primary == primary
+		return email.Label == label
 	}
 	return false
 }
 
-func (u *User) SameData(fields UserDataFields, externalSystem commonmodel.ExternalSystem) bool {
+func (u *User) HasPhoneNumber(phoneNumberId, label string) bool {
+	if len(u.PhoneNumbers) == 0 {
+		return false
+	}
+	if phoneNumber, ok := u.PhoneNumbers[phoneNumberId]; ok {
+		return phoneNumber.Label == label
+	}
+	return false
+}
+
+func (u *User) SameUserData(fields UserDataFields, externalSystem commonmodel.ExternalSystem) bool {
+	if !externalSystem.Available() {
+		return false
+	}
+
 	if externalSystem.Available() && !u.HasExternalSystem(externalSystem) {
 		return false
 	}
-	if u.Name == fields.Name &&
-		u.FirstName == fields.FirstName &&
-		u.LastName == fields.LastName &&
-		u.Internal == fields.Internal &&
-		u.Bot == fields.Bot &&
-		u.Timezone == fields.Timezone &&
-		u.ProfilePhotoUrl == fields.ProfilePhotoUrl {
-		return true
+
+	if u.Source.SourceOfTruth == externalSystem.ExternalSystemId {
+		if u.Name == fields.Name &&
+			u.FirstName == fields.FirstName &&
+			u.LastName == fields.LastName &&
+			u.Internal == fields.Internal &&
+			u.Bot == fields.Bot &&
+			u.Timezone == fields.Timezone &&
+			u.ProfilePhotoUrl == fields.ProfilePhotoUrl {
+			return true
+		}
+	} else {
+		if (u.Name != "" || u.Name == fields.Name) &&
+			(u.FirstName != "" || u.FirstName == fields.FirstName) &&
+			(u.LastName != "" || u.LastName == fields.LastName) &&
+			(u.Internal != false || u.Internal == fields.Internal) &&
+			(u.Bot != false || u.Bot == fields.Bot) &&
+			(u.Timezone != "" || u.Timezone == fields.Timezone) &&
+			(u.ProfilePhotoUrl != "" || u.ProfilePhotoUrl == fields.ProfilePhotoUrl) {
+			return true
+		}
 	}
 	return false
 }

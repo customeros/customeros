@@ -9,6 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	jobRoleProto "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/job_role"
 	userProto "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/user"
@@ -22,11 +23,11 @@ func TestQueryResolver_UserByEmail(t *testing.T) {
 	otherTenant := "other"
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateTenant(ctx, driver, otherTenant)
-	userId1 := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
+	userId1 := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{
 		FirstName: "first",
 		LastName:  "last",
 	})
-	userId2 := neo4jt.CreateUser(ctx, driver, otherTenant, entity.UserEntity{
+	userId2 := neo4jtest.CreateUser(ctx, driver, otherTenant, neo4jentity.UserEntity{
 		FirstName: "otherFirst",
 		LastName:  "otherLast",
 	})
@@ -54,12 +55,12 @@ func TestQueryResolver_Users(t *testing.T) {
 	otherTenant := "other"
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateTenant(ctx, driver, otherTenant)
-	userId1 := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
+	userId1 := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{
 		FirstName: "first",
 		LastName:  "last",
 		Roles:     []string{"OWNER", "USER"},
 	})
-	userId2 := neo4jt.CreateUser(ctx, driver, otherTenant, entity.UserEntity{
+	userId2 := neo4jtest.CreateUser(ctx, driver, otherTenant, neo4jentity.UserEntity{
 		FirstName: "otherFirst",
 		LastName:  "otherLast",
 	})
@@ -92,24 +93,24 @@ func TestQueryResolver_Users_FilteredAndSorted(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
+	neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{
 		FirstName: "first_f_internal",
 		LastName:  "first_l_internal",
 		Internal:  true,
 	})
-	neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
+	neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{
 		FirstName: "first_f",
 		LastName:  "first_l",
 	})
-	neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
+	neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{
 		FirstName: "second_f",
 		LastName:  "second_l",
 	})
-	neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
+	neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{
 		FirstName: "third_f",
 		LastName:  "third_l",
 	})
-	neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
+	neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{
 		FirstName: "fourth_f",
 		LastName:  "fourth_l",
 	})
@@ -138,12 +139,12 @@ func TestQueryResolver_User(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	userId := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
+	userId := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{
 		FirstName:       "first",
 		LastName:        "user",
 		ProfilePhotoUrl: "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png",
 	})
-	neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
+	neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{
 		FirstName: "second",
 		LastName:  "user",
 	})
@@ -173,7 +174,7 @@ func TestQueryResolver_User_WithPhoneNumbers(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	userId := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
 	phoneNumberId1 := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, userId, "+1111", true, "MAIN")
 	phoneNumberId2 := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, userId, "+2222", false, "WORK")
 
@@ -223,7 +224,7 @@ func TestMutationResolver_AddJobRoleInTenant(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	userId1 := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
+	userId1 := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{
 		FirstName: "first",
 		LastName:  "last",
 		Roles:     []string{"USER"},
@@ -290,7 +291,7 @@ func TestMutationResolver_GetUserJobRoleInTenant(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	userId1 := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
+	userId1 := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{
 		FirstName: "first",
 		LastName:  "last",
 		Roles:     []string{"USER"},
@@ -314,7 +315,7 @@ func TestMutationResolver_GetUserCalendarInTenant(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	userId1 := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
+	userId1 := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{
 		FirstName: "first",
 		LastName:  "last",
 		Roles:     []string{"USER"},

@@ -13,8 +13,11 @@ import (
 )
 
 type PhoneNumberRepository interface {
+	// Deprecated
 	Exists(ctx context.Context, tenant, phoneNumber string) (bool, error)
+	// Deprecated
 	GetById(ctx context.Context, phoneNumberId string) (*dbtype.Node, error)
+	// Deprecated
 	GetByPhoneNumber(ctx context.Context, tenant, phoneNumber string) (*dbtype.Node, error)
 }
 

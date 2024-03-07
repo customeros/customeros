@@ -16,6 +16,9 @@ enum ExternalSystemType {
     SALESFORCE
     STRIPE
     MIXPANEL
+    CLOSE
+    OUTLOOK
+    UNTHREAD
 }
 
 type ExternalSystem {

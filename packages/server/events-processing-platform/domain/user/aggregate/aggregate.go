@@ -9,6 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/pkg/errors"
+	"strings"
 )
 
 const (
@@ -53,6 +54,9 @@ func (a *UserAggregate) When(event eventstore.Event) error {
 		return a.onRemoveRole(event)
 
 	default:
+		if strings.HasPrefix(event.GetEventType(), "$") {
+			return nil
+		}
 		err := eventstore.ErrInvalidEventType
 		err.EventType = event.GetEventType()
 		return err

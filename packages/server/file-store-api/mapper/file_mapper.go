@@ -2,35 +2,37 @@ package mapper
 
 import (
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/dto"
+	graph_model "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model"
+	fs "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/model"
 )
 
-func MapFileEntityToDTO(input *model.File, serviceUrl string) *dto.File {
+func MapFileEntityToDTO(input *model.File, serviceUrl string) *fs.FileDTO {
 	if input == nil {
 		return nil
 	}
-	file := dto.File{
+	file := fs.FileDTO{
 		Id:          input.ID,
-		Name:        input.Name,
-		Extension:   input.Extension,
-		Mime:        input.MIME,
-		Length:      input.Length,
+		FileName:    input.FileName,
+		MimeType:    input.MimeType,
+		Size:        input.Size,
 		MetadataUrl: fmt.Sprintf("%s/file/%s", serviceUrl, input.ID),
 		DownloadUrl: fmt.Sprintf("%s/file/%s/download", serviceUrl, input.ID),
+		CdnUrl:      input.CdnUrl,
 	}
 	return &file
 }
 
-func MapAttachmentResponseToFileEntity(input *model.Attachment) *model.File {
+func MapAttachmentResponseToFileEntity(input *graph_model.Attachment) *model.File {
 	if input == nil {
 		return nil
 	}
 	return &model.File{
-		ID:        input.Id,
-		Name:      input.Name,
-		Extension: input.Extension,
-		MIME:      input.MimeType,
-		Length:    input.Size,
+		ID:       input.ID,
+		FileName: input.FileName,
+		MimeType: input.MimeType,
+		BasePath: input.BasePath,
+		Size:     input.Size,
+		CdnUrl:   input.CdnURL,
 	}
 }

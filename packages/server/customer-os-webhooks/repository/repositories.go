@@ -15,12 +15,10 @@ type Repositories struct {
 	Neo4jRepositories            *neo4jrepository.Repositories
 	CommonRepositories           *commonRepository.Repositories
 	SyncRunWebhookRepository     repository.SyncRunWebhookRepository
-	ExternalSystemRepository     ExternalSystemRepository
 	UserRepository               UserRepository
 	LocationRepository           LocationRepository
 	OrganizationRepository       OrganizationRepository
 	ContactRepository            ContactRepository
-	IssueRepository              IssueRepository
 	TenantRepository             TenantRepository
 	EmailRepository              EmailRepository
 	PhoneNumberRepository        PhoneNumberRepository
@@ -41,14 +39,13 @@ func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB, neo4jDatabase s
 		},
 		neo4jDatabase:            neo4jDatabase,
 		CommonRepositories:       commonRepository.InitRepositories(gormDb, driver),
+		Neo4jRepositories:        neo4jrepository.InitNeo4jRepositories(driver, neo4jDatabase),
 		SyncRunWebhookRepository: repository.NewSyncRunWebhookRepository(gormDb),
 	}
-	repositories.ExternalSystemRepository = NewExternalSystemRepository(driver, neo4jDatabase)
 	repositories.UserRepository = NewUserRepository(driver)
 	repositories.LocationRepository = NewLocationRepository(driver)
 	repositories.OrganizationRepository = NewOrganizationRepository(driver)
 	repositories.ContactRepository = NewContactRepository(driver, neo4jDatabase)
-	repositories.IssueRepository = NewIssueRepository(driver, neo4jDatabase)
 	repositories.TenantRepository = NewTenantRepository(driver)
 	repositories.EmailRepository = NewEmailRepository(driver)
 	repositories.PhoneNumberRepository = NewPhoneNumberRepository(driver)

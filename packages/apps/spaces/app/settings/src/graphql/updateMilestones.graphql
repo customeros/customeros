@@ -1,0 +1,11 @@
+mutation updateMilestones($input: [MasterPlanMilestoneUpdateInput!]!) {
+  masterPlanMilestone_BulkUpdate(input: $input) {
+    id
+    name
+    order
+    durationHours
+    optional
+    items
+    retired
+  }
+}

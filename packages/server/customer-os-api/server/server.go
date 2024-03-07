@@ -4,6 +4,16 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"io"
+	"net/http"
+	"os"
+	"os/signal"
+	"runtime"
+	"strconv"
+	"strings"
+	"syscall"
+	"time"
+
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
@@ -38,15 +48,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"go.uber.org/zap"
-	"io"
-	"net/http"
-	"os"
-	"os/signal"
-	"runtime"
-	"strconv"
-	"strings"
-	"syscall"
-	"time"
 )
 
 type server struct {
@@ -95,7 +96,7 @@ func (server *server) Run(parentCtx context.Context) error {
 
 	// Setting up Postgres repositories
 	commonServices := commonservice.InitServices(db.GormDB, &neo4jDriver)
-	commonAuthServices := commonAuthService.InitServices(nil, db.GormDB)
+	commonAuthServices := commonAuthService.InitServices(nil, commonServices, db.GormDB)
 
 	// Setting up gRPC client
 	df := grpc_client.NewDialFactory(server.cfg)
@@ -128,7 +129,7 @@ func (server *server) Run(parentCtx context.Context) error {
 
 	r.POST("/query",
 		cosHandler.TracingEnhancer(ctx, "/query"),
-		apiKeyCheckerHTTPMiddleware(commonServices.CommonRepositories.AppKeyRepository, commonservice.CUSTOMER_OS_API, commonservice.WithCache(commonCache)),
+		apiKeyCheckerHTTPMiddleware(commonServices.CommonRepositories.TenantWebhookApiKeyRepository, commonServices.CommonRepositories.AppKeyRepository, commonservice.CUSTOMER_OS_API, commonservice.WithCache(commonCache)),
 		tenantUserContextEnhancerMiddleware(commonservice.USERNAME_OR_TENANT, commonServices.CommonRepositories, commonservice.WithCache(commonCache)),
 		server.graphqlHandler(grpcContainer, serviceContainer))
 	if server.cfg.GraphQL.PlaygroundEnabled {
@@ -136,7 +137,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	}
 	r.GET("/whoami",
 		cosHandler.TracingEnhancer(ctx, "/whoami"),
-		commonservice.ApiKeyCheckerHTTP(commonServices.CommonRepositories.AppKeyRepository, commonservice.CUSTOMER_OS_API, commonservice.WithCache(commonCache)),
+		commonservice.ApiKeyCheckerHTTP(commonServices.CommonRepositories.TenantWebhookApiKeyRepository, commonServices.CommonRepositories.AppKeyRepository, commonservice.CUSTOMER_OS_API, commonservice.WithCache(commonCache)),
 		rest.WhoamiHandler(serviceContainer))
 	r.POST("/admin/query",
 		cosHandler.TracingEnhancer(ctx, "/admin/query"),
@@ -172,8 +173,8 @@ func (server *server) Run(parentCtx context.Context) error {
 }
 
 // Define a custom middleware adapter for ApiKeyCheckerHTTP.
-func apiKeyCheckerHTTPMiddleware(appKeyRepo commonrepositorypostgres.AppKeyRepository, app commonservice.App, opts ...commonservice.CommonServiceOption) func(c *gin.Context) {
-	apiKeyChecker := commonservice.ApiKeyCheckerHTTP(appKeyRepo, app, opts...)
+func apiKeyCheckerHTTPMiddleware(tenantApiKeyRepo commonrepositorypostgres.TenantWebhookApiKeyRepository, appKeyRepo commonrepositorypostgres.AppKeyRepository, app commonservice.App, opts ...commonservice.CommonServiceOption) func(c *gin.Context) {
+	apiKeyChecker := commonservice.ApiKeyCheckerHTTP(tenantApiKeyRepo, appKeyRepo, app, opts...)
 	return func(c *gin.Context) {
 		if isIntrospectionQuery(c.Request) {
 			c.Next() // Skip ApiKeyCheckerHTTP and continue to the next handler.

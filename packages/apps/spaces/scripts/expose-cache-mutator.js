@@ -28,7 +28,6 @@ const plugin = (_schema, documents, _config) => {
 
   if (output)
     return {
-      prepend: [`import type { InfiniteData } from '@tanstack/react-query';`],
       content: output,
     };
 };
@@ -45,7 +44,7 @@ function template(name, options = { infinite: false }) {
     : queryName; // GetOrganizationsQuery
 
   return `${hookName}.mutateCacheEntry =
-  (queryClient: QueryClient, variables: ${variablesType}) =>
+  (queryClient: QueryClient, variables?: ${variablesType}) =>
   (mutator: (cacheEntry: ${queryType}) => ${queryType}) => {
     const cacheKey = ${hookName}.getKey(variables);
     const previousEntries =

@@ -95,3 +95,12 @@
 .lp_pass {
   display: none !important;
 }
+@keyframes line-animated {
+  0% {
+    width: 0;
+  }
+
+  100% {
+    width: 100%;
+  }
+}

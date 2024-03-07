@@ -1,0 +1,8 @@
+mutation CreateBillingProfile($organizationId :ID!) {
+billingProfile_Create(
+    input: {
+        organizationId: $organizationId
+        legalName: "New profile"
+        taxId: "123456789"
+    })
+}

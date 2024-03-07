@@ -95,6 +95,10 @@ func comparisonOperatorToEnum(co model.ComparisonOperator) utils.ComparisonOpera
 		return utils.GTE
 	case model.ComparisonOperatorBetween:
 		return utils.BETWEEN
+	case model.ComparisonOperatorIsNull:
+		return utils.IS_NULL
+	case model.ComparisonOperatorIsEmpty:
+		return utils.IS_EMPTY
 	default:
 		return utils.EQUALS
 	}

@@ -1,0 +1,8 @@
+query TenantSettings {
+    tenantSettings {
+     logoUrl
+     logoRepositoryFileId
+     baseCurrency
+     billingEnabled
+    }
+}

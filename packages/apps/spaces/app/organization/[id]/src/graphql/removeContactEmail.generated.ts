@@ -5,28 +5,22 @@ import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
 import { useMutation, UseMutationOptions } from '@tanstack/react-query';
 
-function fetcher<TData, TVariables extends { [key: string]: any }>(
-  client: GraphQLClient,
-  query: string,
-  variables?: TVariables,
-  requestHeaders?: RequestInit['headers'],
-) {
-  return async (): Promise<TData> =>
-    client.request({
-      document: query,
-      variables,
-      requestHeaders,
-    });
+function fetcher<TData, TVariables extends { [key: string]: any }>(client: GraphQLClient, query: string, variables?: TVariables, requestHeaders?: RequestInit['headers']) {
+  return async (): Promise<TData> => client.request({
+    document: query,
+    variables,
+    requestHeaders
+  });
 }
 export type RemoveContactEmailMutationVariables = Types.Exact<{
-  contactId: Types.Scalars['ID'];
-  email: Types.Scalars['String'];
+  contactId: Types.Scalars['ID']['input'];
+  email: Types.Scalars['String']['input'];
 }>;
 
-export type RemoveContactEmailMutation = {
-  __typename?: 'Mutation';
-  emailRemoveFromContact: { __typename?: 'Result'; result: boolean };
-};
+
+export type RemoveContactEmailMutation = { __typename?: 'Mutation', emailRemoveFromContact: { __typename?: 'Result', result: boolean } };
+
+
 
 export const RemoveContactEmailDocument = `
     mutation removeContactEmail($contactId: ID!, $email: String!) {
@@ -35,45 +29,25 @@ export const RemoveContactEmailDocument = `
   }
 }
     `;
+
 export const useRemoveContactEmailMutation = <
-  TError = unknown,
-  TContext = unknown,
->(
-  client: GraphQLClient,
-  options?: UseMutationOptions<
-    RemoveContactEmailMutation,
-    TError,
-    RemoveContactEmailMutationVariables,
-    TContext
-  >,
-  headers?: RequestInit['headers'],
-) =>
-  useMutation<
-    RemoveContactEmailMutation,
-    TError,
-    RemoveContactEmailMutationVariables,
-    TContext
-  >(
-    ['removeContactEmail'],
-    (variables?: RemoveContactEmailMutationVariables) =>
-      fetcher<RemoveContactEmailMutation, RemoveContactEmailMutationVariables>(
-        client,
-        RemoveContactEmailDocument,
-        variables,
-        headers,
-      )(),
-    options,
-  );
+      TError = unknown,
+      TContext = unknown
+    >(
+      client: GraphQLClient,
+      options?: UseMutationOptions<RemoveContactEmailMutation, TError, RemoveContactEmailMutationVariables, TContext>,
+      headers?: RequestInit['headers']
+    ) => {
+    
+    return useMutation<RemoveContactEmailMutation, TError, RemoveContactEmailMutationVariables, TContext>(
+      {
+    mutationKey: ['removeContactEmail'],
+    mutationFn: (variables?: RemoveContactEmailMutationVariables) => fetcher<RemoveContactEmailMutation, RemoveContactEmailMutationVariables>(client, RemoveContactEmailDocument, variables, headers)(),
+    ...options
+  }
+    )};
+
 useRemoveContactEmailMutation.getKey = () => ['removeContactEmail'];
 
-useRemoveContactEmailMutation.fetcher = (
-  client: GraphQLClient,
-  variables: RemoveContactEmailMutationVariables,
-  headers?: RequestInit['headers'],
-) =>
-  fetcher<RemoveContactEmailMutation, RemoveContactEmailMutationVariables>(
-    client,
-    RemoveContactEmailDocument,
-    variables,
-    headers,
-  );
+
+useRemoveContactEmailMutation.fetcher = (client: GraphQLClient, variables: RemoveContactEmailMutationVariables, headers?: RequestInit['headers']) => fetcher<RemoveContactEmailMutation, RemoveContactEmailMutationVariables>(client, RemoveContactEmailDocument, variables, headers);

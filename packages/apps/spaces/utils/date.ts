@@ -1,7 +1,10 @@
 import { format, utcToZonedTime } from 'date-fns-tz';
 import {
+  set,
+  formatRFC3339,
   formatDistanceToNow,
   differenceInMinutes,
+  isPast as isPastDateFns,
   isToday as isTodayDateFns,
   isBefore as isBeforeDateFns,
   isFuture as isFutureDateFns,
@@ -9,6 +12,7 @@ import {
   isSameDay as isSameDayDateFns,
   addMonths as addMonthsDateFns,
   formatDuration as formatDurationDateFns,
+  differenceInDays as differenceInDaysDateFns,
   differenceInMonths as differenceInMonthsDateFns,
 } from 'date-fns';
 
@@ -19,6 +23,7 @@ export class DateTimeUtils {
   public static dateWithHour = 'd MMM yyyy • HH:mm'; // Output: "19 Jun 2023 • 14:34"
   public static date = 'd MMM yyyy'; // Output: "19 Jun 2023"
   public static dateWithAbreviatedMonth = 'd MMM yyyy'; // Output: "1 Aug 2024"
+  public static dateWithShortYear = 'd MMM yy'; // Output: "1 Aug '24"
   public static abreviatedMonth = 'MMM'; // Output: "Aug"
   public static shortWeekday = 'iiiiii'; // Output: "We"
   public static longWeekday = 'iiii'; // Output: "Wednesday"
@@ -97,6 +102,10 @@ export class DateTimeUtils {
   public static isFuture(date: string): boolean {
     return isFutureDateFns(this.getDate(date));
   }
+
+  public static isPast(date: string): boolean {
+    return isPastDateFns(this.getDate(date));
+  }
   public static isToday(date: string): boolean {
     return isTodayDateFns(this.getDate(date));
   }
@@ -126,6 +135,13 @@ export class DateTimeUtils {
     );
   }
 
+  public static differenceInDays(dateLeft: string, dateRight: string): number {
+    return differenceInDaysDateFns(
+      this.getDate(dateLeft),
+      this.getDate(dateRight),
+    );
+  }
+
   public static convertToTimeZone(
     date: string | Date,
     formatString: string,
@@ -137,5 +153,19 @@ export class DateTimeUtils {
     return format(zonedDateStr ?? _date, formatString, {
       timeZone: timeZone || undefined,
     });
+  }
+
+  public static toISOMidnight(date: string | Date): string {
+    const dateAtMidnight = set(
+      typeof date === 'string' ? this.getDate(date) : date,
+      {
+        hours: 0,
+        minutes: 0,
+        seconds: 0,
+        milliseconds: 0,
+      },
+    );
+
+    return formatRFC3339(dateAtMidnight);
   }
 }

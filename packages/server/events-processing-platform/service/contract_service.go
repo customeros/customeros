@@ -3,7 +3,9 @@ package service
 import (
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/model"
@@ -17,20 +19,23 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type contractService struct {
 	contractpb.UnimplementedContractGrpcServiceServer
 	log                     logger.Logger
 	contractCommandHandlers *command_handler.CommandHandlers
+	contractRequestHandler  contract.ContractRequestHandler
 	aggregateStore          eventstore.AggregateStore
 }
 
-func NewContractService(log logger.Logger, commandHandlers *command_handler.CommandHandlers, aggregateStore eventstore.AggregateStore) *contractService {
+func NewContractService(log logger.Logger, commandHandlers *command_handler.CommandHandlers, aggregateStore eventstore.AggregateStore, cfg *config.Config) *contractService {
 	return &contractService{
 		log:                     log,
 		contractCommandHandlers: commandHandlers,
 		aggregateStore:          aggregateStore,
+		contractRequestHandler:  contract.NewContractRequestHandler(log, aggregateStore, cfg.Utils),
 	}
 }
 
@@ -56,10 +61,7 @@ func (s *contractService) CreateContract(ctx context.Context, request *contractp
 
 	contractId := uuid.New().String()
 
-	// Convert any protobuf timestamp to time.Time, if necessary
 	createdAt, updatedAt := convertCreateAndUpdateProtoTimestampsToTime(request.CreatedAt, request.UpdatedAt)
-	serviceStartedAt := utils.TimestampProtoToTimePtr(request.ServiceStartedAt)
-	signedAt := utils.TimestampProtoToTimePtr(request.SignedAt)
 
 	source := commonmodel.Source{}
 	source.FromGrpc(request.SourceFields)
@@ -72,14 +74,18 @@ func (s *contractService) CreateContract(ctx context.Context, request *contractp
 		request.Tenant,
 		request.LoggedInUserId,
 		model.ContractDataFields{
-			OrganizationId:   request.OrganizationId,
-			Name:             request.Name,
-			ContractUrl:      request.ContractUrl,
-			CreatedByUserId:  utils.StringFirstNonEmpty(request.CreatedByUserId, request.LoggedInUserId),
-			ServiceStartedAt: serviceStartedAt,
-			SignedAt:         signedAt,
-			RenewalCycle:     model.RenewalCycle(request.RenewalCycle),
-			RenewalPeriods:   request.RenewalPeriods,
+			OrganizationId:     request.OrganizationId,
+			Name:               request.Name,
+			ContractUrl:        request.ContractUrl,
+			CreatedByUserId:    utils.StringFirstNonEmpty(request.CreatedByUserId, request.LoggedInUserId),
+			ServiceStartedAt:   utils.TimestampProtoToTimePtr(request.ServiceStartedAt),
+			SignedAt:           utils.TimestampProtoToTimePtr(request.SignedAt),
+			RenewalCycle:       model.RenewalCycle(request.RenewalCycle).String(),
+			RenewalPeriods:     request.RenewalPeriods,
+			Currency:           request.Currency,
+			BillingCycle:       model.BillingCycle(request.BillingCycle).String(),
+			InvoicingStartDate: utils.TimestampProtoToTimePtr(request.InvoicingStartDate),
+			InvoicingEnabled:   request.InvoicingEnabled,
 		},
 		source,
 		externalSystem,
@@ -108,38 +114,7 @@ func (s *contractService) UpdateContract(ctx context.Context, request *contractp
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("id"))
 	}
 
-	// Convert any protobuf timestamp to time.Time, if necessary
-	updatedAt := utils.TimestampProtoToTimePtr(request.UpdatedAt)
-	serviceStartedAt := utils.TimestampProtoToTimePtr(request.ServiceStartedAt)
-	signedAt := utils.TimestampProtoToTimePtr(request.SignedAt)
-	endedAt := utils.TimestampProtoToTimePtr(request.EndedAt)
-
-	externalSystem := commonmodel.ExternalSystem{}
-	externalSystem.FromGrpc(request.ExternalSystemFields)
-
-	source := commonmodel.Source{}
-	source.FromGrpc(request.SourceFields)
-
-	// Create update contract command
-	updateContractCommand := command.NewUpdateContractCommand(
-		request.Id,
-		request.Tenant,
-		request.LoggedInUserId,
-		model.ContractDataFields{
-			Name:             request.Name,
-			ServiceStartedAt: serviceStartedAt,
-			SignedAt:         signedAt,
-			EndedAt:          endedAt,
-			RenewalCycle:     model.RenewalCycle(request.RenewalCycle),
-			ContractUrl:      request.ContractUrl,
-			RenewalPeriods:   request.RenewalPeriods,
-		},
-		source,
-		externalSystem,
-		updatedAt,
-	)
-
-	if err := s.contractCommandHandlers.UpdateContract.Handle(ctx, updateContractCommand); err != nil {
+	if _, err := s.contractRequestHandler.HandleWithRetry(ctx, request.Tenant, request.Id, false, request); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(UpdateContract.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
@@ -202,4 +177,24 @@ func (s *contractService) checkOrganizationExists(ctx context.Context, tenant, o
 	}
 
 	return true, nil // The organization exists
+}
+
+func (s *contractService) SoftDeleteContract(ctx context.Context, request *contractpb.SoftDeleteContractGrpcRequest) (*emptypb.Empty, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContractService.SoftDeleteContract")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+
+	// Validate contract ID
+	if request.Id == "" {
+		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("id"))
+	}
+
+	if _, err := s.contractRequestHandler.HandleWithRetry(ctx, request.Tenant, request.Id, false, request); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(DeleteContract.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		return nil, grpcerr.ErrResponse(err)
+	}
+
+	return &emptypb.Empty{}, nil
 }

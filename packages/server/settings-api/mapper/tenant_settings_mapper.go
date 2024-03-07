@@ -24,11 +24,6 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings, activeS
 		return &responseMap
 	}
 
-	if tenantSettings.HubspotPrivateAppKey != nil {
-		responseMap[service.SERVICE_HUBSPOT] = make(map[string]interface{})
-		responseMap[service.SERVICE_HUBSPOT].(map[string]interface{})["state"] = "ACTIVE"
-	}
-
 	if tenantSettings != nil && tenantSettings.SmartSheetId != nil && tenantSettings.SmartSheetAccessToken != nil {
 		responseMap[service.SERVICE_SMARTSHEET] = make(map[string]interface{})
 		responseMap[service.SERVICE_SMARTSHEET].(map[string]interface{})["state"] = "ACTIVE"
@@ -367,11 +362,6 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings, activeS
 	if tenantSettings != nil && tenantSettings.RetentlyApiToken != nil {
 		responseMap[service.SERVICE_RETENTLY] = make(map[string]interface{})
 		responseMap[service.SERVICE_RETENTLY].(map[string]interface{})["state"] = "ACTIVE"
-	}
-
-	if tenantSettings != nil && tenantSettings.SalesforceClientId != nil && tenantSettings.SalesforceClientSecret != nil && tenantSettings.SalesforceRefreshToken != nil {
-		responseMap[service.SERVICE_SALESFORCE] = make(map[string]interface{})
-		responseMap[service.SERVICE_SALESFORCE].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
 	if tenantSettings != nil && tenantSettings.SalesloftApiKey != nil {

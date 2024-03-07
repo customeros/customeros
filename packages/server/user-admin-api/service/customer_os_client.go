@@ -4,6 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/machinebox/graphql"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/model"
 
@@ -28,10 +31,19 @@ type CustomerOsClient interface {
 	AddUserRole(tenant, userId string, role model.Role) (*model.UserResponse, error)
 	AddUserRoles(tenant, userId string, roles []model.Role) (*model.UserResponse, error)
 	CreateContact(tenant, username, firstName, lastname, email string, profilePhotoUrl *string) (string, error)
+	CreateTenantBillingProfile(tenant, username string, input model.TenantBillingProfileInput) (string, error)
 	CreateOrganization(tenant, username, organizationName, domain string) (string, error)
 	UpdateOrganizationOnboardingStatus(tenant, username string, onboardingStatus model.OrganizationUpdateOnboardingStatus) (string, error)
+
 	CreateContract(tenant, username string, input model.ContractInput) (string, error)
+	UpdateContract(tenant, username string, input model.ContractUpdateInput) (string, error)
+	GetContractById(tenant, contractId string) (*dbtype.Node, error)
+
 	CreateServiceLine(tenant, username string, input interface{}) (string, error)
+	GetServiceLine(tenant, serviceLineId string) (*dbtype.Node, error)
+
+	DryRunNextInvoiceForContractInput(tenant, username, contractId string) (string, error)
+
 	CreateMeeting(tenant, username string, input model.MeetingInput) (string, error)
 
 	CreateInteractionSession(tenant, username string, options ...InteractionSessionBuilderOption) (*string, error)
@@ -39,17 +51,23 @@ type CustomerOsClient interface {
 	CreateLogEntry(tenant, username string, organizationId, author, content, contentType string, startedAt time.Time) (*string, error)
 
 	AddContactToOrganization(tenant, username, contactId, organizationId, jobTitle, description string) error
+
+	CreateMasterPlan(tenant, username, name string) (string, error)
+	CreateMasterPlanMilestone(tenant, username string, masterPlanMilestoneInput model.MasterPlanMilestoneInput) (string, error)
 }
 
 type customerOsClient struct {
 	cfg           *config.Config
 	graphqlClient *graphql.Client
+	driver        *neo4j.DriverWithContext
+	database      string
 }
 
-func NewCustomerOsClient(cfg *config.Config) CustomerOsClient {
+func NewCustomerOsClient(cfg *config.Config, driver *neo4j.DriverWithContext) CustomerOsClient {
 	return &customerOsClient{
 		cfg:           cfg,
 		graphqlClient: graphql.NewClient(cfg.CustomerOS.CustomerOsAPI),
+		driver:        driver,
 	}
 }
 
@@ -378,6 +396,38 @@ func (cosService *customerOsClient) CreateContact(tenant, username, firstName, l
 	return id, nil
 }
 
+func (s *customerOsClient) prepareReadSession(ctx context.Context) neo4j.SessionWithContext {
+	return utils.NewNeo4jReadSession(ctx, *s.driver, utils.WithDatabaseName(s.database))
+}
+
+func (s *customerOsClient) CreateTenantBillingProfile(tenant, username string, input model.TenantBillingProfileInput) (string, error) {
+	graphqlRequest := graphql.NewRequest(
+		`mutation TenantAddBillingProfile($input: TenantBillingProfileInput!) {
+				tenant_AddBillingProfile(input: $input) {
+					id
+			}
+		}`)
+
+	graphqlRequest.Var("input", input)
+
+	err := s.addHeadersToGraphRequest(graphqlRequest, &tenant, &username)
+	if err != nil {
+		return "", err
+	}
+	ctx, cancel, err := s.contextWithTimeout()
+	if err != nil {
+		return "", err
+	}
+	defer cancel()
+
+	var graphqlResponse model.TenantAddBillingProfileResponse
+	if err := s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+		return "", fmt.Errorf("tenantBillingProfile_Create: %w", err)
+	}
+
+	return graphqlResponse.TenantBillingProfileAdd.Id, nil
+}
+
 func (s *customerOsClient) CreateOrganization(tenant, username, organizationName, domain string) (string, error) {
 	graphqlRequest := graphql.NewRequest(
 		`mutation CreateOrganization($organizationName: String!, $domain: String!) {
@@ -471,11 +521,67 @@ func (s *customerOsClient) CreateContract(tenant, username string, input model.C
 	return graphqlResponse.ContractCreate.Id, nil
 }
 
+func (s *customerOsClient) GetContractById(tenant, contractId string) (*dbtype.Node, error) {
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$id}) RETURN c`
+	params := map[string]any{
+		"tenant": tenant,
+		"id":     contractId,
+	}
+
+	ctx, cancel, err := s.contextWithTimeout()
+	if err != nil {
+		return nil, err
+	}
+	defer cancel()
+	session := s.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.(*dbtype.Node), nil
+}
+
+func (s *customerOsClient) UpdateContract(tenant, username string, input model.ContractUpdateInput) (string, error) {
+	graphqlRequest := graphql.NewRequest(
+		`mutation updateContract($input: ContractUpdateInput!) {
+				contract_Update(input: $input) {
+					id
+			}
+		}`)
+
+	graphqlRequest.Var("input", input)
+
+	err := s.addHeadersToGraphRequest(graphqlRequest, &tenant, &username)
+	if err != nil {
+		return "", err
+	}
+	ctx, cancel, err := s.contextWithTimeout()
+	if err != nil {
+		return "", err
+	}
+	defer cancel()
+
+	var graphqlResponse model.UpdateContractResponse
+	if err := s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+		return "", fmt.Errorf("contract_Update: %w", err)
+	}
+
+	return graphqlResponse.ContractUpdate.Id, nil
+}
+
 func (s *customerOsClient) CreateServiceLine(tenant, username string, input interface{}) (string, error) {
 	graphqlRequest := graphql.NewRequest(
-		`mutation createService($input: ServiceLineItemInput!) {
-				serviceLineItemCreate(input: $input) {
-					id
+		`mutation serviceLineItem($input: ServiceLineItemInput!) {
+				contractLineItem_Create(input: $input) {
+					metadata {
+						id
+					}
 			}
 		}`)
 
@@ -496,7 +602,60 @@ func (s *customerOsClient) CreateServiceLine(tenant, username string, input inte
 		return "", fmt.Errorf("serviceLineItem_Create: %w", err)
 	}
 
-	return graphqlResponse.ServiceLineItemCreate.Id, nil
+	return graphqlResponse.ContractLineItemCreate.Metadata.Id, nil
+}
+
+func (s *customerOsClient) GetServiceLine(contractId, serviceLineId string) (*dbtype.Node, error) {
+	cypher := `MATCH (c:Contract {id:$contractId})-[:HAS_SERVICE]->(sli:ServiceLineItem {id:$serviceLineId}) RETURN sli`
+	params := map[string]any{
+		"contractId":    contractId,
+		"serviceLineId": serviceLineId,
+	}
+
+	ctx, cancel, err := s.contextWithTimeout()
+	if err != nil {
+		return nil, err
+	}
+	defer cancel()
+	session := s.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.(*dbtype.Node), nil
+}
+
+func (s *customerOsClient) DryRunNextInvoiceForContractInput(tenant, username, contractId string) (string, error) {
+	graphqlRequest := graphql.NewRequest(
+		`mutation invoice_NextDryRunForContract($contractId: ID!) {
+				invoice_NextDryRunForContract(contractId: $contractId)
+		}`)
+
+	graphqlRequest.Var("contractId", contractId)
+
+	err := s.addHeadersToGraphRequest(graphqlRequest, &tenant, &username)
+	if err != nil {
+		return "", err
+	}
+	ctx, cancel, err := s.contextWithTimeout()
+	if err != nil {
+		return "", err
+	}
+	defer cancel()
+
+	var graphqlResponse map[string]string
+	if err := s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+		return "", fmt.Errorf("invoice_NextDryRunForContract_Create: %w", err)
+	}
+
+	id := graphqlResponse["invoice_NextDryRunForContract"]
+	return id, nil
 }
 
 func (s *customerOsClient) AddContactToOrganization(tenant, username, contactId, organizationId, jobTitle, description string) error {
@@ -798,6 +957,64 @@ func (s *customerOsClient) CreateLogEntry(tenant, username string, organizationI
 	}
 	id := graphqlResponse["logEntry_CreateForOrganization"]
 	return &id, nil
+}
+
+func (s *customerOsClient) CreateMasterPlan(tenant, username, masterPlanName string) (string, error) {
+	graphqlRequest := graphql.NewRequest(
+		`mutation CreateMasterPlan($masterPlanName: String!) {
+				masterPlan_Create(input: {
+						name: $masterPlanName
+					}) {
+					id
+					name
+			}
+		}`)
+
+	graphqlRequest.Var("masterPlanName", masterPlanName)
+
+	err := s.addHeadersToGraphRequest(graphqlRequest, &tenant, &username)
+	if err != nil {
+		return "", err
+	}
+	ctx, cancel, err := s.contextWithTimeout()
+	if err != nil {
+		return "", err
+	}
+	defer cancel()
+
+	var graphqlResponse model.CreateMasterPlanResponse
+	if err := s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+		return "", fmt.Errorf("masterPlan_Create: %w", err)
+	}
+
+	return graphqlResponse.MasterPlanCreate.Id, nil
+}
+
+func (s *customerOsClient) CreateMasterPlanMilestone(tenant, username string, masterPlanMilestoneInput model.MasterPlanMilestoneInput) (string, error) {
+	graphqlRequest := graphql.NewRequest(
+		`mutation CreateMasterPlanMilestone($input: MasterPlanMilestoneInput!) {
+				masterPlanMilestone_Create(input: $input) {
+					id
+				  }
+				}`)
+	graphqlRequest.Var("input", masterPlanMilestoneInput)
+
+	err := s.addHeadersToGraphRequest(graphqlRequest, &tenant, &username)
+	if err != nil {
+		return "", err
+	}
+	ctx, cancel, err := s.contextWithTimeout()
+	if err != nil {
+		return "", err
+	}
+	defer cancel()
+
+	var graphqlResponse model.CreateMasterPlanMilestoneResponse
+	if err := s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+		return "", fmt.Errorf("masterPlanMilestone_Create: %w", err)
+	}
+
+	return graphqlResponse.MasterPlanMilestoneCreate.Id, nil
 }
 
 func (s *customerOsClient) addHeadersToGraphRequest(req *graphql.Request, tenant, username *string) error {

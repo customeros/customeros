@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-platform-admin-api/tracing"
@@ -30,7 +31,7 @@ func (r *organizationRepository) CountOrganizationsForLastTouchpointRefresh(ctx 
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("tenant", tenant))
 
-	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {hide: false}) RETURN count(o)`
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {hide: false}) WHERE o:Organization_%s RETURN count(o)`, tenant)
 	span.LogFields(log.String("query", query))
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
@@ -57,7 +58,7 @@ func (r *organizationRepository) GetOrganizationsForLastTouchpointRefresh(ctx co
 	span.LogFields(log.Int("skip", skip))
 	span.LogFields(log.Int("limit", limit))
 
-	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {hide: false}) RETURN o.id SKIP $skip LIMIT $limit`
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {hide: false}) WHERE o:Organization_%s RETURN o.id SKIP $skip LIMIT $limit`, tenant)
 	span.LogFields(log.String("query", query))
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)

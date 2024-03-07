@@ -1,0 +1,111 @@
+extend type Query {
+    invoice(id: ID!): Invoice!
+    invoices(pagination: Pagination, where: Filter, sort: [SortBy!], organizationId: ID): InvoicesPage!
+}
+
+extend type Mutation {
+    invoice_NextDryRunForContract(contractId: ID!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+    invoice_Simulate(input: InvoiceSimulateInput!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+    invoice_Update(input: InvoiceUpdateInput!): Invoice!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+    invoice_Void(id: ID!): Invoice!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+type InvoicesPage implements Pages {
+    content: [Invoice!]!
+    totalPages: Int!
+    totalElements: Int64!
+}
+
+type Invoice implements MetadataInterface {
+    metadata:           Metadata!
+    organization:       Organization! @goField(forceResolver: true)
+    contract:           Contract! @goField(forceResolver: true)
+    dryRun:             Boolean!
+    postpaid:           Boolean!
+    offCycle:           Boolean!
+    amountDue:          Float!
+    amountPaid:         Float!
+    amountRemaining:    Float!
+    invoiceNumber:      String!
+    invoicePeriodStart: Time!
+    invoicePeriodEnd:   Time!
+    invoiceUrl:         String!
+    due:                Time!
+    currency:           String!
+    repositoryFileId:   String!
+    invoiceLineItems:   [InvoiceLine!]! @goField(forceResolver: true)
+    status:             InvoiceStatus
+    note:               String
+    domesticPaymentsBankInfo:       String
+    internationalPaymentsBankInfo:  String
+    customer:                   InvoiceCustomer!
+    provider:                   InvoiceProvider!
+    paid:                       Boolean!
+    subtotal:                   Float!
+    taxDue:                     Float!
+}
+
+type InvoiceCustomer {
+    name:               String
+    email:              String
+    addressLine1:       String
+    addressLine2:       String
+    addressZip:         String
+    addressLocality:    String
+    addressCountry:     String
+}
+
+type InvoiceProvider {
+    logoUrl:                String
+    logoRepositoryFileId:   String
+    name:                   String
+    addressLine1:           String
+    addressLine2:           String
+    addressZip:             String
+    addressLocality:        String
+    addressCountry:         String
+}
+
+type InvoiceLine implements MetadataInterface {
+    metadata:           Metadata!
+    description:        String!
+    price:              Float!
+    quantity:           Int!
+    subtotal:           Float!
+    taxDue:             Float!
+    total:              Float!
+}
+
+type Tax {
+    salesTax:   Boolean!
+    vat:        Boolean!
+    taxRate:    Float!
+}
+
+input InvoiceSimulateInput {
+    contractId:         ID!
+    periodStartDate:    Time
+    periodEndDate:      Time
+    invoiceLines:       [InvoiceLineInput!]!
+}
+
+input InvoiceLineInput {
+    serviceLineItemId:  ID
+    name:               String!
+    billed:             BilledType!
+    price:              Float!
+    quantity:           Int!
+}
+
+input InvoiceUpdateInput {
+    id:       ID!
+    status:   InvoiceStatus
+    patch:    Boolean!
+}
+
+enum InvoiceStatus {
+    DRAFT
+    DUE
+    PAID
+    VOID
+}

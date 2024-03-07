@@ -8,13 +8,15 @@ import (
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
 
 func TestQueryResolver_Issue(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -26,8 +28,12 @@ func TestQueryResolver_Issue(t *testing.T) {
 		CreatedAt:   utils.Now(),
 	})
 
-	tagId1 := neo4jt.CreateTag(ctx, driver, tenantName, "critical")
-	tagId2 := neo4jt.CreateTag(ctx, driver, tenantName, "issue-tag")
+	tagId1 := neo4jtest.CreateTag(ctx, driver, tenantName, neo4jentity.TagEntity{
+		Name: "critical",
+	})
+	tagId2 := neo4jtest.CreateTag(ctx, driver, tenantName, neo4jentity.TagEntity{
+		Name: "issue-tag",
+	})
 
 	neo4jt.CreateHubspotExternalSystem(ctx, driver, tenantName)
 	syncDate := utils.Now()
@@ -52,7 +58,7 @@ func TestQueryResolver_Issue(t *testing.T) {
 		"ExternalSystem":   1,
 		"Comment":          2,
 	})
-	assertRelationship(ctx, t, driver, issueId, "IS_LINKED_WITH", string(entity.Hubspot))
+	neo4jtest.AssertRelationship(ctx, t, driver, issueId, "IS_LINKED_WITH", string(neo4jenum.Hubspot))
 
 	rawResponse, err := c.RawPost(getQuery("issue/get_issue"),
 		client.Var("issueId", issueId))
@@ -91,7 +97,7 @@ func TestQueryResolver_Issue(t *testing.T) {
 }
 
 func TestQueryResolver_Issue_WithParticipants(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -103,7 +109,7 @@ func TestQueryResolver_Issue_WithParticipants(t *testing.T) {
 		CreatedAt:   utils.Now(),
 	})
 
-	userId := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{})
+	userId := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{})
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
 	contactId := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{})
 

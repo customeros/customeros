@@ -6,17 +6,19 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
 
-func TestQueryResolver_GCliCache_IsOwnerFalse(t *testing.T) {
-	ctx := context.TODO()
+func TestQueryGlobalCache_GCliCache_IsOwnerFalse(t *testing.T) {
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateUserWithId(ctx, driver, tenantName, testUserId, entity.UserEntity{
+	neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{
+		Id:        testUserId,
 		FirstName: "a",
 		LastName:  "b",
 	})
@@ -45,18 +47,19 @@ func TestQueryResolver_GCliCache_IsOwnerFalse(t *testing.T) {
 	require.Equal(t, false, gcliCacheResponse.Global_Cache.IsOwner)
 }
 
-func TestQueryResolver_GCliCache_IsOwnerTrue(t *testing.T) {
-	ctx := context.TODO()
+func TestQueryGlobalCache_GCliCache_IsOwnerTrue(t *testing.T) {
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	userId := neo4jt.CreateUserWithId(ctx, driver, tenantName, testUserId, entity.UserEntity{
+	neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{
+		Id:        testUserId,
 		FirstName: "a",
 		LastName:  "b",
 	})
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org1")
 
-	neo4jt.UserOwnsOrganization(ctx, driver, userId, organizationId)
+	neo4jt.UserOwnsOrganization(ctx, driver, testUserId, organizationId)
 
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Tenant"))
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
@@ -81,18 +84,25 @@ func TestQueryResolver_GCliCache_IsOwnerTrue(t *testing.T) {
 	require.Equal(t, true, gcliCacheResponse.Global_Cache.IsOwner)
 }
 
-func TestQueryResolver_GCliCache(t *testing.T) {
-	ctx := context.TODO()
+func TestQueryGlobalCache_GCliCache(t *testing.T) {
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateUserWithId(ctx, driver, tenantName, testUserId, entity.UserEntity{
+	neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{
+		Id:        testUserId,
 		FirstName: "a",
 		LastName:  "b",
 	})
 
-	neo4jt.CreateCountryWith(ctx, driver, "1", "USA", "United States")
+	neo4jtest.CreateCountry(ctx, driver, neo4jentity.CountryEntity{
+		Id:        "1",
+		Name:      "United States",
+		CodeA2:    "US",
+		CodeA3:    "USA",
+		PhoneCode: "1",
+	})
 	neo4jt.CreateState(ctx, driver, "USA", "Alabama", "AL")
 	neo4jt.CreateState(ctx, driver, "USA", "Louisiana", "LA")
 
@@ -145,12 +155,13 @@ func TestQueryResolver_GCliCache(t *testing.T) {
 	//require.Equal(t, "ORGANIZATION", gcliCacheResponse.Global_Cache.GCliCache[9].Type.String())
 }
 
-func TestQueryResolver_GCliCache_HasContracts_False(t *testing.T) {
-	ctx := context.TODO()
+func TestQueryGlobalCache_GCliCache_HasContracts_False(t *testing.T) {
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateUserWithId(ctx, driver, tenantName, testUserId, entity.UserEntity{
+	neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{
+		Id:        testUserId,
 		FirstName: "a",
 		LastName:  "b",
 	})
@@ -177,18 +188,19 @@ func TestQueryResolver_GCliCache_HasContracts_False(t *testing.T) {
 	require.Equal(t, false, gcliCacheResponse.Global_Cache.ContractsExist)
 }
 
-func TestQueryResolver_GCliCache_HasContracts_True(t *testing.T) {
-	ctx := context.TODO()
+func TestQueryGlobalCache_GCliCache_HasContracts_True(t *testing.T) {
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateUserWithId(ctx, driver, tenantName, testUserId, entity.UserEntity{
+	neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{
+		Id:        testUserId,
 		FirstName: "a",
 		LastName:  "b",
 	})
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
-	neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{})
+	neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
 
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Tenant"))
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
@@ -208,4 +220,69 @@ func TestQueryResolver_GCliCache_HasContracts_True(t *testing.T) {
 	require.NotNil(t, gcliCacheResponse)
 
 	require.Equal(t, true, gcliCacheResponse.Global_Cache.ContractsExist)
+}
+
+func TestQueryGlobalCache_No_Logo(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{
+		Id:        testUserId,
+		FirstName: "a",
+		LastName:  "b",
+	})
+
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Tenant"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
+
+	rawResponse, err := c.RawPost(getQuery("cache/global_Cache"))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var gcliCacheResponse struct {
+		Global_Cache struct {
+			CdnLogoUrl string `json:"cdnLogoUrl"`
+		}
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &gcliCacheResponse)
+	require.Nil(t, err)
+	require.NotNil(t, gcliCacheResponse)
+
+	require.Equal(t, "", gcliCacheResponse.Global_Cache.CdnLogoUrl)
+}
+
+func TestQueryGlobalCache_Has_Logo(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{
+		Id:        testUserId,
+		FirstName: "a",
+		LastName:  "b",
+	})
+
+	neo4jtest.CreateTenantSettings(ctx, driver, tenantName, neo4jentity.TenantSettingsEntity{
+		LogoRepositoryFileId: "1",
+	})
+	neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
+		Id:     "1",
+		CdnUrl: "https://cdn.openline.com/1",
+	})
+
+	rawResponse, err := c.RawPost(getQuery("cache/global_Cache"))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var gcliCacheResponse struct {
+		Global_Cache struct {
+			CdnLogoUrl string `json:"cdnLogoUrl"`
+		}
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &gcliCacheResponse)
+	require.Nil(t, err)
+	require.NotNil(t, gcliCacheResponse)
+
+	require.Equal(t, "https://cdn.openline.com/1", gcliCacheResponse.Global_Cache.CdnLogoUrl)
 }

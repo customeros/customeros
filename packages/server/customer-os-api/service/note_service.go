@@ -11,6 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/exp/slices"
@@ -20,7 +21,6 @@ import (
 type NoteService interface {
 	GetNotesForContactPaginated(ctx context.Context, contactId string, page, limit int) (*utils.Pagination, error)
 	GetNotesForContactTimeRange(ctx context.Context, contactId string, start, end time.Time) (*entity.NoteEntities, error)
-	GetNotesForOrganization(ctx context.Context, organizationId string, page, limit int) (*utils.Pagination, error)
 	GetNotesForMeetings(ctx context.Context, ids []string) (*entity.NoteEntities, error)
 
 	CreateNoteForContact(ctx context.Context, contactId string, entity *entity.NoteEntity) (*entity.NoteEntity, error)
@@ -139,41 +139,6 @@ func (s *noteService) GetNotesForContactTimeRange(ctx context.Context, contactId
 	return &result, nil
 }
 
-func (s *noteService) GetNotesForOrganization(ctx context.Context, organizationId string, page, limit int) (*utils.Pagination, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteService.GetNotesForOrganization")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("organizationId", organizationId), log.Int("page", page), log.Int("limit", limit))
-
-	session := utils.NewNeo4jReadSession(ctx, *s.repositories.Drivers.Neo4jDriver)
-	defer session.Close(ctx)
-
-	var paginatedResult = utils.Pagination{
-		Limit: limit,
-		Page:  page,
-	}
-	noteDbNodesWithTotalCount, err := s.repositories.NoteRepository.GetPaginatedNotesForOrganization(
-		ctx,
-		session,
-		common.GetContext(ctx).Tenant,
-		organizationId,
-		paginatedResult.GetSkip(),
-		paginatedResult.GetLimit())
-	if err != nil {
-		return nil, err
-	}
-	paginatedResult.SetTotalRows(noteDbNodesWithTotalCount.Count)
-
-	entities := entity.NoteEntities{}
-
-	for _, v := range noteDbNodesWithTotalCount.Nodes {
-		noteEntity := *s.mapDbNodeToNoteEntity(*v.Node)
-		entities = append(entities, noteEntity)
-	}
-	paginatedResult.SetRows(&entities)
-	return &paginatedResult, nil
-}
-
 func (s *noteService) CreateNoteForContact(ctx context.Context, contactId string, entity *entity.NoteEntity) (*entity.NoteEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteService.CreateNoteForContact")
 	defer span.Finish()
@@ -256,11 +221,11 @@ func (s *noteService) GetNotedEntities(ctx context.Context, ids []string) (*enti
 
 	notedEntities := entity.NotedEntities{}
 	for _, v := range records {
-		if slices.Contains(v.Node.Labels, neo4jentity.NodeLabelOrganization) {
+		if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelOrganization) {
 			notedEntity := s.services.OrganizationService.mapDbNodeToOrganizationEntity(*v.Node)
 			notedEntity.DataloaderKey = v.LinkedNodeId
 			notedEntities = append(notedEntities, notedEntity)
-		} else if slices.Contains(v.Node.Labels, neo4jentity.NodeLabelContact) {
+		} else if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelContact) {
 			notedEntity := s.services.ContactService.mapDbNodeToContactEntity(*v.Node)
 			notedEntity.DataloaderKey = v.LinkedNodeId
 			notedEntities = append(notedEntities, notedEntity)

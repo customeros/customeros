@@ -9,7 +9,7 @@ import { setHours, setSeconds, setMinutes, setMilliseconds } from 'date-fns';
 import { Flex } from '@ui/layout/Flex';
 import { Button } from '@ui/form/Button';
 import { DateTimeUtils } from '@spaces/utils/date';
-import { ExternalSystemType } from '@graphql/types';
+import { Meeting, ExternalSystemType } from '@graphql/types';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { EmptyTimeline } from '@organization/src/components/Timeline/EmptyTimeline';
 import { SlackStub } from '@organization/src/components/Timeline/events/slack/SlackStub';
@@ -69,7 +69,7 @@ function getEventDate(event?: TimelineEvent) {
   return (
     (event as InteractionEventWithDate)?.date ||
     (event as LogEntryWithAliases)?.logEntryStartedAt ||
-    event?.createdAt
+    (event as Meeting)?.createdAt
   );
 }
 export const OrganizationTimeline: FC = () => {
@@ -83,9 +83,8 @@ export const OrganizationTimeline: FC = () => {
   const [timelineMeta, setTimelineMeta] = useTimelineMeta();
   const isRestoring = useIsRestoring();
   const client = getGraphQLClient();
-  const { data, isFetchingNextPage, fetchNextPage } =
+  const { data, isFetchingNextPage, fetchNextPage, isPending } =
     useInfiniteGetTimelineQuery(
-      'from',
       client,
       {
         organizationId: id,
@@ -93,6 +92,7 @@ export const OrganizationTimeline: FC = () => {
         size: 50,
       },
       {
+        initialPageParam: 0,
         getNextPageParam: (lastPage) => {
           const lastEvent = lastPage?.organization?.timelineEvents?.slice(
             -1,
@@ -106,7 +106,7 @@ export const OrganizationTimeline: FC = () => {
       },
     );
   const invalidateQuery = useCallback(() => {
-    queryClient.invalidateQueries(['GetTimeline.infinite']);
+    queryClient.invalidateQueries({ queryKey: ['GetTimeline.infinite'] });
   }, []);
 
   useEffect(() => {
@@ -179,13 +179,18 @@ export const OrganizationTimeline: FC = () => {
       return Date.parse(aDate) - Date.parse(bDate);
     });
 
-  if (!isRestoring && !timelineEmailEvents?.length) {
-    return <EmptyTimeline invalidateQuery={invalidateQuery} />;
+  if (!isRestoring && !isPending && !timelineEmailEvents?.length) {
+    return (
+      <>
+        <EmptyTimeline invalidateQuery={invalidateQuery} />
+        <TimelineEventPreviewModal invalidateQuery={invalidateQuery} />
+      </>
+    );
   }
 
   return (
     <>
-      {isFetchingNextPage && (
+      {(isFetchingNextPage || isPending) && (
         <Flex direction='column' mt={4} pl={6}>
           <TimelineItemSkeleton />
           <TimelineItemSkeleton />
@@ -195,14 +200,12 @@ export const OrganizationTimeline: FC = () => {
       <Virtuoso<TimelineEvent>
         ref={virtuosoRef}
         style={styles}
-        initialItemCount={timelineEmailEvents?.length}
         initialTopMostItemIndex={timelineEmailEvents?.length - 1}
-        data={timelineEmailEvents}
+        data={timelineEmailEvents ?? []}
         increaseViewportBy={300}
         atTopThreshold={100}
         context={virtuosoContext}
         itemContent={(index, timelineEvent) => {
-          if (!timelineEvent) return null;
           const showDate =
             index === 0
               ? true
@@ -278,7 +281,7 @@ export const OrganizationTimeline: FC = () => {
               );
             }
             default:
-              return null;
+              return <div>not supported</div>;
           }
         }}
         components={{

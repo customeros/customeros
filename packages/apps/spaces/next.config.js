@@ -9,6 +9,38 @@ const nextConfig = {
   swcMinify: true,
   images: {
     minimumCacheTTL: 31536000,
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'customeros.ai',
+        port: '',
+        pathname: '/images/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'customer-os.imgix.net',
+        port: '',
+        pathname: '**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'fs.customeros.ai',
+        port: '',
+        pathname: '/file/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'customer-os.imgix.net',
+        port: '',
+        pathname: '/images/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'imagedelivery.net',
+        port: '',
+        pathname: '**',
+      },
+    ],
   },
   env: {
     SSR_PUBLIC_PATH: process.env.SSR_PUBLIC_PATH,
@@ -17,6 +49,10 @@ const nextConfig = {
     GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY,
     NEXT_PUBLIC_JUNE_ENABLED: process.env.NEXT_PUBLIC_JUNE_ENABLED,
     NEXT_PUBLIC_PRODUCTION: process.env.NEXT_PUBLIC_PRODUCTION,
+    NEXT_PUBLIC_NOTIFICATION_PROD_APP_IDENTIFIER:
+      process.env.NEXT_PUBLIC_NOTIFICATION_PROD_APP_IDENTIFIER,
+    NEXT_PUBLIC_NOTIFICATION_TEST_APP_IDENTIFIER:
+      process.env.NEXT_PUBLIC_NOTIFICATION_TEST_APP_IDENTIFIER,
   },
   i18n: {
     locales: ['en'],

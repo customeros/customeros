@@ -13,6 +13,7 @@ import (
 
 type PhoneNumberReadRepository interface {
 	GetPhoneNumberIdIfExists(ctx context.Context, tenant, phoneNumber string) (string, error)
+	GetCountryCodeA2ForPhoneNumber(ctx context.Context, tenant, phoneNumberId string) (string, error)
 }
 
 type phoneNumberReadRepository struct {
@@ -64,4 +65,39 @@ func (r *phoneNumberReadRepository) GetPhoneNumberIdIfExists(ctx context.Context
 	}
 	span.LogFields(log.String("result", result.([]*db.Record)[0].Values[0].(string)))
 	return result.([]*db.Record)[0].Values[0].(string), err
+}
+
+func (r *phoneNumberReadRepository) GetCountryCodeA2ForPhoneNumber(ctx context.Context, tenant, phoneNumberId string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberReadRepository.GetCountryCodeA2ForPhoneNumber")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, phoneNumberId)
+
+	cypher := `MATCH (p:PhoneNumber {id:$phoneNumberId})-[:PHONE_NUMBER_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
+				OPTIONAL MATCH (p)-[:LINKED_TO]->(c:Country)
+				OPTIONAL MATCH (tenant)-[:DEFAULT_COUNTRY]->(dc:Country)
+				RETURN COALESCE(c.codeA2, dc.codeA2, '') AS countryCodeA2 LIMIT 1`
+	params := map[string]any{
+		"tenant":        tenant,
+		"phoneNumberId": phoneNumberId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractSingleRecordFirstValueAsString(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+	span.LogFields(log.String("result", result.(string)))
+	return result.(string), nil
 }

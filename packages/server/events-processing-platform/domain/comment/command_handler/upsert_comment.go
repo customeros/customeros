@@ -41,7 +41,7 @@ func (c *upsertCommentCommandHandler) Handle(ctx context.Context, cmd *command.U
 		return err
 	}
 
-	if aggregate.IsAggregateNotFound(commentAggregate) {
+	if eventstore.IsAggregateNotFound(commentAggregate) {
 		cmd.IsCreateCommand = true
 	}
 	if err = commentAggregate.HandleCommand(ctx, cmd); err != nil {

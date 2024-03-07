@@ -45,9 +45,13 @@ export const contractButtonSelect = {
       noOfLines: 1,
       // '-webkit-box-align': 'start',
       webkitBoxAlign: 'start',
-      bg: state.isSelected ? 'primary.50' : 'white',
+      bg: 'white',
       boxShadow: state.isFocused ? 'menuOptionsFocus' : 'none',
       _hover: { bg: state.isSelected ? 'primary.50' : 'gray.100' },
+      _selected: {
+        bg: 'primary.50',
+        color: 'primary.600',
+      },
     };
   },
 };

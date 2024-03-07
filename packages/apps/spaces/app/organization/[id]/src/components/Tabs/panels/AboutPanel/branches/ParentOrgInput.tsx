@@ -42,19 +42,23 @@ export const ParentOrgInput: React.FC<ParentOrgInputProps> = ({
     },
     sort: undefined,
     where: {
-      filter: {
-        property: 'ORGANIZATION',
-        value: searchTerm,
-        operation: ComparisonOperator.Contains,
-        caseSensitive: false,
-      },
+      AND: [
+        {
+          filter: {
+            property: 'ORGANIZATION',
+            value: searchTerm,
+            operation: ComparisonOperator.Contains,
+            caseSensitive: false,
+          },
+        },
+      ],
     },
   });
   const queryKey = useOrganizationQuery.getKey({ id });
   const organizationsQueryKey = useInfiniteGetOrganizationsQuery.getKey(
     organizationsMeta.getOrganization,
   );
-  const invalidateQuery = () => queryClient.invalidateQueries(queryKey);
+  const invalidateQuery = () => queryClient.invalidateQueries({ queryKey });
 
   const addSubsidiaryToOrganizationMutation =
     useAddSubsidiaryToOrganizationMutation(client, {
@@ -123,7 +127,7 @@ export const ParentOrgInput: React.FC<ParentOrgInputProps> = ({
       },
       onSettled: () => {
         invalidateQuery();
-        queryClient.invalidateQueries(organizationsQueryKey);
+        queryClient.invalidateQueries({ queryKey: organizationsQueryKey });
       },
     });
   const removeSubsidiaryToOrganizationMutation =
@@ -187,7 +191,7 @@ export const ParentOrgInput: React.FC<ParentOrgInputProps> = ({
       },
       onSettled: () => {
         invalidateQuery();
-        queryClient.invalidateQueries(organizationsQueryKey);
+        queryClient.invalidateQueries({ queryKey: organizationsQueryKey });
       },
     });
 

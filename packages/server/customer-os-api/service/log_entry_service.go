@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
@@ -36,7 +37,7 @@ func (s *logEntryService) GetById(ctx context.Context, logEntryId string) (*enti
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("logEntryId", logEntryId))
 
-	logEntryDbNode, err := s.repositories.LogEntryRepository.GetById(ctx, logEntryId)
+	logEntryDbNode, err := s.repositories.Neo4jRepositories.LogEntryReadRepository.GetById(ctx, common.GetTenantFromContext(ctx), logEntryId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err

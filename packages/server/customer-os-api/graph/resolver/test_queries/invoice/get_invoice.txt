@@ -1,0 +1,62 @@
+query GetInvoice($id: ID!) {
+invoice(id: $id) {
+    metadata {
+        id
+        created
+        lastUpdated
+    }
+    dryRun
+    postpaid
+    offCycle
+    amountDue
+    amountPaid
+    amountRemaining
+    invoiceNumber
+    invoicePeriodStart
+    invoicePeriodEnd
+    invoiceUrl
+    due
+    currency
+    repositoryFileId
+    note
+    paid
+    subtotal
+    taxDue
+
+    customer {
+        name
+        email
+        addressLine1
+        addressLine2
+        addressZip
+        addressLocality
+        addressCountry
+    }
+
+    provider {
+        logoUrl
+        name
+        addressLine1
+        addressLine2
+        addressZip
+        addressLocality
+        addressCountry
+    }
+
+    invoiceLineItems {
+        description
+        price
+        quantity
+        subtotal
+        taxDue
+        total
+    }
+
+    organization {
+      id
+    }
+    contract {
+      id
+    }
+  }
+}

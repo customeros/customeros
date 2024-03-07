@@ -60,7 +60,7 @@ func main() {
 	cntnr := &container.Container{
 		Cfg:                           cfg,
 		Log:                           appLogger,
-		Repositories:                  repository.InitRepositories(&neo4jDriver, postgresDb.GormDB),
+		Repositories:                  repository.InitRepositories(cfg, &neo4jDriver, postgresDb.GormDB),
 		EventProcessingServicesClient: epClient,
 	}
 

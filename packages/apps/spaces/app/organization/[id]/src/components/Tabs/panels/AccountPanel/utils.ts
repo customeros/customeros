@@ -6,6 +6,7 @@ import {
   Maybe,
   BilledType,
   ContractRenewalCycle,
+  ContractBillingCycle,
   OpportunityRenewalLikelihood,
 } from '@graphql/types';
 
@@ -13,9 +14,9 @@ export const invalidateAccountDetailsQuery = (
   queryClient: QueryClient,
   id: string,
 ) =>
-  queryClient.invalidateQueries(
-    useOrganizationAccountDetailsQuery.getKey({ id }),
-  );
+  queryClient.invalidateQueries({
+    queryKey: useOrganizationAccountDetailsQuery.getKey({ id }),
+  });
 
 export function getRenewalLikelihoodColor(
   renewalLikelihood?: Maybe<OpportunityRenewalLikelihood> | undefined,
@@ -57,6 +58,12 @@ export const billingFrequencyOptions: SelectOption<
   { label: 'Annually', value: ContractRenewalCycle.AnnualRenewal },
   { label: 'Multi-year', value: 'MULTI_YEAR' },
 ];
+export const contractBillingCycleOptions: SelectOption<ContractBillingCycle>[] =
+  [
+    { label: 'Monthly', value: ContractBillingCycle.MonthlyBilling },
+    { label: 'Quarterly', value: ContractBillingCycle.QuarterlyBilling },
+    { label: 'Annually', value: ContractBillingCycle.AnnualBilling },
+  ];
 
 export const billedTypeOptions: SelectOption<BilledType>[] = [
   { label: 'Once', value: BilledType.Once },
@@ -64,4 +71,8 @@ export const billedTypeOptions: SelectOption<BilledType>[] = [
   { label: 'Monthly', value: BilledType.Monthly },
   { label: 'Quarterly', value: BilledType.Quarterly },
   { label: 'Annually', value: BilledType.Annually },
+];
+
+export const currencyOptions: SelectOption<string>[] = [
+  { label: 'United States Dollar', value: 'USD' },
 ];

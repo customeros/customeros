@@ -6,10 +6,11 @@ import (
 )
 
 type MockMasterPlanServiceCallbacks struct {
-	CreateMasterPlan          func(context.Context, *masterplanpb.CreateMasterPlanGrpcRequest) (*masterplanpb.MasterPlanIdGrpcResponse, error)
-	UpdateMasterPlan          func(context.Context, *masterplanpb.UpdateMasterPlanGrpcRequest) (*masterplanpb.MasterPlanIdGrpcResponse, error)
-	CreateMasterPlanMilestone func(context.Context, *masterplanpb.CreateMasterPlanMilestoneGrpcRequest) (*masterplanpb.MasterPlanMilestoneIdGrpcResponse, error)
-	UpdateMasterPlanMilestone func(context.Context, *masterplanpb.UpdateMasterPlanMilestoneGrpcRequest) (*masterplanpb.MasterPlanMilestoneIdGrpcResponse, error)
+	CreateMasterPlan            func(context.Context, *masterplanpb.CreateMasterPlanGrpcRequest) (*masterplanpb.MasterPlanIdGrpcResponse, error)
+	UpdateMasterPlan            func(context.Context, *masterplanpb.UpdateMasterPlanGrpcRequest) (*masterplanpb.MasterPlanIdGrpcResponse, error)
+	CreateMasterPlanMilestone   func(context.Context, *masterplanpb.CreateMasterPlanMilestoneGrpcRequest) (*masterplanpb.MasterPlanMilestoneIdGrpcResponse, error)
+	UpdateMasterPlanMilestone   func(context.Context, *masterplanpb.UpdateMasterPlanMilestoneGrpcRequest) (*masterplanpb.MasterPlanMilestoneIdGrpcResponse, error)
+	ReorderMasterPlanMilestones func(context.Context, *masterplanpb.ReorderMasterPlanMilestonesGrpcRequest) (*masterplanpb.MasterPlanIdGrpcResponse, error)
 }
 
 var masterPlanCallbacks = &MockMasterPlanServiceCallbacks{}
@@ -48,4 +49,11 @@ func (MockMasterPlanService) UpdateMasterPlanMilestone(context context.Context, 
 		panic("masterPlanCallbacks.UpdateMasterPlanMilestone is not set")
 	}
 	return masterPlanCallbacks.UpdateMasterPlanMilestone(context, proto)
+}
+
+func (MockMasterPlanService) ReorderMasterPlanMilestones(context context.Context, proto *masterplanpb.ReorderMasterPlanMilestonesGrpcRequest) (*masterplanpb.MasterPlanIdGrpcResponse, error) {
+	if masterPlanCallbacks.ReorderMasterPlanMilestones == nil {
+		panic("masterPlanCallbacks.ReorderMasterPlanMilestones is not set")
+	}
+	return masterPlanCallbacks.ReorderMasterPlanMilestones(context, proto)
 }

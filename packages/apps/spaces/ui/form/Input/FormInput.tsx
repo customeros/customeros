@@ -10,9 +10,11 @@ import {
   FormLabelProps,
 } from '@chakra-ui/react';
 
+import { Text } from '@ui/typography/Text';
+
 import { Input, InputProps } from './Input';
 
-interface FormInputProps extends InputProps {
+export interface FormInputProps extends InputProps {
   name: string;
   formId: string;
   label?: string;
@@ -34,7 +36,7 @@ export const FormInput = forwardRef(
     }: FormInputProps,
     ref,
   ) => {
-    const { getInputProps } = useField(name, formId);
+    const { getInputProps, renderError, state } = useField(name, formId);
 
     return (
       <FormControl>
@@ -46,7 +48,19 @@ export const FormInput = forwardRef(
           </VisuallyHidden>
         )}
 
-        <Input ref={ref} {...getInputProps()} {...props} autoComplete='off' />
+        <Input
+          ref={ref}
+          {...getInputProps()}
+          {...props}
+          isInvalid={state.meta?.meta?.hasError}
+          autoComplete='off'
+          data-1p-ignore
+        />
+        {renderError((error) => (
+          <Text fontSize='xs' color='error.500'>
+            {error}
+          </Text>
+        ))}
       </FormControl>
     );
   },
