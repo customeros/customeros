@@ -41,7 +41,7 @@
     "@tanstack/react-table": "^8.10.3",
     "@tanstack/react-virtual": "^3.0.1",
     "@visx/visx": "^3.5.1",
-    "axios": "^1.6.3",
+    "axios": "^1.6.4",
     "bufferutil": "^4.0.8",
     "chakra-react-select": "^4.7.6",
     "compressorjs": "^1.2.1",
