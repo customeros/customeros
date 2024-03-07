@@ -31,6 +31,7 @@ message UpdateReminderGrpcRequest {
     google.protobuf.Timestamp updatedAt = 5;
     string reminderId = 6;
     string tenant = 7;
+    repeated ReminderFieldMask fieldsMask = 8;
 }
 
 message ReminderGrpcResponse {
