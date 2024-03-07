@@ -4,7 +4,7 @@ import { useParams } from 'next/navigation';
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { useOrganization } from '@organization/src/hooks/useOrganization';
-import { TimelineActions } from '@organization/src/components/Timeline/TimelineActions/TimelineActions';
+import { TimelineActions } from '@organization/src/components/Timeline/FutureZone/TimelineActions/TimelineActions';
 
 import EmptyTimelineIllustration from './assets/EmptyTimelineIllustration';
 

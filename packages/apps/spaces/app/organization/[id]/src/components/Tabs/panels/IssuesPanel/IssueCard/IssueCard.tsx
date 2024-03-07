@@ -14,7 +14,7 @@ import {
   getParticipant,
   getParticipantName,
 } from '@organization/src/hooks/utils';
-import { useTimelineEventPreviewMethodsContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
+import { useTimelineEventPreviewMethodsContext } from '@organization/src/components/Timeline/shared/TimelineEventPreview/context/TimelineEventPreviewContext';
 
 interface IssueCardProps {
   issue: Issue;

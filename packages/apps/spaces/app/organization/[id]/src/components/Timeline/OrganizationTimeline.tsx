@@ -12,19 +12,20 @@ import { DateTimeUtils } from '@spaces/utils/date';
 import { Meeting, ExternalSystemType } from '@graphql/types';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { EmptyTimeline } from '@organization/src/components/Timeline/EmptyTimeline';
-import { SlackStub } from '@organization/src/components/Timeline/events/slack/SlackStub';
-import { IssueStub } from '@organization/src/components/Timeline/events/issue/IssueStub';
-import { IntercomStub } from '@organization/src/components/Timeline/events/intercom/IntercomStub';
-import { LogEntryStub } from '@organization/src/components/Timeline/events/logEntry/LogEntryStub';
-import { UserActionStub } from '@organization/src/components/Timeline/events/action/UserActionStub';
-import { TimelineActions } from '@organization/src/components/Timeline/TimelineActions/TimelineActions';
+import { SlackStub } from '@organization/src/components/Timeline/PastZone/events/slack/SlackStub';
+import { IssueStub } from '@organization/src/components/Timeline/PastZone/events/issue/IssueStub';
 import { useTimelineRefContext } from '@organization/src/components/Timeline/context/TimelineRefContext';
-import { TimelineEventPreviewModal } from '@organization/src/components/Timeline/preview/TimelineEventPreviewModal';
-import { TimelineItemSkeleton } from '@organization/src/components/Timeline/events/TimelineItem/TimelineItemSkeleton';
+import { IntercomStub } from '@organization/src/components/Timeline/PastZone/events/intercom/IntercomStub';
+import { LogEntryStub } from '@organization/src/components/Timeline/PastZone/events/logEntry/LogEntryStub';
+import { UserActionStub } from '@organization/src/components/Timeline/PastZone/events/action/UserActionStub';
+import { TimelineActions } from '@organization/src/components/Timeline/FutureZone/TimelineActions/TimelineActions';
+import { TimelineItemSkeleton } from '@organization/src/components/Timeline/PastZone/events/TimelineItem/TimelineItemSkeleton';
+import { TimelineEventPreviewModal } from '@organization/src/components/Timeline/shared/TimelineEventPreview/TimelineEventPreviewModal';
 
-import { useTimelineMeta } from './shared/state';
-import { EmailStub, TimelineItem } from './events';
-import { MeetingStub } from './events/meeting/MeetingStub';
+import { useTimelineMeta } from './state';
+import { FutureZone } from './FutureZone/FutureZone';
+import { EmailStub, TimelineItem } from './PastZone/events';
+import { MeetingStub } from './PastZone/events/meeting/MeetingStub';
 import { useInfiniteGetTimelineQuery } from '../../graphql/getTimeline.generated';
 import {
   TimelineEvent,
@@ -128,7 +129,12 @@ export const OrganizationTimeline: FC = () => {
     [fetchNextPage, isFetchingNextPage],
   );
   const Footer = useCallback(() => {
-    return <TimelineActions invalidateQuery={invalidateQuery} />;
+    return (
+      <>
+        <TimelineActions invalidateQuery={invalidateQuery} />
+        <FutureZone />
+      </>
+    );
   }, [invalidateQuery]);
 
   const flattenData = data?.pages.flatMap(

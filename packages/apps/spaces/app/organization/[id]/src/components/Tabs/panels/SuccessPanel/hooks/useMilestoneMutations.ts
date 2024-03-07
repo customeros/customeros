@@ -6,7 +6,7 @@ import { useQueryClient } from '@tanstack/react-query';
 
 import { toastError } from '@ui/presentation/Toast';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useTimelineMeta } from '@organization/src/components/Timeline/shared/state';
+import { useTimelineMeta } from '@organization/src/components/Timeline/state';
 import { useOrganizationQuery } from '@organization/src/graphql/organization.generated';
 import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
 import {

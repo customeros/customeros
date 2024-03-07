@@ -24,7 +24,7 @@ import { FormAutoresizeTextarea } from '@ui/form/Textarea';
 import { FormSelect, SelectInstance } from '@ui/form/SyncSelect';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { OnboardingStatus, OnboardingDetails } from '@graphql/types';
-import { useTimelineMeta } from '@organization/src/components/Timeline/shared/state';
+import { useTimelineMeta } from '@organization/src/components/Timeline/state';
 import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
 import { useUpdateOnboardingStatusMutation } from '@organization/src/graphql/updateOnboardingStatus.generated';
 import {

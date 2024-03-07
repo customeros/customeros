@@ -1,5 +1,5 @@
 'use client';
-import { TimelineActionContextContextProvider } from '@organization/src/components/Timeline/TimelineActions/context/TimelineActionContext';
+import { TimelineActionContextContextProvider } from '@organization/src/components/Timeline/FutureZone/TimelineActions';
 
 import { OrganizationTimeline } from './OrganizationTimeline';
 
