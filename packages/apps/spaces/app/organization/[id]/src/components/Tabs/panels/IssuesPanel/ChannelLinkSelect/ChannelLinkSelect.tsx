@@ -19,7 +19,7 @@ import { useOrganizationQuery } from '@organization/src/graphql/organization.gen
 import { useSlackChannelsQuery } from '@organization/src/graphql/slackChannels.generated';
 import { useUpdateOrganizationMutation } from '@shared/graphql/updateOrganization.generated';
 import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
-import { useTimelineMeta } from '@organization/src/components/Timeline/shared/state/TimelineMeta.atom';
+import { useTimelineMeta } from '@organization/src/components/Timeline/state/TimelineMeta.atom';
 
 interface ChannelLinkSelectProps {
   from: Date;

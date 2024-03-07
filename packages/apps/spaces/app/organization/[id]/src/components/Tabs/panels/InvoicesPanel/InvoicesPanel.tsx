@@ -15,7 +15,7 @@ import { EmptyState } from '@shared/components/Invoice/EmptyState/EmptyState';
 import { useInfiniteInvoices } from '@shared/components/Invoice/hooks/useInfiniteInvoices';
 import { columns } from '@organization/src/components/Tabs/panels/InvoicesPanel/Columns/Columns';
 import { OrganizationPanel } from '@organization/src/components/Tabs/panels/OrganizationPanel/OrganizationPanel';
-import { useTimelineEventPreviewMethodsContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
+import { useTimelineEventPreviewMethodsContext } from '@organization/src/components/Timeline/shared/TimelineEventPreview/context/TimelineEventPreviewContext';
 
 const slideUpVariants = {
   initial: { y: '100%', opacity: 0 },

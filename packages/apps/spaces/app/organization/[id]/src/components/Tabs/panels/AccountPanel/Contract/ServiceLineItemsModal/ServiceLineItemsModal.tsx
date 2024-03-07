@@ -19,14 +19,13 @@ import { DotSingle } from '@ui/media/icons/DotSingle';
 import { AutoresizeTextarea } from '@ui/form/Textarea';
 // import { Invoice } from '@shared/components/Invoice/Invoice';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useTimelineMeta } from '@organization/src/components/Timeline/shared/state';
+import { useTimelineMeta } from '@organization/src/components/Timeline/state';
 import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
 import { useUpdateServicesMutation } from '@organization/src/graphql/updateServiceLineItems.generated';
 import {
   GetContractsQuery,
   useGetContractsQuery,
 } from '@organization/src/graphql/getContracts.generated';
-import { useUpdateCacheWithNewEvent } from '@organization/src/components/Timeline/hooks/updateCacheWithNewEvent';
 import {
   Modal,
   ModalBody,
@@ -35,6 +34,7 @@ import {
   ModalContent,
   ModalOverlay,
 } from '@ui/overlay/Modal';
+import { useUpdateCacheWithNewEvent } from '@organization/src/components/Timeline/PastZone/hooks/updateCacheWithNewEvent';
 import {
   BilledType,
   DataSource,
