@@ -13,6 +13,7 @@ message CreateReminderGrpcRequest {
     string userId = 5;
     string organizationId = 6;
     bool dismissed = 7;
+    string tenant = 8;
 }
 
 enum ReminderFieldMask {
@@ -28,6 +29,8 @@ message UpdateReminderGrpcRequest {
     google.protobuf.Timestamp dueDate = 3;
     bool dismissed = 4;
     google.protobuf.Timestamp updatedAt = 5;
+    string reminderId = 6;
+    string tenant = 7;
 }
 
 message ReminderGrpcResponse {
