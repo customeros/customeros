@@ -178,6 +178,7 @@ type BillingDetails struct {
 	CanPayWithCard         *bool                 `json:"canPayWithCard,omitempty"`
 	CanPayWithDirectDebit  *bool                 `json:"canPayWithDirectDebit,omitempty"`
 	CanPayWithBankTransfer *bool                 `json:"canPayWithBankTransfer,omitempty"`
+	NextInvoicing          *time.Time            `json:"nextInvoicing,omitempty"`
 }
 
 type BillingDetailsInput struct {

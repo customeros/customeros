@@ -23,6 +23,7 @@ func MapEntityToContract(entity *neo4jentity.ContractEntity) *model.Contract {
 		BillingDetails: &model.BillingDetails{
 			BillingCycle:           utils.ToPtr(MapContractBillingCycleToModel(entity.BillingCycle)),
 			InvoicingStarted:       entity.InvoicingStartDate,
+			NextInvoicing:          entity.NextInvoiceDate,
 			AddressLine1:           utils.ToPtr(entity.AddressLine1),
 			AddressLine2:           utils.ToPtr(entity.AddressLine2),
 			Locality:               utils.ToPtr(entity.Locality),

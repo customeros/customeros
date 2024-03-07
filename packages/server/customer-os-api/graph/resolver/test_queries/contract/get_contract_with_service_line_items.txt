@@ -6,6 +6,7 @@ query GetContract($contractId: ID!) {
     billingDetails {
         billingCycle
         invoicingStarted
+        nextInvoicing
         addressLine1
         addressLine2
         locality
