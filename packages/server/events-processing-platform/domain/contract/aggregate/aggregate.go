@@ -86,6 +86,8 @@ func (a *ContractAggregate) onContractCreate(evt eventstore.Event) error {
 	if eventData.ExternalSystem.Available() {
 		a.Contract.ExternalSystems = []commonmodel.ExternalSystem{eventData.ExternalSystem}
 	}
+	a.Contract.PayOnline = eventData.PayOnline
+	a.Contract.PayAutomatically = eventData.PayAutomatically
 
 	return nil
 }
@@ -182,6 +184,12 @@ func (a *ContractAggregate) onContractUpdate(evt eventstore.Event) error {
 	}
 	if eventData.UpdateInvoicingEnabled() {
 		a.Contract.InvoicingEnabled = eventData.InvoicingEnabled
+	}
+	if eventData.UpdatePayOnline() {
+		a.Contract.PayOnline = eventData.PayOnline
+	}
+	if eventData.UpdatePayAutomatically() {
+		a.Contract.PayAutomatically = eventData.PayAutomatically
 	}
 
 	if eventData.ExternalSystem.Available() {

@@ -166,6 +166,7 @@ type AttachmentInput struct {
 type BillingDetails struct {
 	BillingCycle           *ContractBillingCycle `json:"billingCycle,omitempty"`
 	InvoicingStarted       *time.Time            `json:"invoicingStarted,omitempty"`
+	NextInvoicing          *time.Time            `json:"nextInvoicing,omitempty"`
 	AddressLine1           *string               `json:"addressLine1,omitempty"`
 	AddressLine2           *string               `json:"addressLine2,omitempty"`
 	Locality               *string               `json:"locality,omitempty"`
@@ -178,7 +179,8 @@ type BillingDetails struct {
 	CanPayWithCard         *bool                 `json:"canPayWithCard,omitempty"`
 	CanPayWithDirectDebit  *bool                 `json:"canPayWithDirectDebit,omitempty"`
 	CanPayWithBankTransfer *bool                 `json:"canPayWithBankTransfer,omitempty"`
-	NextInvoicing          *time.Time            `json:"nextInvoicing,omitempty"`
+	PayOnline              *bool                 `json:"payOnline,omitempty"`
+	PayAutomatically       *bool                 `json:"payAutomatically,omitempty"`
 }
 
 type BillingDetailsInput struct {
@@ -196,6 +198,8 @@ type BillingDetailsInput struct {
 	CanPayWithCard         *bool                 `json:"canPayWithCard,omitempty"`
 	CanPayWithDirectDebit  *bool                 `json:"canPayWithDirectDebit,omitempty"`
 	CanPayWithBankTransfer *bool                 `json:"canPayWithBankTransfer,omitempty"`
+	PayOnline              *bool                 `json:"payOnline,omitempty"`
+	PayAutomatically       *bool                 `json:"payAutomatically,omitempty"`
 }
 
 type BillingProfile struct {
