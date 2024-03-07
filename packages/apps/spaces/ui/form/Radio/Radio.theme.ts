@@ -7,6 +7,7 @@ const { definePartsStyle, defineMultiStyleConfig } =
 const baseStyle = definePartsStyle(({ colorScheme }) => ({
   control: {
     borderColor: 'gray.300',
+    border: '1px solid',
     color: 'primary.600',
     _hover: {
       borderColor: 'primary.600',
@@ -25,8 +26,8 @@ const baseStyle = definePartsStyle(({ colorScheme }) => ({
       '&:before': {
         content: '""',
         display: 'block',
-        width: '50%',
-        height: '50%',
+        width: 2,
+        height: 2,
         bg: 'primary.600',
         borderRadius: 'full',
       },

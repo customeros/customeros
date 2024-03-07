@@ -5,6 +5,8 @@ import {
   DatePickerProps as ReactDatePickerProps,
 } from 'react-date-picker';
 
+import { Box } from '@chakra-ui/layout';
+
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { DateTimeUtils } from '@spaces/utils/date';
@@ -15,6 +17,7 @@ interface DatePickerProps extends ReactDatePickerProps {
   inset?: string;
   formId: string;
   placeholder?: string;
+  defaultOpen?: boolean;
   calendarIconHidden?: boolean;
 }
 
@@ -23,6 +26,7 @@ export const DatePickerUnderline: React.FC<DatePickerProps> = ({
   formId,
   placeholder,
   value,
+  defaultOpen,
 }) => {
   const { getInputProps } = useField(name, formId);
   const { id, onChange } = getInputProps();
@@ -44,10 +48,12 @@ export const DatePickerUnderline: React.FC<DatePickerProps> = ({
   };
 
   return (
-    <Flex
+    <Box
+      display='inline'
       sx={{
         '& .react-date-picker': {
           height: 'unset',
+          display: 'inline',
         },
         '& .react-date-picker__button': {
           padding: 0,
@@ -78,6 +84,7 @@ export const DatePickerUnderline: React.FC<DatePickerProps> = ({
       <ReactDatePicker
         id={id}
         name={name}
+        isOpen={defaultOpen}
         clearIcon={() => null}
         onChange={(val) => handleDateInputChange(val as DateInputValue)}
         defaultValue={new Date()}
@@ -103,6 +110,6 @@ export const DatePickerUnderline: React.FC<DatePickerProps> = ({
           </Flex>
         }
       />
-    </Flex>
+    </Box>
   );
 };

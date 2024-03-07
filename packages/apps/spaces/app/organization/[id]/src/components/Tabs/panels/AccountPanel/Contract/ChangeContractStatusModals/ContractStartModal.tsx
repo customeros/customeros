@@ -12,6 +12,7 @@ import { ModalBody } from '@ui/overlay/Modal';
 import { FeaturedIcon } from '@ui/media/Icon';
 import { Heading } from '@ui/typography/Heading';
 import { DotLive } from '@ui/media/icons/DotLive';
+import { DateTimeUtils } from '@spaces/utils/date';
 import { Exact, ContractUpdateInput } from '@graphql/types';
 import { DatePickerUnderline } from '@ui/form/DatePicker/DatePickerUnderline';
 import { GetContractsQuery } from '@organization/src/graphql/getContracts.generated';
@@ -109,7 +110,7 @@ export const ContractStartModal = ({
           <Text>
             Congrats! Let’s make {organizationName}
             ’s contract live starting on
-            <Box ml={1}>
+            <Box ml={1} display='inline'>
               <DatePickerUnderline
                 placeholder='Start date'
                 formId={formId}
@@ -132,7 +133,11 @@ export const ContractStartModal = ({
             loadingText='Applying changes...'
             onClick={handleApplyChanges}
           >
-            Make live
+            Start{' '}
+            {DateTimeUtils.format(
+              state.values.serviceStartedAt as string,
+              DateTimeUtils.defaultFormatShortString,
+            )}
           </Button>
         </ModalFooter>
       </ModalContent>
