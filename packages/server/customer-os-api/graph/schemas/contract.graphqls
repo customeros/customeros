@@ -67,6 +67,7 @@ type BillingDetails {
     canPayWithCard:         Boolean
     canPayWithDirectDebit:  Boolean
     canPayWithBankTransfer: Boolean
+    nextInvoicing:          Time
 }
 
 input ContractInput {

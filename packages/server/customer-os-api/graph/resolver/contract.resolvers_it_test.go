@@ -216,6 +216,7 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 
 	now := utils.Now()
+	tomorrow := now.Add(time.Duration(24) * time.Hour)
 	yesterday := now.Add(time.Duration(-24) * time.Hour)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
@@ -231,6 +232,7 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 		InvoiceNote:            "invoice note",
 		BillingCycle:           neo4jenum.BillingCycleMonthlyBilling,
 		InvoicingStartDate:     &now,
+		NextInvoiceDate:        &tomorrow,
 		InvoicingEnabled:       true,
 		CanPayWithCard:         true,
 		CanPayWithDirectDebit:  true,
@@ -295,6 +297,8 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 	require.True(t, *billingDetails.CanPayWithCard)
 	require.True(t, *billingDetails.CanPayWithDirectDebit)
 	require.True(t, *billingDetails.CanPayWithBankTransfer)
+	require.Equal(t, utils.StartOfDayInUTC(now), *billingDetails.InvoicingStarted)
+	require.Equal(t, utils.StartOfDayInUTC(tomorrow), *billingDetails.NextInvoicing)
 
 	require.Equal(t, 2, len(contract.ContractLineItems))
 
