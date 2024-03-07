@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/notifications"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/helper"
 	temporal_client "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/temporal/client"
@@ -64,12 +65,25 @@ func DispatchWebhook(tenant string, event WebhookEvent, payload *InvoicePayload,
 		TaskQueue:                workflows.WEBHOOK_CALLS_TASK_QUEUE, // "webhook-calls",
 	}
 
+	var notification *notifications.NovuNotification
+	if cfg.Temporal.NotifyOnFailure {
+		notification = populateNotification(tenant, event.String(), wh)
+	}
+	notificationJSON, err := json.Marshal(notification)
+	if err != nil {
+		return fmt.Errorf("(webhook.DispatchWebhook) error marshalling notification obj: %v", err)
+	}
+
 	workflowParams := workflows.WHWorkflowParam{
-		TargetUrl:       wh.WebhookUrl,
-		RequestBody:     string(requestBodyJSON),
-		AuthHeaderName:  wh.AuthHeaderName,
-		AuthHeaderValue: wh.AuthHeaderValue,
-		RetryPolicy:     retryPolicy,
+		TargetUrl:                  wh.WebhookUrl,
+		RequestBody:                string(requestBodyJSON),
+		AuthHeaderName:             wh.AuthHeaderName,
+		AuthHeaderValue:            wh.AuthHeaderValue,
+		RetryPolicy:                retryPolicy,
+		Notification:               string(notificationJSON),
+		NotificationProviderApiKey: cfg.Services.Novu.ApiKey,
+		NotifyFailure:              cfg.Temporal.NotifyOnFailure,
+		NotifyAfterAttempts:        cfg.Temporal.NotifyAfterAttempts,
 	}
 
 	// the workflow will run async, so we don't need to wait for it to finish
@@ -90,4 +104,33 @@ func mapResultToWebhook(result helper.QueryResult) *entity.TenantWebhook {
 		return nil
 	}
 	return webhook
+}
+
+func populateNotification(tenant, webhookName string, wh *entity.TenantWebhook) *notifications.NovuNotification {
+	subject := fmt.Sprintf(notifications.WorkflowFailedWebhookSubject, webhookName)
+	payload := map[string]interface{}{
+		"subject":       subject,
+		"email":         wh.UserEmail,
+		"tenant":        tenant,
+		"userFirstName": wh.UserFirstName,
+		"webhookUrl":    wh.WebhookUrl,
+	}
+
+	notification := &notifications.NovuNotification{
+		WorkflowId: notifications.WorkflowFailedWebhook,
+		TemplateData: map[string]string{
+			"{{userFirstName}}": wh.UserFirstName,
+			"{{webhookName}}":   webhookName,
+			"{{webhookUrl}}":    wh.WebhookUrl,
+		},
+		To: &notifications.NotifiableUser{
+			FirstName:    wh.UserFirstName,
+			LastName:     wh.UserLastName,
+			Email:        wh.UserEmail,
+			SubscriberID: wh.UserId,
+		},
+		Subject: subject,
+		Payload: payload,
+	}
+	return notification
 }

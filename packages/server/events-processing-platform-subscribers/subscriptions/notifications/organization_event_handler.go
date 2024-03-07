@@ -8,9 +8,9 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/aws_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/aws_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/notifications"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/notifications"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
@@ -25,7 +25,7 @@ import (
 type OrganizationEventHandler struct {
 	repositories         *repository.Repositories
 	log                  logger.Logger
-	notificationProvider notifications.NotificationProvider
+	notificationProvider notifications.NotificationProvider // TODO: refactor to use notification under common module
 	cfg                  *config.Config
 }
 
@@ -162,9 +162,10 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 	if orgName == "" {
 		orgName = "Unnamed"
 	}
+	subject := fmt.Sprintf(notifications.WorkflowIdOrgOwnerUpdateEmailSubject, actor.FirstName, actor.LastName)
 	payload := map[string]interface{}{
 		// "html":           html, fill during send notification call
-		"subject":        fmt.Sprintf("%s %s added you as an owner", actor.FirstName, actor.LastName),
+		"subject":        subject,
 		"email":          email.Email,
 		"orgName":        orgName,
 		"userFirstName":  user.FirstName,
@@ -195,7 +196,7 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 			Email:        email.Email,
 			SubscriberID: userId,
 		},
-		Subject: fmt.Sprintf("%s %s added you as an owner", actor.FirstName, actor.LastName),
+		Subject: subject,
 		Payload: payload,
 	}
 
@@ -259,7 +260,7 @@ func (h *OrganizationEventHandler) notificationProviderSendInAppNotification(ctx
 		org = *neo4jmapper.MapDbNodeToOrganizationEntity(orgDbNode)
 	}
 	/////////////////////////////////// Notification Provider Payload And Call ///////////////////////////////////
-
+	subject := fmt.Sprintf(notifications.WorkflowIdOrgOwnerUpdateAppNotificationSubject, actor.FirstName, actor.LastName)
 	notification := &notifications.NovuNotification{
 		WorkflowId:   workflowId,
 		TemplateData: map[string]string{},
@@ -269,7 +270,7 @@ func (h *OrganizationEventHandler) notificationProviderSendInAppNotification(ctx
 			Email:        email.Email,
 			SubscriberID: userId,
 		},
-		Subject: fmt.Sprintf("%s %s added you as an owner", actor.FirstName, actor.LastName),
+		Subject: subject,
 		Payload: map[string]interface{}{
 			"notificationText": fmt.Sprintf("%s %s made you the owner of %s", actor.FirstName, actor.LastName, org.Name),
 			"orgId":            orgId,

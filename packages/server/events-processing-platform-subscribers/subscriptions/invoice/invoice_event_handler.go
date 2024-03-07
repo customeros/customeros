@@ -15,6 +15,7 @@ import (
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data"
 	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/notifications"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
@@ -22,7 +23,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/grpc_client"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/notifications"
+	postmark "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/notifications"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/webhook"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
@@ -54,10 +55,10 @@ type InvoiceEventHandler struct {
 	cfg              config.Config
 	grpcClients      *grpc_client.Clients
 	fsc              fsc.FileStoreApiService
-	postmarkProvider *notifications.PostmarkProvider
+	postmarkProvider *postmark.PostmarkProvider
 }
 
-func NewInvoiceEventHandler(log logger.Logger, repositories *repository.Repositories, cfg config.Config, grpcClients *grpc_client.Clients, fsc fsc.FileStoreApiService, postmarkProvider *notifications.PostmarkProvider) *InvoiceEventHandler {
+func NewInvoiceEventHandler(log logger.Logger, repositories *repository.Repositories, cfg config.Config, grpcClients *grpc_client.Clients, fsc fsc.FileStoreApiService, postmarkProvider *postmark.PostmarkProvider) *InvoiceEventHandler {
 	return &InvoiceEventHandler{
 		log:              log,
 		repositories:     repositories,
@@ -415,10 +416,7 @@ func (h *InvoiceEventHandler) fillOffCyclePrepaidInvoice(ctx context.Context, te
 
 func isMonthlyAnniversary(date time.Time) bool {
 	now := utils.Now()
-	if now.Day() == date.Day() {
-		return true
-	}
-	return false
+	return now.Day() == date.Day()
 }
 
 func calculatePriceForBilledType(price float64, billed neo4jenum.BilledType, cycle neo4jenum.BillingCycle) float64 {
@@ -792,9 +790,14 @@ func (h *InvoiceEventHandler) dispatchInvoiceFinalizedEvent(ctx context.Context,
 	}
 
 	webhookPayload := webhook.PopulateInvoiceFinalizedPayload(&invoice, &organizationEntity, &contractEntity, ilEntities)
-
 	// dispatch the event
-	err = webhook.DispatchWebhook(tenant, webhook.WebhookEventInvoiceFinalized, webhookPayload, h.repositories, h.cfg)
+	err = webhook.DispatchWebhook(
+		tenant,
+		webhook.WebhookEventInvoiceFinalized,
+		webhookPayload,
+		h.repositories,
+		h.cfg,
+	)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error dispatching invoice finalized event for invoice %s: %s", invoice.Id, err.Error())
@@ -1033,13 +1036,13 @@ func (h *InvoiceEventHandler) onInvoiceVoidV1(ctx context.Context, evt eventstor
 		return err
 	}
 
-	postmarkEmail := notifications.PostmarkEmail{
+	postmarkEmail := postmark.PostmarkEmail{
 		WorkflowId:    notifications.WorkflowInvoiceVoided,
-		MessageStream: notifications.PostmarkMessageStreamInvoice,
+		MessageStream: postmark.PostmarkMessageStreamInvoice,
 		From:          invoiceEntity.Provider.Email,
 		To:            invoiceEntity.Customer.Email,
 		BCC:           tenantBillingProfileEntity.SendInvoicesBcc,
-		Subject:       "Voided invoice " + invoiceEntity.Number,
+		Subject:       fmt.Sprintf(notifications.WorkflowInvoiceVoidedSubject, invoiceEntity.Number), // "Voided invoice " + invoiceEntity.Number,
 		TemplateData: map[string]string{
 			"{{userFirstName}}":  invoiceEntity.Customer.Name,
 			"{{invoiceNumber}}":  invoiceEntity.Number,
@@ -1047,7 +1050,7 @@ func (h *InvoiceEventHandler) onInvoiceVoidV1(ctx context.Context, evt eventstor
 			"{{amtDue}}":         fmt.Sprintf("%.2f", invoiceEntity.TotalAmount),
 			"{{issueDate}}":      invoiceEntity.CreatedAt.Format("02 Jan 2006"),
 		},
-		Attachments: []notifications.PostmarkEmailAttachment{},
+		Attachments: []postmark.PostmarkEmailAttachment{},
 	}
 
 	err = h.AppendProviderLogoToEmail(eventData.Tenant, invoiceEntity.Provider.LogoRepositoryFileId, &postmarkEmail, span)
@@ -1131,13 +1134,13 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 		return err
 	}
 
-	postmarkEmail := notifications.PostmarkEmail{
+	postmarkEmail := postmark.PostmarkEmail{
 		WorkflowId:    notifications.WorkflowInvoicePaid,
-		MessageStream: notifications.PostmarkMessageStreamInvoice,
+		MessageStream: postmark.PostmarkMessageStreamInvoice,
 		From:          invoiceEntity.Provider.Email,
 		To:            contractEntity.InvoiceEmail,
 		BCC:           tenantBillingProfileEntity.SendInvoicesBcc,
-		Subject:       "Paid Invoice " + invoiceEntity.Number + " from " + invoiceEntity.Provider.Name,
+		Subject:       fmt.Sprintf(notifications.WorkflowInvoicePaidSubject, invoiceEntity.Number, invoiceEntity.Provider.Name),
 		TemplateData: map[string]string{
 			"{{userFirstName}}":  invoiceEntity.Customer.Name,
 			"{{invoiceNumber}}":  invoiceEntity.Number,
@@ -1145,7 +1148,7 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 			"{{amtDue}}":         fmt.Sprintf("%.2f", invoiceEntity.TotalAmount),
 			"{{paymentDate}}":    invoiceEntity.DueDate.Format("02 Jan 2006"),
 		},
-		Attachments: []notifications.PostmarkEmailAttachment{},
+		Attachments: []postmark.PostmarkEmailAttachment{},
 	}
 
 	err = h.AppendInvoiceFileToEmailAsAttachment(eventData.Tenant, invoiceEntity, &postmarkEmail, span)
@@ -1241,13 +1244,13 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 		return err
 	}
 
-	postmarkEmail := notifications.PostmarkEmail{
+	postmarkEmail := postmark.PostmarkEmail{
 		WorkflowId:    notifications.WorkflowInvoiceReady,
-		MessageStream: notifications.PostmarkMessageStreamInvoice,
+		MessageStream: postmark.PostmarkMessageStreamInvoice,
 		From:          invoiceEntity.Provider.Email,
 		To:            contractEntity.InvoiceEmail,
 		BCC:           tenantBillingProfileEntity.SendInvoicesBcc,
-		Subject:       "New invoice " + invoiceEntity.Number,
+		Subject:       fmt.Sprintf(notifications.WorkflowInvoiceReadySubject, invoiceEntity.Number),
 		TemplateData: map[string]string{
 			"{{organizationName}}": invoiceEntity.Customer.Name,
 			"{{invoiceNumber}}":    invoiceEntity.Number,
@@ -1255,7 +1258,7 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 			"{{amtDue}}":           fmt.Sprintf("%.2f", invoiceEntity.TotalAmount),
 			"{{paymentLink}}":      invoiceEntity.PaymentDetails.PaymentLink,
 		},
-		Attachments: []notifications.PostmarkEmailAttachment{},
+		Attachments: []postmark.PostmarkEmailAttachment{},
 	}
 
 	err = h.AppendInvoiceFileToEmailAsAttachment(eventData.Tenant, invoiceEntity, &postmarkEmail, span)
@@ -1291,13 +1294,13 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 	return nil
 }
 
-func (h *InvoiceEventHandler) AppendInvoiceFileToEmailAsAttachment(tenant string, invoice neo4jentity.InvoiceEntity, postmarkEmail *notifications.PostmarkEmail, span opentracing.Span) error {
+func (h *InvoiceEventHandler) AppendInvoiceFileToEmailAsAttachment(tenant string, invoice neo4jentity.InvoiceEntity, postmarkEmail *postmark.PostmarkEmail, span opentracing.Span) error {
 	invoiceFileBytes, err := h.fsc.GetFileBytes(tenant, invoice.RepositoryFileId, span)
 	if err != nil {
 		return err
 	}
 
-	postmarkEmail.Attachments = append(postmarkEmail.Attachments, notifications.PostmarkEmailAttachment{
+	postmarkEmail.Attachments = append(postmarkEmail.Attachments, postmark.PostmarkEmailAttachment{
 		Filename:       "Invoice " + invoice.Number + ".pdf",
 		ContentEncoded: base64.StdEncoding.EncodeToString(*invoiceFileBytes),
 		ContentType:    "application/pdf",
@@ -1306,7 +1309,7 @@ func (h *InvoiceEventHandler) AppendInvoiceFileToEmailAsAttachment(tenant string
 	return nil
 }
 
-func (h *InvoiceEventHandler) AppendProviderLogoToEmail(tenant, logoFileId string, postmarkEmail *notifications.PostmarkEmail, span opentracing.Span) error {
+func (h *InvoiceEventHandler) AppendProviderLogoToEmail(tenant, logoFileId string, postmarkEmail *postmark.PostmarkEmail, span opentracing.Span) error {
 	if logoFileId == "" {
 		return nil
 	}
@@ -1316,7 +1319,7 @@ func (h *InvoiceEventHandler) AppendProviderLogoToEmail(tenant, logoFileId strin
 		return err
 	}
 
-	postmarkEmail.Attachments = append(postmarkEmail.Attachments, notifications.PostmarkEmailAttachment{
+	postmarkEmail.Attachments = append(postmarkEmail.Attachments, postmark.PostmarkEmailAttachment{
 		Filename:       "provider-logo-file-encoded",
 		ContentEncoded: base64.StdEncoding.EncodeToString(*fileBytes),
 		ContentType:    metadata.MimeType,

@@ -9,11 +9,15 @@ import (
 )
 
 type WHWorkflowParam struct {
-	TargetUrl       string
-	RequestBody     string
-	AuthHeaderName  string
-	AuthHeaderValue string
-	RetryPolicy     *temporal.RetryPolicy
+	TargetUrl                  string
+	RequestBody                string
+	AuthHeaderName             string
+	AuthHeaderValue            string
+	RetryPolicy                *temporal.RetryPolicy
+	Notification               string
+	NotificationProviderApiKey string
+	NotifyFailure              bool
+	NotifyAfterAttempts        int32
 }
 
 // Example retry policy
@@ -51,6 +55,10 @@ func WebhookWorkflow(ctx workflow.Context, param WHWorkflowParam) error {
 		param.AuthHeaderName,
 		param.AuthHeaderValue,
 		param.RequestBody,
+		param.NotifyFailure,
+		param.Notification,
+		param.NotificationProviderApiKey,
+		param.NotifyAfterAttempts,
 	).Get(ctx, nil)
 	if err != nil {
 		return err
