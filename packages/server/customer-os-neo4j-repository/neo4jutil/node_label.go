@@ -42,4 +42,5 @@ const (
 	NodeLabelInvoiceLine               = "InvoiceLine"
 	NodeLabelOrganizationPlan          = "OrganizationPlan"
 	NodeLabelOrganizationPlanMilestone = "OrganizationPlanMilestone"
+	NodeLabelReminder                  = "Reminder"
 )

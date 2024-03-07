@@ -73,6 +73,10 @@ func (r *reminderWriteRepository) UpdateReminder(ctx context.Context, tenant, id
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, id)
 
+	if content == nil && dueDate == nil && dismissed == nil {
+		return nil
+	}
+
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:REMINDER_BELONGS_TO_TENANT]-(r:Reminder {id:$id})
 				SET r.updatedAt = datetime($updatedAt)`
 	params := map[string]interface{}{
