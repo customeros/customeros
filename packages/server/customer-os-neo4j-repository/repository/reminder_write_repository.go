@@ -46,8 +46,8 @@ func (r *reminderWriteRepository) CreateReminder(ctx context.Context, tenant, id
 					dueDate: datetime($dueDate),
 					dismissed: $dismissed
 				}
-				MERGE (u:User {id:$userId})-[:REMINDER_BELONGS_TO_USER]->(r)
-				MERGE (o:Organization {id:$orgId})-[:REMINDER_BELONGS_TO_ORGANIZATION]->(r)`
+				MERGE (u:User {id:$userId})<-[:REMINDER_BELONGS_TO_USER]-(r)
+				MERGE (o:Organization {id:$orgId})<-[:REMINDER_BELONGS_TO_ORGANIZATION]-(r)`
 	params := map[string]interface{}{
 		"tenant":    tenant,
 		"id":        id,

@@ -545,7 +545,7 @@ func (r *userRepository) GetOwnerForReminder(parentCtx context.Context, tx neo4j
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	if queryResult, err := tx.Run(ctx, `
-			MATCH (t:Tenant {name:$tenant})<-[:REMINDER_BELONGS_TO_TENANT]-(r:Reminder {id:$reminderId})<-[:REMINDER_BELONGS_TO_USER]-(u:User)
+			MATCH (t:Tenant {name:$tenant})<-[:REMINDER_BELONGS_TO_TENANT]-(r:Reminder {id:$reminderId})-[:REMINDER_BELONGS_TO_USER]->(u:User)
 			RETURN u`,
 		map[string]any{
 			"tenant":     tenant,
