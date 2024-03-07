@@ -14,6 +14,7 @@ const (
 	invoiceGroup               = "invoice"
 	refreshLastTouchpointGroup = "refreshLastTouchpoint"
 	currencyGroup              = "currency"
+	linkUnthreadIssuesGroup    = "linkUnthreadIssues"
 )
 
 var jobLocks = struct {
@@ -26,6 +27,7 @@ var jobLocks = struct {
 		invoiceGroup:               {},
 		refreshLastTouchpointGroup: {},
 		currencyGroup:              {},
+		linkUnthreadIssuesGroup:    {},
 	},
 }
 
@@ -61,6 +63,13 @@ func StartCron(cont *container.Container) *cron.Cron {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "generateOffCycleInvoices", err.Error())
 	}
 
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleGenerateInvoicePaymentLink, func() {
+		lockAndRunJob(cont, invoiceGroup, generateInvoicePaymentLinks)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "generateInvoicePaymentLinks", err.Error())
+	}
+
 	err = c.AddFunc(cont.Cfg.Cron.CronScheduleSendPayInvoiceNotification, func() {
 		lockAndRunJob(cont, invoiceGroup, sendPayInvoiceNotifications)
 	})
@@ -80,6 +89,13 @@ func StartCron(cont *container.Container) *cron.Cron {
 	})
 	if err != nil {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "getCurrencyRatesECB", err.Error())
+	}
+
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleLinkUnthreadIssues, func() {
+		lockAndRunJob(cont, linkUnthreadIssuesGroup, linkUnthreadIssues)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "linkUnthreadIssues", err.Error())
 	}
 
 	c.Start()
@@ -117,6 +133,10 @@ func generateOffCycleInvoices(cont *container.Container) {
 	service.NewInvoiceService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).GenerateOffCycleInvoices()
 }
 
+func generateInvoicePaymentLinks(cont *container.Container) {
+	service.NewInvoiceService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).GenerateInvoicePaymentLinks()
+}
+
 func sendPayInvoiceNotifications(cont *container.Container) {
 	service.NewInvoiceService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).SendPayNotifications()
 }
@@ -127,4 +147,8 @@ func refreshLastTouchpoint(cont *container.Container) {
 
 func getCurrencyRatesECB(cont *container.Container) {
 	service.NewCurrencyService(cont.Cfg, cont.Log, cont.Repositories).GetCurrencyRatesECB()
+}
+
+func linkUnthreadIssues(cont *container.Container) {
+	service.NewIssueService(cont.Cfg, cont.Log, cont.Repositories).LinkUnthreadIssues()
 }

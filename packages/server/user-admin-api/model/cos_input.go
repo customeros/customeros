@@ -94,20 +94,20 @@ type ContractUpdateInput struct {
 
 type ServiceLineInput struct {
 	ContractId string    `json:"contractId,omitempty"`
-	Name       string    `json:"name"`
-	Billed     string    `json:"billed"`
+	Name       string    `json:"description"`
+	Billed     string    `json:"billingCycle"`
 	Price      int       `json:"price"`
 	Quantity   int       `json:"quantity"`
-	StartedAt  time.Time `json:"startedAt"`
+	StartedAt  time.Time `json:"serviceStarted"`
 }
 
 type ServiceLineEndedInput struct {
 	ContractId string    `json:"contractId,omitempty"`
-	Name       string    `json:"name"`
-	Billed     string    `json:"billed"`
+	Name       string    `json:"description"`
+	Billed     string    `json:"billingCycle"`
 	Price      int       `json:"price"`
 	Quantity   int       `json:"quantity"`
-	StartedAt  time.Time `json:"startedAt"`
+	StartedAt  time.Time `json:"serviceStarted"`
 	EndedAt    time.Time `json:"endedAt"`
 }
 

@@ -10,6 +10,7 @@ type Attachment implements Node {
     id: ID!
     createdAt: Time!
     basePath: String!
+    cdnUrl:   String!
     fileName: String!
     mimeType: String!
     size: Int64!
@@ -22,6 +23,7 @@ type Attachment implements Node {
 input AttachmentInput {
     id: ID
     createdAt: Time
+    cdnUrl: String!
     basePath: String!
     fileName: String!
     mimeType: String!

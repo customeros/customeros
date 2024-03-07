@@ -1,13 +1,17 @@
 package service
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/constants"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/events_processing_client"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/repository"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
@@ -16,13 +20,23 @@ import (
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	"github.com/pkg/errors"
+	"net/http"
 	"time"
 )
+
+type GeneratePaymentLinkEventBody struct {
+	Tenant                       string `json:"tenant"`
+	Currency                     string `json:"currency"`
+	AmountInSmallestCurrencyUnit int64  `json:"amountInSmallestCurrencyUnit"`
+	InvoiceId                    string `json:"invoiceId"`
+	InvoiceDescription           string `json:"invoiceDescription"`
+}
 
 type InvoiceService interface {
 	GenerateCycleInvoices()
 	GenerateOffCycleInvoices()
 	SendPayNotifications()
+	GenerateInvoicePaymentLinks()
 }
 
 type invoiceService struct {
@@ -367,5 +381,114 @@ func (s *invoiceService) GenerateOffCycleInvoices() {
 		}
 		//sleep for async processing, then check again
 		time.Sleep(10 * time.Second)
+	}
+}
+
+func (s *invoiceService) GenerateInvoicePaymentLinks() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // Cancel context on exit
+
+	span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.GenerateInvoicePaymentLinks")
+	defer span.Finish()
+
+	if s.eventsProcessingClient == nil {
+		err := errors.New("eventsProcessingClient is nil")
+		tracing.TraceErr(span, err)
+		s.log.Error(err.Error())
+		return
+	}
+
+	if s.cfg.EventNotifications.EndPoints.GeneratePaymentLinkUrl == "" {
+		err := errors.New("GeneratePaymentLinkUrl is not configured")
+		tracing.TraceErr(span, err)
+		s.log.Error(err.Error())
+		return
+	}
+
+	referenceTime := utils.Now()
+
+	for {
+		select {
+		case <-ctx.Done():
+			s.log.Infof("Context cancelled, stopping")
+			return
+		default:
+			// continue as normal
+		}
+
+		records, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoicesForPaymentLinkRequest(ctx, s.cfg.ProcessConfig.DelayRequestPaymentLinkInMinutes, referenceTime)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error getting invoices for payment links generation: %v", err)
+			return
+		}
+
+		// no invoices found
+		if len(records) == 0 {
+			return
+		}
+
+		//process records
+		for _, record := range records {
+			invoice := neo4jmapper.MapDbNodeToInvoiceEntity(record.Node)
+			tenant := record.Tenant
+
+			// convert amount to the smallest currency unit
+			amountInSmallestCurrencyUnit, err := data.InSmallestCurrencyUnit(invoice.Currency.String(), invoice.TotalAmount)
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
+
+			// mark payment link request first, before sending the event
+			err = s.repositories.Neo4jRepositories.InvoiceWriteRepository.MarkPaymentLinkRequested(ctx, tenant, invoice.Id, utils.Now())
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error marking payment link requested for invoice %s: %s", invoice.Id, err.Error())
+			}
+
+			requestBody := GeneratePaymentLinkEventBody{
+				Tenant:                       tenant,
+				Currency:                     invoice.Currency.String(),
+				AmountInSmallestCurrencyUnit: amountInSmallestCurrencyUnit,
+				InvoiceId:                    invoice.Id,
+				InvoiceDescription:           fmt.Sprintf("Invoice %s", invoice.Number),
+			}
+
+			// Convert the request body to JSON
+			requestBodyJSON, err := json.Marshal(requestBody)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("error encoding JSON: %v", err)
+				continue
+			}
+
+			// Create an HTTP client
+			client := &http.Client{}
+
+			// Create a POST request with headers and body
+			req, err := http.NewRequest("POST", s.cfg.EventNotifications.EndPoints.GeneratePaymentLinkUrl, bytes.NewBuffer(requestBodyJSON))
+			if err != nil {
+				tracing.TraceErr(span, err)
+				continue
+			}
+
+			// Set the content type header
+			req.Header.Set("Content-Type", "application/json")
+
+			// Send the POST request
+			resp, err := client.Do(req)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("error sending request: %v", err)
+				continue
+			}
+			defer resp.Body.Close()
+
+			// Check the response status code
+			if resp.StatusCode != http.StatusOK {
+				tracing.TraceErr(span, fmt.Errorf("request failed with status code: %s", resp.Status))
+				s.log.Errorf("request failed with status code: %s", resp.Status)
+			}
+		}
 	}
 }

@@ -13,7 +13,7 @@ type ServiceLineItem struct {
 	ContractId string             `json:"contractId"`
 	ParentId   string             `json:"parentId"`
 	Billed     string             `json:"billed"`
-	Quantity   int64              `json:"quantity"` // Relevant only for Subscription type
+	Quantity   int64              `json:"quantity"`
 	Price      float64            `json:"price"`
 	Name       string             `json:"name"`
 	Comments   string             `json:"comments,omitempty"`
@@ -30,7 +30,7 @@ type ServiceLineItem struct {
 // ServiceLineItemDataFields contains all the fields that may be used to create or update a service line item.
 type ServiceLineItemDataFields struct {
 	Billed     BilledType `json:"billed"`
-	Quantity   int64      `json:"quantity"` // Relevant only for Subscription type
+	Quantity   int64      `json:"quantity"`
 	Price      float64    `json:"price"`
 	Name       string     `json:"name"`
 	ContractId string     `json:"contractId"`

@@ -1,5 +1,7 @@
 import React from 'react';
 
+import { escapeForSlackWithMarkdown } from 'slack-to-html';
+
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { Link03 } from '@ui/media/icons/Link03';
@@ -13,6 +15,7 @@ import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 interface TimelineEventPreviewHeaderProps {
   name: string;
   date?: string;
+  parse?: 'slack';
   copyLabel: string;
   onClose: () => void;
   children?: React.ReactNode;
@@ -20,8 +23,11 @@ interface TimelineEventPreviewHeaderProps {
 
 export const TimelineEventPreviewHeader: React.FC<
   TimelineEventPreviewHeaderProps
-> = ({ date, name, onClose, copyLabel, children }) => {
+> = ({ date, name, onClose, copyLabel, children, parse }) => {
   const [_, copy] = useCopyToClipboard();
+
+  const parsedName =
+    parse === 'slack' ? escapeForSlackWithMarkdown(name) : name;
 
   return (
     <CardHeader
@@ -40,8 +46,14 @@ export const TimelineEventPreviewHeader: React.FC<
         alignItems='flex-start'
       >
         <div>
-          <Text fontSize='lg' fontWeight='semibold'>
-            {name}
+          <Text
+            fontSize='lg'
+            fontWeight='semibold'
+            dangerouslySetInnerHTML={
+              parse === 'slack' ? { __html: parsedName } : undefined
+            }
+          >
+            {parse !== 'slack' ? name : null}
           </Text>
           {date && (
             <Text size='2xs' color='gray.500' fontSize='12px'>

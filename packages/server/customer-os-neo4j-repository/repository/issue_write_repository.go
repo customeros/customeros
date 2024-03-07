@@ -47,6 +47,8 @@ type IssueWriteRepository interface {
 
 	ReportedByOrganizationWithGroupId(ctx context.Context, tenant, organizationId, groupId string) error
 	RemoveReportedByOrganizationWithGroupId(ctx context.Context, tenant, organizationId, groupId string) error
+
+	LinkUnthreadIssuesToOrganizationByGroupId(ctx context.Context) error
 }
 
 type issueWriteRepository struct {
@@ -325,6 +327,26 @@ func (r *issueWriteRepository) RemoveReportedByOrganizationWithGroupId(ctx conte
 		"organizationId": organizationId,
 		"groupId":        groupId,
 	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *issueWriteRepository) LinkUnthreadIssuesToOrganizationByGroupId(ctx context.Context) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueWriteRepository.LinkUnthreadIssuesToOrganizationByGroupId")
+	defer span.Finish()
+
+	cypher := `match (t:Tenant)<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem{id:"unthread"})<-[:IS_LINKED_WITH]-(i:Issue)
+			   with t, i
+			   match (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization{slackChannelId: i.groupId})
+			   where not (i)-[:REPORTED_BY]->(o)
+			   MERGE (i)-[:REPORTED_BY]->(o)`
+	params := map[string]any{}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 

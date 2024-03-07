@@ -11,6 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/user"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -29,10 +30,6 @@ func (a *UserAggregate) HandleCommand(ctx context.Context, cmd eventstore.Comman
 		}
 	case *command.AddPlayerInfoCommand:
 		return a.addPlayerInfo(ctx, c)
-	case *command.LinkEmailCommand:
-		return a.linkEmail(ctx, c)
-	case *command.LinkPhoneNumberCommand:
-		return a.linkPhoneNumber(ctx, c)
 	case *command.AddRoleCommand:
 		return a.addRole(ctx, c)
 	case *command.RemoveRoleCommand:
@@ -40,6 +37,21 @@ func (a *UserAggregate) HandleCommand(ctx context.Context, cmd eventstore.Comman
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidCommandType)
 		return eventstore.ErrInvalidCommandType
+	}
+}
+
+func (a *UserAggregate) HandleRequest(ctx context.Context, request any, params map[string]any) (any, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserAggregate.HandleRequest")
+	defer span.Finish()
+
+	switch r := request.(type) {
+	case *userpb.LinkPhoneNumberToUserGrpcRequest:
+		return nil, a.linkPhoneNumber(ctx, r)
+	case *userpb.LinkEmailToUserGrpcRequest:
+		return nil, a.linkEmail(ctx, r)
+	default:
+		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
+		return nil, eventstore.ErrInvalidRequestType
 	}
 }
 
@@ -77,7 +89,7 @@ func (a *UserAggregate) updateUser(ctx context.Context, cmd *command.UpsertUserC
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
 
 	if aggregate.AllowCheckForNoChanges(cmd.Source.AppSource, cmd.LoggedInUserId) {
-		if a.User.SameData(cmd.DataFields, cmd.ExternalSystem) {
+		if a.User.SameUserData(cmd.DataFields, cmd.ExternalSystem) {
 			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
 			return nil
 		}
@@ -143,22 +155,33 @@ func (a *UserAggregate) LinkJobRole(ctx context.Context, tenant, jobRoleId, logg
 	return a.Apply(event)
 }
 
-func (a *UserAggregate) linkPhoneNumber(ctx context.Context, cmd *command.LinkPhoneNumberCommand) error {
+func (a *UserAggregate) linkPhoneNumber(ctx context.Context, request *userpb.LinkPhoneNumberToUserGrpcRequest) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "UserAggregate.linkPhoneNumber")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("command", fmt.Sprintf("%+v", cmd)))
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+
+	if aggregate.AllowCheckForNoChanges(request.AppSource, request.LoggedInUserId) {
+		if a.User.HasPhoneNumber(request.PhoneNumberId, request.Label) {
+			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
+			return nil
+		}
+	}
 
 	updatedAtNotNil := utils.Now()
 
-	event, err := events.NewUserLinkPhoneNumberEvent(a, cmd.Tenant, cmd.PhoneNumberId, cmd.Label, cmd.Primary, updatedAtNotNil)
+	event, err := events.NewUserLinkPhoneNumberEvent(a, request.Tenant, request.PhoneNumberId, request.Label, request.Primary, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewUserLinkPhoneNumberEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
+	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: request.LoggedInUserId,
+		App:    request.AppSource,
+	})
 
 	err = a.Apply(event)
 	if err != nil {
@@ -166,10 +189,10 @@ func (a *UserAggregate) linkPhoneNumber(ctx context.Context, cmd *command.LinkPh
 		return err
 	}
 
-	if cmd.Primary {
+	if request.Primary {
 		for k, v := range a.User.PhoneNumbers {
-			if k != cmd.PhoneNumberId && v.Primary {
-				if err = a.SetPhoneNumberNonPrimary(ctx, cmd.Tenant, k, cmd.LoggedInUserId); err != nil {
+			if k != request.PhoneNumberId && v.Primary {
+				if err = a.SetPhoneNumberNonPrimary(ctx, request.Tenant, k, request.LoggedInUserId); err != nil {
 					return err
 				}
 			}
@@ -198,21 +221,24 @@ func (a *UserAggregate) SetPhoneNumberNonPrimary(ctx context.Context, tenant, ph
 			return errors.Wrap(err, "NewUserLinkPhoneNumberEvent")
 		}
 
-		aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, loggedInUserId)
+		aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+			Tenant: a.Tenant,
+			UserId: loggedInUserId,
+		})
 		return a.Apply(event)
 	}
 	return nil
 }
 
-func (a *UserAggregate) linkEmail(ctx context.Context, cmd *command.LinkEmailCommand) error {
+func (a *UserAggregate) linkEmail(ctx context.Context, request *userpb.LinkEmailToUserGrpcRequest) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "UserAggregate.linkEmail")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
 
-	if aggregate.AllowCheckForNoChanges(cmd.AppSource, cmd.LoggedInUserId) {
-		if a.User.HasEmail(cmd.EmailId, cmd.Label, cmd.Primary) {
+	if aggregate.AllowCheckForNoChanges(request.AppSource, request.LoggedInUserId) {
+		if a.User.HasEmail(request.EmailId, request.Label) {
 			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
 			return nil
 		}
@@ -220,16 +246,16 @@ func (a *UserAggregate) linkEmail(ctx context.Context, cmd *command.LinkEmailCom
 
 	updatedAtNotNil := utils.Now()
 
-	event, err := events.NewUserLinkEmailEvent(a, cmd.Tenant, cmd.EmailId, cmd.Label, cmd.Primary, updatedAtNotNil)
+	event, err := events.NewUserLinkEmailEvent(a, request.Tenant, request.EmailId, request.Label, request.Primary, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewUserLinkEmailEvent")
 	}
 
 	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
-		Tenant: cmd.Tenant,
-		UserId: cmd.LoggedInUserId,
-		App:    cmd.AppSource,
+		Tenant: request.Tenant,
+		UserId: request.LoggedInUserId,
+		App:    request.AppSource,
 	})
 
 	err = a.Apply(event)
@@ -238,10 +264,10 @@ func (a *UserAggregate) linkEmail(ctx context.Context, cmd *command.LinkEmailCom
 		return err
 	}
 
-	if cmd.Primary {
+	if request.Primary {
 		for k, v := range a.User.Emails {
-			if k != cmd.EmailId && v.Primary {
-				if err = a.SetEmailNonPrimary(ctx, cmd.Tenant, k, cmd.LoggedInUserId); err != nil {
+			if k != request.EmailId && v.Primary {
+				if err = a.SetEmailNonPrimary(ctx, request.Tenant, k, request.LoggedInUserId); err != nil {
 					return err
 				}
 			}

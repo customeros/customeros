@@ -93,5 +93,22 @@ func (r *queryResolver) GlobalCache(ctx context.Context) (*model.GlobalCache, er
 
 	response.ContractsExist = contractsExistForTenant
 
+	tenantSettings, err := r.Services.TenantService.GetTenantSettings(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed GlobalCache - get tenant billing profiles")
+		return nil, nil
+	}
+
+	if tenantSettings != nil && tenantSettings.LogoRepositoryFileId != "" {
+		attachmentById, err := r.Services.AttachmentService.GetAttachmentById(ctx, tenantSettings.LogoRepositoryFileId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "Failed GlobalCache - get tenant logo attachment by id")
+			return nil, nil
+		}
+		response.CdnLogoURL = attachmentById.CdnUrl
+	}
+
 	return response, nil
 }

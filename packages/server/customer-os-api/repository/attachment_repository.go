@@ -17,7 +17,7 @@ type AttachmentRepository interface {
 	LinkWithXXIncludesAttachmentInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, linkedWith LinkedWith, linkedNature *LinkedNature, attachmentId, includedById string) (*dbtype.Node, error)
 	UnlinkWithXXIncludesAttachmentInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, linkedWith LinkedWith, linkedNature *LinkedNature, attachmentId, includedById string) (*dbtype.Node, error)
 	GetAttachmentsForXX(ctx context.Context, tenant string, linkedWith LinkedWith, linkedNature *LinkedNature, ids []string) ([]*utils.DbNodeAndId, error)
-	Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant, id, basePath, fileName, mimeType string, size int64, createdAt *time.Time, source, sourceOfTruth neo4jentity.DataSource, appSource string) (*dbtype.Node, error)
+	Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant, id, cdnUrl, basePath, fileName, mimeType string, size int64, createdAt *time.Time, source, sourceOfTruth neo4jentity.DataSource, appSource string) (*dbtype.Node, error)
 }
 
 type attachmentRepository struct {
@@ -119,7 +119,7 @@ func (r *attachmentRepository) GetAttachmentsForXX(ctx context.Context, tenant s
 	return result.([]*utils.DbNodeAndId), err
 }
 
-func (r *attachmentRepository) Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant, id, basePath, fileName, mimeType string, size int64, createdAt *time.Time, source, sourceOfTruth neo4jentity.DataSource, appSource string) (*dbtype.Node, error) {
+func (r *attachmentRepository) Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant, id, cdnUrl, basePath, fileName, mimeType string, size int64, createdAt *time.Time, source, sourceOfTruth neo4jentity.DataSource, appSource string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AttachmentRepository.Create")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -134,6 +134,7 @@ func (r *attachmentRepository) Create(ctx context.Context, tx neo4j.ManagedTrans
 		" a:Attachment, " +
 		" a.source=$source, " +
 		" a.createdAt=$createdAt, " +
+		" a.cdnUrl=$cdnUrl, " +
 		" a.basePath=$basePath, " +
 		" a.fileName=$fileName, " +
 		" a.mimeType=$mimeType, " +
@@ -150,6 +151,7 @@ func (r *attachmentRepository) Create(ctx context.Context, tx neo4j.ManagedTrans
 			"source":        source,
 			"createdAt":     *createdAt,
 			"id":            id,
+			"cdnUrl":        cdnUrl,
 			"basePath":      basePath,
 			"fileName":      fileName,
 			"mimeType":      mimeType,

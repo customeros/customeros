@@ -1,4 +1,4 @@
-name: Build customer-os-common-auth
+name: customer-os-common-auth
 
 on:
   push:

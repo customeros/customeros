@@ -17,18 +17,18 @@ import { BilledType, ServiceLineItem } from '@graphql/types';
 import { NumberInput, NumberInputField } from '@ui/form/NumberInput';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 import { billedTypeOptions } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
+import { BulkUpdateServiceLineItem } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ServiceLineItemsModal/ServiceLineItemsModal.dto';
 
-import { ServiceItem } from './type';
 import { ServiceLineItemInputWrapper } from './ServiceLineItemInputWrapper';
 type DateInputValue = null | string | number | Date;
 
 const [_, _1, ...subscriptionOptions] = billedTypeOptions;
 interface ServiceLineItemProps {
   index: number;
-  service: ServiceItem;
   currency?: string | null;
+  service: BulkUpdateServiceLineItem;
   prevServiceLineItemData?: ServiceLineItem;
-  onChange: (updatedService: ServiceItem) => void;
+  onChange: (updatedService: BulkUpdateServiceLineItem) => void;
 }
 
 export const ServiceLineItemRow = ({
@@ -39,7 +39,7 @@ export const ServiceLineItemRow = ({
   prevServiceLineItemData,
 }: ServiceLineItemProps) => {
   const handleChange = (
-    field: keyof ServiceItem,
+    field: keyof BulkUpdateServiceLineItem,
     value: string | boolean | Date,
   ) => {
     onChange({ ...service, [field]: value });
@@ -76,16 +76,7 @@ export const ServiceLineItemRow = ({
     if (!data) return handleChange('serviceStarted', false);
     const date = new Date(data);
 
-    const normalizedDate = new Date(
-      Date.UTC(
-        date.getFullYear(),
-        date.getMonth(),
-        date.getDate(),
-        date.getHours(),
-        date.getMinutes(),
-        date.getSeconds(),
-      ),
-    );
+    const normalizedDate = new Date(DateTimeUtils.toISOMidnight(date));
     handleChange('serviceStarted', normalizedDate);
   };
 
@@ -187,8 +178,6 @@ export const ServiceLineItemRow = ({
           w='full'
           placeholder='Per license'
           label='Price/qty'
-          step={0.01}
-          min={0.01}
           value={`${service.price}`}
           fontSize='sm'
           sx={{
@@ -226,6 +215,9 @@ export const ServiceLineItemRow = ({
                   },
                 };
               },
+              menuList: (props, state) => ({
+                minW: '100px',
+              }),
               input: (props, state) => {
                 return {
                   minHeight: 'auto',
@@ -279,12 +271,6 @@ export const ServiceLineItemRow = ({
             id='service-line-template-date-picker'
             name='startDate'
             clearIcon={null}
-            disabled={
-              !!service?.id &&
-              prevServiceLineItemData?.price === service.price &&
-              service.quantity === prevServiceLineItemData?.quantity
-            }
-            minDate={service?.id ? new Date() : undefined}
             onChange={(event) => handleDateInputChange(event as DateInputValue)}
             defaultValue={service.serviceStarted}
             formatShortWeekday={(_, date) =>

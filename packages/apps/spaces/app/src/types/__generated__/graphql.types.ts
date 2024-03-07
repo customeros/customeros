@@ -98,6 +98,7 @@ export type Attachment = Node & {
   __typename?: 'Attachment';
   appSource: Scalars['String']['output'];
   basePath: Scalars['String']['output'];
+  cdnUrl: Scalars['String']['output'];
   createdAt: Scalars['Time']['output'];
   fileName: Scalars['String']['output'];
   id: Scalars['ID']['output'];
@@ -110,6 +111,7 @@ export type Attachment = Node & {
 export type AttachmentInput = {
   appSource: Scalars['String']['input'];
   basePath: Scalars['String']['input'];
+  cdnUrl: Scalars['String']['input'];
   createdAt?: InputMaybe<Scalars['Time']['input']>;
   fileName: Scalars['String']['input'];
   id?: InputMaybe<Scalars['ID']['input']>;
@@ -268,6 +270,8 @@ export enum ComparisonOperator {
   Eq = 'EQ',
   Gte = 'GTE',
   In = 'IN',
+  IsEmpty = 'IS_EMPTY',
+  IsNull = 'IS_NULL',
   Lte = 'LTE',
   StartsWith = 'STARTS_WITH',
 }
@@ -1145,6 +1149,7 @@ export enum ExternalSystemType {
   Salesforce = 'SALESFORCE',
   Slack = 'SLACK',
   Stripe = 'STRIPE',
+  Unthread = 'UNTHREAD',
   ZendeskSupport = 'ZENDESK_SUPPORT',
 }
 
@@ -1248,6 +1253,7 @@ export enum GCliSearchResultType {
 
 export type GlobalCache = {
   __typename?: 'GlobalCache';
+  cdnLogoUrl: Scalars['String']['output'];
   contractsExist: Scalars['Boolean']['output'];
   gCliCache: Array<GCliItem>;
   isGoogleActive: Scalars['Boolean']['output'];
@@ -1936,6 +1942,7 @@ export type Mutation = {
   contractLineItem_Create: ServiceLineItem;
   contractLineItem_Update: ServiceLineItem;
   contract_Create: Contract;
+  contract_Delete: DeleteResponse;
   contract_Update: Contract;
   customFieldDeleteFromContactById: Result;
   customFieldDeleteFromContactByName: Result;
@@ -2050,13 +2057,7 @@ export type Mutation = {
   phoneNumberUpdateInOrganization: PhoneNumber;
   phoneNumberUpdateInUser: PhoneNumber;
   player_Merge: Result;
-  /** @deprecated Use contractLineItem_Create instead. */
-  serviceLineItemCreate: ServiceLineItem;
-  /** @deprecated Use contractLineItem_Update instead. */
-  serviceLineItemUpdate: ServiceLineItem;
   serviceLineItem_BulkUpdate: Array<Scalars['ID']['output']>;
-  /** @deprecated Use contractLineItem_Close instead. */
-  serviceLineItem_Close: Scalars['ID']['output'];
   serviceLineItem_Delete: DeleteResponse;
   social_Remove: Result;
   social_Update: Social;
@@ -2180,6 +2181,10 @@ export type MutationContractLineItem_UpdateArgs = {
 
 export type MutationContract_CreateArgs = {
   input: ContractInput;
+};
+
+export type MutationContract_DeleteArgs = {
+  id: Scalars['ID']['input'];
 };
 
 export type MutationContract_UpdateArgs = {
@@ -2712,20 +2717,8 @@ export type MutationPlayer_MergeArgs = {
   userId: Scalars['ID']['input'];
 };
 
-export type MutationServiceLineItemCreateArgs = {
-  input: ServiceLineItemInput;
-};
-
-export type MutationServiceLineItemUpdateArgs = {
-  input: ServiceLineItemUpdateInput;
-};
-
 export type MutationServiceLineItem_BulkUpdateArgs = {
   input: ServiceLineItemBulkUpdateInput;
-};
-
-export type MutationServiceLineItem_CloseArgs = {
-  input: ServiceLineItemCloseInput;
 };
 
 export type MutationServiceLineItem_DeleteArgs = {
@@ -3805,40 +3798,18 @@ export enum Role {
 
 export type ServiceLineItem = MetadataInterface & {
   __typename?: 'ServiceLineItem';
-  /** @deprecated Use metadata instead. */
-  appSource: Scalars['String']['output'];
-  /** @deprecated Use billingCycle instead. */
-  billed: BilledType;
   billingCycle: BilledType;
   comments: Scalars['String']['output'];
-  /** @deprecated Use metadata instead. */
-  createdAt: Scalars['Time']['output'];
   createdBy?: Maybe<User>;
   description: Scalars['String']['output'];
-  /** @deprecated Use serviceEnded instead. */
-  endedAt?: Maybe<Scalars['Time']['output']>;
   externalLinks: Array<ExternalSystem>;
-  /** @deprecated Use metadata instead. */
-  id: Scalars['ID']['output'];
   metadata: Metadata;
-  /** @deprecated Use description instead. */
-  name: Scalars['String']['output'];
   parentId: Scalars['ID']['output'];
   price: Scalars['Float']['output'];
   quantity: Scalars['Int64']['output'];
   serviceEnded?: Maybe<Scalars['Time']['output']>;
   serviceStarted: Scalars['Time']['output'];
-  /** @deprecated Use metadata instead. */
-  source: DataSource;
-  /** @deprecated Use metadata instead. */
-  sourceOfTruth: DataSource;
-  /** @deprecated Use serviceStarted instead. */
-  startedAt: Scalars['Time']['output'];
   tax: Tax;
-  /** @deprecated Use metadata instead. */
-  updatedAt: Scalars['Time']['output'];
-  /** @deprecated Use tax instead. */
-  vatRate: Scalars['Float']['output'];
 };
 
 export type ServiceLineItemBulkUpdateInput = {
@@ -3867,39 +3838,28 @@ export type ServiceLineItemCloseInput = {
 
 export type ServiceLineItemInput = {
   appSource?: InputMaybe<Scalars['String']['input']>;
-  billed?: InputMaybe<BilledType>;
   billingCycle?: InputMaybe<BilledType>;
   contractId: Scalars['ID']['input'];
   description?: InputMaybe<Scalars['String']['input']>;
-  endedAt?: InputMaybe<Scalars['Time']['input']>;
-  externalReference?: InputMaybe<ExternalSystemReferenceInput>;
-  name?: InputMaybe<Scalars['String']['input']>;
   price?: InputMaybe<Scalars['Float']['input']>;
   quantity?: InputMaybe<Scalars['Int64']['input']>;
   serviceEnded?: InputMaybe<Scalars['Time']['input']>;
   serviceStarted?: InputMaybe<Scalars['Time']['input']>;
-  startedAt?: InputMaybe<Scalars['Time']['input']>;
   tax?: InputMaybe<TaxInput>;
-  vatRate?: InputMaybe<Scalars['Float']['input']>;
 };
 
 export type ServiceLineItemUpdateInput = {
   appSource?: InputMaybe<Scalars['String']['input']>;
-  billed?: InputMaybe<BilledType>;
   billingCycle?: InputMaybe<BilledType>;
   comments?: InputMaybe<Scalars['String']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
-  externalReference?: InputMaybe<ExternalSystemReferenceInput>;
   id?: InputMaybe<Scalars['ID']['input']>;
   isRetroactiveCorrection?: InputMaybe<Scalars['Boolean']['input']>;
-  name?: InputMaybe<Scalars['String']['input']>;
   price?: InputMaybe<Scalars['Float']['input']>;
   quantity?: InputMaybe<Scalars['Int64']['input']>;
   serviceEnded?: InputMaybe<Scalars['Time']['input']>;
-  serviceLineItemId: Scalars['ID']['input'];
   serviceStarted?: InputMaybe<Scalars['Time']['input']>;
   tax?: InputMaybe<TaxInput>;
-  vatRate?: InputMaybe<Scalars['Float']['input']>;
 };
 
 export type SlackChannel = {
@@ -4072,6 +4032,7 @@ export type TenantBillingProfile = Node &
     legalName: Scalars['String']['output'];
     locality: Scalars['String']['output'];
     phone: Scalars['String']['output'];
+    sendInvoicesBcc: Scalars['String']['output'];
     sendInvoicesFrom: Scalars['String']['output'];
     source: DataSource;
     sourceOfTruth: DataSource;
@@ -4096,6 +4057,7 @@ export type TenantBillingProfileInput = {
   legalName?: InputMaybe<Scalars['String']['input']>;
   locality?: InputMaybe<Scalars['String']['input']>;
   phone?: InputMaybe<Scalars['String']['input']>;
+  sendInvoicesBcc?: InputMaybe<Scalars['String']['input']>;
   sendInvoicesFrom: Scalars['String']['input'];
   vatNumber: Scalars['String']['input'];
   zip?: InputMaybe<Scalars['String']['input']>;
@@ -4119,6 +4081,7 @@ export type TenantBillingProfileUpdateInput = {
   locality?: InputMaybe<Scalars['String']['input']>;
   patch?: InputMaybe<Scalars['Boolean']['input']>;
   phone?: InputMaybe<Scalars['String']['input']>;
+  sendInvoicesBcc?: InputMaybe<Scalars['String']['input']>;
   sendInvoicesFrom?: InputMaybe<Scalars['String']['input']>;
   vatNumber?: InputMaybe<Scalars['String']['input']>;
   zip?: InputMaybe<Scalars['String']['input']>;
@@ -4134,6 +4097,7 @@ export type TenantSettings = {
   baseCurrency?: Maybe<Currency>;
   billingEnabled: Scalars['Boolean']['output'];
   logoRepositoryFileId?: Maybe<Scalars['String']['output']>;
+  /** @deprecated Use logoRepositoryFileId */
   logoUrl: Scalars['String']['output'];
 };
 

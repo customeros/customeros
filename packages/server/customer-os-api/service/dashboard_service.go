@@ -73,10 +73,10 @@ func (s *dashboardService) GetDashboardViewOrganizationsData(ctx context.Context
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Int("page", requestDetails.Page), log.Int("limit", requestDetails.Limit))
 	if requestDetails.Where != nil {
-		span.LogFields(log.Object("filter", *requestDetails.Where))
+		tracing.LogObjectAsJson(span, "where", *requestDetails.Where)
 	}
 	if requestDetails.Sort != nil {
-		span.LogFields(log.Object("sort", *requestDetails.Sort))
+		tracing.LogObjectAsJson(span, "sort", *requestDetails.Sort)
 	}
 
 	var paginatedResult = utils.Pagination{

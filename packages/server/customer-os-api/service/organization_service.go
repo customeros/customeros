@@ -196,10 +196,10 @@ func (s *organizationService) GetById(ctx context.Context, organizationId string
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("organizationId", organizationId))
 
-	dbNode, err := s.repositories.OrganizationRepository.GetOrganizationById(ctx, common.GetTenantFromContext(ctx), organizationId)
+	dbNode, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, common.GetTenantFromContext(ctx), organizationId)
 	if err != nil {
-		wrappedErr := errors.Wrap(err, fmt.Sprintf("Organization with id {%s} not found", organizationId))
-		return nil, wrappedErr
+		tracing.TraceErr(span, err)
+		return nil, err
 	}
 	return s.mapDbNodeToOrganizationEntity(*dbNode), nil
 }
@@ -296,7 +296,7 @@ func (s *organizationService) Merge(ctx context.Context, primaryOrganizationId, 
 	// Refresh renewal likelihood
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err = CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-		return s.grpcClients.OrganizationClient.RefreshRenewalSummary(ctx, &organizationpb.OrganizationIdGrpcRequest{
+		return s.grpcClients.OrganizationClient.RefreshRenewalSummary(ctx, &organizationpb.RefreshRenewalSummaryGrpcRequest{
 			Tenant:         common.GetTenantFromContext(ctx),
 			OrganizationId: primaryOrganizationId,
 			LoggedInUserId: common.GetUserIdFromContext(ctx),
@@ -562,7 +562,7 @@ func (s *organizationService) ReplaceOwner(ctx context.Context, organizationID, 
 		return nil, err
 	}
 	// get org node back from db to keep function signature the same
-	dbNode, err := s.repositories.OrganizationRepository.GetOrganizationById(ctx, common.GetTenantFromContext(ctx), organizationID)
+	dbNode, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, common.GetTenantFromContext(ctx), organizationID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err

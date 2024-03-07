@@ -61,7 +61,8 @@ func MapDbNodeToInvoiceEntity(dbNode *dbtype.Node) *entity.InvoiceEntity {
 			PaymentLink: utils.GetStringPropOrEmpty(props, "paymentLink"),
 		},
 		InvoiceInternalFields: entity.InvoiceInternalFields{
-			PaymentRequestedAt:                utils.GetTimePropOrNil(props, "techPaymentRequestedAt"),
+			InvoiceFinalizedSentAt:            utils.GetTimePropOrNil(props, "techInvoiceFinalizedSentAt"),
+			PaymentLinkRequestedAt:            utils.GetTimePropOrNil(props, "techPaymentLinkRequestedAt"),
 			PayInvoiceNotificationRequestedAt: utils.GetTimePropOrNil(props, "techPayNotificationRequestedAt"),
 			PayInvoiceNotificationSentAt:      utils.GetTimePropOrNil(props, "techPayInvoiceNotificationSentAt"),
 			PaidInvoiceNotificationSentAt:     utils.GetTimePropOrNil(props, "techPaidInvoiceNotificationSentAt"),
@@ -496,4 +497,60 @@ func MapDbNodeToTagEntity(dbNode *dbtype.Node) *entity.TagEntity {
 		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
 	return &tag
+}
+
+func MapDbNodeToIssueEntity(dbNode *dbtype.Node) *entity.IssueEntity {
+	if dbNode == nil {
+		return &entity.IssueEntity{}
+	}
+	props := utils.GetPropsFromNode(*dbNode)
+	issue := entity.IssueEntity{
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		CreatedAt:     utils.GetTimePropOrNow(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrNow(props, "updatedAt"),
+		Subject:       utils.GetStringPropOrEmpty(props, "subject"),
+		Status:        utils.GetStringPropOrEmpty(props, "status"),
+		Priority:      utils.GetStringPropOrEmpty(props, "priority"),
+		Description:   utils.GetStringPropOrEmpty(props, "description"),
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
+	}
+	return &issue
+}
+
+func MapDbNodeToCommentEntity(dbNode *dbtype.Node) *entity.CommentEntity {
+	if dbNode == nil {
+		return &entity.CommentEntity{}
+	}
+	props := utils.GetPropsFromNode(*dbNode)
+	comment := entity.CommentEntity{
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		Content:       utils.GetStringPropOrEmpty(props, "content"),
+		ContentType:   utils.GetStringPropOrEmpty(props, "contentType"),
+		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+	}
+	return &comment
+}
+
+func MapDbNodeToSocialEntity(dbNode *dbtype.Node) *entity.SocialEntity {
+	if dbNode == nil {
+		return &entity.SocialEntity{}
+	}
+	props := utils.GetPropsFromNode(*dbNode)
+	social := entity.SocialEntity{
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		PlatformName:  utils.GetStringPropOrEmpty(props, "platformName"),
+		Url:           utils.GetStringPropOrEmpty(props, "url"),
+		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+	}
+	return &social
 }

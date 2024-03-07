@@ -50,10 +50,10 @@ func (r *queryResolver) DashboardViewOrganizations(ctx context.Context, paginati
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.Object("pagination", pagination))
 	if where != nil {
-		span.LogFields(log.Object("filter", *where))
+		tracing.LogObjectAsJson(span, "filter", *where)
 	}
 	if sort != nil {
-		span.LogFields(log.Object("sort", *sort))
+		tracing.LogObjectAsJson(span, "sort", *sort)
 	}
 
 	paginatedResult, err := r.Services.QueryService.GetDashboardViewOrganizationsData(ctx, service.DashboardViewOrganizationsRequest{

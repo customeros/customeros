@@ -7,17 +7,12 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/notifications"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 )
 
 type Services struct {
 	FileStoreApiService fsc.FileStoreApiService
 	CommonServices      *commonService.Services
-
-	//notification servionces
-	//NovuProvider NotificationProvider
-	PostmarkProvider *notifications.PostmarkProvider
 
 	//GRPC services
 	ContactService            *contactService
@@ -49,14 +44,12 @@ func InitServices(cfg *config.Config, repositories *repository.Repositories, agg
 	services.FileStoreApiService = fsc.NewFileStoreApiService(&cfg.Services.FileStoreApiConfig)
 	services.CommonServices = commonService.InitServices(repositories.Drivers.GormDb, repositories.Drivers.Neo4jDriver)
 
-	services.PostmarkProvider = notifications.NewPostmarkProvider(log, repositories)
-
 	//GRPC services
 	services.ContactService = NewContactService(log, commandHandlers.Contact)
 	services.OrganizationService = NewOrganizationService(log, commandHandlers.Organization, aggregateStore, cfg)
 	services.PhoneNumberService = NewPhoneNumberService(log, repositories.Neo4jRepositories, commandHandlers.PhoneNumber)
 	services.EmailService = NewEmailService(log, repositories.Neo4jRepositories, commandHandlers.Email)
-	services.UserService = NewUserService(log, commandHandlers.User)
+	services.UserService = NewUserService(log, aggregateStore, cfg, commandHandlers.User)
 	services.LocationService = NewLocationService(log, commandHandlers.Location)
 	services.JobRoleService = NewJobRoleService(log, commandHandlers.JobRole)
 	services.InteractionEventService = NewInteractionEventService(log, commandHandlers.InteractionEvent)

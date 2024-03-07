@@ -1,7 +1,7 @@
 'use client';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-import { useThrottle } from 'rooks';
+import { useDebounce } from 'rooks';
 
 import { Input } from '@ui/form/Input';
 import { Flex } from '@ui/layout/Flex';
@@ -26,7 +26,7 @@ export const Search = () => {
       ? 'Search portfolio'
       : 'Search organizations';
 
-  const [handleChange] = useThrottle(
+  const handleChange = useDebounce(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const value = event.target.value;
       const params = new URLSearchParams(searchParams?.toString());

@@ -6,15 +6,15 @@ replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-
 
 require (
 	github.com/cucumber/godog v0.14.0
-	github.com/docker/docker v25.0.2+incompatible
+	github.com/docker/docker v25.0.3+incompatible
 	github.com/google/uuid v1.6.0
 	github.com/neo4j/neo4j-go-driver/v5 v5.18.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20231227140027-08b87eac2360
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
-	github.com/stretchr/testify v1.8.4
-	github.com/testcontainers/testcontainers-go v0.28.0
-	golang.org/x/net v0.20.0
+	github.com/stretchr/testify v1.9.0
+	github.com/testcontainers/testcontainers-go v0.29.1
+	golang.org/x/net v0.22.0
 )
 
 require (
@@ -52,7 +52,7 @@ require (
 	github.com/moby/term v0.5.0 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
-	github.com/opencontainers/image-spec v1.1.0-rc5 // indirect
+	github.com/opencontainers/image-spec v1.1.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
 	github.com/shirou/gopsutil/v3 v3.23.12 // indirect
@@ -72,11 +72,11 @@ require (
 	go.uber.org/multierr v1.10.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/exp v0.0.0-20230510235704-dd950f8aeaea // indirect
-	golang.org/x/mod v0.11.0 // indirect
-	golang.org/x/sys v0.16.0 // indirect
-	golang.org/x/tools v0.10.0 // indirect
+	golang.org/x/mod v0.16.0 // indirect
+	golang.org/x/sys v0.18.0 // indirect
+	golang.org/x/tools v0.13.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240123012728-ef4313101c80 // indirect
-	google.golang.org/grpc v1.62.0 // indirect
+	google.golang.org/grpc v1.62.1 // indirect
 	google.golang.org/protobuf v1.32.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

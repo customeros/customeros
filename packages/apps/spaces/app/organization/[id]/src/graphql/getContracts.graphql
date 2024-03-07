@@ -53,22 +53,28 @@ query getContracts($id: ID!) {
                     name
                 }
             }
-            serviceLineItems {
-                id
-                createdAt
-                updatedAt
-                name
-                billed
+            contractLineItems {
+                metadata {
+                    id
+                    created
+                    lastUpdated
+                    source
+                    appSource
+                    sourceOfTruth
+                }
+                description
+                billingCycle
                 price
                 quantity
-                source
                 comments
-                sourceOfTruth
-                appSource
-                endedAt
+                serviceEnded
                 parentId
                 serviceStarted
-                vatRate
+                tax {
+                    salesTax
+                    vat
+                    taxRate
+                }
             }
         }
     }

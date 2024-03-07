@@ -139,7 +139,7 @@ export const ChannelLinkSelect = ({ from }: ChannelLinkSelectProps) => {
     }
 
     return (
-      <Tooltip label={`Edit channel ${value.label}`} hasArrow>
+      <Tooltip label={`Unlink ${value.label}`} hasArrow>
         <Button
           size='sm'
           variant='outline'
@@ -172,6 +172,7 @@ export const ChannelLinkSelect = ({ from }: ChannelLinkSelectProps) => {
         options={options}
         onChange={handleChange}
         onBlur={onClose}
+        noOptionsMessage={() => 'No channel found'}
         openMenuOnClick={!value}
         placeholder='Slack channel'
         isLoading={updateOrganization.isPending}

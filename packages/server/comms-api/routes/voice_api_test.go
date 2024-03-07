@@ -9,8 +9,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/config"
 	voiceModel "github.com/openline-ai/openline-customer-os/packages/server/comms-api/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/test/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/test/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"log"
@@ -38,7 +39,7 @@ func init() {
 func Test_eventCallStarted(t *testing.T) {
 	voiceApiRouter := gin.Default()
 
-	_, client, resolver := utils.NewWebServer(t)
+	_, client, resolver := test.NewGraphQlMockedServer(t)
 	customerOs := service.NewCustomerOSService(client, myVoiceApiConfig)
 	route := voiceApiRouter.Group("/")
 	reachedSessionCreate := false
@@ -198,7 +199,7 @@ func Test_eventCallStarted(t *testing.T) {
 func Test_eventCallAnswered(t *testing.T) {
 	voiceApiRouter := gin.Default()
 
-	_, client, resolver := utils.NewWebServer(t)
+	_, client, resolver := test.NewGraphQlMockedServer(t)
 	customerOs := service.NewCustomerOSService(client, myVoiceApiConfig)
 	route := voiceApiRouter.Group("/")
 	reachedSessionBySessionIdentifier := false
@@ -352,7 +353,7 @@ func Test_eventCallAnswered(t *testing.T) {
 func Test_eventCallCalledHangup(t *testing.T) {
 	voiceApiRouter := gin.Default()
 
-	_, client, resolver := utils.NewWebServer(t)
+	_, client, resolver := test.NewGraphQlMockedServer(t)
 	customerOs := service.NewCustomerOSService(client, myVoiceApiConfig)
 	route := voiceApiRouter.Group("/")
 	reachedSessionBySessionIdentifier := false
@@ -516,7 +517,7 @@ func Test_eventCallCalledHangup(t *testing.T) {
 func Test_eventCallCallingHangup(t *testing.T) {
 	voiceApiRouter := gin.Default()
 
-	_, client, resolver := utils.NewWebServer(t)
+	_, client, resolver := test.NewGraphQlMockedServer(t)
 	customerOs := service.NewCustomerOSService(client, myVoiceApiConfig)
 	route := voiceApiRouter.Group("/")
 	reachedSessionBySessionIdentifier := false

@@ -7,12 +7,12 @@ import { VatInput } from '@settings/components/Tabs/panels/BillingPanel/componen
 import { PaymentMethods } from '@settings/components/Tabs/panels/BillingPanel/components/PaymentMethods';
 
 import { Flex } from '@ui/layout/Flex';
+import { Text } from '@ui/typography/Text';
 import { CardBody } from '@ui/layout/Card';
-import { FormInput } from '@ui/form/Input';
 import { FormSelect } from '@ui/form/SyncSelect';
+import { Divider } from '@ui/presentation/Divider';
 import { countryOptions } from '@shared/util/countryOptions';
-
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+import { FormInput, FormResizableInput } from '@ui/form/Input';
 
 export const TenantBillingPanelDetailsForm = ({
   setIsInvoiceProviderDetailsHovered,
@@ -23,10 +23,8 @@ export const TenantBillingPanelDetailsForm = ({
   canPayWithDirectDebitACH,
   canPayWithDirectDebitSEPA,
   canPayWithDirectDebitBacs,
-  email,
 }: {
   formId: string;
-  email?: string | null;
   canPayWithCard?: boolean;
   invoicingEnabled?: boolean;
   canPayWithDirectDebitACH?: boolean;
@@ -135,28 +133,50 @@ export const TenantBillingPanelDetailsForm = ({
           onFocus={() => setIsInvoiceProviderFocused(true)}
           onBlur={() => setIsInvoiceProviderFocused(false)}
         />
+      </Flex>
+      <Flex flexDir='column'>
+        <Flex position='relative' alignItems='center'>
+          <Text fontSize='sm' whiteSpace='nowrap' mr={2} color='gray.500'>
+            Email invoice
+          </Text>
+          <Divider background='gray.200' />
+        </Flex>
 
-        <FormInput
+        <FormResizableInput
+          formId={formId}
           autoComplete='off'
-          label='Send invoice from'
-          isLabelVisible
+          label='From'
           labelProps={{
             fontSize: 'sm',
             mb: 0,
             mt: 4,
             fontWeight: 'semibold',
           }}
-          formId={formId}
+          fontWeight='medium'
+          isLabelVisible
           name='sendInvoicesFrom'
-          textOverflow='ellipsis'
-          placeholder='Email'
-          type='email'
-          isInvalid={!!email?.length && !emailRegex.test(email)}
+          placeholder=''
+          rightElement={'@invoices.customeros.com'}
           onFocus={() => setIsInvoiceProviderFocused(true)}
-          onBlur={() => setIsInvoiceProviderFocused(false)}
+        />
+
+        <FormInput
+          autoComplete='off'
+          label='BCC'
+          labelProps={{
+            fontSize: 'sm',
+            mb: 0,
+            mt: 4,
+            fontWeight: 'semibold',
+          }}
+          isLabelVisible
+          formId={formId}
+          name='sendInvoicesBcc'
+          textOverflow='ellipsis'
+          placeholder='BCC'
+          type='email'
         />
       </Flex>
-
       <PaymentMethods
         formId={formId}
         canPayWithCard={canPayWithCard}

@@ -220,7 +220,7 @@ func (s *organizationService) RefreshLastTouchpoint(ctx context.Context, request
 	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }
 
-func (s *organizationService) RefreshRenewalSummary(ctx context.Context, request *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+func (s *organizationService) RefreshRenewalSummary(ctx context.Context, request *organizationpb.RefreshRenewalSummaryGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.RefreshRenewalSummary")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
@@ -232,10 +232,10 @@ func (s *organizationService) RefreshRenewalSummary(ctx context.Context, request
 		return nil, status.Error(codes.Canceled, "Context canceled")
 	}
 
-	cmd := command.NewRefreshRenewalSummaryCommand(request.Tenant, request.OrganizationId, request.LoggedInUserId, request.AppSource)
-	if err := s.organizationCommands.RefreshRenewalSummary.Handle(ctx, cmd); err != nil {
+	_, err := s.organizationRequestHandler.HandleTempWithRetry(ctx, request.Tenant, request.OrganizationId, request)
+	if err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("Failed to refresh renewal summary for organization with id  %s in tenant %s, err: %s", request.OrganizationId, request.Tenant, err.Error())
+		s.log.Errorf("Failed to refresh renewal summary for organization with id {%s} for tenant {%s}, err: %s", request.OrganizationId, request.Tenant, err.Error())
 		return nil, s.errResponse(err)
 	}
 

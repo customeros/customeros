@@ -1,7 +1,6 @@
 import { FC, PropsWithChildren } from 'react';
 
 import { match } from 'ts-pattern';
-// @ts-expect-error types not available
 import { escapeForSlackWithMarkdown } from 'slack-to-html';
 
 import { Flex } from '@ui/layout/Flex';

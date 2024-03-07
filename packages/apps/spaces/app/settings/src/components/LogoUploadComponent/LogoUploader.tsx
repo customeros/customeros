@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState } from 'react';
 import { FilePond, FileStatus, registerPlugin } from 'react-filepond';
 
 import { useWillUnmount } from 'rooks';
@@ -19,7 +19,7 @@ import { IconButton } from '@ui/form/IconButton';
 import { Upload01 } from '@ui/media/icons/Upload01';
 import { Image as ChakraImage } from '@ui/media/Image';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useCustomerLogo } from '@shared/state/CustomerLogo.atom';
+import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 
 registerPlugin(FilePondPluginImagePreview);
 registerPlugin(FilePondPluginValidateSize);
@@ -34,8 +34,9 @@ export const LogoUploader: React.FC<LogoUploaderProps> = () => {
   const pondRef = useRef<FilePond | null>(null);
 
   const { data: tenantSettingsData } = useTenantSettingsQuery(client);
+  const { data: globalCacheData } = useGlobalCacheQuery(client);
   const queryKey = useTenantSettingsQuery.getKey();
-  const [{ logoUrl }, setLogoUrl] = useCustomerLogo();
+  const globalCacheQueryKey = useGlobalCacheQuery.getKey();
   const [hasError, setHasError] = useState<null | {
     file: string;
     error: string;
@@ -59,48 +60,15 @@ export const LogoUploader: React.FC<LogoUploaderProps> = () => {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({ queryKey: globalCacheQueryKey });
     },
   });
 
   const [files, setFiles] = React.useState<Array<FilePondFile>>([]);
 
-  const fetchLogo = async ({ id }: { id: string }) => {
-    try {
-      const response = await fetch(`/fs/file/${id}/download`);
-      const blob = await response.blob();
-      const reader = new FileReader();
-      reader.onload = function () {
-        const img = new Image();
-        img.src = reader.result as string;
-        const dataUrl = reader.result as string;
-        if (dataUrl) {
-          setLogoUrl({
-            logoUrl: dataUrl,
-            dimensions: {
-              width: img.width || 136,
-              height: img.height || 36,
-            },
-          });
-        } else {
-          setHasError({ error: 'Error loading logo', file: 'logo' });
-        }
-      };
-      reader.readAsDataURL(blob);
-    } catch (reason) {
-      setHasError({ error: 'Error loading logo', file: 'logo' });
-    }
-  };
-
   useWillUnmount(() => {
     queryClient.cancelQueries({ queryKey });
   });
-  useEffect(() => {
-    if (tenantSettingsData?.tenantSettings?.logoRepositoryFileId) {
-      fetchLogo({
-        id: tenantSettingsData?.tenantSettings?.logoRepositoryFileId,
-      });
-    }
-  }, [tenantSettingsData?.tenantSettings?.logoRepositoryFileId]);
 
   function getDefaultLabel() {
     return renderToString(
@@ -140,7 +108,7 @@ export const LogoUploader: React.FC<LogoUploaderProps> = () => {
         <Text color='gray.600' fontSize='sm' fontWeight='semibold'>
           Organization logo
         </Text>
-        {logoUrl && (
+        {globalCacheData?.global_Cache?.cdnLogoUrl && (
           <IconButton
             variant='ghost'
             aria-label='Upload file'
@@ -152,7 +120,7 @@ export const LogoUploader: React.FC<LogoUploaderProps> = () => {
         )}
       </Flex>
 
-      {logoUrl && !isLoading && !hasError && (
+      {globalCacheData?.global_Cache?.cdnLogoUrl && !isLoading && !hasError && (
         <Box
           position='relative'
           maxHeight={120}
@@ -161,9 +129,9 @@ export const LogoUploader: React.FC<LogoUploaderProps> = () => {
           padding={4}
         >
           <ChakraImage
-            src={`${logoUrl}`}
+            src={`${globalCacheData?.global_Cache?.cdnLogoUrl}`}
             alt='CustomerOS'
-            width={40}
+            width={136}
             height={40}
             style={{
               objectFit: 'contain',
@@ -177,13 +145,26 @@ export const LogoUploader: React.FC<LogoUploaderProps> = () => {
       <Box
         onClick={() => hasError && pondRef.current?.browse()}
         className={
-          hasError ? 'filepond-error' : logoUrl ? 'filepond-uploaded' : ''
+          hasError
+            ? 'filepond-error'
+            : globalCacheData?.global_Cache?.cdnLogoUrl
+            ? 'filepond-uploaded'
+            : ''
         }
         sx={{
           '&': {
             position:
-              logoUrl && !isLoading && !hasError ? 'absolute' : 'static',
-            top: logoUrl && !isLoading && !hasError ? '-9999' : 'auto',
+              globalCacheData?.global_Cache?.cdnLogoUrl &&
+              !isLoading &&
+              !hasError
+                ? 'absolute'
+                : 'static',
+            top:
+              globalCacheData?.global_Cache?.cdnLogoUrl &&
+              !isLoading &&
+              !hasError
+                ? '-9999'
+                : 'auto',
           },
           '& .filepond--root .filepond--drop-label': {
             minHeight:
@@ -237,6 +218,7 @@ export const LogoUploader: React.FC<LogoUploaderProps> = () => {
               // file is the actual file object to send
               const formData = new FormData();
               formData.append('file', file, file.name);
+              formData.append('cdnUpload', 'true');
 
               const request = new XMLHttpRequest();
               request.open('POST', '/fs/file');
@@ -265,14 +247,6 @@ export const LogoUploader: React.FC<LogoUploaderProps> = () => {
                   reader.onload = function () {
                     const img = new Image();
                     img.src = reader.result as string;
-                    setLogoUrl({
-                      logoUrl: reader.result as string,
-                      dimensions: {
-                        width: img.width,
-                        height: img.height,
-                      },
-                    });
-                    fetchLogo({ id: parsedResponse.id });
 
                     return reader.result;
                   };
@@ -325,7 +299,7 @@ export const LogoUploader: React.FC<LogoUploaderProps> = () => {
           }}
           onremovefile={() => {
             setHasError(null);
-            if (logoUrl) {
+            if (globalCacheData?.global_Cache?.cdnLogoUrl) {
               updateTenantSettingsMutation.mutate({
                 input: {
                   patch: true,
@@ -337,7 +311,7 @@ export const LogoUploader: React.FC<LogoUploaderProps> = () => {
           }}
           onaddfilestart={(file) => {
             setHasError(null);
-            if (logoUrl) {
+            if (globalCacheData?.global_Cache?.cdnLogoUrl) {
               updateTenantSettingsMutation.mutate({
                 input: {
                   patch: true,

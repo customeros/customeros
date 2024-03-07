@@ -13,6 +13,7 @@ type UpdateServiceLineItemCommand struct {
 	DataFields model.ServiceLineItemDataFields
 	Source     commonmodel.Source
 	UpdatedAt  *time.Time
+	StartedAt  *time.Time
 }
 
 // NewUpdateServiceLineItemCommand creates a new UpdateServiceLineItemCommand.

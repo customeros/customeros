@@ -11,6 +11,10 @@ import { useTenantBillingProfilesQuery } from '@settings/graphql/getTenantBillin
 import { useCreateBillingProfileMutation } from '@settings/graphql/createTenantBillingProfile.generated';
 import { useTenantUpdateBillingProfileMutation } from '@settings/graphql/updateTenantBillingProfile.generated';
 import {
+  validateEmail,
+  validateEmailLocalPart,
+} from '@settings/components/Tabs/panels/BillingPanel/utils';
+import {
   TenantSettingsQuery,
   useTenantSettingsQuery,
 } from '@settings/graphql/getTenantSettings.generated';
@@ -21,7 +25,6 @@ import { Button } from '@ui/form/Button';
 import { Text } from '@ui/typography/Text';
 import { IconButton } from '@ui/form/IconButton';
 import { Heading } from '@ui/typography/Heading';
-import { Collapse } from '@ui/transitions/Collapse';
 import { DotsVertical } from '@ui/media/icons/DotsVertical';
 import { SlashOctagon } from '@ui/media/icons/SlashOctagon';
 import { Invoice } from '@shared/components/Invoice/Invoice';
@@ -170,10 +173,25 @@ export const BillingPanel = () => {
     },
     2500,
   );
+
   const { state, setDefaultValues } = useForm({
     formId,
     defaultValues,
-    stateReducer: (_, action, next) => {
+    stateReducer: (state, action, next) => {
+      const getStateAfterValidation = () => {
+        return produce(next, (draft) => {
+          const sendInvoiceFromError = validateEmailLocalPart(
+            draft.values.sendInvoicesFrom,
+          );
+          const bccError = validateEmail(draft.values.sendInvoicesBcc);
+          // we do it like this so that if the email is valid, we reset the states.
+          draft.fields.sendInvoicesFrom.meta.hasError = !!sendInvoiceFromError;
+          draft.fields.sendInvoicesFrom.error = sendInvoiceFromError ?? '';
+
+          draft.fields.sendInvoicesBcc.meta.hasError = !!bccError;
+          draft.fields.sendInvoicesBcc.error = bccError ?? '';
+        });
+      };
       if (action.type === 'FIELD_CHANGE') {
         switch (action.payload.name) {
           case 'canPayWithDirectDebitSEPA':
@@ -202,28 +220,41 @@ export const BillingPanel = () => {
 
             return next;
           }
+          case 'sendInvoicesBcc':
           case 'vatNumber':
-          case 'sendInvoicesFrom':
           case 'legalName':
           case 'addressLine1':
           case 'addressLine2':
           case 'addressLine3':
           case 'zip':
           case 'locality': {
+            handleUpdateData.cancel();
             handleUpdateData({
               [action.payload.name]: action.payload.value,
             });
 
             return next;
           }
+
+          case 'sendInvoicesFrom': {
+            handleUpdateData.cancel();
+
+            handleUpdateData({
+              [action.payload
+                .name]: `${action.payload.value}@invoices.customeros.ai`,
+            });
+
+            return getStateAfterValidation();
+          }
           default:
             return next;
         }
       }
+
       if (action.type === 'FIELD_BLUR') {
+        setIsInvoiceProviderFocused(false);
         switch (action.payload.name) {
           case 'vatNumber':
-          case 'sendInvoicesFrom':
           case 'legalName':
           case 'addressLine1':
           case 'addressLine2':
@@ -234,9 +265,55 @@ export const BillingPanel = () => {
 
             return next;
           }
+          case 'sendInvoicesFrom': {
+            const formattedEmail = (action.payload?.value || '')
+              ?.trim()
+              .split(' ')
+              .join('-');
+            if (!formattedEmail?.length && state.values?.legalName?.length) {
+              handleUpdateData.cancel();
+              const newEmail = `${state.values.legalName
+                .split(' ')
+                .join('-')
+                .toLowerCase()}@invoices.customeros.ai`;
+
+              updateBillingProfileMutation.mutate({
+                input: {
+                  id: tenantBillingProfileId,
+                  patch: true,
+                  sendInvoicesFrom: newEmail,
+                },
+              });
+
+              return {
+                ...next,
+                values: {
+                  ...next.values,
+                  sendInvoicesFrom: `${state.values.legalName
+                    .split(' ')
+                    .join('-')
+                    .toLowerCase()}`,
+                },
+              };
+            } else {
+              handleUpdateData.flush();
+            }
+
+            return {
+              ...getStateAfterValidation(),
+              values: {
+                ...next.values,
+                sendInvoicesFrom: formattedEmail,
+              },
+            };
+          }
           default:
             return next;
         }
+      }
+
+      if (action.type === 'SET_DEFAULT_VALUES') {
+        return getStateAfterValidation();
       }
 
       return next;
@@ -287,10 +364,12 @@ export const BillingPanel = () => {
         boxShadow='none'
         background='gray.25'
         maxW={400}
+        minW={400}
         borderRight='1px solid'
         borderColor='gray.300'
         overflowY='scroll'
         borderRadius='none'
+        pr={0}
       >
         <CardHeader
           px='6'
@@ -362,14 +441,8 @@ export const BillingPanel = () => {
           </CardBody>
         )}
 
-        <Collapse
-          delay={{ enter: 0.2 }}
-          in={tenantSettingsData?.tenantSettings.billingEnabled}
-          animateOpacity
-          startingHeight={0}
-        >
+        {tenantSettingsData?.tenantSettings.billingEnabled && (
           <TenantBillingPanelDetailsForm
-            email={state.values.sendInvoicesFrom}
             formId={formId}
             canPayWithCard={state.values.canPayWithCard}
             invoicingEnabled={tenantSettingsData?.tenantSettings.billingEnabled}
@@ -381,7 +454,7 @@ export const BillingPanel = () => {
               setIsInvoiceProviderDetailsHovered
             }
           />
-        </Collapse>
+        )}
       </Card>
       <Box borderRight='1px solid' borderColor='gray.300' maxH='100vh'>
         <Invoice

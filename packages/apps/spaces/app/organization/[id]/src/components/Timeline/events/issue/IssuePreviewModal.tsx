@@ -98,6 +98,7 @@ export const IssuePreviewModal: FC = () => {
         name={issue.subject ?? ''}
         onClose={closeModal}
         copyLabel='Copy link'
+        parse='slack'
       />
 
       <CardBody

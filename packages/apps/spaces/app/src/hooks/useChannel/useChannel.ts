@@ -49,7 +49,7 @@ export const useChannel = (channelName: string) => {
   })();
 
   useEffect(() => {
-    if (!socket) return;
+    if (!socket || !user_id) return;
 
     const phoenixChannel = socket?.channel(channelName, {
       user_id,
@@ -76,7 +76,7 @@ export const useChannel = (channelName: string) => {
     return () => {
       phoenixChannel.leave();
     };
-  }, [setPresence, socket]);
+  }, [setPresence, socket, user_id]);
 
   return { username, channel, presence, presentUsers };
 };

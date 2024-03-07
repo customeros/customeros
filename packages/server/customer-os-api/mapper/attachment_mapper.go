@@ -13,6 +13,7 @@ func MapEntityToAttachment(entity *entity.AttachmentEntity) *model.Attachment {
 	return &model.Attachment{
 		ID:        entity.Id,
 		CreatedAt: utils.IfNotNilTimeWithDefault(*entity.CreatedAt, utils.Now()),
+		CdnURL:    entity.CdnUrl,
 		BasePath:  entity.BasePath,
 		MimeType:  entity.MimeType,
 		FileName:  entity.FileName,
@@ -36,6 +37,7 @@ func MapAttachmentInputToEntity(input *model.AttachmentInput) *entity.Attachment
 	return &entity.AttachmentEntity{
 		Id:        utils.IfNotNilStringWithDefault(input.ID, ""),
 		CreatedAt: input.CreatedAt,
+		CdnUrl:    input.CdnURL,
 		BasePath:  input.BasePath,
 		FileName:  input.FileName,
 		MimeType:  input.MimeType,

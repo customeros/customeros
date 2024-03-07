@@ -138,6 +138,7 @@ type Attachment struct {
 	ID            string     `json:"id"`
 	CreatedAt     time.Time  `json:"createdAt"`
 	BasePath      string     `json:"basePath"`
+	CdnURL        string     `json:"cdnUrl"`
 	FileName      string     `json:"fileName"`
 	MimeType      string     `json:"mimeType"`
 	Size          int64      `json:"size"`
@@ -152,6 +153,7 @@ func (this Attachment) GetID() string { return this.ID }
 type AttachmentInput struct {
 	ID        *string    `json:"id,omitempty"`
 	CreatedAt *time.Time `json:"createdAt,omitempty"`
+	CdnURL    string     `json:"cdnUrl"`
 	BasePath  string     `json:"basePath"`
 	FileName  string     `json:"fileName"`
 	MimeType  string     `json:"mimeType"`
@@ -990,6 +992,7 @@ type GlobalCache struct {
 	MinARRForecastValue  float64     `json:"minARRForecastValue"`
 	MaxARRForecastValue  float64     `json:"maxARRForecastValue"`
 	ContractsExist       bool        `json:"contractsExist"`
+	CdnLogoURL           string      `json:"cdnLogoUrl"`
 }
 
 type InteractionEvent struct {
@@ -2211,17 +2214,6 @@ type ServiceLineItem struct {
 	Tax            *Tax              `json:"tax"`
 	CreatedBy      *User             `json:"createdBy,omitempty"`
 	ExternalLinks  []*ExternalSystem `json:"externalLinks"`
-	VatRate        float64           `json:"vatRate"`
-	StartedAt      time.Time         `json:"startedAt"`
-	EndedAt        *time.Time        `json:"endedAt,omitempty"`
-	Name           string            `json:"name"`
-	Billed         BilledType        `json:"billed"`
-	ID             string            `json:"id"`
-	CreatedAt      time.Time         `json:"createdAt"`
-	UpdatedAt      time.Time         `json:"updatedAt"`
-	Source         DataSource        `json:"source"`
-	SourceOfTruth  DataSource        `json:"sourceOfTruth"`
-	AppSource      string            `json:"appSource"`
 }
 
 func (ServiceLineItem) IsMetadataInterface()        {}
@@ -2252,40 +2244,29 @@ type ServiceLineItemCloseInput struct {
 }
 
 type ServiceLineItemInput struct {
-	ContractID        string                        `json:"contractId"`
-	Description       *string                       `json:"description,omitempty"`
-	BillingCycle      *BilledType                   `json:"billingCycle,omitempty"`
-	Price             *float64                      `json:"price,omitempty"`
-	Quantity          *int64                        `json:"quantity,omitempty"`
-	Tax               *TaxInput                     `json:"tax,omitempty"`
-	AppSource         *string                       `json:"appSource,omitempty"`
-	ServiceStarted    *time.Time                    `json:"serviceStarted,omitempty"`
-	ServiceEnded      *time.Time                    `json:"serviceEnded,omitempty"`
-	VatRate           *float64                      `json:"vatRate,omitempty"`
-	Name              *string                       `json:"name,omitempty"`
-	Billed            *BilledType                   `json:"billed,omitempty"`
-	EndedAt           *time.Time                    `json:"endedAt,omitempty"`
-	StartedAt         *time.Time                    `json:"startedAt,omitempty"`
-	ExternalReference *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
+	ContractID     string      `json:"contractId"`
+	Description    *string     `json:"description,omitempty"`
+	BillingCycle   *BilledType `json:"billingCycle,omitempty"`
+	Price          *float64    `json:"price,omitempty"`
+	Quantity       *int64      `json:"quantity,omitempty"`
+	Tax            *TaxInput   `json:"tax,omitempty"`
+	AppSource      *string     `json:"appSource,omitempty"`
+	ServiceStarted *time.Time  `json:"serviceStarted,omitempty"`
+	ServiceEnded   *time.Time  `json:"serviceEnded,omitempty"`
 }
 
 type ServiceLineItemUpdateInput struct {
-	ID                      *string                       `json:"id,omitempty"`
-	Description             *string                       `json:"description,omitempty"`
-	BillingCycle            *BilledType                   `json:"billingCycle,omitempty"`
-	Price                   *float64                      `json:"price,omitempty"`
-	Quantity                *int64                        `json:"quantity,omitempty"`
-	Tax                     *TaxInput                     `json:"tax,omitempty"`
-	Comments                *string                       `json:"comments,omitempty"`
-	AppSource               *string                       `json:"appSource,omitempty"`
-	IsRetroactiveCorrection *bool                         `json:"isRetroactiveCorrection,omitempty"`
-	ServiceStarted          *time.Time                    `json:"serviceStarted,omitempty"`
-	ServiceEnded            *time.Time                    `json:"serviceEnded,omitempty"`
-	ServiceLineItemID       string                        `json:"serviceLineItemId"`
-	Name                    *string                       `json:"name,omitempty"`
-	VatRate                 *float64                      `json:"vatRate,omitempty"`
-	ExternalReference       *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
-	Billed                  *BilledType                   `json:"billed,omitempty"`
+	ID                      *string     `json:"id,omitempty"`
+	Description             *string     `json:"description,omitempty"`
+	BillingCycle            *BilledType `json:"billingCycle,omitempty"`
+	Price                   *float64    `json:"price,omitempty"`
+	Quantity                *int64      `json:"quantity,omitempty"`
+	Tax                     *TaxInput   `json:"tax,omitempty"`
+	Comments                *string     `json:"comments,omitempty"`
+	AppSource               *string     `json:"appSource,omitempty"`
+	IsRetroactiveCorrection *bool       `json:"isRetroactiveCorrection,omitempty"`
+	ServiceStarted          *time.Time  `json:"serviceStarted,omitempty"`
+	ServiceEnded            *time.Time  `json:"serviceEnded,omitempty"`
 }
 
 type SlackChannel struct {

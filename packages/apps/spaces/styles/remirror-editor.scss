@@ -744,6 +744,9 @@ span.slack_code {
   color: var(--chakra-colors-rose-500);
   width: fit-content;
   padding: 0 0.25em;
+  a {
+    font-family: var(--chakra-fonts-body);
+  }
 }
 
 .slack_code {
@@ -3765,7 +3768,7 @@ a {
 }
 
 .customeros-logger .remirror-editor-wrapper {
-  min-height: 102px;
+  min-height: 130px;
 }
 .customeros-logger .remirror-editor,
 .customeros-logger .remirror-is-empty {

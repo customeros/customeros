@@ -103,6 +103,7 @@ func syncIssueHandler(services *service.Services, log logger.Logger) gin.Handler
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Missing or empty tenant header"})
 			return
 		}
+		span.SetTag(tracing.SpanTagTenant, tenant)
 		ctx = common.WithCustomContext(ctx, &common.CustomContext{Tenant: tenant})
 
 		// Limit the size of the request body

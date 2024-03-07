@@ -8,10 +8,6 @@ extend type Mutation {
 
     serviceLineItem_Delete(id: ID!): DeleteResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
     serviceLineItem_BulkUpdate(input: ServiceLineItemBulkUpdateInput!): [ID!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
-
-    serviceLineItem_Close(input: ServiceLineItemCloseInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated(reason: "Use contractLineItem_Close instead.")
-    serviceLineItemCreate(input: ServiceLineItemInput!): ServiceLineItem! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated(reason: "Use contractLineItem_Create instead.")
-    serviceLineItemUpdate(input: ServiceLineItemUpdateInput!): ServiceLineItem! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated(reason: "Use contractLineItem_Update instead.")
 }
 
 type ServiceLineItem implements MetadataInterface {
@@ -27,18 +23,6 @@ type ServiceLineItem implements MetadataInterface {
     tax:                Tax!
     createdBy:          User @goField(forceResolver: true)
     externalLinks:      [ExternalSystem!]! @goField(forceResolver: true)
-
-    vatRate:            Float! @deprecated(reason: "Use tax instead.")
-    startedAt:          Time! @deprecated(reason: "Use serviceStarted instead.")
-    endedAt:            Time @deprecated(reason: "Use serviceEnded instead.")
-    name:               String! @deprecated(reason: "Use description instead.")
-    billed:             BilledType! @deprecated(reason: "Use billingCycle instead.")
-    id:                 ID! @deprecated(reason: "Use metadata instead.")
-    createdAt:          Time! @deprecated(reason: "Use metadata instead.")
-    updatedAt:          Time! @deprecated(reason: "Use metadata instead.")
-    source:             DataSource! @deprecated(reason: "Use metadata instead.")
-    sourceOfTruth:      DataSource! @deprecated(reason: "Use metadata instead.")
-    appSource:          String! @deprecated(reason: "Use metadata instead.")
 }
 
 input ServiceLineItemInput {
@@ -51,12 +35,6 @@ input ServiceLineItemInput {
     appSource:          String
     serviceStarted:     Time
     serviceEnded:       Time
-    vatRate:            Float @deprecated(reason: "Use tax instead.")
-    name:               String @deprecated(reason: "Use description instead")
-    billed:             BilledType @deprecated(reason: "Use billingCycle instead")
-    endedAt:            Time @deprecated(reason: "Use serviceEnded instead")
-    startedAt:          Time @deprecated(reason: "Use serviceStarted instead")
-    externalReference:  ExternalSystemReferenceInput @deprecated(reason: "Not used yet")
 }
 
 input ServiceLineItemUpdateInput {
@@ -71,11 +49,6 @@ input ServiceLineItemUpdateInput {
     isRetroactiveCorrection:    Boolean
     serviceStarted:             Time
     serviceEnded:               Time
-    serviceLineItemId:          ID! @deprecated(reason: "Use ID instead.")
-    name:                       String @deprecated(reason: "Use description instead")
-    vatRate:                    Float @deprecated(reason: "Use tax instead.")
-    externalReference:          ExternalSystemReferenceInput @deprecated(reason: "Not used yet")
-    billed:                     BilledType @deprecated(reason: "Use billingCycle instead")
 }
 
 input ServiceLineItemBulkUpdateInput {

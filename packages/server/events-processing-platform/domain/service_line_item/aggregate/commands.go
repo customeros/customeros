@@ -42,11 +42,6 @@ func (a *ServiceLineItemAggregate) createServiceLineItem(ctx context.Context, cm
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
 
-	// If the service line item is one-time, set licenses to 0
-	if !cmd.DataFields.Billed.IsRecurrent() {
-		cmd.DataFields.Quantity = 0
-	}
-
 	// Adjust vat rate
 	if cmd.DataFields.VatRate < 0 {
 		cmd.DataFields.VatRate = 0
@@ -123,6 +118,7 @@ func (a *ServiceLineItemAggregate) updateServiceLineItem(ctx context.Context, cm
 		cmd.DataFields,
 		cmd.Source,
 		updatedAtNotNil,
+		cmd.StartedAt,
 	)
 	if err != nil {
 		tracing.TraceErr(span, err)

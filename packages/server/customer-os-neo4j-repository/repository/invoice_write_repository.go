@@ -74,9 +74,10 @@ type InvoiceWriteRepository interface {
 	CreateInvoiceForContract(ctx context.Context, tenant, invoiceId string, data InvoiceCreateFields) error
 	FillInvoice(ctx context.Context, tenant, invoiceId string, data InvoiceFillFields) error
 	InvoicePdfGenerated(ctx context.Context, tenant, id, repositoryFileId string, updatedAt time.Time) error
-	SetInvoicePaymentRequested(ctx context.Context, tenant, invoiceId string) error
 	UpdateInvoice(ctx context.Context, tenant, invoiceId string, data InvoiceUpdateFields) error
+	MarkInvoiceFinalizedEventSent(ctx context.Context, tenant, invoiceId string) error
 	MarkPayNotificationRequested(ctx context.Context, tenant, invoiceId string, requestedAt time.Time) error
+	MarkPaymentLinkRequested(ctx context.Context, tenant, invoiceId string, requestedAt time.Time) error
 	SetPaidInvoiceNotificationSentAt(ctx context.Context, tenant, invoiceId string) error
 	SetPayInvoiceNotificationSentAt(ctx context.Context, tenant, invoiceId string) error
 	DeleteInvoice(ctx context.Context, tenant, invoiceId string) error
@@ -301,15 +302,15 @@ func (r *invoiceWriteRepository) InvoicePdfGenerated(ctx context.Context, tenant
 	return err
 }
 
-func (r *invoiceWriteRepository) SetInvoicePaymentRequested(ctx context.Context, tenant, invoiceId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceWriteRepository.SetInvoicePaymentRequested")
+func (r *invoiceWriteRepository) MarkInvoiceFinalizedEventSent(ctx context.Context, tenant, invoiceId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceWriteRepository.MarkInvoiceFinalizedEventSent")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, invoiceId)
 
 	cypher := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$invoiceId})
 							WHERE i:Invoice_%s
-							SET i.techPaymentRequestedAt=$now`, tenant)
+							SET i.techInvoiceFinalizedSentAt=$now`, tenant)
 	params := map[string]any{
 		"tenant":    tenant,
 		"invoiceId": invoiceId,
@@ -411,6 +412,31 @@ func (r *invoiceWriteRepository) DeleteInvoice(ctx context.Context, tenant, invo
 	params := map[string]any{
 		"tenant":    tenant,
 		"invoiceId": invoiceId,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *invoiceWriteRepository) MarkPaymentLinkRequested(ctx context.Context, tenant, invoiceId string, requestedAt time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceWriteRepository.MarkPaymentLinkRequested")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, invoiceId)
+
+	cypher := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$invoiceId})
+							WHERE i:Invoice_%s
+							SET i.techPaymentLinkRequestedAt=$now`, tenant)
+	params := map[string]any{
+		"tenant":    tenant,
+		"invoiceId": invoiceId,
+		"now":       utils.Now(),
 	}
 
 	span.LogFields(log.String("cypher", cypher))

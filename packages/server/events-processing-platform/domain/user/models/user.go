@@ -46,17 +46,27 @@ func (u *User) String() string {
 	return fmt.Sprintf("User{ID: %s, Name: %s, FirstName: %s, LastName: %s, Source: %s, CreatedAt: %s, UpdatedAt: %s, PhoneNumbers: %v, Emails: %v}", u.ID, u.Name, u.FirstName, u.LastName, u.Source, u.CreatedAt, u.UpdatedAt, u.PhoneNumbers, u.Emails)
 }
 
-func (u *User) HasEmail(emailId, label string, primary bool) bool {
+func (u *User) HasEmail(emailId, label string) bool {
 	if len(u.Emails) == 0 {
 		return false
 	}
 	if email, ok := u.Emails[emailId]; ok {
-		return email.Label == label && email.Primary == primary
+		return email.Label == label
 	}
 	return false
 }
 
-func (u *User) SameData(fields UserDataFields, externalSystem commonmodel.ExternalSystem) bool {
+func (u *User) HasPhoneNumber(phoneNumberId, label string) bool {
+	if len(u.PhoneNumbers) == 0 {
+		return false
+	}
+	if phoneNumber, ok := u.PhoneNumbers[phoneNumberId]; ok {
+		return phoneNumber.Label == label
+	}
+	return false
+}
+
+func (u *User) SameUserData(fields UserDataFields, externalSystem commonmodel.ExternalSystem) bool {
 	if !externalSystem.Available() {
 		return false
 	}

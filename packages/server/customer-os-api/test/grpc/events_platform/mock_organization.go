@@ -14,7 +14,7 @@ type MockOrganizationServiceCallbacks struct {
 	LinkPhoneNumberToOrganization    func(context context.Context, proto *organizationpb.LinkPhoneNumberToOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	RefreshLastTouchpoint            func(ctx context.Context, proto *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	RefreshArr                       func(ctx context.Context, proto *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
-	RefreshRenewalSummary            func(ctx context.Context, proto *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
+	RefreshRenewalSummary            func(ctx context.Context, proto *organizationpb.RefreshRenewalSummaryGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	UpdateOnboardingStatus           func(ctx context.Context, proto *organizationpb.UpdateOnboardingStatusGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	UpdateOrganizationOwner          func(ctx context.Context, proto *organizationpb.UpdateOrganizationOwnerGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	CreateBillingProfile             func(ctx context.Context, proto *organizationpb.CreateBillingProfileGrpcRequest) (*organizationpb.BillingProfileIdGrpcResponse, error)
@@ -139,7 +139,7 @@ func (MockOrganizationService) RefreshArr(context context.Context, proto *organi
 	return organizationCallbacks.RefreshArr(context, proto)
 }
 
-func (MockOrganizationService) RefreshRenewalSummary(context context.Context, proto *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+func (MockOrganizationService) RefreshRenewalSummary(context context.Context, proto *organizationpb.RefreshRenewalSummaryGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 	if organizationCallbacks.RefreshRenewalSummary == nil {
 		panic("organizationCallbacks.RefreshRenewalSummary is not set")
 	}

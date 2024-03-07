@@ -1,7 +1,8 @@
-mutation CreateAttachment($id: ID, $basePath: String!, $fileName: String!, $mimeType: String!, $size: Int64!) {
+mutation CreateAttachment($id: ID, $cdnUrl: String!, $basePath: String!, $fileName: String!, $mimeType: String!, $size: Int64!) {
 attachment_Create(
     input: {
         id: $id
+        cdnUrl: $cdnUrl
         basePath: $basePath
         fileName: $fileName
         mimeType: $mimeType
@@ -11,6 +12,7 @@ attachment_Create(
   ) {
       id
       createdAt
+      cdnUrl
       basePath
       fileName
       mimeType

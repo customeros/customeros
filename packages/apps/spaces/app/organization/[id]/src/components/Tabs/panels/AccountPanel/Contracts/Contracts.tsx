@@ -32,6 +32,7 @@ export const Contracts: FC<ContractsProps> = ({ isLoading, organization }) => {
               key={`contract-card-${contract.id}`}
               flexDir='column'
               gap={4}
+              w='full'
               mb={4}
             >
               <ContractCard

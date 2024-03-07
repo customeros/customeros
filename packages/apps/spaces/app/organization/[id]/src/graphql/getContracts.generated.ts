@@ -89,23 +89,31 @@ export type GetContractsQuery = {
           name?: string | null;
         } | null;
       }> | null;
-      serviceLineItems?: Array<{
+      contractLineItems?: Array<{
         __typename?: 'ServiceLineItem';
-        id: string;
-        createdAt: any;
-        updatedAt: any;
-        name: string;
-        billed: Types.BilledType;
+        description: string;
+        billingCycle: Types.BilledType;
         price: number;
         quantity: any;
-        source: Types.DataSource;
         comments: string;
-        sourceOfTruth: Types.DataSource;
-        appSource: string;
-        endedAt?: any | null;
+        serviceEnded?: any | null;
         parentId: string;
         serviceStarted: any;
-        vatRate: number;
+        metadata: {
+          __typename?: 'Metadata';
+          id: string;
+          created: any;
+          lastUpdated: any;
+          source: Types.DataSource;
+          appSource: string;
+          sourceOfTruth: Types.DataSource;
+        };
+        tax: {
+          __typename?: 'Tax';
+          salesTax: boolean;
+          vat: boolean;
+          taxRate: number;
+        };
       }> | null;
     }> | null;
   } | null;
@@ -166,22 +174,28 @@ export const GetContractsDocument = `
           name
         }
       }
-      serviceLineItems {
-        id
-        createdAt
-        updatedAt
-        name
-        billed
+      contractLineItems {
+        metadata {
+          id
+          created
+          lastUpdated
+          source
+          appSource
+          sourceOfTruth
+        }
+        description
+        billingCycle
         price
         quantity
-        source
         comments
-        sourceOfTruth
-        appSource
-        endedAt
+        serviceEnded
         parentId
         serviceStarted
-        vatRate
+        tax {
+          salesTax
+          vat
+          taxRate
+        }
       }
     }
   }

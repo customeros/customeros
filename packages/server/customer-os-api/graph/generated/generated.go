@@ -116,6 +116,7 @@ type ComplexityRoot struct {
 	Attachment struct {
 		AppSource     func(childComplexity int) int
 		BasePath      func(childComplexity int) int
+		CdnURL        func(childComplexity int) int
 		CreatedAt     func(childComplexity int) int
 		FileName      func(childComplexity int) int
 		ID            func(childComplexity int) int
@@ -535,6 +536,7 @@ type ComplexityRoot struct {
 	}
 
 	GlobalCache struct {
+		CdnLogoURL           func(childComplexity int) int
 		ContractsExist       func(childComplexity int) int
 		GCliCache            func(childComplexity int) int
 		IsGoogleActive       func(childComplexity int) int
@@ -980,10 +982,7 @@ type ComplexityRoot struct {
 		PhoneNumberUpdateInUser                 func(childComplexity int, userID string, input model.PhoneNumberUpdateInput) int
 		PlayerMerge                             func(childComplexity int, userID string, input model.PlayerInput) int
 		ServiceLineItemBulkUpdate               func(childComplexity int, input model.ServiceLineItemBulkUpdateInput) int
-		ServiceLineItemClose                    func(childComplexity int, input model.ServiceLineItemCloseInput) int
-		ServiceLineItemCreate                   func(childComplexity int, input model.ServiceLineItemInput) int
 		ServiceLineItemDelete                   func(childComplexity int, id string) int
-		ServiceLineItemUpdate                   func(childComplexity int, input model.ServiceLineItemUpdateInput) int
 		SocialRemove                            func(childComplexity int, socialID string) int
 		SocialUpdate                            func(childComplexity int, input model.SocialUpdateInput) int
 		TagCreate                               func(childComplexity int, input model.TagInput) int
@@ -1335,29 +1334,18 @@ type ComplexityRoot struct {
 	}
 
 	ServiceLineItem struct {
-		AppSource      func(childComplexity int) int
-		Billed         func(childComplexity int) int
 		BillingCycle   func(childComplexity int) int
 		Comments       func(childComplexity int) int
-		CreatedAt      func(childComplexity int) int
 		CreatedBy      func(childComplexity int) int
 		Description    func(childComplexity int) int
-		EndedAt        func(childComplexity int) int
 		ExternalLinks  func(childComplexity int) int
-		ID             func(childComplexity int) int
 		Metadata       func(childComplexity int) int
-		Name           func(childComplexity int) int
 		ParentID       func(childComplexity int) int
 		Price          func(childComplexity int) int
 		Quantity       func(childComplexity int) int
 		ServiceEnded   func(childComplexity int) int
 		ServiceStarted func(childComplexity int) int
-		Source         func(childComplexity int) int
-		SourceOfTruth  func(childComplexity int) int
-		StartedAt      func(childComplexity int) int
 		Tax            func(childComplexity int) int
-		UpdatedAt      func(childComplexity int) int
-		VatRate        func(childComplexity int) int
 	}
 
 	SlackChannel struct {
@@ -1799,9 +1787,6 @@ type MutationResolver interface {
 	ContractLineItemClose(ctx context.Context, input model.ServiceLineItemCloseInput) (string, error)
 	ServiceLineItemDelete(ctx context.Context, id string) (*model.DeleteResponse, error)
 	ServiceLineItemBulkUpdate(ctx context.Context, input model.ServiceLineItemBulkUpdateInput) ([]string, error)
-	ServiceLineItemClose(ctx context.Context, input model.ServiceLineItemCloseInput) (string, error)
-	ServiceLineItemCreate(ctx context.Context, input model.ServiceLineItemInput) (*model.ServiceLineItem, error)
-	ServiceLineItemUpdate(ctx context.Context, input model.ServiceLineItemUpdateInput) (*model.ServiceLineItem, error)
 	SocialUpdate(ctx context.Context, input model.SocialUpdateInput) (*model.Social, error)
 	SocialRemove(ctx context.Context, socialID string) (*model.Result, error)
 	TagCreate(ctx context.Context, input model.TagInput) (*model.Tag, error)
@@ -2153,6 +2138,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Attachment.BasePath(childComplexity), true
+
+	case "Attachment.cdnUrl":
+		if e.complexity.Attachment.CdnURL == nil {
+			break
+		}
+
+		return e.complexity.Attachment.CdnURL(childComplexity), true
 
 	case "Attachment.createdAt":
 		if e.complexity.Attachment.CreatedAt == nil {
@@ -4187,6 +4179,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.GCliItem.Type(childComplexity), true
+
+	case "GlobalCache.cdnLogoUrl":
+		if e.complexity.GlobalCache.CdnLogoURL == nil {
+			break
+		}
+
+		return e.complexity.GlobalCache.CdnLogoURL(childComplexity), true
 
 	case "GlobalCache.contractsExist":
 		if e.complexity.GlobalCache.ContractsExist == nil {
@@ -7546,30 +7545,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.ServiceLineItemBulkUpdate(childComplexity, args["input"].(model.ServiceLineItemBulkUpdateInput)), true
 
-	case "Mutation.serviceLineItem_Close":
-		if e.complexity.Mutation.ServiceLineItemClose == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_serviceLineItem_Close_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.ServiceLineItemClose(childComplexity, args["input"].(model.ServiceLineItemCloseInput)), true
-
-	case "Mutation.serviceLineItemCreate":
-		if e.complexity.Mutation.ServiceLineItemCreate == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_serviceLineItemCreate_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.ServiceLineItemCreate(childComplexity, args["input"].(model.ServiceLineItemInput)), true
-
 	case "Mutation.serviceLineItem_Delete":
 		if e.complexity.Mutation.ServiceLineItemDelete == nil {
 			break
@@ -7581,18 +7556,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.ServiceLineItemDelete(childComplexity, args["id"].(string)), true
-
-	case "Mutation.serviceLineItemUpdate":
-		if e.complexity.Mutation.ServiceLineItemUpdate == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_serviceLineItemUpdate_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.ServiceLineItemUpdate(childComplexity, args["input"].(model.ServiceLineItemUpdateInput)), true
 
 	case "Mutation.social_Remove":
 		if e.complexity.Mutation.SocialRemove == nil {
@@ -9912,20 +9875,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Result.Result(childComplexity), true
 
-	case "ServiceLineItem.appSource":
-		if e.complexity.ServiceLineItem.AppSource == nil {
-			break
-		}
-
-		return e.complexity.ServiceLineItem.AppSource(childComplexity), true
-
-	case "ServiceLineItem.billed":
-		if e.complexity.ServiceLineItem.Billed == nil {
-			break
-		}
-
-		return e.complexity.ServiceLineItem.Billed(childComplexity), true
-
 	case "ServiceLineItem.billingCycle":
 		if e.complexity.ServiceLineItem.BillingCycle == nil {
 			break
@@ -9939,13 +9888,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ServiceLineItem.Comments(childComplexity), true
-
-	case "ServiceLineItem.createdAt":
-		if e.complexity.ServiceLineItem.CreatedAt == nil {
-			break
-		}
-
-		return e.complexity.ServiceLineItem.CreatedAt(childComplexity), true
 
 	case "ServiceLineItem.createdBy":
 		if e.complexity.ServiceLineItem.CreatedBy == nil {
@@ -9961,13 +9903,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ServiceLineItem.Description(childComplexity), true
 
-	case "ServiceLineItem.endedAt":
-		if e.complexity.ServiceLineItem.EndedAt == nil {
-			break
-		}
-
-		return e.complexity.ServiceLineItem.EndedAt(childComplexity), true
-
 	case "ServiceLineItem.externalLinks":
 		if e.complexity.ServiceLineItem.ExternalLinks == nil {
 			break
@@ -9975,26 +9910,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ServiceLineItem.ExternalLinks(childComplexity), true
 
-	case "ServiceLineItem.id":
-		if e.complexity.ServiceLineItem.ID == nil {
-			break
-		}
-
-		return e.complexity.ServiceLineItem.ID(childComplexity), true
-
 	case "ServiceLineItem.metadata":
 		if e.complexity.ServiceLineItem.Metadata == nil {
 			break
 		}
 
 		return e.complexity.ServiceLineItem.Metadata(childComplexity), true
-
-	case "ServiceLineItem.name":
-		if e.complexity.ServiceLineItem.Name == nil {
-			break
-		}
-
-		return e.complexity.ServiceLineItem.Name(childComplexity), true
 
 	case "ServiceLineItem.parentId":
 		if e.complexity.ServiceLineItem.ParentID == nil {
@@ -10031,47 +9952,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ServiceLineItem.ServiceStarted(childComplexity), true
 
-	case "ServiceLineItem.source":
-		if e.complexity.ServiceLineItem.Source == nil {
-			break
-		}
-
-		return e.complexity.ServiceLineItem.Source(childComplexity), true
-
-	case "ServiceLineItem.sourceOfTruth":
-		if e.complexity.ServiceLineItem.SourceOfTruth == nil {
-			break
-		}
-
-		return e.complexity.ServiceLineItem.SourceOfTruth(childComplexity), true
-
-	case "ServiceLineItem.startedAt":
-		if e.complexity.ServiceLineItem.StartedAt == nil {
-			break
-		}
-
-		return e.complexity.ServiceLineItem.StartedAt(childComplexity), true
-
 	case "ServiceLineItem.tax":
 		if e.complexity.ServiceLineItem.Tax == nil {
 			break
 		}
 
 		return e.complexity.ServiceLineItem.Tax(childComplexity), true
-
-	case "ServiceLineItem.updatedAt":
-		if e.complexity.ServiceLineItem.UpdatedAt == nil {
-			break
-		}
-
-		return e.complexity.ServiceLineItem.UpdatedAt(childComplexity), true
-
-	case "ServiceLineItem.vatRate":
-		if e.complexity.ServiceLineItem.VatRate == nil {
-			break
-		}
-
-		return e.complexity.ServiceLineItem.VatRate(childComplexity), true
 
 	case "SlackChannel.channelId":
 		if e.complexity.SlackChannel.ChannelID == nil {
@@ -11182,6 +11068,7 @@ type Attachment implements Node {
     id: ID!
     createdAt: Time!
     basePath: String!
+    cdnUrl:   String!
     fileName: String!
     mimeType: String!
     size: Int64!
@@ -11194,6 +11081,7 @@ type Attachment implements Node {
 input AttachmentInput {
     id: ID
     createdAt: Time
+    cdnUrl: String!
     basePath: String!
     fileName: String!
     mimeType: String!
@@ -11260,6 +11148,8 @@ type GlobalCache {
     minARRForecastValue: Float!
     maxARRForecastValue: Float!
     contractsExist: Boolean!
+
+    cdnLogoUrl: String!
 }`, BuiltIn: false},
 	{Name: "../schemas/calendar.graphqls", Input: `"""
 Describes the relationship a Contact has with a Organization.
@@ -13965,10 +13855,6 @@ extend type Mutation {
 
     serviceLineItem_Delete(id: ID!): DeleteResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
     serviceLineItem_BulkUpdate(input: ServiceLineItemBulkUpdateInput!): [ID!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
-
-    serviceLineItem_Close(input: ServiceLineItemCloseInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated(reason: "Use contractLineItem_Close instead.")
-    serviceLineItemCreate(input: ServiceLineItemInput!): ServiceLineItem! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated(reason: "Use contractLineItem_Create instead.")
-    serviceLineItemUpdate(input: ServiceLineItemUpdateInput!): ServiceLineItem! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated(reason: "Use contractLineItem_Update instead.")
 }
 
 type ServiceLineItem implements MetadataInterface {
@@ -13984,18 +13870,6 @@ type ServiceLineItem implements MetadataInterface {
     tax:                Tax!
     createdBy:          User @goField(forceResolver: true)
     externalLinks:      [ExternalSystem!]! @goField(forceResolver: true)
-
-    vatRate:            Float! @deprecated(reason: "Use tax instead.")
-    startedAt:          Time! @deprecated(reason: "Use serviceStarted instead.")
-    endedAt:            Time @deprecated(reason: "Use serviceEnded instead.")
-    name:               String! @deprecated(reason: "Use description instead.")
-    billed:             BilledType! @deprecated(reason: "Use billingCycle instead.")
-    id:                 ID! @deprecated(reason: "Use metadata instead.")
-    createdAt:          Time! @deprecated(reason: "Use metadata instead.")
-    updatedAt:          Time! @deprecated(reason: "Use metadata instead.")
-    source:             DataSource! @deprecated(reason: "Use metadata instead.")
-    sourceOfTruth:      DataSource! @deprecated(reason: "Use metadata instead.")
-    appSource:          String! @deprecated(reason: "Use metadata instead.")
 }
 
 input ServiceLineItemInput {
@@ -14008,12 +13882,6 @@ input ServiceLineItemInput {
     appSource:          String
     serviceStarted:     Time
     serviceEnded:       Time
-    vatRate:            Float @deprecated(reason: "Use tax instead.")
-    name:               String @deprecated(reason: "Use description instead")
-    billed:             BilledType @deprecated(reason: "Use billingCycle instead")
-    endedAt:            Time @deprecated(reason: "Use serviceEnded instead")
-    startedAt:          Time @deprecated(reason: "Use serviceStarted instead")
-    externalReference:  ExternalSystemReferenceInput @deprecated(reason: "Not used yet")
 }
 
 input ServiceLineItemUpdateInput {
@@ -14028,11 +13896,6 @@ input ServiceLineItemUpdateInput {
     isRetroactiveCorrection:    Boolean
     serviceStarted:             Time
     serviceEnded:               Time
-    serviceLineItemId:          ID! @deprecated(reason: "Use ID instead.")
-    name:                       String @deprecated(reason: "Use description instead")
-    vatRate:                    Float @deprecated(reason: "Use tax instead.")
-    externalReference:          ExternalSystemReferenceInput @deprecated(reason: "Not used yet")
-    billed:                     BilledType @deprecated(reason: "Use billingCycle instead")
 }
 
 input ServiceLineItemBulkUpdateInput {
@@ -17488,36 +17351,6 @@ func (ec *executionContext) field_Mutation_player_Merge_args(ctx context.Context
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_serviceLineItemCreate_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 model.ServiceLineItemInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNServiceLineItemInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐServiceLineItemInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_serviceLineItemUpdate_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 model.ServiceLineItemUpdateInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNServiceLineItemUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐServiceLineItemUpdateInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
-	return args, nil
-}
-
 func (ec *executionContext) field_Mutation_serviceLineItem_BulkUpdate_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -17525,21 +17358,6 @@ func (ec *executionContext) field_Mutation_serviceLineItem_BulkUpdate_args(ctx c
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalNServiceLineItemBulkUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐServiceLineItemBulkUpdateInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_serviceLineItem_Close_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 model.ServiceLineItemCloseInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNServiceLineItemCloseInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐServiceLineItemCloseInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -20118,6 +19936,50 @@ func (ec *executionContext) _Attachment_basePath(ctx context.Context, field grap
 }
 
 func (ec *executionContext) fieldContext_Attachment_basePath(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Attachment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Attachment_cdnUrl(ctx context.Context, field graphql.CollectedField, obj *model.Attachment) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Attachment_cdnUrl(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CdnURL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Attachment_cdnUrl(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Attachment",
 		Field:      field,
@@ -25294,28 +25156,6 @@ func (ec *executionContext) fieldContext_Contract_contractLineItems(ctx context.
 				return ec.fieldContext_ServiceLineItem_createdBy(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_ServiceLineItem_externalLinks(ctx, field)
-			case "vatRate":
-				return ec.fieldContext_ServiceLineItem_vatRate(ctx, field)
-			case "startedAt":
-				return ec.fieldContext_ServiceLineItem_startedAt(ctx, field)
-			case "endedAt":
-				return ec.fieldContext_ServiceLineItem_endedAt(ctx, field)
-			case "name":
-				return ec.fieldContext_ServiceLineItem_name(ctx, field)
-			case "billed":
-				return ec.fieldContext_ServiceLineItem_billed(ctx, field)
-			case "id":
-				return ec.fieldContext_ServiceLineItem_id(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_ServiceLineItem_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_ServiceLineItem_updatedAt(ctx, field)
-			case "source":
-				return ec.fieldContext_ServiceLineItem_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_ServiceLineItem_sourceOfTruth(ctx, field)
-			case "appSource":
-				return ec.fieldContext_ServiceLineItem_appSource(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ServiceLineItem", field.Name)
 		},
@@ -26674,28 +26514,6 @@ func (ec *executionContext) fieldContext_Contract_serviceLineItems(ctx context.C
 				return ec.fieldContext_ServiceLineItem_createdBy(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_ServiceLineItem_externalLinks(ctx, field)
-			case "vatRate":
-				return ec.fieldContext_ServiceLineItem_vatRate(ctx, field)
-			case "startedAt":
-				return ec.fieldContext_ServiceLineItem_startedAt(ctx, field)
-			case "endedAt":
-				return ec.fieldContext_ServiceLineItem_endedAt(ctx, field)
-			case "name":
-				return ec.fieldContext_ServiceLineItem_name(ctx, field)
-			case "billed":
-				return ec.fieldContext_ServiceLineItem_billed(ctx, field)
-			case "id":
-				return ec.fieldContext_ServiceLineItem_id(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_ServiceLineItem_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_ServiceLineItem_updatedAt(ctx, field)
-			case "source":
-				return ec.fieldContext_ServiceLineItem_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_ServiceLineItem_sourceOfTruth(ctx, field)
-			case "appSource":
-				return ec.fieldContext_ServiceLineItem_appSource(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ServiceLineItem", field.Name)
 		},
@@ -34419,6 +34237,50 @@ func (ec *executionContext) fieldContext_GlobalCache_contractsExist(ctx context.
 	return fc, nil
 }
 
+func (ec *executionContext) _GlobalCache_cdnLogoUrl(ctx context.Context, field graphql.CollectedField, obj *model.GlobalCache) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GlobalCache_cdnLogoUrl(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CdnLogoURL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GlobalCache_cdnLogoUrl(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GlobalCache",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _InteractionEvent_id(ctx context.Context, field graphql.CollectedField, obj *model.InteractionEvent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_InteractionEvent_id(ctx, field)
 	if err != nil {
@@ -35175,6 +35037,8 @@ func (ec *executionContext) fieldContext_InteractionEvent_includes(ctx context.C
 				return ec.fieldContext_Attachment_createdAt(ctx, field)
 			case "basePath":
 				return ec.fieldContext_Attachment_basePath(ctx, field)
+			case "cdnUrl":
+				return ec.fieldContext_Attachment_cdnUrl(ctx, field)
 			case "fileName":
 				return ec.fieldContext_Attachment_fileName(ctx, field)
 			case "mimeType":
@@ -36315,6 +36179,8 @@ func (ec *executionContext) fieldContext_InteractionSession_includes(ctx context
 				return ec.fieldContext_Attachment_createdAt(ctx, field)
 			case "basePath":
 				return ec.fieldContext_Attachment_basePath(ctx, field)
+			case "cdnUrl":
+				return ec.fieldContext_Attachment_cdnUrl(ctx, field)
 			case "fileName":
 				return ec.fieldContext_Attachment_fileName(ctx, field)
 			case "mimeType":
@@ -44621,6 +44487,8 @@ func (ec *executionContext) fieldContext_Meeting_includes(ctx context.Context, f
 				return ec.fieldContext_Attachment_createdAt(ctx, field)
 			case "basePath":
 				return ec.fieldContext_Attachment_basePath(ctx, field)
+			case "cdnUrl":
+				return ec.fieldContext_Attachment_cdnUrl(ctx, field)
 			case "fileName":
 				return ec.fieldContext_Attachment_fileName(ctx, field)
 			case "mimeType":
@@ -44902,6 +44770,8 @@ func (ec *executionContext) fieldContext_Meeting_recording(ctx context.Context, 
 				return ec.fieldContext_Attachment_createdAt(ctx, field)
 			case "basePath":
 				return ec.fieldContext_Attachment_basePath(ctx, field)
+			case "cdnUrl":
+				return ec.fieldContext_Attachment_cdnUrl(ctx, field)
 			case "fileName":
 				return ec.fieldContext_Attachment_fileName(ctx, field)
 			case "mimeType":
@@ -45797,6 +45667,8 @@ func (ec *executionContext) fieldContext_Mutation_attachment_Create(ctx context.
 				return ec.fieldContext_Attachment_createdAt(ctx, field)
 			case "basePath":
 				return ec.fieldContext_Attachment_basePath(ctx, field)
+			case "cdnUrl":
+				return ec.fieldContext_Attachment_cdnUrl(ctx, field)
 			case "fileName":
 				return ec.fieldContext_Attachment_fileName(ctx, field)
 			case "mimeType":
@@ -59912,28 +59784,6 @@ func (ec *executionContext) fieldContext_Mutation_contractLineItem_Create(ctx co
 				return ec.fieldContext_ServiceLineItem_createdBy(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_ServiceLineItem_externalLinks(ctx, field)
-			case "vatRate":
-				return ec.fieldContext_ServiceLineItem_vatRate(ctx, field)
-			case "startedAt":
-				return ec.fieldContext_ServiceLineItem_startedAt(ctx, field)
-			case "endedAt":
-				return ec.fieldContext_ServiceLineItem_endedAt(ctx, field)
-			case "name":
-				return ec.fieldContext_ServiceLineItem_name(ctx, field)
-			case "billed":
-				return ec.fieldContext_ServiceLineItem_billed(ctx, field)
-			case "id":
-				return ec.fieldContext_ServiceLineItem_id(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_ServiceLineItem_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_ServiceLineItem_updatedAt(ctx, field)
-			case "source":
-				return ec.fieldContext_ServiceLineItem_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_ServiceLineItem_sourceOfTruth(ctx, field)
-			case "appSource":
-				return ec.fieldContext_ServiceLineItem_appSource(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ServiceLineItem", field.Name)
 		},
@@ -60045,28 +59895,6 @@ func (ec *executionContext) fieldContext_Mutation_contractLineItem_Update(ctx co
 				return ec.fieldContext_ServiceLineItem_createdBy(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_ServiceLineItem_externalLinks(ctx, field)
-			case "vatRate":
-				return ec.fieldContext_ServiceLineItem_vatRate(ctx, field)
-			case "startedAt":
-				return ec.fieldContext_ServiceLineItem_startedAt(ctx, field)
-			case "endedAt":
-				return ec.fieldContext_ServiceLineItem_endedAt(ctx, field)
-			case "name":
-				return ec.fieldContext_ServiceLineItem_name(ctx, field)
-			case "billed":
-				return ec.fieldContext_ServiceLineItem_billed(ctx, field)
-			case "id":
-				return ec.fieldContext_ServiceLineItem_id(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_ServiceLineItem_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_ServiceLineItem_updatedAt(ctx, field)
-			case "source":
-				return ec.fieldContext_ServiceLineItem_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_ServiceLineItem_sourceOfTruth(ctx, field)
-			case "appSource":
-				return ec.fieldContext_ServiceLineItem_appSource(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ServiceLineItem", field.Name)
 		},
@@ -60340,357 +60168,6 @@ func (ec *executionContext) fieldContext_Mutation_serviceLineItem_BulkUpdate(ctx
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_serviceLineItem_BulkUpdate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_serviceLineItem_Close(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_serviceLineItem_Close(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().ServiceLineItemClose(rctx, fc.Args["input"].(model.ServiceLineItemCloseInput))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRole == nil {
-				return nil, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				return nil, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(string); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be string`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_serviceLineItem_Close(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_serviceLineItem_Close_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_serviceLineItemCreate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_serviceLineItemCreate(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().ServiceLineItemCreate(rctx, fc.Args["input"].(model.ServiceLineItemInput))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRole == nil {
-				return nil, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				return nil, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.ServiceLineItem); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.ServiceLineItem`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.ServiceLineItem)
-	fc.Result = res
-	return ec.marshalNServiceLineItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐServiceLineItem(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_serviceLineItemCreate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "metadata":
-				return ec.fieldContext_ServiceLineItem_metadata(ctx, field)
-			case "billingCycle":
-				return ec.fieldContext_ServiceLineItem_billingCycle(ctx, field)
-			case "comments":
-				return ec.fieldContext_ServiceLineItem_comments(ctx, field)
-			case "description":
-				return ec.fieldContext_ServiceLineItem_description(ctx, field)
-			case "parentId":
-				return ec.fieldContext_ServiceLineItem_parentId(ctx, field)
-			case "price":
-				return ec.fieldContext_ServiceLineItem_price(ctx, field)
-			case "quantity":
-				return ec.fieldContext_ServiceLineItem_quantity(ctx, field)
-			case "serviceEnded":
-				return ec.fieldContext_ServiceLineItem_serviceEnded(ctx, field)
-			case "serviceStarted":
-				return ec.fieldContext_ServiceLineItem_serviceStarted(ctx, field)
-			case "tax":
-				return ec.fieldContext_ServiceLineItem_tax(ctx, field)
-			case "createdBy":
-				return ec.fieldContext_ServiceLineItem_createdBy(ctx, field)
-			case "externalLinks":
-				return ec.fieldContext_ServiceLineItem_externalLinks(ctx, field)
-			case "vatRate":
-				return ec.fieldContext_ServiceLineItem_vatRate(ctx, field)
-			case "startedAt":
-				return ec.fieldContext_ServiceLineItem_startedAt(ctx, field)
-			case "endedAt":
-				return ec.fieldContext_ServiceLineItem_endedAt(ctx, field)
-			case "name":
-				return ec.fieldContext_ServiceLineItem_name(ctx, field)
-			case "billed":
-				return ec.fieldContext_ServiceLineItem_billed(ctx, field)
-			case "id":
-				return ec.fieldContext_ServiceLineItem_id(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_ServiceLineItem_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_ServiceLineItem_updatedAt(ctx, field)
-			case "source":
-				return ec.fieldContext_ServiceLineItem_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_ServiceLineItem_sourceOfTruth(ctx, field)
-			case "appSource":
-				return ec.fieldContext_ServiceLineItem_appSource(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ServiceLineItem", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_serviceLineItemCreate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_serviceLineItemUpdate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_serviceLineItemUpdate(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().ServiceLineItemUpdate(rctx, fc.Args["input"].(model.ServiceLineItemUpdateInput))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRole == nil {
-				return nil, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				return nil, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.ServiceLineItem); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.ServiceLineItem`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.ServiceLineItem)
-	fc.Result = res
-	return ec.marshalNServiceLineItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐServiceLineItem(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_serviceLineItemUpdate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "metadata":
-				return ec.fieldContext_ServiceLineItem_metadata(ctx, field)
-			case "billingCycle":
-				return ec.fieldContext_ServiceLineItem_billingCycle(ctx, field)
-			case "comments":
-				return ec.fieldContext_ServiceLineItem_comments(ctx, field)
-			case "description":
-				return ec.fieldContext_ServiceLineItem_description(ctx, field)
-			case "parentId":
-				return ec.fieldContext_ServiceLineItem_parentId(ctx, field)
-			case "price":
-				return ec.fieldContext_ServiceLineItem_price(ctx, field)
-			case "quantity":
-				return ec.fieldContext_ServiceLineItem_quantity(ctx, field)
-			case "serviceEnded":
-				return ec.fieldContext_ServiceLineItem_serviceEnded(ctx, field)
-			case "serviceStarted":
-				return ec.fieldContext_ServiceLineItem_serviceStarted(ctx, field)
-			case "tax":
-				return ec.fieldContext_ServiceLineItem_tax(ctx, field)
-			case "createdBy":
-				return ec.fieldContext_ServiceLineItem_createdBy(ctx, field)
-			case "externalLinks":
-				return ec.fieldContext_ServiceLineItem_externalLinks(ctx, field)
-			case "vatRate":
-				return ec.fieldContext_ServiceLineItem_vatRate(ctx, field)
-			case "startedAt":
-				return ec.fieldContext_ServiceLineItem_startedAt(ctx, field)
-			case "endedAt":
-				return ec.fieldContext_ServiceLineItem_endedAt(ctx, field)
-			case "name":
-				return ec.fieldContext_ServiceLineItem_name(ctx, field)
-			case "billed":
-				return ec.fieldContext_ServiceLineItem_billed(ctx, field)
-			case "id":
-				return ec.fieldContext_ServiceLineItem_id(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_ServiceLineItem_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_ServiceLineItem_updatedAt(ctx, field)
-			case "source":
-				return ec.fieldContext_ServiceLineItem_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_ServiceLineItem_sourceOfTruth(ctx, field)
-			case "appSource":
-				return ec.fieldContext_ServiceLineItem_appSource(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ServiceLineItem", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_serviceLineItemUpdate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -63075,6 +62552,8 @@ func (ec *executionContext) fieldContext_Note_includes(ctx context.Context, fiel
 				return ec.fieldContext_Attachment_createdAt(ctx, field)
 			case "basePath":
 				return ec.fieldContext_Attachment_basePath(ctx, field)
+			case "cdnUrl":
+				return ec.fieldContext_Attachment_cdnUrl(ctx, field)
 			case "fileName":
 				return ec.fieldContext_Attachment_fileName(ctx, field)
 			case "mimeType":
@@ -72424,6 +71903,8 @@ func (ec *executionContext) fieldContext_Query_attachment(ctx context.Context, f
 				return ec.fieldContext_Attachment_createdAt(ctx, field)
 			case "basePath":
 				return ec.fieldContext_Attachment_basePath(ctx, field)
+			case "cdnUrl":
+				return ec.fieldContext_Attachment_cdnUrl(ctx, field)
 			case "fileName":
 				return ec.fieldContext_Attachment_fileName(ctx, field)
 			case "mimeType":
@@ -72509,6 +71990,8 @@ func (ec *executionContext) fieldContext_Query_global_Cache(ctx context.Context,
 				return ec.fieldContext_GlobalCache_maxARRForecastValue(ctx, field)
 			case "contractsExist":
 				return ec.fieldContext_GlobalCache_contractsExist(ctx, field)
+			case "cdnLogoUrl":
+				return ec.fieldContext_GlobalCache_cdnLogoUrl(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type GlobalCache", field.Name)
 		},
@@ -76562,28 +76045,6 @@ func (ec *executionContext) fieldContext_Query_serviceLineItem(ctx context.Conte
 				return ec.fieldContext_ServiceLineItem_createdBy(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_ServiceLineItem_externalLinks(ctx, field)
-			case "vatRate":
-				return ec.fieldContext_ServiceLineItem_vatRate(ctx, field)
-			case "startedAt":
-				return ec.fieldContext_ServiceLineItem_startedAt(ctx, field)
-			case "endedAt":
-				return ec.fieldContext_ServiceLineItem_endedAt(ctx, field)
-			case "name":
-				return ec.fieldContext_ServiceLineItem_name(ctx, field)
-			case "billed":
-				return ec.fieldContext_ServiceLineItem_billed(ctx, field)
-			case "id":
-				return ec.fieldContext_ServiceLineItem_id(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_ServiceLineItem_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_ServiceLineItem_updatedAt(ctx, field)
-			case "source":
-				return ec.fieldContext_ServiceLineItem_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_ServiceLineItem_sourceOfTruth(ctx, field)
-			case "appSource":
-				return ec.fieldContext_ServiceLineItem_appSource(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ServiceLineItem", field.Name)
 		},
@@ -79300,487 +78761,6 @@ func (ec *executionContext) fieldContext_ServiceLineItem_externalLinks(ctx conte
 				return ec.fieldContext_ExternalSystem_externalSource(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ExternalSystem", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ServiceLineItem_vatRate(ctx context.Context, field graphql.CollectedField, obj *model.ServiceLineItem) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ServiceLineItem_vatRate(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.VatRate, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(float64)
-	fc.Result = res
-	return ec.marshalNFloat2float64(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ServiceLineItem_vatRate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ServiceLineItem",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ServiceLineItem_startedAt(ctx context.Context, field graphql.CollectedField, obj *model.ServiceLineItem) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ServiceLineItem_startedAt(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.StartedAt, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(time.Time)
-	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ServiceLineItem_startedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ServiceLineItem",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ServiceLineItem_endedAt(ctx context.Context, field graphql.CollectedField, obj *model.ServiceLineItem) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ServiceLineItem_endedAt(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.EndedAt, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*time.Time)
-	fc.Result = res
-	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ServiceLineItem_endedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ServiceLineItem",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ServiceLineItem_name(ctx context.Context, field graphql.CollectedField, obj *model.ServiceLineItem) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ServiceLineItem_name(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Name, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ServiceLineItem_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ServiceLineItem",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ServiceLineItem_billed(ctx context.Context, field graphql.CollectedField, obj *model.ServiceLineItem) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ServiceLineItem_billed(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Billed, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(model.BilledType)
-	fc.Result = res
-	return ec.marshalNBilledType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐBilledType(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ServiceLineItem_billed(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ServiceLineItem",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type BilledType does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ServiceLineItem_id(ctx context.Context, field graphql.CollectedField, obj *model.ServiceLineItem) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ServiceLineItem_id(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ServiceLineItem_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ServiceLineItem",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ServiceLineItem_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.ServiceLineItem) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ServiceLineItem_createdAt(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.CreatedAt, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(time.Time)
-	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ServiceLineItem_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ServiceLineItem",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ServiceLineItem_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.ServiceLineItem) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ServiceLineItem_updatedAt(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.UpdatedAt, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(time.Time)
-	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ServiceLineItem_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ServiceLineItem",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ServiceLineItem_source(ctx context.Context, field graphql.CollectedField, obj *model.ServiceLineItem) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ServiceLineItem_source(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Source, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(model.DataSource)
-	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ServiceLineItem_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ServiceLineItem",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type DataSource does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ServiceLineItem_sourceOfTruth(ctx context.Context, field graphql.CollectedField, obj *model.ServiceLineItem) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ServiceLineItem_sourceOfTruth(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.SourceOfTruth, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(model.DataSource)
-	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ServiceLineItem_sourceOfTruth(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ServiceLineItem",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type DataSource does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ServiceLineItem_appSource(ctx context.Context, field graphql.CollectedField, obj *model.ServiceLineItem) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ServiceLineItem_appSource(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.AppSource, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ServiceLineItem_appSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ServiceLineItem",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -87489,7 +86469,7 @@ func (ec *executionContext) unmarshalInputAttachmentInput(ctx context.Context, o
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "createdAt", "basePath", "fileName", "mimeType", "size", "appSource"}
+	fieldsInOrder := [...]string{"id", "createdAt", "cdnUrl", "basePath", "fileName", "mimeType", "size", "appSource"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -87510,6 +86490,13 @@ func (ec *executionContext) unmarshalInputAttachmentInput(ctx context.Context, o
 				return it, err
 			}
 			it.CreatedAt = data
+		case "cdnUrl":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cdnUrl"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CdnURL = data
 		case "basePath":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("basePath"))
 			data, err := ec.unmarshalNString2string(ctx, v)
@@ -92305,7 +91292,7 @@ func (ec *executionContext) unmarshalInputServiceLineItemInput(ctx context.Conte
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"contractId", "description", "billingCycle", "price", "quantity", "tax", "appSource", "serviceStarted", "serviceEnded", "vatRate", "name", "billed", "endedAt", "startedAt", "externalReference"}
+	fieldsInOrder := [...]string{"contractId", "description", "billingCycle", "price", "quantity", "tax", "appSource", "serviceStarted", "serviceEnded"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -92375,48 +91362,6 @@ func (ec *executionContext) unmarshalInputServiceLineItemInput(ctx context.Conte
 				return it, err
 			}
 			it.ServiceEnded = data
-		case "vatRate":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("vatRate"))
-			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.VatRate = data
-		case "name":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Name = data
-		case "billed":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billed"))
-			data, err := ec.unmarshalOBilledType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐBilledType(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Billed = data
-		case "endedAt":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("endedAt"))
-			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.EndedAt = data
-		case "startedAt":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startedAt"))
-			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.StartedAt = data
-		case "externalReference":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalReference"))
-			data, err := ec.unmarshalOExternalSystemReferenceInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐExternalSystemReferenceInput(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.ExternalReference = data
 		}
 	}
 
@@ -92430,7 +91375,7 @@ func (ec *executionContext) unmarshalInputServiceLineItemUpdateInput(ctx context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "description", "billingCycle", "price", "quantity", "tax", "comments", "appSource", "isRetroactiveCorrection", "serviceStarted", "serviceEnded", "serviceLineItemId", "name", "vatRate", "externalReference", "billed"}
+	fieldsInOrder := [...]string{"id", "description", "billingCycle", "price", "quantity", "tax", "comments", "appSource", "isRetroactiveCorrection", "serviceStarted", "serviceEnded"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -92514,41 +91459,6 @@ func (ec *executionContext) unmarshalInputServiceLineItemUpdateInput(ctx context
 				return it, err
 			}
 			it.ServiceEnded = data
-		case "serviceLineItemId":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("serviceLineItemId"))
-			data, err := ec.unmarshalNID2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.ServiceLineItemID = data
-		case "name":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Name = data
-		case "vatRate":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("vatRate"))
-			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.VatRate = data
-		case "externalReference":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalReference"))
-			data, err := ec.unmarshalOExternalSystemReferenceInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐExternalSystemReferenceInput(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.ExternalReference = data
-		case "billed":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billed"))
-			data, err := ec.unmarshalOBilledType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐBilledType(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Billed = data
 		}
 	}
 
@@ -94421,6 +93331,11 @@ func (ec *executionContext) _Attachment(ctx context.Context, sel ast.SelectionSe
 			}
 		case "basePath":
 			out.Values[i] = ec._Attachment_basePath(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "cdnUrl":
+			out.Values[i] = ec._Attachment_cdnUrl(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -98184,6 +97099,11 @@ func (ec *executionContext) _GlobalCache(ctx context.Context, sel ast.SelectionS
 			}
 		case "contractsExist":
 			out.Values[i] = ec._GlobalCache_contractsExist(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "cdnLogoUrl":
+			out.Values[i] = ec._GlobalCache_cdnLogoUrl(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -102071,27 +100991,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "serviceLineItem_BulkUpdate":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_serviceLineItem_BulkUpdate(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "serviceLineItem_Close":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_serviceLineItem_Close(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "serviceLineItemCreate":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_serviceLineItemCreate(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "serviceLineItemUpdate":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_serviceLineItemUpdate(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -106389,58 +105288,6 @@ func (ec *executionContext) _ServiceLineItem(ctx context.Context, sel ast.Select
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-		case "vatRate":
-			out.Values[i] = ec._ServiceLineItem_vatRate(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "startedAt":
-			out.Values[i] = ec._ServiceLineItem_startedAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "endedAt":
-			out.Values[i] = ec._ServiceLineItem_endedAt(ctx, field, obj)
-		case "name":
-			out.Values[i] = ec._ServiceLineItem_name(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "billed":
-			out.Values[i] = ec._ServiceLineItem_billed(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "id":
-			out.Values[i] = ec._ServiceLineItem_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "createdAt":
-			out.Values[i] = ec._ServiceLineItem_createdAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "updatedAt":
-			out.Values[i] = ec._ServiceLineItem_updatedAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "source":
-			out.Values[i] = ec._ServiceLineItem_source(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "sourceOfTruth":
-			out.Values[i] = ec._ServiceLineItem_sourceOfTruth(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "appSource":
-			out.Values[i] = ec._ServiceLineItem_appSource(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

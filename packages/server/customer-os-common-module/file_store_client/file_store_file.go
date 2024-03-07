@@ -7,4 +7,5 @@ type FileDTO struct {
 	Size        int64  `json:"size"`
 	MetadataUrl string `json:"previewUrl"`
 	DownloadUrl string `json:"downloadUrl"`
+	CdnUrl      string `json:"cdnUrl"`
 }

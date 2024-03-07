@@ -57,14 +57,14 @@ func TestMutationResolver_ServiceLineItemCreate(t *testing.T) {
 	})
 
 	var serviceLineItemStruct struct {
-		ServiceLineItemCreate model.ServiceLineItem
+		ContractLineItem_Create model.ServiceLineItem
 	}
 
 	require.Nil(t, rawResponse.Errors)
 	err := decode.Decode(rawResponse.Data.(map[string]any), &serviceLineItemStruct)
 	require.Nil(t, err)
-	serviceLineItem := serviceLineItemStruct.ServiceLineItemCreate
-	require.Equal(t, serviceLineItemId, serviceLineItem.ID)
+	serviceLineItem := serviceLineItemStruct.ContractLineItem_Create
+	require.Equal(t, serviceLineItemId, serviceLineItem.Metadata.ID)
 	require.Equal(t, serviceLineItemId, serviceLineItem.ParentID)
 	require.True(t, calledCreateServiceLineItem)
 }
@@ -107,14 +107,14 @@ func TestMutationResolver_ServiceLineItemUpdate(t *testing.T) {
 	})
 
 	var serviceLineItemStruct struct {
-		ServiceLineItemUpdate model.ServiceLineItem
+		ContractLineItem_Update model.ServiceLineItem
 	}
 
 	require.Nil(t, rawResponse.Errors)
 	err := decode.Decode(rawResponse.Data.(map[string]any), &serviceLineItemStruct)
 	require.Nil(t, err)
-	serviceLineItem := serviceLineItemStruct.ServiceLineItemUpdate
-	require.Equal(t, serviceLineItemId, serviceLineItem.ID)
+	serviceLineItem := serviceLineItemStruct.ContractLineItem_Update
+	require.Equal(t, serviceLineItemId, serviceLineItem.Metadata.ID)
 	require.Equal(t, serviceLineItemIdParentId, serviceLineItem.ParentID)
 	require.True(t, calledUpdateServiceLineItem)
 }
