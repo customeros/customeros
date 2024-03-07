@@ -68,7 +68,6 @@ export const InvoicePreviewModalContent: React.FC<InvoicePreviewModalProps> = ({
     <Invoice
       tax={data?.invoice?.taxDue}
       note={data?.invoice?.note}
-      logoUrl={data?.invoice?.provider?.logoUrl}
       from={providerAddressData}
       total={data?.invoice.amountDue}
       dueDate={data?.invoice.due}

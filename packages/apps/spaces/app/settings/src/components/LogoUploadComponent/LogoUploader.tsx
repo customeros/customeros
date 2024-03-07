@@ -36,6 +36,7 @@ export const LogoUploader: React.FC<LogoUploaderProps> = () => {
   const { data: tenantSettingsData } = useTenantSettingsQuery(client);
   const { data: globalCacheData } = useGlobalCacheQuery(client);
   const queryKey = useTenantSettingsQuery.getKey();
+  const globalCacheQueryKey = useGlobalCacheQuery.getKey();
   const [hasError, setHasError] = useState<null | {
     file: string;
     error: string;
@@ -59,6 +60,7 @@ export const LogoUploader: React.FC<LogoUploaderProps> = () => {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({ queryKey: globalCacheQueryKey });
     },
   });
 

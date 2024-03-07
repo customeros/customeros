@@ -266,8 +266,11 @@ export const BillingPanel = () => {
             return next;
           }
           case 'sendInvoicesFrom': {
-            const trimmedValue = (action.payload?.value || '')?.trim();
-            if (!trimmedValue?.length && state.values?.legalName?.length) {
+            const formattedEmail = (action.payload?.value || '')
+              ?.trim()
+              .split(' ')
+              .join('-');
+            if (!formattedEmail?.length && state.values?.legalName?.length) {
               handleUpdateData.cancel();
               const newEmail = `${state.values.legalName
                 .split(' ')
@@ -296,7 +299,13 @@ export const BillingPanel = () => {
               handleUpdateData.flush();
             }
 
-            return getStateAfterValidation();
+            return {
+              ...getStateAfterValidation(),
+              values: {
+                ...next.values,
+                sendInvoicesFrom: formattedEmail,
+              },
+            };
           }
           default:
             return next;

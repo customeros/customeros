@@ -39,7 +39,6 @@ type InvoiceProps = {
   amountDue?: number;
   note?: string | null;
   invoiceNumber: string;
-  logoUrl?: string | null;
   isBilledToFocused?: boolean;
   isInvoiceProviderFocused?: boolean;
   lines: Partial<Invoice['invoiceLineItems']>;
@@ -63,7 +62,6 @@ export function Invoice({
   isBilledToFocused,
   isInvoiceProviderFocused,
   currency = 'USD',
-  logoUrl,
   isInternationalBankingDetailsSectionFocused,
   isDomesticBankingDetailsSectionFocused,
 }: InvoiceProps) {
@@ -86,11 +84,7 @@ export function Invoice({
     >
       <Flex flexDir='column'>
         <Flex flexDir='column' mt={2}>
-          <InvoiceHeader
-            invoiceNumber={invoiceNumber}
-            status={status}
-            logoUrl={logoUrl}
-          />
+          <InvoiceHeader invoiceNumber={invoiceNumber} status={status} />
 
           <Flex
             mt={2}

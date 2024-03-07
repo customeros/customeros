@@ -1,4 +1,6 @@
-export const validateEmailLocalPart = (value: string): undefined | string => {
+export const validateEmailLocalPart = (data: string): undefined | string => {
+  const value = data.split(' ').join('');
+
   if (value) {
     if (value.startsWith('.') || value.endsWith('.')) {
       return 'The email address cannot start or end with a dot.';
