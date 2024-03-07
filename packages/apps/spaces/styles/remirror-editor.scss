@@ -744,6 +744,9 @@ span.slack_code {
   color: var(--chakra-colors-rose-500);
   width: fit-content;
   padding: 0 0.25em;
+  a {
+    font-family: var(--chakra-fonts-body);
+  }
 }
 
 .slack_code {
