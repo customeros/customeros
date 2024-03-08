@@ -47,7 +47,6 @@ export const OnboardingStatus = ({
   const handleIsFetching = (status: boolean) => setIsFetching(status);
 
   const timeElapsed = match(data?.status)
-    .returnType<string>()
     .with(
       OnboardingStatusEnum.NotApplicable,
       OnboardingStatusEnum.Successful,
@@ -56,14 +55,15 @@ export const OnboardingStatus = ({
     .otherwise(() => {
       if (!data?.updatedAt) return '';
 
-      const [value, unit] = getDifferenceFromNow(data?.updatedAt);
-      if (value === '0' && unit === 'days') {
-        const [value, unit] = getDifferenceInMinutesOrHours(data?.updatedAt);
+      return match(getDifferenceFromNow(data?.updatedAt))
+        .with(['', 'today'], () => {
+          const [value, unit] = getDifferenceInMinutesOrHours(data?.updatedAt);
 
-        return `for ${value} ${unit}`;
-      }
-
-      return `for ${Math.abs(value as number)} ${unit}`;
+          return `for ${Math.abs(value as number)} ${unit}`;
+        })
+        .otherwise(
+          ([value, unit]) => `for ${Math.abs(value as number)} ${unit}`,
+        );
     });
 
   const label =

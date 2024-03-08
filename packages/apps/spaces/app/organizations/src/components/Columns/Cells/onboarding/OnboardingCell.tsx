@@ -33,7 +33,7 @@ export const OnboardingCell = ({
       if (!updatedAt) return '';
 
       return match(getDifferenceFromNow(updatedAt))
-        .with(['0', 'days'], () => {
+        .with(['', 'today'], () => {
           const [value, unit] = getDifferenceInMinutesOrHours(updatedAt);
 
           return `for ${Math.abs(value as number)} ${unit}`;
