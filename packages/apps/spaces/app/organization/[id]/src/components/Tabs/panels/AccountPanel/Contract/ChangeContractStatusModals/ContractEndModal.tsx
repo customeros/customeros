@@ -31,6 +31,7 @@ interface ContractEndModalProps {
   renewsAt?: string;
   contractId: string;
   onClose: () => void;
+  nextInvoiceDate?: string;
   organizationName: string;
   serviceStartedAt?: string;
   onUpdateContract: UseMutationResult<
@@ -55,14 +56,21 @@ export const ContractEndModal = ({
   contractId,
   organizationName,
   renewsAt,
+  nextInvoiceDate,
   onUpdateContract,
 }: ContractEndModalProps) => {
   const initialRef = useRef(null);
   const [value, setValue] = React.useState(EndContract.Now);
   const formId = `contract-ends-on-form-${contractId}`;
-
   const timeToRenewal = renewsAt
     ? DateTimeUtils.format(renewsAt, DateTimeUtils.dateWithAbreviatedMonth)
+    : null;
+
+  const timeToNextInvoice = nextInvoiceDate
+    ? DateTimeUtils.format(
+        nextInvoiceDate,
+        DateTimeUtils.dateWithAbreviatedMonth,
+      )
     : null;
 
   const { state, setDefaultValues } = useForm<{
@@ -158,12 +166,13 @@ export const ContractEndModal = ({
             <Radio value={EndContract.Now} colorScheme='primary'>
               Now
             </Radio>
+
             <Radio
               value={EndContract.EndOfCurrentBillingPeriod}
               colorScheme='primary'
-              display={renewsAt ? 'flex' : 'none'}
+              display={timeToNextInvoice ? 'flex' : 'none'}
             >
-              End of current billing period, {timeToRenewal}
+              End of current billing period, {timeToNextInvoice}
             </Radio>
 
             <Radio

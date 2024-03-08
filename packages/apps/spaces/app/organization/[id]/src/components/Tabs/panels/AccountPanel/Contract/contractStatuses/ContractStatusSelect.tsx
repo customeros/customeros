@@ -24,7 +24,9 @@ interface ContractStatusSelectProps {
   contractId: string;
   status: ContractStatus;
   organizationName: string;
+  nextInvoiceDate?: string;
   serviceStartedAt?: string;
+
   onUpdateContract: UseMutationResult<
     UpdateContractMutation,
     unknown,
@@ -46,6 +48,7 @@ export const ContractStatusSelect: React.FC<ContractStatusSelectProps> = ({
   organizationName,
   serviceStartedAt,
   onUpdateContract,
+  nextInvoiceDate,
 }) => {
   const { onOpen, onClose, isOpen } = useDisclosure({
     id: 'end-contract-modal',
@@ -118,6 +121,7 @@ export const ContractStatusSelect: React.FC<ContractStatusSelectProps> = ({
         renewsAt={renewsAt}
         serviceStartedAt={serviceStartedAt}
         onUpdateContract={onUpdateContract}
+        nextInvoiceDate={nextInvoiceDate}
       />
       <ContractStartModal
         isOpen={isStartModalOpen}

@@ -18,6 +18,7 @@ query getContract($id: ID!) {
       canPayWithCard
       canPayWithDirectDebit
       canPayWithBankTransfer
-    }
+      nextInvoicing
     }
   }
+}

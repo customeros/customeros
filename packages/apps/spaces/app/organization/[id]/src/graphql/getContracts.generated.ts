@@ -68,6 +68,10 @@ export type GetContractsQuery = {
       zip?: string | null;
       invoiceEmail?: string | null;
       invoiceNote?: string | null;
+      billingDetails?: {
+        __typename?: 'BillingDetails';
+        nextInvoicing?: any | null;
+      } | null;
       opportunities?: Array<{
         __typename?: 'Opportunity';
         id: string;
@@ -155,6 +159,9 @@ export const GetContractsDocument = `
       zip
       invoiceEmail
       invoiceNote
+      billingDetails {
+        nextInvoicing
+      }
       opportunities {
         id
         comments
