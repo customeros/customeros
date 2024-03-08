@@ -1092,6 +1092,56 @@ func CreateTag(ctx context.Context, driver *neo4j.DriverWithContext, tenant stri
 	return tagId
 }
 
+func CreateReminder(ctx context.Context, driver *neo4j.DriverWithContext, tenant, userId, orgId string, createdAt time.Time, reminderEntity entity.ReminderEntity) string {
+	reminderId := utils.NewUUIDIfEmpty(reminderEntity.Id)
+	query := `MATCH (t:Tenant {name:$tenant})
+				MERGE (t)<-[:REMINDER_BELONGS_TO_TENANT]-(r:Reminder {id:$id})
+				SET r += {
+					createdAt: datetime($createdAt),
+					updatedAt: datetime($createdAt),
+					source: $source,
+					sourceOfTruth: $source,
+					appSource: $appSource,
+					content: $content,
+					dueDate: datetime($dueDate),
+					dismissed: $dismissed
+				}
+				MERGE (u:User {id:$userId})<-[:REMINDER_BELONGS_TO_USER]-(r)
+				MERGE (o:Organization {id:$orgId})<-[:REMINDER_BELONGS_TO_ORGANIZATION]-(r)`
+	params := map[string]interface{}{
+		"tenant":    tenant,
+		"id":        reminderId,
+		"userId":    userId,
+		"orgId":     orgId,
+		"content":   reminderEntity.Content,
+		"source":    reminderEntity.Source,
+		"appSource": reminderEntity.AppSource,
+		"createdAt": createdAt,
+		"dueDate":   reminderEntity.DueDate,
+		"dismissed": reminderEntity.Dismissed,
+	}
+	ExecuteWriteQuery(ctx, driver, query, params)
+	return reminderId
+}
+
+func UpdateReminder(ctx context.Context, driver *neo4j.DriverWithContext, tenant, reminderId string, reminderEntity entity.ReminderEntity) {
+	query := `MATCH (r:Reminder {id:$reminderId})
+				SET r += {
+					updatedAt: datetime($updatedAt),
+					content: $content,
+					dueDate: datetime($dueDate),
+					dismissed: $dismissed
+				}`
+	params := map[string]interface{}{
+		"reminderId": reminderId,
+		"content":    reminderEntity.Content,
+		"updatedAt":  reminderEntity.UpdatedAt,
+		"dueDate":    reminderEntity.DueDate,
+		"dismissed":  reminderEntity.Dismissed,
+	}
+	ExecuteWriteQuery(ctx, driver, query, params)
+}
+
 // Deprecated
 func FirstTimeOfMonth(year, month int) time.Time {
 	return time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)

@@ -1,0 +1,19 @@
+mutation ReminderUpdate($id: ID!, $content: String, $dueDate: Time, $dismissed: Boolean) {
+reminder_Update(
+    input: {
+      id: $id
+      content: $content
+      dueDate: $dueDate
+      dismissed: $dismissed
+    })  {
+        metadata {
+            id
+        }
+        content
+        dueDate
+        dismissed
+        owner {
+            id
+        }
+  }
+}

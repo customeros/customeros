@@ -69,6 +69,7 @@ type ResolverRoot interface {
 	PhoneNumber() PhoneNumberResolver
 	Player() PlayerResolver
 	Query() QueryResolver
+	Reminder() ReminderResolver
 	ServiceLineItem() ServiceLineItemResolver
 	SlackChannel() SlackChannelResolver
 	TableViewDef() TableViewDefResolver
@@ -985,6 +986,8 @@ type ComplexityRoot struct {
 		PhoneNumberUpdateInOrganization         func(childComplexity int, organizationID string, input model.PhoneNumberUpdateInput) int
 		PhoneNumberUpdateInUser                 func(childComplexity int, userID string, input model.PhoneNumberUpdateInput) int
 		PlayerMerge                             func(childComplexity int, userID string, input model.PlayerInput) int
+		ReminderCreate                          func(childComplexity int, input model.ReminderInput) int
+		ReminderUpdate                          func(childComplexity int, input model.ReminderUpdateInput) int
 		ServiceLineItemBulkUpdate               func(childComplexity int, input model.ServiceLineItemBulkUpdateInput) int
 		ServiceLineItemDelete                   func(childComplexity int, id string) int
 		SocialRemove                            func(childComplexity int, socialID string) int
@@ -1297,6 +1300,8 @@ type ComplexityRoot struct {
 		Organizations                         func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
 		PhoneNumber                           func(childComplexity int, id string) int
 		PlayerByAuthIDProvider                func(childComplexity int, authID string, provider string) int
+		Reminder                              func(childComplexity int, id string) int
+		RemindersForOrganization              func(childComplexity int, organizationID string) int
 		ServiceLineItem                       func(childComplexity int, id string) int
 		SlackChannels                         func(childComplexity int, pagination *model.Pagination) int
 		TableViewDefs                         func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort *model.SortBy) int
@@ -1311,6 +1316,14 @@ type ComplexityRoot struct {
 		User                                  func(childComplexity int, id string) int
 		UserByEmail                           func(childComplexity int, email string) int
 		Users                                 func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
+	}
+
+	Reminder struct {
+		Content   func(childComplexity int) int
+		Dismissed func(childComplexity int) int
+		DueDate   func(childComplexity int) int
+		Metadata  func(childComplexity int) int
+		Owner     func(childComplexity int) int
 	}
 
 	RenewalRecord struct {
@@ -1786,6 +1799,8 @@ type MutationResolver interface {
 	PhoneNumberRemoveFromUserByE164(ctx context.Context, userID string, e164 string) (*model.Result, error)
 	PhoneNumberRemoveFromUserByID(ctx context.Context, userID string, id string) (*model.Result, error)
 	PlayerMerge(ctx context.Context, userID string, input model.PlayerInput) (*model.Result, error)
+	ReminderCreate(ctx context.Context, input model.ReminderInput) (*model.Reminder, error)
+	ReminderUpdate(ctx context.Context, input model.ReminderUpdateInput) (*model.Reminder, error)
 	ContractLineItemCreate(ctx context.Context, input model.ServiceLineItemInput) (*model.ServiceLineItem, error)
 	ContractLineItemUpdate(ctx context.Context, input model.ServiceLineItemUpdateInput) (*model.ServiceLineItem, error)
 	ContractLineItemClose(ctx context.Context, input model.ServiceLineItemCloseInput) (string, error)
@@ -1916,6 +1931,8 @@ type QueryResolver interface {
 	OrganizationPlans(ctx context.Context, retired *bool) ([]*model.OrganizationPlan, error)
 	PhoneNumber(ctx context.Context, id string) (*model.PhoneNumber, error)
 	PlayerByAuthIDProvider(ctx context.Context, authID string, provider string) (*model.Player, error)
+	Reminder(ctx context.Context, id string) (*model.Reminder, error)
+	RemindersForOrganization(ctx context.Context, organizationID string) ([]*model.Reminder, error)
 	GcliSearch(ctx context.Context, keyword string, limit *int) ([]*model.GCliItem, error)
 	ServiceLineItem(ctx context.Context, id string) (*model.ServiceLineItem, error)
 	SlackChannels(ctx context.Context, pagination *model.Pagination) (*model.SlackChannelPage, error)
@@ -1932,6 +1949,9 @@ type QueryResolver interface {
 	User(ctx context.Context, id string) (*model.User, error)
 	UserByEmail(ctx context.Context, email string) (*model.User, error)
 	TableViewDefs(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort *model.SortBy) (*model.TableViewDefPage, error)
+}
+type ReminderResolver interface {
+	Owner(ctx context.Context, obj *model.Reminder) (*model.User, error)
 }
 type ServiceLineItemResolver interface {
 	CreatedBy(ctx context.Context, obj *model.ServiceLineItem) (*model.User, error)
@@ -7558,6 +7578,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.PlayerMerge(childComplexity, args["userId"].(string), args["input"].(model.PlayerInput)), true
 
+	case "Mutation.reminder_Create":
+		if e.complexity.Mutation.ReminderCreate == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_reminder_Create_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ReminderCreate(childComplexity, args["input"].(model.ReminderInput)), true
+
+	case "Mutation.reminder_Update":
+		if e.complexity.Mutation.ReminderUpdate == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_reminder_Update_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ReminderUpdate(childComplexity, args["input"].(model.ReminderUpdateInput)), true
+
 	case "Mutation.serviceLineItem_BulkUpdate":
 		if e.complexity.Mutation.ServiceLineItemBulkUpdate == nil {
 			break
@@ -9668,6 +9712,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.PlayerByAuthIDProvider(childComplexity, args["authId"].(string), args["provider"].(string)), true
 
+	case "Query.reminder":
+		if e.complexity.Query.Reminder == nil {
+			break
+		}
+
+		args, err := ec.field_Query_reminder_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Reminder(childComplexity, args["id"].(string)), true
+
+	case "Query.remindersForOrganization":
+		if e.complexity.Query.RemindersForOrganization == nil {
+			break
+		}
+
+		args, err := ec.field_Query_remindersForOrganization_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.RemindersForOrganization(childComplexity, args["organizationId"].(string)), true
+
 	case "Query.serviceLineItem":
 		if e.complexity.Query.ServiceLineItem == nil {
 			break
@@ -9815,6 +9883,41 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Users(childComplexity, args["pagination"].(*model.Pagination), args["where"].(*model.Filter), args["sort"].([]*model.SortBy)), true
+
+	case "Reminder.content":
+		if e.complexity.Reminder.Content == nil {
+			break
+		}
+
+		return e.complexity.Reminder.Content(childComplexity), true
+
+	case "Reminder.dismissed":
+		if e.complexity.Reminder.Dismissed == nil {
+			break
+		}
+
+		return e.complexity.Reminder.Dismissed(childComplexity), true
+
+	case "Reminder.dueDate":
+		if e.complexity.Reminder.DueDate == nil {
+			break
+		}
+
+		return e.complexity.Reminder.DueDate(childComplexity), true
+
+	case "Reminder.metadata":
+		if e.complexity.Reminder.Metadata == nil {
+			break
+		}
+
+		return e.complexity.Reminder.Metadata(childComplexity), true
+
+	case "Reminder.owner":
+		if e.complexity.Reminder.Owner == nil {
+			break
+		}
+
+		return e.complexity.Reminder.Owner(childComplexity), true
 
 	case "RenewalRecord.contract":
 		if e.complexity.RenewalRecord.Contract == nil {
@@ -10890,6 +10993,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputPhoneNumberUpdateInput,
 		ec.unmarshalInputPlayerInput,
 		ec.unmarshalInputPlayerUpdate,
+		ec.unmarshalInputReminderInput,
+		ec.unmarshalInputReminderUpdateInput,
 		ec.unmarshalInputServiceLineItemBulkUpdateInput,
 		ec.unmarshalInputServiceLineItemBulkUpdateItem,
 		ec.unmarshalInputServiceLineItemCloseInput,
@@ -13828,6 +13933,38 @@ extend type Mutation {
 	{Name: "../../../customer-os-api/graph/schemas/query.graphqls", Input: `type Query {
     entityTemplates(extends: EntityTemplateExtension) :[EntityTemplate!]!
 }`, BuiltIn: false},
+	{Name: "../../../customer-os-api/graph/schemas/reminders.graphqls", Input: `extend type Mutation {
+    reminder_Create(input: ReminderInput!): Reminder!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+    reminder_Update(input: ReminderUpdateInput!): Reminder!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+extend type Query {
+    reminder(id: ID!): Reminder! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    remindersForOrganization(organizationId: ID!): [Reminder!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+type Reminder implements MetadataInterface {
+    metadata:           Metadata!
+    content:            String!
+    owner:              User! @goField(forceResolver: true)
+    dueDate:            Time!
+    dismissed:          Boolean!
+}
+
+input ReminderInput {
+    content:            String!
+    dueDate:            Time!
+    organizationId:     ID!
+    userId:             ID!
+}
+
+input ReminderUpdateInput {
+    id:                 ID!
+    content:            String
+    dueDate:            Time
+    dismissed:          Boolean
+}
+`, BuiltIn: false},
 	{Name: "../../../customer-os-api/graph/schemas/result.graphqls", Input: `"""
 Describes the success or failure of the GraphQL call.
 **A ` + "`" + `return` + "`" + ` object**
@@ -17381,6 +17518,36 @@ func (ec *executionContext) field_Mutation_player_Merge_args(ctx context.Context
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_reminder_Create_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.ReminderInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNReminderInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐReminderInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_reminder_Update_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.ReminderUpdateInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNReminderUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐReminderUpdateInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_serviceLineItem_BulkUpdate_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -18629,6 +18796,36 @@ func (ec *executionContext) field_Query_player_ByAuthIdProvider_args(ctx context
 		}
 	}
 	args["provider"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_reminder_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_remindersForOrganization_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["organizationId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["organizationId"] = arg0
 	return args, nil
 }
 
@@ -59850,6 +60047,200 @@ func (ec *executionContext) fieldContext_Mutation_player_Merge(ctx context.Conte
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_reminder_Create(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_reminder_Create(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().ReminderCreate(rctx, fc.Args["input"].(model.ReminderInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Reminder); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model.Reminder`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Reminder)
+	fc.Result = res
+	return ec.marshalNReminder2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐReminder(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_reminder_Create(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "metadata":
+				return ec.fieldContext_Reminder_metadata(ctx, field)
+			case "content":
+				return ec.fieldContext_Reminder_content(ctx, field)
+			case "owner":
+				return ec.fieldContext_Reminder_owner(ctx, field)
+			case "dueDate":
+				return ec.fieldContext_Reminder_dueDate(ctx, field)
+			case "dismissed":
+				return ec.fieldContext_Reminder_dismissed(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Reminder", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_reminder_Create_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_reminder_Update(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_reminder_Update(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().ReminderUpdate(rctx, fc.Args["input"].(model.ReminderUpdateInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Reminder); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model.Reminder`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Reminder)
+	fc.Result = res
+	return ec.marshalNReminder2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐReminder(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_reminder_Update(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "metadata":
+				return ec.fieldContext_Reminder_metadata(ctx, field)
+			case "content":
+				return ec.fieldContext_Reminder_content(ctx, field)
+			case "owner":
+				return ec.fieldContext_Reminder_owner(ctx, field)
+			case "dueDate":
+				return ec.fieldContext_Reminder_dueDate(ctx, field)
+			case "dismissed":
+				return ec.fieldContext_Reminder_dismissed(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Reminder", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_reminder_Update_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_contractLineItem_Create(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_contractLineItem_Create(ctx, field)
 	if err != nil {
@@ -76076,6 +76467,200 @@ func (ec *executionContext) fieldContext_Query_player_ByAuthIdProvider(ctx conte
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_reminder(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_reminder(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Reminder(rctx, fc.Args["id"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Reminder); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model.Reminder`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Reminder)
+	fc.Result = res
+	return ec.marshalNReminder2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐReminder(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_reminder(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "metadata":
+				return ec.fieldContext_Reminder_metadata(ctx, field)
+			case "content":
+				return ec.fieldContext_Reminder_content(ctx, field)
+			case "owner":
+				return ec.fieldContext_Reminder_owner(ctx, field)
+			case "dueDate":
+				return ec.fieldContext_Reminder_dueDate(ctx, field)
+			case "dismissed":
+				return ec.fieldContext_Reminder_dismissed(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Reminder", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_reminder_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_remindersForOrganization(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_remindersForOrganization(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().RemindersForOrganization(rctx, fc.Args["organizationId"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*model.Reminder); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model.Reminder`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Reminder)
+	fc.Result = res
+	return ec.marshalNReminder2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐReminderᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_remindersForOrganization(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "metadata":
+				return ec.fieldContext_Reminder_metadata(ctx, field)
+			case "content":
+				return ec.fieldContext_Reminder_content(ctx, field)
+			case "owner":
+				return ec.fieldContext_Reminder_owner(ctx, field)
+			case "dueDate":
+				return ec.fieldContext_Reminder_dueDate(ctx, field)
+			case "dismissed":
+				return ec.fieldContext_Reminder_dismissed(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Reminder", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_remindersForOrganization_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_gcli_Search(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_gcli_Search(ctx, field)
 	if err != nil {
@@ -77543,6 +78128,280 @@ func (ec *executionContext) fieldContext_Query___schema(ctx context.Context, fie
 				return ec.fieldContext___Schema_directives(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type __Schema", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Reminder_metadata(ctx context.Context, field graphql.CollectedField, obj *model.Reminder) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Reminder_metadata(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Metadata, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Metadata)
+	fc.Result = res
+	return ec.marshalNMetadata2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐMetadata(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Reminder_metadata(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Reminder",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Metadata_id(ctx, field)
+			case "created":
+				return ec.fieldContext_Metadata_created(ctx, field)
+			case "lastUpdated":
+				return ec.fieldContext_Metadata_lastUpdated(ctx, field)
+			case "source":
+				return ec.fieldContext_Metadata_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Metadata_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Metadata_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Metadata", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Reminder_content(ctx context.Context, field graphql.CollectedField, obj *model.Reminder) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Reminder_content(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Content, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Reminder_content(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Reminder",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Reminder_owner(ctx context.Context, field graphql.CollectedField, obj *model.Reminder) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Reminder_owner(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Reminder().Owner(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.User)
+	fc.Result = res
+	return ec.marshalNUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Reminder_owner(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Reminder",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "firstName":
+				return ec.fieldContext_User_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
+			case "internal":
+				return ec.fieldContext_User_internal(ctx, field)
+			case "bot":
+				return ec.fieldContext_User_bot(ctx, field)
+			case "timezone":
+				return ec.fieldContext_User_timezone(ctx, field)
+			case "profilePhotoUrl":
+				return ec.fieldContext_User_profilePhotoUrl(ctx, field)
+			case "player":
+				return ec.fieldContext_User_player(ctx, field)
+			case "roles":
+				return ec.fieldContext_User_roles(ctx, field)
+			case "emails":
+				return ec.fieldContext_User_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_User_phoneNumbers(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_User_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_User_jobRoles(ctx, field)
+			case "calendars":
+				return ec.fieldContext_User_calendars(ctx, field)
+			case "source":
+				return ec.fieldContext_User_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_User_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_User_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Reminder_dueDate(ctx context.Context, field graphql.CollectedField, obj *model.Reminder) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Reminder_dueDate(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DueDate, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Reminder_dueDate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Reminder",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Reminder_dismissed(ctx context.Context, field graphql.CollectedField, obj *model.Reminder) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Reminder_dismissed(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Dismissed, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Reminder_dismissed(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Reminder",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -91293,6 +92152,102 @@ func (ec *executionContext) unmarshalInputPlayerUpdate(ctx context.Context, obj 
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputReminderInput(ctx context.Context, obj interface{}) (model.ReminderInput, error) {
+	var it model.ReminderInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"content", "dueDate", "organizationId", "userId"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "content":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("content"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Content = data
+		case "dueDate":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("dueDate"))
+			data, err := ec.unmarshalNTime2timeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DueDate = data
+		case "organizationId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OrganizationID = data
+		case "userId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserID = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputReminderUpdateInput(ctx context.Context, obj interface{}) (model.ReminderUpdateInput, error) {
+	var it model.ReminderUpdateInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"id", "content", "dueDate", "dismissed"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "id":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ID = data
+		case "content":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("content"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Content = data
+		case "dueDate":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("dueDate"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DueDate = data
+		case "dismissed":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("dismissed"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Dismissed = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputServiceLineItemBulkUpdateInput(ctx context.Context, obj interface{}) (model.ServiceLineItemBulkUpdateInput, error) {
 	var it model.ServiceLineItemBulkUpdateInput
 	asMap := map[string]interface{}{}
@@ -92763,6 +93718,13 @@ func (ec *executionContext) _MetadataInterface(ctx context.Context, sel ast.Sele
 			return graphql.Null
 		}
 		return ec._Organization(ctx, sel, obj)
+	case model.Reminder:
+		return ec._Reminder(ctx, sel, &obj)
+	case *model.Reminder:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Reminder(ctx, sel, obj)
 	case model.ServiceLineItem:
 		return ec._ServiceLineItem(ctx, sel, &obj)
 	case *model.ServiceLineItem:
@@ -101139,6 +102101,20 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "reminder_Create":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_reminder_Create(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "reminder_Update":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_reminder_Update(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "contractLineItem_Create":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_contractLineItem_Create(ctx, field)
@@ -104782,6 +105758,50 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "reminder":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_reminder(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "remindersForOrganization":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_remindersForOrganization(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "gcli_Search":
 			field := field
 
@@ -105136,6 +106156,96 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Query___schema(ctx, field)
 			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var reminderImplementors = []string{"Reminder", "MetadataInterface"}
+
+func (ec *executionContext) _Reminder(ctx context.Context, sel ast.SelectionSet, obj *model.Reminder) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, reminderImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Reminder")
+		case "metadata":
+			out.Values[i] = ec._Reminder_metadata(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "content":
+			out.Values[i] = ec._Reminder_content(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "owner":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Reminder_owner(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "dueDate":
+			out.Values[i] = ec._Reminder_dueDate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "dismissed":
+			out.Values[i] = ec._Reminder_dismissed(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -110647,6 +111757,74 @@ func (ec *executionContext) marshalNPlayerUser2ᚖgithubᚗcomᚋopenlineᚑai�
 		return graphql.Null
 	}
 	return ec._PlayerUser(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNReminder2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐReminder(ctx context.Context, sel ast.SelectionSet, v model.Reminder) graphql.Marshaler {
+	return ec._Reminder(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNReminder2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐReminderᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Reminder) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNReminder2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐReminder(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNReminder2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐReminder(ctx context.Context, sel ast.SelectionSet, v *model.Reminder) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Reminder(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNReminderInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐReminderInput(ctx context.Context, v interface{}) (model.ReminderInput, error) {
+	res, err := ec.unmarshalInputReminderInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNReminderUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐReminderUpdateInput(ctx context.Context, v interface{}) (model.ReminderUpdateInput, error) {
+	res, err := ec.unmarshalInputReminderUpdateInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNRenewalRecord2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐRenewalRecordᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.RenewalRecord) graphql.Marshaler {

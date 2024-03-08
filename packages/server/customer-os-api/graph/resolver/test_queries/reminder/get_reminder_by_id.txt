@@ -1,0 +1,16 @@
+query GetReminder($reminderId: ID!){
+  reminder(id: $reminderId) {
+    metadata {
+        id
+        created
+        lastUpdated
+    }
+    dismissed
+    content 
+    dueDate 
+    owner {
+        id
+        firstName
+    }
+  }
+}

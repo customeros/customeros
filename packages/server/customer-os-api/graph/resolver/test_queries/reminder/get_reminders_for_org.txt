@@ -1,0 +1,16 @@
+query GetRemindersForOrganization($organizationId: ID!){
+  remindersForOrganization(organizationId: $organizationId) {
+        metadata {
+            id
+            created
+            lastUpdated
+        }
+        dismissed
+        content 
+        dueDate 
+        owner {
+            id
+            firstName
+        }
+  }
+}

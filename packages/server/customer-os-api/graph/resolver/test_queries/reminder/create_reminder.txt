@@ -1,0 +1,17 @@
+mutation ReminderCreate($organizationId: ID!, $userId: ID!, $content: String!, $dueDate: Time!) {
+reminder_Create(
+    input: {
+      content: $content
+      dueDate: $dueDate
+      organizationId: $organizationId
+      userId: $userId
+    })  {
+        metadata {
+            id
+        }
+        content
+        owner {
+            id
+        }
+  }
+}

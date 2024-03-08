@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import "common/source.proto";
+
+option go_package = "api/grpc/v1/reminder;reminder_grpc_service";
+
+message CreateReminderGrpcRequest {
+    SourceFields sourceFields = 1;
+    google.protobuf.Timestamp createdAt = 2;
+    string content = 3;
+    google.protobuf.Timestamp dueDate = 4;
+    string userId = 5;
+    string organizationId = 6;
+    bool dismissed = 7;
+    string tenant = 8;
+}
+
+enum ReminderFieldMask {
+    REMINDER_PROPERTY_NONE = 0;
+    REMINDER_PROPERTY_CONTENT = 1;
+    REMINDER_PROPERTY_DUE_DATE = 2;
+    REMINDER_PROPERTY_DISMISSED = 3;
+}
+
+message UpdateReminderGrpcRequest {
+    string app_source = 1;
+    string content = 2;
+    google.protobuf.Timestamp dueDate = 3;
+    bool dismissed = 4;
+    google.protobuf.Timestamp updatedAt = 5;
+    string reminderId = 6;
+    string tenant = 7;
+    repeated ReminderFieldMask fieldsMask = 8;
+}
+
+message ReminderGrpcResponse {
+    string id = 1;
+}
+
+service ReminderGrpcService {
+    rpc CreateReminder(CreateReminderGrpcRequest) returns (ReminderGrpcResponse);
+    rpc UpdateReminder(UpdateReminderGrpcRequest) returns (ReminderGrpcResponse);
+}
