@@ -2,8 +2,9 @@ package graph
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"strings"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
@@ -26,6 +27,7 @@ import (
 	orgevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	orgplanevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/events"
 	phonenumberevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
+	reminderevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/reminder/events"
 	servicelineitemevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/event"
 	tenantevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/tenant/event"
 	userevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"
@@ -64,6 +66,7 @@ type GraphSubscriber struct {
 	tenantEventHandler             *TenantEventHandler
 	organizationPlanEventHandler   *OrganizationPlanEventHandler
 	bankAccountEventHandler        *BankAccountEventHandler
+	reminderEventHandler           *ReminderEventHandler
 }
 
 func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *repository.Repositories, grpcClients *grpc_client.Clients, cfg *config.Config) *GraphSubscriber {
@@ -92,6 +95,7 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *reposi
 		tenantEventHandler:             NewTenantEventHandler(log, repositories),
 		organizationPlanEventHandler:   NewOrganizationPlanEventHandler(log, repositories),
 		bankAccountEventHandler:        NewBankAccountEventHandler(log, repositories),
+		reminderEventHandler:           NewReminderEventHandler(log, repositories),
 	}
 }
 
@@ -430,6 +434,11 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 
 	case orgevents.OrganizationUpdateOwnerNotificationV1:
 		return nil
+
+	case reminderevents.ReminderCreateV1:
+		return s.reminderEventHandler.OnCreate(ctx, evt)
+	case reminderevents.ReminderUpdateV1:
+		return s.reminderEventHandler.OnUpdate(ctx, evt)
 
 	default:
 		s.log.Errorf("(GraphSubscriber) Unknown EventType: {%s}", evt.EventType)

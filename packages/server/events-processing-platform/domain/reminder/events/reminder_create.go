@@ -3,23 +3,25 @@ package events
 import (
 	"time"
 
+	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 	"github.com/pkg/errors"
 )
 
 type ReminderCreateEvent struct {
-	Tenant         string    `json:"tenant" validate:"required"`
-	Content        string    `json:"content"`
-	DueDate        time.Time `json:"dueDate"`
-	UserId         string    `json:"userId" validate:"required"`
-	OrganizationId string    `json:"organizationId" validate:"required"`
-	Dismissed      bool      `json:"dismissed"`
-	CreatedAt      time.Time `json:"createdAt"`
-	Id             string    `json:"id"`
+	Tenant         string        `json:"tenant" validate:"required"`
+	Content        string        `json:"content"`
+	DueDate        time.Time     `json:"dueDate"`
+	UserId         string        `json:"userId" validate:"required"`
+	OrganizationId string        `json:"organizationId" validate:"required"`
+	Dismissed      bool          `json:"dismissed"`
+	CreatedAt      time.Time     `json:"createdAt"`
+	Id             string        `json:"id"`
+	SourceFields   cmnmod.Source `json:"sourceFields" validate:"required"`
 }
 
-func NewReminderCreateEvent(aggregate eventstore.Aggregate, tenant, content, id, userId, organizationId string, dismissed bool, createdAt, dueDate time.Time) (eventstore.Event, error) {
+func NewReminderCreateEvent(aggregate eventstore.Aggregate, tenant, content, id, userId, organizationId string, dismissed bool, createdAt, dueDate time.Time, sourceFields cmnmod.Source) (eventstore.Event, error) {
 	eventData := ReminderCreateEvent{
 		Id:             id,
 		Tenant:         tenant,
@@ -29,6 +31,7 @@ func NewReminderCreateEvent(aggregate eventstore.Aggregate, tenant, content, id,
 		OrganizationId: organizationId,
 		Dismissed:      dismissed,
 		CreatedAt:      createdAt,
+		SourceFields:   sourceFields,
 	}
 	if err := validator.GetValidator().Struct(eventData); err != nil {
 		return eventstore.Event{}, errors.Wrap(err, "failed to validate ReminderCreateEvent")

@@ -5,6 +5,7 @@ import (
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	commonAggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
+	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/reminder/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/reminder/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -42,10 +43,11 @@ func (h *createReminderHandler) Handle(ctx context.Context, baseRequest eventsto
 		return err
 	}
 
-	// if eventstore.IsAggregateNotFound(reminderAggregate) {
-	// 	tracing.TraceErr(span, eventstore.ErrAggregateNotFound)
-	// 	return eventstore.ErrAggregateNotFound
-	// }
+	if reminderAggregate == nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewReminderCreateEvent:AGGREGATE_IS_NIL")
+	}
+
 	created := utils.TimestampProtoToTime(request.CreatedAt)
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(created, utils.Now())
 	due := utils.TimestampProtoToTime(request.DueDate)
@@ -61,7 +63,9 @@ func (h *createReminderHandler) Handle(ctx context.Context, baseRequest eventsto
 		request.Dismissed,
 		createdAtNotNil,
 		dueNotNil,
+		cmnmod.SourceFromGrpc(request.SourceFields),
 	)
+
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewReminderCreateEvent")
@@ -70,6 +74,7 @@ func (h *createReminderHandler) Handle(ctx context.Context, baseRequest eventsto
 		Tenant: request.Tenant,
 		UserId: request.UserId,
 	})
+
 	if err := h.es.Save(ctx, reminderAggregate); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "es.Save")

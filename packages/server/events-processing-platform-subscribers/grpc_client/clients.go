@@ -11,6 +11,7 @@ import (
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	phonenumpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/phone_number"
+	reminderpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/reminder"
 	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/user"
 	"google.golang.org/grpc"
 )
@@ -27,6 +28,7 @@ type Clients struct {
 	CommentClient          commentpb.CommentGrpcServiceClient
 	OpportunityClient      opportunitypb.OpportunityGrpcServiceClient
 	InvoiceClient          invoicepb.InvoiceGrpcServiceClient
+	ReminderClient         reminderpb.ReminderGrpcServiceClient
 }
 
 func InitGrpcClients(conn *grpc.ClientConn) *Clients {
@@ -45,6 +47,7 @@ func InitGrpcClients(conn *grpc.ClientConn) *Clients {
 		CommentClient:          commentpb.NewCommentGrpcServiceClient(conn),
 		OpportunityClient:      opportunitypb.NewOpportunityGrpcServiceClient(conn),
 		InvoiceClient:          invoicepb.NewInvoiceGrpcServiceClient(conn),
+		ReminderClient:         reminderpb.NewReminderGrpcServiceClient(conn),
 	}
 	return &clients
 }

@@ -49,6 +49,7 @@ type Repositories struct {
 	PhoneNumberWriteRepository        PhoneNumberWriteRepository
 	PlayerWriteRepository             PlayerWriteRepository
 	ReminderReadRepository            ReminderReadRepository
+	ReminderWriteRepository           ReminderWriteRepository
 	ServiceLineItemReadRepository     ServiceLineItemReadRepository
 	ServiceLineItemWriteRepository    ServiceLineItemWriteRepository
 	SocialWriteRepository             SocialWriteRepository

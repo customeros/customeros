@@ -39,11 +39,12 @@ func TestReminderService_CreateReminder(t *testing.T) {
 		},
 		CreatedAt: utils.ConvertTimeToTimestampPtr(utils.NowPtr()),
 	})
-	require.Nil(t, err.Error(), "Failed to create reminder")
+	require.Nil(t, err)
 	require.NotNil(t, response)
 
 	reminderId := response.Id
 	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, "", eventsMap)
 	require.Equal(t, 1, len(eventsMap))
 	reminderAggregate := aggregate.NewReminderAggregateWithTenantAndID(tenant, response.Id)
 	eventList := eventsMap[reminderAggregate.ID]
