@@ -47,6 +47,7 @@ type RequestBodyInvoiceFinalized struct {
 	InvoiceId                    string `json:"invoiceId"`
 	InvoiceDescription           string `json:"invoiceDescription"`
 	CustomerOsId                 string `json:"customerOsId"`
+	PayAutomatically             bool   `json:"payAutomatically"`
 }
 
 type InvoiceEventHandler struct {
@@ -673,6 +674,18 @@ func (h *InvoiceEventHandler) integrationAppInvoiceFinalizedWebhook(ctx context.
 		organizationEntity = *neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
 	}
 
+	// get contract linked to invoice
+	contractDbNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractForInvoice(ctx, tenant, invoice.Id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error getting contract for invoice %s: %s", invoice.Id, err.Error())
+		return err
+	}
+	contractEntity := neo4jentity.ContractEntity{}
+	if contractDbNode != nil {
+		contractEntity = *neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
+	}
+
 	// get stripe customer id for organization
 	stripeCustomerIds, err := h.repositories.Neo4jRepositories.ExternalSystemReadRepository.GetAllExternalIdsForLinkedEntity(ctx, tenant, neo4jenum.Stripe.String(), organizationEntity.ID, neo4jutil.NodeLabelOrganization)
 	if err != nil {
@@ -699,6 +712,7 @@ func (h *InvoiceEventHandler) integrationAppInvoiceFinalizedWebhook(ctx context.
 		InvoiceId:                    invoice.Id,
 		InvoiceDescription:           fmt.Sprintf("Invoice %s", invoice.Number),
 		CustomerOsId:                 organizationEntity.CustomerOsId,
+		PayAutomatically:             contractEntity.PayAutomatically,
 	}
 
 	// Convert the request body to JSON
