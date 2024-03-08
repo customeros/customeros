@@ -1,9 +1,9 @@
-mutation ReminderCreate($orgId: ID!, $userId: ID!, $content: String, $dueDate: String) {
+mutation ReminderCreate($organizationId: ID!, $userId: ID!, $content: String!, $dueDate: Time!) {
 reminder_Create(
     input: {
       content: $content
       dueDate: $dueDate
-      organizationId: $orgId
+      organizationId: $organizationId
       userId: $userId
     })  {
         metadata {

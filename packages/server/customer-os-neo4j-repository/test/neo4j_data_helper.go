@@ -1124,6 +1124,24 @@ func CreateReminder(ctx context.Context, driver *neo4j.DriverWithContext, tenant
 	return reminderId
 }
 
+func UpdateReminder(ctx context.Context, driver *neo4j.DriverWithContext, tenant, reminderId string, reminderEntity entity.ReminderEntity) {
+	query := `MATCH (r:Reminder {id:$reminderId})
+				SET r += {
+					updatedAt: datetime($updatedAt),
+					content: $content,
+					dueDate: datetime($dueDate),
+					dismissed: $dismissed
+				}`
+	params := map[string]interface{}{
+		"reminderId": reminderId,
+		"content":    reminderEntity.Content,
+		"updatedAt":  reminderEntity.UpdatedAt,
+		"dueDate":    reminderEntity.DueDate,
+		"dismissed":  reminderEntity.Dismissed,
+	}
+	ExecuteWriteQuery(ctx, driver, query, params)
+}
+
 // Deprecated
 func FirstTimeOfMonth(year, month int) time.Time {
 	return time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
