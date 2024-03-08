@@ -67,6 +67,9 @@ message CreateContractGrpcRequest {
   bool invoicingEnabled = 19;
   bool payOnline = 20;
   bool payAutomatically = 21;
+  bool canPayWithCard = 22;
+  bool canPayWithDirectDebit = 23;
+  bool canPayWithBankTransfer = 24;
 }
 
 message UpdateContractGrpcRequest {

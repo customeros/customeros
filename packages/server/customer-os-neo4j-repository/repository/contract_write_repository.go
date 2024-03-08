@@ -17,24 +17,27 @@ import (
 )
 
 type ContractCreateFields struct {
-	OrganizationId     string                 `json:"organizationId"`
-	Name               string                 `json:"name"`
-	ContractUrl        string                 `json:"contractUrl"`
-	CreatedByUserId    string                 `json:"createdByUserId"`
-	ServiceStartedAt   *time.Time             `json:"serviceStartedAt,omitempty"`
-	SignedAt           *time.Time             `json:"signedAt,omitempty"`
-	RenewalCycle       string                 `json:"renewalCycle"`
-	RenewalPeriods     *int64                 `json:"renewalPeriods,omitempty"`
-	Status             string                 `json:"status"`
-	CreatedAt          time.Time              `json:"createdAt"`
-	UpdatedAt          time.Time              `json:"updatedAt"`
-	SourceFields       model.Source           `json:"sourceFields"`
-	BillingCycle       neo4jenum.BillingCycle `json:"billingCycle"`
-	Currency           neo4jenum.Currency     `json:"currency"`
-	InvoicingStartDate *time.Time             `json:"invoicingStartDate,omitempty"`
-	InvoicingEnabled   bool                   `json:"invoicingEnabled"`
-	PayOnline          bool                   `json:"payOnline"`
-	PayAutomatically   bool                   `json:"payAutomatically"`
+	OrganizationId         string                 `json:"organizationId"`
+	Name                   string                 `json:"name"`
+	ContractUrl            string                 `json:"contractUrl"`
+	CreatedByUserId        string                 `json:"createdByUserId"`
+	ServiceStartedAt       *time.Time             `json:"serviceStartedAt,omitempty"`
+	SignedAt               *time.Time             `json:"signedAt,omitempty"`
+	RenewalCycle           string                 `json:"renewalCycle"`
+	RenewalPeriods         *int64                 `json:"renewalPeriods,omitempty"`
+	Status                 string                 `json:"status"`
+	CreatedAt              time.Time              `json:"createdAt"`
+	UpdatedAt              time.Time              `json:"updatedAt"`
+	SourceFields           model.Source           `json:"sourceFields"`
+	BillingCycle           neo4jenum.BillingCycle `json:"billingCycle"`
+	Currency               neo4jenum.Currency     `json:"currency"`
+	InvoicingStartDate     *time.Time             `json:"invoicingStartDate,omitempty"`
+	InvoicingEnabled       bool                   `json:"invoicingEnabled"`
+	PayOnline              bool                   `json:"payOnline"`
+	PayAutomatically       bool                   `json:"payAutomatically"`
+	CanPayWithCard         bool                   `json:"canPayWithCard"`
+	CanPayWithDirectDebit  bool                   `json:"canPayWithDirectDebit"`
+	CanPayWithBankTransfer bool                   `json:"canPayWithBankTransfer"`
 }
 
 type ContractUpdateFields struct {
@@ -145,7 +148,10 @@ func (r *contractWriteRepository) CreateForOrganization(ctx context.Context, ten
 								ct.invoicingStartDate=$invoicingStartDate,
 								ct.invoicingEnabled=$invoicingEnabled,
 								ct.payOnline=$payOnline,
-								ct.payAutomatically=$payAutomatically
+								ct.payAutomatically=$payAutomatically,
+								ct.canPayWithCard=$canPayWithCard,
+								ct.canPayWithDirectDebit=$canPayWithDirectDebit,
+								ct.canPayWithBankTransfer=$canPayWithBankTransfer
 							WITH ct, t
 							OPTIONAL MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$createdByUserId}) 
 							WHERE $createdByUserId <> ""
@@ -153,28 +159,31 @@ func (r *contractWriteRepository) CreateForOrganization(ctx context.Context, ten
     							MERGE (ct)-[:CREATED_BY]->(u))
 							`, tenant)
 	params := map[string]any{
-		"tenant":             tenant,
-		"contractId":         contractId,
-		"orgId":              data.OrganizationId,
-		"createdAt":          data.CreatedAt,
-		"updatedAt":          data.UpdatedAt,
-		"source":             data.SourceFields.Source,
-		"sourceOfTruth":      data.SourceFields.Source,
-		"appSource":          data.SourceFields.AppSource,
-		"name":               data.Name,
-		"contractUrl":        data.ContractUrl,
-		"status":             data.Status,
-		"renewalCycle":       data.RenewalCycle,
-		"renewalPeriods":     data.RenewalPeriods,
-		"signedAt":           utils.TimePtrFirstNonNilNillableAsAny(data.SignedAt),
-		"serviceStartedAt":   utils.TimePtrFirstNonNilNillableAsAny(data.ServiceStartedAt),
-		"createdByUserId":    data.CreatedByUserId,
-		"currency":           data.Currency.String(),
-		"billingCycle":       data.BillingCycle.String(),
-		"invoicingStartDate": utils.ToNeo4jDateAsAny(data.InvoicingStartDate),
-		"invoicingEnabled":   data.InvoicingEnabled,
-		"payOnline":          data.PayOnline,
-		"payAutomatically":   data.PayAutomatically,
+		"tenant":                 tenant,
+		"contractId":             contractId,
+		"orgId":                  data.OrganizationId,
+		"createdAt":              data.CreatedAt,
+		"updatedAt":              data.UpdatedAt,
+		"source":                 data.SourceFields.Source,
+		"sourceOfTruth":          data.SourceFields.Source,
+		"appSource":              data.SourceFields.AppSource,
+		"name":                   data.Name,
+		"contractUrl":            data.ContractUrl,
+		"status":                 data.Status,
+		"renewalCycle":           data.RenewalCycle,
+		"renewalPeriods":         data.RenewalPeriods,
+		"signedAt":               utils.TimePtrFirstNonNilNillableAsAny(data.SignedAt),
+		"serviceStartedAt":       utils.TimePtrFirstNonNilNillableAsAny(data.ServiceStartedAt),
+		"createdByUserId":        data.CreatedByUserId,
+		"currency":               data.Currency.String(),
+		"billingCycle":           data.BillingCycle.String(),
+		"invoicingStartDate":     utils.ToNeo4jDateAsAny(data.InvoicingStartDate),
+		"invoicingEnabled":       data.InvoicingEnabled,
+		"payOnline":              data.PayOnline,
+		"payAutomatically":       data.PayAutomatically,
+		"canPayWithCard":         data.CanPayWithCard,
+		"canPayWithDirectDebit":  data.CanPayWithDirectDebit,
+		"canPayWithBankTransfer": data.CanPayWithBankTransfer,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
