@@ -23,6 +23,7 @@ interface ConfirmDeleteDialogProps {
   colorScheme?: string;
   icon?: React.ReactNode;
   body?: React.ReactNode;
+  hideCloseButton?: boolean;
   confirmButtonLabel: string;
   cancelButtonLabel?: string;
   loadingButtonLabel?: string;
@@ -42,6 +43,7 @@ export const ConfirmDeleteDialog = ({
   loadingButtonLabel = 'Deleting',
   icon,
   colorScheme = 'red',
+  hideCloseButton,
 }: ConfirmDeleteDialogProps) => {
   const cancelRef = useRef<HTMLButtonElement>(null);
 
@@ -58,8 +60,10 @@ export const ConfirmDeleteDialog = ({
           backgroundImage='/backgrounds/organization/circular-bg-pattern.png'
           backgroundRepeat='no-repeat'
         >
-          <AlertDialogCloseButton color='gray.400' top={6} />
-          <AlertDialogHeader fontSize='lg' fontWeight='bold' pt='6'>
+          {!hideCloseButton && (
+            <AlertDialogCloseButton color='gray.400' top={6} />
+          )}
+          <AlertDialogHeader fontSize='lg' fontWeight='bold' pt='6' pb={0}>
             <FeaturedIcon size='lg' colorScheme={colorScheme}>
               {icon ? icon : <Icons.Trash1 />}
             </FeaturedIcon>
