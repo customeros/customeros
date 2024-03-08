@@ -31,6 +31,7 @@ interface ContractEndModalProps {
   renewsAt?: string;
   contractId: string;
   onClose: () => void;
+  nextInvoiceDate?: string;
   organizationName: string;
   serviceStartedAt?: string;
   onUpdateContract: UseMutationResult<
@@ -46,6 +47,7 @@ const today = new Date().toUTCString();
 export enum EndContract {
   Now = 'Now',
   EndOfCurrentBillingPeriod = 'EndOfCurrentBillingPeriod',
+  EndOfCurrentRenewalPeriod = 'EndOfCurrentRenewalPeriod',
   CustomDate = 'CustomDate',
 }
 export const ContractEndModal = ({
@@ -54,14 +56,21 @@ export const ContractEndModal = ({
   contractId,
   organizationName,
   renewsAt,
+  nextInvoiceDate,
   onUpdateContract,
 }: ContractEndModalProps) => {
   const initialRef = useRef(null);
   const [value, setValue] = React.useState(EndContract.Now);
   const formId = `contract-ends-on-form-${contractId}`;
-
   const timeToRenewal = renewsAt
     ? DateTimeUtils.format(renewsAt, DateTimeUtils.dateWithAbreviatedMonth)
+    : null;
+
+  const timeToNextInvoice = nextInvoiceDate
+    ? DateTimeUtils.format(
+        nextInvoiceDate,
+        DateTimeUtils.dateWithAbreviatedMonth,
+      )
     : null;
 
   const { state, setDefaultValues } = useForm<{
@@ -110,6 +119,12 @@ export const ContractEndModal = ({
 
       return;
     }
+    if (nextValue === EndContract.EndOfCurrentRenewalPeriod) {
+      setDefaultValues({ endedAt: renewsAt });
+      setValue(EndContract.EndOfCurrentRenewalPeriod);
+
+      return;
+    }
   };
 
   return (
@@ -140,7 +155,7 @@ export const ContractEndModal = ({
               ARR to zero.
             </Text>
           </Text>
-          <Text>Let’s end it on:</Text>
+          <Text>Let’s end it:</Text>
 
           <RadioGroup
             value={value}
@@ -151,20 +166,30 @@ export const ContractEndModal = ({
             <Radio value={EndContract.Now} colorScheme='primary'>
               Now
             </Radio>
+
             <Radio
               value={EndContract.EndOfCurrentBillingPeriod}
               colorScheme='primary'
+              display={timeToNextInvoice ? 'flex' : 'none'}
+            >
+              End of current billing period, {timeToNextInvoice}
+            </Radio>
+
+            <Radio
+              value={EndContract.EndOfCurrentRenewalPeriod}
+              colorScheme='primary'
               display={renewsAt ? 'flex' : 'none'}
             >
-              End of current billing period, {timeToRenewal}
+              End of current renewal period, {timeToRenewal}
             </Radio>
             <Radio value={EndContract.CustomDate} colorScheme='primary'>
               <Flex alignItems='center'>
-                On a{' '}
+                On{' '}
                 {value === EndContract.CustomDate ? (
                   <Box ml={1}>
                     <DatePickerUnderline
                       placeholder='End date'
+                      defaultOpen={true}
                       // minDate={state.values.serviceStartedAt}
                       formId={formId}
                       name='endedAt'

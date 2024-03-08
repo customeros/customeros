@@ -33,6 +33,9 @@ query getContracts($id: ID!) {
             zip
             invoiceEmail
             invoiceNote
+            billingDetails {
+                nextInvoicing
+            }
             opportunities {
                 id
                 comments

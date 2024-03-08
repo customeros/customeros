@@ -11,7 +11,7 @@ export const validateEmailLocalPart = (data: string): undefined | string => {
       return 'The email address cannot contain consecutive dots.';
     }
     if (!regex.test(value)) {
-      return 'The email address contains invalid characters.';
+      return 'The email address cannot contain consecutive dots.';
     }
   }
 

@@ -141,7 +141,10 @@ export type BillingDetails = {
   invoiceNote?: Maybe<Scalars['String']['output']>;
   invoicingStarted?: Maybe<Scalars['Time']['output']>;
   locality?: Maybe<Scalars['String']['output']>;
+  nextInvoicing?: Maybe<Scalars['Time']['output']>;
   organizationLegalName?: Maybe<Scalars['String']['output']>;
+  payAutomatically?: Maybe<Scalars['Boolean']['output']>;
+  payOnline?: Maybe<Scalars['Boolean']['output']>;
   postalCode?: Maybe<Scalars['String']['output']>;
   region?: Maybe<Scalars['String']['output']>;
 };
@@ -159,6 +162,8 @@ export type BillingDetailsInput = {
   invoicingStarted?: InputMaybe<Scalars['Time']['input']>;
   locality?: InputMaybe<Scalars['String']['input']>;
   organizationLegalName?: InputMaybe<Scalars['String']['input']>;
+  payAutomatically?: InputMaybe<Scalars['Boolean']['input']>;
+  payOnline?: InputMaybe<Scalars['Boolean']['input']>;
   postalCode?: InputMaybe<Scalars['String']['input']>;
   region?: InputMaybe<Scalars['String']['input']>;
 };

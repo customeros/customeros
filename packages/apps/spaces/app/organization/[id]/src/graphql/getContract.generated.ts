@@ -51,6 +51,7 @@ export type GetContractQuery = {
       canPayWithCard?: boolean | null;
       canPayWithDirectDebit?: boolean | null;
       canPayWithBankTransfer?: boolean | null;
+      nextInvoicing?: any | null;
     } | null;
   };
 };
@@ -76,6 +77,7 @@ export const GetContractDocument = `
       canPayWithCard
       canPayWithDirectDebit
       canPayWithBankTransfer
+      nextInvoicing
     }
   }
 }

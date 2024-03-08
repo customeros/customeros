@@ -389,6 +389,7 @@ export const ContractCard = ({
               organizationName={
                 data?.organizationLegalName || organizationName || 'Unnamed'
               }
+              nextInvoiceDate={data?.billingDetails?.nextInvoicing}
             />
 
             {isExpanded && (
