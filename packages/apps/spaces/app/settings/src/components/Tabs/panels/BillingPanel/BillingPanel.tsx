@@ -22,6 +22,7 @@ import {
 import { Box } from '@ui/layout/Box';
 import { Flex } from '@ui/layout/Flex';
 import { Button } from '@ui/form/Button';
+import { useDisclosure } from '@ui/utils';
 import { Text } from '@ui/typography/Text';
 import { IconButton } from '@ui/form/IconButton';
 import { Heading } from '@ui/typography/Heading';
@@ -31,6 +32,7 @@ import { Invoice } from '@shared/components/Invoice/Invoice';
 import { Card, CardBody, CardHeader } from '@ui/layout/Card';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu';
+import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
 import {
   DataSource,
   InvoiceLine,
@@ -61,6 +63,7 @@ export const BillingPanel = () => {
     },
   });
   const { data: tenantSettingsData } = useTenantSettingsQuery(client);
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   const updateTenantSettingsMutation = useUpdateTenantSettingsMutation(client, {
     onMutate: ({ input: { ...newSettings } }) => {
@@ -344,13 +347,32 @@ export const BillingPanel = () => {
     setDefaultValues(defaultValues);
   }, [defaultValues]);
 
-  const handleToggleInvoices = () => {
-    updateTenantSettingsMutation.mutate({
-      input: {
-        patch: true,
-        billingEnabled: !tenantSettingsData?.tenantSettings?.billingEnabled,
+  const handleDisableBillingDetails = () => {
+    updateTenantSettingsMutation.mutate(
+      {
+        input: {
+          patch: true,
+          billingEnabled: false,
+        },
       },
-    });
+      {
+        onSuccess: onClose,
+      },
+    );
+  };
+
+  const handleToggleInvoices = () => {
+    if (!tenantSettingsData?.tenantSettings?.billingEnabled) {
+      updateTenantSettingsMutation.mutate({
+        input: {
+          patch: true,
+          billingEnabled: true,
+        },
+      });
+
+      return;
+    }
+    onOpen();
   };
 
   return (
@@ -474,6 +496,17 @@ export const BillingPanel = () => {
           {...invoicePreviewStaticData}
         />
       </Box>
+      <ConfirmDeleteDialog
+        label='Disable Customer billing?'
+        icon={<SlashOctagon color='error.600' />}
+        body='Disabling Customer billing will stop the sending of invoices, and prevent customers from being able to pay.'
+        confirmButtonLabel='Disable'
+        isOpen={isOpen}
+        onClose={onClose}
+        onConfirm={handleDisableBillingDetails}
+        isLoading={updateTenantSettingsMutation.isPending}
+        hideCloseButton
+      />
     </Flex>
   );
 };
