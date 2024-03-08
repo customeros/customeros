@@ -27,7 +27,7 @@ require (
 	github.com/redis/go-redis/v9 v9.5.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.9.0
-	google.golang.org/api v0.168.0
+	google.golang.org/api v0.169.0
 	google.golang.org/grpc v1.62.1
 	gorm.io/driver/postgres v1.5.6
 	gorm.io/gorm v1.25.7-0.20240204074919-46816ad31dde
@@ -98,7 +98,6 @@ require (
 	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/arch v0.7.0 // indirect
 	golang.org/x/crypto v0.21.0 // indirect
-	golang.org/x/mod v0.16.0 // indirect
 	golang.org/x/net v0.22.0 // indirect
 	golang.org/x/oauth2 v0.17.0 // indirect
 	golang.org/x/sync v0.6.0 // indirect
