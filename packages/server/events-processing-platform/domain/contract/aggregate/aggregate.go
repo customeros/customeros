@@ -88,7 +88,9 @@ func (a *ContractAggregate) onContractCreate(evt eventstore.Event) error {
 	}
 	a.Contract.PayOnline = eventData.PayOnline
 	a.Contract.PayAutomatically = eventData.PayAutomatically
-
+	a.Contract.CanPayWithCard = eventData.CanPayWithCard
+	a.Contract.CanPayWithDirectDebit = eventData.CanPayWithDirectDebit
+	a.Contract.CanPayWithBankTransfer = eventData.CanPayWithBankTransfer
 	return nil
 }
 

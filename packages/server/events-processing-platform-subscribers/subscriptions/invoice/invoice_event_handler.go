@@ -47,7 +47,11 @@ type RequestBodyInvoiceFinalized struct {
 	InvoiceId                    string `json:"invoiceId"`
 	InvoiceDescription           string `json:"invoiceDescription"`
 	CustomerOsId                 string `json:"customerOsId"`
-	PayAutomatically             bool   `json:"payAutomatically"`
+	Pay                          struct {
+		PayAutomatically      bool `json:"payAutomatically"`
+		CanPayWithCard        bool `json:"canPayWithCard"`
+		CanPayWithDirectDebit bool `json:"canPayWithDirectDebit"`
+	} `json:"pay"`
 }
 
 type InvoiceEventHandler struct {
@@ -712,7 +716,15 @@ func (h *InvoiceEventHandler) integrationAppInvoiceFinalizedWebhook(ctx context.
 		InvoiceId:                    invoice.Id,
 		InvoiceDescription:           fmt.Sprintf("Invoice %s", invoice.Number),
 		CustomerOsId:                 organizationEntity.CustomerOsId,
-		PayAutomatically:             contractEntity.PayAutomatically,
+		Pay: struct {
+			PayAutomatically      bool `json:"payAutomatically"`
+			CanPayWithCard        bool `json:"canPayWithCard"`
+			CanPayWithDirectDebit bool `json:"canPayWithDirectDebit"`
+		}{
+			PayAutomatically:      contractEntity.PayAutomatically,
+			CanPayWithCard:        contractEntity.CanPayWithCard,
+			CanPayWithDirectDebit: contractEntity.CanPayWithDirectDebit,
+		},
 	}
 
 	// Convert the request body to JSON

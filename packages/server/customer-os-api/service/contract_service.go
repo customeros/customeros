@@ -101,9 +101,12 @@ func (s *contractService) createContractWithEvents(ctx context.Context, contract
 			Source:    string(contractDetails.Source),
 			AppSource: contractDetails.AppSource,
 		},
-		RenewalPeriods:   contractDetails.ContractEntity.RenewalPeriods,
-		PayOnline:        true,
-		PayAutomatically: true,
+		RenewalPeriods:         contractDetails.ContractEntity.RenewalPeriods,
+		PayOnline:              true,
+		PayAutomatically:       true,
+		CanPayWithCard:         true,
+		CanPayWithDirectDebit:  true,
+		CanPayWithBankTransfer: true,
 	}
 
 	// prepare renewal cycle
