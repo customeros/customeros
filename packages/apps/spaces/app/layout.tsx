@@ -3,6 +3,7 @@ import Script from 'next/script';
 import localFont from 'next/font/local';
 import { getServerSession } from 'next-auth';
 import { ToastContainer } from 'react-toastify';
+import { Merriweather } from 'next/font/google';
 
 import { HighlightInit } from '@highlight-run/next/client';
 
@@ -31,6 +32,13 @@ const barlow = localFont({
   preload: false,
   display: 'swap',
   variable: '--font-barlow',
+});
+
+const merriweather = Merriweather({
+  weight: ['300', '400', '700', '900'],
+  preload: false,
+  display: 'swap',
+  variable: '--font-merriweather',
 });
 
 export default async function RootLayout({
@@ -68,7 +76,11 @@ export default async function RootLayout({
         />
       )}
 
-      <html lang='en' className={barlow.variable} data-theme='light'>
+      <html
+        lang='en'
+        className={`${barlow.variable} ${merriweather.variable}`}
+        data-theme='light'
+      >
         <Script
           async
           strategy='afterInteractive'

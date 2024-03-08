@@ -19,9 +19,9 @@ export const TimelineActionsArea: React.FC = () => {
       pb={openedEditor !== null ? 2 : 8}
       mt={-4}
     >
-      <EmailTimelineAction />
-      <LogEntryTimelineAction />
-      <ReminderTimelineAction />
+      {openedEditor === 'email' && <EmailTimelineAction />}
+      {openedEditor === 'log-entry' && <LogEntryTimelineAction />}
+      {openedEditor === 'reminder' && <ReminderTimelineAction />}
     </Box>
   );
 };

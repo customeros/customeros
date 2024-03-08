@@ -21,6 +21,8 @@ export const FormAutoresizeTextarea = forwardRef<
 >(({ isLabelVisible, label, formId, ...props }, ref) => {
   const { getInputProps } = useField(props.name, formId);
 
+  // if (formId.startsWith('reminder')) console.log('VALUE', value);
+
   return (
     <FormControl>
       {isLabelVisible ? (

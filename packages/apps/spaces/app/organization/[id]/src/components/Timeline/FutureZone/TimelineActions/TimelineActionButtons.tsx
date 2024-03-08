@@ -5,7 +5,7 @@ import { Button } from '@ui/form/Button';
 import { Send03 } from '@ui/media/icons/Send03';
 import { Mail01 } from '@ui/media/icons/Mail01';
 import { ButtonGroup } from '@ui/form/ButtonGroup';
-// import { AlarmClockPlus } from '@ui/media/icons/AlarmClockPlus';
+import { AlarmClockPlus } from '@ui/media/icons/AlarmClockPlus';
 import { MessageChatSquare } from '@ui/media/icons/MessageChatSquare';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
 import { useTimelineActionEmailContext } from '@organization/src/components/Timeline/FutureZone/TimelineActions/context/TimelineActionEmailContext';
@@ -138,7 +138,7 @@ export const TimelineActionButtons: FC<{ invalidateQuery: () => void }> = ({
       >
         Log
       </Button>
-      {/* <Button
+      <Button
         variant='outline'
         onClick={() => handleToggleEditor('reminder')}
         borderRadius='3xl'
@@ -147,7 +147,7 @@ export const TimelineActionButtons: FC<{ invalidateQuery: () => void }> = ({
         leftIcon={<AlarmClockPlus color='inherit' />}
       >
         Reminder
-      </Button> */}
+      </Button>
 
       <ConfirmDeleteDialog
         colorScheme='primary'

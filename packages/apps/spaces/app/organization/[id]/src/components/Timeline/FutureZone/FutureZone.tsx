@@ -1,5 +1,9 @@
-// import { Reminders } from './reminders';
+import { Reminders } from './reminders';
 
 export const FutureZone = () => {
-  return <div>{/* <Reminders /> */}</div>;
+  return (
+    <div>
+      <Reminders />
+    </div>
+  );
 };

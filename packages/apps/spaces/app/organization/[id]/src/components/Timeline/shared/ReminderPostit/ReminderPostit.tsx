@@ -1,12 +1,8 @@
-import { Flex } from '@ui/layout/Flex';
+import { Flex, FlexProps } from '@ui/layout/Flex';
 
-interface ReminderPostitProps {
-  children: React.ReactNode;
-}
-
-export const ReminderPostit = ({ children }: ReminderPostitProps) => {
+export const ReminderPostit = ({ children, ...rest }: FlexProps) => {
   return (
-    <Flex position='relative' w='321px' m='6' mt='2'>
+    <Flex position='relative' w='321px' m='6' mt='2' {...rest}>
       <Flex
         h='10px'
         w='calc(100% - 5px)'
@@ -16,7 +12,14 @@ export const ReminderPostit = ({ children }: ReminderPostitProps) => {
         bg='rgba(0, 0, 0, 0.15)'
         transform={'rotate(2deg)'}
       />
-      <Flex flexDir='column' bg='yellow.100' w='full' zIndex={1} boxShadow='md'>
+      <Flex
+        w='full'
+        zIndex={1}
+        boxShadow='md'
+        bg='yellow.100'
+        id='sticky-body'
+        flexDir='column'
+      >
         <Flex
           h='28px'
           w='full'

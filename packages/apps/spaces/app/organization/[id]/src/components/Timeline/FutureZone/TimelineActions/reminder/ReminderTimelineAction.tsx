@@ -24,14 +24,14 @@ type ReminderForm = {
 };
 
 export const ReminderTimelineAction = () => {
-  const { openedEditor } = useTimelineActionContext();
+  const { openedEditor, closeEditor } = useTimelineActionContext();
   const queryClient = useQueryClient();
   const { virtuosoRef } = useTimelineRefContext();
   const [timelineMeta] = useTimelineMeta();
 
   const isOpen = openedEditor === 'reminder';
 
-  const { handleSubmit } = useForm<ReminderForm>({
+  const { handleSubmit, reset } = useForm<ReminderForm>({
     formId: 'reminder-form',
     defaultValues: {
       content: '',
@@ -67,13 +67,13 @@ export const ReminderTimelineAction = () => {
         0,
       );
 
-      setTimeout(
-        () =>
-          virtuosoRef?.current?.scrollToIndex(
-            timelineItemsLength + remindersCount,
-          ),
-        0,
-      );
+      setTimeout(() => {
+        virtuosoRef?.current?.scrollToIndex(
+          timelineItemsLength + remindersCount,
+        );
+        closeEditor();
+        reset();
+      }, 0);
     },
   });
 
@@ -86,12 +86,23 @@ export const ReminderTimelineAction = () => {
   }
 
   return (
-    <ReminderPostit>
+    <ReminderPostit
+      _hover={{
+        '& #sticky-body > #sticky-footer > button': {
+          visibility: 'visible',
+        },
+      }}
+    >
       <FormAutoresizeTextarea
         autoFocus
         px='4'
+        fontFamily='sticky'
+        fontSize='sm'
         name='content'
         formId='reminder-form'
+        // onBlur={() => {
+        //   setIsEditing(false);
+        // }}
         placeholder='Type your reminder here'
         borderBottom='unset'
         _hover={{
@@ -101,10 +112,23 @@ export const ReminderTimelineAction = () => {
           borderBottom: 'unset',
         }}
       />
-      <Flex align='center' px='4' w='full' justify='space-between' mb='2'>
+      <Flex
+        mb='2'
+        px='4'
+        w='full'
+        align='center'
+        id='sticky-footer'
+        justify='space-between'
+      >
         <Text>24 Mar • 09:09</Text>
-        <Button variant='ghost' colorScheme='yellow' size='sm'>
-          Delete
+        <Button
+          size='sm'
+          variant='ghost'
+          visibility='hidden'
+          colorScheme='yellow'
+          onClick={closeEditor}
+        >
+          Dismiss
         </Button>
       </Flex>
     </ReminderPostit>
