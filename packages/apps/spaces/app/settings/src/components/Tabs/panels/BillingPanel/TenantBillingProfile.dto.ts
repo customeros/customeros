@@ -1,5 +1,6 @@
 import { SelectOption } from '@shared/types/SelectOptions';
 import { countryOptions } from '@shared/util/countryOptions';
+import { getCurrencyOptions } from '@shared/util/currencyOptions';
 import {
   TenantBillingProfile,
   TenantBillingProfileInput,
@@ -22,6 +23,7 @@ export interface TenantBillingDetails {
   country?: SelectOption<string> | null;
   domesticPaymentsBankInfo?: string | null;
   canPayWithDirectDebitACH?: boolean | null;
+  baseCurrency?: SelectOption<string> | null;
   canPayWithDirectDebitSEPA?: boolean | null;
   canPayWithDirectDebitBacs?: boolean | null;
   internationalPaymentsBankInfo?: string | null;
@@ -33,6 +35,7 @@ export class TenantBillingDetailsDto implements TenantBillingDetails {
   addressLine1?: string | null;
   addressLine2?: string | null;
   addressLine3?: string | null;
+  baseCurrency?: SelectOption<string> | null;
   locality?: string | null;
   country?: SelectOption<string> | null;
   zip?: string | null;
@@ -48,7 +51,9 @@ export class TenantBillingDetailsDto implements TenantBillingDetails {
   sendInvoicesBcc;
   vatNumber;
 
-  constructor(data?: TenantBillingProfile | null) {
+  constructor(
+    data?: (TenantBillingProfile & { baseCurrency?: string | null }) | null,
+  ) {
     this.email = data?.email;
     this.phone = data?.phone;
     this.addressLine1 = data?.addressLine1;
@@ -68,14 +73,9 @@ export class TenantBillingDetailsDto implements TenantBillingDetails {
     this.sendInvoicesFrom = data?.sendInvoicesFrom?.split('@')[0] ?? '';
     this.sendInvoicesBcc = data?.sendInvoicesBcc ?? '';
     this.vatNumber = data?.vatNumber;
-  }
-
-  static toForm(data?: TenantBillingProfile): TenantBillingDetails {
-    const formData = new TenantBillingDetailsDto(data);
-
-    return {
-      ...formData,
-    };
+    this.baseCurrency = getCurrencyOptions().find(
+      (i) => data?.baseCurrency === i.value,
+    );
   }
 
   static toPayload(data: TenantBillingDetails): TenantBillingProfileInput {

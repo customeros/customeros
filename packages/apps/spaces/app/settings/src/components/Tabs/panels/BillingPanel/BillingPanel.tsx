@@ -160,9 +160,10 @@ export const BillingPanel = () => {
     [],
   );
 
-  const defaultValues = new TenantBillingDetailsDto(
-    data?.tenantBillingProfiles?.[0] as TenantBillingProfile,
-  );
+  const defaultValues = new TenantBillingDetailsDto({
+    ...data?.tenantBillingProfiles?.[0],
+    baseCurrency: tenantSettingsData?.tenantSettings?.baseCurrency,
+  } as TenantBillingProfile & { baseCurrency: string });
 
   const handleUpdateData = useDebounce(
     (d: Partial<TenantBillingProfileUpdateInput>) => {
@@ -248,6 +249,16 @@ export const BillingPanel = () => {
             });
 
             return getStateAfterValidation();
+          }
+          case 'baseCurrency': {
+            updateTenantSettingsMutation.mutate({
+              input: {
+                patch: true,
+                baseCurrency: action.payload.value?.value,
+              },
+            });
+
+            return next;
           }
           default:
             return next;
@@ -467,7 +478,6 @@ export const BillingPanel = () => {
           <TenantBillingPanelDetailsForm
             formId={formId}
             canPayWithCard={state.values.canPayWithCard}
-            invoicingEnabled={tenantSettingsData?.tenantSettings.billingEnabled}
             canPayWithDirectDebitACH={state.values.canPayWithDirectDebitACH}
             canPayWithDirectDebitSEPA={state.values.canPayWithDirectDebitSEPA}
             canPayWithDirectDebitBacs={state.values.canPayWithDirectDebitBacs}

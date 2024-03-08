@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { LogoUploader } from '@settings/components/LogoUploadComponent/LogoUploader';
 import { VatInput } from '@settings/components/Tabs/panels/BillingPanel/components/VatInput';
@@ -11,14 +11,13 @@ import { Text } from '@ui/typography/Text';
 import { CardBody } from '@ui/layout/Card';
 import { FormSelect } from '@ui/form/SyncSelect';
 import { Divider } from '@ui/presentation/Divider';
-import { countryOptions } from '@shared/util/countryOptions';
 import { FormInput, FormResizableInput } from '@ui/form/Input';
+import { getCurrencyOptions } from '@shared/util/currencyOptions';
 
 export const TenantBillingPanelDetailsForm = ({
   setIsInvoiceProviderDetailsHovered,
   setIsInvoiceProviderFocused,
   formId,
-  invoicingEnabled,
   canPayWithCard,
   canPayWithDirectDebitACH,
   canPayWithDirectDebitSEPA,
@@ -33,15 +32,10 @@ export const TenantBillingPanelDetailsForm = ({
   setIsInvoiceProviderFocused: (newState: boolean) => void;
   setIsInvoiceProviderDetailsHovered: (newState: boolean) => void;
 }) => {
+  const currencyOptions = useMemo(() => getCurrencyOptions(), []);
+
   return (
-    <CardBody
-      as={Flex}
-      flexDir='column'
-      px='6'
-      w='full'
-      gap={4}
-      opacity={invoicingEnabled ? 1 : 0}
-    >
+    <CardBody as={Flex} flexDir='column' px='6' w='full' gap={4}>
       <LogoUploader />
       <FormInput
         autoComplete='off'
@@ -60,6 +54,16 @@ export const TenantBillingPanelDetailsForm = ({
         onFocus={() => setIsInvoiceProviderFocused(true)}
         onBlur={() => setIsInvoiceProviderFocused(false)}
       />
+
+      <FormSelect
+        label='Base currency'
+        placeholder='Invoice currency'
+        isLabelVisible
+        name='baseCurrency'
+        formId={formId}
+        options={currencyOptions ?? []}
+      />
+
       <Flex
         flexDir='column'
         onMouseEnter={() => setIsInvoiceProviderDetailsHovered(true)}
@@ -114,7 +118,7 @@ export const TenantBillingPanelDetailsForm = ({
           name='country'
           placeholder='Country'
           formId={formId}
-          options={countryOptions}
+          options={currencyOptions}
         />
         <VatInput
           formId={formId}
