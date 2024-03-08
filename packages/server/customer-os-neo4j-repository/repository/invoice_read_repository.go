@@ -228,11 +228,12 @@ func (r *invoiceReadRepository) GetInvoicesForPaymentLinkRequest(ctx context.Con
 	tracing.SetNeo4jRepositorySpanTags(span, "")
 	span.LogFields(log.Int("minutesFromLastUpdate", minutesFromLastUpdate), log.Int("lookbackWindow", lookbackWindow), log.Object("referenceTime", referenceTime))
 
-	cypher := `MATCH (i:Invoice)-[:INVOICE_BELONGS_TO_TENANT]->(t:Tenant)
+	cypher := `MATCH (c:Contract)-[:HAS_INVOICE]->(i:Invoice)-[:INVOICE_BELONGS_TO_TENANT]->(t:Tenant)
 			WHERE 
 				i.dryRun = false AND
 				i.status IN $acceptedStatuses AND
 				i.techPaymentLinkRequestedAt IS NULL AND
+				c.payOnline = true AND
 				i.createdAt+duration({days: $lookbackWindow}) > $now AND
 				(i.updatedAt + duration({minutes: $delay}) < $referenceTime OR i.techInvoiceFinalizedSentAt + duration({minutes: $delay}) < $referenceTime)
 			RETURN distinct(i), t.name limit 100`
