@@ -113,8 +113,62 @@ message UpdateTenantSettingsRequest {
   string baseCurrency = 12;
 }
 
+message AddBankAccountGrpcRequest {
+  string tenant = 1;
+  string loggedInUserId = 2;
+  google.protobuf.Timestamp createdAt = 3;
+  SourceFields sourceFields = 4;
+  string bankName = 5;
+  bool bankTransferEnabled = 6;
+  string currency = 7;
+  string accountNumber = 8;
+  string iban = 9;
+  string bic = 10;
+  string sortCode = 11;
+  string routingNumber = 12;
+}
+
+message UpdateBankAccountGrpcRequest {
+  string id = 1;
+  string tenant = 2;
+  string loggedInUserId = 3;
+  google.protobuf.Timestamp updatedAt = 4;
+  string appSource = 5;
+  string bankName = 6;
+  bool bankTransferEnabled = 7;
+  string currency = 8;
+  string accountNumber = 9;
+  string iban = 10;
+  string bic = 11;
+  string sortCode = 12;
+  string routingNumber = 13;
+  repeated BankAccountFieldMask fieldsMask = 14;
+}
+
+message DeleteBankAccountGrpcRequest {
+  string id = 1;
+  string tenant = 2;
+  string loggedInUserId = 3;
+  string appSource = 4;
+}
+
+enum BankAccountFieldMask {
+  BANK_ACCOUNT_FIELD_NONE = 0; // No property, ignored by the server
+  BANK_ACCOUNT_FIELD_BANK_NAME = 1;
+  BANK_ACCOUNT_FIELD_BANK_TRANSFER_ENABLED = 2;
+  BANK_ACCOUNT_FIELD_CURRENCY = 3;
+  BANK_ACCOUNT_FIELD_ACCOUNT_NUMBER = 4;
+  BANK_ACCOUNT_FIELD_IBAN = 5;
+  BANK_ACCOUNT_FIELD_BIC = 6;
+  BANK_ACCOUNT_FIELD_SORT_CODE = 7;
+  BANK_ACCOUNT_FIELD_ROUTING_NUMBER = 8;
+}
+
 service tenantGrpcService {
   rpc AddBillingProfile(AddBillingProfileRequest) returns (IdResponse);
   rpc UpdateBillingProfile(UpdateBillingProfileRequest) returns (IdResponse);
   rpc UpdateTenantSettings(UpdateTenantSettingsRequest) returns (google.protobuf.Empty);
+  rpc AddBankAccount(AddBankAccountGrpcRequest) returns (IdResponse);
+  rpc UpdateBankAccount(UpdateBankAccountGrpcRequest) returns (IdResponse);
+  rpc DeleteBankAccount(DeleteBankAccountGrpcRequest) returns (google.protobuf.Empty);
 }

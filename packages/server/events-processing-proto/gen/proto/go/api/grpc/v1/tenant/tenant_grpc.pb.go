@@ -27,6 +27,9 @@ type TenantGrpcServiceClient interface {
 	AddBillingProfile(ctx context.Context, in *AddBillingProfileRequest, opts ...grpc.CallOption) (*common.IdResponse, error)
 	UpdateBillingProfile(ctx context.Context, in *UpdateBillingProfileRequest, opts ...grpc.CallOption) (*common.IdResponse, error)
 	UpdateTenantSettings(ctx context.Context, in *UpdateTenantSettingsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	AddBankAccount(ctx context.Context, in *AddBankAccountGrpcRequest, opts ...grpc.CallOption) (*common.IdResponse, error)
+	UpdateBankAccount(ctx context.Context, in *UpdateBankAccountGrpcRequest, opts ...grpc.CallOption) (*common.IdResponse, error)
+	DeleteBankAccount(ctx context.Context, in *DeleteBankAccountGrpcRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type tenantGrpcServiceClient struct {
@@ -64,6 +67,33 @@ func (c *tenantGrpcServiceClient) UpdateTenantSettings(ctx context.Context, in *
 	return out, nil
 }
 
+func (c *tenantGrpcServiceClient) AddBankAccount(ctx context.Context, in *AddBankAccountGrpcRequest, opts ...grpc.CallOption) (*common.IdResponse, error) {
+	out := new(common.IdResponse)
+	err := c.cc.Invoke(ctx, "/tenantGrpcService/AddBankAccount", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tenantGrpcServiceClient) UpdateBankAccount(ctx context.Context, in *UpdateBankAccountGrpcRequest, opts ...grpc.CallOption) (*common.IdResponse, error) {
+	out := new(common.IdResponse)
+	err := c.cc.Invoke(ctx, "/tenantGrpcService/UpdateBankAccount", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tenantGrpcServiceClient) DeleteBankAccount(ctx context.Context, in *DeleteBankAccountGrpcRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/tenantGrpcService/DeleteBankAccount", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // TenantGrpcServiceServer is the server API for TenantGrpcService service.
 // All implementations should embed UnimplementedTenantGrpcServiceServer
 // for forward compatibility
@@ -71,6 +101,9 @@ type TenantGrpcServiceServer interface {
 	AddBillingProfile(context.Context, *AddBillingProfileRequest) (*common.IdResponse, error)
 	UpdateBillingProfile(context.Context, *UpdateBillingProfileRequest) (*common.IdResponse, error)
 	UpdateTenantSettings(context.Context, *UpdateTenantSettingsRequest) (*emptypb.Empty, error)
+	AddBankAccount(context.Context, *AddBankAccountGrpcRequest) (*common.IdResponse, error)
+	UpdateBankAccount(context.Context, *UpdateBankAccountGrpcRequest) (*common.IdResponse, error)
+	DeleteBankAccount(context.Context, *DeleteBankAccountGrpcRequest) (*emptypb.Empty, error)
 }
 
 // UnimplementedTenantGrpcServiceServer should be embedded to have forward compatible implementations.
@@ -85,6 +118,15 @@ func (UnimplementedTenantGrpcServiceServer) UpdateBillingProfile(context.Context
 }
 func (UnimplementedTenantGrpcServiceServer) UpdateTenantSettings(context.Context, *UpdateTenantSettingsRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateTenantSettings not implemented")
+}
+func (UnimplementedTenantGrpcServiceServer) AddBankAccount(context.Context, *AddBankAccountGrpcRequest) (*common.IdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddBankAccount not implemented")
+}
+func (UnimplementedTenantGrpcServiceServer) UpdateBankAccount(context.Context, *UpdateBankAccountGrpcRequest) (*common.IdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateBankAccount not implemented")
+}
+func (UnimplementedTenantGrpcServiceServer) DeleteBankAccount(context.Context, *DeleteBankAccountGrpcRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteBankAccount not implemented")
 }
 
 // UnsafeTenantGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -152,6 +194,60 @@ func _TenantGrpcService_UpdateTenantSettings_Handler(srv interface{}, ctx contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _TenantGrpcService_AddBankAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddBankAccountGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TenantGrpcServiceServer).AddBankAccount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/tenantGrpcService/AddBankAccount",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TenantGrpcServiceServer).AddBankAccount(ctx, req.(*AddBankAccountGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TenantGrpcService_UpdateBankAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateBankAccountGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TenantGrpcServiceServer).UpdateBankAccount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/tenantGrpcService/UpdateBankAccount",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TenantGrpcServiceServer).UpdateBankAccount(ctx, req.(*UpdateBankAccountGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TenantGrpcService_DeleteBankAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteBankAccountGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TenantGrpcServiceServer).DeleteBankAccount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/tenantGrpcService/DeleteBankAccount",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TenantGrpcServiceServer).DeleteBankAccount(ctx, req.(*DeleteBankAccountGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // TenantGrpcService_ServiceDesc is the grpc.ServiceDesc for TenantGrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -170,6 +266,18 @@ var TenantGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateTenantSettings",
 			Handler:    _TenantGrpcService_UpdateTenantSettings_Handler,
+		},
+		{
+			MethodName: "AddBankAccount",
+			Handler:    _TenantGrpcService_AddBankAccount_Handler,
+		},
+		{
+			MethodName: "UpdateBankAccount",
+			Handler:    _TenantGrpcService_UpdateBankAccount_Handler,
+		},
+		{
+			MethodName: "DeleteBankAccount",
+			Handler:    _TenantGrpcService_DeleteBankAccount_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

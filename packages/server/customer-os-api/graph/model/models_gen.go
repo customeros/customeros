@@ -161,6 +161,44 @@ type AttachmentInput struct {
 	AppSource string     `json:"appSource"`
 }
 
+type BankAccount struct {
+	Metadata            *Metadata `json:"metadata"`
+	BankName            *string   `json:"bankName,omitempty"`
+	Currency            *Currency `json:"currency,omitempty"`
+	BankTransferEnabled bool      `json:"bankTransferEnabled"`
+	Iban                *string   `json:"iban,omitempty"`
+	Bic                 *string   `json:"bic,omitempty"`
+	SortCode            *string   `json:"sortCode,omitempty"`
+	AccountNumber       *string   `json:"accountNumber,omitempty"`
+	RoutingNumber       *string   `json:"routingNumber,omitempty"`
+}
+
+func (BankAccount) IsMetadataInterface()        {}
+func (this BankAccount) GetMetadata() *Metadata { return this.Metadata }
+
+type BankAccountCreateInput struct {
+	Currency            *Currency `json:"currency,omitempty"`
+	Name                *string   `json:"name,omitempty"`
+	BankTransferEnabled *bool     `json:"bankTransferEnabled,omitempty"`
+	Iban                *string   `json:"iban,omitempty"`
+	Bic                 *string   `json:"bic,omitempty"`
+	SortCode            *string   `json:"sortCode,omitempty"`
+	AccountNumber       *string   `json:"accountNumber,omitempty"`
+	RoutingNumber       *string   `json:"routingNumber,omitempty"`
+}
+
+type BankAccountUpdateInput struct {
+	ID                  string    `json:"id"`
+	Currency            *Currency `json:"currency,omitempty"`
+	Name                *string   `json:"name,omitempty"`
+	BankTransferEnabled *bool     `json:"bankTransferEnabled,omitempty"`
+	Iban                *string   `json:"iban,omitempty"`
+	Bic                 *string   `json:"bic,omitempty"`
+	SortCode            *string   `json:"sortCode,omitempty"`
+	AccountNumber       *string   `json:"accountNumber,omitempty"`
+	RoutingNumber       *string   `json:"routingNumber,omitempty"`
+}
+
 type BillingDetails struct {
 	BillingCycle           *ContractBillingCycle `json:"billingCycle,omitempty"`
 	InvoicingStarted       *time.Time            `json:"invoicingStarted,omitempty"`
