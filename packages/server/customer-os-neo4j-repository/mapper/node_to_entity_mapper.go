@@ -575,3 +575,27 @@ func MapDbNodeToReminderEntity(dbNode *dbtype.Node) *entity.ReminderEntity {
 	}
 	return &reminder
 }
+
+func MapDbNodeToBankAccountEntity(dbNode *dbtype.Node) *entity.BankAccountEntity {
+	if dbNode == nil {
+		return &entity.BankAccountEntity{}
+	}
+	props := utils.GetPropsFromNode(*dbNode)
+	bankAccount := entity.BankAccountEntity{
+		Id:                  utils.GetStringPropOrEmpty(props, "id"),
+		CreatedAt:           utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:           utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		Source:              entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:       entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:           utils.GetStringPropOrEmpty(props, "appSource"),
+		BankName:            utils.GetStringPropOrEmpty(props, "bankName"),
+		Currency:            enum.DecodeCurrency(utils.GetStringPropOrEmpty(props, "currency")),
+		BankTransferEnabled: utils.GetBoolPropOrFalse(props, "bankTransferEnabled"),
+		AccountNumber:       utils.GetStringPropOrEmpty(props, "accountNumber"),
+		SortCode:            utils.GetStringPropOrEmpty(props, "sortCode"),
+		Iban:                utils.GetStringPropOrEmpty(props, "iban"),
+		Bic:                 utils.GetStringPropOrEmpty(props, "bic"),
+		RoutingNumber:       utils.GetStringPropOrEmpty(props, "routingNumber"),
+	}
+	return &bankAccount
+}

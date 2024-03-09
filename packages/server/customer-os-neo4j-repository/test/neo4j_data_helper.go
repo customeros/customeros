@@ -1142,6 +1142,39 @@ func UpdateReminder(ctx context.Context, driver *neo4j.DriverWithContext, tenant
 	ExecuteWriteQuery(ctx, driver, query, params)
 }
 
+func CreateBankAccount(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, bankAccount entity.BankAccountEntity) string {
+	accountId := utils.NewUUIDIfEmpty(bankAccount.Id)
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}) 
+				MERGE (t)-[:HAS_BANK_ACCOUNT]->(ba:BankAccount {id:$accountId})
+				ON CREATE SET
+					ba:BankAccount_%s,
+					ba.createdAt=$createdAt,
+					ba.updatedAt=$updatedAt,
+					ba.bankName=$bankName,
+					ba.currency=$currency,
+					ba.bankTransferEnabled=$bankTransferEnabled,
+					ba.accountNumber=$accountNumber,
+					ba.iban=$iban,
+					ba.bic=$bic,
+					ba.sortCode=$sortCode,
+					ba.routingNumber=$routingNumber`, tenant)
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"tenant":              tenant,
+		"accountId":           accountId,
+		"createdAt":           bankAccount.CreatedAt,
+		"updatedAt":           bankAccount.UpdatedAt,
+		"bankName":            bankAccount.BankName,
+		"currency":            bankAccount.Currency.String(),
+		"bankTransferEnabled": bankAccount.BankTransferEnabled,
+		"accountNumber":       bankAccount.AccountNumber,
+		"iban":                bankAccount.Iban,
+		"bic":                 bankAccount.Bic,
+		"sortCode":            bankAccount.SortCode,
+		"routingNumber":       bankAccount.RoutingNumber,
+	})
+	return accountId
+}
+
 // Deprecated
 func FirstTimeOfMonth(year, month int) time.Time {
 	return time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)

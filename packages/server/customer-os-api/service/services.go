@@ -17,6 +17,7 @@ type Services struct {
 	CommonServices     *commonService.Services
 	CommonAuthServices *commonAuthService.Services
 
+	BankAccountService         BankAccountService
 	ContactService             ContactService
 	OrganizationService        OrganizationService
 	CustomFieldService         CustomFieldService
@@ -71,6 +72,7 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *confi
 	services := Services{
 		CommonServices:             commonServices,
 		CommonAuthServices:         commonAuthServices,
+		BankAccountService:         NewBankAccountService(log, repositories, grpcClients),
 		OrganizationService:        NewOrganizationService(log, repositories, grpcClients),
 		CustomFieldService:         NewCustomFieldService(log, repositories),
 		UserService:                NewUserService(log, repositories, grpcClients),

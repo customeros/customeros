@@ -11345,7 +11345,7 @@ input AttachmentInput {
     size: Int64!
     appSource: String!
 }`, BuiltIn: false},
-	{Name: "../schemas/bank_acount.graphqls", Input: `extend type Query {
+	{Name: "../schemas/bank_account.graphqls", Input: `extend type Query {
     bankAccounts: [BankAccount!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 

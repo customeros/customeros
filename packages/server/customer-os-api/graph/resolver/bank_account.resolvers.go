@@ -8,7 +8,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 )
 
 // BankAccountCreate is the resolver for the bankAccount_Create field.
@@ -28,5 +31,15 @@ func (r *mutationResolver) BankAccountDelete(ctx context.Context, id string) (*m
 
 // BankAccounts is the resolver for the bankAccounts field.
 func (r *queryResolver) BankAccounts(ctx context.Context) ([]*model.BankAccount, error) {
-	panic(fmt.Errorf("not implemented: BankAccounts - bankAccounts"))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.BankAccounts", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	bankAccountEntities, err := r.Services.BankAccountService.GetTenantBankAccounts(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to fetch bank accounts")
+		return nil, err
+	}
+	return mapper.MapEntitiesToBankAccounts(bankAccountEntities), nil
 }
