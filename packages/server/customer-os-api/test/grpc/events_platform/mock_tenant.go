@@ -11,6 +11,9 @@ type MockTenantServiceCallbacks struct {
 	AddBillingProfile    func(context.Context, *tenantpb.AddBillingProfileRequest) (*commonpb.IdResponse, error)
 	UpdateBillingProfile func(context.Context, *tenantpb.UpdateBillingProfileRequest) (*commonpb.IdResponse, error)
 	UpdateTenantSettings func(context.Context, *tenantpb.UpdateTenantSettingsRequest) (*emptypb.Empty, error)
+	AddBankAccount       func(context.Context, *tenantpb.AddBankAccountGrpcRequest) (*commonpb.IdResponse, error)
+	UpdateBankAccount    func(context.Context, *tenantpb.UpdateBankAccountGrpcRequest) (*commonpb.IdResponse, error)
+	DeleteBankAccount    func(context.Context, *tenantpb.DeleteBankAccountGrpcRequest) (*emptypb.Empty, error)
 }
 
 var tenantCallbacks = &MockTenantServiceCallbacks{}
@@ -42,4 +45,25 @@ func (MockTenantService) UpdateTenantSettings(context context.Context, proto *te
 		panic("tenantCallbacks.UpdateTenantSettings is not set")
 	}
 	return tenantCallbacks.UpdateTenantSettings(context, proto)
+}
+
+func (MockTenantService) AddBankAccount(context context.Context, proto *tenantpb.AddBankAccountGrpcRequest) (*commonpb.IdResponse, error) {
+	if tenantCallbacks.AddBankAccount == nil {
+		panic("tenantCallbacks.AddBankAccount is not set")
+	}
+	return tenantCallbacks.AddBankAccount(context, proto)
+}
+
+func (MockTenantService) UpdateBankAccount(context context.Context, proto *tenantpb.UpdateBankAccountGrpcRequest) (*commonpb.IdResponse, error) {
+	if tenantCallbacks.UpdateBankAccount == nil {
+		panic("tenantCallbacks.UpdateBankAccount is not set")
+	}
+	return tenantCallbacks.UpdateBankAccount(context, proto)
+}
+
+func (MockTenantService) DeleteBankAccount(context context.Context, proto *tenantpb.DeleteBankAccountGrpcRequest) (*emptypb.Empty, error) {
+	if tenantCallbacks.DeleteBankAccount == nil {
+		panic("tenantCallbacks.DeleteBankAccount is not set")
+	}
+	return tenantCallbacks.DeleteBankAccount(context, proto)
 }

@@ -22,7 +22,7 @@ type BankAccount implements MetadataInterface {
 
 input BankAccountCreateInput {
     currency:               Currency
-    name:                   String
+    bankName:               String
     bankTransferEnabled:    Boolean
     iban:                   String
     bic:                    String
@@ -34,7 +34,7 @@ input BankAccountCreateInput {
 input BankAccountUpdateInput {
     id:                     ID!
     currency:               Currency
-    name:                   String
+    bankName:               String
     bankTransferEnabled:    Boolean
     iban:                   String
     bic:                    String

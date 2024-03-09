@@ -5,20 +5,28 @@ import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
+	tenantpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/tenant"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type BankAccountService interface {
+	CreateTenantBankAccount(ctx context.Context, input *model.BankAccountCreateInput) (string, error)
+	UpdateTenantBankAccount(ctx context.Context, input *model.BankAccountUpdateInput) error
 	GetTenantBankAccounts(ctx context.Context) (*neo4jentity.BankAccountEntities, error)
-	//GetTenantBankAccount(ctx context.Context, id string) (*neo4jentity.BankAccountEntity, error)
-	//CreateTenantBillingProfile(ctx context.Context, input model.TenantBillingProfileInput) (string, error)
-	//UpdateTenantBillingProfile(ctx context.Context, input model.TenantBillingProfileUpdateInput) error
+	GetTenantBankAccount(ctx context.Context, id string) (*neo4jentity.BankAccountEntity, error)
+	DeleteTenantBankAccount(ctx context.Context, id string) (bool, error)
 }
 
 type bankAccountService struct {
@@ -43,7 +51,7 @@ func (s *bankAccountService) GetTenantBankAccounts(ctx context.Context) (*neo4je
 	dbNodes, err := s.repositories.Neo4jRepositories.BankAccountReadRepository.GetBankAccounts(ctx, common.GetTenantFromContext(ctx))
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return nil, fmt.Errorf("GetTenantBankAccounts: %w", err)
+		return nil, fmt.Errorf("GetTenantBankAccounts: %s", err.Error())
 	}
 
 	tenantBankAccounts := neo4jentity.BankAccountEntities{}
@@ -54,187 +62,216 @@ func (s *bankAccountService) GetTenantBankAccounts(ctx context.Context) (*neo4je
 	return &tenantBankAccounts, nil
 }
 
-//func (s *bankAccountService) GetTenantBillingProfile(ctx context.Context, id string) (*neo4jentity.TenantBillingProfileEntity, error) {
-//	span, ctx := opentracing.StartSpanFromContext(ctx, "BankAccountService.GetTenantBillingProfile")
-//	defer span.Finish()
-//	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
-//	span.LogFields(log.String("id", id))
-//
-//	dbNode, err := s.repositories.Neo4jRepositories.TenantReadRepository.GetTenantBillingProfileById(ctx, common.GetTenantFromContext(ctx), id)
-//	if err != nil {
-//		tracing.TraceErr(span, err)
-//		return nil, fmt.Errorf("GetTenantBillingProfile: %w", err)
-//	}
-//
-//	return neo4jmapper.MapDbNodeToTenantBillingProfileEntity(dbNode), nil
-//}
+func (s *bankAccountService) GetTenantBankAccount(ctx context.Context, id string) (*neo4jentity.BankAccountEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "BankAccountService.GetTenantBankAccount")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	span.LogFields(log.String("bankAccountId", id))
 
-//func (s *bankAccountService) CreateTenantBillingProfile(ctx context.Context, input model.TenantBillingProfileInput) (string, error) {
-//	span, ctx := opentracing.StartSpanFromContext(ctx, "BankAccountService.CreateTenantBillingProfile")
-//	defer span.Finish()
-//	tracing.SetDefaultServiceSpanTags(ctx, span)
-//	tracing.LogObjectAsJson(span, "input", input)
-//
-//	grpcRequest := tenantpb.AddBillingProfileRequest{
-//		Tenant:         common.GetTenantFromContext(ctx),
-//		LoggedInUserId: common.GetUserIdFromContext(ctx),
-//		SourceFields: &commonpb.SourceFields{
-//			Source:    neo4jentity.DataSourceOpenline.String(),
-//			AppSource: constants.AppSourceCustomerOsApi,
-//		},
-//		Phone:                         utils.IfNotNilString(input.Phone),
-//		LegalName:                     utils.IfNotNilString(input.LegalName),
-//		AddressLine1:                  utils.IfNotNilString(input.AddressLine1),
-//		AddressLine2:                  utils.IfNotNilString(input.AddressLine2),
-//		AddressLine3:                  utils.IfNotNilString(input.AddressLine3),
-//		Locality:                      utils.IfNotNilString(input.Locality),
-//		Country:                       utils.IfNotNilString(input.Country),
-//		Zip:                           utils.IfNotNilString(input.Zip),
-//		DomesticPaymentsBankInfo:      utils.IfNotNilString(input.DomesticPaymentsBankInfo),
-//		InternationalPaymentsBankInfo: utils.IfNotNilString(input.InternationalPaymentsBankInfo),
-//		VatNumber:                     utils.IfNotNilString(input.VatNumber),
-//		SendInvoicesFrom:              utils.IfNotNilString(input.SendInvoicesFrom),
-//		SendInvoicesBcc:               utils.IfNotNilString(input.SendInvoicesBcc),
-//		CanPayWithCard:                utils.IfNotNilBool(input.CanPayWithCard),
-//		CanPayWithDirectDebitSEPA:     utils.IfNotNilBool(input.CanPayWithDirectDebitSepa),
-//		CanPayWithDirectDebitACH:      utils.IfNotNilBool(input.CanPayWithDirectDebitAch),
-//		CanPayWithDirectDebitBacs:     utils.IfNotNilBool(input.CanPayWithDirectDebitBacs),
-//		CanPayWithPigeon:              utils.IfNotNilBool(input.CanPayWithPigeon),
-//	}
-//
-//	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-//	response, err := CallEventsPlatformGRPCWithRetry[*commonpb.IdResponse](func() (*commonpb.IdResponse, error) {
-//		return s.grpcClients.TenantClient.AddBillingProfile(ctx, &grpcRequest)
-//	})
-//	if err != nil {
-//		tracing.TraceErr(span, err)
-//		s.log.Errorf("Error from events processing: %s", err.Error())
-//		return "", err
-//	}
-//
-//	WaitForNodeCreatedInNeo4j(ctx, s.repositories, response.Id, neo4jutil.NodeLabelTenantBillingProfile, span)
-//
-//	return response.Id, nil
-//}
+	dbNode, err := s.repositories.Neo4jRepositories.BankAccountReadRepository.GetBankAccountById(ctx, common.GetTenantFromContext(ctx), id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, fmt.Errorf("GetTenantBankAccount: %s", err.Error())
+	}
 
-//func (s *bankAccountService) UpdateTenantBillingProfile(ctx context.Context, input model.TenantBillingProfileUpdateInput) error {
-//	span, ctx := opentracing.StartSpanFromContext(ctx, "BankAccountService.UpdateTenantBillingProfile")
-//	defer span.Finish()
-//	tracing.SetDefaultServiceSpanTags(ctx, span)
-//	tracing.LogObjectAsJson(span, "input", input)
-//
-//	if input.ID == "" {
-//		err := fmt.Errorf("(BankAccountService.UpdateTenantBillingProfile) billing profile id is missing")
-//		s.log.Error(err.Error())
-//		tracing.TraceErr(span, err)
-//		return err
-//	}
-//
-//	billingProfileExists, _ := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), input.ID, neo4jutil.NodeLabelTenantBillingProfile)
-//	if !billingProfileExists {
-//		err := fmt.Errorf("(BankAccountService.UpdateTenantBillingProfile) tenant billing profile with id {%s} not found", input.ID)
-//		s.log.Error(err.Error())
-//		tracing.TraceErr(span, err)
-//		return err
-//	}
-//
-//	var fieldsMask []tenantpb.TenantBillingProfileFieldMask
-//	updateRequest := tenantpb.UpdateBillingProfileRequest{
-//		Tenant:                        common.GetTenantFromContext(ctx),
-//		Id:                            input.ID,
-//		LoggedInUserId:                common.GetUserIdFromContext(ctx),
-//		AppSource:                     constants.AppSourceCustomerOsApi,
-//		Phone:                         utils.IfNotNilString(input.Phone),
-//		LegalName:                     utils.IfNotNilString(input.LegalName),
-//		AddressLine1:                  utils.IfNotNilString(input.AddressLine1),
-//		AddressLine2:                  utils.IfNotNilString(input.AddressLine2),
-//		AddressLine3:                  utils.IfNotNilString(input.AddressLine3),
-//		Locality:                      utils.IfNotNilString(input.Locality),
-//		Country:                       utils.IfNotNilString(input.Country),
-//		Zip:                           utils.IfNotNilString(input.Zip),
-//		DomesticPaymentsBankInfo:      utils.IfNotNilString(input.DomesticPaymentsBankInfo),
-//		InternationalPaymentsBankInfo: utils.IfNotNilString(input.InternationalPaymentsBankInfo),
-//		VatNumber:                     utils.IfNotNilString(input.VatNumber),
-//		SendInvoicesFrom:              utils.IfNotNilString(input.SendInvoicesFrom),
-//		SendInvoicesBcc:               utils.IfNotNilString(input.SendInvoicesBcc),
-//		CanPayWithCard:                utils.IfNotNilBool(input.CanPayWithCard),
-//		CanPayWithDirectDebitSEPA:     utils.IfNotNilBool(input.CanPayWithDirectDebitSepa),
-//		CanPayWithDirectDebitACH:      utils.IfNotNilBool(input.CanPayWithDirectDebitAch),
-//		CanPayWithDirectDebitBacs:     utils.IfNotNilBool(input.CanPayWithDirectDebitBacs),
-//		CanPayWithPigeon:              utils.IfNotNilBool(input.CanPayWithPigeon),
-//	}
-//
-//	if input.Patch != nil && *input.Patch {
-//		if input.Phone != nil {
-//			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_PHONE)
-//		}
-//		if input.LegalName != nil {
-//			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_LEGAL_NAME)
-//		}
-//		if input.AddressLine1 != nil {
-//			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_ADDRESS_LINE_1)
-//		}
-//		if input.AddressLine2 != nil {
-//			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_ADDRESS_LINE_2)
-//		}
-//		if input.AddressLine3 != nil {
-//			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_ADDRESS_LINE_3)
-//		}
-//		if input.Locality != nil {
-//			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_LOCALITY)
-//		}
-//		if input.Country != nil {
-//			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_COUNTRY)
-//		}
-//		if input.Zip != nil {
-//			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_ZIP)
-//		}
-//		if input.DomesticPaymentsBankInfo != nil {
-//			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_DOMESTIC_PAYMENTS_BANK_INFO)
-//		}
-//		if input.InternationalPaymentsBankInfo != nil {
-//			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_INTERNATIONAL_PAYMENTS_BANK_INFO)
-//		}
-//		if input.VatNumber != nil {
-//			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_VAT_NUMBER)
-//		}
-//		if input.SendInvoicesFrom != nil {
-//			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_SEND_INVOICES_FROM)
-//		}
-//		if input.SendInvoicesBcc != nil {
-//			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_SEND_INVOICES_BCC)
-//		}
-//		if input.CanPayWithCard != nil {
-//			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_CARD)
-//		}
-//		if input.CanPayWithDirectDebitSepa != nil {
-//			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_DIRECT_DEBIT_SEPA)
-//		}
-//		if input.CanPayWithDirectDebitAch != nil {
-//			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_DIRECT_DEBIT_ACH)
-//		}
-//		if input.CanPayWithDirectDebitBacs != nil {
-//			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_DIRECT_DEBIT_BACS)
-//		}
-//		if input.CanPayWithPigeon != nil {
-//			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_PIGEON)
-//		}
-//		if len(fieldsMask) == 0 {
-//			span.LogFields(log.String("result", "No fields to update"))
-//			return nil
-//		}
-//		updateRequest.FieldsMask = fieldsMask
-//	}
-//
-//	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-//	_, err := CallEventsPlatformGRPCWithRetry[*commonpb.IdResponse](func() (*commonpb.IdResponse, error) {
-//		return s.grpcClients.TenantClient.UpdateBillingProfile(ctx, &updateRequest)
-//	})
-//	if err != nil {
-//		tracing.TraceErr(span, err)
-//		s.log.Errorf("Error from events processing: %s", err.Error())
-//		return err
-//	}
-//
-//	return nil
-//}
+	return neo4jmapper.MapDbNodeToBankAccountEntity(dbNode), nil
+}
+
+func (s *bankAccountService) CreateTenantBankAccount(ctx context.Context, input *model.BankAccountCreateInput) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "BankAccountService.CreateTenantBankAccount")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	tracing.LogObjectAsJson(span, "input", input)
+
+	grpcRequest := tenantpb.AddBankAccountGrpcRequest{
+		Tenant:         common.GetTenantFromContext(ctx),
+		LoggedInUserId: common.GetUserIdFromContext(ctx),
+		SourceFields: &commonpb.SourceFields{
+			Source:    neo4jentity.DataSourceOpenline.String(),
+			AppSource: constants.AppSourceCustomerOsApi,
+		},
+		BankName:            utils.IfNotNilString(input.BankName),
+		BankTransferEnabled: utils.IfNotNilBool(input.BankTransferEnabled),
+		Currency:            utils.IfNotNilString(input.Currency.String()),
+		Iban:                utils.IfNotNilString(input.Iban),
+		Bic:                 utils.IfNotNilString(input.Bic),
+		SortCode:            utils.IfNotNilString(input.SortCode),
+		AccountNumber:       utils.IfNotNilString(input.AccountNumber),
+		RoutingNumber:       utils.IfNotNilString(input.RoutingNumber),
+	}
+
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	response, err := CallEventsPlatformGRPCWithRetry[*commonpb.IdResponse](func() (*commonpb.IdResponse, error) {
+		return s.grpcClients.TenantClient.AddBankAccount(ctx, &grpcRequest)
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error from events processing: %s", err.Error())
+		return "", err
+	}
+
+	WaitForNodeCreatedInNeo4j(ctx, s.repositories, response.Id, neo4jutil.NodeLabelBankAccount, span)
+
+	return response.Id, nil
+}
+
+func (s *bankAccountService) UpdateTenantBankAccount(ctx context.Context, input *model.BankAccountUpdateInput) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "BankAccountService.UpdateTenantBankAccount")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "input", input)
+
+	if input.ID == "" {
+		err := fmt.Errorf("bank account id is missing")
+		s.log.Error(err.Error())
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	bankAccountExists, _ := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), input.ID, neo4jutil.NodeLabelBankAccount)
+	if !bankAccountExists {
+		err := fmt.Errorf("bank account with id {%s} not found", input.ID)
+		s.log.Error(err.Error())
+		tracing.TraceErr(span, err)
+		return err
+	}
+	bankAccountEntity, err := s.GetTenantBankAccount(ctx, input.ID)
+
+	var fieldsMask []tenantpb.BankAccountFieldMask
+	updateRequest := tenantpb.UpdateBankAccountGrpcRequest{
+		Tenant:              common.GetTenantFromContext(ctx),
+		Id:                  input.ID,
+		LoggedInUserId:      common.GetUserIdFromContext(ctx),
+		AppSource:           constants.AppSourceCustomerOsApi,
+		BankName:            utils.IfNotNilString(input.BankName),
+		BankTransferEnabled: utils.IfNotNilBool(input.BankTransferEnabled),
+		Currency:            utils.IfNotNilString(input.Currency.String()),
+		Iban:                utils.IfNotNilString(input.Iban),
+		Bic:                 utils.IfNotNilString(input.Bic),
+		SortCode:            utils.IfNotNilString(input.SortCode),
+		AccountNumber:       utils.IfNotNilString(input.AccountNumber),
+		RoutingNumber:       utils.IfNotNilString(input.RoutingNumber),
+	}
+
+	if input.BankName != nil {
+		fieldsMask = append(fieldsMask, tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_BANK_NAME)
+	}
+	if input.BankTransferEnabled != nil {
+		fieldsMask = append(fieldsMask, tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_BANK_TRANSFER_ENABLED)
+	}
+	if input.Currency != nil {
+		fieldsMask = append(fieldsMask, tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_CURRENCY)
+	}
+	if input.Currency != nil && bankAccountEntity.Currency.String() != input.Currency.String() {
+		if *input.Currency == model.CurrencyUsd {
+			updateRequest.SortCode = ""
+			updateRequest.Iban = ""
+			updateRequest.Bic = ""
+			fieldsMask = append(fieldsMask, tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_SORT_CODE)
+			fieldsMask = append(fieldsMask, tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_IBAN)
+			fieldsMask = append(fieldsMask, tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_BIC)
+		} else if *input.Currency == model.CurrencyGbp {
+			updateRequest.RoutingNumber = ""
+			updateRequest.Iban = ""
+			updateRequest.Bic = ""
+			fieldsMask = append(fieldsMask, tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_ROUTING_NUMBER)
+			fieldsMask = append(fieldsMask, tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_IBAN)
+			fieldsMask = append(fieldsMask, tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_BIC)
+		} else if *input.Currency == model.CurrencyEur {
+			updateRequest.RoutingNumber = ""
+			updateRequest.AccountNumber = ""
+			updateRequest.SortCode = ""
+			fieldsMask = append(fieldsMask, tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_ROUTING_NUMBER)
+			fieldsMask = append(fieldsMask, tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_ACCOUNT_NUMBER)
+			fieldsMask = append(fieldsMask, tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_SORT_CODE)
+		} else {
+			updateRequest.Iban = ""
+			updateRequest.SortCode = ""
+			updateRequest.RoutingNumber = ""
+			fieldsMask = append(fieldsMask, tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_IBAN)
+			fieldsMask = append(fieldsMask, tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_SORT_CODE)
+			fieldsMask = append(fieldsMask, tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_ROUTING_NUMBER)
+		}
+	}
+	if input.Iban != nil && !utils.ContainsElement(fieldsMask, tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_IBAN) {
+		fieldsMask = append(fieldsMask, tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_IBAN)
+	}
+	if input.Bic != nil && !utils.ContainsElement(fieldsMask, tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_BIC) {
+		fieldsMask = append(fieldsMask, tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_BIC)
+	}
+	if input.SortCode != nil && !utils.ContainsElement(fieldsMask, tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_SORT_CODE) {
+		fieldsMask = append(fieldsMask, tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_SORT_CODE)
+	}
+	if input.AccountNumber != nil && !utils.ContainsElement(fieldsMask, tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_ACCOUNT_NUMBER) {
+		fieldsMask = append(fieldsMask, tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_ACCOUNT_NUMBER)
+	}
+	if input.RoutingNumber != nil && !utils.ContainsElement(fieldsMask, tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_ROUTING_NUMBER) {
+		fieldsMask = append(fieldsMask, tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_ROUTING_NUMBER)
+	}
+	if len(fieldsMask) == 0 {
+		span.LogFields(log.String("result", "No fields to update"))
+		return nil
+	}
+	updateRequest.FieldsMask = fieldsMask
+
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err = CallEventsPlatformGRPCWithRetry[*commonpb.IdResponse](func() (*commonpb.IdResponse, error) {
+		return s.grpcClients.TenantClient.UpdateBankAccount(ctx, &updateRequest)
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error from events processing: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (s *bankAccountService) DeleteTenantBankAccount(ctx context.Context, bankAccountId string) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "BankAccountService.DeleteTenantBankAccount")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("bankAccountId", bankAccountId))
+
+	bankAccountExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), bankAccountId, neo4jutil.NodeLabelBankAccount)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("error on checking if bank account exists: %s", err.Error())
+		return false, err
+	}
+	if !bankAccountExists {
+		err := fmt.Errorf("bank account with id {%s} not found", bankAccountId)
+		tracing.TraceErr(span, err)
+		s.log.Errorf(err.Error())
+		return false, err
+	}
+
+	deleteRequest := tenantpb.DeleteBankAccountGrpcRequest{
+		Tenant:         common.GetTenantFromContext(ctx),
+		Id:             bankAccountId,
+		LoggedInUserId: common.GetUserIdFromContext(ctx),
+		AppSource:      constants.AppSourceCustomerOsApi,
+	}
+
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err = CallEventsPlatformGRPCWithRetry[*emptypb.Empty](func() (*emptypb.Empty, error) {
+		return s.grpcClients.TenantClient.DeleteBankAccount(ctx, &deleteRequest)
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error from events processing: %s", err.Error())
+		return false, err
+	}
+
+	// wait for service line item to be deleted from graph db
+	WaitForNodeDeletedFromNeo4j(ctx, s.repositories, bankAccountId, neo4jutil.NodeLabelBankAccount, span)
+
+	bankAccountExists, err = s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), bankAccountId, neo4jutil.NodeLabelBankAccount)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("error on checking if bank account exists: %s", err.Error())
+		return false, err
+	}
+
+	return !bankAccountExists, nil
+}

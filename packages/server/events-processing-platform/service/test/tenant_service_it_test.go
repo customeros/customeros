@@ -6,6 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	tenant "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/tenant"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/tenant/event"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test"
 	eventstoret "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	tenantpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/tenant"
@@ -234,4 +235,171 @@ func TestTenantService_UpdateTenantSettings(t *testing.T) {
 	require.Equal(t, "USD", eventData.BaseCurrency)
 	require.Equal(t, true, eventData.InvoicingEnabled)
 	require.Equal(t, 0, len(eventData.FieldsMask))
+}
+
+func TestTenantService_AddBankAccount(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// setup test environment
+	tenantName := "ziggy"
+	now := utils.Now()
+
+	aggregateStore := eventstoret.NewTestAggregateStore()
+	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
+	require.Nil(t, err, "Failed to get grpc connection")
+	tenantServiceClient := tenantpb.NewTenantGrpcServiceClient(grpcConnection)
+
+	response, err := tenantServiceClient.AddBankAccount(ctx, &tenantpb.AddBankAccountGrpcRequest{
+		Tenant: tenantName,
+		SourceFields: &commonpb.SourceFields{
+			AppSource: "app",
+			Source:    "source",
+		},
+		CreatedAt:           utils.ConvertTimeToTimestampPtr(&now),
+		BankName:            "bankName",
+		Currency:            "USD",
+		BankTransferEnabled: true,
+		AccountNumber:       "accountNumber",
+		SortCode:            "sortCode",
+		Iban:                "iban",
+		Bic:                 "swiftBIC",
+		RoutingNumber:       "routingNumber",
+	})
+	require.Nil(t, err)
+	require.NotNil(t, response)
+
+	bankAccountId := response.Id
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+
+	tenantAggregate := tenant.NewTenantAggregate(tenantName)
+	eventList := eventsMap[tenantAggregate.ID]
+	require.Equal(t, 1, len(eventList))
+	require.Equal(t, event.TenantAddBankAccountV1, eventList[0].GetEventType())
+	require.Equal(t, string(tenant.TenantAggregateType)+"-"+tenantName, eventList[0].GetAggregateID())
+
+	var eventData event.TenantBankAccountCreateEvent
+	err = eventList[0].GetJsonData(&eventData)
+	require.Nil(t, err, "Failed to unmarshal event data")
+
+	// Assertions to validate the contract create event data
+	require.Equal(t, tenantName, eventData.Tenant)
+	require.Equal(t, now, eventData.CreatedAt)
+	require.Equal(t, bankAccountId, eventData.Id)
+	require.Equal(t, "bankName", eventData.BankName)
+	require.Equal(t, "USD", eventData.Currency)
+	require.Equal(t, true, eventData.BankTransferEnabled)
+	require.Equal(t, "accountNumber", eventData.AccountNumber)
+	require.Equal(t, "sortCode", eventData.SortCode)
+	require.Equal(t, "iban", eventData.Iban)
+	require.Equal(t, "swiftBIC", eventData.Bic)
+	require.Equal(t, "routingNumber", eventData.RoutingNumber)
+}
+
+func TestTenantService_UpdateBankAccount(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// setup test environment
+	tenantName := "ziggy"
+	bankAccountId := uuid.New().String()
+	now := utils.Now()
+
+	// setup aggregate and create initial event
+	aggregateStore := eventstoret.NewTestAggregateStore()
+	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
+	require.Nil(t, err, "Failed to get grpc connection")
+	tenantServiceClient := tenantpb.NewTenantGrpcServiceClient(grpcConnection)
+
+	response, err := tenantServiceClient.UpdateBankAccount(ctx, &tenantpb.UpdateBankAccountGrpcRequest{
+		Tenant:              tenantName,
+		Id:                  bankAccountId,
+		AppSource:           "test",
+		UpdatedAt:           utils.ConvertTimeToTimestampPtr(&now),
+		BankName:            "bankName",
+		Currency:            "USD",
+		BankTransferEnabled: true,
+		AccountNumber:       "accountNumber",
+		SortCode:            "sortCode",
+		Iban:                "iban",
+		Bic:                 "swiftBIC",
+		RoutingNumber:       "routingNumber",
+		FieldsMask: []tenantpb.BankAccountFieldMask{
+			tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_BANK_NAME,
+			tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_CURRENCY,
+			tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_BANK_TRANSFER_ENABLED,
+			tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_ACCOUNT_NUMBER,
+			tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_ROUTING_NUMBER,
+		},
+	})
+	require.Nil(t, err)
+	require.NotNil(t, response)
+
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+
+	tenantAggregate := tenant.NewTenantAggregate(tenantName)
+	eventList := eventsMap[tenantAggregate.ID]
+	require.Equal(t, 1, len(eventList))
+	require.Equal(t, event.TenantUpdateBankAccountV1, eventList[0].GetEventType())
+	require.Equal(t, string(tenant.TenantAggregateType)+"-"+tenantName, eventList[0].GetAggregateID())
+
+	var eventData event.TenantBankAccountUpdateEvent
+	err = eventList[0].GetJsonData(&eventData)
+	require.Nil(t, err, "Failed to unmarshal event data")
+
+	// Assertions to validate the contract create event data
+	require.Equal(t, tenantName, eventData.Tenant)
+	require.Equal(t, now, eventData.UpdatedAt)
+	require.Equal(t, bankAccountId, eventData.Id)
+	require.Equal(t, "bankName", eventData.BankName)
+	require.Equal(t, "USD", eventData.Currency)
+	require.Equal(t, true, eventData.BankTransferEnabled)
+	require.Equal(t, "accountNumber", eventData.AccountNumber)
+	require.Equal(t, "sortCode", eventData.SortCode)
+	require.Equal(t, "iban", eventData.Iban)
+	require.Equal(t, "swiftBIC", eventData.Bic)
+	require.Equal(t, "routingNumber", eventData.RoutingNumber)
+	require.Equal(t, 5, len(eventData.FieldsMask))
+}
+
+func TestTenantService_DeleteBankAccount(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// setup test environment
+	tenantName := "ziggy"
+	bankAccountId := uuid.New().String()
+
+	// setup aggregate and create initial event
+	aggregateStore := eventstoret.NewTestAggregateStore()
+	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
+	require.Nil(t, err, "Failed to get grpc connection")
+	tenantServiceClient := tenantpb.NewTenantGrpcServiceClient(grpcConnection)
+
+	response, err := tenantServiceClient.DeleteBankAccount(ctx, &tenantpb.DeleteBankAccountGrpcRequest{
+		Tenant: tenantName,
+		Id:     bankAccountId,
+	})
+	require.Nil(t, err)
+	require.NotNil(t, response)
+
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+
+	tenantAggregate := tenant.NewTenantAggregate(tenantName)
+	eventList := eventsMap[tenantAggregate.ID]
+	require.Equal(t, 1, len(eventList))
+	require.Equal(t, event.TenantDeleteBankAccountV1, eventList[0].GetEventType())
+	require.Equal(t, string(tenant.TenantAggregateType)+"-"+tenantName, eventList[0].GetAggregateID())
+
+	var eventData event.TenantBankAccountDeleteEvent
+	err = eventList[0].GetJsonData(&eventData)
+	require.Nil(t, err, "Failed to unmarshal event data")
+
+	// Assertions to validate the contract create event data
+	require.Equal(t, tenantName, eventData.Tenant)
+	require.Equal(t, bankAccountId, eventData.Id)
+	test.AssertRecentTime(t, eventData.DeletedAt)
 }

@@ -4,6 +4,7 @@ const (
 	NodeLabelTenant                    = "Tenant"
 	NodeLabelTenantSettings            = "TenantSettings"
 	NodeLabelTenantBillingProfile      = "TenantBillingProfile"
+	NodeLabelBankAccount               = "BankAccount"
 	NodeLabelTimelineEvent             = "TimelineEvent"
 	NodeLabelContact                   = "Contact"
 	NodeLabelCustomField               = "CustomField"

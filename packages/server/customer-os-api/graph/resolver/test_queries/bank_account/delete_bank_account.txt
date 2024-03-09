@@ -1,0 +1,6 @@
+mutation DeleteBankAccount($accountId: ID!) {
+bankAccount_Delete(id: $accountId) {
+    accepted
+    completed
+  }
+}

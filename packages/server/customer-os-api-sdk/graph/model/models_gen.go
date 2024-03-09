@@ -180,7 +180,7 @@ func (this BankAccount) GetMetadata() *Metadata { return this.Metadata }
 
 type BankAccountCreateInput struct {
 	Currency            *Currency `json:"currency,omitempty"`
-	Name                *string   `json:"name,omitempty"`
+	BankName            *string   `json:"bankName,omitempty"`
 	BankTransferEnabled *bool     `json:"bankTransferEnabled,omitempty"`
 	Iban                *string   `json:"iban,omitempty"`
 	Bic                 *string   `json:"bic,omitempty"`
@@ -192,7 +192,7 @@ type BankAccountCreateInput struct {
 type BankAccountUpdateInput struct {
 	ID                  string    `json:"id"`
 	Currency            *Currency `json:"currency,omitempty"`
-	Name                *string   `json:"name,omitempty"`
+	BankName            *string   `json:"bankName,omitempty"`
 	BankTransferEnabled *bool     `json:"bankTransferEnabled,omitempty"`
 	Iban                *string   `json:"iban,omitempty"`
 	Bic                 *string   `json:"bic,omitempty"`
