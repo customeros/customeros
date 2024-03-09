@@ -75,3 +75,51 @@ func (s *tenantService) UpdateTenantSettings(ctx context.Context, request *tenan
 
 	return &emptypb.Empty{}, nil
 }
+
+func (s *tenantService) AddBankAccount(ctx context.Context, request *tenantpb.AddBankAccountGrpcRequest) (*commonpb.IdResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "TenantService.AddBankAccount")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+
+	bankAccountId, err := s.tenantRequestHandler.HandleWithRetry(ctx, request.Tenant, false, request)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(AddBankAccount) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		return nil, grpcerr.ErrResponse(err)
+	}
+
+	return &commonpb.IdResponse{Id: bankAccountId.(string)}, nil
+}
+
+func (s *tenantService) UpdateBankAccount(ctx context.Context, request *tenantpb.UpdateBankAccountGrpcRequest) (*commonpb.IdResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "TenantService.UpdateBankAccount")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+
+	_, err := s.tenantRequestHandler.HandleWithRetry(ctx, request.Tenant, false, request)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(UpdateBankAccount) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		return nil, grpcerr.ErrResponse(err)
+	}
+
+	return &commonpb.IdResponse{Id: request.Id}, nil
+}
+
+func (s *tenantService) DeleteBankAccount(ctx context.Context, request *tenantpb.DeleteBankAccountGrpcRequest) (*emptypb.Empty, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "TenantService.DeleteBankAccount")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+
+	_, err := s.tenantRequestHandler.HandleWithRetry(ctx, request.Tenant, false, request)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(DeleteBankAccount) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		return nil, grpcerr.ErrResponse(err)
+	}
+
+	return &emptypb.Empty{}, nil
+}

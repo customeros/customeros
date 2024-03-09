@@ -6,27 +6,94 @@ package resolver
 
 import (
 	"context"
-	"fmt"
+	"github.com/pkg/errors"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 // BankAccountCreate is the resolver for the bankAccount_Create field.
 func (r *mutationResolver) BankAccountCreate(ctx context.Context, input *model.BankAccountCreateInput) (*model.BankAccount, error) {
-	panic(fmt.Errorf("not implemented: BankAccountCreate - bankAccount_Create"))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.BankAccountCreate", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "input", input)
+
+	bankAccountId, err := r.Services.BankAccountService.CreateTenantBankAccount(ctx, input)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to create bank account")
+		return &model.BankAccount{Metadata: &model.Metadata{
+			ID: bankAccountId,
+		}}, err
+	}
+
+	createdBankAccountEntity, err := r.Services.BankAccountService.GetTenantBankAccount(ctx, bankAccountId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Bank account not yet available.")
+		return &model.BankAccount{Metadata: &model.Metadata{
+			ID: bankAccountId,
+		}}, nil
+	}
+	span.LogFields(log.String("response.bankAccountId", bankAccountId))
+	return mapper.MapEntityToBankAccount(createdBankAccountEntity), nil
 }
 
 // BankAccountUpdate is the resolver for the bankAccount_Update field.
 func (r *mutationResolver) BankAccountUpdate(ctx context.Context, input *model.BankAccountUpdateInput) (*model.BankAccount, error) {
-	panic(fmt.Errorf("not implemented: BankAccountUpdate - bankAccount_Update"))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.BankAccountUpdate", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "input", input)
+
+	if input.ID == "" {
+		err := errors.New("missing bank account id")
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Missing bank account id")
+		return nil, nil
+	}
+
+	err := r.Services.BankAccountService.UpdateTenantBankAccount(ctx, input)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to update bank account")
+		return nil, err
+	}
+
+	updatedBankAccountEntity, err := r.Services.BankAccountService.GetTenantBankAccount(ctx, input.ID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to fetch bank account details")
+		return nil, nil
+	}
+	return mapper.MapEntityToBankAccount(updatedBankAccountEntity), nil
 }
 
 // BankAccountDelete is the resolver for the bankAccount_Delete field.
 func (r *mutationResolver) BankAccountDelete(ctx context.Context, id string) (*model.DeleteResponse, error) {
-	panic(fmt.Errorf("not implemented: BankAccountDelete - bankAccount_Delete"))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.BankAccountDelete", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "id", id)
+
+	if id == "" {
+		err := errors.New("missing bank account id")
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Missing bank account id")
+		return &model.DeleteResponse{Accepted: false, Completed: false}, nil
+	}
+
+	deletionCompleted, err := r.Services.BankAccountService.DeleteTenantBankAccount(ctx, id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to delete bank account")
+		return &model.DeleteResponse{Accepted: false, Completed: false}, nil
+	}
+	return &model.DeleteResponse{Accepted: true, Completed: deletionCompleted}, nil
 }
 
 // BankAccounts is the resolver for the bankAccounts field.

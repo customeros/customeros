@@ -2,13 +2,19 @@ package resolver
 
 import (
 	"context"
+	"github.com/google/uuid"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
+	tenantpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/tenant"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"testing"
 )
 
@@ -82,139 +88,146 @@ func TestQueryResolver_BankAccounts(t *testing.T) {
 	require.Equal(t, "routingNumber1", *ba2.RoutingNumber)
 }
 
-//func TestMutationResolver_TenantAddBillingProfile(t *testing.T) {
-//	ctx := context.Background()
-//	defer tearDownTestCase(ctx)(t)
-//
-//	neo4jtest.CreateTenant(ctx, driver, tenantName)
-//	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
-//	profileId := uuid.New().String()
-//	calledAddTenanBillingProfile := false
-//
-//	tenantServiceCallbacks := events_platform.MockTenantServiceCallbacks{
-//		AddBillingProfile: func(context context.Context, profile *tenantpb.AddBillingProfileRequest) (*commonpb.IdResponse, error) {
-//			require.Equal(t, tenantName, profile.Tenant)
-//			require.Equal(t, testUserId, profile.LoggedInUserId)
-//			require.Equal(t, neo4jentity.DataSourceOpenline.String(), profile.SourceFields.Source)
-//			require.Equal(t, constants.AppSourceCustomerOsApi, profile.SourceFields.AppSource)
-//			require.Equal(t, "phone", profile.Phone)
-//			require.Equal(t, "legalName", profile.LegalName)
-//			require.Equal(t, "addressLine1", profile.AddressLine1)
-//			require.Equal(t, "addressLine2", profile.AddressLine2)
-//			require.Equal(t, "addressLine3", profile.AddressLine3)
-//			require.Equal(t, "locality", profile.Locality)
-//			require.Equal(t, "country", profile.Country)
-//			require.Equal(t, "zip", profile.Zip)
-//			require.Equal(t, "domesticPaymentsBankInfo", profile.DomesticPaymentsBankInfo)
-//			require.Equal(t, "internationalPaymentsBankInfo", profile.InternationalPaymentsBankInfo)
-//			require.Equal(t, "vatNumber", profile.VatNumber)
-//			require.Equal(t, "sendInvoicesFrom", profile.SendInvoicesFrom)
-//			require.Equal(t, "sendInvoicesBcc", profile.SendInvoicesBcc)
-//			require.Equal(t, true, profile.CanPayWithCard)
-//			require.Equal(t, true, profile.CanPayWithDirectDebitSEPA)
-//			require.Equal(t, true, profile.CanPayWithDirectDebitACH)
-//			require.Equal(t, true, profile.CanPayWithDirectDebitBacs)
-//			require.Equal(t, true, profile.CanPayWithPigeon)
-//
-//			calledAddTenanBillingProfile = true
-//			neo4jtest.CreateTenantBillingProfile(ctx, driver, tenantName, neo4jentity.TenantBillingProfileEntity{Id: profileId})
-//			return &commonpb.IdResponse{
-//				Id: profileId,
-//			}, nil
-//		},
-//	}
-//	events_platform.SetTenantCallbacks(&tenantServiceCallbacks)
-//
-//	rawResponse := callGraphQL(t, "tenant/add_tenant_billing_profile", map[string]interface{}{})
-//	require.Nil(t, rawResponse.Errors)
-//
-//	var billingProfileStruct struct {
-//		Tenant_AddBillingProfile model.TenantBillingProfile
-//	}
-//
-//	err := decode.Decode(rawResponse.Data.(map[string]any), &billingProfileStruct)
-//	require.Nil(t, err)
-//
-//	profile := billingProfileStruct.Tenant_AddBillingProfile
-//	require.Equal(t, profileId, profile.ID)
-//
-//	require.True(t, calledAddTenanBillingProfile)
-//}
-//
-//func TestMutationResolver_TenantUpdateBillingProfile(t *testing.T) {
-//	ctx := context.Background()
-//	defer tearDownTestCase(ctx)(t)
-//
-//	neo4jtest.CreateTenant(ctx, driver, tenantName)
-//	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
-//	profileId := neo4jtest.CreateTenantBillingProfile(ctx, driver, tenantName, neo4jentity.TenantBillingProfileEntity{})
-//	calledUpdateTenantBillingProfile := false
-//
-//	tenantServiceCallbacks := events_platform.MockTenantServiceCallbacks{
-//		UpdateBillingProfile: func(context context.Context, profile *tenantpb.UpdateBillingProfileRequest) (*commonpb.IdResponse, error) {
-//			require.Equal(t, tenantName, profile.Tenant)
-//			require.Equal(t, profileId, profile.Id)
-//			require.Equal(t, testUserId, profile.LoggedInUserId)
-//			require.Equal(t, constants.AppSourceCustomerOsApi, profile.AppSource)
-//			require.Equal(t, "phone", profile.Phone)
-//			require.Equal(t, "legalName", profile.LegalName)
-//			require.Equal(t, "addressLine1", profile.AddressLine1)
-//			require.Equal(t, "addressLine2", profile.AddressLine2)
-//			require.Equal(t, "addressLine3", profile.AddressLine3)
-//			require.Equal(t, "locality", profile.Locality)
-//			require.Equal(t, "country", profile.Country)
-//			require.Equal(t, "zip", profile.Zip)
-//			require.Equal(t, "domesticPaymentsBankInfo", profile.DomesticPaymentsBankInfo)
-//			require.Equal(t, "internationalPaymentsBankInfo", profile.InternationalPaymentsBankInfo)
-//			require.Equal(t, "vatNumber", profile.VatNumber)
-//			require.Equal(t, "sendInvoicesFrom", profile.SendInvoicesFrom)
-//			require.Equal(t, "sendInvoicesBcc", profile.SendInvoicesBcc)
-//			require.Equal(t, true, profile.CanPayWithCard)
-//			require.Equal(t, true, profile.CanPayWithDirectDebitSEPA)
-//			require.Equal(t, true, profile.CanPayWithDirectDebitACH)
-//			require.Equal(t, true, profile.CanPayWithDirectDebitBacs)
-//			require.Equal(t, true, profile.CanPayWithPigeon)
-//			require.ElementsMatch(t, []tenantpb.TenantBillingProfileFieldMask{
-//				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_PHONE,
-//				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_LEGAL_NAME,
-//				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_ADDRESS_LINE_1,
-//				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_ADDRESS_LINE_2,
-//				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_ADDRESS_LINE_3,
-//				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_LOCALITY,
-//				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_COUNTRY,
-//				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_ZIP,
-//				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_DOMESTIC_PAYMENTS_BANK_INFO,
-//				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_INTERNATIONAL_PAYMENTS_BANK_INFO,
-//				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_VAT_NUMBER,
-//				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_SEND_INVOICES_FROM,
-//				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_SEND_INVOICES_BCC,
-//				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_CARD,
-//				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_DIRECT_DEBIT_SEPA,
-//				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_DIRECT_DEBIT_ACH,
-//				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_DIRECT_DEBIT_BACS,
-//				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_PIGEON,
-//			},
-//				profile.FieldsMask)
-//			calledUpdateTenantBillingProfile = true
-//			return &commonpb.IdResponse{
-//				Id: profileId,
-//			}, nil
-//		},
-//	}
-//	events_platform.SetTenantCallbacks(&tenantServiceCallbacks)
-//
-//	rawResponse := callGraphQL(t, "tenant/update_tenant_billing_profile", map[string]interface{}{"id": profileId})
-//	require.Nil(t, rawResponse.Errors)
-//
-//	var billingProfileStruct struct {
-//		Tenant_UpdateBillingProfile model.TenantBillingProfile
-//	}
-//
-//	err := decode.Decode(rawResponse.Data.(map[string]any), &billingProfileStruct)
-//	require.Nil(t, err)
-//
-//	profile := billingProfileStruct.Tenant_UpdateBillingProfile
-//	require.Equal(t, profileId, profile.ID)
-//
-//	require.True(t, calledUpdateTenantBillingProfile)
-//}
+func TestMutationResolver_BankAccountCreate(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
+	bankAccountId := uuid.New().String()
+	calledAddBankAccount := false
+
+	tenantServiceCallbacks := events_platform.MockTenantServiceCallbacks{
+		AddBankAccount: func(context context.Context, bankAccount *tenantpb.AddBankAccountGrpcRequest) (*commonpb.IdResponse, error) {
+			require.Equal(t, tenantName, bankAccount.Tenant)
+			require.Equal(t, testUserId, bankAccount.LoggedInUserId)
+			require.Equal(t, neo4jentity.DataSourceOpenline.String(), bankAccount.SourceFields.Source)
+			require.Equal(t, constants.AppSourceCustomerOsApi, bankAccount.SourceFields.AppSource)
+			require.Equal(t, "Bank of America", bankAccount.BankName)
+			require.Equal(t, "USD", bankAccount.Currency)
+			require.True(t, bankAccount.BankTransferEnabled)
+			require.Equal(t, "IBAN-123456789", bankAccount.Iban)
+			require.Equal(t, "BIC-123456789", bankAccount.Bic)
+			require.Equal(t, "ACC-123456789", bankAccount.AccountNumber)
+			require.Equal(t, "routing-123456789", bankAccount.RoutingNumber)
+			require.Equal(t, "sort-123456789", bankAccount.SortCode)
+			calledAddBankAccount = true
+			neo4jtest.CreateBankAccount(ctx, driver, tenantName, neo4jentity.BankAccountEntity{Id: bankAccountId})
+			return &commonpb.IdResponse{
+				Id: bankAccountId,
+			}, nil
+		},
+	}
+	events_platform.SetTenantCallbacks(&tenantServiceCallbacks)
+
+	rawResponse := callGraphQL(t, "bank_account/create_bank_account", map[string]interface{}{})
+	require.Nil(t, rawResponse.Errors)
+
+	var graphqlResponse struct {
+		BankAccount_Create model.BankAccount
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &graphqlResponse)
+	require.Nil(t, err)
+
+	bankAccount := graphqlResponse.BankAccount_Create
+	require.Equal(t, bankAccountId, bankAccount.Metadata.ID)
+
+	require.True(t, calledAddBankAccount)
+}
+
+func TestMutationResolver_BankAccountUpdate_FromEurToUsd(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
+	bankAccountId := neo4jtest.CreateBankAccount(ctx, driver, tenantName, neo4jentity.BankAccountEntity{
+		BankName: "Bank",
+		Currency: neo4jenum.CurrencyEUR,
+	})
+	calledUpdateBankAccount := false
+
+	tenantServiceCallbacks := events_platform.MockTenantServiceCallbacks{
+		UpdateBankAccount: func(context context.Context, bankAccount *tenantpb.UpdateBankAccountGrpcRequest) (*commonpb.IdResponse, error) {
+			require.Equal(t, tenantName, bankAccount.Tenant)
+			require.Equal(t, testUserId, bankAccount.LoggedInUserId)
+			require.Equal(t, constants.AppSourceCustomerOsApi, bankAccount.AppSource)
+			require.Equal(t, bankAccountId, bankAccount.Id)
+			require.Equal(t, "Bank of America", bankAccount.BankName)
+			require.Equal(t, "USD", bankAccount.Currency)
+			require.True(t, bankAccount.BankTransferEnabled)
+			require.Equal(t, "", bankAccount.Iban)
+			require.Equal(t, "", bankAccount.Bic)
+			require.Equal(t, "ACC-123456789", bankAccount.AccountNumber)
+			require.Equal(t, "routing-123456789", bankAccount.RoutingNumber)
+			require.Equal(t, "", bankAccount.SortCode)
+			require.Equal(t, 8, len(bankAccount.FieldsMask))
+			calledUpdateBankAccount = true
+			neo4jtest.CreateBankAccount(ctx, driver, tenantName, neo4jentity.BankAccountEntity{Id: bankAccountId})
+			return &commonpb.IdResponse{
+				Id: bankAccountId,
+			}, nil
+		},
+	}
+	events_platform.SetTenantCallbacks(&tenantServiceCallbacks)
+
+	rawResponse := callGraphQL(t, "bank_account/update_bank_account", map[string]interface{}{
+		"accountId": bankAccountId,
+	})
+	require.Nil(t, rawResponse.Errors)
+
+	var graphqlResponse struct {
+		BankAccount_Update model.BankAccount
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &graphqlResponse)
+	require.Nil(t, err)
+
+	bankAccount := graphqlResponse.BankAccount_Update
+	require.Equal(t, bankAccountId, bankAccount.Metadata.ID)
+
+	require.True(t, calledUpdateBankAccount)
+}
+
+func TestMutationResolver_BankAccountDelete(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
+	bankAccountId := neo4jtest.CreateBankAccount(ctx, driver, tenantName, neo4jentity.BankAccountEntity{})
+
+	calledDeleteBankAccount := false
+
+	tenantServiceCallbacks := events_platform.MockTenantServiceCallbacks{
+		DeleteBankAccount: func(context context.Context, bankAccount *tenantpb.DeleteBankAccountGrpcRequest) (*emptypb.Empty, error) {
+			require.Equal(t, tenantName, bankAccount.Tenant)
+			require.Equal(t, testUserId, bankAccount.LoggedInUserId)
+			require.Equal(t, constants.AppSourceCustomerOsApi, bankAccount.AppSource)
+			require.Equal(t, bankAccountId, bankAccount.Id)
+			calledDeleteBankAccount = true
+			neo4jtest.CreateBankAccount(ctx, driver, tenantName, neo4jentity.BankAccountEntity{Id: bankAccountId})
+			return &emptypb.Empty{}, nil
+		},
+	}
+	events_platform.SetTenantCallbacks(&tenantServiceCallbacks)
+
+	rawResponse := callGraphQL(t, "bank_account/delete_bank_account", map[string]interface{}{
+		"accountId": bankAccountId,
+	})
+	require.Nil(t, rawResponse.Errors)
+
+	var graphqlResponse struct {
+		BankAccount_Delete model.DeleteResponse
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &graphqlResponse)
+	require.Nil(t, err)
+
+	deleteResponse := graphqlResponse.BankAccount_Delete
+	require.True(t, deleteResponse.Accepted)
+	require.False(t, deleteResponse.Completed)
+
+	require.True(t, calledDeleteBankAccount)
+}

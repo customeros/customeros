@@ -11369,7 +11369,7 @@ type BankAccount implements MetadataInterface {
 
 input BankAccountCreateInput {
     currency:               Currency
-    name:                   String
+    bankName:               String
     bankTransferEnabled:    Boolean
     iban:                   String
     bic:                    String
@@ -11381,7 +11381,7 @@ input BankAccountCreateInput {
 input BankAccountUpdateInput {
     id:                     ID!
     currency:               Currency
-    name:                   String
+    bankName:               String
     bankTransferEnabled:    Boolean
     iban:                   String
     bic:                    String
@@ -88563,7 +88563,7 @@ func (ec *executionContext) unmarshalInputBankAccountCreateInput(ctx context.Con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"currency", "name", "bankTransferEnabled", "iban", "bic", "sortCode", "accountNumber", "routingNumber"}
+	fieldsInOrder := [...]string{"currency", "bankName", "bankTransferEnabled", "iban", "bic", "sortCode", "accountNumber", "routingNumber"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -88577,13 +88577,13 @@ func (ec *executionContext) unmarshalInputBankAccountCreateInput(ctx context.Con
 				return it, err
 			}
 			it.Currency = data
-		case "name":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+		case "bankName":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("bankName"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.Name = data
+			it.BankName = data
 		case "bankTransferEnabled":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("bankTransferEnabled"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
@@ -88639,7 +88639,7 @@ func (ec *executionContext) unmarshalInputBankAccountUpdateInput(ctx context.Con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "currency", "name", "bankTransferEnabled", "iban", "bic", "sortCode", "accountNumber", "routingNumber"}
+	fieldsInOrder := [...]string{"id", "currency", "bankName", "bankTransferEnabled", "iban", "bic", "sortCode", "accountNumber", "routingNumber"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -88660,13 +88660,13 @@ func (ec *executionContext) unmarshalInputBankAccountUpdateInput(ctx context.Con
 				return it, err
 			}
 			it.Currency = data
-		case "name":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+		case "bankName":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("bankName"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.Name = data
+			it.BankName = data
 		case "bankTransferEnabled":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("bankTransferEnabled"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)

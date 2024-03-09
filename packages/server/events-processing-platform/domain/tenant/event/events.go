@@ -4,6 +4,9 @@ const (
 	TenantAddBillingProfileV1    = "V1_TENANT_BILLING_PROFILE_NEW"
 	TenantUpdateBillingProfileV1 = "V1_TENANT_BILLING_PROFILE_UPDATE"
 	TenantUpdateSettingsV1       = "V1_TENANT_SETTINGS_UPDATE"
+	TenantAddBankAccountV1       = "V1_TENANT_BANK_ACCOUNT_CREATE"
+	TenantUpdateBankAccountV1    = "V1_TENANT_BANK_ACCOUNT_UPDATE"
+	TenantDeleteBankAccountV1    = "V1_TENANT_BANK_ACCOUNT_DELETE"
 )
 
 const (
@@ -30,4 +33,13 @@ const (
 	FieldMaskBaseCurrency         = "baseCurrency"
 	FieldMaskInvoicingEnabled     = "invoicingEnabled"
 	FieldMaskInvoicingPostpaid    = "invoicingPostpaid"
+
+	FieldMaskBankAccountBankName            = "bankAccountBankName"
+	FieldMaskBankAccountBankTransferEnabled = "bankAccountBankTransferEnabled"
+	FieldMaskBankAccountCurrency            = "bankAccountCurrency"
+	FieldMaskBankAccountIban                = "bankAccountIban"
+	FieldMaskBankAccountBic                 = "bankAccountBic"
+	FieldMaskBankAccountSortCode            = "bankAccountSortCode"
+	FieldMaskBankAccountAccountNumber       = "bankAccountAccountNumber"
+	FieldMaskBankAccountRoutingNumber       = "bankAccountRoutingNumber"
 )

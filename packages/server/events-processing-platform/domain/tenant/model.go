@@ -6,13 +6,14 @@ import (
 )
 
 type Tenant struct {
-	Id              string                  `json:"id"`
-	Name            string                  `json:"name"`
-	CreatedAt       time.Time               `json:"createdAt"`
-	UpdatedAt       time.Time               `json:"updatedAt"`
-	SourceFields    commonmodel.Source      `json:"source"`
-	BillingProfiles []*TenantBillingProfile `json:"billingProfiles"`
-	TenantSettings  TenantSettings          `json:"tenantSettings"`
+	Id              string                 `json:"id"`
+	Name            string                 `json:"name"`
+	CreatedAt       time.Time              `json:"createdAt"`
+	UpdatedAt       time.Time              `json:"updatedAt"`
+	SourceFields    commonmodel.Source     `json:"source"`
+	BillingProfiles []TenantBillingProfile `json:"billingProfiles"`
+	BankAccounts    []BankAccount          `json:"bankAccounts"`
+	TenantSettings  TenantSettings         `json:"tenantSettings"`
 }
 
 type TenantSettings struct {
@@ -55,6 +56,21 @@ type TenantBillingProfile struct {
 	CanPayWithPigeon                  bool               `json:"canPayWithPigeon"`
 }
 
+type BankAccount struct {
+	Id                  string             `json:"id"`
+	CreatedAt           time.Time          `json:"createdAt"`
+	UpdatedAt           time.Time          `json:"updatedAt"`
+	SourceFields        commonmodel.Source `json:"source"`
+	BankName            string             `json:"bankName"`
+	BankTransferEnabled bool               `json:"bankTransferEnabled"`
+	Currency            string             `json:"currency"`
+	Iban                string             `json:"iban"`
+	Bic                 string             `json:"bic"`
+	SortCode            string             `json:"sortCode"`
+	AccountNumber       string             `json:"accountNumber"`
+	RoutingNumber       string             `json:"routingNumber"`
+}
+
 func (t Tenant) HasBillingProfile(id string) bool {
 	for _, bp := range t.BillingProfiles {
 		if bp.Id == id {
@@ -67,8 +83,30 @@ func (t Tenant) HasBillingProfile(id string) bool {
 func (t Tenant) GetBillingProfile(id string) *TenantBillingProfile {
 	for _, bp := range t.BillingProfiles {
 		if bp.Id == id {
-			return bp
+			return &bp
 		}
 	}
 	return nil
+}
+
+func (t Tenant) HasBankAccount(id string) bool {
+	for _, ba := range t.BankAccounts {
+		if ba.Id == id {
+			return true
+		}
+	}
+	return false
+}
+
+func (t Tenant) GetBankAccount(id string) *BankAccount {
+	for _, ba := range t.BankAccounts {
+		if ba.Id == id {
+			return &ba
+		}
+	}
+	return nil
+}
+
+func (t Tenant) AddBankAccount(ba BankAccount) {
+	t.BankAccounts = append(t.BankAccounts, ba)
 }

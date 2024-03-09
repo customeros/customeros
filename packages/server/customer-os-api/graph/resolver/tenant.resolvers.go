@@ -71,7 +71,7 @@ func (r *mutationResolver) TenantUpdateBillingProfile(ctx context.Context, input
 	err := r.Services.TenantService.UpdateTenantBillingProfile(ctx, input)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to update master plan")
+		graphql.AddErrorf(ctx, "Failed to update billing profile")
 		return nil, err
 	}
 
