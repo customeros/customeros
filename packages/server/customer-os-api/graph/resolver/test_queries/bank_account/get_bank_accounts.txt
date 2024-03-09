@@ -1,0 +1,20 @@
+query GetBankAccounts {
+  bankAccounts {
+    metadata {
+      id
+      created
+      lastUpdated
+      source
+      sourceOfTruth
+      appSource
+    }
+    bankName
+    currency
+    bankTransferEnabled
+    accountNumber
+    iban
+    bic
+    sortCode
+    routingNumber
+  }
+}

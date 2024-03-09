@@ -4,6 +4,7 @@ import (
 	"time"
 )
 
+// Deprecated - to be checked of not used and remove it
 type BillingProfileEntity struct {
 	Id            string
 	CreatedAt     time.Time
