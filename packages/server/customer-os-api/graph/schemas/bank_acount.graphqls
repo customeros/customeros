@@ -1,0 +1,44 @@
+extend type Query {
+    bankAccounts: [BankAccount!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+extend type Mutation {
+    bankAccount_Create(input: BankAccountCreateInput): BankAccount! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    bankAccount_Update(input: BankAccountUpdateInput): BankAccount! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    bankAccount_Delete(id: ID!): DeleteResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+type BankAccount implements MetadataInterface {
+    metadata:               Metadata!
+    bankName:               String
+    currency:               Currency
+    bankTransferEnabled:    Boolean!
+    iban:                   String
+    bic:                    String
+    sortCode:               String
+    accountNumber:          String
+    routingNumber:          String
+}
+
+input BankAccountCreateInput {
+    currency:               Currency
+    name:                   String
+    bankTransferEnabled:    Boolean
+    iban:                   String
+    bic:                    String
+    sortCode:               String
+    accountNumber:          String
+    routingNumber:          String
+}
+
+input BankAccountUpdateInput {
+    id:                     ID!
+    currency:               Currency
+    name:                   String
+    bankTransferEnabled:    Boolean
+    iban:                   String
+    bic:                    String
+    sortCode:               String
+    accountNumber:          String
+    routingNumber:          String
+}
