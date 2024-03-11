@@ -49,6 +49,7 @@ type Repositories struct {
 	PhoneNumberWriteRepository        PhoneNumberWriteRepository
 	PlayerWriteRepository             PlayerWriteRepository
 	ReminderReadRepository            ReminderReadRepository
+	ReminderWriteRepository           ReminderWriteRepository
 	ServiceLineItemReadRepository     ServiceLineItemReadRepository
 	ServiceLineItemWriteRepository    ServiceLineItemWriteRepository
 	SocialWriteRepository             SocialWriteRepository
@@ -109,6 +110,7 @@ func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string
 		PhoneNumberWriteRepository:        NewPhoneNumberWriteRepository(driver, neo4jDatabase),
 		PlayerWriteRepository:             NewPlayerWriteRepository(driver, neo4jDatabase),
 		ReminderReadRepository:            NewReminderReadRepository(driver, neo4jDatabase),
+		ReminderWriteRepository:           NewReminderWriteRepository(driver, neo4jDatabase),
 		ServiceLineItemReadRepository:     NewServiceLineItemReadRepository(driver, neo4jDatabase),
 		ServiceLineItemWriteRepository:    NewServiceLineItemWriteRepository(driver, neo4jDatabase),
 		SocialWriteRepository:             NewSocialWriteRepository(driver, neo4jDatabase),

@@ -14,6 +14,7 @@ message CreateReminderGrpcRequest {
     string organizationId = 6;
     bool dismissed = 7;
     string tenant = 8;
+    string loggedInUserId = 9;
 }
 
 enum ReminderFieldMask {
@@ -32,6 +33,7 @@ message UpdateReminderGrpcRequest {
     string reminderId = 6;
     string tenant = 7;
     repeated ReminderFieldMask fieldsMask = 8;
+    string loggedInUserId = 9;
 }
 
 message ReminderGrpcResponse {
