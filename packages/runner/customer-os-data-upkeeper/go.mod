@@ -50,5 +50,5 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240123012728-ef4313101c80 // indirect
 	google.golang.org/protobuf v1.32.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	gorm.io/driver/postgres v1.5.6 // indirect
+	gorm.io/driver/postgres v1.5.7 // indirect
 )

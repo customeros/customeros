@@ -40,7 +40,7 @@ require (
 	golang.org/x/sync v0.6.0
 	google.golang.org/grpc v1.62.1
 	google.golang.org/protobuf v1.32.0
-	gorm.io/driver/postgres v1.5.6
+	gorm.io/driver/postgres v1.5.7
 	gorm.io/gorm v1.25.7
 )
 
