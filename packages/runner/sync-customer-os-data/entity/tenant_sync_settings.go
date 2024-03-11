@@ -13,6 +13,7 @@ const (
 	AirbyteSourceIntercom   RawDataSource = "intercom"
 	AirbyteSourceSalesforce RawDataSource = "salesforce"
 	OpenlineSourceSlack     RawDataSource = "slack"
+	AirbyteSourceShopify    RawDataSource = "shopify"
 )
 
 type TenantSyncSettings struct {

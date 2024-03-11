@@ -20,13 +20,15 @@ import (
 
 type organizationSyncService struct {
 	repositories *repository.Repositories
+	services     *Services
 	cfg          *config.Config
 	log          logger.Logger
 }
 
-func NewDefaultOrganizationSyncService(repositories *repository.Repositories, cfg *config.Config, log logger.Logger) SyncService {
+func NewDefaultOrganizationSyncService(repositories *repository.Repositories, services *Services, cfg *config.Config, log logger.Logger) SyncService {
 	return &organizationSyncService{
 		repositories: repositories,
+		services:     services,
 		cfg:          cfg,
 		log:          log,
 	}

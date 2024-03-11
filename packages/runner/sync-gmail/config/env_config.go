@@ -44,11 +44,6 @@ type Config struct {
 		ApiKey  string `env:"OPENAI_API_KEY,required" envDefault:"WARN"`
 	}
 
-	ValidationApi struct {
-		Path string `env:"VALIDATION_API_PATH" validate:"required"`
-		Key  string `env:"VALIDATION_API_KEY" validate:"required"`
-	}
-
 	SyncData struct {
 		CronSync string `env:"CRON_SYNC" envDefault:"0 */1 * * * *"`
 	}
