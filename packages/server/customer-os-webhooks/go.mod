@@ -15,7 +15,7 @@ require (
 	github.com/cenkalti/backoff/v4 v4.2.1
 	github.com/coocood/freecache v1.2.4
 	github.com/docker/docker v25.0.4+incompatible
-	github.com/gin-contrib/cors v1.6.0
+	github.com/gin-contrib/cors v1.7.0
 	github.com/gin-contrib/zap v1.1.0
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-playground/validator/v10 v10.19.0
