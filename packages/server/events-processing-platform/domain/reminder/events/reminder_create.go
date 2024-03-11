@@ -40,3 +40,20 @@ func NewReminderCreateEvent(aggregate eventstore.Aggregate, content, userId, org
 	}
 	return event, nil
 }
+
+func (e *ReminderCreateEvent) String() string {
+	dismissedStr := "false"
+	if e.Dismissed {
+		dismissedStr = "true"
+	}
+	return "ReminderCreateEvent{" +
+		"Tenant: " + e.Tenant +
+		", Content: " + e.Content +
+		", DueDate: " + e.DueDate.String() +
+		", UserId: " + e.UserId +
+		", OrganizationId: " + e.OrganizationId +
+		", Dismissed: " + dismissedStr +
+		", CreatedAt: " + e.CreatedAt.String() +
+		", SourceFields: " + e.SourceFields.String() +
+		"}"
+}

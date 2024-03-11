@@ -85,7 +85,7 @@ func TestReminderService_UpdateReminder(t *testing.T) {
 			AppSource: "app",
 			Source:    "source",
 		},
-		CreatedAt: utils.ConvertTimeToTimestampPtr(utils.NowPtr()),
+		// CreatedAt: utils.ConvertTimeToTimestampPtr(utils.NowPtr()),
 	})
 	require.Nil(t, err)
 	require.NotNil(t, createResponse)
@@ -108,7 +108,7 @@ func TestReminderService_UpdateReminder(t *testing.T) {
 		FieldsMask: []reminderpb.ReminderFieldMask{
 			reminderpb.ReminderFieldMask_REMINDER_PROPERTY_CONTENT,
 		},
-		Dismissed: false,
+		// Dismissed: false,
 	})
 	require.Nil(t, err)
 	require.NotNil(t, updateResponse)

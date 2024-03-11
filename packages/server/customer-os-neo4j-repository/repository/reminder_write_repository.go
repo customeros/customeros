@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
@@ -10,9 +11,18 @@ import (
 	"github.com/opentracing/opentracing-go"
 )
 
+type ReminderUpdateFields struct {
+	Content         *string
+	DueDate         *time.Time
+	Dismissed       *bool
+	UpdateContent   bool
+	UpdateDueDate   bool
+	UpdateDismissed bool
+}
+
 type ReminderWriteRepository interface {
 	CreateReminder(ctx context.Context, tenant, id, userId, orgId, content, source, appSource string, createdAt, dueDate time.Time) error
-	UpdateReminder(ctx context.Context, tenant, id string, content *string, dueDate *time.Time, dismissed *bool) error
+	UpdateReminder(ctx context.Context, tenant, id string, data ReminderUpdateFields) error
 	DeleteReminder(ctx context.Context, tenant, id string) error
 }
 
@@ -34,20 +44,20 @@ func (r *reminderWriteRepository) CreateReminder(ctx context.Context, tenant, id
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, id)
 
-	cypher := `MATCH (t:Tenant {name:$tenant})
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
 				MERGE (t)<-[:REMINDER_BELONGS_TO_TENANT]-(r:Reminder {id:$id})
-				SET r += {
-					createdAt: datetime($createdAt),
-					updatedAt: datetime($createdAt),
-					source: $source,
-					sourceOfTruth: $source,
-					appSource: $appSource,
-					content: $content,
-					dueDate: datetime($dueDate),
-					dismissed: $dismissed
-				}
+				SET 
+					r:Reminder_%s,
+					r.createdAt=datetime($createdAt),
+					r.updatedAt=datetime($createdAt),
+					r.source=$source,
+					r.sourceOfTruth=$source,
+					r.appSource=$appSource,
+					r.content=$content,
+					r.dueDate=datetime($dueDate),
+					r.dismissed=$dismissed
 				MERGE (u:User {id:$userId})<-[:REMINDER_BELONGS_TO_USER]-(r)
-				MERGE (o:Organization {id:$orgId})<-[:REMINDER_BELONGS_TO_ORGANIZATION]-(r)`
+				MERGE (o:Organization {id:$orgId})<-[:REMINDER_BELONGS_TO_ORGANIZATION]-(r)`, tenant)
 	params := map[string]interface{}{
 		"tenant":    tenant,
 		"id":        id,
@@ -67,13 +77,13 @@ func (r *reminderWriteRepository) CreateReminder(ctx context.Context, tenant, id
 	return err
 }
 
-func (r *reminderWriteRepository) UpdateReminder(ctx context.Context, tenant, id string, content *string, dueDate *time.Time, dismissed *bool) error {
+func (r *reminderWriteRepository) UpdateReminder(ctx context.Context, tenant, id string, data ReminderUpdateFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderWriteRepository.UpdateReminder")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, id)
 
-	if content == nil && dueDate == nil && dismissed == nil {
+	if data.Content == nil && data.DueDate == nil && data.Dismissed == nil {
 		return nil
 	}
 
@@ -82,19 +92,19 @@ func (r *reminderWriteRepository) UpdateReminder(ctx context.Context, tenant, id
 	params := map[string]interface{}{
 		"tenant":    tenant,
 		"id":        id,
-		"updatedAt": time.Now(),
+		"updatedAt": time.Now().UTC(),
 	}
-	if content != nil {
+	if data.UpdateContent {
 		cypher += ", r.content = $content"
-		params["content"] = *content
+		params["content"] = data.Content
 	}
-	if dueDate != nil {
+	if data.UpdateDueDate {
 		cypher += ", r.dueDate = datetime($dueDate)"
-		params["dueDate"] = *dueDate
+		params["dueDate"] = *data.DueDate
 	}
-	if dismissed != nil {
+	if data.UpdateDismissed {
 		cypher += ", r.dismissed = $dismissed"
-		params["dismissed"] = *dismissed
+		params["dismissed"] = *data.Dismissed
 	}
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)

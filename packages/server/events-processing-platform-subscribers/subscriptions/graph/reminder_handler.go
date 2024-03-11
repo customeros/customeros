@@ -3,6 +3,8 @@ package graph
 import (
 	"context"
 
+	neo4jrepo "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/reminder/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/reminder/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
@@ -36,7 +38,7 @@ func (h *ReminderEventHandler) OnCreate(ctx context.Context, evt eventstore.Even
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	reminderId := eventData.Id
+	reminderId := aggregate.GetReminderObjectID(evt.AggregateID, eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, reminderId)
 
 	source := helper.GetSource(eventData.SourceFields.Source)
@@ -45,7 +47,7 @@ func (h *ReminderEventHandler) OnCreate(ctx context.Context, evt eventstore.Even
 	err := h.repositories.Neo4jRepositories.ReminderWriteRepository.CreateReminder(ctx, eventData.Tenant, reminderId, eventData.UserId, eventData.OrganizationId, eventData.Content, source, appSource, eventData.CreatedAt, eventData.DueDate)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		h.log.Errorf("Error while saving reminder plan %s: %s", eventData.Id, err.Error())
+		h.log.Errorf("Error while saving reminder plan %s: %s", reminderId, err.Error())
 		return err
 	}
 
@@ -63,14 +65,24 @@ func (h *ReminderEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	reminderId := eventData.ReminderId
+	reminderId := aggregate.GetReminderObjectID(evt.AggregateID, eventData.Tenant)
+
 	due := eventData.DueDate
 	span.SetTag(tracing.SpanTagEntityId, reminderId)
 
-	err := h.repositories.Neo4jRepositories.ReminderWriteRepository.UpdateReminder(ctx, eventData.Tenant, reminderId, &eventData.Content, &due, &eventData.Dismissed)
+	updateData := neo4jrepo.ReminderUpdateFields{
+		Content:         &eventData.Content,
+		DueDate:         &due,
+		Dismissed:       &eventData.Dismissed,
+		UpdateContent:   eventData.UpdateContent(),
+		UpdateDueDate:   eventData.UpdateDueDate(),
+		UpdateDismissed: eventData.UpdateDismissed(),
+	}
+
+	err := h.repositories.Neo4jRepositories.ReminderWriteRepository.UpdateReminder(ctx, eventData.Tenant, reminderId, updateData)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		h.log.Errorf("Error while updating reminder plan %s: %s", eventData.ReminderId, err.Error())
+		h.log.Errorf("Error while updating reminder plan %s: %s", reminderId, err.Error())
 		return err
 	}
 

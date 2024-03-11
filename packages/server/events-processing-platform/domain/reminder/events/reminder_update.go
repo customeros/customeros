@@ -57,3 +57,17 @@ func (e ReminderUpdateEvent) UpdateDueDate() bool {
 func (e ReminderUpdateEvent) UpdateDismissed() bool {
 	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskDismissed)
 }
+
+func (e *ReminderUpdateEvent) String() string {
+	dismissedStr := "false"
+	if e.Dismissed {
+		dismissedStr = "true"
+	}
+	return "ReminderCreateEvent{" +
+		"Tenant: " + e.Tenant +
+		", Content: " + e.Content +
+		", DueDate: " + e.DueDate.String() +
+		", Dismissed: " + dismissedStr +
+		", UpdatedAt: " + e.UpdatedAt.String() +
+		"}"
+}
