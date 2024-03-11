@@ -1,0 +1,16 @@
+query BankAccounts {
+    bankAccounts {
+        metadata {
+            id
+            created
+        }
+        bankName
+        currency
+        bankTransferEnabled
+        iban
+        bic
+        sortCode
+        accountNumber
+        routingNumber
+    }
+}

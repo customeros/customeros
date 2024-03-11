@@ -1,9 +1,9 @@
 import { Icon, IconProps } from '@ui/media/Icon';
 
-export const CurrencyDollar = (props: IconProps) => (
+export const CurrencyPound = (props: IconProps) => (
   <Icon viewBox='0 0 24 24' fill='none' boxSize='4' {...props}>
     <path
-      d='M6 16C6 18.2091 7.79086 20 10 20H14C16.2091 20 18 18.2091 18 16C18 13.7909 16.2091 12 14 12H10C7.79086 12 6 10.2091 6 8C6 5.79086 7.79086 4 10 4H14C16.2091 4 18 5.79086 18 8M12 2V22'
+      d='M17.5 20.5H6.5C6.5 20.5 10 17.7413 10 13.5C10 10.6725 7.91376 9.66123 7.8837 7.30497C7.88566 2.64078 13.5005 2.88877 15.4521 4.74258M6.5 13.5H15'
       stroke='currentColor'
       strokeWidth='2'
       strokeLinecap='round'

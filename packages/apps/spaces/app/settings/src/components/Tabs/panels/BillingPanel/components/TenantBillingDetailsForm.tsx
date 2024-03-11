@@ -5,7 +5,7 @@ import React from 'react';
 import { LogoUploader } from '@settings/components/LogoUploadComponent/LogoUploader';
 import { VatInput } from '@settings/components/Tabs/panels/BillingPanel/components/VatInput';
 import { PaymentMethods } from '@settings/components/Tabs/panels/BillingPanel/components/PaymentMethods';
-import { BankTransferCard } from '@settings/components/Tabs/panels/BillingPanel/components/BankTransferCard';
+import { BankTransferAccountList } from '@settings/components/Tabs/panels/BillingPanel/components/BankTransferAccountList';
 
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
@@ -185,13 +185,8 @@ export const TenantBillingPanelDetailsForm = ({
         canPayWithDirectDebitSEPA={canPayWithDirectDebitSEPA}
         canPayWithDirectDebitBacs={canPayWithDirectDebitBacs}
       />
-      <Flex justifyContent='space-between' alignItems='center'>
-        <Text fontSize='sm' fontWeight='semibold' whiteSpace='nowrap'>
-          Bank transfer
-        </Text>
-      </Flex>
 
-      <BankTransferCard />
+      <BankTransferAccountList />
     </CardBody>
   );
 };
