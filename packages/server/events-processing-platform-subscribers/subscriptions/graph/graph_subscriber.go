@@ -63,6 +63,7 @@ type GraphSubscriber struct {
 	invoiceEventHandler            *InvoiceEventHandler
 	tenantEventHandler             *TenantEventHandler
 	organizationPlanEventHandler   *OrganizationPlanEventHandler
+	bankAccountEventHandler        *BankAccountEventHandler
 }
 
 func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *repository.Repositories, grpcClients *grpc_client.Clients, cfg *config.Config) *GraphSubscriber {
@@ -90,6 +91,7 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *reposi
 		invoiceEventHandler:            NewInvoiceEventHandler(log, repositories, grpcClients),
 		tenantEventHandler:             NewTenantEventHandler(log, repositories),
 		organizationPlanEventHandler:   NewOrganizationPlanEventHandler(log, repositories),
+		bankAccountEventHandler:        NewBankAccountEventHandler(log, repositories),
 	}
 }
 
@@ -419,6 +421,12 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.tenantEventHandler.OnUpdateBillingProfileV1(ctx, evt)
 	case tenantevent.TenantUpdateSettingsV1:
 		return s.tenantEventHandler.OnUpdateTenantSettingsV1(ctx, evt)
+	case tenantevent.TenantAddBankAccountV1:
+		return s.bankAccountEventHandler.OnAddBankAccountV1(ctx, evt)
+	case tenantevent.TenantUpdateBankAccountV1:
+		return s.bankAccountEventHandler.OnUpdateBankAccountV1(ctx, evt)
+	case tenantevent.TenantDeleteBankAccountV1:
+		return s.bankAccountEventHandler.OnDeleteBankAccountV1(ctx, evt)
 
 	case orgevents.OrganizationUpdateOwnerNotificationV1:
 		return nil
