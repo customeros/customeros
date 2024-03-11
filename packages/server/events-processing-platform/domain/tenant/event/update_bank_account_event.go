@@ -53,7 +53,7 @@ func NewTenantBankAccountUpdateEvent(aggregate eventstore.Aggregate, id string, 
 }
 
 func (e TenantBankAccountUpdateEvent) UpdateBankName() bool {
-	return utils.Contains(e.FieldsMask, FieldMaskBankAccountAccountNumber)
+	return utils.Contains(e.FieldsMask, FieldMaskBankAccountBankName)
 }
 
 func (e TenantBankAccountUpdateEvent) UpdateBankTransferEnabled() bool {
