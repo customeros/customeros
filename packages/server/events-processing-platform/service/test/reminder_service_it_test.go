@@ -85,8 +85,9 @@ func TestReminderService_UpdateReminder(t *testing.T) {
 			AppSource: "app",
 			Source:    "source",
 		},
+		CreatedAt: utils.ConvertTimeToTimestampPtr(utils.NowPtr()),
 	})
-	require.Nil(t, err.Error(), "Failed to create reminder")
+	require.Nil(t, err)
 	require.NotNil(t, createResponse)
 
 	reminderId := createResponse.Id
@@ -99,16 +100,21 @@ func TestReminderService_UpdateReminder(t *testing.T) {
 	require.Equal(t, string(aggregate.ReminderAggregateType)+"-"+tenant+"-"+reminderId, eventList[0].GetAggregateID())
 
 	updateResponse, err := reminderClient.UpdateReminder(ctx, &reminderpb.UpdateReminderGrpcRequest{
-		Tenant:     tenant,
-		ReminderId: reminderId,
-		Content:    "Updated Reminder",
-		AppSource:  "app",
+		Tenant:         tenant,
+		ReminderId:     reminderId,
+		Content:        "Updated Reminder",
+		AppSource:      "app",
+		LoggedInUserId: "user",
+		FieldsMask: []reminderpb.ReminderFieldMask{
+			reminderpb.ReminderFieldMask_REMINDER_PROPERTY_CONTENT,
+		},
+		Dismissed: false,
 	})
-	require.Nil(t, err.Error(), "Failed to update reminder")
+	require.Nil(t, err)
 	require.NotNil(t, updateResponse)
 
 	eventsMap = aggregateStore.GetEventMap()
-	require.Equal(t, 2, len(eventsMap))
+	require.Equal(t, 1, len(eventsMap))
 	eventList = eventsMap[reminderAggregate.ID]
 	require.Equal(t, 2, len(eventList))
 	require.Equal(t, events.ReminderUpdateV1, eventList[1].GetEventType())
