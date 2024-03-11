@@ -37,7 +37,7 @@ func InitServices(cfg *config.Config, log logger.Logger, driver *neo4j.DriverWit
 	services.UserService = NewUserService(repositories)
 
 	services.UserDefaultSyncService = NewDefaultUserSyncService(repositories, cfg, log)
-	services.OrganizationDefaultSyncService = NewDefaultOrganizationSyncService(repositories, cfg, log)
+	services.OrganizationDefaultSyncService = NewDefaultOrganizationSyncService(repositories, services, cfg, log)
 	services.ContactDefaultSyncService = NewDefaultContactSyncService(repositories, cfg, log)
 	services.IssueDefaultSyncService = NewDefaultIssueSyncService(repositories, cfg, log)
 	services.LogEntryDefaultSyncService = NewDefaultLogEntrySyncService(repositories, cfg, log)

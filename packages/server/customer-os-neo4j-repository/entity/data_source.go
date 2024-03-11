@@ -18,6 +18,7 @@ const (
 	DataSourceClose          DataSource = "close"
 	DataSourceOutlook        DataSource = "outlook"
 	DataSourceUnthread       DataSource = "unthread"
+	DataSourceShopify        DataSource = "shopify"
 )
 
 var AllDataSource = []DataSource{
@@ -34,6 +35,7 @@ var AllDataSource = []DataSource{
 	DataSourceClose,
 	DataSourceOutlook,
 	DataSourceUnthread,
+	DataSourceShopify,
 }
 
 func (ds DataSource) String() string {
