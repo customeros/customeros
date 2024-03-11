@@ -15,7 +15,7 @@ require (
 	github.com/robfig/cron v1.2.0
 	github.com/slack-go/slack v0.12.5
 	github.com/stretchr/testify v1.9.0
-	gorm.io/driver/postgres v1.5.6
+	gorm.io/driver/postgres v1.5.7
 	gorm.io/gorm v1.25.7-0.20240204074919-46816ad31dde
 	zgo.at/zcache v1.2.0
 )
