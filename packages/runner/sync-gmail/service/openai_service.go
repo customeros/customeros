@@ -102,7 +102,7 @@ func (s *openAiService) queryOpenAi(tenant, elementId, domain string) (map[strin
 		return nil, err
 	}
 	if response.StatusCode != 200 {
-		s.repositories.CommonRepositories.AiPromptLogRepository.UpdateError(storeLogId, err.Error())
+		s.repositories.CommonRepositories.AiPromptLogRepository.UpdateError(storeLogId, bodyString)
 		fmt.Println("Error making the API request:", response.Status)
 		return nil, fmt.Errorf("error making the API request: %s", response.Status)
 	}
