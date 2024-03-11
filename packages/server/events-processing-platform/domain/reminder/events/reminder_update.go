@@ -11,7 +11,6 @@ import (
 
 type ReminderUpdateEvent struct {
 	Tenant     string    `json:"tenant" validate:"required"`
-	ReminderId string    `json:"reminderId" validate:"required"`
 	Content    string    `json:"content,omitempty"`
 	DueDate    time.Time `json:"dueDate,omitempty"`
 	Dismissed  bool      `json:"dismissed,omitempty"`
@@ -19,10 +18,9 @@ type ReminderUpdateEvent struct {
 	FieldsMask []string  `json:"fieldsMask,omitempty"`
 }
 
-func NewReminderUpdateEvent(aggregate eventstore.Aggregate, reminderId, tenant string, content string, dueDate time.Time, dismissed bool, updatedAt time.Time, fieldsMask []string) (eventstore.Event, error) {
+func NewReminderUpdateEvent(aggregate eventstore.Aggregate, content string, dueDate time.Time, dismissed bool, updatedAt time.Time, fieldsMask []string) (eventstore.Event, error) {
 	eventData := ReminderUpdateEvent{
-		Tenant:     tenant,
-		ReminderId: reminderId,
+		Tenant:     aggregate.GetTenant(),
 		UpdatedAt:  updatedAt,
 		FieldsMask: fieldsMask,
 	}

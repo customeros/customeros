@@ -2,10 +2,10 @@ package service
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/reminder"
 
 	"github.com/google/uuid"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/reminder/event_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
@@ -15,14 +15,14 @@ import (
 
 type reminderService struct {
 	reminderpb.UnimplementedReminderGrpcServiceServer
-	log           logger.Logger
-	eventHandlers *event_handler.EventHandlers
+	log            logger.Logger
+	requestHandler reminder.ReminderRequestHandler
 }
 
-func NewReminderService(log logger.Logger, commandHandlers *event_handler.EventHandlers) *reminderService {
+func NewReminderService(log logger.Logger, aggregateStore eventstore.AggregateStore, cfg *config.Config) *reminderService {
 	return &reminderService{
-		log:           log,
-		eventHandlers: commandHandlers,
+		log:            log,
+		requestHandler: reminder.NewReminderRequestHandler(log, aggregateStore, cfg.Utils),
 	}
 }
 
@@ -34,9 +34,8 @@ func (s *reminderService) CreateReminder(ctx context.Context, request *reminderp
 
 	reminderId := uuid.New().String()
 
-	baseRequest := eventstore.NewBaseRequest(reminderId, request.Tenant, request.UserId, commonmodel.SourceFromGrpc(request.SourceFields))
-
-	if err := s.eventHandlers.CreateReminderHandler.Handle(ctx, baseRequest, request); err != nil {
+	_, err := s.requestHandler.Handle(ctx, request.Tenant, reminderId, request)
+	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(CreateReminder.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
@@ -51,11 +50,8 @@ func (s *reminderService) UpdateReminder(ctx context.Context, request *reminderp
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.ReminderId)
 	tracing.LogObjectAsJson(span, "request", request)
 
-	srcFields := commonmodel.Source{AppSource: request.AppSource}
-
-	baseRequest := eventstore.NewBaseRequest(request.ReminderId, request.Tenant, request.ReminderId, srcFields)
-
-	if err := s.eventHandlers.UpdateReminderHandler.Handle(ctx, baseRequest, request); err != nil {
+	_, err := s.requestHandler.HandleWithRetry(ctx, request.Tenant, request.ReminderId, false, request)
+	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(UpdateReminder.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)

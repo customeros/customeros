@@ -17,14 +17,12 @@ type ReminderCreateEvent struct {
 	OrganizationId string        `json:"organizationId" validate:"required"`
 	Dismissed      bool          `json:"dismissed"`
 	CreatedAt      time.Time     `json:"createdAt"`
-	Id             string        `json:"id"`
 	SourceFields   cmnmod.Source `json:"sourceFields" validate:"required"`
 }
 
-func NewReminderCreateEvent(aggregate eventstore.Aggregate, tenant, content, id, userId, organizationId string, dismissed bool, createdAt, dueDate time.Time, sourceFields cmnmod.Source) (eventstore.Event, error) {
+func NewReminderCreateEvent(aggregate eventstore.Aggregate, content, userId, organizationId string, dismissed bool, createdAt, dueDate time.Time, sourceFields cmnmod.Source) (eventstore.Event, error) {
 	eventData := ReminderCreateEvent{
-		Id:             id,
-		Tenant:         tenant,
+		Tenant:         aggregate.GetTenant(),
 		Content:        content,
 		DueDate:        dueDate,
 		UserId:         userId,

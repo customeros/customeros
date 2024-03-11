@@ -19,7 +19,6 @@ import (
 	organizationcmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
 	orgplanevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/event_handler"
 	phonenumbercmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/command_handler"
-	reminderevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/reminder/event_handler"
 	servicelineitemcmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/command_handler"
 	usercmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventbuffer"
@@ -48,7 +47,6 @@ type CommandHandlers struct {
 	OrganizationPlan   *orgplanevents.EventHandlers
 	InvoicingCycle     *invoicingcycleevents.EventHandlers
 	Country            *countryevents.EventHandlers
-	Reminder           *reminderevents.EventHandlers
 }
 
 func NewCommandHandlers(log logger.Logger,
@@ -78,6 +76,5 @@ func NewCommandHandlers(log logger.Logger,
 		OrganizationPlan:   orgplanevents.NewEventHandlers(log, cfg, aggregateStore),
 		InvoicingCycle:     invoicingcycleevents.NewEventHandlers(log, aggregateStore),
 		Country:            countryevents.NewEventHandlers(log, aggregateStore),
-		Reminder:           reminderevents.NewEventHandlers(log, aggregateStore),
 	}
 }

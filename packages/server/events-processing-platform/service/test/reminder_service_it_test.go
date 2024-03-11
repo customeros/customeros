@@ -44,8 +44,8 @@ func TestReminderService_CreateReminder(t *testing.T) {
 
 	reminderId := response.Id
 	eventsMap := aggregateStore.GetEventMap()
-	require.Equal(t, "", eventsMap)
 	require.Equal(t, 1, len(eventsMap))
+
 	reminderAggregate := aggregate.NewReminderAggregateWithTenantAndID(tenant, response.Id)
 	eventList := eventsMap[reminderAggregate.ID]
 	require.Equal(t, 1, len(eventList))
