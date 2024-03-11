@@ -145,7 +145,6 @@ func (s *bankAccountService) UpdateTenantBankAccount(ctx context.Context, input 
 		AppSource:           constants.AppSourceCustomerOsApi,
 		BankName:            utils.IfNotNilString(input.BankName),
 		BankTransferEnabled: utils.IfNotNilBool(input.BankTransferEnabled),
-		Currency:            utils.IfNotNilString(input.Currency.String()),
 		Iban:                utils.IfNotNilString(input.Iban),
 		Bic:                 utils.IfNotNilString(input.Bic),
 		SortCode:            utils.IfNotNilString(input.SortCode),
@@ -160,6 +159,7 @@ func (s *bankAccountService) UpdateTenantBankAccount(ctx context.Context, input 
 		fieldsMask = append(fieldsMask, tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_BANK_TRANSFER_ENABLED)
 	}
 	if input.Currency != nil {
+		updateRequest.Currency = input.Currency.String()
 		fieldsMask = append(fieldsMask, tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_CURRENCY)
 	}
 	if input.Currency != nil && bankAccountEntity.Currency.String() != input.Currency.String() {
