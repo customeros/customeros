@@ -2,8 +2,10 @@ package service
 
 import (
 	"context"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/reminder"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventbuffer"
 
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -19,10 +21,10 @@ type reminderService struct {
 	requestHandler reminder.ReminderRequestHandler
 }
 
-func NewReminderService(log logger.Logger, aggregateStore eventstore.AggregateStore, cfg *config.Config) *reminderService {
+func NewReminderService(log logger.Logger, aggregateStore eventstore.AggregateStore, cfg *config.Config, ebw *eventbuffer.EventBufferWatcher) *reminderService {
 	return &reminderService{
 		log:            log,
-		requestHandler: reminder.NewReminderRequestHandler(log, aggregateStore, cfg.Utils),
+		requestHandler: reminder.NewReminderRequestHandler(log, aggregateStore, ebw, cfg.Utils),
 	}
 }
 

@@ -10,9 +10,9 @@ import (
 
 type ReminderNotificationEvent struct {
 	Tenant         string    `json:"tenant" validate:"required"`
-	CreatedAt      time.Time `json:"updatedAt"`
+	CreatedAt      time.Time `json:"createdAt"`
 	OrganizationId string    `json:"organizationId" validate:"required"`
-	UserId         string    `json:"actorUserId"` // who set the reminder
+	UserId         string    `json:"userId"` // who set the reminder
 	Content        string    `json:"content"`
 }
 
