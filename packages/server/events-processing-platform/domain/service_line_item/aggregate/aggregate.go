@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/pkg/errors"
+	"strings"
 )
 
 const (
@@ -39,6 +40,9 @@ func (a *ServiceLineItemAggregate) When(evt eventstore.Event) error {
 	case event.ServiceLineItemCloseV1:
 		return a.onClose(evt)
 	default:
+		if strings.HasPrefix(evt.GetEventType(), "$") {
+			return nil
+		}
 		err := eventstore.ErrInvalidEventType
 		err.EventType = evt.GetEventType()
 		return err

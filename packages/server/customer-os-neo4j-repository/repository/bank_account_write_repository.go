@@ -19,6 +19,7 @@ type BankAccountCreateFields struct {
 	SourceFields        model.Source  `json:"sourceFields"`
 	BankName            string        `json:"bankName"`
 	BankTransferEnabled bool          `json:"bankTransferEnabled"`
+	AllowInternational  bool          `json:"allowInternational"`
 	Currency            enum.Currency `json:"currency"`
 	Iban                string        `json:"iban"`
 	Bic                 string        `json:"bic"`
@@ -32,6 +33,7 @@ type BankAccountUpdateFields struct {
 	UpdatedAt                 time.Time     `json:"updatedAt"`
 	BankName                  string        `json:"bankName"`
 	BankTransferEnabled       bool          `json:"bankTransferEnabled"`
+	AllowInternational        bool          `json:"allowInternational"`
 	Currency                  enum.Currency `json:"currency"`
 	Iban                      string        `json:"iban"`
 	Bic                       string        `json:"bic"`
@@ -40,6 +42,7 @@ type BankAccountUpdateFields struct {
 	RoutingNumber             string        `json:"routingNumber"`
 	UpdateBankName            bool          `json:"updateBankName"`
 	UpdateBankTransferEnabled bool          `json:"updateBankTransferEnabled"`
+	UpdateAllowInternational  bool          `json:"updateAllowInternational"`
 	UpdateCurrency            bool          `json:"updateCurrency"`
 	UpdateIban                bool          `json:"updateIban"`
 	UpdateBic                 bool          `json:"updateBic"`
@@ -82,6 +85,7 @@ func (r *bankAccountWriteRepository) CreateBankAccount(ctx context.Context, tena
 								ba.appSource=$appSource,
 								ba.bankName=$bankName,
 								ba.bankTransferEnabled=$bankTransferEnabled,
+								ba.allowInternational=$allowInternational,
 								ba.currency=$currency,
 								ba.iban=$iban,
 								ba.bic=$bic,
@@ -99,6 +103,7 @@ func (r *bankAccountWriteRepository) CreateBankAccount(ctx context.Context, tena
 		"appSource":           data.SourceFields.AppSource,
 		"bankName":            data.BankName,
 		"bankTransferEnabled": data.BankTransferEnabled,
+		"allowInternational":  data.AllowInternational,
 		"currency":            data.Currency.String(),
 		"iban":                data.Iban,
 		"bic":                 data.Bic,
@@ -137,6 +142,10 @@ func (r *bankAccountWriteRepository) UpdateBankAccount(ctx context.Context, tena
 	if data.UpdateBankTransferEnabled {
 		cypher += `,ba.bankTransferEnabled=$bankTransferEnabled`
 		params["bankTransferEnabled"] = data.BankTransferEnabled
+	}
+	if data.UpdateAllowInternational {
+		cypher += `,ba.allowInternational=$allowInternational`
+		params["allowInternational"] = data.AllowInternational
 	}
 	if data.UpdateCurrency {
 		cypher += `,ba.currency=$currency`

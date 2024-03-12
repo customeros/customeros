@@ -92,6 +92,7 @@ func (s *bankAccountService) CreateTenantBankAccount(ctx context.Context, input 
 		},
 		BankName:            utils.IfNotNilString(input.BankName),
 		BankTransferEnabled: utils.IfNotNilBool(input.BankTransferEnabled),
+		AllowInternational:  utils.IfNotNilBool(input.AllowInternational),
 		Currency:            utils.IfNotNilString(input.Currency.String()),
 		Iban:                utils.IfNotNilString(input.Iban),
 		Bic:                 utils.IfNotNilString(input.Bic),
@@ -145,6 +146,7 @@ func (s *bankAccountService) UpdateTenantBankAccount(ctx context.Context, input 
 		AppSource:           constants.AppSourceCustomerOsApi,
 		BankName:            utils.IfNotNilString(input.BankName),
 		BankTransferEnabled: utils.IfNotNilBool(input.BankTransferEnabled),
+		AllowInternational:  utils.IfNotNilBool(input.AllowInternational),
 		Iban:                utils.IfNotNilString(input.Iban),
 		Bic:                 utils.IfNotNilString(input.Bic),
 		SortCode:            utils.IfNotNilString(input.SortCode),
@@ -157,6 +159,9 @@ func (s *bankAccountService) UpdateTenantBankAccount(ctx context.Context, input 
 	}
 	if input.BankTransferEnabled != nil {
 		fieldsMask = append(fieldsMask, tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_BANK_TRANSFER_ENABLED)
+	}
+	if input.AllowInternational != nil {
+		fieldsMask = append(fieldsMask, tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_ALLOW_INTERNATIONAL)
 	}
 	if input.Currency != nil {
 		updateRequest.Currency = input.Currency.String()

@@ -260,6 +260,7 @@ func TestTenantService_AddBankAccount(t *testing.T) {
 		BankName:            "bankName",
 		Currency:            "USD",
 		BankTransferEnabled: true,
+		AllowInternational:  true,
 		AccountNumber:       "accountNumber",
 		SortCode:            "sortCode",
 		Iban:                "iban",
@@ -289,7 +290,8 @@ func TestTenantService_AddBankAccount(t *testing.T) {
 	require.Equal(t, bankAccountId, eventData.Id)
 	require.Equal(t, "bankName", eventData.BankName)
 	require.Equal(t, "USD", eventData.Currency)
-	require.Equal(t, true, eventData.BankTransferEnabled)
+	require.True(t, eventData.BankTransferEnabled)
+	require.True(t, eventData.AllowInternational)
 	require.Equal(t, "accountNumber", eventData.AccountNumber)
 	require.Equal(t, "sortCode", eventData.SortCode)
 	require.Equal(t, "iban", eventData.Iban)
@@ -320,6 +322,7 @@ func TestTenantService_UpdateBankAccount(t *testing.T) {
 		BankName:            "bankName",
 		Currency:            "USD",
 		BankTransferEnabled: true,
+		AllowInternational:  true,
 		AccountNumber:       "accountNumber",
 		SortCode:            "sortCode",
 		Iban:                "iban",
@@ -356,6 +359,7 @@ func TestTenantService_UpdateBankAccount(t *testing.T) {
 	require.Equal(t, "bankName", eventData.BankName)
 	require.Equal(t, "USD", eventData.Currency)
 	require.Equal(t, true, eventData.BankTransferEnabled)
+	require.Equal(t, true, eventData.AllowInternational)
 	require.Equal(t, "accountNumber", eventData.AccountNumber)
 	require.Equal(t, "sortCode", eventData.SortCode)
 	require.Equal(t, "iban", eventData.Iban)

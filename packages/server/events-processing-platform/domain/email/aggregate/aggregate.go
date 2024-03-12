@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/pkg/errors"
+	"strings"
 )
 
 const (
@@ -40,8 +41,10 @@ func (a *EmailAggregate) When(event eventstore.Event) error {
 		return a.OnEmailFailedValidation(event)
 	case events.EmailValidatedV1:
 		return a.OnEmailValidated(event)
-
 	default:
+		if strings.HasPrefix(event.GetEventType(), "$") {
+			return nil
+		}
 		err := eventstore.ErrInvalidEventType
 		err.EventType = event.GetEventType()
 		return err

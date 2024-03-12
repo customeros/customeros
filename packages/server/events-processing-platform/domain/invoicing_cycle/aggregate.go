@@ -8,6 +8,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
+	"strings"
 )
 
 const (
@@ -57,6 +58,9 @@ func (a *InvoicingCycleAggregate) When(evt eventstore.Event) error {
 	case InvoicingCycleUpdateV1:
 		return a.onInvoicingCycleUpdate(evt)
 	default:
+		if strings.HasPrefix(evt.GetEventType(), "$") {
+			return nil
+		}
 		err := eventstore.ErrInvalidEventType
 		err.EventType = evt.GetEventType()
 		return err

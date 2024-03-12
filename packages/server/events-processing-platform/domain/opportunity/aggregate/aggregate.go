@@ -9,6 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/pkg/errors"
+	"strings"
 )
 
 const (
@@ -47,6 +48,9 @@ func (a *OpportunityAggregate) When(evt eventstore.Event) error {
 	case event.OpportunityCloseLooseV1:
 		return a.onOpportunityCloseLoose(evt)
 	default:
+		if strings.HasPrefix(evt.GetEventType(), "$") {
+			return nil
+		}
 		err := eventstore.ErrInvalidEventType
 		err.EventType = evt.GetEventType()
 		return err

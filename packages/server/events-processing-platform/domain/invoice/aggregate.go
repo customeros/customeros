@@ -15,6 +15,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
+	"strings"
 	"time"
 )
 
@@ -440,6 +441,9 @@ func (a *InvoiceAggregate) When(evt eventstore.Event) error {
 		InvoiceVoidV1:
 		return nil
 	default:
+		if strings.HasPrefix(evt.GetEventType(), "$") {
+			return nil
+		}
 		err := eventstore.ErrInvalidEventType
 		err.EventType = evt.GetEventType()
 		return err

@@ -70,6 +70,9 @@ func (a *countryAggregate) When(evt eventstore.Event) error {
 	case CountryCreateV1:
 		return a.onCountryCreate(evt)
 	default:
+		if strings.HasPrefix(evt.GetEventType(), "$") {
+			return nil
+		}
 		err := eventstore.ErrInvalidEventType
 		err.EventType = evt.GetEventType()
 		return err

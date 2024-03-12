@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/pkg/errors"
+	"strings"
 )
 
 const (
@@ -42,8 +43,10 @@ func (a *PhoneNumberAggregate) When(event eventstore.Event) error {
 		return a.OnPhoneNumberFailedValidation(event)
 	case events.PhoneNumberValidatedV1:
 		return a.OnPhoneNumberValidated(event)
-
 	default:
+		if strings.HasPrefix(event.GetEventType(), "$") {
+			return nil
+		}
 		err := eventstore.ErrInvalidEventType
 		err.EventType = event.GetEventType()
 		return err

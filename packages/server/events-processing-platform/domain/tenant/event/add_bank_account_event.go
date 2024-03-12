@@ -16,6 +16,7 @@ type TenantBankAccountCreateEvent struct {
 	SourceFields        commonmodel.Source `json:"sourceFields"`
 	BankName            string             `json:"bankName,omitempty"`
 	BankTransferEnabled bool               `json:"bankTransferEnabled"`
+	AllowInternational  bool               `json:"allowInternational"`
 	Currency            string             `json:"currency"`
 	Iban                string             `json:"iban,omitempty"`
 	Bic                 string             `json:"bic,omitempty"`
@@ -32,6 +33,7 @@ func NewTenantBankAccountCreateEvent(aggregate eventstore.Aggregate, sourceField
 		SourceFields:        sourceFields,
 		BankName:            request.BankName,
 		BankTransferEnabled: request.BankTransferEnabled,
+		AllowInternational:  request.AllowInternational,
 		Currency:            request.Currency,
 		Iban:                request.Iban,
 		Bic:                 request.Bic,

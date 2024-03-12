@@ -242,6 +242,9 @@ func (a *TenantAggregate) When(evt eventstore.Event) error {
 	case event.TenantDeleteBankAccountV1:
 		return a.onDeleteBankAccount(evt)
 	default:
+		if strings.HasPrefix(evt.GetEventType(), "$") {
+			return nil
+		}
 		err := eventstore.ErrInvalidEventType
 		err.EventType = evt.GetEventType()
 		return err
@@ -395,6 +398,7 @@ func (a *TenantAggregate) onAddBankAccount(evt eventstore.Event) error {
 		CreatedAt:           eventData.CreatedAt,
 		BankName:            eventData.BankName,
 		BankTransferEnabled: eventData.BankTransferEnabled,
+		AllowInternational:  eventData.AllowInternational,
 		Currency:            eventData.Currency,
 		Iban:                eventData.Iban,
 		Bic:                 eventData.Bic,
@@ -427,6 +431,9 @@ func (a *TenantAggregate) onUpdateBankAccount(evt eventstore.Event) error {
 	}
 	if eventData.UpdateBankTransferEnabled() {
 		bankAccount.BankTransferEnabled = eventData.BankTransferEnabled
+	}
+	if eventData.UpdateAllowInternational() {
+		bankAccount.AllowInternational = eventData.AllowInternational
 	}
 	if eventData.UpdateCurrency() {
 		bankAccount.Currency = eventData.Currency
@@ -536,6 +543,8 @@ func extractTenantBankAccountFieldsMask(inputFieldsMask []tenantpb.BankAccountFi
 			fieldsMask = append(fieldsMask, event.FieldMaskBankAccountBankName)
 		case tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_BANK_TRANSFER_ENABLED:
 			fieldsMask = append(fieldsMask, event.FieldMaskBankAccountBankTransferEnabled)
+		case tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_ALLOW_INTERNATIONAL:
+			fieldsMask = append(fieldsMask, event.FieldMaskBankAccountAllowInternational)
 		case tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_CURRENCY:
 			fieldsMask = append(fieldsMask, event.FieldMaskBankAccountCurrency)
 		case tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_IBAN:

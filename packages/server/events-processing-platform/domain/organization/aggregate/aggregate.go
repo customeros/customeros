@@ -112,6 +112,9 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 	case orgplanevents.OrganizationPlanMilestoneReorderV1:
 		return a.onOrganizationPlanMilestoneReorder(event)
 	default:
+		if strings.HasPrefix(event.GetEventType(), "$") {
+			return nil
+		}
 		err := eventstore.ErrInvalidEventType
 		err.EventType = event.GetEventType()
 		return err
