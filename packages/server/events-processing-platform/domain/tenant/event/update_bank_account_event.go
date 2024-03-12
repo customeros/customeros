@@ -23,6 +23,7 @@ type TenantBankAccountUpdateEvent struct {
 	SortCode            string    `json:"sortCode,omitempty"`
 	AccountNumber       string    `json:"accountNumber,omitempty"`
 	RoutingNumber       string    `json:"routingNumber,omitempty"`
+	OtherDetails        string    `json:"otherDetails,omitempty"`
 }
 
 func NewTenantBankAccountUpdateEvent(aggregate eventstore.Aggregate, id string, request *tenantpb.UpdateBankAccountGrpcRequest, updatedAt time.Time, fieldsMaks []string) (eventstore.Event, error) {
@@ -40,6 +41,7 @@ func NewTenantBankAccountUpdateEvent(aggregate eventstore.Aggregate, id string, 
 		SortCode:            request.SortCode,
 		AccountNumber:       request.AccountNumber,
 		RoutingNumber:       request.RoutingNumber,
+		OtherDetails:        request.OtherDetails,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
@@ -88,4 +90,8 @@ func (e TenantBankAccountUpdateEvent) UpdateAccountNumber() bool {
 
 func (e TenantBankAccountUpdateEvent) UpdateRoutingNumber() bool {
 	return utils.Contains(e.FieldsMask, FieldMaskBankAccountRoutingNumber)
+}
+
+func (e TenantBankAccountUpdateEvent) UpdateOtherDetails() bool {
+	return utils.Contains(e.FieldsMask, FieldMaskBankAccountOtherDetails)
 }

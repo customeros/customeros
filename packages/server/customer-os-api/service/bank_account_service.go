@@ -99,6 +99,7 @@ func (s *bankAccountService) CreateTenantBankAccount(ctx context.Context, input 
 		SortCode:            utils.IfNotNilString(input.SortCode),
 		AccountNumber:       utils.IfNotNilString(input.AccountNumber),
 		RoutingNumber:       utils.IfNotNilString(input.RoutingNumber),
+		OtherDetails:        utils.IfNotNilString(input.OtherDetails),
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
@@ -152,6 +153,7 @@ func (s *bankAccountService) UpdateTenantBankAccount(ctx context.Context, input 
 		SortCode:            utils.IfNotNilString(input.SortCode),
 		AccountNumber:       utils.IfNotNilString(input.AccountNumber),
 		RoutingNumber:       utils.IfNotNilString(input.RoutingNumber),
+		OtherDetails:        utils.IfNotNilString(input.OtherDetails),
 	}
 
 	if input.BankName != nil {
@@ -212,6 +214,9 @@ func (s *bankAccountService) UpdateTenantBankAccount(ctx context.Context, input 
 	}
 	if input.RoutingNumber != nil && !utils.ContainsElement(fieldsMask, tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_ROUTING_NUMBER) {
 		fieldsMask = append(fieldsMask, tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_ROUTING_NUMBER)
+	}
+	if input.OtherDetails != nil && !utils.ContainsElement(fieldsMask, tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_OTHER_DETAILS) {
+		fieldsMask = append(fieldsMask, tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_OTHER_DETAILS)
 	}
 	if len(fieldsMask) == 0 {
 		span.LogFields(log.String("result", "No fields to update"))

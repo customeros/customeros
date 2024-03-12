@@ -26,6 +26,7 @@ type BankAccountCreateFields struct {
 	SortCode            string        `json:"sortCode"`
 	AccountNumber       string        `json:"accountNumber"`
 	RoutingNumber       string        `json:"routingNumber"`
+	OtherDetails        string        `json:"otherDetails"`
 }
 
 type BankAccountUpdateFields struct {
@@ -40,6 +41,7 @@ type BankAccountUpdateFields struct {
 	SortCode                  string        `json:"sortCode"`
 	AccountNumber             string        `json:"accountNumber"`
 	RoutingNumber             string        `json:"routingNumber"`
+	OtherDetails              string        `json:"otherDetails"`
 	UpdateBankName            bool          `json:"updateBankName"`
 	UpdateBankTransferEnabled bool          `json:"updateBankTransferEnabled"`
 	UpdateAllowInternational  bool          `json:"updateAllowInternational"`
@@ -49,6 +51,7 @@ type BankAccountUpdateFields struct {
 	UpdateSortCode            bool          `json:"updateSortCode"`
 	UpdateAccountNumber       bool          `json:"updateAccountNumber"`
 	UpdateRoutingNumber       bool          `json:"updateRoutingNumber"`
+	UpdateOtherDetails        bool          `json:"updateOtherDetails"`
 }
 
 type BankAccountWriteRepository interface {
@@ -91,7 +94,8 @@ func (r *bankAccountWriteRepository) CreateBankAccount(ctx context.Context, tena
 								ba.bic=$bic,
 								ba.sortCode=$sortCode,
 								ba.accountNumber=$accountNumber,
-								ba.routingNumber=$routingNumber
+								ba.routingNumber=$routingNumber,
+								ba.otherDetails=$otherDetails
 							`, tenant)
 	params := map[string]any{
 		"tenant":              tenant,
@@ -110,6 +114,7 @@ func (r *bankAccountWriteRepository) CreateBankAccount(ctx context.Context, tena
 		"sortCode":            data.SortCode,
 		"accountNumber":       data.AccountNumber,
 		"routingNumber":       data.RoutingNumber,
+		"otherDetails":        data.OtherDetails,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -170,6 +175,10 @@ func (r *bankAccountWriteRepository) UpdateBankAccount(ctx context.Context, tena
 	if data.UpdateRoutingNumber {
 		cypher += `,ba.routingNumber=$routingNumber`
 		params["routingNumber"] = data.RoutingNumber
+	}
+	if data.UpdateOtherDetails {
+		cypher += `,ba.otherDetails=$otherDetails`
+		params["otherDetails"] = data.OtherDetails
 	}
 
 	span.LogFields(log.String("cypher", cypher))

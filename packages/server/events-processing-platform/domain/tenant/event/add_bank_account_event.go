@@ -23,6 +23,7 @@ type TenantBankAccountCreateEvent struct {
 	SortCode            string             `json:"sortCode,omitempty"`
 	AccountNumber       string             `json:"accountNumber,omitempty"`
 	RoutingNumber       string             `json:"routingNumber,omitempty"`
+	OtherDetails        string             `json:"otherDetails,omitempty"`
 }
 
 func NewTenantBankAccountCreateEvent(aggregate eventstore.Aggregate, sourceFields commonmodel.Source, id string, request *tenantpb.AddBankAccountGrpcRequest, createdAt time.Time) (eventstore.Event, error) {
@@ -40,6 +41,7 @@ func NewTenantBankAccountCreateEvent(aggregate eventstore.Aggregate, sourceField
 		SortCode:            request.SortCode,
 		AccountNumber:       request.AccountNumber,
 		RoutingNumber:       request.RoutingNumber,
+		OtherDetails:        request.OtherDetails,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

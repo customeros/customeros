@@ -270,6 +270,7 @@ func TestTenantService_AddBankAccount(t *testing.T) {
 		Iban:                "iban",
 		Bic:                 "swiftBIC",
 		RoutingNumber:       "routingNumber",
+		OtherDetails:        "otherDetails",
 	})
 	require.Nil(t, err)
 	require.NotNil(t, response)
@@ -301,6 +302,7 @@ func TestTenantService_AddBankAccount(t *testing.T) {
 	require.Equal(t, "iban", eventData.Iban)
 	require.Equal(t, "swiftBIC", eventData.Bic)
 	require.Equal(t, "routingNumber", eventData.RoutingNumber)
+	require.Equal(t, "otherDetails", eventData.OtherDetails)
 }
 
 func TestTenantService_UpdateBankAccount(t *testing.T) {
@@ -332,12 +334,14 @@ func TestTenantService_UpdateBankAccount(t *testing.T) {
 		Iban:                "iban",
 		Bic:                 "swiftBIC",
 		RoutingNumber:       "routingNumber",
+		OtherDetails:        "otherDetails",
 		FieldsMask: []tenantpb.BankAccountFieldMask{
 			tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_BANK_NAME,
 			tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_CURRENCY,
 			tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_BANK_TRANSFER_ENABLED,
 			tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_ACCOUNT_NUMBER,
 			tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_ROUTING_NUMBER,
+			tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_OTHER_DETAILS,
 		},
 	})
 	require.Nil(t, err)
@@ -369,7 +373,8 @@ func TestTenantService_UpdateBankAccount(t *testing.T) {
 	require.Equal(t, "iban", eventData.Iban)
 	require.Equal(t, "swiftBIC", eventData.Bic)
 	require.Equal(t, "routingNumber", eventData.RoutingNumber)
-	require.Equal(t, 5, len(eventData.FieldsMask))
+	require.Equal(t, "otherDetails", eventData.OtherDetails)
+	require.Equal(t, 6, len(eventData.FieldsMask))
 }
 
 func TestTenantService_DeleteBankAccount(t *testing.T) {

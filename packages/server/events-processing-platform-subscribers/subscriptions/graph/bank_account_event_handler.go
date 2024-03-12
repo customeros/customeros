@@ -59,6 +59,7 @@ func (h *BankAccountEventHandler) OnAddBankAccountV1(ctx context.Context, evt ev
 		Iban:                eventData.Iban,
 		Bic:                 eventData.Bic,
 		RoutingNumber:       eventData.RoutingNumber,
+		OtherDetails:        eventData.OtherDetails,
 	}
 	err := h.repositories.Neo4jRepositories.BankAccountWriteRepository.CreateBankAccount(ctx, tenantName, data)
 	if err != nil {
@@ -95,6 +96,7 @@ func (h *BankAccountEventHandler) OnUpdateBankAccountV1(ctx context.Context, evt
 		Iban:                      eventData.Iban,
 		Bic:                       eventData.Bic,
 		RoutingNumber:             eventData.RoutingNumber,
+		OtherDetails:              eventData.OtherDetails,
 		UpdateBankName:            eventData.UpdateBankName(),
 		UpdateBankTransferEnabled: eventData.UpdateBankTransferEnabled(),
 		UpdateAllowInternational:  eventData.UpdateAllowInternational(),
@@ -104,6 +106,7 @@ func (h *BankAccountEventHandler) OnUpdateBankAccountV1(ctx context.Context, evt
 		UpdateIban:                eventData.UpdateIban(),
 		UpdateBic:                 eventData.UpdateBic(),
 		UpdateRoutingNumber:       eventData.UpdateRoutingNumber(),
+		UpdateOtherDetails:        eventData.UpdateOtherDetails(),
 	}
 	err := h.repositories.Neo4jRepositories.BankAccountWriteRepository.UpdateBankAccount(ctx, tenantName, data)
 	if err != nil {

@@ -1160,7 +1160,9 @@ func CreateBankAccount(ctx context.Context, driver *neo4j.DriverWithContext, ten
 					ba.iban=$iban,
 					ba.bic=$bic,
 					ba.sortCode=$sortCode,
-					ba.routingNumber=$routingNumber`, tenant)
+					ba.routingNumber=$routingNumber,
+					ba.otherDetails=$otherDetails
+`, tenant)
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tenant":              tenant,
 		"accountId":           accountId,
@@ -1175,6 +1177,7 @@ func CreateBankAccount(ctx context.Context, driver *neo4j.DriverWithContext, ten
 		"bic":                 bankAccount.Bic,
 		"sortCode":            bankAccount.SortCode,
 		"routingNumber":       bankAccount.RoutingNumber,
+		"otherDetails":        bankAccount.OtherDetails,
 	})
 	return accountId
 }

@@ -28,6 +28,7 @@ func MapEntityToBankAccount(entity *neo4jentity.BankAccountEntity) *model.BankAc
 		SortCode:            utils.StringPtr(entity.SortCode),
 		AccountNumber:       utils.StringPtr(entity.AccountNumber),
 		RoutingNumber:       utils.StringPtr(entity.RoutingNumber),
+		OtherDetails:        utils.StringPtr(entity.OtherDetails),
 	}
 }
 

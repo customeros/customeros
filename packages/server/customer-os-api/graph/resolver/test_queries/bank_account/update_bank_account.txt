@@ -11,6 +11,7 @@ bankAccount_Update(
         routingNumber: "routing-123456789"
         bic: "BIC-123456789"
         sortCode: "sort-123456789"
+        otherDetails: "otherDetails-123"
     }) {
     metadata {
         id

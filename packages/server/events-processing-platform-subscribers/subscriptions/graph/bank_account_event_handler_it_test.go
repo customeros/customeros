@@ -56,6 +56,7 @@ func TestBankAccountEventHandler_OnAddBankAccountV1(t *testing.T) {
 			Iban:                "iban",
 			Bic:                 "bic",
 			RoutingNumber:       "routingNumber",
+			OtherDetails:        "otherDetails",
 		},
 		now,
 	)
@@ -87,6 +88,7 @@ func TestBankAccountEventHandler_OnAddBankAccountV1(t *testing.T) {
 	require.Equal(t, "iban", bankAccountEntity.Iban)
 	require.Equal(t, "bic", bankAccountEntity.Bic)
 	require.Equal(t, "routingNumber", bankAccountEntity.RoutingNumber)
+	require.Equal(t, "otherDetails", bankAccountEntity.OtherDetails)
 	require.Equal(t, now, bankAccountEntity.CreatedAt)
 	require.Equal(t, now, bankAccountEntity.UpdatedAt)
 	require.Equal(t, neo4jentity.DataSourceOpenline, bankAccountEntity.Source)
@@ -110,6 +112,7 @@ func TestBankAccountEventHandler_OnUpdateBankAccountV1(t *testing.T) {
 		Iban:                "iban",
 		Bic:                 "bic",
 		RoutingNumber:       "routingNumber",
+		OtherDetails:        "otherDetails",
 	})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
@@ -139,6 +142,7 @@ func TestBankAccountEventHandler_OnUpdateBankAccountV1(t *testing.T) {
 			Iban:                "updatedIban",
 			Bic:                 "updatedBic",
 			RoutingNumber:       "updatedRoutingNumber",
+			OtherDetails:        "updatedOtherDetails",
 		},
 		now,
 		[]string{
@@ -151,6 +155,7 @@ func TestBankAccountEventHandler_OnUpdateBankAccountV1(t *testing.T) {
 			event.FieldMaskBankAccountIban,
 			event.FieldMaskBankAccountBic,
 			event.FieldMaskBankAccountRoutingNumber,
+			event.FieldMaskBankAccountOtherDetails,
 		},
 	)
 	require.Nil(t, err)
@@ -181,6 +186,7 @@ func TestBankAccountEventHandler_OnUpdateBankAccountV1(t *testing.T) {
 	require.Equal(t, "updatedIban", bankAccountEntity.Iban)
 	require.Equal(t, "updatedBic", bankAccountEntity.Bic)
 	require.Equal(t, "updatedRoutingNumber", bankAccountEntity.RoutingNumber)
+	require.Equal(t, "updatedOtherDetails", bankAccountEntity.OtherDetails)
 	require.Equal(t, now, bankAccountEntity.UpdatedAt)
 }
 

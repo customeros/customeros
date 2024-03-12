@@ -28,3 +28,8 @@ type ExternalSystem {
     externalUrl: String
     externalSource: String
 }
+
+type ExternalSystemInstance {
+    type: ExternalSystemType!
+    paymentMethods: [String!]!
+}

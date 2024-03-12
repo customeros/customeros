@@ -38,6 +38,7 @@ func TestQueryResolver_BankAccounts(t *testing.T) {
 		SortCode:            "sortCode1",
 		AccountNumber:       "accountNumber1",
 		RoutingNumber:       "routingNumber1",
+		OtherDetails:        "otherDetails1",
 	})
 	account2 := neo4jtest.CreateBankAccount(ctx, driver, tenantName, neo4jentity.BankAccountEntity{
 		CreatedAt:           yesterday,
@@ -51,6 +52,7 @@ func TestQueryResolver_BankAccounts(t *testing.T) {
 		SortCode:            "sortCode2",
 		AccountNumber:       "accountNumber2",
 		RoutingNumber:       "routingNumber2",
+		OtherDetails:        "otherDetails2",
 	})
 
 	rawResponse, err := c.RawPost(getQuery("bank_account/get_bank_accounts"))
@@ -77,6 +79,7 @@ func TestQueryResolver_BankAccounts(t *testing.T) {
 	require.Equal(t, "sortCode2", *ba1.SortCode)
 	require.Equal(t, "accountNumber2", *ba1.AccountNumber)
 	require.Equal(t, "routingNumber2", *ba1.RoutingNumber)
+	require.Equal(t, "otherDetails2", *ba1.OtherDetails)
 
 	ba2 := graphqlResponse.BankAccounts[1]
 	require.Equal(t, account1, ba2.Metadata.ID)
@@ -90,6 +93,7 @@ func TestQueryResolver_BankAccounts(t *testing.T) {
 	require.Equal(t, "sortCode1", *ba2.SortCode)
 	require.Equal(t, "accountNumber1", *ba2.AccountNumber)
 	require.Equal(t, "routingNumber1", *ba2.RoutingNumber)
+	require.Equal(t, "otherDetails1", *ba2.OtherDetails)
 }
 
 func TestMutationResolver_BankAccountCreate(t *testing.T) {
@@ -116,6 +120,7 @@ func TestMutationResolver_BankAccountCreate(t *testing.T) {
 			require.Equal(t, "ACC-123456789", bankAccount.AccountNumber)
 			require.Equal(t, "routing-123456789", bankAccount.RoutingNumber)
 			require.Equal(t, "sort-123456789", bankAccount.SortCode)
+			require.Equal(t, "otherDetails-123", bankAccount.OtherDetails)
 			calledAddBankAccount = true
 			neo4jtest.CreateBankAccount(ctx, driver, tenantName, neo4jentity.BankAccountEntity{Id: bankAccountId})
 			return &commonpb.IdResponse{
@@ -167,8 +172,9 @@ func TestMutationResolver_BankAccountUpdate_FromEurToUsd(t *testing.T) {
 			require.Equal(t, "", bankAccount.Bic)
 			require.Equal(t, "ACC-123456789", bankAccount.AccountNumber)
 			require.Equal(t, "routing-123456789", bankAccount.RoutingNumber)
+			require.Equal(t, "otherDetails-123", bankAccount.OtherDetails)
 			require.Equal(t, "", bankAccount.SortCode)
-			require.Equal(t, 9, len(bankAccount.FieldsMask))
+			require.Equal(t, 10, len(bankAccount.FieldsMask))
 			calledUpdateBankAccount = true
 			neo4jtest.CreateBankAccount(ctx, driver, tenantName, neo4jentity.BankAccountEntity{Id: bankAccountId})
 			return &commonpb.IdResponse{
