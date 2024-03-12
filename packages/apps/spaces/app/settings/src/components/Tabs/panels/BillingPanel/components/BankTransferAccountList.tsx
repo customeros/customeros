@@ -8,12 +8,13 @@ import { Box } from '@ui/layout/Box';
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { BankAccount } from '@graphql/types';
+import { FormSwitch } from '@ui/form/Switch/FromSwitch';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 
 import { AddAccountButton } from './AddAccountButton';
 import { BankTransferCard } from './BankTransferCard';
 
-export const BankTransferAccountList = () => {
+export const BankTransferAccountList = ({ formId }: { formId: string }) => {
   const client = getGraphQLClient();
   const { data } = useBankAccountsQuery(client);
 
@@ -32,7 +33,11 @@ export const BankTransferAccountList = () => {
             existingCurrencies={existingAccountCurrencies ?? []}
           />
           <Box>
-            {/*<FormSwitch name='canPayWithCard' formId={formId} size='sm' />*/}
+            <FormSwitch
+              name='canPayWithBankTransfer'
+              formId={formId}
+              size='sm'
+            />
           </Box>
         </Flex>
       </Flex>

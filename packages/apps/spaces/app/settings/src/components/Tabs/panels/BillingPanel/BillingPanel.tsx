@@ -198,6 +198,7 @@ export const BillingPanel = () => {
       };
       if (action.type === 'FIELD_CHANGE') {
         switch (action.payload.name) {
+          case 'canPayWithBankTransfer':
           case 'canPayWithPigeon': {
             updateBillingProfileMutation.mutate({
               input: {

@@ -7,11 +7,13 @@ import { GetContractQuery } from '@organization/src/graphql/getContract.generate
 export interface BillingDetailsForm {
   zip?: string | null;
   locality?: string | null;
+  payOnline?: boolean | null;
   contractUrl?: string | null;
   invoiceEmail?: string | null;
   addressLine1?: string | null;
   addressLine2?: string | null;
   canPayWithCard?: boolean | null;
+  payAutomatically?: boolean | null;
   organizationLegalName?: string | null;
   country?: SelectOption<string> | null;
   canPayWithDirectDebit?: boolean | null;
@@ -32,6 +34,8 @@ export class BillingDetailsDto implements BillingDetailsForm {
   canPayWithCard?: boolean | null;
   canPayWithDirectDebit?: boolean | null;
   canPayWithBankTransfer?: boolean | null;
+  payAutomatically?: boolean | null;
+  payOnline?: boolean | null;
 
   constructor(data?: Partial<GetContractQuery['contract']> | null) {
     this.zip = data?.billingDetails?.postalCode ?? '';
@@ -51,6 +55,8 @@ export class BillingDetailsDto implements BillingDetailsForm {
     this.addressLine2 = data?.billingDetails?.addressLine2 ?? '';
     this.organizationLegalName = data?.organizationLegalName ?? '';
     this.contractUrl = data?.contractUrl ?? '';
+    this.payOnline = data?.billingDetails?.payOnline;
+    this.payAutomatically = data?.billingDetails?.payAutomatically;
   }
 
   static toForm(
@@ -79,6 +85,11 @@ export class BillingDetailsDto implements BillingDetailsForm {
       canPayWithCard: data?.canPayWithCard,
       canPayWithDirectDebit: data?.canPayWithDirectDebit,
       canPayWithBankTransfer: data?.canPayWithBankTransfer,
+      billingDetails: {
+        payOnline: data?.payOnline,
+        payAutomatically: data?.payAutomatically,
+        canPayWithBankTransfer: data?.canPayWithBankTransfer,
+      },
       patch: true,
     };
   }

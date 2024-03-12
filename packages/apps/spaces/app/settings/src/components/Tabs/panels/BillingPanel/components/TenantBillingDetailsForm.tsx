@@ -172,8 +172,8 @@ export const TenantBillingPanelDetailsForm = ({
           type='email'
         />
       </Flex>
+        <PaymentMethods />
 
-      <PaymentMethods />
     </CardBody>
   );
 };

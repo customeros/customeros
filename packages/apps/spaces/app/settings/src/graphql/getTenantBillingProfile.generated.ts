@@ -47,6 +47,7 @@ export type TenantBillingProfileQuery = {
     canPayWithDirectDebitACH: boolean;
     canPayWithDirectDebitSEPA: boolean;
     canPayWithDirectDebitBacs: boolean;
+    canPayWithBankTransfer: boolean;
     canPayWithCard: boolean;
     canPayWithPigeon: boolean;
   };
@@ -70,6 +71,7 @@ export const TenantBillingProfileDocument = `
     canPayWithDirectDebitACH
     canPayWithDirectDebitSEPA
     canPayWithDirectDebitBacs
+    canPayWithBankTransfer
     canPayWithCard
     canPayWithPigeon
   }

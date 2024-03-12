@@ -40,19 +40,19 @@ export const FormSwitch = forwardRef(
     const { getInputProps } = useField(name, formId);
     const { value, onChange, onBlur, ...rest } = getInputProps();
 
-    const handleChange = (value: boolean) => {
-      if (!value) {
-        onChange(value);
+    const handleChange = (newValue: boolean) => {
+      if (!newValue) {
+        onChange(newValue);
 
         return;
       }
-      if (value) {
+      if (newValue) {
         if (onChangeCallback) {
-          onChangeCallback(() => onChange(value));
+          onChangeCallback(() => onChange(newValue));
 
           return;
         }
-        onChange(value);
+        onChange(newValue);
       }
     };
 
@@ -64,7 +64,11 @@ export const FormSwitch = forwardRef(
         alignItems='center'
       >
         {isLabelVisible ? (
-          <FormLabel {...labelProps} fontWeight='medium'>
+          <FormLabel
+            {...labelProps}
+            fontWeight='medium'
+            color={props.isDisabled ? 'gray.500' : 'gray.700'}
+          >
             {label}
           </FormLabel>
         ) : (

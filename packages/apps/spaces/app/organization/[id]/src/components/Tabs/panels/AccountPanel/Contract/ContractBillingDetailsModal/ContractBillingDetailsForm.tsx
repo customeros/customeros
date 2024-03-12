@@ -1,30 +1,67 @@
 'use client';
+import Link from 'next/link';
 import React, { FC, useMemo } from 'react';
 
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { FormInput } from '@ui/form/Input';
+import { Tooltip } from '@ui/overlay/Tooltip';
 import { ModalBody } from '@ui/overlay/Modal';
 import { FormUrlInput } from '@ui/form/UrlInput';
 import { FormSelect } from '@ui/form/SyncSelect';
+import { TenantBillingProfile } from '@graphql/types';
+import { InfoCircle } from '@ui/media/icons/InfoCircle';
+import { FormSwitch } from '@ui/form/Switch/FromSwitch';
 import { countryOptions } from '@shared/util/countryOptions';
 import { FormCheckbox } from '@ui/form/Checkbox/FormCheckbox';
 import { getCurrencyOptions } from '@shared/util/currencyOptions';
+import {
+  Popover,
+  PopoverBody,
+  PopoverArrow,
+  PopoverContent,
+  PopoverTrigger,
+} from '@ui/overlay/Popover';
 
 interface SubscriptionServiceModalProps {
   formId: string;
+  currency?: string;
   isEmailValid: boolean;
+  organizationName: string;
+  hasNoBankAccounts: boolean;
+  canAllowPayWithBankTransfer?: boolean;
+  tenantBillingProfile?: TenantBillingProfile | null;
   onSetIsBillingDetailsHovered: (newState: boolean) => void;
   onSetIsBillingDetailsFocused: (newState: boolean) => void;
 }
 
 export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
   formId,
+  canAllowPayWithBankTransfer,
   isEmailValid,
   onSetIsBillingDetailsFocused,
   onSetIsBillingDetailsHovered,
+  hasNoBankAccounts,
+  currency,
+  tenantBillingProfile,
+  organizationName,
 }) => {
   const currencyOptions = useMemo(() => getCurrencyOptions(), []);
+
+  const tooltipContent = useMemo(() => {
+    if (
+      tenantBillingProfile?.canPayWithCard &&
+      tenantBillingProfile?.canPayWithDirectDebitACH
+    ) {
+      return `If auto-payment fails, ${organizationName} can still pay using one of the other enabled payment options.`;
+    }
+
+    return '';
+  }, [
+    tenantBillingProfile?.canPayWithCard,
+    tenantBillingProfile?.canPayWithDirectDebitACH,
+    organizationName,
+  ]);
 
   return (
     <ModalBody pb='0' gap={4} display='flex' flexDir='column' flex={1}>
@@ -146,7 +183,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
         autoComplete='off'
       />
       <FormSelect
-        label='Currency'
+        label='Billing currency'
         placeholder='Invoice currency'
         isLabelVisible
         name='currency'
@@ -154,25 +191,122 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
         options={currencyOptions ?? []}
       />
 
-      <Flex flexDirection='column' gap={2}>
-        <Text fontSize='sm' fontWeight='semibold' whiteSpace='nowrap'>
-          Customer can pay using...
+      <Flex flexDirection='column'>
+        <Text fontSize='sm' fontWeight='semibold' whiteSpace='nowrap' mb={2}>
+          Payment options
+          {tooltipContent && (
+            <Tooltip label={tooltipContent} shouldWrapChildren hasArrow>
+              <InfoCircle boxSize={3} color='gray.400' ml={2} />
+            </Tooltip>
+          )}
         </Text>
-        <FormCheckbox name='canPayWithCard' formId={formId} size='md'>
-          <Text fontSize='sm' whiteSpace='nowrap'>
-            Credit or Debit cards
-          </Text>
-        </FormCheckbox>
-        <FormCheckbox name='canPayWithDirectDebit' formId={formId} size='md'>
-          <Text fontSize='sm' whiteSpace='nowrap'>
-            Direct Debit
-          </Text>
-        </FormCheckbox>
-        <FormCheckbox name='canPayWithBankTransfer' formId={formId} size='md'>
-          <Text fontSize='sm' whiteSpace='nowrap'>
-            Bank Transfer
-          </Text>
-        </FormCheckbox>
+
+        <FormSwitch
+          name='payAutomatically'
+          formId={formId}
+          size='sm'
+          label={
+            <Text fontSize='sm' fontWeight='normal' whiteSpace='nowrap'>
+              Auto-payment via Stripe
+            </Text>
+          }
+        />
+        <Flex flexDir='column' gap={2} ml={2}>
+          <Tooltip
+            shouldWrapChildren
+            hasArrow
+            label={
+              tenantBillingProfile?.canPayWithCard
+                ? ''
+                : 'Credit or Debit card not enabled in Stripe'
+            }
+          >
+            <FormCheckbox
+              name='canPayWithCard'
+              formId={formId}
+              size='md'
+              isInvalid={!tenantBillingProfile?.canPayWithCard}
+            >
+              <Text fontSize='sm' whiteSpace='nowrap'>
+                Credit or Debit cards
+              </Text>
+            </FormCheckbox>
+          </Tooltip>
+          <Tooltip
+            shouldWrapChildren
+            hasArrow
+            label={
+              tenantBillingProfile?.canPayWithDirectDebitACH
+                ? ''
+                : 'Direct debit not enabled in Stripe'
+            }
+          >
+            <FormCheckbox
+              name='canPayWithDirectDebit'
+              formId={formId}
+              size='md'
+              isInvalid={!tenantBillingProfile?.canPayWithDirectDebitACH}
+            >
+              <Text fontSize='sm' whiteSpace='nowrap'>
+                Direct Debit via ACH
+              </Text>
+            </FormCheckbox>
+          </Tooltip>
+        </Flex>
+        <FormSwitch
+          name='payOnline'
+          formId={formId}
+          size='sm'
+          label={
+            <Text fontSize='sm' fontWeight='normal' whiteSpace='nowrap'>
+              Online payment via Stripe
+            </Text>
+          }
+        />
+        <Popover placement='bottom-end' trigger='hover'>
+          <PopoverTrigger>
+            <FormSwitch
+              name='canPayWithBankTransfer'
+              isInvalid={
+                !canAllowPayWithBankTransfer ||
+                !tenantBillingProfile?.canPayWithBankTransfer
+              }
+              formId={formId}
+              size='sm'
+              label={
+                <Text fontSize='sm' fontWeight='normal' whiteSpace='nowrap'>
+                  Bank transfer
+                </Text>
+              }
+            />
+          </PopoverTrigger>
+          <PopoverContent
+            width='fit-content'
+            bg='gray.700'
+            color='white'
+            mt={4}
+            borderRadius='md'
+            boxShadow='none'
+            border='none'
+          >
+            <PopoverArrow bg='gray.700' />
+
+            <PopoverBody display='flex'>
+              <Text mr={2}>
+                {!tenantBillingProfile?.canPayWithBankTransfer &&
+                  'Bank transfer not enabled yet'}
+                {tenantBillingProfile?.canPayWithBankTransfer &&
+                canAllowPayWithBankTransfer &&
+                hasNoBankAccounts
+                  ? 'No bank accounts added yet'
+                  : `None of your bank accounts hold ${currency}`}
+              </Text>
+              <Text as={Link} href='/settings?tab=billing' color='white'>
+                Go to Settings
+              </Text>
+            </PopoverBody>
+          </PopoverContent>
+        </Popover>
       </Flex>
     </ModalBody>
   );

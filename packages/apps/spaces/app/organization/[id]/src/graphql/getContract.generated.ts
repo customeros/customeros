@@ -52,6 +52,8 @@ export type GetContractQuery = {
       canPayWithDirectDebit?: boolean | null;
       canPayWithBankTransfer?: boolean | null;
       nextInvoicing?: any | null;
+      payAutomatically?: boolean | null;
+      payOnline?: boolean | null;
     } | null;
   };
 };
@@ -78,6 +80,8 @@ export const GetContractDocument = `
       canPayWithDirectDebit
       canPayWithBankTransfer
       nextInvoicing
+      payAutomatically
+      payOnline
     }
   }
 }

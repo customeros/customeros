@@ -1179,7 +1179,7 @@ export type ExternalSystem = {
 
 export type ExternalSystemInstance = {
   __typename?: 'ExternalSystemInstance';
-  stripeDetails?: Maybe<ExternalSystemStripeDetails>;
+  paymentMethods: Array<Scalars['String']['output']>;
   type: ExternalSystemType;
 };
 
@@ -1189,11 +1189,6 @@ export type ExternalSystemReferenceInput = {
   externalUrl?: InputMaybe<Scalars['String']['input']>;
   syncDate?: InputMaybe<Scalars['Time']['input']>;
   type: ExternalSystemType;
-};
-
-export type ExternalSystemStripeDetails = {
-  __typename?: 'ExternalSystemStripeDetails';
-  paymentMethodTypes: Array<Scalars['String']['output']>;
 };
 
 export enum ExternalSystemType {
@@ -3577,7 +3572,6 @@ export type Query = {
   email: Email;
   entityTemplates: Array<EntityTemplate>;
   externalMeetings: MeetingsPage;
-  externalSystemInstances: Array<ExternalSystemInstance>;
   gcli_Search: Array<GCliItem>;
   global_Cache: GlobalCache;
   interactionEvent: InteractionEvent;
@@ -3806,7 +3800,6 @@ export type QueryReminderArgs = {
 };
 
 export type QueryRemindersForOrganizationArgs = {
-  dismissed?: InputMaybe<Scalars['Boolean']['input']>;
   organizationId: Scalars['ID']['input'];
 };
 
