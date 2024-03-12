@@ -2,8 +2,6 @@
 import React, { useRef, useEffect } from 'react';
 import { DatePicker as ReactDatePicker } from 'react-date-picker';
 
-import { Currency } from '@settings/components/Tabs/panels/BillingPanel/components/Currency';
-
 import { Flex } from '@ui/layout/Flex';
 import { Input } from '@ui/form/Input';
 import { Text } from '@ui/typography/Text';
@@ -17,6 +15,7 @@ import { BilledType, ServiceLineItem } from '@graphql/types';
 import { NumberInput, NumberInputField } from '@ui/form/NumberInput';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 import { billedTypeOptions } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
+import { Currency } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ServiceLineItemsModal/Currency';
 import { BulkUpdateServiceLineItem } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ServiceLineItemsModal/ServiceLineItemsModal.dto';
 
 import { ServiceLineItemInputWrapper } from './ServiceLineItemInputWrapper';

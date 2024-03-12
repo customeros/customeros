@@ -119,6 +119,42 @@ export type AttachmentInput = {
   size: Scalars['Int64']['input'];
 };
 
+export type BankAccount = MetadataInterface & {
+  __typename?: 'BankAccount';
+  accountNumber?: Maybe<Scalars['String']['output']>;
+  bankName?: Maybe<Scalars['String']['output']>;
+  bankTransferEnabled: Scalars['Boolean']['output'];
+  bic?: Maybe<Scalars['String']['output']>;
+  currency?: Maybe<Currency>;
+  iban?: Maybe<Scalars['String']['output']>;
+  metadata: Metadata;
+  routingNumber?: Maybe<Scalars['String']['output']>;
+  sortCode?: Maybe<Scalars['String']['output']>;
+};
+
+export type BankAccountCreateInput = {
+  accountNumber?: InputMaybe<Scalars['String']['input']>;
+  bankName?: InputMaybe<Scalars['String']['input']>;
+  bankTransferEnabled?: InputMaybe<Scalars['Boolean']['input']>;
+  bic?: InputMaybe<Scalars['String']['input']>;
+  currency?: InputMaybe<Currency>;
+  iban?: InputMaybe<Scalars['String']['input']>;
+  routingNumber?: InputMaybe<Scalars['String']['input']>;
+  sortCode?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type BankAccountUpdateInput = {
+  accountNumber?: InputMaybe<Scalars['String']['input']>;
+  bankName?: InputMaybe<Scalars['String']['input']>;
+  bankTransferEnabled?: InputMaybe<Scalars['Boolean']['input']>;
+  bic?: InputMaybe<Scalars['String']['input']>;
+  currency?: InputMaybe<Currency>;
+  iban?: InputMaybe<Scalars['String']['input']>;
+  id: Scalars['ID']['input'];
+  routingNumber?: InputMaybe<Scalars['String']['input']>;
+  sortCode?: InputMaybe<Scalars['String']['input']>;
+};
+
 export enum BilledType {
   Annually = 'ANNUALLY',
   Monthly = 'MONTHLY',
@@ -1924,6 +1960,9 @@ export type Mutation = {
   __typename?: 'Mutation';
   analysis_Create: Analysis;
   attachment_Create: Attachment;
+  bankAccount_Create: BankAccount;
+  bankAccount_Delete: DeleteResponse;
+  bankAccount_Update: BankAccount;
   billingProfile_Create: Scalars['ID']['output'];
   billingProfile_LinkEmail: Scalars['ID']['output'];
   billingProfile_LinkLocation: Scalars['ID']['output'];
@@ -2062,6 +2101,8 @@ export type Mutation = {
   phoneNumberUpdateInOrganization: PhoneNumber;
   phoneNumberUpdateInUser: PhoneNumber;
   player_Merge: Result;
+  reminder_Create: Reminder;
+  reminder_Update: Reminder;
   serviceLineItem_BulkUpdate: Array<Scalars['ID']['output']>;
   serviceLineItem_Delete: DeleteResponse;
   social_Remove: Result;
@@ -2091,6 +2132,18 @@ export type MutationAnalysis_CreateArgs = {
 
 export type MutationAttachment_CreateArgs = {
   input: AttachmentInput;
+};
+
+export type MutationBankAccount_CreateArgs = {
+  input?: InputMaybe<BankAccountCreateInput>;
+};
+
+export type MutationBankAccount_DeleteArgs = {
+  id: Scalars['ID']['input'];
+};
+
+export type MutationBankAccount_UpdateArgs = {
+  input?: InputMaybe<BankAccountUpdateInput>;
 };
 
 export type MutationBillingProfile_CreateArgs = {
@@ -2720,6 +2773,14 @@ export type MutationPhoneNumberUpdateInUserArgs = {
 export type MutationPlayer_MergeArgs = {
   input: PlayerInput;
   userId: Scalars['ID']['input'];
+};
+
+export type MutationReminder_CreateArgs = {
+  input: ReminderInput;
+};
+
+export type MutationReminder_UpdateArgs = {
+  input: ReminderUpdateInput;
 };
 
 export type MutationServiceLineItem_BulkUpdateArgs = {
@@ -3461,6 +3522,7 @@ export type Query = {
   __typename?: 'Query';
   analysis: Analysis;
   attachment: Attachment;
+  bankAccounts: Array<BankAccount>;
   billableInfo: TenantBillableInfo;
   /** Fetch a single contact from customerOS by contact ID. */
   contact?: Maybe<Contact>;
@@ -3517,6 +3579,8 @@ export type Query = {
   organizations: OrganizationPage;
   phoneNumber: PhoneNumber;
   player_ByAuthIdProvider: Player;
+  reminder: Reminder;
+  remindersForOrganization: Array<Reminder>;
   serviceLineItem: ServiceLineItem;
   slack_Channels: SlackChannelPage;
   tableViewDefs: TableViewDefPage;
@@ -3714,6 +3778,14 @@ export type QueryPlayer_ByAuthIdProviderArgs = {
   provider: Scalars['String']['input'];
 };
 
+export type QueryReminderArgs = {
+  id: Scalars['ID']['input'];
+};
+
+export type QueryRemindersForOrganizationArgs = {
+  organizationId: Scalars['ID']['input'];
+};
+
 export type QueryServiceLineItemArgs = {
   id: Scalars['ID']['input'];
 };
@@ -3756,6 +3828,29 @@ export type QueryUsersArgs = {
   pagination?: InputMaybe<Pagination>;
   sort?: InputMaybe<Array<SortBy>>;
   where?: InputMaybe<Filter>;
+};
+
+export type Reminder = MetadataInterface & {
+  __typename?: 'Reminder';
+  content: Scalars['String']['output'];
+  dismissed: Scalars['Boolean']['output'];
+  dueDate: Scalars['Time']['output'];
+  metadata: Metadata;
+  owner: User;
+};
+
+export type ReminderInput = {
+  content: Scalars['String']['input'];
+  dueDate: Scalars['Time']['input'];
+  organizationId: Scalars['ID']['input'];
+  userId: Scalars['ID']['input'];
+};
+
+export type ReminderUpdateInput = {
+  content?: InputMaybe<Scalars['String']['input']>;
+  dismissed?: InputMaybe<Scalars['Boolean']['input']>;
+  dueDate?: InputMaybe<Scalars['Time']['input']>;
+  id: Scalars['ID']['input'];
 };
 
 export type RenewalRecord = {
