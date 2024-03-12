@@ -9,6 +9,8 @@ import { Button } from '@ui/form/Button';
 import { Text } from '@ui/typography/Text';
 import { useModKey } from '@shared/hooks/useModKey';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 import { useTimelineMeta } from '@organization/src/components/Timeline/state';
 import { useTimelineRefContext } from '@organization/src/components/Timeline/context/TimelineRefContext';
 import {
@@ -24,10 +26,17 @@ type ReminderForm = {
 };
 
 export const ReminderTimelineAction = () => {
+  const client = getGraphQLClient();
   const { openedEditor, closeEditor } = useTimelineActionContext();
   const queryClient = useQueryClient();
   const { virtuosoRef } = useTimelineRefContext();
   const [timelineMeta] = useTimelineMeta();
+  const { data: globalCacheData } = useGlobalCacheQuery(client);
+
+  const user = globalCacheData?.global_Cache?.user;
+  const currentOwner = [user?.firstName, user?.lastName]
+    .filter(Boolean)
+    .join(' ');
 
   const isOpen = openedEditor === 'reminder';
 
@@ -39,22 +48,22 @@ export const ReminderTimelineAction = () => {
     onSubmit: async (values) => {
       let remindersCount = 0;
 
-      queryClient.setQueryData<{ id: string; date: string; content: string }[]>(
-        ['reminders'],
-        (cache) => {
-          return produce(cache, (draft) => {
-            if (!draft) return;
+      queryClient.setQueryData<
+        { id: string; date: string; owner: string; content: string }[]
+      >(['reminders'], (cache) => {
+        return produce(cache, (draft) => {
+          if (!draft) return;
 
-            draft.unshift({
-              id: Math.random().toString(),
-              date: new Date().toISOString(),
-              content: values.content,
-            });
-
-            remindersCount = draft.length;
+          draft.unshift({
+            id: Math.random().toString(),
+            date: new Date().toISOString(),
+            content: values.content,
+            owner: currentOwner,
           });
-        },
-      );
+
+          remindersCount = draft.length;
+        });
+      });
 
       const timelineData = queryClient.getQueryData<
         InfiniteData<GetTimelineQuery>
@@ -100,9 +109,6 @@ export const ReminderTimelineAction = () => {
         fontSize='sm'
         name='content'
         formId='reminder-form'
-        // onBlur={() => {
-        //   setIsEditing(false);
-        // }}
         placeholder='Type your reminder here'
         borderBottom='unset'
         _hover={{

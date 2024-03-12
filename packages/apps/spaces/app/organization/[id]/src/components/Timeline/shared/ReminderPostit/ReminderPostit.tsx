@@ -1,6 +1,10 @@
 import { Flex, FlexProps } from '@ui/layout/Flex';
 
-export const ReminderPostit = ({ children, ...rest }: FlexProps) => {
+export const ReminderPostit = ({
+  children,
+  onClickOutside = () => undefined,
+  ...rest
+}: FlexProps & { onClickOutside?: (e: Event) => void }) => {
   return (
     <Flex position='relative' w='321px' m='6' mt='2' {...rest}>
       <Flex

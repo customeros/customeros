@@ -17,6 +17,7 @@ import './../styles/remirror-editor.scss';
 import 'filepond-plugin-image-preview/dist/filepond-plugin-image-preview.min.css';
 import 'filepond/dist/filepond.min.css';
 import 'react-toastify/dist/ReactToastify.css';
+import 'react-datepicker/dist/react-datepicker.css';
 import './../styles/filepond.scss';
 
 const barlow = localFont({
