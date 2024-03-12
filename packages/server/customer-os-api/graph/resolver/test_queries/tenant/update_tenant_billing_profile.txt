@@ -21,7 +21,7 @@ tenant_UpdateBillingProfile(
         canPayWithDirectDebitACH: true
         canPayWithDirectDebitBacs: true
         canPayWithPigeon: true
-        canPayWithBankTransfer
+        canPayWithBankTransfer: true
     }) {
     id
   }
