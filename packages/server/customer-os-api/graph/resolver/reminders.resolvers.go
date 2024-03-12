@@ -85,13 +85,13 @@ func (r *queryResolver) Reminder(ctx context.Context, id string) (*model.Reminde
 }
 
 // RemindersForOrganization is the resolver for the remindersForOrganization field.
-func (r *queryResolver) RemindersForOrganization(ctx context.Context, organizationID string) ([]*model.Reminder, error) {
+func (r *queryResolver) RemindersForOrganization(ctx context.Context, organizationID string, dismissed *bool) ([]*model.Reminder, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.RemindersForOrganization", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagEntityId, organizationID)
 
-	reminderEntities, err := r.Services.ReminderService.RemindersForOrganization(ctx, organizationID)
+	reminderEntities, err := r.Services.ReminderService.RemindersForOrganization(ctx, organizationID, dismissed)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to fetch reminders for organization with id %s", organizationID)

@@ -5,7 +5,7 @@ extend type Mutation {
 
 extend type Query {
     reminder(id: ID!): Reminder! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    remindersForOrganization(organizationId: ID!): [Reminder!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    remindersForOrganization(organizationId: ID!, dismissed: Boolean): [Reminder!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type Reminder implements MetadataInterface {

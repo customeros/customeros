@@ -1323,7 +1323,7 @@ type ComplexityRoot struct {
 		PhoneNumber                           func(childComplexity int, id string) int
 		PlayerByAuthIDProvider                func(childComplexity int, authID string, provider string) int
 		Reminder                              func(childComplexity int, id string) int
-		RemindersForOrganization              func(childComplexity int, organizationID string) int
+		RemindersForOrganization              func(childComplexity int, organizationID string, dismissed *bool) int
 		ServiceLineItem                       func(childComplexity int, id string) int
 		SlackChannels                         func(childComplexity int, pagination *model.Pagination) int
 		TableViewDefs                         func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort *model.SortBy) int
@@ -1959,7 +1959,7 @@ type QueryResolver interface {
 	PhoneNumber(ctx context.Context, id string) (*model.PhoneNumber, error)
 	PlayerByAuthIDProvider(ctx context.Context, authID string, provider string) (*model.Player, error)
 	Reminder(ctx context.Context, id string) (*model.Reminder, error)
-	RemindersForOrganization(ctx context.Context, organizationID string) ([]*model.Reminder, error)
+	RemindersForOrganization(ctx context.Context, organizationID string, dismissed *bool) ([]*model.Reminder, error)
 	GcliSearch(ctx context.Context, keyword string, limit *int) ([]*model.GCliItem, error)
 	ServiceLineItem(ctx context.Context, id string) (*model.ServiceLineItem, error)
 	SlackChannels(ctx context.Context, pagination *model.Pagination) (*model.SlackChannelPage, error)
@@ -9895,7 +9895,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.RemindersForOrganization(childComplexity, args["organizationId"].(string)), true
+		return e.complexity.Query.RemindersForOrganization(childComplexity, args["organizationId"].(string), args["dismissed"].(*bool)), true
 
 	case "Query.serviceLineItem":
 		if e.complexity.Query.ServiceLineItem == nil {
@@ -14165,7 +14165,7 @@ extend type Mutation {
 
 extend type Query {
     reminder(id: ID!): Reminder! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    remindersForOrganization(organizationId: ID!): [Reminder!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    remindersForOrganization(organizationId: ID!, dismissed: Boolean): [Reminder!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type Reminder implements MetadataInterface {
@@ -19099,6 +19099,15 @@ func (ec *executionContext) field_Query_remindersForOrganization_args(ctx contex
 		}
 	}
 	args["organizationId"] = arg0
+	var arg1 *bool
+	if tmp, ok := rawArgs["dismissed"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("dismissed"))
+		arg1, err = ec.unmarshalOBoolean2ᚖbool(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["dismissed"] = arg1
 	return args, nil
 }
 
@@ -77825,7 +77834,7 @@ func (ec *executionContext) _Query_remindersForOrganization(ctx context.Context,
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().RemindersForOrganization(rctx, fc.Args["organizationId"].(string))
+			return ec.resolvers.Query().RemindersForOrganization(rctx, fc.Args["organizationId"].(string), fc.Args["dismissed"].(*bool))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})

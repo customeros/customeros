@@ -26,7 +26,7 @@ type ReminderService interface {
 	ReminderCreate(ctx context.Context, userId, orgId, content string, dueDate time.Time) (string, error)
 	ReminderUpdate(ctx context.Context, id string, content *string, dueDate *time.Time, dismissed *bool) error
 	Reminder(ctx context.Context, id string) (*neo4jentity.ReminderEntity, error)
-	RemindersForOrganization(ctx context.Context, organizationID string) ([]*neo4jentity.ReminderEntity, error)
+	RemindersForOrganization(ctx context.Context, organizationID string, dismissed *bool) ([]*neo4jentity.ReminderEntity, error)
 }
 
 type reminderService struct {
@@ -144,13 +144,13 @@ func (s *reminderService) Reminder(ctx context.Context, id string) (*neo4jentity
 	}
 }
 
-func (s *reminderService) RemindersForOrganization(ctx context.Context, organizationID string) ([]*neo4jentity.ReminderEntity, error) {
+func (s *reminderService) RemindersForOrganization(ctx context.Context, organizationID string, dismissed *bool) ([]*neo4jentity.ReminderEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderService.RemindersForOrganization")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagEntityId, organizationID)
 
-	reminderDbNodes, err := s.repositories.Neo4jRepositories.ReminderReadRepository.GetRemindersForOrganization(ctx, common.GetContext(ctx).Tenant, organizationID)
+	reminderDbNodes, err := s.repositories.Neo4jRepositories.ReminderReadRepository.GetRemindersOrderByDueDateAsc(ctx, common.GetContext(ctx).Tenant, organizationID, dismissed)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
