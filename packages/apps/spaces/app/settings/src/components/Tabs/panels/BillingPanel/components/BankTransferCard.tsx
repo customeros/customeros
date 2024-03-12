@@ -39,7 +39,6 @@ export const BankTransferCard = ({ account }: { account: BankAccount }) => {
     },
     500,
   );
-
   useForm<BankAccount>({
     formId,
     defaultValues: account,
@@ -117,7 +116,10 @@ export const BankTransferCard = ({ account }: { account: BankAccount }) => {
             formId={formId}
           />
 
-          <BankTransferMenu id={account?.metadata?.id} />
+          <BankTransferMenu
+            id={account?.metadata?.id}
+            allowInternational={account.allowInternational}
+          />
         </CardHeader>
         <CardBody p={0} gap={2}>
           <Flex pb={1}>
@@ -148,26 +150,31 @@ export const BankTransferCard = ({ account }: { account: BankAccount }) => {
               formId={formId}
             />
           </Flex>
-          <FormInput
-            autoComplete='off'
-            label='BIC/Swift'
-            placeholder='BIC/Swift'
-            isLabelVisible
-            labelProps={{
-              fontSize: 'sm',
-              mb: 0,
-              fontWeight: 'semibold',
-            }}
-            name='bic'
-            formId={formId}
-          />
-          {/*<FormInput*/}
-          {/*  autoComplete='off'*/}
-          {/*  label='Other details'*/}
-          {/*  placeholder='Other details'*/}
-          {/*  name='comments'*/}
-          {/*  formId={formId}*/}
-          {/*/>*/}
+
+          {account.allowInternational && (
+            <>
+              <FormInput
+                autoComplete='off'
+                label='BIC/Swift'
+                placeholder='BIC/Swift'
+                isLabelVisible
+                labelProps={{
+                  fontSize: 'sm',
+                  mb: 0,
+                  fontWeight: 'semibold',
+                }}
+                name='bic'
+                formId={formId}
+              />
+              <FormInput
+                autoComplete='off'
+                label='Other details'
+                placeholder='Other details'
+                name='otherDetails'
+                formId={formId}
+              />
+            </>
+          )}
         </CardBody>
       </Card>
     </>

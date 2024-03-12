@@ -122,35 +122,41 @@ export type AttachmentInput = {
 export type BankAccount = MetadataInterface & {
   __typename?: 'BankAccount';
   accountNumber?: Maybe<Scalars['String']['output']>;
+  allowInternational: Scalars['Boolean']['output'];
   bankName?: Maybe<Scalars['String']['output']>;
   bankTransferEnabled: Scalars['Boolean']['output'];
   bic?: Maybe<Scalars['String']['output']>;
   currency?: Maybe<Currency>;
   iban?: Maybe<Scalars['String']['output']>;
   metadata: Metadata;
+  otherDetails?: Maybe<Scalars['String']['output']>;
   routingNumber?: Maybe<Scalars['String']['output']>;
   sortCode?: Maybe<Scalars['String']['output']>;
 };
 
 export type BankAccountCreateInput = {
   accountNumber?: InputMaybe<Scalars['String']['input']>;
+  allowInternational?: InputMaybe<Scalars['Boolean']['input']>;
   bankName?: InputMaybe<Scalars['String']['input']>;
   bankTransferEnabled?: InputMaybe<Scalars['Boolean']['input']>;
   bic?: InputMaybe<Scalars['String']['input']>;
   currency?: InputMaybe<Currency>;
   iban?: InputMaybe<Scalars['String']['input']>;
+  otherDetails?: InputMaybe<Scalars['String']['input']>;
   routingNumber?: InputMaybe<Scalars['String']['input']>;
   sortCode?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type BankAccountUpdateInput = {
   accountNumber?: InputMaybe<Scalars['String']['input']>;
+  allowInternational?: InputMaybe<Scalars['Boolean']['input']>;
   bankName?: InputMaybe<Scalars['String']['input']>;
   bankTransferEnabled?: InputMaybe<Scalars['Boolean']['input']>;
   bic?: InputMaybe<Scalars['String']['input']>;
   currency?: InputMaybe<Currency>;
   iban?: InputMaybe<Scalars['String']['input']>;
   id: Scalars['ID']['input'];
+  otherDetails?: InputMaybe<Scalars['String']['input']>;
   routingNumber?: InputMaybe<Scalars['String']['input']>;
   sortCode?: InputMaybe<Scalars['String']['input']>;
 };
@@ -1168,6 +1174,12 @@ export type ExternalSystem = {
   externalSource?: Maybe<Scalars['String']['output']>;
   externalUrl?: Maybe<Scalars['String']['output']>;
   syncDate?: Maybe<Scalars['Time']['output']>;
+  type: ExternalSystemType;
+};
+
+export type ExternalSystemInstance = {
+  __typename?: 'ExternalSystemInstance';
+  paymentMethods: Array<Scalars['String']['output']>;
   type: ExternalSystemType;
 };
 
@@ -4117,9 +4129,14 @@ export type TenantBillingProfile = Node &
     addressLine2: Scalars['String']['output'];
     addressLine3: Scalars['String']['output'];
     appSource: Scalars['String']['output'];
+    canPayWithBankTransfer: Scalars['Boolean']['output'];
+    /** @deprecated Not used */
     canPayWithCard: Scalars['Boolean']['output'];
+    /** @deprecated Not used */
     canPayWithDirectDebitACH: Scalars['Boolean']['output'];
+    /** @deprecated Not used */
     canPayWithDirectDebitBacs: Scalars['Boolean']['output'];
+    /** @deprecated Not used */
     canPayWithDirectDebitSEPA: Scalars['Boolean']['output'];
     canPayWithPigeon: Scalars['Boolean']['output'];
     country: Scalars['String']['output'];
@@ -4145,6 +4162,7 @@ export type TenantBillingProfileInput = {
   addressLine1?: InputMaybe<Scalars['String']['input']>;
   addressLine2?: InputMaybe<Scalars['String']['input']>;
   addressLine3?: InputMaybe<Scalars['String']['input']>;
+  canPayWithBankTransfer: Scalars['Boolean']['input'];
   canPayWithCard: Scalars['Boolean']['input'];
   canPayWithDirectDebitACH: Scalars['Boolean']['input'];
   canPayWithDirectDebitBacs: Scalars['Boolean']['input'];
@@ -4167,6 +4185,7 @@ export type TenantBillingProfileUpdateInput = {
   addressLine1?: InputMaybe<Scalars['String']['input']>;
   addressLine2?: InputMaybe<Scalars['String']['input']>;
   addressLine3?: InputMaybe<Scalars['String']['input']>;
+  canPayWithBankTransfer?: InputMaybe<Scalars['Boolean']['input']>;
   canPayWithCard?: InputMaybe<Scalars['Boolean']['input']>;
   canPayWithDirectDebitACH?: InputMaybe<Scalars['Boolean']['input']>;
   canPayWithDirectDebitBacs?: InputMaybe<Scalars['Boolean']['input']>;

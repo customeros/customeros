@@ -12,5 +12,7 @@ query BankAccounts {
         sortCode
         accountNumber
         routingNumber
+        allowInternational
+        otherDetails
     }
 }
