@@ -11,6 +11,7 @@ query GetBankAccounts {
     bankName
     currency
     bankTransferEnabled
+    allowInternational
     accountNumber
     iban
     bic

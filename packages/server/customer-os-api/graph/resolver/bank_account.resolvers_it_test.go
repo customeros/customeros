@@ -31,6 +31,7 @@ func TestQueryResolver_BankAccounts(t *testing.T) {
 		UpdatedAt:           today,
 		BankName:            "bankName1",
 		BankTransferEnabled: true,
+		AllowInternational:  true,
 		Currency:            neo4jenum.CurrencyEUR,
 		Iban:                "iban1",
 		Bic:                 "bic1",
@@ -43,6 +44,7 @@ func TestQueryResolver_BankAccounts(t *testing.T) {
 		UpdatedAt:           yesterday,
 		BankName:            "bankName2",
 		BankTransferEnabled: false,
+		AllowInternational:  false,
 		Currency:            neo4jenum.CurrencyUSD,
 		Iban:                "iban2",
 		Bic:                 "bic2",
@@ -68,6 +70,7 @@ func TestQueryResolver_BankAccounts(t *testing.T) {
 	require.Equal(t, yesterday, ba1.Metadata.Created)
 	require.Equal(t, "bankName2", *ba1.BankName)
 	require.Equal(t, false, ba1.BankTransferEnabled)
+	require.Equal(t, false, ba1.AllowInternational)
 	require.Equal(t, model.CurrencyUsd, *ba1.Currency)
 	require.Equal(t, "iban2", *ba1.Iban)
 	require.Equal(t, "bic2", *ba1.Bic)
@@ -80,6 +83,7 @@ func TestQueryResolver_BankAccounts(t *testing.T) {
 	require.Equal(t, today, ba2.Metadata.Created)
 	require.Equal(t, "bankName1", *ba2.BankName)
 	require.Equal(t, true, ba2.BankTransferEnabled)
+	require.Equal(t, true, ba2.AllowInternational)
 	require.Equal(t, model.CurrencyEur, *ba2.Currency)
 	require.Equal(t, "iban1", *ba2.Iban)
 	require.Equal(t, "bic1", *ba2.Bic)
@@ -106,6 +110,7 @@ func TestMutationResolver_BankAccountCreate(t *testing.T) {
 			require.Equal(t, "Bank of America", bankAccount.BankName)
 			require.Equal(t, "USD", bankAccount.Currency)
 			require.True(t, bankAccount.BankTransferEnabled)
+			require.True(t, bankAccount.AllowInternational)
 			require.Equal(t, "IBAN-123456789", bankAccount.Iban)
 			require.Equal(t, "BIC-123456789", bankAccount.Bic)
 			require.Equal(t, "ACC-123456789", bankAccount.AccountNumber)
@@ -157,12 +162,13 @@ func TestMutationResolver_BankAccountUpdate_FromEurToUsd(t *testing.T) {
 			require.Equal(t, "Bank of America", bankAccount.BankName)
 			require.Equal(t, "USD", bankAccount.Currency)
 			require.True(t, bankAccount.BankTransferEnabled)
+			require.True(t, bankAccount.AllowInternational)
 			require.Equal(t, "", bankAccount.Iban)
 			require.Equal(t, "", bankAccount.Bic)
 			require.Equal(t, "ACC-123456789", bankAccount.AccountNumber)
 			require.Equal(t, "routing-123456789", bankAccount.RoutingNumber)
 			require.Equal(t, "", bankAccount.SortCode)
-			require.Equal(t, 8, len(bankAccount.FieldsMask))
+			require.Equal(t, 9, len(bankAccount.FieldsMask))
 			calledUpdateBankAccount = true
 			neo4jtest.CreateBankAccount(ctx, driver, tenantName, neo4jentity.BankAccountEntity{Id: bankAccountId})
 			return &commonpb.IdResponse{

@@ -14,6 +14,7 @@ type BankAccountEntity struct {
 	AppSource           string
 	BankName            string
 	BankTransferEnabled bool
+	AllowInternational  bool
 	Currency            enum.Currency
 	Iban                string
 	Bic                 string

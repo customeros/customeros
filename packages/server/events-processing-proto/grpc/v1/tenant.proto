@@ -126,6 +126,7 @@ message AddBankAccountGrpcRequest {
   string bic = 10;
   string sortCode = 11;
   string routingNumber = 12;
+  bool allowInternational = 13;
 }
 
 message UpdateBankAccountGrpcRequest {
@@ -143,6 +144,7 @@ message UpdateBankAccountGrpcRequest {
   string sortCode = 12;
   string routingNumber = 13;
   repeated BankAccountFieldMask fieldsMask = 14;
+  bool allowInternational = 15;
 }
 
 message DeleteBankAccountGrpcRequest {
@@ -162,6 +164,7 @@ enum BankAccountFieldMask {
   BANK_ACCOUNT_FIELD_BIC = 6;
   BANK_ACCOUNT_FIELD_SORT_CODE = 7;
   BANK_ACCOUNT_FIELD_ROUTING_NUMBER = 8;
+  BANK_ACCOUNT_FIELD_ALLOW_INTERNATIONAL = 9;
 }
 
 service tenantGrpcService {

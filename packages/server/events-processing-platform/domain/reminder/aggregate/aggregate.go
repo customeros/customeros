@@ -13,6 +13,7 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
+	"strings"
 )
 
 const ReminderAggregateType = "reminder"
@@ -54,6 +55,9 @@ func (a *ReminderAggregate) When(event eventstore.Event) error {
 	case events.ReminderUpdateV1:
 		return a.whenReminderUpdate(event)
 	default:
+		if strings.HasPrefix(event.GetEventType(), "$") {
+			return nil
+		}
 		err := eventstore.ErrInvalidEventType
 		err.EventType = event.GetEventType()
 		return err

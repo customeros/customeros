@@ -21,6 +21,7 @@ func MapEntityToBankAccount(entity *neo4jentity.BankAccountEntity) *model.BankAc
 		},
 		BankName:            utils.StringPtr(entity.BankName),
 		BankTransferEnabled: entity.BankTransferEnabled,
+		AllowInternational:  entity.AllowInternational,
 		Currency:            utils.ToPtr(MapCurrencyToModel(entity.Currency)),
 		Iban:                utils.StringPtr(entity.Iban),
 		Bic:                 utils.StringPtr(entity.Bic),

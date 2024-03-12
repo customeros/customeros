@@ -36,6 +36,7 @@ const (
 
 	FieldMaskBankAccountBankName            = "bankAccountBankName"
 	FieldMaskBankAccountBankTransferEnabled = "bankAccountBankTransferEnabled"
+	FieldMaskBankAccountAllowInternational  = "bankAccountAllowInternational"
 	FieldMaskBankAccountCurrency            = "bankAccountCurrency"
 	FieldMaskBankAccountIban                = "bankAccountIban"
 	FieldMaskBankAccountBic                 = "bankAccountBic"

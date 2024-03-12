@@ -63,6 +63,7 @@ type BankAccount struct {
 	SourceFields        commonmodel.Source `json:"source"`
 	BankName            string             `json:"bankName"`
 	BankTransferEnabled bool               `json:"bankTransferEnabled"`
+	AllowInternational  bool               `json:"allowInternational"`
 	Currency            string             `json:"currency"`
 	Iban                string             `json:"iban"`
 	Bic                 string             `json:"bic"`

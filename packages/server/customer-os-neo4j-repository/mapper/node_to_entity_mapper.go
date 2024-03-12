@@ -591,6 +591,7 @@ func MapDbNodeToBankAccountEntity(dbNode *dbtype.Node) *entity.BankAccountEntity
 		BankName:            utils.GetStringPropOrEmpty(props, "bankName"),
 		Currency:            enum.DecodeCurrency(utils.GetStringPropOrEmpty(props, "currency")),
 		BankTransferEnabled: utils.GetBoolPropOrFalse(props, "bankTransferEnabled"),
+		AllowInternational:  utils.GetBoolPropOrFalse(props, "allowInternational"),
 		AccountNumber:       utils.GetStringPropOrEmpty(props, "accountNumber"),
 		SortCode:            utils.GetStringPropOrEmpty(props, "sortCode"),
 		Iban:                utils.GetStringPropOrEmpty(props, "iban"),

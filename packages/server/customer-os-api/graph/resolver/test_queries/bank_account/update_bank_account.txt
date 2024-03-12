@@ -5,6 +5,7 @@ bankAccount_Update(
         currency: USD
         bankName: "Bank of America"
         bankTransferEnabled: true
+        allowInternational: true
         accountNumber: "ACC-123456789"
         iban: "IBAN-123456789"
         routingNumber: "routing-123456789"

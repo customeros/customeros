@@ -129,6 +129,7 @@ type ComplexityRoot struct {
 
 	BankAccount struct {
 		AccountNumber       func(childComplexity int) int
+		AllowInternational  func(childComplexity int) int
 		BankName            func(childComplexity int) int
 		BankTransferEnabled func(childComplexity int) int
 		Bic                 func(childComplexity int) int
@@ -2244,6 +2245,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.BankAccount.AccountNumber(childComplexity), true
+
+	case "BankAccount.allowInternational":
+		if e.complexity.BankAccount.AllowInternational == nil {
+			break
+		}
+
+		return e.complexity.BankAccount.AllowInternational(childComplexity), true
 
 	case "BankAccount.bankName":
 		if e.complexity.BankAccount.BankName == nil {
@@ -11360,6 +11368,7 @@ type BankAccount implements MetadataInterface {
     bankName:               String
     currency:               Currency
     bankTransferEnabled:    Boolean!
+    allowInternational:     Boolean!
     iban:                   String
     bic:                    String
     sortCode:               String
@@ -11371,6 +11380,7 @@ input BankAccountCreateInput {
     currency:               Currency
     bankName:               String
     bankTransferEnabled:    Boolean
+    allowInternational:     Boolean
     iban:                   String
     bic:                    String
     sortCode:               String
@@ -11383,6 +11393,7 @@ input BankAccountUpdateInput {
     currency:               Currency
     bankName:               String
     bankTransferEnabled:    Boolean
+    allowInternational:     Boolean
     iban:                   String
     bic:                    String
     sortCode:               String
@@ -20871,6 +20882,50 @@ func (ec *executionContext) _BankAccount_bankTransferEnabled(ctx context.Context
 }
 
 func (ec *executionContext) fieldContext_BankAccount_bankTransferEnabled(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BankAccount",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BankAccount_allowInternational(ctx context.Context, field graphql.CollectedField, obj *model.BankAccount) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_BankAccount_allowInternational(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AllowInternational, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_BankAccount_allowInternational(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "BankAccount",
 		Field:      field,
@@ -46737,6 +46792,8 @@ func (ec *executionContext) fieldContext_Mutation_bankAccount_Create(ctx context
 				return ec.fieldContext_BankAccount_currency(ctx, field)
 			case "bankTransferEnabled":
 				return ec.fieldContext_BankAccount_bankTransferEnabled(ctx, field)
+			case "allowInternational":
+				return ec.fieldContext_BankAccount_allowInternational(ctx, field)
 			case "iban":
 				return ec.fieldContext_BankAccount_iban(ctx, field)
 			case "bic":
@@ -46842,6 +46899,8 @@ func (ec *executionContext) fieldContext_Mutation_bankAccount_Update(ctx context
 				return ec.fieldContext_BankAccount_currency(ctx, field)
 			case "bankTransferEnabled":
 				return ec.fieldContext_BankAccount_bankTransferEnabled(ctx, field)
+			case "allowInternational":
+				return ec.fieldContext_BankAccount_allowInternational(ctx, field)
 			case "iban":
 				return ec.fieldContext_BankAccount_iban(ctx, field)
 			case "bic":
@@ -73468,6 +73527,8 @@ func (ec *executionContext) fieldContext_Query_bankAccounts(ctx context.Context,
 				return ec.fieldContext_BankAccount_currency(ctx, field)
 			case "bankTransferEnabled":
 				return ec.fieldContext_BankAccount_bankTransferEnabled(ctx, field)
+			case "allowInternational":
+				return ec.fieldContext_BankAccount_allowInternational(ctx, field)
 			case "iban":
 				return ec.fieldContext_BankAccount_iban(ctx, field)
 			case "bic":
@@ -88563,7 +88624,7 @@ func (ec *executionContext) unmarshalInputBankAccountCreateInput(ctx context.Con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"currency", "bankName", "bankTransferEnabled", "iban", "bic", "sortCode", "accountNumber", "routingNumber"}
+	fieldsInOrder := [...]string{"currency", "bankName", "bankTransferEnabled", "allowInternational", "iban", "bic", "sortCode", "accountNumber", "routingNumber"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -88591,6 +88652,13 @@ func (ec *executionContext) unmarshalInputBankAccountCreateInput(ctx context.Con
 				return it, err
 			}
 			it.BankTransferEnabled = data
+		case "allowInternational":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("allowInternational"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AllowInternational = data
 		case "iban":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("iban"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -88639,7 +88707,7 @@ func (ec *executionContext) unmarshalInputBankAccountUpdateInput(ctx context.Con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "currency", "bankName", "bankTransferEnabled", "iban", "bic", "sortCode", "accountNumber", "routingNumber"}
+	fieldsInOrder := [...]string{"id", "currency", "bankName", "bankTransferEnabled", "allowInternational", "iban", "bic", "sortCode", "accountNumber", "routingNumber"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -88674,6 +88742,13 @@ func (ec *executionContext) unmarshalInputBankAccountUpdateInput(ctx context.Con
 				return it, err
 			}
 			it.BankTransferEnabled = data
+		case "allowInternational":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("allowInternational"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AllowInternational = data
 		case "iban":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("iban"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -95715,6 +95790,11 @@ func (ec *executionContext) _BankAccount(ctx context.Context, sel ast.SelectionS
 			out.Values[i] = ec._BankAccount_currency(ctx, field, obj)
 		case "bankTransferEnabled":
 			out.Values[i] = ec._BankAccount_bankTransferEnabled(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "allowInternational":
+			out.Values[i] = ec._BankAccount_allowInternational(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

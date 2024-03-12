@@ -166,6 +166,7 @@ type BankAccount struct {
 	BankName            *string   `json:"bankName,omitempty"`
 	Currency            *Currency `json:"currency,omitempty"`
 	BankTransferEnabled bool      `json:"bankTransferEnabled"`
+	AllowInternational  bool      `json:"allowInternational"`
 	Iban                *string   `json:"iban,omitempty"`
 	Bic                 *string   `json:"bic,omitempty"`
 	SortCode            *string   `json:"sortCode,omitempty"`
@@ -180,6 +181,7 @@ type BankAccountCreateInput struct {
 	Currency            *Currency `json:"currency,omitempty"`
 	BankName            *string   `json:"bankName,omitempty"`
 	BankTransferEnabled *bool     `json:"bankTransferEnabled,omitempty"`
+	AllowInternational  *bool     `json:"allowInternational,omitempty"`
 	Iban                *string   `json:"iban,omitempty"`
 	Bic                 *string   `json:"bic,omitempty"`
 	SortCode            *string   `json:"sortCode,omitempty"`
@@ -192,6 +194,7 @@ type BankAccountUpdateInput struct {
 	Currency            *Currency `json:"currency,omitempty"`
 	BankName            *string   `json:"bankName,omitempty"`
 	BankTransferEnabled *bool     `json:"bankTransferEnabled,omitempty"`
+	AllowInternational  *bool     `json:"allowInternational,omitempty"`
 	Iban                *string   `json:"iban,omitempty"`
 	Bic                 *string   `json:"bic,omitempty"`
 	SortCode            *string   `json:"sortCode,omitempty"`

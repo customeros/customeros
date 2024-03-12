@@ -13,6 +13,7 @@ type BankAccount implements MetadataInterface {
     bankName:               String
     currency:               Currency
     bankTransferEnabled:    Boolean!
+    allowInternational:     Boolean!
     iban:                   String
     bic:                    String
     sortCode:               String
@@ -24,6 +25,7 @@ input BankAccountCreateInput {
     currency:               Currency
     bankName:               String
     bankTransferEnabled:    Boolean
+    allowInternational:     Boolean
     iban:                   String
     bic:                    String
     sortCode:               String
@@ -36,6 +38,7 @@ input BankAccountUpdateInput {
     currency:               Currency
     bankName:               String
     bankTransferEnabled:    Boolean
+    allowInternational:     Boolean
     iban:                   String
     bic:                    String
     sortCode:               String

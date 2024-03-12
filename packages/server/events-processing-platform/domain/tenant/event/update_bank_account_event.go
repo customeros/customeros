@@ -16,6 +16,7 @@ type TenantBankAccountUpdateEvent struct {
 	FieldsMask          []string  `json:"fieldsMask,omitempty"`
 	BankName            string    `json:"bankName,omitempty"`
 	BankTransferEnabled bool      `json:"bankTransferEnabled,omitempty"`
+	AllowInternational  bool      `json:"allowInternational,omitempty"`
 	Currency            string    `json:"currency,omitempty"`
 	Iban                string    `json:"iban,omitempty"`
 	Bic                 string    `json:"bic,omitempty"`
@@ -32,6 +33,7 @@ func NewTenantBankAccountUpdateEvent(aggregate eventstore.Aggregate, id string, 
 		FieldsMask:          fieldsMaks,
 		BankName:            request.BankName,
 		BankTransferEnabled: request.BankTransferEnabled,
+		AllowInternational:  request.AllowInternational,
 		Currency:            request.Currency,
 		Iban:                request.Iban,
 		Bic:                 request.Bic,
@@ -58,6 +60,10 @@ func (e TenantBankAccountUpdateEvent) UpdateBankName() bool {
 
 func (e TenantBankAccountUpdateEvent) UpdateBankTransferEnabled() bool {
 	return utils.Contains(e.FieldsMask, FieldMaskBankAccountBankTransferEnabled)
+}
+
+func (e TenantBankAccountUpdateEvent) UpdateAllowInternational() bool {
+	return utils.Contains(e.FieldsMask, FieldMaskBankAccountAllowInternational)
 }
 
 func (e TenantBankAccountUpdateEvent) UpdateCurrency() bool {

@@ -49,6 +49,7 @@ func TestBankAccountEventHandler_OnAddBankAccountV1(t *testing.T) {
 		&tenantpb.AddBankAccountGrpcRequest{
 			BankName:            "bankName",
 			BankTransferEnabled: true,
+			AllowInternational:  true,
 			Currency:            "USD",
 			AccountNumber:       "accountNumber",
 			SortCode:            "sortCode",
@@ -79,6 +80,7 @@ func TestBankAccountEventHandler_OnAddBankAccountV1(t *testing.T) {
 	require.Equal(t, bankAccountId, bankAccountEntity.Id)
 	require.Equal(t, "bankName", bankAccountEntity.BankName)
 	require.Equal(t, true, bankAccountEntity.BankTransferEnabled)
+	require.Equal(t, true, bankAccountEntity.AllowInternational)
 	require.Equal(t, neo4jenum.CurrencyUSD, bankAccountEntity.Currency)
 	require.Equal(t, "accountNumber", bankAccountEntity.AccountNumber)
 	require.Equal(t, "sortCode", bankAccountEntity.SortCode)
@@ -101,6 +103,7 @@ func TestBankAccountEventHandler_OnUpdateBankAccountV1(t *testing.T) {
 	bankAccountId := neo4jtest.CreateBankAccount(ctx, testDatabase.Driver, tenantName, neo4jentity.BankAccountEntity{
 		BankName:            "bankName",
 		BankTransferEnabled: false,
+		AllowInternational:  false,
 		Currency:            neo4jenum.CurrencyEUR,
 		AccountNumber:       "accountNumber",
 		SortCode:            "sortCode",
@@ -129,6 +132,7 @@ func TestBankAccountEventHandler_OnUpdateBankAccountV1(t *testing.T) {
 		&tenantpb.UpdateBankAccountGrpcRequest{
 			BankName:            "updatedName",
 			BankTransferEnabled: true,
+			AllowInternational:  true,
 			Currency:            "USD",
 			AccountNumber:       "updatedAccountNumber",
 			SortCode:            "updatedSortCode",
@@ -140,6 +144,7 @@ func TestBankAccountEventHandler_OnUpdateBankAccountV1(t *testing.T) {
 		[]string{
 			event.FieldMaskBankAccountBankName,
 			event.FieldMaskBankAccountBankTransferEnabled,
+			event.FieldMaskBankAccountAllowInternational,
 			event.FieldMaskBankAccountCurrency,
 			event.FieldMaskBankAccountAccountNumber,
 			event.FieldMaskBankAccountSortCode,
@@ -169,6 +174,7 @@ func TestBankAccountEventHandler_OnUpdateBankAccountV1(t *testing.T) {
 	require.Equal(t, bankAccountId, bankAccountEntity.Id)
 	require.Equal(t, "updatedName", bankAccountEntity.BankName)
 	require.Equal(t, true, bankAccountEntity.BankTransferEnabled)
+	require.Equal(t, true, bankAccountEntity.AllowInternational)
 	require.Equal(t, neo4jenum.CurrencyUSD, bankAccountEntity.Currency)
 	require.Equal(t, "updatedAccountNumber", bankAccountEntity.AccountNumber)
 	require.Equal(t, "updatedSortCode", bankAccountEntity.SortCode)
