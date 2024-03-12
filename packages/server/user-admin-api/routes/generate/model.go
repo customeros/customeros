@@ -33,6 +33,7 @@ type SourceData struct {
 		CanPayWithDirectDebitACH      bool   `json:"canPayWithDirectDebitACH"`
 		CanPayWithDirectDebitBacs     bool   `json:"canPayWithDirectDebitBacs"`
 		CanPayWithPigeon              bool   `json:"canPayWithPigeon"`
+		CanPayWithBankTransfer        bool   `json:"canPayWithBankTransfer"`
 	} `json:"tenantBillingProfiles"`
 	Organizations []struct {
 		Id                    string `json:"id"`

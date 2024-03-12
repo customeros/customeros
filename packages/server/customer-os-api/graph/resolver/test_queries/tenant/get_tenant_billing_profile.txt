@@ -18,5 +18,6 @@ query GetTenantBillingProfiles($id: ID!) {
     canPayWithDirectDebitACH
     canPayWithDirectDebitBacs
     canPayWithPigeon
+    canPayWithBankTransfer
   }
 }

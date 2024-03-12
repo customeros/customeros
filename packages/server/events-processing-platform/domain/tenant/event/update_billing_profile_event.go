@@ -31,6 +31,7 @@ type TenantBillingProfileUpdateEvent struct {
 	CanPayWithDirectDebitACH      bool      `json:"canPayWithDirectDebitACH"`
 	CanPayWithDirectDebitBacs     bool      `json:"canPayWithDirectDebitBacs"`
 	CanPayWithPigeon              bool      `json:"canPayWithPigeon"`
+	CanPayWithBankTransfer        bool      `json:"canPayWithBankTransfer"`
 	FieldsMask                    []string  `json:"fieldsMask,omitempty"`
 }
 
@@ -57,6 +58,7 @@ func NewTenantBillingProfileUpdateEvent(aggregate eventstore.Aggregate, id strin
 		CanPayWithDirectDebitACH:      request.CanPayWithDirectDebitACH,
 		CanPayWithDirectDebitBacs:     request.CanPayWithDirectDebitBacs,
 		CanPayWithPigeon:              request.CanPayWithPigeon,
+		CanPayWithBankTransfer:        request.CanPayWithBankTransfer,
 		FieldsMask:                    fieldsMaks,
 	}
 
@@ -142,4 +144,8 @@ func (e TenantBillingProfileUpdateEvent) UpdateCanPayWithDirectDebitBacs() bool 
 
 func (e TenantBillingProfileUpdateEvent) UpdateCanPayWithPigeon() bool {
 	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskCanPayWithPigeon)
+}
+
+func (e TenantBillingProfileUpdateEvent) UpdateCanPayWithBankTransfer() bool {
+	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskCanPayWithBankTransfer)
 }

@@ -18,5 +18,6 @@ query GetTenantBillingProfiles {
     canPayWithDirectDebitACH
     canPayWithDirectDebitBacs
     canPayWithPigeon
+    canPayWithBankTransfer
   }
 }

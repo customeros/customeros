@@ -42,6 +42,7 @@ type TenantBillingProfileCreateFields struct {
 	CanPayWithDirectDebitACH          bool         `json:"canPayWithDirectDebitACH"`
 	CanPayWithDirectDebitBacs         bool         `json:"canPayWithDirectDebitBacs"`
 	CanPayWithPigeon                  bool         `json:"canPayWithPigeon"`
+	CanPayWithBankTransfer            bool         `json:"canPayWithBankTransfer"`
 }
 
 type TenantBillingProfileUpdateFields struct {
@@ -65,6 +66,7 @@ type TenantBillingProfileUpdateFields struct {
 	CanPayWithDirectDebitACH            bool      `json:"canPayWithDirectDebitACH"`
 	CanPayWithDirectDebitBacs           bool      `json:"canPayWithDirectDebitBacs"`
 	CanPayWithPigeon                    bool      `json:"canPayWithPigeon"`
+	CanPayWithBankTransfer              bool      `json:"canPayWithBankTransfer"`
 	UpdatePhone                         bool      `json:"updatePhone"`
 	UpdateLegalName                     bool      `json:"updateLegalName"`
 	UpdateAddressLine1                  bool      `json:"updateAddressLine1"`
@@ -83,6 +85,7 @@ type TenantBillingProfileUpdateFields struct {
 	UpdateCanPayWithDirectDebitACH      bool      `json:"updateCanPayWithDirectDebitACH"`
 	UpdateCanPayWithDirectDebitBacs     bool      `json:"updateCanPayWithDirectDebitBacs"`
 	UpdateCanPayWithPigeon              bool      `json:"updateCanPayWithPigeon"`
+	UpdateCanPayWithBankTransfer        bool      `json:"updateCanPayWithBankTransfer"`
 }
 
 type TenantSettingsFields struct {
@@ -153,7 +156,8 @@ func (r *tenantWriteRepository) CreateTenantBillingProfile(ctx context.Context, 
 								tbp.canPayWithDirectDebitSEPA=$canPayWithDirectDebitSEPA,
 								tbp.canPayWithDirectDebitACH=$canPayWithDirectDebitACH,	
 								tbp.canPayWithDirectDebitBacs=$canPayWithDirectDebitBacs,
-								tbp.canPayWithPigeon=$canPayWithPigeon
+								tbp.canPayWithPigeon=$canPayWithPigeon,
+								tbp.canPayWithBankTransfer=$canPayWithBankTransfer
 							`, tenant)
 	params := map[string]any{
 		"tenant":                            tenant,
@@ -188,6 +192,7 @@ func (r *tenantWriteRepository) CreateTenantBillingProfile(ctx context.Context, 
 		"canPayWithDirectDebitACH":          data.CanPayWithDirectDebitACH,
 		"canPayWithDirectDebitBacs":         data.CanPayWithDirectDebitBacs,
 		"canPayWithPigeon":                  data.CanPayWithPigeon,
+		"canPayWithBankTransfer":            data.CanPayWithBankTransfer,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -285,6 +290,10 @@ func (r *tenantWriteRepository) UpdateTenantBillingProfile(ctx context.Context, 
 	if data.UpdateCanPayWithPigeon {
 		cypher += `,tbp.canPayWithPigeon=$canPayWithPigeon`
 		params["canPayWithPigeon"] = data.CanPayWithPigeon
+	}
+	if data.UpdateCanPayWithBankTransfer {
+		cypher += `,tbp.canPayWithBankTransfer=$canPayWithBankTransfer`
+		params["canPayWithBankTransfer"] = data.CanPayWithBankTransfer
 	}
 
 	span.LogFields(log.String("cypher", cypher))

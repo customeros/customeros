@@ -161,6 +161,7 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *s
 				CanPayWithDirectDebitACH:      tenantBillingProfile.CanPayWithDirectDebitACH,
 				CanPayWithDirectDebitBacs:     tenantBillingProfile.CanPayWithDirectDebitBacs,
 				CanPayWithPigeon:              tenantBillingProfile.CanPayWithPigeon,
+				CanPayWithBankTransfer:        tenantBillingProfile.CanPayWithBankTransfer,
 			}
 			tenantBillingProfileId, err := services.CustomerOsClient.CreateTenantBillingProfile(tenant, username, tenantBillingProfileInput)
 			if err != nil {

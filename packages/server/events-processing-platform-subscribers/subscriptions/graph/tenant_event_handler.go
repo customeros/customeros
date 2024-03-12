@@ -74,6 +74,7 @@ func (h *TenantEventHandler) OnAddBillingProfileV1(ctx context.Context, evt even
 		CanPayWithDirectDebitACH:          eventData.CanPayWithDirectDebitACH,
 		CanPayWithDirectDebitBacs:         eventData.CanPayWithDirectDebitBacs,
 		CanPayWithPigeon:                  eventData.CanPayWithPigeon,
+		CanPayWithBankTransfer:            eventData.CanPayWithBankTransfer,
 	}
 	err := h.repositories.Neo4jRepositories.TenantWriteRepository.CreateTenantBillingProfile(ctx, tenantName, data)
 	if err != nil {
@@ -118,6 +119,7 @@ func (h *TenantEventHandler) OnUpdateBillingProfileV1(ctx context.Context, evt e
 		CanPayWithDirectDebitACH:            eventData.CanPayWithDirectDebitACH,
 		CanPayWithDirectDebitBacs:           eventData.CanPayWithDirectDebitBacs,
 		CanPayWithPigeon:                    eventData.CanPayWithPigeon,
+		CanPayWithBankTransfer:              eventData.CanPayWithBankTransfer,
 		UpdatePhone:                         eventData.UpdatePhone(),
 		UpdateAddressLine1:                  eventData.UpdateAddressLine1(),
 		UpdateAddressLine2:                  eventData.UpdateAddressLine2(),
@@ -136,6 +138,7 @@ func (h *TenantEventHandler) OnUpdateBillingProfileV1(ctx context.Context, evt e
 		UpdateCanPayWithDirectDebitACH:      eventData.UpdateCanPayWithDirectDebitACH(),
 		UpdateCanPayWithDirectDebitBacs:     eventData.UpdateCanPayWithDirectDebitBacs(),
 		UpdateCanPayWithPigeon:              eventData.UpdateCanPayWithPigeon(),
+		UpdateCanPayWithBankTransfer:        eventData.UpdateCanPayWithBankTransfer(),
 	}
 	err := h.repositories.Neo4jRepositories.TenantWriteRepository.UpdateTenantBillingProfile(ctx, tenantName, data)
 	if err != nil {

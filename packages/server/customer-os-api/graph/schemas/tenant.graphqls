@@ -44,10 +44,11 @@ type TenantBillingProfile implements SourceFields & Node {
     vatNumber:                      String!
     sendInvoicesFrom:               String!
     sendInvoicesBcc:                String!
-    canPayWithCard:                 Boolean!
-    canPayWithDirectDebitSEPA:      Boolean!
-    canPayWithDirectDebitACH:       Boolean!
-    canPayWithDirectDebitBacs:      Boolean!
+    canPayWithCard:                 Boolean! @deprecated(reason: "Not used")
+    canPayWithDirectDebitSEPA:      Boolean! @deprecated(reason: "Not used")
+    canPayWithDirectDebitACH:       Boolean! @deprecated(reason: "Not used")
+    canPayWithDirectDebitBacs:      Boolean! @deprecated(reason: "Not used")
+    canPayWithBankTransfer:         Boolean!
     canPayWithPigeon:               Boolean!
 }
 
@@ -71,10 +72,11 @@ input TenantBillingProfileInput {
     vatNumber: String!
     sendInvoicesFrom: String!
     sendInvoicesBcc: String
-    canPayWithCard: Boolean!
-    canPayWithDirectDebitSEPA: Boolean!
-    canPayWithDirectDebitACH: Boolean!
-    canPayWithDirectDebitBacs: Boolean!
+    canPayWithCard: Boolean! @deprecated(reason: "Not used")
+    canPayWithDirectDebitSEPA: Boolean! @deprecated(reason: "Not used")
+    canPayWithDirectDebitACH: Boolean! @deprecated(reason: "Not used")
+    canPayWithDirectDebitBacs: Boolean! @deprecated(reason: "Not used")
+    canPayWithBankTransfer: Boolean!
     canPayWithPigeon: Boolean!
 }
 
@@ -95,10 +97,11 @@ input TenantBillingProfileUpdateInput {
     vatNumber:                  String
     sendInvoicesFrom:           String
     sendInvoicesBcc:            String
-    canPayWithCard:             Boolean
-    canPayWithDirectDebitSEPA:  Boolean
-    canPayWithDirectDebitACH:   Boolean
-    canPayWithDirectDebitBacs:  Boolean
+    canPayWithCard:             Boolean @deprecated(reason: "Not used")
+    canPayWithDirectDebitSEPA:  Boolean @deprecated(reason: "Not used")
+    canPayWithDirectDebitACH:   Boolean @deprecated(reason: "Not used")
+    canPayWithDirectDebitBacs:  Boolean @deprecated(reason: "Not used")
+    canPayWithBankTransfer:     Boolean
     canPayWithPigeon:           Boolean
 }
 
