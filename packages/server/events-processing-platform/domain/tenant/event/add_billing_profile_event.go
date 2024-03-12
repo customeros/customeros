@@ -39,6 +39,7 @@ type TenantBillingProfileCreateEvent struct {
 	CanPayWithDirectDebitACH          bool               `json:"canPayWithDirectDebitACH"`
 	CanPayWithDirectDebitBacs         bool               `json:"canPayWithDirectDebitBacs"`
 	CanPayWithPigeon                  bool               `json:"canPayWithPigeon"`
+	CanPayWithBankTransfer            bool               `json:"canPayWithBankTransfer"`
 }
 
 func NewTenantBillingProfileCreateEvent(aggregate eventstore.Aggregate, sourceFields commonmodel.Source, id string, request *tenantpb.AddBillingProfileRequest, createdAt time.Time) (eventstore.Event, error) {
@@ -72,6 +73,7 @@ func NewTenantBillingProfileCreateEvent(aggregate eventstore.Aggregate, sourceFi
 		CanPayWithDirectDebitACH:          request.CanPayWithDirectDebitACH,
 		CanPayWithDirectDebitBacs:         request.CanPayWithDirectDebitBacs,
 		CanPayWithPigeon:                  request.CanPayWithPigeon,
+		CanPayWithBankTransfer:            request.CanPayWithBankTransfer,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

@@ -28,11 +28,12 @@ type TenantBillingProfileEntity struct {
 	VatNumber                         string
 	SendInvoicesFrom                  string
 	SendInvoicesBcc                   string
-	CanPayWithCard                    bool
-	CanPayWithDirectDebitSEPA         bool
-	CanPayWithDirectDebitACH          bool
-	CanPayWithDirectDebitBacs         bool
+	CanPayWithCard                    bool //Deprecated
+	CanPayWithDirectDebitSEPA         bool //Deprecated
+	CanPayWithDirectDebitACH          bool //Deprecated
+	CanPayWithDirectDebitBacs         bool //Deprecated
 	CanPayWithPigeon                  bool
+	CanPayWithBankTransfer            bool
 	Source                            DataSource
 	SourceOfTruth                     DataSource
 	AppSource                         string

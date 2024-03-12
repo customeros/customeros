@@ -58,6 +58,7 @@ func TestTenantService_AddBillingProfile(t *testing.T) {
 		CanPayWithDirectDebitACH:          true,
 		CanPayWithDirectDebitBacs:         true,
 		CanPayWithPigeon:                  true,
+		CanPayWithBankTransfer:            true,
 	})
 	require.Nil(t, err)
 	require.NotNil(t, response)
@@ -104,6 +105,7 @@ func TestTenantService_AddBillingProfile(t *testing.T) {
 	require.Equal(t, true, eventData.CanPayWithDirectDebitACH)
 	require.Equal(t, true, eventData.CanPayWithDirectDebitBacs)
 	require.Equal(t, true, eventData.CanPayWithPigeon)
+	require.Equal(t, true, eventData.CanPayWithBankTransfer)
 	require.Equal(t, "app", eventData.SourceFields.AppSource)
 	require.Equal(t, "source", eventData.SourceFields.Source)
 	require.Equal(t, "source", eventData.SourceFields.SourceOfTruth)
@@ -147,6 +149,7 @@ func TestTenantService_UpdateBillingProfile(t *testing.T) {
 		CanPayWithDirectDebitACH:      true,
 		CanPayWithDirectDebitBacs:     true,
 		CanPayWithPigeon:              true,
+		CanPayWithBankTransfer:        true,
 	})
 	require.Nil(t, err)
 	require.NotNil(t, response)
@@ -185,6 +188,7 @@ func TestTenantService_UpdateBillingProfile(t *testing.T) {
 	require.Equal(t, true, eventData.CanPayWithDirectDebitACH)
 	require.Equal(t, true, eventData.CanPayWithDirectDebitBacs)
 	require.Equal(t, true, eventData.CanPayWithPigeon)
+	require.Equal(t, true, eventData.CanPayWithBankTransfer)
 	require.Equal(t, 0, len(eventData.FieldsMask))
 }
 

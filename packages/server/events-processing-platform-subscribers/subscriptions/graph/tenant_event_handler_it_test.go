@@ -59,6 +59,7 @@ func TestTenantEventHandler_OnUpdateBillingProfileV1(t *testing.T) {
 			CanPayWithDirectDebitACH:      true,
 			CanPayWithDirectDebitBacs:     true,
 			CanPayWithPigeon:              true,
+			CanPayWithBankTransfer:        true,
 		},
 		timeNow,
 		[]string{},
@@ -101,6 +102,7 @@ func TestTenantEventHandler_OnUpdateBillingProfileV1(t *testing.T) {
 	require.Equal(t, true, tenantBillingProfileEntity.CanPayWithDirectDebitACH)
 	require.Equal(t, true, tenantBillingProfileEntity.CanPayWithDirectDebitBacs)
 	require.Equal(t, true, tenantBillingProfileEntity.CanPayWithPigeon)
+	require.Equal(t, true, tenantBillingProfileEntity.CanPayWithBankTransfer)
 }
 
 func TestTenantEventHandler_OnUpdateTenantSettingsV1(t *testing.T) {

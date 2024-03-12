@@ -106,7 +106,8 @@ func CreateTenantBillingProfile(ctx context.Context, driver *neo4j.DriverWithCon
 					tbp.canPayWithDirectDebitSEPA=$canPayWithDirectDebitSEPA,
 					tbp.canPayWithDirectDebitACH=$canPayWithDirectDebitACH,
 					tbp.canPayWithDirectDebitBacs=$canPayWithDirectDebitBacs,
-					tbp.canPayWithPigeon=$canPayWithPigeon
+					tbp.canPayWithPigeon=$canPayWithPigeon,
+					tbp.canPayWithBankTransfer=$canPayWithBankTransfer,
 `, tenant)
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tenant":                            tenant,
@@ -138,6 +139,7 @@ func CreateTenantBillingProfile(ctx context.Context, driver *neo4j.DriverWithCon
 		"canPayWithDirectDebitACH":          profile.CanPayWithDirectDebitACH,
 		"canPayWithDirectDebitBacs":         profile.CanPayWithDirectDebitBacs,
 		"canPayWithPigeon":                  profile.CanPayWithPigeon,
+		"canPayWithBankTransfer":            profile.CanPayWithBankTransfer,
 	})
 	return profileId
 }

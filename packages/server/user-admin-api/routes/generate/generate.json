@@ -94,7 +94,8 @@
       "canPayWithDirectDebitSEPA":     false,
       "canPayWithDirectDebitACH":      false,
       "canPayWithDirectDebitBacs":     false,
-      "canPayWithPigeon":              false
+      "canPayWithPigeon":              false,
+      "CanPayWithBankTransfer":        false
     }
   ],
   "organizations": [

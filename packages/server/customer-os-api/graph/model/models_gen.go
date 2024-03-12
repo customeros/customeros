@@ -2515,6 +2515,7 @@ type TenantBillingProfile struct {
 	CanPayWithDirectDebitSepa     bool       `json:"canPayWithDirectDebitSEPA"`
 	CanPayWithDirectDebitAch      bool       `json:"canPayWithDirectDebitACH"`
 	CanPayWithDirectDebitBacs     bool       `json:"canPayWithDirectDebitBacs"`
+	CanPayWithBankTransfer        bool       `json:"canPayWithBankTransfer"`
 	CanPayWithPigeon              bool       `json:"canPayWithPigeon"`
 }
 
@@ -2545,6 +2546,7 @@ type TenantBillingProfileInput struct {
 	CanPayWithDirectDebitSepa     bool    `json:"canPayWithDirectDebitSEPA"`
 	CanPayWithDirectDebitAch      bool    `json:"canPayWithDirectDebitACH"`
 	CanPayWithDirectDebitBacs     bool    `json:"canPayWithDirectDebitBacs"`
+	CanPayWithBankTransfer        bool    `json:"canPayWithBankTransfer"`
 	CanPayWithPigeon              bool    `json:"canPayWithPigeon"`
 }
 
@@ -2569,6 +2571,7 @@ type TenantBillingProfileUpdateInput struct {
 	CanPayWithDirectDebitSepa     *bool   `json:"canPayWithDirectDebitSEPA,omitempty"`
 	CanPayWithDirectDebitAch      *bool   `json:"canPayWithDirectDebitACH,omitempty"`
 	CanPayWithDirectDebitBacs     *bool   `json:"canPayWithDirectDebitBacs,omitempty"`
+	CanPayWithBankTransfer        *bool   `json:"canPayWithBankTransfer,omitempty"`
 	CanPayWithPigeon              *bool   `json:"canPayWithPigeon,omitempty"`
 }
 

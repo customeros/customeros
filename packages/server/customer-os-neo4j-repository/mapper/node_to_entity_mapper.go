@@ -323,6 +323,7 @@ func MapDbNodeToTenantBillingProfileEntity(dbNode *dbtype.Node) *entity.TenantBi
 		CanPayWithDirectDebitACH:          utils.GetBoolPropOrFalse(props, "canPayWithDirectDebitACH"),
 		CanPayWithDirectDebitBacs:         utils.GetBoolPropOrFalse(props, "canPayWithDirectDebitBacs"),
 		CanPayWithPigeon:                  utils.GetBoolPropOrFalse(props, "canPayWithPigeon"),
+		CanPayWithBankTransfer:            utils.GetBoolPropOrFalse(props, "canPayWithBankTransfer"),
 		Source:                            entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth:                     entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:                         utils.GetStringPropOrEmpty(props, "appSource"),

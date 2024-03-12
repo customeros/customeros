@@ -288,6 +288,7 @@ func (a *TenantAggregate) onAddBillingProfile(evt eventstore.Event) error {
 		CanPayWithDirectDebitACH:          eventData.CanPayWithDirectDebitACH,
 		CanPayWithDirectDebitBacs:         eventData.CanPayWithDirectDebitBacs,
 		CanPayWithPigeon:                  eventData.CanPayWithPigeon,
+		CanPayWithBankTransfer:            eventData.CanPayWithBankTransfer,
 		SourceFields:                      eventData.SourceFields,
 	}
 	a.TenantDetails.BillingProfiles = append(a.TenantDetails.BillingProfiles, tenantBillingProfile)
@@ -362,6 +363,9 @@ func (a *TenantAggregate) onUpdateBillingProfile(evt eventstore.Event) error {
 	}
 	if eventData.UpdateCanPayWithPigeon() {
 		tenantBillingProfile.CanPayWithPigeon = eventData.CanPayWithPigeon
+	}
+	if eventData.UpdateCanPayWithBankTransfer() {
+		tenantBillingProfile.CanPayWithBankTransfer = eventData.CanPayWithBankTransfer
 	}
 	return nil
 }
@@ -511,6 +515,8 @@ func extractTenantBillingProfileFieldsMask(requestFieldsMask []tenantpb.TenantBi
 			fieldsMask = append(fieldsMask, event.FieldMaskCanPayWithDirectDebitBacs)
 		case tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_PIGEON:
 			fieldsMask = append(fieldsMask, event.FieldMaskCanPayWithPigeon)
+		case tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_BANK_TRANSFER:
+			fieldsMask = append(fieldsMask, event.FieldMaskCanPayWithBankTransfer)
 		}
 	}
 	fieldsMask = utils.RemoveDuplicates(fieldsMask)
