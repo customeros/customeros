@@ -19,6 +19,7 @@ type BankAccount implements MetadataInterface {
     sortCode:               String
     accountNumber:          String
     routingNumber:          String
+    otherDetails:           String
 }
 
 input BankAccountCreateInput {
@@ -31,6 +32,7 @@ input BankAccountCreateInput {
     sortCode:               String
     accountNumber:          String
     routingNumber:          String
+    otherDetails:           String
 }
 
 input BankAccountUpdateInput {
@@ -44,4 +46,5 @@ input BankAccountUpdateInput {
     sortCode:               String
     accountNumber:          String
     routingNumber:          String
+    otherDetails:           String
 }

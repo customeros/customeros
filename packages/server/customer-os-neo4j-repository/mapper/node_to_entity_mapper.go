@@ -598,6 +598,7 @@ func MapDbNodeToBankAccountEntity(dbNode *dbtype.Node) *entity.BankAccountEntity
 		Iban:                utils.GetStringPropOrEmpty(props, "iban"),
 		Bic:                 utils.GetStringPropOrEmpty(props, "bic"),
 		RoutingNumber:       utils.GetStringPropOrEmpty(props, "routingNumber"),
+		OtherDetails:        utils.GetStringPropOrEmpty(props, "otherDetails"),
 	}
 	return &bankAccount
 }

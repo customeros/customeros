@@ -21,6 +21,7 @@ type BankAccountEntity struct {
 	SortCode            string
 	AccountNumber       string
 	RoutingNumber       string
+	OtherDetails        string
 }
 
 type BankAccountEntities []BankAccountEntity

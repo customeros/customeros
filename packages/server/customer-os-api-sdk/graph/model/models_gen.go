@@ -174,6 +174,7 @@ type BankAccount struct {
 	SortCode            *string   `json:"sortCode,omitempty"`
 	AccountNumber       *string   `json:"accountNumber,omitempty"`
 	RoutingNumber       *string   `json:"routingNumber,omitempty"`
+	OtherDetails        *string   `json:"otherDetails,omitempty"`
 }
 
 func (BankAccount) IsMetadataInterface()        {}
@@ -189,6 +190,7 @@ type BankAccountCreateInput struct {
 	SortCode            *string   `json:"sortCode,omitempty"`
 	AccountNumber       *string   `json:"accountNumber,omitempty"`
 	RoutingNumber       *string   `json:"routingNumber,omitempty"`
+	OtherDetails        *string   `json:"otherDetails,omitempty"`
 }
 
 type BankAccountUpdateInput struct {
@@ -202,6 +204,7 @@ type BankAccountUpdateInput struct {
 	SortCode            *string   `json:"sortCode,omitempty"`
 	AccountNumber       *string   `json:"accountNumber,omitempty"`
 	RoutingNumber       *string   `json:"routingNumber,omitempty"`
+	OtherDetails        *string   `json:"otherDetails,omitempty"`
 }
 
 type BillingDetails struct {
@@ -953,6 +956,11 @@ type ExternalSystem struct {
 	ExternalID     *string            `json:"externalId,omitempty"`
 	ExternalURL    *string            `json:"externalUrl,omitempty"`
 	ExternalSource *string            `json:"externalSource,omitempty"`
+}
+
+type ExternalSystemInstance struct {
+	Type           ExternalSystemType `json:"type"`
+	PaymentMethods []string           `json:"paymentMethods"`
 }
 
 type ExternalSystemReferenceInput struct {

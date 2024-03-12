@@ -44,4 +44,5 @@ const (
 	FieldMaskBankAccountSortCode            = "bankAccountSortCode"
 	FieldMaskBankAccountAccountNumber       = "bankAccountAccountNumber"
 	FieldMaskBankAccountRoutingNumber       = "bankAccountRoutingNumber"
+	FieldMaskBankAccountOtherDetails        = "bankAccountOtherDetails"
 )

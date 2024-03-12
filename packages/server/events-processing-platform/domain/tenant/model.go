@@ -71,6 +71,7 @@ type BankAccount struct {
 	SortCode            string             `json:"sortCode"`
 	AccountNumber       string             `json:"accountNumber"`
 	RoutingNumber       string             `json:"routingNumber"`
+	OtherDetails        string             `json:"otherDetails"`
 }
 
 func (t Tenant) HasBillingProfile(id string) bool {

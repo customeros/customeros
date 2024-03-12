@@ -136,6 +136,7 @@ type ComplexityRoot struct {
 		Currency            func(childComplexity int) int
 		Iban                func(childComplexity int) int
 		Metadata            func(childComplexity int) int
+		OtherDetails        func(childComplexity int) int
 		RoutingNumber       func(childComplexity int) int
 		SortCode            func(childComplexity int) int
 	}
@@ -517,6 +518,11 @@ type ComplexityRoot struct {
 		ExternalSource func(childComplexity int) int
 		ExternalURL    func(childComplexity int) int
 		SyncDate       func(childComplexity int) int
+		Type           func(childComplexity int) int
+	}
+
+	ExternalSystemInstance struct {
+		PaymentMethods func(childComplexity int) int
 		Type           func(childComplexity int) int
 	}
 
@@ -2295,6 +2301,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.BankAccount.Metadata(childComplexity), true
+
+	case "BankAccount.otherDetails":
+		if e.complexity.BankAccount.OtherDetails == nil {
+			break
+		}
+
+		return e.complexity.BankAccount.OtherDetails(childComplexity), true
 
 	case "BankAccount.routingNumber":
 		if e.complexity.BankAccount.RoutingNumber == nil {
@@ -4175,6 +4188,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ExternalSystem.Type(childComplexity), true
+
+	case "ExternalSystemInstance.paymentMethods":
+		if e.complexity.ExternalSystemInstance.PaymentMethods == nil {
+			break
+		}
+
+		return e.complexity.ExternalSystemInstance.PaymentMethods(childComplexity), true
+
+	case "ExternalSystemInstance.type":
+		if e.complexity.ExternalSystemInstance.Type == nil {
+			break
+		}
+
+		return e.complexity.ExternalSystemInstance.Type(childComplexity), true
 
 	case "FieldSet.createdAt":
 		if e.complexity.FieldSet.CreatedAt == nil {
@@ -11382,6 +11409,7 @@ type BankAccount implements MetadataInterface {
     sortCode:               String
     accountNumber:          String
     routingNumber:          String
+    otherDetails:           String
 }
 
 input BankAccountCreateInput {
@@ -11394,6 +11422,7 @@ input BankAccountCreateInput {
     sortCode:               String
     accountNumber:          String
     routingNumber:          String
+    otherDetails:           String
 }
 
 input BankAccountUpdateInput {
@@ -11407,6 +11436,7 @@ input BankAccountUpdateInput {
     sortCode:               String
     accountNumber:          String
     routingNumber:          String
+    otherDetails:           String
 }`, BuiltIn: false},
 	{Name: "../schemas/billing_profile.graphqls", Input: `extend type Mutation {
     billingProfile_Create(input: BillingProfileInput!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -12583,6 +12613,11 @@ type ExternalSystem {
     externalId: String
     externalUrl: String
     externalSource: String
+}
+
+type ExternalSystemInstance {
+    type: ExternalSystemType!
+    paymentMethods: [String!]!
 }`, BuiltIn: false},
 	{Name: "../schemas/filter.graphqls", Input: `"""
 If provided as part of the request, results will be filtered down to the ` + "`" + `page` + "`" + ` and ` + "`" + `limit` + "`" + ` specified.
@@ -21142,6 +21177,47 @@ func (ec *executionContext) _BankAccount_routingNumber(ctx context.Context, fiel
 }
 
 func (ec *executionContext) fieldContext_BankAccount_routingNumber(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BankAccount",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BankAccount_otherDetails(ctx context.Context, field graphql.CollectedField, obj *model.BankAccount) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_BankAccount_otherDetails(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OtherDetails, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_BankAccount_otherDetails(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "BankAccount",
 		Field:      field,
@@ -33919,6 +33995,94 @@ func (ec *executionContext) _ExternalSystem_externalSource(ctx context.Context, 
 func (ec *executionContext) fieldContext_ExternalSystem_externalSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "ExternalSystem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ExternalSystemInstance_type(ctx context.Context, field graphql.CollectedField, obj *model.ExternalSystemInstance) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ExternalSystemInstance_type(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Type, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.ExternalSystemType)
+	fc.Result = res
+	return ec.marshalNExternalSystemType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐExternalSystemType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ExternalSystemInstance_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ExternalSystemInstance",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ExternalSystemType does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ExternalSystemInstance_paymentMethods(ctx context.Context, field graphql.CollectedField, obj *model.ExternalSystemInstance) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ExternalSystemInstance_paymentMethods(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PaymentMethods, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ExternalSystemInstance_paymentMethods(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ExternalSystemInstance",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -46815,6 +46979,8 @@ func (ec *executionContext) fieldContext_Mutation_bankAccount_Create(ctx context
 				return ec.fieldContext_BankAccount_accountNumber(ctx, field)
 			case "routingNumber":
 				return ec.fieldContext_BankAccount_routingNumber(ctx, field)
+			case "otherDetails":
+				return ec.fieldContext_BankAccount_otherDetails(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type BankAccount", field.Name)
 		},
@@ -46922,6 +47088,8 @@ func (ec *executionContext) fieldContext_Mutation_bankAccount_Update(ctx context
 				return ec.fieldContext_BankAccount_accountNumber(ctx, field)
 			case "routingNumber":
 				return ec.fieldContext_BankAccount_routingNumber(ctx, field)
+			case "otherDetails":
+				return ec.fieldContext_BankAccount_otherDetails(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type BankAccount", field.Name)
 		},
@@ -73554,6 +73722,8 @@ func (ec *executionContext) fieldContext_Query_bankAccounts(ctx context.Context,
 				return ec.fieldContext_BankAccount_accountNumber(ctx, field)
 			case "routingNumber":
 				return ec.fieldContext_BankAccount_routingNumber(ctx, field)
+			case "otherDetails":
+				return ec.fieldContext_BankAccount_otherDetails(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type BankAccount", field.Name)
 		},
@@ -88687,7 +88857,7 @@ func (ec *executionContext) unmarshalInputBankAccountCreateInput(ctx context.Con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"currency", "bankName", "bankTransferEnabled", "allowInternational", "iban", "bic", "sortCode", "accountNumber", "routingNumber"}
+	fieldsInOrder := [...]string{"currency", "bankName", "bankTransferEnabled", "allowInternational", "iban", "bic", "sortCode", "accountNumber", "routingNumber", "otherDetails"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -88757,6 +88927,13 @@ func (ec *executionContext) unmarshalInputBankAccountCreateInput(ctx context.Con
 				return it, err
 			}
 			it.RoutingNumber = data
+		case "otherDetails":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("otherDetails"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OtherDetails = data
 		}
 	}
 
@@ -88770,7 +88947,7 @@ func (ec *executionContext) unmarshalInputBankAccountUpdateInput(ctx context.Con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "currency", "bankName", "bankTransferEnabled", "allowInternational", "iban", "bic", "sortCode", "accountNumber", "routingNumber"}
+	fieldsInOrder := [...]string{"id", "currency", "bankName", "bankTransferEnabled", "allowInternational", "iban", "bic", "sortCode", "accountNumber", "routingNumber", "otherDetails"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -88847,6 +89024,13 @@ func (ec *executionContext) unmarshalInputBankAccountUpdateInput(ctx context.Con
 				return it, err
 			}
 			it.RoutingNumber = data
+		case "otherDetails":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("otherDetails"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OtherDetails = data
 		}
 	}
 
@@ -95885,6 +96069,8 @@ func (ec *executionContext) _BankAccount(ctx context.Context, sel ast.SelectionS
 			out.Values[i] = ec._BankAccount_accountNumber(ctx, field, obj)
 		case "routingNumber":
 			out.Values[i] = ec._BankAccount_routingNumber(ctx, field, obj)
+		case "otherDetails":
+			out.Values[i] = ec._BankAccount_otherDetails(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -99230,6 +99416,50 @@ func (ec *executionContext) _ExternalSystem(ctx context.Context, sel ast.Selecti
 			out.Values[i] = ec._ExternalSystem_externalUrl(ctx, field, obj)
 		case "externalSource":
 			out.Values[i] = ec._ExternalSystem_externalSource(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var externalSystemInstanceImplementors = []string{"ExternalSystemInstance"}
+
+func (ec *executionContext) _ExternalSystemInstance(ctx context.Context, sel ast.SelectionSet, obj *model.ExternalSystemInstance) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, externalSystemInstanceImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ExternalSystemInstance")
+		case "type":
+			out.Values[i] = ec._ExternalSystemInstance_type(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "paymentMethods":
+			out.Values[i] = ec._ExternalSystemInstance_paymentMethods(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

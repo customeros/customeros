@@ -409,6 +409,7 @@ func (a *TenantAggregate) onAddBankAccount(evt eventstore.Event) error {
 		SortCode:            eventData.SortCode,
 		AccountNumber:       eventData.AccountNumber,
 		RoutingNumber:       eventData.RoutingNumber,
+		OtherDetails:        eventData.OtherDetails,
 		SourceFields:        eventData.SourceFields,
 	}
 	a.TenantDetails.BankAccounts = append(a.TenantDetails.BankAccounts, bankAccount)
@@ -456,6 +457,9 @@ func (a *TenantAggregate) onUpdateBankAccount(evt eventstore.Event) error {
 	}
 	if eventData.UpdateRoutingNumber() {
 		bankAccount.RoutingNumber = eventData.RoutingNumber
+	}
+	if eventData.UpdateOtherDetails() {
+		bankAccount.OtherDetails = eventData.OtherDetails
 	}
 	return nil
 }
@@ -563,6 +567,8 @@ func extractTenantBankAccountFieldsMask(inputFieldsMask []tenantpb.BankAccountFi
 			fieldsMask = append(fieldsMask, event.FieldMaskBankAccountAccountNumber)
 		case tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_ROUTING_NUMBER:
 			fieldsMask = append(fieldsMask, event.FieldMaskBankAccountRoutingNumber)
+		case tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_OTHER_DETAILS:
+			fieldsMask = append(fieldsMask, event.FieldMaskBankAccountOtherDetails)
 		}
 	}
 	fieldsMask = utils.RemoveDuplicates(fieldsMask)
