@@ -25,7 +25,7 @@ import (
 type OrganizationEventHandler struct {
 	repositories         *repository.Repositories
 	log                  logger.Logger
-	notificationProvider notifications.NotificationProvider // TODO: refactor to use notification under common module
+	notificationProvider notifications.NotificationProvider
 	cfg                  *config.Config
 }
 

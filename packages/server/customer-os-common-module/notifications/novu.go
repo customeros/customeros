@@ -80,6 +80,8 @@ func (np *NovuProvider) LoadEmailBody(workflowId string) (string, error) {
 		fileName = "ownership.single.mjml"
 	case WorkflowFailedWebhook:
 		fileName = "webhook.failed.mjml"
+	case WorkflowReminderNotificationEmail:
+		fileName = "reminder.mjml"
 	}
 
 	if fileName == "" {
