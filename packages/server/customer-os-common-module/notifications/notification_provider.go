@@ -16,6 +16,8 @@ const (
 	WorkflowInvoiceReady                    = "invoice-ready"
 	WorkflowInvoiceVoided                   = "invoice-voided"
 	WorkflowFailedWebhook                   = "failed-webhook"
+	WorkflowReminderNotificationEmail       = "reminder-notification-email"
+	WorkflowReminderInAppNotification       = "reminder-in-app-notification"
 )
 
 var REQUIRED_TEMPLATE_VALUES = map[string][]string{
@@ -30,6 +32,12 @@ var REQUIRED_TEMPLATE_VALUES = map[string][]string{
 		"{{userFirstName}}",
 		"{{webhookName}}",
 		"{{webhookUrl}}",
+	},
+	WorkflowReminderNotificationEmail: {
+		"{{reminderContent}}",
+		"{{reminderCreatedAt}}",
+		"{{orgName}}",
+		"{{orgLink}}",
 	},
 }
 

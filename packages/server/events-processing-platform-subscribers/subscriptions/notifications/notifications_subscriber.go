@@ -2,14 +2,16 @@ package notifications
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"strings"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	orgevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
+	reminderevts "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/reminder/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
@@ -21,18 +23,20 @@ import (
 )
 
 type NotificationsSubscriber struct {
-	log             logger.Logger
-	db              *esdb.Client
-	cfg             *config.Config
-	orgEventHandler *OrganizationEventHandler
+	log                  logger.Logger
+	db                   *esdb.Client
+	cfg                  *config.Config
+	orgEventHandler      *OrganizationEventHandler
+	reminderEventHandler *ReminderEventHandler
 }
 
 func NewNotificationsSubscriber(log logger.Logger, db *esdb.Client, repositories *repository.Repositories, grpcClients *grpc_client.Clients, cfg *config.Config) *NotificationsSubscriber {
 	return &NotificationsSubscriber{
-		log:             log,
-		db:              db,
-		cfg:             cfg,
-		orgEventHandler: NewOrganizationEventHandler(log, repositories, cfg),
+		log:                  log,
+		db:                   db,
+		cfg:                  cfg,
+		orgEventHandler:      NewOrganizationEventHandler(log, repositories, cfg),
+		reminderEventHandler: NewReminderEventHandler(log, repositories, cfg),
 	}
 }
 
@@ -121,6 +125,8 @@ func (s *NotificationsSubscriber) When(ctx context.Context, evt eventstore.Event
 
 	case orgevents.OrganizationUpdateOwnerNotificationV1:
 		return s.orgEventHandler.OnOrganizationUpdateOwner(ctx, evt)
+	case reminderevts.ReminderNotificationV1:
+		return s.reminderEventHandler.OnReminderCreate(ctx, evt)
 
 	default:
 		return nil

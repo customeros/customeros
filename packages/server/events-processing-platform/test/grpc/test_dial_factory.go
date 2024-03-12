@@ -55,7 +55,7 @@ func (dfi TestDialFactoryImpl) GetEventsProcessingPlatformConn(repositories *rep
 	myServer.AggregateStore = aggregateStore
 	eventBufferWatcher := eventbuffer.NewEventBufferWatcher(repositories, appLogger, aggregateStore)
 	myServer.CommandHandlers = command.NewCommandHandlers(appLogger, &config.Config{}, aggregateStore, repositories, eventBufferWatcher)
-	myServer.Services = service.InitServices(&config.Config{}, repositories, aggregateStore, myServer.CommandHandlers, appLogger)
+	myServer.Services = service.InitServices(&config.Config{}, repositories, aggregateStore, myServer.CommandHandlers, appLogger, eventBufferWatcher)
 
 	server.RegisterGrpcServices(myServer.GrpcServer, myServer.Services)
 

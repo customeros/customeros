@@ -105,7 +105,7 @@ func (server *Server) Start(parentCtx context.Context) error {
 	//Server.runMetrics(cancel)
 	//Server.runHealthCheck(ctx)
 
-	server.Services = service.InitServices(server.Config, server.Repositories, server.AggregateStore, server.CommandHandlers, server.Log)
+	server.Services = service.InitServices(server.Config, server.Repositories, server.AggregateStore, server.CommandHandlers, server.Log, eventBufferWatcher)
 
 	// Setting up gRPC client
 	df := grpc_client.NewDialFactory(server.Config)
