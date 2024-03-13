@@ -13,6 +13,7 @@ import { Icons } from '@ui/media/Icon';
 import { VStack } from '@ui/layout/Stack';
 import { Text } from '@ui/typography/Text';
 import { GridItem } from '@ui/layout/Grid';
+import { Button } from '@ui/form/Button/Button';
 import { Receipt } from '@ui/media/icons/Receipt';
 import { Bubbles } from '@ui/media/icons/Bubbles';
 import { LogOut01 } from '@ui/media/icons/LogOut01';
@@ -258,6 +259,14 @@ export const RootSidenav = () => {
             />
           ))}
       </VStack>
+      <Button
+        isLoading
+        loadingText='proba'
+        colorScheme='blueDark'
+        variant='solid'
+      >
+        plm
+      </Button>
 
       <VStack
         spacing='1'
