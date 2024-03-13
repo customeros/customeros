@@ -13,9 +13,9 @@ import (
 
 type ReminderReadRepository interface {
 	GetReminderById(ctx context.Context, tenant, id string) (*dbtype.Node, error)
-	GetRemindersOrderByDueDateAsc(ctx context.Context, tenant, organizationId string) ([]*dbtype.Node, error)
-	GetRemindersOrderByDueDateDesc(ctx context.Context, tenant, organizationId string) ([]*dbtype.Node, error)
-	GetRemindersForOrganization(ctx context.Context, tenant, organizationId string) ([]*dbtype.Node, error)
+	GetRemindersOrderByDueDateAsc(ctx context.Context, tenant, organizationId string, dismissed *bool) ([]*dbtype.Node, error)
+	GetRemindersOrderByDueDateDesc(ctx context.Context, tenant, organizationId string, dismissed *bool) ([]*dbtype.Node, error)
+	GetRemindersForOrganization(ctx context.Context, tenant, organizationId string, dismissed *bool) ([]*dbtype.Node, error)
 }
 
 type reminderReadRepository struct {
@@ -66,12 +66,21 @@ func (r *reminderReadRepository) GetReminderById(ctx context.Context, tenant, id
 }
 
 // GetReminderOrderByDueDateAsc returns a list of reminders ordered by due date in ascending order
-func (r *reminderReadRepository) GetRemindersOrderByDueDateAsc(ctx context.Context, tenant, organizationId string) ([]*dbtype.Node, error) {
+func (r *reminderReadRepository) GetRemindersOrderByDueDateAsc(ctx context.Context, tenant, organizationId string, dismissed *bool) ([]*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderReadRepository.GetRemindersOrderByDueDateAsc")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 
-	cypher := `MATCH (:Tenant {name:$tenant})<-[:REMINDER_BELONGS_TO_TENANT]-(r:Reminder)-[:REMINDER_BELONGS_TO_ORGANIZATION]->(o:Organization {id:$organizationId}) RETURN r ORDER BY r.dueDate ASC`
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:REMINDER_BELONGS_TO_TENANT]-(r:Reminder)-[:REMINDER_BELONGS_TO_ORGANIZATION]->(o:Organization {id:$organizationId})`
+	if dismissed != nil {
+		if *dismissed {
+			cypher += ` WHERE r.dismissed = true`
+		} else {
+			cypher += ` WHERE r.dismissed IS NULL OR r.dismissed = false`
+		}
+	}
+	cypher += ` RETURN r ORDER BY r.dueDate ASC`
+
 	params := map[string]any{
 		"tenant":         tenant,
 		"organizationId": organizationId,
@@ -95,12 +104,21 @@ func (r *reminderReadRepository) GetRemindersOrderByDueDateAsc(ctx context.Conte
 }
 
 // GetReminderOrderByDueDateDesc returns a list of reminders ordered by due date in descending order
-func (r *reminderReadRepository) GetRemindersOrderByDueDateDesc(ctx context.Context, tenant, organizationId string) ([]*dbtype.Node, error) {
+func (r *reminderReadRepository) GetRemindersOrderByDueDateDesc(ctx context.Context, tenant, organizationId string, dismissed *bool) ([]*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderReadRepository.GetRemindersOrderByDueDateDesc")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 
-	cypher := `MATCH (:Tenant {name:$tenant})<-[:REMINDER_BELONGS_TO_TENANT]-(r:Reminder)-[:REMINDER_BELONGS_TO_ORGANIZATION]->(o:Organization {id:$organizationId}) RETURN r ORDER BY r.dueDate DESC`
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:REMINDER_BELONGS_TO_TENANT]-(r:Reminder)-[:REMINDER_BELONGS_TO_ORGANIZATION]->(o:Organization {id:$organizationId})`
+	if dismissed != nil {
+		if *dismissed {
+			cypher += ` WHERE r.dismissed = true`
+		} else {
+			cypher += ` WHERE r.dismissed IS NULL OR r.dismissed = false`
+		}
+	}
+	cypher += ` RETURN r ORDER BY r.dueDate DESC`
+
 	params := map[string]any{
 		"tenant":         tenant,
 		"organizationId": organizationId,
@@ -124,12 +142,21 @@ func (r *reminderReadRepository) GetRemindersOrderByDueDateDesc(ctx context.Cont
 }
 
 // GetRemindersForOrganization returns a list of reminders for an organization
-func (r *reminderReadRepository) GetRemindersForOrganization(ctx context.Context, tenant, organizationId string) ([]*dbtype.Node, error) {
+func (r *reminderReadRepository) GetRemindersForOrganization(ctx context.Context, tenant, organizationId string, dismissed *bool) ([]*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderReadRepository.GetRemindersForOrganization")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 
-	cypher := `MATCH (:Tenant {name:$tenant})<-[:REMINDER_BELONGS_TO_TENANT]-(r:Reminder)-[:REMINDER_BELONGS_TO_ORGANIZATION]->(o:Organization {id:$organizationId}) RETURN r`
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:REMINDER_BELONGS_TO_TENANT]-(r:Reminder)-[:REMINDER_BELONGS_TO_ORGANIZATION]->(o:Organization {id:$organizationId})`
+	if dismissed != nil {
+		if *dismissed {
+			cypher += ` WHERE r.dismissed = true`
+		} else {
+			cypher += ` WHERE r.dismissed IS NULL OR r.dismissed = false`
+		}
+	}
+	cypher += ` RETURN r`
+
 	params := map[string]any{
 		"tenant":         tenant,
 		"organizationId": organizationId,
