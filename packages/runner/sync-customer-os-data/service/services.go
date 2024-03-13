@@ -24,6 +24,7 @@ type Services struct {
 	MeetingDefaultSyncService          SyncService
 	EmailMessageDefaultSyncService     SyncService
 	InteractionEventDefaultSyncService SyncService
+	OrderDefaultSyncService            SyncService
 }
 
 func InitServices(cfg *config.Config, log logger.Logger, driver *neo4j.DriverWithContext, controlDb *gorm.DB, airbyteStoreDb *config.RawDataStoreDB, grpcClients *grpc_client.Clients) *Services {
@@ -44,6 +45,7 @@ func InitServices(cfg *config.Config, log logger.Logger, driver *neo4j.DriverWit
 	services.MeetingDefaultSyncService = NewDefaultMeetingSyncService(repositories, services, log)
 	services.EmailMessageDefaultSyncService = NewDefaultEmailMessageSyncService(repositories, services, log)
 	services.InteractionEventDefaultSyncService = NewDefaultInteractionEventSyncService(repositories, cfg, log)
+	services.OrderDefaultSyncService = NewDefaultOrderSyncService(repositories, cfg, log)
 
 	services.SyncToEventStoreService = NewSyncToEventStoreService(repositories, services, grpcClients, log)
 	services.SyncCustomerOsDataService = NewSyncCustomerOsDataService(repositories, services, cfg, log)

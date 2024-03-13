@@ -114,6 +114,11 @@ func (s *syncService) Sync(parentCtx context.Context, runId string) {
 		syncRunDtls.FailedInteractionEvents = failed
 		syncRunDtls.SkippedInteractionEvents = skipped
 
+		//completed, failed, skipped = s.orderSyncService(v).Sync(ctx, dataService, syncDate, v.Tenant, runId, s.cfg.SyncCustomerOsData.BatchSize)
+		//syncRunDtls.CompletedOrders = completed
+		//syncRunDtls.FailedOrders = failed
+		//syncRunDtls.SkippedOrders = skipped
+
 		syncRunDtls.SumTotalFailed()
 		syncRunDtls.SumTotalSkipped()
 		syncRunDtls.SumTotalCompleted()
@@ -237,4 +242,13 @@ func (s *syncService) interactionEventSyncService(tenantSyncSettings entity.Tena
 		}
 	}
 	return s.services.InteractionEventDefaultSyncService
+}
+
+func (s *syncService) orderSyncService(tenantSyncSettings entity.TenantSyncSettings) SyncService {
+	if v, ok := s.syncServiceMap[tenantSyncSettings.Source]; ok {
+		if u, ok := v[common.ORDERS]; ok {
+			return u
+		}
+	}
+	return s.services.OrderDefaultSyncService
 }

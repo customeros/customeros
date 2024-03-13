@@ -17,10 +17,12 @@ import (
 
 const (
 	CustomersTableSuffix = "customers"
+	OrdersTableSuffix    = "orders"
 )
 
 var sourceTableSuffixByDataType = map[string][]string{
 	string(common.ORGANIZATIONS): {CustomersTableSuffix},
+	string(common.ORDERS):        {OrdersTableSuffix},
 }
 
 type shopifyDataService struct {
@@ -41,6 +43,7 @@ func NewShopifyDataService(airbyteStoreDb *config.RawDataStoreDB, tenant string,
 	}
 	dataService.dataFuncs = map[common.SyncedEntityType]func(context.Context, int, string) []any{}
 	dataService.dataFuncs[common.ORGANIZATIONS] = dataService.GetOrganizationsForSync
+	dataService.dataFuncs[common.ORDERS] = dataService.GetOrdersForSync
 	return &dataService
 }
 
@@ -50,7 +53,7 @@ func (s *shopifyDataService) GetOrganizationsForSync(ctx context.Context, batchS
 
 	var organizations []any
 	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
-		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
+		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), 100, runId, currentEntity, sourceTableSuffix)
 		if err != nil {
 			s.log.Error(err)
 			return nil
@@ -74,7 +77,52 @@ func (s *shopifyDataService) GetOrganizationsForSync(ctx context.Context, batchS
 				Entity:      currentEntity,
 				TableSuffix: sourceTableSuffix,
 			}
-			organizations = append(organizations, organization)
+
+			if organization.IsCustomer {
+				organizations = append(organizations, organization)
+			} else {
+				err := repository.MarkAirbyteRawRecordProcessed(ctx, s.getDb(), currentEntity, sourceTableSuffix, v.AirbyteAbId, true, false, runId, organization.ExternalId, "Organization is not a customer")
+				if err != nil {
+					s.log.Errorf("error while marking %s with external reference %s as synced for %s", currentEntity, organization.ExternalId, s.SourceId())
+					return nil
+				}
+			}
+		}
+	}
+	return organizations
+}
+
+func (s *shopifyDataService) GetOrdersForSync(ctx context.Context, batchSize int, runId string) []any {
+	s.processingIds = make(map[string]source.ProcessingEntity)
+	currentEntity := string(common.ORDERS)
+
+	var organizations []any
+	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
+		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
+		if err != nil {
+			s.log.Error(err)
+			return nil
+		}
+		for _, v := range airbyteRecords {
+			if len(organizations) >= batchSize {
+				break
+			}
+			outputJSON, err := MapOrder(v.AirbyteData)
+			order, err := source.MapJsonToOrder(outputJSON, v.AirbyteAbId, s.SourceId())
+			if err != nil {
+				order = entity.OrderData{
+					BaseData: entity.BaseData{
+						SyncId: v.AirbyteAbId,
+					},
+				}
+			}
+
+			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
+				ExternalId:  order.ExternalId,
+				Entity:      currentEntity,
+				TableSuffix: sourceTableSuffix,
+			}
+			organizations = append(organizations, order)
 		}
 	}
 	return organizations
