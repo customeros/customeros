@@ -15,6 +15,7 @@ type ExternalSystemWriteRepository interface {
 	CreateIfNotExists(ctx context.Context, tenant, externalSystemId, externalSystemName string) error
 	LinkWithEntity(ctx context.Context, tenant, linkedEntityId, linkedEntityNodeLabel string, externalSystem model.ExternalSystem) error
 	LinkWithEntityInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, linkedEntityId, linkedEntityNodeLabel string, externalSystem model.ExternalSystem) error
+	SetProperty(ctx context.Context, tenant, externalSystemId, propertyName string, propertyValue any) error
 }
 
 type externalSystemWriteRepository struct {
@@ -103,7 +104,32 @@ func (r *externalSystemWriteRepository) LinkWithEntityInTx(ctx context.Context, 
 		"entityId":         linkedEntityId,
 	}
 	span.LogFields(log.String("cypher", cypher))
-	span.LogFields(log.Object("params", params))
+	tracing.LogObjectAsJson(span, "params", params)
 
 	return utils.ExecuteQueryInTx(ctx, tx, cypher, params)
+}
+
+func (r *externalSystemWriteRepository) SetProperty(ctx context.Context, tenant, externalSystemId, propertyName string, propertyValue any) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemWriteRepository.SetProperty")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.LogFields(log.String("externalSystemId", externalSystemId), log.String("propertyName", propertyName), log.Object("propertyValue", propertyValue))
+
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystemId})
+		SET e.%s=$propertyValue, e.updatedAt=$now`, propertyName)
+	params := map[string]any{
+		"tenant":           tenant,
+		"externalSystemId": externalSystemId,
+		"propertyValue":    propertyValue,
+		"now":              utils.Now(),
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+
 }

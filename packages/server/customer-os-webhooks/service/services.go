@@ -56,10 +56,10 @@ func InitServices(log logger.Logger,
 		LocationService:           NewLocationService(log, repositories, grpcClients),
 		PhoneNumberService:        NewPhoneNumberService(log, repositories, grpcClients),
 		SyncStatusService:         NewSyncStatusService(log, repositories),
-		ExternalSystemService:     NewExternalSystemService(log, repositories, cache),
 		InteractionSessionService: NewInteractionSessionService(log, repositories, grpcClients),
 	}
 	services.cfg = cfg
+	services.ExternalSystemService = NewExternalSystemService(log, repositories, cache, &services)
 	services.UserService = NewUserService(log, repositories, grpcClients, &services)
 	services.OrganizationService = NewOrganizationService(log, repositories, grpcClients, &services, cache)
 	services.ContactService = NewContactService(log, repositories, grpcClients, &services)
