@@ -3,14 +3,15 @@
 import React from 'react';
 
 import { useBankAccountsQuery } from '@settings/graphql/getBankAccounts.generated';
-import { AddAccountButton } from '@settings/components/Tabs/panels/BillingPanel/components/AddAccountButton';
-import { BankTransferCard } from '@settings/components/Tabs/panels/BillingPanel/components/BankTransferCard';
 
 import { Box } from '@ui/layout/Box';
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { BankAccount } from '@graphql/types';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+
+import { AddAccountButton } from './AddAccountButton';
+import { BankTransferCard } from './BankTransferCard';
 
 export const BankTransferAccountList = () => {
   const client = getGraphQLClient();
