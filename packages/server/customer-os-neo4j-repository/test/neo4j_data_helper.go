@@ -1182,6 +1182,20 @@ func CreateBankAccount(ctx context.Context, driver *neo4j.DriverWithContext, ten
 	return accountId
 }
 
+func CreateExternalSystem(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, externalSystem entity.ExternalSystemEntity) {
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}) 
+				MERGE (t)<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(es:ExternalSystem {id:$externalSystemId})
+				ON CREATE SET
+					es:ExternalSystem_%s,
+					es.stripePaymentMethodTypes=$stripePaymentMethodTypes
+`, tenant)
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"tenant":                   tenant,
+		"externalSystemId":         externalSystem.ExternalSystemId.String(),
+		"stripePaymentMethodTypes": externalSystem.Stripe.PaymentMethodTypes,
+	})
+}
+
 // Deprecated
 func FirstTimeOfMonth(year, month int) time.Time {
 	return time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)

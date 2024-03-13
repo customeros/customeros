@@ -156,7 +156,7 @@ func (b *externalSystemBatcher) getExternalSystemsForInteractionEvents(ctx conte
 func (b *externalSystemBatcher) getExternalSystemsFor(ctx context.Context, keys dataloader.Keys, entityType entity.EntityType, span opentracing.Span) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
-	ExternalSystemsPtr, err := b.externalSystemService.GetExternalSystemsFor(ctx, ids, entityType)
+	ExternalSystemsPtr, err := b.externalSystemService.GetExternalSystemsForEntities(ctx, ids, entityType)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred

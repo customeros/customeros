@@ -1,0 +1,8 @@
+query GetExternalSystemInstances {
+  externalSystemInstances {
+    type
+    stripeDetails {
+        paymentMethodTypes
+    }
+  }
+}
