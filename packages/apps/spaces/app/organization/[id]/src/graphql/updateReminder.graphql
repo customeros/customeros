@@ -1,0 +1,16 @@
+mutation updateReminder($input: ReminderUpdateInput!) {
+  reminder_Update(input: $input) {
+    metadata {
+      id
+    }
+    content
+    owner {
+      id
+      firstName
+      lastName
+      name
+    }
+    dueDate
+    dismissed
+  }
+}

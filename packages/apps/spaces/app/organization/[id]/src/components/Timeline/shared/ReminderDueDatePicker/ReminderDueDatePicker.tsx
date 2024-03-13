@@ -1,9 +1,10 @@
-import { useState } from 'react';
 import { useField } from 'react-inverted-form';
 
+import set from 'date-fns/set';
 import getHours from 'date-fns/getHours';
 import getMinutes from 'date-fns/getMinutes';
 
+import { Portal } from '@ui/utils/';
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { DateTimeUtils } from '@spaces/utils/date';
@@ -26,7 +27,7 @@ export const ReminderDueDatePicker = ({ name, formId }: DueDatePickerProps) => {
   const { getInputProps } = useField(name, formId);
   const { onChange, ...inputProps } = getInputProps();
 
-  const defaultTime = (() => {
+  const time = (() => {
     const dateStr = inputProps.value;
     const date = dateStr ? new Date(dateStr) : new Date();
 
@@ -44,25 +45,41 @@ export const ReminderDueDatePicker = ({ name, formId }: DueDatePickerProps) => {
     return `${hours}:${minutes}`;
   })();
 
-  const [time, setTime] = useState(defaultTime);
+  const handleChange = (date: Date | null) => {
+    if (!date) return;
+    const [hours, minutes] = time.split(':').map(Number);
+    const _date = set(date, { hours, minutes });
+
+    onChange(_date.toISOString());
+  };
 
   return (
     <Flex justify='flex-start' align='center'>
-      <Popover>
+      <Popover placement='top-start'>
         <PopoverTrigger>
           <Text whiteSpace='pre' pb='1px'>{`${DateTimeUtils.format(
             inputProps.value,
             DateTimeUtils.date,
           )} • `}</Text>
         </PopoverTrigger>
-        <PopoverContent>
-          <PopoverBody>
-            <InlineDatePicker {...inputProps} onChange={onChange} />
-          </PopoverBody>
-          <PopoverFooter>PLM</PopoverFooter>
-        </PopoverContent>
+        <Portal>
+          <PopoverContent>
+            <PopoverBody>
+              <InlineDatePicker {...inputProps} onChange={handleChange} />
+            </PopoverBody>
+            <PopoverFooter>PLM</PopoverFooter>
+          </PopoverContent>
+        </Portal>
       </Popover>
-      <TimeInput value={time} onChange={(v) => setTime(v)} />
+      <TimeInput
+        value={time}
+        onChange={(v) => {
+          const [hours, minutes] = v.split(':').map(Number);
+          const date = set(new Date(inputProps.value), { hours, minutes });
+
+          onChange(date.toISOString());
+        }}
+      />
     </Flex>
   );
 };

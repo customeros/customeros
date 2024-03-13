@@ -1,67 +1,95 @@
+import { useParams } from 'next/navigation';
 import { FormEvent, useEffect } from 'react';
 import { useForm } from 'react-inverted-form';
 
 import { produce } from 'immer';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useDebounceFn } from 'rooks';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { Flex } from '@ui/layout/Flex';
 import { Button } from '@ui/form/Button';
 import { VStack } from '@ui/layout/Stack';
 import { useModKey } from '@shared/hooks/useModKey';
+import { toastError } from '@ui/presentation/Toast';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
-
-// import { useTimelineMeta } from '@organization/src/components/Timeline/state';
-// import {
-//   GetTimelineQuery,
-//   useInfiniteGetTimelineQuery,
-// } from '@organization/src/graphql/getTimeline.generated';
+import { useUpdateReminderMutation } from '@organization/src/graphql/updateReminder.generated';
+import {
+  RemindersQuery,
+  useRemindersQuery,
+} from '@organization/src/graphql/reminders.generated';
 
 import { ReminderPostit, ReminderDueDatePicker } from '../../shared';
 
-type Reminder = {
+type ReminderEditForm = {
   id: string;
   date: string;
   owner: string;
   content: string;
-  isDismissed: boolean;
 };
 
-const mockData: Reminder[] = [
-  {
-    id: '1',
-    date: '2021-10-01:12:30:00Z',
-    content: 'Reminder 1',
-    owner: 'customerostest',
-    isDismissed: false,
-  },
-  {
-    id: '2',
-    date: '2021-10-02',
-    content: 'Reminder 2',
-    owner: 'Gigel',
-    isDismissed: false,
-  },
-  {
-    id: '3',
-    date: '2021-10-03',
-    content: 'Reminder 3',
-    owner: 'Frone',
-    isDismissed: false,
-  },
-];
-
 export const Reminders = () => {
+  const organizationId = useParams()?.id as string;
   const client = getGraphQLClient();
-  const { data, isPending } = useQuery<Reminder[]>({
-    queryKey: ['reminders'],
-    queryFn: async () => {
-      return new Promise((resolve) => resolve(mockData));
+  const queryClient = useQueryClient();
+
+  const { data, isPending } = useRemindersQuery(client, { organizationId });
+  const remindersQueryKey = useRemindersQuery.getKey({ organizationId });
+
+  const updateReminder = useUpdateReminderMutation(client, {
+    onMutate: (values) => {
+      queryClient.cancelQueries({ queryKey: remindersQueryKey });
+
+      const previousEntries = useRemindersQuery.mutateCacheEntry(queryClient, {
+        organizationId,
+      })((cache) =>
+        produce(cache, (draft) => {
+          if (!draft) return;
+
+          const foundReminder = draft.remindersForOrganization.find(
+            (r) => r.metadata.id === values.input.id,
+          );
+
+          if (!foundReminder) return;
+          foundReminder.content = values.input.content ?? '';
+          foundReminder.dismissed = values.input.dismissed ?? false;
+        }),
+      );
+
+      return { previousEntries };
+    },
+    onError: (_, __, context) => {
+      if (context?.previousEntries) {
+        queryClient.setQueryData(remindersQueryKey, context.previousEntries);
+      }
+      toastError(`We couldn't update the reminder`, 'update-reminder-error');
+    },
+    onSettled: () => {
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: remindersQueryKey });
+      }, 500);
     },
   });
 
-  // const [timelineMeta] = useTimelineMeta();
+  const onChange = (values: ReminderEditForm) => {
+    updateReminder.mutate({
+      input: {
+        id: values.id,
+        dueDate: values.date,
+        content: values.content,
+      },
+    });
+  };
+
+  const onDismiss = (id: string) => {
+    updateReminder.mutate({
+      input: {
+        id: id,
+        dismissed: true,
+      },
+    });
+  };
 
   const { data: globalCacheData } = useGlobalCacheQuery(client);
 
@@ -74,23 +102,39 @@ export const Reminders = () => {
 
   return (
     <VStack align='flex-start'>
-      {data
-        ?.filter((r) => !r.isDismissed)
+      {data?.remindersForOrganization
+        ?.filter((r) => !r.dismissed)
         ?.map((r) => (
-          <ReminderItem key={r.id} data={r} currentOwner={currentOwner} />
+          <ReminderItem
+            key={r.metadata.id}
+            currentOwner={currentOwner}
+            onChange={onChange}
+            onDismiss={onDismiss}
+            data={mapReminderToForm(r)}
+          />
         ))}
     </VStack>
   );
 };
 
 interface ReminderItem {
-  data: Reminder;
   currentOwner: string;
+  data: ReminderEditForm;
+  onDismiss: (id: string) => void;
+  onChange: (value: ReminderEditForm) => void;
 }
 
-const ReminderItem = ({ data, currentOwner }: ReminderItem) => {
-  const queryClient = useQueryClient();
+const ReminderItem = ({
+  data,
+  onChange,
+  onDismiss,
+  currentOwner,
+}: ReminderItem) => {
   const formId = `reminder-edit-form-${data.id}`;
+  const [debouncedOnChange] = useDebounceFn(
+    (arg) => onChange(arg as ReminderEditForm),
+    1000,
+  );
 
   const makeContentStr = (content: string, owner: string) => {
     const strippedContent = content.replace(`for ${owner}: `, '');
@@ -100,30 +144,24 @@ const ReminderItem = ({ data, currentOwner }: ReminderItem) => {
       : strippedContent;
   };
 
-  const { handleSubmit, setDefaultValues } = useForm<Reminder>({
+  const { handleSubmit, setDefaultValues } = useForm<ReminderEditForm>({
     formId,
     defaultValues: data,
     onSubmit: async (values) => {
-      queryClient.setQueryData<Reminder[]>(['reminders'], (cache) => {
-        return produce(cache, (draft) => {
-          if (!draft) return;
-
-          const foundReminder = draft.find((r) => r.id === values.id);
-          if (!foundReminder) return;
-
-          foundReminder.content = values.content;
-        });
-      });
+      onChange(values);
     },
     stateReducer: (_, action, next) => {
-      if (action.type === 'FIELD_CHANGE' && action.payload.name === 'content') {
-        return {
-          ...next,
-          values: {
-            ...next.values,
-            content: makeContentStr(next.values.content, next.values.owner),
-          },
-        };
+      if (action.type === 'FIELD_CHANGE') {
+        if (action.payload.name === 'content') {
+          return {
+            ...next,
+            values: {
+              ...next.values,
+              content: makeContentStr(next.values.content, next.values.owner),
+            },
+          };
+        }
+        debouncedOnChange(next.values);
       }
 
       return next;
@@ -132,18 +170,6 @@ const ReminderItem = ({ data, currentOwner }: ReminderItem) => {
 
   const updateReminder = () => {
     handleSubmit({} as FormEvent<HTMLFormElement>);
-  };
-
-  const dismissReminder = () => {
-    queryClient.setQueryData<Reminder[]>(['reminders'], (cache) => {
-      return produce(cache, (draft) => {
-        if (!draft) return;
-
-        const foundIdx = draft.findIndex((r) => r.id === data.id);
-
-        draft.splice(foundIdx, 1);
-      });
-    });
   };
 
   useModKey('Enter', updateReminder);
@@ -180,7 +206,7 @@ const ReminderItem = ({ data, currentOwner }: ReminderItem) => {
           size='sm'
           variant='ghost'
           colorScheme='yellow'
-          onClick={dismissReminder}
+          onClick={() => onDismiss(data.id)}
         >
           Dismiss
         </Button>
@@ -188,3 +214,18 @@ const ReminderItem = ({ data, currentOwner }: ReminderItem) => {
     </ReminderPostit>
   );
 };
+
+function mapReminderToForm(
+  reminder?: RemindersQuery['remindersForOrganization'][number],
+): ReminderEditForm {
+  return {
+    id: reminder?.metadata.id ?? '',
+    date: reminder?.dueDate,
+    content: reminder?.content ?? '',
+    owner:
+      reminder?.owner?.name ||
+      [reminder?.owner?.firstName, reminder?.owner?.lastName]
+        .filter(Boolean)
+        .join(' '),
+  };
+}
