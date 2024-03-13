@@ -1265,6 +1265,56 @@ func CreateSocial(ctx context.Context, driver *neo4j.DriverWithContext, tenant s
 	return socialId
 }
 
+func CreateOrder(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId string, order entity.OrderEntity) string {
+	orderId := utils.NewUUIDIfEmpty(order.Id)
+
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {id:$organizationId})
+							MERGE (t)<-[:ORDER_BELONGS_TO_TENANT]-(or:Order {id:$orderId}) 
+							ON CREATE SET
+								or.createdAt=$createdAt,
+								or:Order_%s,
+								or:TimelineEvent,
+								or:TimelineEvent_%s
+							SET 
+								or.updatedAt=$updatedAt,
+								or.source=$source,
+								or.sourceOfTruth=$sourceOfTruth,
+								or.appSource=$appSource
+							`, tenant, tenant)
+	params := map[string]any{
+		"tenant":         tenant,
+		"organizationId": organizationId,
+		"orderId":        orderId,
+		"createdAt":      order.CreatedAt,
+		"updatedAt":      order.UpdatedAt,
+		"source":         order.Source,
+		"sourceOfTruth":  order.Source,
+		"appSource":      order.AppSource,
+	}
+
+	if order.ConfirmedAt != nil {
+		query += `, or.confirmedAt=$confirmedAt`
+		params["confirmedAt"] = *order.ConfirmedAt
+	}
+	if order.PaidAt != nil {
+		query += `, or.paidAt=$paidAt`
+		params["paidAt"] = *order.PaidAt
+	}
+	if order.FulfilledAt != nil {
+		query += `, or.fulfilledAt=$fulfilledAt`
+		params["fulfilledAt"] = *order.FulfilledAt
+	}
+	if order.CancelledAt != nil {
+		query += `, or.canceledAt=$canceledAt`
+		params["canceledAt"] = *order.CancelledAt
+	}
+	query += ` WITH o, or 
+				MERGE (o)-[:HAS]->(or) `
+
+	ExecuteWriteQuery(ctx, driver, query, params)
+	return orderId
+}
+
 // Deprecated
 func FirstTimeOfMonth(year, month int) time.Time {
 	return time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)

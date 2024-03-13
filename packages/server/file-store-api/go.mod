@@ -27,7 +27,7 @@ require (
 )
 
 require (
-	github.com/99designs/gqlgen v0.17.44 // indirect
+	github.com/99designs/gqlgen v0.17.45 // indirect
 	github.com/agnivade/levenshtein v1.1.1 // indirect
 	github.com/bytedance/sonic v1.11.2 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect

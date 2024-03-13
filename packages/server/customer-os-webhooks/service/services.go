@@ -36,6 +36,7 @@ type Services struct {
 	CommentService            CommentService
 	InvoiceService            InvoiceService
 	SyncEmailService          SyncEmailService
+	OrderService              OrderService
 }
 
 func InitServices(log logger.Logger,
@@ -70,5 +71,6 @@ func InitServices(log logger.Logger,
 	services.CommentService = NewCommentService(log, repositories, grpcClients, &services)
 	services.InvoiceService = NewInvoiceService(log, repositories, grpcClients, &services)
 	services.SyncEmailService = NewSyncEmailService(log, repositories, grpcClients, &services, cache, []commonEntity.PersonalEmailProvider{})
+	services.OrderService = NewOrderService(log, repositories, grpcClients, &services)
 	return &services
 }

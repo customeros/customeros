@@ -945,6 +945,57 @@ func TestQueryResolver_Organization_WithSocials(t *testing.T) {
 	require.Equal(t, "test", organization.Socials[1].AppSource)
 }
 
+func TestQueryResolver_Organization_WithOrders(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+		Name: "org name",
+	})
+
+	orderId1 := neo4jtest.CreateOrder(ctx, driver, tenantName, orgId, neo4jentity.OrderEntity{
+		ConfirmedAt: utils.TimePtr(utils.Now().Add(-time.Hour * 24)),
+	})
+
+	orderId2 := neo4jtest.CreateOrder(ctx, driver, tenantName, orgId, neo4jentity.OrderEntity{
+		ConfirmedAt: utils.TimePtr(utils.Now().Add(-time.Hour * 24)),
+		PaidAt:      utils.TimePtr(utils.Now().Add(-time.Hour * 24)),
+	})
+
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Order"))
+	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "HAS"))
+
+	rawResponse := callGraphQL(t, "organization/get_organization_with_orders",
+		map[string]interface{}{"organizationId": orgId})
+
+	var orgStruct struct {
+		Organization model.Organization
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &orgStruct)
+	require.Nil(t, err)
+
+	organization := orgStruct.Organization
+	require.NotNil(t, organization)
+	require.Equal(t, 2, len(organization.Orders))
+
+	require.Equal(t, orderId1, organization.Orders[0].ID)
+	require.NotNil(t, organization.Orders[0].ConfirmedAt)
+	require.Nil(t, organization.Orders[0].PaidAt)
+	require.Nil(t, organization.Orders[0].FulfilledAt)
+	require.Nil(t, organization.Orders[0].CancelledAt)
+
+	require.Equal(t, orderId2, organization.Orders[1].ID)
+	require.NotNil(t, organization.Orders[1].ConfirmedAt)
+	require.NotNil(t, organization.Orders[1].PaidAt)
+	require.Nil(t, organization.Orders[1].FulfilledAt)
+	require.Nil(t, organization.Orders[1].CancelledAt)
+
+}
+
 func TestQueryResolver_Organization_WithOwner(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)

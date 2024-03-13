@@ -44,6 +44,7 @@ const (
 	NodeLabelOrganizationPlan          = "OrganizationPlan"
 	NodeLabelOrganizationPlanMilestone = "OrganizationPlanMilestone"
 	NodeLabelReminder                  = "Reminder"
+	NodeLabelOrder                     = "Order"
 )
 
 func NodeLabelWithTenant(label string, tenant string) string {

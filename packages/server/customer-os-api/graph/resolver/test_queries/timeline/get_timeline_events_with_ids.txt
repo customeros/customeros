@@ -44,5 +44,12 @@ query GetTimelineEvents($ids: [ID!]!) {
       analysisType
       createdAt
     }
+    ... on Order {
+      id
+      confirmedAt
+      paidAt
+      fulfilledAt
+      cancelledAt
+    }
   }
 }
