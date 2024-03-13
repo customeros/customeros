@@ -105,7 +105,7 @@ func (o *OrganizationData) Normalize() {
 }
 
 func (o *OrganizationData) NormalizeDomains() {
-	o.Domains = utils.FilterOutEmpty(o.Domains)
+	o.Domains = utils.RemoveEmpties(o.Domains)
 	o.Domains = utils.LowercaseSliceOfStrings(o.Domains)
 	o.Domains = utils.RemoveDuplicates(o.Domains)
 }

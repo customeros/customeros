@@ -2,7 +2,6 @@ package mapper
 
 import (
 	"encoding/json"
-
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -627,4 +626,19 @@ func MapDbNodeToEmailEntity(node dbtype.Node) *entity.EmailEntity {
 		IsDisabled:     utils.GetBoolPropOrNil(props, "isDisabled"),
 		Error:          utils.GetStringPropOrNil(props, "error"),
 	}
+}
+
+func MapDbNodeToExternalSystem(node *dbtype.Node) *entity.ExternalSystemEntity {
+	if node == nil {
+		return &entity.ExternalSystemEntity{}
+	}
+	props := utils.GetPropsFromNode(*node)
+	externalSystemEntity := entity.ExternalSystemEntity{
+		ExternalSystemId: enum.DecodeExternalSystemId(utils.GetStringPropOrEmpty(props, "id")),
+		Name:             utils.GetStringPropOrEmpty(props, "name"),
+	}
+	if externalSystemEntity.ExternalSystemId == enum.Stripe {
+		externalSystemEntity.Stripe.PaymentMethodTypes = utils.GetListStringPropOrEmpty(props, entity.PropertyExternalSystemStripePaymentMethodTypes)
+	}
+	return &externalSystemEntity
 }

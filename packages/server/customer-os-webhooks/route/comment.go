@@ -50,7 +50,7 @@ func syncCommentsHandler(services *service.Services, log logger.Logger) gin.Hand
 		requestBody, err := io.ReadAll(c.Request.Body)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			log.Errorf("(SyncLogEntries) error reading request body: %s", err.Error())
+			log.Errorf("(SyncComments) error reading request body: %s", err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 			return
 		}
@@ -59,7 +59,7 @@ func syncCommentsHandler(services *service.Services, log logger.Logger) gin.Hand
 		var comments []model.CommentData
 		if err = json.Unmarshal(requestBody, &comments); err != nil {
 			tracing.TraceErr(span, err)
-			log.Errorf("(SyncLogEntries) Failed unmarshalling body request: %s", err.Error())
+			log.Errorf("(SyncComments) Failed unmarshalling body request: %s", err.Error())
 			c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Cannot unmarshal request body"})
 			return
 		}
@@ -119,7 +119,7 @@ func syncCommentHandler(services *service.Services, log logger.Logger) gin.Handl
 		var comment model.CommentData
 		if err = json.Unmarshal(requestBody, &comment); err != nil {
 			tracing.TraceErr(span, err)
-			log.Errorf("(SyncLogEntries) Failed unmarshalling body request: %s", err.Error())
+			log.Errorf("(SyncComment) Failed unmarshalling body request: %s", err.Error())
 			c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Cannot unmarshal request body"})
 			return
 		}

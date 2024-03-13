@@ -5,15 +5,21 @@ import (
 	"time"
 )
 
+const PropertyExternalSystemStripePaymentMethodTypes = "stripePaymentMethodTypes"
+
 type ExternalSystemEntity struct {
+	DataLoaderKey
 	ExternalSystemId neo4jenum.ExternalSystemId
+	Name             string
 	Relationship     struct {
 		ExternalId     string
 		SyncDate       *time.Time
 		ExternalUrl    *string
 		ExternalSource *string
 	}
-	DataloaderKey string
+	Stripe struct {
+		PaymentMethodTypes []string
+	}
 }
 
 type ExternalSystemEntities []ExternalSystemEntity

@@ -105,6 +105,7 @@ func (server *server) Run(parentCtx context.Context) error {
 
 	commonCache := commoncaches.NewCommonCache()
 
+	route.AddExternalSystemRoutes(ctx, r, serviceContainer, server.log, commonCache)
 	route.AddUserRoutes(ctx, r, serviceContainer, server.log, commonCache)
 	route.AddOrganizationRoutes(ctx, r, serviceContainer, server.log, commonCache)
 	route.AddLogEntryRoutes(ctx, r, serviceContainer, server.log, commonCache)

@@ -5,9 +5,9 @@ import (
 	"strings"
 )
 
-func FilterOutEmpty(vals []string) []string {
+func RemoveEmpties(arr []string) []string {
 	var result []string
-	for _, val := range vals {
+	for _, val := range arr {
 		if val != "" {
 			result = append(result, val)
 		}
