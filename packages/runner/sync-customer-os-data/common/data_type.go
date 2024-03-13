@@ -11,4 +11,5 @@ const (
 	LOG_ENTRIES        SyncedEntityType = "log_entries"
 	MEETINGS           SyncedEntityType = "meetings"
 	INTERACTION_EVENTS SyncedEntityType = "interaction_events"
+	ORDERS             SyncedEntityType = "orders"
 )

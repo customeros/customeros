@@ -5,11 +5,49 @@ import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"strings"
-	"time"
 )
 
 func MapOrganization(inputJson string) (string, error) {
+	var input struct {
+		Email        string `json:"email"`
+		FirstName    string `json:"first_name"`
+		LastName     string `json:"last_name"`
+		ID           int64  `json:"id"`
+		CreatedAtStr string `json:"created_at"`
+		Addresses    []struct {
+			Company string `json:"company"`
+		}
+	}
+
+	err := json.Unmarshal([]byte(inputJson), &input)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse input JSON: %v", err)
+	}
+
+	isCustomer := false
+	var name string
+
+	if input.Addresses != nil && len(input.Addresses) > 0 && input.Addresses[0].Company != "" {
+		name = input.Addresses[0].Company
+		isCustomer = true
+	}
+
+	output := entity.OrganizationData{
+		BaseData: entity.BaseData{
+			ExternalId:           fmt.Sprintf("%d", input.ID),
+			ExternalSourceEntity: "customers",
+			ExternalSystem:       "shopify",
+		},
+		Name:        name,
+		IsCustomer:  isCustomer,
+		Whitelisted: true,
+	}
+	output.CreatedAtStr = input.CreatedAtStr
+
+	return utils.ToJson(output)
+}
+
+func MapOrder(inputJson string) (string, error) {
 	var input struct {
 		Email        string `json:"email,omitempty"`
 		FirstName    string `json:"first_name,omitempty"`
@@ -43,18 +81,4 @@ func MapOrganization(inputJson string) (string, error) {
 	output.CreatedAtStr = input.CreatedAtStr
 
 	return utils.ToJson(output)
-}
-
-func extractDomain(email string) string {
-	parts := strings.Split(email, "@")
-	if len(parts) != 2 {
-		return ""
-	}
-	return parts[1]
-}
-
-func tsStrToRFC3339(timestamp int64) string {
-	t := time.Unix(timestamp, 0).UTC()
-	layout := "2013-06-27T08:48:27-04:00"
-	return t.Format(layout)
 }
