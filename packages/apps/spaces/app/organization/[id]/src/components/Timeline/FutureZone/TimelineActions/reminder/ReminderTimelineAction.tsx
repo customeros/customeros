@@ -52,7 +52,7 @@ export const ReminderTimelineAction = () => {
         produce(cache, (draft) => {
           if (!draft) return;
 
-          draft.remindersForOrganization.unshift({
+          draft.remindersForOrganization.push({
             metadata: {
               id: 'TEMP',
             },
@@ -104,25 +104,6 @@ export const ReminderTimelineAction = () => {
           userId: globalCacheData?.global_Cache?.user?.id ?? '',
         },
       });
-
-      // let remindersCount = 0;
-
-      // queryClient.setQueryData<
-      //   { id: string; date: string; owner: string; content: string }[]
-      // >(['reminders'], (cache) => {
-      //   return produce(cache, (draft) => {
-      //     if (!draft) return;
-
-      //     draft.unshift({
-      //       id: Math.random().toString(),
-      //       date: new Date().toISOString(),
-      //       content: values.content,
-      //       owner: currentOwner,
-      //     });
-
-      //     remindersCount = draft.length;
-      //   });
-      // });
 
       const timelineData = queryClient.getQueryData<
         InfiniteData<GetTimelineQuery>

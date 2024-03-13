@@ -57,7 +57,11 @@ export const ReminderDueDatePicker = ({ name, formId }: DueDatePickerProps) => {
     <Flex justify='flex-start' align='center'>
       <Popover placement='top-start'>
         <PopoverTrigger>
-          <Text whiteSpace='pre' pb='1px'>{`${DateTimeUtils.format(
+          <Text
+            whiteSpace='pre'
+            pb='1px'
+            color='gray.500'
+          >{`${DateTimeUtils.format(
             inputProps.value,
             DateTimeUtils.date,
           )} • `}</Text>
@@ -72,6 +76,7 @@ export const ReminderDueDatePicker = ({ name, formId }: DueDatePickerProps) => {
         </Portal>
       </Popover>
       <TimeInput
+        color='gray.500'
         value={time}
         onChange={(v) => {
           const [hours, minutes] = v.split(':').map(Number);

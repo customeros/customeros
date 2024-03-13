@@ -15,6 +15,8 @@ import {
   useTimelineActionContext,
 } from '@organization/src/components/Timeline/FutureZone/TimelineActions/context/TimelineActionContext';
 
+import { useReminderAction } from './reminder';
+
 export const TimelineActionButtons: FC<{ invalidateQuery: () => void }> = ({
   invalidateQuery,
 }) => {
@@ -34,6 +36,7 @@ export const TimelineActionButtons: FC<{ invalidateQuery: () => void }> = ({
   } = useTimelineActionEmailContext();
   const { openedEditor, showEditor } = useTimelineActionContext();
   const [openOnConfirm, setOpenOnConfirm] = useState<null | EditorType>(null);
+  const { handleCreateReminder } = useReminderAction();
 
   useEffect(() => {
     return () => {
@@ -140,7 +143,7 @@ export const TimelineActionButtons: FC<{ invalidateQuery: () => void }> = ({
       </Button>
       <Button
         variant='outline'
-        onClick={() => handleToggleEditor('reminder')}
+        onClick={handleCreateReminder}
         borderRadius='3xl'
         size='xs'
         colorScheme={openedEditor === 'reminder' ? 'primary' : 'gray'}

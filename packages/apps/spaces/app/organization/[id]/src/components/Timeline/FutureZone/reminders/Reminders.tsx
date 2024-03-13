@@ -1,17 +1,10 @@
 import { useParams } from 'next/navigation';
-import { FormEvent, useEffect } from 'react';
-import { useForm } from 'react-inverted-form';
 
 import { produce } from 'immer';
-import { useDebounceFn } from 'rooks';
 import { useQueryClient } from '@tanstack/react-query';
 
-import { Flex } from '@ui/layout/Flex';
-import { Button } from '@ui/form/Button';
 import { VStack } from '@ui/layout/Stack';
-import { useModKey } from '@shared/hooks/useModKey';
 import { toastError } from '@ui/presentation/Toast';
-import { FormAutoresizeTextarea } from '@ui/form/Textarea';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 import { useUpdateReminderMutation } from '@organization/src/graphql/updateReminder.generated';
@@ -20,14 +13,8 @@ import {
   useRemindersQuery,
 } from '@organization/src/graphql/reminders.generated';
 
-import { ReminderPostit, ReminderDueDatePicker } from '../../shared';
-
-type ReminderEditForm = {
-  id: string;
-  date: string;
-  owner: string;
-  content: string;
-};
+import { ReminderEditForm } from './types';
+import { ReminderItem } from './ReminderItem';
 
 export const Reminders = () => {
   const organizationId = useParams()?.id as string;
@@ -104,7 +91,11 @@ export const Reminders = () => {
     <VStack align='flex-start'>
       {data?.remindersForOrganization
         ?.filter((r) => !r.dismissed)
-        ?.map((r) => (
+        .sort(
+          (a, b) =>
+            new Date(a?.dueDate).valueOf() - new Date(b?.dueDate).valueOf(),
+        )
+        .map((r) => (
           <ReminderItem
             key={r.metadata.id}
             currentOwner={currentOwner}
@@ -114,104 +105,6 @@ export const Reminders = () => {
           />
         ))}
     </VStack>
-  );
-};
-
-interface ReminderItem {
-  currentOwner: string;
-  data: ReminderEditForm;
-  onDismiss: (id: string) => void;
-  onChange: (value: ReminderEditForm) => void;
-}
-
-const ReminderItem = ({
-  data,
-  onChange,
-  onDismiss,
-  currentOwner,
-}: ReminderItem) => {
-  const formId = `reminder-edit-form-${data.id}`;
-  const [debouncedOnChange] = useDebounceFn(
-    (arg) => onChange(arg as ReminderEditForm),
-    1000,
-  );
-
-  const makeContentStr = (content: string, owner: string) => {
-    const strippedContent = content.replace(`for ${owner}: `, '');
-
-    return currentOwner !== owner
-      ? `for ${owner}: ${strippedContent}`
-      : strippedContent;
-  };
-
-  const { handleSubmit, setDefaultValues } = useForm<ReminderEditForm>({
-    formId,
-    defaultValues: data,
-    onSubmit: async (values) => {
-      onChange(values);
-    },
-    stateReducer: (_, action, next) => {
-      if (action.type === 'FIELD_CHANGE') {
-        if (action.payload.name === 'content') {
-          return {
-            ...next,
-            values: {
-              ...next.values,
-              content: makeContentStr(next.values.content, next.values.owner),
-            },
-          };
-        }
-        debouncedOnChange(next.values);
-      }
-
-      return next;
-    },
-  });
-
-  const updateReminder = () => {
-    handleSubmit({} as FormEvent<HTMLFormElement>);
-  };
-
-  useModKey('Enter', updateReminder);
-
-  useEffect(() => {
-    setDefaultValues({
-      ...data,
-      content: makeContentStr(data.content, data.owner),
-    });
-  }, [currentOwner]);
-
-  return (
-    <ReminderPostit>
-      <FormAutoresizeTextarea
-        px='4'
-        fontFamily='sticky'
-        fontSize='sm'
-        name='content'
-        formId={formId}
-        onBlur={updateReminder}
-        placeholder='Type your reminder here'
-        borderBottom='unset'
-        _hover={{
-          borderBottom: 'unset',
-        }}
-        _focus={{
-          borderBottom: 'unset',
-        }}
-      />
-      <Flex align='center' px='4' w='full' justify='space-between' mb='2'>
-        <ReminderDueDatePicker name='date' formId={formId} />
-
-        <Button
-          size='sm'
-          variant='ghost'
-          colorScheme='yellow'
-          onClick={() => onDismiss(data.id)}
-        >
-          Dismiss
-        </Button>
-      </Flex>
-    </ReminderPostit>
   );
 };
 
