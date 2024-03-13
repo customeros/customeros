@@ -957,8 +957,8 @@ type ExternalSystem struct {
 }
 
 type ExternalSystemInstance struct {
-	Type           ExternalSystemType `json:"type"`
-	PaymentMethods []string           `json:"paymentMethods"`
+	Type          ExternalSystemType           `json:"type"`
+	StripeDetails *ExternalSystemStripeDetails `json:"stripeDetails,omitempty"`
 }
 
 type ExternalSystemReferenceInput struct {
@@ -967,6 +967,10 @@ type ExternalSystemReferenceInput struct {
 	Type           ExternalSystemType `json:"type"`
 	ExternalURL    *string            `json:"externalUrl,omitempty"`
 	ExternalSource *string            `json:"externalSource,omitempty"`
+}
+
+type ExternalSystemStripeDetails struct {
+	PaymentMethodTypes []string `json:"paymentMethodTypes"`
 }
 
 type FieldSet struct {

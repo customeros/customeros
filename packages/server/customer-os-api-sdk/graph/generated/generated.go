@@ -523,8 +523,12 @@ type ComplexityRoot struct {
 	}
 
 	ExternalSystemInstance struct {
-		PaymentMethods func(childComplexity int) int
-		Type           func(childComplexity int) int
+		StripeDetails func(childComplexity int) int
+		Type          func(childComplexity int) int
+	}
+
+	ExternalSystemStripeDetails struct {
+		PaymentMethodTypes func(childComplexity int) int
 	}
 
 	FieldSet struct {
@@ -1299,6 +1303,7 @@ type ComplexityRoot struct {
 		Email                                 func(childComplexity int, id string) int
 		EntityTemplates                       func(childComplexity int, extends *model.EntityTemplateExtension) int
 		ExternalMeetings                      func(childComplexity int, externalSystemID string, externalID *string, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
+		ExternalSystemInstances               func(childComplexity int) int
 		GcliSearch                            func(childComplexity int, keyword string, limit *int) int
 		GlobalCache                           func(childComplexity int) int
 		InteractionEvent                      func(childComplexity int, id string) int
@@ -1936,6 +1941,7 @@ type QueryResolver interface {
 	DashboardTimeToOnboard(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardTimeToOnboard, error)
 	DashboardOnboardingCompletion(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardOnboardingCompletion, error)
 	Email(ctx context.Context, id string) (*model.Email, error)
+	ExternalSystemInstances(ctx context.Context) ([]*model.ExternalSystemInstance, error)
 	InteractionSession(ctx context.Context, id string) (*model.InteractionSession, error)
 	InteractionSessionBySessionIdentifier(ctx context.Context, sessionIdentifier string) (*model.InteractionSession, error)
 	InteractionEvent(ctx context.Context, id string) (*model.InteractionEvent, error)
@@ -4190,12 +4196,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ExternalSystem.Type(childComplexity), true
 
-	case "ExternalSystemInstance.paymentMethods":
-		if e.complexity.ExternalSystemInstance.PaymentMethods == nil {
+	case "ExternalSystemInstance.stripeDetails":
+		if e.complexity.ExternalSystemInstance.StripeDetails == nil {
 			break
 		}
 
-		return e.complexity.ExternalSystemInstance.PaymentMethods(childComplexity), true
+		return e.complexity.ExternalSystemInstance.StripeDetails(childComplexity), true
 
 	case "ExternalSystemInstance.type":
 		if e.complexity.ExternalSystemInstance.Type == nil {
@@ -4203,6 +4209,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ExternalSystemInstance.Type(childComplexity), true
+
+	case "ExternalSystemStripeDetails.paymentMethodTypes":
+		if e.complexity.ExternalSystemStripeDetails.PaymentMethodTypes == nil {
+			break
+		}
+
+		return e.complexity.ExternalSystemStripeDetails.PaymentMethodTypes(childComplexity), true
 
 	case "FieldSet.createdAt":
 		if e.complexity.FieldSet.CreatedAt == nil {
@@ -9601,6 +9614,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.ExternalMeetings(childComplexity, args["externalSystemId"].(string), args["externalId"].(*string), args["pagination"].(*model.Pagination), args["where"].(*model.Filter), args["sort"].([]*model.SortBy)), true
 
+	case "Query.externalSystemInstances":
+		if e.complexity.Query.ExternalSystemInstances == nil {
+			break
+		}
+
+		return e.complexity.Query.ExternalSystemInstances(childComplexity), true
+
 	case "Query.gcli_Search":
 		if e.complexity.Query.GcliSearch == nil {
 			break
@@ -12585,7 +12605,11 @@ input FieldSetTemplateInput {
     order: Int!
     customFieldTemplateInputs: [CustomFieldTemplateInput!]
 }`, BuiltIn: false},
-	{Name: "../../../customer-os-api/graph/schemas/external_system.graphqls", Input: `input ExternalSystemReferenceInput {
+	{Name: "../../../customer-os-api/graph/schemas/external_system.graphqls", Input: `extend type Query {
+    externalSystemInstances: [ExternalSystemInstance!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+input ExternalSystemReferenceInput {
     externalId: ID!
     syncDate: Time
     type: ExternalSystemType!
@@ -12618,7 +12642,11 @@ type ExternalSystem {
 
 type ExternalSystemInstance {
     type: ExternalSystemType!
-    paymentMethods: [String!]!
+    stripeDetails: ExternalSystemStripeDetails
+}
+
+type ExternalSystemStripeDetails {
+    paymentMethodTypes: [String!]!
 }`, BuiltIn: false},
 	{Name: "../../../customer-os-api/graph/schemas/filter.graphqls", Input: `"""
 If provided as part of the request, results will be filtered down to the ` + "`" + `page` + "`" + ` and ` + "`" + `limit` + "`" + ` specified.
@@ -34059,8 +34087,8 @@ func (ec *executionContext) fieldContext_ExternalSystemInstance_type(ctx context
 	return fc, nil
 }
 
-func (ec *executionContext) _ExternalSystemInstance_paymentMethods(ctx context.Context, field graphql.CollectedField, obj *model.ExternalSystemInstance) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ExternalSystemInstance_paymentMethods(ctx, field)
+func (ec *executionContext) _ExternalSystemInstance_stripeDetails(ctx context.Context, field graphql.CollectedField, obj *model.ExternalSystemInstance) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ExternalSystemInstance_stripeDetails(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -34073,7 +34101,52 @@ func (ec *executionContext) _ExternalSystemInstance_paymentMethods(ctx context.C
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.PaymentMethods, nil
+		return obj.StripeDetails, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.ExternalSystemStripeDetails)
+	fc.Result = res
+	return ec.marshalOExternalSystemStripeDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐExternalSystemStripeDetails(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ExternalSystemInstance_stripeDetails(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ExternalSystemInstance",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "paymentMethodTypes":
+				return ec.fieldContext_ExternalSystemStripeDetails_paymentMethodTypes(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ExternalSystemStripeDetails", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ExternalSystemStripeDetails_paymentMethodTypes(ctx context.Context, field graphql.CollectedField, obj *model.ExternalSystemStripeDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ExternalSystemStripeDetails_paymentMethodTypes(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PaymentMethodTypes, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -34090,9 +34163,9 @@ func (ec *executionContext) _ExternalSystemInstance_paymentMethods(ctx context.C
 	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_ExternalSystemInstance_paymentMethods(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_ExternalSystemStripeDetails_paymentMethodTypes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "ExternalSystemInstance",
+		Object:     "ExternalSystemStripeDetails",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -75159,6 +75232,86 @@ func (ec *executionContext) fieldContext_Query_email(ctx context.Context, field 
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_externalSystemInstances(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_externalSystemInstances(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().ExternalSystemInstances(rctx)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*model.ExternalSystemInstance); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model.ExternalSystemInstance`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.ExternalSystemInstance)
+	fc.Result = res
+	return ec.marshalNExternalSystemInstance2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐExternalSystemInstanceᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_externalSystemInstances(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "type":
+				return ec.fieldContext_ExternalSystemInstance_type(ctx, field)
+			case "stripeDetails":
+				return ec.fieldContext_ExternalSystemInstance_stripeDetails(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ExternalSystemInstance", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_interactionSession(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_interactionSession(ctx, field)
 	if err != nil {
@@ -99465,8 +99618,44 @@ func (ec *executionContext) _ExternalSystemInstance(ctx context.Context, sel ast
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "paymentMethods":
-			out.Values[i] = ec._ExternalSystemInstance_paymentMethods(ctx, field, obj)
+		case "stripeDetails":
+			out.Values[i] = ec._ExternalSystemInstance_stripeDetails(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var externalSystemStripeDetailsImplementors = []string{"ExternalSystemStripeDetails"}
+
+func (ec *executionContext) _ExternalSystemStripeDetails(ctx context.Context, sel ast.SelectionSet, obj *model.ExternalSystemStripeDetails) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, externalSystemStripeDetailsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ExternalSystemStripeDetails")
+		case "paymentMethodTypes":
+			out.Values[i] = ec._ExternalSystemStripeDetails_paymentMethodTypes(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -106925,6 +107114,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "externalSystemInstances":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_externalSystemInstances(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "interactionSession":
 			field := field
 
@@ -111359,6 +111570,60 @@ func (ec *executionContext) marshalNExternalSystem2ᚖgithubᚗcomᚋopenlineᚑ
 	return ec._ExternalSystem(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNExternalSystemInstance2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐExternalSystemInstanceᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ExternalSystemInstance) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNExternalSystemInstance2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐExternalSystemInstance(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNExternalSystemInstance2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐExternalSystemInstance(ctx context.Context, sel ast.SelectionSet, v *model.ExternalSystemInstance) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ExternalSystemInstance(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNExternalSystemType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐExternalSystemType(ctx context.Context, v interface{}) (model.ExternalSystemType, error) {
 	var res model.ExternalSystemType
 	err := res.UnmarshalGQL(v)
@@ -115279,6 +115544,13 @@ func (ec *executionContext) unmarshalOExternalSystemReferenceInput2ᚖgithubᚗc
 	}
 	res, err := ec.unmarshalInputExternalSystemReferenceInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOExternalSystemStripeDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐExternalSystemStripeDetails(ctx context.Context, sel ast.SelectionSet, v *model.ExternalSystemStripeDetails) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._ExternalSystemStripeDetails(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOFieldSet2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐFieldSet(ctx context.Context, sel ast.SelectionSet, v *model.FieldSet) graphql.Marshaler {
