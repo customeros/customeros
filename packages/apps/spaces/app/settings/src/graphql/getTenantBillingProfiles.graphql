@@ -7,17 +7,10 @@ query TenantBillingProfiles {
         locality
         zip
         legalName
-        domesticPaymentsBankInfo
-        internationalPaymentsBankInfo
         country
-        email
         vatNumber
         sendInvoicesFrom
         sendInvoicesBcc
-        canPayWithDirectDebitACH
-        canPayWithDirectDebitSEPA
-        canPayWithDirectDebitBacs
-        canPayWithCard
         canPayWithPigeon
     }
 }
