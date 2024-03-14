@@ -61,9 +61,59 @@
         "code",
         "doc"
       ]
+    },
+    {
+      "login": "acalinica",
+      "name": "acalinica",
+      "avatar_url": "https://avatars.githubusercontent.com/u/135133139?v=4",
+      "profile": "https://github.com/acalinica",
+      "contributions": [
+        "code",
+        "review"
+      ]
+    },
+    {
+      "login": "Kasia9090",
+      "name": "Kasia9090",
+      "avatar_url": "https://avatars.githubusercontent.com/u/121807793?v=4",
+      "profile": "https://github.com/Kasia9090",
+      "contributions": [
+        "code",
+        "review"
+      ]
+    },
+    {
+      "login": "SilviuOpenline",
+      "name": "SilviuOpenline",
+      "avatar_url": "https://avatars.githubusercontent.com/u/125381623?v=4",
+      "profile": "https://github.com/SilviuOpenline",
+      "contributions": [
+        "code",
+        "review"
+      ]
+    },
+    {
+      "login": "grokkos",
+      "name": "grokkos",
+      "avatar_url": "https://avatars.githubusercontent.com/u/19203770?v=4",
+      "profile": "https://github.com/grokkos",
+      "contributions": [
+        "code",
+        "review"
+      ]
+    },
+    {
+      "login": "max-openline",
+      "name": "max-openline",
+      "avatar_url": "https://avatars.githubusercontent.com/u/151522527?v=4",
+      "profile": "https://github.com/max-openline",
+      "contributions": [
+        "code",
+        "doc"
+      ]
     }
   ],
-  "contributorsPerLine": 7,
+  "contributorsPerLine": 6,
   "skipCi": true,
   "repoType": "github",
   "repoHost": "https://github.com",
