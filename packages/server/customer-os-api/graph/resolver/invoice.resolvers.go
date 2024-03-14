@@ -7,7 +7,6 @@ package resolver
 import (
 	"context"
 	"errors"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
@@ -133,6 +132,50 @@ func (r *mutationResolver) InvoiceUpdate(ctx context.Context, input model.Invoic
 		graphql.AddErrorf(ctx, "Failed fetching invoice details. Invoice id: %s", input.ID)
 		return &model.Invoice{Metadata: &model.Metadata{
 			ID: input.ID,
+		}}, nil
+	}
+
+	return mapper.MapEntityToInvoice(invoiceEntity), nil
+}
+
+// InvoicePay is the resolver for the invoice_Pay field.
+func (r *mutationResolver) InvoicePay(ctx context.Context, id string) (*model.Invoice, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.InvoicePay", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("id", id))
+
+	invoice, err := r.Services.InvoiceService.GetById(ctx, id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to fetch invoice %s", id)
+		return &model.Invoice{Metadata: &model.Metadata{
+			ID: id,
+		}}, nil
+	}
+
+	if invoice.Status != neo4jenum.InvoiceStatusDue {
+		tracing.TraceErr(span, errors.New("Invoice is not due"))
+		graphql.AddErrorf(ctx, "Invoice is not due")
+		return &model.Invoice{Metadata: &model.Metadata{
+			ID: id,
+		}}, nil
+	}
+
+	err = r.Services.InvoiceService.PayInvoice(ctx, id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to pay invoice %s", id)
+		return &model.Invoice{Metadata: &model.Metadata{
+			ID: id,
+		}}, nil
+	}
+	invoiceEntity, err := r.Services.InvoiceService.GetById(ctx, id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed fetching invoice details. Invoice id: %s", id)
+		return &model.Invoice{Metadata: &model.Metadata{
+			ID: id,
 		}}, nil
 	}
 

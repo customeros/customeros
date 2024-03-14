@@ -42,6 +42,11 @@ func (r *mutationResolver) InvoiceUpdate(ctx context.Context, input model.Invoic
 	panic(fmt.Errorf("not implemented: InvoiceUpdate - invoice_Update"))
 }
 
+// InvoicePay is the resolver for the invoice_Pay field.
+func (r *mutationResolver) InvoicePay(ctx context.Context, id string) (*model.Invoice, error) {
+	panic(fmt.Errorf("not implemented: InvoicePay - invoice_Pay"))
+}
+
 // InvoiceVoid is the resolver for the invoice_Void field.
 func (r *mutationResolver) InvoiceVoid(ctx context.Context, id string) (*model.Invoice, error) {
 	panic(fmt.Errorf("not implemented: InvoiceVoid - invoice_Void"))
@@ -61,3 +66,13 @@ func (r *queryResolver) Invoices(ctx context.Context, pagination *model.Paginati
 func (r *Resolver) Invoice() generated.InvoiceResolver { return &invoiceResolver{r} }
 
 type invoiceResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *mutationResolver) InvoiceMarkAsPaid(ctx context.Context, id string) (*model.Invoice, error) {
+	panic(fmt.Errorf("not implemented: InvoiceMarkAsPaid - invoice_MarkAsPaid"))
+}
