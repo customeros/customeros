@@ -203,7 +203,7 @@ func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_New(t *testin
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "test org",
 	})
-	neo4jt.CreateSocial(ctx, testDatabase.Driver, tenantName, neo4jentity.SocialEntity{
+	neo4jtest.CreateSocial(ctx, testDatabase.Driver, tenantName, neo4jentity.SocialEntity{
 		Url: socialUrl,
 	})
 	orgEventHandler := &OrganizationEventHandler{
@@ -247,7 +247,7 @@ func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_SocialUrlAlre
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "test org",
 	})
-	existingSocialId := neo4jt.CreateSocial(ctx, testDatabase.Driver, tenantName, neo4jentity.SocialEntity{
+	existingSocialId := neo4jtest.CreateSocial(ctx, testDatabase.Driver, tenantName, neo4jentity.SocialEntity{
 		Url:          socialUrl,
 		PlatformName: platformName,
 	})

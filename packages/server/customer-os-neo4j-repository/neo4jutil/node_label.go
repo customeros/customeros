@@ -45,3 +45,7 @@ const (
 	NodeLabelOrganizationPlanMilestone = "OrganizationPlanMilestone"
 	NodeLabelReminder                  = "Reminder"
 )
+
+func NodeLabelWithTenant(label string, tenant string) string {
+	return label + "_" + tenant
+}
