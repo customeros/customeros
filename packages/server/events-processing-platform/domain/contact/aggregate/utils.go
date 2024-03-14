@@ -13,7 +13,7 @@ func GetContactObjectID(aggregateID, tenant string) string {
 	return aggregate.GetAggregateObjectID(aggregateID, tenant, ContactAggregateType)
 }
 
-func LoadContactAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string) (*ContactAggregate, error) {
+func LoadContactAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string, options eventstore.LoadAggregateOptions) (*ContactAggregate, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LoadContactAggregate")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
@@ -21,7 +21,7 @@ func LoadContactAggregate(ctx context.Context, eventStore eventstore.AggregateSt
 
 	contactAggregate := NewContactAggregateWithTenantAndID(tenant, objectID)
 
-	err := aggregate.LoadAggregate(ctx, eventStore, contactAggregate, *eventstore.NewLoadAggregateOptions())
+	err := aggregate.LoadAggregate(ctx, eventStore, contactAggregate, options)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err

@@ -47,7 +47,7 @@ func InitServices(cfg *config.Config, repositories *repository.Repositories, agg
 	services.CommonServices = commonService.InitServices(repositories.Drivers.GormDb, repositories.Drivers.Neo4jDriver)
 
 	//GRPC services
-	services.ContactService = NewContactService(log, commandHandlers.Contact)
+	services.ContactService = NewContactService(log, commandHandlers.Contact, aggregateStore, cfg)
 	services.OrganizationService = NewOrganizationService(log, commandHandlers.Organization, aggregateStore, cfg)
 	services.PhoneNumberService = NewPhoneNumberService(log, repositories.Neo4jRepositories, commandHandlers.PhoneNumber)
 	services.EmailService = NewEmailService(log, repositories.Neo4jRepositories, commandHandlers.Email)

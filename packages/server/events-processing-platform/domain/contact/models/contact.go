@@ -21,6 +21,7 @@ type Contact struct {
 	UpdatedAt              time.Time                     `json:"updatedAt"`
 	PhoneNumbers           map[string]ContactPhoneNumber `json:"phoneNumbers"`
 	Emails                 map[string]ContactEmail       `json:"emails"`
+	Socials                map[string]Social             `json:"socials,omitempty"`
 	Locations              []string                      `json:"locations,omitempty"`
 	ExternalSystems        []commonmodel.ExternalSystem  `json:"externalSystems"`
 	JobRolesByOrganization map[string]JobRole            `json:"jobRoles,omitempty"`
@@ -44,6 +45,10 @@ type ContactPhoneNumber struct {
 type ContactEmail struct {
 	Primary bool   `json:"primary"`
 	Label   string `json:"label"`
+}
+
+type Social struct {
+	Url string `json:"url"`
 }
 
 func (c *Contact) String() string {
@@ -124,6 +129,30 @@ func (c *Contact) HasLocation(locationId string) bool {
 		}
 	}
 	return false
+}
+
+func (c *Contact) HasSocialUrl(url string) bool {
+	if c.Socials == nil {
+		return false
+	}
+	for _, social := range c.Socials {
+		if social.Url == url {
+			return true
+		}
+	}
+	return false
+}
+
+func (c *Contact) GetSocialIdForUrl(url string) string {
+	if c.Socials == nil {
+		return ""
+	}
+	for key, social := range c.Socials {
+		if social.Url == url {
+			return key
+		}
+	}
+	return ""
 }
 
 func (c *Contact) HasJobRoleInOrganization(organizationId string, jobRoleFields JobRole) bool {

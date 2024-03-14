@@ -2,12 +2,15 @@ package aggregate
 
 import (
 	"context"
+	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -35,6 +38,19 @@ func (a *ContactAggregate) HandleCommand(ctx context.Context, cmd eventstore.Com
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidCommandType)
 		return eventstore.ErrInvalidCommandType
+	}
+}
+
+func (a *ContactAggregate) HandleRequest(ctx context.Context, request any) (any, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactAggregate.HandleRequest")
+	defer span.Finish()
+
+	switch r := request.(type) {
+	case *contactpb.ContactAddSocialGrpcRequest:
+		return a.addSocial(ctx, r)
+	default:
+		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
+		return nil, eventstore.ErrInvalidRequestType
 	}
 }
 
@@ -311,4 +327,40 @@ func (a *ContactAggregate) linkOrganization(ctx context.Context, cmd *command.Li
 	})
 
 	return a.Apply(event)
+}
+
+func (a *ContactAggregate) addSocial(ctx context.Context, r *contactpb.ContactAddSocialGrpcRequest) (any, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "ContractAggregate.addSocial")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "request", r)
+
+	sourceFields := commonmodel.Source{}
+	sourceFields.FromGrpc(r.SourceFields)
+
+	if aggregate.AllowCheckForNoChanges(sourceFields.AppSource, r.LoggedInUserId) {
+		if a.Contact.HasSocialUrl(r.Url) {
+			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
+			return nil, nil
+		}
+	}
+
+	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(r.CreatedAt), utils.Now())
+
+	socialId := utils.StringFirstNonEmpty(a.Contact.GetSocialIdForUrl(r.Url), uuid.New().String())
+
+	addSocialEvent, err := event.NewAddSocialEvent(a, r, socialId, sourceFields, createdAtNotNil)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", errors.Wrap(err, "NewAddSocialEvent")
+	}
+	aggregate.EnrichEventWithMetadataExtended(&addSocialEvent, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: r.LoggedInUserId,
+		App:    r.SourceFields.AppSource,
+	})
+
+	return socialId, a.Apply(addSocialEvent)
 }

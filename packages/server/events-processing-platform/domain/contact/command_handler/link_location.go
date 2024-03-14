@@ -36,7 +36,7 @@ func (h *linkLocationCommandHandler) Handle(ctx context.Context, cmd *command.Li
 		return validationError
 	}
 
-	contactAggregate, err := aggregate.LoadContactAggregate(ctx, h.es, cmd.Tenant, cmd.ObjectID)
+	contactAggregate, err := aggregate.LoadContactAggregate(ctx, h.es, cmd.Tenant, cmd.ObjectID, *eventstore.NewLoadAggregateOptions())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

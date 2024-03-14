@@ -46,6 +46,8 @@ func (a *ContactAggregate) When(evt eventstore.Event) error {
 		return a.onLocationLink(evt)
 	case event.ContactOrganizationLinkV1:
 		return a.onOrganizationLink(evt)
+	case event.ContactAddSocialV1:
+		return a.onAddSocial(evt)
 	default:
 		if strings.HasPrefix(evt.GetEventType(), "$") {
 			return nil
@@ -231,4 +233,19 @@ func (a *ContactAggregate) onOrganizationLink(evt eventstore.Event) error {
 
 	a.Contact.UpdatedAt = eventData.UpdatedAt
 	return nil
+}
+
+func (a *ContactAggregate) onAddSocial(evt eventstore.Event) error {
+	var eventData event.AddSocialEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	if a.Contact.Socials == nil {
+		a.Contact.Socials = make(map[string]models.Social)
+	}
+	a.Contact.Socials[eventData.SocialId] = models.Social{
+		Url: eventData.Url,
+	}
+	return nil
+
 }
