@@ -6,6 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { produce } from 'immer';
 import { useSession } from 'next-auth/react';
 import { useQueryClient } from '@tanstack/react-query';
+import { useBaseCurrencyQuery } from '@settings/graphql/getBaseCurrency.generated';
 
 import { Flex } from '@ui/layout/Flex';
 import { Button } from '@ui/form/Button';
@@ -27,6 +28,7 @@ import {
 } from '@organization/src/graphql/getContracts.generated';
 import {
   User,
+  Currency,
   DataSource,
   Organization,
   ContractStatus,
@@ -59,6 +61,8 @@ const AccountPanelComponent = () => {
     useGetInvoicesCountQuery(client, {
       organizationId: id,
     });
+  const { data: baseCurrencyData } = useBaseCurrencyQuery(client);
+
   const createContract = useCreateContractMutation(client, {
     onMutate: () => {
       const contract = {
@@ -117,7 +121,12 @@ const AccountPanelComponent = () => {
 
   if (!data?.organization?.contracts?.length) {
     return (
-      <EmptyContracts name={data?.organization?.name || ''}>
+      <EmptyContracts
+        name={data?.organization?.name || ''}
+        baseCurrency={
+          baseCurrencyData?.tenantSettings?.baseCurrency || Currency.Usd
+        }
+      >
         <Notes id={id} data={data?.organization} />
       </EmptyContracts>
     );
@@ -175,6 +184,9 @@ const AccountPanelComponent = () => {
                 createContract.mutate({
                   input: {
                     organizationId: id,
+                    currency:
+                      baseCurrencyData?.tenantSettings?.baseCurrency ||
+                      Currency.Usd,
                     name: `${
                       data?.organization?.name?.length
                         ? `${data?.organization?.name}'s`

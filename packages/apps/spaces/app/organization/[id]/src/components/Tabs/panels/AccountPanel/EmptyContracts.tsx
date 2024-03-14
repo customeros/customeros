@@ -17,6 +17,7 @@ import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useCreateContractMutation } from '@organization/src/graphql/createContract.generated';
 import {
   User,
+  Currency,
   DataSource,
   ContractStatus,
   ContractRenewalCycle,
@@ -28,10 +29,9 @@ import {
 } from '@organization/src/graphql/getContracts.generated';
 import { OrganizationPanel } from '@organization/src/components/Tabs/panels/OrganizationPanel/OrganizationPanel';
 
-export const EmptyContracts: FC<PropsWithChildren<{ name: string }>> = ({
-  name,
-  children,
-}) => {
+export const EmptyContracts: FC<
+  PropsWithChildren<{ name: string; baseCurrency: Currency }>
+> = ({ name, baseCurrency, children }) => {
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
   const { data: session } = useSession();
@@ -113,6 +113,7 @@ export const EmptyContracts: FC<PropsWithChildren<{ name: string }>> = ({
             createContract.mutate({
               input: {
                 organizationId: id,
+                currency: baseCurrency,
                 name: `${name?.length ? `${name}'s` : "Unnamed's"} contract`,
               },
             })
