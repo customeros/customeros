@@ -1,10 +1,11 @@
 package model
 
 type ReferencedOrganization struct {
-	ExternalId string `json:"externalId,omitempty"`
-	Id         string `json:"id,omitempty"`
-	Domain     string `json:"domain,omitempty"`
-	JobTitle   string `json:"jobTitle,omitempty"`
+	ExternalId     string `json:"externalId,omitempty"`
+	Id             string `json:"id,omitempty"`
+	Domain         string `json:"domain,omitempty"`
+	JobTitle       string `json:"jobTitle,omitempty"`
+	JobDescription string `json:"jobDescription,omitempty"`
 }
 
 func (r *ReferencedOrganization) GetReferencedEntityType() ReferencedEntityType {

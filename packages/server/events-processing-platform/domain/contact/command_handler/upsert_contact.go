@@ -41,7 +41,7 @@ func (h *upsertContactCommandHandler) Handle(ctx context.Context, cmd *command.U
 	if cmd.IsCreateCommand {
 		contactAggregate = aggregate.NewContactAggregateWithTenantAndID(cmd.Tenant, cmd.ObjectID)
 	} else {
-		contactAggregate, err = aggregate.LoadContactAggregate(ctx, h.es, cmd.Tenant, cmd.ObjectID)
+		contactAggregate, err = aggregate.LoadContactAggregate(ctx, h.es, cmd.Tenant, cmd.ObjectID, *eventstore.NewLoadAggregateOptions())
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err

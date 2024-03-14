@@ -32,7 +32,8 @@ type ContactData struct {
 	ProfilePhotoUrl      string                   `json:"profilePhotoUrl,omitempty"`
 	Organizations        []ReferencedOrganization `json:"organizations,omitempty"`
 	// if no valid organization provided sync is skipped
-	OrganizationRequired bool `json:"organizationRequired,omitempty"`
+	OrganizationRequired bool            `json:"organizationRequired,omitempty"`
+	Socials              []SocialDetails `json:"socials,omitempty"`
 }
 
 type ContactNote struct {
@@ -113,6 +114,10 @@ func (c *ContactData) HasTags() bool {
 	return len(c.Tags) > 0
 }
 
+func (c *ContactData) HasSocials() bool {
+	return len(c.Socials) > 0
+}
+
 func (c *ContactData) SetTextCustomFieldsTimes() {
 	for i := range c.TextCustomFields {
 		if c.TextCustomFields[i].CreatedAtStr != "" && c.TextCustomFields[i].CreatedAt == nil {
@@ -141,4 +146,15 @@ func (c *ContactData) Normalize() {
 	}
 	c.PhoneNumbers = GetNonEmptyPhoneNumbers(c.PhoneNumbers)
 	c.PhoneNumbers = RemoveDuplicatedPhoneNumbers(c.PhoneNumbers)
+
+	// normalize socials
+	var socials []SocialDetails
+	var seenSocialUrls []string
+	for social := range c.Socials {
+		if c.Socials[social].URL != "" && !utils.Contains(seenSocialUrls, c.Socials[social].URL) {
+			socials = append(socials, c.Socials[social])
+			seenSocialUrls = append(seenSocialUrls, c.Socials[social].URL)
+		}
+	}
+	c.Socials = socials
 }

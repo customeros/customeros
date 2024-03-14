@@ -289,6 +289,35 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 			}
 		}
 	}
+	if !failedSync && contactInput.HasSocials() {
+		for _, social := range contactInput.Socials {
+			// Create or update social
+			socialId, err := s.services.SocialService.CreateSocial(ctx, social.PlatformName, social.Url, contactInput.ExternalSystem, appSource)
+			if err != nil {
+				failedSync = true
+				tracing.TraceErr(span, err)
+				reason = fmt.Sprintf("Failed to create social for contact %s: %s", contactId, err.Error())
+				s.log.Error(reason)
+			}
+			// Link social to contact
+			if !failedSync {
+				_, err = CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
+					return s.grpcClients.ContactClient.LinkSocialToContact(ctx, &contactpb.LinkSocialToContactGrpcRequest{
+						Tenant:    common.GetTenantFromContext(ctx),
+						ContactId: contactId,
+						SocialId:  socialId,
+						AppSource: appSource,
+					})
+				})
+				if err != nil {
+					failedSync = true
+					tracing.TraceErr(span, err, log.String("grpcMethod", "LinkSocialToContact"))
+					reason = fmt.Sprintf("Failed to link social %s with contact %s: %s", social.Url, contactId, err.Error())
+					s.log.Error(reason)
+				}
+			}
+		}
+	}
 
 	if !failedSync {
 		for orgId, referencedOrganization := range identifiedOrganizations {
@@ -299,6 +328,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 					ContactId:      contactId,
 					OrganizationId: orgId,
 					JobTitle:       referencedOrganization.JobTitle,
+					Description:    referencedOrganization.JobDescription,
 					SourceFields: &commonpb.SourceFields{
 						Source:    contactInput.ExternalSystem,
 						AppSource: appSource,

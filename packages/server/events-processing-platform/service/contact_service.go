@@ -3,14 +3,18 @@ package service
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/models"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 )
 
@@ -18,12 +22,14 @@ type contactService struct {
 	contactpb.UnimplementedContactGrpcServiceServer
 	log                    logger.Logger
 	contactCommandHandlers *command_handler.CommandHandlers
+	contactRequestHandler  contact.ContactRequestHandler
 }
 
-func NewContactService(log logger.Logger, contactCommandHandlers *command_handler.CommandHandlers) *contactService {
+func NewContactService(log logger.Logger, contactCommandHandlers *command_handler.CommandHandlers, aggregateStore eventstore.AggregateStore, cfg *config.Config) *contactService {
 	return &contactService{
 		log:                    log,
 		contactCommandHandlers: contactCommandHandlers,
+		contactRequestHandler:  contact.NewContactRequestHandler(log, aggregateStore, cfg.Utils),
 	}
 }
 
@@ -162,6 +168,23 @@ func (s *contactService) LinkWithOrganization(ctx context.Context, request *cont
 	}
 
 	return &contactpb.ContactIdGrpcResponse{Id: request.ContactId}, nil
+}
+
+func (s *contactService) AddSocial(ctx context.Context, request *contactpb.ContactAddSocialGrpcRequest) (*commonpb.IdResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContactService.AddSocial")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+	span.SetTag(tracing.SpanTagEntityId, request.ContactId)
+
+	socialId, err := s.contactRequestHandler.HandleWithRetry(ctx, request.Tenant, request.ContactId, true, request)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(AddSocial.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		return nil, grpcerr.ErrResponse(err)
+	}
+
+	return &commonpb.IdResponse{Id: socialId.(string)}, nil
 }
 
 func (s *contactService) errResponse(err error) error {

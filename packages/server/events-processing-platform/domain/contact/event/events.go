@@ -16,6 +16,7 @@ const (
 	ContactEmailLinkV1        = "V1_CONTACT_EMAIL_LINK"
 	ContactLocationLinkV1     = "V1_CONTACT_LOCATION_LINK"
 	ContactOrganizationLinkV1 = "V1_CONTACT_ORGANIZATION_LINK"
+	ContactAddSocialV1        = "V1_CONTACT_ADD_SOCIAL"
 )
 
 const (
