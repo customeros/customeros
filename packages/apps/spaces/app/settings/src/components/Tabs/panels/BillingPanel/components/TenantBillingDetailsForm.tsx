@@ -4,7 +4,7 @@ import React, { useMemo } from 'react';
 
 import { LogoUploader } from '@settings/components/LogoUploadComponent/LogoUploader';
 import { VatInput } from '@settings/components/Tabs/panels/BillingPanel/components/VatInput';
-import { BankTransferAccountList } from '@settings/components/Tabs/panels/BillingPanel/components/BankTransferAccountList';
+import { PaymentMethods } from '@settings/components/Tabs/panels/BillingPanel/components/PaymentMethods';
 
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
@@ -18,17 +18,8 @@ export const TenantBillingPanelDetailsForm = ({
   setIsInvoiceProviderDetailsHovered,
   setIsInvoiceProviderFocused,
   formId,
-  canPayWithCard,
-  canPayWithDirectDebitACH,
-  canPayWithDirectDebitSEPA,
-  canPayWithDirectDebitBacs,
 }: {
   formId: string;
-  canPayWithCard?: boolean;
-  invoicingEnabled?: boolean;
-  canPayWithDirectDebitACH?: boolean;
-  canPayWithDirectDebitSEPA?: boolean;
-  canPayWithDirectDebitBacs?: boolean;
   setIsInvoiceProviderFocused: (newState: boolean) => void;
   setIsInvoiceProviderDetailsHovered: (newState: boolean) => void;
 }) => {
@@ -182,7 +173,7 @@ export const TenantBillingPanelDetailsForm = ({
         />
       </Flex>
 
-      <BankTransferAccountList />
+      <PaymentMethods />
     </CardBody>
   );
 };
