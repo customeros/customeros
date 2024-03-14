@@ -119,8 +119,9 @@ func main() {
 	//PleasePayInvoiceNotification()
 	//testCreateInvoice()
 	//testTenantSettingsUpdate()
-	// testCreateReminder()
-	// testUpdateReminder()
+	//testCreateReminder()
+	//testUpdateReminder()
+	//testAddBankAccount()
 }
 
 func testCreateInvoice() {
@@ -168,8 +169,9 @@ func PleasePayInvoiceNotification() {
 
 func testAddTenantBillingProfile() {
 	result, err := clients.TenantClient.AddBillingProfile(context.Background(), &tenantpb.AddBillingProfileRequest{
-		Tenant: tenant,
-		Email:  "test@gmail.com",
+		Tenant:          tenant,
+		SendInvoicesBcc: "invoice@openline.ai",
+		LegalName:       "Openline",
 	})
 	if err != nil {
 		log.Fatalf("Failed: %v", err.Error())
@@ -818,6 +820,23 @@ func testUpdateReminder() {
 			reminderpb.ReminderFieldMask_REMINDER_PROPERTY_DUE_DATE,
 			reminderpb.ReminderFieldMask_REMINDER_PROPERTY_DISMISSED,
 		},
+	})
+	if err != nil {
+		log.Fatalf("Failed: %v", err.Error())
+	}
+}
+
+func testAddBankAccount() {
+	_, err := clients.TenantClient.AddBankAccount(context.Background(), &tenantpb.AddBankAccountGrpcRequest{
+		Tenant:        tenant,
+		OtherDetails:  "Some eur details",
+		BankName:      "Bank of Europe",
+		AccountNumber: "ACC-456",
+		RoutingNumber: "ROUT-456",
+		Iban:          "IBAN-456",
+		Bic:           "BIC-456",
+		SortCode:      "SORT-456",
+		Currency:      "USD",
 	})
 	if err != nil {
 		log.Fatalf("Failed: %v", err.Error())
