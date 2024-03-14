@@ -11,6 +11,7 @@ import { useTenantSettingsQuery } from '@settings/graphql/getTenantSettings.gene
 
 import { cn } from '@ui/utils/cn';
 import { Icons } from '@ui/media/Icon';
+import { Skeleton } from '@ui/feedback/Skeleton';
 import { Receipt } from '@ui/media/icons/Receipt';
 import { Bubbles } from '@ui/media/icons/Bubbles';
 import { LogOut01 } from '@ui/media/icons/LogOut01';
@@ -52,7 +53,7 @@ export const RootSidenav = () => {
       placeholderData: { tableViewDefs: { content: mockedTableDefs } },
     },
   );
-  const { data } = useGlobalCacheQuery(client);
+  const { data, isLoading } = useGlobalCacheQuery(client);
   const globalCache = data?.global_Cache;
   const myViews = tableViewDefsData?.tableViewDefs?.content ?? [];
 
@@ -105,18 +106,26 @@ export const RootSidenav = () => {
     });
   }, []);
 
+  const cdnLogoUrl = data?.global_Cache?.cdnLogoUrl;
+
   return (
     <div className='px-2 pt-2.5 pb-4 h-full w-12.5 bg-white flex flex-col border-r border-gray-200'>
       <div
-        className='mb-4 ml-3 cursor-pointer flex justify-flex-start overflow-hidden relative'
+        className='mb-2 ml-3 cursor-pointer flex justify-flex-start overflow-hidden relative'
         tabIndex={0}
         role='button'
       >
-        <Image
-          src={logoCustomerOs}
-          alt='CustomerOS'
-          className='w-136 h-30 pointer-events-none transition-opacity-250 ease-in-out'
-        />
+        {!isLoading ? (
+          <Image
+            src={cdnLogoUrl ?? logoCustomerOs}
+            alt='CustomerOS'
+            width={136}
+            height={30}
+            className='pointer-events-none transition-opacity-250 ease-in-out'
+          />
+        ) : (
+          <Skeleton className='w-full h-8 mr-2' />
+        )}
       </div>
 
       <div className='space-y-2 w-full mb-4'>
