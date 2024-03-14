@@ -10,7 +10,7 @@ interface UserHexagonProps {
 
 export const UserHexagon = ({ name, isCurrent, color }: UserHexagonProps) => {
   return (
-    <Tooltip label={name} placement='auto-start' hasArrow>
+    <Tooltip label={name} hasArrow>
       <Flex w='26px' h='28px' align='center' justify='center' cursor='default'>
         <svg
           xmlns='http://www.w3.org/2000/svg'

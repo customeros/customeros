@@ -1,11 +1,7 @@
-'use client';
-
-import { Flex } from '@ui/layout/Flex';
-
 export const SideSection = ({ children }: { children?: React.ReactNode }) => {
   return (
-    <Flex flex='1' h='100%' minW='28rem'>
+    <div className='flex h-full min-w-[28rem] drop-shadow-ringPrimary'>
       {children}
-    </Flex>
+    </div>
   );
 };

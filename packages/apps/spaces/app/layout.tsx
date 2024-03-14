@@ -153,7 +153,7 @@ export default async function RootLayout({
           }}
         />
 
-        <body className='scrollbar'>
+        <body>
           <ThemeProvider>
             <Providers isProduction={isProduction} env={env}>
               {children}

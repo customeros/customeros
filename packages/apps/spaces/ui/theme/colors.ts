@@ -1,4 +1,5 @@
 export const colors = {
+  white: '#FFFFFF',
   primary: {
     25: '#FCFAFF',
     50: '#F9F5FF',
@@ -15,6 +16,7 @@ export const colors = {
   },
   gray: {
     25: '#FCFCFD',
+    50: '#F9FAFB',
     100: '#F2F4F7',
     200: '#EAECF0',
     300: '#D0D5DD',
