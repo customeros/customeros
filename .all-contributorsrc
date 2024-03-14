@@ -63,16 +63,27 @@
       ]
     },
     {
-      "login": "SilviuOpenline",
-      "name": "SilviuOpenline",
-      "avatar_url": "https://avatars.githubusercontent.com/u/125381623?v=4",
-      "profile": "https://github.com/SilviuOpenline",
+      "login": "acalinica",
+      "name": "Alex Calinica",
+      "avatar_url": "https://avatars.githubusercontent.com/u/135133139?v=4",
+      "profile": "https://www.openline.ai/",
       "contributions": [
         "review",
         "test",
         "code"
       ]
-    }
+    },
+    {
+          "login": "SilviuOpenline",
+          "name": "SilviuOpenline",
+          "avatar_url": "https://avatars.githubusercontent.com/u/125381623?v=4",
+          "profile": "https://github.com/SilviuOpenline",
+          "contributions": [
+            "review",
+            "test",
+            "code"
+     ]
+     }
   ],
   "contributorsPerLine": 7,
   "skipCi": true,
