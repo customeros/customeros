@@ -93,7 +93,7 @@ export const Reminders = () => {
     .filter(Boolean)
     .join(' ');
 
-  if (isPending) return <p>Loading...</p>;
+  if (isPending) return null;
 
   return (
     <VStack align='flex-start'>
