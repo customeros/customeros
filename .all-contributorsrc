@@ -61,6 +61,17 @@
         "code",
         "doc"
       ]
+    },
+    {
+      "login": "SilviuOpenline",
+      "name": "SilviuOpenline",
+      "avatar_url": "https://avatars.githubusercontent.com/u/125381623?v=4",
+      "profile": "https://github.com/SilviuOpenline",
+      "contributions": [
+        "review",
+        "test",
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
@@ -68,5 +79,6 @@
   "repoType": "github",
   "repoHost": "https://github.com",
   "projectName": "openline-customer-os",
-  "projectOwner": "openline-ai"
+  "projectOwner": "openline-ai",
+  "commitType": "docs"
 }
