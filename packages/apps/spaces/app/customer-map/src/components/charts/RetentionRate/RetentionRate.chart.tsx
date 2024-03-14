@@ -50,14 +50,19 @@ const RetentionRate = ({
     Churned: warning950,
   };
 
+  const isMissingData = (dataPoint: 'renewed' | 'churned') =>
+    data.every((d) => d.values[dataPoint] === 0);
+
   const legendData = [
     {
       label: 'Renewed',
       color: colorScale.Renewed,
+      isMissingData: isMissingData('renewed'),
     },
     {
       label: 'Churned',
       color: colorScale.Churned,
+      isMissingData: isMissingData('churned'),
     },
   ];
 
@@ -165,11 +170,13 @@ const RetentionRate = ({
                         label='Renewed'
                         value={values.renewed}
                         color={colorScale.Renewed}
+                        isMissingData={isMissingData('renewed')}
                       />
                       <TooltipEntry
                         label='Churned'
                         value={values.churned}
                         color={colorScale.Churned}
+                        isMissingData={isMissingData('churned')}
                       />
                     </Flex>
                   </>
@@ -183,6 +190,9 @@ const RetentionRate = ({
           }}
         />
       </XYChart>
+      <Text color='gray.500' fontSize='xs' mt='2'>
+        <i>*Key data missing.</i>
+      </Text>
     </>
   );
 };
@@ -191,10 +201,12 @@ const TooltipEntry = ({
   color,
   label,
   value,
+  isMissingData,
 }: {
   color: string;
   label: string;
   value: number;
+  isMissingData?: boolean;
 }) => {
   return (
     <Flex align='center' gap='4'>
@@ -211,8 +223,8 @@ const TooltipEntry = ({
         </Text>
       </Flex>
       <Flex justify='flex-start'>
-        <Text color='white' fontSize='sm'>
-          {value}
+        <Text color={isMissingData ? 'gray.400' : 'white'} fontSize='sm'>
+          {isMissingData ? '*' : value}
         </Text>
       </Flex>
     </Flex>

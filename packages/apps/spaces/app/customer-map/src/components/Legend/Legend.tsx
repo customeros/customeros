@@ -11,6 +11,7 @@ interface LegendProps {
     label: string;
     color: string;
     borderColor?: string;
+    isMissingData?: boolean;
   }[];
 }
 
@@ -41,7 +42,10 @@ export const Legend = ({ data }: LegendProps) => {
                 />
               </svg>
               <LegendLabel align='left' margin='0 0 0 4px'>
-                <Text fontSize='sm'>{label.text}</Text>
+                <Text fontSize='sm'>
+                  {label.text}
+                  {data[i].isMissingData && <Text as='span'>*</Text>}
+                </Text>
               </LegendLabel>
             </LegendItem>
           ))}

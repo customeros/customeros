@@ -3,6 +3,7 @@ import dynamic from 'next/dynamic';
 
 import ParentSize from '@visx/responsive/lib/components/ParentSize';
 
+import { Text } from '@ui/typography/Text';
 import { Skeleton } from '@ui/presentation/Skeleton';
 import { ChartCard } from '@customerMap/components/ChartCard';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
@@ -37,6 +38,9 @@ export const GrossRevenueRetention = () => {
       };
     },
   ) as GrossRevenueRetentionDatum[];
+  const hasMissingData = chartData.every(
+    (d) => d.value === 0 || d.value === 100,
+  );
 
   const stat = `${
     data?.dashboard_GrossRevenueRetention?.grossRevenueRetention ?? 0
@@ -48,11 +52,19 @@ export const GrossRevenueRetention = () => {
   return (
     <ChartCard
       flex='2'
-      stat={stat}
+      stat={hasMissingData ? undefined : stat}
       hasData={hasContracts}
       title='Gross Revenue Retention'
       renderHelpContent={HelpContent}
-      renderSubStat={() => <PercentageTrend percentage={percentage} />}
+      renderSubStat={
+        hasMissingData
+          ? () => (
+              <Text fontWeight='semibold' color='gray.400' mb='10'>
+                Key data missing.
+              </Text>
+            )
+          : () => <PercentageTrend percentage={percentage} />
+      }
     >
       <ParentSize>
         {({ width }) => (
@@ -66,7 +78,7 @@ export const GrossRevenueRetention = () => {
             <RevenueRetentionRateChart
               width={width}
               data={chartData}
-              hasContracts={hasContracts}
+              hasContracts={hasMissingData ? false : hasContracts}
             />
           </Skeleton>
         )}

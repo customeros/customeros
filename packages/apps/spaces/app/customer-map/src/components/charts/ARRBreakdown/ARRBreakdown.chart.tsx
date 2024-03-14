@@ -73,32 +73,41 @@ const ARRBreakdown = ({
     Churned: warning950,
   };
 
+  const isMissingData = (dataPoint: keyof ARRBreakdownDatum) =>
+    data.every((d) => d[dataPoint] === 0);
+
   const legendData = [
     {
       label: 'Newly contracted',
       color: colorScale.NewlyContracted,
+      isMissingData: isMissingData('newlyContracted'),
     },
     {
       label: 'Renewals',
       color: colorScale.Renewals,
+      isMissingData: isMissingData('renewals'),
     },
     {
       label: 'Upsells',
       color: colorScale.Upsells,
       borderColor: greenLight400,
+      isMissingData: isMissingData('upsells'),
     },
     {
       label: 'Downgrades',
       color: colorScale.Downgrades,
       borderColor: !hasContracts ? greenLight400 : undefined,
+      isMissingData: isMissingData('downgrades'),
     },
     {
       label: 'Cancellations',
       color: colorScale.Cancellations,
+      isMissingData: isMissingData('cancellations'),
     },
     {
       label: 'Churned',
       color: colorScale.Churned,
+      isMissingData: isMissingData('churned'),
     },
   ];
 
@@ -236,31 +245,37 @@ const ARRBreakdown = ({
                         label='Upsells'
                         value={values.upsells}
                         color={colorScale.Upsells}
+                        isMissingData={isMissingData('upsells')}
                       />
                       <TooltipEntry
                         label='Renewals'
                         value={values.renewals}
                         color={colorScale.Renewals}
+                        isMissingData={isMissingData('renewals')}
                       />
                       <TooltipEntry
                         label='Newly contracted'
                         value={values.newlyContracted}
                         color={colorScale.NewlyContracted}
+                        isMissingData={isMissingData('newlyContracted')}
                       />
                       <TooltipEntry
                         label='Churned'
                         value={values.churned}
                         color={colorScale.Churned}
+                        isMissingData={isMissingData('churned')}
                       />
                       <TooltipEntry
                         label='Cancellations'
                         value={values.cancellations}
                         color={colorScale.Cancellations}
+                        isMissingData={isMissingData('cancellations')}
                       />
                       <TooltipEntry
                         label='Downgrades'
                         value={values.downgrades}
                         color={colorScale.Downgrades}
+                        isMissingData={isMissingData('downgrades')}
                       />
                     </Flex>
                   </>
@@ -274,6 +289,9 @@ const ARRBreakdown = ({
           }}
         />
       </XYChart>
+      <Text color='gray.500' fontSize='xs' mt='2'>
+        <i>*Key data missing.</i>
+      </Text>
     </>
   );
 };
@@ -282,10 +300,12 @@ const TooltipEntry = ({
   color,
   label,
   value,
+  isMissingData,
 }: {
   color: string;
   label: string;
   value: number;
+  isMissingData?: boolean;
 }) => {
   return (
     <Flex align='center' gap='4'>
@@ -302,8 +322,8 @@ const TooltipEntry = ({
         </Text>
       </Flex>
       <Flex>
-        <Text color='white' fontSize='sm'>
-          {formatCurrency(value)}
+        <Text color={isMissingData ? 'gray.400' : 'white'} fontSize='sm'>
+          {isMissingData ? '*' : formatCurrency(value)}
         </Text>
       </Flex>
     </Flex>
