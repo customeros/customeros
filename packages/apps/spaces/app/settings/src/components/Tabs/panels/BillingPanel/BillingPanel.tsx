@@ -198,10 +198,6 @@ export const BillingPanel = () => {
       };
       if (action.type === 'FIELD_CHANGE') {
         switch (action.payload.name) {
-          case 'canPayWithDirectDebitSEPA':
-          case 'canPayWithDirectDebitACH':
-          case 'canPayWithDirectDebitBacs':
-          case 'canPayWithCard':
           case 'canPayWithPigeon': {
             updateBillingProfileMutation.mutate({
               input: {
@@ -478,10 +474,6 @@ export const BillingPanel = () => {
         {tenantSettingsData?.tenantSettings.billingEnabled && (
           <TenantBillingPanelDetailsForm
             formId={formId}
-            canPayWithCard={state.values.canPayWithCard}
-            canPayWithDirectDebitACH={state.values.canPayWithDirectDebitACH}
-            canPayWithDirectDebitSEPA={state.values.canPayWithDirectDebitSEPA}
-            canPayWithDirectDebitBacs={state.values.canPayWithDirectDebitBacs}
             setIsInvoiceProviderFocused={setIsInvoiceProviderFocused}
             setIsInvoiceProviderDetailsHovered={
               setIsInvoiceProviderDetailsHovered
@@ -500,7 +492,7 @@ export const BillingPanel = () => {
             locality: state.values.locality ?? '',
             zip: state.values.zip ?? '',
             country: state?.values?.country?.label ?? '',
-            email: state?.values?.email ?? '',
+            email: state?.values?.sendInvoicesFrom ?? '',
             name: state.values?.legalName ?? '',
             vatNumber: state.values?.vatNumber ?? '',
           }}
