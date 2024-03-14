@@ -38,6 +38,8 @@ export type BankAccountsQuery = {
     sortCode?: string | null;
     accountNumber?: string | null;
     routingNumber?: string | null;
+    allowInternational: boolean;
+    otherDetails?: string | null;
     metadata: { __typename?: 'Metadata'; id: string; created: any };
   }>;
 };
@@ -57,6 +59,8 @@ export const BankAccountsDocument = `
     sortCode
     accountNumber
     routingNumber
+    allowInternational
+    otherDetails
   }
 }
     `;

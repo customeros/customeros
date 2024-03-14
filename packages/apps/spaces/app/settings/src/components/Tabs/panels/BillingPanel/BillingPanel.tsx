@@ -332,6 +332,7 @@ export const BillingPanel = () => {
       createBillingProfileMutation.mutate({
         input: {
           canPayWithDirectDebitACH: false,
+          canPayWithBankTransfer: true,
           canPayWithDirectDebitSEPA: false,
           canPayWithDirectDebitBacs: false,
           canPayWithCard: false,

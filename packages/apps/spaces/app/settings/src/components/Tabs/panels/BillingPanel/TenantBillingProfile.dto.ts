@@ -20,6 +20,7 @@ export interface TenantBillingDetails {
   sendInvoicesFrom?: string | null;
   canPayWithPigeon?: boolean | null;
   country?: SelectOption<string> | null;
+  canPayWithBankTransfer?: boolean | null;
   domesticPaymentsBankInfo?: string | null;
   canPayWithDirectDebitACH?: boolean | null;
   canPayWithDirectDebitSEPA?: boolean | null;
@@ -42,6 +43,7 @@ export class TenantBillingDetailsDto implements TenantBillingDetails {
   canPayWithDirectDebitACH;
   canPayWithDirectDebitSEPA;
   canPayWithDirectDebitBacs;
+  canPayWithBankTransfer;
   canPayWithCard;
   canPayWithPigeon;
   sendInvoicesFrom;
@@ -64,6 +66,7 @@ export class TenantBillingDetailsDto implements TenantBillingDetails {
     this.canPayWithDirectDebitSEPA = data?.canPayWithDirectDebitSEPA;
     this.canPayWithDirectDebitBacs = data?.canPayWithDirectDebitBacs;
     this.canPayWithCard = data?.canPayWithCard;
+    this.canPayWithBankTransfer = data?.canPayWithBankTransfer;
     this.canPayWithPigeon = data?.canPayWithPigeon;
     this.sendInvoicesFrom = data?.sendInvoicesFrom?.split('@')[0] ?? '';
     this.sendInvoicesBcc = data?.sendInvoicesBcc ?? '';
@@ -94,6 +97,7 @@ export class TenantBillingDetailsDto implements TenantBillingDetails {
       canPayWithDirectDebitACH: !!data?.canPayWithDirectDebitACH,
       canPayWithDirectDebitSEPA: !!data?.canPayWithDirectDebitSEPA,
       canPayWithDirectDebitBacs: !!data?.canPayWithDirectDebitBacs,
+      canPayWithBankTransfer: !!data?.canPayWithBankTransfer,
       canPayWithCard: !!data?.canPayWithCard,
       canPayWithPigeon: !!data?.canPayWithPigeon,
       sendInvoicesFrom: data?.sendInvoicesFrom ?? '',
