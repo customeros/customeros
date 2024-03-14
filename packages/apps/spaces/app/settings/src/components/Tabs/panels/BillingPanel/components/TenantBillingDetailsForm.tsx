@@ -4,7 +4,6 @@ import React, { useMemo } from 'react';
 
 import { LogoUploader } from '@settings/components/LogoUploadComponent/LogoUploader';
 import { VatInput } from '@settings/components/Tabs/panels/BillingPanel/components/VatInput';
-import { PaymentMethods } from '@settings/components/Tabs/panels/BillingPanel/components/PaymentMethods';
 import { BankTransferAccountList } from '@settings/components/Tabs/panels/BillingPanel/components/BankTransferAccountList';
 
 import { Flex } from '@ui/layout/Flex';
@@ -182,13 +181,6 @@ export const TenantBillingPanelDetailsForm = ({
           type='email'
         />
       </Flex>
-      <PaymentMethods
-        formId={formId}
-        canPayWithCard={canPayWithCard}
-        canPayWithDirectDebitACH={canPayWithDirectDebitACH}
-        canPayWithDirectDebitSEPA={canPayWithDirectDebitSEPA}
-        canPayWithDirectDebitBacs={canPayWithDirectDebitBacs}
-      />
 
       <BankTransferAccountList />
     </CardBody>
