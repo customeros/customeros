@@ -147,7 +147,10 @@ func (c *ContactData) Normalize() {
 	c.PhoneNumbers = GetNonEmptyPhoneNumbers(c.PhoneNumbers)
 	c.PhoneNumbers = RemoveDuplicatedPhoneNumbers(c.PhoneNumbers)
 
-	// normalize socials
+	c.NormalizeSocials()
+}
+
+func (c *ContactData) NormalizeSocials() {
 	var socials []SocialDetails
 	var seenSocialUrls []string
 	for social := range c.Socials {

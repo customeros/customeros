@@ -483,6 +483,28 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 				}
 			}
 		}
+
+		if !orgInput.HasSocials() {
+			for _, social := range orgInput.Socials {
+				// Link social to contact
+				_, err = CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+					return s.grpcClients.OrganizationClient.AddSocial(ctx, &organizationpb.AddSocialGrpcRequest{
+						Tenant:         common.GetTenantFromContext(ctx),
+						OrganizationId: organizationId,
+						SourceFields: &commonpb.SourceFields{
+							Source:    orgInput.ExternalSystem,
+							AppSource: appSource,
+						},
+						Url: social.URL,
+					})
+				})
+				if err != nil {
+					tracing.TraceErr(span, err, log.String("grpcMethod", "AddSocial"))
+					reason = fmt.Sprintf("Failed to link social %s with organization %s: %s", social.URL, organizationId, err.Error())
+					s.log.Error(reason)
+				}
+			}
+		}
 	}
 
 	span.LogFields(log.Bool("failedSync", failedSync))

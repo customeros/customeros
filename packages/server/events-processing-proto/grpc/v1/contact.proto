@@ -90,7 +90,6 @@ message ContactAddSocialGrpcRequest {
   SourceFields sourceFields = 4;
   string url = 5;
   google.protobuf.Timestamp  createdAt = 6;
-  google.protobuf.Timestamp  updatedAt = 7;
 }
 
 message ContactIdGrpcResponse {
