@@ -12,5 +12,6 @@ query TenantBillingProfiles {
         sendInvoicesFrom
         sendInvoicesBcc
         canPayWithPigeon
+        canPayWithBankTransfer
     }
 }

@@ -2,6 +2,9 @@
 import Link from 'next/link';
 import React, { FC, useMemo } from 'react';
 
+import { useConnections } from '@integration-app/react';
+import { useGetExternalSystemInstancesQuery } from '@settings/graphql/getExternalSystemInstances.generated';
+
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { FormInput } from '@ui/form/Input';
@@ -9,12 +12,13 @@ import { Tooltip } from '@ui/overlay/Tooltip';
 import { ModalBody } from '@ui/overlay/Modal';
 import { FormUrlInput } from '@ui/form/UrlInput';
 import { FormSelect } from '@ui/form/SyncSelect';
-import { TenantBillingProfile } from '@graphql/types';
 import { InfoCircle } from '@ui/media/icons/InfoCircle';
 import { FormSwitch } from '@ui/form/Switch/FromSwitch';
 import { countryOptions } from '@shared/util/countryOptions';
 import { FormCheckbox } from '@ui/form/Checkbox/FormCheckbox';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { getCurrencyOptions } from '@shared/util/currencyOptions';
+import { ExternalSystemType, TenantBillingProfile } from '@graphql/types';
 import {
   Popover,
   PopoverBody,
@@ -46,22 +50,23 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
   tenantBillingProfile,
   organizationName,
 }) => {
+  const client = getGraphQLClient();
+  const { data } = useGetExternalSystemInstancesQuery(client);
   const currencyOptions = useMemo(() => getCurrencyOptions(), []);
-
+  const availablePaymentMethodTypes = data?.externalSystemInstances.find(
+    (e) => e.type === ExternalSystemType.Stripe,
+  )?.stripeDetails?.paymentMethodTypes;
+  const { items: iConnections } = useConnections();
+  const isStripeActive = !!iConnections
+    .map((item) => item.integration?.key)
+    .find((e) => e === 'stripe');
   const tooltipContent = useMemo(() => {
-    if (
-      tenantBillingProfile?.canPayWithCard &&
-      tenantBillingProfile?.canPayWithDirectDebitACH
-    ) {
+    if (availablePaymentMethodTypes?.length && isStripeActive) {
       return `If auto-payment fails, ${organizationName} can still pay using one of the other enabled payment options.`;
     }
 
     return '';
-  }, [
-    tenantBillingProfile?.canPayWithCard,
-    tenantBillingProfile?.canPayWithDirectDebitACH,
-    organizationName,
-  ]);
+  }, [isStripeActive, availablePaymentMethodTypes, organizationName]);
 
   return (
     <ModalBody pb='0' gap={4} display='flex' flexDir='column' flex={1}>
@@ -200,23 +205,29 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
             </Tooltip>
           )}
         </Text>
-
-        <FormSwitch
-          name='payAutomatically'
-          formId={formId}
-          size='sm'
-          label={
-            <Text fontSize='sm' fontWeight='normal' whiteSpace='nowrap'>
-              Auto-payment via Stripe
-            </Text>
-          }
-        />
-        <Flex flexDir='column' gap={2} ml={2}>
+        <Tooltip
+          shouldWrapChildren
+          hasArrow
+          label={isStripeActive ? '' : 'No payment provider enabled'}
+        >
+          <FormSwitch
+            name='payAutomatically'
+            formId={formId}
+            isInvalid={!isStripeActive}
+            size='sm'
+            label={
+              <Text fontSize='sm' fontWeight='normal' whiteSpace='nowrap'>
+                Auto-payment via Stripe
+              </Text>
+            }
+          />
+        </Tooltip>
+        <Flex flexDir='column' gap={1} ml={2} mb={3}>
           <Tooltip
             shouldWrapChildren
             hasArrow
             label={
-              tenantBillingProfile?.canPayWithCard
+              !availablePaymentMethodTypes?.includes('card')
                 ? ''
                 : 'Credit or Debit card not enabled in Stripe'
             }
@@ -225,7 +236,10 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
               name='canPayWithCard'
               formId={formId}
               size='md'
-              isInvalid={!tenantBillingProfile?.canPayWithCard}
+              isInvalid={
+                !availablePaymentMethodTypes?.includes('card') ||
+                !isStripeActive
+              }
             >
               <Text fontSize='sm' whiteSpace='nowrap'>
                 Credit or Debit cards
@@ -236,7 +250,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
             shouldWrapChildren
             hasArrow
             label={
-              tenantBillingProfile?.canPayWithDirectDebitACH
+              availablePaymentMethodTypes?.includes('bacs_debit')
                 ? ''
                 : 'Direct debit not enabled in Stripe'
             }
@@ -245,7 +259,10 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
               name='canPayWithDirectDebit'
               formId={formId}
               size='md'
-              isInvalid={!tenantBillingProfile?.canPayWithDirectDebitACH}
+              isInvalid={
+                !availablePaymentMethodTypes?.includes('bacs_debit') ||
+                !isStripeActive
+              }
             >
               <Text fontSize='sm' whiteSpace='nowrap'>
                 Direct Debit via ACH
@@ -253,16 +270,23 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
             </FormCheckbox>
           </Tooltip>
         </Flex>
-        <FormSwitch
-          name='payOnline'
-          formId={formId}
-          size='sm'
-          label={
-            <Text fontSize='sm' fontWeight='normal' whiteSpace='nowrap'>
-              Online payment via Stripe
-            </Text>
-          }
-        />
+        <Tooltip
+          shouldWrapChildren
+          hasArrow
+          label={isStripeActive ? '' : 'No payment provider enabled'}
+        >
+          <FormSwitch
+            name='payOnline'
+            formId={formId}
+            isInvalid={!isStripeActive}
+            size='sm'
+            label={
+              <Text fontSize='sm' fontWeight='normal' whiteSpace='nowrap'>
+                Online payment via Stripe
+              </Text>
+            }
+          />
+        </Tooltip>
         <Popover placement='bottom-end' trigger='hover'>
           <PopoverTrigger>
             <FormSwitch
@@ -296,7 +320,6 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
                 {!tenantBillingProfile?.canPayWithBankTransfer &&
                   'Bank transfer not enabled yet'}
                 {tenantBillingProfile?.canPayWithBankTransfer &&
-                canAllowPayWithBankTransfer &&
                 hasNoBankAccounts
                   ? 'No bank accounts added yet'
                   : `None of your bank accounts hold ${currency}`}
