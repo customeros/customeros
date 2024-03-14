@@ -1,5 +1,10 @@
 const fs = require('fs');
+const { format } = require('prettier');
 const file = require('../../theme/colors');
+
+const prettierConfig = JSON.parse(
+  fs.readFileSync(process.cwd() + '/.prettierrc', 'utf8'),
+);
 
 const buttonTypes = ['Link', 'Solid', 'Ghost', 'Outline'];
 const sizes = ['sm', 'md', 'lg', 'xl', '2xl'];
@@ -224,6 +229,11 @@ ${buttonTypes
   .join('')}
 `;
 
-const filePath = './ui/form/Button/Button.variants.ts';
+const formattedContent = format(fileContent, {
+  ...prettierConfig,
+  parser: 'babel',
+});
 
-fs.writeFile(filePath, fileContent, () => {});
+const filePath = process.cwd() + '/ui/form/Button/Button.variants.ts';
+
+fs.writeFile(filePath, formattedContent, () => {});

@@ -3,8 +3,6 @@ import React, { cloneElement } from 'react';
 import { twMerge } from 'tailwind-merge';
 import { cva, type VariantProps } from 'class-variance-authority';
 
-import { Spinner, SpinnerOptions } from '@ui/feedback/Spinner/Spinner';
-
 import {
   linkButton,
   ghostButton,
@@ -35,11 +33,10 @@ interface ButtonProps
   asChild?: boolean;
   isLoading?: boolean;
   isDisabled?: boolean;
-  loadingText?: string;
+  spinner?: React.ReactElement;
   leftIcon?: React.ReactElement;
   rightIcon?: React.ReactElement;
   variant?: 'link' | 'ghost' | 'solid' | 'outline';
-  spinnerPlacement?: SpinnerOptions['spinnerPlacement'];
 }
 
 export const Button = ({
@@ -48,12 +45,11 @@ export const Button = ({
   className,
   rightIcon,
   colorScheme,
+  spinner,
   variant,
   isLoading = false,
   isDisabled = false,
   size,
-  spinnerPlacement = 'left',
-  loadingText,
   ...props
 }: ButtonProps) => {
   const buttonVariant = (() => {
@@ -81,20 +77,21 @@ export const Button = ({
       )}
       disabled={isLoading || isDisabled}
     >
-      {isLoading && (
-        <Spinner
-          loadingText={loadingText}
-          colorScheme={colorScheme ?? ''}
-          label='loading'
-          size='4'
-          spinnerPlacement={spinnerPlacement}
-          {...props}
-        />
+      {isLoading && spinner && (
+        <span className='relative inline-flex'>{spinner}</span>
       )}
+
       {!isLoading && leftIcon && (
         <>
           {cloneElement(leftIcon, {
-            className: twMerge(iconVariant({ size, variant, colorScheme })),
+            className: twMerge(
+              iconVariant({
+                size,
+                variant,
+                colorScheme,
+                className: leftIcon.props.className,
+              }),
+            ),
           })}
         </>
       )}

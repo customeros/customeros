@@ -1,25 +1,41 @@
-export interface SpinnerOptions {
-  size: string;
+import { twMerge } from 'tailwind-merge';
+import { cva, VariantProps } from 'class-variance-authority';
+
+/**
+ * @example
+ * <Spinner label='Loading' className='text-gray-500 fill-gray-700 w-4 h-4'/>
+ * label:string
+ * // The label for accessibility
+ */
+
+const spinnerSize = cva([], {
+  variants: {
+    size: {
+      sm: ['w-4', 'h-4'],
+      md: ['w-8', 'h-8'],
+      lg: ['w-10', 'h-10'],
+      xl: ['w-12', 'h-12'],
+      '2xl': ['w-14', 'h-14'],
+    },
+  },
+  defaultVariants: {
+    size: 'md',
+  },
+});
+export interface SpinnerOptions extends VariantProps<typeof spinnerSize> {
   label: string;
-  colorScheme: string;
-  loadingText?: string;
-  spinnerPlacement: 'left' | 'right';
+  className?: string;
 }
 
-export const Spinner = ({
-  label,
-  size,
-  colorScheme,
-  loadingText,
-  spinnerPlacement = 'left',
-}: SpinnerOptions) => {
-  const spinnerDirection = spinnerPlacement === 'left' ? 'row' : 'row-reverse';
-
+export const Spinner = ({ label, className, size }: SpinnerOptions) => {
   return (
-    <div className={`flex items-center ${spinnerDirection}`}>
+    <div className='flex items-center'>
       <svg
         role='status'
-        className={`inline w-${size} h-${size} animate-spin  text-${colorScheme}-300   dark:fill-gray-400`}
+        className={twMerge(
+          `${className}inline animate-spin `,
+          spinnerSize({ className, size }),
+        )}
         viewBox='0 0 100 101'
         fill='none'
         xmlns='http://www.w3.org/2000/svg'
@@ -34,7 +50,6 @@ export const Spinner = ({
         />
       </svg>
       {label && <span className={`sr-only`}>{label}</span>}
-      {loadingText && <span className='ml-2'>{loadingText}</span>}
     </div>
   );
 };
