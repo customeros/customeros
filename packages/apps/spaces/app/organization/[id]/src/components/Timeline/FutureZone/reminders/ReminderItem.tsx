@@ -1,15 +1,18 @@
-import { FormEvent, useEffect } from 'react';
 import { useForm } from 'react-inverted-form';
+import { useRef, FormEvent, useEffect } from 'react';
 
-import { useDebounceFn } from 'rooks';
+import { produce } from 'immer';
+import { useDidMount, useDebounceFn } from 'rooks';
 
 import { Flex } from '@ui/layout/Flex';
 import { Button } from '@ui/form/Button';
 import { useModKey } from '@shared/hooks/useModKey';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea';
+import { useTimelineMeta } from '@organization/src/components/Timeline/state';
 
 import { ReminderEditForm } from './types';
 import { ReminderPostit, ReminderDueDatePicker } from '../../shared';
+import { useReminderAction } from '../TimelineActions/reminder/useReminderAction';
 
 interface ReminderItem {
   currentOwner: string;
@@ -24,11 +27,15 @@ export const ReminderItem = ({
   onDismiss,
   currentOwner,
 }: ReminderItem) => {
+  const ref = useRef<HTMLTextAreaElement>(null);
   const formId = `reminder-edit-form-${data.id}`;
+  const [timelineMeta, setTimelineMeta] = useTimelineMeta();
   const [debouncedOnChange] = useDebounceFn(
     (arg) => onChange(arg as ReminderEditForm),
     1000,
   );
+  const { recentlyCreatedId, recentlyUpdatedId } = timelineMeta.reminders;
+  const { handleCreateReminder } = useReminderAction();
 
   const stripContent = (content: string, owner: string) => {
     const targetString = `for ${owner}: `;
@@ -79,7 +86,11 @@ export const ReminderItem = ({
     handleSubmit({} as FormEvent<HTMLFormElement>);
   };
 
-  useModKey('Enter', updateReminder);
+  useModKey('Enter', () =>
+    ref.current === document.activeElement
+      ? handleCreateReminder(data.date)
+      : undefined,
+  );
 
   useEffect(() => {
     setDefaultValues({
@@ -88,10 +99,35 @@ export const ReminderItem = ({
     });
   }, [currentOwner]);
 
+  useDidMount(() => {
+    if (['TEMP', recentlyCreatedId, recentlyUpdatedId].includes(data.id)) {
+      ref.current?.focus();
+
+      if (data.id === recentlyCreatedId) {
+        setTimelineMeta((prev) =>
+          produce(prev, (draft) => {
+            draft.reminders.recentlyCreatedId = '';
+            draft.reminders.recentlyUpdatedId = '';
+          }),
+        );
+      }
+    }
+  });
+
   return (
-    <ReminderPostit>
+    <ReminderPostit
+      boxShadow={data.id === recentlyUpdatedId ? 'ringPrimary' : 'unset'}
+      onClickOutside={() => {
+        setTimelineMeta((prev) =>
+          produce(prev, (draft) => {
+            draft.reminders.recentlyUpdatedId = '';
+          }),
+        );
+      }}
+    >
       <FormAutoresizeTextarea
         px='4'
+        ref={ref}
         fontFamily='sticky'
         fontSize='sm'
         name='content'

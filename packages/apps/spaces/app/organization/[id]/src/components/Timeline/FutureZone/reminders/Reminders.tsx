@@ -7,6 +7,7 @@ import { VStack } from '@ui/layout/Stack';
 import { toastError } from '@ui/presentation/Toast';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
+import { useTimelineMeta } from '@organization/src/components/Timeline/state';
 import { useUpdateReminderMutation } from '@organization/src/graphql/updateReminder.generated';
 import {
   RemindersQuery,
@@ -20,6 +21,7 @@ export const Reminders = () => {
   const organizationId = useParams()?.id as string;
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
+  const [_, setTimelineMeta] = useTimelineMeta();
 
   const { data, isPending } = useRemindersQuery(client, { organizationId });
   const remindersQueryKey = useRemindersQuery.getKey({ organizationId });
@@ -41,6 +43,12 @@ export const Reminders = () => {
           if (!foundReminder) return;
           foundReminder.content = values.input.content ?? '';
           foundReminder.dismissed = values.input.dismissed ?? false;
+
+          setTimelineMeta((prev) =>
+            produce(prev, (draft) => {
+              draft.reminders.recentlyUpdatedId = values.input.id ?? '';
+            }),
+          );
         }),
       );
 

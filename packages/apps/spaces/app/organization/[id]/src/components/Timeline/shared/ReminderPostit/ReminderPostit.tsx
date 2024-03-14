@@ -1,3 +1,6 @@
+import { useRef } from 'react';
+
+import { useOutsideClick } from '@ui/utils';
 import { Flex, FlexProps } from '@ui/layout/Flex';
 
 export const ReminderPostit = ({
@@ -5,8 +8,12 @@ export const ReminderPostit = ({
   onClickOutside = () => undefined,
   ...rest
 }: FlexProps & { onClickOutside?: (e: Event) => void }) => {
+  const ref = useRef(null);
+
+  useOutsideClick({ ref, handler: onClickOutside });
+
   return (
-    <Flex position='relative' w='321px' m='6' mt='2' {...rest}>
+    <Flex ref={ref} position='relative' w='321px' m='6' mt='2' {...rest}>
       <Flex
         h='10px'
         w='calc(100% - 5px)'

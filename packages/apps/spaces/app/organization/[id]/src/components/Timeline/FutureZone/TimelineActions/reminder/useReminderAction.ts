@@ -25,7 +25,7 @@ export const useReminderAction = () => {
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
   const { virtuosoRef } = useTimelineRefContext();
-  const [timelineMeta] = useTimelineMeta();
+  const [timelineMeta, setTimelineMeta] = useTimelineMeta();
   const { data: globalCacheData } = useGlobalCacheQuery(client);
 
   const remindersQueryKey = useRemindersQuery.getKey({ organizationId });
@@ -63,19 +63,28 @@ export const useReminderAction = () => {
       }
       toastError(`We couldn't create the reminder`, 'create-reminder-error');
     },
-    onSettled: () => {
+    onSettled: (data) => {
       setTimeout(() => {
         queryClient.invalidateQueries({ queryKey: remindersQueryKey });
       }, 500);
+
+      setTimelineMeta((prev) =>
+        produce(prev, (draft) => {
+          draft.reminders.recentlyCreatedId =
+            data?.reminder_Create?.metadata?.id ?? '';
+          draft.reminders.recentlyUpdatedId = '';
+        }),
+      );
     },
   });
 
-  const handleCreateReminder = () => {
+  const handleCreateReminder = (defaultDate?: string) => {
     const remindersCount =
       queryClient.getQueryData<RemindersQuery>(remindersQueryKey)
         ?.remindersForOrganization.length ?? 0;
 
-    const dueDate = set(addDays(new Date(), 1), {
+    const targetDate = defaultDate ? new Date(defaultDate) : new Date();
+    const dueDate = set(addDays(targetDate, 1), {
       hours: 9,
       minutes: 0,
     }).toISOString();
