@@ -9,7 +9,7 @@ import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
 interface StatusCellProps {
   status?: InvoiceStatus | null;
 }
-function renderStatusNode(type: InvoiceStatus | null | undefined) {
+export function renderStatusNode(type: InvoiceStatus | null | undefined) {
   switch (type) {
     // case 'SCHEDULED':
     //   return (
