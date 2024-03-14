@@ -61,6 +61,17 @@
         "code",
         "doc"
       ]
+    },
+    {
+      "login": "Kasia9090",
+      "name": "Kasia",
+      "avatar_url": "https://avatars.githubusercontent.com/u/121807793?v=4",
+      "profile": "https://github.com/Kasia9090",
+      "contributions": [
+        "review",
+        "test",
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
@@ -68,5 +79,6 @@
   "repoType": "github",
   "repoHost": "https://github.com",
   "projectName": "openline-customer-os",
-  "projectOwner": "openline-ai"
+  "projectOwner": "openline-ai",
+  "commitType": "docs"
 }
