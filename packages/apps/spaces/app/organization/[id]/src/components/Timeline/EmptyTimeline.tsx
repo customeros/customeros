@@ -1,11 +1,14 @@
 import React from 'react';
 import { useParams } from 'next/navigation';
 
+import { useFeatureIsOn } from '@growthbook/growthbook-react';
+
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { useOrganization } from '@organization/src/hooks/useOrganization';
 import { TimelineActions } from '@organization/src/components/Timeline/FutureZone/TimelineActions/TimelineActions';
 
+import { FutureZone } from './FutureZone/FutureZone';
 import EmptyTimelineIllustration from './assets/EmptyTimelineIllustration';
 
 interface EmptyTimelineProps {
@@ -15,6 +18,7 @@ export const EmptyTimeline: React.FC<EmptyTimelineProps> = ({
   invalidateQuery,
 }) => {
   const id = useParams()?.id as string;
+  const isRemindersEnabled = useFeatureIsOn('reminders');
 
   const { data } = useOrganization({ id });
 
@@ -59,7 +63,9 @@ export const EmptyTimeline: React.FC<EmptyTimelineProps> = ({
         <div>
           <TimelineActions invalidateQuery={invalidateQuery} />
         </div>
-        <Flex flex={1} height='100%' bg='#F9F9FB' />
+        <Flex flex={1} height='100%' bg='#F9F9FB'>
+          {isRemindersEnabled && <FutureZone />}
+        </Flex>
       </Flex>
     </Flex>
   );

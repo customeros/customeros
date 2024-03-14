@@ -6,13 +6,11 @@ import { useDidMount, useDebounceFn } from 'rooks';
 
 import { Flex } from '@ui/layout/Flex';
 import { Button } from '@ui/form/Button';
-import { useModKey } from '@shared/hooks/useModKey';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea';
 import { useTimelineMeta } from '@organization/src/components/Timeline/state';
 
 import { ReminderEditForm } from './types';
 import { ReminderPostit, ReminderDueDatePicker } from '../../shared';
-import { useReminderAction } from '../TimelineActions/reminder/useReminderAction';
 
 interface ReminderItem {
   currentOwner: string;
@@ -35,7 +33,6 @@ export const ReminderItem = ({
     1000,
   );
   const { recentlyCreatedId, recentlyUpdatedId } = timelineMeta.reminders;
-  const { handleCreateReminder } = useReminderAction();
 
   const stripContent = (content: string, owner: string) => {
     const targetString = `for ${owner}: `;
@@ -86,18 +83,12 @@ export const ReminderItem = ({
     handleSubmit({} as FormEvent<HTMLFormElement>);
   };
 
-  useModKey('Enter', () =>
-    ref.current === document.activeElement
-      ? handleCreateReminder(data.date)
-      : undefined,
-  );
-
   useEffect(() => {
     setDefaultValues({
       ...data,
       content: makeContentStr(data.content, data.owner),
     });
-  }, [currentOwner]);
+  }, [currentOwner, data.id]);
 
   useDidMount(() => {
     if (['TEMP', recentlyCreatedId, recentlyUpdatedId].includes(data.id)) {
