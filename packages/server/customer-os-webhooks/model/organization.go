@@ -33,6 +33,7 @@ type OrganizationData struct {
 	IsCustomer   bool               `json:"isCustomer,omitempty"`
 	Employees    int64              `json:"employees,omitempty"`
 	PhoneNumbers []PhoneNumber      `json:"phoneNumbers,omitempty"`
+	Socials      []SocialDetails    `json:"socials,omitempty"`
 	Email        string             `json:"email,omitempty"`
 	// Currently not used. Sync processes will not set automatically owner user
 	OwnerUser          *ReferencedUser     `json:"ownerUser,omitempty"`
@@ -68,6 +69,10 @@ func (o *OrganizationData) HasDomains() bool {
 
 func (o *OrganizationData) HasLocation() bool {
 	return o.LocationName != "" || o.Country != "" || o.Region != "" || o.Locality != "" || o.Address != "" || o.Address2 != "" || o.Zip != ""
+}
+
+func (o *OrganizationData) HasSocials() bool {
+	return len(o.Socials) > 0
 }
 
 func (o *OrganizationData) HasNotes() bool {
@@ -108,4 +113,17 @@ func (o *OrganizationData) NormalizeDomains() {
 	o.Domains = utils.RemoveEmpties(o.Domains)
 	o.Domains = utils.LowercaseSliceOfStrings(o.Domains)
 	o.Domains = utils.RemoveDuplicates(o.Domains)
+}
+
+func (o *OrganizationData) NormalizeSocials() {
+	// normalize socials
+	var socials []SocialDetails
+	var seenSocialUrls []string
+	for social := range o.Socials {
+		if o.Socials[social].URL != "" && !utils.Contains(seenSocialUrls, o.Socials[social].URL) {
+			socials = append(socials, o.Socials[social])
+			seenSocialUrls = append(seenSocialUrls, o.Socials[social].URL)
+		}
+	}
+	o.Socials = socials
 }
