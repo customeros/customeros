@@ -7,9 +7,5 @@ export const FutureZone = () => {
 
   if (!isRemindersEnabled) return null;
 
-  return (
-    <>
-      <Reminders />
-    </>
-  );
+  return <Reminders />;
 };
