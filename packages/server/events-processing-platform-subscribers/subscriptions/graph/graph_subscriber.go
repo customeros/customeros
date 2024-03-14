@@ -210,6 +210,8 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.contactEventHandler.OnLocationLinkToContact(ctx, evt)
 	case contactevent.ContactOrganizationLinkV1:
 		return s.contactEventHandler.OnContactLinkToOrganization(ctx, evt)
+	case contactevent.ContactAddSocialV1:
+		return s.contactEventHandler.OnSocialAddedToContactV1(ctx, evt)
 
 	case orgevents.OrganizationCreateV1:
 		return s.organizationEventHandler.OnOrganizationCreate(ctx, evt)

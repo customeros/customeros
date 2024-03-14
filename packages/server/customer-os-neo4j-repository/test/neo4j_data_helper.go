@@ -1220,6 +1220,51 @@ func CreateExternalSystem(ctx context.Context, driver *neo4j.DriverWithContext, 
 	})
 }
 
+func CreateContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, contact entity.ContactEntity) string {
+	contactId := utils.NewUUIDIfEmpty(contact.Id)
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
+				MERGE (t)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId})
+				ON CREATE SET
+					c:Contact_%s,
+					c.createdAt=$createdAt,
+					c.updatedAt=$updatedAt,
+					c.source=$source,
+					c.sourceOfTruth=$sourceOfTruth,
+					c.appSource=$appSource,
+					c.firstName=$firstName,
+					c.lastName=$lastName,
+					c.name=$name
+`, tenant)
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"tenant":        tenant,
+		"contactId":     contactId,
+		"createdAt":     contact.CreatedAt,
+		"updatedAt":     contact.UpdatedAt,
+		"source":        contact.Source,
+		"sourceOfTruth": contact.SourceOfTruth,
+		"appSource":     contact.AppSource,
+		"firstName":     contact.FirstName,
+		"lastName":      contact.LastName,
+		"name":          contact.Name,
+	})
+	return contactId
+}
+
+func CreateSocial(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, social entity.SocialEntity) string {
+	socialId := utils.NewUUIDIfEmpty(social.Id)
+	query := fmt.Sprintf(`MERGE (s:Social:Social_%s {id: $id})
+				SET s.url=$url,
+					s.platformName=$platformName
+				`, tenant)
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"id":           socialId,
+		"url":          social.Url,
+		"platformName": social.PlatformName,
+	})
+	return socialId
+}
+
 // Deprecated
 func FirstTimeOfMonth(year, month int) time.Time {
 	return time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)

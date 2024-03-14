@@ -245,3 +245,32 @@ func (h *ContactEventHandler) OnContactLinkToOrganization(ctx context.Context, e
 
 	return err
 }
+
+func (h *ContactEventHandler) OnSocialAddedToContactV1(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.OnSocialAddedToContactV1")
+	defer span.Finish()
+	setEventSpanTagsAndLogFields(span, evt)
+
+	var eventData event.AddSocialEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
+
+	contactId := aggregate.GetContactObjectID(evt.AggregateID, eventData.Tenant)
+	data := neo4jrepository.SocialFields{
+		SocialId:  eventData.SocialId,
+		Url:       eventData.Url,
+		CreatedAt: eventData.CreatedAt,
+		UpdatedAt: eventData.CreatedAt,
+		SourceFields: neo4jmodel.Source{
+			Source:        helper.GetSource(eventData.Source.Source),
+			SourceOfTruth: helper.GetSource(eventData.Source.Source),
+			AppSource:     helper.GetSource(eventData.Source.AppSource),
+		},
+	}
+	err := h.repositories.Neo4jRepositories.SocialWriteRepository.MergeSocialFor(ctx, eventData.Tenant, contactId, neo4jutil.NodeLabelContact, data)
+
+	return err
+}

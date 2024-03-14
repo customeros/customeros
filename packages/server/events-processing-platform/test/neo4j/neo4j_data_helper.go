@@ -11,21 +11,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
 )
 
-func CreateSocial(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, social neo4jentity.SocialEntity) string {
-	socialId := utils.NewUUIDIfEmpty(social.Id)
-	query := fmt.Sprintf(`MERGE (s:Social:Social_%s {id: $id})
-				SET s.url=$url,
-					s.platformName=$platformName
-				`, tenant)
-
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"id":           socialId,
-		"url":          social.Url,
-		"platformName": social.PlatformName,
-	})
-	return socialId
-}
-
 func CreateContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, contact entity.ContactEntity) string {
 	contactId := contact.Id
 	if contactId == "" {
