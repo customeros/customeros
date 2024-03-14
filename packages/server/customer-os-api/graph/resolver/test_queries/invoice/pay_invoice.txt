@@ -1,0 +1,7 @@
+mutation PayInvoice($invoiceId: ID!) {
+invoice_Pay(id: $invoiceId) {
+    metadata {
+        id
+    }
+  }
+}
