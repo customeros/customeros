@@ -7,14 +7,16 @@ import { useDebounce } from 'rooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { useBankAccountsQuery } from '@settings/graphql/getBankAccounts.generated';
 import { useUpdateBankAccountMutation } from '@settings/graphql/updateBankAccount.generated';
-import { BankTransferMenu } from '@settings/components/Tabs/panels/BillingPanel/components/BankTransferMenu';
-import { BankTransferCurrencySelect } from '@settings/components/Tabs/panels/BillingPanel/components/BankTransferCurrencySelect';
 
 import { Flex } from '@ui/layout/Flex';
 import { FormInput } from '@ui/form/Input';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { Card, CardBody, CardHeader } from '@ui/presentation/Card';
 import { BankAccount, BankAccountUpdateInput } from '@graphql/types';
+
+import { BankTransferMenu } from './BankTransferMenu';
+import { SortCodeInput, BankAccountInput } from './inputs';
+import { BankTransferCurrencySelect } from './BankTransferCurrencySelect';
 
 export const BankTransferCard = ({ account }: { account: BankAccount }) => {
   const formId = `bank-transfer-form-${account.metadata.id}`;
@@ -122,8 +124,8 @@ export const BankTransferCard = ({ account }: { account: BankAccount }) => {
           />
         </CardHeader>
         <CardBody p={0} gap={2}>
-          <Flex pb={1}>
-            <FormInput
+          <Flex pb={1} gap={2}>
+            <SortCodeInput
               autoComplete='off'
               label='Sort code'
               placeholder='Sort code'
@@ -136,7 +138,7 @@ export const BankTransferCard = ({ account }: { account: BankAccount }) => {
               name='sortCode'
               formId={formId}
             />
-            <FormInput
+            <BankAccountInput
               autoComplete='off'
               label='Account number'
               placeholder='Bank account #'
