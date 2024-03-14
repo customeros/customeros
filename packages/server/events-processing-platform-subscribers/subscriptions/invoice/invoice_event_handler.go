@@ -861,6 +861,7 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 		return errors.New("invoiceNode is nil")
 	}
 
+	//load invoice lines
 	invoiceLinesNodes, err := h.repositories.Neo4jRepositories.InvoiceLineReadRepository.GetAllForInvoice(ctx, eventData.Tenant, invoiceId)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -880,37 +881,78 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 		invoiceHasVat = true
 	}
 
-	data := map[string]interface{}{
-		"Tenant":                        eventData.Tenant,
-		"CustomerName":                  invoiceEntity.Customer.Name,
-		"CustomerEmail":                 invoiceEntity.Customer.Email,
-		"CustomerAddressLine1":          invoiceEntity.Customer.AddressLine1,
-		"CustomerAddressLine2":          invoiceEntity.Customer.AddressLine2,
-		"CustomerAddressLine3":          utils.JoinNonEmpty(", ", invoiceEntity.Customer.Locality, invoiceEntity.Customer.Zip),
-		"CustomerCountry":               invoiceEntity.Customer.Country,
-		"ProviderLogoExtension":         "",
-		"ProviderLogoRepositoryFileId":  invoiceEntity.Provider.LogoRepositoryFileId,
-		"ProviderName":                  invoiceEntity.Provider.Name,
-		"ProviderEmail":                 invoiceEntity.Provider.Email,
-		"ProviderAddressLine1":          invoiceEntity.Provider.AddressLine1,
-		"ProviderAddressLine2":          invoiceEntity.Provider.AddressLine2,
-		"ProviderAddressLine3":          utils.JoinNonEmpty(", ", invoiceEntity.Provider.Locality, invoiceEntity.Provider.Zip),
-		"ProviderCountry":               invoiceEntity.Provider.Country,
-		"InvoiceNumber":                 invoiceEntity.Number,
-		"InvoiceIssueDate":              invoiceEntity.CreatedAt.Format("02 Jan 2006"),
-		"InvoiceDueDate":                invoiceEntity.DueDate.Format("02 Jan 2006"),
-		"InvoiceCurrency":               invoiceEntity.Currency.String() + "" + invoiceEntity.Currency.Symbol(),
-		"InvoiceSubtotal":               utils.FormatAmount(invoiceEntity.Amount, 2),
-		"InvoiceTotal":                  utils.FormatAmount(invoiceEntity.TotalAmount, 2),
-		"InvoiceAmountDue":              utils.FormatAmount(invoiceEntity.TotalAmount, 2),
-		"InvoiceLineItems":              []map[string]string{},
-		"Note":                          invoiceEntity.Note,
-		"DomesticPaymentsBankInfo":      invoiceEntity.DomesticPaymentsBankInfo,
-		"InternationalPaymentsBankInfo": invoiceEntity.InternationalPaymentsBankInfo,
+	dataForPdf := map[string]interface{}{
+		"Tenant":                       eventData.Tenant,
+		"CustomerName":                 invoiceEntity.Customer.Name,
+		"CustomerEmail":                invoiceEntity.Customer.Email,
+		"CustomerAddressLine1":         invoiceEntity.Customer.AddressLine1,
+		"CustomerAddressLine2":         invoiceEntity.Customer.AddressLine2,
+		"CustomerAddressLine3":         utils.JoinNonEmpty(", ", invoiceEntity.Customer.Locality, invoiceEntity.Customer.Zip),
+		"CustomerCountry":              invoiceEntity.Customer.Country,
+		"ProviderLogoExtension":        "",
+		"ProviderLogoRepositoryFileId": invoiceEntity.Provider.LogoRepositoryFileId,
+		"ProviderName":                 invoiceEntity.Provider.Name,
+		"ProviderEmail":                invoiceEntity.Provider.Email,
+		"ProviderAddressLine1":         invoiceEntity.Provider.AddressLine1,
+		"ProviderAddressLine2":         invoiceEntity.Provider.AddressLine2,
+		"ProviderAddressLine3":         utils.JoinNonEmpty(", ", invoiceEntity.Provider.Locality, invoiceEntity.Provider.Zip),
+		"ProviderCountry":              invoiceEntity.Provider.Country,
+		"InvoiceNumber":                invoiceEntity.Number,
+		"InvoiceIssueDate":             invoiceEntity.CreatedAt.Format("02 Jan 2006"),
+		"InvoiceDueDate":               invoiceEntity.DueDate.Format("02 Jan 2006"),
+		"InvoiceCurrency":              invoiceEntity.Currency.String() + "" + invoiceEntity.Currency.Symbol(),
+		"InvoiceSubtotal":              utils.FormatAmount(invoiceEntity.Amount, 2),
+		"InvoiceTotal":                 utils.FormatAmount(invoiceEntity.TotalAmount, 2),
+		"InvoiceAmountDue":             utils.FormatAmount(invoiceEntity.TotalAmount, 2),
+		"InvoiceLineItems":             []map[string]string{},
+		"Note":                         invoiceEntity.Note,
+	}
+
+	// load contract
+	contractNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractForInvoice(ctx, eventData.Tenant, invoiceId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.GetContractForInvoice")
+	}
+	if contractNode == nil {
+		tracing.TraceErr(span, errors.New("contractNode is nil"))
+		return errors.New("contractNode is nil")
+	}
+	contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractNode)
+
+	// Include bank details
+	if contractEntity.CanPayWithBankTransfer {
+		//load tenant billing profile from neo4j
+		tenantBillingProfileEntity, err := h.loadTenantBillingProfile(ctx, eventData.Tenant, false)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+		if tenantBillingProfileEntity.CanPayWithBankTransfer {
+			bankAccountDbNodes, err := h.repositories.Neo4jRepositories.BankAccountReadRepository.GetBankAccounts(ctx, eventData.Tenant)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.GetBankAccounts")
+			}
+			for _, bankAccountDbNode := range bankAccountDbNodes {
+				bankAccountEntity := neo4jmapper.MapDbNodeToBankAccountEntity(bankAccountDbNode)
+				if bankAccountEntity.Currency == invoiceEntity.Currency {
+					dataForPdf["BankDetailsAvailable"] = true
+					dataForPdf["BankAccountName"] = bankAccountEntity.BankName
+					dataForPdf["BankAccountNumber"] = bankAccountEntity.AccountNumber
+					dataForPdf["BankAccountIBAN"] = bankAccountEntity.Iban
+					dataForPdf["BankAccountBIC"] = bankAccountEntity.Bic
+					dataForPdf["BankAccountSortCode"] = bankAccountEntity.SortCode
+					dataForPdf["BankAccountRoutingNumber"] = bankAccountEntity.RoutingNumber
+					dataForPdf["BankAccountOtherDetails"] = bankAccountEntity.OtherDetails
+					break
+				}
+			}
+		}
 	}
 
 	if invoiceHasVat {
-		data["InvoiceVat"] = fmt.Sprintf("%.2f", invoiceEntity.Vat)
+		dataForPdf["InvoiceVat"] = fmt.Sprintf("%.2f", invoiceEntity.Vat)
 	}
 
 	for _, line := range invoiceLineEntities {
@@ -936,7 +978,7 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 			invoiceLineItem["InvoiceHasVat"] = "true"
 		}
 
-		data["InvoiceLineItems"] = append(data["InvoiceLineItems"].([]map[string]string), invoiceLineItem)
+		dataForPdf["InvoiceLineItems"] = append(dataForPdf["InvoiceLineItems"].([]map[string]string), invoiceLineItem)
 	}
 
 	//prepare the temp html file
@@ -954,18 +996,18 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 			return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.GetFileMetadata")
 		}
 
-		data["ProviderLogoExtension"] = GetFileExtensionFromMetadata(fileMetadata)
+		dataForPdf["ProviderLogoExtension"] = GetFileExtensionFromMetadata(fileMetadata)
 	}
 
 	//fill the template with data and store it in temp
-	err = FillInvoiceHtmlTemplate(tmpInvoiceFile, data)
+	err = FillInvoiceHtmlTemplate(tmpInvoiceFile, dataForPdf)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "FillInvoiceHtmlTemplate")
 	}
 
 	//convert the temp to pdf
-	pdfBytes, err := ConvertInvoiceHtmlToPdf(h.fsc, h.cfg.Subscriptions.InvoiceSubscription.PdfConverterUrl, tmpInvoiceFile, data, span)
+	pdfBytes, err := ConvertInvoiceHtmlToPdf(h.fsc, h.cfg.Subscriptions.InvoiceSubscription.PdfConverterUrl, tmpInvoiceFile, dataForPdf, span)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "ConvertInvoiceHtmlToPdf")

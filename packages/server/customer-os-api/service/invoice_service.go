@@ -296,8 +296,12 @@ func (s *invoiceService) NextInvoiceDryRun(ctx context.Context, contractId strin
 	var invoicePeriodStart, invoicePeriodEnd time.Time
 	if contract.NextInvoiceDate != nil {
 		invoicePeriodStart = *contract.NextInvoiceDate
-	} else {
+	} else if contract.InvoicingStartDate != nil {
 		invoicePeriodStart = *contract.InvoicingStartDate
+	} else {
+		err = fmt.Errorf("contract has no next invoice date or invoicing start date")
+		tracing.TraceErr(span, err)
+		return "", err
 	}
 	invoicePeriodEnd = calculateInvoiceCycleEnd(invoicePeriodStart, contract.BillingCycle)
 

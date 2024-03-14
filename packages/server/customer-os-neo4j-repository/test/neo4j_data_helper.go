@@ -54,12 +54,12 @@ func CreateTenant(ctx context.Context, driver *neo4j.DriverWithContext, tenant s
 func CreateTenantSettings(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, settings entity.TenantSettingsEntity) string {
 	settingsId := utils.NewUUIDIfEmpty(settings.Id)
 	query := `MATCH (t:Tenant {name:$tenant}) 
-				MERGE (t)-[:HAS_SETTINGS]->(s:TenantSettings {id:$id})
+				MERGE (t)-[:HAS_SETTINGS]->(s:TenantSettings {tenant:$tenant})
 				ON CREATE SET
+					s.id=$id,
 					s.createdAt=$createdAt,
 					s.invoicingEnabled=$invoicingEnabled,
 					s.invoicingPostpaid=$invoicingPostpaid,
-					s.tenant=$tenant,
 					s.logoRepositoryFileId=$logoRepositoryFileId,
 					s.baseCurrency=$baseCurrency`
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
