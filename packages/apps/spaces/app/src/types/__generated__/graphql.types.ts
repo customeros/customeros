@@ -2038,6 +2038,7 @@ export type Mutation = {
   interactionSession_Create: InteractionSession;
   interactionSession_LinkAttachment: InteractionSession;
   invoice_NextDryRunForContract: Scalars['ID']['output'];
+  invoice_Pay: Invoice;
   invoice_Simulate: Scalars['ID']['output'];
   invoice_Update: Invoice;
   invoice_Void: Invoice;
@@ -2426,6 +2427,10 @@ export type MutationInteractionSession_LinkAttachmentArgs = {
 
 export type MutationInvoice_NextDryRunForContractArgs = {
   contractId: Scalars['ID']['input'];
+};
+
+export type MutationInvoice_PayArgs = {
+  id: Scalars['ID']['input'];
 };
 
 export type MutationInvoice_SimulateArgs = {

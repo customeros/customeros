@@ -6,7 +6,8 @@ import { Flex } from '@ui/layout/Flex';
 import { Button } from '@ui/form/Button';
 import { InvoiceStatus } from '@graphql/types';
 import { Download02 } from '@ui/media/icons/Download02';
-import { StatusCell } from '@shared/components/Invoice/Cells';
+import { renderStatusNode } from '@shared/components/Invoice/Cells';
+import { StatusMenuButton } from '@shared/components/Invoice/components/StatusMenuButton';
 
 import { DownloadInvoice } from '../../../../services/fileStore';
 
@@ -27,7 +28,11 @@ export function InvoiceActionHeader({ status, id, number }: InvoiceProps) {
 
   return (
     <Flex justifyContent='space-between' w='full'>
-      <StatusCell status={status} />
+      {id ? (
+        <StatusMenuButton status={status} id={id} />
+      ) : (
+        <Flex align='center'>{renderStatusNode(status)}</Flex>
+      )}
 
       <Flex>
         <Button

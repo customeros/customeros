@@ -33,7 +33,6 @@ export const InvoicePreviewModal = () => {
         py='4'
         px='6'
         pb='1'
-        position='sticky'
         background='white'
         top={0}
         borderRadius='xl'

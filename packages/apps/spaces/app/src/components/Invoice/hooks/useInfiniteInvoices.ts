@@ -1,5 +1,6 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 
+import { produce } from 'immer';
 import {
   InfiniteData,
   FetchNextPageOptions,
@@ -8,6 +9,7 @@ import {
 
 import { Invoice } from '@graphql/types';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { useInvoicesMeta } from '@shared/state/InvoicesMeta.atom';
 import { filterOutDryRunInvoices } from '@shared/components/Invoice/utils';
 import {
   GetInvoicesQuery,
@@ -34,6 +36,7 @@ export function useInfiniteInvoices(
   organizationId?: string,
 ): useInfiniteInvoicesReturn {
   const client = getGraphQLClient();
+  const [invoicesMeta, setInvoicesMeta] = useInvoicesMeta();
 
   const { data, isFetching, isFetched, fetchNextPage, hasNextPage } =
     useInfiniteGetInvoicesQuery(
@@ -76,6 +79,17 @@ export function useInfiniteInvoices(
   const totalInvoicesCount = useMemo(() => {
     return data?.pages?.[0]?.invoices?.totalElements ?? 0;
   }, [data?.pages?.[0]?.invoices?.totalElements]);
+  useEffect(() => {
+    setInvoicesMeta(
+      produce(invoicesMeta, (draft) => {
+        draft.getInvoices.pagination.page = 0;
+        draft.getInvoices.pagination.limit = 40;
+        if (organizationId) {
+          draft.getInvoices.organizationId = organizationId;
+        }
+      }),
+    );
+  }, [organizationId, data?.pageParams]);
 
   return {
     invoiceFlattenData,
