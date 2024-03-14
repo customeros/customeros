@@ -30,6 +30,8 @@ func TestQueryResolver_Reminder(t *testing.T) {
 		AppSource:     "TEST APP SOURCE",
 		SourceOfTruth: neo4jentity.DataSourceOpenline,
 	})
+	neo4jtest.LinkReminderToUser(ctx, driver, tenantName, rid, uid)
+	neo4jtest.LinkReminderToOrganization(ctx, driver, tenantName, rid, orgId)
 
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Reminder"))
 
@@ -54,7 +56,7 @@ func TestQueryResolver_RemindersForOrg(t *testing.T) {
 	now := utils.Now()
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "TEST ORG"})
-	uid := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{Name: "TEST USER"})
+	uid := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{Name: "TEST USER", FirstName: "TEST", LastName: "USER"})
 	rid := neo4jtest.CreateReminder(ctx, driver, tenantName, uid, orgId, now, neo4jentity.ReminderEntity{
 		Content:       "TEST CONTENT",
 		DueDate:       now,
@@ -63,6 +65,8 @@ func TestQueryResolver_RemindersForOrg(t *testing.T) {
 		AppSource:     "TEST APP SOURCE",
 		SourceOfTruth: neo4jentity.DataSourceOpenline,
 	})
+	neo4jtest.LinkReminderToUser(ctx, driver, tenantName, rid, uid)
+	neo4jtest.LinkReminderToOrganization(ctx, driver, tenantName, rid, orgId)
 
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Reminder"))
 
@@ -79,6 +83,8 @@ func TestQueryResolver_RemindersForOrg(t *testing.T) {
 	require.Equal(t, now.Format("2006-01-02"), reminderStruct.RemindersForOrganization[0].DueDate.Format("2006-01-02"))
 	require.Equal(t, false, reminderStruct.RemindersForOrganization[0].Dismissed)
 	require.Equal(t, uid, reminderStruct.RemindersForOrganization[0].Owner.ID)
+	require.Equal(t, "TEST", reminderStruct.RemindersForOrganization[0].Owner.FirstName)
+
 }
 
 func TestMutationResolver_ReminderCreate(t *testing.T) {
@@ -86,7 +92,7 @@ func TestMutationResolver_ReminderCreate(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "TEST ORG"})
-	uid := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{Name: "TEST USER"})
+	uid := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{FirstName: "TEST", LastName: "USER"})
 	rid := uuid.New().String()
 	dueDate := utils.Now()
 	neo4jtest.CreateReminder(ctx, driver, tenantName, uid, orgId, utils.Now(), neo4jentity.ReminderEntity{
@@ -98,6 +104,8 @@ func TestMutationResolver_ReminderCreate(t *testing.T) {
 		AppSource:     "TEST APP SOURCE",
 		SourceOfTruth: neo4jentity.DataSourceOpenline,
 	})
+	neo4jtest.LinkReminderToUser(ctx, driver, tenantName, rid, uid)
+	neo4jtest.LinkReminderToOrganization(ctx, driver, tenantName, rid, orgId)
 
 	calledCreateReminder := false
 	reminderServiceCallbacks := events_platform.MockReminderServiceCallbacks{
@@ -135,6 +143,7 @@ func TestMutationResolver_ReminderCreate(t *testing.T) {
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Reminder"))
 	require.Equal(t, "TEST CONTENT", reminderStruct.Reminder_Create.Content)
 	require.Equal(t, uid, reminderStruct.Reminder_Create.Owner.ID)
+	require.Equal(t, "TEST", reminderStruct.Reminder_Create.Owner.FirstName)
 }
 
 func TestMutationResolver_ReminderUpdate(t *testing.T) {
@@ -143,7 +152,7 @@ func TestMutationResolver_ReminderUpdate(t *testing.T) {
 	now := utils.Now()
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "TEST ORG"})
-	uid := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{Name: "TEST USER"})
+	uid := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{FirstName: "TEST", LastName: "USER"})
 	rid := neo4jtest.CreateReminder(ctx, driver, tenantName, uid, orgId, now, neo4jentity.ReminderEntity{
 		Content:       "TEST CONTENT",
 		DueDate:       now,
@@ -152,6 +161,9 @@ func TestMutationResolver_ReminderUpdate(t *testing.T) {
 		AppSource:     "TEST APP SOURCE",
 		SourceOfTruth: neo4jentity.DataSourceOpenline,
 	})
+	neo4jtest.LinkReminderToUser(ctx, driver, tenantName, rid, uid)
+	neo4jtest.LinkReminderToOrganization(ctx, driver, tenantName, rid, orgId)
+
 	dueDate := utils.Now()
 
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Reminder"))
@@ -200,4 +212,5 @@ func TestMutationResolver_ReminderUpdate(t *testing.T) {
 	require.Equal(t, "UPDATED CONTENT", reminderStruct.Reminder_Update.Content)
 	require.Equal(t, true, reminderStruct.Reminder_Update.Dismissed)
 	require.Equal(t, uid, reminderStruct.Reminder_Update.Owner.ID)
+	require.Equal(t, "TEST", reminderStruct.Reminder_Update.Owner.FirstName)
 }

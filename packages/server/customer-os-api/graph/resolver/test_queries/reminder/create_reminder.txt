@@ -12,6 +12,7 @@ reminder_Create(
         content
         owner {
             id
+            firstName
         }
   }
 }
