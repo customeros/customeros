@@ -1,11 +1,13 @@
 import React, { FC, useRef, useState, useEffect } from 'react';
 
+import { useFeatureIsOn } from '@growthbook/growthbook-react';
+
 import { Box } from '@ui/layout/Box';
 import { Button } from '@ui/form/Button';
 import { Send03 } from '@ui/media/icons/Send03';
 import { Mail01 } from '@ui/media/icons/Mail01';
 import { ButtonGroup } from '@ui/form/ButtonGroup';
-// import { AlarmClockPlus } from '@ui/media/icons/AlarmClockPlus';
+import { AlarmClockPlus } from '@ui/media/icons/AlarmClockPlus';
 import { MessageChatSquare } from '@ui/media/icons/MessageChatSquare';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
 import { useTimelineActionEmailContext } from '@organization/src/components/Timeline/FutureZone/TimelineActions/context/TimelineActionEmailContext';
@@ -15,10 +17,13 @@ import {
   useTimelineActionContext,
 } from '@organization/src/components/Timeline/FutureZone/TimelineActions/context/TimelineActionContext';
 
+import { useReminderAction } from './reminder';
+
 export const TimelineActionButtons: FC<{ invalidateQuery: () => void }> = ({
   invalidateQuery,
 }) => {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isRemindersEnabled = useFeatureIsOn('reminders');
 
   const {
     checkCanExitSafely,
@@ -34,6 +39,7 @@ export const TimelineActionButtons: FC<{ invalidateQuery: () => void }> = ({
   } = useTimelineActionEmailContext();
   const { openedEditor, showEditor } = useTimelineActionContext();
   const [openOnConfirm, setOpenOnConfirm] = useState<null | EditorType>(null);
+  const { handleCreateReminder } = useReminderAction();
 
   useEffect(() => {
     return () => {
@@ -138,16 +144,18 @@ export const TimelineActionButtons: FC<{ invalidateQuery: () => void }> = ({
       >
         Log
       </Button>
-      {/* <Button
-        variant='outline'
-        onClick={() => handleToggleEditor('reminder')}
-        borderRadius='3xl'
-        size='xs'
-        colorScheme={openedEditor === 'reminder' ? 'primary' : 'gray'}
-        leftIcon={<AlarmClockPlus color='inherit' />}
-      >
-        Reminder
-      </Button> */}
+      {isRemindersEnabled && (
+        <Button
+          variant='outline'
+          onClick={() => handleCreateReminder()}
+          borderRadius='3xl'
+          size='xs'
+          colorScheme={openedEditor === 'reminder' ? 'primary' : 'gray'}
+          leftIcon={<AlarmClockPlus color='inherit' />}
+        >
+          Reminder
+        </Button>
+      )}
 
       <ConfirmDeleteDialog
         colorScheme='primary'

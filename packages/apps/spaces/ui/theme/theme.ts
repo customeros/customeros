@@ -19,6 +19,7 @@ export const theme = extendTheme({
   fonts: {
     heading: 'var(--font-barlow)',
     body: 'var(--font-barlow)',
+    sticky: 'var(--font-merriweather)',
   },
   colors,
   shadows,

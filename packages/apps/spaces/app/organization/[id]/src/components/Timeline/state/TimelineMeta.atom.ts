@@ -8,6 +8,10 @@ export const TimelineMetaState = atom({
       organizationId: '',
       size: 50,
     },
+    reminders: {
+      recentlyCreatedId: '',
+      recentlyUpdatedId: '',
+    },
   },
 });
 
