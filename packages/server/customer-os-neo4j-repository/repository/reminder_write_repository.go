@@ -24,6 +24,8 @@ type ReminderWriteRepository interface {
 	CreateReminder(ctx context.Context, tenant, id, userId, orgId, content, source, appSource string, createdAt, dueDate time.Time) error
 	UpdateReminder(ctx context.Context, tenant, id string, data ReminderUpdateFields) error
 	DeleteReminder(ctx context.Context, tenant, id string) error
+	LinkReminderToUser(ctx context.Context, tenant, reminderId, userId string) error
+	LinkReminderToOrganization(ctx context.Context, tenant, reminderId, orgId string) error
 }
 
 type reminderWriteRepository struct {
@@ -55,9 +57,7 @@ func (r *reminderWriteRepository) CreateReminder(ctx context.Context, tenant, id
 					r.appSource=$appSource,
 					r.content=$content,
 					r.dueDate=datetime($dueDate),
-					r.dismissed=$dismissed
-				MERGE (u:User {id:$userId})<-[:REMINDER_BELONGS_TO_USER]-(r)
-				MERGE (o:Organization {id:$orgId})<-[:REMINDER_BELONGS_TO_ORGANIZATION]-(r)`, tenant)
+					r.dismissed=$dismissed`, tenant)
 	params := map[string]interface{}{
 		"tenant":    tenant,
 		"id":        id,
@@ -69,6 +69,48 @@ func (r *reminderWriteRepository) CreateReminder(ctx context.Context, tenant, id
 		"createdAt": createdAt,
 		"dueDate":   dueDate,
 		"dismissed": false,
+	}
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *reminderWriteRepository) LinkReminderToUser(ctx context.Context, tenant, reminderId, userId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderWriteRepository.LinkReminderToUser")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, reminderId)
+
+	cypher := `MATCH (u:User {id:$userId})
+				MATCH (:Tenant {name:$tenant})<-[:REMINDER_BELONGS_TO_TENANT]-(r:Reminder {id:$reminderId})
+				MERGE (u)<-[:REMINDER_BELONGS_TO_USER]-(r)`
+	params := map[string]interface{}{
+		"tenant":     tenant,
+		"userId":     userId,
+		"reminderId": reminderId,
+	}
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *reminderWriteRepository) LinkReminderToOrganization(ctx context.Context, tenant, reminderId, orgId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderWriteRepository.LinkReminderToOrganization")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, reminderId)
+
+	cypher := `MATCH (o:Organization {id:$orgId})
+				MATCH (:Tenant {name:$tenant})<-[:REMINDER_BELONGS_TO_TENANT]-(r:Reminder {id:$reminderId})
+				MERGE (o)<-[:REMINDER_BELONGS_TO_ORGANIZATION]-(r)`
+	params := map[string]interface{}{
+		"tenant":     tenant,
+		"orgId":      orgId,
+		"reminderId": reminderId,
 	}
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {

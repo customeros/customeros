@@ -47,7 +47,20 @@ func (h *ReminderEventHandler) OnCreate(ctx context.Context, evt eventstore.Even
 	err := h.repositories.Neo4jRepositories.ReminderWriteRepository.CreateReminder(ctx, eventData.Tenant, reminderId, eventData.UserId, eventData.OrganizationId, eventData.Content, source, appSource, eventData.CreatedAt, eventData.DueDate)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		h.log.Errorf("Error while saving reminder plan %s: %s", reminderId, err.Error())
+		h.log.Errorf("Error while saving reminder %s: %s", reminderId, err.Error())
+		return err
+	}
+	err = h.repositories.Neo4jRepositories.ReminderWriteRepository.LinkReminderToUser(ctx, eventData.Tenant, reminderId, eventData.UserId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while linking reminder %s to user %s: %s", reminderId, eventData.UserId, err.Error())
+		return err
+	}
+
+	err = h.repositories.Neo4jRepositories.ReminderWriteRepository.LinkReminderToOrganization(ctx, eventData.Tenant, reminderId, eventData.OrganizationId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while linking reminder %s to organization %s: %s", reminderId, eventData.OrganizationId, err.Error())
 		return err
 	}
 

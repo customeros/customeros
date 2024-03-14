@@ -5,6 +5,10 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
+	"os"
+	"testing"
+
 	"github.com/99designs/gqlgen/client"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
@@ -26,9 +30,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 	"gorm.io/gorm"
-	"log"
-	"os"
-	"testing"
 )
 
 var (
