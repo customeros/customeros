@@ -1,5 +1,4 @@
 'use client';
-import Link from 'next/link';
 import React, { FC, useMemo } from 'react';
 
 import { useConnections } from '@integration-app/react';
@@ -19,13 +18,7 @@ import { FormCheckbox } from '@ui/form/Checkbox/FormCheckbox';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { getCurrencyOptions } from '@shared/util/currencyOptions';
 import { ExternalSystemType, TenantBillingProfile } from '@graphql/types';
-import {
-  Popover,
-  PopoverBody,
-  PopoverArrow,
-  PopoverContent,
-  PopoverTrigger,
-} from '@ui/overlay/Popover';
+import { PaymentDetailsPopover } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/PaymentDetailsPopover';
 
 interface SubscriptionServiceModalProps {
   formId: string;
@@ -67,6 +60,12 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
 
     return '';
   }, [isStripeActive, availablePaymentMethodTypes, organizationName]);
+  const bankTransferPopoverContent =
+    (!tenantBillingProfile?.canPayWithBankTransfer &&
+      'Bank transfer not enabled yet') ||
+    (tenantBillingProfile?.canPayWithBankTransfer && hasNoBankAccounts)
+      ? 'No bank accounts added yet'
+      : `None of your bank accounts hold ${currency}`;
 
   return (
     <ModalBody pb='0' gap={4} display='flex' flexDir='column' flex={1}>
@@ -205,10 +204,10 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
             </Tooltip>
           )}
         </Text>
-        <Tooltip
-          shouldWrapChildren
-          hasArrow
-          label={isStripeActive ? '' : 'No payment provider enabled'}
+
+        <PaymentDetailsPopover
+          content={isStripeActive ? '' : 'No payment provider enabled'}
+          withNavigation
         >
           <FormSwitch
             name='payAutomatically'
@@ -221,16 +220,15 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
               </Text>
             }
           />
-        </Tooltip>
-        <Flex flexDir='column' gap={1} ml={2} mb={3}>
-          <Tooltip
-            shouldWrapChildren
-            hasArrow
-            label={
+        </PaymentDetailsPopover>
+        <Flex flexDir='column' gap={2} ml={2} mb={3}>
+          <PaymentDetailsPopover
+            content={
               !availablePaymentMethodTypes?.includes('card')
                 ? ''
                 : 'Credit or Debit card not enabled in Stripe'
             }
+            withNavigation
           >
             <FormCheckbox
               name='canPayWithCard'
@@ -240,17 +238,17 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
                 !availablePaymentMethodTypes?.includes('card') ||
                 !isStripeActive
               }
+              isDisabled={!isStripeActive}
             >
               <Text fontSize='sm' whiteSpace='nowrap'>
                 Credit or Debit cards
               </Text>
             </FormCheckbox>
-          </Tooltip>
-          <Tooltip
-            shouldWrapChildren
-            hasArrow
-            label={
-              availablePaymentMethodTypes?.includes('bacs_debit')
+          </PaymentDetailsPopover>
+
+          <PaymentDetailsPopover
+            content={
+              !availablePaymentMethodTypes?.includes('bacs_debit')
                 ? ''
                 : 'Direct debit not enabled in Stripe'
             }
@@ -263,17 +261,17 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
                 !availablePaymentMethodTypes?.includes('bacs_debit') ||
                 !isStripeActive
               }
+              isDisabled={!isStripeActive}
             >
               <Text fontSize='sm' whiteSpace='nowrap'>
                 Direct Debit via ACH
               </Text>
             </FormCheckbox>
-          </Tooltip>
+          </PaymentDetailsPopover>
         </Flex>
-        <Tooltip
-          shouldWrapChildren
-          hasArrow
-          label={isStripeActive ? '' : 'No payment provider enabled'}
+
+        <PaymentDetailsPopover
+          content={isStripeActive ? '' : 'No payment provider enabled'}
         >
           <FormSwitch
             name='payOnline'
@@ -286,50 +284,27 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
               </Text>
             }
           />
-        </Tooltip>
-        <Popover placement='bottom-end' trigger='hover'>
-          <PopoverTrigger>
-            <FormSwitch
-              name='canPayWithBankTransfer'
-              isInvalid={
-                !canAllowPayWithBankTransfer ||
-                !tenantBillingProfile?.canPayWithBankTransfer
-              }
-              formId={formId}
-              size='sm'
-              label={
-                <Text fontSize='sm' fontWeight='normal' whiteSpace='nowrap'>
-                  Bank transfer
-                </Text>
-              }
-            />
-          </PopoverTrigger>
-          <PopoverContent
-            width='fit-content'
-            bg='gray.700'
-            color='white'
-            mt={4}
-            borderRadius='md'
-            boxShadow='none'
-            border='none'
-          >
-            <PopoverArrow bg='gray.700' />
+        </PaymentDetailsPopover>
 
-            <PopoverBody display='flex'>
-              <Text mr={2}>
-                {!tenantBillingProfile?.canPayWithBankTransfer &&
-                  'Bank transfer not enabled yet'}
-                {tenantBillingProfile?.canPayWithBankTransfer &&
-                hasNoBankAccounts
-                  ? 'No bank accounts added yet'
-                  : `None of your bank accounts hold ${currency}`}
+        <PaymentDetailsPopover
+          withNavigation
+          content={bankTransferPopoverContent}
+        >
+          <FormSwitch
+            name='canPayWithBankTransfer'
+            isInvalid={
+              !canAllowPayWithBankTransfer ||
+              !tenantBillingProfile?.canPayWithBankTransfer
+            }
+            formId={formId}
+            size='sm'
+            label={
+              <Text fontSize='sm' fontWeight='normal' whiteSpace='nowrap'>
+                Bank transfer
               </Text>
-              <Text as={Link} href='/settings?tab=billing' color='white'>
-                Go to Settings
-              </Text>
-            </PopoverBody>
-          </PopoverContent>
-        </Popover>
+            }
+          />
+        </PaymentDetailsPopover>
       </Flex>
     </ModalBody>
   );

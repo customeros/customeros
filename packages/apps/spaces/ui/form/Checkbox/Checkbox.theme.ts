@@ -8,12 +8,14 @@ const helpers = createMultiStyleConfigHelpers([
 ]);
 
 export const Checkbox = helpers.defineMultiStyleConfig({
-  baseStyle: ({ colorScheme, isInvalid }) => ({
+  baseStyle: ({ colorScheme, isInvalid, isDisabled }) => ({
     control: {
       border: '1px solid',
       borderColor: 'gray.300',
       borderRadius: '4px',
       transition: 'all 0.3s ease',
+      pointerEvents: isDisabled ? 'none' : 'auto',
+      opacity: isDisabled ? 0.4 : 1,
       _focus: {
         boxShadow: 'ringPrimary',
         borderColor: `${colorScheme}.300`,
@@ -151,6 +153,13 @@ export const Checkbox = helpers.defineMultiStyleConfig({
           borderColor: 'gray.300',
           boxShadow: 'unset',
         },
+      },
+    },
+    label: {
+      pointerEvents: isDisabled ? 'none' : 'auto',
+      opacity: isDisabled ? 0.4 : 1,
+      _disabled: {
+        color: 'gray.500',
       },
     },
     icon: {
