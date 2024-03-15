@@ -32,33 +32,20 @@ func TestTenantService_AddBillingProfile(t *testing.T) {
 			AppSource: "app",
 			Source:    "source",
 		},
-		CreatedAt:                         utils.ConvertTimeToTimestampPtr(&now),
-		Email:                             "email",
-		Phone:                             "phone",
-		AddressLine1:                      "addressLine1",
-		AddressLine2:                      "addressLine2",
-		AddressLine3:                      "addressLine3",
-		Locality:                          "locality",
-		Country:                           "country",
-		Zip:                               "zip",
-		LegalName:                         "legalName",
-		DomesticPaymentsBankInfo:          "domesticPaymentsBankInfo",
-		DomesticPaymentsBankName:          "domesticPaymentsBankName",
-		DomesticPaymentsAccountNumber:     "domesticPaymentsAccountNumber",
-		DomesticPaymentsSortCode:          "domesticPaymentsSortCode",
-		InternationalPaymentsBankInfo:     "internationalPaymentsBankInfo",
-		InternationalPaymentsSwiftBic:     "internationalPaymentsSwiftBic",
-		InternationalPaymentsBankName:     "internationalPaymentsBankName",
-		InternationalPaymentsBankAddress:  "internationalPaymentsBankAddress",
-		InternationalPaymentsInstructions: "internationalPaymentsInstructions",
-		VatNumber:                         "vatNumber",
-		SendInvoicesFrom:                  "sendInvoicesFrom",
-		CanPayWithCard:                    true,
-		CanPayWithDirectDebitSEPA:         true,
-		CanPayWithDirectDebitACH:          true,
-		CanPayWithDirectDebitBacs:         true,
-		CanPayWithPigeon:                  true,
-		CanPayWithBankTransfer:            true,
+		CreatedAt:              utils.ConvertTimeToTimestampPtr(&now),
+		Email:                  "email",
+		Phone:                  "phone",
+		AddressLine1:           "addressLine1",
+		AddressLine2:           "addressLine2",
+		AddressLine3:           "addressLine3",
+		Locality:               "locality",
+		Country:                "country",
+		Zip:                    "zip",
+		LegalName:              "legalName",
+		VatNumber:              "vatNumber",
+		SendInvoicesFrom:       "sendInvoicesFrom",
+		CanPayWithPigeon:       true,
+		CanPayWithBankTransfer: true,
 	})
 	require.Nil(t, err)
 	require.NotNil(t, response)
@@ -89,21 +76,8 @@ func TestTenantService_AddBillingProfile(t *testing.T) {
 	require.Equal(t, "country", eventData.Country)
 	require.Equal(t, "zip", eventData.Zip)
 	require.Equal(t, "legalName", eventData.LegalName)
-	require.Equal(t, "domesticPaymentsBankInfo", eventData.DomesticPaymentsBankInfo)
-	require.Equal(t, "domesticPaymentsBankName", eventData.DomesticPaymentsBankName)
-	require.Equal(t, "domesticPaymentsAccountNumber", eventData.DomesticPaymentsAccountNumber)
-	require.Equal(t, "domesticPaymentsSortCode", eventData.DomesticPaymentsSortCode)
-	require.Equal(t, "internationalPaymentsBankInfo", eventData.InternationalPaymentsBankInfo)
-	require.Equal(t, "internationalPaymentsSwiftBic", eventData.InternationalPaymentsSwiftBic)
-	require.Equal(t, "internationalPaymentsBankName", eventData.InternationalPaymentsBankName)
-	require.Equal(t, "internationalPaymentsBankAddress", eventData.InternationalPaymentsBankAddress)
-	require.Equal(t, "internationalPaymentsInstructions", eventData.InternationalPaymentsInstructions)
 	require.Equal(t, "vatNumber", eventData.VatNumber)
 	require.Equal(t, "sendInvoicesFrom", eventData.SendInvoicesFrom)
-	require.Equal(t, true, eventData.CanPayWithCard)
-	require.Equal(t, true, eventData.CanPayWithDirectDebitSEPA)
-	require.Equal(t, true, eventData.CanPayWithDirectDebitACH)
-	require.Equal(t, true, eventData.CanPayWithDirectDebitBacs)
 	require.Equal(t, true, eventData.CanPayWithPigeon)
 	require.Equal(t, true, eventData.CanPayWithBankTransfer)
 	require.Equal(t, "app", eventData.SourceFields.AppSource)
@@ -127,29 +101,23 @@ func TestTenantService_UpdateBillingProfile(t *testing.T) {
 	tenantServiceClient := tenantpb.NewTenantGrpcServiceClient(grpcConnection)
 
 	response, err := tenantServiceClient.UpdateBillingProfile(ctx, &tenantpb.UpdateBillingProfileRequest{
-		Tenant:                        tenantName,
-		Id:                            billingProfileId,
-		AppSource:                     "test",
-		UpdatedAt:                     utils.ConvertTimeToTimestampPtr(&now),
-		Email:                         "email",
-		Phone:                         "phone",
-		LegalName:                     "legalName",
-		AddressLine1:                  "addressLine1",
-		AddressLine2:                  "addressLine2",
-		AddressLine3:                  "addressLine3",
-		Locality:                      "locality",
-		Country:                       "country",
-		Zip:                           "zip",
-		DomesticPaymentsBankInfo:      "domesticPaymentsBankInfo",
-		InternationalPaymentsBankInfo: "internationalPaymentsBankInfo",
-		VatNumber:                     "vatNumber",
-		SendInvoicesFrom:              "sendInvoicesFrom",
-		CanPayWithCard:                true,
-		CanPayWithDirectDebitSEPA:     true,
-		CanPayWithDirectDebitACH:      true,
-		CanPayWithDirectDebitBacs:     true,
-		CanPayWithPigeon:              true,
-		CanPayWithBankTransfer:        true,
+		Tenant:                 tenantName,
+		Id:                     billingProfileId,
+		AppSource:              "test",
+		UpdatedAt:              utils.ConvertTimeToTimestampPtr(&now),
+		Email:                  "email",
+		Phone:                  "phone",
+		LegalName:              "legalName",
+		AddressLine1:           "addressLine1",
+		AddressLine2:           "addressLine2",
+		AddressLine3:           "addressLine3",
+		Locality:               "locality",
+		Country:                "country",
+		Zip:                    "zip",
+		VatNumber:              "vatNumber",
+		SendInvoicesFrom:       "sendInvoicesFrom",
+		CanPayWithPigeon:       true,
+		CanPayWithBankTransfer: true,
 	})
 	require.Nil(t, err)
 	require.NotNil(t, response)
@@ -179,14 +147,8 @@ func TestTenantService_UpdateBillingProfile(t *testing.T) {
 	require.Equal(t, "country", eventData.Country)
 	require.Equal(t, "zip", eventData.Zip)
 	require.Equal(t, "legalName", eventData.LegalName)
-	require.Equal(t, "domesticPaymentsBankInfo", eventData.DomesticPaymentsBankInfo)
-	require.Equal(t, "internationalPaymentsBankInfo", eventData.InternationalPaymentsBankInfo)
 	require.Equal(t, "vatNumber", eventData.VatNumber)
 	require.Equal(t, "sendInvoicesFrom", eventData.SendInvoicesFrom)
-	require.Equal(t, true, eventData.CanPayWithCard)
-	require.Equal(t, true, eventData.CanPayWithDirectDebitSEPA)
-	require.Equal(t, true, eventData.CanPayWithDirectDebitACH)
-	require.Equal(t, true, eventData.CanPayWithDirectDebitBacs)
 	require.Equal(t, true, eventData.CanPayWithPigeon)
 	require.Equal(t, true, eventData.CanPayWithBankTransfer)
 	require.Equal(t, 0, len(eventData.FieldsMask))

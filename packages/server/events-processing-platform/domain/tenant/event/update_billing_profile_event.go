@@ -10,56 +10,44 @@ import (
 )
 
 type TenantBillingProfileUpdateEvent struct {
-	Tenant                        string    `json:"tenant" validate:"required"`
-	Id                            string    `json:"id" validate:"required"`
-	UpdatedAt                     time.Time `json:"updatedAt"`
-	Phone                         string    `json:"phone,omitempty"`
-	AddressLine1                  string    `json:"addressLine1,omitempty"`
-	AddressLine2                  string    `json:"addressLine2,omitempty"`
-	AddressLine3                  string    `json:"addressLine3,omitempty"`
-	Locality                      string    `json:"locality,omitempty"`
-	Country                       string    `json:"country,omitempty"`
-	Zip                           string    `json:"zip,omitempty"`
-	LegalName                     string    `json:"legalName,omitempty"`
-	DomesticPaymentsBankInfo      string    `json:"domesticPaymentsBankInfo,omitempty"`
-	InternationalPaymentsBankInfo string    `json:"internationalPaymentsBankInfo,omitempty"`
-	VatNumber                     string    `json:"vatNumber"`
-	SendInvoicesFrom              string    `json:"sendInvoicesFrom"`
-	SendInvoicesBcc               string    `json:"sendInvoicesBcc"`
-	CanPayWithCard                bool      `json:"canPayWithCard"`
-	CanPayWithDirectDebitSEPA     bool      `json:"canPayWithDirectDebitSEPA"`
-	CanPayWithDirectDebitACH      bool      `json:"canPayWithDirectDebitACH"`
-	CanPayWithDirectDebitBacs     bool      `json:"canPayWithDirectDebitBacs"`
-	CanPayWithPigeon              bool      `json:"canPayWithPigeon"`
-	CanPayWithBankTransfer        bool      `json:"canPayWithBankTransfer"`
-	FieldsMask                    []string  `json:"fieldsMask,omitempty"`
+	Tenant                 string    `json:"tenant" validate:"required"`
+	Id                     string    `json:"id" validate:"required"`
+	UpdatedAt              time.Time `json:"updatedAt"`
+	Phone                  string    `json:"phone,omitempty"`
+	AddressLine1           string    `json:"addressLine1,omitempty"`
+	AddressLine2           string    `json:"addressLine2,omitempty"`
+	AddressLine3           string    `json:"addressLine3,omitempty"`
+	Locality               string    `json:"locality,omitempty"`
+	Country                string    `json:"country,omitempty"`
+	Zip                    string    `json:"zip,omitempty"`
+	LegalName              string    `json:"legalName,omitempty"`
+	VatNumber              string    `json:"vatNumber"`
+	SendInvoicesFrom       string    `json:"sendInvoicesFrom"`
+	SendInvoicesBcc        string    `json:"sendInvoicesBcc"`
+	CanPayWithPigeon       bool      `json:"canPayWithPigeon"`
+	CanPayWithBankTransfer bool      `json:"canPayWithBankTransfer"`
+	FieldsMask             []string  `json:"fieldsMask,omitempty"`
 }
 
 func NewTenantBillingProfileUpdateEvent(aggregate eventstore.Aggregate, id string, request *tenantpb.UpdateBillingProfileRequest, updatedAt time.Time, fieldsMaks []string) (eventstore.Event, error) {
 	eventData := TenantBillingProfileUpdateEvent{
-		Tenant:                        aggregate.GetTenant(),
-		Id:                            id,
-		UpdatedAt:                     updatedAt,
-		Phone:                         request.Phone,
-		AddressLine1:                  request.AddressLine1,
-		AddressLine2:                  request.AddressLine2,
-		AddressLine3:                  request.AddressLine3,
-		Locality:                      request.Locality,
-		Country:                       request.Country,
-		Zip:                           request.Zip,
-		LegalName:                     request.LegalName,
-		DomesticPaymentsBankInfo:      request.DomesticPaymentsBankInfo,
-		InternationalPaymentsBankInfo: request.InternationalPaymentsBankInfo,
-		VatNumber:                     request.VatNumber,
-		SendInvoicesFrom:              request.SendInvoicesFrom,
-		SendInvoicesBcc:               request.SendInvoicesBcc,
-		CanPayWithCard:                request.CanPayWithCard,
-		CanPayWithDirectDebitSEPA:     request.CanPayWithDirectDebitSEPA,
-		CanPayWithDirectDebitACH:      request.CanPayWithDirectDebitACH,
-		CanPayWithDirectDebitBacs:     request.CanPayWithDirectDebitBacs,
-		CanPayWithPigeon:              request.CanPayWithPigeon,
-		CanPayWithBankTransfer:        request.CanPayWithBankTransfer,
-		FieldsMask:                    fieldsMaks,
+		Tenant:                 aggregate.GetTenant(),
+		Id:                     id,
+		UpdatedAt:              updatedAt,
+		Phone:                  request.Phone,
+		AddressLine1:           request.AddressLine1,
+		AddressLine2:           request.AddressLine2,
+		AddressLine3:           request.AddressLine3,
+		Locality:               request.Locality,
+		Country:                request.Country,
+		Zip:                    request.Zip,
+		LegalName:              request.LegalName,
+		VatNumber:              request.VatNumber,
+		SendInvoicesFrom:       request.SendInvoicesFrom,
+		SendInvoicesBcc:        request.SendInvoicesBcc,
+		CanPayWithPigeon:       request.CanPayWithPigeon,
+		CanPayWithBankTransfer: request.CanPayWithBankTransfer,
+		FieldsMask:             fieldsMaks,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
@@ -106,14 +94,6 @@ func (e TenantBillingProfileUpdateEvent) UpdateLegalName() bool {
 	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskLegalName)
 }
 
-func (e TenantBillingProfileUpdateEvent) UpdateDomesticPaymentsBankInfo() bool {
-	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskDomesticPaymentsBankInfo)
-}
-
-func (e TenantBillingProfileUpdateEvent) UpdateInternationalPaymentsBankInfo() bool {
-	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskInternationalPaymentsBankInfo)
-}
-
 func (e TenantBillingProfileUpdateEvent) UpdateVatNumber() bool {
 	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskVatNumber)
 }
@@ -124,22 +104,6 @@ func (e TenantBillingProfileUpdateEvent) UpdateSendInvoicesFrom() bool {
 
 func (e TenantBillingProfileUpdateEvent) UpdateSendInvoicesBcc() bool {
 	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskSendInvoicesBcc)
-}
-
-func (e TenantBillingProfileUpdateEvent) UpdateCanPayWithCard() bool {
-	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskCanPayWithCard)
-}
-
-func (e TenantBillingProfileUpdateEvent) UpdateCanPayWithDirectDebitSEPA() bool {
-	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskCanPayWithDirectDebitSEPA)
-}
-
-func (e TenantBillingProfileUpdateEvent) UpdateCanPayWithDirectDebitACH() bool {
-	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskCanPayWithDirectDebitACH)
-}
-
-func (e TenantBillingProfileUpdateEvent) UpdateCanPayWithDirectDebitBacs() bool {
-	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskCanPayWithDirectDebitBacs)
 }
 
 func (e TenantBillingProfileUpdateEvent) UpdateCanPayWithPigeon() bool {

@@ -9,15 +9,9 @@ tenant_AddBillingProfile(
         country: "country"
         zip: "zip"
         legalName: "legalName"
-        domesticPaymentsBankInfo: "domesticPaymentsBankInfo"
-        internationalPaymentsBankInfo: "internationalPaymentsBankInfo"
         vatNumber: "vatNumber"
         sendInvoicesFrom: "sendInvoicesFrom"
         sendInvoicesBcc: "sendInvoicesBcc"
-        canPayWithCard: true
-        canPayWithDirectDebitSEPA: true
-        canPayWithDirectDebitACH: true
-        canPayWithDirectDebitBacs: true
         canPayWithPigeon: true
         canPayWithBankTransfer: true
     }) {

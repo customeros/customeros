@@ -25,36 +25,23 @@ type TenantSettings struct {
 }
 
 type TenantBillingProfile struct {
-	Id                                string             `json:"id"`
-	CreatedAt                         time.Time          `json:"createdAt"`
-	UpdatedAt                         time.Time          `json:"updatedAt"`
-	SourceFields                      commonmodel.Source `json:"source"`
-	Phone                             string             `json:"phone"`
-	AddressLine1                      string             `json:"addressLine1"`
-	AddressLine2                      string             `json:"addressLine2"`
-	AddressLine3                      string             `json:"addressLine3"`
-	Locality                          string             `json:"locality"`
-	Country                           string             `json:"country"`
-	Zip                               string             `json:"zip"`
-	LegalName                         string             `json:"legalName"`
-	DomesticPaymentsBankInfo          string             `json:"domesticPaymentsBankInfo"`
-	DomesticPaymentsBankName          string             `json:"domesticPaymentsBankName"`
-	DomesticPaymentsAccountNumber     string             `json:"domesticPaymentsAccountNumber"`
-	DomesticPaymentsSortCode          string             `json:"domesticPaymentsSortCode"`
-	InternationalPaymentsBankInfo     string             `json:"internationalPaymentsBankInfo"`
-	InternationalPaymentsSwiftBic     string             `json:"internationalPaymentsSwiftBic"`
-	InternationalPaymentsBankName     string             `json:"internationalPaymentsBankName"`
-	InternationalPaymentsBankAddress  string             `json:"internationalPaymentsBankAddress"`
-	InternationalPaymentsInstructions string             `json:"internationalPaymentsInstructions"`
-	VatNumber                         string             `json:"vatNumber"`
-	SendInvoicesFrom                  string             `json:"sendInvoicesFrom"`
-	SendInvoicesBcc                   string             `json:"sendInvoicesBcc"`
-	CanPayWithCard                    bool               `json:"canPayWithCard"`
-	CanPayWithDirectDebitSEPA         bool               `json:"canPayWithDirectDebitSEPA"`
-	CanPayWithDirectDebitACH          bool               `json:"canPayWithDirectDebitACH"`
-	CanPayWithDirectDebitBacs         bool               `json:"canPayWithDirectDebitBacs"`
-	CanPayWithPigeon                  bool               `json:"canPayWithPigeon"`
-	CanPayWithBankTransfer            bool               `json:"canPayWithBankTransfer"`
+	Id                     string             `json:"id"`
+	CreatedAt              time.Time          `json:"createdAt"`
+	UpdatedAt              time.Time          `json:"updatedAt"`
+	SourceFields           commonmodel.Source `json:"source"`
+	Phone                  string             `json:"phone"`
+	AddressLine1           string             `json:"addressLine1"`
+	AddressLine2           string             `json:"addressLine2"`
+	AddressLine3           string             `json:"addressLine3"`
+	Locality               string             `json:"locality"`
+	Country                string             `json:"country"`
+	Zip                    string             `json:"zip"`
+	LegalName              string             `json:"legalName"`
+	VatNumber              string             `json:"vatNumber"`
+	SendInvoicesFrom       string             `json:"sendInvoicesFrom"`
+	SendInvoicesBcc        string             `json:"sendInvoicesBcc"`
+	CanPayWithPigeon       bool               `json:"canPayWithPigeon"`
+	CanPayWithBankTransfer bool               `json:"canPayWithBankTransfer"`
 }
 
 type BankAccount struct {

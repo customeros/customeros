@@ -14610,15 +14610,15 @@ type TenantBillingProfile implements SourceFields & Node {
     country:            String!
     zip:                String!
     legalName:          String!
-    domesticPaymentsBankInfo:       String!
-    internationalPaymentsBankInfo:  String!
+    domesticPaymentsBankInfo:       String @deprecated(reason: "Not used")
+    internationalPaymentsBankInfo:  String @deprecated(reason: "Not used")
     vatNumber:                      String!
     sendInvoicesFrom:               String!
     sendInvoicesBcc:                String!
-    canPayWithCard:                 Boolean! @deprecated(reason: "Not used")
-    canPayWithDirectDebitSEPA:      Boolean! @deprecated(reason: "Not used")
-    canPayWithDirectDebitACH:       Boolean! @deprecated(reason: "Not used")
-    canPayWithDirectDebitBacs:      Boolean! @deprecated(reason: "Not used")
+    canPayWithCard:                 Boolean @deprecated(reason: "Not used")
+    canPayWithDirectDebitSEPA:      Boolean @deprecated(reason: "Not used")
+    canPayWithDirectDebitACH:       Boolean @deprecated(reason: "Not used")
+    canPayWithDirectDebitBacs:      Boolean @deprecated(reason: "Not used")
     canPayWithBankTransfer:         Boolean!
     canPayWithPigeon:               Boolean!
 }
@@ -14638,15 +14638,15 @@ input TenantBillingProfileInput {
     country:            String
     zip:                String
     legalName:          String
-    domesticPaymentsBankInfo:      String
-    internationalPaymentsBankInfo: String
+    domesticPaymentsBankInfo:      String @deprecated(reason: "Not used")
+    internationalPaymentsBankInfo: String @deprecated(reason: "Not used")
     vatNumber: String!
     sendInvoicesFrom: String!
     sendInvoicesBcc: String
-    canPayWithCard: Boolean! @deprecated(reason: "Not used")
-    canPayWithDirectDebitSEPA: Boolean! @deprecated(reason: "Not used")
-    canPayWithDirectDebitACH: Boolean! @deprecated(reason: "Not used")
-    canPayWithDirectDebitBacs: Boolean! @deprecated(reason: "Not used")
+    canPayWithCard: Boolean @deprecated(reason: "Not used")
+    canPayWithDirectDebitSEPA: Boolean @deprecated(reason: "Not used")
+    canPayWithDirectDebitACH: Boolean @deprecated(reason: "Not used")
+    canPayWithDirectDebitBacs: Boolean @deprecated(reason: "Not used")
     canPayWithBankTransfer: Boolean!
     canPayWithPigeon: Boolean!
 }
@@ -14663,8 +14663,8 @@ input TenantBillingProfileUpdateInput {
     country:            String
     zip:                String
     legalName:          String
-    domesticPaymentsBankInfo:      String
-    internationalPaymentsBankInfo: String
+    domesticPaymentsBankInfo:      String @deprecated(reason: "Not used")
+    internationalPaymentsBankInfo: String @deprecated(reason: "Not used")
     vatNumber:                  String
     sendInvoicesFrom:           String
     sendInvoicesBcc:            String
@@ -85306,14 +85306,11 @@ func (ec *executionContext) _TenantBillingProfile_domesticPaymentsBankInfo(ctx c
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_TenantBillingProfile_domesticPaymentsBankInfo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -85350,14 +85347,11 @@ func (ec *executionContext) _TenantBillingProfile_internationalPaymentsBankInfo(
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_TenantBillingProfile_internationalPaymentsBankInfo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -85526,14 +85520,11 @@ func (ec *executionContext) _TenantBillingProfile_canPayWithCard(ctx context.Con
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(bool)
+	res := resTmp.(*bool)
 	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_TenantBillingProfile_canPayWithCard(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -85570,14 +85561,11 @@ func (ec *executionContext) _TenantBillingProfile_canPayWithDirectDebitSEPA(ctx 
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(bool)
+	res := resTmp.(*bool)
 	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_TenantBillingProfile_canPayWithDirectDebitSEPA(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -85614,14 +85602,11 @@ func (ec *executionContext) _TenantBillingProfile_canPayWithDirectDebitACH(ctx c
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(bool)
+	res := resTmp.(*bool)
 	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_TenantBillingProfile_canPayWithDirectDebitACH(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -85658,14 +85643,11 @@ func (ec *executionContext) _TenantBillingProfile_canPayWithDirectDebitBacs(ctx 
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(bool)
+	res := resTmp.(*bool)
 	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_TenantBillingProfile_canPayWithDirectDebitBacs(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -95370,28 +95352,28 @@ func (ec *executionContext) unmarshalInputTenantBillingProfileInput(ctx context.
 			it.SendInvoicesBcc = data
 		case "canPayWithCard":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("canPayWithCard"))
-			data, err := ec.unmarshalNBoolean2bool(ctx, v)
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.CanPayWithCard = data
 		case "canPayWithDirectDebitSEPA":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("canPayWithDirectDebitSEPA"))
-			data, err := ec.unmarshalNBoolean2bool(ctx, v)
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.CanPayWithDirectDebitSepa = data
 		case "canPayWithDirectDebitACH":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("canPayWithDirectDebitACH"))
-			data, err := ec.unmarshalNBoolean2bool(ctx, v)
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.CanPayWithDirectDebitAch = data
 		case "canPayWithDirectDebitBacs":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("canPayWithDirectDebitBacs"))
-			data, err := ec.unmarshalNBoolean2bool(ctx, v)
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -110066,14 +110048,8 @@ func (ec *executionContext) _TenantBillingProfile(ctx context.Context, sel ast.S
 			}
 		case "domesticPaymentsBankInfo":
 			out.Values[i] = ec._TenantBillingProfile_domesticPaymentsBankInfo(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "internationalPaymentsBankInfo":
 			out.Values[i] = ec._TenantBillingProfile_internationalPaymentsBankInfo(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "vatNumber":
 			out.Values[i] = ec._TenantBillingProfile_vatNumber(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -110091,24 +110067,12 @@ func (ec *executionContext) _TenantBillingProfile(ctx context.Context, sel ast.S
 			}
 		case "canPayWithCard":
 			out.Values[i] = ec._TenantBillingProfile_canPayWithCard(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "canPayWithDirectDebitSEPA":
 			out.Values[i] = ec._TenantBillingProfile_canPayWithDirectDebitSEPA(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "canPayWithDirectDebitACH":
 			out.Values[i] = ec._TenantBillingProfile_canPayWithDirectDebitACH(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "canPayWithDirectDebitBacs":
 			out.Values[i] = ec._TenantBillingProfile_canPayWithDirectDebitBacs(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "canPayWithBankTransfer":
 			out.Values[i] = ec._TenantBillingProfile_canPayWithBankTransfer(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

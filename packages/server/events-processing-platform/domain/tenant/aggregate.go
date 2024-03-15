@@ -261,35 +261,22 @@ func (a *TenantAggregate) onAddBillingProfile(evt eventstore.Event) error {
 		return nil
 	}
 	tenantBillingProfile := TenantBillingProfile{
-		Id:                                eventData.Id,
-		CreatedAt:                         eventData.CreatedAt,
-		Phone:                             eventData.Phone,
-		AddressLine1:                      eventData.AddressLine1,
-		AddressLine2:                      eventData.AddressLine2,
-		AddressLine3:                      eventData.AddressLine3,
-		Locality:                          eventData.Locality,
-		Country:                           eventData.Country,
-		Zip:                               eventData.Zip,
-		LegalName:                         eventData.LegalName,
-		DomesticPaymentsBankInfo:          eventData.DomesticPaymentsBankInfo,
-		DomesticPaymentsBankName:          eventData.DomesticPaymentsBankName,
-		DomesticPaymentsAccountNumber:     eventData.DomesticPaymentsAccountNumber,
-		DomesticPaymentsSortCode:          eventData.DomesticPaymentsSortCode,
-		InternationalPaymentsBankInfo:     eventData.InternationalPaymentsBankInfo,
-		InternationalPaymentsSwiftBic:     eventData.InternationalPaymentsSwiftBic,
-		InternationalPaymentsBankName:     eventData.InternationalPaymentsBankName,
-		InternationalPaymentsBankAddress:  eventData.InternationalPaymentsBankAddress,
-		InternationalPaymentsInstructions: eventData.InternationalPaymentsInstructions,
-		VatNumber:                         eventData.VatNumber,
-		SendInvoicesFrom:                  eventData.SendInvoicesFrom,
-		SendInvoicesBcc:                   eventData.SendInvoicesBcc,
-		CanPayWithCard:                    eventData.CanPayWithCard,
-		CanPayWithDirectDebitSEPA:         eventData.CanPayWithDirectDebitSEPA,
-		CanPayWithDirectDebitACH:          eventData.CanPayWithDirectDebitACH,
-		CanPayWithDirectDebitBacs:         eventData.CanPayWithDirectDebitBacs,
-		CanPayWithPigeon:                  eventData.CanPayWithPigeon,
-		CanPayWithBankTransfer:            eventData.CanPayWithBankTransfer,
-		SourceFields:                      eventData.SourceFields,
+		Id:                     eventData.Id,
+		CreatedAt:              eventData.CreatedAt,
+		Phone:                  eventData.Phone,
+		AddressLine1:           eventData.AddressLine1,
+		AddressLine2:           eventData.AddressLine2,
+		AddressLine3:           eventData.AddressLine3,
+		Locality:               eventData.Locality,
+		Country:                eventData.Country,
+		Zip:                    eventData.Zip,
+		LegalName:              eventData.LegalName,
+		VatNumber:              eventData.VatNumber,
+		SendInvoicesFrom:       eventData.SendInvoicesFrom,
+		SendInvoicesBcc:        eventData.SendInvoicesBcc,
+		CanPayWithPigeon:       eventData.CanPayWithPigeon,
+		CanPayWithBankTransfer: eventData.CanPayWithBankTransfer,
+		SourceFields:           eventData.SourceFields,
 	}
 	a.TenantDetails.BillingProfiles = append(a.TenantDetails.BillingProfiles, tenantBillingProfile)
 
@@ -334,12 +321,6 @@ func (a *TenantAggregate) onUpdateBillingProfile(evt eventstore.Event) error {
 	if eventData.UpdateLegalName() {
 		tenantBillingProfile.LegalName = eventData.LegalName
 	}
-	if eventData.UpdateDomesticPaymentsBankInfo() {
-		tenantBillingProfile.DomesticPaymentsBankInfo = eventData.DomesticPaymentsBankInfo
-	}
-	if eventData.UpdateInternationalPaymentsBankInfo() {
-		tenantBillingProfile.InternationalPaymentsBankInfo = eventData.InternationalPaymentsBankInfo
-	}
 	if eventData.UpdateVatNumber() {
 		tenantBillingProfile.VatNumber = eventData.VatNumber
 	}
@@ -348,18 +329,6 @@ func (a *TenantAggregate) onUpdateBillingProfile(evt eventstore.Event) error {
 	}
 	if eventData.UpdateSendInvoicesBcc() {
 		tenantBillingProfile.SendInvoicesBcc = eventData.SendInvoicesBcc
-	}
-	if eventData.UpdateCanPayWithCard() {
-		tenantBillingProfile.CanPayWithCard = eventData.CanPayWithCard
-	}
-	if eventData.UpdateCanPayWithDirectDebitSEPA() {
-		tenantBillingProfile.CanPayWithDirectDebitSEPA = eventData.CanPayWithDirectDebitSEPA
-	}
-	if eventData.UpdateCanPayWithDirectDebitACH() {
-		tenantBillingProfile.CanPayWithDirectDebitACH = eventData.CanPayWithDirectDebitACH
-	}
-	if eventData.UpdateCanPayWithDirectDebitBacs() {
-		tenantBillingProfile.CanPayWithDirectDebitBacs = eventData.CanPayWithDirectDebitBacs
 	}
 	if eventData.UpdateCanPayWithPigeon() {
 		tenantBillingProfile.CanPayWithPigeon = eventData.CanPayWithPigeon
@@ -499,24 +468,12 @@ func extractTenantBillingProfileFieldsMask(requestFieldsMask []tenantpb.TenantBi
 			fieldsMask = append(fieldsMask, event.FieldMaskZip)
 		case tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_LEGAL_NAME:
 			fieldsMask = append(fieldsMask, event.FieldMaskLegalName)
-		case tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_DOMESTIC_PAYMENTS_BANK_INFO:
-			fieldsMask = append(fieldsMask, event.FieldMaskDomesticPaymentsBankInfo)
-		case tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_INTERNATIONAL_PAYMENTS_BANK_INFO:
-			fieldsMask = append(fieldsMask, event.FieldMaskInternationalPaymentsBankInfo)
 		case tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_VAT_NUMBER:
 			fieldsMask = append(fieldsMask, event.FieldMaskVatNumber)
 		case tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_SEND_INVOICES_FROM:
 			fieldsMask = append(fieldsMask, event.FieldMaskSendInvoicesFrom)
 		case tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_SEND_INVOICES_BCC:
 			fieldsMask = append(fieldsMask, event.FieldMaskSendInvoicesBcc)
-		case tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_CARD:
-			fieldsMask = append(fieldsMask, event.FieldMaskCanPayWithCard)
-		case tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_DIRECT_DEBIT_SEPA:
-			fieldsMask = append(fieldsMask, event.FieldMaskCanPayWithDirectDebitSEPA)
-		case tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_DIRECT_DEBIT_ACH:
-			fieldsMask = append(fieldsMask, event.FieldMaskCanPayWithDirectDebitACH)
-		case tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_DIRECT_DEBIT_BACS:
-			fieldsMask = append(fieldsMask, event.FieldMaskCanPayWithDirectDebitBacs)
 		case tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_PIGEON:
 			fieldsMask = append(fieldsMask, event.FieldMaskCanPayWithPigeon)
 		case tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_BANK_TRANSFER:

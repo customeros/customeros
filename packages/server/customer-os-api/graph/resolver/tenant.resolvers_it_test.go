@@ -175,25 +175,19 @@ func TestQueryResolver_GetTenantBillingProfiles(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	profileId := neo4jtest.CreateTenantBillingProfile(ctx, driver, tenantName, neo4jentity.TenantBillingProfileEntity{
-		Phone:                         "123456789",
-		LegalName:                     "test",
-		AddressLine1:                  "address1",
-		AddressLine2:                  "address2",
-		AddressLine3:                  "address3",
-		Locality:                      "locality",
-		Country:                       "country",
-		Zip:                           "zip",
-		DomesticPaymentsBankInfo:      "domesticPaymentsBankInfo",
-		InternationalPaymentsBankInfo: "internationalPaymentsBankInfo",
-		VatNumber:                     "vatNumber",
-		SendInvoicesFrom:              "sendInvoicesFrom",
-		SendInvoicesBcc:               "sendInvoicesBcc",
-		CanPayWithCard:                true,
-		CanPayWithDirectDebitSEPA:     true,
-		CanPayWithDirectDebitACH:      true,
-		CanPayWithDirectDebitBacs:     true,
-		CanPayWithPigeon:              true,
-		CanPayWithBankTransfer:        true,
+		Phone:                  "123456789",
+		LegalName:              "test",
+		AddressLine1:           "address1",
+		AddressLine2:           "address2",
+		AddressLine3:           "address3",
+		Locality:               "locality",
+		Country:                "country",
+		Zip:                    "zip",
+		VatNumber:              "vatNumber",
+		SendInvoicesFrom:       "sendInvoicesFrom",
+		SendInvoicesBcc:        "sendInvoicesBcc",
+		CanPayWithPigeon:       true,
+		CanPayWithBankTransfer: true,
 	})
 
 	rawResponse, err := c.RawPost(getQuery("tenant/get_tenant_billing_profiles"))
@@ -218,14 +212,8 @@ func TestQueryResolver_GetTenantBillingProfiles(t *testing.T) {
 	require.Equal(t, "locality", tenantBillingProfile.Locality)
 	require.Equal(t, "country", tenantBillingProfile.Country)
 	require.Equal(t, "zip", tenantBillingProfile.Zip)
-	require.Equal(t, "domesticPaymentsBankInfo", tenantBillingProfile.DomesticPaymentsBankInfo)
-	require.Equal(t, "internationalPaymentsBankInfo", tenantBillingProfile.InternationalPaymentsBankInfo)
 	require.Equal(t, "vatNumber", tenantBillingProfile.VatNumber)
 	require.Equal(t, "sendInvoicesFrom", tenantBillingProfile.SendInvoicesFrom)
-	require.Equal(t, true, tenantBillingProfile.CanPayWithCard)
-	require.Equal(t, true, tenantBillingProfile.CanPayWithDirectDebitSepa)
-	require.Equal(t, true, tenantBillingProfile.CanPayWithDirectDebitAch)
-	require.Equal(t, true, tenantBillingProfile.CanPayWithDirectDebitBacs)
 	require.True(t, tenantBillingProfile.CanPayWithPigeon)
 	require.True(t, tenantBillingProfile.CanPayWithBankTransfer)
 }
@@ -236,25 +224,19 @@ func TestQueryResolver_GetTenantBillingProfile(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	profileId := neo4jtest.CreateTenantBillingProfile(ctx, driver, tenantName, neo4jentity.TenantBillingProfileEntity{
-		Phone:                         "123456789",
-		LegalName:                     "test",
-		AddressLine1:                  "address1",
-		AddressLine2:                  "address2",
-		AddressLine3:                  "address3",
-		Locality:                      "locality",
-		Country:                       "country",
-		Zip:                           "zip",
-		DomesticPaymentsBankInfo:      "domesticPaymentsBankInfo",
-		InternationalPaymentsBankInfo: "internationalPaymentsBankInfo",
-		VatNumber:                     "vatNumber",
-		SendInvoicesFrom:              "sendInvoicesFrom",
-		SendInvoicesBcc:               "sendInvoicesBcc",
-		CanPayWithCard:                true,
-		CanPayWithDirectDebitSEPA:     true,
-		CanPayWithDirectDebitACH:      true,
-		CanPayWithDirectDebitBacs:     true,
-		CanPayWithPigeon:              true,
-		CanPayWithBankTransfer:        true,
+		Phone:                  "123456789",
+		LegalName:              "test",
+		AddressLine1:           "address1",
+		AddressLine2:           "address2",
+		AddressLine3:           "address3",
+		Locality:               "locality",
+		Country:                "country",
+		Zip:                    "zip",
+		VatNumber:              "vatNumber",
+		SendInvoicesFrom:       "sendInvoicesFrom",
+		SendInvoicesBcc:        "sendInvoicesBcc",
+		CanPayWithPigeon:       true,
+		CanPayWithBankTransfer: true,
 	})
 
 	rawResponse, err := c.RawPost(getQuery("tenant/get_tenant_billing_profile"), client.Var("id", profileId))
@@ -278,14 +260,8 @@ func TestQueryResolver_GetTenantBillingProfile(t *testing.T) {
 	require.Equal(t, "locality", tenantBillingProfile.Locality)
 	require.Equal(t, "country", tenantBillingProfile.Country)
 	require.Equal(t, "zip", tenantBillingProfile.Zip)
-	require.Equal(t, "domesticPaymentsBankInfo", tenantBillingProfile.DomesticPaymentsBankInfo)
-	require.Equal(t, "internationalPaymentsBankInfo", tenantBillingProfile.InternationalPaymentsBankInfo)
 	require.Equal(t, "vatNumber", tenantBillingProfile.VatNumber)
 	require.Equal(t, "sendInvoicesFrom", tenantBillingProfile.SendInvoicesFrom)
-	require.Equal(t, true, tenantBillingProfile.CanPayWithCard)
-	require.Equal(t, true, tenantBillingProfile.CanPayWithDirectDebitSepa)
-	require.Equal(t, true, tenantBillingProfile.CanPayWithDirectDebitAch)
-	require.Equal(t, true, tenantBillingProfile.CanPayWithDirectDebitBacs)
 	require.True(t, tenantBillingProfile.CanPayWithPigeon)
 	require.True(t, tenantBillingProfile.CanPayWithBankTransfer)
 }
@@ -313,15 +289,9 @@ func TestMutationResolver_TenantAddBillingProfile(t *testing.T) {
 			require.Equal(t, "locality", profile.Locality)
 			require.Equal(t, "country", profile.Country)
 			require.Equal(t, "zip", profile.Zip)
-			require.Equal(t, "domesticPaymentsBankInfo", profile.DomesticPaymentsBankInfo)
-			require.Equal(t, "internationalPaymentsBankInfo", profile.InternationalPaymentsBankInfo)
 			require.Equal(t, "vatNumber", profile.VatNumber)
 			require.Equal(t, "sendInvoicesFrom", profile.SendInvoicesFrom)
 			require.Equal(t, "sendInvoicesBcc", profile.SendInvoicesBcc)
-			require.Equal(t, true, profile.CanPayWithCard)
-			require.Equal(t, true, profile.CanPayWithDirectDebitSEPA)
-			require.Equal(t, true, profile.CanPayWithDirectDebitACH)
-			require.Equal(t, true, profile.CanPayWithDirectDebitBacs)
 			require.True(t, profile.CanPayWithPigeon)
 			require.True(t, profile.CanPayWithBankTransfer)
 
@@ -373,15 +343,9 @@ func TestMutationResolver_TenantUpdateBillingProfile(t *testing.T) {
 			require.Equal(t, "locality", profile.Locality)
 			require.Equal(t, "country", profile.Country)
 			require.Equal(t, "zip", profile.Zip)
-			require.Equal(t, "domesticPaymentsBankInfo", profile.DomesticPaymentsBankInfo)
-			require.Equal(t, "internationalPaymentsBankInfo", profile.InternationalPaymentsBankInfo)
 			require.Equal(t, "vatNumber", profile.VatNumber)
 			require.Equal(t, "sendInvoicesFrom", profile.SendInvoicesFrom)
 			require.Equal(t, "sendInvoicesBcc", profile.SendInvoicesBcc)
-			require.Equal(t, true, profile.CanPayWithCard)
-			require.Equal(t, true, profile.CanPayWithDirectDebitSEPA)
-			require.Equal(t, true, profile.CanPayWithDirectDebitACH)
-			require.Equal(t, true, profile.CanPayWithDirectDebitBacs)
 			require.True(t, profile.CanPayWithPigeon)
 			require.True(t, profile.CanPayWithBankTransfer)
 			require.ElementsMatch(t, []tenantpb.TenantBillingProfileFieldMask{
@@ -393,15 +357,9 @@ func TestMutationResolver_TenantUpdateBillingProfile(t *testing.T) {
 				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_LOCALITY,
 				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_COUNTRY,
 				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_ZIP,
-				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_DOMESTIC_PAYMENTS_BANK_INFO,
-				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_INTERNATIONAL_PAYMENTS_BANK_INFO,
 				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_VAT_NUMBER,
 				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_SEND_INVOICES_FROM,
 				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_SEND_INVOICES_BCC,
-				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_CARD,
-				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_DIRECT_DEBIT_SEPA,
-				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_DIRECT_DEBIT_ACH,
-				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_DIRECT_DEBIT_BACS,
 				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_PIGEON,
 				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_BANK_TRANSFER,
 			},
