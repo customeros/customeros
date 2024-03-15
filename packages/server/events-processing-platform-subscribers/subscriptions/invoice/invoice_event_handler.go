@@ -1296,11 +1296,6 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 		return errors.New("contractEntity.InvoiceEmail is empty or invalid")
 	}
 
-	if invoiceEntity.PaymentDetails.PaymentLink == "" {
-		tracing.TraceErr(span, errors.New("invoiceEntity.PaymentDetails.PaymentLink is empty"))
-		return errors.New("invoiceEntity.PaymentDetails.PaymentLink is empty")
-	}
-
 	//load tenant billing profile from neo4j
 	tenantBillingProfileEntity, err := h.loadTenantBillingProfile(ctx, eventData.Tenant, false)
 	if err != nil {
@@ -1308,8 +1303,15 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 		return err
 	}
 
+	workflowId := ""
+	if invoiceEntity.PaymentDetails.PaymentLink == "" {
+		workflowId = notifications.WorkflowInvoiceReadyNoPaymentLink
+	} else {
+		workflowId = notifications.WorkflowInvoiceReadyWithPaymentLink
+	}
+
 	postmarkEmail := postmark.PostmarkEmail{
-		WorkflowId:    notifications.WorkflowInvoiceReady,
+		WorkflowId:    workflowId,
 		MessageStream: postmark.PostmarkMessageStreamInvoice,
 		From:          invoiceEntity.Provider.Email,
 		To:            contractEntity.InvoiceEmail,

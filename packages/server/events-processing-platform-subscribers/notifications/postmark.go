@@ -154,8 +154,10 @@ func (np *PostmarkProvider) GetFileName(workflowId, fileExtension string) string
 	switch workflowId {
 	case notifications.WorkflowInvoicePaid:
 		fileName = "invoice.paid." + fileExtension
-	case notifications.WorkflowInvoiceReady:
+	case notifications.WorkflowInvoiceReadyWithPaymentLink:
 		fileName = "invoice.ready." + fileExtension
+	case notifications.WorkflowInvoiceReadyNoPaymentLink:
+		fileName = "invoice.ready.nolink." + fileExtension
 	case notifications.WorkflowInvoiceVoided:
 		fileName = "invoice.voided." + fileExtension
 	}
