@@ -1,14 +1,23 @@
 import React from 'react';
 
+import { useBankAccountsQuery } from '@settings/graphql/getBankAccounts.generated';
+import { useTenantBillingProfilesQuery } from '@settings/graphql/getTenantBillingProfiles.generated';
+
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { FeaturedIcon } from '@ui/media/Icon';
 import { Heading } from '@ui/typography/Heading';
 import { FileX02 } from '@ui/media/icons/FileX02';
 import { Invoice } from '@shared/components/Invoice/Invoice';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { GetInvoiceQuery } from '@shared/graphql/getInvoice.generated';
 import { InvoiceSkeleton } from '@shared/components/Invoice/InvoiceSkeleton';
-import { InvoiceLine, InvoiceCustomer, InvoiceProvider } from '@graphql/types';
+import {
+  InvoiceLine,
+  BankAccount,
+  InvoiceCustomer,
+  InvoiceProvider,
+} from '@graphql/types';
 interface InvoicePreviewModalProps {
   isError: boolean;
   isFetching: boolean;
@@ -32,6 +41,10 @@ export const InvoicePreviewModalContent: React.FC<InvoicePreviewModalProps> = ({
   isError,
   data,
 }) => {
+  const client = getGraphQLClient();
+
+  const { data: bankAccountsData } = useBankAccountsQuery(client);
+  const { data: tenantBillingProfile } = useTenantBillingProfilesQuery(client);
   if (isFetching) {
     return <InvoiceSkeleton />;
   }
@@ -77,6 +90,16 @@ export const InvoicePreviewModalContent: React.FC<InvoicePreviewModalProps> = ({
       invoiceNumber={data?.invoice?.invoiceNumber ?? ''}
       lines={(data?.invoice?.invoiceLineItems as Array<InvoiceLine>) ?? []}
       currency={data?.invoice?.currency || 'USD'}
+      canPayWithBankTransfer={
+        tenantBillingProfile?.tenantBillingProfiles?.[0]
+          ?.canPayWithBankTransfer &&
+        data?.invoice?.contract?.billingDetails?.canPayWithBankTransfer
+      }
+      availableBankAccount={
+        bankAccountsData?.bankAccounts?.find(
+          (e) => e.currency === data?.invoice?.currency,
+        ) as BankAccount
+      }
     />
   );
 };

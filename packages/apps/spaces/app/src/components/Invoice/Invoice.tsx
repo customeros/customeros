@@ -1,16 +1,21 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 
+import { Box } from '@ui/layout/Box';
 import { Flex } from '@ui/layout/Flex';
-import { Invoice } from '@graphql/types';
+import { Link } from '@ui/navigation/Link';
 import { Text } from '@ui/typography/Text';
 import { DateTimeUtils } from '@spaces/utils/date';
+import { Invoice, BankAccount } from '@graphql/types';
 
 import { ServicesTable } from './ServicesTable';
+import logoCustomerOs from './assets/customeros-logo-tiny.png';
 import {
   InvoiceHeader,
   InvoiceSummary,
+  BankingDetails,
   InvoicePartySection,
 } from './components';
 
@@ -41,9 +46,9 @@ type InvoiceProps = {
   invoiceNumber: string;
   isBilledToFocused?: boolean;
   isInvoiceProviderFocused?: boolean;
+  canPayWithBankTransfer?: boolean | null;
   lines: Partial<Invoice['invoiceLineItems']>;
-  isDomesticBankingDetailsSectionFocused?: boolean;
-  isInternationalBankingDetailsSectionFocused?: boolean;
+  availableBankAccount?: Partial<BankAccount> | null;
 };
 
 export function Invoice({
@@ -62,16 +67,11 @@ export function Invoice({
   isBilledToFocused,
   isInvoiceProviderFocused,
   currency = 'USD',
-  isInternationalBankingDetailsSectionFocused,
-  isDomesticBankingDetailsSectionFocused,
+  canPayWithBankTransfer,
+  availableBankAccount,
 }: InvoiceProps) {
   const isInvoiceMetaSectionBlurred =
     isBilledToFocused || isInvoiceProviderFocused;
-  const bankingDetailsFocused =
-    isDomesticBankingDetailsSectionFocused ||
-    isInternationalBankingDetailsSectionFocused;
-  const isServicesSectionBlurred =
-    isInvoiceMetaSectionBlurred || bankingDetailsFocused;
 
   return (
     <Flex
@@ -81,6 +81,7 @@ export function Invoice({
       overflowY='auto'
       h='full'
       justifyContent='space-between'
+      pb={4}
     >
       <Flex flexDir='column'>
         <Flex flexDir='column' mt={2}>
@@ -89,7 +90,6 @@ export function Invoice({
           <Flex
             mt={2}
             justifyContent='space-evenly'
-            filter={bankingDetailsFocused ? 'blur(2px)' : 'none'}
             transition='filter 0.25s ease-in-out'
           >
             <Flex
@@ -156,7 +156,7 @@ export function Invoice({
         <Flex
           mt={4}
           flexDir='column'
-          filter={isServicesSectionBlurred ? 'blur(2px)' : 'none'}
+          filter={isInvoiceMetaSectionBlurred ? 'blur(2px)' : 'none'}
           transition='filter 0.25s ease-in-out'
         >
           <ServicesTable services={lines} currency={currency} />
@@ -171,19 +171,39 @@ export function Invoice({
         </Flex>
       </Flex>
 
-      {/*{(domesticBankingDetails || internationalBankingDetails) && (*/}
-      {/*  <BankingDetails*/}
-      {/*    isBlurred={Boolean(isInvoiceMetaSectionBlurred)}*/}
-      {/*    domesticBankingDetails={domesticBankingDetails}*/}
-      {/*    internationalBankingDetails={internationalBankingDetails}*/}
-      {/*    isDomesticBankingDetailsSectionFocused={*/}
-      {/*      isDomesticBankingDetailsSectionFocused*/}
-      {/*    }*/}
-      {/*    isInternationalBankingDetailsSectionFocused={*/}
-      {/*      isInternationalBankingDetailsSectionFocused*/}
-      {/*    }*/}
-      {/*  />*/}
-      {/*)}*/}
+      <Box>
+        {canPayWithBankTransfer && availableBankAccount && (
+          <BankingDetails availableBankAccount={availableBankAccount} />
+        )}
+        <Flex
+          alignItems='center'
+          py={2}
+          borderTop='1px solid'
+          borderColor='gray.300'
+        >
+          <Box mr={2}>
+            <Image
+              src={logoCustomerOs}
+              alt='CustomerOS'
+              width={14}
+              height={14}
+            />
+          </Box>
+          <Text fontSize='xs' color='gray.500'>
+            Powered by
+            <Link
+              color='gray.500'
+              as='span'
+              href='/'
+              mx={1}
+              textDecoration='underline'
+            >
+              CustomerOS
+            </Link>
+            - Revenue Intelligence for B2B hyperscalers
+          </Text>
+        </Flex>
+      </Box>
     </Flex>
   );
 }

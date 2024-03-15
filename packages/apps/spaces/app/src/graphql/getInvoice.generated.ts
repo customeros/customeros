@@ -44,6 +44,13 @@ export type GetInvoiceQuery = {
     note?: string | null;
     repositoryFileId: string;
     metadata: { __typename?: 'Metadata'; id: string; created: any };
+    contract: {
+      __typename?: 'Contract';
+      billingDetails?: {
+        __typename?: 'BillingDetails';
+        canPayWithBankTransfer?: boolean | null;
+      } | null;
+    };
     customer: {
       __typename?: 'InvoiceCustomer';
       name?: string | null;
@@ -91,6 +98,11 @@ export const GetInvoiceDocument = `
     metadata {
       id
       created
+    }
+    contract {
+      billingDetails {
+        canPayWithBankTransfer
+      }
     }
     status
     invoiceNumber
