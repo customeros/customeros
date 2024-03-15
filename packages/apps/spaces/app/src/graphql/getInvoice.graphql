@@ -4,6 +4,11 @@ query GetInvoice($id: ID!) {
       id
       created
     }
+    contract {
+      billingDetails {
+        canPayWithBankTransfer
+      }
+    }
     status
     invoiceNumber
     invoicePeriodStart

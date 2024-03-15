@@ -75,7 +75,15 @@ export const InvoicePreviewModal = () => {
         </Flex>
       </CardHeader>
 
-      <Card m={6} mt={3} p='4' boxShadow='xs' variant='outline' w={600}>
+      <Card
+        m={6}
+        mt={3}
+        p='4'
+        boxShadow='xs'
+        variant='outline'
+        w={600}
+        h='full'
+      >
         <CardBody as={Flex} p='0' align='center'>
           <InvoicePreviewModalContent
             data={data}

@@ -6,8 +6,8 @@ import React, { useRef, useMemo, useState } from 'react';
 import { produce } from 'immer';
 import { useDeepCompareEffect } from 'rooks';
 import { useQueryClient } from '@tanstack/react-query';
+import { useBankAccountsQuery } from '@settings/graphql/getBankAccounts.generated';
 import { useTenantBillingProfilesQuery } from '@settings/graphql/getTenantBillingProfiles.generated';
-import { useBankAccountsCurrenciesQuery } from '@settings/graphql/getBankAccountsCurrencies.generated';
 
 import { Box } from '@ui/layout/Box';
 import { Button } from '@ui/form/Button';
@@ -19,9 +19,14 @@ import { Invoice } from '@shared/components/Invoice/Invoice';
 import { countryOptions } from '@shared/util/countryOptions';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { toastError, toastSuccess } from '@ui/presentation/Toast';
-import { DataSource, InvoiceLine, TenantBillingProfile } from '@graphql/types';
 import { useGetContractQuery } from '@organization/src/graphql/getContract.generated';
 import { useUpdateContractMutation } from '@organization/src/graphql/updateContract.generated';
+import {
+  DataSource,
+  BankAccount,
+  InvoiceLine,
+  TenantBillingProfile,
+} from '@graphql/types';
 import {
   Modal,
   ModalFooter,
@@ -68,7 +73,7 @@ export const ContractBillingDetailsModal = ({
       refetchOnMount: true,
     },
   );
-  const { data: bankAccountData } = useBankAccountsCurrenciesQuery(client);
+  const { data: bankAccountsData } = useBankAccountsQuery(client);
 
   const [isBillingDetailsFocused, setIsBillingDetailsFocused] =
     useState<boolean>(false);
@@ -255,7 +260,7 @@ export const ContractBillingDetailsModal = ({
     );
   }, [state?.values?.invoiceEmail]);
   const availableCurrencies = useMemo(
-    () => (bankAccountData?.bankAccounts ?? []).map((e) => e.currency),
+    () => (bankAccountsData?.bankAccounts ?? []).map((e) => e.currency),
     [],
   );
 
@@ -326,7 +331,7 @@ export const ContractBillingDetailsModal = ({
               }
               organizationName={organizationName}
               canAllowPayWithBankTransfer={canAllowPayWithBankTransfer}
-              hasNoBankAccounts={!bankAccountData?.bankAccounts?.length}
+              hasNoBankAccounts={!bankAccountsData?.bankAccounts?.length}
               currency={state?.values?.currency?.value}
               isEmailValid={isEmailValid}
               onSetIsBillingDetailsHovered={setIsBillingDetailsHovered}
@@ -349,7 +354,7 @@ export const ContractBillingDetailsModal = ({
             </ModalFooter>
           </GridItem>
           <GridItem>
-            <Box width='100%'>
+            <Box width='100%' h='full'>
               <Invoice
                 isBilledToFocused={
                   isBillingDetailsFocused || isBillingDetailsHovered
@@ -366,6 +371,16 @@ export const ContractBillingDetailsModal = ({
                   name: state.values?.organizationLegalName ?? '',
                 }}
                 {...invoicePreviewStaticData}
+                canPayWithBankTransfer={
+                  tenantBillingProfile?.tenantBillingProfiles?.[0]
+                    ?.canPayWithBankTransfer &&
+                  state.values.canPayWithBankTransfer
+                }
+                availableBankAccount={
+                  bankAccountsData?.bankAccounts?.find(
+                    (e) => e.currency === state?.values?.currency?.value,
+                  ) as BankAccount
+                }
               />
             </Box>
           </GridItem>

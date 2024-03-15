@@ -2,101 +2,57 @@
 
 import React, { FC } from 'react';
 
+import { Box } from '@ui/layout/Box';
+import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
-import { Grid, GridItem } from '@ui/layout/Grid';
+import { BankAccount } from '@graphql/types';
 
 type InvoiceHeaderProps = {
-  isBlurred: boolean;
-  domesticBankingDetails?: string | null;
-  internationalBankingDetails?: string | null;
-  isDomesticBankingDetailsSectionFocused?: boolean;
-  isInternationalBankingDetailsSectionFocused?: boolean;
+  availableBankAccount?: Partial<BankAccount> | null;
 };
 
 export const BankingDetails: FC<InvoiceHeaderProps> = ({
-  domesticBankingDetails,
-  internationalBankingDetails,
-  isBlurred,
-  isDomesticBankingDetailsSectionFocused,
-  isInternationalBankingDetailsSectionFocused,
-}) => (
-  <Grid
-    templateColumns={
-      !domesticBankingDetails || !internationalBankingDetails
-        ? '1fr'
-        : '1fr 1fr'
-    }
-    marginTop={6}
-    minH={100}
-    maxW={600}
-    filter={isBlurred ? 'blur(2px)' : 'none'}
-    transition='filter 0.25s ease-in-out'
-  >
-    {domesticBankingDetails && (
-      <GridItem
-        p={3}
-        borderRight={internationalBankingDetails ? '1px solid' : 'none'}
-        borderTop='1px solid'
-        borderBottom='1px solid'
-        borderColor='gray.300'
-        filter={
-          isInternationalBankingDetailsSectionFocused ? 'blur(2px)' : 'none'
-        }
-        transition='filter 0.25s ease-in-out'
-        position='relative'
-        sx={{
-          '&:after': {
-            content: '""',
-            bg: 'transparent',
-            border: '2px solid',
-            position: 'absolute',
-            top: 0,
-            bottom: 0,
-            left: 0,
-            right: 0,
-            opacity: isDomesticBankingDetailsSectionFocused ? 1 : 0,
-            transition: 'opacity 0.25s ease-in-out',
-          },
-        }}
-      >
-        <Text fontSize='xs' fontWeight='semibold'>
-          Domestic Payments
-        </Text>
-        <Text fontSize='xs' whiteSpace='pre-wrap'>
-          {domesticBankingDetails}
-        </Text>
-      </GridItem>
-    )}
-
-    {internationalBankingDetails && (
-      <GridItem
-        p={3}
-        borderTop='1px solid'
-        borderBottom='1px solid'
-        borderColor='gray.300'
-        filter={isDomesticBankingDetailsSectionFocused ? 'blur(2px)' : 'none'}
-        transition='filter 0.25s ease-in-out'
-        position='relative'
-        sx={{
-          '&:after': {
-            content: '""',
-            bg: 'transparent',
-            border: '2px solid',
-            position: 'absolute',
-            top: 0,
-            bottom: 0,
-            left: 0,
-            right: domesticBankingDetails ? -4 : 0,
-            opacity: isInternationalBankingDetailsSectionFocused ? 1 : 0,
-            transition: 'opacity 0.25s ease-in-out',
-          },
-        }}
-      >
-        <Text fontSize='xs' fontWeight='semibold'>
-          International Payments
-        </Text>
-        <Text fontSize='xs'>{internationalBankingDetails}</Text>
-      </GridItem>
-    )}
-  </Grid>
-);
+  availableBankAccount,
+}) => {
+  return (
+    <Flex flexDir='column' borderTop='1px solid' borderColor='gray.300' py={2}>
+      <Text fontSize='xs' fontWeight='semibold'>
+        Bank transfer
+      </Text>
+      <Flex justifyContent='space-between'>
+        <Box>
+          <Text fontSize='xs' fontWeight='medium'>
+            Bank name
+          </Text>
+          <Text fontSize='xs' color='gray.500'>
+            {availableBankAccount?.bankName || '-'}
+          </Text>
+        </Box>
+        <Box>
+          <Text fontSize='xs' fontWeight='medium'>
+            Sort code
+          </Text>
+          <Text fontSize='xs' color='gray.500'>
+            {availableBankAccount?.sortCode || '-'}
+          </Text>
+        </Box>
+        <Box>
+          <Text fontSize='xs' fontWeight='medium'>
+            Account number
+          </Text>
+          <Text fontSize='xs' color='gray.500'>
+            {availableBankAccount?.accountNumber || '-'}
+          </Text>
+        </Box>
+        <Box w='25%'>
+          <Text fontSize='xs' fontWeight='medium'>
+            Other details
+          </Text>
+          <Text fontSize='xs' color='gray.500'>
+            {availableBankAccount?.otherDetails || '-'}
+          </Text>
+        </Box>
+      </Flex>
+    </Flex>
+  );
+};

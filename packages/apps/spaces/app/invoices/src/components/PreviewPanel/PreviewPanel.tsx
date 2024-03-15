@@ -22,7 +22,7 @@ export const PreviewPanel = ({ id }: { id: string }) => {
   });
 
   return (
-    <Flex flexDir='column'>
+    <Flex flexDir='column' h='full'>
       <Flex
         direction='row'
         justifyContent='space-between'
