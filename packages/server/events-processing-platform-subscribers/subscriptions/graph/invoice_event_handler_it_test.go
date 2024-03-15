@@ -164,8 +164,6 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 		invoice.Invoice{
 			ContractId: contractId,
 		},
-		"a",
-		"b",
 		"customerName",
 		"customerAddressLine1",
 		"customerAddressLine2",
