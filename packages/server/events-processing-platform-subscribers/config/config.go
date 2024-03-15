@@ -45,6 +45,7 @@ type Subscriptions struct {
 	ContractSubscription              ContractSubscription
 	NotificationsSubscription         NotificationsSubscription
 	InvoiceSubscription               InvoiceSubscription
+	OrderSubscription                 OrderSubscription
 }
 
 type GraphSubscription struct {
@@ -144,6 +145,15 @@ type InvoiceSubscription struct {
 	StartPosition    uint64 `env:"EVENT_STORE_INVOICE_NOTIFICATIONS_START_POSITION" envDefault:"0"`
 	IgnoreEvents     bool   `env:"EVENT_STORE_INVOICE_NOTIFICATIONS_IGNORE_EVENTS" envDefault:"false"`
 	PdfConverterUrl  string `env:"EVENT_STORE_INVOICE_NOTIFICATIONS_PDF_CONVERTER_URL" envDefault:"http://localhost:11006"`
+}
+
+type OrderSubscription struct {
+	Enabled          bool   `env:"EVENT_STORE_INVOICE_NOTIFICATIONS_ENABLED" envDefault:"true"`
+	GroupName        string `env:"EVENT_STORE_INVOICE_NOTIFICATIONS_GROUP_NAME" envDefault:"order-v1" validate:"required"`
+	PoolSize         int    `env:"EVENT_STORE_INVOICE_NOTIFICATIONS_POOL_SIZE" envDefault:"4" validate:"required,gte=0"`
+	BufferSizeClient uint32 `env:"EVENT_STORE_INVOICE_NOTIFICATIONS_CLIENT_BUFFER_SIZE" envDefault:"10" validate:"required,gte=0"`
+	StartPosition    uint64 `env:"EVENT_STORE_INVOICE_NOTIFICATIONS_START_POSITION" envDefault:"0"`
+	IgnoreEvents     bool   `env:"EVENT_STORE_INVOICE_NOTIFICATIONS_IGNORE_EVENTS" envDefault:"false"`
 }
 
 type Services struct {

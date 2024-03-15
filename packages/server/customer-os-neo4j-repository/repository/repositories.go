@@ -45,6 +45,8 @@ type Repositories struct {
 	OrganizationWriteRepository       OrganizationWriteRepository
 	OrganizationPlanReadRepository    OrganizationPlanReadRepository
 	OrganizationPlanWriteRepository   OrganizationPlanWriteRepository
+	OrderReadRepository               OrderReadRepository
+	OrderWriteRepository              OrderWriteRepository
 	PhoneNumberReadRepository         PhoneNumberReadRepository
 	PhoneNumberWriteRepository        PhoneNumberWriteRepository
 	PlayerWriteRepository             PlayerWriteRepository
@@ -106,6 +108,8 @@ func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string
 		OrganizationWriteRepository:       NewOrganizationWriteRepository(driver, neo4jDatabase),
 		OrganizationPlanReadRepository:    NewOrganizationPlanReadRepository(driver, neo4jDatabase),
 		OrganizationPlanWriteRepository:   NewOrganizationPlanWriteRepository(driver, neo4jDatabase),
+		OrderReadRepository:               NewOrderReadRepository(driver, neo4jDatabase),
+		OrderWriteRepository:              NewOrderWriteRepository(driver, neo4jDatabase),
 		PhoneNumberReadRepository:         NewPhoneNumberReadRepository(driver, neo4jDatabase),
 		PhoneNumberWriteRepository:        NewPhoneNumberWriteRepository(driver, neo4jDatabase),
 		PlayerWriteRepository:             NewPlayerWriteRepository(driver, neo4jDatabase),

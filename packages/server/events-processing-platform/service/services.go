@@ -38,6 +38,7 @@ type Services struct {
 	TenantService             *tenantService
 	CountryService            *countryService
 	ReminderService           *reminderService
+	OrderService              *orderService
 }
 
 func InitServices(cfg *config.Config, repositories *repository.Repositories, aggregateStore eventstore.AggregateStore, commandHandlers *command.CommandHandlers, log logger.Logger, eventbufferWatcher *eventbuffer.EventBufferWatcher) *Services {
@@ -69,6 +70,7 @@ func InitServices(cfg *config.Config, repositories *repository.Repositories, agg
 	services.TenantService = NewTenantService(log, aggregateStore, cfg)
 	services.CountryService = NewCountryService(log, commandHandlers.Country)
 	services.ReminderService = NewReminderService(log, aggregateStore, cfg, eventbufferWatcher)
+	services.OrderService = NewOrderService(log, aggregateStore, cfg)
 
 	return &services
 }

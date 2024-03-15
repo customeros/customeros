@@ -38,6 +38,9 @@ func MapEntityToTimelineEvent(timelineEventEntity *entity.TimelineEvent) model.T
 	case neo4jutil.NodeLabelLogEntry:
 		logEntryEntity := (*timelineEventEntity).(*entity.LogEntryEntity)
 		return MapEntityToLogEntry(logEntryEntity)
+	case neo4jutil.NodeLabelOrder:
+		orderEntity := (*timelineEventEntity).(*entity.OrderEntity)
+		return MapEntityToOrder(orderEntity)
 	}
 	return nil
 }

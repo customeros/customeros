@@ -100,6 +100,7 @@ type Loaders struct {
 	MasterPlanMilestonesForMasterPlan             *dataloader.Loader
 	InvoiceLinesForInvoice                        *dataloader.Loader
 	OrganizationPlanMilestonesForOrganizationPlan *dataloader.Loader
+	OrdersForOrganization                         *dataloader.Loader
 }
 
 type tagBatcher struct {
@@ -206,6 +207,10 @@ type organizationPlanBatcher struct {
 	organizationPlanService service.OrganizationPlanService
 }
 
+type orderBatcher struct {
+	orderService service.OrderService
+}
+
 // NewDataLoader returns the instantiated Loaders struct for use in a request
 func NewDataLoader(services *service.Services) *Loaders {
 	tagBatcher := &tagBatcher{
@@ -310,6 +315,9 @@ func NewDataLoader(services *service.Services) *Loaders {
 	organizationPlanBatcher := &organizationPlanBatcher{
 		organizationPlanService: services.OrganizationPlanService,
 	}
+	orderBatcher := &orderBatcher{
+		orderService: services.OrderService,
+	}
 	return &Loaders{
 		TagsForOrganization:                           dataloader.NewBatchedLoader(tagBatcher.getTagsForOrganizations, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		TagsForContact:                                dataloader.NewBatchedLoader(tagBatcher.getTagsForContacts, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
@@ -395,6 +403,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		MasterPlanMilestonesForMasterPlan:             dataloader.NewBatchedLoader(masterPlanBatcher.getMasterPlanMilestonesForMasterPlans, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		InvoiceLinesForInvoice:                        dataloader.NewBatchedLoader(invoiceBatcher.getInvoiceLinesForInvoice, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		OrganizationPlanMilestonesForOrganizationPlan: dataloader.NewBatchedLoader(organizationPlanBatcher.getOrganizationPlanMilestonesForOrganizationPlans, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		OrdersForOrganization:                         dataloader.NewBatchedLoader(orderBatcher.getOrdersForOrganizations, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 	}
 }
 

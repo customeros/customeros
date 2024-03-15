@@ -64,6 +64,7 @@ type Services struct {
 	OrganizationPlanService    OrganizationPlanService
 	SlackService               SlackService
 	ReminderService            ReminderService
+	OrderService               OrderService
 }
 
 func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *config.Config, commonServices *commonService.Services, commonAuthServices *commonAuthService.Services, grpcClients *grpc_client.Clients) *Services {
@@ -98,6 +99,7 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *confi
 		MasterPlanService:          NewMasterPlanService(log, repositories, grpcClients),
 		OrganizationPlanService:    NewOrganizationPlanService(log, repositories, grpcClients),
 		ReminderService:            NewReminderService(log, repositories, grpcClients),
+		OrderService:               NewOrderService(log, repositories),
 	}
 	services.IssueService = NewIssueService(log, repositories, &services)
 	services.PhoneNumberService = NewPhoneNumberService(log, repositories, grpcClients, &services)

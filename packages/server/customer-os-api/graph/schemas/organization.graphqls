@@ -77,6 +77,7 @@ type Organization implements MetadataInterface {
     timelineEventsTotalCount(timelineEventTypes: [TimelineEventType!]): Int64! @goField(forceResolver: true)
     externalLinks: [ExternalSystem!]! @goField(forceResolver: true)
     issueSummaryByStatus: [IssueSummaryByStatus!]! @goField(forceResolver: true)
+    orders: [Order!]! @goField(forceResolver: true)
 
     socials: [Social!]! @goField(forceResolver: true) @deprecated(reason: "Use socialMedia")
     isPublic:    Boolean @deprecated(reason: "Use public")

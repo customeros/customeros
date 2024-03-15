@@ -1789,6 +1789,20 @@ type OpportunityUpdateInput struct {
 	ExternalReference   *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
 }
 
+type Order struct {
+	ID            string     `json:"id"`
+	CreatedAt     time.Time  `json:"createdAt"`
+	ConfirmedAt   *time.Time `json:"confirmedAt,omitempty"`
+	PaidAt        *time.Time `json:"paidAt,omitempty"`
+	FulfilledAt   *time.Time `json:"fulfilledAt,omitempty"`
+	CancelledAt   *time.Time `json:"cancelledAt,omitempty"`
+	Source        DataSource `json:"source"`
+	SourceOfTruth DataSource `json:"sourceOfTruth"`
+	AppSource     string     `json:"appSource"`
+}
+
+func (Order) IsTimelineEvent() {}
+
 type OrgAccountDetails struct {
 	RenewalSummary *RenewalSummary    `json:"renewalSummary,omitempty"`
 	Onboarding     *OnboardingDetails `json:"onboarding,omitempty"`
@@ -1841,6 +1855,7 @@ type Organization struct {
 	TimelineEventsTotalCount      int64                         `json:"timelineEventsTotalCount"`
 	ExternalLinks                 []*ExternalSystem             `json:"externalLinks"`
 	IssueSummaryByStatus          []*IssueSummaryByStatus       `json:"issueSummaryByStatus"`
+	Orders                        []*Order                      `json:"orders"`
 	Socials                       []*Social                     `json:"socials"`
 	IsPublic                      *bool                         `json:"isPublic,omitempty"`
 	Note                          *string                       `json:"note,omitempty"`
@@ -3322,6 +3337,7 @@ const (
 	DataSourceClose          DataSource = "CLOSE"
 	DataSourceOutlook        DataSource = "OUTLOOK"
 	DataSourceUnthread       DataSource = "UNTHREAD"
+	DataSourceShopify        DataSource = "SHOPIFY"
 )
 
 var AllDataSource = []DataSource{
@@ -3339,11 +3355,12 @@ var AllDataSource = []DataSource{
 	DataSourceClose,
 	DataSourceOutlook,
 	DataSourceUnthread,
+	DataSourceShopify,
 }
 
 func (e DataSource) IsValid() bool {
 	switch e {
-	case DataSourceNa, DataSourceOpenline, DataSourceWebscrape, DataSourceHubspot, DataSourceZendeskSupport, DataSourcePipedrive, DataSourceSLACk, DataSourceIntercom, DataSourceSalesforce, DataSourceStripe, DataSourceMixpanel, DataSourceClose, DataSourceOutlook, DataSourceUnthread:
+	case DataSourceNa, DataSourceOpenline, DataSourceWebscrape, DataSourceHubspot, DataSourceZendeskSupport, DataSourcePipedrive, DataSourceSLACk, DataSourceIntercom, DataSourceSalesforce, DataSourceStripe, DataSourceMixpanel, DataSourceClose, DataSourceOutlook, DataSourceUnthread, DataSourceShopify:
 		return true
 	}
 	return false
@@ -4480,6 +4497,7 @@ const (
 	TimelineEventTypeMeeting            TimelineEventType = "MEETING"
 	TimelineEventTypeAction             TimelineEventType = "ACTION"
 	TimelineEventTypeLogEntry           TimelineEventType = "LOG_ENTRY"
+	TimelineEventTypeOrder              TimelineEventType = "ORDER"
 )
 
 var AllTimelineEventType = []TimelineEventType{
@@ -4492,11 +4510,12 @@ var AllTimelineEventType = []TimelineEventType{
 	TimelineEventTypeMeeting,
 	TimelineEventTypeAction,
 	TimelineEventTypeLogEntry,
+	TimelineEventTypeOrder,
 }
 
 func (e TimelineEventType) IsValid() bool {
 	switch e {
-	case TimelineEventTypePageView, TimelineEventTypeInteractionSession, TimelineEventTypeNote, TimelineEventTypeInteractionEvent, TimelineEventTypeAnalysis, TimelineEventTypeIssue, TimelineEventTypeMeeting, TimelineEventTypeAction, TimelineEventTypeLogEntry:
+	case TimelineEventTypePageView, TimelineEventTypeInteractionSession, TimelineEventTypeNote, TimelineEventTypeInteractionEvent, TimelineEventTypeAnalysis, TimelineEventTypeIssue, TimelineEventTypeMeeting, TimelineEventTypeAction, TimelineEventTypeLogEntry, TimelineEventTypeOrder:
 		return true
 	}
 	return false

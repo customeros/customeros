@@ -165,6 +165,8 @@ func (s *timelineEventService) convertDbNodeToTimelineEvent(dbNode *dbtype.Node)
 		return s.services.ActionService.mapDbNodeToActionEntity(*dbNode)
 	} else if slices.Contains(dbNode.Labels, neo4jutil.NodeLabelLogEntry) {
 		return s.services.LogEntryService.mapDbNodeToLogEntryEntity(dbNode)
+	} else if slices.Contains(dbNode.Labels, neo4jutil.NodeLabelOrder) {
+		return s.services.OrderService.mapDbNodeToOrderEntity(dbNode)
 	}
 	return nil
 }

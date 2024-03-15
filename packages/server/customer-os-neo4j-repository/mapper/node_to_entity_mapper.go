@@ -576,6 +576,25 @@ func MapDbNodeToReminderEntity(dbNode *dbtype.Node) *entity.ReminderEntity {
 	return &reminder
 }
 
+func MapDbNodeToOrderEntity(dbNode *dbtype.Node) *entity.OrderEntity {
+	if dbNode == nil {
+		return &entity.OrderEntity{}
+	}
+	props := utils.GetPropsFromNode(*dbNode)
+	return &entity.OrderEntity{
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		ConfirmedAt:   utils.GetTimePropOrNil(props, "confirmedAt"),
+		PaidAt:        utils.GetTimePropOrNil(props, "paidAt"),
+		FulfilledAt:   utils.GetTimePropOrNil(props, "fulfilledAt"),
+		CancelledAt:   utils.GetTimePropOrNil(props, "cancelledAt"),
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
+	}
+}
+
 func MapDbNodeToBankAccountEntity(dbNode *dbtype.Node) *entity.BankAccountEntity {
 	if dbNode == nil {
 		return &entity.BankAccountEntity{}

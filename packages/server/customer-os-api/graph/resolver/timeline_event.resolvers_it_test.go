@@ -5,6 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -14,6 +15,8 @@ func TestQueryResolver_TimelineEvents(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 
 	channel := "EMAIL"
 	interactionEventId1 := neo4jt.CreateInteractionEventFromEntity(ctx, driver, tenantName, entity.InteractionEventEntity{
@@ -43,11 +46,15 @@ func TestQueryResolver_TimelineEvents(t *testing.T) {
 		})
 	issueId1 := neo4jt.CreateIssue(ctx, driver, tenantName, entity.IssueEntity{})
 
-	rawResponse := callGraphQL(t, "timeline/get_timeline_events_with_ids", map[string]interface{}{"ids": []string{interactionEventId1, interactionEventId2, issueId1}})
+	orderId := neo4jtest.CreateOrder(ctx, driver, tenantName, organizationId, neo4jentity.OrderEntity{
+		ConfirmedAt: utils.TimePtr(utils.Now()),
+	})
+
+	rawResponse := callGraphQL(t, "timeline/get_timeline_events_with_ids", map[string]interface{}{"ids": []string{interactionEventId1, interactionEventId2, issueId1, orderId}})
 
 	timelineEvents := rawResponse.Data.(map[string]interface{})["timelineEvents"].([]interface{})
 
-	require.Equal(t, 3, len(timelineEvents))
+	require.Equal(t, 4, len(timelineEvents))
 
 	var interactionTimelineEventIds, issueTimelineEventIds []string
 	for _, timelineEvent := range timelineEvents {
