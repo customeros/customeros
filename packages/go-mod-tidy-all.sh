@@ -32,9 +32,20 @@ go mod tidy
 cd ../validation-api
 go mod tidy
 cd ../..
+
 cd runner
 cd customer-os-data-upkeeper
 go mod tidy
 cd ../sync-gmail-raw
+go mod tidy
+cd ../sync-gmail
+go mod tidy
+cd ../sync-slack
+go mod tidy
+cd ../sync-customer-os-data
+go mod tidy
+cd ../integrity-checker
+go mod tidy
+cd ../customer-os-dedup
 go mod tidy
 cd ../..
