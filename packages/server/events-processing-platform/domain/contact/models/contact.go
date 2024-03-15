@@ -3,6 +3,7 @@ package models
 import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"time"
 )
@@ -155,16 +156,25 @@ func (c *Contact) GetSocialIdForUrl(url string) string {
 	return ""
 }
 
-func (c *Contact) HasJobRoleInOrganization(organizationId string, jobRoleFields JobRole) bool {
+func (c *Contact) HasJobRoleInOrganization(organizationId string, jobRoleFields JobRole, sourceFields commonmodel.Source) bool {
 	if c.JobRolesByOrganization == nil {
 		return false
 	}
-	if jobRoles, ok := c.JobRolesByOrganization[organizationId]; ok {
-		return jobRoles.JobTitle == jobRoleFields.JobTitle &&
-			jobRoles.Description == jobRoleFields.Description &&
-			jobRoles.Primary == jobRoleFields.Primary &&
-			utils.IsEqualTimePtr(jobRoles.StartedAt, jobRoleFields.StartedAt) &&
-			utils.IsEqualTimePtr(jobRoles.EndedAt, jobRoleFields.EndedAt)
+	if jobRole, ok := c.JobRolesByOrganization[organizationId]; ok {
+		found := jobRole.JobTitle == jobRoleFields.JobTitle &&
+			jobRole.Description == jobRoleFields.Description &&
+			jobRole.Primary == jobRoleFields.Primary &&
+			(utils.IsEqualTimePtr(jobRole.StartedAt, jobRoleFields.StartedAt) || jobRoleFields.StartedAt == nil) &&
+			(utils.IsEqualTimePtr(jobRole.EndedAt, jobRoleFields.EndedAt) || jobRoleFields.EndedAt == nil)
+		if found {
+			return true
+		}
+		if sourceFields.Source != jobRole.Source.SourceOfTruth && jobRole.Source.SourceOfTruth == constants.SourceOpenline {
+			return !(jobRole.JobTitle == "" && jobRoleFields.JobTitle != "") &&
+				!(jobRole.Description == "" && jobRoleFields.Description != "") &&
+				!(jobRole.StartedAt == nil && jobRoleFields.StartedAt != nil) &&
+				!(jobRole.EndedAt == nil && jobRoleFields.EndedAt != nil)
+		}
 	}
 	return false
 }
