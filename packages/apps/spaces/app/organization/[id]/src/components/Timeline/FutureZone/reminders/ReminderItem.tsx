@@ -33,6 +33,7 @@ export const ReminderItem = ({
     1000,
   );
   const { recentlyCreatedId, recentlyUpdatedId } = timelineMeta.reminders;
+  const isMutating = data.id === 'TEMP';
 
   const stripContent = (content: string, owner: string) => {
     const targetString = `for ${owner}: `;
@@ -58,7 +59,7 @@ export const ReminderItem = ({
         content: stripContent(values.content, values.owner),
       });
     },
-    stateReducer: (_, action, next) => {
+    stateReducer: (state, action, next) => {
       if (action.type === 'FIELD_CHANGE') {
         if (action.payload.name === 'content') {
           return {
@@ -107,6 +108,7 @@ export const ReminderItem = ({
 
   return (
     <ReminderPostit
+      isMutating={isMutating}
       boxShadow={data.id === recentlyUpdatedId ? 'ringPrimary' : 'unset'}
       onClickOutside={() => {
         setTimelineMeta((prev) =>
@@ -119,6 +121,7 @@ export const ReminderItem = ({
       <FormAutoresizeTextarea
         px='4'
         ref={ref}
+        isReadOnly={isMutating}
         fontFamily='sticky'
         fontSize='sm'
         name='content'
