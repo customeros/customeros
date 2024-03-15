@@ -385,7 +385,6 @@ func testRemoveParentOrganization() {
 }
 
 func testCreateContact() {
-	tenant := "openline"
 	userId := "697563a8-171c-4950-a067-1aaaaf2de1d8"
 	name := "hubspot contact 3"
 
@@ -508,8 +507,7 @@ func testOrganizationLinkWithEmail() {
 }
 
 func testContactLinkWithOrganization() {
-	tenant := "openline"
-	contactId := "dd7bd45e-d6d3-405c-a7ba-cd4127479c20"
+	contactId := "2f7660a8-a40b-4f21-b81f-1b73f025f79c"
 	orgId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
 	jobRole := "CTO"
 
@@ -520,7 +518,10 @@ func testContactLinkWithOrganization() {
 		JobTitle:       jobRole,
 		Primary:        true,
 		Description:    "CEO of the company",
-		StartedAt:      timestamppb.Now(),
+		SourceFields: &commonpb.SourceFields{
+			AppSource: "integration.app",
+			Source:    "hubspot",
+		},
 	})
 	print(result)
 }

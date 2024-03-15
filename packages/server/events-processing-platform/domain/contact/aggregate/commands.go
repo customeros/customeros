@@ -304,7 +304,7 @@ func (a *ContactAggregate) linkOrganization(ctx context.Context, cmd *command.Li
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
 
 	if aggregate.AllowCheckForNoChanges(cmd.Source.AppSource, cmd.LoggedInUserId) {
-		if a.Contact.HasJobRoleInOrganization(cmd.OrganizationId, cmd.JobRoleFields) {
+		if a.Contact.HasJobRoleInOrganization(cmd.OrganizationId, cmd.JobRoleFields, cmd.Source) {
 			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
 			return nil
 		}
