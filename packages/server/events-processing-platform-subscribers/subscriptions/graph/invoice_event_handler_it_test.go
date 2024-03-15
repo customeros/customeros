@@ -248,8 +248,6 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 	require.Equal(t, float64(100), invoiceEntity.Amount)
 	require.Equal(t, float64(20), invoiceEntity.Vat)
 	require.Equal(t, float64(120), invoiceEntity.TotalAmount)
-	require.Equal(t, "a", invoiceEntity.DomesticPaymentsBankInfo)
-	require.Equal(t, "b", invoiceEntity.InternationalPaymentsBankInfo)
 	require.Equal(t, "customerName", invoiceEntity.Customer.Name)
 	require.Equal(t, "customerEmail", invoiceEntity.Customer.Email)
 	require.Equal(t, "customerAddressLine1", invoiceEntity.Customer.AddressLine1)

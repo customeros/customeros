@@ -108,12 +108,10 @@ func TestInvoiceService_FillInvoice(t *testing.T) {
 
 	// Execute the command
 	response, err := invoiceClient.FillInvoice(ctx, &invoicepb.FillInvoiceRequest{
-		Tenant:                        tenant,
-		LoggedInUserId:                "user-id",
-		InvoiceId:                     invoiceId,
-		Note:                          "abc",
-		DomesticPaymentsBankInfo:      "a",
-		InternationalPaymentsBankInfo: "b",
+		Tenant:         tenant,
+		LoggedInUserId: "user-id",
+		InvoiceId:      invoiceId,
+		Note:           "abc",
 		Provider: &invoicepb.FillInvoiceProvider{
 			LogoRepositoryFileId: "c",
 			Name:                 "d",
@@ -176,8 +174,6 @@ func TestInvoiceService_FillInvoice(t *testing.T) {
 	require.Equal(t, float64(3.03), eventData.TotalAmount)
 	require.Equal(t, "abc", eventData.Note)
 	require.Equal(t, 9, len(eventData.InvoiceNumber))
-	require.Equal(t, "a", eventData.DomesticPaymentsBankInfo)
-	require.Equal(t, "b", eventData.InternationalPaymentsBankInfo)
 	require.Equal(t, "c", eventData.Provider.LogoRepositoryFileId)
 	require.Equal(t, "d", eventData.Provider.Name)
 	require.Equal(t, "e", eventData.Provider.AddressLine1)

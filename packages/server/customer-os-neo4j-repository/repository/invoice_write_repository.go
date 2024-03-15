@@ -30,36 +30,34 @@ type InvoiceCreateFields struct {
 }
 
 type InvoiceFillFields struct {
-	Amount                        float64                 `json:"amount"`
-	VAT                           float64                 `json:"vat"`
-	TotalAmount                   float64                 `json:"totalAmount"`
-	UpdatedAt                     time.Time               `json:"updatedAt"`
-	ContractId                    string                  `json:"contractId"`
-	Currency                      neo4jenum.Currency      `json:"currency"`
-	DryRun                        bool                    `json:"dryRun"`
-	InvoiceNumber                 string                  `json:"invoiceNumber"`
-	PeriodStartDate               time.Time               `json:"periodStartDate"`
-	PeriodEndDate                 time.Time               `json:"periodEndDate"`
-	BillingCycle                  neo4jenum.BillingCycle  `json:"billingCycle"`
-	Status                        neo4jenum.InvoiceStatus `json:"status"`
-	Note                          string                  `json:"note"`
-	DomesticPaymentsBankInfo      string                  `json:"domesticPaymentsBankInfo"`
-	InternationalPaymentsBankInfo string                  `json:"internationalPaymentsBankInfo"`
-	CustomerName                  string                  `json:"customerName"`
-	CustomerEmail                 string                  `json:"customerEmail"`
-	CustomerAddressLine1          string                  `json:"customerAddressLine1"`
-	CustomerAddressLine2          string                  `json:"customerAddressLine2"`
-	CustomerAddressZip            string                  `json:"customerAddressZip"`
-	CustomerAddressLocality       string                  `json:"customerAddressLocality"`
-	CustomerAddressCountry        string                  `json:"customerAddressCountry"`
-	ProviderLogoRepositoryFileId  string                  `json:"providerLogoRepositoryFileId"`
-	ProviderName                  string                  `json:"providerName"`
-	ProviderEmail                 string                  `json:"providerEmail"`
-	ProviderAddressLine1          string                  `json:"providerAddressLine1"`
-	ProviderAddressLine2          string                  `json:"providerAddressLine2"`
-	ProviderAddressZip            string                  `json:"providerAddressZip"`
-	ProviderAddressLocality       string                  `json:"providerAddressLocality"`
-	ProviderAddressCountry        string                  `json:"providerAddressCountry"`
+	Amount                       float64                 `json:"amount"`
+	VAT                          float64                 `json:"vat"`
+	TotalAmount                  float64                 `json:"totalAmount"`
+	UpdatedAt                    time.Time               `json:"updatedAt"`
+	ContractId                   string                  `json:"contractId"`
+	Currency                     neo4jenum.Currency      `json:"currency"`
+	DryRun                       bool                    `json:"dryRun"`
+	InvoiceNumber                string                  `json:"invoiceNumber"`
+	PeriodStartDate              time.Time               `json:"periodStartDate"`
+	PeriodEndDate                time.Time               `json:"periodEndDate"`
+	BillingCycle                 neo4jenum.BillingCycle  `json:"billingCycle"`
+	Status                       neo4jenum.InvoiceStatus `json:"status"`
+	Note                         string                  `json:"note"`
+	CustomerName                 string                  `json:"customerName"`
+	CustomerEmail                string                  `json:"customerEmail"`
+	CustomerAddressLine1         string                  `json:"customerAddressLine1"`
+	CustomerAddressLine2         string                  `json:"customerAddressLine2"`
+	CustomerAddressZip           string                  `json:"customerAddressZip"`
+	CustomerAddressLocality      string                  `json:"customerAddressLocality"`
+	CustomerAddressCountry       string                  `json:"customerAddressCountry"`
+	ProviderLogoRepositoryFileId string                  `json:"providerLogoRepositoryFileId"`
+	ProviderName                 string                  `json:"providerName"`
+	ProviderEmail                string                  `json:"providerEmail"`
+	ProviderAddressLine1         string                  `json:"providerAddressLine1"`
+	ProviderAddressLine2         string                  `json:"providerAddressLine2"`
+	ProviderAddressZip           string                  `json:"providerAddressZip"`
+	ProviderAddressLocality      string                  `json:"providerAddressLocality"`
+	ProviderAddressCountry       string                  `json:"providerAddressCountry"`
 }
 
 type InvoiceUpdateFields struct {
@@ -178,8 +176,6 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tenant, invoic
 								i.totalAmount=$totalAmount,
 								i.status=$status,
 								i.note=$note,
-								i.domesticPaymentsBankInfo=$domesticPaymentsBankInfo,
-								i.internationalPaymentsBankInfo=$internationalPaymentsBankInfo,
 								i.customerName=$customerName,
 								i.customerEmail=$customerEmail,
 								i.customerAddressLine1=$customerAddressLine1,
@@ -199,38 +195,36 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tenant, invoic
 							MERGE (c)-[:HAS_INVOICE]->(i) 
 							`, tenant)
 	params := map[string]any{
-		"tenant":                        tenant,
-		"contractId":                    data.ContractId,
-		"invoiceId":                     invoiceId,
-		"updatedAt":                     data.UpdatedAt,
-		"amount":                        data.Amount,
-		"vat":                           data.VAT,
-		"totalAmount":                   data.TotalAmount,
-		"dryRun":                        data.DryRun,
-		"number":                        data.InvoiceNumber,
-		"currency":                      data.Currency.String(),
-		"periodStart":                   data.PeriodStartDate,
-		"periodEnd":                     data.PeriodEndDate,
-		"billingCycle":                  data.BillingCycle.String(),
-		"status":                        data.Status.String(),
-		"note":                          data.Note,
-		"domesticPaymentsBankInfo":      data.DomesticPaymentsBankInfo,
-		"internationalPaymentsBankInfo": data.InternationalPaymentsBankInfo,
-		"customerName":                  data.CustomerName,
-		"customerEmail":                 data.CustomerEmail,
-		"customerAddressLine1":          data.CustomerAddressLine1,
-		"customerAddressLine2":          data.CustomerAddressLine2,
-		"customerAddressZip":            data.CustomerAddressZip,
-		"customerAddressLocality":       data.CustomerAddressLocality,
-		"customerAddressCountry":        data.CustomerAddressCountry,
-		"providerLogoRepositoryFileId":  data.ProviderLogoRepositoryFileId,
-		"providerName":                  data.ProviderName,
-		"providerEmail":                 data.ProviderEmail,
-		"providerAddressLine1":          data.ProviderAddressLine1,
-		"providerAddressLine2":          data.ProviderAddressLine2,
-		"providerAddressZip":            data.ProviderAddressZip,
-		"providerAddressLocality":       data.ProviderAddressLocality,
-		"providerAddressCountry":        data.ProviderAddressCountry,
+		"tenant":                       tenant,
+		"contractId":                   data.ContractId,
+		"invoiceId":                    invoiceId,
+		"updatedAt":                    data.UpdatedAt,
+		"amount":                       data.Amount,
+		"vat":                          data.VAT,
+		"totalAmount":                  data.TotalAmount,
+		"dryRun":                       data.DryRun,
+		"number":                       data.InvoiceNumber,
+		"currency":                     data.Currency.String(),
+		"periodStart":                  data.PeriodStartDate,
+		"periodEnd":                    data.PeriodEndDate,
+		"billingCycle":                 data.BillingCycle.String(),
+		"status":                       data.Status.String(),
+		"note":                         data.Note,
+		"customerName":                 data.CustomerName,
+		"customerEmail":                data.CustomerEmail,
+		"customerAddressLine1":         data.CustomerAddressLine1,
+		"customerAddressLine2":         data.CustomerAddressLine2,
+		"customerAddressZip":           data.CustomerAddressZip,
+		"customerAddressLocality":      data.CustomerAddressLocality,
+		"customerAddressCountry":       data.CustomerAddressCountry,
+		"providerLogoRepositoryFileId": data.ProviderLogoRepositoryFileId,
+		"providerName":                 data.ProviderName,
+		"providerEmail":                data.ProviderEmail,
+		"providerAddressLine1":         data.ProviderAddressLine1,
+		"providerAddressLine2":         data.ProviderAddressLine2,
+		"providerAddressZip":           data.ProviderAddressZip,
+		"providerAddressLocality":      data.ProviderAddressLocality,
+		"providerAddressCountry":       data.ProviderAddressCountry,
 	}
 
 	span.LogFields(log.String("cypher", cypher))

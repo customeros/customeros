@@ -194,7 +194,6 @@ func (a *InvoiceAggregate) FillInvoice(ctx context.Context, request *invoicepb.F
 
 	invoiceStatus := InvoiceStatus(request.Status).String()
 	fillEvent, err := NewInvoiceFillEvent(a, updatedAtNotNil, *a.Invoice,
-		request.DomesticPaymentsBankInfo, request.InternationalPaymentsBankInfo,
 		request.Customer.Name, request.Customer.AddressLine1, request.Customer.AddressLine2, request.Customer.Zip, request.Customer.Locality, request.Customer.Country, request.Customer.Email,
 		request.Provider.LogoRepositoryFileId, request.Provider.Name, request.Provider.Email, request.Provider.AddressLine1, request.Provider.AddressLine2, request.Provider.Zip, request.Provider.Locality, request.Provider.Country,
 		request.Note, invoiceStatus, invoiceNumberForEvent, request.Amount, request.Vat, request.Total, invoiceLines)
