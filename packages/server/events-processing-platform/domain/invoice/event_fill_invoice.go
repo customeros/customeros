@@ -9,26 +9,24 @@ import (
 )
 
 type InvoiceFillEvent struct {
-	Tenant                        string                   `json:"tenant" validate:"required"`
-	UpdatedAt                     time.Time                `json:"updatedAt"`
-	Amount                        float64                  `json:"amount"`
-	VAT                           float64                  `json:"vat"`
-	SubtotalAmount                float64                  `json:"subtotalAmount" `
-	TotalAmount                   float64                  `json:"totalAmount" `
-	InvoiceLines                  []InvoiceLineEvent       `json:"invoiceLines" validate:"required"`
-	ContractId                    string                   `json:"contractId"`
-	DryRun                        bool                     `json:"dryRun"`
-	InvoiceNumber                 string                   `json:"invoiceNumber"`
-	Currency                      string                   `json:"currency"`
-	PeriodStartDate               time.Time                `json:"periodStartDate"`
-	PeriodEndDate                 time.Time                `json:"periodEndDate"`
-	BillingCycle                  string                   `json:"billingCycle"`
-	Status                        string                   `json:"status"`
-	Note                          string                   `json:"note"`
-	DomesticPaymentsBankInfo      string                   `json:"domesticPaymentsBankInfo"`
-	InternationalPaymentsBankInfo string                   `json:"internationalPaymentsBankInfo"`
-	Customer                      InvoiceFillCustomerEvent `json:"customer"`
-	Provider                      InvoiceFillProviderEvent `json:"provider"`
+	Tenant          string                   `json:"tenant" validate:"required"`
+	UpdatedAt       time.Time                `json:"updatedAt"`
+	Amount          float64                  `json:"amount"`
+	VAT             float64                  `json:"vat"`
+	SubtotalAmount  float64                  `json:"subtotalAmount" `
+	TotalAmount     float64                  `json:"totalAmount" `
+	InvoiceLines    []InvoiceLineEvent       `json:"invoiceLines" validate:"required"`
+	ContractId      string                   `json:"contractId"`
+	DryRun          bool                     `json:"dryRun"`
+	InvoiceNumber   string                   `json:"invoiceNumber"`
+	Currency        string                   `json:"currency"`
+	PeriodStartDate time.Time                `json:"periodStartDate"`
+	PeriodEndDate   time.Time                `json:"periodEndDate"`
+	BillingCycle    string                   `json:"billingCycle"`
+	Status          string                   `json:"status"`
+	Note            string                   `json:"note"`
+	Customer        InvoiceFillCustomerEvent `json:"customer"`
+	Provider        InvoiceFillProviderEvent `json:"provider"`
 }
 type InvoiceFillCustomerEvent struct {
 	Name         string `json:"name"`
@@ -51,28 +49,25 @@ type InvoiceFillProviderEvent struct {
 }
 
 func NewInvoiceFillEvent(aggregate eventstore.Aggregate, updatedAt time.Time, invoice Invoice,
-	domesticPaymentsBankInfo, internationalPaymentsBankInfo,
 	customerName, customerAddressLine1, customerAddressLine2, customerAddressZip, customerAddressLocality, customerAddressCountry, customerEmail,
 	providerLogoRepositoryFileId, providerName, providerEmail, providerAddressLine1, providerAddressLine2, providerAddressZip, providerAddressLocality, providerAddressCountry,
 	note, status, invoiceNumber string, amount, vat, totalAmount float64, invoiceLines []InvoiceLineEvent) (eventstore.Event, error) {
 	eventData := InvoiceFillEvent{
-		Tenant:                        aggregate.GetTenant(),
-		UpdatedAt:                     updatedAt,
-		Amount:                        amount,
-		VAT:                           vat,
-		TotalAmount:                   totalAmount,
-		Currency:                      invoice.Currency,
-		ContractId:                    invoice.ContractId,
-		InvoiceLines:                  invoiceLines,
-		BillingCycle:                  invoice.BillingCycle,
-		PeriodStartDate:               invoice.PeriodStartDate,
-		PeriodEndDate:                 invoice.PeriodEndDate,
-		InvoiceNumber:                 invoiceNumber,
-		DryRun:                        invoice.DryRun,
-		Status:                        status,
-		Note:                          note,
-		DomesticPaymentsBankInfo:      domesticPaymentsBankInfo,
-		InternationalPaymentsBankInfo: internationalPaymentsBankInfo,
+		Tenant:          aggregate.GetTenant(),
+		UpdatedAt:       updatedAt,
+		Amount:          amount,
+		VAT:             vat,
+		TotalAmount:     totalAmount,
+		Currency:        invoice.Currency,
+		ContractId:      invoice.ContractId,
+		InvoiceLines:    invoiceLines,
+		BillingCycle:    invoice.BillingCycle,
+		PeriodStartDate: invoice.PeriodStartDate,
+		PeriodEndDate:   invoice.PeriodEndDate,
+		InvoiceNumber:   invoiceNumber,
+		DryRun:          invoice.DryRun,
+		Status:          status,
+		Note:            note,
 		Customer: InvoiceFillCustomerEvent{
 			Name:         customerName,
 			Email:        customerEmail,

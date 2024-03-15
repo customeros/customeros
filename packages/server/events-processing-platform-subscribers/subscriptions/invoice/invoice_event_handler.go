@@ -534,8 +534,6 @@ func (h *InvoiceEventHandler) prepareAndCallFillInvoice(ctx context.Context, ten
 	err = h.callFillInvoice(ctx,
 		tenant,
 		invoiceEntity.Id,
-		"",
-		"",
 		contractEntity.OrganizationLegalName,
 		contractEntity.InvoiceEmail,
 		contractEntity.AddressLine1, contractEntity.AddressLine2, contractEntity.Zip, contractEntity.Locality, contractCountry,
@@ -556,7 +554,7 @@ func (h *InvoiceEventHandler) prepareAndCallFillInvoice(ctx context.Context, ten
 	return nil
 }
 
-func (h *InvoiceEventHandler) callFillInvoice(ctx context.Context, tenant, invoiceId, domesticPaymentsBankInfo, internationalPaymentsBankInfo,
+func (h *InvoiceEventHandler) callFillInvoice(ctx context.Context, tenant, invoiceId,
 	customerName, customerEmail, customerAddressLine1, customerAddressLine2, customerAddressZip, customerAddressLocality, customerAddressCountry,
 	providerLogoRepositoryFileId, providerName, providerEmail, providerAddressLine1, providerAddressLine2, providerAddressZip, providerAddressLocality, providerAddressCountry,
 	note string, amount, vat, total float64, invoiceLines []*invoicepb.InvoiceLine, span opentracing.Span) error {
@@ -564,11 +562,9 @@ func (h *InvoiceEventHandler) callFillInvoice(ctx context.Context, tenant, invoi
 	now := time.Now()
 	_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
 		return h.grpcClients.InvoiceClient.FillInvoice(ctx, &invoicepb.FillInvoiceRequest{
-			Tenant:                        tenant,
-			InvoiceId:                     invoiceId,
-			Note:                          note,
-			DomesticPaymentsBankInfo:      domesticPaymentsBankInfo,
-			InternationalPaymentsBankInfo: internationalPaymentsBankInfo,
+			Tenant:    tenant,
+			InvoiceId: invoiceId,
+			Note:      note,
 			Customer: &invoicepb.FillInvoiceCustomer{
 				Name:         customerName,
 				Email:        customerEmail,

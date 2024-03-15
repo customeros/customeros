@@ -50,8 +50,6 @@ message FillInvoiceRequest {
   string appSource = 10;
   InvoiceStatus status = 11;
   string Note = 12;
-  string DomesticPaymentsBankInfo = 13;
-  string InternationalPaymentsBankInfo = 14;
   FillInvoiceCustomer Customer = 15;
   FillInvoiceProvider Provider = 16;
 }
