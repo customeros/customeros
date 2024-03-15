@@ -16,6 +16,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
+	"strings"
 )
 
 type contactService struct {
@@ -38,6 +39,8 @@ func (s *contactService) UpsertContact(ctx context.Context, request *contactpb.U
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	tracing.LogObjectAsJson(span, "request", request)
+
+	request.Timezone = normalizeTimezone(request.Timezone)
 
 	contactId := utils.NewUUIDIfEmpty(request.Id)
 
@@ -189,4 +192,13 @@ func (s *contactService) AddSocial(ctx context.Context, request *contactpb.Conta
 
 func (s *contactService) errResponse(err error) error {
 	return grpcerr.ErrResponse(err)
+}
+
+func normalizeTimezone(timezone string) string {
+	if timezone == "" {
+		return ""
+	}
+	output := strings.Replace(timezone, "_slash_", "/", -1)
+	output = utils.CapitalizeAllParts(output, []string{"/", "_"})
+	return output
 }
