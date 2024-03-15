@@ -80,7 +80,7 @@ export const ReminderDueDatePicker = ({ name, formId }: DueDatePickerProps) => {
                 DateTimeUtils.date,
               )} • `}</Text>
             </PopoverTrigger>
-            <Portal containerRef={containerRef}>
+            <Portal>
               <PopoverContent w='fit-content'>
                 <PopoverBody w='fit-content'>
                   <InlineDatePicker

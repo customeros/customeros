@@ -5,7 +5,6 @@ import { useTimelineActionContext } from '@organization/src/components/Timeline/
 
 import { EmailTimelineAction } from './email/EmailTimelineAction';
 import { LogEntryTimelineAction } from './logger/LogEntryTimelineAction';
-import { ReminderTimelineAction } from './reminder/ReminderTimelineAction';
 
 export const TimelineActionsArea: React.FC = () => {
   const { openedEditor } = useTimelineActionContext();
@@ -21,7 +20,6 @@ export const TimelineActionsArea: React.FC = () => {
     >
       {openedEditor === 'email' && <EmailTimelineAction />}
       {openedEditor === 'log-entry' && <LogEntryTimelineAction />}
-      {openedEditor === 'reminder' && <ReminderTimelineAction />}
     </Box>
   );
 };

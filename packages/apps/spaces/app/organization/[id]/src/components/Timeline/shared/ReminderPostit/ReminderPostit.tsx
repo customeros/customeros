@@ -2,18 +2,36 @@ import { useRef } from 'react';
 
 import { useOutsideClick } from '@ui/utils';
 import { Flex, FlexProps } from '@ui/layout/Flex';
+import { pulseOpacity } from '@ui/utils/keyframes';
+
+interface ReminderPostitProps extends FlexProps {
+  isMutating?: boolean;
+  onClickOutside?: (e: Event) => void;
+}
 
 export const ReminderPostit = ({
   children,
+  isMutating,
   onClickOutside = () => undefined,
   ...rest
-}: FlexProps & { onClickOutside?: (e: Event) => void }) => {
+}: ReminderPostitProps) => {
   const ref = useRef(null);
 
   useOutsideClick({ ref, handler: onClickOutside });
 
   return (
-    <Flex ref={ref} position='relative' w='321px' m='6' mt='2' {...rest}>
+    <Flex
+      ref={ref}
+      position='relative'
+      w='321px'
+      m='6'
+      mt='2'
+      pointerEvents={isMutating ? 'none' : 'auto'}
+      animation={
+        isMutating ? `${pulseOpacity} 0.7s alternate ease-in-out` : undefined
+      }
+      {...rest}
+    >
       <Flex
         h='10px'
         w='calc(100% - 5px)'
@@ -23,14 +41,7 @@ export const ReminderPostit = ({
         bg='rgba(0, 0, 0, 0.15)'
         transform={'rotate(2deg)'}
       />
-      <Flex
-        w='full'
-        zIndex={1}
-        boxShadow='md'
-        bg='yellow.100'
-        id='sticky-body'
-        flexDir='column'
-      >
+      <Flex w='full' zIndex={1} boxShadow='md' bg='yellow.100' flexDir='column'>
         <Flex
           h='28px'
           w='full'
