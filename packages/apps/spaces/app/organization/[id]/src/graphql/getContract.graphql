@@ -19,6 +19,8 @@ query getContract($id: ID!) {
       canPayWithDirectDebit
       canPayWithBankTransfer
       nextInvoicing
+      payAutomatically
+      payOnline
     }
   }
 }

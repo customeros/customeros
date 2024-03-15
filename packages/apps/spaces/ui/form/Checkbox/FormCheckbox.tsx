@@ -66,7 +66,6 @@ export const FormCheckbox = (props: PropsWithChildren<FormCheckboxProps>) => {
     isIndeterminate: isIndeterminate,
     isChecked: isChecked,
   });
-
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     onChange(e.target?.checked);
   };

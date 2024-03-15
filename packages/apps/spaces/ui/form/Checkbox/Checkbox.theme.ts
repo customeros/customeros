@@ -8,12 +8,14 @@ const helpers = createMultiStyleConfigHelpers([
 ]);
 
 export const Checkbox = helpers.defineMultiStyleConfig({
-  baseStyle: ({ colorScheme }) => ({
+  baseStyle: ({ colorScheme, isInvalid, isDisabled }) => ({
     control: {
       border: '1px solid',
       borderColor: 'gray.300',
       borderRadius: '4px',
       transition: 'all 0.3s ease',
+      pointerEvents: isDisabled ? 'none' : 'auto',
+      opacity: isDisabled ? 0.4 : 1,
       _focus: {
         boxShadow: 'ringPrimary',
         borderColor: `${colorScheme}.300`,
@@ -24,8 +26,8 @@ export const Checkbox = helpers.defineMultiStyleConfig({
         },
       },
       _hover: {
-        borderColor: `${colorScheme}.600`,
-        backgroundColor: `${colorScheme}.100`,
+        backgroundColor: isInvalid ? 'warning.100' : `${colorScheme}.100`,
+        borderColor: isInvalid ? 'warning.600' : `${colorScheme}.600`,
         _invalid: {
           borderColor: 'red.300',
           boxShadow: 'inputInvalid',
@@ -36,8 +38,8 @@ export const Checkbox = helpers.defineMultiStyleConfig({
         boxShadow: 'inputInvalid',
       },
       _checked: {
-        backgroundColor: `${colorScheme}.50`,
-        borderColor: `${colorScheme}.600`,
+        backgroundColor: isInvalid ? 'warning.50' : `${colorScheme}.50`,
+        borderColor: isInvalid ? 'warning.600' : `${colorScheme}.600`,
         _invalid: {
           backgroundColor: 'red.100',
           boxShadow: 'inputInvalid',
@@ -60,8 +62,8 @@ export const Checkbox = helpers.defineMultiStyleConfig({
           },
         },
         _hover: {
-          backgroundColor: `${colorScheme}.100`,
-          borderColor: `${colorScheme}.600`,
+          backgroundColor: isInvalid ? 'warning.100' : `${colorScheme}.100`,
+          borderColor: isInvalid ? 'warning.600' : `${colorScheme}.600`,
           _invalid: {
             backgroundColor: 'red.100',
             borderColor: 'red.500',
@@ -96,8 +98,8 @@ export const Checkbox = helpers.defineMultiStyleConfig({
           },
         },
         _hover: {
-          backgroundColor: `${colorScheme}.100`,
-          borderColor: `${colorScheme}.600`,
+          backgroundColor: isInvalid ? 'warning.100' : `${colorScheme}.100`,
+          borderColor: isInvalid ? 'warning.600' : `${colorScheme}.600`,
           _invalid: {
             backgroundColor: 'red.100',
             borderColor: 'red.500',
@@ -153,8 +155,15 @@ export const Checkbox = helpers.defineMultiStyleConfig({
         },
       },
     },
+    label: {
+      pointerEvents: isDisabled ? 'none' : 'auto',
+      opacity: isDisabled ? 0.4 : 1,
+      _disabled: {
+        color: 'gray.500',
+      },
+    },
     icon: {
-      color: `${colorScheme}.600`,
+      color: isInvalid ? 'warning.600' : `${colorScheme}.600`, // workaround, _invalid styles are not picked up
     },
   }),
   sizes: {

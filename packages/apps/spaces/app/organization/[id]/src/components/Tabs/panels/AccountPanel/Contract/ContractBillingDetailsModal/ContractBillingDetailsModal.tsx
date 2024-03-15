@@ -7,6 +7,7 @@ import { produce } from 'immer';
 import { useDeepCompareEffect } from 'rooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTenantBillingProfilesQuery } from '@settings/graphql/getTenantBillingProfiles.generated';
+import { useBankAccountsCurrenciesQuery } from '@settings/graphql/getBankAccountsCurrencies.generated';
 
 import { Box } from '@ui/layout/Box';
 import { Button } from '@ui/form/Button';
@@ -14,11 +15,11 @@ import { FeaturedIcon } from '@ui/media/Icon';
 import { File02 } from '@ui/media/icons/File02';
 import { Grid, GridItem } from '@ui/layout/Grid';
 import { Heading } from '@ui/typography/Heading';
-import { DataSource, InvoiceLine } from '@graphql/types';
 import { Invoice } from '@shared/components/Invoice/Invoice';
 import { countryOptions } from '@shared/util/countryOptions';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { toastError, toastSuccess } from '@ui/presentation/Toast';
+import { DataSource, InvoiceLine, TenantBillingProfile } from '@graphql/types';
 import { useGetContractQuery } from '@organization/src/graphql/getContract.generated';
 import { useUpdateContractMutation } from '@organization/src/graphql/updateContract.generated';
 import {
@@ -67,6 +68,8 @@ export const ContractBillingDetailsModal = ({
       refetchOnMount: true,
     },
   );
+  const { data: bankAccountData } = useBankAccountsCurrenciesQuery(client);
+
   const [isBillingDetailsFocused, setIsBillingDetailsFocused] =
     useState<boolean>(false);
 
@@ -251,6 +254,29 @@ export const ContractBillingDetailsModal = ({
       !emailRegex.test(state.values.invoiceEmail)
     );
   }, [state?.values?.invoiceEmail]);
+  const availableCurrencies = useMemo(
+    () => (bankAccountData?.bankAccounts ?? []).map((e) => e.currency),
+    [],
+  );
+
+  const canAllowPayWithBankTransfer = useMemo(() => {
+    return availableCurrencies.includes(state.values.currency?.value);
+  }, [availableCurrencies, state.values.currency]);
+
+  useDeepCompareEffect(() => {
+    if (!canAllowPayWithBankTransfer) {
+      const newDefaultValues = new BillingDetailsDto({
+        ...(data?.contract ?? {}),
+        organizationLegalName:
+          data?.contract?.organizationLegalName || organizationName,
+        billingDetails: {
+          ...(data?.contract?.billingDetails ?? {}),
+          canPayWithBankTransfer: false,
+        },
+      });
+      setDefaultValues(newDefaultValues);
+    }
+  }, [canAllowPayWithBankTransfer]);
 
   return (
     <Modal
@@ -294,6 +320,14 @@ export const ContractBillingDetailsModal = ({
             </ModalHeader>
             <ContractBillingDetailsForm
               formId={formId}
+              tenantBillingProfile={
+                tenantBillingProfile
+                  ?.tenantBillingProfiles?.[0] as TenantBillingProfile
+              }
+              organizationName={organizationName}
+              canAllowPayWithBankTransfer={canAllowPayWithBankTransfer}
+              hasNoBankAccounts={!bankAccountData?.bankAccounts?.length}
+              currency={state?.values?.currency?.value}
               isEmailValid={isEmailValid}
               onSetIsBillingDetailsHovered={setIsBillingDetailsHovered}
               onSetIsBillingDetailsFocused={setIsBillingDetailsFocused}
