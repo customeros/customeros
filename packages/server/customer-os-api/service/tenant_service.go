@@ -150,25 +150,19 @@ func (s *tenantService) CreateTenantBillingProfile(ctx context.Context, input mo
 			Source:    neo4jentity.DataSourceOpenline.String(),
 			AppSource: constants.AppSourceCustomerOsApi,
 		},
-		Phone:                         utils.IfNotNilString(input.Phone),
-		LegalName:                     utils.IfNotNilString(input.LegalName),
-		AddressLine1:                  utils.IfNotNilString(input.AddressLine1),
-		AddressLine2:                  utils.IfNotNilString(input.AddressLine2),
-		AddressLine3:                  utils.IfNotNilString(input.AddressLine3),
-		Locality:                      utils.IfNotNilString(input.Locality),
-		Country:                       utils.IfNotNilString(input.Country),
-		Zip:                           utils.IfNotNilString(input.Zip),
-		DomesticPaymentsBankInfo:      utils.IfNotNilString(input.DomesticPaymentsBankInfo),
-		InternationalPaymentsBankInfo: utils.IfNotNilString(input.InternationalPaymentsBankInfo),
-		VatNumber:                     utils.IfNotNilString(input.VatNumber),
-		SendInvoicesFrom:              utils.IfNotNilString(input.SendInvoicesFrom),
-		SendInvoicesBcc:               utils.IfNotNilString(input.SendInvoicesBcc),
-		CanPayWithCard:                utils.IfNotNilBool(input.CanPayWithCard),
-		CanPayWithDirectDebitSEPA:     utils.IfNotNilBool(input.CanPayWithDirectDebitSepa),
-		CanPayWithDirectDebitACH:      utils.IfNotNilBool(input.CanPayWithDirectDebitAch),
-		CanPayWithDirectDebitBacs:     utils.IfNotNilBool(input.CanPayWithDirectDebitBacs),
-		CanPayWithPigeon:              utils.IfNotNilBool(input.CanPayWithPigeon),
-		CanPayWithBankTransfer:        utils.IfNotNilBool(input.CanPayWithBankTransfer),
+		Phone:                  utils.IfNotNilString(input.Phone),
+		LegalName:              utils.IfNotNilString(input.LegalName),
+		AddressLine1:           utils.IfNotNilString(input.AddressLine1),
+		AddressLine2:           utils.IfNotNilString(input.AddressLine2),
+		AddressLine3:           utils.IfNotNilString(input.AddressLine3),
+		Locality:               utils.IfNotNilString(input.Locality),
+		Country:                utils.IfNotNilString(input.Country),
+		Zip:                    utils.IfNotNilString(input.Zip),
+		VatNumber:              utils.IfNotNilString(input.VatNumber),
+		SendInvoicesFrom:       utils.IfNotNilString(input.SendInvoicesFrom),
+		SendInvoicesBcc:        utils.IfNotNilString(input.SendInvoicesBcc),
+		CanPayWithPigeon:       utils.IfNotNilBool(input.CanPayWithPigeon),
+		CanPayWithBankTransfer: utils.IfNotNilBool(input.CanPayWithBankTransfer),
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
@@ -209,29 +203,23 @@ func (s *tenantService) UpdateTenantBillingProfile(ctx context.Context, input mo
 
 	var fieldsMask []tenantpb.TenantBillingProfileFieldMask
 	updateRequest := tenantpb.UpdateBillingProfileRequest{
-		Tenant:                        common.GetTenantFromContext(ctx),
-		Id:                            input.ID,
-		LoggedInUserId:                common.GetUserIdFromContext(ctx),
-		AppSource:                     constants.AppSourceCustomerOsApi,
-		Phone:                         utils.IfNotNilString(input.Phone),
-		LegalName:                     utils.IfNotNilString(input.LegalName),
-		AddressLine1:                  utils.IfNotNilString(input.AddressLine1),
-		AddressLine2:                  utils.IfNotNilString(input.AddressLine2),
-		AddressLine3:                  utils.IfNotNilString(input.AddressLine3),
-		Locality:                      utils.IfNotNilString(input.Locality),
-		Country:                       utils.IfNotNilString(input.Country),
-		Zip:                           utils.IfNotNilString(input.Zip),
-		DomesticPaymentsBankInfo:      utils.IfNotNilString(input.DomesticPaymentsBankInfo),
-		InternationalPaymentsBankInfo: utils.IfNotNilString(input.InternationalPaymentsBankInfo),
-		VatNumber:                     utils.IfNotNilString(input.VatNumber),
-		SendInvoicesFrom:              utils.IfNotNilString(input.SendInvoicesFrom),
-		SendInvoicesBcc:               utils.IfNotNilString(input.SendInvoicesBcc),
-		CanPayWithCard:                utils.IfNotNilBool(input.CanPayWithCard),
-		CanPayWithDirectDebitSEPA:     utils.IfNotNilBool(input.CanPayWithDirectDebitSepa),
-		CanPayWithDirectDebitACH:      utils.IfNotNilBool(input.CanPayWithDirectDebitAch),
-		CanPayWithDirectDebitBacs:     utils.IfNotNilBool(input.CanPayWithDirectDebitBacs),
-		CanPayWithPigeon:              utils.IfNotNilBool(input.CanPayWithPigeon),
-		CanPayWithBankTransfer:        utils.IfNotNilBool(input.CanPayWithBankTransfer),
+		Tenant:                 common.GetTenantFromContext(ctx),
+		Id:                     input.ID,
+		LoggedInUserId:         common.GetUserIdFromContext(ctx),
+		AppSource:              constants.AppSourceCustomerOsApi,
+		Phone:                  utils.IfNotNilString(input.Phone),
+		LegalName:              utils.IfNotNilString(input.LegalName),
+		AddressLine1:           utils.IfNotNilString(input.AddressLine1),
+		AddressLine2:           utils.IfNotNilString(input.AddressLine2),
+		AddressLine3:           utils.IfNotNilString(input.AddressLine3),
+		Locality:               utils.IfNotNilString(input.Locality),
+		Country:                utils.IfNotNilString(input.Country),
+		Zip:                    utils.IfNotNilString(input.Zip),
+		VatNumber:              utils.IfNotNilString(input.VatNumber),
+		SendInvoicesFrom:       utils.IfNotNilString(input.SendInvoicesFrom),
+		SendInvoicesBcc:        utils.IfNotNilString(input.SendInvoicesBcc),
+		CanPayWithPigeon:       utils.IfNotNilBool(input.CanPayWithPigeon),
+		CanPayWithBankTransfer: utils.IfNotNilBool(input.CanPayWithBankTransfer),
 	}
 
 	if input.Patch != nil && *input.Patch {
@@ -259,12 +247,6 @@ func (s *tenantService) UpdateTenantBillingProfile(ctx context.Context, input mo
 		if input.Zip != nil {
 			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_ZIP)
 		}
-		if input.DomesticPaymentsBankInfo != nil {
-			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_DOMESTIC_PAYMENTS_BANK_INFO)
-		}
-		if input.InternationalPaymentsBankInfo != nil {
-			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_INTERNATIONAL_PAYMENTS_BANK_INFO)
-		}
 		if input.VatNumber != nil {
 			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_VAT_NUMBER)
 		}
@@ -273,18 +255,6 @@ func (s *tenantService) UpdateTenantBillingProfile(ctx context.Context, input mo
 		}
 		if input.SendInvoicesBcc != nil {
 			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_SEND_INVOICES_BCC)
-		}
-		if input.CanPayWithCard != nil {
-			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_CARD)
-		}
-		if input.CanPayWithDirectDebitSepa != nil {
-			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_DIRECT_DEBIT_SEPA)
-		}
-		if input.CanPayWithDirectDebitAch != nil {
-			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_DIRECT_DEBIT_ACH)
-		}
-		if input.CanPayWithDirectDebitBacs != nil {
-			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_DIRECT_DEBIT_BACS)
 		}
 		if input.CanPayWithPigeon != nil {
 			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_PIGEON)

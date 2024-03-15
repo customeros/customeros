@@ -9,14 +9,8 @@ query GetTenantBillingProfiles {
     country
     zip
     legalName
-    domesticPaymentsBankInfo
-    internationalPaymentsBankInfo
     vatNumber
     sendInvoicesFrom
-    canPayWithCard
-    canPayWithDirectDebitSEPA
-    canPayWithDirectDebitACH
-    canPayWithDirectDebitBacs
     canPayWithPigeon
     canPayWithBankTransfer
   }

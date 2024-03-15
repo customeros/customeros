@@ -9,14 +9,8 @@ query GetTenantBillingProfiles($id: ID!) {
     country
     zip
     legalName
-    domesticPaymentsBankInfo
-    internationalPaymentsBankInfo
     vatNumber
     sendInvoicesFrom
-    canPayWithCard
-    canPayWithDirectDebitSEPA
-    canPayWithDirectDebitACH
-    canPayWithDirectDebitBacs
     canPayWithPigeon
     canPayWithBankTransfer
   }

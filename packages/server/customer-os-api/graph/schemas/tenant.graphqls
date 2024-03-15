@@ -39,15 +39,15 @@ type TenantBillingProfile implements SourceFields & Node {
     country:            String!
     zip:                String!
     legalName:          String!
-    domesticPaymentsBankInfo:       String!
-    internationalPaymentsBankInfo:  String!
+    domesticPaymentsBankInfo:       String @deprecated(reason: "Not used")
+    internationalPaymentsBankInfo:  String @deprecated(reason: "Not used")
     vatNumber:                      String!
     sendInvoicesFrom:               String!
     sendInvoicesBcc:                String!
-    canPayWithCard:                 Boolean! @deprecated(reason: "Not used")
-    canPayWithDirectDebitSEPA:      Boolean! @deprecated(reason: "Not used")
-    canPayWithDirectDebitACH:       Boolean! @deprecated(reason: "Not used")
-    canPayWithDirectDebitBacs:      Boolean! @deprecated(reason: "Not used")
+    canPayWithCard:                 Boolean @deprecated(reason: "Not used")
+    canPayWithDirectDebitSEPA:      Boolean @deprecated(reason: "Not used")
+    canPayWithDirectDebitACH:       Boolean @deprecated(reason: "Not used")
+    canPayWithDirectDebitBacs:      Boolean @deprecated(reason: "Not used")
     canPayWithBankTransfer:         Boolean!
     canPayWithPigeon:               Boolean!
 }
@@ -67,15 +67,15 @@ input TenantBillingProfileInput {
     country:            String
     zip:                String
     legalName:          String
-    domesticPaymentsBankInfo:      String
-    internationalPaymentsBankInfo: String
+    domesticPaymentsBankInfo:      String @deprecated(reason: "Not used")
+    internationalPaymentsBankInfo: String @deprecated(reason: "Not used")
     vatNumber: String!
     sendInvoicesFrom: String!
     sendInvoicesBcc: String
-    canPayWithCard: Boolean! @deprecated(reason: "Not used")
-    canPayWithDirectDebitSEPA: Boolean! @deprecated(reason: "Not used")
-    canPayWithDirectDebitACH: Boolean! @deprecated(reason: "Not used")
-    canPayWithDirectDebitBacs: Boolean! @deprecated(reason: "Not used")
+    canPayWithCard: Boolean @deprecated(reason: "Not used")
+    canPayWithDirectDebitSEPA: Boolean @deprecated(reason: "Not used")
+    canPayWithDirectDebitACH: Boolean @deprecated(reason: "Not used")
+    canPayWithDirectDebitBacs: Boolean @deprecated(reason: "Not used")
     canPayWithBankTransfer: Boolean!
     canPayWithPigeon: Boolean!
 }
@@ -92,8 +92,8 @@ input TenantBillingProfileUpdateInput {
     country:            String
     zip:                String
     legalName:          String
-    domesticPaymentsBankInfo:      String
-    internationalPaymentsBankInfo: String
+    domesticPaymentsBankInfo:      String @deprecated(reason: "Not used")
+    internationalPaymentsBankInfo: String @deprecated(reason: "Not used")
     vatNumber:                  String
     sendInvoicesFrom:           String
     sendInvoicesBcc:            String
