@@ -2,6 +2,8 @@ package utils
 
 import (
 	"github.com/google/uuid"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"strings"
 )
 
@@ -41,4 +43,33 @@ func ExtractFirstPart(str, delimiter string) string {
 	// Extract the first part
 	firstPart := str[:delimiterIndex]
 	return firstPart
+}
+
+func CapitalizeAllParts(str string, delimiters []string) string {
+	if len(delimiters) == 0 {
+		titleCase := cases.Title(language.Und)
+		return titleCase.String(str)
+	}
+
+	for _, delimiter := range delimiters {
+		str = capitalizeParts(str, delimiter)
+	}
+	return str
+}
+
+func capitalizeParts(input, delimiter string) string {
+	parts := strings.Split(input, delimiter)
+
+	// Create a title casing for capitalizing the words
+	titleCase := cases.Title(language.Und)
+
+	// Capitalize the first letter of each word
+	for i, part := range parts {
+		parts[i] = titleCase.String(part)
+	}
+
+	// Join the parts back together
+	capitalized := strings.Join(parts, delimiter)
+
+	return capitalized
 }
