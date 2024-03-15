@@ -2535,15 +2535,15 @@ type TenantBillingProfile struct {
 	Country                       string     `json:"country"`
 	Zip                           string     `json:"zip"`
 	LegalName                     string     `json:"legalName"`
-	DomesticPaymentsBankInfo      string     `json:"domesticPaymentsBankInfo"`
-	InternationalPaymentsBankInfo string     `json:"internationalPaymentsBankInfo"`
+	DomesticPaymentsBankInfo      *string    `json:"domesticPaymentsBankInfo,omitempty"`
+	InternationalPaymentsBankInfo *string    `json:"internationalPaymentsBankInfo,omitempty"`
 	VatNumber                     string     `json:"vatNumber"`
 	SendInvoicesFrom              string     `json:"sendInvoicesFrom"`
 	SendInvoicesBcc               string     `json:"sendInvoicesBcc"`
-	CanPayWithCard                bool       `json:"canPayWithCard"`
-	CanPayWithDirectDebitSepa     bool       `json:"canPayWithDirectDebitSEPA"`
-	CanPayWithDirectDebitAch      bool       `json:"canPayWithDirectDebitACH"`
-	CanPayWithDirectDebitBacs     bool       `json:"canPayWithDirectDebitBacs"`
+	CanPayWithCard                *bool      `json:"canPayWithCard,omitempty"`
+	CanPayWithDirectDebitSepa     *bool      `json:"canPayWithDirectDebitSEPA,omitempty"`
+	CanPayWithDirectDebitAch      *bool      `json:"canPayWithDirectDebitACH,omitempty"`
+	CanPayWithDirectDebitBacs     *bool      `json:"canPayWithDirectDebitBacs,omitempty"`
 	CanPayWithBankTransfer        bool       `json:"canPayWithBankTransfer"`
 	CanPayWithPigeon              bool       `json:"canPayWithPigeon"`
 }
@@ -2571,10 +2571,10 @@ type TenantBillingProfileInput struct {
 	VatNumber                     string  `json:"vatNumber"`
 	SendInvoicesFrom              string  `json:"sendInvoicesFrom"`
 	SendInvoicesBcc               *string `json:"sendInvoicesBcc,omitempty"`
-	CanPayWithCard                bool    `json:"canPayWithCard"`
-	CanPayWithDirectDebitSepa     bool    `json:"canPayWithDirectDebitSEPA"`
-	CanPayWithDirectDebitAch      bool    `json:"canPayWithDirectDebitACH"`
-	CanPayWithDirectDebitBacs     bool    `json:"canPayWithDirectDebitBacs"`
+	CanPayWithCard                *bool   `json:"canPayWithCard,omitempty"`
+	CanPayWithDirectDebitSepa     *bool   `json:"canPayWithDirectDebitSEPA,omitempty"`
+	CanPayWithDirectDebitAch      *bool   `json:"canPayWithDirectDebitACH,omitempty"`
+	CanPayWithDirectDebitBacs     *bool   `json:"canPayWithDirectDebitBacs,omitempty"`
 	CanPayWithBankTransfer        bool    `json:"canPayWithBankTransfer"`
 	CanPayWithPigeon              bool    `json:"canPayWithPigeon"`
 }
