@@ -1,5 +1,5 @@
 import { useForm } from 'react-inverted-form';
-import { useRef, FormEvent, useEffect } from 'react';
+import { useRef, useState, FormEvent, useEffect } from 'react';
 
 import { produce } from 'immer';
 import { useDidMount, useDebounceFn } from 'rooks';
@@ -34,6 +34,7 @@ export const ReminderItem = ({
   );
   const { recentlyCreatedId, recentlyUpdatedId } = timelineMeta.reminders;
   const isMutating = data.id === 'TEMP';
+  const [isFocused, setIsFocused] = useState(false);
 
   const stripContent = (content: string, owner: string) => {
     const targetString = `for ${owner}: `;
@@ -81,6 +82,7 @@ export const ReminderItem = ({
   });
 
   const updateReminder = () => {
+    setIsFocused(false);
     handleSubmit({} as FormEvent<HTMLFormElement>);
   };
 
@@ -120,13 +122,18 @@ export const ReminderItem = ({
     >
       <FormAutoresizeTextarea
         px='4'
+        pb='0'
         ref={ref}
         isReadOnly={isMutating}
         fontFamily='sticky'
         fontSize='sm'
         name='content'
         formId={formId}
+        lineHeight='inherit'
         onBlur={updateReminder}
+        onFocus={() => setIsFocused(true)}
+        cacheMeasurements
+        maxRows={isFocused ? undefined : 3}
         placeholder='Type your reminder here'
         borderBottom='unset'
         _hover={{
