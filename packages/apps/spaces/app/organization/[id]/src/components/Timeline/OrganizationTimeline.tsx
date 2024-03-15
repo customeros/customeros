@@ -3,7 +3,7 @@ import { Virtuoso } from 'react-virtuoso';
 import { useParams } from 'next/navigation';
 import React, { FC, useMemo, useEffect, useCallback } from 'react';
 
-import { useIsRestoring, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { setHours, setSeconds, setMinutes, setMilliseconds } from 'date-fns';
 
 import { Flex } from '@ui/layout/Flex';
@@ -82,7 +82,6 @@ export const OrganizationTimeline: FC = () => {
   const queryClient = useQueryClient();
   const { virtuosoRef } = useTimelineRefContext();
   const [timelineMeta, setTimelineMeta] = useTimelineMeta();
-  const isRestoring = useIsRestoring();
   const client = getGraphQLClient();
   const { data, isFetchingNextPage, fetchNextPage, isPending } =
     useInfiniteGetTimelineQuery(
@@ -185,7 +184,7 @@ export const OrganizationTimeline: FC = () => {
       return Date.parse(aDate) - Date.parse(bDate);
     });
 
-  if (!isRestoring && !isPending && !timelineEmailEvents?.length) {
+  if (!isPending && !timelineEmailEvents?.length) {
     return (
       <>
         <EmptyTimeline invalidateQuery={invalidateQuery} />
@@ -194,9 +193,18 @@ export const OrganizationTimeline: FC = () => {
     );
   }
 
+  if (isPending && !isFetchingNextPage) {
+    return (
+      <Flex direction='column' mt={4} pl={6}>
+        <TimelineItemSkeleton />
+        <TimelineItemSkeleton />
+      </Flex>
+    );
+  }
+
   return (
     <>
-      {(isFetchingNextPage || isPending) && (
+      {isFetchingNextPage && (
         <Flex direction='column' mt={4} pl={6}>
           <TimelineItemSkeleton />
           <TimelineItemSkeleton />
@@ -206,7 +214,11 @@ export const OrganizationTimeline: FC = () => {
       <Virtuoso<TimelineEvent>
         ref={virtuosoRef}
         style={styles}
-        initialTopMostItemIndex={timelineEmailEvents?.length - 1}
+        initialTopMostItemIndex={{
+          align: 'start',
+          index: timelineEmailEvents?.length - 1,
+          behavior: 'auto',
+        }}
         data={timelineEmailEvents ?? []}
         increaseViewportBy={300}
         atTopThreshold={100}
