@@ -2,8 +2,8 @@ package servicet
 
 import (
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/grpc"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/grpc"
 	"golang.org/x/net/context"
 	"os"
 	"testing"

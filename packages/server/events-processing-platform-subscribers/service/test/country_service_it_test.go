@@ -2,9 +2,9 @@ package servicet
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test"
+	eventstoret "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/country"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test"
-	eventstoret "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	countrypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/country"
 	"github.com/stretchr/testify/require"
