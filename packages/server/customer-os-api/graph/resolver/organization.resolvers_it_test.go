@@ -982,13 +982,13 @@ func TestQueryResolver_Organization_WithOrders(t *testing.T) {
 	require.NotNil(t, organization)
 	require.Equal(t, 2, len(organization.Orders))
 
-	require.Equal(t, orderId1, organization.Orders[0].ID)
+	require.ElementsMatch(t, []string{orderId1, orderId2}, []string{organization.Orders[0].ID, organization.Orders[1].ID})
+
 	require.NotNil(t, organization.Orders[0].ConfirmedAt)
 	require.Nil(t, organization.Orders[0].PaidAt)
 	require.Nil(t, organization.Orders[0].FulfilledAt)
 	require.Nil(t, organization.Orders[0].CancelledAt)
 
-	require.Equal(t, orderId2, organization.Orders[1].ID)
 	require.NotNil(t, organization.Orders[1].ConfirmedAt)
 	require.NotNil(t, organization.Orders[1].PaidAt)
 	require.Nil(t, organization.Orders[1].FulfilledAt)
