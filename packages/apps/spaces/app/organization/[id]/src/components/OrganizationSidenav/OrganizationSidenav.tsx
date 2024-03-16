@@ -5,10 +5,10 @@ import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { useLocalStorage } from 'usehooks-ts';
 
 import { Icons } from '@ui/media/Icon';
-import { IconButton } from '@ui/form/IconButton';
 import { Ticket02 } from '@ui/media/icons/Ticket02';
 import { Trophy01 } from '@ui/media/icons/Trophy01';
-import { Tooltip } from '@ui/overlay/Tooltip/Tooltip2';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
+import { IconButton } from '@ui/form/IconButton/IconButton';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { SidenavItem } from '@shared/components/RootSidenav/components/SidenavItem';
 import { useOrganizationQuery } from '@organization/src/graphql/organization.generated';
@@ -65,11 +65,7 @@ export const OrganizationSidenav = () => {
               {parentOrg.name}
             </a>
           )}
-          <Tooltip
-            // position={'bottom'}
-            label={data?.organization?.name ?? ''}
-            // className='bg-gray-700 text-white'
-          >
+          <Tooltip label={data?.organization?.name ?? ''}>
             <span className='max-w-150px text-lg font-semibold text-gray-700 truncate whitespace-nowrap '>
               {data?.organization?.name || 'Organization'}
             </span>

@@ -1,85 +1,42 @@
-import React from 'react';
+import { twMerge } from 'tailwind-merge';
+import * as RadixTooltip from '@radix-ui/react-tooltip';
 
-import { TooltipRootProps, Tooltip as ArkTooltip } from '@ark-ui/react';
-
-import { cn } from '@ui/utils/cn';
-
-type Placement =
-  | 'top'
-  | 'bottom'
-  | 'left'
-  | 'right'
-  | 'bottom-start'
-  | 'bottom-end'
-  | 'top-start'
-  | 'top-end'
-  | 'left-start'
-  | 'left-end'
-  | 'right-start'
-  | 'right-end';
-
-interface TooltipProps extends TooltipRootProps {
+interface TooltipProps {
   label: string;
   className?: string;
   hasArrow?: boolean;
-  position: Placement;
   children: React.ReactNode;
+  align?: 'start' | 'end' | 'center';
+  side?: 'top' | 'bottom' | 'left' | 'right';
 }
 
 export const Tooltip = ({
-  children,
-  position = 'bottom',
   label,
-  hasArrow = false,
-  className = '',
-  ...props
+  children,
+  className,
+  align,
+  side,
+  hasArrow,
 }: TooltipProps) => {
   return (
-    <ArkTooltip.Root
-      closeDelay={150}
-      openDelay={150}
-      positioning={{ placement: position }}
-      {...props}
-    >
-      {({ isOpen }) => (
-        <>
-          <ArkTooltip.Trigger>{children}</ArkTooltip.Trigger>
-          <ArkTooltip.Positioner>
-            <ArkTooltip.Content
-              className={cn(
-                'py-2 px-3 shadow-lg text-lg leading-7 rounded-md items-center overflow-hidden',
-                {
-                  'animate-in fade-in-15': isOpen,
-                  'animate-out fade-out-15': !isOpen,
-                },
-                className,
-              )}
-            >
-              {label}
-            </ArkTooltip.Content>
-            {hasArrow && (
-              <>
-                <ArkTooltip.Arrow
-                  className={cn('data-[part=arrow]', {
-                    'animate-in fade-in-55': isOpen,
-                    'animate-out fade-out-20': !isOpen,
-                  })}
-                  style={
-                    {
-                      '--arrow-size': isOpen ? '8px' : '0',
-                      '--arrow-background': isOpen
-                        ? 'rgb(55 65 81)'
-                        : 'transparent',
-                    } as React.CSSProperties
-                  }
-                >
-                  <ArkTooltip.ArrowTip />
-                </ArkTooltip.Arrow>
-              </>
+    <RadixTooltip.Provider>
+      <RadixTooltip.Root>
+        <RadixTooltip.Trigger asChild>{children}</RadixTooltip.Trigger>
+        <RadixTooltip.Portal>
+          <RadixTooltip.Content
+            className={twMerge(
+              'data-[state=delayed-open]:data-[side=top]:animate-slideDownAndFade data-[state=delayed-open]:data-[side=right]:animate-slideLeftAndFade data-[state=delayed-open]:data-[side=left]:animate-slideRightAndFade data-[state=delayed-open]:data-[side=bottom]:animate-slideUpAndFade text-white select-none rounded-[4px] bg-gray-700 px-[15px] py-[10px] text-[15px] leading-none shadow-[hsl(206_22%_7%_/_35%)_0px_10px_38px_-10px,_hsl(206_22%_7%_/_20%)_0px_10px_20px_-15px] will-change-[transform,opacity]',
+              className,
             )}
-          </ArkTooltip.Positioner>
-        </>
-      )}
-    </ArkTooltip.Root>
+            side={side}
+            align={align}
+            sideOffset={5}
+          >
+            {label}
+            {hasArrow && <RadixTooltip.Arrow className='fill-gray-700' />}
+          </RadixTooltip.Content>
+        </RadixTooltip.Portal>
+      </RadixTooltip.Root>
+    </RadixTooltip.Provider>
   );
 };
