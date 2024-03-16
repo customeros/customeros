@@ -6,8 +6,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-platform-admin-api/metrics"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-platform-admin-api/validator"
 	"log"
 )
 
