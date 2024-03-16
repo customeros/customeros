@@ -3,7 +3,7 @@ package logger
 import (
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	common_logger "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"go.uber.org/zap"
 	"time"
 )
