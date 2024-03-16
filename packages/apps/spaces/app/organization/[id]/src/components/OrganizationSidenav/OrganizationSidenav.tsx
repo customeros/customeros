@@ -8,7 +8,7 @@ import { Icons } from '@ui/media/Icon';
 import { IconButton } from '@ui/form/IconButton';
 import { Ticket02 } from '@ui/media/icons/Ticket02';
 import { Trophy01 } from '@ui/media/icons/Trophy01';
-import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip2';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { SidenavItem } from '@shared/components/RootSidenav/components/SidenavItem';
 import { useOrganizationQuery } from '@organization/src/graphql/organization.generated';
@@ -66,10 +66,9 @@ export const OrganizationSidenav = () => {
             </a>
           )}
           <Tooltip
+            // position={'bottom'}
             label={data?.organization?.name ?? ''}
-            position={'bottom'}
-            hasArrow
-            className='bg-gray-700 text-white'
+            // className='bg-gray-700 text-white'
           >
             <span className='max-w-150px text-lg font-semibold text-gray-700 truncate whitespace-nowrap '>
               {data?.organization?.name || 'Organization'}
