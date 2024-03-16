@@ -8,7 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/graph_db/entity"
 )
 
 func CreateSocial(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, social neo4jentity.SocialEntity) string {
