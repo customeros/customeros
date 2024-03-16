@@ -1,5 +1,5 @@
 run: build
-	go run events-processing-platform.go
+	go run events_processing_platform_subscribers.go
 
 generate:
 
