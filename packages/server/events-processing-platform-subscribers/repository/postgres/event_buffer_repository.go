@@ -3,7 +3,7 @@ package repository
 import (
 	"time"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository/postgres/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository/postgres/entity"
 	"gorm.io/gorm"
 )
 

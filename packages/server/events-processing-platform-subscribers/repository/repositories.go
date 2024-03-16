@@ -4,8 +4,8 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	cmn_repository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
-	repository "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository/postgres"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository/postgres/entity"
+	repository "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository/postgres"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository/postgres/entity"
 	"gorm.io/gorm"
 )
 
@@ -21,7 +21,6 @@ type Repositories struct {
 	CommonRepositories      *cmn_repository.Repositories
 	CustomerOsIdsRepository repository.CustomerOsIdsRepository
 	EventBufferRepository   repository.EventBufferRepository
-	InvoiceRepository       repository.InvoiceRepository
 }
 
 func InitRepos(driver *neo4j.DriverWithContext, neo4jDatabase string, gormDb *gorm.DB) *Repositories {
@@ -34,7 +33,6 @@ func InitRepos(driver *neo4j.DriverWithContext, neo4jDatabase string, gormDb *go
 		CommonRepositories:      cmn_repository.InitRepositories(gormDb, driver),
 		CustomerOsIdsRepository: repository.NewCustomerOsIdsRepository(gormDb),
 		EventBufferRepository:   repository.NewEventBufferRepository(gormDb),
-		InvoiceRepository:       repository.NewInvoiceRepository(gormDb),
 	}
 
 	return &repositories
@@ -42,7 +40,7 @@ func InitRepos(driver *neo4j.DriverWithContext, neo4jDatabase string, gormDb *go
 
 func Migration(db *gorm.DB) {
 
-	err := db.AutoMigrate(&entity.CustomerOsIds{}, &entity.EventBuffer{}, &entity.InvoiceNumberEntity{})
+	err := db.AutoMigrate(&entity.CustomerOsIds{}, &entity.EventBuffer{})
 	if err != nil {
 		panic(err)
 	}
