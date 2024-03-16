@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"

@@ -11,7 +11,7 @@ import (
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	orgmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"

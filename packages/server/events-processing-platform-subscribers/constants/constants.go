@@ -1,13 +1,11 @@
 package constants
 
 const (
-	AppSourceEventProcessingPlatform = "event-processing-platform"
+	AppSourceEventProcessingPlatform = "event-processing-platform-subscribers"
 	AppSourceIntegrationApp          = "integration.app"
-	AppSourceSyncCustomerOsData      = "sync-customer-os-data"
 
 	ComponentNeo4jRepository     = "neo4jRepository"
 	ComponentService             = "service"
-	ComponentCommandHandler      = "commandHandler"
 	ComponentSubscriptionGraph   = "subscriptionGraph"
 	ComponentSubscriptionInvoice = "subscriptionInvoice"
 
@@ -37,8 +35,6 @@ const (
 	OnboardingStatus_Order_Successful = 60
 
 	MaxRetriesCheckDataInNeo4j = 8
-
-	Tcp = "tcp"
 
 	GRPC     = "GRPC"
 	SIZE     = "SIZE"
@@ -73,15 +69,9 @@ const (
 	Redis           = "redis"
 
 	EsInternalStreamPrefix = "$"
-	EsAll                  = "$all"
-	StreamTempPrefix       = "temp"
 
-	StreamMetadataMaxCount              = 1000
-	StreamMetadataMaxAgeSeconds         = 7 * 24 * 60 * 60  // 7 days
-	StreamMetadataMaxAgeSecondsExtended = 30 * 24 * 60 * 60 // 30 days
-
-	UrlCustomerOsApi = "https://customeros.ai"
-	UrlInvoices      = UrlCustomerOsApi + "/invoices"
+	StreamMetadataMaxCount      = 1000
+	StreamMetadataMaxAgeSeconds = 7 * 24 * 60 * 60 // 7 days
 
 	UrlFileStoreApi                     = "https://fs.customeros.ai/"
 	UrlFileStoreFileDownloadUrlTemplate = UrlFileStoreApi + "file/%s/download"

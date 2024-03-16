@@ -4,12 +4,13 @@ import (
 	"context"
 	"strings"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	commentevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment/event"
 	contactevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event"
 	contractevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/event"
@@ -35,7 +36,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/opentracing/opentracing-go/log"

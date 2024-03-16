@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
@@ -13,12 +13,11 @@ import (
 )
 
 const (
-	SpanTagTenant                = "tenant"
-	SpanTagUserId                = "user-id"
-	SpanTagComponent             = "component"
-	SpanTagAggregateId           = "aggregateID"
-	SpanTagEntityId              = "entity-id"
-	SpanTagRedundantEventSkipped = "redundantEventSkipped"
+	SpanTagTenant      = "tenant"
+	SpanTagUserId      = "user-id"
+	SpanTagComponent   = "component"
+	SpanTagAggregateId = "aggregateID"
+	SpanTagEntityId    = "entity-id"
 )
 
 func StartGrpcServerTracerSpan(ctx context.Context, operationName string) (context.Context, opentracing.Span) {
