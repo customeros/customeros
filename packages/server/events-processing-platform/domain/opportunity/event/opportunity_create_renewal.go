@@ -1,10 +1,10 @@
 package event
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 	"github.com/pkg/errors"
 	"time"
 )

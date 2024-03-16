@@ -1,9 +1,9 @@
 package invoice
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	"github.com/pkg/errors"
 	"time"

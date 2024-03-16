@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	validator "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 	"os"
 	"os/signal"
 	"syscall"
@@ -31,7 +32,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstroredb"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"

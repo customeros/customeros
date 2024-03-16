@@ -4,12 +4,12 @@ import (
 	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
 	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstroredb"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 )
 
 type Config struct {

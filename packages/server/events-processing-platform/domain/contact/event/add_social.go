@@ -1,9 +1,9 @@
 package event
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	"github.com/pkg/errors"
 	"time"

@@ -2,8 +2,8 @@ package event
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 	tenantpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/tenant"
 	"github.com/pkg/errors"
 	"time"

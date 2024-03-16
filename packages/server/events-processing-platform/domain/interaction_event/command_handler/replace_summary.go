@@ -2,12 +2,12 @@ package command_handler
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
