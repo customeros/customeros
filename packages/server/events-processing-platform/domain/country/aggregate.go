@@ -2,6 +2,7 @@ package country
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -70,7 +71,7 @@ func (a *countryAggregate) When(evt eventstore.Event) error {
 	case CountryCreateV1:
 		return a.onCountryCreate(evt)
 	default:
-		if strings.HasPrefix(evt.GetEventType(), "$") {
+		if strings.HasPrefix(evt.GetEventType(), constants.EsInternalStreamPrefix) {
 			return nil
 		}
 		err := eventstore.ErrInvalidEventType

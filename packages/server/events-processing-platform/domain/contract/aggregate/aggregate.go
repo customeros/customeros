@@ -55,7 +55,7 @@ func (a *ContractAggregate) When(evt eventstore.Event) error {
 	case event.ContractDeleteV1:
 		return a.onContractDelete(evt)
 	default:
-		if strings.HasPrefix(evt.GetEventType(), "$") {
+		if strings.HasPrefix(evt.GetEventType(), constants.EsInternalStreamPrefix) {
 			return nil
 		}
 		err := eventstore.ErrInvalidEventType

@@ -2,6 +2,7 @@ package invoicing_cycle
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -58,7 +59,7 @@ func (a *InvoicingCycleAggregate) When(evt eventstore.Event) error {
 	case InvoicingCycleUpdateV1:
 		return a.onInvoicingCycleUpdate(evt)
 	default:
-		if strings.HasPrefix(evt.GetEventType(), "$") {
+		if strings.HasPrefix(evt.GetEventType(), constants.EsInternalStreamPrefix) {
 			return nil
 		}
 		err := eventstore.ErrInvalidEventType

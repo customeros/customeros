@@ -1,6 +1,7 @@
 package aggregate
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_session/event"
@@ -34,7 +35,7 @@ func (a *InteractionSessionAggregate) When(evt eventstore.Event) error {
 	case event.InteractionSessionCreateV1:
 		return a.onInteractionSessionCreate(evt)
 	default:
-		if strings.HasPrefix(evt.GetEventType(), "$") {
+		if strings.HasPrefix(evt.GetEventType(), constants.EsInternalStreamPrefix) {
 			return nil
 		}
 		err := eventstore.ErrInvalidEventType
