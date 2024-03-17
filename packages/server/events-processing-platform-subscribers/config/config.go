@@ -22,7 +22,6 @@ type Config struct {
 	GRPC               GRPC
 	Subscriptions      Subscriptions
 	Services           Services
-	Utils              Utils
 	EventNotifications EventNotifications
 	Temporal           config.TemporalConfig
 }
@@ -234,10 +233,6 @@ type Services struct {
 		ApiKey string `env:"NOVU_API_KEY,required" envDefault:"N/A"`
 	}
 	FileStoreApiConfig fsc.FileStoreApiConfig
-}
-
-type Utils struct {
-	RetriesOnOptimisticLockException int `env:"UTILS_RETRIES_ON_OPTIMISTIC_LOCK" envDefault:"5"`
 }
 
 type EventNotifications struct {
