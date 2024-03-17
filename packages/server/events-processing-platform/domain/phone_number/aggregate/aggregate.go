@@ -44,7 +44,7 @@ func (a *PhoneNumberAggregate) When(event eventstore.Event) error {
 	case events.PhoneNumberValidatedV1:
 		return a.OnPhoneNumberValidated(event)
 	default:
-		if strings.HasPrefix(event.GetEventType(), "$") {
+		if strings.HasPrefix(event.GetEventType(), constants.EsInternalStreamPrefix) {
 			return nil
 		}
 		err := eventstore.ErrInvalidEventType

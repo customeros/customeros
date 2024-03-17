@@ -44,7 +44,7 @@ func (a *InteractionEventAggregate) When(evt eventstore.Event) error {
 	case event.InteractionEventReplaceActionItemsV1:
 		return a.onActionItemsReplace(evt)
 	default:
-		if strings.HasPrefix(evt.GetEventType(), "$") {
+		if strings.HasPrefix(evt.GetEventType(), constants.EsInternalStreamPrefix) {
 			return nil
 		}
 		err := eventstore.ErrInvalidEventType

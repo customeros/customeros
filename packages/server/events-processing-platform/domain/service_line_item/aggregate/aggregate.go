@@ -40,7 +40,7 @@ func (a *ServiceLineItemAggregate) When(evt eventstore.Event) error {
 	case event.ServiceLineItemCloseV1:
 		return a.onClose(evt)
 	default:
-		if strings.HasPrefix(evt.GetEventType(), "$") {
+		if strings.HasPrefix(evt.GetEventType(), constants.EsInternalStreamPrefix) {
 			return nil
 		}
 		err := eventstore.ErrInvalidEventType

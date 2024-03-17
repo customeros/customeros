@@ -54,7 +54,7 @@ func (a *UserAggregate) When(event eventstore.Event) error {
 		return a.onRemoveRole(event)
 
 	default:
-		if strings.HasPrefix(event.GetEventType(), "$") {
+		if strings.HasPrefix(event.GetEventType(), constants.EsInternalStreamPrefix) {
 			return nil
 		}
 		err := eventstore.ErrInvalidEventType

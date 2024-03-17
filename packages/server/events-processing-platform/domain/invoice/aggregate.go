@@ -440,7 +440,7 @@ func (a *InvoiceAggregate) When(evt eventstore.Event) error {
 		InvoiceVoidV1:
 		return nil
 	default:
-		if strings.HasPrefix(evt.GetEventType(), "$") {
+		if strings.HasPrefix(evt.GetEventType(), constants.EsInternalStreamPrefix) {
 			return nil
 		}
 		err := eventstore.ErrInvalidEventType

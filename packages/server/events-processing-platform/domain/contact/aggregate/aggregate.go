@@ -49,7 +49,7 @@ func (a *ContactAggregate) When(evt eventstore.Event) error {
 	case event.ContactAddSocialV1:
 		return a.onAddSocial(evt)
 	default:
-		if strings.HasPrefix(evt.GetEventType(), "$") {
+		if strings.HasPrefix(evt.GetEventType(), constants.EsInternalStreamPrefix) {
 			return nil
 		}
 		err := eventstore.ErrInvalidEventType

@@ -42,7 +42,7 @@ func (a *LocationAggregate) When(event eventstore.Event) error {
 	case events.LocationValidatedV1:
 		return a.OnLocationValidated(event)
 	default:
-		if strings.HasPrefix(event.GetEventType(), "$") {
+		if strings.HasPrefix(event.GetEventType(), constants.EsInternalStreamPrefix) {
 			return nil
 		}
 		err := eventstore.ErrInvalidEventType
