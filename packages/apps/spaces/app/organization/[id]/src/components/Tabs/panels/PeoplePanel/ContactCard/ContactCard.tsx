@@ -11,7 +11,7 @@ import differenceInCalendarMonths from 'date-fns/differenceInCalendarMonths';
 import { Flex } from '@ui/layout/Flex';
 import { Icons } from '@ui/media/Icon';
 import { Contact } from '@graphql/types';
-import { Avatar } from '@ui/media/Avatar';
+// import { Avatar } from '@ui/media/Avatar';
 import { useDisclosure } from '@ui/utils';
 import { FormInput } from '@ui/form/Input';
 import { Text } from '@ui/typography/Text';
@@ -20,6 +20,7 @@ import { Fade } from '@ui/transitions/Fade';
 import { User01 } from '@ui/media/icons/User01';
 import { IconButton } from '@ui/form/IconButton';
 import { Collapse } from '@ui/transitions/Collapse';
+import { AvatarDemo } from '@ui/media/Avatar/Avatar';
 import { FormInputGroup } from '@ui/form/InputGroup';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea';
 import { SelectOption } from '@shared/types/SelectOptions';
@@ -324,11 +325,17 @@ export const ContactCard = ({
           position='relative'
           onClick={toggle}
         >
-          <Avatar
+          {/* <Avatar
             name={state?.values?.name ?? data?.name}
-            variant='shadowed'
             src={contact?.profilePhotoUrl ? contact.profilePhotoUrl : undefined}
             icon={<User01 color='gray.700' height='1.8rem' />}
+            variant='shadowed'
+          /> */}
+          <AvatarDemo
+            name={state?.values?.name ?? data?.name}
+            src={contact?.profilePhotoUrl ? contact.profilePhotoUrl : undefined}
+            icon={<User01 className='text-gray-700' />}
+            variant='shadowed'
           />
           <Flex ml='4' flexDir='column' flex='1'>
             <FormInput
