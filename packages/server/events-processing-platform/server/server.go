@@ -20,7 +20,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore/store"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstroredb"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/opentracing/opentracing-go"
@@ -106,14 +105,6 @@ func (server *Server) Start(parentCtx context.Context) error {
 	//Server.runHealthCheck(ctx)
 
 	server.Services = service.InitServices(server.Config, server.Repositories, server.AggregateStore, server.CommandHandlers, server.Log, eventBufferWatcher)
-
-	// Setting up gRPC client
-	df := grpc_client.NewDialFactory(server.Config)
-	gRPCconn, err := df.GetEventsProcessingPlatformConn()
-	if err != nil {
-		server.Log.Fatalf("Failed to connect: %v", err)
-	}
-	defer df.Close(gRPCconn)
 
 	closeGrpcServer, grpcServer, err := server.NewEventProcessorGrpcServer()
 	if err != nil {
