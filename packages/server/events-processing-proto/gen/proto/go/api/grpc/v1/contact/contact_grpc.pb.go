@@ -8,7 +8,6 @@ package contact_grpc_service
 
 import (
 	context "context"
-	common "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -28,7 +27,7 @@ type ContactGrpcServiceClient interface {
 	LinkEmailToContact(ctx context.Context, in *LinkEmailToContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
 	LinkLocationToContact(ctx context.Context, in *LinkLocationToContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
 	LinkWithOrganization(ctx context.Context, in *LinkWithOrganizationGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
-	AddSocial(ctx context.Context, in *ContactAddSocialGrpcRequest, opts ...grpc.CallOption) (*common.IdResponse, error)
+	AddSocial(ctx context.Context, in *ContactAddSocialGrpcRequest, opts ...grpc.CallOption) (*SocialIdGrpcResponse, error)
 }
 
 type contactGrpcServiceClient struct {
@@ -84,8 +83,8 @@ func (c *contactGrpcServiceClient) LinkWithOrganization(ctx context.Context, in 
 	return out, nil
 }
 
-func (c *contactGrpcServiceClient) AddSocial(ctx context.Context, in *ContactAddSocialGrpcRequest, opts ...grpc.CallOption) (*common.IdResponse, error) {
-	out := new(common.IdResponse)
+func (c *contactGrpcServiceClient) AddSocial(ctx context.Context, in *ContactAddSocialGrpcRequest, opts ...grpc.CallOption) (*SocialIdGrpcResponse, error) {
+	out := new(SocialIdGrpcResponse)
 	err := c.cc.Invoke(ctx, "/contactGrpcService/AddSocial", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -102,7 +101,7 @@ type ContactGrpcServiceServer interface {
 	LinkEmailToContact(context.Context, *LinkEmailToContactGrpcRequest) (*ContactIdGrpcResponse, error)
 	LinkLocationToContact(context.Context, *LinkLocationToContactGrpcRequest) (*ContactIdGrpcResponse, error)
 	LinkWithOrganization(context.Context, *LinkWithOrganizationGrpcRequest) (*ContactIdGrpcResponse, error)
-	AddSocial(context.Context, *ContactAddSocialGrpcRequest) (*common.IdResponse, error)
+	AddSocial(context.Context, *ContactAddSocialGrpcRequest) (*SocialIdGrpcResponse, error)
 }
 
 // UnimplementedContactGrpcServiceServer should be embedded to have forward compatible implementations.
@@ -124,7 +123,7 @@ func (UnimplementedContactGrpcServiceServer) LinkLocationToContact(context.Conte
 func (UnimplementedContactGrpcServiceServer) LinkWithOrganization(context.Context, *LinkWithOrganizationGrpcRequest) (*ContactIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LinkWithOrganization not implemented")
 }
-func (UnimplementedContactGrpcServiceServer) AddSocial(context.Context, *ContactAddSocialGrpcRequest) (*common.IdResponse, error) {
+func (UnimplementedContactGrpcServiceServer) AddSocial(context.Context, *ContactAddSocialGrpcRequest) (*SocialIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddSocial not implemented")
 }
 

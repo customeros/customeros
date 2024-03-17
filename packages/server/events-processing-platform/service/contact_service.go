@@ -14,7 +14,6 @@ import (
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	"strings"
 )
@@ -173,21 +172,25 @@ func (s *contactService) LinkWithOrganization(ctx context.Context, request *cont
 	return &contactpb.ContactIdGrpcResponse{Id: request.ContactId}, nil
 }
 
-func (s *contactService) AddSocial(ctx context.Context, request *contactpb.ContactAddSocialGrpcRequest) (*commonpb.IdResponse, error) {
+func (s *contactService) AddSocial(ctx context.Context, request *contactpb.ContactAddSocialGrpcRequest) (*contactpb.SocialIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContactService.AddSocial")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	tracing.LogObjectAsJson(span, "request", request)
 	span.SetTag(tracing.SpanTagEntityId, request.ContactId)
 
-	socialId, err := s.contactRequestHandler.HandleWithRetry(ctx, request.Tenant, request.ContactId, true, request)
+	socialIdAny, err := s.contactRequestHandler.HandleWithRetry(ctx, request.Tenant, request.ContactId, true, request)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(AddSocial.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
 	}
+	socialId := ""
+	if socialIdAny != nil {
+		socialId = socialIdAny.(string)
+	}
 
-	return &commonpb.IdResponse{Id: socialId.(string)}, nil
+	return &contactpb.SocialIdGrpcResponse{Id: socialId}, nil
 }
 
 func (s *contactService) errResponse(err error) error {
