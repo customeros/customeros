@@ -41,11 +41,7 @@ func (dfi TestDialFactoryImpl) GetEventsProcessingPlatformConn(repositories *rep
 	appLogger.InitLogger()
 	appLogger.WithName("unit-test")
 
-	myServer := server.NewServer(&config.Config{
-		Utils: config.Utils{
-			RetriesOnOptimisticLockException: 3,
-		},
-	}, appLogger)
+	myServer := server.NewServer(&config.Config{}, appLogger)
 
 	myServer.Repositories = repositories
 	myServer.AggregateStore = aggregateStore

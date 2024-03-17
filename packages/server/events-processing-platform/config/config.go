@@ -13,16 +13,15 @@ import (
 )
 
 type Config struct {
-	ServiceName        string `env:"SERVICE_NAME" envDefault:"events-processing-platform"`
-	Logger             logger.Config
-	EventStoreConfig   eventstroredb.EventStoreConfig
-	Neo4j              config.Neo4jConfig
-	Postgres           config.PostgresConfig
-	Jaeger             tracing.JaegerConfig
-	GRPC               GRPC
-	Services           Services
-	Utils              Utils
-	EventNotifications EventNotifications
+	ServiceName      string `env:"SERVICE_NAME" envDefault:"events-processing-platform"`
+	Logger           logger.Config
+	EventStoreConfig eventstroredb.EventStoreConfig
+	Neo4j            config.Neo4jConfig
+	Postgres         config.PostgresConfig
+	Jaeger           tracing.JaegerConfig
+	GRPC             GRPC
+	Services         Services
+	Utils            Utils
 }
 
 type GRPC struct {
@@ -105,12 +104,6 @@ type Services struct {
 
 type Utils struct {
 	RetriesOnOptimisticLockException int `env:"UTILS_RETRIES_ON_OPTIMISTIC_LOCK" envDefault:"5"`
-}
-
-type EventNotifications struct {
-	EndPoints struct {
-		InvoiceReady string `env:"INVOICE_READY_URL" envDefault:""`
-	}
 }
 
 func InitConfig() (*Config, error) {
