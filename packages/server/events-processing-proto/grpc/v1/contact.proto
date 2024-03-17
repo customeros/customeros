@@ -96,11 +96,15 @@ message ContactIdGrpcResponse {
   string id = 1;
 }
 
+message SocialIdGrpcResponse {
+  string id = 1;
+}
+
 service contactGrpcService {
   rpc UpsertContact(UpsertContactGrpcRequest) returns (ContactIdGrpcResponse);
   rpc LinkPhoneNumberToContact(LinkPhoneNumberToContactGrpcRequest) returns (ContactIdGrpcResponse);
   rpc LinkEmailToContact(LinkEmailToContactGrpcRequest) returns (ContactIdGrpcResponse);
   rpc LinkLocationToContact(LinkLocationToContactGrpcRequest) returns (ContactIdGrpcResponse);
   rpc LinkWithOrganization(LinkWithOrganizationGrpcRequest) returns (ContactIdGrpcResponse);
-  rpc AddSocial(ContactAddSocialGrpcRequest) returns (IdResponse);
+  rpc AddSocial(ContactAddSocialGrpcRequest) returns (SocialIdGrpcResponse);
 }

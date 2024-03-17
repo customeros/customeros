@@ -343,7 +343,7 @@ func (a *ContactAggregate) addSocial(ctx context.Context, r *contactpb.ContactAd
 	if aggregate.AllowCheckForNoChanges(sourceFields.AppSource, r.LoggedInUserId) {
 		if a.Contact.HasSocialUrl(r.Url) {
 			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
-			return nil, nil
+			return "", nil
 		}
 	}
 
