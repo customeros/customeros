@@ -6,19 +6,18 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Boostport/mjml-go"
 	"github.com/aws/aws-sdk-go/aws"
 	awsSes "github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/mrz1836/postmark"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/notifications"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/opentracing/opentracing-go"
-
-	"github.com/Boostport/mjml-go"
-	"github.com/mrz1836/postmark"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 )
 
 const (
