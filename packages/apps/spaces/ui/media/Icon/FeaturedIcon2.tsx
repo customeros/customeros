@@ -28,7 +28,7 @@ interface FeaturedIconStyleProps
     | ((props: React.HTMLAttributes<HTMLDivElement>) => ReactNode);
 }
 
-export const FeaturedIcon2 = ({
+export const FeaturedIcon = ({
   children,
   colorScheme = 'primary',
   size = 'md',
@@ -43,12 +43,10 @@ export const FeaturedIcon2 = ({
     ),
   };
 
-  const Icon = isValidElement(children)
+  return isValidElement(children)
     ? cloneElement(children, iconProps)
     : typeof children === 'function'
     ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
       children(iconProps as any)
     : children;
-
-  return <>{Icon}</>;
 };
