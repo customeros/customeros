@@ -1,19 +1,13 @@
 'use client';
 import React from 'react';
+import Image from 'next/image';
 
 import { BuiltInProviderType } from 'next-auth/providers';
 import { signIn, LiteralUnion, ClientSafeProvider } from 'next-auth/react';
 
-import { Box } from '@ui/layout/Box';
-import { Flex } from '@ui/layout/Flex';
-import { Image } from '@ui/media/Image';
-import { Button } from '@ui/form/Button';
-import { GridItem } from '@ui/layout/Grid';
-import { Text } from '@ui/typography/Text';
-import { Center } from '@ui/layout/Center';
-import { Link } from '@ui/navigation/Link';
+import { cn } from '@ui/utils/cn';
+import { Button } from '@ui/form/Button/Button';
 import { Google } from '@ui/media/logos/Google';
-import { Heading } from '@ui/typography/Heading';
 import { Microsoft } from '@ui/media/logos/Microsoft';
 
 import Background from './login-bg.png';
@@ -30,90 +24,82 @@ export default function SignIn({
 }) {
   return (
     <>
-      <GridItem h='100vh'>
-        <Box height='50%'>
+      <div className='h-screen'>
+        <div className='h-[50%]'>
           <Image
             alt=''
             src={BackgroundGridDot}
-            width={480}
-            top='-10%'
-            margin='auto'
+            className='top-[-10%] w-[480px]'
           />
-        </Box>
-        <Center height='100%' pos='relative' top='-50%'>
-          <Flex flexDirection={'column'} align={'center'} width={360}>
+        </div>
+        <div className='h-full flex items-center justify-center relative top-[-50%]'>
+          <div className='flex flex-col items-center w-[360px]'>
             <Image
               src={CustomOsLogo}
               alt='CustomerOS'
-              width={264}
-              height={264}
+              className='size-[264px]'
             />
-            <Heading color='gray.900' size='lg' py={3} mt={-10}>
+            <h2 className='text-gray-900 leading-9 font-bold text-3xl py-3 mt-[-40px]'>
               Welcome back
-            </Heading>
-            <Text color='gray.500'>Sign in to your account</Text>
+            </h2>
+            <p className='text-gray-500'>Sign in to your account</p>
             {providers &&
               Object.values(providers).map((provider, i) => {
                 let icon = undefined;
                 switch (provider.id) {
                   case 'google':
-                    icon = <Google boxSize={6} />;
+                    icon = <Google className='size-6' />;
                     break;
                   case 'azure-ad':
-                    icon = <Microsoft boxSize={6} />;
+                    icon = <Microsoft className='size-6' />;
                     break;
                   default:
                     icon = undefined;
                 }
+                const dynamicMargin = i === 0 ? 'mt-[17px]' : 'mt-3';
 
                 return (
                   <Button
-                    mt={i === 0 ? 6 : 3}
                     key={provider.name}
                     size='md'
                     variant='outline'
+                    colorScheme='gray'
                     leftIcon={icon}
-                    backgroundColor={'white'}
                     onClick={() => signIn(provider.id)}
-                    width='100%'
+                    className={cn(
+                      `w-[100%] py-[7px] px-[16px] bg-white ${dynamicMargin} `,
+                    )}
                   >
                     Sign in with {provider.name}
                   </Button>
                 );
               })}
-
-            <Text color='gray.500' mt={2} textAlign='center' fontSize='xs'>
+            <div className='text-gray-500 mt-2 text-center text-xs'>
               By logging in you agree to CustomerOS&apos;s
-              <Text color='gray.500'>
-                <Link
-                  color='primary.700'
+              <div className='text-gray-500'>
+                <a
+                  className='text-primary-700 mr-1'
                   href='https://customeros.ai/legal/terms-of-service'
-                  mr={1}
                 >
                   Terms of Service
-                </Link>
-                <Text as='span' mr={1}>
-                  and
-                </Text>
-                <Link
-                  color='primary.700'
+                </a>
+                <span className='mr-1'>and</span>
+                <a
+                  className='text-primary-700'
                   href='https://www.customeros.ai/legal/privacy-policy'
                 >
                   Privacy Policy
-                </Link>
+                </a>
                 .
-              </Text>
-            </Text>
-          </Flex>
-        </Center>
-      </GridItem>
-      <GridItem
-        borderTopLeftRadius='80px'
-        borderBottomLeftRadius='80px'
-        bg={`url(${Background.src})`}
-        backgroundRepeat={'no-repeat'}
-        backgroundSize={'cover'}
-      ></GridItem>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div
+        className=' bg-cover rounded-s-[80px] bg-no-repeat'
+        style={{ backgroundImage: `url(${Background.src})` }}
+      />
     </>
   );
 }

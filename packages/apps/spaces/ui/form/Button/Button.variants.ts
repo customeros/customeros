@@ -1601,7 +1601,7 @@ export const linkButton = cva(
     'justify-center',
     'whitespace-nowrap',
     'gap-2',
-    'text-sm',
+    'text-base',
     'font-semibold',
     'shadow-xs',
     'outline-none',
@@ -1718,7 +1718,7 @@ export const solidButton = cva(
     'justify-center',
     'whitespace-nowrap',
     'gap-2',
-    'text-sm',
+    'text-base',
     'font-semibold',
     'shadow-xs',
     'outline-none',
@@ -1900,7 +1900,7 @@ export const ghostButton = cva(
     'justify-center',
     'whitespace-nowrap',
     'gap-2',
-    'text-sm',
+    'text-base',
     'font-semibold',
     'shadow-xs',
     'outline-none',
@@ -2043,7 +2043,7 @@ export const outlineButton = cva(
     'justify-center',
     'whitespace-nowrap',
     'gap-2',
-    'text-sm',
+    'text-base',
     'font-semibold',
     'shadow-xs',
     'outline-none',
@@ -2055,7 +2055,7 @@ export const outlineButton = cva(
     variants: {
       colorScheme: {
         primary: [
-          'text-primary-600',
+          'text-primary-500',
           'border',
           'border-solid',
           'border-primary-300',
@@ -2066,7 +2066,7 @@ export const outlineButton = cva(
           'focus-visible:shadow-ringPrimary',
         ],
         gray: [
-          'text-gray-600',
+          'text-gray-500',
           'border',
           'border-solid',
           'border-gray-300',
@@ -2077,7 +2077,7 @@ export const outlineButton = cva(
           'focus-visible:shadow-ringPrimary',
         ],
         warm: [
-          'text-warm-600',
+          'text-warm-500',
           'border',
           'border-solid',
           'border-warm-300',
@@ -2088,7 +2088,7 @@ export const outlineButton = cva(
           'focus-visible:shadow-ringPrimary',
         ],
         error: [
-          'text-error-600',
+          'text-error-500',
           'border',
           'border-solid',
           'border-error-300',
@@ -2099,7 +2099,7 @@ export const outlineButton = cva(
           'focus-visible:shadow-ringPrimary',
         ],
         rose: [
-          'text-rose-600',
+          'text-rose-500',
           'border',
           'border-solid',
           'border-rose-300',
@@ -2110,7 +2110,7 @@ export const outlineButton = cva(
           'focus-visible:shadow-ringPrimary',
         ],
         warning: [
-          'text-warning-600',
+          'text-warning-500',
           'border',
           'border-solid',
           'border-warning-300',
@@ -2121,7 +2121,7 @@ export const outlineButton = cva(
           'focus-visible:shadow-ringPrimary',
         ],
         blueDark: [
-          'text-blueDark-600',
+          'text-blueDark-500',
           'border',
           'border-solid',
           'border-blueDark-300',
@@ -2132,7 +2132,7 @@ export const outlineButton = cva(
           'focus-visible:shadow-ringPrimary',
         ],
         teal: [
-          'text-teal-600',
+          'text-teal-500',
           'border',
           'border-solid',
           'border-teal-300',
@@ -2143,7 +2143,7 @@ export const outlineButton = cva(
           'focus-visible:shadow-ringPrimary',
         ],
         success: [
-          'text-success-600',
+          'text-success-500',
           'border',
           'border-solid',
           'border-success-300',
@@ -2154,7 +2154,7 @@ export const outlineButton = cva(
           'focus-visible:shadow-ringPrimary',
         ],
         moss: [
-          'text-moss-600',
+          'text-moss-500',
           'border',
           'border-solid',
           'border-moss-300',
@@ -2165,7 +2165,7 @@ export const outlineButton = cva(
           'focus-visible:shadow-ringPrimary',
         ],
         greenLight: [
-          'text-greenLight-600',
+          'text-greenLight-500',
           'border',
           'border-solid',
           'border-greenLight-300',
@@ -2176,7 +2176,7 @@ export const outlineButton = cva(
           'focus-visible:shadow-ringPrimary',
         ],
         violet: [
-          'text-violet-600',
+          'text-violet-500',
           'border',
           'border-solid',
           'border-violet-300',
@@ -2187,7 +2187,7 @@ export const outlineButton = cva(
           'focus-visible:shadow-ringPrimary',
         ],
         fuchsia: [
-          'text-fuchsia-600',
+          'text-fuchsia-500',
           'border',
           'border-solid',
           'border-fuchsia-300',

@@ -27,7 +27,7 @@ const solidButton = (color: string) => `
 
 const outlineButton = (color: string) => `
     ${color}: [
-    'text-${color}-600',
+    'text-${color}-500',
     'border',
     'border-solid',
     'border-${color}-300',
@@ -86,7 +86,7 @@ const buttonDefaultProp = `cva([
   'justify-center',
   'whitespace-nowrap',
   'gap-2',
-  'text-sm',
+  'text-base',
   'font-semibold',
   'shadow-xs',
   'outline-none',
