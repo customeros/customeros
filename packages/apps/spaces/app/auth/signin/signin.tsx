@@ -67,7 +67,7 @@ export default function SignIn({
                     leftIcon={icon}
                     onClick={() => signIn(provider.id)}
                     className={cn(
-                      `w-[100%] py-[7px] px-[16px] bg-white ${dynamicMargin} `,
+                      `w-[100%] py-[7px] px-[16px]  ${dynamicMargin} `,
                     )}
                   >
                     Sign in with {provider.name}
