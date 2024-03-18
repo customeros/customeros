@@ -1,7 +1,69 @@
+import React from 'react';
+import { cloneElement } from 'react';
+
 import { twMerge } from 'tailwind-merge';
 import * as RadixAvatar from '@radix-ui/react-avatar';
 import { AvatarImageProps } from '@radix-ui/react-avatar';
 import { cva, VariantProps } from 'class-variance-authority';
+
+import { cn } from '@ui/utils/cn';
+
+const avatarBadgeSize = cva([], {
+  variants: {
+    badgeSize: {
+      xs: ['w-[6px] h-[6px]'],
+      sm: ['w-[8px] h-[8px]'],
+      md: ['w-[10px] h-[10px]'],
+      lg: ['w-[12px] h-[12px]'],
+      xl: ['w-[14px] h-[14px]'],
+      '2xl': ['w-[16px] h-[16px]'],
+    },
+    borderRadius: {
+      xs: ['ring-[2px] ring-white'],
+      sm: ['ring-[2px] ring-white'],
+      md: ['ring-[2px] ring-white'],
+      lg: ['ring-[2px] ring-white'],
+      xl: ['ring-[2px] ring-white'],
+      '2xl': ['border-[8px] ring-white'],
+    },
+    badgePosition: {
+      xs: ['transform -translate-x-[-12px] -translate-y-[-10px]'],
+      sm: ['transform -translate-x-[-12px] -translate-y-[-13px]'],
+      md: ['transform -translate-x-[-20px] -translate-y-[-15px]'],
+      lg: ['transform -translate-x-[-20px] -translate-y-[-20px]'],
+      xl: ['transform -translate-x-[-20px] -translate-y-[-25px]'],
+      '2xl': ['transform -translate-x-[-25px] -translate-y-[-25px]'],
+    },
+  },
+  compoundVariants: [
+    {
+      badgeSize: 'xs',
+      borderRadius: 'xs',
+      badgePosition: 'xs',
+    },
+    {
+      badgeSize: 'sm',
+      borderRadius: 'sm',
+      badgePosition: 'sm',
+    },
+    {
+      badgeSize: 'md',
+      borderRadius: 'md',
+    },
+    {
+      badgeSize: 'lg',
+      borderRadius: 'lg',
+    },
+    {
+      badgeSize: 'xl',
+      borderRadius: 'xl',
+    },
+    {
+      badgeSize: '2xl',
+      borderRadius: '2xl',
+    },
+  ],
+});
 
 const avatarStyle = cva(
   [
@@ -61,23 +123,28 @@ const avatarStyle = cva(
     },
   },
 );
+
 interface AvatarDemoProps
   extends VariantProps<typeof avatarStyle>,
+    VariantProps<typeof avatarBadgeSize>,
     AvatarImageProps {
   src?: string;
   name?: string;
   className?: string;
   icon?: React.ReactNode;
+  badge?: React.ReactElement;
 }
 
-export const AvatarDemo = ({
+export const Avatar: React.FC<AvatarDemoProps> = ({
   icon,
   name,
   src,
   size,
   variant,
+  badgeSize,
   className,
   color,
+  badge,
   ...props
 }: AvatarDemoProps) => {
   const emptyFallbackLetters = name?.split(' ').map((word) => word[0]);
@@ -89,7 +156,7 @@ export const AvatarDemo = ({
       {src && (
         <RadixAvatar.Image
           {...props}
-          className={'h-full w-full rounded-[inherit] object-cover'}
+          className={'h-full w-full relative rounded-[inherit] object-cover'}
           src={src}
         />
       )}
@@ -109,6 +176,37 @@ export const AvatarDemo = ({
           {emptyFallbackLetters}
         </RadixAvatar.Fallback>
       )}
+      {badge &&
+        cloneElement(badge, {
+          className: cn(
+            avatarBadgeSize({
+              badgeSize: size,
+              badgePosition: size,
+              borderRadius: size,
+            }),
+            badge.props.className,
+          ),
+        })}
     </RadixAvatar.Root>
+  );
+};
+
+interface AvatarBadgeProps extends VariantProps<typeof avatarBadgeSize> {
+  className?: string;
+}
+
+export const AvatarBadge: React.FC<AvatarBadgeProps> = ({
+  className,
+  badgePosition,
+  badgeSize,
+}: AvatarBadgeProps) => {
+  return (
+    <div
+      className={twMerge([
+        className,
+        'rounded-full absolute ',
+        avatarBadgeSize({ badgeSize, badgePosition: badgeSize }),
+      ])}
+    />
   );
 };

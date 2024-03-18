@@ -1,42 +1,26 @@
 import React from 'react';
 
-import { Box } from '@ui/layout/Box';
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
-import { FeaturedIcon } from '@ui/media/Icon';
 import { Lotus } from '@ui/media/icons/Lotus';
-import { Heading } from '@ui/typography/Heading';
+import { FeaturedIcon2 as FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
 
 import HalfCirclePattern from '../../assets/HalfCirclePattern';
 
-interface EmptyNotificationsProps {}
-
-export const EmptyNotifications: React.FC<EmptyNotificationsProps> = () => {
+export const EmptyNotifications = () => {
   return (
-    <Flex
-      as='article'
-      position='relative'
-      flexDirection='column'
-      alignItems='center'
-      maxW='448px'
-      px={4}
-      py={1}
-      mt={5}
-      overflow='hidden'
-    >
-      <Box position='absolute' height='400px' width='448px'>
+    <div className='relative flex flex-col items-center max-w-[448px] px-4 py-1 mt-5 overflow-hidden'>
+      <div className='absolute h-[400px] w-[448px]'>
         <HalfCirclePattern />
-      </Box>
-      <FeaturedIcon colorScheme='primary'>
+      </div>
+      <FeaturedIcon className='mt-[20px]' colorScheme='primary'>
         <Lotus />
       </FeaturedIcon>
-      <Heading fontSize='md' mt={4} mb={1}>
+      <div className='mt-4 mb-1 text-[16px] font-bold leading-5 text-gray-900'>
         No notifications for now
-      </Heading>
-      <Text textAlign='center' fontSize='sm' color='gray.500'>
+      </div>
+      <div className='text-center text-[14px] leading-5 text-gray-500'>
         Enjoy the quiet moment. Explore other corners of the app or take a deep
         breath and savor the calm.
-      </Text>
-    </Flex>
+      </div>
+    </div>
   );
 };
