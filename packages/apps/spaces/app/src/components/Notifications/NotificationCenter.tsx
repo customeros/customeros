@@ -5,7 +5,7 @@ import { IMessage, PopoverNotificationCenter } from '@novu/notification-center';
 
 import { cn } from '@ui/utils/cn';
 import { Tooltip } from '@ui/overlay/Tooltip/';
-// import { DateTimeUtils } from '@spaces/utils/date';
+import { DateTimeUtils } from '@spaces/utils/date';
 // import { Avatar, AvatarBadge } from '@ui/media/Avatar';
 import { Avatar, AvatarBadge } from '@ui/media/Avatar/Avatar';
 import { CountButton } from '@shared/components/Notifications/CountButton';
@@ -54,10 +54,6 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = () => {
         const content: false | string[] =
           typeof parsedMessage === 'string' &&
           parsedMessage?.split('owner of ');
-        // const dynamicTextClass = cn(message.read ? 'gray.400' : 'gray.500');
-        // const dynamicCursor = cn(
-        //   message.payload.isArchived ? 'cursor-default' : 'cursor-pointer',
-        // );
 
         return (
           <Tooltip
@@ -70,7 +66,12 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = () => {
             }
           >
             <div
-              // className={`flex px-4 mb-5 ${dynamicCursor}`}
+              className={cn(
+                message.payload.isArchived
+                  ? 'cursor-default'
+                  : 'cursor-pointer',
+                'flex px-4 mb-5',
+              )}
               role='button'
               tabIndex={message.payload.isArchived ? -1 : 0}
               onClick={
@@ -103,12 +104,17 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = () => {
                     (content[1]?.trim()?.length ? content[1] : 'Unnamed')}
                 </span>
               </p>
-              {/* <p className={`text-xs leading-4 ${dynamicTextClass}`}>
+              <p
+                className={cn(
+                  message.read ? 'text-gray-400' : 'text-gray-500',
+                  'text-xs leading-4',
+                )}
+              >
                 {DateTimeUtils.timeAgo(message?.createdAt as string, {
                   includeMin: true,
                   addSuffix: true,
                 })}
-              </p> */}
+              </p>
             </div>
           </Tooltip>
         );
