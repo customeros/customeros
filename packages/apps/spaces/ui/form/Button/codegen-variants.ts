@@ -108,8 +108,10 @@ const genCompoundVariant = (
     case 'lg':
     case 'xl':
       iconSize = 'w-4 h-4';
+      break;
     case '2xl':
       iconSize = 'w-6 h-6';
+      break;
     default:
       iconSize = 'w-4 h-4';
       break;
