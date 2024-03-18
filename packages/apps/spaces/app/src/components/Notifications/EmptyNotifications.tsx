@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { Lotus } from '@ui/media/icons/Lotus';
-import { FeaturedIcon2 as FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
+import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
 
 import HalfCirclePattern from '../../assets/HalfCirclePattern';
 
