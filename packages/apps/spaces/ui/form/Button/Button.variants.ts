@@ -2062,8 +2062,6 @@ export const outlineButton = cva(
           'hover:bg-primary-50',
           'hover:text-primary-700',
           'focus:bg-primary-50',
-          'focus:shadow-ringPrimary',
-          'focus-visible:shadow-ringPrimary',
         ],
         gray: [
           'text-gray-500',
@@ -2073,8 +2071,6 @@ export const outlineButton = cva(
           'hover:bg-gray-50',
           'hover:text-gray-700',
           'focus:bg-gray-50',
-          'focus:shadow-ringPrimary',
-          'focus-visible:shadow-ringPrimary',
         ],
         warm: [
           'text-warm-500',
@@ -2084,8 +2080,6 @@ export const outlineButton = cva(
           'hover:bg-warm-50',
           'hover:text-warm-700',
           'focus:bg-warm-50',
-          'focus:shadow-ringPrimary',
-          'focus-visible:shadow-ringPrimary',
         ],
         error: [
           'text-error-500',
@@ -2095,8 +2089,6 @@ export const outlineButton = cva(
           'hover:bg-error-50',
           'hover:text-error-700',
           'focus:bg-error-50',
-          'focus:shadow-ringPrimary',
-          'focus-visible:shadow-ringPrimary',
         ],
         rose: [
           'text-rose-500',
@@ -2106,8 +2098,6 @@ export const outlineButton = cva(
           'hover:bg-rose-50',
           'hover:text-rose-700',
           'focus:bg-rose-50',
-          'focus:shadow-ringPrimary',
-          'focus-visible:shadow-ringPrimary',
         ],
         warning: [
           'text-warning-500',
@@ -2117,8 +2107,6 @@ export const outlineButton = cva(
           'hover:bg-warning-50',
           'hover:text-warning-700',
           'focus:bg-warning-50',
-          'focus:shadow-ringPrimary',
-          'focus-visible:shadow-ringPrimary',
         ],
         blueDark: [
           'text-blueDark-500',
@@ -2128,8 +2116,6 @@ export const outlineButton = cva(
           'hover:bg-blueDark-50',
           'hover:text-blueDark-700',
           'focus:bg-blueDark-50',
-          'focus:shadow-ringPrimary',
-          'focus-visible:shadow-ringPrimary',
         ],
         teal: [
           'text-teal-500',
@@ -2139,8 +2125,6 @@ export const outlineButton = cva(
           'hover:bg-teal-50',
           'hover:text-teal-700',
           'focus:bg-teal-50',
-          'focus:shadow-ringPrimary',
-          'focus-visible:shadow-ringPrimary',
         ],
         success: [
           'text-success-500',
@@ -2150,8 +2134,6 @@ export const outlineButton = cva(
           'hover:bg-success-50',
           'hover:text-success-700',
           'focus:bg-success-50',
-          'focus:shadow-ringPrimary',
-          'focus-visible:shadow-ringPrimary',
         ],
         moss: [
           'text-moss-500',
@@ -2161,8 +2143,6 @@ export const outlineButton = cva(
           'hover:bg-moss-50',
           'hover:text-moss-700',
           'focus:bg-moss-50',
-          'focus:shadow-ringPrimary',
-          'focus-visible:shadow-ringPrimary',
         ],
         greenLight: [
           'text-greenLight-500',
@@ -2172,8 +2152,6 @@ export const outlineButton = cva(
           'hover:bg-greenLight-50',
           'hover:text-greenLight-700',
           'focus:bg-greenLight-50',
-          'focus:shadow-ringPrimary',
-          'focus-visible:shadow-ringPrimary',
         ],
         violet: [
           'text-violet-500',
@@ -2183,8 +2161,6 @@ export const outlineButton = cva(
           'hover:bg-violet-50',
           'hover:text-violet-700',
           'focus:bg-violet-50',
-          'focus:shadow-ringPrimary',
-          'focus-visible:shadow-ringPrimary',
         ],
         fuchsia: [
           'text-fuchsia-500',
@@ -2194,8 +2170,6 @@ export const outlineButton = cva(
           'hover:bg-fuchsia-50',
           'hover:text-fuchsia-700',
           'focus:bg-fuchsia-50',
-          'focus:shadow-ringPrimary',
-          'focus-visible:shadow-ringPrimary',
         ],
       },
     },

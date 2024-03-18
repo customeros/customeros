@@ -34,8 +34,7 @@ const outlineButton = (color: string) => `
     'hover:bg-${color}-50',
     'hover:text-${color}-700',
     'focus:bg-${color}-50',
-    'focus:shadow-ringPrimary',
-    'focus-visible:shadow-ringPrimary',
+   
 ],`;
 
 const ghostButton = (color: string) => `
