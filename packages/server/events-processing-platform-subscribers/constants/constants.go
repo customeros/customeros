@@ -54,17 +54,6 @@ const (
 	CreatedDate  = "CreatedDate"
 	UserMetadata = "UserMetadata"
 
-	Validate        = "validate"
-	FieldValidation = "field validation"
-	RequiredHeaders = "required header"
-	Base64          = "base64"
-	Unmarshal       = "unmarshal"
-	Uuid            = "uuid"
-	Cookie          = "cookie"
-	Token           = "token"
-	Bcrypt          = "bcrypt"
-	Redis           = "redis"
-
 	EsInternalStreamPrefix = "$"
 
 	StreamMetadataMaxCount      = 1000
