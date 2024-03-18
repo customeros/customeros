@@ -27,3 +27,17 @@ func (e RenewalLikelihood) IsValid() bool {
 func (e RenewalLikelihood) String() string {
 	return string(e)
 }
+
+func DecodeRenewalLikelihood(input string) RenewalLikelihood {
+	switch input {
+	case "HIGH":
+		return RenewalLikelihoodHigh
+	case "MEDIUM":
+		return RenewalLikelihoodMedium
+	case "LOW":
+		return RenewalLikelihoodLow
+	case "ZERO":
+		return RenewalLikelihoodZero
+	}
+	return ""
+}

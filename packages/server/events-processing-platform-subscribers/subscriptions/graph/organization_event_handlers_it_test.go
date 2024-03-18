@@ -330,30 +330,26 @@ func TestGraphOrganizationEventHandler_OnRefreshArr(t *testing.T) {
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId1 := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{})
 	contractId2 := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{})
-	opportunityIdRenewal1_1 := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
+	neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId1, neo4jentity.OpportunityEntity{
 		Amount:       float64(10),
 		MaxAmount:    float64(20),
-		InternalType: string(neo4jenum.OpportunityInternalTypeRenewal),
+		InternalType: neo4jenum.OpportunityInternalTypeRenewal,
 	})
-	opportunityIdRenewal2_1 := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
+	neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId1, neo4jentity.OpportunityEntity{
 		Amount:       float64(100),
 		MaxAmount:    float64(200),
-		InternalType: string(neo4jenum.OpportunityInternalTypeRenewal),
+		InternalType: neo4jenum.OpportunityInternalTypeRenewal,
 	})
-	opportunityIdRenewal2_2 := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
+	neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId2, neo4jentity.OpportunityEntity{
 		Amount:       float64(1000),
 		MaxAmount:    float64(2000),
-		InternalType: string(neo4jenum.OpportunityInternalTypeRenewal),
+		InternalType: neo4jenum.OpportunityInternalTypeRenewal,
 	})
-	opportunityIdNbo2_3 := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
+	neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId2, neo4jentity.OpportunityEntity{
 		Amount:       float64(10000),
 		MaxAmount:    float64(20000),
-		InternalType: string(neo4jenum.OpportunityInternalTypeNBO),
+		InternalType: neo4jenum.OpportunityInternalTypeNBO,
 	})
-	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId1, opportunityIdRenewal1_1, true)
-	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId2, opportunityIdRenewal2_1, true)
-	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId2, opportunityIdRenewal2_2, true)
-	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId2, opportunityIdNbo2_3, false)
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Contract": 2, "Opportunity": 4})
 
 	// prepare event handler
@@ -397,37 +393,33 @@ func TestGraphOrganizationEventHandler_OnRefreshRenewalSummary(t *testing.T) {
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId1 := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{})
 	contractId2 := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{})
-	opportunityIdRenewal1_1 := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
-		RenewalDetails: entity.RenewalDetails{
+	neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId1, neo4jentity.OpportunityEntity{
+		RenewalDetails: neo4jentity.RenewalDetails{
 			RenewedAt:         &tomorrow,
 			RenewalLikelihood: "HIGH",
 		},
-		InternalType:  string(neo4jenum.OpportunityInternalTypeRenewal),
-		InternalStage: string(neo4jenum.OpportunityInternalStageOpen),
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
 	})
-	opportunityIdRenewal2_1 := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
-		RenewalDetails: entity.RenewalDetails{
+	neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId2, neo4jentity.OpportunityEntity{
+		RenewalDetails: neo4jentity.RenewalDetails{
 			RenewedAt:         &afterTomorrow,
 			RenewalLikelihood: "LOW",
 		},
-		InternalType:  string(neo4jenum.OpportunityInternalTypeRenewal),
-		InternalStage: string(neo4jenum.OpportunityInternalStageOpen),
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
 	})
-	opportunityIdRenewal2_2 := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
-		RenewalDetails: entity.RenewalDetails{
+	neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId2, neo4jentity.OpportunityEntity{
+		RenewalDetails: neo4jentity.RenewalDetails{
 			RenewedAt:         &afterTomorrow,
 			RenewalLikelihood: "ZERO",
 		},
-		InternalType:  string(neo4jenum.OpportunityInternalTypeRenewal),
-		InternalStage: string(neo4jenum.OpportunityInternalStageClosedWon),
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		InternalStage: neo4jenum.OpportunityInternalStageClosedWon,
 	})
-	opportunityIdNbo2_3 := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
-		InternalType: string(neo4jenum.OpportunityInternalTypeNBO),
+	neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId2, neo4jentity.OpportunityEntity{
+		InternalType: neo4jenum.OpportunityInternalTypeNBO,
 	})
-	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId1, opportunityIdRenewal1_1, true)
-	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId2, opportunityIdRenewal2_1, true)
-	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId2, opportunityIdRenewal2_2, true)
-	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId2, opportunityIdNbo2_3, false)
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Contract": 2, "Opportunity": 4})
 
 	// prepare event handler

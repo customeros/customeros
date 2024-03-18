@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	validator "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstoredb"
 	"os"
 	"os/signal"
 	"syscall"
@@ -14,9 +15,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/eventstore"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/eventstore/store"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/eventstroredb"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
@@ -31,6 +29,8 @@ import (
 	notifications_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/notifications"
 	organization_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/organization"
 	phone_number_validation_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/phone_number_validation"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore/store"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -82,7 +82,7 @@ func (server *Server) Start(parentCtx context.Context) error {
 	//Server.interceptorManager = interceptors.NewInterceptorManager(Server.log, Server.getGrpcMetricsCb())
 	//Server.mw = middlewares.NewMiddlewareManager(Server.log, Server.cfg, Server.getHttpMetricsCb())
 
-	esdb, err := eventstroredb.NewEventStoreDB(server.Config.EventStoreConfig, server.Log)
+	esdb, err := eventstoredb.NewEventStoreDB(server.Config.EventStoreConfig, server.Log)
 	if err != nil {
 		return err
 	}

@@ -7,11 +7,11 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/graph_db"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/graph_db/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/mocked_grpc"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/neo4j"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -264,11 +264,10 @@ func TestContractEventHandler_OnUpdate_FrequencyNotChanged(t *testing.T) {
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
 		RenewalCycle: neo4jenum.RenewalCycleMonthlyRenewal,
 	})
-	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
-		InternalType:  neo4jenum.OpportunityInternalTypeRenewal.String(),
-		InternalStage: neo4jenum.OpportunityInternalStageOpen.String(),
+	opportunityId := neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
 	})
-	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
 
 	// prepare grpc client
 	calledEventsPlatformToUpdateOpportunity := false
@@ -326,11 +325,10 @@ func TestContractEventHandler_OnUpdate_FrequencyChanged(t *testing.T) {
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
 		RenewalCycle: neo4jenum.RenewalCycleMonthlyRenewal,
 	})
-	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
-		InternalType:  neo4jenum.OpportunityInternalTypeRenewal.String(),
-		InternalStage: neo4jenum.OpportunityInternalStageOpen.String(),
+	opportunityId := neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
 	})
-	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
 
 	// prepare grpc client
 	calledEventsPlatformToUpdateOpportunity := false
@@ -388,11 +386,10 @@ func TestContractEventHandler_OnUpdate_FrequencyRemoved(t *testing.T) {
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
 		RenewalCycle: neo4jenum.RenewalCycleMonthlyRenewal,
 	})
-	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
-		InternalType:  neo4jenum.OpportunityInternalTypeRenewal.String(),
-		InternalStage: neo4jenum.OpportunityInternalStageOpen.String(),
+	opportunityId := neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
 	})
-	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
 
 	// prepare grpc mock
 	calledEventsPlatformToRefreshRenewalSummary, calledEventsPlatformToRefreshArr := false, false
@@ -445,8 +442,8 @@ func TestContractEventHandler_OnUpdate_FrequencyRemoved(t *testing.T) {
 	opportunityDbNode, _ := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Opportunity", opportunityId)
 	require.Nil(t, err)
 	require.NotNil(t, opportunityDbNode)
-	opportunity := graph_db.MapDbNodeToOpportunityEntity(opportunityDbNode)
-	require.Equal(t, "SUSPENDED", opportunity.InternalStage)
+	opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
+	require.Equal(t, neo4jenum.OpportunityInternalStageSuspended, opportunity.InternalStage)
 
 	contractDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Contract_"+tenantName, contractId)
 	require.Nil(t, err)
@@ -473,11 +470,10 @@ func TestContractEventHandler_OnUpdate_ServiceStartDateChanged(t *testing.T) {
 		RenewalCycle:     neo4jenum.RenewalCycleMonthlyRenewal,
 		ServiceStartedAt: &yesterday,
 	})
-	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
-		InternalType:  neo4jenum.OpportunityInternalTypeRenewal.String(),
-		InternalStage: neo4jenum.OpportunityInternalStageOpen.String(),
+	opportunityId := neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
 	})
-	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
 
 	// prepare grpc client
 	calledEventsPlatformToUpdateOpportunity := false
@@ -570,15 +566,14 @@ func TestContractEventHandler_OnUpdate_EndDateSet(t *testing.T) {
 		ContractUrl:  "http://contract.url",
 		RenewalCycle: neo4jenum.RenewalCycleMonthlyRenewal,
 	})
-	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
-		InternalType:  neo4jenum.OpportunityInternalTypeRenewal.String(),
-		InternalStage: neo4jenum.OpportunityInternalStageOpen.String(),
-		RenewalDetails: entity.RenewalDetails{
+	opportunityId := neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		RenewalDetails: neo4jentity.RenewalDetails{
 			RenewedAt:         utils.Ptr(utils.Now().AddDate(0, 0, 20)),
 			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh.String(),
 		},
 	})
-	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Contract": 1, "Opportunity": 1})
 
 	// prepare grpc mock

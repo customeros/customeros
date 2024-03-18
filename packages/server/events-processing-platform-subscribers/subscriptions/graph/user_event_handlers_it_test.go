@@ -7,7 +7,6 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/graph_db/entity"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/neo4j"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -20,6 +19,13 @@ import (
 	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
+)
+
+const (
+	RoleAdmin                   string = "ADMIN"
+	RoleCustomerOsPlatformOwner string = "CUSTOMER_OS_PLATFORM_OWNER"
+	RoleOwner                   string = "OWNER"
+	RoleUser                    string = "USER"
 )
 
 func TestGraphUserEventHandler_OnUserCreate(t *testing.T) {
@@ -333,7 +339,7 @@ func TestGraphUserEventHandler_OnUserUpdate(t *testing.T) {
 		Source:           constants.SourceOpenline,
 		SourceOfTruth:    constants.SourceOpenline,
 		AppSource:        constants.AppSourceEventProcessingPlatform,
-		Roles:            []string{model.RoleUser.String(), model.RoleOwner.String()},
+		Roles:            []string{RoleUser, RoleOwner},
 		ProfilePhotoUrl:  "www.photo.com/create",
 		Timezone:         "userTimezoneCreate",
 		Internal:         false,
@@ -409,7 +415,7 @@ func TestGraphUserEventHandler_OnPhoneNumberLinkedToUser(t *testing.T) {
 		Source:           constants.SourceOpenline,
 		SourceOfTruth:    constants.SourceOpenline,
 		AppSource:        constants.AppSourceEventProcessingPlatform,
-		Roles:            []string{model.RoleUser.String(), model.RoleOwner.String()},
+		Roles:            []string{RoleUser, RoleOwner},
 		ProfilePhotoUrl:  "www.photo.com/create",
 		Timezone:         "userTimezoneCreate",
 		Internal:         false,
@@ -481,7 +487,7 @@ func TestGraphUserEventHandler_OnEmailLinkedToUser(t *testing.T) {
 		Source:           constants.SourceOpenline,
 		SourceOfTruth:    constants.SourceOpenline,
 		AppSource:        constants.AppSourceEventProcessingPlatform,
-		Roles:            []string{model.RoleUser.String(), model.RoleOwner.String()},
+		Roles:            []string{RoleUser, RoleOwner},
 		ProfilePhotoUrl:  "www.photo.com/create",
 		Timezone:         "userTimezoneCreate",
 		Internal:         false,
@@ -557,7 +563,7 @@ func TestGraphUserEventHandler_OnJobRoleLinkedToUser(t *testing.T) {
 		Source:           constants.SourceOpenline,
 		SourceOfTruth:    constants.SourceOpenline,
 		AppSource:        constants.AppSourceEventProcessingPlatform,
-		Roles:            []string{model.RoleUser.String(), model.RoleOwner.String()},
+		Roles:            []string{RoleUser, RoleOwner},
 		ProfilePhotoUrl:  "www.photo.com/create",
 		Timezone:         "userTimezoneCreate",
 		Internal:         false,
@@ -615,7 +621,7 @@ func TestGraphUserEventHandler_OnAddPlayer(t *testing.T) {
 		Source:           constants.SourceOpenline,
 		SourceOfTruth:    constants.SourceOpenline,
 		AppSource:        constants.AppSourceEventProcessingPlatform,
-		Roles:            []string{model.RoleUser.String(), model.RoleOwner.String()},
+		Roles:            []string{RoleUser, RoleOwner},
 		ProfilePhotoUrl:  "www.photo.com/create",
 		Timezone:         "userTimezoneCreate",
 		Internal:         false,
@@ -687,7 +693,7 @@ func TestGraphUserEventHandler_OnAddRole(t *testing.T) {
 		Source:           constants.SourceOpenline,
 		SourceOfTruth:    constants.SourceOpenline,
 		AppSource:        constants.AppSourceEventProcessingPlatform,
-		Roles:            []string{model.RoleUser.String(), model.RoleOwner.String()},
+		Roles:            []string{RoleUser, RoleOwner},
 		ProfilePhotoUrl:  "www.photo.com/create",
 		Timezone:         "userTimezoneCreate",
 		Internal:         false,
@@ -710,7 +716,7 @@ func TestGraphUserEventHandler_OnAddRole(t *testing.T) {
 	userAggregate := user_aggregate.NewUserAggregateWithTenantAndID(tenantName, userId)
 	roleAddedTime := utils.Now()
 
-	roleEvent, err := user_events.NewUserAddRoleEvent(userAggregate, model.RoleCustomerOsPlatformOwner.String(), roleAddedTime)
+	roleEvent, err := user_events.NewUserAddRoleEvent(userAggregate, RoleCustomerOsPlatformOwner, roleAddedTime)
 	require.Nil(t, err)
 	err = userEventHandler.OnAddRole(context.Background(), roleEvent)
 	require.Nil(t, err)
@@ -738,7 +744,7 @@ func TestGraphUserEventHandler_OnRemoveRole(t *testing.T) {
 		Source:           constants.SourceOpenline,
 		SourceOfTruth:    constants.SourceOpenline,
 		AppSource:        constants.AppSourceEventProcessingPlatform,
-		Roles:            []string{model.RoleUser.String(), model.RoleOwner.String()},
+		Roles:            []string{RoleUser, RoleOwner},
 		ProfilePhotoUrl:  "www.photo.com/create",
 		Timezone:         "userTimezoneCreate",
 		Internal:         false,
@@ -761,7 +767,7 @@ func TestGraphUserEventHandler_OnRemoveRole(t *testing.T) {
 	userAggregate := user_aggregate.NewUserAggregateWithTenantAndID(tenantName, userId)
 	roleAddedTime := utils.Now()
 
-	roleEvent, err := user_events.NewUserRemoveRoleEvent(userAggregate, model.RoleUser.String(), roleAddedTime)
+	roleEvent, err := user_events.NewUserRemoveRoleEvent(userAggregate, RoleUser, roleAddedTime)
 	require.Nil(t, err)
 	err = userEventHandler.OnRemoveRole(context.Background(), roleEvent)
 	require.Nil(t, err)

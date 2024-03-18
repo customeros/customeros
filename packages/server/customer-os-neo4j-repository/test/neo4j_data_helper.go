@@ -685,9 +685,19 @@ func CreateContractForOrganization(ctx context.Context, driver *neo4j.DriverWith
 }
 
 func CreateOpportunityForContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId string, opportunity entity.OpportunityEntity) string {
+	opportunityId := CreateOpportunity(ctx, driver, tenant, opportunity)
+	if opportunity.InternalType == enum.OpportunityInternalTypeRenewal {
+		LinkContractWithOpportunity(ctx, driver, contractId, opportunityId, true)
+	} else {
+		LinkContractWithOpportunity(ctx, driver, contractId, opportunityId, false)
+	}
+	return opportunityId
+}
+
+func CreateOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, opportunity entity.OpportunityEntity) string {
 	opportunityId := utils.NewUUIDIfEmpty(opportunity.Id)
-	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}), (c:Contract {id:$contractId})
-				MERGE (t)<-[:OPPORTUNITY_BELONGS_TO_TENANT]-(op:Opportunity {id:$id})<-[:HAS_OPPORTUNITY]-(c)
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
+				MERGE (t)<-[:OPPORTUNITY_BELONGS_TO_TENANT]-(op:Opportunity {id:$id})
 				SET 
                     op:Opportunity_%s,
 					op.name=$name,
@@ -711,10 +721,12 @@ func CreateOpportunityForContract(ctx context.Context, driver *neo4j.DriverWithC
 					op.createdAt=$createdAt,
 					op.updatedAt=$updatedAt
 				`, tenant)
+	if opportunity.InternalType == enum.OpportunityInternalTypeRenewal {
+		query += ", op:RenewalOpportunity"
+	}
 
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"id":                     opportunityId,
-		"contractId":             contractId,
 		"tenant":                 tenant,
 		"name":                   opportunity.Name,
 		"source":                 opportunity.Source,
@@ -730,14 +742,26 @@ func CreateOpportunityForContract(ctx context.Context, driver *neo4j.DriverWithC
 		"generalNotes":           opportunity.GeneralNotes,
 		"nextSteps":              opportunity.NextSteps,
 		"comments":               opportunity.Comments,
-		"renewedAt":              opportunity.RenewedAt,
-		"renewalLikelihood":      opportunity.RenewalLikelihood,
-		"renewalUpdatedByUserId": opportunity.RenewalUpdatedByUserId,
-		"renewalUpdateByUserAt":  opportunity.RenewalUpdatedByUserAt,
+		"renewedAt":              utils.TimePtrFirstNonNilNillableAsAny(opportunity.RenewalDetails.RenewedAt),
+		"renewalLikelihood":      opportunity.RenewalDetails.RenewalLikelihood,
+		"renewalUpdatedByUserId": opportunity.RenewalDetails.RenewalUpdatedByUserId,
+		"renewalUpdateByUserAt":  utils.TimePtrFirstNonNilNillableAsAny(opportunity.RenewalDetails.RenewalUpdatedByUserAt),
 		"createdAt":              opportunity.CreatedAt,
 		"updatedAt":              opportunity.UpdatedAt,
 	})
 	return opportunityId
+}
+
+func LinkContractWithOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, contractId, opportunityId string, renewal bool) {
+	query := `MATCH (c:Contract {id:$contractId}), (o:Opportunity {id:$opportunityId})
+				MERGE (c)-[:HAS_OPPORTUNITY]->(o) `
+	if renewal {
+		query += `MERGE (c)-[:ACTIVE_RENEWAL]->(o)`
+	}
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"contractId":    contractId,
+		"opportunityId": opportunityId,
+	})
 }
 
 func ActiveRenewalOpportunityForContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId, opportunityId string) string {

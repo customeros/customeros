@@ -6,21 +6,20 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/grpc_client"
 	"strings"
 
+	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	aiConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/config"
 	ai "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	orgevts "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
-	"golang.org/x/sync/errgroup"
-
-	esdb "github.com/EventStore/EventStore-Client-Go/v3/esdb"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
+	"golang.org/x/sync/errgroup"
 )
 
 type OrganizationSubscriber struct {

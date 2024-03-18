@@ -646,3 +646,38 @@ func MapDbNodeToExternalSystem(node *dbtype.Node) *entity.ExternalSystemEntity {
 	}
 	return &externalSystemEntity
 }
+
+func MapDbNodeToOpportunityEntity(node *dbtype.Node) *entity.OpportunityEntity {
+	if node == nil {
+		return &entity.OpportunityEntity{}
+	}
+	props := utils.GetPropsFromNode(*node)
+	opportunity := entity.OpportunityEntity{
+		Id:                utils.GetStringPropOrEmpty(props, "id"),
+		Name:              utils.GetStringPropOrEmpty(props, "name"),
+		Amount:            utils.GetFloatPropOrZero(props, "amount"),
+		MaxAmount:         utils.GetFloatPropOrZero(props, "maxAmount"),
+		InternalType:      enum.DecodeOpportunityInternalType(utils.GetStringPropOrEmpty(props, "internalType")),
+		ExternalType:      utils.GetStringPropOrEmpty(props, "externalType"),
+		InternalStage:     enum.DecodeOpportunityInternalStage(utils.GetStringPropOrEmpty(props, "internalStage")),
+		ExternalStage:     utils.GetStringPropOrEmpty(props, "externalStage"),
+		EstimatedClosedAt: utils.GetTimePropOrNil(props, "estimatedClosedAt"),
+		ClosedAt:          utils.GetTimePropOrNil(props, "closedAt"),
+		GeneralNotes:      utils.GetStringPropOrEmpty(props, "generalNotes"),
+		NextSteps:         utils.GetStringPropOrEmpty(props, "nextSteps"),
+		Comments:          utils.GetStringPropOrEmpty(props, "comments"),
+		CreatedAt:         utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:         utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		AppSource:         utils.GetStringPropOrEmpty(props, "appSource"),
+		Source:            entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:     entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		OwnerUserId:       utils.GetStringPropOrEmpty(props, "ownerUserId"),
+		RenewalDetails: entity.RenewalDetails{
+			RenewedAt:              utils.GetTimePropOrNil(props, "renewedAt"),
+			RenewalLikelihood:      enum.DecodeRenewalLikelihood(utils.GetStringPropOrEmpty(props, "renewalLikelihood")),
+			RenewalUpdatedByUserId: utils.GetStringPropOrEmpty(props, "renewalUpdatedByUserId"),
+			RenewalUpdatedByUserAt: utils.GetTimePropOrNil(props, "renewalUpdatedByUserAt"),
+		},
+	}
+	return &opportunity
+}
