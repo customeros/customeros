@@ -9,7 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstroredb"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/eventstroredb"
 )
 
 type Config struct {
