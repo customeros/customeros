@@ -114,12 +114,12 @@ func (h *contractHandler) UpdateActiveRenewalOpportunityLikelihood(ctx context.C
 
 	var renewalLikelihood neo4jenum.RenewalLikelihood
 	if contractEntity.EndedAt != nil &&
-		opportunityEntity.RenewalDetails.RenewalLikelihood != string(neo4jenum.RenewalLikelihoodZero) &&
+		opportunityEntity.RenewalDetails.RenewalLikelihood != neo4jenum.RenewalLikelihoodZero &&
 		opportunityEntity.RenewalDetails.RenewedAt != nil &&
 		contractEntity.EndedAt.Before(*opportunityEntity.RenewalDetails.RenewedAt) {
 		// check if likelihood should be set to Zero
 		renewalLikelihood = neo4jenum.RenewalLikelihoodZero
-	} else if opportunityEntity.RenewalDetails.RenewalLikelihood == string(neo4jenum.RenewalLikelihoodZero) &&
+	} else if opportunityEntity.RenewalDetails.RenewalLikelihood == neo4jenum.RenewalLikelihoodZero &&
 		opportunityEntity.RenewalDetails.RenewedAt != nil &&
 		(contractEntity.EndedAt == nil || contractEntity.EndedAt.After(*opportunityEntity.RenewalDetails.RenewedAt)) {
 		// check if likelihood should be set to Medium
@@ -231,7 +231,7 @@ func (h *contractHandler) updateRenewalArr(ctx context.Context, tenant string, c
 		return nil
 	}
 	// adjust with likelihood
-	currentArr := h.calculateCurrentArrByLikelihood(maxArr, renewalOpportunity.RenewalDetails.RenewalLikelihood)
+	currentArr := h.calculateCurrentArrByLikelihood(maxArr, renewalOpportunity.RenewalDetails.RenewalLikelihood.String())
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {

@@ -554,10 +554,10 @@ func (h *OrganizationEventHandler) OnRefreshRenewalSummaryV1(ctx context.Context
 				}
 			}
 			if opportunity.RenewalDetails.RenewalLikelihood != "" {
-				order := getOrderForRenewalLikelihood(opportunity.RenewalDetails.RenewalLikelihood)
+				order := getOrderForRenewalLikelihood(opportunity.RenewalDetails.RenewalLikelihood.String())
 				if renewalLikelihoodOrder == 0 || renewalLikelihoodOrder > order {
 					renewalLikelihoodOrder = order
-					lowestRenewalLikelihood = utils.ToPtr(opportunity.RenewalDetails.RenewalLikelihood)
+					lowestRenewalLikelihood = utils.ToPtr(opportunity.RenewalDetails.RenewalLikelihood.String())
 				}
 			}
 		}

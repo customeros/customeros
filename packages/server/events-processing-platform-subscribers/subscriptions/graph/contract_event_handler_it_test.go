@@ -571,7 +571,7 @@ func TestContractEventHandler_OnUpdate_EndDateSet(t *testing.T) {
 		InternalStage: neo4jenum.OpportunityInternalStageOpen,
 		RenewalDetails: neo4jentity.RenewalDetails{
 			RenewedAt:         utils.Ptr(utils.Now().AddDate(0, 0, 20)),
-			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh.String(),
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
 		},
 	})
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Contract": 1, "Opportunity": 1})
