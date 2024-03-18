@@ -27,7 +27,7 @@ const buttonSize = cva([], {
   },
 });
 
-interface ButtonProps
+interface IconButtonProps
   extends React.HTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof solidButton>,
     VariantProps<typeof buttonSize> {
@@ -52,7 +52,7 @@ export const IconButton = ({
   size,
   'aria-label': ariaLabel,
   ...props
-}: ButtonProps) => {
+}: IconButtonProps) => {
   const buttonVariant = (() => {
     switch (variant) {
       case 'link':
