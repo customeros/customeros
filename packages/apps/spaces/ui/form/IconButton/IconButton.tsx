@@ -32,9 +32,9 @@ interface ButtonProps
     VariantProps<typeof solidButton>,
     VariantProps<typeof buttonSize> {
   asChild?: boolean;
-  ariaLabel: string;
   isLoading?: boolean;
   isDisabled?: boolean;
+  'aria-label': string;
   icon: React.ReactElement;
   spinner?: React.ReactElement;
   variant?: 'link' | 'ghost' | 'solid' | 'outline';
@@ -45,12 +45,12 @@ export const IconButton = ({
   className,
   colorScheme,
   spinner,
-  ariaLabel,
   variant,
   isLoading = false,
   isDisabled = false,
   icon,
   size,
+  'aria-label': ariaLabel,
   ...props
 }: ButtonProps) => {
   const buttonVariant = (() => {
