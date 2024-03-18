@@ -48,8 +48,8 @@ export const OrganizationSidenav = () => {
       <div className='flex gap-2 items-center mb-4'>
         <IconButton
           size='xs'
+          ariaLabel='Go back'
           variant='ghost'
-          aria-label='Go back'
           onClick={() => {
             router.push(`/${lastActivePosition?.root || 'organization'}`);
           }}

@@ -32,6 +32,7 @@ interface ButtonProps
     VariantProps<typeof solidButton>,
     VariantProps<typeof buttonSize> {
   asChild?: boolean;
+  ariaLabel: string;
   isLoading?: boolean;
   isDisabled?: boolean;
   icon: React.ReactElement;
@@ -44,6 +45,7 @@ export const IconButton = ({
   className,
   colorScheme,
   spinner,
+  ariaLabel,
   variant,
   isLoading = false,
   isDisabled = false,
@@ -74,6 +76,7 @@ export const IconButton = ({
         buttonSize({ className, size }),
         isLoading ? 'opacity-50 cursor-not-allowed' : '',
       )}
+      aria-label={ariaLabel}
       disabled={isLoading || isDisabled}
     >
       {isLoading && spinner && (
