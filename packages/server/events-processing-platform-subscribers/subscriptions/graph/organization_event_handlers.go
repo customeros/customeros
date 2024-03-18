@@ -18,9 +18,6 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/eventstore"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/graph_db"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/graph_db/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
@@ -29,6 +26,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -545,9 +543,9 @@ func (h *OrganizationEventHandler) OnRefreshRenewalSummaryV1(ctx context.Context
 	var lowestRenewalLikelihood *string
 	var renewalLikelihoodOrder int64
 	if len(openRenewalOpportunityDbNodes) > 0 {
-		opportunities := make([]entity.OpportunityEntity, len(openRenewalOpportunityDbNodes))
+		opportunities := make([]neo4jentity.OpportunityEntity, len(openRenewalOpportunityDbNodes))
 		for _, opportunityDbNode := range openRenewalOpportunityDbNodes {
-			opportunities = append(opportunities, *graph_db.MapDbNodeToOpportunityEntity(opportunityDbNode))
+			opportunities = append(opportunities, *neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode))
 		}
 		for _, opportunity := range opportunities {
 			if opportunity.RenewalDetails.RenewedAt != nil && opportunity.RenewalDetails.RenewedAt.After(utils.Now()) {

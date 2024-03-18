@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstoredb"
 	"os"
 	"os/signal"
 	"syscall"
@@ -19,7 +20,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore/store"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstroredb"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/opentracing/opentracing-go"
@@ -73,7 +73,7 @@ func (server *Server) Start(parentCtx context.Context) error {
 	//Server.interceptorManager = interceptors.NewInterceptorManager(Server.log, Server.getGrpcMetricsCb())
 	//Server.mw = middlewares.NewMiddlewareManager(Server.log, Server.cfg, Server.getHttpMetricsCb())
 
-	esdb, err := eventstroredb.NewEventStoreDB(server.Config.EventStoreConfig, server.Log)
+	esdb, err := eventstoredb.NewEventStoreDB(server.Config.EventStoreConfig, server.Log)
 	if err != nil {
 		return err
 	}

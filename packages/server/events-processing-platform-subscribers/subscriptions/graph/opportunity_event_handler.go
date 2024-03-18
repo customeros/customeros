@@ -10,8 +10,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/eventstore"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
@@ -21,6 +19,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/event"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -135,7 +134,7 @@ func (h *OpportunityEventHandler) OnCreateRenewal(ctx context.Context, evt event
 		return nil
 	}
 	if opportunotyDbNode != nil {
-		opportunity := graph_db.MapDbNodeToOpportunityEntity(opportunotyDbNode)
+		opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunotyDbNode)
 		if opportunity.RenewalDetails.RenewedAt != nil && opportunity.RenewalDetails.RenewedAt.After(utils.Now()) {
 			span.LogFields(log.String("result", "active renewal opportunity already exists, skip creation"))
 			h.log.Infof("active renewal opportunity already exists for contract %s", eventData.ContractId)
@@ -260,7 +259,7 @@ func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 		h.log.Errorf("Error while getting opportunity %s: %s", opportunityId, err.Error())
 		return err
 	}
-	opportunity := graph_db.MapDbNodeToOpportunityEntity(opportunityDbNode)
+	opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
 	amountChanged := ((opportunity.Amount != eventData.Amount) && eventData.UpdateAmount()) ||
 		((opportunity.MaxAmount != eventData.MaxAmount) && eventData.UpdateMaxAmount())
 
@@ -346,7 +345,7 @@ func (h *OpportunityEventHandler) OnUpdateRenewal(ctx context.Context, evt event
 		h.log.Errorf("Error while getting opportunity %s: %s", opportunityId, err.Error())
 		return err
 	}
-	opportunity := graph_db.MapDbNodeToOpportunityEntity(opportunityDbNode)
+	opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
 	amountChanged := eventData.UpdateAmount() && opportunity.Amount != eventData.Amount
 	likelihoodChanged := eventData.UpdateRenewalLikelihood() && opportunity.RenewalDetails.RenewalLikelihood != eventData.RenewalLikelihood
 	setUpdatedByUserId := (amountChanged || likelihoodChanged) && eventData.UpdatedByUserId != ""

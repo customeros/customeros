@@ -73,9 +73,11 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_Draft_Contract(t *testing.T) {
 		ContractStatus:   neo4jenum.ContractStatusDraft,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, neo4jentity.OpportunityEntity{
-		MaxAmount:         10,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		MaxAmount:    10,
+		InternalType: neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		},
 	})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
@@ -116,9 +118,11 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_Closed_Contract(t *testing.T) {
 		ServiceStartedAt: &contract1ServiceStartedAt,
 		EndedAt:          &contract1EndeddAt,
 	}, neo4jentity.OpportunityEntity{
-		MaxAmount:         10,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		MaxAmount:    10,
+		InternalType: neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		},
 	})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
@@ -160,9 +164,11 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_Hidden_Organization_With_Contra
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, neo4jentity.OpportunityEntity{
-		MaxAmount:         10,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		MaxAmount:    10,
+		InternalType: neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		},
 	})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
@@ -203,9 +209,11 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_Prospect_Organization_With_Cont
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, neo4jentity.OpportunityEntity{
-		MaxAmount:         10,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		MaxAmount:    10,
+		InternalType: neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		},
 	})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
@@ -243,10 +251,12 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_Organization_With_1_Live_Renewa
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, neo4jentity.OpportunityEntity{
-		MaxAmount:         10,
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		MaxAmount:     10,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		},
 	})
 
 	assertFor1Organization(ctx, t, driver, float64(10), float64(0))
@@ -267,10 +277,12 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_Organization_With_1_Live_Renewa
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, neo4jentity.OpportunityEntity{
-		MaxAmount:         10,
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
+		MaxAmount:     10,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
+		},
 	})
 
 	assertFor1Organization(ctx, t, driver, float64(0), float64(10))
@@ -291,10 +303,12 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_Organization_With_1_Live_Renewa
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, neo4jentity.OpportunityEntity{
-		MaxAmount:         10,
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodLow,
+		MaxAmount:     10,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodLow,
+		},
 	})
 
 	assertFor1Organization(ctx, t, driver, float64(0), float64(10))
@@ -315,10 +329,12 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_Organization_With_1_Live_Contra
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, neo4jentity.OpportunityEntity{
-		MaxAmount:         10,
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodZero,
+		MaxAmount:     10,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodZero,
+		},
 	})
 
 	assertFor1Organization(ctx, t, driver, float64(0), float64(10))
@@ -339,20 +355,24 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_Organization_With_1_High_1_At_R
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contractServiceStartedAt,
 	}, neo4jentity.OpportunityEntity{
-		MaxAmount:         10,
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		MaxAmount:     10,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		},
 	})
 
 	neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ServiceStartedAt: &contractServiceStartedAt,
 		ContractStatus:   neo4jenum.ContractStatusLive,
 	}, neo4jentity.OpportunityEntity{
-		MaxAmount:         10,
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
+		MaxAmount:     10,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
+		},
 	})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
@@ -394,16 +414,20 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_Organization_With_2_Opportuniti
 	})
 
 	neo4jtest.CreateOpportunityForContract(ctx, driver, tenantName, contractId, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageClosedWon,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
-		MaxAmount:         5,
+		InternalStage: neo4jenum.OpportunityInternalStageClosedWon,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
+		},
+		MaxAmount: 5,
 	})
 	opId := neo4jtest.CreateOpportunityForContract(ctx, driver, tenantName, contractId, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
-		MaxAmount:         12,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		},
+		MaxAmount: 12,
 	})
 	neo4jtest.ActiveRenewalOpportunityForContract(ctx, driver, tenantName, contractId, opId)
 
@@ -446,16 +470,20 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_Organization_With_2_Opportuniti
 	})
 
 	neo4jtest.CreateOpportunityForContract(ctx, driver, tenantName, contractId, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageClosedWon,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
-		MaxAmount:         5,
+		InternalStage: neo4jenum.OpportunityInternalStageClosedWon,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		},
+		MaxAmount: 5,
 	})
 	opId := neo4jtest.CreateOpportunityForContract(ctx, driver, tenantName, contractId, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
-		MaxAmount:         12,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
+		},
+		MaxAmount: 12,
 	})
 	neo4jtest.ActiveRenewalOpportunityForContract(ctx, driver, tenantName, contractId, opId)
 
@@ -496,10 +524,12 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_2_Organizations_With_1_High_1_A
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contractServiceStartedAt,
 	}, neo4jentity.OpportunityEntity{
-		MaxAmount:         10,
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		MaxAmount:     10,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		},
 	})
 
 	org2Id := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
@@ -510,10 +540,12 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_2_Organizations_With_1_High_1_A
 		ServiceStartedAt: &contractServiceStartedAt,
 		ContractStatus:   neo4jenum.ContractStatusLive,
 	}, neo4jentity.OpportunityEntity{
-		MaxAmount:         10,
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
+		MaxAmount:     10,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
+		},
 	})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})

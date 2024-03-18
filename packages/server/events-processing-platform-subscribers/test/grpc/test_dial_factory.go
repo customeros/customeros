@@ -2,18 +2,17 @@ package grpc
 
 import (
 	"context"
-	"log"
-	"net"
-
 	comlog "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/server"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/test/bufconn"
+	"log"
+	"net"
 )
 
 type TestDialFactoryImpl struct {

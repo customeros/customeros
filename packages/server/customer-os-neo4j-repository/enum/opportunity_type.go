@@ -27,3 +27,17 @@ func (e OpportunityInternalType) IsValid() bool {
 func (e OpportunityInternalType) String() string {
 	return string(e)
 }
+
+func DecodeOpportunityInternalType(input string) OpportunityInternalType {
+	switch input {
+	case "NBO":
+		return OpportunityInternalTypeNBO
+	case "UPSELL":
+		return OpportunityInternalTypeUpsell
+	case "CROSS_SELL":
+		return OpportunityInternalTypeCrossSell
+	case "RENEWAL":
+		return OpportunityInternalTypeRenewal
+	}
+	return ""
+}

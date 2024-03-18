@@ -108,59 +108,6 @@ func CreateComment(ctx context.Context, driver *neo4j.DriverWithContext, tenant 
 	return commentId
 }
 
-// Deprecated
-func CreateOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, opportunity entity.OpportunityEntity) string {
-	opportunityId := utils.NewUUIDIfEmpty(opportunity.Id)
-	query := fmt.Sprintf(`
-				MERGE (op:Opportunity {id:$id})
-				SET 
-					op:Opportunity_%s,
-					op.name=$name,
-					op.source=$source,
-					op.sourceOfTruth=$sourceOfTruth,
-					op.internalStage=$internalStage,
-					op.internalType=$internalType,
-					op.renewedAt=$renewedAt,
-					op.amount=$amount,
-					op.maxAmount=$maxAmount,
-					op.renewalLikelihood=$renewalLikelihood,
-					op.renewalUpdatedByUserId=$renewalUpdatedByUserId,
-					op.comments=$comments
-				`, tenant)
-
-	if opportunity.InternalType == "RENEWAL" {
-		query += `, op:RenewalOpportunity`
-	}
-
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"id":                     opportunityId,
-		"name":                   opportunity.Name,
-		"source":                 opportunity.Source,
-		"sourceOfTruth":          opportunity.SourceOfTruth,
-		"internalStage":          opportunity.InternalStage,
-		"internalType":           opportunity.InternalType,
-		"amount":                 opportunity.Amount,
-		"maxAmount":              opportunity.MaxAmount,
-		"renewedAt":              utils.TimePtrFirstNonNilNillableAsAny(opportunity.RenewalDetails.RenewedAt),
-		"renewalLikelihood":      opportunity.RenewalDetails.RenewalLikelihood,
-		"renewalUpdatedByUserId": opportunity.RenewalDetails.RenewalUpdatedByUserId,
-		"comments":               opportunity.Comments,
-	})
-	return opportunityId
-}
-
-func LinkContractWithOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, contractId, opportunityId string, renewal bool) {
-	query := `MATCH (c:Contract {id:$contractId}), (o:Opportunity {id:$opportunityId})
-				MERGE (c)-[:HAS_OPPORTUNITY]->(o) `
-	if renewal {
-		query += `MERGE (c)-[:ACTIVE_RENEWAL]->(o)`
-	}
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"contractId":    contractId,
-		"opportunityId": opportunityId,
-	})
-}
-
 func CreatePhoneNumber(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, phoneNumber entity.PhoneNumberEntity) string {
 	phoneNumberId := utils.NewUUIDIfEmpty(phoneNumber.Id)
 	query := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})
