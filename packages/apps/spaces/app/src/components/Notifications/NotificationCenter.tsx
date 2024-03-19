@@ -6,7 +6,6 @@ import { IMessage, PopoverNotificationCenter } from '@novu/notification-center';
 import { cn } from '@ui/utils/cn';
 import { Tooltip } from '@ui/overlay/Tooltip/';
 import { DateTimeUtils } from '@spaces/utils/date';
-// import { Avatar, AvatarBadge } from '@ui/media/Avatar';
 import { Avatar, AvatarBadge } from '@ui/media/Avatar/Avatar';
 import { CountButton } from '@shared/components/Notifications/CountButton';
 import { EmptyNotifications } from '@shared/components/Notifications/EmptyNotifications';
