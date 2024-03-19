@@ -14,7 +14,7 @@ require (
 	github.com/testcontainers/testcontainers-go v0.29.1
 	github.com/vektah/gqlparser/v2 v2.5.11
 	gorm.io/driver/postgres v1.5.7
-	gorm.io/gorm v1.25.7-0.20240204074919-46816ad31dde
+	gorm.io/gorm v1.25.8
 )
 
 require (
