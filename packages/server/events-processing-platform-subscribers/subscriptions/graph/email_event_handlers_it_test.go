@@ -4,10 +4,9 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/graph_db/entity"
-	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/neo4j"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	emailAggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/aggregate"
 	emailEvents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
@@ -60,7 +59,7 @@ func TestGraphEmailEventHandler_OnEmailUpdate(t *testing.T) {
 	rawEmailCreate := "email@create.com"
 	isReachable := "emailIsNotReachable"
 	creationTime := utils.Now()
-	emailId := neo4jt.CreateEmail(ctx, testDatabase.Driver, tenantName, entity.EmailEntity{
+	emailId := neo4jtest.CreateEmail(ctx, testDatabase.Driver, tenantName, neo4jentity.EmailEntity{
 		Email:       emailCreate,
 		RawEmail:    rawEmailCreate,
 		CreatedAt:   creationTime,
@@ -113,7 +112,7 @@ func TestGraphEmailEventHandler_OnEmailValidationFailed(t *testing.T) {
 	rawEmailCreate := "email@create.com"
 	isReachable := "emailIsNotReachable"
 	creationTime := utils.Now()
-	emailId := neo4jt.CreateEmail(ctx, testDatabase.Driver, tenantName, entity.EmailEntity{
+	emailId := neo4jtest.CreateEmail(ctx, testDatabase.Driver, tenantName, neo4jentity.EmailEntity{
 		Email:       emailCreate,
 		RawEmail:    rawEmailCreate,
 		CreatedAt:   creationTime,
@@ -171,7 +170,7 @@ func TestGraphEmailEventHandler_OnEmailValidated(t *testing.T) {
 	isCatchAll := true
 	IsDeliverable := true
 	isDisabled := true
-	emailId := neo4jt.CreateEmail(ctx, testDatabase.Driver, tenantName, entity.EmailEntity{
+	emailId := neo4jtest.CreateEmail(ctx, testDatabase.Driver, tenantName, neo4jentity.EmailEntity{
 		Email:          emailCreate,
 		RawEmail:       rawEmailCreate,
 		Primary:        false,

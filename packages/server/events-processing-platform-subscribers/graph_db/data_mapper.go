@@ -201,33 +201,6 @@ func MapDbNodeToTimelineEvent(dbNode *dbtype.Node) neo4jentity.TimelineEvent {
 }
 
 // Deprecated
-func MapDbNodeToEmailEntity(node dbtype.Node) *entity.EmailEntity {
-	props := utils.GetPropsFromNode(node)
-	return &entity.EmailEntity{
-		Id:             utils.GetStringPropOrEmpty(props, "id"),
-		Email:          utils.GetStringPropOrEmpty(props, "email"),
-		RawEmail:       utils.GetStringPropOrEmpty(props, "rawEmail"),
-		CreatedAt:      utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:      utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Primary:        utils.GetBoolPropOrFalse(props, "primary"),
-		Source:         neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:  neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		AppSource:      utils.GetStringPropOrEmpty(props, "appSource"),
-		Label:          utils.GetStringPropOrEmpty(props, "label"),
-		Validated:      utils.GetBoolPropOrNil(props, "validated"),
-		IsReachable:    utils.GetStringPropOrNil(props, "isReachable"),
-		IsValidSyntax:  utils.GetBoolPropOrNil(props, "isValidSyntax"),
-		CanConnectSMTP: utils.GetBoolPropOrNil(props, "canConnectSMTP"),
-		AcceptsMail:    utils.GetBoolPropOrNil(props, "acceptsMail"),
-		HasFullInbox:   utils.GetBoolPropOrNil(props, "hasFullInbox"),
-		IsCatchAll:     utils.GetBoolPropOrNil(props, "isCatchAll"),
-		IsDeliverable:  utils.GetBoolPropOrNil(props, "isDeliverable"),
-		IsDisabled:     utils.GetBoolPropOrNil(props, "isDisabled"),
-		Error:          utils.GetStringPropOrNil(props, "error"),
-	}
-}
-
-// Deprecated
 func MapDbNodeToIssueEntity(node dbtype.Node) *entity.IssueEntity {
 	props := utils.GetPropsFromNode(node)
 	issue := entity.IssueEntity{

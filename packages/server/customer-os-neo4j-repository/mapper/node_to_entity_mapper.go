@@ -606,8 +606,11 @@ func MapDbNodeToBankAccountEntity(dbNode *dbtype.Node) *entity.BankAccountEntity
 	return &bankAccount
 }
 
-func MapDbNodeToEmailEntity(node dbtype.Node) *entity.EmailEntity {
-	props := utils.GetPropsFromNode(node)
+func MapDbNodeToEmailEntity(node *dbtype.Node) *entity.EmailEntity {
+	if node == nil {
+		return &entity.EmailEntity{}
+	}
+	props := utils.GetPropsFromNode(*node)
 	return &entity.EmailEntity{
 		Id:             utils.GetStringPropOrEmpty(props, "id"),
 		Email:          utils.GetStringPropOrEmpty(props, "email"),
