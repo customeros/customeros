@@ -75,9 +75,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Draft_Contract(t *testing.T) {
 		ContractStatus:   neo4jenum.ContractStatusDraft,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, neo4jentity.OpportunityEntity{
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		InternalStage:     neo4jenum.InternalStageOpen,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		},
 	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
@@ -119,8 +121,10 @@ func TestQueryResolver_Dashboard_Customer_Map_Hidden_Organization_With_Contract(
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, neo4jentity.OpportunityEntity{
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		InternalType: neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		},
 	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
@@ -160,8 +164,10 @@ func TestQueryResolver_Dashboard_Customer_Map_Prospect_Organization_With_Contrac
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, neo4jentity.OpportunityEntity{
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		InternalType: neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		},
 	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
@@ -201,9 +207,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		},
 	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
@@ -248,9 +256,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
+		},
 	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
@@ -295,9 +305,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodLow,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodLow,
+		},
 	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
@@ -342,9 +354,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodZero,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodZero,
+		},
 	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
@@ -389,9 +403,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodZero,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodZero,
+		},
 	})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
@@ -428,9 +444,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodZero,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodZero,
+		},
 	})
 
 	sliStartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
@@ -474,9 +492,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Closed_Contrac
 		ServiceStartedAt: &contract1ServiceStartedAt,
 		EndedAt:          &contract1ServiceEndedAt,
 	}, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
+		},
 	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
@@ -522,14 +542,18 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_1_Contract_2_Opportun
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	})
 	neo4jtest.CreateOpportunityForContract(ctx, driver, tenantName, contractId, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageClosedWon,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
+		InternalStage: neo4jenum.OpportunityInternalStageClosedWon,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
+		},
 	})
 	opId := neo4jtest.CreateOpportunityForContract(ctx, driver, tenantName, contractId, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		},
 	})
 	neo4jtest.ActiveRenewalOpportunityForContract(ctx, driver, tenantName, contractId, opId)
 
@@ -577,19 +601,25 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_1_Contract_3_Opportun
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	})
 	neo4jtest.CreateOpportunityForContract(ctx, driver, tenantName, contractId, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageClosedLost,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodZero,
+		InternalStage: neo4jenum.OpportunityInternalStageClosedLost,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodZero,
+		},
 	})
 	neo4jtest.CreateOpportunityForContract(ctx, driver, tenantName, contractId, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageClosedWon,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
+		InternalStage: neo4jenum.OpportunityInternalStageClosedWon,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
+		},
 	})
 	opId := neo4jtest.CreateOpportunityForContract(ctx, driver, tenantName, contractId, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		},
 	})
 	neo4jtest.ActiveRenewalOpportunityForContract(ctx, driver, tenantName, contractId, opId)
 
@@ -637,14 +667,18 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_1_Contract_2_Opportun
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	})
 	neo4jtest.CreateOpportunityForContract(ctx, driver, tenantName, contractId, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageClosedWon,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		InternalStage: neo4jenum.OpportunityInternalStageClosedWon,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		},
 	})
 	opId := neo4jtest.CreateOpportunityForContract(ctx, driver, tenantName, contractId, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
+		},
 	})
 	neo4jtest.ActiveRenewalOpportunityForContract(ctx, driver, tenantName, contractId, opId)
 
@@ -694,14 +728,18 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_1_Contract_2_Opportun
 		EndedAt:          &contract1ServiceEndedAt,
 	})
 	neo4jtest.CreateOpportunityForContract(ctx, driver, tenantName, contractId, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageClosedWon,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		InternalStage: neo4jenum.OpportunityInternalStageClosedWon,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		},
 	})
 	opId := neo4jtest.CreateOpportunityForContract(ctx, driver, tenantName, contractId, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
+		},
 	})
 	neo4jtest.ActiveRenewalOpportunityForContract(ctx, driver, tenantName, contractId, opId)
 
@@ -749,9 +787,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		},
 	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
@@ -761,8 +801,10 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2ServiceStartedAt,
 	}, neo4jentity.OpportunityEntity{
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		InternalType: neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		},
 	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contract2Id, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
@@ -808,9 +850,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		},
 	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
@@ -820,9 +864,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2ServiceStartedAt,
 	}, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
+		},
 	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contract2Id, neo4jenum.BilledTypeAnnually, 12, 1, contract2ServiceStartedAt)
 
@@ -865,9 +911,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		},
 	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
@@ -877,9 +925,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2ServiceStartedAt,
 	}, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodLow,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodLow,
+		},
 	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contract2Id, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
@@ -922,9 +972,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		},
 	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
@@ -934,9 +986,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2ServiceStartedAt,
 	}, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodZero,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodZero,
+		},
 	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contract2Id, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
@@ -979,9 +1033,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
+		},
 	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
@@ -991,7 +1047,9 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2ServiceStartedAt,
 	}, neo4jentity.OpportunityEntity{
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodLow,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodLow,
+		},
 	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contract2Id, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
@@ -1034,9 +1092,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_First_Live_Secon
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		},
 	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contract1Id, neo4jenum.BilledTypeAnnually, 100, 1, contract1ServiceStartedAt)
 
@@ -1048,8 +1108,10 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_First_Live_Secon
 		ServiceStartedAt: &contract2ServiceStartedAt,
 		EndedAt:          &contract2ServiceEndedAt,
 	}, neo4jentity.OpportunityEntity{
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
+		InternalType: neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
+		},
 	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract2ServiceEndedAt)
 
@@ -1094,9 +1156,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_First_Closed_Sec
 		ServiceStartedAt: &contract1ServiceStartedAt,
 		EndedAt:          &contract1ServiceEndedAt,
 	}, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
+		},
 	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
@@ -1106,9 +1170,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_First_Closed_Sec
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2ServiceStartedAt,
 	}, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		},
 	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contract2Id, neo4jenum.BilledTypeAnnually, 100, 1, contract1ServiceStartedAt)
 
@@ -1153,9 +1219,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_First_Live_Secon
 		ServiceStartedAt: &contract1ServiceStartedAt,
 		EndedAt:          &contract1ServiceEndedAt,
 	}, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		},
 	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
@@ -1165,9 +1233,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_First_Live_Secon
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2ServiceStartedAt,
 	}, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
+		},
 	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contract2Id, neo4jenum.BilledTypeAnnually, 100, 1, contract1ServiceStartedAt)
 
@@ -1212,9 +1282,11 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_2_Closed_Con
 		ServiceStartedAt: &contract1ServiceStartedAt,
 		EndedAt:          &contract1ServiceEndedAt,
 	}, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		},
 	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
@@ -1226,9 +1298,11 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_2_Closed_Con
 		ServiceStartedAt: &contract2ServiceStartedAt,
 		EndedAt:          &contract2ServiceEndedAt,
 	}, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
+		},
 	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contract2Id, neo4jenum.BilledTypeAnnually, 100, 1, contract2ServiceStartedAt)
 
@@ -1273,9 +1347,11 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_2_Closed_Con
 		ServiceStartedAt: &contract1ServiceStartedAt,
 		EndedAt:          &contract1ServiceEndedAt,
 	}, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		},
 	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
@@ -1287,9 +1363,11 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_2_Closed_Con
 		ServiceStartedAt: &contract2ServiceStartedAt,
 		EndedAt:          &contract2ServiceEndedAt,
 	}, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
+		},
 	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contract2Id, neo4jenum.BilledTypeAnnually, 100, 1, contract2ServiceStartedAt)
 
@@ -1333,9 +1411,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Two_Organizations_With_1_Contract_
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		},
 	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
@@ -1350,9 +1430,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Two_Organizations_With_1_Contract_
 		ServiceStartedAt: &contract2ServiceStartedAt,
 		EndedAt:          &contract2ServiceEndedAt,
 	}, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		},
 	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contract2Id, neo4jenum.BilledTypeAnnually, 10, 1, contract2ServiceStartedAt)
 
@@ -1406,9 +1488,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Two_Organizations_With_2_Contracts
 		ServiceStartedAt: &contract1ServiceStartedAt,
 		EndedAt:          &contract1EndedAt,
 	}, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		},
 	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contract1Id, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
@@ -1416,9 +1500,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Two_Organizations_With_2_Contracts
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		},
 	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contract2Id, neo4jenum.BilledTypeAnnually, 24, 1, contract1ServiceStartedAt)
 
@@ -1432,9 +1518,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Two_Organizations_With_2_Contracts
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2ServiceStartedAt,
 	}, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
+		},
 	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contract3Id, neo4jenum.BilledTypeAnnually, 15, 1, contract2ServiceStartedAt)
 
@@ -1443,9 +1531,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Two_Organizations_With_2_Contracts
 		ServiceStartedAt: &contract2ServiceStartedAt,
 		EndedAt:          &contract2ServiceEndedAt,
 	}, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		},
 	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contract4Id, neo4jenum.BilledTypeAnnually, 10, 1, contract2ServiceStartedAt)
 
@@ -1497,9 +1587,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Annually_SLI(t *testing.T) {
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodLow,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodLow,
+		},
 	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
@@ -1544,9 +1636,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Quarterly_SLI(t *testing.T) {
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodLow,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodLow,
+		},
 	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeQuarterly, 12, 1, contract1ServiceStartedAt)
 
@@ -1591,9 +1685,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Monthly_SLI(t *testing.T) {
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, neo4jentity.OpportunityEntity{
-		InternalStage:     neo4jenum.InternalStageOpen,
-		InternalType:      neo4jenum.InternalTypeRenewal,
-		RenewalLikelihood: neo4jenum.RenewalLikelihoodLow,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodLow,
+		},
 	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeMonthly, 12, 1, contract1ServiceStartedAt)
 

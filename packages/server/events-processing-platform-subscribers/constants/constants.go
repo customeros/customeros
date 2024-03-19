@@ -2,12 +2,7 @@ package constants
 
 const (
 	AppSourceEventProcessingPlatform = "event-processing-platform"
-	AppSourceIntegrationApp          = "integration.app"
-	AppSourceSyncCustomerOsData      = "sync-customer-os-data"
 
-	ComponentNeo4jRepository     = "neo4jRepository"
-	ComponentService             = "service"
-	ComponentCommandHandler      = "commandHandler"
 	ComponentSubscriptionGraph   = "subscriptionGraph"
 	ComponentSubscriptionInvoice = "subscriptionInvoice"
 
@@ -38,8 +33,6 @@ const (
 
 	MaxRetriesCheckDataInNeo4j = 8
 
-	Tcp = "tcp"
-
 	GRPC     = "GRPC"
 	SIZE     = "SIZE"
 	URI      = "URI"
@@ -61,27 +54,10 @@ const (
 	CreatedDate  = "CreatedDate"
 	UserMetadata = "UserMetadata"
 
-	Validate        = "validate"
-	FieldValidation = "field validation"
-	RequiredHeaders = "required header"
-	Base64          = "base64"
-	Unmarshal       = "unmarshal"
-	Uuid            = "uuid"
-	Cookie          = "cookie"
-	Token           = "token"
-	Bcrypt          = "bcrypt"
-	Redis           = "redis"
-
 	EsInternalStreamPrefix = "$"
-	EsAll                  = "$all"
-	StreamTempPrefix       = "temp"
 
-	StreamMetadataMaxCount              = 1000
-	StreamMetadataMaxAgeSeconds         = 7 * 24 * 60 * 60  // 7 days
-	StreamMetadataMaxAgeSecondsExtended = 30 * 24 * 60 * 60 // 30 days
-
-	UrlCustomerOsApi = "https://customeros.ai"
-	UrlInvoices      = UrlCustomerOsApi + "/invoices"
+	StreamMetadataMaxCount      = 1000
+	StreamMetadataMaxAgeSeconds = 7 * 24 * 60 * 60 // 7 days
 
 	UrlFileStoreApi                     = "https://fs.customeros.ai/"
 	UrlFileStoreFileDownloadUrlTemplate = UrlFileStoreApi + "file/%s/download"

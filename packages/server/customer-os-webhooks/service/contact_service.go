@@ -292,7 +292,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 	if !failedSync && contactInput.HasSocials() {
 		for _, social := range contactInput.Socials {
 			// Link social to contact
-			_, err = CallEventsPlatformGRPCWithRetry[*commonpb.IdResponse](func() (*commonpb.IdResponse, error) {
+			_, err = CallEventsPlatformGRPCWithRetry[*contactpb.SocialIdGrpcResponse](func() (*contactpb.SocialIdGrpcResponse, error) {
 				return s.grpcClients.ContactClient.AddSocial(ctx, &contactpb.ContactAddSocialGrpcRequest{
 					Tenant:    common.GetTenantFromContext(ctx),
 					ContactId: contactId,

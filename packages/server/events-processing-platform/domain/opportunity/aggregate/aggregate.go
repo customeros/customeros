@@ -48,7 +48,7 @@ func (a *OpportunityAggregate) When(evt eventstore.Event) error {
 	case event.OpportunityCloseLooseV1:
 		return a.onOpportunityCloseLoose(evt)
 	default:
-		if strings.HasPrefix(evt.GetEventType(), "$") {
+		if strings.HasPrefix(evt.GetEventType(), constants.EsInternalStreamPrefix) {
 			return nil
 		}
 		err := eventstore.ErrInvalidEventType

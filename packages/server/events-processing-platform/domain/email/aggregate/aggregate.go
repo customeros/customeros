@@ -42,7 +42,7 @@ func (a *EmailAggregate) When(event eventstore.Event) error {
 	case events.EmailValidatedV1:
 		return a.OnEmailValidated(event)
 	default:
-		if strings.HasPrefix(event.GetEventType(), "$") {
+		if strings.HasPrefix(event.GetEventType(), constants.EsInternalStreamPrefix) {
 			return nil
 		}
 		err := eventstore.ErrInvalidEventType

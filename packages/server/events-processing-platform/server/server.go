@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstoredb"
 	"os"
 	"os/signal"
 	"syscall"
@@ -14,15 +15,13 @@ import (
 	"github.com/labstack/echo/v4"
 	commonconf "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore/store"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstroredb"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -74,7 +73,7 @@ func (server *Server) Start(parentCtx context.Context) error {
 	//Server.interceptorManager = interceptors.NewInterceptorManager(Server.log, Server.getGrpcMetricsCb())
 	//Server.mw = middlewares.NewMiddlewareManager(Server.log, Server.cfg, Server.getHttpMetricsCb())
 
-	esdb, err := eventstroredb.NewEventStoreDB(server.Config.EventStoreConfig, server.Log)
+	esdb, err := eventstoredb.NewEventStoreDB(server.Config.EventStoreConfig, server.Log)
 	if err != nil {
 		return err
 	}
@@ -106,14 +105,6 @@ func (server *Server) Start(parentCtx context.Context) error {
 	//Server.runHealthCheck(ctx)
 
 	server.Services = service.InitServices(server.Config, server.Repositories, server.AggregateStore, server.CommandHandlers, server.Log, eventBufferWatcher)
-
-	// Setting up gRPC client
-	df := grpc_client.NewDialFactory(server.Config)
-	gRPCconn, err := df.GetEventsProcessingPlatformConn()
-	if err != nil {
-		server.Log.Fatalf("Failed to connect: %v", err)
-	}
-	defer df.Close(gRPCconn)
 
 	closeGrpcServer, grpcServer, err := server.NewEventProcessorGrpcServer()
 	if err != nil {

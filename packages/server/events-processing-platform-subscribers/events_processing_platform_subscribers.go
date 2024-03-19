@@ -13,8 +13,8 @@ import (
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/temporal/worker"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/server"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 )
 
 func main() {

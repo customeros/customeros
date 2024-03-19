@@ -6,19 +6,19 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/graph_db"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test"
+	eventstoret "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/mocked_grpc"
+	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/neo4j"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test"
-	eventstoret "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/mocked_grpc"
-	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/neo4j"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/stretchr/testify/require"
@@ -99,7 +99,7 @@ func TestOpportunityEventHandler_OnCreate(t *testing.T) {
 	require.NotNil(t, opportunityDbNode)
 
 	// verify opportunity
-	opportunity := graph_db.MapDbNodeToOpportunityEntity(opportunityDbNode)
+	opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
 	require.Equal(t, opportunityId, opportunity.Id)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), opportunity.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, opportunity.AppSource)
@@ -109,9 +109,9 @@ func TestOpportunityEventHandler_OnCreate(t *testing.T) {
 	require.Equal(t, timeNow, *opportunity.EstimatedClosedAt)
 	require.Equal(t, opportunityData.Name, opportunity.Name)
 	require.Equal(t, opportunityData.Amount, opportunity.Amount)
-	require.Equal(t, string(opportunityData.InternalType.StringEnumValue()), opportunity.InternalType)
+	require.Equal(t, opportunityData.InternalType.StringEnumValue(), opportunity.InternalType)
 	require.Equal(t, opportunityData.ExternalType, opportunity.ExternalType)
-	require.Equal(t, string(opportunityData.InternalStage.StringEnumValue()), opportunity.InternalStage)
+	require.Equal(t, opportunityData.InternalStage.StringEnumValue(), opportunity.InternalStage)
 	require.Equal(t, opportunityData.ExternalStage, opportunity.ExternalStage)
 	require.Equal(t, opportunityData.GeneralNotes, opportunity.GeneralNotes)
 	require.Equal(t, opportunityData.NextSteps, opportunity.NextSteps)
@@ -181,7 +181,7 @@ func TestOpportunityEventHandler_OnCreateRenewal(t *testing.T) {
 	require.NotNil(t, opportunityDbNode)
 
 	// verify opportunity
-	opportunity := graph_db.MapDbNodeToOpportunityEntity(opportunityDbNode)
+	opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
 	require.Equal(t, opportunityId, opportunity.Id)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), opportunity.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, opportunity.AppSource)
@@ -192,9 +192,9 @@ func TestOpportunityEventHandler_OnCreateRenewal(t *testing.T) {
 	require.Equal(t, "", opportunity.Name)
 	require.Equal(t, "", opportunity.ExternalType)
 	require.Equal(t, "", opportunity.ExternalStage)
-	require.Equal(t, neo4jenum.OpportunityInternalTypeRenewal.String(), opportunity.InternalType)
-	require.Equal(t, neo4jenum.OpportunityInternalStageOpen.String(), opportunity.InternalStage)
-	require.Equal(t, neo4jenum.RenewalLikelihoodLow.String(), opportunity.RenewalDetails.RenewalLikelihood)
+	require.Equal(t, neo4jenum.OpportunityInternalTypeRenewal, opportunity.InternalType)
+	require.Equal(t, neo4jenum.OpportunityInternalStageOpen, opportunity.InternalStage)
+	require.Equal(t, neo4jenum.RenewalLikelihoodLow, opportunity.RenewalDetails.RenewalLikelihood)
 
 	require.True(t, calledEventsPlatformToRefreshRenewalSummary)
 }
@@ -205,8 +205,8 @@ func TestOpportunityEventHandler_OnUpdateNextCycleDate(t *testing.T) {
 
 	// Prepare test data in Neo4j
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
-		InternalStage: neo4jenum.OpportunityInternalStageOpen.String(),
+	opportunityId := neo4jtest.CreateOpportunity(ctx, testDatabase.Driver, tenantName, neo4jentity.OpportunityEntity{
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
 	})
 	updatedAt := utils.Now()
 	renewedAt := updatedAt.AddDate(0, 6, 0) // 6 months later
@@ -235,7 +235,7 @@ func TestOpportunityEventHandler_OnUpdateNextCycleDate(t *testing.T) {
 	require.NotNil(t, opportunityDbNode)
 
 	// Validate that the opportunity next cycle date is updated in the repository
-	opportunity := graph_db.MapDbNodeToOpportunityEntity(opportunityDbNode)
+	opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
 	require.Equal(t, opportunityId, opportunity.Id)
 	require.Equal(t, updatedAt, opportunity.UpdatedAt)
 	require.Equal(t, renewedAt, *opportunity.RenewalDetails.RenewedAt)
@@ -247,7 +247,7 @@ func TestOpportunityEventHandler_OnUpdate(t *testing.T) {
 
 	// prepare neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
+	opportunityId := neo4jtest.CreateOpportunity(ctx, testDatabase.Driver, tenantName, neo4jentity.OpportunityEntity{
 		Name:      "test opportunity",
 		Amount:    10000,
 		MaxAmount: 20000,
@@ -286,7 +286,7 @@ func TestOpportunityEventHandler_OnUpdate(t *testing.T) {
 	require.NotNil(t, opportunityDbNode)
 
 	// verify opportunity
-	opportunity := graph_db.MapDbNodeToOpportunityEntity(opportunityDbNode)
+	opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
 	require.Equal(t, opportunityId, opportunity.Id)
 	require.Equal(t, now, opportunity.UpdatedAt)
 	require.Equal(t, "updated opportunity", opportunity.Name)
@@ -300,7 +300,7 @@ func TestOpportunityEventHandler_OnUpdate_OnlyAmountIsChangedByFieldsMask(t *tes
 
 	// prepare neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
+	opportunityId := neo4jtest.CreateOpportunity(ctx, testDatabase.Driver, tenantName, neo4jentity.OpportunityEntity{
 		Name:   "test opportunity",
 		Amount: 10000,
 	})
@@ -337,7 +337,7 @@ func TestOpportunityEventHandler_OnUpdate_OnlyAmountIsChangedByFieldsMask(t *tes
 	require.NotNil(t, opportunityDbNode)
 
 	// verify opportunity
-	opportunity := graph_db.MapDbNodeToOpportunityEntity(opportunityDbNode)
+	opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
 	require.Equal(t, opportunityId, opportunity.Id)
 	require.Equal(t, now, opportunity.UpdatedAt)
 	require.Equal(t, "test opportunity", opportunity.Name)
@@ -350,19 +350,18 @@ func TestOpportunityEventHandler_OnUpdateRenewal_AmountAndRenewalChangedByUser(t
 
 	// prepare neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
-		Name:         "test opportunity",
-		Amount:       10000,
-		InternalType: neo4jenum.OpportunityInternalTypeRenewal.String(),
-		RenewalDetails: entity.RenewalDetails{
-			RenewalLikelihood: "HIGH",
-		},
-	})
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
 		RenewalCycle: neo4jenum.RenewalCycleMonthlyRenewal,
 	})
-	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
+	opportunityId := neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
+		Name:         "test opportunity",
+		Amount:       10000,
+		InternalType: neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: "HIGH",
+		},
+	})
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{neo4jutil.NodeLabelOpportunity: 1})
 
 	// prepare grpc mock
@@ -420,10 +419,10 @@ func TestOpportunityEventHandler_OnUpdateRenewal_AmountAndRenewalChangedByUser(t
 	require.NotNil(t, opportunityDbNode)
 
 	// verify opportunity
-	opportunity := graph_db.MapDbNodeToOpportunityEntity(opportunityDbNode)
+	opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
 	require.Equal(t, opportunityId, opportunity.Id)
 	require.Equal(t, now, opportunity.UpdatedAt)
-	require.Equal(t, "MEDIUM", opportunity.RenewalDetails.RenewalLikelihood)
+	require.Equal(t, neo4jenum.RenewalLikelihoodMedium, opportunity.RenewalDetails.RenewalLikelihood)
 	require.Equal(t, "user-123", opportunity.RenewalDetails.RenewalUpdatedByUserId)
 	require.Equal(t, now, *opportunity.RenewalDetails.RenewalUpdatedByUserAt)
 	require.Equal(t, float64(10), opportunity.Amount)
@@ -441,12 +440,12 @@ func TestOpportunityEventHandler_OnUpdateRenewal_OnlyCommentsChangedByUser_DoNot
 
 	// prepare neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
+	opportunityId := neo4jtest.CreateOpportunity(ctx, testDatabase.Driver, tenantName, neo4jentity.OpportunityEntity{
 		Name:         "test opportunity",
 		Amount:       10000,
 		Comments:     "no comments",
-		InternalType: string(neo4jenum.OpportunityInternalTypeRenewal),
-		RenewalDetails: entity.RenewalDetails{
+		InternalType: neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
 			RenewalLikelihood:      "HIGH",
 			RenewalUpdatedByUserId: "orig-user",
 		},
@@ -484,10 +483,10 @@ func TestOpportunityEventHandler_OnUpdateRenewal_OnlyCommentsChangedByUser_DoNot
 	require.NotNil(t, opportunityDbNode)
 
 	// verify opportunity
-	opportunity := graph_db.MapDbNodeToOpportunityEntity(opportunityDbNode)
+	opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
 	require.Equal(t, opportunityId, opportunity.Id)
 	require.Equal(t, now, opportunity.UpdatedAt)
-	require.Equal(t, "HIGH", opportunity.RenewalDetails.RenewalLikelihood)
+	require.Equal(t, neo4jenum.RenewalLikelihoodHigh, opportunity.RenewalDetails.RenewalLikelihood)
 	require.Equal(t, "orig-user", opportunity.RenewalDetails.RenewalUpdatedByUserId)
 	require.Nil(t, opportunity.RenewalDetails.RenewalUpdatedByUserAt)
 	require.Equal(t, float64(10000), opportunity.Amount)
@@ -508,16 +507,15 @@ func TestOpportunityEventHandler_OnUpdateRenewal_LikelihoodChangedByUser_Generat
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
 		RenewalCycle: neo4jenum.RenewalCycleMonthlyRenewal,
 	})
-	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
+	opportunityId := neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
 		Amount:        10000,
-		InternalType:  string(neo4jenum.OpportunityInternalTypeRenewal),
-		InternalStage: string(neo4jenum.OpportunityInternalStageOpen),
-		RenewalDetails: entity.RenewalDetails{
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		RenewalDetails: neo4jentity.RenewalDetails{
 			RenewalLikelihood:      "HIGH",
 			RenewalUpdatedByUserId: "orig-user",
 		},
 	})
-	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		neo4jutil.NodeLabelOpportunity: 1,
 		neo4jutil.NodeLabelContract:    1})
@@ -587,10 +585,10 @@ func TestOpportunityEventHandler_OnUpdateRenewal_LikelihoodChangedByUser_Generat
 	require.NotNil(t, opportunityDbNode)
 
 	// verify opportunity
-	opportunity := graph_db.MapDbNodeToOpportunityEntity(opportunityDbNode)
+	opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
 	require.Equal(t, opportunityId, opportunity.Id)
 	require.Equal(t, now, opportunity.UpdatedAt)
-	require.Equal(t, "MEDIUM", opportunity.RenewalDetails.RenewalLikelihood)
+	require.Equal(t, neo4jenum.RenewalLikelihoodMedium, opportunity.RenewalDetails.RenewalLikelihood)
 	require.Equal(t, "user-123", opportunity.RenewalDetails.RenewalUpdatedByUserId)
 	require.Equal(t, now, *opportunity.RenewalDetails.RenewalUpdatedByUserAt)
 	require.Equal(t, float64(10000), opportunity.Amount)
@@ -622,8 +620,8 @@ func TestOpportunityEventHandler_OnCloseWin(t *testing.T) {
 
 	// Prepare test data in Neo4j
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
-		InternalStage: string(neo4jenum.OpportunityInternalStageOpen),
+	opportunityId := neo4jtest.CreateOpportunity(ctx, testDatabase.Driver, tenantName, neo4jentity.OpportunityEntity{
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
 	})
 	now := utils.Now()
 
@@ -646,11 +644,11 @@ func TestOpportunityEventHandler_OnCloseWin(t *testing.T) {
 	require.NotNil(t, opportunityDbNode)
 
 	// Validate that the opportunity next cycle date is updated in the repository
-	opportunity := graph_db.MapDbNodeToOpportunityEntity(opportunityDbNode)
+	opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
 	require.Equal(t, opportunityId, opportunity.Id)
 	require.Equal(t, now, opportunity.UpdatedAt)
 	require.Equal(t, now, *opportunity.ClosedAt)
-	require.Equal(t, string(neo4jenum.OpportunityInternalStageClosedWon), opportunity.InternalStage)
+	require.Equal(t, neo4jenum.OpportunityInternalStageClosedWon, opportunity.InternalStage)
 }
 
 func TestOpportunityEventHandler_OnCloseLoose(t *testing.T) {
@@ -659,8 +657,8 @@ func TestOpportunityEventHandler_OnCloseLoose(t *testing.T) {
 
 	// Prepare test data in Neo4j
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
-		InternalStage: string(neo4jenum.OpportunityInternalStageOpen),
+	opportunityId := neo4jtest.CreateOpportunity(ctx, testDatabase.Driver, tenantName, neo4jentity.OpportunityEntity{
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
 	})
 	now := utils.Now()
 
@@ -683,11 +681,11 @@ func TestOpportunityEventHandler_OnCloseLoose(t *testing.T) {
 	require.NotNil(t, opportunityDbNode)
 
 	// Validate that the opportunity next cycle date is updated in the repository
-	opportunity := graph_db.MapDbNodeToOpportunityEntity(opportunityDbNode)
+	opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
 	require.Equal(t, opportunityId, opportunity.Id)
 	require.Equal(t, now, opportunity.UpdatedAt)
 	require.Equal(t, now, *opportunity.ClosedAt)
-	require.Equal(t, string(neo4jenum.OpportunityInternalStageClosedLost), opportunity.InternalStage)
+	require.Equal(t, neo4jenum.OpportunityInternalStageClosedLost, opportunity.InternalStage)
 }
 
 func TestOpportunityEventHandler_OnUpdateRenewal_ChangeOwner(t *testing.T) {
@@ -779,7 +777,7 @@ func TestOpportunityEventHandler_OnUpdateRenewal_ChangeOwner(t *testing.T) {
 	require.NotNil(t, opportunityDbNode)
 
 	// verify opportunity
-	opportunity := graph_db.MapDbNodeToOpportunityEntity(opportunityDbNode)
+	opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
 	require.Equal(t, opportunityId, opportunity.Id)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), opportunity.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, opportunity.AppSource)
@@ -789,9 +787,9 @@ func TestOpportunityEventHandler_OnUpdateRenewal_ChangeOwner(t *testing.T) {
 	require.Equal(t, timeNow, *opportunity.EstimatedClosedAt)
 	require.Equal(t, opportunityData.Name, opportunity.Name)
 	require.Equal(t, opportunityData.Amount, opportunity.Amount)
-	require.Equal(t, string(opportunityData.InternalType.StringEnumValue()), opportunity.InternalType)
+	require.Equal(t, opportunityData.InternalType.StringEnumValue(), opportunity.InternalType)
 	require.Equal(t, opportunityData.ExternalType, opportunity.ExternalType)
-	require.Equal(t, string(opportunityData.InternalStage.StringEnumValue()), opportunity.InternalStage)
+	require.Equal(t, opportunityData.InternalStage.StringEnumValue(), opportunity.InternalStage)
 	require.Equal(t, opportunityData.ExternalStage, opportunity.ExternalStage)
 	require.Equal(t, opportunityData.GeneralNotes, opportunity.GeneralNotes)
 	require.Equal(t, opportunityData.NextSteps, opportunity.NextSteps)
@@ -822,7 +820,7 @@ func TestOpportunityEventHandler_OnUpdateRenewal_ChangeOwner(t *testing.T) {
 	require.NotNil(t, opportunityDbNode1)
 
 	// verify opportunity
-	opportunity1 := graph_db.MapDbNodeToOpportunityEntity(opportunityDbNode1)
+	opportunity1 := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode1)
 	require.Equal(t, opportunityId, opportunity1.Id)
 
 	require.True(t, calledEventsPlatformToRefreshRenewalSummary)

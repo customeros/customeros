@@ -45,7 +45,7 @@ func (a *IssueAggregate) When(evt eventstore.Event) error {
 	case event.IssueRemoveUserFollowerV1:
 		return a.onIssueRemoveUserFollower(evt)
 	default:
-		if strings.HasPrefix(evt.GetEventType(), "$") {
+		if strings.HasPrefix(evt.GetEventType(), constants.EsInternalStreamPrefix) {
 			return nil
 		}
 		err := eventstore.ErrInvalidEventType

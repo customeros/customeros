@@ -8,7 +8,7 @@ import (
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/graph_db/entity"
 	"golang.org/x/exp/slices"
 )
 
@@ -84,42 +84,6 @@ func MapDbNodeToInteractionSessionEntity(node dbtype.Node) *entity.InteractionSe
 		SourceOfTruth: neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
 	return &issue
-}
-
-// Deprecated
-func MapDbNodeToOpportunityEntity(node *dbtype.Node) *entity.OpportunityEntity {
-	if node == nil {
-		return nil
-	}
-	props := utils.GetPropsFromNode(*node)
-	opportunity := entity.OpportunityEntity{
-		Id:                utils.GetStringPropOrEmpty(props, "id"),
-		Name:              utils.GetStringPropOrEmpty(props, "name"),
-		Amount:            utils.GetFloatPropOrZero(props, "amount"),
-		MaxAmount:         utils.GetFloatPropOrZero(props, "maxAmount"),
-		InternalType:      utils.GetStringPropOrEmpty(props, "internalType"),
-		ExternalType:      utils.GetStringPropOrEmpty(props, "externalType"),
-		InternalStage:     utils.GetStringPropOrEmpty(props, "internalStage"),
-		ExternalStage:     utils.GetStringPropOrEmpty(props, "externalStage"),
-		EstimatedClosedAt: utils.GetTimePropOrNil(props, "estimatedClosedAt"),
-		ClosedAt:          utils.GetTimePropOrNil(props, "closedAt"),
-		GeneralNotes:      utils.GetStringPropOrEmpty(props, "generalNotes"),
-		NextSteps:         utils.GetStringPropOrEmpty(props, "nextSteps"),
-		Comments:          utils.GetStringPropOrEmpty(props, "comments"),
-		CreatedAt:         utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:         utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		AppSource:         utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:            neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:     neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		OwnerUserId:       utils.GetStringPropOrEmpty(props, "ownerUserId"),
-		RenewalDetails: entity.RenewalDetails{
-			RenewedAt:              utils.GetTimePropOrNil(props, "renewedAt"),
-			RenewalLikelihood:      utils.GetStringPropOrEmpty(props, "renewalLikelihood"),
-			RenewalUpdatedByUserId: utils.GetStringPropOrEmpty(props, "renewalUpdatedByUserId"),
-			RenewalUpdatedByUserAt: utils.GetTimePropOrNil(props, "renewalUpdatedByUserAt"),
-		},
-	}
-	return &opportunity
 }
 
 // Deprecated

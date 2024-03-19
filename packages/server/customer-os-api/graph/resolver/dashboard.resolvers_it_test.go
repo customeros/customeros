@@ -846,13 +846,21 @@ func TestQueryResolver_Sort_Renewals_ByRenewalDate(t *testing.T) {
 	contractId1 := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, organizationId3, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contractStartedAt,
-	}, neo4jentity.OpportunityEntity{RenewedAt: daysFromNow20})
+	}, neo4jentity.OpportunityEntity{
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewedAt: &daysFromNow20,
+		},
+	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId1, neo4jenum.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	contractId2 := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, organizationId3, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2StartedAt,
-	}, neo4jentity.OpportunityEntity{RenewedAt: daysFromNow10})
+	}, neo4jentity.OpportunityEntity{
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewedAt: &daysFromNow10,
+		},
+	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId2, neo4jenum.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 3, "Contract": 2, "Opportunity": 2})
@@ -906,14 +914,22 @@ func TestQueryResolver_Sort_Renewals_ByForecastAmountASC(t *testing.T) {
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contractStartedAt,
 		RenewalCycle:     "MONTHLY",
-	}, neo4jentity.OpportunityEntity{RenewedAt: daysFromNow20, MaxAmount: 100})
+	}, neo4jentity.OpportunityEntity{
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewedAt: &daysFromNow20,
+		},
+		MaxAmount: 100})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId1, neo4jenum.BilledTypeAnnually, 3, 2, sli1StartedAt)
 
 	contractId2 := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, organizationId3, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2StartedAt,
 		RenewalCycle:     "MONTHLY",
-	}, neo4jentity.OpportunityEntity{RenewedAt: daysFromNow10, MaxAmount: 200})
+	}, neo4jentity.OpportunityEntity{
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewedAt: &daysFromNow10,
+		},
+		MaxAmount: 200})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId2, neo4jenum.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 3, "Contract": 2, "Opportunity": 2})
@@ -968,14 +984,24 @@ func TestQueryResolver_Sort_Renewals_ByForecastAmountDESC(t *testing.T) {
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contractStartedAt,
 		RenewalCycle:     "MONTHLY",
-	}, neo4jentity.OpportunityEntity{RenewedAt: daysFromNow20, MaxAmount: 100})
+	}, neo4jentity.OpportunityEntity{
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewedAt: &daysFromNow20,
+		},
+		MaxAmount: 100,
+	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId1, neo4jenum.BilledTypeAnnually, 3, 2, sli1StartedAt)
 
 	contractId2 := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, organizationId3, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2StartedAt,
 		RenewalCycle:     "MONTHLY",
-	}, neo4jentity.OpportunityEntity{RenewedAt: daysFromNow10, MaxAmount: 200})
+	}, neo4jentity.OpportunityEntity{
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewedAt: &daysFromNow10,
+		},
+		MaxAmount: 200,
+	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId2, neo4jenum.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 3, "Contract": 2, "Opportunity": 2})
@@ -1030,21 +1056,39 @@ func TestQueryResolver_Sort_Renewals_ByRenewalLikelihood(t *testing.T) {
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contractStartedAt,
 		RenewalCycle:     "MONTHLY",
-	}, neo4jentity.OpportunityEntity{RenewedAt: daysFromNow20, MaxAmount: 100, RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh})
+	}, neo4jentity.OpportunityEntity{
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewedAt:         &daysFromNow20,
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		},
+		MaxAmount: 100,
+	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId1, neo4jenum.BilledTypeAnnually, 3, 2, sli1StartedAt)
 
 	contractId2 := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, organizationId3, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2StartedAt,
 		RenewalCycle:     "MONTHLY",
-	}, neo4jentity.OpportunityEntity{RenewedAt: daysFromNow10, MaxAmount: 200, RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium})
+	}, neo4jentity.OpportunityEntity{
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewedAt:         &daysFromNow10,
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
+		},
+		MaxAmount: 200,
+	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId2, neo4jenum.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	contractId3 := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, organizationId3, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2StartedAt,
 		RenewalCycle:     "MONTHLY",
-	}, neo4jentity.OpportunityEntity{RenewedAt: daysFromNow10, MaxAmount: 200, RenewalLikelihood: neo4jenum.RenewalLikelihoodLow})
+	}, neo4jentity.OpportunityEntity{
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewedAt:         &daysFromNow10,
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodLow,
+		},
+		MaxAmount: 200,
+	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId3, neo4jenum.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 3, "Contract": 3, "Opportunity": 3})
@@ -1211,28 +1255,52 @@ func TestQueryResolver_Search_Renewals_ByRenewalCycle(t *testing.T) {
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contractStartedAt,
 		RenewalCycle:     "MONTHLY",
-	}, neo4jentity.OpportunityEntity{RenewedAt: daysFromNow20, MaxAmount: 100, RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh})
+	}, neo4jentity.OpportunityEntity{
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewedAt:         &daysFromNow20,
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		},
+		MaxAmount: 100,
+	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId1, neo4jenum.BilledTypeAnnually, 3, 2, sli1StartedAt)
 
 	contractId2 := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, organizationId3, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2StartedAt,
 		RenewalCycle:     "MONTHLY",
-	}, neo4jentity.OpportunityEntity{RenewedAt: daysFromNow10, MaxAmount: 200, RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium})
+	}, neo4jentity.OpportunityEntity{
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewedAt:         &daysFromNow10,
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
+		},
+		MaxAmount: 200,
+	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId2, neo4jenum.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	contractId3 := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, organizationId3, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2StartedAt,
 		RenewalCycle:     "QUARTERLY",
-	}, neo4jentity.OpportunityEntity{RenewedAt: daysFromNow10, MaxAmount: 200, RenewalLikelihood: neo4jenum.RenewalLikelihoodLow})
+	}, neo4jentity.OpportunityEntity{
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewedAt:         &daysFromNow10,
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodLow,
+		},
+		MaxAmount: 200,
+	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId3, neo4jenum.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	contractId4 := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, organizationId3, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2StartedAt,
 		RenewalCycle:     "ANNUALLY",
-	}, neo4jentity.OpportunityEntity{RenewedAt: daysFromNow10, MaxAmount: 200, RenewalLikelihood: neo4jenum.RenewalLikelihoodLow})
+	}, neo4jentity.OpportunityEntity{
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewedAt:         &daysFromNow10,
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodLow,
+		},
+		MaxAmount: 200,
+	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId4, neo4jenum.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 3, "Contract": 4, "Opportunity": 4})

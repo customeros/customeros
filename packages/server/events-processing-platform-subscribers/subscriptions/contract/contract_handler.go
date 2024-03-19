@@ -6,14 +6,12 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	"github.com/opentracing/opentracing-go"
@@ -112,16 +110,16 @@ func (h *contractHandler) UpdateActiveRenewalOpportunityLikelihood(ctx context.C
 		return err
 	}
 	contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
-	opportunityEntity := graph_db.MapDbNodeToOpportunityEntity(opportunityDbNode)
+	opportunityEntity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
 
 	var renewalLikelihood neo4jenum.RenewalLikelihood
 	if contractEntity.EndedAt != nil &&
-		opportunityEntity.RenewalDetails.RenewalLikelihood != string(neo4jenum.RenewalLikelihoodZero) &&
+		opportunityEntity.RenewalDetails.RenewalLikelihood != neo4jenum.RenewalLikelihoodZero &&
 		opportunityEntity.RenewalDetails.RenewedAt != nil &&
 		contractEntity.EndedAt.Before(*opportunityEntity.RenewalDetails.RenewedAt) {
 		// check if likelihood should be set to Zero
 		renewalLikelihood = neo4jenum.RenewalLikelihoodZero
-	} else if opportunityEntity.RenewalDetails.RenewalLikelihood == string(neo4jenum.RenewalLikelihoodZero) &&
+	} else if opportunityEntity.RenewalDetails.RenewalLikelihood == neo4jenum.RenewalLikelihoodZero &&
 		opportunityEntity.RenewalDetails.RenewedAt != nil &&
 		(contractEntity.EndedAt == nil || contractEntity.EndedAt.After(*opportunityEntity.RenewalDetails.RenewedAt)) {
 		// check if likelihood should be set to Medium
@@ -151,7 +149,7 @@ func (h *contractHandler) UpdateActiveRenewalOpportunityLikelihood(ctx context.C
 	return nil
 }
 
-func (h *contractHandler) updateRenewalNextCycleDate(ctx context.Context, tenant string, contractEntity *neo4jentity.ContractEntity, renewalOpportunityEntity *entity.OpportunityEntity, span opentracing.Span) error {
+func (h *contractHandler) updateRenewalNextCycleDate(ctx context.Context, tenant string, contractEntity *neo4jentity.ContractEntity, renewalOpportunityEntity *neo4jentity.OpportunityEntity, span opentracing.Span) error {
 	if contractEntity.IsEnded() && renewalOpportunityEntity != nil {
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
@@ -219,7 +217,7 @@ func (h *contractHandler) calculateNextCycleDate(serviceStartedAt *time.Time, re
 	return &renewalCycleNext
 }
 
-func (h *contractHandler) updateRenewalArr(ctx context.Context, tenant string, contract *neo4jentity.ContractEntity, renewalOpportunity *entity.OpportunityEntity, span opentracing.Span) error {
+func (h *contractHandler) updateRenewalArr(ctx context.Context, tenant string, contract *neo4jentity.ContractEntity, renewalOpportunity *neo4jentity.OpportunityEntity, span opentracing.Span) error {
 	// if contract already ended, return
 	if contract.IsEnded() {
 		span.LogFields(log.Bool("contract ended", true))
@@ -233,7 +231,7 @@ func (h *contractHandler) updateRenewalArr(ctx context.Context, tenant string, c
 		return nil
 	}
 	// adjust with likelihood
-	currentArr := h.calculateCurrentArrByLikelihood(maxArr, renewalOpportunity.RenewalDetails.RenewalLikelihood)
+	currentArr := h.calculateCurrentArrByLikelihood(maxArr, renewalOpportunity.RenewalDetails.RenewalLikelihood.String())
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
@@ -260,7 +258,7 @@ func (h *contractHandler) updateRenewalArr(ctx context.Context, tenant string, c
 	return nil
 }
 
-func (h *contractHandler) calculateMaxArr(ctx context.Context, tenant string, contract *neo4jentity.ContractEntity, renewalOpportunity *entity.OpportunityEntity, span opentracing.Span) (float64, error) {
+func (h *contractHandler) calculateMaxArr(ctx context.Context, tenant string, contract *neo4jentity.ContractEntity, renewalOpportunity *neo4jentity.OpportunityEntity, span opentracing.Span) (float64, error) {
 	var arr float64
 
 	// Fetch service line items for the contract from the database
@@ -351,7 +349,7 @@ func (h *contractHandler) calculateCurrentArrByLikelihood(amount float64, likeli
 	return utils.TruncateFloat64(amount*likelihoodFactor, 2)
 }
 
-func (h *contractHandler) assertContractAndRenewalOpportunity(ctx context.Context, tenant, contractId string) (*neo4jentity.ContractEntity, *entity.OpportunityEntity, bool) {
+func (h *contractHandler) assertContractAndRenewalOpportunity(ctx context.Context, tenant, contractId string) (*neo4jentity.ContractEntity, *neo4jentity.OpportunityEntity, bool) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractHandler.assertContractAndRenewalOpportunity")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
@@ -400,7 +398,7 @@ func (h *contractHandler) assertContractAndRenewalOpportunity(ctx context.Contex
 		return nil, nil, true
 	}
 
-	currentRenewalOpportunity := graph_db.MapDbNodeToOpportunityEntity(currentRenewalOpportunityDbNode)
+	currentRenewalOpportunity := neo4jmapper.MapDbNodeToOpportunityEntity(currentRenewalOpportunityDbNode)
 
 	return contract, currentRenewalOpportunity, false
 }

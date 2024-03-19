@@ -2,18 +2,17 @@ package grpc
 
 import (
 	"context"
-	"log"
-	"net"
-
 	comlog "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/server"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/test/bufconn"
+	"log"
+	"net"
 )
 
 type TestDialFactoryImpl struct {
@@ -41,11 +40,7 @@ func (dfi TestDialFactoryImpl) GetEventsProcessingPlatformConn(repositories *rep
 	appLogger.InitLogger()
 	appLogger.WithName("unit-test")
 
-	myServer := server.NewServer(&config.Config{
-		Utils: config.Utils{
-			RetriesOnOptimisticLockException: 3,
-		},
-	}, appLogger)
+	myServer := server.NewServer(&config.Config{}, appLogger)
 
 	myServer.Repositories = repositories
 	myServer.AggregateStore = aggregateStore

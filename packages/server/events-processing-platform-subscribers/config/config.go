@@ -3,26 +3,24 @@ package config
 import (
 	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
-	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
-
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
+	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstroredb"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstoredb"
 )
 
 type Config struct {
 	ServiceName        string `env:"SERVICE_NAME" envDefault:"events-processing-platform"`
 	Logger             logger.Config
-	EventStoreConfig   eventstroredb.EventStoreConfig
+	EventStoreConfig   eventstoredb.EventStoreConfig
 	Neo4j              config.Neo4jConfig
 	Postgres           config.PostgresConfig
 	Jaeger             tracing.JaegerConfig
 	GRPC               GRPC
 	Subscriptions      Subscriptions
 	Services           Services
-	Utils              Utils
 	EventNotifications EventNotifications
 	Temporal           config.TemporalConfig
 }
@@ -234,10 +232,6 @@ type Services struct {
 		ApiKey string `env:"NOVU_API_KEY,required" envDefault:"N/A"`
 	}
 	FileStoreApiConfig fsc.FileStoreApiConfig
-}
-
-type Utils struct {
-	RetriesOnOptimisticLockException int `env:"UTILS_RETRIES_ON_OPTIMISTIC_LOCK" envDefault:"5"`
 }
 
 type EventNotifications struct {
