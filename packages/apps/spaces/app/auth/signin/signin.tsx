@@ -25,11 +25,11 @@ export default function SignIn({
   return (
     <>
       <div className='h-screen'>
-        <div className='h-[50%]'>
+        <div className='h-[50%] w-[100%]'>
           <Image
             alt=''
             src={BackgroundGridDot}
-            className='top-[-10%] w-[480px]'
+            className='top-[-10%] relative w-[480px] m-auto'
           />
         </div>
         <div className='h-full flex items-center justify-center relative top-[-50%]'>
@@ -78,14 +78,14 @@ export default function SignIn({
               By logging in you agree to CustomerOS&apos;s
               <div className='text-gray-500'>
                 <a
-                  className='text-primary-700 mr-1'
+                  className='text-primary-700 mr-1 no-underline'
                   href='https://customeros.ai/legal/terms-of-service'
                 >
                   Terms of Service
                 </a>
                 <span className='mr-1'>and</span>
                 <a
-                  className='text-primary-700'
+                  className='text-primary-700 no-underline'
                   href='https://www.customeros.ai/legal/privacy-policy'
                 >
                   Privacy Policy
