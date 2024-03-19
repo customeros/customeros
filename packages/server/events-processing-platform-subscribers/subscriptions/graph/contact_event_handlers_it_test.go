@@ -83,7 +83,7 @@ func TestGraphContactEventHandler_OnLocationLinkToContact(t *testing.T) {
 	require.Equal(t, contactId, utils.GetStringPropOrEmpty(propsAfterContactCreate, "id"))
 
 	locationName := "test_location_name"
-	locationId := neo4jt.CreateLocation(ctx, testDatabase.Driver, tenantName, entity.LocationEntity{
+	locationId := neo4jtest.CreateLocation(ctx, testDatabase.Driver, tenantName, neo4jentity.LocationEntity{
 		Name: locationName,
 	})
 
