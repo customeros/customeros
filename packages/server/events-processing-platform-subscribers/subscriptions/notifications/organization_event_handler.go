@@ -10,8 +10,6 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/graph_db"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/graph_db/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
@@ -96,13 +94,13 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 		return errors.Wrap(err, "h.repositories.EmailRepository.GetEmailForUser")
 	}
 
-	var email *entity.EmailEntity
+	var email *neo4jentity.EmailEntity
 	if emailDbNode == nil {
 		tracing.TraceErr(span, err)
 		err = errors.New("email db node not found")
 		return errors.Wrap(err, "h.notificationProviderSendEmail")
 	}
-	email = graph_db.MapDbNodeToEmailEntity(*emailDbNode)
+	email = neo4jmapper.MapDbNodeToEmailEntity(emailDbNode)
 
 	// actor user email
 	actorEmailDbNode, err := h.repositories.Neo4jRepositories.EmailReadRepository.GetEmailForUser(ctx, tenant, actorUserId)
@@ -112,13 +110,13 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 		return errors.Wrap(err, "h.repositories.EmailRepository.GetEmailForUser")
 	}
 
-	var actorEmail *entity.EmailEntity
+	var actorEmail *neo4jentity.EmailEntity
 	if actorEmailDbNode == nil {
 		tracing.TraceErr(span, err)
 		err = errors.New("actor email db node not found")
 		return errors.Wrap(err, "h.notificationProviderSendEmail")
 	}
-	actorEmail = graph_db.MapDbNodeToEmailEntity(*actorEmailDbNode)
+	actorEmail = neo4jmapper.MapDbNodeToEmailEntity(actorEmailDbNode)
 
 	// target user
 	userDbNode, err := h.repositories.Neo4jRepositories.UserReadRepository.GetUserById(ctx, tenant, userId)
@@ -215,13 +213,13 @@ func (h *OrganizationEventHandler) notificationProviderSendInAppNotification(ctx
 		return errors.Wrap(err, "h.repositories.EmailRepository.GetEmailForUser")
 	}
 
-	var email *entity.EmailEntity
+	var email *neo4jentity.EmailEntity
 	if emailDbNode == nil {
 		tracing.TraceErr(span, err)
 		err = errors.New("email db node not found")
 		return errors.Wrap(err, "h.notificationProviderSendInAppNotification")
 	}
-	email = graph_db.MapDbNodeToEmailEntity(*emailDbNode)
+	email = neo4jmapper.MapDbNodeToEmailEntity(emailDbNode)
 
 	// target user
 	userDbNode, err := h.repositories.Neo4jRepositories.UserReadRepository.GetUserById(ctx, tenant, userId)

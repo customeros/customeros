@@ -137,45 +137,6 @@ func CreatePhoneNumber(ctx context.Context, driver *neo4j.DriverWithContext, ten
 	return phoneNumberId
 }
 
-func CreateEmail(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, entity entity.EmailEntity) string {
-	emailId := utils.NewUUIDIfEmpty(entity.Id)
-	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
-								MERGE (e:Email {id:$emailId})
-								MERGE (e)-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t)
-								ON CREATE SET e:Email_%s,
-									e.email=$email,
-									e.rawEmail=$rawEmail,
-									e.isReachable=$isReachable,
-									e.createdAt=$createdAt,
-									e.updatedAt=$updatedAt
-							`, tenant)
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"tenant":      tenant,
-		"emailId":     emailId,
-		"email":       entity.Email,
-		"rawEmail":    entity.RawEmail,
-		"isReachable": entity.IsReachable,
-		"createdAt":   entity.CreatedAt,
-		"updatedAt":   entity.UpdatedAt,
-	})
-	return emailId
-}
-
-func CreateEmailForUser(ctx context.Context, driver *neo4j.DriverWithContext, tenant, userId string, entity entity.EmailEntity) string {
-	emailId := CreateEmail(ctx, driver, tenant, entity)
-	LinkEmailWithUser(ctx, driver, emailId, userId)
-	return emailId
-}
-
-func LinkEmailWithUser(ctx context.Context, driver *neo4j.DriverWithContext, emailId, userId string) {
-	query := `MATCH (e:Email {id:$emailId}), (u:User {id:$userId})
-				MERGE (u)-[:HAS]->(e) `
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"emailId": emailId,
-		"userId":  userId,
-	})
-}
-
 func CreateLocation(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, location entity.LocationEntity) string {
 	locationId := utils.NewUUIDIfEmpty(location.Id)
 	query := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})
