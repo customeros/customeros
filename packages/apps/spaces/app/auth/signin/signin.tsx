@@ -56,7 +56,6 @@ export default function SignIn({
                   default:
                     icon = undefined;
                 }
-                const dynamicMargin = i === 0 ? 'mt-[17px]' : 'mt-3';
 
                 return (
                   <Button
@@ -67,7 +66,8 @@ export default function SignIn({
                     leftIcon={icon}
                     onClick={() => signIn(provider.id)}
                     className={cn(
-                      `w-[100%] py-[7px] px-[16px]  ${dynamicMargin} `,
+                      ` mt-3 w-[100%] py-[7px] px-4`,
+                      i === 0 ? 'mt-6' : 'mt-3',
                     )}
                   >
                     Sign in with {provider.name}
