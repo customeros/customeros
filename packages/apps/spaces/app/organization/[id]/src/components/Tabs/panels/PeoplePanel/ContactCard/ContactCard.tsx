@@ -326,10 +326,11 @@ export const ContactCard = ({
         >
           <Avatar
             name={state?.values?.name ?? data?.name}
-            variant='shadowed'
             src={contact?.profilePhotoUrl ? contact.profilePhotoUrl : undefined}
             icon={<User01 color='gray.700' height='1.8rem' />}
+            variant='shadowed'
           />
+
           <Flex ml='4' flexDir='column' flex='1'>
             <FormInput
               h='6'

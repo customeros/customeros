@@ -3,11 +3,10 @@ import { useRouter } from 'next/navigation';
 
 import { IMessage, PopoverNotificationCenter } from '@novu/notification-center';
 
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
-import { Tooltip } from '@ui/overlay/Tooltip';
+import { cn } from '@ui/utils/cn';
+import { Tooltip } from '@ui/overlay/Tooltip/';
 import { DateTimeUtils } from '@spaces/utils/date';
-import { Avatar, AvatarBadge } from '@ui/media/Avatar';
+import { Avatar, AvatarBadge } from '@ui/media/Avatar/Avatar';
 import { CountButton } from '@shared/components/Notifications/CountButton';
 import { EmptyNotifications } from '@shared/components/Notifications/EmptyNotifications';
 import { NotificationsHeader } from '@shared/components/Notifications/NotificationsHeader';
@@ -65,55 +64,57 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = () => {
                 : ''
             }
           >
-            <Flex
-              px={4}
-              mb={5}
+            <div
+              className={cn(
+                message.payload.isArchived
+                  ? 'cursor-default'
+                  : 'cursor-pointer',
+                'flex px-4 mb-5',
+              )}
               role='button'
-              cursor={message.payload.isArchived ? 'default' : 'pointer'}
               tabIndex={message.payload.isArchived ? -1 : 0}
               onClick={
                 message.payload.isArchived ? undefined : onNotificationClick
               }
+              style={{
+                cursor: message.payload.isArchived ? 'default' : 'pointer',
+              }}
             >
               <Avatar
-                opacity={message.read ? 0.5 : 1}
                 size='sm'
                 name={'UN'}
                 variant='roundedSquareSmall'
                 src={undefined}
+                className={cn(message.read ? 'opacity-5' : 'opacity-10')}
+                badge={
+                  !message.seen ? (
+                    <AvatarBadge className='bg-[#0BA5EC]' />
+                  ) : (
+                    <> </>
+                  )
+                }
+              />
+            </div>
+            <div className='flex flex-col ml-3 gap-1 text-gray-700'>
+              <p className='text-sm leading-4 truncate text-inherit'>
+                {content && `${content[0]} owner of `}
+                <span className='font-medium text-inherit'>
+                  {content &&
+                    (content[1]?.trim()?.length ? content[1] : 'Unnamed')}
+                </span>
+              </p>
+              <p
+                className={cn(
+                  message.read ? 'text-gray-400' : 'text-gray-500',
+                  'text-xs leading-4',
+                )}
               >
-                {!message.seen && <AvatarBadge boxSize='10px' bg='#0BA5EC' />}
-              </Avatar>
-              <Flex
-                direction='column'
-                ml={3}
-                gap={1}
-                color={message.read ? 'gray.400' : 'gray.700'}
-              >
-                <Text
-                  fontSize='sm'
-                  lineHeight='1'
-                  noOfLines={2}
-                  color='inherit'
-                >
-                  {content && `${content[0]} owner of `}
-                  <Text as='span' fontWeight='medium' color='inherit'>
-                    {content &&
-                      (content[1]?.trim()?.length ? content[1] : 'Unnamed')}
-                  </Text>
-                </Text>
-                <Text
-                  fontSize='xs'
-                  lineHeight='1'
-                  color={message.read ? 'gray.400' : 'gray.500'}
-                >
-                  {DateTimeUtils.timeAgo(message?.createdAt as string, {
-                    includeMin: true,
-                    addSuffix: true,
-                  })}
-                </Text>
-              </Flex>
-            </Flex>
+                {DateTimeUtils.timeAgo(message?.createdAt as string, {
+                  includeMin: true,
+                  addSuffix: true,
+                })}
+              </p>
+            </div>
           </Tooltip>
         );
       }}
