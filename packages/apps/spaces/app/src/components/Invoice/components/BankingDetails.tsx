@@ -1,19 +1,52 @@
-'use client';
-
-import React, { FC } from 'react';
+import React, { FC, useMemo } from 'react';
 
 import { Box } from '@ui/layout/Box';
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
-import { BankAccount } from '@graphql/types';
+import { Currency, BankAccount } from '@graphql/types';
 
 type InvoiceHeaderProps = {
+  currency?: string;
   availableBankAccount?: Partial<BankAccount> | null;
 };
 
 export const BankingDetails: FC<InvoiceHeaderProps> = ({
   availableBankAccount,
+  currency,
 }) => {
+  const bankDetails: { label: string; value: string } = useMemo(() => {
+    const details = {
+      label: 'BIC/Swift',
+      value: availableBankAccount?.bic || '-',
+    };
+
+    switch (currency) {
+      case Currency.Gbp:
+        details.label = 'Sort code';
+        details.value = availableBankAccount?.sortCode || '-';
+        break;
+      case Currency.Usd:
+        details.label = 'Routing Number';
+        details.value = availableBankAccount?.routingNumber || '-';
+        break;
+      case Currency.Eur:
+        details.label = 'BIC/Swift';
+        details.value = availableBankAccount?.bic || '-';
+        break;
+      default:
+        break;
+    }
+
+    return details;
+  }, [currency, availableBankAccount]);
+
+  const accountNumberLabel =
+    currency === Currency.Eur ? 'Iban' : 'Account number';
+  const accountNumberValue =
+    currency === Currency.Eur
+      ? availableBankAccount?.iban
+      : availableBankAccount?.accountNumber;
+
   return (
     <Flex flexDir='column' borderTop='1px solid' borderColor='gray.300' py={2}>
       <Text fontSize='xs' fontWeight='semibold'>
@@ -30,26 +63,18 @@ export const BankingDetails: FC<InvoiceHeaderProps> = ({
         </Box>
         <Box>
           <Text fontSize='xs' fontWeight='medium'>
-            Sort code
+            {bankDetails.label}
           </Text>
           <Text fontSize='xs' color='gray.500'>
-            {availableBankAccount?.sortCode || '-'}
+            {bankDetails.value}
           </Text>
         </Box>
         <Box>
           <Text fontSize='xs' fontWeight='medium'>
-            Account number
+            {accountNumberLabel}
           </Text>
           <Text fontSize='xs' color='gray.500'>
-            {availableBankAccount?.accountNumber || '-'}
-          </Text>
-        </Box>
-        <Box w='25%'>
-          <Text fontSize='xs' fontWeight='medium'>
-            Other details
-          </Text>
-          <Text fontSize='xs' color='gray.500'>
-            {availableBankAccount?.otherDetails || '-'}
+            {accountNumberValue || '-'}
           </Text>
         </Box>
       </Flex>
