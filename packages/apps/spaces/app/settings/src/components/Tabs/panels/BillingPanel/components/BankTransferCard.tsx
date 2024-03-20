@@ -51,6 +51,8 @@ export const BankTransferCard = ({ account }: { account: BankAccount }) => {
         switch (action.payload.name) {
           case 'bic':
           case 'sortCode':
+          case 'iban':
+          case 'routingNumber':
           case 'accountNumber':
           case 'bankName':
             updateBankAccountDebounced({
@@ -196,7 +198,7 @@ export const BankTransferCard = ({ account }: { account: BankAccount }) => {
           </Flex>
           {account.currency === 'USD' && (
             <>
-              <SortCodeInput
+              <FormInput
                 autoComplete='off'
                 label='Routing number'
                 placeholder='Routing number'
