@@ -63,7 +63,7 @@ services:
       start_period: 5s
 
   neo4j-sidecar:
-    image: debian:bullseye
+    image: ghcr.io/openline-ai/openline-customer-os/neo4j-sidecar:latest
     container_name: neo4j-sidecar
     networks:
       - openline
@@ -72,12 +72,7 @@ services:
         condition: service_healthy
     command: >
       /bin/bash -c "\
-      apt-get update && \
-      apt-get install -y wget && \
       wget -O /tmp/customeros.cypher https://raw.githubusercontent.com/openline-ai/openline-cli/otter/packages/cli/src/deployment/scripts/neo4j/customer-os.cypher && \
-      wget -O /tmp/cypher-shell_5.18.1_all.deb https://dist.neo4j.org/cypher-shell/cypher-shell_5.18.1_all.deb && \
-      apt-get install -y openjdk-17-jdk && \
-      dpkg -i /tmp/cypher-shell_5.18.1_all.deb && \
       cat /tmp/customeros.cypher | cypher-shell -u neo4j -p password --format plain -a bolt://neo4j:7687"
 
   eventstore:
@@ -110,7 +105,6 @@ services:
     environment:
       - POSTGRES_HOST=postgres
       - NEO4J_TARGET=neo4j://neo4j:7687
-      - NEO4J_AUTH_PWD=password
       - EVENTS_PROCESSING_PLATFORM_URL=events-processing-platform:5001
 
   events-processing-platform:
@@ -128,7 +122,6 @@ services:
       - EVENT_STORE_CONNECTION_STRING=esdb://host.docker.internal:2113
       - POSTGRES_HOST=postgres
       - NEO4J_TARGET=neo4j://neo4j:7687
-      - NEO4J_AUTH_PWD=password
       - VALIDATION_API_URL=http://validation-api:10003
       - FILE_STORE_API_URL=http://file-store-api:10001
       - EVENTS_PROCESSING_PLATFORM_URL=events-processing-platform:5001
@@ -147,7 +140,6 @@ services:
       - EVENT_STORE_CONNECTION_STRING=esdb://host.docker.internal:2113
       - POSTGRES_HOST=postgres
       - NEO4J_TARGET=neo4j://neo4j:7687
-      - NEO4J_AUTH_PWD=password
       - EVENTS_PROCESSING_PLATFORM_URL=events-processing-platform:5001
       - OPENAI_API_PATH=http://openai-api:10101
 
@@ -164,7 +156,6 @@ services:
     environment:
       - POSTGRES_HOST=postgres
       - NEO4J_TARGET=neo4j://neo4j:7687
-      - NEO4J_AUTH_PWD=password
       - EVENTS_PROCESSING_PLATFORM_URL=events-processing-platform:5001
 
   user-admin-api:
@@ -180,7 +171,6 @@ services:
     environment:
       - POSTGRES_HOST=postgres
       - NEO4J_TARGET=neo4j://neo4j:7687
-      - NEO4J_AUTH_PWD=password
       - EVENTS_PROCESSING_PLATFORM_URL=events-processing-platform:5001
       - CUSTOMER_OS_API=http://customer-os-api:10000/admin/query
 
@@ -197,7 +187,6 @@ services:
     environment:
       - POSTGRES_HOST=postgres
       - NEO4J_TARGET=neo4j://neo4j:7687
-      - NEO4J_AUTH_PWD=password
       - CUSTOMER_OS_API=http://customer-os-api:10000/query
 
   validation-api:
@@ -213,7 +202,6 @@ services:
     environment:
       - POSTGRES_HOST=postgres
       - NEO4J_TARGET=neo4j://neo4j:7687
-      - NEO4J_AUTH_PWD=password
 
   settings-api:
     image: ghcr.io/openline-ai/openline-customer-os/settings-api:latest
@@ -228,7 +216,6 @@ services:
     environment:
       - POSTGRES_HOST=postgres
       - NEO4J_TARGET=neo4j://neo4j:7687
-      - NEO4J_AUTH_PWD=password
 
   customer-os-platform-admin-api:
     image: ghcr.io/openline-ai/openline-customer-os/customer-os-platform-admin-api:latest
@@ -242,7 +229,6 @@ services:
     environment:
       - POSTGRES_HOST=postgres
       - NEO4J_TARGET=neo4j://neo4j:7687
-      - NEO4J_AUTH_PWD=password
       - EVENTS_PROCESSING_PLATFORM_URL=events-processing-platform:5001
 
   openai-api:
@@ -258,7 +244,6 @@ services:
     environment:
       - POSTGRES_HOST=postgres
       - NEO4J_TARGET=neo4j://neo4j:7687
-      - NEO4J_AUTH_PWD=password
 
   comms-api:
     image: ghcr.io/openline-ai/openline-customer-os/comms-api:latest
@@ -273,7 +258,6 @@ services:
     environment:
       - POSTGRES_HOST=postgres
       - NEO4J_TARGET=neo4j://neo4j:7687
-      - NEO4J_AUTH_PWD=password
       - CUSTOMER_OS_API=http://customer-os-api:10000/query
       - FILE_STORE_API=http://file-store-api:10001
 
@@ -290,4 +274,3 @@ services:
     environment:
       - POSTGRES_HOST=postgres
       - NEO4J_TARGET=neo4j://neo4j:7687
-      - NEO4J_AUTH_PWD=password
