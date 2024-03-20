@@ -1,6 +1,6 @@
 'use client';
+import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import React, { useState, useEffect, ChangeEvent } from 'react';
 
 import axios from 'axios';
 import { signIn, useSession } from 'next-auth/react';
@@ -18,17 +18,11 @@ import {
   OAuthUserSettingsInterface,
 } from 'services/settings/settingsService';
 
-import { Flex } from '@ui/layout/Flex';
 import { Icons } from '@ui/media/Icon';
-import { Switch } from '@ui/form/Switch';
-import { Text } from '@ui/typography/Text';
 import { Spinner } from '@ui/feedback/Spinner';
-import { Heading } from '@ui/typography/Heading';
+import { Switch } from '@ui/form/Switch/Switch2';
 import { FormLabel } from '@ui/form/FormElement';
 import { Outlook } from '@ui/media/logos/Outlook';
-import { HStack, VStack } from '@ui/layout/Stack';
-import { Divider } from '@ui/presentation/Divider';
-import { Card, CardBody, CardHeader } from '@ui/layout/Card';
 import { toastError, toastSuccess } from '@ui/presentation/Toast';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 
@@ -122,7 +116,7 @@ export const AuthPanel = () => {
     }
   }, [session]);
 
-  const handleSyncGoogleToggle = async (event: ChangeEvent) => {
+  const handleSyncGoogleToggle = async (isChecked: boolean) => {
     setGoogleSettingsLoading(true);
     const scopes = [
       'openid',
@@ -133,7 +127,7 @@ export const AuthPanel = () => {
       'https://www.googleapis.com/auth/calendar.readonly',
     ];
 
-    if ((event.target as HTMLInputElement).checked) {
+    if (isChecked) {
       const _ = await signIn(
         'google',
         { callbackUrl: '/settings?tab=oauth' },
@@ -179,10 +173,10 @@ export const AuthPanel = () => {
     }
   };
 
-  const handleSlackToggle = async (event: ChangeEvent) => {
+  const handleSlackToggle = async (isChecked: boolean) => {
     setSlackSettingsLoading(true);
 
-    if ((event.target as HTMLInputElement).checked) {
+    if (isChecked) {
       axios
         .get(`/ua/slack/requestAccess`)
         .then(({ data }) => {
@@ -227,147 +221,111 @@ export const AuthPanel = () => {
 
   return (
     <>
-      <Card
-        bg='#FCFCFC'
-        borderRadius='2xl'
-        flexDirection='column'
-        boxShadow='none'
-        position='relative'
-        background='gray.25'
-        maxW='50%'
-      >
-        <CardHeader px={6} pb={2}>
-          <Flex gap='1' align='center' mb='2'>
+      <div className='bg-gray-25 rounded-2xl flex-col flex relative max-w-[50%] '>
+        <div className='px-6 pb-2'>
+          <div className='flex gap-1 items-center mb-2 pt-5 '>
             <Icons.GOOGLE boxSize='6' />
-            <Heading as='h1' fontSize='lg' color='gray.700'>
-              Google OAuth
-            </Heading>
-          </Flex>
-          <Divider></Divider>
-        </CardHeader>
+            <h1 className='text-gray-700 text-lg '>Google OAuth</h1>
+          </div>
+          <div className='w-full border-b border-gray-100' />
+        </div>
 
-        <CardBody padding={6} pr={0} pt={0} position='unset'>
-          <Text noOfLines={2} mt={2} mb={3}>
+        <div className='p-6 pr-0 pt-0 '>
+          <text className='line-clamp-2 mt-2 mb-3'>
             Enable OAuth Integration to get access to your google workspace
             emails and calendar events
-          </Text>
-          <Flex direction={'column'} gap={2} width={'250px'}>
-            <HStack>
-              <VStack alignItems={'start'}>
-                <Flex gap='1' align='center'>
+          </text>
+
+          <div className='flex flex-col gap-2 w-[250px]'>
+            <div className='flex gap-2 items-center'>
+              <div className='flex flex-col items-start gap-4'>
+                <div className='flex gap-1 items-center'>
                   <Icons.GMAIL boxSize='6' />
                   <FormLabel mb='0'>Sync Google Mail</FormLabel>
-                </Flex>
-                <Flex gap='1' align='center'>
+                </div>
+
+                <div className='flex gap-1 items-center'>
                   <Icons.GOOGLE_CALENDAR boxSize='6' />
                   <FormLabel mb='0'>Sync Google Calendar</FormLabel>
-                </Flex>
-              </VStack>
+                </div>
+              </div>
 
               {googleSettingsLoading && <Spinner size='sm' color='green.500' />}
               {!googleSettingsLoading && (
                 <Switch
                   isChecked={googleSettings.gmailSyncEnabled}
-                  colorScheme='green'
-                  onChange={(event) => handleSyncGoogleToggle(event)}
+                  onChange={(value) => handleSyncGoogleToggle(value)}
+                  colorScheme='success'
                 />
               )}
-            </HStack>
-          </Flex>
-        </CardBody>
-      </Card>
+            </div>
+          </div>
+        </div>
+      </div>
 
-      <Card
-        bg='#FCFCFC'
-        borderRadius='2xl'
-        flexDirection='column'
-        boxShadow='none'
-        position='relative'
-        background='gray.25'
-        maxW='50%'
-      >
-        <CardHeader px={6} pb={2}>
-          <Flex gap='1' align='center' mb='2'>
+      <div className='bg-gray-25 rounded-2xl flex-col flex relative max-w-[50%] '>
+        <div className='px-6 pb-2'>
+          <div className='flex gap-1 items-center mb-2 pt-5 '>
             <Outlook boxSize='6' />
-            <Heading as='h1' fontSize='lg' color='gray.700'>
-              Microsoft Outlook
-            </Heading>
-          </Flex>
-          <Divider></Divider>
-        </CardHeader>
+            <h1 className='text-gray-700 text-lg'>Microsoft Outlook</h1>
+          </div>
+          <div className='w-full border-b border-gray-100' />
+        </div>
 
-        <CardBody padding={6} pr={0} pt={0} position='unset'>
-          <Text noOfLines={2} mt={2} mb={3}>
+        <div className='p-6 pr-0 pt-0 '>
+          <text className='line-clamp-2 mt-2 mb-3'>
             Enable OAuth Integration to get access to your microsoft outlook
             emails
-          </Text>
-          <Flex direction={'column'} gap={2} width={'250px'}>
-            <HStack>
-              <VStack alignItems={'start'}>
-                <Flex gap='1' align='center'>
-                  <Outlook boxSize='6' />
-                  <FormLabel mb='0'>Sync Microsoft Outlook</FormLabel>
-                </Flex>
-              </VStack>
+          </text>
 
-              {loading ? (
-                <Spinner size='sm' color='green.500' />
-              ) : (
-                <Switch
-                  colorScheme='green'
-                  onChange={handleOutlookToggle}
-                  defaultChecked={!!outlookConnection}
-                />
-              )}
-            </HStack>
-          </Flex>
-        </CardBody>
-      </Card>
+          <div className='flex space-x-4 items-center'>
+            <div className='flex alig-middle space-x-1'>
+              <Outlook boxSize='6' />
+              <FormLabel mb='0'>Sync Microsoft Outlook</FormLabel>
+            </div>
+            {loading ? (
+              <Spinner size='sm' color='green.500' />
+            ) : (
+              <Switch
+                colorScheme='success'
+                onChange={handleOutlookToggle}
+                isChecked={!!outlookConnection}
+              />
+            )}
+          </div>
+        </div>
+      </div>
 
-      <Card
-        bg='#FCFCFC'
-        borderRadius='2xl'
-        flexDirection='column'
-        boxShadow='none'
-        position='relative'
-        background='gray.25'
-        mt={4}
-      >
-        <CardHeader px={6} pb={2}>
-          <Flex gap='1' align='center' mb='2'>
+      <div className='bg-gray-25 rounded-2xl flex-col mt-4 flex relative max-w-[50%] '>
+        <div className='px-6 pb-2'>
+          <div className='flex items-center gap-1 mb-2'>
             <Icons.Slack boxSize='6' />
-            <Heading as='h1' fontSize='lg' color='gray.700'>
-              Slack
-            </Heading>
-          </Flex>
-          <Divider></Divider>
-        </CardHeader>
+            <h1 className='text-gray-700 text-lg'>Slack</h1>
+          </div>
+          <div className='w-full border-b border-gray-100' />
+        </div>
 
-        <CardBody padding={6} pr={0} pt={0} position='unset'>
-          <Text noOfLines={2} mt={2} mb={3}>
+        <div className='p-6 pr-0 pt-0'>
+          <text className='line-clamp-2 mt-2 mb-3'>
             Enable Slack Integration to get access to your Slack workspace
-          </Text>
-          <Flex direction={'column'} gap={2} width={'250px'}>
-            <HStack>
-              <VStack alignItems={'start'}>
-                <Flex gap='1' align='center'>
-                  <Icons.Slack boxSize='6' />
-                  <FormLabel mb='0'>Sync Slack</FormLabel>
-                </Flex>
-              </VStack>
+          </text>
 
-              {slackSettingsLoading && <Spinner size='sm' color='green.500' />}
-              {!slackSettingsLoading && (
-                <Switch
-                  isChecked={slackSettings.slackEnabled}
-                  colorScheme='green'
-                  onChange={(event) => handleSlackToggle(event)}
-                />
-              )}
-            </HStack>
-          </Flex>
-        </CardBody>
-      </Card>
+          <div className='flex space-x-4 items-center'>
+            <div className='flex alig-middle space-x-1'>
+              <Icons.Slack boxSize='6' />
+              <FormLabel mb='0'>Sync Slack</FormLabel>
+            </div>
+            {slackSettingsLoading && <Spinner size='sm' color='green.500' />}
+            {!slackSettingsLoading && (
+              <Switch
+                isChecked={slackSettings.slackEnabled}
+                colorScheme='success'
+                onChange={(isChecked) => handleSlackToggle(isChecked)}
+              />
+            )}
+          </div>
+        </div>
+      </div>
     </>
   );
 };
