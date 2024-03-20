@@ -10,6 +10,7 @@ export const shadows = {
   ringPrimary: '0px 0px 0px 4px #F4EBFF',
   ringSecondary: '0px 0px 0px 4px #F2F4F7',
   ringDestructive: '0px 0px 0px 4px #FEE4E2',
+  ringWarning: '0px 0px 0px 4px #FEF0C7',
   avatarRing: '0px 0px 0px 6px #F9F5FF',
   avatarRingGray: '0px 0px 0px 6px var(--chakra-colors-gray-100)',
   menuOptionsFocus: '0px 0px 0px 2px #F2F4F7',

@@ -479,6 +479,7 @@ export const BillingPanel = () => {
             setIsInvoiceProviderDetailsHovered={
               setIsInvoiceProviderDetailsHovered
             }
+            organizationName={state.values?.legalName}
           />
         )}
       </Card>
