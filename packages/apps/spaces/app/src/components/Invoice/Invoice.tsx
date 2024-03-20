@@ -172,12 +172,12 @@ export function Invoice({
       </Flex>
 
       <Box>
-        {/*{canPayWithBankTransfer && availableBankAccount && (*/}
-        <BankingDetails
-          availableBankAccount={availableBankAccount}
-          currency={currency}
-        />
-        {/*)}*/}
+        {canPayWithBankTransfer && availableBankAccount && (
+          <BankingDetails
+            availableBankAccount={availableBankAccount}
+            currency={currency}
+          />
+        )}
         <Flex
           alignItems='center'
           py={2}
