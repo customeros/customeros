@@ -331,11 +331,11 @@ export const ContractBillingDetailsModal = ({
               }
               organizationName={organizationName}
               canAllowPayWithBankTransfer={canAllowPayWithBankTransfer}
-              hasNoBankAccounts={!bankAccountsData?.bankAccounts?.length}
               currency={state?.values?.currency?.value}
               isEmailValid={isEmailValid}
               onSetIsBillingDetailsHovered={setIsBillingDetailsHovered}
               onSetIsBillingDetailsFocused={setIsBillingDetailsFocused}
+              bankAccounts={bankAccountsData?.bankAccounts as BankAccount[]}
             />
             <ModalFooter p='6'>
               <Button variant='outline' w='full' onClick={onClose}>

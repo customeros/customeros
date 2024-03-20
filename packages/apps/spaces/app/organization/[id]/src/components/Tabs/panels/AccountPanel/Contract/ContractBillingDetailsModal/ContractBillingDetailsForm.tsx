@@ -17,7 +17,11 @@ import { countryOptions } from '@shared/util/countryOptions';
 import { FormCheckbox } from '@ui/form/Checkbox/FormCheckbox';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { getCurrencyOptions } from '@shared/util/currencyOptions';
-import { ExternalSystemType, TenantBillingProfile } from '@graphql/types';
+import {
+  BankAccount,
+  ExternalSystemType,
+  TenantBillingProfile,
+} from '@graphql/types';
 import { PaymentDetailsPopover } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/PaymentDetailsPopover';
 
 interface SubscriptionServiceModalProps {
@@ -25,9 +29,9 @@ interface SubscriptionServiceModalProps {
   currency?: string;
   isEmailValid: boolean;
   organizationName: string;
-  hasNoBankAccounts: boolean;
   canAllowPayWithBankTransfer?: boolean;
   tenantBillingProfile?: TenantBillingProfile | null;
+  bankAccounts: Array<BankAccount> | null | undefined;
   onSetIsBillingDetailsHovered: (newState: boolean) => void;
   onSetIsBillingDetailsFocused: (newState: boolean) => void;
 }
@@ -38,10 +42,10 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
   isEmailValid,
   onSetIsBillingDetailsFocused,
   onSetIsBillingDetailsHovered,
-  hasNoBankAccounts,
   currency,
   tenantBillingProfile,
   organizationName,
+  bankAccounts,
 }) => {
   const client = getGraphQLClient();
   const { data } = useGetExternalSystemInstancesQuery(client);
@@ -60,12 +64,30 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
 
     return '';
   }, [isStripeActive, availablePaymentMethodTypes, organizationName]);
-  const bankTransferPopoverContent =
-    (!tenantBillingProfile?.canPayWithBankTransfer &&
-      'Bank transfer not enabled yet') ||
-    (tenantBillingProfile?.canPayWithBankTransfer && hasNoBankAccounts)
-      ? 'No bank accounts added yet'
-      : `None of your bank accounts hold ${currency}`;
+
+  const bankTransferPopoverContent = useMemo(() => {
+    if (!tenantBillingProfile?.canPayWithBankTransfer) {
+      return 'Bank transfer not enabled yet';
+    }
+    if (
+      tenantBillingProfile?.canPayWithBankTransfer &&
+      (!bankAccounts || bankAccounts.length === 0)
+    ) {
+      return 'No bank accounts added yet';
+    }
+    const accountIndexWithCurrency = bankAccounts?.findIndex(
+      (account) => account.currency === currency,
+    );
+
+    if (accountIndexWithCurrency === -1 && currency) {
+      return `None of your bank accounts hold ${currency}`;
+    }
+    if (!currency) {
+      return `Please select contract currency to enable bank transfer`;
+    }
+
+    return '';
+  }, [tenantBillingProfile, bankAccounts, currency]);
 
   return (
     <ModalBody pb='0' gap={4} display='flex' flexDir='column' flex={1}>
@@ -272,6 +294,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
 
         <PaymentDetailsPopover
           content={isStripeActive ? '' : 'No payment provider enabled'}
+          withNavigation
         >
           <FormSwitch
             name='payOnline'
@@ -292,10 +315,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
         >
           <FormSwitch
             name='canPayWithBankTransfer'
-            isInvalid={
-              !canAllowPayWithBankTransfer ||
-              !tenantBillingProfile?.canPayWithBankTransfer
-            }
+            isInvalid={!!bankTransferPopoverContent.length}
             formId={formId}
             size='sm'
             label={

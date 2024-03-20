@@ -17,6 +17,7 @@ export const SortCodeInput = ({
   label,
   formId,
   name,
+  maxW,
   ...props
 }: FormInputProps) => {
   const { ref, setUnmaskedValue } = useIMask(
@@ -32,7 +33,7 @@ export const SortCodeInput = ({
   }, [value]);
 
   return (
-    <FormControl maxW='80px'>
+    <FormControl maxW={maxW}>
       {isLabelVisible ? (
         <FormLabel {...labelProps}>{label}</FormLabel>
       ) : (

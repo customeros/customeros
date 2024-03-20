@@ -33,6 +33,7 @@ export const PaymentDetailsPopover: FC<PaymentDetailsPopoverProps> = ({
         borderRadius='md'
         boxShadow='none'
         border='none'
+        display={content ? 'block' : 'none'}
       >
         <PopoverArrow bg='gray.700' />
 

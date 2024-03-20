@@ -14,13 +14,15 @@ import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { Plus } from '@ui/media/icons/Plus';
 import { Select } from '@ui/form/SyncSelect';
-import { Tooltip } from '@ui/overlay/Tooltip';
 import { IconButton } from '@ui/form/IconButton';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 
 export const AddAccountButton = ({
   existingCurrencies,
+  organizationName,
 }: {
+  organizationName?: string | null;
+
   existingCurrencies: Array<string>;
 }) => {
   const [showCurrencySelect, setShowCurrencySelect] = useState(false);
@@ -54,12 +56,14 @@ export const AddAccountButton = ({
       {showCurrencySelect && (
         <Select
           placeholder='Account currency'
-          name='renewalCycle'
+          name='bankAccountCurrency'
+          defaultMenuIsOpen
           blurInputOnSelect
           onChange={(e) => {
             mutate({
               input: {
                 currency: e.value,
+                bankName: `${organizationName}'s ${e.value} account`,
               },
             });
           }}
@@ -78,24 +82,40 @@ export const AddAccountButton = ({
           isOptionDisabled={(option, selectValue) =>
             existingCurrencies?.indexOf(option.value) > -1
           }
-          getOptionLabel={(option) => {
-            const alreadyExists =
-              existingCurrencies?.indexOf(option.value) > -1;
-
+          formatOptionLabel={(option, { context }) => {
             return (
-              <Tooltip
-                label={alreadyExists ? 'Already used on another account' : ''}
-              >
-                <Flex alignItems='center'>
+              <Flex alignItems='center'>
+                <Flex
+                  w={context === 'value' ? 'auto' : 7}
+                  justifyContent={context === 'value' ? 'center' : 'flex-end'}
+                  alignItems='center'
+                  minW={context === 'value' ? '14px' : 'auto'}
+                >
                   {currencyIcon?.[option.value]}
-
-                  <Text className='option-label'>{option.label}</Text>
                 </Flex>
-              </Tooltip>
-            ) as unknown as string;
+                <Text className='option-label' ml={3}>
+                  {option.value}
+                </Text>
+              </Flex>
+            );
           }}
           chakraStyles={{
             container: (props, state) => {
+              if (
+                !state?.selectProps?.menuIsOpen &&
+                state.hasValue &&
+                !state.isFocused
+              ) {
+                return {
+                  display: 'flex',
+                  alignItems: 'center',
+                  width: 'fit-content',
+                  maxW: 'fit-content',
+                  willChange: 'width',
+                  transition: 'width 0.2s',
+                };
+              }
+
               return {
                 ...props,
                 w: '100%',
@@ -103,12 +123,39 @@ export const AddAccountButton = ({
                 willChange: 'width',
                 transition: 'width 0.2s',
                 _hover: { cursor: 'pointer' },
-                minHeight: '10px',
-                maxH: '24px',
-                height: '24px',
               };
             },
             control: (props, state) => {
+              if (
+                !state?.selectProps?.menuIsOpen &&
+                state.hasValue &&
+                !state.isFocused
+              ) {
+                return {
+                  height: '24px',
+                  maxH: '24px',
+                  width: 'max-content',
+                  minW: '24px',
+                  borderRadius: '30px',
+                  border: '1px solid',
+                  borderColor: 'gray.200',
+                  padding: '2px',
+
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  fontSize: '12px',
+
+                  '& .option-label': {
+                    display: 'none',
+                  },
+                  '& svg': {
+                    marginLeft: '1px',
+                    height: '12px',
+                  },
+                };
+              }
+
               return {
                 ...props,
                 w: '100%',

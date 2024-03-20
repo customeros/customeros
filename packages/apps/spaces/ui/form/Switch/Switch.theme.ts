@@ -13,17 +13,19 @@ const baseStyle = definePartsStyle(({ colorScheme }) => ({
   },
   thumb: {
     _invalid: {
-      position: 'relative',
-      '&:after': {
-        content: '"!"',
-        width: '100%',
-        background: 'gray.200',
-        color: 'warning.500',
-        position: 'absolute',
-        top: '6px',
-        right: '-5px',
-        fontSize: 'xs',
-        fontWeight: 'bold',
+      _checked: {
+        position: 'relative',
+        '&:after': {
+          content: '"!"',
+          width: '100%',
+          background: 'gray.200',
+          color: 'warning.500',
+          position: 'absolute',
+          top: '6px',
+          right: '-5px',
+          fontSize: 'xs',
+          fontWeight: 'bold',
+        },
       },
     },
   },

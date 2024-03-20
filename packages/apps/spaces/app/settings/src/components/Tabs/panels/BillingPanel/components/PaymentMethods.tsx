@@ -17,7 +17,13 @@ import { ExternalSystemType } from '@graphql/types';
 import { toastError } from '@ui/presentation/Toast';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 
-export const PaymentMethods = ({ formId }: { formId: string }) => {
+export const PaymentMethods = ({
+  formId,
+  organizationName,
+}: {
+  formId: string;
+  organizationName?: string | null;
+}) => {
   const client = getGraphQLClient();
   const { data } = useGetExternalSystemInstancesQuery(client);
   const iApp = useIntegrationApp();
@@ -47,12 +53,12 @@ export const PaymentMethods = ({ formId }: { formId: string }) => {
         </Text>
         <Divider background='gray.200' />
       </Flex>
-      <Box>
+      <Box w='full'>
         <FormLabel
           display='flex'
           alignItems='center'
           justifyContent='space-between'
-          mb={0}
+          m={0}
         >
           <Text fontSize='sm' whiteSpace='nowrap'>
             <Stripe boxSize={5} mr={2} />
@@ -81,7 +87,10 @@ export const PaymentMethods = ({ formId }: { formId: string }) => {
         )}
       </Box>
 
-      <BankTransferAccountList formId={formId} />
+      <BankTransferAccountList
+        formId={formId}
+        organizationName={organizationName}
+      />
     </>
   );
 };
