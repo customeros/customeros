@@ -1,0 +1,293 @@
+version: '3.8'
+
+networks:
+  openline:
+
+volumes:
+  postgres_data:
+  neo4j_data:
+  eventstore-volume-data:
+  eventstore-volume-index:
+
+services:
+
+  postgres:
+    image: postgres:14.5
+    container_name: postgres
+    networks:
+      - openline
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: openline
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d openline -h localhost -p 5432" ]
+      interval: 3s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  postgres-sidecar:
+    image: postgres:14.5  # Use the same image as Neo4j for simplicity
+    container_name: postgres-sidecar
+    networks:
+      - openline
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["bash", "-c", "apt-get update && apt-get install -y wget && wget -O /tmp/setup.sql https://raw.githubusercontent.com/openline-ai/openline-cli/otter/packages/cli/src/deployment/scripts/postgresql/setup.sql && PGPASSWORD=password psql -U postgres -d openline -h postgres -p 5432 -W -f /tmp/setup.sql"]
+
+  neo4j:
+    image: neo4j:latest
+    container_name: neo4j
+    networks:
+      - openline
+    volumes:
+      - neo4j_data:/data hello how a
+    ports:
+      - "7474:7474" # HTTP
+      - "7687:7687" # Bolt
+    environment:
+      - NEO4J_AUTH=neo4j/password
+      - NEO4J_apoc_import_file_enabled=true
+      - NEO4J_PLUGINS=["apoc"]
+    healthcheck:
+      test: wget http://localhost:7474 || exit 1
+      interval: 1s
+      timeout: 10s
+      retries: 20
+      start_period: 5s
+
+  neo4j-sidecar:
+    image: debian:bullseye
+    container_name: neo4j-sidecar
+    networks:
+      - openline
+    depends_on:
+      neo4j:
+        condition: service_healthy
+    command: >
+      /bin/bash -c "\
+      apt-get update && \
+      apt-get install -y wget && \
+      wget -O /tmp/customeros.cypher https://raw.githubusercontent.com/openline-ai/openline-cli/otter/packages/cli/src/deployment/scripts/neo4j/customer-os.cypher && \
+      wget -O /tmp/cypher-shell_5.18.1_all.deb https://dist.neo4j.org/cypher-shell/cypher-shell_5.18.1_all.deb && \
+      apt-get install -y openjdk-17-jdk && \
+      dpkg -i /tmp/cypher-shell_5.18.1_all.deb && \
+      cat /tmp/customeros.cypher | cypher-shell -u neo4j -p password --format plain -a bolt://neo4j:7687"
+
+  eventstore:
+    image: eventstore/eventstore:22.10.3-alpha-arm64v8
+    environment:
+      - EVENTSTORE_INSECURE=true # let eventstore run without ceritficate
+      - EVENTSTORE_EXT_TCP_PORT=1113 # set internal tcp port
+      - EVENTSTORE_HTTP_PORT=2113 # set internal admin ui port
+      - EVENTSTORE_ENABLE_ATOM_PUB_OVER_HTTP=true
+    networks:
+      - openline
+    ports:
+      - "1113:1113"
+      - "2113:2113"
+    volumes:
+      - type: volume
+        source: eventstore-volume-data
+        target: /var/lib/eventstore-data
+
+  customer-os-api:
+    image: ghcr.io/openline-ai/openline-customer-os/customer-os-api:latest
+    networks:
+      - openline
+    ports:
+      - "10000:10000"
+    depends_on:
+      - postgres-sidecar
+      - neo4j-sidecar
+      - customer-os-platform-admin-api
+    environment:
+      - POSTGRES_HOST=postgres
+      - NEO4J_TARGET=neo4j://neo4j:7687
+      - NEO4J_AUTH_PWD=password
+      - EVENTS_PROCESSING_PLATFORM_URL=events-processing-platform:5001
+
+  events-processing-platform:
+    image: ghcr.io/openline-ai/openline-customer-os/events-processing-platform:latest
+    networks:
+      - openline
+    ports:
+      - "5001:5001"
+    depends_on:
+      - postgres-sidecar
+      - neo4j-sidecar
+      - eventstore
+      - customer-os-platform-admin-api
+    environment:
+      - EVENT_STORE_CONNECTION_STRING=esdb://host.docker.internal:2113
+      - POSTGRES_HOST=postgres
+      - NEO4J_TARGET=neo4j://neo4j:7687
+      - NEO4J_AUTH_PWD=password
+      - VALIDATION_API_URL=http://validation-api:10003
+      - FILE_STORE_API_URL=http://file-store-api:10001
+      - EVENTS_PROCESSING_PLATFORM_URL=events-processing-platform:5001
+      - OPENAI_API_PATH=http://openai-api:10101
+
+  events-processing-platform-subscribers:
+    image: ghcr.io/openline-ai/openline-customer-os/events-processing-platform-subscribers:latest
+    networks:
+      - openline
+    depends_on:
+      - postgres-sidecar
+      - neo4j-sidecar
+      - eventstore
+      - customer-os-platform-admin-api
+    environment:
+      - EVENT_STORE_CONNECTION_STRING=esdb://host.docker.internal:2113
+      - POSTGRES_HOST=postgres
+      - NEO4J_TARGET=neo4j://neo4j:7687
+      - NEO4J_AUTH_PWD=password
+      - EVENTS_PROCESSING_PLATFORM_URL=events-processing-platform:5001
+      - OPENAI_API_PATH=http://openai-api:10101
+
+  customer-os-webhooks:
+    image: ghcr.io/openline-ai/openline-customer-os/customer-os-webhooks:latest
+    networks:
+      - openline
+    ports:
+      - "10004:10004"
+    depends_on:
+      - postgres-sidecar
+      - neo4j-sidecar
+      - customer-os-platform-admin-api
+    environment:
+      - POSTGRES_HOST=postgres
+      - NEO4J_TARGET=neo4j://neo4j:7687
+      - NEO4J_AUTH_PWD=password
+      - EVENTS_PROCESSING_PLATFORM_URL=events-processing-platform:5001
+
+  user-admin-api:
+    image: ghcr.io/openline-ai/openline-customer-os/user-admin-api:latest
+    networks:
+      - openline
+    ports:
+      - "4001:4001"
+    depends_on:
+      - postgres-sidecar
+      - neo4j-sidecar
+      - customer-os-platform-admin-api
+    environment:
+      - POSTGRES_HOST=postgres
+      - NEO4J_TARGET=neo4j://neo4j:7687
+      - NEO4J_AUTH_PWD=password
+      - EVENTS_PROCESSING_PLATFORM_URL=events-processing-platform:5001
+      - CUSTOMER_OS_API=http://customer-os-api:10000/admin/query
+
+  file-store-api:
+    image: ghcr.io/openline-ai/openline-customer-os/file-store-api:latest
+    networks:
+      - openline
+    ports:
+      - "10001:10001"
+    depends_on:
+      - postgres-sidecar
+      - neo4j-sidecar
+      - customer-os-platform-admin-api
+    environment:
+      - POSTGRES_HOST=postgres
+      - NEO4J_TARGET=neo4j://neo4j:7687
+      - NEO4J_AUTH_PWD=password
+      - CUSTOMER_OS_API=http://customer-os-api:10000/query
+
+  validation-api:
+    image: ghcr.io/openline-ai/openline-customer-os/validation-api:latest
+    networks:
+      - openline
+    ports:
+      - "10003:10003"
+    depends_on:
+      - postgres-sidecar
+      - neo4j-sidecar
+      - customer-os-platform-admin-api
+    environment:
+      - POSTGRES_HOST=postgres
+      - NEO4J_TARGET=neo4j://neo4j:7687
+      - NEO4J_AUTH_PWD=password
+
+  settings-api:
+    image: ghcr.io/openline-ai/openline-customer-os/settings-api:latest
+    networks:
+      - openline
+    ports:
+      - "10002:10002"
+    depends_on:
+      - postgres-sidecar
+      - neo4j-sidecar
+      - customer-os-platform-admin-api
+    environment:
+      - POSTGRES_HOST=postgres
+      - NEO4J_TARGET=neo4j://neo4j:7687
+      - NEO4J_AUTH_PWD=password
+
+  customer-os-platform-admin-api:
+    image: ghcr.io/openline-ai/openline-customer-os/customer-os-platform-admin-api:latest
+    networks:
+      - openline
+    ports:
+      - "10005:10005"
+    depends_on:
+      - postgres-sidecar
+      - neo4j-sidecar
+    environment:
+      - POSTGRES_HOST=postgres
+      - NEO4J_TARGET=neo4j://neo4j:7687
+      - NEO4J_AUTH_PWD=password
+      - EVENTS_PROCESSING_PLATFORM_URL=events-processing-platform:5001
+
+  openai-api:
+    image: ghcr.io/openline-ai/openline-customer-os/openai-api:latest
+    networks:
+      - openline
+    ports:
+      - "10101:10101"
+    depends_on:
+      - postgres-sidecar
+      - neo4j-sidecar
+      - customer-os-platform-admin-api
+    environment:
+      - POSTGRES_HOST=postgres
+      - NEO4J_TARGET=neo4j://neo4j:7687
+      - NEO4J_AUTH_PWD=password
+
+  comms-api:
+    image: ghcr.io/openline-ai/openline-customer-os/comms-api:latest
+    networks:
+      - openline
+    ports:
+      - "9013:9013" #GRPC
+    depends_on:
+      - postgres-sidecar
+      - neo4j-sidecar
+      - customer-os-platform-admin-api
+    environment:
+      - POSTGRES_HOST=postgres
+      - NEO4J_TARGET=neo4j://neo4j:7687
+      - NEO4J_AUTH_PWD=password
+      - CUSTOMER_OS_API=http://customer-os-api:10000/query
+      - FILE_STORE_API=http://file-store-api:10001
+
+  anthropic-api:
+    image: ghcr.io/openline-ai/openline-customer-os/anthropic-api:latest
+    networks:
+      - openline
+    ports:
+      - "10100:10100"
+    depends_on:
+      - postgres-sidecar
+      - neo4j-sidecar
+      - customer-os-platform-admin-api
+    environment:
+      - POSTGRES_HOST=postgres
+      - NEO4J_TARGET=neo4j://neo4j:7687
+      - NEO4J_AUTH_PWD=password
