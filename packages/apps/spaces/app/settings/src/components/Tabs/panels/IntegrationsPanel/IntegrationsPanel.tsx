@@ -9,13 +9,9 @@ import {
   useIntegrationApp,
 } from '@integration-app/react';
 
-import { Input } from '@ui/form/Input';
-import { VStack } from '@ui/layout/Stack';
-import { Text } from '@ui/typography/Text';
-import { Heading } from '@ui/typography/Heading';
+import { Input } from '@ui/form/Input/Input2';
+import { Skeleton } from '@ui/feedback/Skeleton';
 import { toastError } from '@ui/presentation/Toast';
-import { Skeleton } from '@ui/presentation/Skeleton';
-import { Card, CardBody, CardHeader } from '@ui/layout/Card';
 
 import { IntegrationItem, integrationsData } from './data';
 import { SettingsIntegrationItem } from './SettingsIntegrationItem';
@@ -113,36 +109,21 @@ export const IntegrationsPanel = () => {
 
   return (
     <>
-      <Card
-        flex='3'
-        h='calc(100vh - 1rem)'
-        bg='#FCFCFC'
-        borderRadius='2xl'
-        flexDirection='column'
-        boxShadow='none'
-        position='relative'
-        background='gray.25'
-        maxHeight='calc(100vh - 1rem)'
-        maxW='50%'
-      >
-        <CardHeader px={6} pb={1}>
-          <Heading as='h1' fontSize='2xl'>
-            Data Integrations
-          </Heading>
+      <div className=' flex h-[calc(100vh-1rem)] bg-gray-25  rounded-2xl flex-col max-w-[50%] max-h-[calc(100vh - 1rem)] relative '>
+        <div className='pb-1 pt-5 px-6 '>
+          <h1 className='text-2xl font-bold'>Data Integrations</h1>
           <Input
             onChange={(event) => handleFilterResults(event.target.value)}
             placeholder={'Search...'}
           />
-        </CardHeader>
-        <CardBody overflow='auto' pt={1}>
-          <Heading as='h3' fontSize='lg' fontWeight='medium'>
-            Active integrations
-          </Heading>
+        </div>
+        <div className='overflow-auto pt-1 px-5 pb-5'>
+          <h3 className='text-lg font-medium'>Active integrations</h3>
           {loading && (
-            <VStack gap={3} my={2}>
-              <Skeleton height={5} width='full' />
-              <Skeleton height={5} width='full' />
-            </VStack>
+            <div className='flex-col space-y-3 my-2'>
+              <Skeleton className='h-5 w-full rounded-sm' />
+              <Skeleton className='h-5 w-full rounded-sm' />
+            </div>
           )}
           {!loading && (
             <>
@@ -181,22 +162,20 @@ export const IntegrationsPanel = () => {
                 (integration: IntegrationItem) =>
                   integration.state === 'ACTIVE',
               ).length && (
-                <Text color='gray.400' mt={1} mb={3}>
+                <p className='text-gray-400 mt-1 mb-3'>
                   There are no active integrations
-                </Text>
+                </p>
               )}
             </>
           )}
 
-          <Heading as='h3' fontSize='lg' fontWeight='medium'>
-            Inactive integrations
-          </Heading>
+          <h3 className='text-lg font-medium'>Inactive integrations</h3>
           {loading && (
-            <VStack gap={3} mt={2}>
-              <Skeleton height={5} width='full' />
-              <Skeleton height={5} width='full' />
-              <Skeleton height={5} width='full' />
-            </VStack>
+            <div className='flex-col space-y-3 mt-2'>
+              <Skeleton className='h-5 w-full rounded-sm' />
+              <Skeleton className='h-5 w-full rounded-sm' />
+              <Skeleton className='h-5 w-full rounded-sm' />
+            </div>
           )}
           {!loading && (
             <>
@@ -232,8 +211,8 @@ export const IntegrationsPanel = () => {
                 })}
             </>
           )}
-        </CardBody>
-      </Card>
+        </div>
+      </div>
     </>
   );
 };

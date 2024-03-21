@@ -231,10 +231,10 @@ export const AuthPanel = () => {
         </div>
 
         <div className='p-6 pr-0 pt-0 '>
-          <text className='line-clamp-2 mt-2 mb-3'>
+          <p className='line-clamp-2 mt-2 mb-3'>
             Enable OAuth Integration to get access to your google workspace
             emails and calendar events
-          </text>
+          </p>
 
           <div className='flex flex-col gap-2 w-[250px]'>
             <div className='flex gap-2 items-center'>
@@ -273,10 +273,10 @@ export const AuthPanel = () => {
         </div>
 
         <div className='p-6 pr-0 pt-0 '>
-          <text className='line-clamp-2 mt-2 mb-3'>
+          <p className='line-clamp-2 mt-2 mb-3'>
             Enable OAuth Integration to get access to your microsoft outlook
             emails
-          </text>
+          </p>
 
           <div className='flex space-x-4 items-center'>
             <div className='flex alig-middle space-x-1'>
@@ -306,9 +306,9 @@ export const AuthPanel = () => {
         </div>
 
         <div className='p-6 pr-0 pt-0'>
-          <text className='line-clamp-2 mt-2 mb-3'>
+          <p className='line-clamp-2 mt-2 mb-3'>
             Enable Slack Integration to get access to your Slack workspace
-          </text>
+          </p>
 
           <div className='flex space-x-4 items-center'>
             <div className='flex alig-middle space-x-1'>
