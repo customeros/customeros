@@ -40,13 +40,22 @@ export const BankTransferCurrencySelect = ({
 
         ...currencyOptions,
       ]}
-      getOptionLabel={(option) => {
+      formatOptionLabel={(option, { context }) => {
         return (
           <Flex alignItems='center'>
-            {currencyIcon?.[option.value]}
-            <Text className='option-label'>{option.value}</Text>
+            <Flex
+              w={context === 'value' ? 'auto' : 7}
+              justifyContent={context === 'value' ? 'center' : 'flex-end'}
+              alignItems='center'
+              minW={context === 'value' ? '14px' : 'auto'}
+            >
+              {currencyIcon?.[option.value]}
+            </Flex>
+            <Text className='option-label' ml={3}>
+              {option.value}
+            </Text>
           </Flex>
-        ) as unknown as string;
+        );
       }}
       defaultValue={{ label: currency, value: currency }}
       chakraStyles={{
@@ -59,8 +68,8 @@ export const BankTransferCurrencySelect = ({
             return {
               display: 'flex',
               alignItems: 'center',
-              width: '24px',
-              maxW: '24px',
+              width: 'fit-content',
+              maxW: 'fit-content',
               willChange: 'width',
               transition: 'width 0.2s',
             };
@@ -82,13 +91,14 @@ export const BankTransferCurrencySelect = ({
             !state.isFocused
           ) {
             return {
-              width: '24px',
-              maxW: '24px',
               height: '24px',
               maxH: '24px',
-              borderRadius: '50%',
+              width: 'max-content',
+              minW: '24px',
+              borderRadius: '30px',
               border: '1px solid',
               borderColor: 'gray.200',
+              padding: '2px',
 
               display: 'flex',
               justifyContent: 'center',

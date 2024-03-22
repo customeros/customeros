@@ -21,43 +21,41 @@ export const Checkbox = helpers.defineMultiStyleConfig({
         borderColor: `${colorScheme}.300`,
         backgroundColor: 'white',
         _invalid: {
-          boxShadow: 'inputInvalid',
-          backgroundColor: 'red.100',
+          boxShadow: 'ringWarning',
+          backgroundColor: 'warning.100',
         },
       },
       _hover: {
-        backgroundColor: isInvalid ? 'warning.100' : `${colorScheme}.100`,
-        borderColor: isInvalid ? 'warning.600' : `${colorScheme}.600`,
+        backgroundColor: `${colorScheme}.100`,
+        borderColor: `${colorScheme}.600`,
         _invalid: {
-          borderColor: 'red.300',
-          boxShadow: 'inputInvalid',
-          backgroundColor: 'red.100',
+          borderColor: 'warning.300',
+          boxShadow: 'ringWarning',
+          backgroundColor: 'warning.100',
         },
       },
-      _invalid: {
-        boxShadow: 'inputInvalid',
-      },
+
       _checked: {
-        backgroundColor: isInvalid ? 'warning.50' : `${colorScheme}.50`,
-        borderColor: isInvalid ? 'warning.600' : `${colorScheme}.600`,
+        backgroundColor: `${colorScheme}.50`,
+        borderColor: `${colorScheme}.600`,
         _invalid: {
-          backgroundColor: 'red.100',
-          boxShadow: 'inputInvalid',
+          backgroundColor: 'warning.50',
+          borderColor: 'warning.600',
           _before: {
-            backgroundColor: 'red.500',
+            backgroundColor: 'warning.500',
           },
           _disabled: {
             boxShadow: 'unset',
             borderColor: 'gray.200',
             '& > div': {
               '& > *': {
-                color: 'red.500',
+                color: 'warning.500',
               },
             },
           },
           '& > div': {
             '& > *': {
-              color: 'red.500',
+              color: 'warning.500',
             },
           },
         },
@@ -65,8 +63,8 @@ export const Checkbox = helpers.defineMultiStyleConfig({
           backgroundColor: isInvalid ? 'warning.100' : `${colorScheme}.100`,
           borderColor: isInvalid ? 'warning.600' : `${colorScheme}.600`,
           _invalid: {
-            backgroundColor: 'red.100',
-            borderColor: 'red.500',
+            backgroundColor: 'warning.50',
+            borderColor: 'warning.500',
           },
         },
         _before: {
@@ -77,32 +75,32 @@ export const Checkbox = helpers.defineMultiStyleConfig({
         backgroundColor: `${colorScheme}.100`,
         boxShadow: 'ringPrimary',
         _invalid: {
-          backgroundColor: 'red.100',
-          boxShadow: 'inputInvalid',
+          backgroundColor: 'warning.100',
+          boxShadow: 'ringWarning',
           _before: {
-            backgroundColor: 'red.500',
+            backgroundColor: 'warning.500',
           },
           _disabled: {
             borderColor: 'gray.200',
             boxShadow: 'unset',
             '& > div': {
               '& > *': {
-                color: 'red.500',
+                color: 'warning.500',
               },
             },
           },
           '& > div': {
             '& > *': {
-              color: 'red.500',
+              color: 'warning.500',
             },
           },
         },
         _hover: {
-          backgroundColor: isInvalid ? 'warning.100' : `${colorScheme}.100`,
-          borderColor: isInvalid ? 'warning.600' : `${colorScheme}.600`,
+          backgroundColor: `${colorScheme}.100`,
+          borderColor: `${colorScheme}.600`,
           _invalid: {
-            backgroundColor: 'red.100',
-            borderColor: 'red.500',
+            backgroundColor: 'warning.100',
+            borderColor: 'warning.500',
           },
         },
         _disabled: {
@@ -122,10 +120,10 @@ export const Checkbox = helpers.defineMultiStyleConfig({
         },
         _invalid: {
           boxShadow: 'unset',
-          borderColor: 'red.200',
+          borderColor: 'warning.200',
           _hover: {
             boxShadow: 'unset',
-            borderColor: 'red.200',
+            borderColor: 'warning.200',
             backgroundColor: 'gray.100',
           },
         },

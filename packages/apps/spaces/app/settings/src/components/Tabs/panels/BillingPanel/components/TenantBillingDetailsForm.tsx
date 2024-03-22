@@ -11,6 +11,7 @@ import { Text } from '@ui/typography/Text';
 import { CardBody } from '@ui/layout/Card';
 import { FormSelect } from '@ui/form/SyncSelect';
 import { Divider } from '@ui/presentation/Divider';
+import { countryOptions } from '@shared/util/countryOptions';
 import { FormInput, FormResizableInput } from '@ui/form/Input';
 import { getCurrencyOptions } from '@shared/util/currencyOptions';
 
@@ -18,8 +19,10 @@ export const TenantBillingPanelDetailsForm = ({
   setIsInvoiceProviderDetailsHovered,
   setIsInvoiceProviderFocused,
   formId,
+  organizationName,
 }: {
   formId: string;
+  organizationName?: string | null;
   setIsInvoiceProviderFocused: (newState: boolean) => void;
   setIsInvoiceProviderDetailsHovered: (newState: boolean) => void;
 }) => {
@@ -109,7 +112,7 @@ export const TenantBillingPanelDetailsForm = ({
           name='country'
           placeholder='Country'
           formId={formId}
-          options={currencyOptions}
+          options={countryOptions}
         />
         <VatInput
           formId={formId}
@@ -172,7 +175,7 @@ export const TenantBillingPanelDetailsForm = ({
           type='email'
         />
       </Flex>
-      <PaymentMethods formId={formId} />
+      <PaymentMethods formId={formId} organizationName={organizationName} />
     </CardBody>
   );
 };

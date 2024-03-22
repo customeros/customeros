@@ -14,7 +14,13 @@ import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { AddAccountButton } from './AddAccountButton';
 import { BankTransferCard } from './BankTransferCard';
 
-export const BankTransferAccountList = ({ formId }: { formId: string }) => {
+export const BankTransferAccountList = ({
+  formId,
+  organizationName,
+}: {
+  formId: string;
+  organizationName?: string | null;
+}) => {
   const client = getGraphQLClient();
   const { data } = useBankAccountsQuery(client);
 
@@ -31,6 +37,7 @@ export const BankTransferAccountList = ({ formId }: { formId: string }) => {
         <Flex alignItems='center'>
           <AddAccountButton
             existingCurrencies={existingAccountCurrencies ?? []}
+            organizationName={organizationName}
           />
           <Box>
             <FormSwitch

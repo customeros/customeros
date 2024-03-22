@@ -10,9 +10,10 @@ import { useUpdateBankAccountMutation } from '@settings/graphql/updateBankAccoun
 
 import { Flex } from '@ui/layout/Flex';
 import { FormInput } from '@ui/form/Input';
+import { FormAutoresizeTextarea } from '@ui/form/Textarea';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { Card, CardBody, CardHeader } from '@ui/presentation/Card';
-import { BankAccount, BankAccountUpdateInput } from '@graphql/types';
+import { Currency, BankAccount, BankAccountUpdateInput } from '@graphql/types';
 
 import { BankTransferMenu } from './BankTransferMenu';
 import { SortCodeInput, BankAccountInput } from './inputs';
@@ -50,6 +51,8 @@ export const BankTransferCard = ({ account }: { account: BankAccount }) => {
         switch (action.payload.name) {
           case 'bic':
           case 'sortCode':
+          case 'iban':
+          case 'routingNumber':
           case 'accountNumber':
           case 'bankName':
             updateBankAccountDebounced({
@@ -63,6 +66,11 @@ export const BankTransferCard = ({ account }: { account: BankAccount }) => {
               input: {
                 id: account.metadata.id,
                 currency: action.payload.value?.value,
+                sortCode: '',
+                iban: '',
+                routingNumber: '',
+                accountNumber: '',
+                bic: '',
               },
             });
 
@@ -121,40 +129,105 @@ export const BankTransferCard = ({ account }: { account: BankAccount }) => {
           <BankTransferMenu
             id={account?.metadata?.id}
             allowInternational={account.allowInternational}
+            currency={account?.currency}
           />
         </CardHeader>
         <CardBody p={0} gap={2}>
           <Flex pb={1} gap={2}>
-            <SortCodeInput
-              autoComplete='off'
-              label='Sort code'
-              placeholder='Sort code'
-              isLabelVisible
-              labelProps={{
-                fontSize: 'sm',
-                mb: 0,
-                fontWeight: 'semibold',
-              }}
-              name='sortCode'
-              formId={formId}
-            />
-            <BankAccountInput
-              autoComplete='off'
-              label='Account number'
-              placeholder='Bank account #'
-              isLabelVisible
-              labelProps={{
-                fontSize: 'sm',
-                mb: 0,
-                fontWeight: 'semibold',
-              }}
-              name='accountNumber'
-              formId={formId}
-            />
+            {account.currency === 'GBP' && (
+              <>
+                <SortCodeInput
+                  autoComplete='off'
+                  label='Sort code'
+                  placeholder='Sort code'
+                  isLabelVisible
+                  labelProps={{
+                    fontSize: 'sm',
+                    mb: 0,
+                    fontWeight: 'semibold',
+                  }}
+                  name='sortCode'
+                  formId={formId}
+                  maxW='80px'
+                />
+                <BankAccountInput
+                  autoComplete='off'
+                  label='Account number'
+                  placeholder='Bank account #'
+                  isLabelVisible
+                  labelProps={{
+                    fontSize: 'sm',
+                    mb: 0,
+                    fontWeight: 'semibold',
+                  }}
+                  name='accountNumber'
+                  formId={formId}
+                />
+              </>
+            )}
+            {account.currency !== 'USD' && account.currency !== 'GBP' && (
+              <>
+                <FormInput
+                  autoComplete='off'
+                  label='BIC/Swift'
+                  placeholder='BIC/Swift'
+                  isLabelVisible
+                  labelProps={{
+                    fontSize: 'sm',
+                    mb: 0,
+                    fontWeight: 'semibold',
+                  }}
+                  name='bic'
+                  formId={formId}
+                />
+                <BankAccountInput
+                  autoComplete='off'
+                  label='Iban'
+                  placeholder='Iban #'
+                  isLabelVisible
+                  labelProps={{
+                    fontSize: 'sm',
+                    mb: 0,
+                    fontWeight: 'semibold',
+                  }}
+                  name='iban'
+                  formId={formId}
+                />
+              </>
+            )}
           </Flex>
-
-          {account.allowInternational && (
+          {account.currency === 'USD' && (
             <>
+              <FormInput
+                autoComplete='off'
+                label='Routing number'
+                placeholder='Routing number'
+                isLabelVisible
+                labelProps={{
+                  fontSize: 'sm',
+                  mb: 0,
+                  fontWeight: 'semibold',
+                }}
+                name='routingNumber'
+                formId={formId}
+              />
+              <BankAccountInput
+                autoComplete='off'
+                label='Account number'
+                placeholder='Bank account #'
+                isLabelVisible
+                labelProps={{
+                  fontSize: 'sm',
+                  mb: 0,
+                  fontWeight: 'semibold',
+                }}
+                name='accountNumber'
+                formId={formId}
+              />
+            </>
+          )}
+          {account.allowInternational &&
+            (account.currency === 'USD' || account.currency === 'GBP') && (
               <FormInput
                 autoComplete='off'
                 label='BIC/Swift'
@@ -168,14 +241,19 @@ export const BankTransferCard = ({ account }: { account: BankAccount }) => {
                 name='bic'
                 formId={formId}
               />
-              <FormInput
-                autoComplete='off'
-                label='Other details'
-                placeholder='Other details'
-                name='otherDetails'
-                formId={formId}
-              />
-            </>
+            )}
+
+          {(account.allowInternational ||
+            ![Currency.Gbp, Currency.Usd, Currency.Eur].includes(
+              account?.currency as Currency,
+            )) && (
+            <FormAutoresizeTextarea
+              autoComplete='off'
+              label='Other details'
+              placeholder='Other details'
+              name='otherDetails'
+              formId={formId}
+            />
           )}
         </CardBody>
       </Card>

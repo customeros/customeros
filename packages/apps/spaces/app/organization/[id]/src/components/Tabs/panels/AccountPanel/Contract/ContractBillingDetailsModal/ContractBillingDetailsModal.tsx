@@ -1,7 +1,7 @@
 'use client';
 import { useParams } from 'next/navigation';
 import { useForm } from 'react-inverted-form';
-import React, { useRef, useMemo, useState } from 'react';
+import React, { useRef, useMemo, useState, useEffect } from 'react';
 
 import { produce } from 'immer';
 import { useDeepCompareEffect } from 'rooks';
@@ -268,7 +268,7 @@ export const ContractBillingDetailsModal = ({
     return availableCurrencies.includes(state.values.currency?.value);
   }, [availableCurrencies, state.values.currency]);
 
-  useDeepCompareEffect(() => {
+  useEffect(() => {
     if (!canAllowPayWithBankTransfer) {
       const newDefaultValues = new BillingDetailsDto({
         ...(data?.contract ?? {}),
@@ -330,12 +330,11 @@ export const ContractBillingDetailsModal = ({
                   ?.tenantBillingProfiles?.[0] as TenantBillingProfile
               }
               organizationName={organizationName}
-              canAllowPayWithBankTransfer={canAllowPayWithBankTransfer}
-              hasNoBankAccounts={!bankAccountsData?.bankAccounts?.length}
               currency={state?.values?.currency?.value}
               isEmailValid={isEmailValid}
               onSetIsBillingDetailsHovered={setIsBillingDetailsHovered}
               onSetIsBillingDetailsFocused={setIsBillingDetailsFocused}
+              bankAccounts={bankAccountsData?.bankAccounts as BankAccount[]}
             />
             <ModalFooter p='6'>
               <Button variant='outline' w='full' onClick={onClose}>

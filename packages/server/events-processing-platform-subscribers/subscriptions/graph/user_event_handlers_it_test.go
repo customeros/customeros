@@ -434,7 +434,7 @@ func TestGraphUserEventHandler_OnPhoneNumberLinkedToUser(t *testing.T) {
 	validated := false
 	e164 := "+0123456789"
 
-	phoneNumberId := neo4jt.CreatePhoneNumber(ctx, testDatabase.Driver, tenantName, entity.PhoneNumberEntity{
+	phoneNumberId := neo4jtest.CreatePhoneNumber(ctx, testDatabase.Driver, tenantName, neo4jentity.PhoneNumberEntity{
 		E164:           e164,
 		Validated:      &validated,
 		RawPhoneNumber: e164,
@@ -505,7 +505,7 @@ func TestGraphUserEventHandler_OnEmailLinkedToUser(t *testing.T) {
 
 	primary := true
 	email := "email@website.com"
-	emailId := neo4jt.CreateEmail(ctx, testDatabase.Driver, tenantName, entity.EmailEntity{
+	emailId := neo4jtest.CreateEmail(ctx, testDatabase.Driver, tenantName, neo4jentity.EmailEntity{
 		Email:         email,
 		RawEmail:      email,
 		Primary:       primary,

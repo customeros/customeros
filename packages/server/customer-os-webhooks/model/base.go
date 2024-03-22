@@ -23,6 +23,7 @@ type BaseData struct {
 	AppSource            string     `json:"appSource,omitempty"`
 	Source               string     `json:"source,omitempty"` // used if ExternalSystem is empty
 	UpdateOnly           bool       `json:"updateOnly"`
+	RunId                string     `json:"runId,omitempty"`
 }
 
 func (b *BaseData) SetCreatedAt() {

@@ -528,18 +528,42 @@ func CreateEmail(ctx context.Context, driver *neo4j.DriverWithContext, tenant st
 									e.email=$email,
 									e.rawEmail=$rawEmail,
 									e.isReachable=$isReachable,
+									e.canConnectSMTP=$canConnectSMTP,
+									e.acceptsMail=$acceptsMail,
+									e.hasFullInbox=$hasFullInbox,
+									e.isCatchAll=$isCatchAll,
+									e.isDeliverable=$isDeliverable,
+									e.isDisabled=$isDisabled,
+									e.validated=$validated,	
+									e.error=$error,	
+									e.isValidSyntax=$isValidSyntax,	
 									e.createdAt=$createdAt,
 									e.updatedAt=$updatedAt
 							`, tenant)
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"tenant":      tenant,
-		"emailId":     emailId,
-		"email":       entity.Email,
-		"rawEmail":    entity.RawEmail,
-		"isReachable": entity.IsReachable,
-		"createdAt":   entity.CreatedAt,
-		"updatedAt":   entity.UpdatedAt,
+		"tenant":         tenant,
+		"emailId":        emailId,
+		"email":          entity.Email,
+		"rawEmail":       entity.RawEmail,
+		"isReachable":    entity.IsReachable,
+		"createdAt":      entity.CreatedAt,
+		"updatedAt":      entity.UpdatedAt,
+		"canConnectSMTP": entity.CanConnectSMTP,
+		"acceptsMail":    entity.AcceptsMail,
+		"hasFullInbox":   entity.HasFullInbox,
+		"isCatchAll":     entity.IsCatchAll,
+		"isDeliverable":  entity.IsDeliverable,
+		"isDisabled":     entity.IsDisabled,
+		"validated":      entity.Validated,
+		"error":          entity.Error,
+		"isValidSyntax":  entity.IsValidSyntax,
 	})
+	return emailId
+}
+
+func CreateEmailForUser(ctx context.Context, driver *neo4j.DriverWithContext, tenant, userId string, entity entity.EmailEntity) string {
+	emailId := CreateEmail(ctx, driver, tenant, entity)
+	LinkNodes(ctx, driver, userId, emailId, "HAS")
 	return emailId
 }
 
@@ -604,6 +628,35 @@ func CreateLocation(ctx context.Context, driver *neo4j.DriverWithContext, tenant
 		"appSource":     location.AppSource,
 	})
 	return locationId
+}
+
+func CreatePhoneNumber(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, phoneNumber entity.PhoneNumberEntity) string {
+	phoneNumberId := utils.NewUUIDIfEmpty(phoneNumber.Id)
+	query := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})
+			  MERGE (t)<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(i:PhoneNumber {id:$id})
+				SET i:PhoneNumber_%s,
+					i.e164=$e164,
+					i.validated=$validated,
+					i.rawPhoneNumber=$rawPhoneNumber,
+					i.source=$source,
+					i.sourceOfTruth=$sourceOfTruth,
+					i.appSource=$appSource,
+					i.createdAt=$createdAt,
+					i.updatedAt=$updatedAt`, tenant)
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"tenant":         tenant,
+		"id":             phoneNumberId,
+		"e164":           phoneNumber.E164,
+		"validated":      phoneNumber.Validated,
+		"rawPhoneNumber": phoneNumber.RawPhoneNumber,
+		"source":         phoneNumber.Source,
+		"sourceOfTruth":  phoneNumber.SourceOfTruth,
+		"appSource":      phoneNumber.AppSource,
+		"createdAt":      phoneNumber.CreatedAt,
+		"updatedAt":      phoneNumber.UpdatedAt,
+	})
+	return phoneNumberId
 }
 
 func CreateContractForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId string, contract entity.ContractEntity) string {

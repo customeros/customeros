@@ -7,6 +7,7 @@ import { useBankAccountsQuery } from '@settings/graphql/getBankAccounts.generate
 import { useUpdateBankAccountMutation } from '@settings/graphql/updateBankAccount.generated';
 import { useDeleteBankAccountMutation } from '@settings/graphql/deleteBankAccount.generated';
 
+import { Currency } from '@graphql/types';
 import { Globe04 } from '@ui/media/icons/Globe04';
 import { Archive } from '@ui/media/icons/Archive';
 import { MinusCircle } from '@ui/media/icons/MinusCircle';
@@ -17,8 +18,10 @@ import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu';
 export const BankTransferMenu = ({
   id,
   allowInternational,
+  currency,
 }: {
   id: string;
+  currency?: Currency | null;
   allowInternational: boolean;
 }) => {
   const queryKey = useBankAccountsQuery.getKey();
@@ -37,7 +40,9 @@ export const BankTransferMenu = ({
       queryClient.invalidateQueries({ queryKey });
     },
   });
-
+  const showInternational = [Currency.Usd, Currency.Gbp, Currency.Eur].includes(
+    currency as Currency,
+  );
   const toggleAllowInternational = () => {
     update({
       input: {
@@ -55,13 +60,13 @@ export const BankTransferMenu = ({
         <DotsVertical color='gray.400' boxSize={4} />
       </MenuButton>
       <MenuList minW={'150px'}>
-        {!allowInternational && (
+        {!allowInternational && showInternational && (
           <MenuItem onClick={toggleAllowInternational}>
             <Globe04 mr={2} color='gray.500' />
             Add international
           </MenuItem>
         )}
-        {allowInternational && (
+        {allowInternational && showInternational && (
           <MenuItem onClick={toggleAllowInternational}>
             <MinusCircle mr={2} color='gray.500' />
             Remove international

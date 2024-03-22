@@ -4,9 +4,9 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/graph_db/entity"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/neo4j"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/aggregate"
@@ -147,7 +147,7 @@ func TestGraphLocationEventHandler_OnLocationValidated(t *testing.T) {
 	var utcOffset = 1
 	var latitude float64 = 1
 	var longitude float64 = 2
-	locationId := neo4jt.CreateLocation(ctx, testDatabase.Driver, tenantName, entity.LocationEntity{
+	locationId := neo4jtest.CreateLocation(ctx, testDatabase.Driver, tenantName, neo4jentity.LocationEntity{
 		Name:          name,
 		UpdatedAt:     updatedAt,
 		Country:       country,
@@ -288,7 +288,7 @@ func TestGraphLocationEventHandler_OnLocationValidationFailed(t *testing.T) {
 	var utcOffset = 1
 	var latitude float64 = 1
 	var longitude float64 = 2
-	locationId := neo4jt.CreateLocation(ctx, testDatabase.Driver, tenantName, entity.LocationEntity{
+	locationId := neo4jtest.CreateLocation(ctx, testDatabase.Driver, tenantName, neo4jentity.LocationEntity{
 		Name:          name,
 		UpdatedAt:     updatedAt,
 		Country:       country,
@@ -393,7 +393,7 @@ func TestGraphLocationEventHandler_OnLocationUpdate(t *testing.T) {
 	var utcOffset = 1
 	var latitude float64 = 1
 	var longitude float64 = 2
-	locationId := neo4jt.CreateLocation(ctx, testDatabase.Driver, tenantName, entity.LocationEntity{
+	locationId := neo4jtest.CreateLocation(ctx, testDatabase.Driver, tenantName, neo4jentity.LocationEntity{
 		Name:          name,
 		UpdatedAt:     updatedAt,
 		Country:       country,

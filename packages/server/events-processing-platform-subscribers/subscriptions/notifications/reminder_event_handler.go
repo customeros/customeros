@@ -108,7 +108,7 @@ func (h *ReminderEventHandler) notificationProviderSendEmail(
 		err = errors.New("email db node not found")
 		return errors.Wrap(err, "h.notificationProviderSendEmail")
 	}
-	email = *neo4jmapper.MapDbNodeToEmailEntity(*emailDbNode)
+	email = *neo4jmapper.MapDbNodeToEmailEntity(emailDbNode)
 	// target user
 	userDbNode, err := h.repositories.Neo4jRepositories.UserReadRepository.GetUserById(ctx, tenant, userId)
 
@@ -196,7 +196,7 @@ func (h *ReminderEventHandler) notificationProviderSendInAppNotification(
 		err = errors.New("email db node not found")
 		return errors.Wrap(err, "h.notificationProviderSendEmail")
 	}
-	email = *neo4jmapper.MapDbNodeToEmailEntity(*emailDbNode)
+	email = *neo4jmapper.MapDbNodeToEmailEntity(emailDbNode)
 	// target user
 	userDbNode, err := h.repositories.Neo4jRepositories.UserReadRepository.GetUserById(ctx, tenant, userId)
 

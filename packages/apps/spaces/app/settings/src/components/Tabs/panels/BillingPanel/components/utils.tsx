@@ -2,29 +2,24 @@ import React, { ReactNode, ReactElement } from 'react';
 
 import { Currency } from '@graphql/types';
 import { Text } from '@ui/typography/Text';
-import { CurrencyEuro } from '@ui/media/icons/CurrencyEuro';
-import { CurrencyPound } from '@ui/media/icons/CurrencyPound';
-import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
 
 const CurrencySymbol = ({ children }: { children: ReactNode }) => {
   return (
     <Text
-      w={5}
-      mr={1}
       textAlign='center'
       color='gray.500'
       whiteSpace='nowrap'
       fontWeight='semibold'
-      fontSize='xs'
+      fontSize='sm'
     >
       {children}
     </Text>
   );
 };
 export const currencyIcon: Record<string, ReactElement> = {
-  [Currency.Usd]: <CurrencyDollar mr={2} color='gray.500' boxSize={4} />,
-  [Currency.Gbp]: <CurrencyPound mr={2} color='gray.500' boxSize={4} />,
-  [Currency.Eur]: <CurrencyEuro mr={2} color='gray.500' boxSize={4} />,
+  [Currency.Usd]: <CurrencySymbol>$</CurrencySymbol>,
+  [Currency.Gbp]: <CurrencySymbol>€</CurrencySymbol>,
+  [Currency.Eur]: <CurrencySymbol>£</CurrencySymbol>,
   [Currency.Aud]: <CurrencySymbol>AU$</CurrencySymbol>,
   [Currency.Brl]: <CurrencySymbol>R$</CurrencySymbol>,
   [Currency.Cad]: <CurrencySymbol>CA$</CurrencySymbol>,
