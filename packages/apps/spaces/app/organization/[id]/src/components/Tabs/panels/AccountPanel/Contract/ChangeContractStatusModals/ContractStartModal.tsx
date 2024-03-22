@@ -29,8 +29,8 @@ interface ContractStartModalProps {
   isOpen: boolean;
   contractId: string;
   onClose: () => void;
+  serviceStarted?: string;
   organizationName: string;
-  serviceStartedAt?: string;
   onUpdateContract: UseMutationResult<
     UpdateContractMutation,
     unknown,
@@ -44,19 +44,17 @@ export const ContractStartModal = ({
   onClose,
   contractId,
   organizationName,
-  serviceStartedAt,
+  serviceStarted,
   onUpdateContract,
 }: ContractStartModalProps) => {
   const initialRef = useRef(null);
   const formId = `contract-starts-on-form-${contractId}`;
   const { state, setDefaultValues } = useForm<{
-    serviceStartedAt?: string | Date | null;
+    serviceStarted?: string | Date | null;
   }>({
     formId,
     defaultValues: {
-      serviceStartedAt: serviceStartedAt
-        ? new Date(serviceStartedAt)
-        : new Date(),
+      serviceStarted: serviceStarted ? new Date(serviceStarted) : new Date(),
     },
     stateReducer: (_, action, next) => {
       return next;
@@ -64,12 +62,12 @@ export const ContractStartModal = ({
   });
 
   useEffect(() => {
-    if (serviceStartedAt) {
+    if (serviceStarted) {
       setDefaultValues({
-        serviceStartedAt: new Date(serviceStartedAt),
+        serviceStarted: new Date(serviceStarted),
       });
     }
-  }, [serviceStartedAt]);
+  }, [serviceStarted]);
 
   const handleApplyChanges = () => {
     onUpdateContract.mutate(
@@ -77,7 +75,7 @@ export const ContractStartModal = ({
         input: {
           contractId,
           patch: true,
-          serviceStartedAt: state.values.serviceStartedAt,
+          serviceStarted: state.values.serviceStarted,
           endedAt: '0001-01-01T00:00:00.000000Z',
         },
       },
@@ -114,9 +112,9 @@ export const ContractStartModal = ({
               <DatePickerUnderline
                 placeholder='Start date'
                 formId={formId}
-                name='serviceStartedAt'
+                name='serviceStarted'
                 calendarIconHidden
-                value={state.values.serviceStartedAt}
+                value={state.values.serviceStarted}
               />
             </Box>
           </Text>
@@ -135,7 +133,7 @@ export const ContractStartModal = ({
           >
             Start{' '}
             {DateTimeUtils.format(
-              state.values.serviceStartedAt as string,
+              state.values.serviceStarted as string,
               DateTimeUtils.defaultFormatShortString,
             )}
           </Button>

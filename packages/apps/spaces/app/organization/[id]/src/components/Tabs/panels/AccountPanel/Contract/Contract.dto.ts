@@ -1,6 +1,7 @@
 import { SelectOption } from '@shared/types/SelectOptions';
 import { UpdateContractMutationVariables } from '@organization/src/graphql/updateContract.generated';
 import {
+  Contract,
   ContractUpdateInput,
   ContractRenewalCycle,
   ContractBillingCycle,
@@ -13,72 +14,76 @@ import {
 export interface TimeToRenewalData {
   name?: string;
   endedAt?: Date;
-  serviceStartedAt?: Date;
+  serviceStarted?: Date;
   invoicingStartDate?: Date;
   organizationName?: string;
   contractUrl?: string | null;
 
-  renewalPeriods?: number | null;
   billingEnabled?: boolean | null;
-  renewalCycle?: ContractRenewalCycle;
+  committedPeriods?: number | null;
   billingCycle?: ContractBillingCycle | null;
+  contractRenewalCycle?: ContractRenewalCycle;
 }
 export interface TimeToRenewalForm {
   name?: string;
   endedAt?: Date;
-  serviceStartedAt?: Date;
+  serviceStarted?: Date;
   invoicingStartDate?: Date;
   contractUrl?: string | null;
-  renewalPeriods?: string | null;
+  committedPeriods?: string | null;
   country?: SelectOption<string> | null;
   organizationLegalName?: string | null;
   billingEnabled?: SelectOption<boolean> | null;
   billingCycle?: SelectOption<ContractBillingCycle> | null;
-  renewalCycle?: SelectOption<ContractRenewalCycle | 'MULTI_YEAR'> | null;
+  contractRenewalCycle?: SelectOption<
+    ContractRenewalCycle | 'MULTI_YEAR'
+  > | null;
 }
 
 export class ContractDTO implements TimeToRenewalForm {
   endedAt?: Date;
   invoicingStartDate?: Date;
-  serviceStartedAt?: Date;
-  renewalCycle?: SelectOption<ContractRenewalCycle | 'MULTI_YEAR'> | null;
+  serviceStarted?: Date;
+  contractRenewalCycle?: SelectOption<
+    ContractRenewalCycle | 'MULTI_YEAR'
+  > | null;
   name?: string;
   contractUrl?: string | null;
   renewalPeriods?: string | null;
   billingCycle?: SelectOption<ContractBillingCycle> | null;
   billingEnabled?: SelectOption<boolean> | null;
 
-  constructor(data?: TimeToRenewalData | null) {
-    this.renewalCycle =
+  constructor(data?: Contract | null) {
+    this.contractRenewalCycle =
       [...billingFrequencyOptions].find(({ value }) =>
-        (data?.renewalPeriods ?? 0) > 1
+        (data?.committedPeriods ?? 0) > 1
           ? value === 'MULTI_YEAR'
-          : value === data?.renewalCycle,
+          : value === data?.contractRenewalCycle,
       ) ?? undefined;
     this.billingEnabled = data?.billingEnabled
       ? { label: 'Enabled', value: true }
       : { label: 'Disabled', value: false };
     this.billingCycle =
       [...contractBillingCycleOptions].find(
-        ({ value }) => value === data?.billingCycle,
+        ({ value }) => value === data?.billingDetails?.billingCycle,
       ) ?? undefined;
-    this.endedAt = data?.endedAt && new Date(data.endedAt);
+    this.endedAt = data?.contractEnded && new Date(data.contractEnded);
     this.invoicingStartDate =
-      data?.invoicingStartDate && new Date(data.invoicingStartDate);
-    this.serviceStartedAt =
-      data?.serviceStartedAt && new Date(data.serviceStartedAt);
-    this.name = data?.name?.length
-      ? data?.name
+      data?.billingDetails?.invoicingStarted &&
+      new Date(data.billingDetails?.invoicingStarted);
+    this.serviceStarted = data?.serviceStarted && new Date(data.serviceStarted);
+    this.name = data?.contractName?.length
+      ? data?.contractName
       : `${
-          data?.organizationName?.length
-            ? `${data?.organizationName}'s`
+          data?.billingDetails?.organizationLegalName?.length
+            ? `${data?.billingDetails?.organizationLegalName}'s`
             : "Unnamed's"
         } contract`;
     this.contractUrl = data?.contractUrl ?? '';
-    this.renewalPeriods = String(data?.renewalPeriods ?? 2);
+    this.renewalPeriods = String(data?.committedPeriods ?? 2);
   }
 
-  static toForm(data?: TimeToRenewalData | null): TimeToRenewalForm {
+  static toForm(data?: Contract | null): TimeToRenewalForm {
     const formData = new ContractDTO(data);
 
     return {

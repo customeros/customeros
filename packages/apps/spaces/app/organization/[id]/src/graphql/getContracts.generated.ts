@@ -46,31 +46,36 @@ export type GetContractsQuery = {
     } | null;
     contracts?: Array<{
       __typename?: 'Contract';
-      id: string;
-      name: string;
-      createdAt: any;
-      serviceStartedAt?: any | null;
-      signedAt?: any | null;
-      endedAt?: any | null;
-      renewalCycle: Types.ContractRenewalCycle;
-      renewalPeriods?: any | null;
-      status: Types.ContractStatus;
+      serviceStarted?: any | null;
+      contractSigned?: any | null;
+      contractEnded?: any | null;
+      contractStatus: Types.ContractStatus;
+      contractRenewalCycle: Types.ContractRenewalCycle;
+      committedPeriods?: any | null;
       contractUrl?: string | null;
       billingCycle?: Types.ContractBillingCycle | null;
       billingEnabled: boolean;
-      invoicingStartDate?: any | null;
       currency?: Types.Currency | null;
-      organizationLegalName?: string | null;
-      addressLine1?: string | null;
-      addressLine2?: string | null;
-      locality?: string | null;
-      country?: string | null;
-      zip?: string | null;
       invoiceEmail?: string | null;
-      invoiceNote?: string | null;
+      metadata: {
+        __typename?: 'Metadata';
+        id: string;
+        created: any;
+        source: Types.DataSource;
+        lastUpdated: any;
+      };
       billingDetails?: {
         __typename?: 'BillingDetails';
         nextInvoicing?: any | null;
+        postalCode?: string | null;
+        country?: string | null;
+        locality?: string | null;
+        addressLine1?: string | null;
+        addressLine2?: string | null;
+        invoiceNote?: string | null;
+        organizationLegalName?: string | null;
+        billingCycle?: Types.ContractBillingCycle | null;
+        invoicingStarted?: any | null;
       } | null;
       opportunities?: Array<{
         __typename?: 'Opportunity';
@@ -137,30 +142,34 @@ export const GetContractsDocument = `
       }
     }
     contracts {
-      id
-      name
-      createdAt
-      serviceStartedAt
-      signedAt
-      endedAt
-      renewalCycle
-      renewalPeriods
-      status
+      metadata {
+        id
+        created
+        source
+        lastUpdated
+      }
+      serviceStarted
+      contractSigned
+      contractEnded
+      contractStatus
+      contractRenewalCycle
+      committedPeriods
       contractUrl
       billingCycle
       billingEnabled
-      invoicingStartDate
       currency
-      organizationLegalName
-      addressLine1
-      addressLine2
-      locality
-      country
-      zip
       invoiceEmail
-      invoiceNote
       billingDetails {
         nextInvoicing
+        postalCode
+        country
+        locality
+        addressLine1
+        addressLine2
+        invoiceNote
+        organizationLegalName
+        billingCycle
+        invoicingStarted
       }
       opportunities {
         id

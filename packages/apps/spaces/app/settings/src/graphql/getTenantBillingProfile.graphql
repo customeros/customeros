@@ -7,16 +7,10 @@ query TenantBillingProfile($id: ID!) {
         locality
         zip
         legalName
-        domesticPaymentsBankInfo
-        internationalPaymentsBankInfo
         country
         vatNumber
         sendInvoicesFrom
-        canPayWithDirectDebitACH
-        canPayWithDirectDebitSEPA
-        canPayWithDirectDebitBacs
         canPayWithBankTransfer
-        canPayWithCard
         canPayWithPigeon
     }
 }

@@ -29,7 +29,7 @@ export const Contracts: FC<ContractsProps> = ({ isLoading, organization }) => {
           />
           {organization?.contracts.map((contract) => (
             <Flex
-              key={`contract-card-${contract.id}`}
+              key={`contract-card-${contract.metadata.id}`}
               flexDir='column'
               gap={4}
               w='full'

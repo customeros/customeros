@@ -24,7 +24,7 @@ export const BankTransferCurrencySelect = ({
     <Select
       id={id}
       placeholder='Account currency'
-      name='renewalCycle'
+      name='contractRenewalCycle'
       blurInputOnSelect
       onChange={(e) => {
         onChange(e);

@@ -57,6 +57,7 @@ const AccountPanelComponent = () => {
   const { data, isLoading } = useGetContractsQuery(client, {
     id,
   });
+
   const { data: invoicesCountData, isFetching: isFetchingInvoicesCount } =
     useGetInvoicesCountQuery(client, {
       organizationId: id,
@@ -66,24 +67,26 @@ const AccountPanelComponent = () => {
   const createContract = useCreateContractMutation(client, {
     onMutate: () => {
       const contract = {
-        appSource: DataSource.Openline,
         contractUrl: '',
-        createdAt: new Date().toISOString(),
+        metadata: {
+          id: `created-contract-${Math.random().toString()}`,
+          created: new Date().toISOString(),
+          lastUpdated: new Date().toISOString(),
+
+          source: DataSource.Openline,
+        },
         createdBy: [session?.user] as unknown as User,
         externalLinks: [],
-        renewalCycle: ContractRenewalCycle.None,
-        id: `created-contract-${Math.random().toString()}`,
+        contractRenewalCycle: ContractRenewalCycle.None,
         name: `${
           data?.organization?.name?.length
             ? `${data?.organization?.name}'s`
             : "Unnamed's"
         } contract`,
         owner: null,
-        source: DataSource.Openline,
-        sourceOfTruth: DataSource.Openline,
-        status: ContractStatus.Draft,
-        updatedAt: new Date().toISOString(),
-        serviceLineItems: [],
+
+        contractStatus: ContractStatus.Draft,
+        contractLineItems: [],
         billingEnabled: false,
       };
       queryClient.cancelQueries({ queryKey });

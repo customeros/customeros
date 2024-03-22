@@ -136,7 +136,7 @@ export const ServiceLineItemsModal = ({
           if (draft?.['organization']?.['contracts']) {
             draft['organization']['contracts']?.map((contractData, index) => {
               const updatedContractIndex = previousContracts?.findIndex(
-                (contract) => contract.id === input.contractId,
+                (contract) => contract.metadata.id === input.contractId,
               );
               if (!draft) return;
               if (index !== updatedContractIndex) {
