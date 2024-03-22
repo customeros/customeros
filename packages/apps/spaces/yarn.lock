@@ -4134,25 +4134,25 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
-"@novu/client@^0.22.0":
-  version "0.22.0"
-  resolved "https://registry.yarnpkg.com/@novu/client/-/client-0.22.0.tgz#8c66fb46409ee459d06c789dd531b361b31efe09"
-  integrity sha512-e4QPW8GLLAoz2Wv86uFgZt0Xeb9iKC1TlWPgl0/QpgYTrZY9ixYt36u6yHkSrvpePjmDGsfN4rlTXb1eMlcC7w==
+"@novu/client@^0.24.0":
+  version "0.24.0"
+  resolved "https://registry.yarnpkg.com/@novu/client/-/client-0.24.0.tgz#a821467d7481d512ec5984b185181570b8f3c84c"
+  integrity sha512-JlNfp+wrqG2BBLGOg2Q58l2mz43J7J47nRfbCb5ZSn0AnEdgzoqU1H0y3o9pw1PRJkeYmm8GpQbP3nSpVuCKhQ==
   dependencies:
-    "@novu/shared" "^0.22.0"
+    "@novu/shared" "^0.24.0"
 
-"@novu/notification-center@^0.22.0":
-  version "0.22.0"
-  resolved "https://registry.yarnpkg.com/@novu/notification-center/-/notification-center-0.22.0.tgz#8641fcfc6cce3f19d1bd728f17c63a5d223d6cc8"
-  integrity sha512-jeVgLRolbAmj2zkZ5R+U2oJA3k1H8Vciy/Y9+hEqMeLnvfMq1gXjRBKSIpRavCdSmv1hPC4yJrBRvh58VJqNGQ==
+"@novu/notification-center@^0.24.0":
+  version "0.24.0"
+  resolved "https://registry.yarnpkg.com/@novu/notification-center/-/notification-center-0.24.0.tgz#3dc65ab081026b1be1fbcb136b783048891acba2"
+  integrity sha512-bnDjc5TxzQT2WCPlHRVpxKufVdadnOAkMq/RvFdL6zivDuwC2Ea/bsy/dkINbBBAUeQh/3XefRWFbinCPgV4Fg==
   dependencies:
     "@emotion/css" "^11.10.5"
     "@emotion/react" "^11.7.1"
     "@emotion/styled" "^11.6.0"
     "@mantine/core" "^5.7.1"
     "@mantine/hooks" "^5.7.1"
-    "@novu/client" "^0.22.0"
-    "@novu/shared" "^0.22.0"
+    "@novu/client" "^0.24.0"
+    "@novu/shared" "^0.24.0"
     "@tanstack/react-query" "^4.20.4"
     acorn-jsx "^5.3.2"
     axios "^1.6.2"
@@ -4164,10 +4164,10 @@
     tslib "^2.3.1"
     webfontloader "^1.6.28"
 
-"@novu/shared@^0.22.0":
-  version "0.22.0"
-  resolved "https://registry.yarnpkg.com/@novu/shared/-/shared-0.22.0.tgz#6bc58d67e23a4382f1f59c5a7846fee6c9aaf466"
-  integrity sha512-lqP3idO1jkyXZbQR7TuPs2KpRdOJ7YUyJCiaItuiLHe0uO6iCWj3TwWAPalMJmxd05YZfXsyvaqPWYPHzy42qw==
+"@novu/shared@^0.24.0":
+  version "0.24.0"
+  resolved "https://registry.yarnpkg.com/@novu/shared/-/shared-0.24.0.tgz#862021ba4a376df3336518f119bd65ba534be778"
+  integrity sha512-yjL/17e3gV/+hxU5KxJfXxbHcHmiPZ0khrXdHimgjQbrwJP9KxEsNVjWgE/g2Y8b7lHI76hRNQS6vJAHAfWlIQ==
   dependencies:
     axios "^1.6.2"
     class-transformer "0.5.1"
@@ -4416,16 +4416,6 @@
   dependencies:
     "@babel/runtime" "^7.13.10"
 
-"@radix-ui/react-avatar@^1.0.4":
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/@radix-ui/react-avatar/-/react-avatar-1.0.4.tgz#de9a5349d9e3de7bbe990334c4d2011acbbb9623"
-  integrity sha512-kVK2K7ZD3wwj3qhle0ElXhOjbezIgyl2hVvgwfIdexL3rN6zJmy5AqqIf+D31lxVppdzV8CjAfZ6PklkmInZLw==
-  dependencies:
-    "@babel/runtime" "^7.13.10"
-    "@radix-ui/react-context" "1.0.1"
-    "@radix-ui/react-primitive" "1.0.3"
-    "@radix-ui/react-use-callback-ref" "1.0.1"
-    "@radix-ui/react-use-layout-effect" "1.0.1"
 "@radix-ui/primitive@1.0.1":
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/@radix-ui/primitive/-/primitive-1.0.1.tgz#e46f9958b35d10e9f6dc71c497305c22e3e55dbd"
@@ -4440,6 +4430,17 @@
   dependencies:
     "@babel/runtime" "^7.13.10"
     "@radix-ui/react-primitive" "1.0.3"
+
+"@radix-ui/react-avatar@^1.0.4":
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/@radix-ui/react-avatar/-/react-avatar-1.0.4.tgz#de9a5349d9e3de7bbe990334c4d2011acbbb9623"
+  integrity sha512-kVK2K7ZD3wwj3qhle0ElXhOjbezIgyl2hVvgwfIdexL3rN6zJmy5AqqIf+D31lxVppdzV8CjAfZ6PklkmInZLw==
+  dependencies:
+    "@babel/runtime" "^7.13.10"
+    "@radix-ui/react-context" "1.0.1"
+    "@radix-ui/react-primitive" "1.0.3"
+    "@radix-ui/react-use-callback-ref" "1.0.1"
+    "@radix-ui/react-use-layout-effect" "1.0.1"
 
 "@radix-ui/react-compose-refs@1.0.0":
   version "1.0.0"
@@ -4649,7 +4650,6 @@
   integrity sha512-v/5RegiJWYdoCvMnITBkNNx6bCj20fiaJnWtRkU18yITptraXjffz5Qbn05uOiQnOvi+dbkznkoaMltz1GnszQ==
   dependencies:
     "@babel/runtime" "^7.13.10"
-
 
 "@radix-ui/react-use-rect@1.0.1":
   version "1.0.1"
