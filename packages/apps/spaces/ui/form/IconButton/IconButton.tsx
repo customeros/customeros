@@ -27,7 +27,7 @@ const buttonSize = cva([], {
   },
 });
 
-interface IconButtonProps
+export interface IconButtonProps
   extends React.HTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof solidButton>,
     VariantProps<typeof buttonSize> {

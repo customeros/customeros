@@ -19,19 +19,15 @@ import {
   useTenantSettingsQuery,
 } from '@settings/graphql/getTenantSettings.generated';
 
-import { Box } from '@ui/layout/Box';
-import { Flex } from '@ui/layout/Flex';
-import { Button } from '@ui/form/Button';
+import { cn } from '@ui/utils/cn';
 import { useDisclosure } from '@ui/utils';
-import { Text } from '@ui/typography/Text';
-import { IconButton } from '@ui/form/IconButton';
-import { Heading } from '@ui/typography/Heading';
+import { Button } from '@ui/form/Button/Button';
+import { IconButton } from '@ui/form/IconButton/IconButton';
 import { DotsVertical } from '@ui/media/icons/DotsVertical';
 import { SlashOctagon } from '@ui/media/icons/SlashOctagon';
 import { Invoice } from '@shared/components/Invoice/Invoice';
-import { Card, CardBody, CardHeader } from '@ui/layout/Card';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu';
+import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
 import {
   DataSource,
@@ -385,81 +381,96 @@ export const BillingPanel = () => {
   };
 
   return (
-    <Flex>
-      <Card
-        flex='1'
-        w='full'
-        h='100vh'
-        bg='#FCFCFC'
-        flexDirection='column'
-        boxShadow='none'
-        background='gray.25'
-        maxW={400}
-        minW={400}
-        borderRight='1px solid'
-        borderColor='gray.300'
-        overflowY='scroll'
-        borderRadius='none'
-        pr={0}
+    <div className='flex'>
+      <div
+        className='flex-1 w-full h-[100vh] bg-gray-25 flex-col shadow-none max-w-[400px] min-w-[400px] border-r border-gray-300 overflow-y-scroll pr-0 '
+        // flex='1'
+        // w='full'
+        // h='100vh'
+        // bg='#FCFCFC'
+        // flexDirection='column'
+        // boxShadow='none'
+        // background='gray.25'
+        // maxW={400}
+        // minW={400}
+        // borderRight='1px solid'
+        // borderColor='gray.300'
+        // overflowY='scroll'
+        // borderRadius='none'
+        // pr={0}
       >
-        <CardHeader
-          px='6'
-          pb='0'
-          pt='4'
-          as={Flex}
-          alignItems='center'
-          justifyContent='space-between'
+        <div
+          className='flex items-center justify-between px-6 pb-0 pt-4'
+          // px='6'
+          // pb='0'
+          // pt='4'
+          // as={Flex}
+          // alignItems='center'
+          // justifyContent='space-between'
         >
-          <Heading as='h1' fontSize='lg' color='gray.700' pt={1}>
+          <h1
+            className='text-lg text-gray-700 pt-1'
+            // fontSize='lg' color='gray.700' pt={1}
+          >
             <b>Billing</b>
-          </Heading>
+          </h1>
 
           {tenantSettingsData?.tenantSettings.billingEnabled && (
             <Menu>
-              <MenuButton
-                as={IconButton}
-                size='xs'
-                aria-label='Options'
-                icon={<DotsVertical />}
-                variant='outline'
-                border='none'
-              />
+              <MenuButton>
+                <IconButton
+                  size='xs'
+                  aria-label='Options'
+                  icon={<DotsVertical />}
+                  variant='ghost'
+                  colorScheme='gray'
+                />
+              </MenuButton>
               <MenuList>
-                <MenuItem
-                  alignItems='center'
-                  color='gray.700'
-                  onClick={handleToggleInvoices}
-                >
+                <MenuItem onClick={handleToggleInvoices}>
                   <SlashOctagon marginRight={1} color='gray.500' /> Disable
                   Customer billing
                 </MenuItem>
               </MenuList>
             </Menu>
           )}
-        </CardHeader>
+        </div>
 
         {!tenantSettingsData?.tenantSettings.billingEnabled && (
-          <CardBody
-            as={Flex}
-            flexDir='column'
-            px='6'
-            w='full'
-            gap={4}
-            opacity={tenantSettingsData?.tenantSettings.billingEnabled ? 0 : 1}
+          <div
+            className={cn(
+              tenantSettingsData?.tenantSettings.billingEnabled ? 0 : 1,
+              'flex flex-col px-6 w-full gap-4',
+            )}
+            // as={Flex}
+            // flexDir='column'
+            // px='6'
+            // w='full'
+            // gap={4}
+            // opacity={tenantSettingsData?.tenantSettings.billingEnabled ? 0 : 1}
           >
-            <Text fontSize='sm'>
+            <span
+              className='text-sm'
+              // fontSize='sm'
+            >
               Master your revenue lifecycle from contract to cash by enabling
               customer billing for your customers.
-            </Text>
+            </span>
 
-            <Box as='ul' pl={6} fontSize='sm'>
+            <ul
+              className='pl-6 text-sm'
+              //  pl={6} fontSize='sm'
+            >
               <li>
                 Automatically send customer invoices based on their contract
                 service line items
               </li>
               <li>Let customers pay using a connected payment provider</li>
-            </Box>
-            <Flex alignItems='center'>
+            </ul>
+            <div
+              className='items-center'
+              // alignItems='center'
+            >
               <Button
                 colorScheme='primary'
                 variant='outline'
@@ -468,8 +479,8 @@ export const BillingPanel = () => {
               >
                 Enable invoicing
               </Button>
-            </Flex>
-          </CardBody>
+            </div>
+          </div>
         )}
 
         {tenantSettingsData?.tenantSettings.billingEnabled && (
@@ -482,8 +493,11 @@ export const BillingPanel = () => {
             organizationName={state.values?.legalName}
           />
         )}
-      </Card>
-      <Box borderRight='1px solid' borderColor='gray.300' maxH='100vh'>
+      </div>
+      <div
+        className='bodre-r border-gray-300 max-h-[100vh]'
+        //  borderRight='1px solid' borderColor='gray.300' maxH='100vh
+      >
         <Invoice
           isInvoiceProviderFocused={
             isInvoiceProviderFocused || isInvoiceProviderDetailsHovered
@@ -500,7 +514,7 @@ export const BillingPanel = () => {
           }}
           {...invoicePreviewStaticData}
         />
-      </Box>
+      </div>
       <ConfirmDeleteDialog
         label='Disable Customer billing?'
         icon={<SlashOctagon color='error.600' />}
@@ -512,6 +526,6 @@ export const BillingPanel = () => {
         isLoading={updateTenantSettingsMutation.isPending}
         hideCloseButton
       />
-    </Flex>
+    </div>
   );
 };

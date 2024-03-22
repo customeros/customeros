@@ -6,9 +6,6 @@ import { LogoUploader } from '@settings/components/LogoUploadComponent/LogoUploa
 import { VatInput } from '@settings/components/Tabs/panels/BillingPanel/components/VatInput';
 import { PaymentMethods } from '@settings/components/Tabs/panels/BillingPanel/components/PaymentMethods';
 
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
-import { CardBody } from '@ui/layout/Card';
 import { FormSelect } from '@ui/form/SyncSelect';
 import { Divider } from '@ui/presentation/Divider';
 import { countryOptions } from '@shared/util/countryOptions';
@@ -29,7 +26,10 @@ export const TenantBillingPanelDetailsForm = ({
   const currencyOptions = useMemo(() => getCurrencyOptions(), []);
 
   return (
-    <CardBody as={Flex} flexDir='column' px='6' w='full' gap={4}>
+    <div
+      className='w-full flex flex-col px-6 gap-4'
+      //  as={Flex} flexDir='column' px='6' w='full' gap={4}
+    >
       <LogoUploader />
       <FormInput
         autoComplete='off'
@@ -58,8 +58,8 @@ export const TenantBillingPanelDetailsForm = ({
         options={currencyOptions ?? []}
       />
 
-      <Flex
-        flexDir='column'
+      <div
+        className='flex flex-col'
         onMouseEnter={() => setIsInvoiceProviderDetailsHovered(true)}
         onMouseLeave={() => setIsInvoiceProviderDetailsHovered(false)}
       >
@@ -88,7 +88,7 @@ export const TenantBillingPanelDetailsForm = ({
           onBlur={() => setIsInvoiceProviderFocused(false)}
         />
 
-        <Flex gap={2}>
+        <div className='flex space-x-2'>
           <FormInput
             autoComplete='off'
             label='Billing address locality'
@@ -107,7 +107,7 @@ export const TenantBillingPanelDetailsForm = ({
             onFocus={() => setIsInvoiceProviderFocused(true)}
             onBlur={() => setIsInvoiceProviderFocused(false)}
           />
-        </Flex>
+        </div>
         <FormSelect
           name='country'
           placeholder='Country'
@@ -131,14 +131,14 @@ export const TenantBillingPanelDetailsForm = ({
           onFocus={() => setIsInvoiceProviderFocused(true)}
           onBlur={() => setIsInvoiceProviderFocused(false)}
         />
-      </Flex>
-      <Flex flexDir='column'>
-        <Flex position='relative' alignItems='center'>
-          <Text fontSize='sm' whiteSpace='nowrap' mr={2} color='gray.500'>
+      </div>
+      <div className='flex flex-col'>
+        <div className='items-center relative'>
+          <span className='tes-sm whitespace-nowrap mr-2 text-gray.500'>
             Email invoice
-          </Text>
+          </span>
           <Divider background='gray.200' />
-        </Flex>
+        </div>
 
         <FormResizableInput
           formId={formId}
@@ -174,8 +174,8 @@ export const TenantBillingPanelDetailsForm = ({
           placeholder='BCC'
           type='email'
         />
-      </Flex>
+      </div>
       <PaymentMethods formId={formId} organizationName={organizationName} />
-    </CardBody>
+    </div>
   );
 };
