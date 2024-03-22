@@ -161,18 +161,12 @@ export const Avatar: React.FC<AvatarDemoProps> = ({
         />
       )}
       {icon && !name && !src && (
-        <RadixAvatar.Fallback
-          delayMs={600}
-          className=' leading-1 flex h-full w-full items-center justify-center text-[15px] font-medium'
-        >
+        <RadixAvatar.Fallback className=' leading-1 flex h-full w-full items-center justify-center text-[15px] font-medium'>
           {icon}
         </RadixAvatar.Fallback>
       )}
       {!icon && !src && name && (
-        <RadixAvatar.Fallback
-          className='leading-1 flex h-full w-full items-center justify-center text-[15px] font-semibold'
-          delayMs={600}
-        >
+        <RadixAvatar.Fallback className='leading-1 flex h-full w-full items-center justify-center text-[15px] font-semibold'>
           {emptyFallbackLetters}
         </RadixAvatar.Fallback>
       )}
