@@ -11,6 +11,13 @@ import { Collapse } from '@ui/transitions/Collapse';
 import { Textarea } from '@ui/form/Textarea/Textarea';
 import { SlideFade } from '@ui/transitions/SlideFade';
 import { toastError, toastSuccess } from '@ui/presentation/Toast';
+// import {
+//   Card,
+//   CardHeader,
+//   CardFooter,
+//   CardContent,
+//   CardSubtitle,
+// } from '@ui/layout/Card/Card';
 
 interface FieldDefinition {
   name: string;
@@ -251,7 +258,7 @@ export const SettingsIntegrationItem = ({
                               onChange={({ target: { value } }) => {
                                 field.onChange(value);
                               }}
-                              border
+                              className='border-gray-200'
                             />
                           );
                         } else {
@@ -267,7 +274,7 @@ export const SettingsIntegrationItem = ({
                               onChange={({ target: { value } }) => {
                                 field.onChange(value);
                               }}
-                              border
+                              className='border-gray-200'
                             />
                           );
                         }
@@ -278,6 +285,17 @@ export const SettingsIntegrationItem = ({
             </>
           </SlideFade>
         </Collapse>
+        {/* <Card>
+          <CardHeader>Bombastic</CardHeader>
+          <CardSubtitle> Subtitle</CardSubtitle>
+          <CardContent>albalaportocala</CardContent>
+          <CardFooter>
+            <div className='flex space-x-2 items-center'>
+              <span>bucinescu</span>
+              <Button>lcick aiic</Button>
+            </div>
+          </CardFooter>
+        </Card> */}
       </div>
     </div>
   );
