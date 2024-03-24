@@ -14,7 +14,7 @@ import {
 const buttonSize = cva([], {
   variants: {
     size: {
-      sm: ['px-2', 'py-1', 'rounded-lg'],
+      sm: ['px-3', 'py-1', 'rounded-lg'],
       md: ['px-4', 'py-2.5', 'rounded-lg'],
       lg: ['px-[1.125rem]', 'py-2.5', 'rounded-lg', 'text-base'],
       xl: ['px-5', 'py-3', 'rounded-lg', 'text-base'],
@@ -98,9 +98,18 @@ export const Button = ({
 
       {!isLoading && children}
       {!isLoading && rightIcon && (
-        <span className={twMerge(iconVariant({ size, variant, colorScheme }))}>
-          {leftIcon}
-        </span>
+        <>
+          {cloneElement(rightIcon, {
+            className: twMerge(
+              iconVariant({
+                size,
+                variant,
+                colorScheme,
+                className: rightIcon.props.className,
+              }),
+            ),
+          })}
+        </>
       )}
     </button>
   );

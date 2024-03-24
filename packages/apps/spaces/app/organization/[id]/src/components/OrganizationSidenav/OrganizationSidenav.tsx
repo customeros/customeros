@@ -59,7 +59,7 @@ export const OrganizationSidenav = () => {
         <div className='flex flex-col'>
           {parentOrg && (
             <a
-              className='text-xs truncate'
+              className='text-xs text-gray-600 truncate no-underline '
               href={`/organization/${parentOrg.id}?tab=about`}
             >
               {parentOrg.name}

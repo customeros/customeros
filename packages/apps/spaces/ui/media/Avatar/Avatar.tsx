@@ -49,18 +49,22 @@ const avatarBadgeSize = cva([], {
     {
       badgeSize: 'md',
       borderRadius: 'md',
+      badgePosition: 'md',
     },
     {
       badgeSize: 'lg',
       borderRadius: 'lg',
+      badgePosition: 'lg',
     },
     {
       badgeSize: 'xl',
       borderRadius: 'xl',
+      badgePosition: 'xl',
     },
     {
       badgeSize: '2xl',
       borderRadius: '2xl',
+      badgePosition: '2xl',
     },
   ],
 });
