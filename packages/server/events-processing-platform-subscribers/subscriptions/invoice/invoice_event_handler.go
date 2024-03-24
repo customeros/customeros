@@ -1117,7 +1117,7 @@ func (h *InvoiceEventHandler) onInvoiceVoidV1(ctx context.Context, evt eventstor
 		Attachments: []postmark.PostmarkEmailAttachment{},
 	}
 
-	err = h.AppendProviderLogoToEmail(eventData.Tenant, invoiceEntity.Provider.LogoRepositoryFileId, &postmarkEmail, span)
+	err = h.appendProviderLogoToEmail(ctx, eventData.Tenant, invoiceEntity.Provider.LogoRepositoryFileId, &postmarkEmail)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error appending provider logo to email for invoice %s: %s", invoiceId, err.Error())
@@ -1215,14 +1215,14 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 		Attachments: []postmark.PostmarkEmailAttachment{},
 	}
 
-	err = h.AppendInvoiceFileToEmailAsAttachment(eventData.Tenant, invoiceEntity, &postmarkEmail, span)
+	err = h.appendInvoiceFileToEmailAsAttachment(ctx, eventData.Tenant, invoiceEntity, &postmarkEmail)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error appending invoice file to email attachment for invoice %s: %s", invoiceId, err.Error())
 		return err
 	}
 
-	err = h.AppendProviderLogoToEmail(eventData.Tenant, invoiceEntity.Provider.LogoRepositoryFileId, &postmarkEmail, span)
+	err = h.appendProviderLogoToEmail(ctx, eventData.Tenant, invoiceEntity.Provider.LogoRepositoryFileId, &postmarkEmail)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error appending provider logo to email for invoice %s: %s", invoiceId, err.Error())
@@ -1327,26 +1327,29 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 		Attachments: []postmark.PostmarkEmailAttachment{},
 	}
 
-	err = h.AppendInvoiceFileToEmailAsAttachment(eventData.Tenant, invoiceEntity, &postmarkEmail, span)
+	err = h.appendInvoiceFileToEmailAsAttachment(ctx, eventData.Tenant, invoiceEntity, &postmarkEmail)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		wrappedErr := errors.Wrap(err, "InvoiceSubscriber.onInvoicePayNotificationV1.AppendInvoiceFileToEmailAsAttachment")
+		tracing.TraceErr(span, wrappedErr)
 		h.log.Errorf("Error appending invoice file to email attachment for invoice %s: %s", invoiceId, err.Error())
-		return err
+		return wrappedErr
 	}
 
-	err = h.AppendProviderLogoToEmail(eventData.Tenant, invoiceEntity.Provider.LogoRepositoryFileId, &postmarkEmail, span)
+	err = h.appendProviderLogoToEmail(ctx, eventData.Tenant, invoiceEntity.Provider.LogoRepositoryFileId, &postmarkEmail)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		wrappedErr := errors.Wrap(err, "InvoiceSubscriber.onInvoicePayNotificationV1.AppendProviderLogoToEmail")
+		tracing.TraceErr(span, wrappedErr)
 		h.log.Errorf("Error appending provider logo to email for invoice %s: %s", invoiceId, err.Error())
-		return err
+		return wrappedErr
 	}
 
 	err = h.postmarkProvider.SendNotification(ctx, postmarkEmail, span, eventData.Tenant)
 
 	if err != nil {
-		tracing.TraceErr(span, err)
+		wrappedErr := errors.Wrap(err, "InvoiceSubscriber.onInvoicePayNotificationV1.SendNotification")
+		tracing.TraceErr(span, wrappedErr)
 		h.log.Errorf("Error sending invoice pay request notification for invoice %s: %s", invoiceId, err.Error())
-		return err
+		return wrappedErr
 	}
 
 	// Request was successful
@@ -1360,7 +1363,10 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 	return nil
 }
 
-func (h *InvoiceEventHandler) AppendInvoiceFileToEmailAsAttachment(tenant string, invoice neo4jentity.InvoiceEntity, postmarkEmail *postmark.PostmarkEmail, span opentracing.Span) error {
+func (h *InvoiceEventHandler) appendInvoiceFileToEmailAsAttachment(ctx context.Context, tenant string, invoice neo4jentity.InvoiceEntity, postmarkEmail *postmark.PostmarkEmail) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.appendInvoiceFileToEmailAsAttachment")
+	defer span.Finish()
+
 	invoiceFileBytes, err := h.fsc.GetFileBytes(tenant, invoice.RepositoryFileId, span)
 	if err != nil {
 		return err
@@ -1375,7 +1381,10 @@ func (h *InvoiceEventHandler) AppendInvoiceFileToEmailAsAttachment(tenant string
 	return nil
 }
 
-func (h *InvoiceEventHandler) AppendProviderLogoToEmail(tenant, logoFileId string, postmarkEmail *postmark.PostmarkEmail, span opentracing.Span) error {
+func (h *InvoiceEventHandler) appendProviderLogoToEmail(ctx context.Context, tenant, logoFileId string, postmarkEmail *postmark.PostmarkEmail) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.appendProviderLogoToEmail")
+	defer span.Finish()
+
 	if logoFileId == "" {
 		return nil
 	}
