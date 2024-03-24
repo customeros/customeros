@@ -1,17 +1,14 @@
 import React from 'react';
+import Image from 'next/image';
 import { useForm, Controller } from 'react-hook-form';
 
 import { DeleteIntegrationSettings, UpdateIntegrationSettings } from 'services';
 
-import { Box } from '@ui/layout/Box';
-import { Flex } from '@ui/layout/Flex';
-import { Input } from '@ui/form/Input';
-import { Image } from '@ui/media/Image';
-import { Button } from '@ui/form/Button';
-import { Text } from '@ui/typography/Text';
 import { Fade } from '@ui/transitions/Fade';
-import { Textarea } from '@ui/form/Textarea';
+import { Input } from '@ui/form/Input/Input2';
+import { Button } from '@ui/form/Button/Button';
 import { Collapse } from '@ui/transitions/Collapse';
+import { Textarea } from '@ui/form/Textarea/Textarea';
 import { SlideFade } from '@ui/transitions/SlideFade';
 import { toastError, toastSuccess } from '@ui/presentation/Toast';
 
@@ -89,23 +86,22 @@ export const SettingsIntegrationItem = ({
   };
 
   return (
-    <Flex direction='column'>
-      <Flex justifyContent='space-between' my={2}>
-        <Flex alignItems='center'>
-          <Image alt='' src={icon} height={5} width={5} mr={2} />
+    <div className='flex space-y-1 flex-col'>
+      <div className='flex justify-between my-2'>
+        <div className='flex items-center'>
+          <Image className='mr-2' alt='' src={icon} width={20} height={20} />
 
-          <Text fontWeight='medium' alignSelf='center' fontSize='md'>
-            {name}
-          </Text>
-        </Flex>
+          <span className='self-center text-md font-medium'>{name}</span>
+        </div>
 
-        <Box>
+        <div>
           {collapsed && (
-            <Flex>
+            <div className='flex space-x-1'>
               {state === 'ACTIVE' && (
                 <Button
                   size='sm'
                   variant='outline'
+                  colorScheme='gray'
                   onClick={() => {
                     if (onDisable) {
                       onDisable();
@@ -122,6 +118,7 @@ export const SettingsIntegrationItem = ({
                 <Button
                   size='sm'
                   variant='outline'
+                  colorScheme='gray'
                   onClick={() => {
                     // If onEnable is present -> we're using the integration.app flows
                     if (onEnable) {
@@ -134,18 +131,19 @@ export const SettingsIntegrationItem = ({
                   Enable
                 </Button>
               )}
-            </Flex>
+            </div>
           )}
 
           {!collapsed && (
             <Collapse in={!collapsed} style={{ overflow: 'unset' }}>
               <Fade in={!collapsed}>
-                <Flex>
+                <div className='flex space-x-1'>
                   {state === 'ACTIVE' && (
                     <>
                       <Button
                         size='sm'
                         variant='outline'
+                        colorScheme='gray'
                         onClick={() => {
                           setCollapsed(true);
                           onCancel && onCancel();
@@ -167,7 +165,7 @@ export const SettingsIntegrationItem = ({
                       <Button
                         size='sm'
                         variant='outline'
-                        colorScheme='green'
+                        colorScheme='success'
                         onClick={onSave}
                       >
                         Done
@@ -180,6 +178,7 @@ export const SettingsIntegrationItem = ({
                       <Button
                         size='sm'
                         variant='outline'
+                        colorScheme='gray'
                         onClick={() => {
                           setCollapsed(true);
                           onCancel && onCancel();
@@ -193,20 +192,20 @@ export const SettingsIntegrationItem = ({
                         size='sm'
                         variant='outline'
                         onClick={onSave}
-                        colorScheme='green'
+                        colorScheme='success'
                       >
                         Done
                       </Button>
                     </>
                   )}
-                </Flex>
+                </div>
               </Fade>
             </Collapse>
           )}
-        </Box>
-      </Flex>
+        </div>
+      </div>
 
-      <Box>
+      <div>
         <Collapse
           in={!collapsed}
           style={{ overflow: 'hidden' }}
@@ -217,22 +216,21 @@ export const SettingsIntegrationItem = ({
           <SlideFade in={!collapsed}>
             <>
               {!fields && (
-                <Text m={5} mt={0} fontWeight='medium'>
-                  Contact us!
-                </Text>
+                <span className='w-full m-5 mt-0 font-medium'>Contact us!</span>
               )}
 
               {fields &&
                 fields.map((fieldDefinition: FieldDefinition) => (
-                  <Flex key={fieldDefinition.name} alignItems='center' mb={2}>
-                    <Text
-                      whiteSpace='nowrap'
-                      mr={3}
-                      as='label'
+                  <div
+                    className=' flex mb-2 items-center'
+                    key={fieldDefinition.name}
+                  >
+                    <label
+                      className='mr-3 whitespace-nowrap'
                       htmlFor={fieldDefinition.name}
                     >
                       {fieldDefinition.label}
-                    </Text>
+                    </label>
 
                     <Controller
                       // @ts-expect-error TODO: react-inverted-form should be used instead of hook-form
@@ -253,15 +251,12 @@ export const SettingsIntegrationItem = ({
                               onChange={({ target: { value } }) => {
                                 field.onChange(value);
                               }}
-                              borderBottom='1px solid'
-                              borderColor='gray.200'
+                              className='border-gray-200'
                             />
                           );
                         } else {
                           return (
                             <Input
-                              borderBottom='1px solid'
-                              borderColor='gray.200'
                               id={fieldDefinition.name}
                               value={
                                 state === 'ACTIVE'
@@ -272,17 +267,18 @@ export const SettingsIntegrationItem = ({
                               onChange={({ target: { value } }) => {
                                 field.onChange(value);
                               }}
+                              className='border-gray-200'
                             />
                           );
                         }
                       }}
                     />
-                  </Flex>
+                  </div>
                 ))}
             </>
           </SlideFade>
         </Collapse>
-      </Box>
-    </Flex>
+      </div>
+    </div>
   );
 };

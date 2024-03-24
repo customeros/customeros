@@ -27,7 +27,7 @@ const solidButton = (color: string) => `
 
 const outlineButton = (color: string) => `
     ${color}: [
-    'text-${color}-500',
+    'text-${color}-700',
     'border',
     'border-solid',
     'border-${color}-300',

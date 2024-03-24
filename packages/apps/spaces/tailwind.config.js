@@ -11,7 +11,11 @@ module.exports = {
   ],
   theme: {
     boxShadow: shadows,
-    colors,
+    colors: {
+      ...colors,
+      transparent: 'transparent',
+      current: 'currentColor',
+    },
     extend: {
       keyframes: {
         slideDownAndFade: {
