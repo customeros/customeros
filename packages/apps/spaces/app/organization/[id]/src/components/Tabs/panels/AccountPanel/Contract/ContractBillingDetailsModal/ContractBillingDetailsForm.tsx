@@ -250,7 +250,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
                   }
                 />
               </PaymentDetailsPopover>
-              {!isStripeActive && (
+              {isStripeActive && (
                 <Flex flexDir='column' gap={2} ml={2}>
                   <Tooltip
                     label={
@@ -289,7 +289,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
                         formId={formId}
                         size='md'
                         isInvalid={
-                          !availablePaymentMethodTypes?.includes('bacs_debit')
+                          !availablePaymentMethodTypes?.includes('ach_debit')
                         }
                       >
                         <Text fontSize='sm' whiteSpace='nowrap'>

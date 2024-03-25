@@ -48,3 +48,10 @@ export function mapCurrencyToOptions() {
       (e) => ![Currency.Eur, Currency.Usd, Currency.Gbp].includes(e.value),
     );
 }
+
+export const paymentMethods: Record<string, string> = {
+  card: 'Debit or Card',
+  ach_debit: 'ACH',
+  sepa: 'SEPA',
+  bacs_debit: 'Bacs',
+};

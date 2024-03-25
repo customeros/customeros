@@ -48,6 +48,7 @@ export const BankTransferCurrencySelect = ({
               justifyContent={context === 'value' ? 'center' : 'flex-end'}
               alignItems='center'
               minW={context === 'value' ? '14px' : 'auto'}
+              padding={context === 'value' ? '0 2px' : 'auto'}
             >
               {currencyIcon?.[option.value]}
             </Flex>

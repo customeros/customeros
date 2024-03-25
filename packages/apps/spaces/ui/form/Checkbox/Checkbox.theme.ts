@@ -16,6 +16,9 @@ export const Checkbox = helpers.defineMultiStyleConfig({
       transition: 'all 0.3s ease',
       pointerEvents: isDisabled ? 'none' : 'auto',
       opacity: isDisabled ? 0.4 : 1,
+      _invalid: {
+        borderColor: 'gray.400',
+      },
       _focus: {
         boxShadow: 'ringPrimary',
         borderColor: `${colorScheme}.300`,
@@ -23,6 +26,7 @@ export const Checkbox = helpers.defineMultiStyleConfig({
         _invalid: {
           boxShadow: 'ringWarning',
           backgroundColor: 'warning.100',
+          borderColor: 'warning.300',
         },
       },
       _hover: {
@@ -30,7 +34,6 @@ export const Checkbox = helpers.defineMultiStyleConfig({
         borderColor: `${colorScheme}.600`,
         _invalid: {
           borderColor: 'warning.300',
-          boxShadow: 'ringWarning',
           backgroundColor: 'warning.100',
         },
       },

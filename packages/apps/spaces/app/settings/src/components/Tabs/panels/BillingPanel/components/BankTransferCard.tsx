@@ -7,6 +7,7 @@ import { useDebounce } from 'rooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { useBankAccountsQuery } from '@settings/graphql/getBankAccounts.generated';
 import { useUpdateBankAccountMutation } from '@settings/graphql/updateBankAccount.generated';
+import { BankNameInput } from '@settings/components/Tabs/panels/BillingPanel/components/BankNameInput';
 
 import { Flex } from '@ui/layout/Flex';
 import { FormInput } from '@ui/form/Input';
@@ -31,6 +32,7 @@ export const BankTransferCard = ({ account }: { account: BankAccount }) => {
       queryClient.invalidateQueries({ queryKey });
     },
   });
+
   const updateBankAccountDebounced = useDebounce(
     (variables: Partial<BankAccountUpdateInput>) => {
       mutate({
@@ -102,35 +104,13 @@ export const BankTransferCard = ({ account }: { account: BankAccount }) => {
         }}
       >
         <CardHeader p='0' pb={1} as={Flex}>
-          <FormInput
-            fontSize='md'
-            fontWeight='semibold'
-            autoComplete='off'
-            label='Bank Name'
-            placeholder='Bank name'
-            name='bankName'
-            formId={formId}
-            border='none'
-            _hover={{
-              border: 'none',
-            }}
-            _focus={{
-              border: 'none',
-            }}
-            _focusVisible={{
-              border: 'none',
-            }}
-          />
+          <BankNameInput formId={formId} metadata={account.metadata} />
           <BankTransferCurrencySelect
             currency={account.currency}
             formId={formId}
           />
 
-          <BankTransferMenu
-            id={account?.metadata?.id}
-            allowInternational={account.allowInternational}
-            currency={account?.currency}
-          />
+          <BankTransferMenu id={account?.metadata?.id} />
         </CardHeader>
         <CardBody p={0} gap={2}>
           <Flex pb={1} gap={2}>
