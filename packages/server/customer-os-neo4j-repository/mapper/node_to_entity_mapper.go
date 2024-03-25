@@ -371,6 +371,7 @@ func MapDbNodeToContractEntity(dbNode *dbtype.Node) *entity.ContractEntity {
 		InvoicingEnabled:                utils.GetBoolPropOrFalse(props, "invoicingEnabled"),
 		PayOnline:                       utils.GetBoolPropOrFalse(props, "payOnline"),
 		PayAutomatically:                utils.GetBoolPropOrFalse(props, "payAutomatically"),
+		AutoRenew:                       utils.GetBoolPropOrFalse(props, "autoRenew"),
 	}
 	return &contract
 }

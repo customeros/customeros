@@ -24,6 +24,7 @@ contract_Update(
         canPayWithCard: true
         canPayWithDirectDebit: true
         canPayWithBankTransfer: true
+        autoRenew: true
         billingDetails: {
             payOnline: true
             payAutomatically: true

@@ -268,6 +268,7 @@ type ComplexityRoot struct {
 		AddressLine1          func(childComplexity int) int
 		AddressLine2          func(childComplexity int) int
 		AppSource             func(childComplexity int) int
+		AutoRenew             func(childComplexity int) int
 		BillingCycle          func(childComplexity int) int
 		BillingDetails        func(childComplexity int) int
 		BillingEnabled        func(childComplexity int) int
@@ -3056,6 +3057,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Contract.AppSource(childComplexity), true
+
+	case "Contract.autoRenew":
+		if e.complexity.Contract.AutoRenew == nil {
+			break
+		}
+
+		return e.complexity.Contract.AutoRenew(childComplexity), true
 
 	case "Contract.billingCycle":
 		if e.complexity.Contract.BillingCycle == nil {
@@ -11991,6 +11999,7 @@ type Contract implements MetadataInterface {
     owner:              User @goField(forceResolver: true)
     serviceStarted:     Time
     contractStatus:     ContractStatus!
+    autoRenew:          Boolean!
 
     status:             ContractStatus! @deprecated(reason: "Use contractStatus instead.")
     serviceStartedAt:   Time @deprecated(reason: "Use serviceStarted instead.")
@@ -12049,6 +12058,7 @@ input ContractInput {
     contractSigned:         Time
     currency:               Currency
     billingEnabled:         Boolean
+    autoRenew:              Boolean
 
     invoicingStartDate:     Time @deprecated(reason: "Removed from create input.")
     externalReference:      ExternalSystemReferenceInput @deprecated(reason: "Not used yet")
@@ -12074,6 +12084,7 @@ input ContractUpdateInput {
     billingDetails:         BillingDetailsInput
     appSource:              String
     billingEnabled:         Boolean
+    autoRenew:              Boolean
 
     canPayWithCard:         Boolean @deprecated(reason: "Use billingDetails instead.")
     canPayWithDirectDebit:  Boolean @deprecated(reason: "Use billingDetails instead.")
@@ -27083,6 +27094,50 @@ func (ec *executionContext) fieldContext_Contract_contractStatus(ctx context.Con
 	return fc, nil
 }
 
+func (ec *executionContext) _Contract_autoRenew(ctx context.Context, field graphql.CollectedField, obj *model.Contract) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contract_autoRenew(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AutoRenew, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contract_autoRenew(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contract",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Contract_status(ctx context.Context, field graphql.CollectedField, obj *model.Contract) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Contract_status(ctx, field)
 	if err != nil {
@@ -37975,6 +38030,8 @@ func (ec *executionContext) fieldContext_Invoice_contract(ctx context.Context, f
 				return ec.fieldContext_Contract_serviceStarted(ctx, field)
 			case "contractStatus":
 				return ec.fieldContext_Contract_contractStatus(ctx, field)
+			case "autoRenew":
+				return ec.fieldContext_Contract_autoRenew(ctx, field)
 			case "status":
 				return ec.fieldContext_Contract_status(ctx, field)
 			case "serviceStartedAt":
@@ -49391,6 +49448,8 @@ func (ec *executionContext) fieldContext_Mutation_contract_Create(ctx context.Co
 				return ec.fieldContext_Contract_serviceStarted(ctx, field)
 			case "contractStatus":
 				return ec.fieldContext_Contract_contractStatus(ctx, field)
+			case "autoRenew":
+				return ec.fieldContext_Contract_autoRenew(ctx, field)
 			case "status":
 				return ec.fieldContext_Contract_status(ctx, field)
 			case "serviceStartedAt":
@@ -49560,6 +49619,8 @@ func (ec *executionContext) fieldContext_Mutation_contract_Update(ctx context.Co
 				return ec.fieldContext_Contract_serviceStarted(ctx, field)
 			case "contractStatus":
 				return ec.fieldContext_Contract_contractStatus(ctx, field)
+			case "autoRenew":
+				return ec.fieldContext_Contract_autoRenew(ctx, field)
 			case "status":
 				return ec.fieldContext_Contract_status(ctx, field)
 			case "serviceStartedAt":
@@ -66953,6 +67014,8 @@ func (ec *executionContext) fieldContext_Organization_contracts(ctx context.Cont
 				return ec.fieldContext_Contract_serviceStarted(ctx, field)
 			case "contractStatus":
 				return ec.fieldContext_Contract_contractStatus(ctx, field)
+			case "autoRenew":
+				return ec.fieldContext_Contract_autoRenew(ctx, field)
 			case "status":
 				return ec.fieldContext_Contract_status(ctx, field)
 			case "serviceStartedAt":
@@ -75143,6 +75206,8 @@ func (ec *executionContext) fieldContext_Query_contract(ctx context.Context, fie
 				return ec.fieldContext_Contract_serviceStarted(ctx, field)
 			case "contractStatus":
 				return ec.fieldContext_Contract_contractStatus(ctx, field)
+			case "autoRenew":
+				return ec.fieldContext_Contract_autoRenew(ctx, field)
 			case "status":
 				return ec.fieldContext_Contract_status(ctx, field)
 			case "serviceStartedAt":
@@ -80820,6 +80885,8 @@ func (ec *executionContext) fieldContext_RenewalRecord_contract(ctx context.Cont
 				return ec.fieldContext_Contract_serviceStarted(ctx, field)
 			case "contractStatus":
 				return ec.fieldContext_Contract_contractStatus(ctx, field)
+			case "autoRenew":
+				return ec.fieldContext_Contract_autoRenew(ctx, field)
 			case "status":
 				return ec.fieldContext_Contract_status(ctx, field)
 			case "serviceStartedAt":
@@ -90557,7 +90624,7 @@ func (ec *executionContext) unmarshalInputContractInput(ctx context.Context, obj
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"organizationId", "contractName", "contractRenewalCycle", "committedPeriods", "appSource", "contractUrl", "serviceStarted", "contractSigned", "currency", "billingEnabled", "invoicingStartDate", "externalReference", "billingCycle", "renewalPeriods", "renewalCycle", "signedAt", "serviceStartedAt", "name"}
+	fieldsInOrder := [...]string{"organizationId", "contractName", "contractRenewalCycle", "committedPeriods", "appSource", "contractUrl", "serviceStarted", "contractSigned", "currency", "billingEnabled", "autoRenew", "invoicingStartDate", "externalReference", "billingCycle", "renewalPeriods", "renewalCycle", "signedAt", "serviceStartedAt", "name"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -90634,6 +90701,13 @@ func (ec *executionContext) unmarshalInputContractInput(ctx context.Context, obj
 				return it, err
 			}
 			it.BillingEnabled = data
+		case "autoRenew":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("autoRenew"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AutoRenew = data
 		case "invoicingStartDate":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("invoicingStartDate"))
 			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
@@ -90703,7 +90777,7 @@ func (ec *executionContext) unmarshalInputContractUpdateInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"contractId", "patch", "contractName", "contractUrl", "contractRenewalCycle", "committedPeriods", "serviceStarted", "contractSigned", "contractEnded", "currency", "billingDetails", "appSource", "billingEnabled", "canPayWithCard", "canPayWithDirectDebit", "canPayWithBankTransfer", "invoicingStartDate", "addressLine1", "addressLine2", "locality", "country", "zip", "billingCycle", "invoiceNote", "endedAt", "renewalPeriods", "invoiceEmail", "organizationLegalName", "renewalCycle", "signedAt", "serviceStartedAt", "name"}
+	fieldsInOrder := [...]string{"contractId", "patch", "contractName", "contractUrl", "contractRenewalCycle", "committedPeriods", "serviceStarted", "contractSigned", "contractEnded", "currency", "billingDetails", "appSource", "billingEnabled", "autoRenew", "canPayWithCard", "canPayWithDirectDebit", "canPayWithBankTransfer", "invoicingStartDate", "addressLine1", "addressLine2", "locality", "country", "zip", "billingCycle", "invoiceNote", "endedAt", "renewalPeriods", "invoiceEmail", "organizationLegalName", "renewalCycle", "signedAt", "serviceStartedAt", "name"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -90801,6 +90875,13 @@ func (ec *executionContext) unmarshalInputContractUpdateInput(ctx context.Contex
 				return it, err
 			}
 			it.BillingEnabled = data
+		case "autoRenew":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("autoRenew"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AutoRenew = data
 		case "canPayWithCard":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("canPayWithCard"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
@@ -98457,6 +98538,11 @@ func (ec *executionContext) _Contract(ctx context.Context, sel ast.SelectionSet,
 			out.Values[i] = ec._Contract_serviceStarted(ctx, field, obj)
 		case "contractStatus":
 			out.Values[i] = ec._Contract_contractStatus(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "autoRenew":
+			out.Values[i] = ec._Contract_autoRenew(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}

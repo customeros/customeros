@@ -164,6 +164,7 @@ func (a *ContractAggregate) updateContract(ctx context.Context, request *contrac
 		PayOnline:              request.PayOnline,
 		PayAutomatically:       request.PayAutomatically,
 		InvoicingEnabled:       request.InvoicingEnabled,
+		AutoRenew:              request.AutoRenew,
 	}
 	fieldsMask := extractFieldsMask(request.FieldsMask)
 
@@ -342,6 +343,8 @@ func extractFieldsMask(requestFieldsMask []contractpb.ContractFieldMask) []strin
 			fieldsMask = append(fieldsMask, event.FieldMaskPayOnline)
 		case contractpb.ContractFieldMask_CONTRACT_FIELD_PAY_AUTOMATICALLY:
 			fieldsMask = append(fieldsMask, event.FieldMaskPayAutomatically)
+		case contractpb.ContractFieldMask_CONTRACT_FIELD_AUTO_RENEW:
+			fieldsMask = append(fieldsMask, event.FieldMaskAutoRenew)
 		}
 	}
 	fieldsMask = utils.RemoveDuplicates(fieldsMask)

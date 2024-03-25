@@ -35,4 +35,5 @@ const (
 	FieldMaskPayOnline              = "payOnline"
 	FieldMaskPayAutomatically       = "payAutomatically"
 	FieldMaskInvoicingEnabled       = "invoicingEnabled"
+	FieldMaskAutoRenew              = "autoRenew"
 )

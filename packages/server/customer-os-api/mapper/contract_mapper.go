@@ -49,6 +49,7 @@ func MapEntityToContract(entity *neo4jentity.ContractEntity) *model.Contract {
 		BillingEnabled:       entity.InvoicingEnabled,
 		ServiceStarted:       entity.ServiceStartedAt,
 		ContractStatus:       MapContractStatusToModel(entity.ContractStatus),
+		AutoRenew:            entity.AutoRenew,
 
 		// All below are deprecated
 		ID:                    entity.Id,

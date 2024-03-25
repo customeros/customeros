@@ -30,6 +30,7 @@ query GetContract($contractId: ID!) {
     contractUrl
     currency
     billingEnabled
+    autoRenew
     serviceStarted
     contractStatus
     contractLineItems {

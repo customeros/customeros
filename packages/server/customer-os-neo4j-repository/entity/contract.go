@@ -41,6 +41,7 @@ type ContractEntity struct {
 	InvoicingEnabled                bool
 	PayOnline                       bool
 	PayAutomatically                bool
+	AutoRenew                       bool
 }
 
 type ContractEntities []ContractEntity

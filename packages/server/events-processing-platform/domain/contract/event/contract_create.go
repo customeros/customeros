@@ -34,6 +34,7 @@ type ContractCreateEvent struct {
 	CanPayWithCard         bool                       `json:"canPayWithCard,omitempty"`
 	CanPayWithDirectDebit  bool                       `json:"canPayWithDirectDebit,omitempty"`
 	CanPayWithBankTransfer bool                       `json:"canPayWithBankTransfer,omitempty"`
+	AutoRenew              bool                       `json:"autoRenew,omitempty"`
 }
 
 func NewContractCreateEvent(aggregate eventstore.Aggregate, dataFields model.ContractDataFields, source commonmodel.Source, externalSystem commonmodel.ExternalSystem, createdAt, updatedAt time.Time) (eventstore.Event, error) {
@@ -57,6 +58,7 @@ func NewContractCreateEvent(aggregate eventstore.Aggregate, dataFields model.Con
 		CanPayWithCard:         dataFields.CanPayWithCard,
 		CanPayWithDirectDebit:  dataFields.CanPayWithDirectDebit,
 		CanPayWithBankTransfer: dataFields.CanPayWithBankTransfer,
+		AutoRenew:              dataFields.AutoRenew,
 		CreatedAt:              createdAt,
 		UpdatedAt:              updatedAt,
 		Source:                 source,

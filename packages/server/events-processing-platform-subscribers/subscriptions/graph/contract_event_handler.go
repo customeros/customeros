@@ -78,6 +78,7 @@ func (h *ContractEventHandler) OnCreate(ctx context.Context, evt eventstore.Even
 		InvoicingEnabled:       eventData.InvoicingEnabled,
 		PayOnline:              eventData.PayOnline,
 		PayAutomatically:       eventData.PayAutomatically,
+		AutoRenew:              eventData.AutoRenew,
 		CanPayWithCard:         eventData.CanPayWithCard,
 		CanPayWithDirectDebit:  eventData.CanPayWithDirectDebit,
 		CanPayWithBankTransfer: eventData.CanPayWithBankTransfer,
@@ -179,6 +180,7 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 		InvoicingEnabled:             eventData.InvoicingEnabled,
 		PayOnline:                    eventData.PayOnline,
 		PayAutomatically:             eventData.PayAutomatically,
+		AutoRenew:                    eventData.AutoRenew,
 		UpdateName:                   eventData.UpdateName(),
 		UpdateContractUrl:            eventData.UpdateContractUrl(),
 		UpdateServiceStartedAt:       eventData.UpdateServiceStartedAt(),
@@ -205,6 +207,7 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 		UpdateInvoicingEnabled:       eventData.UpdateInvoicingEnabled(),
 		UpdatePayOnline:              eventData.UpdatePayOnline(),
 		UpdatePayAutomatically:       eventData.UpdatePayAutomatically(),
+		UpdateAutoRenew:              eventData.UpdateAutoRenew(),
 	}
 	updatedContractDbNode, err := h.repositories.Neo4jRepositories.ContractWriteRepository.UpdateAndReturn(ctx, eventData.Tenant, contractId, data)
 	if err != nil {

@@ -38,6 +38,7 @@ type ContractCreateFields struct {
 	CanPayWithCard         bool                   `json:"canPayWithCard"`
 	CanPayWithDirectDebit  bool                   `json:"canPayWithDirectDebit"`
 	CanPayWithBankTransfer bool                   `json:"canPayWithBankTransfer"`
+	AutoRenew              bool                   `json:"autoRenew"`
 }
 
 type ContractUpdateFields struct {
@@ -66,6 +67,7 @@ type ContractUpdateFields struct {
 	InvoicingEnabled             bool                   `json:"invoicingEnabled"`
 	PayOnline                    bool                   `json:"payOnline"`
 	PayAutomatically             bool                   `json:"payAutomatically"`
+	AutoRenew                    bool                   `json:"autoRenew"`
 	UpdateName                   bool                   `json:"updateName"`
 	UpdateContractUrl            bool                   `json:"updateContractUrl"`
 	UpdateStatus                 bool                   `json:"updateStatus"`
@@ -92,6 +94,7 @@ type ContractUpdateFields struct {
 	UpdateInvoicingEnabled       bool                   `json:"updateInvoicingEnabled"`
 	UpdatePayOnline              bool                   `json:"updatePayOnline"`
 	UpdatePayAutomatically       bool                   `json:"updatePayAutomatically"`
+	UpdateAutoRenew              bool                   `json:"updateAutoRenew"`
 }
 
 type ContractWriteRepository interface {
@@ -151,7 +154,8 @@ func (r *contractWriteRepository) CreateForOrganization(ctx context.Context, ten
 								ct.payAutomatically=$payAutomatically,
 								ct.canPayWithCard=$canPayWithCard,
 								ct.canPayWithDirectDebit=$canPayWithDirectDebit,
-								ct.canPayWithBankTransfer=$canPayWithBankTransfer
+								ct.canPayWithBankTransfer=$canPayWithBankTransfer,
+								ct.autoRenew=$autoRenew
 							WITH ct, t
 							OPTIONAL MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$createdByUserId}) 
 							WHERE $createdByUserId <> ""
@@ -184,6 +188,7 @@ func (r *contractWriteRepository) CreateForOrganization(ctx context.Context, ten
 		"canPayWithCard":         data.CanPayWithCard,
 		"canPayWithDirectDebit":  data.CanPayWithDirectDebit,
 		"canPayWithBankTransfer": data.CanPayWithBankTransfer,
+		"autoRenew":              data.AutoRenew,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -317,6 +322,10 @@ func (r *contractWriteRepository) UpdateAndReturn(ctx context.Context, tenant, c
 	if data.UpdatePayAutomatically {
 		cypher += `, ct.payAutomatically=$payAutomatically `
 		params["payAutomatically"] = data.PayAutomatically
+	}
+	if data.UpdateAutoRenew {
+		cypher += `, ct.autoRenew=$autoRenew `
+		params["autoRenew"] = data.AutoRenew
 	}
 	cypher += ` RETURN ct`
 

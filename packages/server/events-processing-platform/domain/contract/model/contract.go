@@ -44,6 +44,7 @@ type Contract struct {
 	Removed                bool                         `json:"removed"`
 	PayOnline              bool                         `json:"payOnline"`
 	PayAutomatically       bool                         `json:"payAutomatically"`
+	AutoRenew              bool                         `json:"autoRenew"`
 }
 
 type ContractDataFields struct {
@@ -75,6 +76,7 @@ type ContractDataFields struct {
 	InvoicingEnabled       bool   `json:"invoicingEnabled"`
 	PayOnline              bool   `json:"payOnline"`
 	PayAutomatically       bool   `json:"payAutomatically"`
+	AutoRenew              bool   `json:"autoRenew"`
 }
 
 // ContractStatus represents the status of a contract.
