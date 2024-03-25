@@ -37,6 +37,7 @@ func MapEntityToInvoice(entity *neo4jentity.InvoiceEntity) *model.Invoice {
 		InvoiceURL:         fmt.Sprintf(constants.UrlFileStoreFileDownloadUrlTemplate, entity.RepositoryFileId),
 		Status:             utils.ToPtr(MapInvoiceStatusToModel(entity.Status)),
 		Note:               utils.StringPtrNillable(entity.Note),
+		PaymentLink:        utils.StringPtrNillable(entity.PaymentDetails.PaymentLink),
 		Customer: &model.InvoiceCustomer{
 			Name:            utils.StringPtrNillable(entity.Customer.Name),
 			Email:           utils.StringPtrNillable(entity.Customer.Email),

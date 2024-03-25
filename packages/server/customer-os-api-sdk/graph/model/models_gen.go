@@ -1189,6 +1189,7 @@ type Invoice struct {
 	Paid                          bool             `json:"paid"`
 	Subtotal                      float64          `json:"subtotal"`
 	TaxDue                        float64          `json:"taxDue"`
+	PaymentLink                   *string          `json:"paymentLink,omitempty"`
 }
 
 func (Invoice) IsMetadataInterface()        {}
