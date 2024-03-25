@@ -34,6 +34,7 @@ type Invoice struct {
 	BillingCycle     string                  `json:"billingCycle"`
 	Status           string                  `json:"status"`
 	Note             string                  `json:"note"`
+	FooterNote       string                  `json:"footerNote"`
 	PaymentLink      string                  `json:"paymentLink"`
 }
 

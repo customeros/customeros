@@ -40,6 +40,7 @@ type TenantBillingProfile implements SourceFields & Node {
     region:             String!
     zip:                String!
     legalName:          String!
+    invoiceNote:        String!
     domesticPaymentsBankInfo:       String @deprecated(reason: "Not used")
     internationalPaymentsBankInfo:  String @deprecated(reason: "Not used")
     vatNumber:                      String!
@@ -69,6 +70,7 @@ input TenantBillingProfileInput {
     region:             String
     zip:                String
     legalName:          String
+    invoiceNote:        String
     domesticPaymentsBankInfo:      String @deprecated(reason: "Not used")
     internationalPaymentsBankInfo: String @deprecated(reason: "Not used")
     vatNumber: String!
@@ -95,6 +97,7 @@ input TenantBillingProfileUpdateInput {
     region:             String
     zip:                String
     legalName:          String
+    invoiceNote:        String
     domesticPaymentsBankInfo:      String @deprecated(reason: "Not used")
     internationalPaymentsBankInfo: String @deprecated(reason: "Not used")
     vatNumber:                  String

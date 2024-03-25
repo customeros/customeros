@@ -27,6 +27,7 @@ type InvoiceCreateFields struct {
 	BillingCycle    neo4jenum.BillingCycle  `json:"billingCycle"`
 	Status          neo4jenum.InvoiceStatus `json:"status"`
 	Note            string                  `json:"note"`
+	FooterNote      string                  `json:"footerNote"`
 }
 
 type InvoiceFillFields struct {
@@ -43,6 +44,7 @@ type InvoiceFillFields struct {
 	BillingCycle                 neo4jenum.BillingCycle  `json:"billingCycle"`
 	Status                       neo4jenum.InvoiceStatus `json:"status"`
 	Note                         string                  `json:"note"`
+	FooterNote                   string                  `json:"footerNote"`
 	CustomerName                 string                  `json:"customerName"`
 	CustomerEmail                string                  `json:"customerEmail"`
 	CustomerAddressLine1         string                  `json:"customerAddressLine1"`
@@ -121,7 +123,8 @@ func (r *invoiceWriteRepository) CreateInvoiceForContract(ctx context.Context, t
 								i.periodStartDate=$periodStart,
 								i.periodEndDate=$periodEnd,
 								i.billingCycle=$billingCycle,
-								i.note=$note
+								i.note=$note,
+								i.footerNote=$footerNote
 							WITH c, i 
 							MERGE (c)-[:HAS_INVOICE]->(i) 
 							`, tenant)
@@ -143,6 +146,7 @@ func (r *invoiceWriteRepository) CreateInvoiceForContract(ctx context.Context, t
 		"billingCycle":  data.BillingCycle.String(),
 		"status":        data.Status.String(),
 		"note":          data.Note,
+		"footerNote":    data.FooterNote,
 		"postpaid":      data.Postpaid,
 	}
 	span.LogFields(log.String("cypher", cypher))
@@ -178,6 +182,7 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tenant, invoic
 								i.totalAmount=$totalAmount,
 								i.status=$status,
 								i.note=$note,
+								i.footerNote=$footerNote,
 								i.customerName=$customerName,
 								i.customerEmail=$customerEmail,
 								i.customerAddressLine1=$customerAddressLine1,
@@ -214,6 +219,7 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tenant, invoic
 		"billingCycle":                 data.BillingCycle.String(),
 		"status":                       data.Status.String(),
 		"note":                         data.Note,
+		"footerNote":                   data.FooterNote,
 		"customerName":                 data.CustomerName,
 		"customerEmail":                data.CustomerEmail,
 		"customerAddressLine1":         data.CustomerAddressLine1,

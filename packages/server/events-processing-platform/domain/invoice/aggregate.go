@@ -136,7 +136,7 @@ func (a *InvoiceAggregate) CreateNewInvoiceForContract(ctx context.Context, requ
 	periodEndDate := utils.TimestampProtoToTimePtr(request.InvoicePeriodEnd)
 	billingCycle := BillingCycle(request.BillingCycle)
 
-	createEvent, err := NewInvoiceForContractCreateEvent(a, sourceFields, request.ContractId, request.Currency, billingCycle.String(), request.Note, request.DryRun, request.OffCycle, request.Postpaid, createdAtNotNil, *periodStartDate, *periodEndDate)
+	createEvent, err := NewInvoiceForContractCreateEvent(a, sourceFields, request.ContractId, request.Currency, billingCycle.String(), request.Note, request.FooterNote, request.DryRun, request.OffCycle, request.Postpaid, createdAtNotNil, *periodStartDate, *periodEndDate)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "InvoiceCreateEvent")
@@ -196,7 +196,7 @@ func (a *InvoiceAggregate) FillInvoice(ctx context.Context, request *invoicepb.F
 	fillEvent, err := NewInvoiceFillEvent(a, updatedAtNotNil, *a.Invoice,
 		request.Customer.Name, request.Customer.AddressLine1, request.Customer.AddressLine2, request.Customer.Zip, request.Customer.Locality, request.Customer.Country, request.Customer.Region, request.Customer.Email,
 		request.Provider.LogoRepositoryFileId, request.Provider.Name, request.Provider.Email, request.Provider.AddressLine1, request.Provider.AddressLine2, request.Provider.Zip, request.Provider.Locality, request.Provider.Country, request.Provider.Region,
-		request.Note, invoiceStatus, invoiceNumberForEvent, request.Amount, request.Vat, request.Total, invoiceLines)
+		request.Note, request.FooterNote, invoiceStatus, invoiceNumberForEvent, request.Amount, request.Vat, request.Total, invoiceLines)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "InvoiceFillEvent")
@@ -469,6 +469,7 @@ func (a *InvoiceAggregate) onInvoiceCreateEvent(evt eventstore.Event) error {
 	a.Invoice.PeriodEndDate = eventData.PeriodEndDate
 	a.Invoice.BillingCycle = eventData.BillingCycle
 	a.Invoice.Note = eventData.Note
+	a.Invoice.FooterNote = eventData.FooterNote
 	a.Invoice.Status = neo4jenum.InvoiceStatusDraft.String()
 
 	return nil
@@ -485,6 +486,8 @@ func (a *InvoiceAggregate) onFillInvoice(evt eventstore.Event) error {
 	a.Invoice.Amount = eventData.Amount
 	a.Invoice.VAT = eventData.VAT
 	a.Invoice.TotalAmount = eventData.TotalAmount
+	a.Invoice.Note = eventData.Note
+	a.Invoice.FooterNote = eventData.FooterNote
 	if eventData.Status != "" {
 		a.Invoice.Status = eventData.Status
 	}

@@ -12,7 +12,9 @@ query GetTenantBillingProfiles {
     legalName
     vatNumber
     sendInvoicesFrom
+    sendInvoicesBcc
     canPayWithPigeon
     canPayWithBankTransfer
+    invoiceNote
   }
 }

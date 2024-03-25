@@ -187,6 +187,7 @@ func TestQueryResolver_GetTenantBillingProfiles(t *testing.T) {
 		VatNumber:              "vatNumber",
 		SendInvoicesFrom:       "sendInvoicesFrom",
 		SendInvoicesBcc:        "sendInvoicesBcc",
+		InvoiceNote:            "invoiceNote",
 		CanPayWithPigeon:       true,
 		CanPayWithBankTransfer: true,
 	})
@@ -216,6 +217,8 @@ func TestQueryResolver_GetTenantBillingProfiles(t *testing.T) {
 	require.Equal(t, "zip", tenantBillingProfile.Zip)
 	require.Equal(t, "vatNumber", tenantBillingProfile.VatNumber)
 	require.Equal(t, "sendInvoicesFrom", tenantBillingProfile.SendInvoicesFrom)
+	require.Equal(t, "sendInvoicesBcc", tenantBillingProfile.SendInvoicesBcc)
+	require.Equal(t, "invoiceNote", tenantBillingProfile.InvoiceNote)
 	require.True(t, tenantBillingProfile.CanPayWithPigeon)
 	require.True(t, tenantBillingProfile.CanPayWithBankTransfer)
 }
@@ -238,6 +241,7 @@ func TestQueryResolver_GetTenantBillingProfile(t *testing.T) {
 		VatNumber:              "vatNumber",
 		SendInvoicesFrom:       "sendInvoicesFrom",
 		SendInvoicesBcc:        "sendInvoicesBcc",
+		InvoiceNote:            "invoiceNote",
 		CanPayWithPigeon:       true,
 		CanPayWithBankTransfer: true,
 	})
@@ -266,6 +270,8 @@ func TestQueryResolver_GetTenantBillingProfile(t *testing.T) {
 	require.Equal(t, "zip", tenantBillingProfile.Zip)
 	require.Equal(t, "vatNumber", tenantBillingProfile.VatNumber)
 	require.Equal(t, "sendInvoicesFrom", tenantBillingProfile.SendInvoicesFrom)
+	require.Equal(t, "sendInvoicesBcc", tenantBillingProfile.SendInvoicesBcc)
+	require.Equal(t, "invoiceNote", tenantBillingProfile.InvoiceNote)
 	require.True(t, tenantBillingProfile.CanPayWithPigeon)
 	require.True(t, tenantBillingProfile.CanPayWithBankTransfer)
 }
@@ -352,6 +358,7 @@ func TestMutationResolver_TenantUpdateBillingProfile(t *testing.T) {
 			require.Equal(t, "vatNumber", profile.VatNumber)
 			require.Equal(t, "sendInvoicesFrom", profile.SendInvoicesFrom)
 			require.Equal(t, "sendInvoicesBcc", profile.SendInvoicesBcc)
+			require.Equal(t, "invoiceNote", profile.InvoiceNote)
 			require.True(t, profile.CanPayWithPigeon)
 			require.True(t, profile.CanPayWithBankTransfer)
 			require.ElementsMatch(t, []tenantpb.TenantBillingProfileFieldMask{
@@ -369,6 +376,7 @@ func TestMutationResolver_TenantUpdateBillingProfile(t *testing.T) {
 				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_PIGEON,
 				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_BANK_TRANSFER,
 				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_REGION,
+				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_INVOICE_NOTE,
 			},
 				profile.FieldsMask)
 			calledUpdateTenantBillingProfile = true

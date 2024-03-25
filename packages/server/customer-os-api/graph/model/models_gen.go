@@ -2540,6 +2540,7 @@ type TenantBillingProfile struct {
 	Region                        string     `json:"region"`
 	Zip                           string     `json:"zip"`
 	LegalName                     string     `json:"legalName"`
+	InvoiceNote                   string     `json:"invoiceNote"`
 	DomesticPaymentsBankInfo      *string    `json:"domesticPaymentsBankInfo,omitempty"`
 	InternationalPaymentsBankInfo *string    `json:"internationalPaymentsBankInfo,omitempty"`
 	VatNumber                     string     `json:"vatNumber"`
@@ -2572,6 +2573,7 @@ type TenantBillingProfileInput struct {
 	Region                        *string `json:"region,omitempty"`
 	Zip                           *string `json:"zip,omitempty"`
 	LegalName                     *string `json:"legalName,omitempty"`
+	InvoiceNote                   *string `json:"invoiceNote,omitempty"`
 	DomesticPaymentsBankInfo      *string `json:"domesticPaymentsBankInfo,omitempty"`
 	InternationalPaymentsBankInfo *string `json:"internationalPaymentsBankInfo,omitempty"`
 	VatNumber                     string  `json:"vatNumber"`
@@ -2598,6 +2600,7 @@ type TenantBillingProfileUpdateInput struct {
 	Region                        *string `json:"region,omitempty"`
 	Zip                           *string `json:"zip,omitempty"`
 	LegalName                     *string `json:"legalName,omitempty"`
+	InvoiceNote                   *string `json:"invoiceNote,omitempty"`
 	DomesticPaymentsBankInfo      *string `json:"domesticPaymentsBankInfo,omitempty"`
 	InternationalPaymentsBankInfo *string `json:"internationalPaymentsBankInfo,omitempty"`
 	VatNumber                     *string `json:"vatNumber,omitempty"`

@@ -95,7 +95,8 @@ func CreateTenantBillingProfile(ctx context.Context, driver *neo4j.DriverWithCon
 					tbp.sendInvoicesFrom=$sendInvoicesFrom,
 					tbp.sendInvoicesBcc=$sendInvoicesBcc,
 					tbp.canPayWithPigeon=$canPayWithPigeon,
-					tbp.canPayWithBankTransfer=$canPayWithBankTransfer
+					tbp.canPayWithBankTransfer=$canPayWithBankTransfer,
+					tbp.invoiceNote=$invoiceNote
 `, tenant)
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tenant":                 tenant,
@@ -116,6 +117,7 @@ func CreateTenantBillingProfile(ctx context.Context, driver *neo4j.DriverWithCon
 		"sendInvoicesBcc":        profile.SendInvoicesBcc,
 		"canPayWithPigeon":       profile.CanPayWithPigeon,
 		"canPayWithBankTransfer": profile.CanPayWithBankTransfer,
+		"invoiceNote":            profile.InvoiceNote,
 	})
 	return profileId
 }
@@ -1028,6 +1030,7 @@ func CreateInvoiceForContract(ctx context.Context, driver *neo4j.DriverWithConte
 				i.repositoryFileId=$repositoryFileId,
 				i.status=$status,
 				i.note=$note,
+				i.footerNote=$footerNote,
 				i.customerEmail=$customerEmail,
 				i.paymentLink=$paymentLink,
 				i.offCycle=$offCycle,
@@ -1058,6 +1061,7 @@ func CreateInvoiceForContract(ctx context.Context, driver *neo4j.DriverWithConte
 		"repositoryFileId": invoice.RepositoryFileId,
 		"status":           invoice.Status.String(),
 		"note":             invoice.Note,
+		"footerNote":       invoice.FooterNote,
 		"customerEmail":    invoice.Customer.Email,
 		"paymentLink":      invoice.PaymentDetails.PaymentLink,
 		"offCycle":         invoice.OffCycle,
