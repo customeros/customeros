@@ -15,7 +15,6 @@ tenant_UpdateBillingProfile(
         vatNumber: "vatNumber"
         sendInvoicesFrom: "sendInvoicesFrom"
         sendInvoicesBcc: "sendInvoicesBcc"
-        invoiceNote: "invoiceNote"
         canPayWithPigeon: true
         canPayWithBankTransfer: true
         check: true
