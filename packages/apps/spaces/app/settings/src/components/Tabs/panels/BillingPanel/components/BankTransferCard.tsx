@@ -108,7 +108,7 @@ export const BankTransferCard = ({ account }: { account: BankAccount }) => {
         //     visibility: 'visible',
         //   },
         // }}
-        className={'py-2 px-4 border-b border-gray-200 rounded-lg  '}
+        className={'py-2 px-4 border-b border-gray-200 rounded-lg bg-white '}
       >
         <CardHeader className='p-0 grid grid-cols-3'>
           <div className='col-span-2'>
