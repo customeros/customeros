@@ -24,7 +24,7 @@ const (
 	FieldMaskSendInvoicesBcc        = "sendInvoicesBcc"
 	FieldMaskCanPayWithPigeon       = "canPayWithPigeon"
 	FieldMaskCanPayWithBankTransfer = "canPayWithBankTransfer"
-	FieldMaskInvoiceNote            = "invoiceNote"
+	FieldMaskCheck                  = "check"
 
 	FieldMaskLogoRepositoryFileId = "logoRepositoryFileId"
 	FieldMaskBaseCurrency         = "baseCurrency"

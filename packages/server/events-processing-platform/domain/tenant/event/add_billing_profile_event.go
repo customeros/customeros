@@ -28,7 +28,7 @@ type TenantBillingProfileCreateEvent struct {
 	SendInvoicesBcc        string             `json:"sendInvoicesBcc"`
 	CanPayWithPigeon       bool               `json:"canPayWithPigeon"`
 	CanPayWithBankTransfer bool               `json:"canPayWithBankTransfer"`
-	InvoiceNote            string             `json:"invoiceNote"`
+	Check                  bool               `json:"check"`
 }
 
 func NewTenantBillingProfileCreateEvent(aggregate eventstore.Aggregate, sourceFields commonmodel.Source, id string, request *tenantpb.AddBillingProfileRequest, createdAt time.Time) (eventstore.Event, error) {
@@ -51,7 +51,7 @@ func NewTenantBillingProfileCreateEvent(aggregate eventstore.Aggregate, sourceFi
 		SendInvoicesBcc:        request.SendInvoicesBcc,
 		CanPayWithPigeon:       request.CanPayWithPigeon,
 		CanPayWithBankTransfer: request.CanPayWithBankTransfer,
-		InvoiceNote:            request.InvoiceNote,
+		Check:                  request.Check,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

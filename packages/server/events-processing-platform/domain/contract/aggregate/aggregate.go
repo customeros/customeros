@@ -96,6 +96,7 @@ func (a *ContractAggregate) onContractCreate(evt eventstore.Event) error {
 	a.Contract.CanPayWithDirectDebit = eventData.CanPayWithDirectDebit
 	a.Contract.CanPayWithBankTransfer = eventData.CanPayWithBankTransfer
 	a.Contract.AutoRenew = eventData.AutoRenew
+	a.Contract.Check = eventData.Check
 	return nil
 }
 
@@ -203,6 +204,9 @@ func (a *ContractAggregate) onContractUpdate(evt eventstore.Event) error {
 	}
 	if eventData.UpdateAutoRenew() {
 		a.Contract.AutoRenew = eventData.AutoRenew
+	}
+	if eventData.UpdateCheck() {
+		a.Contract.Check = eventData.Check
 	}
 
 	if eventData.ExternalSystem.Available() {

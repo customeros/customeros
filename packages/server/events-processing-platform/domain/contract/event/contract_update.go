@@ -44,6 +44,7 @@ type ContractUpdateEvent struct {
 	PayAutomatically       bool                       `json:"payAutomatically,omitempty"`
 	InvoicingEnabled       bool                       `json:"invoicingEnabled,omitempty"`
 	AutoRenew              bool                       `json:"autoRenew,omitempty"`
+	Check                  bool                       `json:"check,omitempty"`
 }
 
 func NewContractUpdateEvent(aggr eventstore.Aggregate, dataFields model.ContractDataFields, externalSystem commonmodel.ExternalSystem, source string, updatedAt time.Time, fieldsMask []string) (eventstore.Event, error) {
@@ -73,6 +74,7 @@ func NewContractUpdateEvent(aggr eventstore.Aggregate, dataFields model.Contract
 		PayAutomatically:       dataFields.PayAutomatically,
 		InvoicingEnabled:       dataFields.InvoicingEnabled,
 		AutoRenew:              dataFields.AutoRenew,
+		Check:                  dataFields.Check,
 		UpdatedAt:              updatedAt,
 		Source:                 source,
 		FieldsMask:             fieldsMask,
@@ -215,4 +217,8 @@ func (e ContractUpdateEvent) UpdatePayAutomatically() bool {
 
 func (e ContractUpdateEvent) UpdateAutoRenew() bool {
 	return utils.Contains(e.FieldsMask, FieldMaskAutoRenew)
+}
+
+func (e ContractUpdateEvent) UpdateCheck() bool {
+	return utils.Contains(e.FieldsMask, FieldMaskCheck)
 }

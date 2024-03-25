@@ -18,6 +18,7 @@ tenant_UpdateBillingProfile(
         invoiceNote: "invoiceNote"
         canPayWithPigeon: true
         canPayWithBankTransfer: true
+        check: true
     }) {
     id
   }

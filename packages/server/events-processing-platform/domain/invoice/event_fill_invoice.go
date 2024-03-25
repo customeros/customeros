@@ -25,7 +25,6 @@ type InvoiceFillEvent struct {
 	BillingCycle    string                   `json:"billingCycle"`
 	Status          string                   `json:"status"`
 	Note            string                   `json:"note"`
-	FooterNote      string                   `json:"footerNote"`
 	Customer        InvoiceFillCustomerEvent `json:"customer"`
 	Provider        InvoiceFillProviderEvent `json:"provider"`
 }
@@ -54,7 +53,7 @@ type InvoiceFillProviderEvent struct {
 func NewInvoiceFillEvent(aggregate eventstore.Aggregate, updatedAt time.Time, invoice Invoice,
 	customerName, customerAddressLine1, customerAddressLine2, customerAddressZip, customerAddressLocality, customerAddressCountry, customerAddressRegion, customerEmail,
 	providerLogoRepositoryFileId, providerName, providerEmail, providerAddressLine1, providerAddressLine2, providerAddressZip, providerAddressLocality, providerAddressCountry, providerAddressRegion,
-	note, footerNote, status, invoiceNumber string, amount, vat, totalAmount float64, invoiceLines []InvoiceLineEvent) (eventstore.Event, error) {
+	note, status, invoiceNumber string, amount, vat, totalAmount float64, invoiceLines []InvoiceLineEvent) (eventstore.Event, error) {
 	eventData := InvoiceFillEvent{
 		Tenant:          aggregate.GetTenant(),
 		UpdatedAt:       updatedAt,
@@ -71,7 +70,6 @@ func NewInvoiceFillEvent(aggregate eventstore.Aggregate, updatedAt time.Time, in
 		DryRun:          invoice.DryRun,
 		Status:          status,
 		Note:            note,
-		FooterNote:      footerNote,
 		Customer: InvoiceFillCustomerEvent{
 			Name:         customerName,
 			Email:        customerEmail,

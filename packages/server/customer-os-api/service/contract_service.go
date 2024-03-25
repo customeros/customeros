@@ -107,6 +107,7 @@ func (s *contractService) createContractWithEvents(ctx context.Context, contract
 		CanPayWithCard:         true,
 		CanPayWithDirectDebit:  true,
 		CanPayWithBankTransfer: true,
+		Check:                  true,
 		AutoRenew:              utils.IfNotNilBool(contractDetails.ContractEntity.AutoRenew, func() bool { return true }),
 	}
 
@@ -227,6 +228,9 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 		}
 		if input.BillingDetails.CanPayWithBankTransfer != nil {
 			contractUpdateRequest.CanPayWithBankTransfer = *input.BillingDetails.CanPayWithBankTransfer
+		}
+		if input.BillingDetails.Check != nil {
+			contractUpdateRequest.Check = *input.BillingDetails.Check
 		}
 		if input.BillingDetails.AddressLine1 != nil {
 			contractUpdateRequest.AddressLine1 = *input.BillingDetails.AddressLine1
@@ -445,6 +449,9 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 		}
 		if input.CanPayWithBankTransfer != nil || (input.BillingDetails != nil && input.BillingDetails.CanPayWithBankTransfer != nil) {
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_CAN_PAY_WITH_BANK_TRANSFER)
+		}
+		if input.BillingDetails != nil && input.BillingDetails.Check != nil {
+			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_CHECK)
 		}
 		if input.BillingDetails != nil && input.BillingDetails.PayOnline != nil {
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_PAY_ONLINE)

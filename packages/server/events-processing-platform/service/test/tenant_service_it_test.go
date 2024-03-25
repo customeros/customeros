@@ -48,7 +48,7 @@ func TestTenantService_AddBillingProfile(t *testing.T) {
 		SendInvoicesFrom:       "sendInvoicesFrom",
 		CanPayWithPigeon:       true,
 		CanPayWithBankTransfer: true,
-		InvoiceNote:            "invoiceNote",
+		Check:                  true,
 	})
 	require.Nil(t, err)
 	require.NotNil(t, response)
@@ -84,10 +84,10 @@ func TestTenantService_AddBillingProfile(t *testing.T) {
 	require.Equal(t, "sendInvoicesFrom", eventData.SendInvoicesFrom)
 	require.Equal(t, true, eventData.CanPayWithPigeon)
 	require.Equal(t, true, eventData.CanPayWithBankTransfer)
+	require.Equal(t, true, eventData.Check)
 	require.Equal(t, "app", eventData.SourceFields.AppSource)
 	require.Equal(t, "source", eventData.SourceFields.Source)
 	require.Equal(t, "source", eventData.SourceFields.SourceOfTruth)
-	require.Equal(t, "invoiceNote", eventData.InvoiceNote)
 }
 
 func TestTenantService_UpdateBillingProfile(t *testing.T) {
@@ -124,7 +124,7 @@ func TestTenantService_UpdateBillingProfile(t *testing.T) {
 		SendInvoicesFrom:       "sendInvoicesFrom",
 		CanPayWithPigeon:       true,
 		CanPayWithBankTransfer: true,
-		InvoiceNote:            "invoiceNote",
+		Check:                  true,
 	})
 	require.Nil(t, err)
 	require.NotNil(t, response)
@@ -159,7 +159,7 @@ func TestTenantService_UpdateBillingProfile(t *testing.T) {
 	require.Equal(t, "sendInvoicesFrom", eventData.SendInvoicesFrom)
 	require.Equal(t, true, eventData.CanPayWithPigeon)
 	require.Equal(t, true, eventData.CanPayWithBankTransfer)
-	require.Equal(t, "invoiceNote", eventData.InvoiceNote)
+	require.Equal(t, true, eventData.Check)
 	require.Equal(t, 0, len(eventData.FieldsMask))
 }
 

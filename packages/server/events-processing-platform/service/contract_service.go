@@ -92,6 +92,7 @@ func (s *contractService) CreateContract(ctx context.Context, request *contractp
 			CanPayWithDirectDebit:  request.CanPayWithDirectDebit,
 			CanPayWithBankTransfer: request.CanPayWithBankTransfer,
 			AutoRenew:              request.AutoRenew,
+			Check:                  request.Check,
 		},
 		source,
 		externalSystem,

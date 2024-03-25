@@ -43,6 +43,7 @@ type ContractEntity struct {
 	PayOnline                       bool
 	PayAutomatically                bool
 	AutoRenew                       bool
+	Check                           bool
 }
 
 type ContractEntities []ContractEntity
