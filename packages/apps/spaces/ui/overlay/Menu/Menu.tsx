@@ -18,7 +18,7 @@ export const MenuItem = React.forwardRef<HTMLDivElement, MenuItemProps>(
         {...props}
         ref={forwardedRef}
         className={twMerge(
-          'flex text-start rounded-md py-[0.375rem] px-3 outline-none ',
+          'flex text-start  py-[0.375rem] px-3 outline-none cursor-pointer hover:bg-gray-200 ',
           className,
         )}
       >

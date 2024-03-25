@@ -10,12 +10,7 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 export const CardHeader = ({ className, ...props }: CardProps) => {
-  return (
-    <div
-      className={twMerge('flex flex-col space-y-1.5 p-6', className)}
-      {...props}
-    />
-  );
+  return <div className={twMerge('pb-1', className)} {...props} />;
 };
 
 export const CardContent = ({ children, className, ...props }: CardProps) => {
