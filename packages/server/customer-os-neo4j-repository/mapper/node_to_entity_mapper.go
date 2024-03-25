@@ -696,3 +696,37 @@ func MapDbNodeToOpportunityEntity(node *dbtype.Node) *entity.OpportunityEntity {
 	}
 	return &opportunity
 }
+
+func MapDbNodeToOfferingEntity(node *dbtype.Node) *entity.OfferingEntity {
+	if node == nil {
+		return &entity.OfferingEntity{}
+	}
+	props := utils.GetPropsFromNode(*node)
+	offering := entity.OfferingEntity{
+		Id:                    utils.GetStringPropOrEmpty(props, "id"),
+		CreatedAt:             utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:             utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		Source:                entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:         entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:             utils.GetStringPropOrEmpty(props, "appSource"),
+		Name:                  utils.GetStringPropOrEmpty(props, "name"),
+		Active:                utils.GetBoolPropOrFalse(props, "active"),
+		Type:                  enum.DecodeOfferingType(utils.GetStringPropOrEmpty(props, "type")),
+		PricingModel:          enum.DecodePricingModel(utils.GetStringPropOrEmpty(props, "pricingModel")),
+		PricingPeriodInMonths: utils.GetInt64PropOrZero(props, "pricingPeriodInMonths"),
+		Currency:              enum.DecodeCurrency(utils.GetStringPropOrEmpty(props, "currency")),
+		Price:                 utils.GetFloatPropOrZero(props, "price"),
+		PriceCalculated:       utils.GetBoolPropOrFalse(props, "priceCalculated"),
+		Conditional:           utils.GetBoolPropOrFalse(props, "conditional"),
+		Taxable:               utils.GetBoolPropOrFalse(props, "taxable"),
+		PriceCalculation: entity.PriceCalculation{
+			Type:                   enum.DecodePriceCalculationType(utils.GetStringPropOrEmpty(props, "priceCalculationType")),
+			RevenueSharePercentage: utils.GetFloatPropOrZero(props, "priceCalculationRevenueSharePercentage"),
+		},
+		Conditionals: entity.Conditionals{
+			MinimumChargePeriod: enum.DecodeChargePeriod(utils.GetStringPropOrEmpty(props, "conditionalsMinimumChargePeriod")),
+			MinimumChargeAmount: utils.GetFloatPropOrZero(props, "conditionalsMinimumChargeAmount"),
+		},
+	}
+	return &offering
+}

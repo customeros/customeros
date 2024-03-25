@@ -1,7 +1,7 @@
 package grpc_client
 
 import (
-	contact_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
+	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	contract_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
 	email_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
 	invoice_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
@@ -9,6 +9,7 @@ import (
 	job_role_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/job_role"
 	log_entry_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/log_entry"
 	master_plan_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/master_plan"
+	offeringpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/offering"
 	opportunity_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	organization_plan_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/org_plan"
 	organization_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
@@ -16,12 +17,12 @@ import (
 	reminder_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/reminder"
 	service_line_item_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/service_line_item"
 	tenant_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/tenant"
-	user_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/user"
+	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/user"
 	"google.golang.org/grpc"
 )
 
 type Clients struct {
-	ContactClient          contact_grpc_service.ContactGrpcServiceClient
+	ContactClient          contactpb.ContactGrpcServiceClient
 	ContractClient         contract_grpc_service.ContractGrpcServiceClient
 	EmailClient            email_grpc_service.EmailGrpcServiceClient
 	InvoiceClient          invoice_grpc_service.InvoiceGrpcServiceClient
@@ -36,7 +37,8 @@ type Clients struct {
 	ReminderClient         reminder_grpc_service.ReminderGrpcServiceClient
 	ServiceLineItemClient  service_line_item_grpc_service.ServiceLineItemGrpcServiceClient
 	TenantClient           tenant_grpc_service.TenantGrpcServiceClient
-	UserClient             user_grpc_service.UserGrpcServiceClient
+	UserClient             userpb.UserGrpcServiceClient
+	OfferingClient         offeringpb.OfferingGrpcServiceClient
 }
 
 func InitClients(conn *grpc.ClientConn) *Clients {
@@ -44,11 +46,11 @@ func InitClients(conn *grpc.ClientConn) *Clients {
 		return &Clients{}
 	}
 	clients := Clients{
-		ContactClient:          contact_grpc_service.NewContactGrpcServiceClient(conn),
+		ContactClient:          contactpb.NewContactGrpcServiceClient(conn),
 		OrganizationClient:     organization_grpc_service.NewOrganizationGrpcServiceClient(conn),
 		PhoneNumberClient:      phone_number_grpc_service.NewPhoneNumberGrpcServiceClient(conn),
 		EmailClient:            email_grpc_service.NewEmailGrpcServiceClient(conn),
-		UserClient:             user_grpc_service.NewUserGrpcServiceClient(conn),
+		UserClient:             userpb.NewUserGrpcServiceClient(conn),
 		JobRoleClient:          job_role_grpc_service.NewJobRoleGrpcServiceClient(conn),
 		LogEntryClient:         log_entry_grpc_service.NewLogEntryGrpcServiceClient(conn),
 		ContractClient:         contract_grpc_service.NewContractGrpcServiceClient(conn),
@@ -60,6 +62,7 @@ func InitClients(conn *grpc.ClientConn) *Clients {
 		OrganizationPlanClient: organization_plan_grpc_service.NewOrganizationPlanGrpcServiceClient(conn),
 		TenantClient:           tenant_grpc_service.NewTenantGrpcServiceClient(conn),
 		ReminderClient:         reminder_grpc_service.NewReminderGrpcServiceClient(conn),
+		OfferingClient:         offeringpb.NewOfferingGrpcServiceClient(conn),
 	}
 	return &clients
 }
