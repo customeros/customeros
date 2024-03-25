@@ -107,6 +107,7 @@ func (s *contractService) createContractWithEvents(ctx context.Context, contract
 		CanPayWithCard:         true,
 		CanPayWithDirectDebit:  true,
 		CanPayWithBankTransfer: true,
+		AutoRenew:              utils.IfNotNilBool(contractDetails.ContractEntity.AutoRenew, func() bool { return true }),
 	}
 
 	// prepare renewal cycle
@@ -447,6 +448,10 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 		}
 		if input.BillingEnabled != nil {
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_INVOICING_ENABLED)
+		}
+		if input.AutoRenew != nil {
+			contractUpdateRequest.AutoRenew = *input.AutoRenew
+			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_AUTO_RENEW)
 		}
 		contractUpdateRequest.FieldsMask = fieldMask
 		if len(fieldMask) == 0 {

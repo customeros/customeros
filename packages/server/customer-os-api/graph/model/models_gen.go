@@ -520,6 +520,7 @@ type Contract struct {
 	Owner                 *User                 `json:"owner,omitempty"`
 	ServiceStarted        *time.Time            `json:"serviceStarted,omitempty"`
 	ContractStatus        ContractStatus        `json:"contractStatus"`
+	AutoRenew             bool                  `json:"autoRenew"`
 	Status                ContractStatus        `json:"status"`
 	ServiceStartedAt      *time.Time            `json:"serviceStartedAt,omitempty"`
 	Name                  string                `json:"name"`
@@ -560,6 +561,7 @@ type ContractInput struct {
 	ContractSigned       *time.Time                    `json:"contractSigned,omitempty"`
 	Currency             *Currency                     `json:"currency,omitempty"`
 	BillingEnabled       *bool                         `json:"billingEnabled,omitempty"`
+	AutoRenew            *bool                         `json:"autoRenew,omitempty"`
 	InvoicingStartDate   *time.Time                    `json:"invoicingStartDate,omitempty"`
 	ExternalReference    *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
 	BillingCycle         *ContractBillingCycle         `json:"billingCycle,omitempty"`
@@ -584,6 +586,7 @@ type ContractUpdateInput struct {
 	BillingDetails         *BillingDetailsInput  `json:"billingDetails,omitempty"`
 	AppSource              *string               `json:"appSource,omitempty"`
 	BillingEnabled         *bool                 `json:"billingEnabled,omitempty"`
+	AutoRenew              *bool                 `json:"autoRenew,omitempty"`
 	CanPayWithCard         *bool                 `json:"canPayWithCard,omitempty"`
 	CanPayWithDirectDebit  *bool                 `json:"canPayWithDirectDebit,omitempty"`
 	CanPayWithBankTransfer *bool                 `json:"canPayWithBankTransfer,omitempty"`

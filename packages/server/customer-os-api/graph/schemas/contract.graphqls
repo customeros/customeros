@@ -25,6 +25,7 @@ type Contract implements MetadataInterface {
     owner:              User @goField(forceResolver: true)
     serviceStarted:     Time
     contractStatus:     ContractStatus!
+    autoRenew:          Boolean!
 
     status:             ContractStatus! @deprecated(reason: "Use contractStatus instead.")
     serviceStartedAt:   Time @deprecated(reason: "Use serviceStarted instead.")
@@ -83,6 +84,7 @@ input ContractInput {
     contractSigned:         Time
     currency:               Currency
     billingEnabled:         Boolean
+    autoRenew:              Boolean
 
     invoicingStartDate:     Time @deprecated(reason: "Removed from create input.")
     externalReference:      ExternalSystemReferenceInput @deprecated(reason: "Not used yet")
@@ -108,6 +110,7 @@ input ContractUpdateInput {
     billingDetails:         BillingDetailsInput
     appSource:              String
     billingEnabled:         Boolean
+    autoRenew:              Boolean
 
     canPayWithCard:         Boolean @deprecated(reason: "Use billingDetails instead.")
     canPayWithDirectDebit:  Boolean @deprecated(reason: "Use billingDetails instead.")
