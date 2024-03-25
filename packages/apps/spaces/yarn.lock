@@ -4450,10 +4450,14 @@
     "@radix-ui/react-use-layout-effect" "1.0.1"
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> 3655554b7 (fix)
+=======
+
+>>>>>>> 30341dc45 (refactor)
 "@radix-ui/react-collection@1.0.3":
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/@radix-ui/react-collection/-/react-collection-1.0.3.tgz#9595a66e09026187524a36c6e7e9c7d286469159"
@@ -4466,12 +4470,16 @@
     "@radix-ui/react-slot" "1.0.2"
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> d10f6e551 (fix: up next tooltip usage (#6329))
 =======
 >>>>>>> d10f6e551 (fix: up next tooltip usage (#6329))
 >>>>>>> 3655554b7 (fix)
+=======
+
+>>>>>>> 30341dc45 (refactor)
 "@radix-ui/react-compose-refs@1.0.0":
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@radix-ui/react-compose-refs/-/react-compose-refs-1.0.0.tgz#37595b1f16ec7f228d698590e78eeed18ff218ae"

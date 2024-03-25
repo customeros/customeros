@@ -1,8 +1,13 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { forwardRef } from 'react';
 
 =======
 >>>>>>> 1a3464920 (Create new Switch component + refactor IntegrationsTab view (#6305))
+=======
+import { forwardRef } from 'react';
+
+>>>>>>> 30341dc45 (refactor)
 import { twMerge } from 'tailwind-merge';
 import * as RadixSwitch from '@radix-ui/react-switch';
 import { cva, VariantProps } from 'class-variance-authority';
@@ -45,24 +50,35 @@ const thumbSizes = cva(
 );
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 export interface SwitchProps
 =======
 interface SwitchProps
 >>>>>>> 1a3464920 (Create new Switch component + refactor IntegrationsTab view (#6305))
+=======
+export interface SwitchProps
+>>>>>>> 30341dc45 (refactor)
   extends Omit<RadixSwitch.SwitchProps, 'onChange'>,
     VariantProps<typeof switchVariants> {
   className?: string;
   isChecked?: boolean;
 <<<<<<< HEAD
+<<<<<<< HEAD
   isInvalid?: boolean;
 =======
 >>>>>>> 1a3464920 (Create new Switch component + refactor IntegrationsTab view (#6305))
+=======
+  isInvalid?: boolean;
+>>>>>>> 30341dc45 (refactor)
   isDisabled?: boolean;
   isRequired?: boolean;
   onChange?: (value: boolean) => void;
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 30341dc45 (refactor)
 export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(
   (
     {
@@ -110,6 +126,7 @@ export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(
     );
   },
 );
+<<<<<<< HEAD
 =======
 export const Switch = ({
   colorScheme,
@@ -139,3 +156,5 @@ export const Switch = ({
   );
 };
 >>>>>>> 1a3464920 (Create new Switch component + refactor IntegrationsTab view (#6305))
+=======
+>>>>>>> 30341dc45 (refactor)
