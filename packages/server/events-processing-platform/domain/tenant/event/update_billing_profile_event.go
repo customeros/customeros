@@ -27,6 +27,7 @@ type TenantBillingProfileUpdateEvent struct {
 	SendInvoicesBcc        string    `json:"sendInvoicesBcc"`
 	CanPayWithPigeon       bool      `json:"canPayWithPigeon"`
 	CanPayWithBankTransfer bool      `json:"canPayWithBankTransfer"`
+	InvoiceNote            string    `json:"invoiceNote,omitempty"`
 	FieldsMask             []string  `json:"fieldsMask,omitempty"`
 }
 
@@ -49,6 +50,7 @@ func NewTenantBillingProfileUpdateEvent(aggregate eventstore.Aggregate, id strin
 		SendInvoicesBcc:        request.SendInvoicesBcc,
 		CanPayWithPigeon:       request.CanPayWithPigeon,
 		CanPayWithBankTransfer: request.CanPayWithBankTransfer,
+		InvoiceNote:            request.InvoiceNote,
 		FieldsMask:             fieldsMaks,
 	}
 
@@ -118,4 +120,8 @@ func (e TenantBillingProfileUpdateEvent) UpdateCanPayWithPigeon() bool {
 
 func (e TenantBillingProfileUpdateEvent) UpdateCanPayWithBankTransfer() bool {
 	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskCanPayWithBankTransfer)
+}
+
+func (e TenantBillingProfileUpdateEvent) UpdateInvoiceNote() bool {
+	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskInvoiceNote)
 }

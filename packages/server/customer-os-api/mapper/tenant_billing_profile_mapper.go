@@ -30,6 +30,7 @@ func MapEntityToTenantBillingProfile(entity *neo4jentity.TenantBillingProfileEnt
 		SendInvoicesBcc:        entity.SendInvoicesBcc,
 		CanPayWithPigeon:       entity.CanPayWithPigeon,
 		CanPayWithBankTransfer: entity.CanPayWithBankTransfer,
+		InvoiceNote:            entity.InvoiceNote,
 	}
 }
 

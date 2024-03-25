@@ -15,6 +15,7 @@ tenant_AddBillingProfile(
         sendInvoicesBcc: "sendInvoicesBcc"
         canPayWithPigeon: true
         canPayWithBankTransfer: true
+        invoiceNote: "invoiceNote"
     }) {
     id
   }

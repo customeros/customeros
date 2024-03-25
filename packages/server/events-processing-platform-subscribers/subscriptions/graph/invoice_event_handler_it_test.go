@@ -65,6 +65,7 @@ func TestInvoiceEventHandler_OnInvoiceCreateForContractV1(t *testing.T) {
 		"EUR",
 		neo4jenum.BillingCycleMonthlyBilling.String(),
 		"some note",
+		"some footer note",
 		true,
 		true,
 		true,
@@ -109,6 +110,7 @@ func TestInvoiceEventHandler_OnInvoiceCreateForContractV1(t *testing.T) {
 	require.Equal(t, neo4jenum.CurrencyEUR, createdInvoice.Currency)
 	require.Equal(t, "", createdInvoice.RepositoryFileId)
 	require.Equal(t, "some note", createdInvoice.Note)
+	require.Equal(t, "some footer note", createdInvoice.FooterNote)
 
 	require.True(t, calledRequestFillInvoice)
 }
@@ -182,6 +184,7 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 		"providerAddressCountry",
 		"providerAddressRegion",
 		"note abc",
+		"footer note abc",
 		neo4jenum.InvoiceStatusDue.String(),
 		"INV-001",
 		100,
@@ -266,6 +269,7 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 	require.Equal(t, "providerAddressCountry", invoiceEntity.Provider.Country)
 	require.Equal(t, "providerAddressRegion", invoiceEntity.Provider.Region)
 	require.Equal(t, "note abc", invoiceEntity.Note)
+	require.Equal(t, "footer note abc", invoiceEntity.FooterNote)
 	require.Equal(t, neo4jenum.InvoiceStatusDue, invoiceEntity.Status)
 
 	// verify invoice lines

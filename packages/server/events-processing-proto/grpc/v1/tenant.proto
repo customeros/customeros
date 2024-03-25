@@ -27,6 +27,7 @@ message AddBillingProfileRequest {
   string sendInvoicesBcc = 30;
   bool canPayWithBankTransfer = 31;
   string region = 32;
+  string invoiceNote = 33;
 }
 
 enum TenantBillingProfileFieldMask {
@@ -46,6 +47,7 @@ enum TenantBillingProfileFieldMask {
   TENANT_BILLING_PROFILE_FIELD_SEND_INVOICES_BCC = 19;
   TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_BANK_TRANSFER = 20;
   TENANT_BILLING_PROFILE_FIELD_REGION = 21;
+  TENANT_BILLING_PROFILE_FIELD_INVOICE_NOTE = 22;
 }
 
 message UpdateBillingProfileRequest {
@@ -70,6 +72,7 @@ message UpdateBillingProfileRequest {
   string sendInvoicesBcc = 25;
   bool canPayWithBankTransfer = 26;
   string region = 27;
+  string invoiceNote = 28;
 }
 
 enum TenantSettingsFieldMask {

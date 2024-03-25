@@ -542,6 +542,7 @@ func (h *InvoiceEventHandler) prepareAndCallFillInvoice(ctx context.Context, ten
 		tenantBillingProfileEntity.SendInvoicesFrom,
 		tenantBillingProfileEntity.AddressLine1, tenantBillingProfileEntity.AddressLine2, tenantBillingProfileEntity.Zip, tenantBillingProfileEntity.Locality, tenantBillingProfileCountry, tenantBillingProfileEntity.Region,
 		contractEntity.InvoiceNote,
+		tenantBillingProfileEntity.InvoiceNote,
 		amount,
 		vat,
 		totalAmount,
@@ -557,14 +558,15 @@ func (h *InvoiceEventHandler) prepareAndCallFillInvoice(ctx context.Context, ten
 func (h *InvoiceEventHandler) callFillInvoice(ctx context.Context, tenant, invoiceId,
 	customerName, customerEmail, customerAddressLine1, customerAddressLine2, customerAddressZip, customerAddressLocality, customerAddressCountry, customerAddressRegion,
 	providerLogoRepositoryFileId, providerName, providerEmail, providerAddressLine1, providerAddressLine2, providerAddressZip, providerAddressLocality, providerAddressCountry, providerAddressRegion,
-	note string, amount, vat, total float64, invoiceLines []*invoicepb.InvoiceLine, span opentracing.Span) error {
+	note, footerNote string, amount, vat, total float64, invoiceLines []*invoicepb.InvoiceLine, span opentracing.Span) error {
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	now := time.Now()
 	_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
 		return h.grpcClients.InvoiceClient.FillInvoice(ctx, &invoicepb.FillInvoiceRequest{
-			Tenant:    tenant,
-			InvoiceId: invoiceId,
-			Note:      note,
+			Tenant:     tenant,
+			InvoiceId:  invoiceId,
+			Note:       note,
+			FooterNote: footerNote,
 			Customer: &invoicepb.FillInvoiceCustomer{
 				Name:         customerName,
 				Email:        customerEmail,
@@ -906,6 +908,7 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 		"InvoiceAmountDue":             utils.FormatAmount(invoiceEntity.TotalAmount, 2),
 		"InvoiceLineItems":             []map[string]string{},
 		"Note":                         invoiceEntity.Note,
+		"FooterNote":                   invoiceEntity.FooterNote,
 	}
 
 	// load contract

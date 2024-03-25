@@ -24,6 +24,7 @@ type InvoiceEntity struct {
 	BillingCycle     enum.BillingCycle
 	Status           enum.InvoiceStatus
 	Note             string
+	FooterNote       string
 	PaymentDetails   PaymentDetails
 	OffCycle         bool
 	Postpaid         bool

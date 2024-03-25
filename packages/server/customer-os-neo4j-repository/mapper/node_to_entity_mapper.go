@@ -35,6 +35,7 @@ func MapDbNodeToInvoiceEntity(dbNode *dbtype.Node) *entity.InvoiceEntity {
 		AppSource:        utils.GetStringPropOrEmpty(props, "appSource"),
 		Status:           enum.DecodeInvoiceStatus(utils.GetStringPropOrEmpty(props, "status")),
 		Note:             utils.GetStringPropOrEmpty(props, "note"),
+		FooterNote:       utils.GetStringPropOrEmpty(props, "footerNote"),
 		Customer: entity.InvoiceCustomer{
 			Name:         utils.GetStringPropOrEmpty(props, "customerName"),
 			Email:        utils.GetStringPropOrEmpty(props, "customerEmail"),
@@ -314,6 +315,7 @@ func MapDbNodeToTenantBillingProfileEntity(dbNode *dbtype.Node) *entity.TenantBi
 		Source:                 entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth:          entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:              utils.GetStringPropOrEmpty(props, "appSource"),
+		InvoiceNote:            utils.GetStringPropOrEmpty(props, "invoiceNote"),
 	}
 	return &tenantBillingProfile
 }

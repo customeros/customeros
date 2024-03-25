@@ -25,6 +25,7 @@ type TenantBillingProfileEntity struct {
 	Source                 DataSource
 	SourceOfTruth          DataSource
 	AppSource              string
+	InvoiceNote            string
 }
 
 type TenantBillingProfileEntities []TenantBillingProfileEntity

@@ -12,7 +12,9 @@ query GetTenantBillingProfiles($id: ID!) {
     legalName
     vatNumber
     sendInvoicesFrom
+    sendInvoicesBcc
     canPayWithPigeon
     canPayWithBankTransfer
+    invoiceNote
   }
 }
