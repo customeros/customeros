@@ -1,3 +1,5 @@
+import { forwardRef } from 'react';
+
 import { twMerge } from 'tailwind-merge';
 import * as RadixSwitch from '@radix-ui/react-switch';
 import { cva, VariantProps } from 'class-variance-authority';
@@ -39,40 +41,61 @@ const thumbSizes = cva(
   },
 );
 
-interface SwitchProps
+export interface SwitchProps
   extends Omit<RadixSwitch.SwitchProps, 'onChange'>,
     VariantProps<typeof switchVariants> {
   className?: string;
   isChecked?: boolean;
+  isInvalid?: boolean;
   isDisabled?: boolean;
   isRequired?: boolean;
   onChange?: (value: boolean) => void;
 }
 
-export const Switch = ({
-  colorScheme,
-  isDisabled,
-  isRequired,
-  isChecked,
-  className,
-  onChange,
-  size,
-  ...props
-}: SwitchProps) => {
-  return (
-    <RadixSwitch.Root
-      onCheckedChange={onChange}
-      checked={isChecked}
-      required={isRequired}
-      disabled={isDisabled}
-      className={twMerge(switchVariants({ colorScheme, size }), className)}
-      style={
-        {
-          WebkitTapHighlightColor: 'rgba(0, 0, 0, 0)',
-        } as React.CSSProperties
-      }
-    >
-      <RadixSwitch.Thumb className={twMerge(thumbSizes({ size }), className)} />
-    </RadixSwitch.Root>
-  );
-};
+export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(
+  (
+    {
+      size,
+      colorScheme,
+      className,
+      isChecked,
+      isInvalid,
+      isDisabled,
+      isRequired,
+      onChange,
+      ...rest
+    },
+    ref,
+  ) => {
+    const invalidContainer =
+      isInvalid && ' data-[state=checked]:bg-warning-500';
+    const invalidThumb =
+      isInvalid &&
+      'after:content-["!"] after:absolute after:top-[-2px] after:left-0 after:right-0 after:text-xs after:text-warning-500 font-bold';
+
+    return (
+      <RadixSwitch.Root
+        ref={ref}
+        onCheckedChange={onChange}
+        checked={isChecked}
+        required={isRequired}
+        disabled={isDisabled}
+        className={twMerge(
+          switchVariants({ colorScheme, size }),
+          className,
+          invalidContainer,
+        )}
+        style={
+          {
+            WebkitTapHighlightColor: 'rgba(0, 0, 0, 0)',
+          } as React.CSSProperties
+        }
+        {...rest}
+      >
+        <RadixSwitch.Thumb
+          className={twMerge(thumbSizes({ size }), className, invalidThumb)}
+        />
+      </RadixSwitch.Root>
+    );
+  },
+);

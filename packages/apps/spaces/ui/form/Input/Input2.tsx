@@ -1,3 +1,5 @@
+import React, { forwardRef } from 'react';
+
 import { twMerge } from 'tailwind-merge';
 import { cva, VariantProps } from 'class-variance-authority';
 
@@ -32,6 +34,13 @@ const inputVariants = cva(
           'placeholder-gray-400',
           'focus:outline-none',
         ],
+        unstyled: [
+          'text-gray-700',
+          'bg-transparent',
+          'placeholder-gray-400',
+          'focus:outline-none',
+        ],
+        outline: [],
       },
     },
     defaultVariants: {
@@ -41,18 +50,21 @@ const inputVariants = cva(
   },
 );
 
-interface InputProps
+export interface InputProps
   extends VariantProps<typeof inputVariants>,
     Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
   className?: string;
   placeholder?: string;
 }
 
-export const Input = ({ size, variant, className, ...props }: InputProps) => {
-  return (
-    <input
-      {...props}
-      className={twMerge(inputVariants({ className, size, variant }))}
-    />
-  );
-};
+export const Input = forwardRef<HTMLInputElement, InputProps>(
+  ({ size, variant, className, ...rest }, ref) => {
+    return (
+      <input
+        ref={ref}
+        className={twMerge(inputVariants({ className, size, variant }))}
+        {...rest}
+      />
+    );
+  },
+);
