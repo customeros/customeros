@@ -14,20 +14,20 @@ function getLabelFromValue(value: string): string | undefined {
   }
 }
 export const ContractSubtitle = ({ data }: { data: Contract }) => {
-  if (!data.serviceStartedAt) {
+  if (!data.serviceStarted) {
     return <Text>No start date or services yet</Text>;
   }
-  if (!data?.serviceLineItems?.length) {
+  if (!data?.contractLineItems?.length) {
     return <Text>No services added yet</Text>;
   }
 
   const hasStartedService =
-    data?.serviceStartedAt && !DateTimeUtils.isFuture(data.serviceStartedAt);
+    data?.serviceStarted && !DateTimeUtils.isFuture(data.serviceStarted);
 
   const serviceStartDate =
-    data?.serviceStartedAt && DateTimeUtils.isFuture(data.serviceStartedAt)
+    data?.serviceStarted && DateTimeUtils.isFuture(data.serviceStarted)
       ? DateTimeUtils.format(
-          data.serviceStartedAt,
+          data.serviceStarted,
           DateTimeUtils.dateWithAbreviatedMonth,
         )
       : null;
@@ -40,11 +40,11 @@ export const ContractSubtitle = ({ data }: { data: Contract }) => {
   if (
     !renewalDate &&
     hasStartedService &&
-    data?.status !== ContractStatus.Ended
+    data?.contractStatus !== ContractStatus.Ended
   ) {
     const serviceStarted = hasStartedService
       ? DateTimeUtils.format(
-          data.serviceStartedAt,
+          data.serviceStarted,
           DateTimeUtils.dateWithAbreviatedMonth,
         )
       : null;
@@ -52,29 +52,34 @@ export const ContractSubtitle = ({ data }: { data: Contract }) => {
     return <Text>Service started {serviceStarted}</Text>;
   }
 
-  const endDate = data?.endedAt
-    ? DateTimeUtils.format(data.endedAt, DateTimeUtils.dateWithAbreviatedMonth)
+  const endDate = data?.contractEnded
+    ? DateTimeUtils.format(
+        data.contractEnded,
+        DateTimeUtils.dateWithAbreviatedMonth,
+      )
     : null;
 
   const isActiveAndRenewable =
     hasStartedService &&
-    data.status !== ContractStatus.Ended &&
-    !!data.renewalCycle &&
-    data.renewalCycle !== ContractRenewalCycle.None;
+    data.contractStatus !== ContractStatus.Ended &&
+    !!data.contractRenewalCycle &&
+    data.contractRenewalCycle !== ContractRenewalCycle.None;
 
   return (
     <Flex flexDir='column' alignItems='flex-start' justifyContent='center'>
       {serviceStartDate && <Text>Service starts {serviceStartDate}</Text>}
       {isActiveAndRenewable && (
         <Text>
-          Renews {getLabelFromValue(data.renewalCycle)} on {renewalDate}
+          Renews {getLabelFromValue(data.contractRenewalCycle)} on {renewalDate}
         </Text>
       )}
-      {data?.endedAt && DateTimeUtils.isFuture(data.endedAt) && (
+      {data?.contractEnded && DateTimeUtils.isFuture(data.contractEnded) && (
         <Text>Ends {endDate}</Text>
       )}
 
-      {data.status === ContractStatus.Ended && <Text>Ended on {endDate}</Text>}
+      {data.contractStatus === ContractStatus.Ended && (
+        <Text>Ended on {endDate}</Text>
+      )}
     </Flex>
   );
 };

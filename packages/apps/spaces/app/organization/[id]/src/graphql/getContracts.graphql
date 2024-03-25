@@ -11,30 +11,35 @@ query getContracts($id: ID!) {
             }
         }
         contracts {
-            id
-            name
-            createdAt
-            serviceStartedAt
-            signedAt
-            endedAt
-            renewalCycle
-            renewalPeriods
-            status
+            metadata {
+                id
+                created
+                source
+                lastUpdated
+            }
+
+            serviceStarted
+            contractSigned
+            contractEnded
+            contractStatus
+            contractRenewalCycle
+            committedPeriods
             contractUrl
             billingCycle
             billingEnabled
-            invoicingStartDate
             currency
-            organizationLegalName
-            addressLine1
-            addressLine2
-            locality
-            country
-            zip
             invoiceEmail
-            invoiceNote
             billingDetails {
                 nextInvoicing
+                postalCode
+                country
+                locality
+                addressLine1
+                addressLine2
+                invoiceNote
+                organizationLegalName
+                billingCycle
+                invoicingStarted
             }
             opportunities {
                 id

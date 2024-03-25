@@ -57,8 +57,8 @@ export const ContractCard = ({
   const queryKey = useGetContractsQuery.getKey({ id: organizationId });
   const queryClient = useQueryClient();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const [isExpanded, setIsExpanded] = useState(!data?.signedAt);
-  const formId = `contract-form-${data.id}`;
+  const [isExpanded, setIsExpanded] = useState(!data?.contractSigned);
+  const formId = `contract-form-${data.metadata.id}`;
   const { setIsPanelModalOpen } = useUpdatePanelModalStateContext();
   const { onOpen, onClose, isOpen } = useDisclosure({
     id: 'billing-details-modal',
@@ -90,7 +90,7 @@ export const ContractCard = ({
         return produce(currentCache, (draft) => {
           const previousContracts = draft?.['organization']?.['contracts'];
           const updatedContractIndex = previousContracts?.findIndex(
-            (contract) => contract.id === data?.id,
+            (contract) => contract.metadata.id === data?.metadata?.id,
           );
           if (draft?.['organization']?.['contracts']) {
             draft['organization']['contracts']?.map((contractData, index) => {
@@ -122,8 +122,8 @@ export const ContractCard = ({
       );
 
       const invalidDate =
-        DateTimeUtils.isBefore(input.endedAt, input.serviceStartedAt) ||
-        DateTimeUtils.isBefore(input.endedAt, input.signedAt);
+        DateTimeUtils.isBefore(input.contractEnded, input.serviceStarted) ||
+        DateTimeUtils.isBefore(input.contractEnded, input.contractSigned);
 
       toastError(
         `${
@@ -159,10 +159,7 @@ export const ContractCard = ({
     },
     500,
   );
-  const defaultValues = ContractDTO.toForm({
-    organizationName,
-    ...(data ?? {}),
-  });
+  const defaultValues = ContractDTO.toForm(data ?? {});
   const { setDefaultValues, state } = useForm<TimeToRenewalForm>({
     formId,
     defaultValues,
@@ -175,14 +172,14 @@ export const ContractCard = ({
           case 'name': {
             updateContractDebounced(
               ContractDTO.toPayload({
-                contractId: data.id,
+                contractId: data.metadata.id,
                 name: action.payload.value,
               }),
             );
 
             return next;
           }
-          case 'renewalCycle': {
+          case 'contractRenewalCycle': {
             let renewalPeriods = '1';
 
             if (action.payload.value.value === 'MULTI_YEAR') {
@@ -191,11 +188,11 @@ export const ContractCard = ({
 
             updateContract.mutate(
               ContractDTO.toPayload({
-                contractId: data.id,
-                renewalCycle:
-                  state.values.renewalCycle?.value === 'MULTI_YEAR'
+                contractId: data.metadata.id,
+                contractRenewalCycle:
+                  state.values.contractRenewalCycle?.value === 'MULTI_YEAR'
                     ? ContractRenewalCycle.AnnualRenewal
-                    : state.values.renewalCycle?.value,
+                    : state.values.contractRenewalCycle?.value,
                 renewalPeriods,
               }),
             );
@@ -208,12 +205,12 @@ export const ContractCard = ({
               },
             };
           }
-          case 'serviceStartedAt':
+          case 'serviceStarted':
           case 'endedAt':
           case 'invoicingStartDate':
             updateContract.mutate(
               ContractDTO.toPayload({
-                contractId: data.id,
+                contractId: data.metadata.id,
                 [action.payload.name]: action.payload.value
                   ? action.payload.value
                   : '0001-01-01T00:00:00.000000Z',
@@ -231,7 +228,7 @@ export const ContractCard = ({
           case 'billingEnabled':
             updateContract.mutate(
               ContractDTO.toPayload({
-                contractId: data.id,
+                contractId: data.metadata.id,
                 [action.payload.name]: action.payload.value?.value,
               }),
             );
@@ -240,7 +237,7 @@ export const ContractCard = ({
           case 'contractUrl':
             updateContractDebounced(
               ContractDTO.toPayload({
-                contractId: data.id,
+                contractId: data.metadata.id,
                 contractUrl: action.payload.value,
               }),
             );
@@ -256,9 +253,9 @@ export const ContractCard = ({
         if (action.payload.name === 'renewalPeriods') {
           updateContract.mutate(
             ContractDTO.toPayload({
-              contractId: data.id,
+              contractId: data.metadata.id,
               renewalPeriods:
-                state.values?.renewalCycle?.value === 'MULTI_YEAR'
+                state.values?.contractRenewalCycle?.value === 'MULTI_YEAR'
                   ? parseInt(action.payload?.value || '2')
                   : action.payload?.value
                   ? parseInt(action.payload?.value)
@@ -381,13 +378,15 @@ export const ContractCard = ({
             />
 
             <ContractStatusSelect
-              status={data.status}
-              contractId={data.id}
+              status={data.contractStatus}
+              contractId={data.metadata.id}
               renewsAt={data?.opportunities?.[0]?.renewedAt}
               onUpdateContract={updateContract}
-              serviceStartedAt={data.serviceStartedAt}
+              serviceStarted={data.serviceStarted}
               organizationName={
-                data?.organizationLegalName || organizationName || 'Unnamed'
+                data?.billingDetails?.organizationLegalName ||
+                organizationName ||
+                'Unnamed'
               }
               nextInvoiceDate={data?.billingDetails?.nextInvoicing}
             />
@@ -431,10 +430,10 @@ export const ContractCard = ({
               label='Service starts'
               placeholder='Service starts date'
               formId={formId}
-              name='serviceStartedAt'
+              name='serviceStarted'
               inset='120% auto auto 0px'
               calendarIconHidden
-              value={state.values.serviceStartedAt}
+              value={state.values.serviceStarted}
             />
           </Flex>
           <Flex gap='4' flexGrow={0} mb={2}>
@@ -442,11 +441,11 @@ export const ContractCard = ({
               label='Contract renews'
               placeholder='Contract renews'
               isLabelVisible
-              name='renewalCycle'
+              name='contractRenewalCycle'
               formId={formId}
               options={billingFrequencyOptions}
             />
-            {state.values.renewalCycle?.value === 'MULTI_YEAR' && (
+            {state.values.contractRenewalCycle?.value === 'MULTI_YEAR' && (
               <FormPeriodInput
                 formId={formId}
                 label='Renews every'
@@ -459,7 +458,7 @@ export const ContractCard = ({
             <DatePicker
               label='Invoicing starts'
               placeholder='Invoicing starts'
-              minDate={state.values.serviceStartedAt}
+              minDate={state.values.serviceStarted}
               formId={formId}
               name='invoicingStartDate'
               inset='120% auto auto 0px'
@@ -494,15 +493,15 @@ export const ContractCard = ({
       <CardFooter p='0' mt={1} w='full' flexDir='column'>
         <Collapse
           delay={{ enter: 0.2 }}
-          in={!!data?.opportunities && !!data.renewalCycle}
+          in={!!data?.opportunities && !!data.contractRenewalCycle}
           animateOpacity
           startingHeight={0}
         >
-          {data?.opportunities && data.renewalCycle && (
+          {data?.opportunities && data.contractRenewalCycle && (
             <RenewalARRCard
-              hasEnded={data.status === ContractStatus.Ended}
-              startedAt={data.serviceStartedAt}
-              renewCycle={data.renewalCycle}
+              hasEnded={data.contractStatus === ContractStatus.Ended}
+              startedAt={data.serviceStarted}
+              renewCycle={data.contractRenewalCycle}
               currency={data.currency}
               opportunity={data.opportunities?.[0]}
             />
@@ -516,21 +515,21 @@ export const ContractCard = ({
 
         <ContractBillingDetailsModal
           isOpen={isOpen}
-          contractId={data.id}
+          contractId={data.metadata.id}
           onClose={onClose}
           organizationName={organizationName}
-          notes={data?.invoiceNote}
+          notes={data?.billingDetails?.invoiceNote}
         />
 
         <ServiceLineItemsModal
           isOpen={isServceItemsModalOpen}
-          contractId={data.id}
+          contractId={data.metadata.id}
           onClose={onServiceLineItemClose}
-          contractName={data.name}
+          contractName={data.contractName}
           currency={data.currency}
           contractLineItems={data?.contractLineItems ?? []}
           organizationName={organizationName}
-          notes={data?.invoiceNote}
+          notes={data?.billingDetails?.invoiceNote}
         />
       </CardFooter>
     </Card>

@@ -82,6 +82,7 @@ export const GetContractDocument = `
       nextInvoicing
       payAutomatically
       payOnline
+      invoicingStarted
     }
   }
 }

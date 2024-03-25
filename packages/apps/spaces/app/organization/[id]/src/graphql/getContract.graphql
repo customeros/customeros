@@ -21,6 +21,8 @@ query getContract($id: ID!) {
       nextInvoicing
       payAutomatically
       payOnline
+      invoicingStarted
+
     }
   }
 }

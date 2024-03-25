@@ -102,7 +102,7 @@ export const ContractBillingDetailsModal = ({
         return produce(currentCache, (draft) => {
           const previousContracts = draft?.['organization']?.['contracts'];
           const updatedContractIndex = previousContracts?.findIndex(
-            (contract) => contract.id === contractId,
+            (contract) => contract.metadata.id === contractId,
           );
 
           if (draft?.['organization']?.['contracts']) {

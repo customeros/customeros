@@ -31,9 +31,10 @@ interface ContractEndModalProps {
   renewsAt?: string;
   contractId: string;
   onClose: () => void;
+  contractEnded?: string;
+  serviceStarted?: string;
   nextInvoiceDate?: string;
   organizationName: string;
-  serviceStartedAt?: string;
   onUpdateContract: UseMutationResult<
     UpdateContractMutation,
     unknown,
@@ -58,6 +59,7 @@ export const ContractEndModal = ({
   renewsAt,
   nextInvoiceDate,
   onUpdateContract,
+  contractEnded,
 }: ContractEndModalProps) => {
   const initialRef = useRef(null);
   const [value, setValue] = React.useState(EndContract.Now);
@@ -77,7 +79,7 @@ export const ContractEndModal = ({
     endedAt?: string | Date | null;
   }>({
     formId,
-    defaultValues: { endedAt: new Date() },
+    defaultValues: { endedAt: contractEnded || new Date() },
     stateReducer: (_, action, next) => {
       return next;
     },
@@ -108,7 +110,7 @@ export const ContractEndModal = ({
       return;
     }
     if (nextValue === EndContract.EndOfCurrentBillingPeriod) {
-      setDefaultValues({ endedAt: renewsAt });
+      setDefaultValues({ endedAt: nextInvoiceDate });
       setValue(EndContract.EndOfCurrentBillingPeriod);
 
       return;
@@ -190,7 +192,7 @@ export const ContractEndModal = ({
                     <DatePickerUnderline
                       placeholder='End date'
                       defaultOpen={true}
-                      // minDate={state.values.serviceStartedAt}
+                      // minDate={state.values.serviceStarted}
                       formId={formId}
                       name='endedAt'
                       calendarIconHidden

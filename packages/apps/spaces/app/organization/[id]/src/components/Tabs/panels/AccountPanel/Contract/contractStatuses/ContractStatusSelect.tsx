@@ -23,9 +23,9 @@ interface ContractStatusSelectProps {
   renewsAt?: string;
   contractId: string;
   status: ContractStatus;
+  serviceStarted?: string;
   organizationName: string;
   nextInvoiceDate?: string;
-  serviceStartedAt?: string;
 
   onUpdateContract: UseMutationResult<
     UpdateContractMutation,
@@ -46,7 +46,7 @@ export const ContractStatusSelect: React.FC<ContractStatusSelectProps> = ({
   renewsAt,
   contractId,
   organizationName,
-  serviceStartedAt,
+  serviceStarted,
   onUpdateContract,
   nextInvoiceDate,
 }) => {
@@ -119,7 +119,7 @@ export const ContractStatusSelect: React.FC<ContractStatusSelectProps> = ({
         contractId={contractId}
         organizationName={organizationName}
         renewsAt={renewsAt}
-        serviceStartedAt={serviceStartedAt}
+        serviceStarted={serviceStarted}
         onUpdateContract={onUpdateContract}
         nextInvoiceDate={nextInvoiceDate}
       />
@@ -128,7 +128,7 @@ export const ContractStatusSelect: React.FC<ContractStatusSelectProps> = ({
         onClose={onCloseStartModal}
         contractId={contractId}
         organizationName={organizationName}
-        serviceStartedAt={serviceStartedAt}
+        serviceStarted={serviceStarted}
         onUpdateContract={onUpdateContract}
       />
     </>
