@@ -250,7 +250,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
                   }
                 />
               </PaymentDetailsPopover>
-              {!isStripeActive && (
+              {isStripeActive && (
                 <Flex flexDir='column' gap={2} ml={2}>
                   <Tooltip
                     label={
