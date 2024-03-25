@@ -36,41 +36,16 @@ export const ReminderItem = ({
   const isMutating = data.id === 'TEMP';
   const [isFocused, setIsFocused] = useState(false);
 
-  const stripContent = (content: string, owner: string) => {
-    const targetString = `for ${owner}: `;
-
-    if (!content.startsWith(targetString)) return content;
-
-    return content.replace(targetString, '');
-  };
-  // const makeContentStr = (content: string, owner: string) => {
-  //   const strippedContent = stripContent(content, owner);
-
-  //   return currentOwner !== owner
-  //     ? `for ${owner}: ${strippedContent}`
-  //     : strippedContent;
-  // };
-
   const { handleSubmit, setDefaultValues } = useForm<ReminderEditForm>({
     formId,
     defaultValues: data,
     onSubmit: async (values) => {
       onChange({
         ...values,
-        content: stripContent(values.content, values.owner),
       });
     },
     stateReducer: (state, action, next) => {
       if (action.type === 'FIELD_CHANGE') {
-        // if (action.payload.name === 'content') {
-        //   return {
-        //     ...next,
-        //     values: {
-        //       ...next.values,
-        //       content: makeContentStr(next.values.content, next.values.owner),
-        //     },
-        //   };
-        // }
         debouncedOnChange({
           ...next.values,
           content: next.values.content,
@@ -89,7 +64,6 @@ export const ReminderItem = ({
   useEffect(() => {
     setDefaultValues({
       ...data,
-      // content: makeContentStr(data.content, data.owner),
     });
   }, [currentOwner, data.id]);
 
