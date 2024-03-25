@@ -17,10 +17,9 @@ type Drivers struct {
 type Repositories struct {
 	Drivers Drivers
 
-	Neo4jRepositories     *neo4jrepository.Repositories
-	CommonRepositories    *cmn_repository.Repositories
-	EventBufferRepository repository.EventBufferRepository
-	InvoiceRepository     repository.InvoiceRepository
+	Neo4jRepositories  *neo4jrepository.Repositories
+	CommonRepositories *cmn_repository.Repositories
+	InvoiceRepository  repository.InvoiceRepository
 }
 
 func InitRepos(driver *neo4j.DriverWithContext, neo4jDatabase string, gormDb *gorm.DB) *Repositories {
@@ -29,10 +28,9 @@ func InitRepos(driver *neo4j.DriverWithContext, neo4jDatabase string, gormDb *go
 			Neo4jDriver: driver,
 			GormDb:      gormDb,
 		},
-		Neo4jRepositories:     neo4jrepository.InitNeo4jRepositories(driver, neo4jDatabase),
-		CommonRepositories:    cmn_repository.InitRepositories(gormDb, driver),
-		EventBufferRepository: repository.NewEventBufferRepository(gormDb),
-		InvoiceRepository:     repository.NewInvoiceRepository(gormDb),
+		Neo4jRepositories:  neo4jrepository.InitNeo4jRepositories(driver, neo4jDatabase),
+		CommonRepositories: cmn_repository.InitRepositories(gormDb, driver),
+		InvoiceRepository:  repository.NewInvoiceRepository(gormDb),
 	}
 
 	return &repositories
@@ -40,7 +38,7 @@ func InitRepos(driver *neo4j.DriverWithContext, neo4jDatabase string, gormDb *go
 
 func Migration(db *gorm.DB) {
 
-	err := db.AutoMigrate(&entity.EventBuffer{}, &entity.InvoiceNumberEntity{})
+	err := db.AutoMigrate(&entity.InvoiceNumberEntity{})
 	if err != nil {
 		panic(err)
 	}

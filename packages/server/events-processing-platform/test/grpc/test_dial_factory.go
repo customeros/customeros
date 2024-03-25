@@ -8,7 +8,6 @@ import (
 	comlog "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/command"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventbuffer"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
@@ -53,9 +52,9 @@ func (dfi TestDialFactoryImpl) GetEventsProcessingPlatformConn(repositories *rep
 	myServer.GrpcServer = grpcServer
 	myServer.Repositories = repositories
 	myServer.AggregateStore = aggregateStore
-	eventBufferWatcher := eventbuffer.NewEventBufferWatcher(repositories, appLogger, aggregateStore)
-	myServer.CommandHandlers = command.NewCommandHandlers(appLogger, &config.Config{}, aggregateStore, repositories, eventBufferWatcher)
-	myServer.Services = service.InitServices(&config.Config{}, repositories, aggregateStore, myServer.CommandHandlers, appLogger, eventBufferWatcher)
+	bufferService := eventstore.NewEventBufferService(myServer.Repositories.CommonRepositories.EventBufferRepository)
+	myServer.CommandHandlers = command.NewCommandHandlers(appLogger, &config.Config{}, aggregateStore, bufferService)
+	myServer.Services = service.InitServices(&config.Config{}, repositories, aggregateStore, myServer.CommandHandlers, appLogger, bufferService)
 
 	server.RegisterGrpcServices(myServer.GrpcServer, myServer.Services)
 

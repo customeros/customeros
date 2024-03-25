@@ -11,8 +11,7 @@ import (
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/reminder/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/reminder/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/reminder"
 	"github.com/stretchr/testify/require"
 )
 
@@ -28,7 +27,7 @@ func TestReminderEventHandler_OnCreate(t *testing.T) {
 		log:          testLogger,
 	}
 	reminderId := uuid.New().String()
-	reminderAgg := aggregate.NewReminderAggregateWithTenantAndID(tenantName, reminderId)
+	reminderAgg := reminder.NewReminderAggregateWithTenantAndID(tenantName, reminderId)
 
 	createdAt := utils.Now()
 	dueDate := createdAt.AddDate(0, 0, 1)
@@ -38,7 +37,7 @@ func TestReminderEventHandler_OnCreate(t *testing.T) {
 		AppSource:     "test",
 	}
 
-	evt, err := events.NewReminderCreateEvent(
+	evt, err := reminder.NewReminderCreateEvent(
 		reminderAgg,
 		"content",
 		userId,
@@ -81,7 +80,7 @@ func TestReminderEventHandler_OnUpdate(t *testing.T) {
 		log:          testLogger,
 	}
 	reminderId := uuid.New().String()
-	reminderAgg := aggregate.NewReminderAggregateWithTenantAndID(tenantName, reminderId)
+	reminderAgg := reminder.NewReminderAggregateWithTenantAndID(tenantName, reminderId)
 
 	createdAt := utils.Now()
 	dueDate := createdAt.AddDate(0, 0, 1)
@@ -91,7 +90,7 @@ func TestReminderEventHandler_OnUpdate(t *testing.T) {
 		AppSource:     "test",
 	}
 
-	evt, err := events.NewReminderCreateEvent(
+	evt, err := reminder.NewReminderCreateEvent(
 		reminderAgg,
 		"content",
 		userId,
@@ -121,13 +120,13 @@ func TestReminderEventHandler_OnUpdate(t *testing.T) {
 	require.Equal(t, "content", utils.GetStringPropOrEmpty(props, "content"))
 	require.Equal(t, "test", utils.GetStringPropOrEmpty(props, "appSource"))
 
-	evt, err = events.NewReminderUpdateEvent(
+	evt, err = reminder.NewReminderUpdateEvent(
 		reminderAgg,
 		"NEW_CONTENT",
 		dueDate.AddDate(0, 0, 1),
 		true,
 		utils.Now(),
-		[]string{events.FieldMaskContent, events.FieldMaskDueDate, events.FieldMaskDismissed},
+		[]string{reminder.FieldMaskContent, reminder.FieldMaskDueDate, reminder.FieldMaskDismissed},
 	)
 
 	require.Nil(t, err)

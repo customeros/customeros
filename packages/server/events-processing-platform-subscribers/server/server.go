@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	validator "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/eventbuffer"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstoredb"
 	"os"
 	"os/signal"
@@ -111,10 +112,11 @@ func (server *Server) Start(parentCtx context.Context) error {
 
 	server.AggregateStore = store.NewAggregateStore(server.Log, esdb)
 
-	//Server.runMetrics(cancel)
-	//Server.runHealthCheck(ctx)
-
 	server.Services = service.InitServices(server.Config, server.Repositories, server.Log)
+
+	eventBufferWatcher := eventbuffer.NewEventBufferWatcher(server.Repositories.CommonRepositories.EventBufferRepository, server.Log, server.AggregateStore)
+	eventBufferWatcher.Start(ctx)
+	defer eventBufferWatcher.Stop()
 
 	// Setting up gRPC client
 	df := grpc_client.NewDialFactory(server.Config)

@@ -17,46 +17,46 @@ import (
 
 // ReminderCreate is the resolver for the reminder_Create field.
 func (r *mutationResolver) ReminderCreate(ctx context.Context, input model.ReminderInput) (*model.Reminder, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ReminderCreate", graphql.GetOperationContext(ctx))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.CreateReminder", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", input)
 
-	id, err := r.Services.ReminderService.ReminderCreate(ctx, input.UserID, input.OrganizationID, input.Content, input.DueDate)
+	id, err := r.Services.ReminderService.CreateReminder(ctx, input.UserID, input.OrganizationID, input.Content, input.DueDate)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to create reminder")
 		return &model.Reminder{Metadata: &model.Metadata{ID: id}}, err
 	}
 
-	createdReminderEntity, err := r.Services.ReminderService.Reminder(ctx, id)
+	reminder, err := r.Services.ReminderService.GetReminderById(ctx, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Reminder details not yet available. Reminder id: %s", id)
+		graphql.AddErrorf(ctx, "GetReminderById details not yet available. GetReminderById id: %s", id)
 		return &model.Reminder{Metadata: &model.Metadata{ID: id}}, nil
 	}
 	span.LogFields(log.String("response.ReminderId", id))
-	return mapper.MapEntityToReminder(createdReminderEntity), nil
+	return mapper.MapEntityToReminder(reminder), nil
 }
 
 // ReminderUpdate is the resolver for the reminder_Update field.
 func (r *mutationResolver) ReminderUpdate(ctx context.Context, input model.ReminderUpdateInput) (*model.Reminder, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ReminderUpdate", graphql.GetOperationContext(ctx))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.UpdateReminder", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", input)
 
-	err := r.Services.ReminderService.ReminderUpdate(ctx, input.ID, input.Content, input.DueDate, input.Dismissed)
+	err := r.Services.ReminderService.UpdateReminder(ctx, input.ID, input.Content, input.DueDate, input.Dismissed)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to update reminder")
 		return &model.Reminder{Metadata: &model.Metadata{ID: input.ID}}, err
 	}
 
-	updatedReminderEntity, err := r.Services.ReminderService.Reminder(ctx, input.ID)
+	updatedReminderEntity, err := r.Services.ReminderService.GetReminderById(ctx, input.ID)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Reminder details not yet available. Reminder id: %s", input.ID)
+		graphql.AddErrorf(ctx, "GetReminderById details not yet available. GetReminderById id: %s", input.ID)
 		return &model.Reminder{Metadata: &model.Metadata{ID: input.ID}}, nil
 	}
 	span.LogFields(log.String("response.ReminderId", input.ID))
@@ -70,14 +70,14 @@ func (r *queryResolver) Reminder(ctx context.Context, id string) (*model.Reminde
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagEntityId, id)
 
-	reminderEntity, err := r.Services.ReminderService.Reminder(ctx, id)
+	reminderEntity, err := r.Services.ReminderService.GetReminderById(ctx, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to fetch reminder with id %s", id)
 		return nil, nil
 	}
 	if reminderEntity == nil {
-		graphql.AddErrorf(ctx, "Reminder with id %s not found", id)
+		graphql.AddErrorf(ctx, "GetReminderById with id %s not found", id)
 		return nil, nil
 	}
 

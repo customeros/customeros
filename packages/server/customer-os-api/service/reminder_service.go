@@ -23,9 +23,9 @@ import (
 )
 
 type ReminderService interface {
-	ReminderCreate(ctx context.Context, userId, orgId, content string, dueDate time.Time) (string, error)
-	ReminderUpdate(ctx context.Context, id string, content *string, dueDate *time.Time, dismissed *bool) error
-	Reminder(ctx context.Context, id string) (*neo4jentity.ReminderEntity, error)
+	CreateReminder(ctx context.Context, userId, orgId, content string, dueDate time.Time) (string, error)
+	UpdateReminder(ctx context.Context, id string, content *string, dueDate *time.Time, dismissed *bool) error
+	GetReminderById(ctx context.Context, id string) (*neo4jentity.ReminderEntity, error)
 	RemindersForOrganization(ctx context.Context, organizationID string, dismissed *bool) ([]*neo4jentity.ReminderEntity, error)
 }
 
@@ -43,8 +43,8 @@ func NewReminderService(log logger.Logger, repositories *repository.Repositories
 	}
 }
 
-func (s *reminderService) ReminderCreate(ctx context.Context, userId, orgId, content string, dueDate time.Time) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderService.ReminderCreate")
+func (s *reminderService) CreateReminder(ctx context.Context, userId, orgId, content string, dueDate time.Time) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderService.CreateReminder")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("userId", userId), log.String("orgId", orgId), log.String("content", content), log.String("dueDate", dueDate.String()))
@@ -52,7 +52,7 @@ func (s *reminderService) ReminderCreate(ctx context.Context, userId, orgId, con
 	createdAt := time.Now().UTC()
 	due := dueDate.UTC()
 	grpcRequest := &reminderpb.CreateReminderGrpcRequest{
-		UserId:         userId,
+		LoggedInUserId: userId,
 		OrganizationId: orgId,
 		Content:        content,
 		DueDate:        utils.ConvertTimeToTimestampPtr(&due),
@@ -80,8 +80,8 @@ func (s *reminderService) ReminderCreate(ctx context.Context, userId, orgId, con
 	return response.Id, nil
 }
 
-func (s *reminderService) ReminderUpdate(ctx context.Context, id string, content *string, dueDate *time.Time, dismissed *bool) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderService.ReminderUpdate")
+func (s *reminderService) UpdateReminder(ctx context.Context, id string, content *string, dueDate *time.Time, dismissed *bool) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderService.UpdateReminder")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagEntityId, id)
@@ -129,8 +129,8 @@ func (s *reminderService) ReminderUpdate(ctx context.Context, id string, content
 	return nil
 }
 
-func (s *reminderService) Reminder(ctx context.Context, id string) (*neo4jentity.ReminderEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderService.Reminder")
+func (s *reminderService) GetReminderById(ctx context.Context, id string) (*neo4jentity.ReminderEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderService.GetReminderById")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagEntityId, id)

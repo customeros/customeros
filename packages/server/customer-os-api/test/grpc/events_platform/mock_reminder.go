@@ -23,14 +23,14 @@ type MockReminderService struct {
 
 func (MockReminderService) CreateReminder(context context.Context, proto *reminderpb.CreateReminderGrpcRequest) (*reminderpb.ReminderGrpcResponse, error) {
 	if reminderCallbacks.ReminderCreate == nil {
-		panic("reminderCallbacks.ReminderCreate is not set")
+		panic("reminderCallbacks.CreateReminder is not set")
 	}
 	return reminderCallbacks.ReminderCreate(context, proto)
 }
 
 func (MockReminderService) UpdateReminder(context context.Context, proto *reminderpb.UpdateReminderGrpcRequest) (*reminderpb.ReminderGrpcResponse, error) {
 	if reminderCallbacks.ReminderUpdate == nil {
-		panic("reminderCallbacks.ReminderUpdate is not set")
+		panic("reminderCallbacks.UpdateReminder is not set")
 	}
 	return reminderCallbacks.ReminderUpdate(context, proto)
 }

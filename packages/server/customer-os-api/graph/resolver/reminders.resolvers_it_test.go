@@ -111,7 +111,7 @@ func TestMutationResolver_ReminderCreate(t *testing.T) {
 	reminderServiceCallbacks := events_platform.MockReminderServiceCallbacks{
 		ReminderCreate: func(context context.Context, request *reminderpb.CreateReminderGrpcRequest) (*reminderpb.ReminderGrpcResponse, error) {
 			require.Equal(t, tenantName, request.Tenant)
-			require.Equal(t, uid, request.UserId)
+			require.Equal(t, uid, request.LoggedInUserId)
 			require.Equal(t, orgId, request.OrganizationId)
 			require.Equal(t, "TEST CONTENT", request.Content)
 			reqDate := utils.TimestampProtoToTime(request.DueDate)

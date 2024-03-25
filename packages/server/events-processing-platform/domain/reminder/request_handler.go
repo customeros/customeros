@@ -2,14 +2,11 @@ package reminder
 
 import (
 	"context"
+	commonaggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"time"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	commonaggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/reminder/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/reminder/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventbuffer"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -28,11 +25,11 @@ type reminderRequestHandler struct {
 	log logger.Logger
 	es  eventstore.AggregateStore
 	cfg config.Utils
-	ebw *eventbuffer.EventBufferWatcher
+	ebs *eventstore.EventBufferService
 }
 
-func NewReminderRequestHandler(log logger.Logger, es eventstore.AggregateStore, ebw *eventbuffer.EventBufferWatcher, cfg config.Utils) ReminderRequestHandler {
-	return &reminderRequestHandler{log: log, es: es, ebw: ebw, cfg: cfg}
+func NewReminderRequestHandler(log logger.Logger, es eventstore.AggregateStore, ebs *eventstore.EventBufferService, cfg config.Utils) ReminderRequestHandler {
+	return &reminderRequestHandler{log: log, es: es, ebs: ebs, cfg: cfg}
 }
 
 func (h *reminderRequestHandler) Handle(ctx context.Context, tenant, objectId string, request any, params ...map[string]any) (any, error) {
@@ -44,7 +41,7 @@ func (h *reminderRequestHandler) Handle(ctx context.Context, tenant, objectId st
 		span.LogFields(log.Object("params", params))
 	}
 
-	reminderAggregate, err := aggregate.LoadReminderAggregate(ctx, h.es, tenant, objectId, *eventstore.NewLoadAggregateOptions())
+	reminderAggregate, err := LoadReminderAggregate(ctx, h.es, tenant, objectId, *eventstore.NewLoadAggregateOptions())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -78,7 +75,7 @@ func (h *reminderRequestHandler) HandleWithRetry(ctx context.Context, tenant, ob
 	}
 
 	for attempt := 0; attempt == 0 || attempt < h.cfg.RetriesOnOptimisticLockException; attempt++ {
-		reminderAggregate, err := aggregate.LoadReminderAggregate(ctx, h.es, tenant, objectId, *eventstore.NewLoadAggregateOptions())
+		reminderAggregate, err := LoadReminderAggregate(ctx, h.es, tenant, objectId, *eventstore.NewLoadAggregateOptions())
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
@@ -126,7 +123,7 @@ func (h *reminderRequestHandler) HandleWithRetry(ctx context.Context, tenant, ob
 	return nil, err
 }
 
-func (h *reminderRequestHandler) parkReminderNotification(ctx context.Context, agg *aggregate.ReminderAggregate, reminderId string, request any) error {
+func (h *reminderRequestHandler) parkReminderNotification(ctx context.Context, agg *ReminderAggregate, reminderId string, request any) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderRequestHandler.parkReminderNotification")
 	defer span.Finish()
 
@@ -135,7 +132,7 @@ func (h *reminderRequestHandler) parkReminderNotification(ctx context.Context, a
 		return nil
 	}
 
-	// create notification event Park it in the event buffer for notifications
+	// create notification event and Park it in the event buffer for notifications
 	event, err := createNotificationEvent(ctx, agg, createReq.LoggedInUserId, createReq.OrganizationId, createReq.SourceFields.AppSource, createReq.Content, createReq.CreatedAt.AsTime().UTC())
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -144,18 +141,21 @@ func (h *reminderRequestHandler) parkReminderNotification(ctx context.Context, a
 
 	dueDate := agg.Reminder.DueDate.UTC() // when buffer should dispatch reminder notification event
 
-	h.ebw.Park(ctx, *event, agg.GetTenant(), reminderId, dueDate)
+	err = h.ebs.Park(ctx, *event, agg.GetTenant(), reminderId, dueDate)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
 	return nil
 }
 
-func createNotificationEvent(ctx context.Context, agg *aggregate.ReminderAggregate, loggedInUserId, organizationId, appSource, content string, reminderCreatedAt time.Time) (*eventstore.Event, error) {
+func createNotificationEvent(ctx context.Context, agg *ReminderAggregate, loggedInUserId, organizationId, appSource, content string, reminderCreatedAt time.Time) (*eventstore.Event, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "createNotificationEvent")
 	defer span.Finish()
 	tenant := agg.GetTenant()
 	tracing.SetCommandHandlerSpanTags(ctx, span, tenant, loggedInUserId)
-	// tracing.LogObjectAsJson(span, "command", cmd)
 
-	event, err := events.NewReminderNotificationEvent(
+	event, err := NewReminderNotificationEvent(
 		agg,
 		loggedInUserId,
 		organizationId,
