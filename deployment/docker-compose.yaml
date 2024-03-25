@@ -39,7 +39,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    command: ["bash", "-c", "apt-get update && apt-get install -y wget && wget -O /tmp/setup.sql https://raw.githubusercontent.com/openline-ai/openline-cli/otter/packages/cli/src/deployment/scripts/postgresql/setup.sql && PGPASSWORD=password psql -U postgres -d openline -h postgres -p 5432 -W -f /tmp/setup.sql"]
+    command: ["bash", "-c", "apt-get update && apt-get install -y wget && wget -O /tmp/setup.sql https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/provision/postgresql.sql && PGPASSWORD=password psql -U postgres -d openline -h postgres -p 5432 -W -f /tmp/setup.sql"]
 
   neo4j:
     image: neo4j:latest
@@ -72,7 +72,7 @@ services:
         condition: service_healthy
     command: >
       /bin/bash -c "\
-      wget -O /tmp/customeros.cypher https://raw.githubusercontent.com/openline-ai/openline-cli/otter/packages/cli/src/deployment/scripts/neo4j/customer-os.cypher && \
+      wget -O /tmp/customeros.cypher https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/provision/neo4j.cypher && \
       cat /tmp/customeros.cypher | cypher-shell -u neo4j -p password --format plain -a bolt://neo4j:7687"
 
   eventstore:
@@ -91,6 +91,52 @@ services:
       - type: volume
         source: eventstore-volume-data
         target: /var/lib/eventstore-data
+
+  temporal:
+    container_name: temporal
+    depends_on:
+      - postgres-sidecar
+    environment:
+      - DB=postgres
+      - DB_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PWD=password
+      - POSTGRES_SEEDS=postgres
+      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development-sql.yaml
+      - ENABLE_ES=false
+    image: temporalio/auto-setup:1.22.6
+    networks:
+      - openline
+    ports:
+      - "7233:7233"
+    volumes:
+      - ./temporal:/etc/temporal/config/dynamicconfig
+    labels:
+      kompose.volume.type: configMap
+  temporal-admin-tools:
+    container_name: temporal-admin-tools
+    depends_on:
+      - temporal
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+      - TEMPORAL_CLI_ADDRESS=temporal:7233
+    image: temporalio/admin-tools:1.22.6
+    networks:
+      - openline
+    stdin_open: true
+    tty: true
+  temporal-ui:
+    container_name: temporal-ui
+    depends_on:
+      - temporal
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+      - TEMPORAL_CORS_ORIGINS=http://localhost:3000
+    image: temporalio/ui:2.16.2
+    networks:
+      - openline
+    ports:
+      - "8080:8080"
 
   customer-os-platform-admin-api:
     image: ghcr.io/openline-ai/openline-customer-os/customer-os-platform-admin-api:latest
