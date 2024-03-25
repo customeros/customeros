@@ -45,6 +45,7 @@ enum ContractFieldMask {
   CONTRACT_FIELD_PAY_AUTOMATICALLY = 25;
   CONTRACT_FIELD_AUTO_RENEW = 26;
   CONTRACT_FIELD_REGION = 27;
+  CONTRACT_FIELD_CHECK = 28;
 }
 
 // CreateContract request message
@@ -73,6 +74,7 @@ message CreateContractGrpcRequest {
   bool canPayWithDirectDebit = 23;
   bool canPayWithBankTransfer = 24;
   bool autoRenew = 25;
+  bool check = 26;
 }
 
 message UpdateContractGrpcRequest {
@@ -110,6 +112,7 @@ message UpdateContractGrpcRequest {
   bool payAutomatically = 32;
   bool autoRenew = 33;
   string region = 34;
+  bool check = 35;
 }
 
 message RolloutRenewalOpportunityOnExpirationGrpcRequest {

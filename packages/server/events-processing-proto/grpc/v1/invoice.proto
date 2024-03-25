@@ -35,7 +35,6 @@ message NewInvoiceForContractRequest {
   string note = 13;
   bool offCycle = 14;
   bool postpaid = 15;
-  string footerNote = 16;
 }
 
 message FillInvoiceRequest {
@@ -53,7 +52,6 @@ message FillInvoiceRequest {
   string Note = 12;
   FillInvoiceCustomer Customer = 15;
   FillInvoiceProvider Provider = 16;
-  string footerNote = 17;
 }
 
 message FillInvoiceCustomer {

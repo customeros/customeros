@@ -96,7 +96,7 @@ func CreateTenantBillingProfile(ctx context.Context, driver *neo4j.DriverWithCon
 					tbp.sendInvoicesBcc=$sendInvoicesBcc,
 					tbp.canPayWithPigeon=$canPayWithPigeon,
 					tbp.canPayWithBankTransfer=$canPayWithBankTransfer,
-					tbp.invoiceNote=$invoiceNote
+					tbp.check=$check
 `, tenant)
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tenant":                 tenant,
@@ -117,7 +117,7 @@ func CreateTenantBillingProfile(ctx context.Context, driver *neo4j.DriverWithCon
 		"sendInvoicesBcc":        profile.SendInvoicesBcc,
 		"canPayWithPigeon":       profile.CanPayWithPigeon,
 		"canPayWithBankTransfer": profile.CanPayWithBankTransfer,
-		"invoiceNote":            profile.InvoiceNote,
+		"check":                  profile.Check,
 	})
 	return profileId
 }
@@ -701,7 +701,8 @@ func CreateContractForOrganization(ctx context.Context, driver *neo4j.DriverWith
 					c.invoicingEnabled=$invoicingEnabled,
 					c.payOnline=$payOnline,
 					c.payAutomatically=$payAutomatically,
-					c.autoRenew=$autoRenew
+					c.autoRenew=$autoRenew,
+					c.check=$check
 				`, tenant)
 
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
@@ -741,6 +742,7 @@ func CreateContractForOrganization(ctx context.Context, driver *neo4j.DriverWith
 		"payOnline":              contract.PayOnline,
 		"payAutomatically":       contract.PayAutomatically,
 		"autoRenew":              contract.AutoRenew,
+		"check":                  contract.Check,
 	})
 	return contractId
 }
@@ -1030,7 +1032,6 @@ func CreateInvoiceForContract(ctx context.Context, driver *neo4j.DriverWithConte
 				i.repositoryFileId=$repositoryFileId,
 				i.status=$status,
 				i.note=$note,
-				i.footerNote=$footerNote,
 				i.customerEmail=$customerEmail,
 				i.paymentLink=$paymentLink,
 				i.offCycle=$offCycle,
@@ -1061,7 +1062,6 @@ func CreateInvoiceForContract(ctx context.Context, driver *neo4j.DriverWithConte
 		"repositoryFileId": invoice.RepositoryFileId,
 		"status":           invoice.Status.String(),
 		"note":             invoice.Note,
-		"footerNote":       invoice.FooterNote,
 		"customerEmail":    invoice.Customer.Email,
 		"paymentLink":      invoice.PaymentDetails.PaymentLink,
 		"offCycle":         invoice.OffCycle,

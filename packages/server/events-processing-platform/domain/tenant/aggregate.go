@@ -279,7 +279,7 @@ func (a *TenantAggregate) onAddBillingProfile(evt eventstore.Event) error {
 		CanPayWithPigeon:       eventData.CanPayWithPigeon,
 		CanPayWithBankTransfer: eventData.CanPayWithBankTransfer,
 		SourceFields:           eventData.SourceFields,
-		InvoiceNote:            eventData.InvoiceNote,
+		Check:                  eventData.Check,
 	}
 	a.TenantDetails.BillingProfiles = append(a.TenantDetails.BillingProfiles, tenantBillingProfile)
 
@@ -342,8 +342,8 @@ func (a *TenantAggregate) onUpdateBillingProfile(evt eventstore.Event) error {
 	if eventData.UpdateCanPayWithBankTransfer() {
 		tenantBillingProfile.CanPayWithBankTransfer = eventData.CanPayWithBankTransfer
 	}
-	if eventData.UpdateInvoiceNote() {
-		tenantBillingProfile.InvoiceNote = eventData.InvoiceNote
+	if eventData.UpdateCheck() {
+		tenantBillingProfile.Check = eventData.Check
 	}
 	return nil
 }
@@ -489,8 +489,8 @@ func extractTenantBillingProfileFieldsMask(requestFieldsMask []tenantpb.TenantBi
 			fieldsMask = append(fieldsMask, event.FieldMaskCanPayWithPigeon)
 		case tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_BANK_TRANSFER:
 			fieldsMask = append(fieldsMask, event.FieldMaskCanPayWithBankTransfer)
-		case tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_INVOICE_NOTE:
-			fieldsMask = append(fieldsMask, event.FieldMaskInvoiceNote)
+		case tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CHECK:
+			fieldsMask = append(fieldsMask, event.FieldMaskCheck)
 		}
 	}
 	fieldsMask = utils.RemoveDuplicates(fieldsMask)

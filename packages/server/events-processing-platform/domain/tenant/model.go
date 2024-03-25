@@ -43,7 +43,7 @@ type TenantBillingProfile struct {
 	SendInvoicesBcc        string             `json:"sendInvoicesBcc"`
 	CanPayWithPigeon       bool               `json:"canPayWithPigeon"`
 	CanPayWithBankTransfer bool               `json:"canPayWithBankTransfer"`
-	InvoiceNote            string             `json:"invoiceNote"`
+	Check                  bool               `json:"check"`
 }
 
 type BankAccount struct {

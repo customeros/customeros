@@ -38,6 +38,7 @@ func MapEntityToContract(entity *neo4jentity.ContractEntity) *model.Contract {
 			CanPayWithBankTransfer: utils.ToPtr(entity.CanPayWithBankTransfer),
 			PayOnline:              utils.ToPtr(entity.PayOnline),
 			PayAutomatically:       utils.ToPtr(entity.PayAutomatically),
+			Check:                  utils.ToPtr(entity.Check),
 		},
 		CommittedPeriods:     entity.RenewalPeriods,
 		ContractEnded:        entity.EndedAt,
@@ -88,6 +89,7 @@ func MapContractInputToEntity(input model.ContractInput) *neo4jentity.ContractEn
 		SourceOfTruth:    neo4jentity.DataSourceOpenline,
 		RenewalPeriods:   input.RenewalPeriods,
 		InvoicingEnabled: utils.IfNotNilBool(input.BillingEnabled),
+		AutoRenew:        utils.IfNotNilBool(input.AutoRenew),
 	}
 	if input.CommittedPeriods != nil {
 		contractEntity.RenewalPeriods = input.CommittedPeriods

@@ -40,7 +40,6 @@ type TenantBillingProfile implements SourceFields & Node {
     region:             String!
     zip:                String!
     legalName:          String!
-    invoiceNote:        String!
     domesticPaymentsBankInfo:       String @deprecated(reason: "Not used")
     internationalPaymentsBankInfo:  String @deprecated(reason: "Not used")
     vatNumber:                      String!
@@ -52,6 +51,7 @@ type TenantBillingProfile implements SourceFields & Node {
     canPayWithDirectDebitBacs:      Boolean @deprecated(reason: "Not used")
     canPayWithBankTransfer:         Boolean!
     canPayWithPigeon:               Boolean!
+    check:                          Boolean!
 }
 
 input TenantInput {
@@ -70,7 +70,6 @@ input TenantBillingProfileInput {
     region:             String
     zip:                String
     legalName:          String
-    invoiceNote:        String
     domesticPaymentsBankInfo:      String @deprecated(reason: "Not used")
     internationalPaymentsBankInfo: String @deprecated(reason: "Not used")
     vatNumber: String!
@@ -81,7 +80,8 @@ input TenantBillingProfileInput {
     canPayWithDirectDebitACH: Boolean @deprecated(reason: "Not used")
     canPayWithDirectDebitBacs: Boolean @deprecated(reason: "Not used")
     canPayWithBankTransfer: Boolean!
-    canPayWithPigeon: Boolean!
+    canPayWithPigeon:       Boolean!
+    check:                  Boolean!
 }
 
 input TenantBillingProfileUpdateInput {
@@ -97,7 +97,6 @@ input TenantBillingProfileUpdateInput {
     region:             String
     zip:                String
     legalName:          String
-    invoiceNote:        String
     domesticPaymentsBankInfo:      String @deprecated(reason: "Not used")
     internationalPaymentsBankInfo: String @deprecated(reason: "Not used")
     vatNumber:                  String
@@ -109,6 +108,7 @@ input TenantBillingProfileUpdateInput {
     canPayWithDirectDebitBacs:  Boolean @deprecated(reason: "Not used")
     canPayWithBankTransfer:     Boolean
     canPayWithPigeon:           Boolean
+    check:                      Boolean
 }
 
 input TenantSettingsInput {

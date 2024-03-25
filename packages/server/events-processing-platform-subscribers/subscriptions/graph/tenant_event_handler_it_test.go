@@ -55,7 +55,7 @@ func TestTenantEventHandler_OnUpdateBillingProfileV1(t *testing.T) {
 			SendInvoicesBcc:        "sendInvoicesBcc",
 			CanPayWithPigeon:       true,
 			CanPayWithBankTransfer: true,
-			InvoiceNote:            "invoiceNote",
+			Check:                  true,
 		},
 		timeNow,
 		[]string{},
@@ -94,7 +94,7 @@ func TestTenantEventHandler_OnUpdateBillingProfileV1(t *testing.T) {
 	require.Equal(t, "sendInvoicesBcc", tenantBillingProfileEntity.SendInvoicesBcc)
 	require.Equal(t, true, tenantBillingProfileEntity.CanPayWithPigeon)
 	require.Equal(t, true, tenantBillingProfileEntity.CanPayWithBankTransfer)
-	require.Equal(t, "invoiceNote", tenantBillingProfileEntity.InvoiceNote)
+	require.Equal(t, true, tenantBillingProfileEntity.Check)
 }
 
 func TestTenantEventHandler_OnUpdateTenantSettingsV1(t *testing.T) {

@@ -71,6 +71,7 @@ type BillingDetails {
     canPayWithBankTransfer: Boolean
     payOnline :             Boolean
     payAutomatically:       Boolean
+    check:                  Boolean
 }
 
 input ContractInput {
@@ -150,6 +151,7 @@ input BillingDetailsInput {
     canPayWithBankTransfer: Boolean
     payOnline :             Boolean
     payAutomatically:       Boolean
+    check:                  Boolean
 }
 
 enum ContractRenewalCycle {

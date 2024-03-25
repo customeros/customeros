@@ -164,7 +164,7 @@ func (s *tenantService) CreateTenantBillingProfile(ctx context.Context, input mo
 		SendInvoicesBcc:        utils.IfNotNilString(input.SendInvoicesBcc),
 		CanPayWithPigeon:       utils.IfNotNilBool(input.CanPayWithPigeon),
 		CanPayWithBankTransfer: utils.IfNotNilBool(input.CanPayWithBankTransfer),
-		InvoiceNote:            utils.IfNotNilString(input.InvoiceNote),
+		Check:                  utils.IfNotNilBool(input.Check),
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
@@ -223,7 +223,7 @@ func (s *tenantService) UpdateTenantBillingProfile(ctx context.Context, input mo
 		SendInvoicesBcc:        utils.IfNotNilString(input.SendInvoicesBcc),
 		CanPayWithPigeon:       utils.IfNotNilBool(input.CanPayWithPigeon),
 		CanPayWithBankTransfer: utils.IfNotNilBool(input.CanPayWithBankTransfer),
-		InvoiceNote:            utils.IfNotNilString(input.InvoiceNote),
+		Check:                  utils.IfNotNilBool(input.Check),
 	}
 
 	if input.Patch != nil && *input.Patch {
@@ -269,8 +269,8 @@ func (s *tenantService) UpdateTenantBillingProfile(ctx context.Context, input mo
 		if input.CanPayWithBankTransfer != nil {
 			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_BANK_TRANSFER)
 		}
-		if input.InvoiceNote != nil {
-			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_INVOICE_NOTE)
+		if input.Check != nil {
+			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CHECK)
 		}
 		if len(fieldsMask) == 0 {
 			span.LogFields(log.String("result", "No fields to update"))

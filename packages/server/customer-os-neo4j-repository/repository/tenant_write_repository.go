@@ -31,7 +31,7 @@ type TenantBillingProfileCreateFields struct {
 	SendInvoicesBcc        string       `json:"sendInvoicesBcc"`
 	CanPayWithPigeon       bool         `json:"canPayWithPigeon"`
 	CanPayWithBankTransfer bool         `json:"canPayWithBankTransfer"`
-	InvoiceNote            string       `json:"invoiceNote"`
+	Check                  bool         `json:"check"`
 }
 
 type TenantBillingProfileUpdateFields struct {
@@ -51,7 +51,7 @@ type TenantBillingProfileUpdateFields struct {
 	SendInvoicesBcc              string    `json:"sendInvoicesBcc"`
 	CanPayWithPigeon             bool      `json:"canPayWithPigeon"`
 	CanPayWithBankTransfer       bool      `json:"canPayWithBankTransfer"`
-	InvoiceNote                  string    `json:"invoiceNote"`
+	Check                        bool      `json:"check"`
 	UpdatePhone                  bool      `json:"updatePhone"`
 	UpdateLegalName              bool      `json:"updateLegalName"`
 	UpdateAddressLine1           bool      `json:"updateAddressLine1"`
@@ -66,7 +66,7 @@ type TenantBillingProfileUpdateFields struct {
 	UpdateSendInvoicesBcc        bool      `json:"updateSendInvoicesBcc"`
 	UpdateCanPayWithPigeon       bool      `json:"updateCanPayWithPigeon"`
 	UpdateCanPayWithBankTransfer bool      `json:"updateCanPayWithBankTransfer"`
-	UpdateInvoiceNote            bool      `json:"updateInvoiceNote"`
+	UpdateCheck                  bool      `json:"updateCheck"`
 }
 
 type TenantSettingsFields struct {
@@ -123,11 +123,11 @@ func (r *tenantWriteRepository) CreateTenantBillingProfile(ctx context.Context, 
 								tbp.region=$region,
 								tbp.zip=$zip,
 								tbp.vatNumber=$vatNumber,	
-								tbp.invoiceNote=$invoiceNote,
 								tbp.sendInvoicesFrom=$sendInvoicesFrom,
 								tbp.sendInvoicesBcc=$sendInvoicesBcc,
 								tbp.canPayWithPigeon=$canPayWithPigeon,
-								tbp.canPayWithBankTransfer=$canPayWithBankTransfer
+								tbp.canPayWithBankTransfer=$canPayWithBankTransfer,
+								tbp.check=$check
 							`, tenant)
 	params := map[string]any{
 		"tenant":                 tenant,
@@ -151,7 +151,7 @@ func (r *tenantWriteRepository) CreateTenantBillingProfile(ctx context.Context, 
 		"sendInvoicesBcc":        data.SendInvoicesBcc,
 		"canPayWithPigeon":       data.CanPayWithPigeon,
 		"canPayWithBankTransfer": data.CanPayWithBankTransfer,
-		"invoiceNote":            data.InvoiceNote,
+		"check":                  data.Check,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -234,9 +234,9 @@ func (r *tenantWriteRepository) UpdateTenantBillingProfile(ctx context.Context, 
 		cypher += `,tbp.canPayWithBankTransfer=$canPayWithBankTransfer`
 		params["canPayWithBankTransfer"] = data.CanPayWithBankTransfer
 	}
-	if data.UpdateInvoiceNote {
-		cypher += `,tbp.invoiceNote=$invoiceNote`
-		params["invoiceNote"] = data.InvoiceNote
+	if data.UpdateCheck {
+		cypher += `,tbp.check=$check`
+		params["check"] = data.Check
 	}
 
 	span.LogFields(log.String("cypher", cypher))

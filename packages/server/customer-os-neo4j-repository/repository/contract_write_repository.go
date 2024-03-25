@@ -39,6 +39,7 @@ type ContractCreateFields struct {
 	CanPayWithDirectDebit  bool                   `json:"canPayWithDirectDebit"`
 	CanPayWithBankTransfer bool                   `json:"canPayWithBankTransfer"`
 	AutoRenew              bool                   `json:"autoRenew"`
+	Check                  bool                   `json:"check"`
 }
 
 type ContractUpdateFields struct {
@@ -69,6 +70,7 @@ type ContractUpdateFields struct {
 	PayOnline                    bool                   `json:"payOnline"`
 	PayAutomatically             bool                   `json:"payAutomatically"`
 	AutoRenew                    bool                   `json:"autoRenew"`
+	Check                        bool                   `json:"check"`
 	UpdateName                   bool                   `json:"updateName"`
 	UpdateContractUrl            bool                   `json:"updateContractUrl"`
 	UpdateStatus                 bool                   `json:"updateStatus"`
@@ -97,6 +99,7 @@ type ContractUpdateFields struct {
 	UpdatePayOnline              bool                   `json:"updatePayOnline"`
 	UpdatePayAutomatically       bool                   `json:"updatePayAutomatically"`
 	UpdateAutoRenew              bool                   `json:"updateAutoRenew"`
+	UpdateCheck                  bool                   `json:"updateCheck"`
 }
 
 type ContractWriteRepository interface {
@@ -157,7 +160,8 @@ func (r *contractWriteRepository) CreateForOrganization(ctx context.Context, ten
 								ct.canPayWithCard=$canPayWithCard,
 								ct.canPayWithDirectDebit=$canPayWithDirectDebit,
 								ct.canPayWithBankTransfer=$canPayWithBankTransfer,
-								ct.autoRenew=$autoRenew
+								ct.autoRenew=$autoRenew,
+								ct.check=$check
 							WITH ct, t
 							OPTIONAL MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$createdByUserId}) 
 							WHERE $createdByUserId <> ""
@@ -191,6 +195,7 @@ func (r *contractWriteRepository) CreateForOrganization(ctx context.Context, ten
 		"canPayWithDirectDebit":  data.CanPayWithDirectDebit,
 		"canPayWithBankTransfer": data.CanPayWithBankTransfer,
 		"autoRenew":              data.AutoRenew,
+		"check":                  data.Check,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -333,6 +338,10 @@ func (r *contractWriteRepository) UpdateAndReturn(ctx context.Context, tenant, c
 	if data.UpdateAutoRenew {
 		cypher += `, ct.autoRenew=$autoRenew `
 		params["autoRenew"] = data.AutoRenew
+	}
+	if data.UpdateCheck {
+		cypher += `, ct.check=$check `
+		params["check"] = data.Check
 	}
 	cypher += ` RETURN ct`
 
