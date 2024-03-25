@@ -13,7 +13,7 @@ import { Archive } from '@ui/media/icons/Archive';
 import { MinusCircle } from '@ui/media/icons/MinusCircle';
 import { DotsVertical } from '@ui/media/icons/DotsVertical';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu';
+import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 
 export const BankTransferMenu = ({
   id,
@@ -56,10 +56,10 @@ export const BankTransferMenu = ({
 
   return (
     <Menu>
-      <MenuButton maxW={'auto'} mb={1} ml={1}>
+      <MenuButton className='mb-1 ml-1'>
         <DotsVertical color='gray.400' boxSize={4} />
       </MenuButton>
-      <MenuList minW={'150px'}>
+      <MenuList className='min-w-[150px]'>
         {!allowInternational && showInternational && (
           <MenuItem onClick={toggleAllowInternational}>
             <Globe04 mr={2} color='gray.500' />

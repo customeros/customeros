@@ -5,6 +5,7 @@ import React from 'react';
 import { useBankAccountsQuery } from '@settings/graphql/getBankAccounts.generated';
 
 import { BankAccount } from '@graphql/types';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { FormSwitch } from '@ui/form/Switch/FromSwitch';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 
@@ -29,13 +30,17 @@ export const BankTransferAccountList = ({
     <>
       <div className='flex items-center justify-between'>
         <span className='text-sm font-semibold whitespace-nowrap'>
-          Bank transfer
+          Bank transfer test
         </span>
         <span className='flex items-center'>
-          <AddAccountButton
-            existingCurrencies={existingAccountCurrencies ?? []}
-            organizationName={organizationName}
-          />
+          <Tooltip label='Add new bank account' side='top' align='center'>
+            <div>
+              <AddAccountButton
+                existingCurrencies={existingAccountCurrencies ?? []}
+                organizationName={organizationName}
+              />
+            </div>
+          </Tooltip>
           <div>
             <FormSwitch
               name='canPayWithBankTransfer'

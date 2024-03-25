@@ -67,6 +67,7 @@ export const TenantBillingPanelDetailsForm = ({
       <FormSelect
         label='Base currency'
         placeholder='Invoice currency'
+        isLabelVisible
         name='baseCurrency'
         formId={formId}
         options={currencyOptions ?? []}
@@ -92,6 +93,7 @@ export const TenantBillingPanelDetailsForm = ({
         <FormInput
           autoComplete='off'
           label='Billing address line 2'
+          labelProps={{ style: { display: 'none' } }}
           name='addressLine2'
           placeholder='Address line 2'
           formId={formId}
@@ -156,7 +158,7 @@ export const TenantBillingPanelDetailsForm = ({
           autoComplete='off'
           label='From'
           labelProps={{
-            className: 'text-sm mb-0 font-semibold mt-4',
+            className: 'text-sm mb-0 font-semibold inline-block pt-4',
           }}
           fontWeight='medium'
           name='sendInvoicesFrom'

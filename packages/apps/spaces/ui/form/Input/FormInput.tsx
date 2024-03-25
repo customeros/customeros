@@ -3,8 +3,6 @@
 import { useField } from 'react-inverted-form';
 import React, { forwardRef, ForwardedRef } from 'react';
 
-import { Text } from '@ui/typography/Text';
-
 import { Input, InputProps } from './Input2';
 
 export interface FormInputProps extends InputProps {
@@ -36,9 +34,7 @@ export const FormInput = forwardRef(
           data-1p-ignore
         />
         {renderError((error) => (
-          <Text fontSize='xs' color='error.500'>
-            {error}
-          </Text>
+          <span className='text-xs text-error-500'>{error}</span>
         ))}
       </div>
     );

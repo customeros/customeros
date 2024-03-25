@@ -13,7 +13,7 @@ import { FormInput } from '@ui/form/Input/FormInput';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea';
 import { FormMaskInput } from '@ui/form/Input/FormMaskInput';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { Card, CardBody, CardHeader } from '@ui/presentation/Card';
+import { Card, CardHeader, CardContent } from '@ui/presentation/Card/Card';
 import { Currency, BankAccount, BankAccountUpdateInput } from '@graphql/types';
 
 import { BankTransferMenu } from './BankTransferMenu';
@@ -103,40 +103,43 @@ export const BankTransferCard = ({ account }: { account: BankAccount }) => {
   return (
     <>
       <Card
-        py={2}
-        px={4}
-        borderRadius='lg'
-        boxShadow='none'
-        border='1px solid'
-        borderColor='gray.200'
-        _hover={{
-          '& #help-button': {
-            visibility: 'visible',
-          },
-        }}
+        // _hover={{
+        //   '& #help-button': {
+        //     visibility: 'visible',
+        //   },
+        // }}
+        className={'py-2 px-4 border-b border-gray-200 rounded-lg  '}
       >
-        <CardHeader p='0' pb={1} as={Flex}>
-          <FormInput
-            formId={formId}
-            name='bankName'
-            label='Bank Name'
-            variant='unstyled'
-            autoComplete='off'
-            placeholder='Bank name'
-            className='font-semibold'
-          />
-          <BankTransferCurrencySelect
-            currency={account.currency}
-            formId={formId}
-          />
+        <CardHeader className='p-0 grid grid-cols-3'>
+          <div className='col-span-2'>
+            <FormInput
+              formId={formId}
+              name='bankName'
+              label='Bank Name'
+              labelProps={{
+                style: { display: 'none' },
+              }}
+              variant='unstyled'
+              autoComplete='off'
+              placeholder='Bank name'
+              className='font-semibold '
+            />
+          </div>
 
-          <BankTransferMenu
-            id={account?.metadata?.id}
-            allowInternational={account.allowInternational}
-            currency={account?.currency}
-          />
+          <div className='flex justify-end'>
+            <BankTransferCurrencySelect
+              currency={account.currency}
+              formId={formId}
+            />
+
+            <BankTransferMenu
+              id={account?.metadata?.id}
+              allowInternational={account.allowInternational}
+              currency={account?.currency}
+            />
+          </div>
         </CardHeader>
-        <CardBody p={0} gap={2}>
+        <CardContent className='p-0 gap-2'>
           <Flex pb={1} gap={2}>
             {account.currency === 'GBP' && (
               <>
@@ -246,7 +249,7 @@ export const BankTransferCard = ({ account }: { account: BankAccount }) => {
               formId={formId}
             />
           )}
-        </CardBody>
+        </CardContent>
       </Card>
     </>
   );

@@ -10,8 +10,7 @@ import {
   mapCurrencyToOptions,
 } from '@settings/components/Tabs/panels/BillingPanel/components/utils';
 
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
+import { cn } from '@ui/utils/cn';
 import { Plus } from '@ui/media/icons/Plus';
 import { Select } from '@ui/form/SyncSelect';
 import { IconButton } from '@ui/form/IconButton/IconButton';
@@ -84,20 +83,25 @@ export const AddAccountButton = ({
             existingCurrencies?.indexOf(option.value) > -1
           }
           formatOptionLabel={(option, { context }) => {
+            const currencyIconPosition =
+              context === 'value' ? 'center' : 'flex-end';
+            const widthIcon = context === 'value' ? 'w-auto' : 'w-7';
+            const minWidthIcon = context === 'value' ? 'w-[14px]' : 'w-auto';
+
             return (
-              <Flex alignItems='center'>
-                <Flex
-                  w={context === 'value' ? 'auto' : 7}
-                  justifyContent={context === 'value' ? 'center' : 'flex-end'}
-                  alignItems='center'
-                  minW={context === 'value' ? '14px' : 'auto'}
+              <div className='flex items-center'>
+                <div
+                  className={cn(
+                    currencyIconPosition,
+                    widthIcon,
+                    minWidthIcon,
+                    'flex items-center',
+                  )}
                 >
                   {currencyIcon?.[option.value]}
-                </Flex>
-                <Text className='option-label' ml={3}>
-                  {option.value}
-                </Text>
-              </Flex>
+                </div>
+                <span className='option-label ml-3'>{option.value}</span>
+              </div>
             );
           }}
           chakraStyles={{
