@@ -15,6 +15,7 @@ import { Text } from '@ui/typography/Text';
 import { Plus } from '@ui/media/icons/Plus';
 import { Select } from '@ui/form/SyncSelect';
 import { IconButton } from '@ui/form/IconButton';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 
 export const AddAccountButton = ({
@@ -43,14 +44,16 @@ export const AddAccountButton = ({
   return (
     <>
       {!showCurrencySelect && (
-        <IconButton
-          size='xs'
-          color='gray.400'
-          icon={<Plus />}
-          variant='ghost'
-          aria-label='Add account'
-          onClick={() => setShowCurrencySelect(true)}
-        />
+        <Tooltip label='Add new bank account'>
+          <IconButton
+            size='xs'
+            color='gray.400'
+            icon={<Plus />}
+            variant='ghost'
+            aria-label='Add account'
+            onClick={() => setShowCurrencySelect(true)}
+          />
+        </Tooltip>
       )}
 
       {showCurrencySelect && (
@@ -63,7 +66,7 @@ export const AddAccountButton = ({
             mutate({
               input: {
                 currency: e.value,
-                bankName: `${organizationName}'s ${e.value} account`,
+                bankName: `${e.value} account`,
               },
             });
           }}

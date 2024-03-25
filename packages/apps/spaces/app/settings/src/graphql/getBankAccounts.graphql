@@ -3,6 +3,8 @@ query BankAccounts {
         metadata {
             id
             created
+            lastUpdated
+
         }
         bankName
         currency

@@ -40,7 +40,12 @@ export type BankAccountsQuery = {
     routingNumber?: string | null;
     allowInternational: boolean;
     otherDetails?: string | null;
-    metadata: { __typename?: 'Metadata'; id: string; created: any };
+    metadata: {
+      __typename?: 'Metadata';
+      id: string;
+      created: any;
+      lastUpdated: any;
+    };
   }>;
 };
 
@@ -50,6 +55,7 @@ export const BankAccountsDocument = `
     metadata {
       id
       created
+      lastUpdated
     }
     bankName
     currency
