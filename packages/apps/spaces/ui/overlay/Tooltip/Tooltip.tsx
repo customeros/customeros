@@ -1,3 +1,4 @@
+'use client';
 import { twMerge } from 'tailwind-merge';
 import * as RadixTooltip from '@radix-ui/react-tooltip';
 
@@ -23,7 +24,11 @@ export const Tooltip = ({
       <RadixTooltip.Root>
         <RadixTooltip.Trigger asChild>{children}</RadixTooltip.Trigger>
         <RadixTooltip.Portal
-          container={document.getElementById('tooltip-portal')}
+          container={
+            typeof window !== 'undefined'
+              ? document?.getElementById('tooltip-portal')
+              : null
+          }
         >
           <RadixTooltip.Content
             className={twMerge(
