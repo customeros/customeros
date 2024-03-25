@@ -43,13 +43,13 @@ export const ReminderItem = ({
 
     return content.replace(targetString, '');
   };
-  const makeContentStr = (content: string, owner: string) => {
-    const strippedContent = stripContent(content, owner);
+  // const makeContentStr = (content: string, owner: string) => {
+  //   const strippedContent = stripContent(content, owner);
 
-    return currentOwner !== owner
-      ? `for ${owner}: ${strippedContent}`
-      : strippedContent;
-  };
+  //   return currentOwner !== owner
+  //     ? `for ${owner}: ${strippedContent}`
+  //     : strippedContent;
+  // };
 
   const { handleSubmit, setDefaultValues } = useForm<ReminderEditForm>({
     formId,
@@ -62,18 +62,18 @@ export const ReminderItem = ({
     },
     stateReducer: (state, action, next) => {
       if (action.type === 'FIELD_CHANGE') {
-        if (action.payload.name === 'content') {
-          return {
-            ...next,
-            values: {
-              ...next.values,
-              content: makeContentStr(next.values.content, next.values.owner),
-            },
-          };
-        }
+        // if (action.payload.name === 'content') {
+        //   return {
+        //     ...next,
+        //     values: {
+        //       ...next.values,
+        //       content: makeContentStr(next.values.content, next.values.owner),
+        //     },
+        //   };
+        // }
         debouncedOnChange({
           ...next.values,
-          content: stripContent(next.values.content, next.values.owner),
+          content: next.values.content,
         });
       }
 
@@ -89,7 +89,7 @@ export const ReminderItem = ({
   useEffect(() => {
     setDefaultValues({
       ...data,
-      content: makeContentStr(data.content, data.owner),
+      // content: makeContentStr(data.content, data.owner),
     });
   }, [currentOwner, data.id]);
 
@@ -110,8 +110,10 @@ export const ReminderItem = ({
 
   return (
     <ReminderPostit
+      owner={data?.owner !== currentOwner ? undefined : data?.owner}
+      isFocused={isFocused}
       isMutating={isMutating}
-      boxShadow={data.id === recentlyUpdatedId ? 'ringPrimary' : 'unset'}
+      boxShadow={data.id === recentlyUpdatedId ? 'ringWarning' : 'unset'}
       onClickOutside={() => {
         setTimelineMeta((prev) =>
           produce(prev, (draft) => {
@@ -126,6 +128,7 @@ export const ReminderItem = ({
         ref={ref}
         isReadOnly={isMutating}
         fontFamily='sticky'
+        fontWeight='300'
         fontSize='sm'
         name='content'
         formId={formId}
@@ -134,7 +137,7 @@ export const ReminderItem = ({
         onFocus={() => setIsFocused(true)}
         cacheMeasurements
         maxRows={isFocused ? undefined : 3}
-        placeholder='Type your reminder here'
+        placeholder='What should we remind you about?'
         borderBottom='unset'
         _hover={{
           borderBottom: 'unset',
@@ -150,6 +153,13 @@ export const ReminderItem = ({
           size='sm'
           variant='ghost'
           colorScheme='yellow'
+          _hover={{
+            bg: 'transparent',
+            color: 'yellow.900',
+          }}
+          _focus={{
+            boxShadow: 'ringWarning',
+          }}
           onClick={() => onDismiss(data.id)}
         >
           Dismiss

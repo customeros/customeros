@@ -73,8 +73,10 @@ export const ReminderDueDatePicker = ({ name, formId }: DueDatePickerProps) => {
                 cursor='pointer'
                 whiteSpace='pre'
                 pb='1px'
-                color={isOpen ? 'primary.700' : 'gray.500'}
-                _hover={{ color: 'primary.700' }}
+                fontSize='sm'
+                borderTop='1px solid transparent'
+                color={isOpen ? 'gray.700' : 'gray.500'}
+                _hover={{ color: 'gray.700' }}
               >{`${DateTimeUtils.format(
                 inputProps.value,
                 DateTimeUtils.date,
@@ -115,6 +117,7 @@ export const ReminderDueDatePicker = ({ name, formId }: DueDatePickerProps) => {
       <TimeInput
         color='gray.500'
         value={time}
+        fontSize='sm'
         onChange={(v) => {
           const [hours, minutes] = v.split(':').map(Number);
           const date = set(new Date(inputProps.value), { hours, minutes });
@@ -141,6 +144,12 @@ const TimeInput = ({ onChange, value, ...rest }: TimeInputProps) => {
       lineHeight='1'
       h='min-content'
       w='fit-content'
+      _focus={{
+        color: 'gray.700',
+        boxShadow: 'unset',
+        borderColor: 'primary.500',
+      }}
+      cursor='text'
       onChange={(e) => {
         const val = e.target.value;
         onChange?.(val);
