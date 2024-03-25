@@ -154,7 +154,7 @@ export const TenantBillingPanelDetailsForm = ({
           isLabelVisible
           name='sendInvoicesFrom'
           placeholder=''
-          rightElement={'@invoices.customeros.com'}
+          rightElement={'@invoices.customeros.ai'}
           onFocus={() => setIsInvoiceProviderFocused(true)}
         />
 
