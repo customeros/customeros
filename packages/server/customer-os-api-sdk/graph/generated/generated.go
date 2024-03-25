@@ -655,6 +655,7 @@ type ComplexityRoot struct {
 		AddressLine1    func(childComplexity int) int
 		AddressLine2    func(childComplexity int) int
 		AddressLocality func(childComplexity int) int
+		AddressRegion   func(childComplexity int) int
 		AddressZip      func(childComplexity int) int
 		Email           func(childComplexity int) int
 		Name            func(childComplexity int) int
@@ -675,6 +676,7 @@ type ComplexityRoot struct {
 		AddressLine1         func(childComplexity int) int
 		AddressLine2         func(childComplexity int) int
 		AddressLocality      func(childComplexity int) int
+		AddressRegion        func(childComplexity int) int
 		AddressZip           func(childComplexity int) int
 		LogoRepositoryFileID func(childComplexity int) int
 		LogoURL              func(childComplexity int) int
@@ -1510,6 +1512,7 @@ type ComplexityRoot struct {
 		LegalName                     func(childComplexity int) int
 		Locality                      func(childComplexity int) int
 		Phone                         func(childComplexity int) int
+		Region                        func(childComplexity int) int
 		SendInvoicesBcc               func(childComplexity int) int
 		SendInvoicesFrom              func(childComplexity int) int
 		Source                        func(childComplexity int) int
@@ -4927,6 +4930,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.InvoiceCustomer.AddressLocality(childComplexity), true
 
+	case "InvoiceCustomer.addressRegion":
+		if e.complexity.InvoiceCustomer.AddressRegion == nil {
+			break
+		}
+
+		return e.complexity.InvoiceCustomer.AddressRegion(childComplexity), true
+
 	case "InvoiceCustomer.addressZip":
 		if e.complexity.InvoiceCustomer.AddressZip == nil {
 			break
@@ -5024,6 +5034,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.InvoiceProvider.AddressLocality(childComplexity), true
+
+	case "InvoiceProvider.addressRegion":
+		if e.complexity.InvoiceProvider.AddressRegion == nil {
+			break
+		}
+
+		return e.complexity.InvoiceProvider.AddressRegion(childComplexity), true
 
 	case "InvoiceProvider.addressZip":
 		if e.complexity.InvoiceProvider.AddressZip == nil {
@@ -10872,6 +10889,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.TenantBillingProfile.Phone(childComplexity), true
 
+	case "TenantBillingProfile.region":
+		if e.complexity.TenantBillingProfile.Region == nil {
+			break
+		}
+
+		return e.complexity.TenantBillingProfile.Region(childComplexity), true
+
 	case "TenantBillingProfile.sendInvoicesBcc":
 		if e.complexity.TenantBillingProfile.SendInvoicesBcc == nil {
 			break
@@ -13073,6 +13097,7 @@ type InvoiceCustomer {
     addressZip:         String
     addressLocality:    String
     addressCountry:     String
+    addressRegion:      String
 }
 
 type InvoiceProvider {
@@ -13084,6 +13109,7 @@ type InvoiceProvider {
     addressZip:             String
     addressLocality:        String
     addressCountry:         String
+    addressRegion:          String
 }
 
 type InvoiceLine implements MetadataInterface {
@@ -14620,6 +14646,7 @@ type TenantBillingProfile implements SourceFields & Node {
     addressLine3:       String!
     locality:           String!
     country:            String!
+    region:             String!
     zip:                String!
     legalName:          String!
     domesticPaymentsBankInfo:       String @deprecated(reason: "Not used")
@@ -14648,6 +14675,7 @@ input TenantBillingProfileInput {
     addressLine3:       String
     locality:           String
     country:            String
+    region:             String
     zip:                String
     legalName:          String
     domesticPaymentsBankInfo:      String @deprecated(reason: "Not used")
@@ -14673,6 +14701,7 @@ input TenantBillingProfileUpdateInput {
     addressLine3:       String
     locality:           String
     country:            String
+    region:             String
     zip:                String
     legalName:          String
     domesticPaymentsBankInfo:      String @deprecated(reason: "Not used")
@@ -38936,6 +38965,8 @@ func (ec *executionContext) fieldContext_Invoice_customer(ctx context.Context, f
 				return ec.fieldContext_InvoiceCustomer_addressLocality(ctx, field)
 			case "addressCountry":
 				return ec.fieldContext_InvoiceCustomer_addressCountry(ctx, field)
+			case "addressRegion":
+				return ec.fieldContext_InvoiceCustomer_addressRegion(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type InvoiceCustomer", field.Name)
 		},
@@ -38998,6 +39029,8 @@ func (ec *executionContext) fieldContext_Invoice_provider(ctx context.Context, f
 				return ec.fieldContext_InvoiceProvider_addressLocality(ctx, field)
 			case "addressCountry":
 				return ec.fieldContext_InvoiceProvider_addressCountry(ctx, field)
+			case "addressRegion":
+				return ec.fieldContext_InvoiceProvider_addressRegion(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type InvoiceProvider", field.Name)
 		},
@@ -39412,6 +39445,47 @@ func (ec *executionContext) _InvoiceCustomer_addressCountry(ctx context.Context,
 }
 
 func (ec *executionContext) fieldContext_InvoiceCustomer_addressCountry(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InvoiceCustomer",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _InvoiceCustomer_addressRegion(ctx context.Context, field graphql.CollectedField, obj *model.InvoiceCustomer) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InvoiceCustomer_addressRegion(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AddressRegion, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InvoiceCustomer_addressRegion(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "InvoiceCustomer",
 		Field:      field,
@@ -40062,6 +40136,47 @@ func (ec *executionContext) _InvoiceProvider_addressCountry(ctx context.Context,
 }
 
 func (ec *executionContext) fieldContext_InvoiceProvider_addressCountry(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InvoiceProvider",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _InvoiceProvider_addressRegion(ctx context.Context, field graphql.CollectedField, obj *model.InvoiceProvider) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InvoiceProvider_addressRegion(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AddressRegion, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InvoiceProvider_addressRegion(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "InvoiceProvider",
 		Field:      field,
@@ -62866,6 +62981,8 @@ func (ec *executionContext) fieldContext_Mutation_tenant_AddBillingProfile(ctx c
 				return ec.fieldContext_TenantBillingProfile_locality(ctx, field)
 			case "country":
 				return ec.fieldContext_TenantBillingProfile_country(ctx, field)
+			case "region":
+				return ec.fieldContext_TenantBillingProfile_region(ctx, field)
 			case "zip":
 				return ec.fieldContext_TenantBillingProfile_zip(ctx, field)
 			case "legalName":
@@ -63005,6 +63122,8 @@ func (ec *executionContext) fieldContext_Mutation_tenant_UpdateBillingProfile(ct
 				return ec.fieldContext_TenantBillingProfile_locality(ctx, field)
 			case "country":
 				return ec.fieldContext_TenantBillingProfile_country(ctx, field)
+			case "region":
+				return ec.fieldContext_TenantBillingProfile_region(ctx, field)
 			case "zip":
 				return ec.fieldContext_TenantBillingProfile_zip(ctx, field)
 			case "legalName":
@@ -79480,6 +79599,8 @@ func (ec *executionContext) fieldContext_Query_tenantBillingProfiles(ctx context
 				return ec.fieldContext_TenantBillingProfile_locality(ctx, field)
 			case "country":
 				return ec.fieldContext_TenantBillingProfile_country(ctx, field)
+			case "region":
+				return ec.fieldContext_TenantBillingProfile_region(ctx, field)
 			case "zip":
 				return ec.fieldContext_TenantBillingProfile_zip(ctx, field)
 			case "legalName":
@@ -79608,6 +79729,8 @@ func (ec *executionContext) fieldContext_Query_tenantBillingProfile(ctx context.
 				return ec.fieldContext_TenantBillingProfile_locality(ctx, field)
 			case "country":
 				return ec.fieldContext_TenantBillingProfile_country(ctx, field)
+			case "region":
+				return ec.fieldContext_TenantBillingProfile_region(ctx, field)
 			case "zip":
 				return ec.fieldContext_TenantBillingProfile_zip(ctx, field)
 			case "legalName":
@@ -85253,6 +85376,50 @@ func (ec *executionContext) _TenantBillingProfile_country(ctx context.Context, f
 }
 
 func (ec *executionContext) fieldContext_TenantBillingProfile_country(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantBillingProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantBillingProfile_region(ctx context.Context, field graphql.CollectedField, obj *model.TenantBillingProfile) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantBillingProfile_region(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Region, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantBillingProfile_region(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "TenantBillingProfile",
 		Field:      field,
@@ -95327,7 +95494,7 @@ func (ec *executionContext) unmarshalInputTenantBillingProfileInput(ctx context.
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"email", "phone", "addressLine1", "addressLine2", "addressLine3", "locality", "country", "zip", "legalName", "domesticPaymentsBankInfo", "internationalPaymentsBankInfo", "vatNumber", "sendInvoicesFrom", "sendInvoicesBcc", "canPayWithCard", "canPayWithDirectDebitSEPA", "canPayWithDirectDebitACH", "canPayWithDirectDebitBacs", "canPayWithBankTransfer", "canPayWithPigeon"}
+	fieldsInOrder := [...]string{"email", "phone", "addressLine1", "addressLine2", "addressLine3", "locality", "country", "region", "zip", "legalName", "domesticPaymentsBankInfo", "internationalPaymentsBankInfo", "vatNumber", "sendInvoicesFrom", "sendInvoicesBcc", "canPayWithCard", "canPayWithDirectDebitSEPA", "canPayWithDirectDebitACH", "canPayWithDirectDebitBacs", "canPayWithBankTransfer", "canPayWithPigeon"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -95383,6 +95550,13 @@ func (ec *executionContext) unmarshalInputTenantBillingProfileInput(ctx context.
 				return it, err
 			}
 			it.Country = data
+		case "region":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("region"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Region = data
 		case "zip":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("zip"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -95487,7 +95661,7 @@ func (ec *executionContext) unmarshalInputTenantBillingProfileUpdateInput(ctx co
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "patch", "email", "phone", "addressLine1", "addressLine2", "addressLine3", "locality", "country", "zip", "legalName", "domesticPaymentsBankInfo", "internationalPaymentsBankInfo", "vatNumber", "sendInvoicesFrom", "sendInvoicesBcc", "canPayWithCard", "canPayWithDirectDebitSEPA", "canPayWithDirectDebitACH", "canPayWithDirectDebitBacs", "canPayWithBankTransfer", "canPayWithPigeon"}
+	fieldsInOrder := [...]string{"id", "patch", "email", "phone", "addressLine1", "addressLine2", "addressLine3", "locality", "country", "region", "zip", "legalName", "domesticPaymentsBankInfo", "internationalPaymentsBankInfo", "vatNumber", "sendInvoicesFrom", "sendInvoicesBcc", "canPayWithCard", "canPayWithDirectDebitSEPA", "canPayWithDirectDebitACH", "canPayWithDirectDebitBacs", "canPayWithBankTransfer", "canPayWithPigeon"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -95557,6 +95731,13 @@ func (ec *executionContext) unmarshalInputTenantBillingProfileUpdateInput(ctx co
 				return it, err
 			}
 			it.Country = data
+		case "region":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("region"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Region = data
 		case "zip":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("zip"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -101833,6 +102014,8 @@ func (ec *executionContext) _InvoiceCustomer(ctx context.Context, sel ast.Select
 			out.Values[i] = ec._InvoiceCustomer_addressLocality(ctx, field, obj)
 		case "addressCountry":
 			out.Values[i] = ec._InvoiceCustomer_addressCountry(ctx, field, obj)
+		case "addressRegion":
+			out.Values[i] = ec._InvoiceCustomer_addressRegion(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -101952,6 +102135,8 @@ func (ec *executionContext) _InvoiceProvider(ctx context.Context, sel ast.Select
 			out.Values[i] = ec._InvoiceProvider_addressLocality(ctx, field, obj)
 		case "addressCountry":
 			out.Values[i] = ec._InvoiceProvider_addressCountry(ctx, field, obj)
+		case "addressRegion":
+			out.Values[i] = ec._InvoiceProvider_addressRegion(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -110120,6 +110305,11 @@ func (ec *executionContext) _TenantBillingProfile(ctx context.Context, sel ast.S
 			}
 		case "country":
 			out.Values[i] = ec._TenantBillingProfile_country(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "region":
+			out.Values[i] = ec._TenantBillingProfile_region(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

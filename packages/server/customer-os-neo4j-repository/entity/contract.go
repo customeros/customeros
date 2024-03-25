@@ -32,6 +32,7 @@ type ContractEntity struct {
 	Zip                             string
 	Locality                        string
 	Country                         string
+	Region                          string
 	OrganizationLegalName           string
 	InvoiceEmail                    string
 	InvoiceNote                     string

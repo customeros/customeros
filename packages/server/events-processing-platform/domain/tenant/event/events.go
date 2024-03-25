@@ -16,6 +16,7 @@ const (
 	FieldMaskAddressLine3           = "addressLine3"
 	FieldMaskZip                    = "zip"
 	FieldMaskCountry                = "country"
+	FieldMaskRegion                 = "region"
 	FieldMaskLocality               = "locality"
 	FieldMaskLegalName              = "legalName"
 	FieldMaskVatNumber              = "vatNumber"

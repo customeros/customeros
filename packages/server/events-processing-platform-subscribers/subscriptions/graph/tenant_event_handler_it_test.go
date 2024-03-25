@@ -47,6 +47,7 @@ func TestTenantEventHandler_OnUpdateBillingProfileV1(t *testing.T) {
 			AddressLine3:           "addressLine3",
 			Locality:               "locality",
 			Country:                "country",
+			Region:                 "region",
 			Zip:                    "zip",
 			LegalName:              "legalName",
 			VatNumber:              "vatNumber",
@@ -84,6 +85,7 @@ func TestTenantEventHandler_OnUpdateBillingProfileV1(t *testing.T) {
 	require.Equal(t, "addressLine3", tenantBillingProfileEntity.AddressLine3)
 	require.Equal(t, "locality", tenantBillingProfileEntity.Locality)
 	require.Equal(t, "country", tenantBillingProfileEntity.Country)
+	require.Equal(t, "region", tenantBillingProfileEntity.Region)
 	require.Equal(t, "zip", tenantBillingProfileEntity.Zip)
 	require.Equal(t, "legalName", tenantBillingProfileEntity.LegalName)
 	require.Equal(t, "vatNumber", tenantBillingProfileEntity.VatNumber)

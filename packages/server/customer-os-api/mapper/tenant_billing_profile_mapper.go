@@ -23,6 +23,7 @@ func MapEntityToTenantBillingProfile(entity *neo4jentity.TenantBillingProfileEnt
 		AddressLine3:           entity.AddressLine3,
 		Locality:               entity.Locality,
 		Country:                entity.Country,
+		Region:                 entity.Region,
 		Zip:                    entity.Zip,
 		VatNumber:              entity.VatNumber,
 		SendInvoicesFrom:       entity.SendInvoicesFrom,

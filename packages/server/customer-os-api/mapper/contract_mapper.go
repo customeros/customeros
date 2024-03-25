@@ -27,7 +27,7 @@ func MapEntityToContract(entity *neo4jentity.ContractEntity) *model.Contract {
 			AddressLine1:           utils.ToPtr(entity.AddressLine1),
 			AddressLine2:           utils.ToPtr(entity.AddressLine2),
 			Locality:               utils.ToPtr(entity.Locality),
-			Region:                 utils.ToPtr(""), // TODO add regions
+			Region:                 utils.ToPtr(entity.Region),
 			Country:                utils.ToPtr(entity.Country),
 			PostalCode:             utils.ToPtr(entity.Zip),
 			OrganizationLegalName:  utils.ToPtr(entity.OrganizationLegalName),

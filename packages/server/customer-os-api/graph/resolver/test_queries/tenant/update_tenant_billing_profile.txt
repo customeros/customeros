@@ -9,6 +9,7 @@ tenant_UpdateBillingProfile(
         addressLine3: "addressLine3"
         locality: "locality"
         country: "country"
+        region: "region"
         zip: "zip"
         legalName: "legalName"
         vatNumber: "vatNumber"

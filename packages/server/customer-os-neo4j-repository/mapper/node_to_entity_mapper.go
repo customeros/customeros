@@ -43,6 +43,7 @@ func MapDbNodeToInvoiceEntity(dbNode *dbtype.Node) *entity.InvoiceEntity {
 			Zip:          utils.GetStringPropOrEmpty(props, "customerAddressZip"),
 			Locality:     utils.GetStringPropOrEmpty(props, "customerAddressLocality"),
 			Country:      utils.GetStringPropOrEmpty(props, "customerAddressCountry"),
+			Region:       utils.GetStringPropOrEmpty(props, "customerAddressRegion"),
 		},
 		Provider: entity.InvoiceProvider{
 			LogoRepositoryFileId: utils.GetStringPropOrEmpty(props, "providerLogoRepositoryFileId"),
@@ -53,6 +54,7 @@ func MapDbNodeToInvoiceEntity(dbNode *dbtype.Node) *entity.InvoiceEntity {
 			Zip:                  utils.GetStringPropOrEmpty(props, "providerAddressZip"),
 			Locality:             utils.GetStringPropOrEmpty(props, "providerAddressLocality"),
 			Country:              utils.GetStringPropOrEmpty(props, "providerAddressCountry"),
+			Region:               utils.GetStringPropOrEmpty(props, "providerAddressRegion"),
 		},
 		PaymentDetails: entity.PaymentDetails{
 			PaymentLink: utils.GetStringPropOrEmpty(props, "paymentLink"),
@@ -302,6 +304,7 @@ func MapDbNodeToTenantBillingProfileEntity(dbNode *dbtype.Node) *entity.TenantBi
 		AddressLine3:           utils.GetStringPropOrEmpty(props, "addressLine3"),
 		Locality:               utils.GetStringPropOrEmpty(props, "locality"),
 		Country:                utils.GetStringPropOrEmpty(props, "country"),
+		Region:                 utils.GetStringPropOrEmpty(props, "region"),
 		Zip:                    utils.GetStringPropOrEmpty(props, "zip"),
 		VatNumber:              utils.GetStringPropOrEmpty(props, "vatNumber"),
 		SendInvoicesFrom:       utils.GetStringPropOrEmpty(props, "sendInvoicesFrom"),
@@ -362,6 +365,7 @@ func MapDbNodeToContractEntity(dbNode *dbtype.Node) *entity.ContractEntity {
 		Zip:                             utils.GetStringPropOrEmpty(props, "zip"),
 		Locality:                        utils.GetStringPropOrEmpty(props, "locality"),
 		Country:                         utils.GetStringPropOrEmpty(props, "country"),
+		Region:                          utils.GetStringPropOrEmpty(props, "region"),
 		OrganizationLegalName:           utils.GetStringPropOrEmpty(props, "organizationLegalName"),
 		InvoiceEmail:                    utils.GetStringPropOrEmpty(props, "invoiceEmail"),
 		InvoiceNote:                     utils.GetStringPropOrEmpty(props, "invoiceNote"),

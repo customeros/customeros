@@ -270,6 +270,7 @@ func (a *TenantAggregate) onAddBillingProfile(evt eventstore.Event) error {
 		AddressLine3:           eventData.AddressLine3,
 		Locality:               eventData.Locality,
 		Country:                eventData.Country,
+		Region:                 eventData.Region,
 		Zip:                    eventData.Zip,
 		LegalName:              eventData.LegalName,
 		VatNumber:              eventData.VatNumber,
@@ -315,6 +316,9 @@ func (a *TenantAggregate) onUpdateBillingProfile(evt eventstore.Event) error {
 	}
 	if eventData.UpdateCountry() {
 		tenantBillingProfile.Country = eventData.Country
+	}
+	if eventData.UpdateRegion() {
+		tenantBillingProfile.Region = eventData.Region
 	}
 	if eventData.UpdateZip() {
 		tenantBillingProfile.Zip = eventData.Zip
@@ -465,6 +469,8 @@ func extractTenantBillingProfileFieldsMask(requestFieldsMask []tenantpb.TenantBi
 			fieldsMask = append(fieldsMask, event.FieldMaskLocality)
 		case tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_COUNTRY:
 			fieldsMask = append(fieldsMask, event.FieldMaskCountry)
+		case tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_REGION:
+			fieldsMask = append(fieldsMask, event.FieldMaskRegion)
 		case tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_ZIP:
 			fieldsMask = append(fieldsMask, event.FieldMaskZip)
 		case tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_LEGAL_NAME:

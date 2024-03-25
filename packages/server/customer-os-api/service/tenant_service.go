@@ -157,6 +157,7 @@ func (s *tenantService) CreateTenantBillingProfile(ctx context.Context, input mo
 		AddressLine3:           utils.IfNotNilString(input.AddressLine3),
 		Locality:               utils.IfNotNilString(input.Locality),
 		Country:                utils.IfNotNilString(input.Country),
+		Region:                 utils.IfNotNilString(input.Region),
 		Zip:                    utils.IfNotNilString(input.Zip),
 		VatNumber:              utils.IfNotNilString(input.VatNumber),
 		SendInvoicesFrom:       utils.IfNotNilString(input.SendInvoicesFrom),
@@ -214,6 +215,7 @@ func (s *tenantService) UpdateTenantBillingProfile(ctx context.Context, input mo
 		AddressLine3:           utils.IfNotNilString(input.AddressLine3),
 		Locality:               utils.IfNotNilString(input.Locality),
 		Country:                utils.IfNotNilString(input.Country),
+		Region:                 utils.IfNotNilString(input.Region),
 		Zip:                    utils.IfNotNilString(input.Zip),
 		VatNumber:              utils.IfNotNilString(input.VatNumber),
 		SendInvoicesFrom:       utils.IfNotNilString(input.SendInvoicesFrom),
@@ -243,6 +245,9 @@ func (s *tenantService) UpdateTenantBillingProfile(ctx context.Context, input mo
 		}
 		if input.Country != nil {
 			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_COUNTRY)
+		}
+		if input.Region != nil {
+			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_REGION)
 		}
 		if input.Zip != nil {
 			fieldsMask = append(fieldsMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_ZIP)

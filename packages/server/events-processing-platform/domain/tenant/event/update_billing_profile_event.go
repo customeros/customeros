@@ -19,6 +19,7 @@ type TenantBillingProfileUpdateEvent struct {
 	AddressLine3           string    `json:"addressLine3,omitempty"`
 	Locality               string    `json:"locality,omitempty"`
 	Country                string    `json:"country,omitempty"`
+	Region                 string    `json:"region,omitempty"`
 	Zip                    string    `json:"zip,omitempty"`
 	LegalName              string    `json:"legalName,omitempty"`
 	VatNumber              string    `json:"vatNumber"`
@@ -40,6 +41,7 @@ func NewTenantBillingProfileUpdateEvent(aggregate eventstore.Aggregate, id strin
 		AddressLine3:           request.AddressLine3,
 		Locality:               request.Locality,
 		Country:                request.Country,
+		Region:                 request.Region,
 		Zip:                    request.Zip,
 		LegalName:              request.LegalName,
 		VatNumber:              request.VatNumber,
@@ -84,6 +86,10 @@ func (e TenantBillingProfileUpdateEvent) UpdateLocality() bool {
 
 func (e TenantBillingProfileUpdateEvent) UpdateCountry() bool {
 	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskCountry)
+}
+
+func (e TenantBillingProfileUpdateEvent) UpdateRegion() bool {
+	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskRegion)
 }
 
 func (e TenantBillingProfileUpdateEvent) UpdateZip() bool {

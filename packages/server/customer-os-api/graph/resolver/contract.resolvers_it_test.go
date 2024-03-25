@@ -125,6 +125,7 @@ func TestMutationResolver_ContractUpdate(t *testing.T) {
 			require.Equal(t, "test address line 2", contract.AddressLine2)
 			require.Equal(t, "test locality", contract.Locality)
 			require.Equal(t, "test country", contract.Country)
+			require.Equal(t, "test region", contract.Region)
 			require.Equal(t, "test zip", contract.Zip)
 			require.Equal(t, "test organization legal name", contract.OrganizationLegalName)
 			require.Equal(t, "test invoice email", contract.InvoiceEmail)
@@ -135,7 +136,7 @@ func TestMutationResolver_ContractUpdate(t *testing.T) {
 			require.Equal(t, true, contract.PayOnline)
 			require.Equal(t, true, contract.PayAutomatically)
 			require.Equal(t, true, contract.AutoRenew)
-			require.Equal(t, 23, len(contract.FieldsMask))
+			require.Equal(t, 24, len(contract.FieldsMask))
 			calledUpdateContract = true
 			return &contractpb.ContractIdGrpcResponse{
 				Id: contractId,
@@ -230,6 +231,7 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 		Zip:                    "zip",
 		Locality:               "locality",
 		Country:                "country",
+		Region:                 "region",
 		OrganizationLegalName:  "organization legal name",
 		InvoiceEmail:           "invoice email",
 		InvoiceNote:            "invoice note",
@@ -297,6 +299,7 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 	require.Equal(t, "zip", *billingDetails.PostalCode)
 	require.Equal(t, "locality", *billingDetails.Locality)
 	require.Equal(t, "country", *billingDetails.Country)
+	require.Equal(t, "region", *billingDetails.Region)
 	require.Equal(t, "organization legal name", *billingDetails.OrganizationLegalName)
 	require.Equal(t, "invoice email", *billingDetails.BillingEmail)
 	require.Equal(t, "invoice note", *billingDetails.InvoiceNote)

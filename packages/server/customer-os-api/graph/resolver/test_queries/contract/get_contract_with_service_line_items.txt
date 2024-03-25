@@ -12,6 +12,7 @@ query GetContract($contractId: ID!) {
         locality
         region
         country
+        region
         postalCode
         organizationLegalName
         billingEmail

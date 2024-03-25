@@ -54,6 +54,7 @@ type InvoiceCustomer {
     addressZip:         String
     addressLocality:    String
     addressCountry:     String
+    addressRegion:      String
 }
 
 type InvoiceProvider {
@@ -65,6 +66,7 @@ type InvoiceProvider {
     addressZip:             String
     addressLocality:        String
     addressCountry:         String
+    addressRegion:          String
 }
 
 type InvoiceLine implements MetadataInterface {

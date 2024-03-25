@@ -13,8 +13,9 @@ type TenantBillingProfileEntity struct {
 	AddressLine1           string
 	AddressLine2           string
 	AddressLine3           string
-	Locality               string
 	Country                string
+	Region                 string
+	Locality               string
 	Zip                    string
 	VatNumber              string
 	SendInvoicesFrom       string

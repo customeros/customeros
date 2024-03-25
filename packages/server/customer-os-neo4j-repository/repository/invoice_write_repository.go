@@ -50,6 +50,7 @@ type InvoiceFillFields struct {
 	CustomerAddressZip           string                  `json:"customerAddressZip"`
 	CustomerAddressLocality      string                  `json:"customerAddressLocality"`
 	CustomerAddressCountry       string                  `json:"customerAddressCountry"`
+	CustomerAddressRegion        string                  `json:"customerAddressRegion"`
 	ProviderLogoRepositoryFileId string                  `json:"providerLogoRepositoryFileId"`
 	ProviderName                 string                  `json:"providerName"`
 	ProviderEmail                string                  `json:"providerEmail"`
@@ -58,6 +59,7 @@ type InvoiceFillFields struct {
 	ProviderAddressZip           string                  `json:"providerAddressZip"`
 	ProviderAddressLocality      string                  `json:"providerAddressLocality"`
 	ProviderAddressCountry       string                  `json:"providerAddressCountry"`
+	ProviderAddressRegion        string                  `json:"providerAddressRegion"`
 }
 
 type InvoiceUpdateFields struct {
@@ -183,6 +185,7 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tenant, invoic
 								i.customerAddressZip=$customerAddressZip,
 								i.customerAddressLocality=$customerAddressLocality,
 								i.customerAddressCountry=$customerAddressCountry,
+								i.customerAddressRegion=$customerAddressRegion,
 								i.providerLogoRepositoryFileId=$providerLogoRepositoryFileId,
 								i.providerName=$providerName,
 								i.providerEmail=$providerEmail,
@@ -190,7 +193,8 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tenant, invoic
 								i.providerAddressLine2=$providerAddressLine2,
 								i.providerAddressZip=$providerAddressZip,
 								i.providerAddressLocality=$providerAddressLocality,
-								i.providerAddressCountry=$providerAddressCountry
+								i.providerAddressCountry=$providerAddressCountry,
+								i.providerAddressRegion=$providerAddressRegion
 							WITH c, i 
 							MERGE (c)-[:HAS_INVOICE]->(i) 
 							`, tenant)
@@ -217,6 +221,7 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tenant, invoic
 		"customerAddressZip":           data.CustomerAddressZip,
 		"customerAddressLocality":      data.CustomerAddressLocality,
 		"customerAddressCountry":       data.CustomerAddressCountry,
+		"customerAddressRegion":        data.CustomerAddressRegion,
 		"providerLogoRepositoryFileId": data.ProviderLogoRepositoryFileId,
 		"providerName":                 data.ProviderName,
 		"providerEmail":                data.ProviderEmail,
@@ -225,6 +230,7 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tenant, invoic
 		"providerAddressZip":           data.ProviderAddressZip,
 		"providerAddressLocality":      data.ProviderAddressLocality,
 		"providerAddressCountry":       data.ProviderAddressCountry,
+		"providerAddressRegion":        data.ProviderAddressRegion,
 	}
 
 	span.LogFields(log.String("cypher", cypher))
