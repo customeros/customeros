@@ -14,7 +14,7 @@ import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { Plus } from '@ui/media/icons/Plus';
 import { Select } from '@ui/form/SyncSelect';
-import { IconButton } from '@ui/form/IconButton';
+import { IconButton } from '@ui/form/IconButton/IconButton';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 
 export const AddAccountButton = ({
@@ -45,7 +45,8 @@ export const AddAccountButton = ({
       {!showCurrencySelect && (
         <IconButton
           size='xs'
-          color='gray.400'
+          colorScheme='gray'
+          className='text-gray-400'
           icon={<Plus />}
           variant='ghost'
           aria-label='Add account'

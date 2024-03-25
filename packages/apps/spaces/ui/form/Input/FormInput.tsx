@@ -1,58 +1,37 @@
 'use client';
 
-import { forwardRef } from 'react';
 import { useField } from 'react-inverted-form';
-
-import {
-  FormLabel,
-  FormControl,
-  VisuallyHidden,
-  FormLabelProps,
-} from '@chakra-ui/react';
+import React, { forwardRef, ForwardedRef } from 'react';
 
 import { Text } from '@ui/typography/Text';
 
-import { Input, InputProps } from './Input';
+import { Input, InputProps } from './Input2';
 
 export interface FormInputProps extends InputProps {
   name: string;
   formId: string;
   label?: string;
-  isLabelVisible?: boolean;
-  labelProps?: FormLabelProps;
+  labelProps?: React.LabelHTMLAttributes<HTMLLabelElement>;
 }
 
 //todo add visually hidden label - accessibility
 
 export const FormInput = forwardRef(
   (
-    {
-      name,
-      formId,
-      label,
-      isLabelVisible,
-      labelProps,
-      ...props
-    }: FormInputProps,
-    ref,
+    { name, formId, label, labelProps, ...props }: FormInputProps,
+    ref: ForwardedRef<HTMLInputElement>,
   ) => {
     const { getInputProps, renderError, state } = useField(name, formId);
 
     return (
-      <FormControl>
-        {isLabelVisible ? (
-          <FormLabel {...labelProps}>{label}</FormLabel>
-        ) : (
-          <VisuallyHidden>
-            <FormLabel>{label}</FormLabel>
-          </VisuallyHidden>
-        )}
+      <div>
+        <label {...labelProps}>{label}</label>
 
         <Input
           ref={ref}
           {...getInputProps()}
           {...props}
-          isInvalid={state.meta?.meta?.hasError}
+          onInvalid={() => state.meta?.meta?.hasError}
           autoComplete='off'
           data-1p-ignore
         />
@@ -61,7 +40,7 @@ export const FormInput = forwardRef(
             {error}
           </Text>
         ))}
-      </FormControl>
+      </div>
     );
   },
 );

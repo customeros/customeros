@@ -46,8 +46,8 @@ export const BankAccountInput = ({
         {...props}
         onChange={onChange}
         autoComplete='off'
-        textOverflow='ellipsis'
-        overflow='hidden'
+        // textOverflow='ellipsis'
+        // overflow='hidden'
       />
     </FormControl>
   );

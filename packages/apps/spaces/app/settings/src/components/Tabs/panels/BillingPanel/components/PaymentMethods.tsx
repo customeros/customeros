@@ -6,15 +6,11 @@ import { useConnections, useIntegrationApp } from '@integration-app/react';
 import { useGetExternalSystemInstancesQuery } from '@settings/graphql/getExternalSystemInstances.generated';
 import { BankTransferAccountList } from '@settings/components/Tabs/panels/BillingPanel/components/BankTransferAccountList';
 
-import { Box } from '@ui/layout/Box';
-import { Flex } from '@ui/layout/Flex';
-import { Switch } from '@ui/form/Switch';
-import { FormLabel } from '@ui/form/Input';
-import { Text } from '@ui/typography/Text';
 import { Stripe } from '@ui/media/logos/Stripe';
-import { Divider } from '@ui/presentation/Divider';
+import { Switch } from '@ui/form/Switch/Switch2';
 import { ExternalSystemType } from '@graphql/types';
 import { toastError } from '@ui/presentation/Toast';
+import { Divider } from '@ui/presentation/Divider/Divider';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 
 export const PaymentMethods = ({
@@ -25,7 +21,7 @@ export const PaymentMethods = ({
   organizationName?: string | null;
 }) => {
   const client = getGraphQLClient();
-  const { data } = useGetExternalSystemInstancesQuery(client);
+  const { data, isLoading } = useGetExternalSystemInstancesQuery(client);
   const iApp = useIntegrationApp();
   const { items: iConnections, refresh } = useConnections();
   const isStripeActive = !!iConnections
@@ -47,45 +43,37 @@ export const PaymentMethods = ({
 
   return (
     <>
-      <Flex position='relative' alignItems='center'>
-        <Text fontSize='sm' whiteSpace='nowrap' mr={2} color='gray.500'>
+      <div className='flex items-center'>
+        <span className='text-sm text-gray-500 whitespace-nowrap mr-2'>
           Customer can pay using
-        </Text>
-        <Divider background='gray.200' />
-      </Flex>
-      <Box w='full'>
-        <FormLabel
-          display='flex'
-          alignItems='center'
-          justifyContent='space-between'
-          m={0}
+        </span>
+        <Divider />
+      </div>
+      <div className='w-full'>
+        <label
+          htmlFor='Stripe'
+          className='flex items-center justify-between mt-0'
         >
-          <Text fontSize='sm' whiteSpace='nowrap'>
+          <span className='text-sm whitespace-nowrap'>
             <Stripe boxSize={5} mr={2} />
             Stripe
-          </Text>
+          </span>
           <Switch
             size='sm'
-            isInvalid={!availablePaymentMethodTypes?.length}
+            isInvalid={!isLoading && !availablePaymentMethodTypes?.length}
             isChecked={isStripeActive}
             colorScheme='primary'
             onChange={handleOpenIntegrationAppModal}
           />
-        </FormLabel>
+        </label>
         {isStripeActive && (
-          <Text
-            textTransform='capitalize'
-            color='gray.500'
-            fontSize='sm'
-            ml={7}
-            noOfLines={1}
-          >
+          <span className='text-sm capitalize text-gray-500 ml-7 line-clamp-1'>
             {availablePaymentMethodTypes?.length
               ? availablePaymentMethodTypes?.join(', ').split('_').join(' ')
               : 'No payment methods enabled in Stripe yet'}
-          </Text>
+          </span>
         )}
-      </Box>
+      </div>
 
       <BankTransferAccountList
         formId={formId}

@@ -379,39 +379,15 @@ export const BillingPanel = () => {
     }
     onOpen();
   };
+  const billingEnabledStyle = tenantSettingsData?.tenantSettings.billingEnabled
+    ? 'opacity-0'
+    : 'opacity-1';
 
   return (
     <div className='flex'>
-      <div
-        className='flex-1 w-full h-[100vh] bg-gray-25 flex-col shadow-none max-w-[400px] min-w-[400px] border-r border-gray-300 overflow-y-scroll pr-0 '
-        // flex='1'
-        // w='full'
-        // h='100vh'
-        // bg='#FCFCFC'
-        // flexDirection='column'
-        // boxShadow='none'
-        // background='gray.25'
-        // maxW={400}
-        // minW={400}
-        // borderRight='1px solid'
-        // borderColor='gray.300'
-        // overflowY='scroll'
-        // borderRadius='none'
-        // pr={0}
-      >
-        <div
-          className='flex items-center justify-between px-6 pb-0 pt-4'
-          // px='6'
-          // pb='0'
-          // pt='4'
-          // as={Flex}
-          // alignItems='center'
-          // justifyContent='space-between'
-        >
-          <h1
-            className='text-lg text-gray-700 pt-1'
-            // fontSize='lg' color='gray.700' pt={1}
-          >
+      <div className='flex-1 w-full h-[100vh] bg-gray-25 flex-col shadow-none max-w-[400px] min-w-[400px] border-r border-gray-300 overflow-y-scroll pr-0 '>
+        <div className='flex items-center justify-between px-6 pb-0 pt-4'>
+          <h1 className='text-lg text-gray-700 pt-1'>
             <b>Billing</b>
           </h1>
 
@@ -439,38 +415,23 @@ export const BillingPanel = () => {
         {!tenantSettingsData?.tenantSettings.billingEnabled && (
           <div
             className={cn(
-              tenantSettingsData?.tenantSettings.billingEnabled ? 0 : 1,
+              billingEnabledStyle,
               'flex flex-col px-6 w-full gap-4',
             )}
-            // as={Flex}
-            // flexDir='column'
-            // px='6'
-            // w='full'
-            // gap={4}
-            // opacity={tenantSettingsData?.tenantSettings.billingEnabled ? 0 : 1}
           >
-            <span
-              className='text-sm'
-              // fontSize='sm'
-            >
+            <span className='text-sm'>
               Master your revenue lifecycle from contract to cash by enabling
               customer billing for your customers.
             </span>
 
-            <ul
-              className='pl-6 text-sm'
-              //  pl={6} fontSize='sm'
-            >
+            <ul className='pl-6 text-sm'>
               <li>
                 Automatically send customer invoices based on their contract
                 service line items
               </li>
               <li>Let customers pay using a connected payment provider</li>
             </ul>
-            <div
-              className='items-center'
-              // alignItems='center'
-            >
+            <div className='items-center'>
               <Button
                 colorScheme='primary'
                 variant='outline'
@@ -494,10 +455,7 @@ export const BillingPanel = () => {
           />
         )}
       </div>
-      <div
-        className='bodre-r border-gray-300 max-h-[100vh]'
-        //  borderRight='1px solid' borderColor='gray.300' maxH='100vh
-      >
+      <div className='bodre-r border-gray-300 max-h-[100vh]'>
         <Invoice
           isInvoiceProviderFocused={
             isInvoiceProviderFocused || isInvoiceProviderDetailsHovered

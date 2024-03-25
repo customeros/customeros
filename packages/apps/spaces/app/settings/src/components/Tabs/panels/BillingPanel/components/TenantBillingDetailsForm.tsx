@@ -3,14 +3,35 @@
 import React, { useMemo } from 'react';
 
 import { LogoUploader } from '@settings/components/LogoUploadComponent/LogoUploader';
-import { VatInput } from '@settings/components/Tabs/panels/BillingPanel/components/VatInput';
 import { PaymentMethods } from '@settings/components/Tabs/panels/BillingPanel/components/PaymentMethods';
 
 import { FormSelect } from '@ui/form/SyncSelect';
 import { Divider } from '@ui/presentation/Divider';
 import { countryOptions } from '@shared/util/countryOptions';
+import { FormMaskInput } from '@ui/form/Input/FormMaskInput';
 import { FormInput, FormResizableInput } from '@ui/form/Input';
 import { getCurrencyOptions } from '@shared/util/currencyOptions';
+
+const VAT = {
+  mask: 'AA 000 000 000',
+  definitions: {
+    A: /[A-Za-z]/,
+    '0': /[0-9]/,
+  },
+  prepare: function (value: string, mask: { _value: string }) {
+    if (mask._value.length < 2) {
+      return value.toUpperCase();
+    }
+
+    return value;
+  },
+  format: function (value: string) {
+    return value.toUpperCase();
+  },
+  parse: function (value: string) {
+    return value.toUpperCase();
+  },
+};
 
 export const TenantBillingPanelDetailsForm = ({
   setIsInvoiceProviderDetailsHovered,
@@ -26,20 +47,14 @@ export const TenantBillingPanelDetailsForm = ({
   const currencyOptions = useMemo(() => getCurrencyOptions(), []);
 
   return (
-    <div
-      className='w-full flex flex-col px-6 gap-4'
-      //  as={Flex} flexDir='column' px='6' w='full' gap={4}
-    >
+    <div className='w-full flex flex-col px-6 gap-4'>
       <LogoUploader />
       <FormInput
         autoComplete='off'
         label='Organization legal name'
         placeholder='Legal name'
-        isLabelVisible
         labelProps={{
-          fontSize: 'sm',
-          mb: 0,
-          fontWeight: 'semibold',
+          className: 'text-sm mb-0 font-semibold',
         }}
         name='legalName'
         formId={formId}
@@ -52,7 +67,6 @@ export const TenantBillingPanelDetailsForm = ({
       <FormSelect
         label='Base currency'
         placeholder='Invoice currency'
-        isLabelVisible
         name='baseCurrency'
         formId={formId}
         options={currencyOptions ?? []}
@@ -67,11 +81,8 @@ export const TenantBillingPanelDetailsForm = ({
           autoComplete='off'
           label='Billing address'
           placeholder='Address line 1'
-          isLabelVisible
           labelProps={{
-            fontSize: 'sm',
-            mb: 0,
-            fontWeight: 'semibold',
+            className: 'text-sm mb-0 font-semibold',
           }}
           name='addressLine1'
           formId={formId}
@@ -93,6 +104,7 @@ export const TenantBillingPanelDetailsForm = ({
             autoComplete='off'
             label='Billing address locality'
             name='locality'
+            labelProps={{ className: 'hidden' }}
             placeholder='City'
             formId={formId}
             onFocus={() => setIsInvoiceProviderFocused(true)}
@@ -103,6 +115,7 @@ export const TenantBillingPanelDetailsForm = ({
             label='Billing address zip/Postal code'
             name='zip'
             placeholder='ZIP/Postal code'
+            labelProps={{ className: 'hidden' }}
             formId={formId}
             onFocus={() => setIsInvoiceProviderFocused(true)}
             onBlur={() => setIsInvoiceProviderFocused(false)}
@@ -114,19 +127,17 @@ export const TenantBillingPanelDetailsForm = ({
           formId={formId}
           options={countryOptions}
         />
-        <VatInput
+
+        <FormMaskInput
+          options={{ opts: VAT }}
           formId={formId}
           name='vatNumber'
           autoComplete='off'
           label='VAT number'
-          isLabelVisible
           labelProps={{
-            fontSize: 'sm',
-            mb: 0,
-            mt: 4,
-            fontWeight: 'semibold',
+            className: 'text-sm mb-0 font-semibold mt-4',
           }}
-          textOverflow='ellipsis'
+          className='overflow-ellipsis'
           placeholder='VAT number'
           onFocus={() => setIsInvoiceProviderFocused(true)}
           onBlur={() => setIsInvoiceProviderFocused(false)}
@@ -145,15 +156,12 @@ export const TenantBillingPanelDetailsForm = ({
           autoComplete='off'
           label='From'
           labelProps={{
-            fontSize: 'sm',
-            mb: 0,
-            mt: 4,
-            fontWeight: 'semibold',
+            className: 'text-sm mb-0 font-semibold mt-4',
           }}
           fontWeight='medium'
-          isLabelVisible
           name='sendInvoicesFrom'
           placeholder=''
+          className='font-semibold'
           rightElement={'@invoices.customeros.com'}
           onFocus={() => setIsInvoiceProviderFocused(true)}
         />
@@ -162,17 +170,13 @@ export const TenantBillingPanelDetailsForm = ({
           autoComplete='off'
           label='BCC'
           labelProps={{
-            fontSize: 'sm',
-            mb: 0,
-            mt: 4,
-            fontWeight: 'semibold',
+            className: 'text-sm mb-0 h-[100%] pt-4 font-semibold inline-block',
           }}
-          isLabelVisible
           formId={formId}
           name='sendInvoicesBcc'
-          textOverflow='ellipsis'
           placeholder='BCC'
           type='email'
+          className='overflow-ellipsis'
         />
       </div>
       <PaymentMethods formId={formId} organizationName={organizationName} />

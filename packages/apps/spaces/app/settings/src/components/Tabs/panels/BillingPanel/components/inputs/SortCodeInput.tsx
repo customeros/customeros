@@ -2,8 +2,10 @@ import { useIMask } from 'react-imask';
 import React, { useEffect } from 'react';
 import { useField } from 'react-inverted-form';
 
-import { VisuallyHidden } from '@ui/presentation/VisuallyHidden';
-import { Input, FormLabel, FormControl, FormInputProps } from '@ui/form/Input';
+import { twMerge } from 'tailwind-merge';
+
+import { Input } from '@ui/form/Input/Input2';
+import { FormInputProps } from '@ui/form/Input/FormInput';
 
 const opts = {
   mask: '00-00-00',
@@ -17,10 +19,10 @@ export const SortCodeInput = ({
   label,
   formId,
   name,
-  maxW,
+  className,
   ...props
 }: FormInputProps) => {
-  const { ref, setUnmaskedValue } = useIMask(
+  const { ref, setUnmaskedValue } = useIMask<HTMLInputElement>(
     opts /* { onAccept, onComplete } */,
   );
   const { getInputProps } = useField(name, formId);
@@ -33,16 +35,16 @@ export const SortCodeInput = ({
   }, [value]);
 
   return (
-    <FormControl maxW={maxW}>
+    <div className={twMerge(className)}>
       {isLabelVisible ? (
-        <FormLabel {...labelProps}>{label}</FormLabel>
+        <label {...labelProps}>{label}</label>
       ) : (
-        <VisuallyHidden>
-          <FormLabel>{label}</FormLabel>
-        </VisuallyHidden>
+        <span>
+          <label>{label}</label>
+        </span>
       )}
 
       <Input ref={ref} {...props} onChange={onChange} autoComplete='off' />
-    </FormControl>
+    </div>
   );
 };

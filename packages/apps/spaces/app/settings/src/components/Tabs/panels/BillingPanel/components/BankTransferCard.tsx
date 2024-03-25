@@ -9,15 +9,29 @@ import { useBankAccountsQuery } from '@settings/graphql/getBankAccounts.generate
 import { useUpdateBankAccountMutation } from '@settings/graphql/updateBankAccount.generated';
 
 import { Flex } from '@ui/layout/Flex';
-import { FormInput } from '@ui/form/Input';
+import { FormInput } from '@ui/form/Input/FormInput';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea';
+import { FormMaskInput } from '@ui/form/Input/FormMaskInput';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { Card, CardBody, CardHeader } from '@ui/presentation/Card';
 import { Currency, BankAccount, BankAccountUpdateInput } from '@graphql/types';
 
 import { BankTransferMenu } from './BankTransferMenu';
-import { SortCodeInput, BankAccountInput } from './inputs';
 import { BankTransferCurrencySelect } from './BankTransferCurrencySelect';
+
+const sortCode = {
+  mask: '00-00-00',
+  definitions: {
+    '0': /[0-9]/,
+  },
+};
+
+const accountNumber = {
+  mask: '00 0000 0000 0000 0000 0000 0000 ',
+  definitions: {
+    '0': /[0-9]/,
+  },
+};
 
 export const BankTransferCard = ({ account }: { account: BankAccount }) => {
   const formId = `bank-transfer-form-${account.metadata.id}`;
@@ -103,23 +117,13 @@ export const BankTransferCard = ({ account }: { account: BankAccount }) => {
       >
         <CardHeader p='0' pb={1} as={Flex}>
           <FormInput
-            fontSize='md'
-            fontWeight='semibold'
-            autoComplete='off'
-            label='Bank Name'
-            placeholder='Bank name'
-            name='bankName'
             formId={formId}
-            border='none'
-            _hover={{
-              border: 'none',
-            }}
-            _focus={{
-              border: 'none',
-            }}
-            _focusVisible={{
-              border: 'none',
-            }}
+            name='bankName'
+            label='Bank Name'
+            variant='unstyled'
+            autoComplete='off'
+            placeholder='Bank name'
+            className='font-semibold'
           />
           <BankTransferCurrencySelect
             currency={account.currency}
@@ -136,29 +140,25 @@ export const BankTransferCard = ({ account }: { account: BankAccount }) => {
           <Flex pb={1} gap={2}>
             {account.currency === 'GBP' && (
               <>
-                <SortCodeInput
+                <FormMaskInput
+                  options={{ opts: sortCode }}
                   autoComplete='off'
                   label='Sort code'
                   placeholder='Sort code'
-                  isLabelVisible
                   labelProps={{
-                    fontSize: 'sm',
-                    mb: 0,
-                    fontWeight: 'semibold',
+                    className: 'font-semibold mb-0 text-sm',
                   }}
                   name='sortCode'
                   formId={formId}
-                  maxW='80px'
+                  className='max-w-20'
                 />
-                <BankAccountInput
+                <FormMaskInput
+                  options={{ opts: accountNumber }}
                   autoComplete='off'
                   label='Account number'
                   placeholder='Bank account #'
-                  isLabelVisible
                   labelProps={{
-                    fontSize: 'sm',
-                    mb: 0,
-                    fontWeight: 'semibold',
+                    className: 'font-semibold mb-0 text-sm',
                   }}
                   name='accountNumber'
                   formId={formId}
@@ -171,24 +171,20 @@ export const BankTransferCard = ({ account }: { account: BankAccount }) => {
                   autoComplete='off'
                   label='BIC/Swift'
                   placeholder='BIC/Swift'
-                  isLabelVisible
                   labelProps={{
-                    fontSize: 'sm',
-                    mb: 0,
-                    fontWeight: 'semibold',
+                    className: 'font-semibold mb-0 text-sm',
                   }}
                   name='bic'
                   formId={formId}
                 />
-                <BankAccountInput
+
+                <FormMaskInput
+                  options={{ opts: accountNumber }}
                   autoComplete='off'
                   label='Iban'
                   placeholder='Iban #'
-                  isLabelVisible
                   labelProps={{
-                    fontSize: 'sm',
-                    mb: 0,
-                    fontWeight: 'semibold',
+                    className: 'font-semibold mb-0 text-sm',
                   }}
                   name='iban'
                   formId={formId}
@@ -202,24 +198,22 @@ export const BankTransferCard = ({ account }: { account: BankAccount }) => {
                 autoComplete='off'
                 label='Routing number'
                 placeholder='Routing number'
-                isLabelVisible
                 labelProps={{
-                  fontSize: 'sm',
-                  mb: 0,
-                  fontWeight: 'semibold',
+                  className: 'font-semibold mb-0 text-sm',
                 }}
                 name='routingNumber'
                 formId={formId}
               />
-              <BankAccountInput
+
+              <FormMaskInput
+                options={{
+                  opts: accountNumber,
+                }}
                 autoComplete='off'
                 label='Account number'
                 placeholder='Bank account #'
-                isLabelVisible
                 labelProps={{
-                  fontSize: 'sm',
-                  mb: 0,
-                  fontWeight: 'semibold',
+                  className: 'font-semibold mb-0 text-sm',
                 }}
                 name='accountNumber'
                 formId={formId}
@@ -232,11 +226,8 @@ export const BankTransferCard = ({ account }: { account: BankAccount }) => {
                 autoComplete='off'
                 label='BIC/Swift'
                 placeholder='BIC/Swift'
-                isLabelVisible
                 labelProps={{
-                  fontSize: 'sm',
-                  mb: 0,
-                  fontWeight: 'semibold',
+                  className: 'font-semibold mb-0 text-sm',
                 }}
                 name='bic'
                 formId={formId}

@@ -2,8 +2,9 @@ import { useIMask } from 'react-imask';
 import React, { useEffect } from 'react';
 import { useField } from 'react-inverted-form';
 
+import { Input } from '@ui/form/Input/Input2';
 import { VisuallyHidden } from '@ui/presentation/VisuallyHidden';
-import { Input, FormLabel, FormControl, FormInputProps } from '@ui/form/Input';
+import { FormLabel, FormControl, FormInputProps } from '@ui/form/Input';
 
 const opts = {
   mask: 'AA 000 000 000',
@@ -19,12 +20,13 @@ const opts = {
     return value;
   },
   format: function (value: string) {
-    return value.toUpperCase(); // Ensure the country code is uppercase
+    return value.toUpperCase();
   },
   parse: function (value: string) {
-    return value.toUpperCase(); // Ensure the input is treated as uppercase
+    return value.toUpperCase();
   },
 };
+
 export const VatInput = ({
   isLabelVisible,
   labelProps,
@@ -33,7 +35,7 @@ export const VatInput = ({
   name,
   ...props
 }: FormInputProps) => {
-  const { ref, setUnmaskedValue } = useIMask(
+  const { ref, setUnmaskedValue } = useIMask<HTMLInputElement>(
     opts /* { onAccept, onComplete } */,
   );
   const { getInputProps } = useField(name, formId);
@@ -55,7 +57,7 @@ export const VatInput = ({
         </VisuallyHidden>
       )}
 
-      <Input ref={ref} {...props} onChange={onChange} autoComplete='off' />
+      <Input ref={ref} onChange={onChange} autoComplete='off' {...props} />
     </FormControl>
   );
 };

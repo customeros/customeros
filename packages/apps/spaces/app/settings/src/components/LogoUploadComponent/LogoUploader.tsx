@@ -1,3 +1,4 @@
+import NextImage from 'next/image';
 import React, { useRef, useState } from 'react';
 import { FilePond, FileStatus, registerPlugin } from 'react-filepond';
 
@@ -12,12 +13,9 @@ import FilePondPluginFileValidateType from 'filepond-plugin-file-validate-type';
 import { useTenantSettingsQuery } from '@settings/graphql/getTenantSettings.generated';
 import { useUpdateTenantSettingsMutation } from '@settings/graphql/updateTenantSettings.generated';
 
-import { Box } from '@ui/layout/Box';
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
-import { IconButton } from '@ui/form/IconButton';
+import { cn } from '@ui/utils/cn';
 import { Upload01 } from '@ui/media/icons/Upload01';
-import { Image as ChakraImage } from '@ui/media/Image';
+import { IconButton } from '@ui/form/IconButton/IconButton';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 
@@ -102,33 +100,47 @@ export const LogoUploader: React.FC<LogoUploaderProps> = () => {
     pondRef.current?.getFile()?.status === FileStatus.PROCESSING ||
     pondRef.current?.getFile()?.status === FileStatus.LOADING;
 
+  const statusClassName = hasError
+    ? 'filepond-error'
+    : globalCacheData?.global_Cache?.cdnLogoUrl
+    ? 'filepond-uploaded'
+    : '';
+
+  const position =
+    globalCacheData?.global_Cache?.cdnLogoUrl && !isLoading && !hasError
+      ? 'absolute'
+      : 'static';
+
+  const minHeightClass =
+    files.length || hasError ? `${32}px` : `${120}px !important`;
+
+  const topPosition =
+    globalCacheData?.global_Cache?.cdnLogoUrl && !isLoading && !hasError
+      ? 'top-[-9999px]'
+      : 'auto';
+
   return (
-    <Box position='relative'>
-      <Flex justifyContent='space-between' alignItems='center' mb={2}>
-        <Text color='gray.600' fontSize='sm' fontWeight='semibold'>
+    <div>
+      <div className='flex justify-between items-center mb-2'>
+        <span className='text-gray-600 text-sm font-semibold'>
           Organization logo
-        </Text>
+        </span>
         {globalCacheData?.global_Cache?.cdnLogoUrl && (
           <IconButton
+            className='pr-0'
             variant='ghost'
             aria-label='Upload file'
             size='sm'
-            color={'gray.500'}
+            colorScheme='gray'
             icon={<Upload01 />}
             onClick={() => pondRef.current?.browse()}
           />
         )}
-      </Flex>
+      </div>
 
       {globalCacheData?.global_Cache?.cdnLogoUrl && !isLoading && !hasError && (
-        <Box
-          position='relative'
-          maxHeight={120}
-          width='full'
-          display='flex'
-          padding={4}
-        >
-          <ChakraImage
+        <div className='relative max-h-[120px] w-full flex p-4 '>
+          <NextImage
             src={`${globalCacheData?.global_Cache?.cdnLogoUrl}`}
             alt='CustomerOS'
             width={136}
@@ -139,41 +151,19 @@ export const LogoUploader: React.FC<LogoUploaderProps> = () => {
               maxWidth: 'fit-content',
             }}
           />
-        </Box>
+        </div>
       )}
 
-      <Box
+      <div
         onClick={() => hasError && pondRef.current?.browse()}
-        className={
-          hasError
-            ? 'filepond-error'
-            : globalCacheData?.global_Cache?.cdnLogoUrl
-            ? 'filepond-uploaded'
-            : ''
-        }
-        sx={{
-          '&': {
-            position:
-              globalCacheData?.global_Cache?.cdnLogoUrl &&
-              !isLoading &&
-              !hasError
-                ? 'absolute'
-                : 'static',
-            top:
-              globalCacheData?.global_Cache?.cdnLogoUrl &&
-              !isLoading &&
-              !hasError
-                ? '-9999'
-                : 'auto',
-          },
-          '& .filepond--root .filepond--drop-label': {
-            minHeight:
-              files.length || hasError ? `${32}px` : `${120}px !important`,
-          },
-          '& .filepond--image-clip': {
-            margin: 0,
-          },
-        }}
+        className={cn(
+          statusClassName,
+          position,
+          topPosition,
+          '[&_.filepond--root .filepond--drop-label]:',
+          minHeightClass,
+          '[&_.filepond--image-clip]:m-0',
+        )}
       >
         <FilePond
           ref={pondRef}
@@ -322,7 +312,7 @@ export const LogoUploader: React.FC<LogoUploaderProps> = () => {
             }
           }}
         />
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 };

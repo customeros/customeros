@@ -1,18 +1,17 @@
 'use client';
 
-import { ReactNode, forwardRef } from 'react';
 import { useField } from 'react-inverted-form';
+import { ReactNode, forwardRef, ForwardedRef } from 'react';
 
 import {
   Flex,
-  Switch,
   FormLabel,
   FormControl,
-  SwitchProps,
   VisuallyHidden,
   FormLabelProps,
 } from '@chakra-ui/react';
 
+import { Switch, SwitchProps } from '@ui/form/Switch/Switch2';
 export interface FormSwitchProps extends SwitchProps {
   name: string;
   formId: string;
@@ -32,10 +31,11 @@ export const FormSwitch = forwardRef(
       isLabelVisible = true,
       labelProps,
       leftElement,
+      size = 'md',
       onChangeCallback,
       ...props
     }: FormSwitchProps,
-    ref,
+    ref: ForwardedRef<HTMLButtonElement>,
   ) => {
     const { getInputProps } = useField(name, formId);
     const { value, onChange, onBlur, ...rest } = getInputProps();
@@ -80,11 +80,10 @@ export const FormSwitch = forwardRef(
           {leftElement && leftElement}
           <Switch
             ref={ref}
-            {...rest}
-            colorScheme='primary'
-            {...props}
+            size={size}
             isChecked={value}
             onChange={() => handleChange(!value)}
+            {...rest}
           />
         </Flex>
       </FormControl>
