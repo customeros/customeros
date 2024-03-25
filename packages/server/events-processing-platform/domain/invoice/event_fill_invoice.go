@@ -35,6 +35,7 @@ type InvoiceFillCustomerEvent struct {
 	Zip          string `json:"zip"`
 	Locality     string `json:"locality"`
 	Country      string `json:"country"`
+	Region       string `json:"region"`
 	Email        string `json:"email"`
 }
 type InvoiceFillProviderEvent struct {
@@ -45,12 +46,13 @@ type InvoiceFillProviderEvent struct {
 	Zip                  string `json:"zip"`
 	Locality             string `json:"locality"`
 	Country              string `json:"country"`
+	Region               string `json:"region"`
 	LogoRepositoryFileId string `json:"logoRepositoryFileId"`
 }
 
 func NewInvoiceFillEvent(aggregate eventstore.Aggregate, updatedAt time.Time, invoice Invoice,
-	customerName, customerAddressLine1, customerAddressLine2, customerAddressZip, customerAddressLocality, customerAddressCountry, customerEmail,
-	providerLogoRepositoryFileId, providerName, providerEmail, providerAddressLine1, providerAddressLine2, providerAddressZip, providerAddressLocality, providerAddressCountry,
+	customerName, customerAddressLine1, customerAddressLine2, customerAddressZip, customerAddressLocality, customerAddressCountry, customerAddressRegion, customerEmail,
+	providerLogoRepositoryFileId, providerName, providerEmail, providerAddressLine1, providerAddressLine2, providerAddressZip, providerAddressLocality, providerAddressCountry, providerAddressRegion,
 	note, status, invoiceNumber string, amount, vat, totalAmount float64, invoiceLines []InvoiceLineEvent) (eventstore.Event, error) {
 	eventData := InvoiceFillEvent{
 		Tenant:          aggregate.GetTenant(),
@@ -76,6 +78,7 @@ func NewInvoiceFillEvent(aggregate eventstore.Aggregate, updatedAt time.Time, in
 			Zip:          customerAddressZip,
 			Locality:     customerAddressLocality,
 			Country:      customerAddressCountry,
+			Region:       customerAddressRegion,
 		},
 		Provider: InvoiceFillProviderEvent{
 			Name:                 providerName,
@@ -85,6 +88,7 @@ func NewInvoiceFillEvent(aggregate eventstore.Aggregate, updatedAt time.Time, in
 			Zip:                  providerAddressZip,
 			Locality:             providerAddressLocality,
 			Country:              providerAddressCountry,
+			Region:               providerAddressRegion,
 			LogoRepositoryFileId: providerLogoRepositoryFileId,
 		},
 	}

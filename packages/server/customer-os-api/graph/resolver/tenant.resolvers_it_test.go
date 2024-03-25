@@ -182,6 +182,7 @@ func TestQueryResolver_GetTenantBillingProfiles(t *testing.T) {
 		AddressLine3:           "address3",
 		Locality:               "locality",
 		Country:                "country",
+		Region:                 "region",
 		Zip:                    "zip",
 		VatNumber:              "vatNumber",
 		SendInvoicesFrom:       "sendInvoicesFrom",
@@ -211,6 +212,7 @@ func TestQueryResolver_GetTenantBillingProfiles(t *testing.T) {
 	require.Equal(t, "address3", tenantBillingProfile.AddressLine3)
 	require.Equal(t, "locality", tenantBillingProfile.Locality)
 	require.Equal(t, "country", tenantBillingProfile.Country)
+	require.Equal(t, "region", tenantBillingProfile.Region)
 	require.Equal(t, "zip", tenantBillingProfile.Zip)
 	require.Equal(t, "vatNumber", tenantBillingProfile.VatNumber)
 	require.Equal(t, "sendInvoicesFrom", tenantBillingProfile.SendInvoicesFrom)
@@ -231,6 +233,7 @@ func TestQueryResolver_GetTenantBillingProfile(t *testing.T) {
 		AddressLine3:           "address3",
 		Locality:               "locality",
 		Country:                "country",
+		Region:                 "region",
 		Zip:                    "zip",
 		VatNumber:              "vatNumber",
 		SendInvoicesFrom:       "sendInvoicesFrom",
@@ -259,6 +262,7 @@ func TestQueryResolver_GetTenantBillingProfile(t *testing.T) {
 	require.Equal(t, "address3", tenantBillingProfile.AddressLine3)
 	require.Equal(t, "locality", tenantBillingProfile.Locality)
 	require.Equal(t, "country", tenantBillingProfile.Country)
+	require.Equal(t, "region", tenantBillingProfile.Region)
 	require.Equal(t, "zip", tenantBillingProfile.Zip)
 	require.Equal(t, "vatNumber", tenantBillingProfile.VatNumber)
 	require.Equal(t, "sendInvoicesFrom", tenantBillingProfile.SendInvoicesFrom)
@@ -288,6 +292,7 @@ func TestMutationResolver_TenantAddBillingProfile(t *testing.T) {
 			require.Equal(t, "addressLine3", profile.AddressLine3)
 			require.Equal(t, "locality", profile.Locality)
 			require.Equal(t, "country", profile.Country)
+			require.Equal(t, "region", profile.Region)
 			require.Equal(t, "zip", profile.Zip)
 			require.Equal(t, "vatNumber", profile.VatNumber)
 			require.Equal(t, "sendInvoicesFrom", profile.SendInvoicesFrom)
@@ -342,6 +347,7 @@ func TestMutationResolver_TenantUpdateBillingProfile(t *testing.T) {
 			require.Equal(t, "addressLine3", profile.AddressLine3)
 			require.Equal(t, "locality", profile.Locality)
 			require.Equal(t, "country", profile.Country)
+			require.Equal(t, "region", profile.Region)
 			require.Equal(t, "zip", profile.Zip)
 			require.Equal(t, "vatNumber", profile.VatNumber)
 			require.Equal(t, "sendInvoicesFrom", profile.SendInvoicesFrom)
@@ -362,6 +368,7 @@ func TestMutationResolver_TenantUpdateBillingProfile(t *testing.T) {
 				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_SEND_INVOICES_BCC,
 				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_PIGEON,
 				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_BANK_TRANSFER,
+				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_REGION,
 			},
 				profile.FieldsMask)
 			calledUpdateTenantBillingProfile = true

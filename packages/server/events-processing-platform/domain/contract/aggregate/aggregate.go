@@ -165,6 +165,9 @@ func (a *ContractAggregate) onContractUpdate(evt eventstore.Event) error {
 	if eventData.UpdateCountry() {
 		a.Contract.Country = eventData.Country
 	}
+	if eventData.UpdateCountry() {
+		a.Contract.Region = eventData.Region
+	}
 	if eventData.UpdateZip() {
 		a.Contract.Zip = eventData.Zip
 	}

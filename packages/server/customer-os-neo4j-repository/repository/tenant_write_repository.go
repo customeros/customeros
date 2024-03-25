@@ -24,6 +24,7 @@ type TenantBillingProfileCreateFields struct {
 	AddressLine3           string       `json:"addressLine3"`
 	Locality               string       `json:"locality"`
 	Country                string       `json:"country"`
+	Region                 string       `json:"region"`
 	Zip                    string       `json:"zip"`
 	VatNumber              string       `json:"vatNumber"`
 	SendInvoicesFrom       string       `json:"sendInvoicesFrom"`
@@ -42,6 +43,7 @@ type TenantBillingProfileUpdateFields struct {
 	AddressLine3                 string    `json:"addressLine3"`
 	Locality                     string    `json:"locality"`
 	Country                      string    `json:"country"`
+	Region                       string    `json:"region"`
 	Zip                          string    `json:"zip"`
 	VatNumber                    string    `json:"vatNumber"`
 	SendInvoicesFrom             string    `json:"sendInvoicesFrom"`
@@ -55,6 +57,7 @@ type TenantBillingProfileUpdateFields struct {
 	UpdateAddressLine3           bool      `json:"updateAddressLine3"`
 	UpdateLocality               bool      `json:"updateLocality"`
 	UpdateCountry                bool      `json:"updateCountry"`
+	UpdateRegion                 bool      `json:"updateRegion"`
 	UpdateZip                    bool      `json:"updateZip"`
 	UpdateVatNumber              bool      `json:"updateVatNumber"`
 	UpdateSendInvoicesFrom       bool      `json:"updateSendInvoicesFrom"`
@@ -114,6 +117,7 @@ func (r *tenantWriteRepository) CreateTenantBillingProfile(ctx context.Context, 
 								tbp.addressLine3=$addressLine3,
 								tbp.locality=$locality,
 								tbp.country=$country,
+								tbp.region=$region,
 								tbp.zip=$zip,
 								tbp.vatNumber=$vatNumber,	
 								tbp.sendInvoicesFrom=$sendInvoicesFrom,
@@ -136,6 +140,7 @@ func (r *tenantWriteRepository) CreateTenantBillingProfile(ctx context.Context, 
 		"addressLine3":           data.AddressLine3,
 		"locality":               data.Locality,
 		"country":                data.Country,
+		"region":                 data.Region,
 		"zip":                    data.Zip,
 		"vatNumber":              data.VatNumber,
 		"sendInvoicesFrom":       data.SendInvoicesFrom,
@@ -195,6 +200,10 @@ func (r *tenantWriteRepository) UpdateTenantBillingProfile(ctx context.Context, 
 	if data.UpdateCountry {
 		cypher += `,tbp.country=$country`
 		params["country"] = data.Country
+	}
+	if data.UpdateRegion {
+		cypher += `,tbp.region=$region`
+		params["region"] = data.Region
 	}
 	if data.UpdateZip {
 		cypher += `,tbp.zip=$zip`

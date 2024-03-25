@@ -41,6 +41,7 @@ func TestTenantService_AddBillingProfile(t *testing.T) {
 		AddressLine3:           "addressLine3",
 		Locality:               "locality",
 		Country:                "country",
+		Region:                 "region",
 		Zip:                    "zip",
 		LegalName:              "legalName",
 		VatNumber:              "vatNumber",
@@ -75,6 +76,7 @@ func TestTenantService_AddBillingProfile(t *testing.T) {
 	require.Equal(t, "addressLine3", eventData.AddressLine3)
 	require.Equal(t, "locality", eventData.Locality)
 	require.Equal(t, "country", eventData.Country)
+	require.Equal(t, "region", eventData.Region)
 	require.Equal(t, "zip", eventData.Zip)
 	require.Equal(t, "legalName", eventData.LegalName)
 	require.Equal(t, "vatNumber", eventData.VatNumber)
@@ -114,6 +116,7 @@ func TestTenantService_UpdateBillingProfile(t *testing.T) {
 		AddressLine3:           "addressLine3",
 		Locality:               "locality",
 		Country:                "country",
+		Region:                 "region",
 		Zip:                    "zip",
 		VatNumber:              "vatNumber",
 		SendInvoicesFrom:       "sendInvoicesFrom",
@@ -146,6 +149,7 @@ func TestTenantService_UpdateBillingProfile(t *testing.T) {
 	require.Equal(t, "addressLine3", eventData.AddressLine3)
 	require.Equal(t, "locality", eventData.Locality)
 	require.Equal(t, "country", eventData.Country)
+	require.Equal(t, "region", eventData.Region)
 	require.Equal(t, "zip", eventData.Zip)
 	require.Equal(t, "legalName", eventData.LegalName)
 	require.Equal(t, "vatNumber", eventData.VatNumber)

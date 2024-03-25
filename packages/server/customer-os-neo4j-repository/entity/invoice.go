@@ -43,6 +43,7 @@ type InvoiceCustomer struct {
 	Zip          string
 	Locality     string
 	Country      string
+	Region       string
 }
 
 type InvoiceProvider struct {
@@ -54,6 +55,7 @@ type InvoiceProvider struct {
 	Zip                  string
 	Locality             string
 	Country              string
+	Region               string
 }
 
 type PaymentDetails struct {

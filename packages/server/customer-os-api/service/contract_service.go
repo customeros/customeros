@@ -240,6 +240,9 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 		if input.BillingDetails.Country != nil {
 			contractUpdateRequest.Country = *input.BillingDetails.Country
 		}
+		if input.BillingDetails.Region != nil {
+			contractUpdateRequest.Region = *input.BillingDetails.Region
+		}
 		if input.BillingDetails.PostalCode != nil {
 			contractUpdateRequest.Zip = *input.BillingDetails.PostalCode
 		}
@@ -418,6 +421,9 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 		}
 		if input.Country != nil || (input.BillingDetails != nil && input.BillingDetails.Country != nil) {
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_COUNTRY)
+		}
+		if input.BillingDetails != nil && input.BillingDetails.Region != nil {
+			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_REGION)
 		}
 		if input.Zip != nil || (input.BillingDetails != nil && input.BillingDetails.PostalCode != nil) {
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_ZIP)

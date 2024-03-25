@@ -45,6 +45,7 @@ func MapEntityToInvoice(entity *neo4jentity.InvoiceEntity) *model.Invoice {
 			AddressZip:      utils.StringPtrNillable(entity.Customer.Zip),
 			AddressLocality: utils.StringPtrNillable(entity.Customer.Locality),
 			AddressCountry:  utils.StringPtrNillable(entity.Customer.Country),
+			AddressRegion:   utils.StringPtrNillable(entity.Customer.Region),
 		},
 		Provider: &model.InvoiceProvider{
 			LogoRepositoryFileID: utils.StringPtrNillable(entity.Provider.LogoRepositoryFileId),
@@ -54,6 +55,7 @@ func MapEntityToInvoice(entity *neo4jentity.InvoiceEntity) *model.Invoice {
 			AddressZip:           utils.StringPtrNillable(entity.Provider.Zip),
 			AddressLocality:      utils.StringPtrNillable(entity.Provider.Locality),
 			AddressCountry:       utils.StringPtrNillable(entity.Provider.Country),
+			AddressRegion:        utils.StringPtrNillable(entity.Provider.Region),
 		},
 	}
 	if entity.Status == neo4jenum.InvoiceStatusPaid {

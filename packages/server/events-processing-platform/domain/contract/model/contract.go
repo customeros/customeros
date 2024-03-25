@@ -32,6 +32,7 @@ type Contract struct {
 	AddressLine2           string                       `json:"addressLine2"`
 	Locality               string                       `json:"locality"`
 	Country                string                       `json:"country"`
+	Region                 string                       `json:"region"`
 	Zip                    string                       `json:"zip"`
 	OrganizationLegalName  string                       `json:"organizationLegalName"`
 	InvoiceEmail           string                       `json:"invoiceEmail"`
@@ -66,6 +67,7 @@ type ContractDataFields struct {
 	AddressLine2           string `json:"addressLine2"`
 	Locality               string `json:"locality"`
 	Country                string `json:"country"`
+	Region                 string `json:"region"`
 	Zip                    string `json:"zip"`
 	OrganizationLegalName  string `json:"organizationLegalName"`
 	InvoiceEmail           string `json:"invoiceEmail"`

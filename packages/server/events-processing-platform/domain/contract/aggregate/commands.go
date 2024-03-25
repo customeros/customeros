@@ -153,6 +153,7 @@ func (a *ContractAggregate) updateContract(ctx context.Context, request *contrac
 		AddressLine2:           request.AddressLine2,
 		Locality:               request.Locality,
 		Country:                request.Country,
+		Region:                 request.Region,
 		Zip:                    request.Zip,
 		OrganizationLegalName:  request.OrganizationLegalName,
 		InvoiceEmail:           request.InvoiceEmail,
@@ -321,6 +322,8 @@ func extractFieldsMask(requestFieldsMask []contractpb.ContractFieldMask) []strin
 			fieldsMask = append(fieldsMask, event.FieldMaskLocality)
 		case contractpb.ContractFieldMask_CONTRACT_FIELD_COUNTRY:
 			fieldsMask = append(fieldsMask, event.FieldMaskCountry)
+		case contractpb.ContractFieldMask_CONTRACT_FIELD_REGION:
+			fieldsMask = append(fieldsMask, event.FieldMaskRegion)
 		case contractpb.ContractFieldMask_CONTRACT_FIELD_ZIP:
 			fieldsMask = append(fieldsMask, event.FieldMaskZip)
 		case contractpb.ContractFieldMask_CONTRACT_FIELD_ORGANIZATION_LEGAL_NAME:

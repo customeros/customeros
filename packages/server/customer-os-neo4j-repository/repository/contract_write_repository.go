@@ -60,6 +60,7 @@ type ContractUpdateFields struct {
 	AddressLine2                 string                 `json:"addressLine2"`
 	Locality                     string                 `json:"locality"`
 	Country                      string                 `json:"country"`
+	Region                       string                 `json:"region"`
 	Zip                          string                 `json:"zip"`
 	OrganizationLegalName        string                 `json:"organizationLegalName"`
 	InvoiceEmail                 string                 `json:"invoiceEmail"`
@@ -84,6 +85,7 @@ type ContractUpdateFields struct {
 	UpdateAddressLine2           bool                   `json:"updateAddressLine2"`
 	UpdateLocality               bool                   `json:"updateLocality"`
 	UpdateCountry                bool                   `json:"updateCountry"`
+	UpdateRegion                 bool                   `json:"updateRegion"`
 	UpdateZip                    bool                   `json:"updateZip"`
 	UpdateOrganizationLegalName  bool                   `json:"updateOrganizationLegalName"`
 	UpdateInvoiceEmail           bool                   `json:"updateInvoiceEmail"`
@@ -278,6 +280,11 @@ func (r *contractWriteRepository) UpdateAndReturn(ctx context.Context, tenant, c
 	if data.UpdateCountry {
 		cypher += `, ct.country = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $country ELSE ct.country END `
 		params["country"] = data.Country
+	}
+	if data.UpdateRegion {
+		cypher += `, ct.region = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $region ELSE ct.region END `
+		params["region"] = data.Region
+
 	}
 	if data.UpdateZip {
 		cypher += `, ct.zip = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $zip ELSE ct.zip END `

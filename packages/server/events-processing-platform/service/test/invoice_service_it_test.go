@@ -120,6 +120,7 @@ func TestInvoiceService_FillInvoice(t *testing.T) {
 			Zip:                  "g",
 			Locality:             "h",
 			Country:              "i",
+			Region:               "ii",
 		},
 		Customer: &invoicepb.FillInvoiceCustomer{
 			Name:         "j",
@@ -129,6 +130,7 @@ func TestInvoiceService_FillInvoice(t *testing.T) {
 			Zip:          "n",
 			Locality:     "o",
 			Country:      "p",
+			Region:       "pp",
 		},
 		Amount: 1.01,
 		Vat:    2.02,
@@ -181,6 +183,7 @@ func TestInvoiceService_FillInvoice(t *testing.T) {
 	require.Equal(t, "g", eventData.Provider.Zip)
 	require.Equal(t, "h", eventData.Provider.Locality)
 	require.Equal(t, "i", eventData.Provider.Country)
+	require.Equal(t, "ii", eventData.Provider.Region)
 	require.Equal(t, "j", eventData.Customer.Name)
 	require.Equal(t, "k", eventData.Customer.Email)
 	require.Equal(t, "l", eventData.Customer.AddressLine1)
@@ -188,6 +191,7 @@ func TestInvoiceService_FillInvoice(t *testing.T) {
 	require.Equal(t, "n", eventData.Customer.Zip)
 	require.Equal(t, "o", eventData.Customer.Locality)
 	require.Equal(t, "p", eventData.Customer.Country)
+	require.Equal(t, "pp", eventData.Customer.Region)
 	require.Equal(t, "contract-1", eventData.ContractId)
 	require.Equal(t, "USD", eventData.Currency)
 	require.Equal(t, 1, len(eventData.InvoiceLines))

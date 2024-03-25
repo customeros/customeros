@@ -30,6 +30,7 @@ type ContractUpdateEvent struct {
 	AddressLine2           string                     `json:"addressLine2,omitempty"`
 	Locality               string                     `json:"locality,omitempty"`
 	Country                string                     `json:"country,omitempty"`
+	Region                 string                     `json:"region,omitempty"`
 	Zip                    string                     `json:"zip,omitempty"`
 	OrganizationLegalName  string                     `json:"organizationLegalName,omitempty"`
 	InvoiceEmail           string                     `json:"invoiceEmail,omitempty"`
@@ -62,6 +63,7 @@ func NewContractUpdateEvent(aggr eventstore.Aggregate, dataFields model.Contract
 		AddressLine2:           dataFields.AddressLine2,
 		Locality:               dataFields.Locality,
 		Country:                dataFields.Country,
+		Region:                 dataFields.Region,
 		Zip:                    dataFields.Zip,
 		OrganizationLegalName:  dataFields.OrganizationLegalName,
 		CanPayWithCard:         dataFields.CanPayWithCard,
@@ -161,6 +163,10 @@ func (e ContractUpdateEvent) UpdateZip() bool {
 
 func (e ContractUpdateEvent) UpdateCountry() bool {
 	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskCountry)
+}
+
+func (e ContractUpdateEvent) UpdateRegion() bool {
+	return utils.Contains(e.FieldsMask, FieldMaskRegion)
 }
 
 func (e ContractUpdateEvent) UpdateLocality() bool {

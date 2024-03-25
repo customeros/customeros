@@ -170,6 +170,7 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 		"customerAddressZip",
 		"customerAddressLocality",
 		"customerAddressCountry",
+		"customerAddressRegion",
 		"customerEmail",
 		"providerLogoRepositoryFileId",
 		"providerName",
@@ -179,6 +180,7 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 		"providerAddressZip",
 		"providerAddressLocality",
 		"providerAddressCountry",
+		"providerAddressRegion",
 		"note abc",
 		neo4jenum.InvoiceStatusDue.String(),
 		"INV-001",
@@ -253,6 +255,7 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 	require.Equal(t, "customerAddressZip", invoiceEntity.Customer.Zip)
 	require.Equal(t, "customerAddressLocality", invoiceEntity.Customer.Locality)
 	require.Equal(t, "customerAddressCountry", invoiceEntity.Customer.Country)
+	require.Equal(t, "customerAddressRegion", invoiceEntity.Customer.Region)
 	require.Equal(t, "providerLogoRepositoryFileId", invoiceEntity.Provider.LogoRepositoryFileId)
 	require.Equal(t, "providerName", invoiceEntity.Provider.Name)
 	require.Equal(t, "providerEmail", invoiceEntity.Provider.Email)
@@ -261,6 +264,7 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 	require.Equal(t, "providerAddressZip", invoiceEntity.Provider.Zip)
 	require.Equal(t, "providerAddressLocality", invoiceEntity.Provider.Locality)
 	require.Equal(t, "providerAddressCountry", invoiceEntity.Provider.Country)
+	require.Equal(t, "providerAddressRegion", invoiceEntity.Provider.Region)
 	require.Equal(t, "note abc", invoiceEntity.Note)
 	require.Equal(t, neo4jenum.InvoiceStatusDue, invoiceEntity.Status)
 

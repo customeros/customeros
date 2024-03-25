@@ -28,6 +28,7 @@ contract_Update(
         billingDetails: {
             payOnline: true
             payAutomatically: true
+            region: "test region"
         }
     }
   ) {

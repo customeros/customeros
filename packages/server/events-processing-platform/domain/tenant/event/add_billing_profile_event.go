@@ -20,6 +20,7 @@ type TenantBillingProfileCreateEvent struct {
 	AddressLine3           string             `json:"addressLine3"`
 	Locality               string             `json:"locality"`
 	Country                string             `json:"country"`
+	Region                 string             `json:"region"`
 	Zip                    string             `json:"zip"`
 	LegalName              string             `json:"legalName"`
 	VatNumber              string             `json:"vatNumber"`
@@ -41,6 +42,7 @@ func NewTenantBillingProfileCreateEvent(aggregate eventstore.Aggregate, sourceFi
 		AddressLine3:           request.AddressLine3,
 		Locality:               request.Locality,
 		Country:                request.Country,
+		Region:                 request.Region,
 		Zip:                    request.Zip,
 		LegalName:              request.LegalName,
 		VatNumber:              request.VatNumber,

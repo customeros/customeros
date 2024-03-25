@@ -35,6 +35,7 @@ type TenantBillingProfile struct {
 	AddressLine3           string             `json:"addressLine3"`
 	Locality               string             `json:"locality"`
 	Country                string             `json:"country"`
+	Region                 string             `json:"region"`
 	Zip                    string             `json:"zip"`
 	LegalName              string             `json:"legalName"`
 	VatNumber              string             `json:"vatNumber"`

@@ -1200,6 +1200,7 @@ type InvoiceCustomer struct {
 	AddressZip      *string `json:"addressZip,omitempty"`
 	AddressLocality *string `json:"addressLocality,omitempty"`
 	AddressCountry  *string `json:"addressCountry,omitempty"`
+	AddressRegion   *string `json:"addressRegion,omitempty"`
 }
 
 type InvoiceLine struct {
@@ -1232,6 +1233,7 @@ type InvoiceProvider struct {
 	AddressZip           *string `json:"addressZip,omitempty"`
 	AddressLocality      *string `json:"addressLocality,omitempty"`
 	AddressCountry       *string `json:"addressCountry,omitempty"`
+	AddressRegion        *string `json:"addressRegion,omitempty"`
 }
 
 type InvoiceSimulateInput struct {
@@ -2534,6 +2536,7 @@ type TenantBillingProfile struct {
 	AddressLine3                  string     `json:"addressLine3"`
 	Locality                      string     `json:"locality"`
 	Country                       string     `json:"country"`
+	Region                        string     `json:"region"`
 	Zip                           string     `json:"zip"`
 	LegalName                     string     `json:"legalName"`
 	DomesticPaymentsBankInfo      *string    `json:"domesticPaymentsBankInfo,omitempty"`
@@ -2565,6 +2568,7 @@ type TenantBillingProfileInput struct {
 	AddressLine3                  *string `json:"addressLine3,omitempty"`
 	Locality                      *string `json:"locality,omitempty"`
 	Country                       *string `json:"country,omitempty"`
+	Region                        *string `json:"region,omitempty"`
 	Zip                           *string `json:"zip,omitempty"`
 	LegalName                     *string `json:"legalName,omitempty"`
 	DomesticPaymentsBankInfo      *string `json:"domesticPaymentsBankInfo,omitempty"`
@@ -2590,6 +2594,7 @@ type TenantBillingProfileUpdateInput struct {
 	AddressLine3                  *string `json:"addressLine3,omitempty"`
 	Locality                      *string `json:"locality,omitempty"`
 	Country                       *string `json:"country,omitempty"`
+	Region                        *string `json:"region,omitempty"`
 	Zip                           *string `json:"zip,omitempty"`
 	LegalName                     *string `json:"legalName,omitempty"`
 	DomesticPaymentsBankInfo      *string `json:"domesticPaymentsBankInfo,omitempty"`

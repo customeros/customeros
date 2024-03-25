@@ -536,11 +536,11 @@ func (h *InvoiceEventHandler) prepareAndCallFillInvoice(ctx context.Context, ten
 		invoiceEntity.Id,
 		contractEntity.OrganizationLegalName,
 		contractEntity.InvoiceEmail,
-		contractEntity.AddressLine1, contractEntity.AddressLine2, contractEntity.Zip, contractEntity.Locality, contractCountry,
+		contractEntity.AddressLine1, contractEntity.AddressLine2, contractEntity.Zip, contractEntity.Locality, contractCountry, contractEntity.Region,
 		tenantSettingsEntity.LogoRepositoryFileId,
 		tenantBillingProfileEntity.LegalName,
 		tenantBillingProfileEntity.SendInvoicesFrom,
-		tenantBillingProfileEntity.AddressLine1, tenantBillingProfileEntity.AddressLine2, tenantBillingProfileEntity.Zip, tenantBillingProfileEntity.Locality, tenantBillingProfileCountry,
+		tenantBillingProfileEntity.AddressLine1, tenantBillingProfileEntity.AddressLine2, tenantBillingProfileEntity.Zip, tenantBillingProfileEntity.Locality, tenantBillingProfileCountry, tenantBillingProfileEntity.Region,
 		contractEntity.InvoiceNote,
 		amount,
 		vat,
@@ -555,8 +555,8 @@ func (h *InvoiceEventHandler) prepareAndCallFillInvoice(ctx context.Context, ten
 }
 
 func (h *InvoiceEventHandler) callFillInvoice(ctx context.Context, tenant, invoiceId,
-	customerName, customerEmail, customerAddressLine1, customerAddressLine2, customerAddressZip, customerAddressLocality, customerAddressCountry,
-	providerLogoRepositoryFileId, providerName, providerEmail, providerAddressLine1, providerAddressLine2, providerAddressZip, providerAddressLocality, providerAddressCountry,
+	customerName, customerEmail, customerAddressLine1, customerAddressLine2, customerAddressZip, customerAddressLocality, customerAddressCountry, customerAddressRegion,
+	providerLogoRepositoryFileId, providerName, providerEmail, providerAddressLine1, providerAddressLine2, providerAddressZip, providerAddressLocality, providerAddressCountry, providerAddressRegion,
 	note string, amount, vat, total float64, invoiceLines []*invoicepb.InvoiceLine, span opentracing.Span) error {
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	now := time.Now()
@@ -573,6 +573,7 @@ func (h *InvoiceEventHandler) callFillInvoice(ctx context.Context, tenant, invoi
 				Zip:          customerAddressZip,
 				Locality:     customerAddressLocality,
 				Country:      customerAddressCountry,
+				Region:       customerAddressRegion,
 			},
 			Provider: &invoicepb.FillInvoiceProvider{
 				LogoRepositoryFileId: providerLogoRepositoryFileId,
@@ -583,6 +584,7 @@ func (h *InvoiceEventHandler) callFillInvoice(ctx context.Context, tenant, invoi
 				Zip:                  providerAddressZip,
 				Locality:             providerAddressLocality,
 				Country:              providerAddressCountry,
+				Region:               providerAddressRegion,
 			},
 			Amount:       amount,
 			Vat:          vat,
@@ -885,6 +887,7 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 		"CustomerAddressLine2":         invoiceEntity.Customer.AddressLine2,
 		"CustomerAddressLine3":         utils.JoinNonEmpty(", ", invoiceEntity.Customer.Locality, invoiceEntity.Customer.Zip),
 		"CustomerCountry":              invoiceEntity.Customer.Country,
+		"CustomerRegion":               invoiceEntity.Customer.Region,
 		"ProviderLogoExtension":        "",
 		"ProviderLogoRepositoryFileId": invoiceEntity.Provider.LogoRepositoryFileId,
 		"ProviderName":                 invoiceEntity.Provider.Name,
@@ -893,6 +896,7 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 		"ProviderAddressLine2":         invoiceEntity.Provider.AddressLine2,
 		"ProviderAddressLine3":         utils.JoinNonEmpty(", ", invoiceEntity.Provider.Locality, invoiceEntity.Provider.Zip),
 		"ProviderCountry":              invoiceEntity.Provider.Country,
+		"ProviderRegion":               invoiceEntity.Provider.Region,
 		"InvoiceNumber":                invoiceEntity.Number,
 		"InvoiceIssueDate":             invoiceEntity.CreatedAt.Format("02 Jan 2006"),
 		"InvoiceDueDate":               invoiceEntity.DueDate.Format("02 Jan 2006"),
