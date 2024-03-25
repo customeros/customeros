@@ -2,6 +2,7 @@
 import React, { FC, useMemo } from 'react';
 
 import { useConnections } from '@integration-app/react';
+import { useTenantSettingsQuery } from '@settings/graphql/getTenantSettings.generated';
 import { useGetExternalSystemInstancesQuery } from '@settings/graphql/getExternalSystemInstances.generated';
 
 import { Box } from '@ui/layout/Box';
@@ -47,6 +48,8 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
   bankAccounts,
 }) => {
   const client = getGraphQLClient();
+  const { data: tenantSettingsData } = useTenantSettingsQuery(client);
+
   const { data } = useGetExternalSystemInstancesQuery(client);
   const currencyOptions = useMemo(() => getCurrencyOptions(), []);
   const availablePaymentMethodTypes = data?.externalSystemInstances.find(
@@ -187,153 +190,160 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
           onBlur={() => onSetIsBillingDetailsFocused(false)}
         />
       </Flex>
-      <FormInput
-        label='Send invoice to'
-        isLabelVisible
-        labelProps={{
-          fontSize: 'sm',
-          mb: 0,
-          fontWeight: 'semibold',
-        }}
-        formId={formId}
-        name='invoiceEmail'
-        textOverflow='ellipsis'
-        placeholder='Email'
-        type='email'
-        isInvalid={isEmailValid}
-        onMouseEnter={() => onSetIsBillingDetailsHovered(true)}
-        onMouseLeave={() => onSetIsBillingDetailsHovered(false)}
-        onFocus={() => onSetIsBillingDetailsFocused(true)}
-        onBlur={() => onSetIsBillingDetailsFocused(false)}
-        autoComplete='off'
-      />
-      <FormSelect
-        label='Billing currency'
-        placeholder='Invoice currency'
-        isLabelVisible
-        name='currency'
-        formId={formId}
-        options={currencyOptions ?? []}
-      />
 
-      <Flex flexDirection='column' gap={2}>
-        <Text fontSize='sm' fontWeight='semibold' whiteSpace='nowrap'>
-          Payment options
-          {tooltipContent && (
-            <Tooltip label={tooltipContent} hasArrow shouldWrapChildren>
-              <InfoCircle boxSize={3} color='gray.400' ml={2} />
-            </Tooltip>
-          )}
-        </Text>
+      {tenantSettingsData?.tenantSettings?.billingEnabled && (
+        <>
+          <FormInput
+            label='Send invoice to'
+            isLabelVisible
+            labelProps={{
+              fontSize: 'sm',
+              mb: 0,
+              fontWeight: 'semibold',
+            }}
+            formId={formId}
+            name='invoiceEmail'
+            textOverflow='ellipsis'
+            placeholder='Email'
+            type='email'
+            isInvalid={isEmailValid}
+            onMouseEnter={() => onSetIsBillingDetailsHovered(true)}
+            onMouseLeave={() => onSetIsBillingDetailsHovered(false)}
+            onFocus={() => onSetIsBillingDetailsFocused(true)}
+            onBlur={() => onSetIsBillingDetailsFocused(false)}
+            autoComplete='off'
+          />
+          <FormSelect
+            label='Billing currency'
+            placeholder='Invoice currency'
+            isLabelVisible
+            name='currency'
+            formId={formId}
+            options={currencyOptions ?? []}
+          />
 
-        <Flex flexDir='column' gap={2}>
-          <PaymentDetailsPopover
-            content={isStripeActive ? '' : 'No payment provider enabled'}
-            withNavigation
-          >
-            <FormSwitch
-              name='payAutomatically'
-              formId={formId}
-              isInvalid={!isStripeActive}
-              size='sm'
-              labelProps={{ margin: 0 }}
-              label={
-                <Text fontSize='sm' fontWeight='normal' whiteSpace='nowrap'>
-                  Auto-payment via Stripe
-                </Text>
-              }
-            />
-          </PaymentDetailsPopover>
-          {!isStripeActive && (
-            <Flex flexDir='column' gap={2} ml={2}>
-              <Tooltip
-                label={
-                  availablePaymentMethodTypes?.includes('card')
-                    ? ''
-                    : 'Credit or Debit card not enabled in Stripe'
-                }
-                placement='bottom-start'
+          <Flex flexDirection='column' gap={2}>
+            <Text fontSize='sm' fontWeight='semibold' whiteSpace='nowrap'>
+              Payment options
+              {tooltipContent && (
+                <Tooltip label={tooltipContent} hasArrow shouldWrapChildren>
+                  <InfoCircle boxSize={3} color='gray.400' ml={2} />
+                </Tooltip>
+              )}
+            </Text>
+
+            <Flex flexDir='column' gap={2}>
+              <PaymentDetailsPopover
+                content={isStripeActive ? '' : 'No payment provider enabled'}
+                withNavigation
               >
-                <Box>
-                  <FormCheckbox
-                    name='canPayWithCard'
-                    formId={formId}
-                    size='md'
-                    isInvalid={!availablePaymentMethodTypes?.includes('card')}
-                  >
-                    <Text fontSize='sm' whiteSpace='nowrap'>
-                      Credit or Debit cards
+                <FormSwitch
+                  name='payAutomatically'
+                  formId={formId}
+                  isInvalid={!isStripeActive}
+                  size='sm'
+                  labelProps={{ margin: 0 }}
+                  label={
+                    <Text fontSize='sm' fontWeight='normal' whiteSpace='nowrap'>
+                      Auto-payment via Stripe
                     </Text>
-                  </FormCheckbox>
-                </Box>
-              </Tooltip>
-              <Tooltip
-                label={
-                  availablePaymentMethodTypes?.includes('bacs_debit')
-                    ? ''
-                    : 'Direct debit not enabled in Stripe'
-                }
-                placement='bottom-start'
-              >
-                <Box>
-                  <FormCheckbox
-                    name='canPayWithDirectDebit'
-                    formId={formId}
-                    size='md'
-                    isInvalid={
-                      !availablePaymentMethodTypes?.includes('bacs_debit')
+                  }
+                />
+              </PaymentDetailsPopover>
+              {!isStripeActive && (
+                <Flex flexDir='column' gap={2} ml={2}>
+                  <Tooltip
+                    label={
+                      availablePaymentMethodTypes?.includes('card')
+                        ? ''
+                        : 'Credit or Debit card not enabled in Stripe'
                     }
+                    placement='bottom-start'
                   >
-                    <Text fontSize='sm' whiteSpace='nowrap'>
-                      Direct Debit via ACH
-                    </Text>
-                  </FormCheckbox>
-                </Box>
-              </Tooltip>
+                    <Box>
+                      <FormCheckbox
+                        name='canPayWithCard'
+                        formId={formId}
+                        size='md'
+                        isInvalid={
+                          !availablePaymentMethodTypes?.includes('card')
+                        }
+                      >
+                        <Text fontSize='sm' whiteSpace='nowrap'>
+                          Credit or Debit cards
+                        </Text>
+                      </FormCheckbox>
+                    </Box>
+                  </Tooltip>
+                  <Tooltip
+                    label={
+                      availablePaymentMethodTypes?.includes('bacs_debit')
+                        ? ''
+                        : 'Direct debit not enabled in Stripe'
+                    }
+                    placement='bottom-start'
+                  >
+                    <Box>
+                      <FormCheckbox
+                        name='canPayWithDirectDebit'
+                        formId={formId}
+                        size='md'
+                        isInvalid={
+                          !availablePaymentMethodTypes?.includes('bacs_debit')
+                        }
+                      >
+                        <Text fontSize='sm' whiteSpace='nowrap'>
+                          Direct Debit via ACH
+                        </Text>
+                      </FormCheckbox>
+                    </Box>
+                  </Tooltip>
+                </Flex>
+              )}
             </Flex>
-          )}
-        </Flex>
 
-        <PaymentDetailsPopover
-          content={isStripeActive ? '' : 'No payment provider enabled'}
-          withNavigation
-        >
-          <FormSwitch
-            name='payOnline'
-            formId={formId}
-            isInvalid={!isStripeActive}
-            size='sm'
-            labelProps={{
-              margin: 0,
-            }}
-            label={
-              <Text fontSize='sm' fontWeight='normal' whiteSpace='nowrap'>
-                Online payment via Stripe
-              </Text>
-            }
-          />
-        </PaymentDetailsPopover>
+            <PaymentDetailsPopover
+              content={isStripeActive ? '' : 'No payment provider enabled'}
+              withNavigation
+            >
+              <FormSwitch
+                name='payOnline'
+                formId={formId}
+                isInvalid={!isStripeActive}
+                size='sm'
+                labelProps={{
+                  margin: 0,
+                }}
+                label={
+                  <Text fontSize='sm' fontWeight='normal' whiteSpace='nowrap'>
+                    Online payment via Stripe
+                  </Text>
+                }
+              />
+            </PaymentDetailsPopover>
 
-        <PaymentDetailsPopover
-          withNavigation
-          content={bankTransferPopoverContent}
-        >
-          <FormSwitch
-            name='canPayWithBankTransfer'
-            isInvalid={!!bankTransferPopoverContent.length}
-            formId={formId}
-            size='sm'
-            labelProps={{
-              margin: 0,
-            }}
-            label={
-              <Text fontSize='sm' fontWeight='normal' whiteSpace='nowrap'>
-                Bank transfer
-              </Text>
-            }
-          />
-        </PaymentDetailsPopover>
-      </Flex>
+            <PaymentDetailsPopover
+              withNavigation
+              content={bankTransferPopoverContent}
+            >
+              <FormSwitch
+                name='canPayWithBankTransfer'
+                isInvalid={!!bankTransferPopoverContent.length}
+                formId={formId}
+                size='sm'
+                labelProps={{
+                  margin: 0,
+                }}
+                label={
+                  <Text fontSize='sm' fontWeight='normal' whiteSpace='nowrap'>
+                    Bank transfer
+                  </Text>
+                }
+              />
+            </PaymentDetailsPopover>
+          </Flex>
+        </>
+      )}
     </ModalBody>
   );
 };
