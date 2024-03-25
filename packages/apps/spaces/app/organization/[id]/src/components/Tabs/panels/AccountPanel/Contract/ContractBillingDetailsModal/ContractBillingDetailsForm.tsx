@@ -289,7 +289,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
                         formId={formId}
                         size='md'
                         isInvalid={
-                          !availablePaymentMethodTypes?.includes('bacs_debit')
+                          !availablePaymentMethodTypes?.includes('ach_debit')
                         }
                       >
                         <Text fontSize='sm' whiteSpace='nowrap'>

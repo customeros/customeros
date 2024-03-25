@@ -3,6 +3,7 @@
 import React from 'react';
 
 import { useConnections, useIntegrationApp } from '@integration-app/react';
+import { paymentMethods } from '@settings/components/Tabs/panels/BillingPanel/components/utils';
 import { useGetExternalSystemInstancesQuery } from '@settings/graphql/getExternalSystemInstances.generated';
 import { BankTransferAccountList } from '@settings/components/Tabs/panels/BillingPanel/components/BankTransferAccountList';
 
@@ -36,6 +37,15 @@ export const PaymentMethods = ({
     try {
       await iApp.integration('stripe').open({ showPoweredBy: false });
       await refresh();
+      await iApp
+        .flowInstance({
+          flowKey: 'stripe-default-flow-v1',
+          integrationKey: 'stripe',
+          autoCreate: false,
+        })
+        .run({
+          input: '<input data>',
+        });
     } catch (err) {
       toastError('Integration failed', 'get-intergration-data');
     }
@@ -81,7 +91,10 @@ export const PaymentMethods = ({
             noOfLines={1}
           >
             {availablePaymentMethodTypes?.length
-              ? availablePaymentMethodTypes?.join(', ').split('_').join(' ')
+              ? availablePaymentMethodTypes
+                  ?.map((e) => paymentMethods?.[e])
+                  .filter(Boolean)
+                  .join(', ')
               : 'No payment methods enabled in Stripe yet'}
           </Text>
         )}
