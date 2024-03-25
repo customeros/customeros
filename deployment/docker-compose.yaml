@@ -92,6 +92,21 @@ services:
         source: eventstore-volume-data
         target: /var/lib/eventstore-data
 
+  customer-os-platform-admin-api:
+    image: ghcr.io/openline-ai/openline-customer-os/customer-os-platform-admin-api:latest
+    networks:
+      - openline
+    ports:
+      - "10005:10005"
+    depends_on:
+      - postgres-sidecar
+      - neo4j-sidecar
+      - eventstore
+    environment:
+      - POSTGRES_HOST=postgres
+      - NEO4J_TARGET=neo4j://neo4j:7687
+      - EVENTS_PROCESSING_PLATFORM_URL=events-processing-platform:5001
+
   customer-os-api:
     image: ghcr.io/openline-ai/openline-customer-os/customer-os-api:latest
     networks:
@@ -99,8 +114,6 @@ services:
     ports:
       - "10000:10000"
     depends_on:
-      - postgres-sidecar
-      - neo4j-sidecar
       - customer-os-platform-admin-api
     environment:
       - POSTGRES_HOST=postgres
@@ -114,9 +127,6 @@ services:
     ports:
       - "5001:5001"
     depends_on:
-      - postgres-sidecar
-      - neo4j-sidecar
-      - eventstore
       - customer-os-platform-admin-api
     environment:
       - EVENT_STORE_CONNECTION_STRING=esdb://host.docker.internal:2113
@@ -132,9 +142,6 @@ services:
     networks:
       - openline
     depends_on:
-      - postgres-sidecar
-      - neo4j-sidecar
-      - eventstore
       - customer-os-platform-admin-api
     environment:
       - EVENT_STORE_CONNECTION_STRING=esdb://host.docker.internal:2113
@@ -150,8 +157,6 @@ services:
     ports:
       - "10004:10004"
     depends_on:
-      - postgres-sidecar
-      - neo4j-sidecar
       - customer-os-platform-admin-api
     environment:
       - POSTGRES_HOST=postgres
@@ -165,8 +170,6 @@ services:
     ports:
       - "4001:4001"
     depends_on:
-      - postgres-sidecar
-      - neo4j-sidecar
       - customer-os-platform-admin-api
     environment:
       - POSTGRES_HOST=postgres
@@ -181,8 +184,6 @@ services:
     ports:
       - "10001:10001"
     depends_on:
-      - postgres-sidecar
-      - neo4j-sidecar
       - customer-os-platform-admin-api
     environment:
       - POSTGRES_HOST=postgres
@@ -196,8 +197,6 @@ services:
     ports:
       - "10003:10003"
     depends_on:
-      - postgres-sidecar
-      - neo4j-sidecar
       - customer-os-platform-admin-api
     environment:
       - POSTGRES_HOST=postgres
@@ -210,26 +209,10 @@ services:
     ports:
       - "10002:10002"
     depends_on:
-      - postgres-sidecar
-      - neo4j-sidecar
       - customer-os-platform-admin-api
     environment:
       - POSTGRES_HOST=postgres
       - NEO4J_TARGET=neo4j://neo4j:7687
-
-  customer-os-platform-admin-api:
-    image: ghcr.io/openline-ai/openline-customer-os/customer-os-platform-admin-api:latest
-    networks:
-      - openline
-    ports:
-      - "10005:10005"
-    depends_on:
-      - postgres-sidecar
-      - neo4j-sidecar
-    environment:
-      - POSTGRES_HOST=postgres
-      - NEO4J_TARGET=neo4j://neo4j:7687
-      - EVENTS_PROCESSING_PLATFORM_URL=events-processing-platform:5001
 
   openai-api:
     image: ghcr.io/openline-ai/openline-customer-os/openai-api:latest
@@ -238,8 +221,6 @@ services:
     ports:
       - "10101:10101"
     depends_on:
-      - postgres-sidecar
-      - neo4j-sidecar
       - customer-os-platform-admin-api
     environment:
       - POSTGRES_HOST=postgres
@@ -252,8 +233,6 @@ services:
     ports:
       - "9013:9013" #GRPC
     depends_on:
-      - postgres-sidecar
-      - neo4j-sidecar
       - customer-os-platform-admin-api
     environment:
       - POSTGRES_HOST=postgres
@@ -268,8 +247,6 @@ services:
     ports:
       - "10100:10100"
     depends_on:
-      - postgres-sidecar
-      - neo4j-sidecar
       - customer-os-platform-admin-api
     environment:
       - POSTGRES_HOST=postgres
