@@ -642,6 +642,7 @@ type ComplexityRoot struct {
 		OffCycle                      func(childComplexity int) int
 		Organization                  func(childComplexity int) int
 		Paid                          func(childComplexity int) int
+		PaymentLink                   func(childComplexity int) int
 		Postpaid                      func(childComplexity int) int
 		Provider                      func(childComplexity int) int
 		RepositoryFileID              func(childComplexity int) int
@@ -4856,6 +4857,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Invoice.Paid(childComplexity), true
+
+	case "Invoice.paymentLink":
+		if e.complexity.Invoice.PaymentLink == nil {
+			break
+		}
+
+		return e.complexity.Invoice.PaymentLink(childComplexity), true
 
 	case "Invoice.postpaid":
 		if e.complexity.Invoice.Postpaid == nil {
@@ -13063,6 +13071,7 @@ type Invoice implements MetadataInterface {
     paid:                       Boolean!
     subtotal:                   Float!
     taxDue:                     Float!
+    paymentLink:                String
 }
 
 type InvoiceCustomer {
@@ -39137,6 +39146,47 @@ func (ec *executionContext) fieldContext_Invoice_taxDue(ctx context.Context, fie
 	return fc, nil
 }
 
+func (ec *executionContext) _Invoice_paymentLink(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Invoice_paymentLink(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PaymentLink, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Invoice_paymentLink(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Invoice",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _InvoiceCustomer_name(ctx context.Context, field graphql.CollectedField, obj *model.InvoiceCustomer) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_InvoiceCustomer_name(ctx, field)
 	if err != nil {
@@ -40165,6 +40215,8 @@ func (ec *executionContext) fieldContext_InvoicesPage_content(ctx context.Contex
 				return ec.fieldContext_Invoice_subtotal(ctx, field)
 			case "taxDue":
 				return ec.fieldContext_Invoice_taxDue(ctx, field)
+			case "paymentLink":
+				return ec.fieldContext_Invoice_paymentLink(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Invoice", field.Name)
 		},
@@ -52727,6 +52779,8 @@ func (ec *executionContext) fieldContext_Mutation_invoice_Update(ctx context.Con
 				return ec.fieldContext_Invoice_subtotal(ctx, field)
 			case "taxDue":
 				return ec.fieldContext_Invoice_taxDue(ctx, field)
+			case "paymentLink":
+				return ec.fieldContext_Invoice_paymentLink(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Invoice", field.Name)
 		},
@@ -52866,6 +52920,8 @@ func (ec *executionContext) fieldContext_Mutation_invoice_Pay(ctx context.Contex
 				return ec.fieldContext_Invoice_subtotal(ctx, field)
 			case "taxDue":
 				return ec.fieldContext_Invoice_taxDue(ctx, field)
+			case "paymentLink":
+				return ec.fieldContext_Invoice_paymentLink(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Invoice", field.Name)
 		},
@@ -53005,6 +53061,8 @@ func (ec *executionContext) fieldContext_Mutation_invoice_Void(ctx context.Conte
 				return ec.fieldContext_Invoice_subtotal(ctx, field)
 			case "taxDue":
 				return ec.fieldContext_Invoice_taxDue(ctx, field)
+			case "paymentLink":
+				return ec.fieldContext_Invoice_paymentLink(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Invoice", field.Name)
 		},
@@ -76603,6 +76661,8 @@ func (ec *executionContext) fieldContext_Query_invoice(ctx context.Context, fiel
 				return ec.fieldContext_Invoice_subtotal(ctx, field)
 			case "taxDue":
 				return ec.fieldContext_Invoice_taxDue(ctx, field)
+			case "paymentLink":
+				return ec.fieldContext_Invoice_paymentLink(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Invoice", field.Name)
 		},
@@ -101785,6 +101845,8 @@ func (ec *executionContext) _Invoice(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "paymentLink":
+			out.Values[i] = ec._Invoice_paymentLink(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

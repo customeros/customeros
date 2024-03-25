@@ -43,6 +43,9 @@ func TestInvoiceResolver_Invoice(t *testing.T) {
 		TotalAmount:      119,
 		RepositoryFileId: "ABC",
 		Note:             "Note",
+		PaymentDetails: neo4jentity.PaymentDetails{
+			PaymentLink: "Link",
+		},
 	})
 
 	neo4jtest.CreateInvoiceLine(ctx, driver, tenantName, invoiceId, neo4jentity.InvoiceLineEntity{
@@ -86,6 +89,7 @@ func TestInvoiceResolver_Invoice(t *testing.T) {
 	require.False(t, invoice.Paid)
 	require.Equal(t, 119.0, invoice.AmountRemaining)
 	require.Equal(t, 0.0, invoice.AmountPaid)
+	require.Equal(t, "Link", *invoice.PaymentLink)
 
 	require.Equal(t, 1, len(invoice.InvoiceLineItems))
 	require.Equal(t, "SLI 1", invoice.InvoiceLineItems[0].Description)
