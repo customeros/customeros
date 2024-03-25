@@ -183,7 +183,7 @@ export const BillingPanel = () => {
     defaultValues,
     stateReducer: (state, action, next) => {
       const getStateAfterValidation = () => {
-        return produce(next, (draft) => {
+        return produce({ ...next }, (draft) => {
           const sendInvoiceFromError = validateEmailLocalPart(
             draft.values.sendInvoicesFrom,
           );
