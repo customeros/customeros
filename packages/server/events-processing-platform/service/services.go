@@ -5,7 +5,6 @@ import (
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/command"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventbuffer"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
@@ -41,7 +40,7 @@ type Services struct {
 	OrderService              *orderService
 }
 
-func InitServices(cfg *config.Config, repositories *repository.Repositories, aggregateStore eventstore.AggregateStore, commandHandlers *command.CommandHandlers, log logger.Logger, eventbufferWatcher *eventbuffer.EventBufferWatcher) *Services {
+func InitServices(cfg *config.Config, repositories *repository.Repositories, aggregateStore eventstore.AggregateStore, commandHandlers *command.CommandHandlers, log logger.Logger, ebs *eventstore.EventBufferService) *Services {
 	services := Services{}
 
 	services.FileStoreApiService = fsc.NewFileStoreApiService(&cfg.Services.FileStoreApiConfig)
@@ -69,7 +68,7 @@ func InitServices(cfg *config.Config, repositories *repository.Repositories, agg
 	services.InvoiceService = NewInvoiceService(log, aggregateStore, cfg, repositories.InvoiceRepository)
 	services.TenantService = NewTenantService(log, aggregateStore, cfg)
 	services.CountryService = NewCountryService(log, commandHandlers.Country)
-	services.ReminderService = NewReminderService(log, aggregateStore, cfg, eventbufferWatcher)
+	services.ReminderService = NewReminderService(log, aggregateStore, cfg, ebs)
 	services.OrderService = NewOrderService(log, aggregateStore, cfg)
 
 	return &services

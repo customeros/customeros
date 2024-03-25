@@ -794,7 +794,7 @@ func testTenantSettingsUpdate() {
 func testCreateReminder() {
 	_, err := clients.ReminderClient.CreateReminder(context.Background(), &reminderpb.CreateReminderGrpcRequest{
 		Tenant:         tenant,
-		UserId:         "05f382ba-0fa9-4828-940c-efb4e2e6b84c",
+		LoggedInUserId: "05f382ba-0fa9-4828-940c-efb4e2e6b84c",
 		Content:        "test reminder",
 		DueDate:        timestamppb.New(utils.Now().AddDate(0, 0, 1)),
 		OrganizationId: "05f382ba-0fa9-4828-940c-efb4e2e6b84c",

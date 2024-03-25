@@ -2,14 +2,13 @@ package graph
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/reminder"
 
 	neo4jrepo "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/reminder/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/reminder/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
@@ -32,13 +31,13 @@ func (h *ReminderEventHandler) OnCreate(ctx context.Context, evt eventstore.Even
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData events.ReminderCreateEvent
+	var eventData reminder.ReminderCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	reminderId := aggregate.GetReminderObjectID(evt.AggregateID, eventData.Tenant)
+	reminderId := reminder.GetReminderObjectID(evt.AggregateID, eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, reminderId)
 
 	source := helper.GetSource(eventData.SourceFields.Source)
@@ -72,13 +71,13 @@ func (h *ReminderEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData events.ReminderUpdateEvent
+	var eventData reminder.ReminderUpdateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	reminderId := aggregate.GetReminderObjectID(evt.AggregateID, eventData.Tenant)
+	reminderId := reminder.GetReminderObjectID(evt.AggregateID, eventData.Tenant)
 
 	due := eventData.DueDate
 	span.SetTag(tracing.SpanTagEntityId, reminderId)

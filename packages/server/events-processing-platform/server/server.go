@@ -8,7 +8,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventbuffer"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/service"
 	"google.golang.org/grpc"
 
@@ -95,16 +94,13 @@ func (server *Server) Start(parentCtx context.Context) error {
 
 	server.AggregateStore = store.NewAggregateStore(server.Log, esdb)
 
-	eventBufferWatcher := eventbuffer.NewEventBufferWatcher(server.Repositories, server.Log, server.AggregateStore)
-	eventBufferWatcher.Start(ctx)
-	defer eventBufferWatcher.Stop()
-
-	server.CommandHandlers = command.NewCommandHandlers(server.Log, server.Config, server.AggregateStore, server.Repositories, eventBufferWatcher)
+	bufferService := eventstore.NewEventBufferService(server.Repositories.CommonRepositories.EventBufferRepository)
+	server.CommandHandlers = command.NewCommandHandlers(server.Log, server.Config, server.AggregateStore, bufferService)
 
 	//Server.runMetrics(cancel)
 	//Server.runHealthCheck(ctx)
 
-	server.Services = service.InitServices(server.Config, server.Repositories, server.AggregateStore, server.CommandHandlers, server.Log, eventBufferWatcher)
+	server.Services = service.InitServices(server.Config, server.Repositories, server.AggregateStore, server.CommandHandlers, server.Log, bufferService)
 
 	closeGrpcServer, grpcServer, err := server.NewEventProcessorGrpcServer()
 	if err != nil {

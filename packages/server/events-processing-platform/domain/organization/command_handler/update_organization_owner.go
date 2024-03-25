@@ -12,7 +12,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventbuffer"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -28,12 +27,12 @@ type UpdateOrganizationOwnerCommandHandler interface {
 type updateOrganizationOwnerCommandHandler struct {
 	log logger.Logger
 	es  eventstore.AggregateStore
-	ebw *eventbuffer.EventBufferWatcher
+	ebs *eventstore.EventBufferService
 	cfg config.Utils
 }
 
-func NewUpdateOrganizationOwnerCommandHandler(log logger.Logger, es eventstore.AggregateStore, cfg config.Utils, ebw *eventbuffer.EventBufferWatcher) UpdateOrganizationOwnerCommandHandler {
-	return &updateOrganizationOwnerCommandHandler{log: log, es: es, cfg: cfg, ebw: ebw}
+func NewUpdateOrganizationOwnerCommandHandler(log logger.Logger, es eventstore.AggregateStore, cfg config.Utils, ebs *eventstore.EventBufferService) UpdateOrganizationOwnerCommandHandler {
+	return &updateOrganizationOwnerCommandHandler{log: log, es: es, cfg: cfg, ebs: ebs}
 }
 
 func (h *updateOrganizationOwnerCommandHandler) Handle(ctx context.Context, cmd *command.UpdateOrganizationOwnerCommand) error {
@@ -65,7 +64,11 @@ func (h *updateOrganizationOwnerCommandHandler) Handle(ctx context.Context, cmd 
 		}
 
 		eventBufferUUID := fmt.Sprintf("%s-%s", cmd.ActorUserId, cmd.OrganizationId)
-		h.ebw.Park(ctx, *event, cmd.Tenant, eventBufferUUID, time.Now().UTC().Add(time.Second*30))
+		err = h.ebs.Park(ctx, *event, cmd.Tenant, eventBufferUUID, time.Now().UTC().Add(time.Second*30))
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
 
 		// Save the aggregate to the event store
 		err = h.es.Save(ctx, organizationAggregate)

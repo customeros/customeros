@@ -23,6 +23,7 @@ type Repositories struct {
 	PostmarkApiKeyRepository          repository.PostmarkApiKeyRepository
 	GoogleServiceAccountKeyRepository repository.GoogleServiceAccountKeyRepository
 	CurrencyRateRepository            repository.CurrencyRateRepository
+	EventBufferRepository             repository.EventBufferRepository
 }
 
 func InitRepositories(db *gorm.DB, driver *neo4j.DriverWithContext) *Repositories {
@@ -41,6 +42,7 @@ func InitRepositories(db *gorm.DB, driver *neo4j.DriverWithContext) *Repositorie
 		PostmarkApiKeyRepository:          repository.NewPostmarkApiKeyRepo(db),
 		GoogleServiceAccountKeyRepository: repository.NewGoogleServiceAccountKeyRepository(db),
 		CurrencyRateRepository:            repository.NewCurrencyRateRepository(db),
+		EventBufferRepository:             repository.NewEventBufferRepository(db),
 	}
 
 	return repositories
@@ -101,6 +103,11 @@ func Migration(db *gorm.DB) {
 	}
 
 	err = db.AutoMigrate(&commonEntity.CurrencyRate{})
+	if err != nil {
+		panic(err)
+	}
+
+	err = db.AutoMigrate(&commonEntity.EventBuffer{})
 	if err != nil {
 		panic(err)
 	}

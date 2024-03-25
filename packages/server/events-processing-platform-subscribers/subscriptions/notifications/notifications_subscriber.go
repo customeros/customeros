@@ -11,7 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	orgevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
-	reminderevts "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/reminder/events"
+	reminder "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/reminder"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -122,7 +122,7 @@ func (s *NotificationsSubscriber) When(ctx context.Context, evt eventstore.Event
 
 	case orgevents.OrganizationUpdateOwnerNotificationV1:
 		return s.orgEventHandler.OnOrganizationUpdateOwner(ctx, evt)
-	case reminderevts.ReminderNotificationV1:
+	case reminder.ReminderNotificationV1:
 		return s.reminderEventHandler.OnReminderCreate(ctx, evt)
 
 	default:

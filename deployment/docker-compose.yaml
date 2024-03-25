@@ -138,6 +138,18 @@ services:
     ports:
       - "8080:8080"
 
+  gotenberg:
+    image: thecodingmachine/gotenberg:8
+    container_name: gotenberg
+    depends_on:
+      - postgres-sidecar
+      - neo4j-sidecar
+      - eventstore
+    networks:
+      - openline
+    ports:
+      - "11006:8080"
+
   customer-os-platform-admin-api:
     image: ghcr.io/openline-ai/openline-customer-os/customer-os-platform-admin-api:latest
     networks:

@@ -31,7 +31,7 @@ import (
 	orgevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	orgplanevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/events"
 	phonenumberevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
-	reminderevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/reminder/events"
+	reminderevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/reminder"
 	servicelineitemevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/event"
 	tenantevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/tenant/event"
 	userevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"
@@ -444,6 +444,8 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.reminderEventHandler.OnCreate(ctx, evt)
 	case reminderevents.ReminderUpdateV1:
 		return s.reminderEventHandler.OnUpdate(ctx, evt)
+	case reminderevents.ReminderNotificationV1:
+		return nil
 
 	case orderevents.OrderUpsertV1:
 		return s.orderEventHandler.OnUpsertOrderV1(ctx, evt)

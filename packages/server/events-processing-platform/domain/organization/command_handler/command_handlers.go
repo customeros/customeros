@@ -2,10 +2,8 @@ package command_handler
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventbuffer"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 )
 
 // CommandHandlers acts as a container for all command handlers.
@@ -29,7 +27,7 @@ type CommandHandlers struct {
 	UpdateOrganizationOwner      UpdateOrganizationOwnerCommandHandler
 }
 
-func NewCommandHandlers(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore, repositories *repository.Repositories, eventBufferWatcher *eventbuffer.EventBufferWatcher) *CommandHandlers {
+func NewCommandHandlers(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore, ebs *eventstore.EventBufferService) *CommandHandlers {
 	return &CommandHandlers{
 		UpsertOrganization:           NewUpsertOrganizationCommandHandler(log, es),
 		UpdateOrganization:           NewUpdateOrganizationCommandHandler(log, es, cfg.Utils),
@@ -47,6 +45,6 @@ func NewCommandHandlers(log logger.Logger, cfg *config.Config, es eventstore.Agg
 		RefreshArr:                   NewRefreshArrCommandHandler(log, es, cfg.Utils),
 		WebScrapeOrganization:        NewWebScrapeOrganizationCommandHandler(log, es, cfg.Utils),
 		UpdateOnboardingStatus:       NewUpdateOnboardingStatusCommandHandler(log, es, cfg.Utils),
-		UpdateOrganizationOwner:      NewUpdateOrganizationOwnerCommandHandler(log, es, cfg.Utils, eventBufferWatcher),
+		UpdateOrganizationOwner:      NewUpdateOrganizationOwnerCommandHandler(log, es, cfg.Utils, ebs),
 	}
 }

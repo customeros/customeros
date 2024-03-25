@@ -3,11 +3,9 @@ package service
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/reminder"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventbuffer"
-
-	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
@@ -21,17 +19,17 @@ type reminderService struct {
 	requestHandler reminder.ReminderRequestHandler
 }
 
-func NewReminderService(log logger.Logger, aggregateStore eventstore.AggregateStore, cfg *config.Config, ebw *eventbuffer.EventBufferWatcher) *reminderService {
+func NewReminderService(log logger.Logger, aggregateStore eventstore.AggregateStore, cfg *config.Config, ebs *eventstore.EventBufferService) *reminderService {
 	return &reminderService{
 		log:            log,
-		requestHandler: reminder.NewReminderRequestHandler(log, aggregateStore, ebw, cfg.Utils),
+		requestHandler: reminder.NewReminderRequestHandler(log, aggregateStore, ebs, cfg.Utils),
 	}
 }
 
 func (s *reminderService) CreateReminder(ctx context.Context, request *reminderpb.CreateReminderGrpcRequest) (*reminderpb.ReminderGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ReminderService.CreateReminder")
 	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.UserId)
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	tracing.LogObjectAsJson(span, "request", request)
 
 	reminderId := uuid.New().String()
