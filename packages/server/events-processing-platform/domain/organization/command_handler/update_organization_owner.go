@@ -64,7 +64,7 @@ func (h *updateOrganizationOwnerCommandHandler) Handle(ctx context.Context, cmd 
 		}
 
 		eventBufferUUID := fmt.Sprintf("%s-%s", cmd.ActorUserId, cmd.OrganizationId)
-		err = h.ebs.Park(ctx, *event, cmd.Tenant, eventBufferUUID, time.Now().UTC().Add(time.Second*30))
+		err = h.ebs.Park(*event, cmd.Tenant, eventBufferUUID, time.Now().UTC().Add(time.Second*30))
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err

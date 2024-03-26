@@ -31,5 +31,7 @@ func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB, neo4jDatabase s
 	repositories.OrganizationRepository = NewOrganizationRepository(driver)
 	repositories.TenantRepository = NewTenantRepository(driver)
 
+	commonRepository.Migration(gormDb)
+
 	return &repositories
 }
