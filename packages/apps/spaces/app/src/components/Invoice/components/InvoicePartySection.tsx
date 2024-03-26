@@ -85,15 +85,9 @@ export const InvoicePartySection: FC<InvoiceHeaderProps> = ({
       </Text>
 
       {isUSA && (
-        <>
-          <Text fontSize='sm' lineHeight={1.2} color='gray.500'>
-            {locality}
-          </Text>
-          <Text fontSize='sm' lineHeight={1.2} color='gray.500'>
-            {region}
-            {region && zip && ', '} {zip}
-          </Text>
-        </>
+        <Text fontSize='sm' lineHeight={1.2} color='gray.500'>
+          {locality && `${locality}, `} {region} {zip}
+        </Text>
       )}
       {!isUSA && (
         <Text fontSize='sm' lineHeight={1.2} color='gray.500'>

@@ -136,25 +136,20 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
         onMouseEnter={() => onSetIsBillingDetailsHovered(true)}
         onMouseLeave={() => onSetIsBillingDetailsHovered(false)}
       >
+        <Text fontSize='sm' fontWeight='semibold'>
+          Billing address
+        </Text>
         <FormSelect
           label='Country'
           placeholder='Country'
           name='country'
           formId={formId}
-          isLabelVisible
           options={countryOptions}
           onFocus={() => onSetIsBillingDetailsFocused(true)}
           onBlur={() => onSetIsBillingDetailsFocused(false)}
         />
         <FormInput
-          label='Billing address'
-          isLabelVisible
-          labelProps={{
-            fontSize: 'sm',
-            mb: 0,
-            mt: 2,
-            fontWeight: 'semibold',
-          }}
+          label='Address line 1'
           formId={formId}
           name='addressLine1'
           textOverflow='ellipsis'
@@ -175,16 +170,6 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
         />
         {country?.value === 'US' && (
           <FormInput
-            label='State'
-            name='region'
-            placeholder='State'
-            formId={formId}
-            onFocus={() => onSetIsBillingDetailsFocused(true)}
-            onBlur={() => onSetIsBillingDetailsFocused(false)}
-          />
-        )}
-        <Flex>
-          <FormInput
             label='City'
             formId={formId}
             name='locality'
@@ -194,6 +179,29 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
             onBlur={() => onSetIsBillingDetailsFocused(false)}
             autoComplete='off'
           />
+        )}
+        <Flex>
+          {country?.value === 'US' ? (
+            <FormInput
+              label='State'
+              name='region'
+              placeholder='State'
+              formId={formId}
+              onFocus={() => onSetIsBillingDetailsFocused(true)}
+              onBlur={() => onSetIsBillingDetailsFocused(false)}
+            />
+          ) : (
+            <FormInput
+              label='City'
+              formId={formId}
+              name='locality'
+              textOverflow='ellipsis'
+              placeholder='City'
+              onFocus={() => onSetIsBillingDetailsFocused(true)}
+              onBlur={() => onSetIsBillingDetailsFocused(false)}
+              autoComplete='off'
+            />
+          )}
           <FormInput
             label='ZIP/Postal code'
             formId={formId}
