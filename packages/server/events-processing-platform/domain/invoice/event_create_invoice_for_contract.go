@@ -12,7 +12,6 @@ type InvoiceForContractCreateEvent struct {
 	Tenant          string             `json:"tenant" validate:"required"`
 	ContractId      string             `json:"organizationId" validate:"required"`
 	CreatedAt       time.Time          `json:"createdAt"`
-	DueDate         time.Time          `json:"dueDate"`
 	SourceFields    commonmodel.Source `json:"sourceFields"`
 	DryRun          bool               `json:"dryRun"`
 	Currency        string             `json:"currency"`
@@ -29,7 +28,6 @@ func NewInvoiceForContractCreateEvent(aggregate eventstore.Aggregate, sourceFiel
 		Tenant:          aggregate.GetTenant(),
 		ContractId:      contractId,
 		CreatedAt:       createdAt,
-		DueDate:         createdAt,
 		SourceFields:    sourceFields,
 		Currency:        currency,
 		DryRun:          dryRun,

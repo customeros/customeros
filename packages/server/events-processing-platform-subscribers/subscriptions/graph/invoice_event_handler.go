@@ -3,6 +3,7 @@ package graph
 import (
 	"context"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
@@ -47,6 +48,14 @@ func (h *InvoiceEventHandler) OnInvoiceCreateForContractV1(ctx context.Context, 
 	invoiceId := invoice.GetInvoiceObjectID(evt.GetAggregateID(), eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, invoiceId)
 
+	contractDbNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, eventData.Tenant, eventData.ContractId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while getting contract %s: %s", eventData.ContractId, err.Error())
+		return err
+	}
+	contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
+
 	data := neo4jrepository.InvoiceCreateFields{
 		ContractId:      eventData.ContractId,
 		Currency:        neo4jenum.DecodeCurrency(eventData.Currency),
@@ -57,7 +66,7 @@ func (h *InvoiceEventHandler) OnInvoiceCreateForContractV1(ctx context.Context, 
 		PeriodStartDate: eventData.PeriodStartDate,
 		PeriodEndDate:   eventData.PeriodEndDate,
 		CreatedAt:       eventData.CreatedAt,
-		DueDate:         eventData.DueDate,
+		DueDate:         eventData.CreatedAt.AddDate(0, 0, int(contractEntity.DueDays)),
 		Status:          neo4jenum.InvoiceStatusDraft,
 		SourceFields: neo4jmodel.Source{
 			Source:    eventData.SourceFields.Source,
@@ -65,7 +74,7 @@ func (h *InvoiceEventHandler) OnInvoiceCreateForContractV1(ctx context.Context, 
 		},
 		Note: eventData.Note,
 	}
-	err := h.repositories.Neo4jRepositories.InvoiceWriteRepository.CreateInvoiceForContract(ctx, eventData.Tenant, invoiceId, data)
+	err = h.repositories.Neo4jRepositories.InvoiceWriteRepository.CreateInvoiceForContract(ctx, eventData.Tenant, invoiceId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while saving invoice %s: %s", invoiceId, err.Error())
