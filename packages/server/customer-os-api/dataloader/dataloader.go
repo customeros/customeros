@@ -69,6 +69,7 @@ type Loaders struct {
 	AttachmentsForInteractionEvent                *dataloader.Loader
 	AttachmentsForInteractionSession              *dataloader.Loader
 	AttachmentsForMeeting                         *dataloader.Loader
+	AttachmentsForContract                        *dataloader.Loader
 	SocialsForContact                             *dataloader.Loader
 	SocialsForOrganization                        *dataloader.Loader
 	ExternalSystemsForComment                     *dataloader.Loader
@@ -371,6 +372,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		AttachmentsForInteractionEvent:                dataloader.NewBatchedLoader(attachmentBatcher.getAttachmentsForInteractionEvents, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		AttachmentsForInteractionSession:              dataloader.NewBatchedLoader(attachmentBatcher.getAttachmentsForInteractionSessions, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		AttachmentsForMeeting:                         dataloader.NewBatchedLoader(attachmentBatcher.getAttachmentsForMeetings, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		AttachmentsForContract:                        dataloader.NewBatchedLoader(attachmentBatcher.getAttachmentsForContracts, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		SocialsForContact:                             dataloader.NewBatchedLoader(socialBatcher.getSocialsForContacts, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		SocialsForOrganization:                        dataloader.NewBatchedLoader(socialBatcher.getSocialsForOrganizations, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		ExternalSystemsForComment:                     dataloader.NewBatchedLoader(externalSystemBatcher.getExternalSystemsForComments, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
