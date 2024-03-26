@@ -28,7 +28,7 @@ curl -X POST \
         industryGroup: "industryGroup",
         public: true,
         isCustomer: true,
-        market: "B2B"
+        market: "B2B",
         logo: "https://acmecorp.io/logo.png",
         employeeGrowthRate: "0 percent",
         headquarters: "San Francisco",
