@@ -106,15 +106,7 @@ export const TenantBillingPanelDetailsForm = ({
           onFocus={() => setIsInvoiceProviderFocused(true)}
           onBlur={() => setIsInvoiceProviderFocused(false)}
         />
-        <FormInput
-          autoComplete='off'
-          label='Billing address line 2'
-          name='addressLine2'
-          placeholder='Address line 2'
-          formId={formId}
-          onFocus={() => setIsInvoiceProviderFocused(true)}
-          onBlur={() => setIsInvoiceProviderFocused(false)}
-        />
+
         {country?.value === 'US' && (
           <FormInput
             label='State'
