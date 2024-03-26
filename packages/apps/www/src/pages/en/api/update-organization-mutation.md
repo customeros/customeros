@@ -13,7 +13,7 @@ curl -X POST \
   -H "X-CUSTOMER-OS-API-KEY: <MY_API_KEY_HERE>" \
   -d '{
     "query": "mutation UpdateOrganization { 
-      invoice_Update(input: { 
+      organization_Update(input: { 
         id: \"96d699a8-b986-4dae-9f10-a23196f30c90\", 
         customId: \"MyNewCustomId\" 
         patch: true
