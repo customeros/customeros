@@ -2,6 +2,7 @@ package reminder
 
 import (
 	"context"
+	"encoding/json"
 	commonaggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"time"
 
@@ -56,7 +57,7 @@ func (h *reminderRequestHandler) Handle(ctx context.Context, tenant, objectId st
 		return nil, err
 	}
 
-	if err := h.parkReminderNotification(ctx, reminderAggregate, objectId, request); err != nil {
+	if err := h.parkReminderNotification(ctx, reminderAggregate, reminderAggregate.GetID(), request); err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
@@ -98,6 +99,20 @@ func (h *reminderRequestHandler) HandleWithRetry(ctx context.Context, tenant, ob
 
 		err = h.es.Save(ctx, reminderAggregate)
 		if err == nil {
+
+			if reminderAggregate.Reminder.Dismissed {
+				err := h.deleteParkedReminderNotification(ctx, reminderAggregate, reminderAggregate.GetID(), request)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return nil, err
+				}
+			} else {
+				if err := h.updateParkedReminderNotification(ctx, reminderAggregate, reminderAggregate.GetID(), request); err != nil {
+					tracing.TraceErr(span, err)
+					return nil, err
+				}
+			}
+
 			return result, nil // Save successful
 		}
 
@@ -141,11 +156,75 @@ func (h *reminderRequestHandler) parkReminderNotification(ctx context.Context, a
 
 	dueDate := agg.Reminder.DueDate.UTC() // when buffer should dispatch reminder notification event
 
-	err = h.ebs.Park(ctx, *event, agg.GetTenant(), reminderId, dueDate)
+	err = h.ebs.Park(*event, agg.GetTenant(), reminderId, dueDate)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
+	return nil
+}
+
+func (h *reminderRequestHandler) updateParkedReminderNotification(ctx context.Context, agg *ReminderAggregate, reminderId string, request any) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderRequestHandler.parkReminderNotification")
+	defer span.Finish()
+
+	req, ok := request.(*reminderpb.UpdateReminderGrpcRequest)
+	if !ok {
+		return nil
+	}
+
+	parkedReminder, err := h.ebs.GetById(reminderId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	if parkedReminder == nil {
+		return errors.New("parked reminder not found")
+	}
+
+	var parkedReminderEventData ReminderNotificationEvent
+	if err := json.Unmarshal(parkedReminder.EventData, &parkedReminderEventData); err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	parkedReminderEventData.Content = req.Content
+
+	parkedReminder.ExpiryTimestamp = agg.Reminder.DueDate.UTC()
+	parkedReminder.EventData, err = json.Marshal(parkedReminderEventData)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	err = h.ebs.Update(parkedReminder)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
+}
+
+func (h *reminderRequestHandler) deleteParkedReminderNotification(ctx context.Context, agg *ReminderAggregate, reminderId string, request any) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderRequestHandler.parkReminderNotification")
+	defer span.Finish()
+
+	parkedReminder, err := h.ebs.GetById(reminderId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	if parkedReminder == nil {
+		return errors.New("parked reminder not found")
+	}
+
+	err = h.ebs.Delete(parkedReminder)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
 	return nil
 }
 

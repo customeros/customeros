@@ -1,7 +1,6 @@
 package eventstore
 
 import (
-	"context"
 	repository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"time"
@@ -16,7 +15,6 @@ func NewEventBufferService(eventBufferRepository repository.EventBufferRepositor
 }
 
 func (eb *EventBufferService) Park(
-	ctx context.Context,
 	evt Event,
 	tenant string,
 	uuid string,
@@ -35,9 +33,21 @@ func (eb *EventBufferService) Park(
 		EventVersion:       evt.Version,
 		EventMetadata:      evt.Metadata,
 	}
-	err := eb.eventBufferRepository.Upsert(eventBuffer)
+	err := eb.eventBufferRepository.Upsert(&eventBuffer)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func (eb *EventBufferService) GetById(uuid string) (*entity.EventBuffer, error) {
+	return eb.eventBufferRepository.GetByUUID(uuid)
+}
+
+func (eb *EventBufferService) Update(eventBuffer *entity.EventBuffer) error {
+	return eb.eventBufferRepository.Upsert(eventBuffer)
+}
+
+func (eb *EventBufferService) Delete(eventBuffer *entity.EventBuffer) error {
+	return eb.eventBufferRepository.Delete(eventBuffer)
 }

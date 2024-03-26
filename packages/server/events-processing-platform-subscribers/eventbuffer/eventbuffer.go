@@ -2,8 +2,10 @@ package eventbuffer
 
 import (
 	"context"
+	"encoding/json"
 	repository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
+	orgaggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/reminder"
 	"os"
 	"os/signal"
@@ -85,7 +87,7 @@ func (eb *EventBufferWatcher) Dispatch(ctx context.Context) error {
 			eb.logger.Errorf("EventBufferWatcher.Dispatch: error handling event: %s", err.Error())
 			continue
 		}
-		err = eb.ebr.Delete(eventBuffer)
+		err = eb.ebr.Delete(&eventBuffer)
 		if err != nil {
 			return err
 		}
@@ -113,51 +115,49 @@ func (eb *EventBufferWatcher) handleEvent(ctx context.Context, evt eventstore.Ev
 	defer span.Finish()
 	switch evt.EventType {
 	case orgevents.OrganizationUpdateOwnerNotificationV1:
-		//var data orgevents.OrganizationOwnerUpdateEvent
-		//if err := json.Unmarshal(evt.Data, &data); err != nil {
-		//	tracing.TraceErr(span, err)
-		//	return err
-		//}
-		//organizationAggregate, err := orgaggregate.LoadOrganizationAggregate(ctx, eb.es, data.Tenant, data.OrganizationId, eventstore.LoadAggregateOptions{})
-		//if err != nil {
-		//	tracing.TraceErr(span, err)
-		//	return err
-		//}
-		//err = organizationAggregate.Apply(evt)
-		//if err != nil {
-		//	tracing.TraceErr(span, err)
-		//	return err
-		//}
-		//// Persist the changes to the event store
-		//if err = eb.es.Save(ctx, organizationAggregate); err != nil {
-		//	tracing.TraceErr(span, err)
-		//	return err
-		//}
-		//return err
-		return nil
+		var data orgevents.OrganizationOwnerUpdateEvent
+		if err := json.Unmarshal(evt.Data, &data); err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+		organizationAggregate, err := orgaggregate.LoadOrganizationAggregate(ctx, eb.es, data.Tenant, data.OrganizationId, eventstore.LoadAggregateOptions{})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+		err = organizationAggregate.Apply(evt)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+		// Persist the changes to the event store
+		if err = eb.es.Save(ctx, organizationAggregate); err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+		return err
 	case reminder.ReminderNotificationV1:
-		//var data reminder.ReminderNotificationEvent
-		//if err := json.Unmarshal(evt.Data, &data); err != nil {
-		//	tracing.TraceErr(span, err)
-		//	return err
-		//}
-		//reminderAggregate, err := reminder.LoadReminderAggregate(ctx, eb.es, data.Tenant, data.ReminderId, eventstore.LoadAggregateOptions{})
-		//if err != nil {
-		//	tracing.TraceErr(span, err)
-		//	return err
-		//}
-		//err = reminderAggregate.Apply(evt)
-		//if err != nil {
-		//	tracing.TraceErr(span, err)
-		//	return err
-		//}
-		//// Persist the changes to the event store
-		//if err = eb.es.Save(ctx, reminderAggregate); err != nil {
-		//	tracing.TraceErr(span, err)
-		//	return err
-		//}
-		//return err
-		return nil
+		var data reminder.ReminderNotificationEvent
+		if err := json.Unmarshal(evt.Data, &data); err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+		reminderAggregate, err := reminder.LoadReminderAggregate(ctx, eb.es, data.Tenant, data.ReminderId, eventstore.LoadAggregateOptions{})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+		err = reminderAggregate.Apply(evt)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+		// Persist the changes to the event store
+		if err = eb.es.Save(ctx, reminderAggregate); err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+		return err
 	default:
 		return nil
 	}
