@@ -248,7 +248,7 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 		PayAutomatically:       true,
 		AutoRenew:              true,
 		Check:                  true,
-		DueDays:                7,
+		DueDays:                int64(7),
 	})
 
 	serviceLineItemId1 := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
