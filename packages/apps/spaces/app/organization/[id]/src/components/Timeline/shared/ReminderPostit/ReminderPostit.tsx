@@ -1,4 +1,6 @@
-import { useRef, useMemo, useState } from 'react';
+import { useRef, useMemo, useState, forwardRef } from 'react';
+
+import { useMergeRefs } from 'rooks';
 
 import { Text } from '@ui/typography/Text';
 import { useOutsideClick } from '@ui/utils';
@@ -25,58 +27,73 @@ const getRandomStyles = () => {
   return [rotations[index], rgadients[index]];
 };
 
-export const ReminderPostit = ({
-  owner,
-  children,
-  isFocused,
-  isMutating,
-  onClickOutside = () => undefined,
-  ...rest
-}: ReminderPostitProps) => {
-  const ref = useRef(null);
-  const [isHovered, setIsHovered] = useState(false);
-  const [rotation, gradient] = useMemo(() => getRandomStyles(), []);
+export const ReminderPostit = forwardRef<HTMLDivElement, ReminderPostitProps>(
+  (
+    {
+      owner,
+      children,
+      isFocused,
+      isMutating,
+      onClickOutside = () => undefined,
+      ...rest
+    },
+    ref,
+  ) => {
+    const _ref = useRef(null);
+    const [isHovered, setIsHovered] = useState(false);
+    const [rotation, gradient] = useMemo(() => getRandomStyles(), []);
 
-  useOutsideClick({ ref, handler: onClickOutside });
+    const mergedRef = useMergeRefs(_ref, ref);
 
-  return (
-    <Flex
-      ref={ref}
-      position='relative'
-      w='321px'
-      m='6'
-      mt='2'
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      pointerEvents={isMutating ? 'none' : 'auto'}
-      animation={
-        isMutating ? `${pulseOpacity} 0.7s alternate ease-in-out` : undefined
-      }
-      {...rest}
-    >
+    useOutsideClick({ ref: _ref, handler: onClickOutside });
+
+    return (
       <Flex
-        h='calc(100% - 28px)'
-        w='calc(100% - 10px)'
-        bottom='-4px'
-        left='5px'
-        position='absolute'
-        filter={isFocused || isHovered ? 'blur(7px)' : 'blur(3px)'}
-        bg={
-          isFocused || isHovered ? 'rgba(0, 0, 0, 0.2)' : 'rgba(0, 0, 0, 0.07)'
+        ref={mergedRef}
+        position='relative'
+        w='321px'
+        m='6'
+        mt='2'
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        pointerEvents={isMutating ? 'none' : 'auto'}
+        animation={
+          isMutating ? `${pulseOpacity} 0.7s alternate ease-in-out` : undefined
         }
-        transition='all 0.1s ease-in-out'
-        transform={isFocused || isHovered ? 'unset' : rotation}
-      />
-      <Flex w='full' zIndex={1} bg='yellow.100' flexDir='column'>
-        <Flex h='24px' w='full' align='center' bgGradient={gradient}>
-          {owner && (
-            <Text pt='3' fontSize='xs' color='gray.500' pl='4' fontWeight='400'>
-              {owner} added
-            </Text>
-          )}
+        {...rest}
+      >
+        <Flex
+          h='calc(100% - 28px)'
+          w='calc(100% - 10px)'
+          bottom='-4px'
+          left='5px'
+          position='absolute'
+          filter={isFocused || isHovered ? 'blur(7px)' : 'blur(3px)'}
+          bg={
+            isFocused || isHovered
+              ? 'rgba(0, 0, 0, 0.2)'
+              : 'rgba(0, 0, 0, 0.07)'
+          }
+          transition='all 0.1s ease-in-out'
+          transform={isFocused || isHovered ? 'unset' : rotation}
+        />
+        <Flex w='full' zIndex={1} bg='yellow.100' flexDir='column'>
+          <Flex h='24px' w='full' align='center' bgGradient={gradient}>
+            {owner && (
+              <Text
+                pt='3'
+                fontSize='xs'
+                color='gray.500'
+                pl='4'
+                fontWeight='400'
+              >
+                {owner} added
+              </Text>
+            )}
+          </Flex>
+          {children}
         </Flex>
-        {children}
       </Flex>
-    </Flex>
-  );
-};
+    );
+  },
+);

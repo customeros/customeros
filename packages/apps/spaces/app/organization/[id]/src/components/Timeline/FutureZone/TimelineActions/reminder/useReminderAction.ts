@@ -3,22 +3,15 @@ import { useParams } from 'next/navigation';
 import set from 'date-fns/set';
 import { produce } from 'immer';
 import addDays from 'date-fns/addDays';
-import { InfiniteData, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { toastError } from '@ui/presentation/Toast';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 import { useTimelineMeta } from '@organization/src/components/Timeline/state';
+import { useRemindersQuery } from '@organization/src/graphql/reminders.generated';
 import { useCreateReminderMutation } from '@organization/src/graphql/createReminder.generated';
-import {
-  RemindersQuery,
-  useRemindersQuery,
-} from '@organization/src/graphql/reminders.generated';
 import { useTimelineRefContext } from '@organization/src/components/Timeline/context/TimelineRefContext';
-import {
-  GetTimelineQuery,
-  useInfiniteGetTimelineQuery,
-} from '@organization/src/graphql/getTimeline.generated';
 
 export const useReminderAction = () => {
   const organizationId = useParams()?.id as string;
@@ -42,6 +35,8 @@ export const useReminderAction = () => {
           draft.remindersForOrganization.push({
             metadata: {
               id: 'TEMP',
+              created: new Date().toISOString(),
+              lastUpdated: new Date().toISOString(),
             },
             dueDate: values.input.dueDate,
             content: values.input.content,
@@ -79,14 +74,12 @@ export const useReminderAction = () => {
   });
 
   const handleCreateReminder = (defaultDate?: string) => {
-    const remindersCount =
-      queryClient.getQueryData<RemindersQuery>(remindersQueryKey)
-        ?.remindersForOrganization.length ?? 0;
-
     const targetDate = defaultDate ? new Date(defaultDate) : new Date();
     const dueDate = set(addDays(targetDate, 1), {
       hours: 9,
       minutes: 0,
+      seconds: 0,
+      milliseconds: 0,
     }).toISOString();
 
     createReminder.mutate({
@@ -98,18 +91,9 @@ export const useReminderAction = () => {
       },
     });
 
-    const timelineData = queryClient.getQueryData<
-      InfiniteData<GetTimelineQuery>
-    >(useInfiniteGetTimelineQuery.getKey(timelineMeta.getTimelineVariables));
-
-    const timelineItemsLength = Object.values(timelineData?.pages ?? []).reduce(
-      (acc, curr) => curr.organization?.timelineEventsTotalCount + acc,
-      0,
-    );
-
     setTimeout(() => {
       virtuosoRef?.current?.scrollToIndex(
-        timelineItemsLength + remindersCount + 1,
+        timelineMeta.itemCount + timelineMeta.remindersCount + 1,
       );
     }, 0);
   };

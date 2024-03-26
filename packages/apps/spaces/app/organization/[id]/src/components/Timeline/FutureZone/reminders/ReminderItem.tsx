@@ -13,6 +13,7 @@ import { ReminderEditForm } from './types';
 import { ReminderPostit, ReminderDueDatePicker } from '../../shared';
 
 interface ReminderItem {
+  index: number;
   currentOwner: string;
   data: ReminderEditForm;
   onDismiss: (id: string) => void;
@@ -21,11 +22,13 @@ interface ReminderItem {
 
 export const ReminderItem = ({
   data,
+  index,
   onChange,
   onDismiss,
   currentOwner,
 }: ReminderItem) => {
   const ref = useRef<HTMLTextAreaElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const formId = `reminder-edit-form-${data.id}`;
   const [timelineMeta, setTimelineMeta] = useTimelineMeta();
   const [debouncedOnChange] = useDebounceFn(
@@ -39,17 +42,19 @@ export const ReminderItem = ({
   const { handleSubmit, setDefaultValues } = useForm<ReminderEditForm>({
     formId,
     defaultValues: data,
-    onSubmit: async (values) => {
-      onChange({
-        ...values,
-      });
-    },
-    stateReducer: (state, action, next) => {
+    onSubmit: async (values) => onChange(values),
+    stateReducer: (_, action, next) => {
       if (action.type === 'FIELD_CHANGE') {
-        debouncedOnChange({
-          ...next.values,
-          content: next.values.content,
-        });
+        switch (action.payload.name) {
+          case 'date': {
+            onChange(next.values);
+            break;
+          }
+          default: {
+            debouncedOnChange(next.values);
+            break;
+          }
+        }
       }
 
       return next;
@@ -62,9 +67,7 @@ export const ReminderItem = ({
   };
 
   useEffect(() => {
-    setDefaultValues({
-      ...data,
-    });
+    setDefaultValues(data);
   }, [currentOwner, data.id]);
 
   useDidMount(() => {
@@ -82,9 +85,20 @@ export const ReminderItem = ({
     }
   });
 
+  useEffect(() => {
+    if (
+      data.id === recentlyUpdatedId ||
+      data.id === 'TEMP' ||
+      data.id === recentlyCreatedId
+    ) {
+      containerRef.current && containerRef.current.scrollIntoView();
+    }
+  }, [recentlyUpdatedId, data.id, index]);
+
   return (
     <ReminderPostit
-      owner={data?.owner !== currentOwner ? undefined : data?.owner}
+      ref={containerRef}
+      owner={data?.owner === currentOwner ? undefined : data?.owner}
       isFocused={isFocused}
       isMutating={isMutating}
       boxShadow={data.id === recentlyUpdatedId ? 'ringWarning' : 'unset'}

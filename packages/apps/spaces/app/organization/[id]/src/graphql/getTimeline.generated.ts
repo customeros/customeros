@@ -780,6 +780,7 @@ export type GetTimelineQuery = {
           }>;
         }
       | { __typename: 'Note' }
+      | { __typename: 'Order' }
       | { __typename: 'PageView' }
     >;
   } | null;
