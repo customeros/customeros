@@ -24,7 +24,6 @@ type Invoice struct {
 	Currency         string                  `json:"currency"`
 	PeriodStartDate  time.Time               `json:"periodStartDate"`
 	PeriodEndDate    time.Time               `json:"periodEndDate"`
-	DueDate          time.Time               `json:"dueDate"`
 	Amount           float64                 `json:"amount"`
 	VAT              float64                 `json:"vat"`
 	TotalAmount      float64                 `json:"totalAmount"`
