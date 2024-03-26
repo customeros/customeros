@@ -15,7 +15,7 @@ curl -X POST \
     "query": "mutation AddSubsidiaryToOrganization { 
       organization_AddSubsidiary(input: { 
         organizationId: "ed3b1fde-6905-47e3-80fe-8f5327672bb1",
-        subOrganizationId: "c7452931-8e2e-4796-a97e-ee75a6f908aa",
+        subsidiaryId: "c7452931-8e2e-4796-a97e-ee75a6f908aa",
         type: "Branch"
       }) {
           <organization object>
@@ -42,6 +42,8 @@ As this is a graphQL request, you are able to specify the exact payload you woul
 }
 ```
 
+The response will contain the parent organization object or parts of it if specified in the request.
+
 ## RemoveSubsidiaryFromOrganization mutation request
 
 ```curl
@@ -52,7 +54,7 @@ curl -X POST \
     "query": "mutation RemoveSubsidiaryFromOrganization { 
       organization_RemoveSubsidiary(input: { 
         organizationId: "ed3b1fde-6905-47e3-80fe-8f5327672bb1",
-        subOrganizationId: "c7452931-8e2e-4796-a97e-ee75a6f908aa",
+        subsidiaryId: "c7452931-8e2e-4796-a97e-ee75a6f908aa",
       }) {
           <organization object>
         } 
@@ -63,15 +65,15 @@ curl -X POST \
 
 ```
 
-This request will allow you to unlink a subsidiary Organization from it's parent Organization.
+This request will allow you to unlink a subsidiary Organization from its parent Organization.
 
 ## RemoveSubsidiaryFromOrganization mutation response
 ```json
 "data": {
     "organization_RemoveSubsidiary": {
-        "metadata": {
-            "id": "ed3b1fde-6905-47e3-80fe-8f5327672bb1",
-        }
+        <organization object>
     }
 }
 ```
+
+The response will contain the parent organization object or parts of it if specified in the request.
