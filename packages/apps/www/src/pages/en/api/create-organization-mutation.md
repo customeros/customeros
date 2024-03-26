@@ -47,9 +47,9 @@ curl -X POST \
 
 ```
 
-As this is a graphQL request, you are able to specify the exact payload you would like returned in the response. In the example above, we’ve specified that only id is returned, but you can choose from any of the response parameters defined in the [organization object](objects/organizations).
+As this is a graphQL request, you can specify the exact payload you would like returned in the response. In the example above, we’ve specified that only id is returned, but you can choose from any of the response parameters defined in the [organization object](objects/organization).
 
-## CreateContractLineItem mutation response
+## CreateOrganization mutation response
 ```json
 "data": {
     "organization_Create": {
