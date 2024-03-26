@@ -14,6 +14,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -97,6 +98,20 @@ func (r *contractResolver) Owner(ctx context.Context, obj *model.Contract) (*mod
 	return mapper.MapEntityToUser(owner), err
 }
 
+// Attachments is the resolver for the attachments field.
+func (r *contractResolver) Attachments(ctx context.Context, obj *model.Contract) ([]*model.Attachment, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	attachmentEntities, err := dataloader.For(ctx).GetAttachmentsForContract(ctx, obj.ID)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("Failed to get attachments for contract %s: %s", obj.ID, err.Error())
+		graphql.AddErrorf(ctx, "Failed to get attachments for contract %s", obj.ID)
+		return nil, nil
+	}
+	return mapper.MapEntitiesToAttachment(attachmentEntities), nil
+}
+
 // ServiceLineItems is the resolver for the serviceLineItems field.
 func (r *contractResolver) ServiceLineItems(ctx context.Context, obj *model.Contract) ([]*model.ServiceLineItem, error) {
 	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
@@ -177,6 +192,70 @@ func (r *mutationResolver) ContractDelete(ctx context.Context, id string) (*mode
 		return &model.DeleteResponse{Accepted: false, Completed: false}, nil
 	}
 	return &model.DeleteResponse{Accepted: true, Completed: deletionCompleted}, nil
+}
+
+// ContractAddAttachment is the resolver for the contract_AddAttachment field.
+func (r *mutationResolver) ContractAddAttachment(ctx context.Context, contractID string, attachmentID string) (*model.Contract, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContractAddAttachment", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("contractID", contractID))
+	span.LogFields(log.String("attachmentID", attachmentID))
+
+	_, err := r.Services.ContractService.GetById(ctx, contractID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed fetching contract details. Contract id: %s", contractID)
+		return &model.Contract{ID: contractID}, nil
+	}
+
+	_, err = r.Services.AttachmentService.GetAttachmentById(ctx, attachmentID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed fetching attachment details. Attachment id: %s", contractID)
+		return &model.Contract{ID: contractID}, nil
+	}
+
+	_, err = r.Services.AttachmentService.LinkNodeWithAttachment(ctx, repository.LINKED_WITH_CONTRACT, nil, attachmentID, contractID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to link attachment %s with contract %s", attachmentID, contractID)
+		return &model.Contract{ID: contractID}, nil
+	}
+
+	return mapper.MapEntityToContract(&neo4jentity.ContractEntity{Id: contractID}), nil
+}
+
+// ContractRemoveAttachment is the resolver for the contract_RemoveAttachment field.
+func (r *mutationResolver) ContractRemoveAttachment(ctx context.Context, contractID string, attachmentID string) (*model.Contract, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContractRemoveAttachment", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("contractID", contractID))
+	span.LogFields(log.String("attachmentID", attachmentID))
+
+	_, err := r.Services.ContractService.GetById(ctx, contractID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed fetching contract details. Contract id: %s", contractID)
+		return &model.Contract{ID: contractID}, nil
+	}
+
+	_, err = r.Services.AttachmentService.GetAttachmentById(ctx, attachmentID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed fetching attachment details. Attachment id: %s", contractID)
+		return &model.Contract{ID: contractID}, nil
+	}
+
+	_, err = r.Services.AttachmentService.UnlinkNodeWithAttachment(ctx, repository.LINKED_WITH_CONTRACT, nil, attachmentID, contractID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to remove attachment %s from contract %s", attachmentID, contractID)
+		return &model.Contract{ID: contractID}, nil
+	}
+
+	return mapper.MapEntityToContract(&neo4jentity.ContractEntity{Id: contractID}), nil
 }
 
 // Contract is the resolver for the contract field.

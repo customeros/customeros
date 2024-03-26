@@ -8,6 +8,7 @@ const (
 	LINKED_WITH_INTERACTION_EVENT   LinkedWith = "InteractionEvent"
 	LINKED_WITH_MEETING             LinkedWith = "Meeting"
 	LINKED_WITH_NOTE                LinkedWith = "Note"
+	LINKED_WITH_CONTRACT            LinkedWith = "Contract"
 
 	LINKED_NATURE_RECORDING LinkedNature = "Recording"
 )

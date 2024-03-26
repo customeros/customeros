@@ -15,6 +15,7 @@ import { FormUrlInput } from '@ui/form/UrlInput';
 import { FormSelect } from '@ui/form/SyncSelect';
 import { InfoCircle } from '@ui/media/icons/InfoCircle';
 import { FormSwitch } from '@ui/form/Switch/FromSwitch';
+import { SelectOption } from '@shared/types/SelectOptions';
 import { countryOptions } from '@shared/util/countryOptions';
 import { FormCheckbox } from '@ui/form/Checkbox/FormCheckbox';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
@@ -31,6 +32,8 @@ interface SubscriptionServiceModalProps {
   currency?: string;
   isEmailValid: boolean;
   organizationName: string;
+  country?: SelectOption<string> | null;
+
   tenantBillingProfile?: TenantBillingProfile | null;
   bankAccounts: Array<BankAccount> | null | undefined;
   onSetIsBillingDetailsHovered: (newState: boolean) => void;
@@ -46,6 +49,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
   tenantBillingProfile,
   organizationName,
   bankAccounts,
+  country,
 }) => {
   const client = getGraphQLClient();
   const { data: tenantSettingsData } = useTenantSettingsQuery(client);
@@ -132,14 +136,20 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
         onMouseEnter={() => onSetIsBillingDetailsHovered(true)}
         onMouseLeave={() => onSetIsBillingDetailsHovered(false)}
       >
+        <Text fontSize='sm' fontWeight='semibold'>
+          Billing address
+        </Text>
+        <FormSelect
+          label='Country'
+          placeholder='Country'
+          name='country'
+          formId={formId}
+          options={countryOptions}
+          onFocus={() => onSetIsBillingDetailsFocused(true)}
+          onBlur={() => onSetIsBillingDetailsFocused(false)}
+        />
         <FormInput
-          label='Billing address'
-          isLabelVisible
-          labelProps={{
-            fontSize: 'sm',
-            mb: 0,
-            fontWeight: 'semibold',
-          }}
+          label='Address line 1'
           formId={formId}
           name='addressLine1'
           textOverflow='ellipsis'
@@ -158,7 +168,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
           onBlur={() => onSetIsBillingDetailsFocused(false)}
           autoComplete='off'
         />
-        <Flex>
+        {country?.value === 'US' && (
           <FormInput
             label='City'
             formId={formId}
@@ -169,6 +179,29 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
             onBlur={() => onSetIsBillingDetailsFocused(false)}
             autoComplete='off'
           />
+        )}
+        <Flex>
+          {country?.value === 'US' ? (
+            <FormInput
+              label='State'
+              name='region'
+              placeholder='State'
+              formId={formId}
+              onFocus={() => onSetIsBillingDetailsFocused(true)}
+              onBlur={() => onSetIsBillingDetailsFocused(false)}
+            />
+          ) : (
+            <FormInput
+              label='City'
+              formId={formId}
+              name='locality'
+              textOverflow='ellipsis'
+              placeholder='City'
+              onFocus={() => onSetIsBillingDetailsFocused(true)}
+              onBlur={() => onSetIsBillingDetailsFocused(false)}
+              autoComplete='off'
+            />
+          )}
           <FormInput
             label='ZIP/Postal code'
             formId={formId}
@@ -180,15 +213,6 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
             autoComplete='off'
           />
         </Flex>
-        <FormSelect
-          label='Country'
-          placeholder='Country'
-          name='country'
-          formId={formId}
-          options={countryOptions}
-          onFocus={() => onSetIsBillingDetailsFocused(true)}
-          onBlur={() => onSetIsBillingDetailsFocused(false)}
-        />
       </Flex>
 
       {tenantSettingsData?.tenantSettings?.billingEnabled && (

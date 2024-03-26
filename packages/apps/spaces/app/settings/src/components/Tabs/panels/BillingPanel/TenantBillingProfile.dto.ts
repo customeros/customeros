@@ -6,6 +6,8 @@ import { getCurrencyOptions } from '@shared/util/currencyOptions';
 export interface TenantBillingDetails {
   zip?: string | null;
   phone?: string | null;
+  check?: boolean | null;
+  region?: string | null;
   locality?: string | null;
   legalName?: string | null;
   vatNumber?: string | null;
@@ -31,13 +33,13 @@ export class TenantBillingDetailsDto implements TenantBillingDetails {
   country?: SelectOption<string> | null;
   zip?: string | null;
   legalName?: string | null;
-  domesticPaymentsBankInfo?: string | null;
-  internationalPaymentsBankInfo?: string | null;
   canPayWithBankTransfer;
   canPayWithPigeon;
   sendInvoicesFrom;
   sendInvoicesBcc;
   vatNumber;
+  check?: boolean | null;
+  region?: string | null;
 
   constructor(
     data?: (TenantBillingProfile & { baseCurrency?: string | null }) | null,
@@ -52,9 +54,11 @@ export class TenantBillingDetailsDto implements TenantBillingDetails {
     this.legalName = data?.legalName;
     this.canPayWithBankTransfer = data?.canPayWithBankTransfer;
     this.canPayWithPigeon = data?.canPayWithPigeon;
-    this.sendInvoicesFrom = data?.sendInvoicesFrom?.split('@')[0] ?? '';
+    this.sendInvoicesFrom = data?.sendInvoicesFrom ?? '';
     this.sendInvoicesBcc = data?.sendInvoicesBcc ?? '';
     this.vatNumber = data?.vatNumber;
+    this.check = data?.check;
+    this.region = data?.region;
     this.baseCurrency = getCurrencyOptions().find(
       (i) => data?.baseCurrency === i.value,
     );

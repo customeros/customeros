@@ -9,10 +9,13 @@ import { PaymentMethods } from '@settings/components/Tabs/panels/BillingPanel/co
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { CardBody } from '@ui/layout/Card';
+import { FormInput } from '@ui/form/Input';
 import { FormSelect } from '@ui/form/SyncSelect';
 import { Divider } from '@ui/presentation/Divider';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
+import { FormSwitch } from '@ui/form/Switch/FromSwitch';
+import { SelectOption } from '@shared/types/SelectOptions';
 import { countryOptions } from '@shared/util/countryOptions';
-import { FormInput, FormResizableInput } from '@ui/form/Input';
 import { getCurrencyOptions } from '@shared/util/currencyOptions';
 
 export const TenantBillingPanelDetailsForm = ({
@@ -20,9 +23,13 @@ export const TenantBillingPanelDetailsForm = ({
   setIsInvoiceProviderFocused,
   formId,
   organizationName,
+  sendInvoicesFrom,
+  country,
 }: {
   formId: string;
+  sendInvoicesFrom?: string;
   organizationName?: string | null;
+  country?: SelectOption<string> | null;
   setIsInvoiceProviderFocused: (newState: boolean) => void;
   setIsInvoiceProviderDetailsHovered: (newState: boolean) => void;
 }) => {
@@ -63,16 +70,20 @@ export const TenantBillingPanelDetailsForm = ({
         onMouseEnter={() => setIsInvoiceProviderDetailsHovered(true)}
         onMouseLeave={() => setIsInvoiceProviderDetailsHovered(false)}
       >
+        <Text fontSize='sm' fontWeight='semibold'>
+          Billing address
+        </Text>
+        <FormSelect
+          name='country'
+          placeholder='Country'
+          label='Country'
+          formId={formId}
+          options={countryOptions}
+        />
         <FormInput
           autoComplete='off'
-          label='Billing address'
+          label='Address line 1'
           placeholder='Address line 1'
-          isLabelVisible
-          labelProps={{
-            fontSize: 'sm',
-            mb: 0,
-            fontWeight: 'semibold',
-          }}
           name='addressLine1'
           formId={formId}
           onFocus={() => setIsInvoiceProviderFocused(true)}
@@ -88,16 +99,41 @@ export const TenantBillingPanelDetailsForm = ({
           onBlur={() => setIsInvoiceProviderFocused(false)}
         />
 
-        <Flex gap={2}>
+        {country?.value === 'US' && (
           <FormInput
-            autoComplete='off'
-            label='Billing address locality'
-            name='locality'
-            placeholder='City'
+            label='City'
             formId={formId}
+            name='locality'
+            textOverflow='ellipsis'
+            placeholder='City'
             onFocus={() => setIsInvoiceProviderFocused(true)}
             onBlur={() => setIsInvoiceProviderFocused(false)}
+            autoComplete='off'
           />
+        )}
+
+        <Flex gap={2}>
+          {country?.value === 'US' ? (
+            <FormInput
+              label='State'
+              name='region'
+              placeholder='State'
+              formId={formId}
+              onFocus={() => setIsInvoiceProviderFocused(true)}
+              onBlur={() => setIsInvoiceProviderFocused(false)}
+            />
+          ) : (
+            <FormInput
+              label='City'
+              formId={formId}
+              name='locality'
+              textOverflow='ellipsis'
+              placeholder='City'
+              onFocus={() => setIsInvoiceProviderFocused(true)}
+              onBlur={() => setIsInvoiceProviderFocused(false)}
+              autoComplete='off'
+            />
+          )}
           <FormInput
             autoComplete='off'
             label='Billing address zip/Postal code'
@@ -108,12 +144,7 @@ export const TenantBillingPanelDetailsForm = ({
             onBlur={() => setIsInvoiceProviderFocused(false)}
           />
         </Flex>
-        <FormSelect
-          name='country'
-          placeholder='Country'
-          formId={formId}
-          options={countryOptions}
-        />
+
         <VatInput
           formId={formId}
           name='vatNumber'
@@ -140,23 +171,27 @@ export const TenantBillingPanelDetailsForm = ({
           <Divider background='gray.200' />
         </Flex>
 
-        <FormResizableInput
-          formId={formId}
-          autoComplete='off'
-          label='From'
-          labelProps={{
-            fontSize: 'sm',
-            mb: 0,
-            mt: 4,
-            fontWeight: 'semibold',
-          }}
-          fontWeight='medium'
-          isLabelVisible
-          name='sendInvoicesFrom'
-          placeholder=''
-          rightElement={'@invoices.customeros.ai'}
-          onFocus={() => setIsInvoiceProviderFocused(true)}
-        />
+        {sendInvoicesFrom && (
+          <Tooltip label='This email is configured by CustomerOS'>
+            <FormInput
+              formId={formId}
+              autoComplete='off'
+              cursor='not-allowed'
+              label='From'
+              labelProps={{
+                fontSize: 'sm',
+                mb: 0,
+                mt: 4,
+                fontWeight: 'semibold',
+              }}
+              isLabelVisible
+              isReadOnly
+              name='sendInvoicesFrom'
+              placeholder=''
+              onFocus={() => setIsInvoiceProviderFocused(true)}
+            />
+          </Tooltip>
+        )}
 
         <FormInput
           autoComplete='off'
@@ -176,6 +211,18 @@ export const TenantBillingPanelDetailsForm = ({
         />
       </Flex>
       <PaymentMethods formId={formId} organizationName={organizationName} />
+      <FormSwitch
+        size='sm'
+        name='check'
+        formId={formId}
+        label='Checks'
+        fontWeight='semibold'
+        labelProps={{
+          fontSize: 'sm',
+          fontWeight: 'semibold',
+          margin: 0,
+        }}
+      />
     </CardBody>
   );
 };

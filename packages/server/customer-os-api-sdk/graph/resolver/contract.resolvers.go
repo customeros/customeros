@@ -37,6 +37,11 @@ func (r *contractResolver) Owner(ctx context.Context, obj *model.Contract) (*mod
 	panic(fmt.Errorf("not implemented: Owner - owner"))
 }
 
+// Attachments is the resolver for the attachments field.
+func (r *contractResolver) Attachments(ctx context.Context, obj *model.Contract) ([]*model.Attachment, error) {
+	panic(fmt.Errorf("not implemented: Attachments - attachments"))
+}
+
 // ServiceLineItems is the resolver for the serviceLineItems field.
 func (r *contractResolver) ServiceLineItems(ctx context.Context, obj *model.Contract) ([]*model.ServiceLineItem, error) {
 	panic(fmt.Errorf("not implemented: ServiceLineItems - serviceLineItems"))
@@ -55,6 +60,16 @@ func (r *mutationResolver) ContractUpdate(ctx context.Context, input model.Contr
 // ContractDelete is the resolver for the contract_Delete field.
 func (r *mutationResolver) ContractDelete(ctx context.Context, id string) (*model.DeleteResponse, error) {
 	panic(fmt.Errorf("not implemented: ContractDelete - contract_Delete"))
+}
+
+// ContractAddAttachment is the resolver for the contract_AddAttachment field.
+func (r *mutationResolver) ContractAddAttachment(ctx context.Context, contractID string, attachmentID string) (*model.Contract, error) {
+	panic(fmt.Errorf("not implemented: ContractAddAttachment - contract_AddAttachment"))
+}
+
+// ContractRemoveAttachment is the resolver for the contract_RemoveAttachment field.
+func (r *mutationResolver) ContractRemoveAttachment(ctx context.Context, contractID string, attachmentID string) (*model.Contract, error) {
+	panic(fmt.Errorf("not implemented: ContractRemoveAttachment - contract_RemoveAttachment"))
 }
 
 // Contract is the resolver for the contract field.

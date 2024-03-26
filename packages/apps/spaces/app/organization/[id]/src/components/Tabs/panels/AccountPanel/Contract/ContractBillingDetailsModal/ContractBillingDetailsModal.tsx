@@ -238,17 +238,22 @@ export const ContractBillingDetailsModal = ({
                     tenantBillingProfile?.tenantBillingProfiles?.[0]?.country,
                 )?.label
               : '',
-            email: '',
+            email:
+              tenantBillingProfile?.tenantBillingProfiles?.[0]
+                ?.sendInvoicesFrom,
             name: tenantBillingProfile?.tenantBillingProfiles?.[0]?.legalName,
+            region:
+              tenantBillingProfile?.tenantBillingProfiles?.[0]?.region ?? '',
           }
         : {
             addressLine1: '29 Maple Lane',
             addressLine2: 'Springfield, Haven County',
             locality: 'San Francisco',
             zip: '89302',
-            country: 'United States',
+            country: 'United States of America',
             email: 'invoices@acme.com',
             name: 'Acme Corp.',
+            region: 'California',
           },
     }),
     [tenantBillingProfile?.tenantBillingProfiles?.[0]],
@@ -335,6 +340,7 @@ export const ContractBillingDetailsModal = ({
               onSetIsBillingDetailsHovered={setIsBillingDetailsHovered}
               onSetIsBillingDetailsFocused={setIsBillingDetailsFocused}
               bankAccounts={bankAccountsData?.bankAccounts as BankAccount[]}
+              country={state?.values?.country}
             />
             <ModalFooter p='6'>
               <Button variant='outline' w='full' onClick={onClose}>
@@ -368,6 +374,7 @@ export const ContractBillingDetailsModal = ({
                   country: state?.values?.country?.label ?? '',
                   email: state.values.invoiceEmail ?? '',
                   name: state.values?.organizationLegalName ?? '',
+                  region: state.values?.region ?? '',
                 }}
                 {...invoicePreviewStaticData}
                 canPayWithBankTransfer={
@@ -375,6 +382,7 @@ export const ContractBillingDetailsModal = ({
                     ?.canPayWithBankTransfer &&
                   state.values.canPayWithBankTransfer
                 }
+                check={tenantBillingProfile?.tenantBillingProfiles?.[0]?.check}
                 availableBankAccount={
                   bankAccountsData?.bankAccounts?.find(
                     (e) => e.currency === state?.values?.currency?.value,

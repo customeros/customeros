@@ -24,7 +24,9 @@ func TestInvoiceEventHandler_OnInvoiceCreateForContractV1(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	organizationId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, organizationId, neo4jentity.ContractEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, organizationId, neo4jentity.ContractEntity{
+		DueDays: 2,
+	})
 
 	eventHandler := &InvoiceEventHandler{
 		log:          testLogger,
@@ -95,7 +97,7 @@ func TestInvoiceEventHandler_OnInvoiceCreateForContractV1(t *testing.T) {
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, createdInvoice.AppSource)
 	require.Equal(t, now, createdInvoice.CreatedAt)
 	require.Equal(t, now, createdInvoice.UpdatedAt)
-	require.Equal(t, now, createdInvoice.DueDate)
+	require.Equal(t, now.AddDate(0, 0, 2), createdInvoice.DueDate)
 	require.Equal(t, true, createdInvoice.DryRun)
 	require.Equal(t, true, createdInvoice.OffCycle)
 	require.Equal(t, true, createdInvoice.Postpaid)

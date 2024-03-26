@@ -38,4 +38,5 @@ const (
 	FieldMaskInvoicingEnabled       = "invoicingEnabled"
 	FieldMaskAutoRenew              = "autoRenew"
 	FieldMaskCheck                  = "check"
+	FieldMaskDueDays                = "dueDays"
 )

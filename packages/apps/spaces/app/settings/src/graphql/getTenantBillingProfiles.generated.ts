@@ -45,6 +45,8 @@ export type TenantBillingProfilesQuery = {
     sendInvoicesBcc: string;
     canPayWithPigeon: boolean;
     canPayWithBankTransfer: boolean;
+    check: boolean;
+    region: string;
   }>;
 };
 
@@ -64,6 +66,8 @@ export const TenantBillingProfilesDocument = `
     sendInvoicesBcc
     canPayWithPigeon
     canPayWithBankTransfer
+    check
+    region
   }
 }
     `;

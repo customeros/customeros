@@ -226,6 +226,7 @@ type BillingDetails struct {
 	PayOnline              *bool                 `json:"payOnline,omitempty"`
 	PayAutomatically       *bool                 `json:"payAutomatically,omitempty"`
 	Check                  *bool                 `json:"check,omitempty"`
+	DueDays                *int64                `json:"dueDays,omitempty"`
 }
 
 type BillingDetailsInput struct {
@@ -246,6 +247,7 @@ type BillingDetailsInput struct {
 	PayOnline              *bool                 `json:"payOnline,omitempty"`
 	PayAutomatically       *bool                 `json:"payAutomatically,omitempty"`
 	Check                  *bool                 `json:"check,omitempty"`
+	DueDays                *int64                `json:"dueDays,omitempty"`
 }
 
 type BillingProfile struct {
@@ -525,6 +527,7 @@ type Contract struct {
 	ServiceStarted        *time.Time            `json:"serviceStarted,omitempty"`
 	ContractStatus        ContractStatus        `json:"contractStatus"`
 	AutoRenew             bool                  `json:"autoRenew"`
+	Attachments           []*Attachment         `json:"attachments,omitempty"`
 	Status                ContractStatus        `json:"status"`
 	ServiceStartedAt      *time.Time            `json:"serviceStartedAt,omitempty"`
 	Name                  string                `json:"name"`
@@ -566,6 +569,7 @@ type ContractInput struct {
 	Currency             *Currency                     `json:"currency,omitempty"`
 	BillingEnabled       *bool                         `json:"billingEnabled,omitempty"`
 	AutoRenew            *bool                         `json:"autoRenew,omitempty"`
+	DueDays              *int64                        `json:"dueDays,omitempty"`
 	InvoicingStartDate   *time.Time                    `json:"invoicingStartDate,omitempty"`
 	ExternalReference    *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
 	BillingCycle         *ContractBillingCycle         `json:"billingCycle,omitempty"`

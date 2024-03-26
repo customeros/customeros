@@ -44,6 +44,7 @@ type ContractEntity struct {
 	PayAutomatically                bool
 	AutoRenew                       bool
 	Check                           bool
+	DueDays                         int64
 }
 
 type ContractEntities []ContractEntity

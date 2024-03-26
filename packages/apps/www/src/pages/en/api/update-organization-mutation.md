@@ -13,9 +13,9 @@ curl -X POST \
   -H "X-CUSTOMER-OS-API-KEY: <MY_API_KEY_HERE>" \
   -d '{
     "query": "mutation UpdateOrganization { 
-      organization_Update(input: { 
-        id: \"96d699a8-b986-4dae-9f10-a23196f30c90\", 
-        customId: \"MyNewCustomId\" 
+      organization_Update(input: {
+        id: "96d699a8-b986-4dae-9f10-a23196f30c90", 
+        customId: "MyNewCustomId",
         patch: true
       }) { 
         id 
@@ -26,9 +26,9 @@ curl -X POST \
 
 ```
 
-The organization mutation request requires that you pass the invoice `id` as a query parameter.  
+The organization mutation request requires that you pass the organization `id` as a query parameter.  
 
-In order to update only the fields specified in the request, you must pass `patch: true` as part of the query parameters.  If you do not, you must pass the full object in the request.
+To update specific fields, include `patch: true` in the query parameters; otherwise, provide the full object.
 
 As this is a graphQL request, you are able to specify the exact payload you would like returned in the response.  In the example above, we've specified that `id` is returned, but you can choose from any of the response parameters defined in the [organization object](objects/organization).
 

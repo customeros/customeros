@@ -25,6 +25,7 @@ const opts = {
     return value.toUpperCase(); // Ensure the input is treated as uppercase
   },
 };
+
 export const VatInput = ({
   isLabelVisible,
   labelProps,

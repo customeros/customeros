@@ -61,6 +61,8 @@ func TestContractEventHandler_OnCreate(t *testing.T) {
 			Currency:           "USD",
 			InvoicingStartDate: &timeNow,
 			AutoRenew:          true,
+			Check:              true,
+			DueDays:            30,
 		},
 		commonmodel.Source{
 			Source:    constants.SourceOpenline,
@@ -149,6 +151,8 @@ func TestContractEventHandler_OnCreate(t *testing.T) {
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), contract.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, contract.AppSource)
 	require.True(t, contract.AutoRenew)
+	require.True(t, contract.Check)
+	require.Equal(t, int64(30), contract.DueDays)
 
 	// Verify events platform was called
 	require.True(t, calledEventsPlatformForOnboardingStatusChange)
@@ -921,7 +925,7 @@ func TestContractEventHandler_OnUpdateStatus_Live(t *testing.T) {
 	require.Equal(t, `{"status":"LIVE","contract-name":"test contract","comment":"test contract is now LIVE"}`, action.Metadata)
 }
 
-func TestContractEventHandler_OnUpdate_SubsetOfFiedsSet(t *testing.T) {
+func TestContractEventHandler_OnUpdate_SubsetOfFiledsSet(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
@@ -944,11 +948,13 @@ func TestContractEventHandler_OnUpdate_SubsetOfFiedsSet(t *testing.T) {
 		model.ContractDataFields{
 			CanPayWithCard: true,
 			AutoRenew:      true,
+			Check:          true,
+			DueDays:        60,
 		},
 		commonmodel.ExternalSystem{},
 		constants.SourceOpenline,
 		now,
-		[]string{event.FieldMaskAutoRenew, event.FieldMaskCanPayWithCard})
+		[]string{event.FieldMaskAutoRenew, event.FieldMaskCanPayWithCard, event.FieldMaskCheck, event.FieldMaskDueDays})
 	require.Nil(t, err, "failed to create event")
 
 	// EXECUTE
@@ -966,6 +972,8 @@ func TestContractEventHandler_OnUpdate_SubsetOfFiedsSet(t *testing.T) {
 	require.Equal(t, contractId, contract.Id)
 	require.Equal(t, true, contract.CanPayWithCard)
 	require.Equal(t, true, contract.AutoRenew)
+	require.Equal(t, true, contract.Check)
+	require.Equal(t, int64(60), contract.DueDays)
 }
 
 func TestContractEventHandler_OnDeleteV1(t *testing.T) {

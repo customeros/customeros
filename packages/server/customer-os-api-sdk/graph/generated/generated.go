@@ -152,6 +152,7 @@ type ComplexityRoot struct {
 		CanPayWithDirectDebit  func(childComplexity int) int
 		Check                  func(childComplexity int) int
 		Country                func(childComplexity int) int
+		DueDays                func(childComplexity int) int
 		InvoiceNote            func(childComplexity int) int
 		InvoicingStarted       func(childComplexity int) int
 		Locality               func(childComplexity int) int
@@ -269,6 +270,7 @@ type ComplexityRoot struct {
 		AddressLine1          func(childComplexity int) int
 		AddressLine2          func(childComplexity int) int
 		AppSource             func(childComplexity int) int
+		Attachments           func(childComplexity int) int
 		AutoRenew             func(childComplexity int) int
 		BillingCycle          func(childComplexity int) int
 		BillingDetails        func(childComplexity int) int
@@ -898,11 +900,13 @@ type ComplexityRoot struct {
 		ContactRemoveTagByID                    func(childComplexity int, input model.ContactTagInput) int
 		ContactRestoreFromArchive               func(childComplexity int, contactID string) int
 		ContactUpdate                           func(childComplexity int, input model.ContactUpdateInput) int
+		ContractAddAttachment                   func(childComplexity int, contractID string, attachmentID string) int
 		ContractCreate                          func(childComplexity int, input model.ContractInput) int
 		ContractDelete                          func(childComplexity int, id string) int
 		ContractLineItemClose                   func(childComplexity int, input model.ServiceLineItemCloseInput) int
 		ContractLineItemCreate                  func(childComplexity int, input model.ServiceLineItemInput) int
 		ContractLineItemUpdate                  func(childComplexity int, input model.ServiceLineItemUpdateInput) int
+		ContractRemoveAttachment                func(childComplexity int, contractID string, attachmentID string) int
 		ContractUpdate                          func(childComplexity int, input model.ContractUpdateInput) int
 		CustomFieldDeleteFromContactByID        func(childComplexity int, contactID string, id string) int
 		CustomFieldDeleteFromContactByName      func(childComplexity int, contactID string, fieldName string) int
@@ -1625,6 +1629,8 @@ type ContractResolver interface {
 	Opportunities(ctx context.Context, obj *model.Contract) ([]*model.Opportunity, error)
 	Owner(ctx context.Context, obj *model.Contract) (*model.User, error)
 
+	Attachments(ctx context.Context, obj *model.Contract) ([]*model.Attachment, error)
+
 	ServiceLineItems(ctx context.Context, obj *model.Contract) ([]*model.ServiceLineItem, error)
 }
 type CustomFieldResolver interface {
@@ -1741,6 +1747,8 @@ type MutationResolver interface {
 	ContractCreate(ctx context.Context, input model.ContractInput) (*model.Contract, error)
 	ContractUpdate(ctx context.Context, input model.ContractUpdateInput) (*model.Contract, error)
 	ContractDelete(ctx context.Context, id string) (*model.DeleteResponse, error)
+	ContractAddAttachment(ctx context.Context, contractID string, attachmentID string) (*model.Contract, error)
+	ContractRemoveAttachment(ctx context.Context, contractID string, attachmentID string) (*model.Contract, error)
 	CustomFieldsMergeAndUpdateInContact(ctx context.Context, contactID string, customFields []*model.CustomFieldInput, fieldSets []*model.FieldSetInput) (*model.Contact, error)
 	CustomFieldMergeToContact(ctx context.Context, contactID string, input model.CustomFieldInput) (*model.CustomField, error)
 	CustomFieldUpdateInContact(ctx context.Context, contactID string, input model.CustomFieldUpdateInput) (*model.CustomField, error)
@@ -2416,6 +2424,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.BillingDetails.Country(childComplexity), true
 
+	case "BillingDetails.dueDays":
+		if e.complexity.BillingDetails.DueDays == nil {
+			break
+		}
+
+		return e.complexity.BillingDetails.DueDays(childComplexity), true
+
 	case "BillingDetails.invoiceNote":
 		if e.complexity.BillingDetails.InvoiceNote == nil {
 			break
@@ -3070,6 +3085,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Contract.AppSource(childComplexity), true
+
+	case "Contract.attachments":
+		if e.complexity.Contract.Attachments == nil {
+			break
+		}
+
+		return e.complexity.Contract.Attachments(childComplexity), true
 
 	case "Contract.autoRenew":
 		if e.complexity.Contract.AutoRenew == nil {
@@ -6376,6 +6398,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.ContactUpdate(childComplexity, args["input"].(model.ContactUpdateInput)), true
 
+	case "Mutation.contract_AddAttachment":
+		if e.complexity.Mutation.ContractAddAttachment == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_contract_AddAttachment_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ContractAddAttachment(childComplexity, args["contractId"].(string), args["attachmentId"].(string)), true
+
 	case "Mutation.contract_Create":
 		if e.complexity.Mutation.ContractCreate == nil {
 			break
@@ -6435,6 +6469,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.ContractLineItemUpdate(childComplexity, args["input"].(model.ServiceLineItemUpdateInput)), true
+
+	case "Mutation.contract_RemoveAttachment":
+		if e.complexity.Mutation.ContractRemoveAttachment == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_contract_RemoveAttachment_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ContractRemoveAttachment(childComplexity, args["contractId"].(string), args["attachmentId"].(string)), true
 
 	case "Mutation.contract_Update":
 		if e.complexity.Mutation.ContractUpdate == nil {
@@ -12027,6 +12073,9 @@ extend type Mutation {
     contract_Create(input: ContractInput!): Contract!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     contract_Update(input: ContractUpdateInput!): Contract!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     contract_Delete(id: ID!): DeleteResponse!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+
+    contract_AddAttachment(contractId: ID!, attachmentId: ID!): Contract!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+    contract_RemoveAttachment(contractId: ID!, attachmentId: ID!): Contract!  @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type Contract implements MetadataInterface {
@@ -12048,6 +12097,7 @@ type Contract implements MetadataInterface {
     serviceStarted:     Time
     contractStatus:     ContractStatus!
     autoRenew:          Boolean!
+    attachments:        [Attachment!] @goField(forceResolver: true)
 
     status:             ContractStatus! @deprecated(reason: "Use contractStatus instead.")
     serviceStartedAt:   Time @deprecated(reason: "Use serviceStarted instead.")
@@ -12094,6 +12144,7 @@ type BillingDetails {
     payOnline :             Boolean
     payAutomatically:       Boolean
     check:                  Boolean
+    dueDays:                Int64
 }
 
 input ContractInput {
@@ -12108,6 +12159,7 @@ input ContractInput {
     currency:               Currency
     billingEnabled:         Boolean
     autoRenew:              Boolean
+    dueDays:                Int64
 
     invoicingStartDate:     Time @deprecated(reason: "Removed from create input.")
     externalReference:      ExternalSystemReferenceInput @deprecated(reason: "Not used yet")
@@ -12174,6 +12226,7 @@ input BillingDetailsInput {
     payOnline :             Boolean
     payAutomatically:       Boolean
     check:                  Boolean
+    dueDays:                Int64
 }
 
 enum ContractRenewalCycle {
@@ -15599,6 +15652,30 @@ func (ec *executionContext) field_Mutation_contractLineItem_Update_args(ctx cont
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_contract_AddAttachment_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["contractId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contractId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["contractId"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["attachmentId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("attachmentId"))
+		arg1, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["attachmentId"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_contract_Create_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -15626,6 +15703,30 @@ func (ec *executionContext) field_Mutation_contract_Delete_args(ctx context.Cont
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_contract_RemoveAttachment_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["contractId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contractId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["contractId"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["attachmentId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("attachmentId"))
+		arg1, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["attachmentId"] = arg1
 	return args, nil
 }
 
@@ -22206,6 +22307,47 @@ func (ec *executionContext) fieldContext_BillingDetails_check(ctx context.Contex
 	return fc, nil
 }
 
+func (ec *executionContext) _BillingDetails_dueDays(ctx context.Context, field graphql.CollectedField, obj *model.BillingDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_BillingDetails_dueDays(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DueDays, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int64)
+	fc.Result = res
+	return ec.marshalOInt642ᚖint64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_BillingDetails_dueDays(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _BillingProfile_id(ctx context.Context, field graphql.CollectedField, obj *model.BillingProfile) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_BillingProfile_id(ctx, field)
 	if err != nil {
@@ -26391,6 +26533,8 @@ func (ec *executionContext) fieldContext_Contract_billingDetails(ctx context.Con
 				return ec.fieldContext_BillingDetails_payAutomatically(ctx, field)
 			case "check":
 				return ec.fieldContext_BillingDetails_check(ctx, field)
+			case "dueDays":
+				return ec.fieldContext_BillingDetails_dueDays(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type BillingDetails", field.Name)
 		},
@@ -27235,6 +27379,69 @@ func (ec *executionContext) fieldContext_Contract_autoRenew(ctx context.Context,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Contract_attachments(ctx context.Context, field graphql.CollectedField, obj *model.Contract) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contract_attachments(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Contract().Attachments(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Attachment)
+	fc.Result = res
+	return ec.marshalOAttachment2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐAttachmentᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contract_attachments(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contract",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Attachment_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Attachment_createdAt(ctx, field)
+			case "basePath":
+				return ec.fieldContext_Attachment_basePath(ctx, field)
+			case "cdnUrl":
+				return ec.fieldContext_Attachment_cdnUrl(ctx, field)
+			case "fileName":
+				return ec.fieldContext_Attachment_fileName(ctx, field)
+			case "mimeType":
+				return ec.fieldContext_Attachment_mimeType(ctx, field)
+			case "size":
+				return ec.fieldContext_Attachment_size(ctx, field)
+			case "source":
+				return ec.fieldContext_Attachment_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Attachment_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Attachment_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Attachment", field.Name)
 		},
 	}
 	return fc, nil
@@ -38134,6 +38341,8 @@ func (ec *executionContext) fieldContext_Invoice_contract(ctx context.Context, f
 				return ec.fieldContext_Contract_contractStatus(ctx, field)
 			case "autoRenew":
 				return ec.fieldContext_Contract_autoRenew(ctx, field)
+			case "attachments":
+				return ec.fieldContext_Contract_attachments(ctx, field)
 			case "status":
 				return ec.fieldContext_Contract_status(ctx, field)
 			case "serviceStartedAt":
@@ -49681,6 +49890,8 @@ func (ec *executionContext) fieldContext_Mutation_contract_Create(ctx context.Co
 				return ec.fieldContext_Contract_contractStatus(ctx, field)
 			case "autoRenew":
 				return ec.fieldContext_Contract_autoRenew(ctx, field)
+			case "attachments":
+				return ec.fieldContext_Contract_attachments(ctx, field)
 			case "status":
 				return ec.fieldContext_Contract_status(ctx, field)
 			case "serviceStartedAt":
@@ -49852,6 +50063,8 @@ func (ec *executionContext) fieldContext_Mutation_contract_Update(ctx context.Co
 				return ec.fieldContext_Contract_contractStatus(ctx, field)
 			case "autoRenew":
 				return ec.fieldContext_Contract_autoRenew(ctx, field)
+			case "attachments":
+				return ec.fieldContext_Contract_attachments(ctx, field)
 			case "status":
 				return ec.fieldContext_Contract_status(ctx, field)
 			case "serviceStartedAt":
@@ -50003,6 +50216,352 @@ func (ec *executionContext) fieldContext_Mutation_contract_Delete(ctx context.Co
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_contract_Delete_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_contract_AddAttachment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_contract_AddAttachment(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().ContractAddAttachment(rctx, fc.Args["contractId"].(string), fc.Args["attachmentId"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Contract); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model.Contract`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Contract)
+	fc.Result = res
+	return ec.marshalNContract2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐContract(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_contract_AddAttachment(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "metadata":
+				return ec.fieldContext_Contract_metadata(ctx, field)
+			case "billingDetails":
+				return ec.fieldContext_Contract_billingDetails(ctx, field)
+			case "committedPeriods":
+				return ec.fieldContext_Contract_committedPeriods(ctx, field)
+			case "contractEnded":
+				return ec.fieldContext_Contract_contractEnded(ctx, field)
+			case "contractLineItems":
+				return ec.fieldContext_Contract_contractLineItems(ctx, field)
+			case "contractName":
+				return ec.fieldContext_Contract_contractName(ctx, field)
+			case "contractRenewalCycle":
+				return ec.fieldContext_Contract_contractRenewalCycle(ctx, field)
+			case "contractSigned":
+				return ec.fieldContext_Contract_contractSigned(ctx, field)
+			case "contractUrl":
+				return ec.fieldContext_Contract_contractUrl(ctx, field)
+			case "currency":
+				return ec.fieldContext_Contract_currency(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_Contract_createdBy(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_Contract_externalLinks(ctx, field)
+			case "billingEnabled":
+				return ec.fieldContext_Contract_billingEnabled(ctx, field)
+			case "opportunities":
+				return ec.fieldContext_Contract_opportunities(ctx, field)
+			case "owner":
+				return ec.fieldContext_Contract_owner(ctx, field)
+			case "serviceStarted":
+				return ec.fieldContext_Contract_serviceStarted(ctx, field)
+			case "contractStatus":
+				return ec.fieldContext_Contract_contractStatus(ctx, field)
+			case "autoRenew":
+				return ec.fieldContext_Contract_autoRenew(ctx, field)
+			case "attachments":
+				return ec.fieldContext_Contract_attachments(ctx, field)
+			case "status":
+				return ec.fieldContext_Contract_status(ctx, field)
+			case "serviceStartedAt":
+				return ec.fieldContext_Contract_serviceStartedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_Contract_name(ctx, field)
+			case "signedAt":
+				return ec.fieldContext_Contract_signedAt(ctx, field)
+			case "renewalCycle":
+				return ec.fieldContext_Contract_renewalCycle(ctx, field)
+			case "organizationLegalName":
+				return ec.fieldContext_Contract_organizationLegalName(ctx, field)
+			case "invoiceEmail":
+				return ec.fieldContext_Contract_invoiceEmail(ctx, field)
+			case "id":
+				return ec.fieldContext_Contract_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Contract_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Contract_updatedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_Contract_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Contract_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Contract_appSource(ctx, field)
+			case "renewalPeriods":
+				return ec.fieldContext_Contract_renewalPeriods(ctx, field)
+			case "endedAt":
+				return ec.fieldContext_Contract_endedAt(ctx, field)
+			case "serviceLineItems":
+				return ec.fieldContext_Contract_serviceLineItems(ctx, field)
+			case "invoiceNote":
+				return ec.fieldContext_Contract_invoiceNote(ctx, field)
+			case "billingCycle":
+				return ec.fieldContext_Contract_billingCycle(ctx, field)
+			case "invoicingStartDate":
+				return ec.fieldContext_Contract_invoicingStartDate(ctx, field)
+			case "addressLine1":
+				return ec.fieldContext_Contract_addressLine1(ctx, field)
+			case "addressLine2":
+				return ec.fieldContext_Contract_addressLine2(ctx, field)
+			case "zip":
+				return ec.fieldContext_Contract_zip(ctx, field)
+			case "locality":
+				return ec.fieldContext_Contract_locality(ctx, field)
+			case "country":
+				return ec.fieldContext_Contract_country(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Contract", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_contract_AddAttachment_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_contract_RemoveAttachment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_contract_RemoveAttachment(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().ContractRemoveAttachment(rctx, fc.Args["contractId"].(string), fc.Args["attachmentId"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Contract); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model.Contract`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Contract)
+	fc.Result = res
+	return ec.marshalNContract2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐContract(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_contract_RemoveAttachment(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "metadata":
+				return ec.fieldContext_Contract_metadata(ctx, field)
+			case "billingDetails":
+				return ec.fieldContext_Contract_billingDetails(ctx, field)
+			case "committedPeriods":
+				return ec.fieldContext_Contract_committedPeriods(ctx, field)
+			case "contractEnded":
+				return ec.fieldContext_Contract_contractEnded(ctx, field)
+			case "contractLineItems":
+				return ec.fieldContext_Contract_contractLineItems(ctx, field)
+			case "contractName":
+				return ec.fieldContext_Contract_contractName(ctx, field)
+			case "contractRenewalCycle":
+				return ec.fieldContext_Contract_contractRenewalCycle(ctx, field)
+			case "contractSigned":
+				return ec.fieldContext_Contract_contractSigned(ctx, field)
+			case "contractUrl":
+				return ec.fieldContext_Contract_contractUrl(ctx, field)
+			case "currency":
+				return ec.fieldContext_Contract_currency(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_Contract_createdBy(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_Contract_externalLinks(ctx, field)
+			case "billingEnabled":
+				return ec.fieldContext_Contract_billingEnabled(ctx, field)
+			case "opportunities":
+				return ec.fieldContext_Contract_opportunities(ctx, field)
+			case "owner":
+				return ec.fieldContext_Contract_owner(ctx, field)
+			case "serviceStarted":
+				return ec.fieldContext_Contract_serviceStarted(ctx, field)
+			case "contractStatus":
+				return ec.fieldContext_Contract_contractStatus(ctx, field)
+			case "autoRenew":
+				return ec.fieldContext_Contract_autoRenew(ctx, field)
+			case "attachments":
+				return ec.fieldContext_Contract_attachments(ctx, field)
+			case "status":
+				return ec.fieldContext_Contract_status(ctx, field)
+			case "serviceStartedAt":
+				return ec.fieldContext_Contract_serviceStartedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_Contract_name(ctx, field)
+			case "signedAt":
+				return ec.fieldContext_Contract_signedAt(ctx, field)
+			case "renewalCycle":
+				return ec.fieldContext_Contract_renewalCycle(ctx, field)
+			case "organizationLegalName":
+				return ec.fieldContext_Contract_organizationLegalName(ctx, field)
+			case "invoiceEmail":
+				return ec.fieldContext_Contract_invoiceEmail(ctx, field)
+			case "id":
+				return ec.fieldContext_Contract_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Contract_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Contract_updatedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_Contract_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Contract_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Contract_appSource(ctx, field)
+			case "renewalPeriods":
+				return ec.fieldContext_Contract_renewalPeriods(ctx, field)
+			case "endedAt":
+				return ec.fieldContext_Contract_endedAt(ctx, field)
+			case "serviceLineItems":
+				return ec.fieldContext_Contract_serviceLineItems(ctx, field)
+			case "invoiceNote":
+				return ec.fieldContext_Contract_invoiceNote(ctx, field)
+			case "billingCycle":
+				return ec.fieldContext_Contract_billingCycle(ctx, field)
+			case "invoicingStartDate":
+				return ec.fieldContext_Contract_invoicingStartDate(ctx, field)
+			case "addressLine1":
+				return ec.fieldContext_Contract_addressLine1(ctx, field)
+			case "addressLine2":
+				return ec.fieldContext_Contract_addressLine2(ctx, field)
+			case "zip":
+				return ec.fieldContext_Contract_zip(ctx, field)
+			case "locality":
+				return ec.fieldContext_Contract_locality(ctx, field)
+			case "country":
+				return ec.fieldContext_Contract_country(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Contract", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_contract_RemoveAttachment_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -67261,6 +67820,8 @@ func (ec *executionContext) fieldContext_Organization_contracts(ctx context.Cont
 				return ec.fieldContext_Contract_contractStatus(ctx, field)
 			case "autoRenew":
 				return ec.fieldContext_Contract_autoRenew(ctx, field)
+			case "attachments":
+				return ec.fieldContext_Contract_attachments(ctx, field)
 			case "status":
 				return ec.fieldContext_Contract_status(ctx, field)
 			case "serviceStartedAt":
@@ -75453,6 +76014,8 @@ func (ec *executionContext) fieldContext_Query_contract(ctx context.Context, fie
 				return ec.fieldContext_Contract_contractStatus(ctx, field)
 			case "autoRenew":
 				return ec.fieldContext_Contract_autoRenew(ctx, field)
+			case "attachments":
+				return ec.fieldContext_Contract_attachments(ctx, field)
 			case "status":
 				return ec.fieldContext_Contract_status(ctx, field)
 			case "serviceStartedAt":
@@ -81142,6 +81705,8 @@ func (ec *executionContext) fieldContext_RenewalRecord_contract(ctx context.Cont
 				return ec.fieldContext_Contract_contractStatus(ctx, field)
 			case "autoRenew":
 				return ec.fieldContext_Contract_autoRenew(ctx, field)
+			case "attachments":
+				return ec.fieldContext_Contract_attachments(ctx, field)
 			case "status":
 				return ec.fieldContext_Contract_status(ctx, field)
 			case "serviceStartedAt":
@@ -90360,7 +90925,7 @@ func (ec *executionContext) unmarshalInputBillingDetailsInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"billingCycle", "invoicingStarted", "addressLine1", "addressLine2", "locality", "region", "country", "postalCode", "organizationLegalName", "billingEmail", "invoiceNote", "canPayWithCard", "canPayWithDirectDebit", "canPayWithBankTransfer", "payOnline", "payAutomatically", "check"}
+	fieldsInOrder := [...]string{"billingCycle", "invoicingStarted", "addressLine1", "addressLine2", "locality", "region", "country", "postalCode", "organizationLegalName", "billingEmail", "invoiceNote", "canPayWithCard", "canPayWithDirectDebit", "canPayWithBankTransfer", "payOnline", "payAutomatically", "check", "dueDays"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -90486,6 +91051,13 @@ func (ec *executionContext) unmarshalInputBillingDetailsInput(ctx context.Contex
 				return it, err
 			}
 			it.Check = data
+		case "dueDays":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("dueDays"))
+			data, err := ec.unmarshalOInt642ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DueDays = data
 		}
 	}
 
@@ -90974,7 +91546,7 @@ func (ec *executionContext) unmarshalInputContractInput(ctx context.Context, obj
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"organizationId", "contractName", "contractRenewalCycle", "committedPeriods", "appSource", "contractUrl", "serviceStarted", "contractSigned", "currency", "billingEnabled", "autoRenew", "invoicingStartDate", "externalReference", "billingCycle", "renewalPeriods", "renewalCycle", "signedAt", "serviceStartedAt", "name"}
+	fieldsInOrder := [...]string{"organizationId", "contractName", "contractRenewalCycle", "committedPeriods", "appSource", "contractUrl", "serviceStarted", "contractSigned", "currency", "billingEnabled", "autoRenew", "dueDays", "invoicingStartDate", "externalReference", "billingCycle", "renewalPeriods", "renewalCycle", "signedAt", "serviceStartedAt", "name"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -91058,6 +91630,13 @@ func (ec *executionContext) unmarshalInputContractInput(ctx context.Context, obj
 				return it, err
 			}
 			it.AutoRenew = data
+		case "dueDays":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("dueDays"))
+			data, err := ec.unmarshalOInt642ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DueDays = data
 		case "invoicingStartDate":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("invoicingStartDate"))
 			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
@@ -97513,6 +98092,8 @@ func (ec *executionContext) _BillingDetails(ctx context.Context, sel ast.Selecti
 			out.Values[i] = ec._BillingDetails_payAutomatically(ctx, field, obj)
 		case "check":
 			out.Values[i] = ec._BillingDetails_check(ctx, field, obj)
+		case "dueDays":
+			out.Values[i] = ec._BillingDetails_dueDays(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -98926,6 +99507,39 @@ func (ec *executionContext) _Contract(ctx context.Context, sel ast.SelectionSet,
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "attachments":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Contract_attachments(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "status":
 			out.Values[i] = ec._Contract_status(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -104391,6 +105005,20 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "contract_Delete":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_contract_Delete(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "contract_AddAttachment":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_contract_AddAttachment(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "contract_RemoveAttachment":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_contract_RemoveAttachment(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -116367,6 +116995,53 @@ func (ec *executionContext) marshalOAnalysis2ᚖgithubᚗcomᚋopenlineᚑaiᚋo
 		return graphql.Null
 	}
 	return ec._Analysis(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOAttachment2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐAttachmentᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Attachment) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNAttachment2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐAttachment(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalOAttachment2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐAttachment(ctx context.Context, sel ast.SelectionSet, v *model.Attachment) graphql.Marshaler {

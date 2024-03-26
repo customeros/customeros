@@ -5,6 +5,9 @@ extend type Mutation {
     contract_Create(input: ContractInput!): Contract!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     contract_Update(input: ContractUpdateInput!): Contract!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     contract_Delete(id: ID!): DeleteResponse!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+
+    contract_AddAttachment(contractId: ID!, attachmentId: ID!): Contract!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+    contract_RemoveAttachment(contractId: ID!, attachmentId: ID!): Contract!  @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type Contract implements MetadataInterface {
@@ -26,6 +29,7 @@ type Contract implements MetadataInterface {
     serviceStarted:     Time
     contractStatus:     ContractStatus!
     autoRenew:          Boolean!
+    attachments:        [Attachment!] @goField(forceResolver: true)
 
     status:             ContractStatus! @deprecated(reason: "Use contractStatus instead.")
     serviceStartedAt:   Time @deprecated(reason: "Use serviceStarted instead.")
@@ -72,6 +76,7 @@ type BillingDetails {
     payOnline :             Boolean
     payAutomatically:       Boolean
     check:                  Boolean
+    dueDays:                Int64
 }
 
 input ContractInput {
@@ -86,6 +91,7 @@ input ContractInput {
     currency:               Currency
     billingEnabled:         Boolean
     autoRenew:              Boolean
+    dueDays:                Int64
 
     invoicingStartDate:     Time @deprecated(reason: "Removed from create input.")
     externalReference:      ExternalSystemReferenceInput @deprecated(reason: "Not used yet")
@@ -152,6 +158,7 @@ input BillingDetailsInput {
     payOnline :             Boolean
     payAutomatically:       Boolean
     check:                  Boolean
+    dueDays:                Int64
 }
 
 enum ContractRenewalCycle {
