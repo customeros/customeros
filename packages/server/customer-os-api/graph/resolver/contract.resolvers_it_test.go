@@ -137,7 +137,7 @@ func TestMutationResolver_ContractUpdate(t *testing.T) {
 			require.Equal(t, true, contract.PayAutomatically)
 			require.Equal(t, true, contract.AutoRenew)
 			require.Equal(t, true, contract.Check)
-			require.Equal(t, 24, len(contract.FieldsMask))
+			require.Equal(t, 25, len(contract.FieldsMask))
 			calledUpdateContract = true
 			return &contractpb.ContractIdGrpcResponse{
 				Id: contractId,
