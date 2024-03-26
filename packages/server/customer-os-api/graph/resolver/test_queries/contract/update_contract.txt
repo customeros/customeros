@@ -30,6 +30,7 @@ contract_Update(
             payAutomatically: true
             region: "test region"
             check: true
+            dueDays: 7
         }
     }
   ) {

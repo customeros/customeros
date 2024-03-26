@@ -844,6 +844,7 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 
 	invoiceId := invoice.GetInvoiceObjectID(evt.GetAggregateID(), eventData.Tenant)
 
+	var contractEntity *neo4jentity.ContractEntity
 	var invoiceEntity *neo4jentity.InvoiceEntity
 	var invoiceLineEntities = []*neo4jentity.InvoiceLineEntity{}
 
@@ -857,6 +858,19 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 		invoiceEntity = neo4jmapper.MapDbNodeToInvoiceEntity(invoiceNode)
 	} else {
 		return errors.New("invoiceNode is nil")
+	}
+
+	// load contract
+	contractNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractForInvoice(ctx, eventData.Tenant, invoiceEntity.Id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "InvoiceSubscriber.onInvoicePaidV1.GetContractForInvoice")
+	}
+	if contractNode != nil {
+		contractEntity = neo4jmapper.MapDbNodeToContractEntity(contractNode)
+	} else {
+		tracing.TraceErr(span, errors.New("contractNode is nil"))
+		return errors.New("contractNode is nil")
 	}
 
 	//load invoice lines
@@ -886,8 +900,7 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 		"CustomerAddressLine1":         invoiceEntity.Customer.AddressLine1,
 		"CustomerAddressLine2":         invoiceEntity.Customer.AddressLine2,
 		"CustomerAddressLine3":         utils.JoinNonEmpty(", ", invoiceEntity.Customer.Locality, invoiceEntity.Customer.Zip),
-		"CustomerCountry":              invoiceEntity.Customer.Country,
-		"CustomerRegion":               invoiceEntity.Customer.Region,
+		"CustomerAddressLine4":         utils.JoinNonEmpty(", ", invoiceEntity.Customer.Region, invoiceEntity.Customer.Country),
 		"ProviderLogoExtension":        "",
 		"ProviderLogoRepositoryFileId": invoiceEntity.Provider.LogoRepositoryFileId,
 		"ProviderName":                 invoiceEntity.Provider.Name,
@@ -895,8 +908,7 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 		"ProviderAddressLine1":         invoiceEntity.Provider.AddressLine1,
 		"ProviderAddressLine2":         invoiceEntity.Provider.AddressLine2,
 		"ProviderAddressLine3":         utils.JoinNonEmpty(", ", invoiceEntity.Provider.Locality, invoiceEntity.Provider.Zip),
-		"ProviderCountry":              invoiceEntity.Provider.Country,
-		"ProviderRegion":               invoiceEntity.Provider.Region,
+		"ProviderAddressLine4":         utils.JoinNonEmpty(", ", invoiceEntity.Provider.Region, invoiceEntity.Provider.Country),
 		"InvoiceNumber":                invoiceEntity.Number,
 		"InvoiceIssueDate":             invoiceEntity.CreatedAt.Format("02 Jan 2006"),
 		"InvoiceDueDate":               invoiceEntity.DueDate.Format("02 Jan 2006"),
@@ -906,19 +918,8 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 		"InvoiceAmountDue":             utils.FormatAmount(invoiceEntity.TotalAmount, 2),
 		"InvoiceLineItems":             []map[string]string{},
 		"Note":                         invoiceEntity.Note,
+		"CanPayByCheck":                contractEntity.Check,
 	}
-
-	// load contract
-	contractNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractForInvoice(ctx, eventData.Tenant, invoiceId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.GetContractForInvoice")
-	}
-	if contractNode == nil {
-		tracing.TraceErr(span, errors.New("contractNode is nil"))
-		return errors.New("contractNode is nil")
-	}
-	contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractNode)
 
 	// Include bank details
 	if contractEntity.CanPayWithBankTransfer {

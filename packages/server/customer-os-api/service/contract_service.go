@@ -109,6 +109,7 @@ func (s *contractService) createContractWithEvents(ctx context.Context, contract
 		CanPayWithBankTransfer: true,
 		Check:                  true,
 		AutoRenew:              utils.IfNotNilBool(contractDetails.ContractEntity.AutoRenew, func() bool { return true }),
+		DueDays:                contractDetails.ContractEntity.DueDays,
 	}
 
 	// prepare renewal cycle
@@ -465,6 +466,10 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 		if input.AutoRenew != nil {
 			contractUpdateRequest.AutoRenew = *input.AutoRenew
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_AUTO_RENEW)
+		}
+		if input.BillingDetails != nil && input.BillingDetails.DueDays != nil {
+			contractUpdateRequest.DueDays = *input.BillingDetails.DueDays
+			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_DUE_DAYS)
 		}
 		contractUpdateRequest.FieldsMask = fieldMask
 		if len(fieldMask) == 0 {

@@ -137,7 +137,8 @@ func TestMutationResolver_ContractUpdate(t *testing.T) {
 			require.Equal(t, true, contract.PayAutomatically)
 			require.Equal(t, true, contract.AutoRenew)
 			require.Equal(t, true, contract.Check)
-			require.Equal(t, 25, len(contract.FieldsMask))
+			require.Equal(t, int64(7), contract.DueDays)
+			require.Equal(t, 26, len(contract.FieldsMask))
 			calledUpdateContract = true
 			return &contractpb.ContractIdGrpcResponse{
 				Id: contractId,
@@ -247,6 +248,7 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 		PayAutomatically:       true,
 		AutoRenew:              true,
 		Check:                  true,
+		DueDays:                int64(7),
 	})
 
 	serviceLineItemId1 := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
@@ -314,6 +316,7 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 	require.True(t, *billingDetails.PayAutomatically)
 	require.Equal(t, utils.StartOfDayInUTC(now), *billingDetails.InvoicingStarted)
 	require.Equal(t, utils.StartOfDayInUTC(tomorrow), *billingDetails.NextInvoicing)
+	require.Equal(t, int64(7), *billingDetails.DueDays)
 
 	require.Equal(t, 2, len(contract.ContractLineItems))
 

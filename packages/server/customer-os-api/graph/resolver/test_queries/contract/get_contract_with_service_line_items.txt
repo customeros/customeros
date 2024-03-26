@@ -23,6 +23,7 @@ query GetContract($contractId: ID!) {
         payOnline
         payAutomatically
         check
+        dueDays
     }
     committedPeriods
     contractEnded
