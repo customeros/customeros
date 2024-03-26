@@ -5,7 +5,7 @@ import { useField } from 'react-inverted-form';
 import { Input } from '@ui/form/Input/Input2';
 import { FormInputProps } from '@ui/form/Input';
 
-interface FormMarkInputProps extends FormInputProps {
+interface FormMaskInputProps extends FormInputProps {
   name: string;
   label: string;
   formId: string;
@@ -25,8 +25,8 @@ export const FormMaskInput = ({
   name,
   options: { opts, onAccept, onComplete },
   ...props
-}: FormMarkInputProps) => {
-  const { ref, setUnmaskedValue } = useIMask<HTMLInputElement>(opts, {
+}: FormMaskInputProps) => {
+  const { ref, setUnmaskedValue } = useIMask(opts, {
     onAccept: onAccept,
     onComplete: onComplete,
   });
@@ -42,6 +42,7 @@ export const FormMaskInput = ({
   return (
     <div>
       <label {...labelProps}>{label}</label>
+      {/* @ts-expect-error-ignore-now*/}
       <Input ref={ref} onChange={onChange} autoComplete='off' {...props} />
     </div>
   );

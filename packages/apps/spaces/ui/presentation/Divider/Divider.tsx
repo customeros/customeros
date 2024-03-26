@@ -6,6 +6,6 @@ interface DividerProps {
 
 export const Divider = ({ className }: DividerProps) => {
   return (
-    <div className={twMerge(' w-full border-b border-gray-200', className)} />
+    <div className={twMerge('w-full border-b border-gray-200', className)} />
   );
 };

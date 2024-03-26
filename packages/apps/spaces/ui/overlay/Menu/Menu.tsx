@@ -18,11 +18,11 @@ export const MenuItem = React.forwardRef<HTMLDivElement, MenuItemProps>(
         {...props}
         ref={forwardedRef}
         className={twMerge(
-          'flex text-start  py-[0.375rem] px-3 outline-none cursor-pointer hover:bg-gray-200 ',
+          'flex text-start py-[0.375rem] px-3 outline-none cursor-pointer hover:bg-gray-200 ',
           className,
         )}
       >
-        <span className=''>{children}</span>
+        <span>{children}</span>
       </DropdownMenuPrimitive.DropdownMenuItem>
     );
   },
