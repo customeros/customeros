@@ -202,7 +202,6 @@ export const TenantBillingPanelDetailsForm = ({
           textOverflow='ellipsis'
           placeholder='BCC'
           type='email'
-          className='overflow-ellipsis'
         />
       </Flex>
       <PaymentMethods formId={formId} organizationName={organizationName} />
