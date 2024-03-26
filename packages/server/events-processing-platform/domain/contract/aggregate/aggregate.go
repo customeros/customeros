@@ -134,9 +134,6 @@ func (a *ContractAggregate) onContractUpdate(evt eventstore.Event) error {
 	if eventData.UpdateRenewalCycle() {
 		a.Contract.RenewalCycle = eventData.RenewalCycle
 	}
-	if eventData.UpdateStatus() {
-		a.Contract.Status = eventData.Status
-	}
 	if eventData.UpdateServiceStartedAt() {
 		a.Contract.ServiceStartedAt = eventData.ServiceStartedAt
 	}

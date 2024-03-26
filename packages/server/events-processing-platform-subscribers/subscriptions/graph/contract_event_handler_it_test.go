@@ -12,6 +12,7 @@ import (
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/graph_db"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/mocked_grpc"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/neo4j"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -56,7 +57,6 @@ func TestContractEventHandler_OnCreate(t *testing.T) {
 			ServiceStartedAt:   &timeNow,
 			SignedAt:           &timeNow,
 			RenewalCycle:       model.MonthlyRenewal.String(),
-			Status:             model.Live,
 			BillingCycle:       model.MonthlyBilling.String(),
 			Currency:           "USD",
 			InvoicingStartDate: &timeNow,
@@ -141,7 +141,7 @@ func TestContractEventHandler_OnCreate(t *testing.T) {
 	require.Equal(t, neo4jenum.ContractStatusLive, contract.ContractStatus)
 	require.Equal(t, neo4jenum.RenewalCycleMonthlyRenewal, contract.RenewalCycle)
 	require.True(t, timeNow.Equal(contract.CreatedAt.UTC()))
-	require.True(t, timeNow.Equal(contract.UpdatedAt.UTC()))
+	test.AssertRecentTime(t, contract.UpdatedAt)
 	require.True(t, timeNow.Equal(*contract.ServiceStartedAt))
 	require.True(t, timeNow.Equal(*contract.SignedAt))
 	require.True(t, utils.ToDatePtr(&timeNow).Equal(*contract.InvoicingStartDate))
@@ -224,7 +224,6 @@ func TestContractEventHandler_OnUpdate_FrequencySet(t *testing.T) {
 			SignedAt:         &daysAgo2,
 			EndedAt:          &tomorrow,
 			RenewalCycle:     model.MonthlyRenewal.String(),
-			Status:           model.Live,
 		},
 		commonmodel.ExternalSystem{},
 		constants.SourceOpenline,
@@ -249,7 +248,7 @@ func TestContractEventHandler_OnUpdate_FrequencySet(t *testing.T) {
 	require.Equal(t, "http://contract.url/updated", contract.ContractUrl)
 	require.Equal(t, neo4jenum.ContractStatusLive, contract.ContractStatus)
 	require.Equal(t, neo4jenum.RenewalCycleMonthlyRenewal, contract.RenewalCycle)
-	require.True(t, now.Equal(contract.UpdatedAt))
+	test.AssertRecentTime(t, contract.UpdatedAt)
 	require.True(t, yesterday.Equal(*contract.ServiceStartedAt))
 	require.True(t, daysAgo2.Equal(*contract.SignedAt))
 	require.True(t, tomorrow.Equal(*contract.EndedAt))
@@ -663,7 +662,6 @@ func TestContractEventHandler_OnUpdate_EndDateSet(t *testing.T) {
 			SignedAt:         &daysAgo2,
 			EndedAt:          &tomorrow,
 			RenewalCycle:     model.MonthlyRenewal.String(),
-			Status:           model.Live,
 		},
 		commonmodel.ExternalSystem{},
 		constants.SourceOpenline,
@@ -688,7 +686,7 @@ func TestContractEventHandler_OnUpdate_EndDateSet(t *testing.T) {
 	require.Equal(t, "http://contract.url/updated", contract.ContractUrl)
 	require.Equal(t, neo4jenum.ContractStatusLive, contract.ContractStatus)
 	require.Equal(t, neo4jenum.RenewalCycleMonthlyRenewal, contract.RenewalCycle)
-	require.True(t, now.Equal(contract.UpdatedAt))
+	test.AssertRecentTime(t, contract.UpdatedAt)
 	require.True(t, yesterday.Equal(*contract.ServiceStartedAt))
 	require.True(t, daysAgo2.Equal(*contract.SignedAt))
 	require.True(t, tomorrow.Equal(*contract.EndedAt))
@@ -708,12 +706,13 @@ func TestContractEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOpen
 	// prepare neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	now := utils.Now()
+	tomorrow := now.AddDate(0, 0, 1)
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
 		Name:             "test contract",
 		ContractUrl:      "http://contract.url",
-		ContractStatus:   neo4jenum.ContractStatusDraft,
 		RenewalCycle:     "ANNUALLY",
+		ContractStatus:   neo4jenum.ContractStatusEnded,
 		ServiceStartedAt: &now,
 		SignedAt:         &now,
 		EndedAt:          &now,
@@ -729,7 +728,6 @@ func TestContractEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOpen
 	}
 	yesterday := now.AddDate(0, 0, -1)
 	daysAgo2 := now.AddDate(0, 0, -2)
-	tomorrow := now.AddDate(0, 0, 1)
 	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
 	updateEvent, err := event.NewContractUpdateEvent(contractAggregate,
 		model.ContractDataFields{
@@ -739,7 +737,6 @@ func TestContractEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOpen
 			SignedAt:         &daysAgo2,
 			EndedAt:          &tomorrow,
 			RenewalCycle:     model.MonthlyRenewal.String(),
-			Status:           model.Live,
 		},
 		commonmodel.ExternalSystem{},
 		"hubspot",
@@ -762,16 +759,16 @@ func TestContractEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOpen
 	require.Equal(t, contractId, contract.Id)
 	require.Equal(t, "test contract", contract.Name)
 	require.Equal(t, "http://contract.url", contract.ContractUrl)
-	require.Equal(t, neo4jenum.ContractStatusDraft, contract.ContractStatus)
+	require.Equal(t, neo4jenum.ContractStatusEnded, contract.ContractStatus)
 	require.Equal(t, neo4jenum.RenewalCycleAnnualRenewal, contract.RenewalCycle)
-	require.True(t, now.Equal(contract.UpdatedAt))
+	test.AssertRecentTime(t, contract.UpdatedAt)
 	require.True(t, now.Equal(*contract.ServiceStartedAt))
 	require.True(t, now.Equal(*contract.SignedAt))
 	require.True(t, now.Equal(*contract.EndedAt))
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), contract.SourceOfTruth)
 }
 
-func TestContractEventHandler_OnUpdateStatus_Ended(t *testing.T) {
+func TestContractEventHandler_OnRefreshStatus_Ended(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
@@ -781,6 +778,7 @@ func TestContractEventHandler_OnUpdateStatus_Ended(t *testing.T) {
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
 		Name:           "test contract",
 		ContractStatus: neo4jenum.ContractStatusDraft,
+		EndedAt:        utils.Ptr(utils.Now().AddDate(0, 0, -1)),
 	})
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1,
 		"Contract": 1, "Contract_" + tenantName: 1, "Action": 0, "TimelineEvent": 0})
@@ -792,31 +790,11 @@ func TestContractEventHandler_OnUpdateStatus_Ended(t *testing.T) {
 		grpcClients:  testMockedGrpcClient,
 	}
 	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
-	now := utils.Now()
-	event, err := event.NewContractUpdateStatusEvent(contractAggregate, string(model.ContractStatusStringEnded), &now, nil)
+	event, err := event.NewContractRefreshStatusEvent(contractAggregate)
 	require.Nil(t, err)
 
-	// prepare grpc mock for onboarding status update
-	calledEventsPlatformForOnboardingStatusChange := false
-	organizationServiceCallbacks := mocked_grpc.MockOrganizationServiceCallbacks{
-		UpdateOnboardingStatus: func(context context.Context, org *organizationpb.UpdateOnboardingStatusGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-			require.Equal(t, tenantName, org.Tenant)
-			require.Equal(t, orgId, org.OrganizationId)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, org.AppSource)
-			require.Equal(t, organizationpb.OnboardingStatus_ONBOARDING_STATUS_NOT_STARTED, org.OnboardingStatus)
-			require.Equal(t, "", org.LoggedInUserId)
-			require.Equal(t, "", org.Comments)
-			require.Equal(t, contractId, org.CausedByContractId)
-			calledEventsPlatformForOnboardingStatusChange = true
-			return &organizationpb.OrganizationIdGrpcResponse{
-				Id: orgId,
-			}, nil
-		},
-	}
-	mocked_grpc.SetOrganizationCallbacks(&organizationServiceCallbacks)
-
 	// EXECUTE
-	err = contractEventHandler.OnUpdateStatus(context.Background(), event)
+	err = contractEventHandler.OnRefreshStatus(context.Background(), event)
 	require.Nil(t, err)
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1,
@@ -832,9 +810,6 @@ func TestContractEventHandler_OnUpdateStatus_Ended(t *testing.T) {
 	contract := mapper.MapDbNodeToContractEntity(contractDbNode)
 	require.Equal(t, contractId, contract.Id)
 
-	// verify grpc was called
-	require.True(t, calledEventsPlatformForOnboardingStatusChange)
-
 	// verify action
 	actionDbNode, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
 	require.Nil(t, err)
@@ -848,7 +823,7 @@ func TestContractEventHandler_OnUpdateStatus_Ended(t *testing.T) {
 	require.Equal(t, `{"status":"ENDED","contract-name":"test contract","comment":"test contract is now ENDED"}`, action.Metadata)
 }
 
-func TestContractEventHandler_OnUpdateStatus_Live(t *testing.T) {
+func TestContractEventHandler_OnRefreshStatus_Live(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
@@ -856,8 +831,9 @@ func TestContractEventHandler_OnUpdateStatus_Live(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
-		Name:           "test contract",
-		ContractStatus: neo4jenum.ContractStatusDraft,
+		Name:             "test contract",
+		ContractStatus:   neo4jenum.ContractStatusDraft,
+		ServiceStartedAt: utils.Ptr(utils.Now().AddDate(0, 0, -1)),
 	})
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1,
 		"Contract": 1, "Contract_" + tenantName: 1, "Action": 0, "TimelineEvent": 0})
@@ -869,8 +845,7 @@ func TestContractEventHandler_OnUpdateStatus_Live(t *testing.T) {
 		grpcClients:  testMockedGrpcClient,
 	}
 	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
-	now := utils.Now()
-	event, err := event.NewContractUpdateStatusEvent(contractAggregate, string(model.ContractStatusStringLive), &now, nil)
+	event, err := event.NewContractRefreshStatusEvent(contractAggregate)
 	require.Nil(t, err)
 
 	// prepare grpc mock for onboarding status update
@@ -893,7 +868,7 @@ func TestContractEventHandler_OnUpdateStatus_Live(t *testing.T) {
 	mocked_grpc.SetOrganizationCallbacks(&organizationServiceCallbacks)
 
 	// EXECUTE
-	err = contractEventHandler.OnUpdateStatus(context.Background(), event)
+	err = contractEventHandler.OnRefreshStatus(context.Background(), event)
 	require.Nil(t, err)
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1,

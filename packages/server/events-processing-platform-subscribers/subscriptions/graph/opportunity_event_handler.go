@@ -127,7 +127,7 @@ func (h *OpportunityEventHandler) OnCreateRenewal(ctx context.Context, evt event
 	}
 
 	// check if active renewal opportunity already exists for this contract
-	opportunotyDbNode, err := h.repositories.Neo4jRepositories.OpportunityReadRepository.GetOpenRenewalOpportunityForContract(ctx, eventData.Tenant, eventData.ContractId)
+	opportunotyDbNode, err := h.repositories.Neo4jRepositories.OpportunityReadRepository.GetActiveRenewalOpportunityForContract(ctx, eventData.Tenant, eventData.ContractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while getting renewal opportunity for contract %s: %s", eventData.ContractId, err.Error())

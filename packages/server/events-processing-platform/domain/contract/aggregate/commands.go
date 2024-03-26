@@ -27,8 +27,6 @@ func (a *ContractAggregate) HandleCommand(ctx context.Context, cmd eventstore.Co
 	switch c := cmd.(type) {
 	case *command.CreateContractCommand:
 		return a.createContract(ctx, c)
-	case *command.RefreshContractStatusCommand:
-		return a.refreshContractStatus(ctx, c)
 	case *command.RolloutRenewalOpportunityOnExpirationCommand:
 		return a.rolloutRenewalOpportunityOnExpiration(ctx, c)
 	default:
@@ -46,6 +44,8 @@ func (a *ContractAggregate) HandleRequest(ctx context.Context, request any) (any
 		return nil, a.updateContract(ctx, r)
 	case *contractpb.SoftDeleteContractGrpcRequest:
 		return nil, a.softDeleteContract(ctx, r)
+	case *contractpb.RefreshContractStatusGrpcRequest:
+		return nil, a.refreshContractStatus(ctx, r)
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
 		return nil, eventstore.ErrInvalidRequestType
@@ -88,9 +88,6 @@ func (a *ContractAggregate) createContract(ctx context.Context, cmd *command.Cre
 	}
 
 	// Determine contract status based start and end dates
-	status := determineContractStatus(cmd.DataFields.ServiceStartedAt, cmd.DataFields.EndedAt)
-	cmd.DataFields.Status = status
-
 	createEvent, err := event.NewContractCreateEvent(a, cmd.DataFields, cmd.Source, cmd.ExternalSystem, createdAtNotNil, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -184,8 +181,6 @@ func (a *ContractAggregate) updateContract(ctx context.Context, request *contrac
 	if !isUpdated(event.FieldMaskEndedAt, fieldsMask) {
 		dataFields.EndedAt = a.Contract.EndedAt
 	}
-	status := determineContractStatus(dataFields.ServiceStartedAt, dataFields.EndedAt)
-	dataFields.Status = status
 	// set status field mask if at least any other field is set
 	if len(fieldsMask) > 0 {
 		fieldsMask = append(fieldsMask, event.FieldMaskStatus)
@@ -229,25 +224,23 @@ func (a *ContractAggregate) updateContract(ctx context.Context, request *contrac
 	return a.Apply(updateEvent)
 }
 
-func (a *ContractAggregate) refreshContractStatus(ctx context.Context, cmd *command.RefreshContractStatusCommand) error {
+func (a *ContractAggregate) refreshContractStatus(ctx context.Context, request *contractpb.RefreshContractStatusGrpcRequest) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "ContractAggregate.refreshContractStatus")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.Tenant)
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "request", request)
 
-	// Determine contract status based start and end dates
-	status := determineContractStatus(a.Contract.ServiceStartedAt, a.Contract.EndedAt)
-
-	updateEvent, err := event.NewContractUpdateStatusEvent(a, status.String(), a.Contract.ServiceStartedAt, a.Contract.EndedAt)
+	updateEvent, err := event.NewContractRefreshStatusEvent(a)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewContractUpdateStatusEvent")
+		return errors.Wrap(err, "NewContractRefreshStatusEvent")
 	}
 	aggregate.EnrichEventWithMetadataExtended(&updateEvent, span, aggregate.EventMetadata{
 		Tenant: a.Tenant,
-		UserId: cmd.LoggedInUserId,
-		App:    cmd.AppSource,
+		UserId: request.LoggedInUserId,
+		App:    request.GetAppSource(),
 	})
 
 	return a.Apply(updateEvent)
@@ -273,23 +266,6 @@ func (a *ContractAggregate) rolloutRenewalOpportunityOnExpiration(ctx context.Co
 	})
 
 	return a.Apply(updateEvent)
-}
-
-func determineContractStatus(serviceStartedAt, endedAt *time.Time) model.ContractStatus {
-	now := utils.Now()
-
-	// If endedAt is not nil and is in the past, the contract is considered Ended.
-	if endedAt != nil && endedAt.Before(now) {
-		return model.Ended
-	}
-
-	// If serviceStartedAt is nil or in the future, the contract is considered Draft.
-	if serviceStartedAt == nil || serviceStartedAt.After(now) {
-		return model.Draft
-	}
-
-	// Otherwise, the contract is considered Live.
-	return model.Live
 }
 
 func extractFieldsMask(requestFieldsMask []contractpb.ContractFieldMask) []string {

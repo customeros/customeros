@@ -50,7 +50,6 @@ func NewContractCreateEvent(aggregate eventstore.Aggregate, dataFields model.Con
 		SignedAt:               dataFields.SignedAt,
 		RenewalCycle:           dataFields.RenewalCycle,
 		RenewalPeriods:         dataFields.RenewalPeriods,
-		Status:                 dataFields.Status.String(),
 		Currency:               dataFields.Currency,
 		BillingCycle:           dataFields.BillingCycle,
 		InvoicingStartDate:     utils.ToDatePtr(dataFields.InvoicingStartDate),

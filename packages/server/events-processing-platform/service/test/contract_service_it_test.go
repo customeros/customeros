@@ -78,7 +78,6 @@ func TestContractService_CreateContract(t *testing.T) {
 	require.True(t, timeNow.Equal(*eventData.ServiceStartedAt))
 	require.True(t, timeNow.Equal(*eventData.SignedAt))
 	require.Equal(t, model.MonthlyRenewal.String(), eventData.RenewalCycle)
-	require.Equal(t, model.Live.String(), eventData.Status)
 	require.Equal(t, "ExternalSystemID", eventData.ExternalSystem.ExternalSystemId)
 	require.Equal(t, "http://external.url", eventData.ExternalSystem.ExternalUrl)
 	require.Equal(t, "ExternalID", eventData.ExternalSystem.ExternalId)
@@ -119,7 +118,6 @@ func TestContractService_CreateContract_ServiceStartedInFuture(t *testing.T) {
 	require.Equal(t, 1, len(eventList))
 	var eventData event.ContractCreateEvent
 	err = eventList[0].GetJsonData(&eventData)
-	require.Equal(t, model.Draft.String(), eventData.Status)
 }
 
 func TestContractService_CreateContract_ServiceStartedNil(t *testing.T) {
@@ -150,7 +148,6 @@ func TestContractService_CreateContract_ServiceStartedNil(t *testing.T) {
 	require.Equal(t, 1, len(eventList))
 	var eventData event.ContractCreateEvent
 	err = eventList[0].GetJsonData(&eventData)
-	require.Equal(t, model.Draft.String(), eventData.Status)
 }
 
 func TestContractService_CreateContract_MissingOrganizationId(t *testing.T) {
@@ -271,7 +268,6 @@ func TestContractService_UpdateContract(t *testing.T) {
 	require.Equal(t, "Updated Contract", eventData.Name)
 	require.Equal(t, "http://new.contract.url", eventData.ContractUrl)
 	require.Equal(t, model.MonthlyRenewal.String(), eventData.RenewalCycle)
-	require.Equal(t, model.Live.String(), eventData.Status)
 	require.True(t, timeNow.Equal(eventData.UpdatedAt))
 	require.True(t, timeNow.Equal(*eventData.ServiceStartedAt))
 	require.True(t, timeNow.Equal(*eventData.SignedAt))
