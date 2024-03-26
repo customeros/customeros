@@ -7,10 +7,11 @@ import { PaymentMethods } from '@settings/components/Tabs/panels/BillingPanel/co
 
 import { FormSelect } from '@ui/form/SyncSelect';
 import { Divider } from '@ui/presentation/Divider';
+import { FormInput } from '@ui/form/Input/FormInput2';
 import { countryOptions } from '@shared/util/countryOptions';
 import { FormMaskInput } from '@ui/form/Input/FormMaskInput';
-import { FormInput, FormResizableInput } from '@ui/form/Input';
 import { getCurrencyOptions } from '@shared/util/currencyOptions';
+import { FormResizableInput } from '@ui/form/Input/FormResizableInput2';
 
 const VAT = {
   mask: 'AA 000 000 000',

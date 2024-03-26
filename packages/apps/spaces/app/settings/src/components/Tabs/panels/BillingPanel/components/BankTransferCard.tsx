@@ -9,7 +9,7 @@ import { useBankAccountsQuery } from '@settings/graphql/getBankAccounts.generate
 import { useUpdateBankAccountMutation } from '@settings/graphql/updateBankAccount.generated';
 
 import { Flex } from '@ui/layout/Flex';
-import { FormInput } from '@ui/form/Input/FormInput';
+import { FormInput } from '@ui/form/Input/FormInput2';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea';
 import { FormMaskInput } from '@ui/form/Input/FormMaskInput';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';

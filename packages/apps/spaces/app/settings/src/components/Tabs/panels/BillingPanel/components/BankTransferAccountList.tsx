@@ -6,7 +6,7 @@ import { useBankAccountsQuery } from '@settings/graphql/getBankAccounts.generate
 
 import { BankAccount } from '@graphql/types';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
-import { FormSwitch } from '@ui/form/Switch/FromSwitch';
+import { FormSwitch } from '@ui/form/Switch/FormSwitch2';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 
 import { AddAccountButton } from './AddAccountButton';
