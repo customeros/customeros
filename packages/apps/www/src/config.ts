@@ -106,6 +106,8 @@ export const SIDEBAR: Sidebar = {
     ],
     "Organizations API": [
       { text: "Query: Organization", link: "en/api/organization-query"},
+      { text: "Mutation: Create Organization", link: "en/api/create-organization-mutation"},
+      { text: "Mutation: Update Organization", link: "en/api/update-organization-mutation"},
       { text: "Organization Events", link: "en/api/organization-events"},
     ],
     "API Data Objects": [
