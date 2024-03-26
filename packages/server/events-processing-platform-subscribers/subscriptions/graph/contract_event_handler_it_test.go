@@ -973,7 +973,7 @@ func TestContractEventHandler_OnUpdate_SubsetOfFiledsSet(t *testing.T) {
 	require.Equal(t, true, contract.CanPayWithCard)
 	require.Equal(t, true, contract.AutoRenew)
 	require.Equal(t, true, contract.Check)
-	require.Equal(t, 60, contract.DueDays)
+	require.Equal(t, int64(60), contract.DueDays)
 }
 
 func TestContractEventHandler_OnDeleteV1(t *testing.T) {
