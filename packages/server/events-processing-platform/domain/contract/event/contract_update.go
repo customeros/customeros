@@ -20,7 +20,6 @@ type ContractUpdateEvent struct {
 	EndedAt                *time.Time                 `json:"endedAt,omitempty"`
 	RenewalCycle           string                     `json:"renewalCycle"`
 	RenewalPeriods         *int64                     `json:"renewalPeriods,omitempty"`
-	Status                 string                     `json:"status"`
 	ExternalSystem         commonmodel.ExternalSystem `json:"externalSystem,omitempty"`
 	Source                 string                     `json:"source"`
 	InvoicingStartDate     *time.Time                 `json:"invoicingStartDate,omitempty"`
@@ -58,7 +57,6 @@ func NewContractUpdateEvent(aggr eventstore.Aggregate, dataFields model.Contract
 		EndedAt:                dataFields.EndedAt,
 		RenewalCycle:           dataFields.RenewalCycle,
 		RenewalPeriods:         dataFields.RenewalPeriods,
-		Status:                 dataFields.Status.String(),
 		Currency:               dataFields.Currency,
 		BillingCycle:           dataFields.BillingCycle,
 		AddressLine1:           dataFields.AddressLine1,

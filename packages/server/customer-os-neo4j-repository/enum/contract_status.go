@@ -3,16 +3,18 @@ package enum
 type ContractStatus string
 
 const (
-	ContractStatusUndefined ContractStatus = ""
-	ContractStatusDraft     ContractStatus = "DRAFT"
-	ContractStatusLive      ContractStatus = "LIVE"
-	ContractStatusEnded     ContractStatus = "ENDED"
+	ContractStatusUndefined     ContractStatus = ""
+	ContractStatusDraft         ContractStatus = "DRAFT"
+	ContractStatusLive          ContractStatus = "LIVE"
+	ContractStatusEnded         ContractStatus = "ENDED"
+	ContractStatusOutOfContract ContractStatus = "OUT_OF_CONTRACT"
 )
 
 var AllContractStatuses = []ContractStatus{
 	ContractStatusDraft,
 	ContractStatusLive,
 	ContractStatusEnded,
+	ContractStatusOutOfContract,
 }
 
 func DecodeContractStatus(s string) ContractStatus {

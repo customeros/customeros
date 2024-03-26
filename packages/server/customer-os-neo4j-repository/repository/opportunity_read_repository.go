@@ -14,8 +14,8 @@ import (
 
 type OpportunityReadRepository interface {
 	GetOpportunityById(ctx context.Context, tenant, opportunityId string) (*dbtype.Node, error)
-	GetOpenRenewalOpportunityForContract(ctx context.Context, tenant, contractId string) (*dbtype.Node, error)
-	GetOpenRenewalOpportunitiesForOrganization(ctx context.Context, tenant, organizationId string) ([]*dbtype.Node, error)
+	GetActiveRenewalOpportunityForContract(ctx context.Context, tenant, contractId string) (*dbtype.Node, error)
+	GetActiveRenewalOpportunitiesForOrganization(ctx context.Context, tenant, organizationId string) ([]*dbtype.Node, error)
 }
 
 type opportunityReadRepository struct {
@@ -65,8 +65,8 @@ func (r *opportunityReadRepository) GetOpportunityById(ctx context.Context, tena
 	return result.(*dbtype.Node), nil
 }
 
-func (r *opportunityReadRepository) GetOpenRenewalOpportunityForContract(ctx context.Context, tenant, contractId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityReadRepository.GetOpenRenewalOpportunityForContract")
+func (r *opportunityReadRepository) GetActiveRenewalOpportunityForContract(ctx context.Context, tenant, contractId string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityReadRepository.GetActiveRenewalOpportunityForContract")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.LogFields(log.String("contractId", contractId))
@@ -102,8 +102,8 @@ func (r *opportunityReadRepository) GetOpenRenewalOpportunityForContract(ctx con
 	return nil, nil
 }
 
-func (r *opportunityReadRepository) GetOpenRenewalOpportunitiesForOrganization(ctx context.Context, tenant, organizationId string) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityReadRepository.GetOpenRenewalOpportunitiesForOrganization")
+func (r *opportunityReadRepository) GetActiveRenewalOpportunitiesForOrganization(ctx context.Context, tenant, organizationId string) ([]*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityReadRepository.GetActiveRenewalOpportunitiesForOrganization")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.LogFields(log.String("organizationId", organizationId))

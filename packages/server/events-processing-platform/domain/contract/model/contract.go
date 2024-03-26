@@ -60,7 +60,6 @@ type ContractDataFields struct {
 	EndedAt                *time.Time
 	RenewalCycle           string
 	RenewalPeriods         *int64
-	Status                 ContractStatus
 	BillingCycle           string
 	Currency               string
 	InvoicingStartDate     *time.Time
@@ -84,22 +83,6 @@ type ContractDataFields struct {
 	Check                  bool   `json:"check"`
 	DueDays                int64  `json:"dueDays"`
 }
-
-// ContractStatus represents the status of a contract.
-type ContractStatus int32
-
-const (
-	Draft ContractStatus = iota
-	Live
-	Ended
-)
-
-type ContractStatusString string
-
-const (
-	ContractStatusStringLive  ContractStatusString = "LIVE"
-	ContractStatusStringEnded ContractStatusString = "ENDED"
-)
 
 // RenewalCycle represents the renewal cycle of a contract.
 type RenewalCycle int32
@@ -148,20 +131,6 @@ func (bc BillingCycle) String() string {
 		return string(enum.BillingCycleQuarterlyBilling)
 	case AnnuallyBilling:
 		return string(enum.BillingCycleAnnuallyBilling)
-	default:
-		return ""
-	}
-}
-
-// This function provides a string representation of the ContractStatus enum.
-func (cs ContractStatus) String() string {
-	switch cs {
-	case Draft:
-		return string(enum.ContractStatusDraft)
-	case Live:
-		return string(enum.ContractStatusLive)
-	case Ended:
-		return string(enum.ContractStatusEnded)
 	default:
 		return ""
 	}

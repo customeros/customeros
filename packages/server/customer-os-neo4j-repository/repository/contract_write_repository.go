@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
@@ -107,8 +106,8 @@ type ContractUpdateFields struct {
 
 type ContractWriteRepository interface {
 	CreateForOrganization(ctx context.Context, tenant, contractId string, data ContractCreateFields) error
-	UpdateAndReturn(ctx context.Context, tenant, contractId string, data ContractUpdateFields) (*dbtype.Node, error)
-	UpdateStatus(ctx context.Context, tenant, contractId, status string, serviceStartedAt, endedAt *time.Time) error
+	UpdateContract(ctx context.Context, tenant, contractId string, data ContractUpdateFields) error
+	UpdateStatus(ctx context.Context, tenant, contractId, status string) error
 	SuspendActiveRenewalOpportunity(ctx context.Context, tenant, contractId string) error
 	ActivateSuspendedRenewalOpportunity(ctx context.Context, tenant, contractId string) error
 	ContractCausedOnboardingStatusChange(ctx context.Context, tenant, contractId string) error
@@ -212,8 +211,8 @@ func (r *contractWriteRepository) CreateForOrganization(ctx context.Context, ten
 	return err
 }
 
-func (r *contractWriteRepository) UpdateAndReturn(ctx context.Context, tenant, contractId string, data ContractUpdateFields) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.UpdateAndReturn")
+func (r *contractWriteRepository) UpdateContract(ctx context.Context, tenant, contractId string, data ContractUpdateFields) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.UpdateContract")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, contractId)
@@ -352,29 +351,18 @@ func (r *contractWriteRepository) UpdateAndReturn(ctx context.Context, tenant, c
 		cypher += `, ct.dueDays=$dueDays `
 		params["dueDays"] = data.DueDays
 	}
-	cypher += ` RETURN ct`
 
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
-	defer session.Close(ctx)
-
-	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
-			return nil, err
-		} else {
-			return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
-		}
-	})
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return nil, err
 	}
-	return result.(*dbtype.Node), nil
+	return err
 }
 
-func (r *contractWriteRepository) UpdateStatus(ctx context.Context, tenant, contractId, status string, serviceStartedAt, endedAt *time.Time) error {
+func (r *contractWriteRepository) UpdateStatus(ctx context.Context, tenant, contractId, status string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.UpdateStatus")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
@@ -383,17 +371,13 @@ func (r *contractWriteRepository) UpdateStatus(ctx context.Context, tenant, cont
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(ct:Contract {id:$contractId})
 				SET 
 					ct.status=$status,
-					ct.serviceStartedAt=$serviceStartedAt,
-					ct.endedAt=$endedAt,
 					ct.updatedAt=$updatedAt
 							`
 	params := map[string]any{
-		"tenant":           tenant,
-		"contractId":       contractId,
-		"status":           status,
-		"serviceStartedAt": utils.TimePtrFirstNonNilNillableAsAny(serviceStartedAt),
-		"endedAt":          utils.TimePtrFirstNonNilNillableAsAny(endedAt),
-		"updatedAt":        utils.Now(),
+		"tenant":     tenant,
+		"contractId": contractId,
+		"status":     status,
+		"updatedAt":  utils.Now(),
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
