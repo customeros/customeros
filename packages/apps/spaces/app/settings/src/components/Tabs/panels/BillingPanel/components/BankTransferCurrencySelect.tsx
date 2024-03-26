@@ -3,8 +3,7 @@
 import React, { useMemo } from 'react';
 import { useField } from 'react-inverted-form';
 
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
+import { cn } from '@ui/utils/cn';
 import { Select } from '@ui/form/SyncSelect';
 
 import { currencyIcon, mapCurrencyToOptions } from './utils';
@@ -41,20 +40,25 @@ export const BankTransferCurrencySelect = ({
         ...currencyOptions,
       ]}
       formatOptionLabel={(option, { context }) => {
+        const currencyIconSize = context === 'value' ? 'w-auto' : 'w-7';
+        const currencyIconPosition =
+          context === 'value' ? 'center' : 'flex-end';
+        const currencyIconWidth = context === 'value' ? 'w-[14px]' : 'w-auto';
+
         return (
-          <Flex alignItems='center'>
-            <Flex
-              w={context === 'value' ? 'auto' : 7}
-              justifyContent={context === 'value' ? 'center' : 'flex-end'}
-              alignItems='center'
-              minW={context === 'value' ? '14px' : 'auto'}
+          <div className='items-center'>
+            <div
+              className={cn(
+                currencyIconSize,
+                currencyIconPosition,
+                currencyIconWidth,
+                'flex items-center',
+              )}
             >
               {currencyIcon?.[option.value]}
-            </Flex>
-            <Text className='option-label' ml={3}>
-              {option.value}
-            </Text>
-          </Flex>
+            </div>
+            <span className='option-label ml-3'>{option.value}</span>
+          </div>
         );
       }}
       defaultValue={{ label: currency, value: currency }}
