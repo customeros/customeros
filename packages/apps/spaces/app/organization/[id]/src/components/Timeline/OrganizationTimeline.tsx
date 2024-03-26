@@ -108,6 +108,10 @@ export const OrganizationTimeline: FC = () => {
   const invalidateQuery = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ['GetTimeline.infinite'] });
   }, []);
+  const timelineItemsLength = Object.values(data?.pages ?? []).reduce(
+    (acc, curr) => curr.organization?.timelineEventsTotalCount + acc,
+    0,
+  );
 
   useEffect(() => {
     setTimelineMeta({
@@ -119,6 +123,13 @@ export const OrganizationTimeline: FC = () => {
       },
     });
   }, [NEW_DATE, id]);
+
+  useEffect(() => {
+    setTimelineMeta((prev) => ({
+      ...prev,
+      itemCount: timelineItemsLength,
+    }));
+  }, [timelineItemsLength]);
 
   const virtuosoContext = useMemo(
     () => ({

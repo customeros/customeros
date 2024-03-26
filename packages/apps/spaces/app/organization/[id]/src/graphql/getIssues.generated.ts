@@ -127,6 +127,7 @@ export type GetIssuesQuery = {
       | { __typename?: 'LogEntry' }
       | { __typename?: 'Meeting' }
       | { __typename?: 'Note' }
+      | { __typename?: 'Order' }
       | { __typename?: 'PageView' }
     >;
   } | null;

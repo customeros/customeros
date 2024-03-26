@@ -35,7 +35,12 @@ export type RemindersQuery = {
     content: string;
     dueDate: any;
     dismissed: boolean;
-    metadata: { __typename?: 'Metadata'; id: string };
+    metadata: {
+      __typename?: 'Metadata';
+      id: string;
+      created: any;
+      lastUpdated: any;
+    };
     owner: {
       __typename?: 'User';
       id: string;
@@ -51,6 +56,8 @@ export const RemindersDocument = `
   remindersForOrganization(organizationId: $organizationId) {
     metadata {
       id
+      created
+      lastUpdated
     }
     content
     owner {

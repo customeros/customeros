@@ -543,6 +543,7 @@ export type Contract = MetadataInterface & {
   addressLine2?: Maybe<Scalars['String']['output']>;
   /** @deprecated Use metadata instead. */
   appSource: Scalars['String']['output'];
+  autoRenew: Scalars['Boolean']['output'];
   /** @deprecated Use billingDetails instead. */
   billingCycle?: Maybe<ContractBillingCycle>;
   billingDetails?: Maybe<BillingDetails>;
@@ -613,6 +614,7 @@ export enum ContractBillingCycle {
 
 export type ContractInput = {
   appSource?: InputMaybe<Scalars['String']['input']>;
+  autoRenew?: InputMaybe<Scalars['Boolean']['input']>;
   billingCycle?: InputMaybe<ContractBillingCycle>;
   billingEnabled?: InputMaybe<Scalars['Boolean']['input']>;
   committedPeriods?: InputMaybe<Scalars['Int64']['input']>;
@@ -650,6 +652,7 @@ export type ContractUpdateInput = {
   addressLine1?: InputMaybe<Scalars['String']['input']>;
   addressLine2?: InputMaybe<Scalars['String']['input']>;
   appSource?: InputMaybe<Scalars['String']['input']>;
+  autoRenew?: InputMaybe<Scalars['Boolean']['input']>;
   billingCycle?: InputMaybe<ContractBillingCycle>;
   billingDetails?: InputMaybe<BillingDetailsInput>;
   billingEnabled?: InputMaybe<Scalars['Boolean']['input']>;
@@ -1016,6 +1019,7 @@ export enum DataSource {
   Outlook = 'OUTLOOK',
   Pipedrive = 'PIPEDRIVE',
   Salesforce = 'SALESFORCE',
+  Shopify = 'SHOPIFY',
   Slack = 'SLACK',
   Stripe = 'STRIPE',
   Unthread = 'UNTHREAD',
@@ -1452,9 +1456,11 @@ export type Invoice = MetadataInterface & {
   contract: Contract;
   currency: Scalars['String']['output'];
   customer: InvoiceCustomer;
+  /** @deprecated not used */
   domesticPaymentsBankInfo?: Maybe<Scalars['String']['output']>;
   dryRun: Scalars['Boolean']['output'];
   due: Scalars['Time']['output'];
+  /** @deprecated not used */
   internationalPaymentsBankInfo?: Maybe<Scalars['String']['output']>;
   invoiceLineItems: Array<InvoiceLine>;
   invoiceNumber: Scalars['String']['output'];
@@ -1466,6 +1472,7 @@ export type Invoice = MetadataInterface & {
   offCycle: Scalars['Boolean']['output'];
   organization: Organization;
   paid: Scalars['Boolean']['output'];
+  paymentLink?: Maybe<Scalars['String']['output']>;
   postpaid: Scalars['Boolean']['output'];
   provider: InvoiceProvider;
   repositoryFileId: Scalars['String']['output'];
@@ -1480,6 +1487,7 @@ export type InvoiceCustomer = {
   addressLine1?: Maybe<Scalars['String']['output']>;
   addressLine2?: Maybe<Scalars['String']['output']>;
   addressLocality?: Maybe<Scalars['String']['output']>;
+  addressRegion?: Maybe<Scalars['String']['output']>;
   addressZip?: Maybe<Scalars['String']['output']>;
   email?: Maybe<Scalars['String']['output']>;
   name?: Maybe<Scalars['String']['output']>;
@@ -1510,6 +1518,7 @@ export type InvoiceProvider = {
   addressLine1?: Maybe<Scalars['String']['output']>;
   addressLine2?: Maybe<Scalars['String']['output']>;
   addressLocality?: Maybe<Scalars['String']['output']>;
+  addressRegion?: Maybe<Scalars['String']['output']>;
   addressZip?: Maybe<Scalars['String']['output']>;
   logoRepositoryFileId?: Maybe<Scalars['String']['output']>;
   logoUrl?: Maybe<Scalars['String']['output']>;
@@ -3045,6 +3054,19 @@ export type OpportunityUpdateInput = {
   opportunityId: Scalars['ID']['input'];
 };
 
+export type Order = {
+  __typename?: 'Order';
+  appSource: Scalars['String']['output'];
+  cancelledAt?: Maybe<Scalars['Time']['output']>;
+  confirmedAt?: Maybe<Scalars['Time']['output']>;
+  createdAt: Scalars['Time']['output'];
+  fulfilledAt?: Maybe<Scalars['Time']['output']>;
+  id: Scalars['ID']['output'];
+  paidAt?: Maybe<Scalars['Time']['output']>;
+  source: DataSource;
+  sourceOfTruth: DataSource;
+};
+
 export type OrgAccountDetails = {
   __typename?: 'OrgAccountDetails';
   onboarding?: Maybe<OnboardingDetails>;
@@ -3102,6 +3124,7 @@ export type Organization = MetadataInterface & {
   /** @deprecated Use notes */
   note?: Maybe<Scalars['String']['output']>;
   notes?: Maybe<Scalars['String']['output']>;
+  orders: Array<Order>;
   owner?: Maybe<User>;
   parentCompanies: Array<LinkedOrganization>;
   phoneNumbers: Array<PhoneNumber>;
@@ -4143,24 +4166,28 @@ export type TenantBillingProfile = Node &
     appSource: Scalars['String']['output'];
     canPayWithBankTransfer: Scalars['Boolean']['output'];
     /** @deprecated Not used */
-    canPayWithCard: Scalars['Boolean']['output'];
+    canPayWithCard?: Maybe<Scalars['Boolean']['output']>;
     /** @deprecated Not used */
-    canPayWithDirectDebitACH: Scalars['Boolean']['output'];
+    canPayWithDirectDebitACH?: Maybe<Scalars['Boolean']['output']>;
     /** @deprecated Not used */
-    canPayWithDirectDebitBacs: Scalars['Boolean']['output'];
+    canPayWithDirectDebitBacs?: Maybe<Scalars['Boolean']['output']>;
     /** @deprecated Not used */
-    canPayWithDirectDebitSEPA: Scalars['Boolean']['output'];
+    canPayWithDirectDebitSEPA?: Maybe<Scalars['Boolean']['output']>;
     canPayWithPigeon: Scalars['Boolean']['output'];
     country: Scalars['String']['output'];
     createdAt: Scalars['Time']['output'];
-    domesticPaymentsBankInfo: Scalars['String']['output'];
+    /** @deprecated Not used */
+    domesticPaymentsBankInfo?: Maybe<Scalars['String']['output']>;
     /** @deprecated Use sendInvoicesFrom */
     email: Scalars['String']['output'];
     id: Scalars['ID']['output'];
-    internationalPaymentsBankInfo: Scalars['String']['output'];
+    /** @deprecated Not used */
+    internationalPaymentsBankInfo?: Maybe<Scalars['String']['output']>;
+    invoiceNote: Scalars['String']['output'];
     legalName: Scalars['String']['output'];
     locality: Scalars['String']['output'];
     phone: Scalars['String']['output'];
+    region: Scalars['String']['output'];
     sendInvoicesBcc: Scalars['String']['output'];
     sendInvoicesFrom: Scalars['String']['output'];
     source: DataSource;
@@ -4175,18 +4202,20 @@ export type TenantBillingProfileInput = {
   addressLine2?: InputMaybe<Scalars['String']['input']>;
   addressLine3?: InputMaybe<Scalars['String']['input']>;
   canPayWithBankTransfer: Scalars['Boolean']['input'];
-  canPayWithCard: Scalars['Boolean']['input'];
-  canPayWithDirectDebitACH: Scalars['Boolean']['input'];
-  canPayWithDirectDebitBacs: Scalars['Boolean']['input'];
-  canPayWithDirectDebitSEPA: Scalars['Boolean']['input'];
+  canPayWithCard?: InputMaybe<Scalars['Boolean']['input']>;
+  canPayWithDirectDebitACH?: InputMaybe<Scalars['Boolean']['input']>;
+  canPayWithDirectDebitBacs?: InputMaybe<Scalars['Boolean']['input']>;
+  canPayWithDirectDebitSEPA?: InputMaybe<Scalars['Boolean']['input']>;
   canPayWithPigeon: Scalars['Boolean']['input'];
   country?: InputMaybe<Scalars['String']['input']>;
   domesticPaymentsBankInfo?: InputMaybe<Scalars['String']['input']>;
   email?: InputMaybe<Scalars['String']['input']>;
   internationalPaymentsBankInfo?: InputMaybe<Scalars['String']['input']>;
+  invoiceNote?: InputMaybe<Scalars['String']['input']>;
   legalName?: InputMaybe<Scalars['String']['input']>;
   locality?: InputMaybe<Scalars['String']['input']>;
   phone?: InputMaybe<Scalars['String']['input']>;
+  region?: InputMaybe<Scalars['String']['input']>;
   sendInvoicesBcc?: InputMaybe<Scalars['String']['input']>;
   sendInvoicesFrom: Scalars['String']['input'];
   vatNumber: Scalars['String']['input'];
@@ -4208,10 +4237,12 @@ export type TenantBillingProfileUpdateInput = {
   email?: InputMaybe<Scalars['String']['input']>;
   id: Scalars['ID']['input'];
   internationalPaymentsBankInfo?: InputMaybe<Scalars['String']['input']>;
+  invoiceNote?: InputMaybe<Scalars['String']['input']>;
   legalName?: InputMaybe<Scalars['String']['input']>;
   locality?: InputMaybe<Scalars['String']['input']>;
   patch?: InputMaybe<Scalars['Boolean']['input']>;
   phone?: InputMaybe<Scalars['String']['input']>;
+  region?: InputMaybe<Scalars['String']['input']>;
   sendInvoicesBcc?: InputMaybe<Scalars['String']['input']>;
   sendInvoicesFrom?: InputMaybe<Scalars['String']['input']>;
   vatNumber?: InputMaybe<Scalars['String']['input']>;
@@ -4262,6 +4293,7 @@ export type TimelineEvent =
   | LogEntry
   | Meeting
   | Note
+  | Order
   | PageView;
 
 export enum TimelineEventType {
@@ -4273,6 +4305,7 @@ export enum TimelineEventType {
   LogEntry = 'LOG_ENTRY',
   Meeting = 'MEETING',
   Note = 'NOTE',
+  Order = 'ORDER',
   PageView = 'PAGE_VIEW',
 }
 

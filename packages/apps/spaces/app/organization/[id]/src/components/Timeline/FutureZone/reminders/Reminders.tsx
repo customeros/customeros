@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useParams } from 'next/navigation';
 
 import { produce } from 'immer';
@@ -43,6 +44,8 @@ export const Reminders = () => {
           if (!foundReminder) return;
           foundReminder.content = values.input.content ?? '';
           foundReminder.dismissed = values.input.dismissed ?? false;
+          foundReminder.dueDate = values.input.dueDate ?? '';
+          foundReminder.metadata.lastUpdated = new Date().toISOString();
 
           setTimelineMeta((prev) =>
             produce(prev, (draft) => {
@@ -88,10 +91,18 @@ export const Reminders = () => {
 
   const { data: globalCacheData } = useGlobalCacheQuery(client);
 
+  const remindersLength = data?.remindersForOrganization?.length ?? 0;
   const user = globalCacheData?.global_Cache?.user;
   const currentOwner = [user?.firstName, user?.lastName]
     .filter(Boolean)
     .join(' ');
+
+  useEffect(() => {
+    setTimelineMeta((prev) => ({
+      ...prev,
+      remindersCount: remindersLength,
+    }));
+  }, [remindersLength]);
 
   if (isPending) return null;
 
@@ -99,12 +110,21 @@ export const Reminders = () => {
     <VStack align='flex-start'>
       {data?.remindersForOrganization
         ?.filter((r) => !r.dismissed)
-        .sort(
-          (a, b) =>
-            new Date(a?.dueDate).valueOf() - new Date(b?.dueDate).valueOf(),
-        )
-        .map((r) => (
+        .sort((a, b) => {
+          const diff =
+            new Date(a?.dueDate).valueOf() - new Date(b?.dueDate).valueOf();
+
+          if (diff === 0)
+            return (
+              new Date(a.metadata.lastUpdated).valueOf() -
+              new Date(b.metadata.lastUpdated).valueOf()
+            );
+
+          return diff;
+        })
+        .map((r, i) => (
           <ReminderItem
+            index={i}
             key={r.metadata.id}
             currentOwner={currentOwner}
             onChange={onChange}

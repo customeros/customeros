@@ -10,7 +10,6 @@ import { Portal } from '@ui/utils/';
 import { Flex } from '@ui/layout/Flex';
 import { Button } from '@ui/form/Button';
 import { Text } from '@ui/typography/Text';
-import { Clock } from '@ui/media/icons/Clock';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { Input, InputProps } from '@ui/form/Input';
 import { InlineDatePicker } from '@ui/form/DatePicker';
@@ -53,20 +52,25 @@ export const ReminderDueDatePicker = ({ name, formId }: DueDatePickerProps) => {
   const handleChange = (date: Date | null) => {
     if (!date) return;
     const [hours, minutes] = time.split(':').map(Number);
-    const _date = set(date, { hours, minutes });
+    const _date = set(date, { hours, minutes, seconds: 0, milliseconds: 0 });
 
     onChange(_date.toISOString());
   };
 
   const handleClickTomorrow = () => {
-    const date = set(addDays(new Date(), 1), { hours: 9, minutes: 0 });
+    const date = set(addDays(new Date(), 1), {
+      hours: 9,
+      minutes: 0,
+      seconds: 0,
+      milliseconds: 0,
+    });
     onChange(date.toISOString());
   };
 
   return (
     <Flex ref={containerRef} justify='flex-start' align='center'>
       <Popover placement='top-start' matchWidth>
-        {({ isOpen }) => (
+        {({ isOpen, onClose }) => (
           <>
             <PopoverTrigger>
               <Text
@@ -87,24 +91,26 @@ export const ReminderDueDatePicker = ({ name, formId }: DueDatePickerProps) => {
                 <PopoverBody w='fit-content'>
                   <InlineDatePicker
                     {...inputProps}
-                    onChange={handleChange}
+                    onChange={(date) => {
+                      handleChange(date);
+                      onClose();
+                    }}
                     minDate={new Date()}
                   />
                 </PopoverBody>
                 <PopoverFooter
                   display='flex'
                   alignItems='center'
-                  justifyContent='space-between'
+                  justifyContent='right'
                   px='6'
                 >
-                  <Flex align='center' gap='2'>
-                    <Clock color='gray.500' />
-                    <Text color='gray.500'>{time}</Text>
-                  </Flex>
                   <Button
                     variant='outline'
                     borderRadius='full'
-                    onClick={handleClickTomorrow}
+                    onClick={() => {
+                      handleClickTomorrow();
+                      onClose();
+                    }}
                   >
                     Tomorrow
                   </Button>

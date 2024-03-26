@@ -689,6 +689,7 @@ export type GetTimelineEventsQuery = {
         }>;
       }
     | { __typename: 'Note' }
+    | { __typename: 'Order' }
     | { __typename: 'PageView' }
   >;
 };
