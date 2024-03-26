@@ -14,6 +14,7 @@ curl -X POST \
   -d '{
     "query": "mutation UpdateOrganization { 
       organization_Update(input: {
+        customId: "MyNewCustomId",
         id: "96d699a8-b986-4dae-9f10-a23196f30c90", 
         customId: "MyNewCustomId",
         patch: true
