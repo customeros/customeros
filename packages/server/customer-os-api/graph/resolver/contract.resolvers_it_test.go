@@ -1,6 +1,7 @@
 package resolver
 
 import (
+	"github.com/99designs/gqlgen/client"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -464,4 +465,91 @@ func TestMutationResolver_ContractDelete(t *testing.T) {
 	require.True(t, response.Contract_Delete.Accepted)
 	require.False(t, response.Contract_Delete.Completed)
 	require.True(t, calledDeleteContractEvent)
+}
+
+func TestMutationResolver_AddAttachmentToContract(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
+
+	attachmentId := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
+		MimeType: "text/plain",
+		FileName: "readme.txt",
+	})
+
+	rawResponse, err := c.RawPost(getQuery("contract/contract_add_attachment"),
+		client.Var("contractId", contractId),
+		client.Var("attachmentId", attachmentId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Contract"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Attachment"))
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "INCLUDES"))
+
+	var meeting struct {
+		Contract_AddAttachment model.Contract
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &meeting)
+	require.Nil(t, err)
+
+	require.NotNil(t, meeting.Contract_AddAttachment.ID)
+	require.Len(t, meeting.Contract_AddAttachment.Attachments, 1)
+	require.Equal(t, meeting.Contract_AddAttachment.Attachments[0].ID, attachmentId)
+}
+
+func TestMutationResolver_RemoveAttachmentFromContract(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
+
+	attachmentId1 := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
+		MimeType: "text/plain",
+		FileName: "readme1.txt",
+	})
+
+	attachmentId2 := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
+		MimeType: "text/plain",
+		FileName: "readme2.txt",
+	})
+
+	addAttachment1Response, err := c.RawPost(getQuery("contract/contract_add_attachment"),
+		client.Var("contractId", contractId),
+		client.Var("attachmentId", attachmentId1))
+	assertRawResponseSuccess(t, addAttachment1Response, err)
+
+	addAttachment2Response, err := c.RawPost(getQuery("contract/contract_add_attachment"),
+		client.Var("contractId", contractId),
+		client.Var("attachmentId", attachmentId2))
+	assertRawResponseSuccess(t, addAttachment2Response, err)
+
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Contract"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Attachment"))
+	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "INCLUDES"))
+
+	removeAttachmentResponse, err := c.RawPost(getQuery("contract/contract_remove_attachment"),
+		client.Var("contractId", contractId),
+		client.Var("attachmentId", attachmentId2))
+	assertRawResponseSuccess(t, removeAttachmentResponse, err)
+
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Contract"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Attachment"))
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "INCLUDES"))
+
+	var meeting struct {
+		Contract_RemoveAttachment model.Contract
+	}
+
+	err = decode.Decode(removeAttachmentResponse.Data.(map[string]any), &meeting)
+	require.Nil(t, err)
+
+	require.NotNil(t, meeting.Contract_RemoveAttachment.ID)
+	require.Len(t, meeting.Contract_RemoveAttachment.Attachments, 1)
+	require.Equal(t, meeting.Contract_RemoveAttachment.Attachments[0].ID, attachmentId1)
 }

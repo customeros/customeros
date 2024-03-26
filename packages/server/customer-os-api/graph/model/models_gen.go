@@ -525,6 +525,7 @@ type Contract struct {
 	ServiceStarted        *time.Time            `json:"serviceStarted,omitempty"`
 	ContractStatus        ContractStatus        `json:"contractStatus"`
 	AutoRenew             bool                  `json:"autoRenew"`
+	Attachments           []*Attachment         `json:"attachments,omitempty"`
 	Status                ContractStatus        `json:"status"`
 	ServiceStartedAt      *time.Time            `json:"serviceStartedAt,omitempty"`
 	Name                  string                `json:"name"`

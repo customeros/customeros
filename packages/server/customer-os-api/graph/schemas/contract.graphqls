@@ -5,6 +5,9 @@ extend type Mutation {
     contract_Create(input: ContractInput!): Contract!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     contract_Update(input: ContractUpdateInput!): Contract!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     contract_Delete(id: ID!): DeleteResponse!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+
+    contract_AddAttachment(contractId: ID!, attachmentId: ID!): Contract!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+    contract_RemoveAttachment(contractId: ID!, attachmentId: ID!): Contract!  @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type Contract implements MetadataInterface {
@@ -26,6 +29,7 @@ type Contract implements MetadataInterface {
     serviceStarted:     Time
     contractStatus:     ContractStatus!
     autoRenew:          Boolean!
+    attachments:        [Attachment!] @goField(forceResolver: true)
 
     status:             ContractStatus! @deprecated(reason: "Use contractStatus instead.")
     serviceStartedAt:   Time @deprecated(reason: "Use serviceStarted instead.")
