@@ -1,6 +1,5 @@
 import { useRef, useState, useEffect, forwardRef } from 'react';
 
-import { cn } from '@ui/utils/cn';
 import { Input, InputProps } from '@ui/form/Input/Input2';
 
 export const ResizableInput = forwardRef<HTMLInputElement, InputProps>(
@@ -21,10 +20,7 @@ export const ResizableInput = forwardRef<HTMLInputElement, InputProps>(
       <>
         <span
           ref={spanRef}
-          className={cn(
-            props.size && `text-${props.size}`,
-            `z-[-1] absolute h-0 inline-block invisible`,
-          )}
+          className={`z-[-1] absolute h-0 inline-block invisible`}
         >
           {props.value}
         </span>
