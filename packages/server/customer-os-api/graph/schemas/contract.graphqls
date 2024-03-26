@@ -72,6 +72,7 @@ type BillingDetails {
     payOnline :             Boolean
     payAutomatically:       Boolean
     check:                  Boolean
+    dueDays:                Int64
 }
 
 input ContractInput {
@@ -86,6 +87,7 @@ input ContractInput {
     currency:               Currency
     billingEnabled:         Boolean
     autoRenew:              Boolean
+    dueDays:                Int64
 
     invoicingStartDate:     Time @deprecated(reason: "Removed from create input.")
     externalReference:      ExternalSystemReferenceInput @deprecated(reason: "Not used yet")
@@ -152,6 +154,7 @@ input BillingDetailsInput {
     payOnline :             Boolean
     payAutomatically:       Boolean
     check:                  Boolean
+    dueDays:                Int64
 }
 
 enum ContractRenewalCycle {

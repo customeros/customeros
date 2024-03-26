@@ -97,6 +97,7 @@ func (a *ContractAggregate) onContractCreate(evt eventstore.Event) error {
 	a.Contract.CanPayWithBankTransfer = eventData.CanPayWithBankTransfer
 	a.Contract.AutoRenew = eventData.AutoRenew
 	a.Contract.Check = eventData.Check
+	a.Contract.DueDays = eventData.DueDays
 	return nil
 }
 
@@ -207,6 +208,9 @@ func (a *ContractAggregate) onContractUpdate(evt eventstore.Event) error {
 	}
 	if eventData.UpdateCheck() {
 		a.Contract.Check = eventData.Check
+	}
+	if eventData.UpdateDueDays() {
+		a.Contract.DueDays = eventData.DueDays
 	}
 
 	if eventData.ExternalSystem.Available() {

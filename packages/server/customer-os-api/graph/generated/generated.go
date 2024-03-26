@@ -151,6 +151,7 @@ type ComplexityRoot struct {
 		CanPayWithDirectDebit  func(childComplexity int) int
 		Check                  func(childComplexity int) int
 		Country                func(childComplexity int) int
+		DueDays                func(childComplexity int) int
 		InvoiceNote            func(childComplexity int) int
 		InvoicingStarted       func(childComplexity int) int
 		Locality               func(childComplexity int) int
@@ -2414,6 +2415,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.BillingDetails.Country(childComplexity), true
+
+	case "BillingDetails.dueDays":
+		if e.complexity.BillingDetails.DueDays == nil {
+			break
+		}
+
+		return e.complexity.BillingDetails.DueDays(childComplexity), true
 
 	case "BillingDetails.invoiceNote":
 		if e.complexity.BillingDetails.InvoiceNote == nil {
@@ -12093,6 +12101,7 @@ type BillingDetails {
     payOnline :             Boolean
     payAutomatically:       Boolean
     check:                  Boolean
+    dueDays:                Int64
 }
 
 input ContractInput {
@@ -12107,6 +12116,7 @@ input ContractInput {
     currency:               Currency
     billingEnabled:         Boolean
     autoRenew:              Boolean
+    dueDays:                Int64
 
     invoicingStartDate:     Time @deprecated(reason: "Removed from create input.")
     externalReference:      ExternalSystemReferenceInput @deprecated(reason: "Not used yet")
@@ -12173,6 +12183,7 @@ input BillingDetailsInput {
     payOnline :             Boolean
     payAutomatically:       Boolean
     check:                  Boolean
+    dueDays:                Int64
 }
 
 enum ContractRenewalCycle {
@@ -22205,6 +22216,47 @@ func (ec *executionContext) fieldContext_BillingDetails_check(ctx context.Contex
 	return fc, nil
 }
 
+func (ec *executionContext) _BillingDetails_dueDays(ctx context.Context, field graphql.CollectedField, obj *model.BillingDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_BillingDetails_dueDays(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DueDays, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int64)
+	fc.Result = res
+	return ec.marshalOInt642ᚖint64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_BillingDetails_dueDays(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _BillingProfile_id(ctx context.Context, field graphql.CollectedField, obj *model.BillingProfile) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_BillingProfile_id(ctx, field)
 	if err != nil {
@@ -26390,6 +26442,8 @@ func (ec *executionContext) fieldContext_Contract_billingDetails(ctx context.Con
 				return ec.fieldContext_BillingDetails_payAutomatically(ctx, field)
 			case "check":
 				return ec.fieldContext_BillingDetails_check(ctx, field)
+			case "dueDays":
+				return ec.fieldContext_BillingDetails_dueDays(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type BillingDetails", field.Name)
 		},
@@ -90359,7 +90413,7 @@ func (ec *executionContext) unmarshalInputBillingDetailsInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"billingCycle", "invoicingStarted", "addressLine1", "addressLine2", "locality", "region", "country", "postalCode", "organizationLegalName", "billingEmail", "invoiceNote", "canPayWithCard", "canPayWithDirectDebit", "canPayWithBankTransfer", "payOnline", "payAutomatically", "check"}
+	fieldsInOrder := [...]string{"billingCycle", "invoicingStarted", "addressLine1", "addressLine2", "locality", "region", "country", "postalCode", "organizationLegalName", "billingEmail", "invoiceNote", "canPayWithCard", "canPayWithDirectDebit", "canPayWithBankTransfer", "payOnline", "payAutomatically", "check", "dueDays"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -90485,6 +90539,13 @@ func (ec *executionContext) unmarshalInputBillingDetailsInput(ctx context.Contex
 				return it, err
 			}
 			it.Check = data
+		case "dueDays":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("dueDays"))
+			data, err := ec.unmarshalOInt642ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DueDays = data
 		}
 	}
 
@@ -90973,7 +91034,7 @@ func (ec *executionContext) unmarshalInputContractInput(ctx context.Context, obj
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"organizationId", "contractName", "contractRenewalCycle", "committedPeriods", "appSource", "contractUrl", "serviceStarted", "contractSigned", "currency", "billingEnabled", "autoRenew", "invoicingStartDate", "externalReference", "billingCycle", "renewalPeriods", "renewalCycle", "signedAt", "serviceStartedAt", "name"}
+	fieldsInOrder := [...]string{"organizationId", "contractName", "contractRenewalCycle", "committedPeriods", "appSource", "contractUrl", "serviceStarted", "contractSigned", "currency", "billingEnabled", "autoRenew", "dueDays", "invoicingStartDate", "externalReference", "billingCycle", "renewalPeriods", "renewalCycle", "signedAt", "serviceStartedAt", "name"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -91057,6 +91118,13 @@ func (ec *executionContext) unmarshalInputContractInput(ctx context.Context, obj
 				return it, err
 			}
 			it.AutoRenew = data
+		case "dueDays":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("dueDays"))
+			data, err := ec.unmarshalOInt642ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DueDays = data
 		case "invoicingStartDate":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("invoicingStartDate"))
 			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
@@ -97512,6 +97580,8 @@ func (ec *executionContext) _BillingDetails(ctx context.Context, sel ast.Selecti
 			out.Values[i] = ec._BillingDetails_payAutomatically(ctx, field, obj)
 		case "check":
 			out.Values[i] = ec._BillingDetails_check(ctx, field, obj)
+		case "dueDays":
+			out.Values[i] = ec._BillingDetails_dueDays(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

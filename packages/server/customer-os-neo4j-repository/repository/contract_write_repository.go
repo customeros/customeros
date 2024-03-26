@@ -40,6 +40,7 @@ type ContractCreateFields struct {
 	CanPayWithBankTransfer bool                   `json:"canPayWithBankTransfer"`
 	AutoRenew              bool                   `json:"autoRenew"`
 	Check                  bool                   `json:"check"`
+	DueDays                int64                  `json:"dueDays"`
 }
 
 type ContractUpdateFields struct {
@@ -70,6 +71,7 @@ type ContractUpdateFields struct {
 	PayOnline                    bool                   `json:"payOnline"`
 	PayAutomatically             bool                   `json:"payAutomatically"`
 	AutoRenew                    bool                   `json:"autoRenew"`
+	DueDays                      int64                  `json:"dueDays"`
 	Check                        bool                   `json:"check"`
 	UpdateName                   bool                   `json:"updateName"`
 	UpdateContractUrl            bool                   `json:"updateContractUrl"`
@@ -100,6 +102,7 @@ type ContractUpdateFields struct {
 	UpdatePayAutomatically       bool                   `json:"updatePayAutomatically"`
 	UpdateAutoRenew              bool                   `json:"updateAutoRenew"`
 	UpdateCheck                  bool                   `json:"updateCheck"`
+	UpdateDueDays                bool                   `json:"updateDueDays"`
 }
 
 type ContractWriteRepository interface {
@@ -161,7 +164,8 @@ func (r *contractWriteRepository) CreateForOrganization(ctx context.Context, ten
 								ct.canPayWithDirectDebit=$canPayWithDirectDebit,
 								ct.canPayWithBankTransfer=$canPayWithBankTransfer,
 								ct.autoRenew=$autoRenew,
-								ct.check=$check
+								ct.check=$check,
+								ct.dueDays=$dueDays
 							WITH ct, t
 							OPTIONAL MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$createdByUserId}) 
 							WHERE $createdByUserId <> ""
@@ -196,6 +200,7 @@ func (r *contractWriteRepository) CreateForOrganization(ctx context.Context, ten
 		"canPayWithBankTransfer": data.CanPayWithBankTransfer,
 		"autoRenew":              data.AutoRenew,
 		"check":                  data.Check,
+		"dueDays":                data.DueDays,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -342,6 +347,10 @@ func (r *contractWriteRepository) UpdateAndReturn(ctx context.Context, tenant, c
 	if data.UpdateCheck {
 		cypher += `, ct.check=$check `
 		params["check"] = data.Check
+	}
+	if data.UpdateDueDays {
+		cypher += `, ct.dueDays=$dueDays `
+		params["dueDays"] = data.DueDays
 	}
 	cypher += ` RETURN ct`
 
