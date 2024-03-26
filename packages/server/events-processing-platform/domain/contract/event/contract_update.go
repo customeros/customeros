@@ -45,6 +45,7 @@ type ContractUpdateEvent struct {
 	InvoicingEnabled       bool                       `json:"invoicingEnabled,omitempty"`
 	AutoRenew              bool                       `json:"autoRenew,omitempty"`
 	Check                  bool                       `json:"check,omitempty"`
+	DueDays                int64                      `json:"dueDays,omitempty"`
 }
 
 func NewContractUpdateEvent(aggr eventstore.Aggregate, dataFields model.ContractDataFields, externalSystem commonmodel.ExternalSystem, source string, updatedAt time.Time, fieldsMask []string) (eventstore.Event, error) {
@@ -75,9 +76,13 @@ func NewContractUpdateEvent(aggr eventstore.Aggregate, dataFields model.Contract
 		InvoicingEnabled:       dataFields.InvoicingEnabled,
 		AutoRenew:              dataFields.AutoRenew,
 		Check:                  dataFields.Check,
+		DueDays:                dataFields.DueDays,
 		UpdatedAt:              updatedAt,
 		Source:                 source,
 		FieldsMask:             fieldsMask,
+	}
+	if eventData.DueDays < 0 {
+		eventData.DueDays = 0
 	}
 	if eventData.UpdateNextInvoiceDate() {
 		eventData.NextInvoiceDate = utils.ToDatePtr(dataFields.NextInvoiceDate)
@@ -221,4 +226,8 @@ func (e ContractUpdateEvent) UpdateAutoRenew() bool {
 
 func (e ContractUpdateEvent) UpdateCheck() bool {
 	return utils.Contains(e.FieldsMask, FieldMaskCheck)
+}
+
+func (e ContractUpdateEvent) UpdateDueDays() bool {
+	return utils.Contains(e.FieldsMask, FieldMaskDueDays)
 }

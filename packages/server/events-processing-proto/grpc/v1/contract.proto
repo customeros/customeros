@@ -46,6 +46,7 @@ enum ContractFieldMask {
   CONTRACT_FIELD_AUTO_RENEW = 26;
   CONTRACT_FIELD_REGION = 27;
   CONTRACT_FIELD_CHECK = 28;
+  CONTRACT_FIELD_DUE_DAYS = 29;
 }
 
 // CreateContract request message
@@ -75,6 +76,7 @@ message CreateContractGrpcRequest {
   bool canPayWithBankTransfer = 24;
   bool autoRenew = 25;
   bool check = 26;
+  int64 dueDays = 27;
 }
 
 message UpdateContractGrpcRequest {
@@ -113,6 +115,7 @@ message UpdateContractGrpcRequest {
   bool autoRenew = 33;
   string region = 34;
   bool check = 35;
+  int64 dueDays = 36;
 }
 
 message RolloutRenewalOpportunityOnExpirationGrpcRequest {
