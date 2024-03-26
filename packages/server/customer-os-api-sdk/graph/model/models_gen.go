@@ -225,6 +225,7 @@ type BillingDetails struct {
 	CanPayWithBankTransfer *bool                 `json:"canPayWithBankTransfer,omitempty"`
 	PayOnline              *bool                 `json:"payOnline,omitempty"`
 	PayAutomatically       *bool                 `json:"payAutomatically,omitempty"`
+	Check                  *bool                 `json:"check,omitempty"`
 }
 
 type BillingDetailsInput struct {
@@ -244,6 +245,7 @@ type BillingDetailsInput struct {
 	CanPayWithBankTransfer *bool                 `json:"canPayWithBankTransfer,omitempty"`
 	PayOnline              *bool                 `json:"payOnline,omitempty"`
 	PayAutomatically       *bool                 `json:"payAutomatically,omitempty"`
+	Check                  *bool                 `json:"check,omitempty"`
 }
 
 type BillingProfile struct {
@@ -2542,7 +2544,6 @@ type TenantBillingProfile struct {
 	Region                        string     `json:"region"`
 	Zip                           string     `json:"zip"`
 	LegalName                     string     `json:"legalName"`
-	InvoiceNote                   string     `json:"invoiceNote"`
 	DomesticPaymentsBankInfo      *string    `json:"domesticPaymentsBankInfo,omitempty"`
 	InternationalPaymentsBankInfo *string    `json:"internationalPaymentsBankInfo,omitempty"`
 	VatNumber                     string     `json:"vatNumber"`
@@ -2554,6 +2555,7 @@ type TenantBillingProfile struct {
 	CanPayWithDirectDebitBacs     *bool      `json:"canPayWithDirectDebitBacs,omitempty"`
 	CanPayWithBankTransfer        bool       `json:"canPayWithBankTransfer"`
 	CanPayWithPigeon              bool       `json:"canPayWithPigeon"`
+	Check                         bool       `json:"check"`
 }
 
 func (TenantBillingProfile) IsSourceFields()                   {}
@@ -2575,7 +2577,6 @@ type TenantBillingProfileInput struct {
 	Region                        *string `json:"region,omitempty"`
 	Zip                           *string `json:"zip,omitempty"`
 	LegalName                     *string `json:"legalName,omitempty"`
-	InvoiceNote                   *string `json:"invoiceNote,omitempty"`
 	DomesticPaymentsBankInfo      *string `json:"domesticPaymentsBankInfo,omitempty"`
 	InternationalPaymentsBankInfo *string `json:"internationalPaymentsBankInfo,omitempty"`
 	VatNumber                     string  `json:"vatNumber"`
@@ -2587,6 +2588,7 @@ type TenantBillingProfileInput struct {
 	CanPayWithDirectDebitBacs     *bool   `json:"canPayWithDirectDebitBacs,omitempty"`
 	CanPayWithBankTransfer        bool    `json:"canPayWithBankTransfer"`
 	CanPayWithPigeon              bool    `json:"canPayWithPigeon"`
+	Check                         bool    `json:"check"`
 }
 
 type TenantBillingProfileUpdateInput struct {
@@ -2602,7 +2604,6 @@ type TenantBillingProfileUpdateInput struct {
 	Region                        *string `json:"region,omitempty"`
 	Zip                           *string `json:"zip,omitempty"`
 	LegalName                     *string `json:"legalName,omitempty"`
-	InvoiceNote                   *string `json:"invoiceNote,omitempty"`
 	DomesticPaymentsBankInfo      *string `json:"domesticPaymentsBankInfo,omitempty"`
 	InternationalPaymentsBankInfo *string `json:"internationalPaymentsBankInfo,omitempty"`
 	VatNumber                     *string `json:"vatNumber,omitempty"`
@@ -2614,6 +2615,7 @@ type TenantBillingProfileUpdateInput struct {
 	CanPayWithDirectDebitBacs     *bool   `json:"canPayWithDirectDebitBacs,omitempty"`
 	CanPayWithBankTransfer        *bool   `json:"canPayWithBankTransfer,omitempty"`
 	CanPayWithPigeon              *bool   `json:"canPayWithPigeon,omitempty"`
+	Check                         *bool   `json:"check,omitempty"`
 }
 
 type TenantInput struct {
