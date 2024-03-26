@@ -26,7 +26,7 @@ curl -X POST \
 
 ```
 
-The organization mutation request requires that you pass the invoice `id` as a query parameter.  
+The organization mutation request requires that you pass the organization `id` as a query parameter.  
 
 To update specific fields, include `patch: true` in the query parameters; otherwise, provide the full object.
 
