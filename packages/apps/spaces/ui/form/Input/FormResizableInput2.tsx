@@ -45,6 +45,7 @@ export const FormResizableInput = forwardRef<HTMLInputElement, FormInputProps>(
           />
           {rightElement && rightElement}
         </div>
+
         {renderError((error) => (
           <span className='text-xs text-error-500'>{error}</span>
         ))}
