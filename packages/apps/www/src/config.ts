@@ -105,7 +105,7 @@ export const SIDEBAR: Sidebar = {
       { text: "Invoice Events", link: "en/api/invoice-events"},
     ],
     "Organizations API": [
-      { text: "API Reference", link: "en/api/organization-api"},
+      { text: "Query: Organization", link: "en/api/organization-query"},
       { text: "Organization Events", link: "en/api/organization-events"},
     ],
     "API Data Objects": [
