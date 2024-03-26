@@ -128,7 +128,7 @@ const avatarStyle = cva(
   },
 );
 
-interface AvatarDemoProps
+interface AvatarProps
   extends VariantProps<typeof avatarStyle>,
     VariantProps<typeof avatarBadgeSize>,
     AvatarImageProps {
@@ -139,7 +139,7 @@ interface AvatarDemoProps
   badge?: React.ReactElement;
 }
 
-export const Avatar: React.FC<AvatarDemoProps> = ({
+export const Avatar: React.FC<AvatarProps> = ({
   icon,
   name,
   src,
@@ -150,7 +150,7 @@ export const Avatar: React.FC<AvatarDemoProps> = ({
   color,
   badge,
   ...props
-}: AvatarDemoProps) => {
+}: AvatarProps) => {
   const emptyFallbackLetters = name?.split(' ').map((word) => word[0]);
 
   return (

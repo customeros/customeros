@@ -11,16 +11,16 @@ export const EmptyNotifications = () => {
       <div className='absolute h-[400px] w-[448px] transform -translate-y-[75px]'>
         <HalfCirclePattern />
       </div>
-      <FeaturedIcon className='mt-5' colorScheme='primary'>
+      <FeaturedIcon className='mt-5'>
         <Lotus />
       </FeaturedIcon>
       <h1 className='mt-8 mb-1 text-4 z-10 font-semibold leading-6 text-gray-700'>
         No notifications for now
       </h1>
-      <text className='text-center z-10 text-sm leading-5 text-gray-500'>
+      <span className='text-center z-10 text-sm leading-5 text-gray-500'>
         Enjoy the quiet moment. Explore other corners of the app or take a deep
         breath and savor the calm.
-      </text>
+      </span>
     </div>
   );
 };
