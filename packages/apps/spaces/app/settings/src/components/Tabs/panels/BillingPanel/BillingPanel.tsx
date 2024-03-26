@@ -6,14 +6,11 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { produce } from 'immer';
 import { useQueryClient } from '@tanstack/react-query';
 import { useDebounce, useDeepCompareEffect } from 'rooks';
+import { validateEmail } from '@settings/components/Tabs/panels/BillingPanel/utils';
 import { useUpdateTenantSettingsMutation } from '@settings/graphql/updateTenantSettings.generated';
 import { useTenantBillingProfilesQuery } from '@settings/graphql/getTenantBillingProfiles.generated';
 import { useCreateBillingProfileMutation } from '@settings/graphql/createTenantBillingProfile.generated';
 import { useTenantUpdateBillingProfileMutation } from '@settings/graphql/updateTenantBillingProfile.generated';
-import {
-  validateEmail,
-  validateEmailLocalPart,
-} from '@settings/components/Tabs/panels/BillingPanel/utils';
 import {
   TenantSettingsQuery,
   useTenantSettingsQuery,
@@ -93,8 +90,8 @@ export const BillingPanel = () => {
         queryClient.cancelQueries({ queryKey });
 
         useTenantBillingProfilesQuery.mutateCacheEntry(queryClient)(
-          (cacheEntry) => {
-            return produce(cacheEntry, (draft) => {
+          ({ ...cacheEntry }) => {
+            return produce({ ...cacheEntry }, (draft) => {
               const selectedProfile = draft?.tenantBillingProfiles?.findIndex(
                 (profileId) =>
                   profileId.id === data?.tenantBillingProfiles?.[0]?.id,
@@ -151,8 +148,9 @@ export const BillingPanel = () => {
         addressLine1: '29 Maple Lane',
         addressLine2: 'Springfield, Haven County',
         locality: 'San Francisco',
+        region: 'California',
         zip: '89302',
-        country: 'United States',
+        country: 'United States of America',
         email: 'invoices@acme.com',
         name: 'Acme Corp.',
       },
@@ -183,21 +181,26 @@ export const BillingPanel = () => {
     defaultValues,
     stateReducer: (state, action, next) => {
       const getStateAfterValidation = () => {
-        return produce({ ...next }, (draft) => {
-          const sendInvoiceFromError = validateEmailLocalPart(
-            draft.values.sendInvoicesFrom,
-          );
-          const bccError = validateEmail(draft.values.sendInvoicesBcc);
-          // we do it like this so that if the email is valid, we reset the states.
-          draft.fields.sendInvoicesFrom.meta.hasError = !!sendInvoiceFromError;
-          draft.fields.sendInvoicesFrom.error = sendInvoiceFromError ?? '';
+        const bccError = validateEmail(state.values.sendInvoicesBcc);
 
-          draft.fields.sendInvoicesBcc.meta.hasError = !!bccError;
-          draft.fields.sendInvoicesBcc.error = bccError ?? '';
-        });
+        return {
+          ...next,
+          fields: {
+            ...next.fields,
+            sendInvoicesBcc: {
+              ...next.fields.sendInvoicesBcc,
+              meta: {
+                ...next.fields.sendInvoicesBcc.meta,
+                hasError: !!bccError,
+              },
+              error: bccError ?? '',
+            },
+          },
+        };
       };
       if (action.type === 'FIELD_CHANGE') {
         switch (action.payload.name) {
+          case 'check':
           case 'canPayWithBankTransfer':
           case 'canPayWithPigeon': {
             updateBillingProfileMutation.mutate({
@@ -215,6 +218,7 @@ export const BillingPanel = () => {
               input: {
                 id: tenantBillingProfileId,
                 patch: true,
+                region: '',
                 [action.payload.name]: action.payload.value?.value,
               },
             });
@@ -227,6 +231,7 @@ export const BillingPanel = () => {
           case 'addressLine1':
           case 'addressLine2':
           case 'addressLine3':
+          case 'region':
           case 'zip':
           case 'locality': {
             handleUpdateData.cancel();
@@ -235,17 +240,6 @@ export const BillingPanel = () => {
             });
 
             return next;
-          }
-
-          case 'sendInvoicesFrom': {
-            handleUpdateData.cancel();
-
-            handleUpdateData({
-              [action.payload
-                .name]: `${action.payload.value}@invoices.customeros.ai`,
-            });
-
-            return getStateAfterValidation();
           }
           case 'baseCurrency': {
             updateTenantSettingsMutation.mutate({
@@ -270,53 +264,15 @@ export const BillingPanel = () => {
           case 'addressLine1':
           case 'addressLine2':
           case 'addressLine3':
+          case 'region':
           case 'zip':
           case 'locality': {
             handleUpdateData.flush();
 
             return next;
           }
-          case 'sendInvoicesFrom': {
-            const formattedEmail = (action.payload?.value || '')
-              ?.trim()
-              .split(' ')
-              .join('-');
-            if (!formattedEmail?.length && state.values?.legalName?.length) {
-              handleUpdateData.cancel();
-              const newEmail = `${state.values.legalName
-                .split(' ')
-                .join('-')
-                .toLowerCase()}@invoices.customeros.ai`;
-
-              updateBillingProfileMutation.mutate({
-                input: {
-                  id: tenantBillingProfileId,
-                  patch: true,
-                  sendInvoicesFrom: newEmail,
-                },
-              });
-
-              return {
-                ...next,
-                values: {
-                  ...next.values,
-                  sendInvoicesFrom: `${state.values.legalName
-                    .split(' ')
-                    .join('-')
-                    .toLowerCase()}`,
-                },
-              };
-            } else {
-              handleUpdateData.flush();
-            }
-
-            return {
-              ...getStateAfterValidation(),
-              values: {
-                ...next.values,
-                sendInvoicesFrom: formattedEmail,
-              },
-            };
+          case 'sendInvoicesBcc': {
+            return getStateAfterValidation();
           }
           default:
             return next;
@@ -347,6 +303,7 @@ export const BillingPanel = () => {
           canPayWithPigeon: false,
           sendInvoicesFrom: '',
           vatNumber: '',
+          check: true,
         },
       });
     }
@@ -480,6 +437,9 @@ export const BillingPanel = () => {
               setIsInvoiceProviderDetailsHovered
             }
             organizationName={state.values?.legalName}
+            check={state.values?.check}
+            sendInvoicesFrom={state.values?.sendInvoicesFrom}
+            country={state.values?.country}
           />
         )}
       </Card>
@@ -494,10 +454,12 @@ export const BillingPanel = () => {
             locality: state.values.locality ?? '',
             zip: state.values.zip ?? '',
             country: state?.values?.country?.label ?? '',
+            region: state?.values?.region ?? '',
             email: state?.values?.sendInvoicesFrom ?? '',
             name: state.values?.legalName ?? '',
             vatNumber: state.values?.vatNumber ?? '',
           }}
+          check={state.values?.check}
           {...invoicePreviewStaticData}
         />
       </Box>

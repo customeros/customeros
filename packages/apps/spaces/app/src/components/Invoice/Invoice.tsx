@@ -24,6 +24,7 @@ type Address = {
   zip: string;
   email: string;
   name?: string;
+  region: string;
   country?: string;
   locality: string;
   vatNumber?: string;
@@ -44,6 +45,7 @@ type InvoiceProps = {
   amountDue?: number;
   note?: string | null;
   invoiceNumber: string;
+  check?: boolean | null;
   isBilledToFocused?: boolean;
   isInvoiceProviderFocused?: boolean;
   canPayWithBankTransfer?: boolean | null;
@@ -69,6 +71,7 @@ export function Invoice({
   currency = 'USD',
   canPayWithBankTransfer,
   availableBankAccount,
+  check,
 }: InvoiceProps) {
   const isInvoiceMetaSectionBlurred =
     isBilledToFocused || isInvoiceProviderFocused;
@@ -136,6 +139,7 @@ export function Invoice({
               addressLine1={billedTo?.addressLine1}
               addressLine2={billedTo?.addressLine2}
               vatNumber={billedTo?.vatNumber}
+              region={billedTo?.region}
             />
             <InvoicePartySection
               title='From'
@@ -149,6 +153,7 @@ export function Invoice({
               addressLine1={from?.addressLine1}
               addressLine2={from?.addressLine2}
               vatNumber={from?.vatNumber}
+              region={from?.region}
             />
           </Flex>
         </Flex>
@@ -177,6 +182,14 @@ export function Invoice({
             availableBankAccount={availableBankAccount}
             currency={currency}
           />
+        )}
+        {check && (
+          <Text fontSize='xs' color='gray.500' my={2}>
+            Want to pay by check? Contact{' '}
+            <Link href={`mailto:${from.email}`} textDecoration='underline'>
+              {from.email}
+            </Link>
+          </Text>
         )}
         <Flex
           alignItems='center'

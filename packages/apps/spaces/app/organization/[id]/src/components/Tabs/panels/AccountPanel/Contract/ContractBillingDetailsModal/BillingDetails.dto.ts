@@ -6,6 +6,7 @@ import { GetContractQuery } from '@organization/src/graphql/getContract.generate
 
 export interface BillingDetailsForm {
   zip?: string | null;
+  region?: string | null;
   locality?: string | null;
   payOnline?: boolean | null;
   contractUrl?: string | null;
@@ -28,6 +29,7 @@ export class BillingDetailsDto implements BillingDetailsForm {
   addressLine1?: string | null;
   addressLine2?: string | null;
   organizationLegalName?: string | null;
+  region?: string | null;
   country?: SelectOption<string> | null;
   currency?: SelectOption<Currency> | null;
   contractUrl?: string | null;
@@ -57,6 +59,7 @@ export class BillingDetailsDto implements BillingDetailsForm {
     this.contractUrl = data?.contractUrl ?? '';
     this.payOnline = data?.billingDetails?.payOnline;
     this.payAutomatically = data?.billingDetails?.payAutomatically;
+    this.region = data?.billingDetails?.region;
   }
 
   static toForm(
@@ -89,6 +92,11 @@ export class BillingDetailsDto implements BillingDetailsForm {
         payOnline: data?.payOnline,
         payAutomatically: data?.payAutomatically,
         canPayWithBankTransfer: data?.canPayWithBankTransfer,
+        canPayWithCard: data?.canPayWithCard,
+        region: data?.region,
+        locality: data?.locality,
+        country: data?.country?.value ?? '',
+        postalCode: data?.zip,
       },
       patch: true,
     };

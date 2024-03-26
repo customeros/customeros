@@ -40,6 +40,7 @@ query getContracts($id: ID!) {
                 organizationLegalName
                 billingCycle
                 invoicingStarted
+                region
             }
             opportunities {
                 id

@@ -33,6 +33,7 @@ const extractAddressData = (invoiceData: InvoiceCustomer | InvoiceProvider) => {
     locality: invoiceData?.addressLocality ?? '',
     addressLine1: invoiceData?.addressLine1 ?? '',
     addressLine2: invoiceData?.addressLine2 ?? '',
+    region: invoiceData?.addressRegion ?? '',
   };
 };
 
