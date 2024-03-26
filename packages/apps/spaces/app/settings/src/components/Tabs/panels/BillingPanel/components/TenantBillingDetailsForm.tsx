@@ -6,7 +6,6 @@ import { LogoUploader } from '@settings/components/LogoUploadComponent/LogoUploa
 import { VatInput } from '@settings/components/Tabs/panels/BillingPanel/components/VatInput';
 import { PaymentMethods } from '@settings/components/Tabs/panels/BillingPanel/components/PaymentMethods';
 
-import { Box } from '@ui/layout/Box';
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { CardBody } from '@ui/layout/Card';
@@ -24,12 +23,10 @@ export const TenantBillingPanelDetailsForm = ({
   setIsInvoiceProviderFocused,
   formId,
   organizationName,
-  check,
   sendInvoicesFrom,
   country,
 }: {
   formId: string;
-  check?: boolean | null;
   sendInvoicesFrom?: string;
   organizationName?: string | null;
   country?: SelectOption<string> | null;
@@ -73,25 +70,20 @@ export const TenantBillingPanelDetailsForm = ({
         onMouseEnter={() => setIsInvoiceProviderDetailsHovered(true)}
         onMouseLeave={() => setIsInvoiceProviderDetailsHovered(false)}
       >
+        <Text fontSize='sm' fontWeight='semibold'>
+          Billing address
+        </Text>
         <FormSelect
           name='country'
           placeholder='Country'
           label='Country'
-          isLabelVisible
           formId={formId}
           options={countryOptions}
         />
         <FormInput
           autoComplete='off'
-          label='Billing address'
+          label='Address line 1'
           placeholder='Address line 1'
-          isLabelVisible
-          labelProps={{
-            fontSize: 'sm',
-            mb: 0,
-            mt: 2,
-            fontWeight: 'semibold',
-          }}
           name='addressLine1'
           formId={formId}
           onFocus={() => setIsInvoiceProviderFocused(true)}
@@ -109,25 +101,39 @@ export const TenantBillingPanelDetailsForm = ({
 
         {country?.value === 'US' && (
           <FormInput
-            label='State'
-            name='region'
-            placeholder='State'
+            label='City'
             formId={formId}
+            name='locality'
+            textOverflow='ellipsis'
+            placeholder='City'
             onFocus={() => setIsInvoiceProviderFocused(true)}
             onBlur={() => setIsInvoiceProviderFocused(false)}
+            autoComplete='off'
           />
         )}
 
         <Flex gap={2}>
-          <FormInput
-            autoComplete='off'
-            label='Billing address locality'
-            name='locality'
-            placeholder='City'
-            formId={formId}
-            onFocus={() => setIsInvoiceProviderFocused(true)}
-            onBlur={() => setIsInvoiceProviderFocused(false)}
-          />
+          {country?.value === 'US' ? (
+            <FormInput
+              label='State'
+              name='region'
+              placeholder='State'
+              formId={formId}
+              onFocus={() => setIsInvoiceProviderFocused(true)}
+              onBlur={() => setIsInvoiceProviderFocused(false)}
+            />
+          ) : (
+            <FormInput
+              label='City'
+              formId={formId}
+              name='locality'
+              textOverflow='ellipsis'
+              placeholder='City'
+              onFocus={() => setIsInvoiceProviderFocused(true)}
+              onBlur={() => setIsInvoiceProviderFocused(false)}
+              autoComplete='off'
+            />
+          )}
           <FormInput
             autoComplete='off'
             label='Billing address zip/Postal code'
@@ -166,7 +172,7 @@ export const TenantBillingPanelDetailsForm = ({
         </Flex>
 
         {sendInvoicesFrom && (
-          <Tooltip label='This email is configured by CustomerOs'>
+          <Tooltip label='This email is configured by CustomerOS'>
             <FormInput
               formId={formId}
               autoComplete='off'
@@ -205,21 +211,18 @@ export const TenantBillingPanelDetailsForm = ({
         />
       </Flex>
       <PaymentMethods formId={formId} organizationName={organizationName} />
-      <Box>
-        <FormSwitch
-          size='sm'
-          name='check'
-          formId={formId}
-          label='Checks'
-          fontWeight='semibold'
-          labelProps={{
-            fontSize: 'sm',
-            fontWeight: 'semibold',
-            margin: 0,
-          }}
-        />
-        {check && <Text>Want to pay by check? Contact {sendInvoicesFrom}</Text>}
-      </Box>
+      <FormSwitch
+        size='sm'
+        name='check'
+        formId={formId}
+        label='Checks'
+        fontWeight='semibold'
+        labelProps={{
+          fontSize: 'sm',
+          fontWeight: 'semibold',
+          margin: 0,
+        }}
+      />
     </CardBody>
   );
 };

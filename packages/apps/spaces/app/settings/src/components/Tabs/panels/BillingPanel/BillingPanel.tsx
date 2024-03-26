@@ -148,7 +148,7 @@ export const BillingPanel = () => {
         addressLine1: '29 Maple Lane',
         addressLine2: 'Springfield, Haven County',
         locality: 'San Francisco',
-        region: 'California',
+        region: 'CA',
         zip: '89302',
         country: 'United States of America',
         email: 'invoices@acme.com',
@@ -437,7 +437,6 @@ export const BillingPanel = () => {
               setIsInvoiceProviderDetailsHovered
             }
             organizationName={state.values?.legalName}
-            check={state.values?.check}
             sendInvoicesFrom={state.values?.sendInvoicesFrom}
             country={state.values?.country}
           />
