@@ -28,7 +28,7 @@ curl -X POST \
 
 The organization mutation request requires that you pass the invoice `id` as a query parameter.  
 
-In order to update only the fields specified in the request, you must pass `patch: true` as part of the query parameters.  If you do not, you must pass the full object in the request.
+To update specific fields, include `patch: true` in the query parameters; otherwise, provide the full object.
 
 As this is a graphQL request, you are able to specify the exact payload you would like returned in the response.  In the example above, we've specified that `id` is returned, but you can choose from any of the response parameters defined in the [organization object](objects/organization).
 
