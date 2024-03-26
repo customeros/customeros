@@ -316,7 +316,7 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 	require.True(t, *billingDetails.PayAutomatically)
 	require.Equal(t, utils.StartOfDayInUTC(now), *billingDetails.InvoicingStarted)
 	require.Equal(t, utils.StartOfDayInUTC(tomorrow), *billingDetails.NextInvoicing)
-	require.Equal(t, 7, *billingDetails.DueDays)
+	require.Equal(t, int64(7), *billingDetails.DueDays)
 
 	require.Equal(t, 2, len(contract.ContractLineItems))
 
