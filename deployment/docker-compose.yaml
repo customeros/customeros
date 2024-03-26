@@ -148,7 +148,7 @@ services:
     networks:
       - openline
     ports:
-      - "11006:8080"
+      - "11006:3000"
 
   customer-os-platform-admin-api:
     image: ghcr.io/openline-ai/openline-customer-os/customer-os-platform-admin-api:latest

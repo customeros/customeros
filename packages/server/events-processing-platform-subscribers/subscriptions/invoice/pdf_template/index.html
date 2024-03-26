@@ -168,6 +168,9 @@
                                 {{.CustomerAddressLine3}}
                             </div>
                             <div class="invoice-text TextsmRegular line-height-14">
+                                {{.CustomerRegion}}
+                            </div>
+                            <div class="invoice-text TextsmRegular line-height-14">
                                 {{.CustomerCountry}}
                             </div>
                             <div class="invoice-text TextsmRegular line-height-14">
@@ -191,6 +194,9 @@
                             </div>
                             <div class="invoice-text TextsmRegular line-height-14">
                                 {{.ProviderAddressLine3}}
+                            </div>
+                            <div class="invoice-text TextsmRegular line-height-14">
+                                {{.ProviderRegion}}
                             </div>
                             <div class="invoice-text TextsmRegular line-height-14">
                                 {{.ProviderCountry}}
@@ -406,6 +412,13 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+    {{end}}
+    {{if .CanPayByCheck}}
+    <div class="invoice-printed-frame3615">
+        <div class="invoice-text-left TextsmRegular">
+            Want to pay by check? Contact <a style="text-decoration: underline;" href="mailto:{{.ProviderEmail}}?subject=Payment by check for invoice {{.InvoiceNumber}}&body=Hi team, I would like to pay by check">{{.ProviderEmail}}</a>
         </div>
     </div>
     {{end}}

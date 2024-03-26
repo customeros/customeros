@@ -844,6 +844,7 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 
 	invoiceId := invoice.GetInvoiceObjectID(evt.GetAggregateID(), eventData.Tenant)
 
+	var contractEntity *neo4jentity.ContractEntity
 	var invoiceEntity *neo4jentity.InvoiceEntity
 	var invoiceLineEntities = []*neo4jentity.InvoiceLineEntity{}
 
@@ -857,6 +858,19 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 		invoiceEntity = neo4jmapper.MapDbNodeToInvoiceEntity(invoiceNode)
 	} else {
 		return errors.New("invoiceNode is nil")
+	}
+
+	// load contract
+	contractNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractForInvoice(ctx, eventData.Tenant, invoiceEntity.Id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "InvoiceSubscriber.onInvoicePaidV1.GetContractForInvoice")
+	}
+	if contractNode != nil {
+		contractEntity = neo4jmapper.MapDbNodeToContractEntity(contractNode)
+	} else {
+		tracing.TraceErr(span, errors.New("contractNode is nil"))
+		return errors.New("contractNode is nil")
 	}
 
 	//load invoice lines
@@ -906,19 +920,8 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 		"InvoiceAmountDue":             utils.FormatAmount(invoiceEntity.TotalAmount, 2),
 		"InvoiceLineItems":             []map[string]string{},
 		"Note":                         invoiceEntity.Note,
+		"CanPayByCheck":                contractEntity.Check,
 	}
-
-	// load contract
-	contractNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractForInvoice(ctx, eventData.Tenant, invoiceId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.GetContractForInvoice")
-	}
-	if contractNode == nil {
-		tracing.TraceErr(span, errors.New("contractNode is nil"))
-		return errors.New("contractNode is nil")
-	}
-	contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractNode)
 
 	// Include bank details
 	if contractEntity.CanPayWithBankTransfer {
