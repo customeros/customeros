@@ -110,18 +110,14 @@ export const RootSidenav = () => {
 
   return (
     <div className='px-2 pt-2.5 pb-4 h-full w-12.5 bg-white flex flex-col border-r border-gray-200'>
-      <div
-        className='mb-2 ml-3 cursor-pointer flex justify-flex-start overflow-hidden relative'
-        tabIndex={0}
-        role='button'
-      >
+      <div className='mb-2 ml-3 cursor-pointer flex justify-flex-start overflow-hidden relative'>
         {!isLoading ? (
           <Image
             src={cdnLogoUrl ?? logoCustomerOs}
             alt='CustomerOS'
             width={136}
             height={30}
-            className='pointer-events-none transition-opacity-250 ease-in-out'
+            className='pointer-events-none transition-opacity-250 ease-in-out max-h-8 w-auto'
           />
         ) : (
           <Skeleton className='w-full h-8 mr-2' />

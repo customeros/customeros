@@ -65,9 +65,9 @@ export const FormSwitch = forwardRef(
       >
         {isLabelVisible ? (
           <FormLabel
-            {...labelProps}
             fontWeight='medium'
             color={props.isDisabled ? 'gray.500' : 'gray.700'}
+            {...labelProps}
           >
             {label}
           </FormLabel>

@@ -12,5 +12,7 @@ query TenantBillingProfile($id: ID!) {
         sendInvoicesFrom
         canPayWithBankTransfer
         canPayWithPigeon
+        check
+        region
     }
 }

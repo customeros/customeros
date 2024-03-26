@@ -76,6 +76,7 @@ export type GetContractsQuery = {
         organizationLegalName?: string | null;
         billingCycle?: Types.ContractBillingCycle | null;
         invoicingStarted?: any | null;
+        region?: string | null;
       } | null;
       opportunities?: Array<{
         __typename?: 'Opportunity';
@@ -170,6 +171,7 @@ export const GetContractsDocument = `
         organizationLegalName
         billingCycle
         invoicingStarted
+        region
       }
       opportunities {
         id

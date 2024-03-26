@@ -83,6 +83,7 @@ export const GetContractDocument = `
       payAutomatically
       payOnline
       invoicingStarted
+      region
     }
   }
 }

@@ -2504,6 +2504,13 @@
   resolved "https://registry.yarnpkg.com/@floating-ui/utils/-/utils-0.2.1.tgz#16308cea045f0fc777b6ff20a9f25474dd8293d2"
   integrity sha512-9TANp6GPoMtYzQdt54kfAyMmz1+osLlXdg2ENroU7zzrtflTLrrC/lgrIfaSe+Wu0b89GKccT7vxXA0MoAIO+Q==
 
+"@fragaria/address-formatter@^5.3.0":
+  version "5.3.0"
+  resolved "https://registry.yarnpkg.com/@fragaria/address-formatter/-/address-formatter-5.3.0.tgz#a054eab7da00ab656ac506bcaf44d5901eee0b32"
+  integrity sha512-XyPVrogFcn9at13gq+5Q4NPNgPxfwukWa0Gl2Jpoa5sFuIcT7mb327GBeb2cDevzZTJ3RG8jnFv0NfZCl/YTyg==
+  dependencies:
+    mustache "^4.0.0"
+
 "@graphql-codegen/add@^3.2.1":
   version "3.2.3"
   resolved "https://registry.yarnpkg.com/@graphql-codegen/add/-/add-3.2.3.tgz#f1ecee085987e7c21841edc4b1fd48877c663e1a"
@@ -4671,7 +4678,6 @@
   integrity sha512-cV5La9DPwiQ7S0gf/0qiD6YgNqM5Fk97Kdrlc5yBcrF3jyEZQwm7vYFqMo4IfeHgJXsRaMvLABFtd0OVEmZhDw==
   dependencies:
     "@babel/runtime" "^7.13.10"
-
 
 "@radix-ui/react-use-rect@1.0.1":
   version "1.0.1"
@@ -13972,6 +13978,11 @@ multishift@^2.0.8:
     compute-scroll-into-view "^1.0.20"
     tiny-warning "^1.0.3"
     w3c-keyname "^2.2.7"
+
+mustache@^4.0.0:
+  version "4.2.0"
+  resolved "https://registry.yarnpkg.com/mustache/-/mustache-4.2.0.tgz#e5892324d60a12ec9c2a73359edca52972bf6f64"
+  integrity sha512-71ippSywq5Yb7/tVYyGbkBggbU8H3u5Rz56fH60jGFgr8uHwxs+aSKeqmluIVzM0m0kB7xQjKS6qPfd0b2ZoqQ==
 
 mute-stream@0.0.8:
   version "0.0.8"

@@ -179,6 +179,7 @@ export type BillingDetails = {
   canPayWithBankTransfer?: Maybe<Scalars['Boolean']['output']>;
   canPayWithCard?: Maybe<Scalars['Boolean']['output']>;
   canPayWithDirectDebit?: Maybe<Scalars['Boolean']['output']>;
+  check?: Maybe<Scalars['Boolean']['output']>;
   country?: Maybe<Scalars['String']['output']>;
   invoiceNote?: Maybe<Scalars['String']['output']>;
   invoicingStarted?: Maybe<Scalars['Time']['output']>;
@@ -199,6 +200,7 @@ export type BillingDetailsInput = {
   canPayWithBankTransfer?: InputMaybe<Scalars['Boolean']['input']>;
   canPayWithCard?: InputMaybe<Scalars['Boolean']['input']>;
   canPayWithDirectDebit?: InputMaybe<Scalars['Boolean']['input']>;
+  check?: InputMaybe<Scalars['Boolean']['input']>;
   country?: InputMaybe<Scalars['String']['input']>;
   invoiceNote?: InputMaybe<Scalars['String']['input']>;
   invoicingStarted?: InputMaybe<Scalars['Time']['input']>;
@@ -4174,6 +4176,7 @@ export type TenantBillingProfile = Node &
     /** @deprecated Not used */
     canPayWithDirectDebitSEPA?: Maybe<Scalars['Boolean']['output']>;
     canPayWithPigeon: Scalars['Boolean']['output'];
+    check: Scalars['Boolean']['output'];
     country: Scalars['String']['output'];
     createdAt: Scalars['Time']['output'];
     /** @deprecated Not used */
@@ -4183,7 +4186,6 @@ export type TenantBillingProfile = Node &
     id: Scalars['ID']['output'];
     /** @deprecated Not used */
     internationalPaymentsBankInfo?: Maybe<Scalars['String']['output']>;
-    invoiceNote: Scalars['String']['output'];
     legalName: Scalars['String']['output'];
     locality: Scalars['String']['output'];
     phone: Scalars['String']['output'];
@@ -4207,11 +4209,11 @@ export type TenantBillingProfileInput = {
   canPayWithDirectDebitBacs?: InputMaybe<Scalars['Boolean']['input']>;
   canPayWithDirectDebitSEPA?: InputMaybe<Scalars['Boolean']['input']>;
   canPayWithPigeon: Scalars['Boolean']['input'];
+  check: Scalars['Boolean']['input'];
   country?: InputMaybe<Scalars['String']['input']>;
   domesticPaymentsBankInfo?: InputMaybe<Scalars['String']['input']>;
   email?: InputMaybe<Scalars['String']['input']>;
   internationalPaymentsBankInfo?: InputMaybe<Scalars['String']['input']>;
-  invoiceNote?: InputMaybe<Scalars['String']['input']>;
   legalName?: InputMaybe<Scalars['String']['input']>;
   locality?: InputMaybe<Scalars['String']['input']>;
   phone?: InputMaybe<Scalars['String']['input']>;
@@ -4232,12 +4234,12 @@ export type TenantBillingProfileUpdateInput = {
   canPayWithDirectDebitBacs?: InputMaybe<Scalars['Boolean']['input']>;
   canPayWithDirectDebitSEPA?: InputMaybe<Scalars['Boolean']['input']>;
   canPayWithPigeon?: InputMaybe<Scalars['Boolean']['input']>;
+  check?: InputMaybe<Scalars['Boolean']['input']>;
   country?: InputMaybe<Scalars['String']['input']>;
   domesticPaymentsBankInfo?: InputMaybe<Scalars['String']['input']>;
   email?: InputMaybe<Scalars['String']['input']>;
   id: Scalars['ID']['input'];
   internationalPaymentsBankInfo?: InputMaybe<Scalars['String']['input']>;
-  invoiceNote?: InputMaybe<Scalars['String']['input']>;
   legalName?: InputMaybe<Scalars['String']['input']>;
   locality?: InputMaybe<Scalars['String']['input']>;
   patch?: InputMaybe<Scalars['Boolean']['input']>;
