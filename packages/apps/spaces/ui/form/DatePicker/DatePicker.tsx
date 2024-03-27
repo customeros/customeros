@@ -38,9 +38,9 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   const handleDateInputChange = (data?: DateInputValue) => {
     if (!data) return onChange(null);
     const date = new Date(data);
-
-    const normalizedDate = new Date(DateTimeUtils.toISOMidnight(date));
-
+    const normalizedDate = new Date(
+      Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
+    );
     onChange(normalizedDate);
   };
 
