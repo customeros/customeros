@@ -7,23 +7,12 @@ import {
   ContractBillingCycle,
 } from '@graphql/types';
 import {
+  paymentDueOptions,
+  autorenewalOptions,
   billingFrequencyOptions,
   contractBillingCycleOptions,
 } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 
-export interface TimeToRenewalData {
-  name?: string;
-  endedAt?: Date;
-  serviceStarted?: Date;
-  invoicingStartDate?: Date;
-  organizationName?: string;
-  contractUrl?: string | null;
-
-  billingEnabled?: boolean | null;
-  committedPeriods?: number | null;
-  billingCycle?: ContractBillingCycle | null;
-  contractRenewalCycle?: ContractRenewalCycle;
-}
 export interface TimeToRenewalForm {
   name?: string;
   endedAt?: Date;
@@ -31,8 +20,10 @@ export interface TimeToRenewalForm {
   invoicingStartDate?: Date;
   contractUrl?: string | null;
   committedPeriods?: string | null;
+  dueDays?: SelectOption<number> | null;
   country?: SelectOption<string> | null;
   organizationLegalName?: string | null;
+  autoRenew?: SelectOption<boolean> | null;
   billingEnabled?: SelectOption<boolean> | null;
   billingCycle?: SelectOption<ContractBillingCycle> | null;
   contractRenewalCycle?: SelectOption<
@@ -52,6 +43,8 @@ export class ContractDTO implements TimeToRenewalForm {
   renewalPeriods?: string | null;
   billingCycle?: SelectOption<ContractBillingCycle> | null;
   billingEnabled?: SelectOption<boolean> | null;
+  autoRenew?: SelectOption<boolean> | null;
+  dueDays?: SelectOption<number> | null;
 
   constructor(data?: Contract | null) {
     this.contractRenewalCycle =
@@ -80,7 +73,13 @@ export class ContractDTO implements TimeToRenewalForm {
             : "Unnamed's"
         } contract`;
     this.contractUrl = data?.contractUrl ?? '';
+    this.dueDays = paymentDueOptions.find(
+      (e) => e.value === data?.billingDetails?.dueDays,
+    );
     this.renewalPeriods = String(data?.committedPeriods ?? 2);
+    this.autoRenew = autorenewalOptions.find(
+      (e) => e.value === data?.autoRenew,
+    );
   }
 
   static toForm(data?: Contract | null): TimeToRenewalForm {

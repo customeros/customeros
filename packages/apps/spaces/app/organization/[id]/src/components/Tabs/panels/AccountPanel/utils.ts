@@ -55,7 +55,7 @@ export const billingFrequencyOptions: SelectOption<
 >[] = [
   { label: 'Monthly', value: ContractRenewalCycle.MonthlyRenewal },
   { label: 'Quarterly', value: ContractRenewalCycle.QuarterlyRenewal },
-  { label: 'Annually', value: ContractRenewalCycle.AnnualRenewal },
+  { label: 'Annual', value: ContractRenewalCycle.AnnualRenewal },
   { label: 'Multi-year', value: 'MULTI_YEAR' },
 ];
 export const contractBillingCycleOptions: SelectOption<ContractBillingCycle>[] =
@@ -75,4 +75,17 @@ export const billedTypeOptions: SelectOption<BilledType>[] = [
 
 export const currencyOptions: SelectOption<string>[] = [
   { label: 'United States Dollar', value: 'USD' },
+];
+
+export const autorenewalOptions = [
+  { label: 'Does auto-renew', value: true },
+  { label: 'Does not auto-renew', value: false },
+];
+export const paymentDueOptions: SelectOption<number>[] = [
+  { label: 'On receipt', value: 0 },
+  { label: 'Net 15', value: 15 },
+  { label: 'Net 30', value: 30 },
+  { label: 'Net 45', value: 45 },
+  { label: 'Net 60', value: 60 },
+  { label: 'Net 90', value: 90 },
 ];

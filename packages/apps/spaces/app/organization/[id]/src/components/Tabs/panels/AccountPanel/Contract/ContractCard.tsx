@@ -41,7 +41,12 @@ import { ServiceLineItemsModal } from './ServiceLineItemsModal';
 import { ContractDTO, TimeToRenewalForm } from './Contract.dto';
 import { ContractBillingDetailsModal } from './ContractBillingDetailsModal';
 import { ContractStatusSelect } from './contractStatuses/ContractStatusSelect';
-import { billingFrequencyOptions, contractBillingCycleOptions } from '../utils';
+import {
+  paymentDueOptions,
+  autorenewalOptions,
+  billingFrequencyOptions,
+  contractBillingCycleOptions,
+} from '../utils';
 
 interface ContractCardProps {
   data: Contract;
@@ -224,12 +229,24 @@ export const ContractCard = ({
                 [action.payload.name]: action.payload.value ?? null,
               },
             };
+          case 'autoRenew':
           case 'billingCycle':
           case 'billingEnabled':
             updateContract.mutate(
               ContractDTO.toPayload({
                 contractId: data.metadata.id,
                 [action.payload.name]: action.payload.value?.value,
+              }),
+            );
+
+            return next;
+          case 'dueDays':
+            updateContract.mutate(
+              ContractDTO.toPayload({
+                contractId: data.metadata.id,
+                billingDetails: {
+                  dueDays: action.payload.value?.value,
+                },
               }),
             );
 
@@ -435,11 +452,25 @@ export const ContractCard = ({
               calendarIconHidden
               value={state.values.serviceStarted}
             />
+            <FormSelect
+              label='Renewal term'
+              placeholder='Contract renews'
+              isLabelVisible
+              name='autoRenew'
+              formId={formId}
+              options={autorenewalOptions}
+              chakraStyles={{
+                menuList: (props, state) => ({
+                  ...props,
+                  minW: '190px',
+                }),
+              }}
+            />
           </Flex>
           <Flex gap='4' flexGrow={0} mb={2}>
             <FormSelect
-              label='Contract renews'
-              placeholder='Contract renews'
+              label='Contract term'
+              placeholder='Contract term'
               isLabelVisible
               name='contractRenewalCycle'
               formId={formId}
@@ -455,27 +486,6 @@ export const ContractCard = ({
             )}
           </Flex>
           <Flex gap='4' flexGrow={0} mb={2}>
-            <DatePicker
-              label='Invoicing starts'
-              placeholder='Invoicing starts'
-              minDate={state.values.serviceStarted}
-              formId={formId}
-              name='invoicingStartDate'
-              inset='120% auto auto 0px'
-              calendarIconHidden
-              value={state.values.invoicingStartDate}
-            />
-
-            <FormSelect
-              label='Billing period'
-              placeholder='Billing period'
-              isLabelVisible
-              name='billingCycle'
-              formId={formId}
-              options={contractBillingCycleOptions}
-            />
-          </Flex>
-          <Flex gap='4' flexGrow={0} mb={2}>
             <FormSelect
               label='Billing is'
               placeholder='Enable billing'
@@ -486,6 +496,34 @@ export const ContractCard = ({
                 { label: 'Enabled', value: true },
                 { label: 'Disabled', value: false },
               ]}
+            />
+            <FormSelect
+              label='Billing period'
+              placeholder='Billing period'
+              isLabelVisible
+              name='billingCycle'
+              formId={formId}
+              options={contractBillingCycleOptions}
+            />
+          </Flex>
+          <Flex gap='4' flexGrow={0} mb={2}>
+            <DatePicker
+              label='Invoicing starts'
+              placeholder='Invoicing starts'
+              minDate={state.values.serviceStarted}
+              formId={formId}
+              name='invoicingStartDate'
+              inset='120% auto auto 0px'
+              calendarIconHidden
+              value={state.values.invoicingStartDate}
+            />
+            <FormSelect
+              label='Payment due'
+              placeholder='Payment due'
+              isLabelVisible
+              name='dueDays'
+              formId={formId}
+              options={paymentDueOptions}
             />
           </Flex>
         </CardBody>

@@ -14,13 +14,6 @@ function getLabelFromValue(value: string): string | undefined {
   }
 }
 export const ContractSubtitle = ({ data }: { data: Contract }) => {
-  if (!data.serviceStarted) {
-    return <Text>No start date or services yet</Text>;
-  }
-  if (!data?.contractLineItems?.length) {
-    return <Text>No services added yet</Text>;
-  }
-
   const hasStartedService =
     data?.serviceStarted && !DateTimeUtils.isFuture(data.serviceStarted);
 
