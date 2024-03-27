@@ -33,4 +33,5 @@ type RenewalDetails struct {
 	RenewalLikelihood      enum.RenewalLikelihood
 	RenewalUpdatedByUserId string
 	RenewalUpdatedByUserAt *time.Time
+	RenewalApproved        bool
 }

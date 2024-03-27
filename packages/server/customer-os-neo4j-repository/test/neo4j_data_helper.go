@@ -782,6 +782,7 @@ func CreateOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, ten
                     op.renewalLikelihood=$renewalLikelihood,
                     op.renewalUpdatedByUserId=$renewalUpdatedByUserId,
                     op.renewalUpdateByUserAt=$renewalUpdateByUserAt,
+					op.renewalApproved=$renewalApproved,
 					op.nextSteps=$nextSteps,
 					op.createdAt=$createdAt,
 					op.updatedAt=$updatedAt
@@ -807,10 +808,11 @@ func CreateOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, ten
 		"generalNotes":           opportunity.GeneralNotes,
 		"nextSteps":              opportunity.NextSteps,
 		"comments":               opportunity.Comments,
-		"renewedAt":              utils.TimePtrFirstNonNilNillableAsAny(opportunity.RenewalDetails.RenewedAt),
+		"renewedAt":              utils.ToDatePtr(opportunity.RenewalDetails.RenewedAt),
 		"renewalLikelihood":      opportunity.RenewalDetails.RenewalLikelihood,
 		"renewalUpdatedByUserId": opportunity.RenewalDetails.RenewalUpdatedByUserId,
 		"renewalUpdateByUserAt":  utils.TimePtrFirstNonNilNillableAsAny(opportunity.RenewalDetails.RenewalUpdatedByUserAt),
+		"renewalApproved":        opportunity.RenewalDetails.RenewalApproved,
 		"createdAt":              opportunity.CreatedAt,
 		"updatedAt":              opportunity.UpdatedAt,
 	})
