@@ -17,7 +17,7 @@ query getContracts($id: ID!) {
                 source
                 lastUpdated
             }
-
+            contractName
             serviceStarted
             contractSigned
             contractEnded

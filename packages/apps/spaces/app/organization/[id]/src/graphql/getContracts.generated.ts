@@ -46,6 +46,7 @@ export type GetContractsQuery = {
     } | null;
     contracts?: Array<{
       __typename?: 'Contract';
+      contractName: string;
       serviceStarted?: any | null;
       contractSigned?: any | null;
       contractEnded?: any | null;
@@ -149,6 +150,7 @@ export const GetContractsDocument = `
         source
         lastUpdated
       }
+      contractName
       serviceStarted
       contractSigned
       contractEnded

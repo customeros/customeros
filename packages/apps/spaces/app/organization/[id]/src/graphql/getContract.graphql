@@ -5,6 +5,7 @@ query getContract($id: ID!) {
     billingEnabled
     organizationLegalName
     currency
+    contractName
     billingDetails {
       addressLine1
       addressLine2
