@@ -688,6 +688,7 @@ func MapDbNodeToOpportunityEntity(node *dbtype.Node) *entity.OpportunityEntity {
 			RenewalLikelihood:      enum.DecodeRenewalLikelihood(utils.GetStringPropOrEmpty(props, "renewalLikelihood")),
 			RenewalUpdatedByUserId: utils.GetStringPropOrEmpty(props, "renewalUpdatedByUserId"),
 			RenewalUpdatedByUserAt: utils.GetTimePropOrNil(props, "renewalUpdatedByUserAt"),
+			RenewalApproved:        utils.GetBoolPropOrFalse(props, "renewalApproved"),
 		},
 	}
 	return &opportunity

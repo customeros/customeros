@@ -60,9 +60,11 @@ type RenewalOpportunityUpdateFields struct {
 	Comments                string    `json:"comments"`
 	Amount                  float64   `json:"amount"`
 	RenewalLikelihood       string    `json:"renewalLikelihood"`
+	RenewalApproved         bool      `json:"renewalApproved"`
 	UpdateComments          bool      `json:"updateComments"`
 	UpdateAmount            bool      `json:"updateAmount"`
 	UpdateRenewalLikelihood bool      `json:"updateRenewalLikelihood"`
+	UpdateRenewalApproved   bool      `json:"updateRenewalApproved"`
 }
 
 type OpportunityWriteRepository interface {
@@ -285,19 +287,23 @@ func (r *opportunityWriteRepository) UpdateRenewal(ctx context.Context, tenant, 
 	if data.SetUpdatedByUserId {
 		params["renewalUpdatedByUserId"] = data.UpdatedByUserId
 		cypher += ` op.renewalUpdatedByUserAt = $updatedAt, 
-					op.renewalUpdatedByUserId = $renewalUpdatedByUserId, `
+					op.renewalUpdatedByUserId = $renewalUpdatedByUserId `
 	}
 	if data.UpdateComments {
-		cypher += ` op.comments = $comments, `
+		cypher += `, op.comments = $comments `
 		params["comments"] = data.Comments
 	}
 	if data.UpdateAmount {
-		cypher += ` op.amount = $amount, `
+		cypher += `, op.amount = $amount `
 		params["amount"] = data.Amount
 	}
 	if data.UpdateRenewalLikelihood {
 		cypher += ` op.renewalLikelihood = $renewalLikelihood, `
 		params["renewalLikelihood"] = data.RenewalLikelihood
+	}
+	if data.UpdateRenewalApproved {
+		cypher += ` op.renewalApproved = $renewalApproved, `
+		params["renewalApproved"] = data.RenewalApproved
 	}
 	cypher += ` op.updatedAt = $updatedAt,
 				op.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE op.sourceOfTruth END`
