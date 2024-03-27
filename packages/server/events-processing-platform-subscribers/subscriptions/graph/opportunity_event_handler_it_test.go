@@ -207,6 +207,7 @@ func TestOpportunityEventHandler_OnUpdateNextCycleDate(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	opportunityId := neo4jtest.CreateOpportunity(ctx, testDatabase.Driver, tenantName, neo4jentity.OpportunityEntity{
 		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
 	})
 	updatedAt := utils.Now()
 	renewedAt := updatedAt.AddDate(0, 6, 0) // 6 months later
@@ -238,7 +239,7 @@ func TestOpportunityEventHandler_OnUpdateNextCycleDate(t *testing.T) {
 	opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
 	require.Equal(t, opportunityId, opportunity.Id)
 	require.Equal(t, updatedAt, opportunity.UpdatedAt)
-	require.Equal(t, renewedAt, *opportunity.RenewalDetails.RenewedAt)
+	require.Equal(t, utils.StartOfDayInUTC(renewedAt), *opportunity.RenewalDetails.RenewedAt)
 }
 
 func TestOpportunityEventHandler_OnUpdate(t *testing.T) {
