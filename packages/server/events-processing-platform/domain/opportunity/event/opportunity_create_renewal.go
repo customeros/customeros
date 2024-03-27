@@ -18,9 +18,10 @@ type OpportunityCreateRenewalEvent struct {
 	InternalType      string             `json:"internalType"`
 	InternalStage     string             `json:"internalStage"`
 	RenewalLikelihood string             `json:"renewalLikelihood" validate:"required" enums:"HIGH,MEDIUM,LOW,ZERO"`
+	RenewalApproved   bool               `json:"renewalApproved,omitempty"`
 }
 
-func NewOpportunityCreateRenewalEvent(aggregate eventstore.Aggregate, contractId, renewalLikelihood string, source commonmodel.Source, createdAt, updatedAt time.Time) (eventstore.Event, error) {
+func NewOpportunityCreateRenewalEvent(aggregate eventstore.Aggregate, contractId, renewalLikelihood string, renewalApproved bool, source commonmodel.Source, createdAt, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := OpportunityCreateRenewalEvent{
 		Tenant:            aggregate.GetTenant(),
 		CreatedAt:         createdAt,
@@ -30,6 +31,7 @@ func NewOpportunityCreateRenewalEvent(aggregate eventstore.Aggregate, contractId
 		InternalType:      neo4jenum.OpportunityInternalTypeRenewal.String(),
 		InternalStage:     neo4jenum.OpportunityInternalStageOpen.String(),
 		RenewalLikelihood: renewalLikelihood,
+		RenewalApproved:   renewalApproved,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

@@ -102,6 +102,7 @@ func (a *OpportunityAggregate) onRenewalOpportunityCreate(evt eventstore.Event) 
 	a.Opportunity.UpdatedAt = eventData.UpdatedAt
 	a.Opportunity.Source = eventData.Source
 	a.Opportunity.RenewalDetails.RenewalLikelihood = eventData.RenewalLikelihood
+	a.Opportunity.RenewalDetails.RenewalApproved = eventData.RenewalApproved
 
 	return nil
 }
@@ -176,6 +177,9 @@ func (a *OpportunityAggregate) onRenewalOpportunityUpdate(evt eventstore.Event) 
 	a.Opportunity.UpdatedAt = eventData.UpdatedAt
 	if eventData.UpdateRenewalLikelihood() {
 		a.Opportunity.RenewalDetails.RenewalLikelihood = eventData.RenewalLikelihood
+	}
+	if eventData.RenewalApproved {
+		a.Opportunity.RenewalDetails.RenewalApproved = eventData.RenewalApproved
 	}
 	if eventData.UpdatedByUserId != "" &&
 		(eventData.Amount != a.Opportunity.Amount || eventData.RenewalLikelihood != a.Opportunity.RenewalDetails.RenewalLikelihood) {

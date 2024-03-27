@@ -283,7 +283,8 @@ func (r *opportunityWriteRepository) UpdateRenewal(ctx context.Context, tenant, 
 		"overwrite":     data.Source == constants.SourceOpenline,
 	}
 	cypher := fmt.Sprintf(`MATCH (op:Opportunity {id:$opportunityId}) WHERE op:RenewalOpportunity AND op:Opportunity_%s 
-				SET `, tenant)
+				SET op.updatedAt = $updatedAt,
+					op.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE op.sourceOfTruth END`, tenant)
 	if data.SetUpdatedByUserId {
 		params["renewalUpdatedByUserId"] = data.UpdatedByUserId
 		cypher += ` op.renewalUpdatedByUserAt = $updatedAt, 
@@ -298,15 +299,13 @@ func (r *opportunityWriteRepository) UpdateRenewal(ctx context.Context, tenant, 
 		params["amount"] = data.Amount
 	}
 	if data.UpdateRenewalLikelihood {
-		cypher += ` op.renewalLikelihood = $renewalLikelihood, `
+		cypher += `, op.renewalLikelihood = $renewalLikelihood `
 		params["renewalLikelihood"] = data.RenewalLikelihood
 	}
 	if data.UpdateRenewalApproved {
-		cypher += ` op.renewalApproved = $renewalApproved, `
+		cypher += `, op.renewalApproved = $renewalApproved `
 		params["renewalApproved"] = data.RenewalApproved
 	}
-	cypher += ` op.updatedAt = $updatedAt,
-				op.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE op.sourceOfTruth END`
 
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

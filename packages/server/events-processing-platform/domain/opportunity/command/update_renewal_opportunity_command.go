@@ -12,13 +12,14 @@ type UpdateRenewalOpportunityCommand struct {
 	Source            commonmodel.Source
 	UpdatedAt         *time.Time
 	RenewalLikelihood neo4jenum.RenewalLikelihood
+	RenewalApproved   bool
 	Comments          string
 	Amount            float64
 	MaskFields        []string
 	OwnerUserId       string
 }
 
-func NewUpdateRenewalOpportunityCommand(opportunityId, tenant, loggedInUserId, comments string, renewalLikelihood neo4jenum.RenewalLikelihood, amount float64, source commonmodel.Source, updatedAt *time.Time, maskFields []string, ownerUserId string) *UpdateRenewalOpportunityCommand {
+func NewUpdateRenewalOpportunityCommand(opportunityId, tenant, loggedInUserId, comments string, renewalLikelihood neo4jenum.RenewalLikelihood, amount float64, renewalApproved bool, source commonmodel.Source, updatedAt *time.Time, maskFields []string, ownerUserId string) *UpdateRenewalOpportunityCommand {
 	return &UpdateRenewalOpportunityCommand{
 		BaseCommand:       eventstore.NewBaseCommand(opportunityId, tenant, loggedInUserId),
 		Source:            source,
@@ -28,5 +29,6 @@ func NewUpdateRenewalOpportunityCommand(opportunityId, tenant, loggedInUserId, c
 		Amount:            amount,
 		MaskFields:        maskFields,
 		OwnerUserId:       ownerUserId,
+		RenewalApproved:   renewalApproved,
 	}
 }
