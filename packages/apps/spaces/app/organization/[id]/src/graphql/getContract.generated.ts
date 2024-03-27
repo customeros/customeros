@@ -37,6 +37,7 @@ export type GetContractQuery = {
     billingEnabled: boolean;
     organizationLegalName?: string | null;
     currency?: Types.Currency | null;
+    contractName: string;
     billingDetails?: {
       __typename?: 'BillingDetails';
       addressLine1?: string | null;
@@ -66,6 +67,7 @@ export const GetContractDocument = `
     billingEnabled
     organizationLegalName
     currency
+    contractName
     billingDetails {
       addressLine1
       addressLine2

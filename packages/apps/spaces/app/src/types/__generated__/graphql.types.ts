@@ -181,6 +181,7 @@ export type BillingDetails = {
   canPayWithDirectDebit?: Maybe<Scalars['Boolean']['output']>;
   check?: Maybe<Scalars['Boolean']['output']>;
   country?: Maybe<Scalars['String']['output']>;
+  dueDays?: Maybe<Scalars['Int64']['output']>;
   invoiceNote?: Maybe<Scalars['String']['output']>;
   invoicingStarted?: Maybe<Scalars['Time']['output']>;
   locality?: Maybe<Scalars['String']['output']>;
@@ -202,6 +203,7 @@ export type BillingDetailsInput = {
   canPayWithDirectDebit?: InputMaybe<Scalars['Boolean']['input']>;
   check?: InputMaybe<Scalars['Boolean']['input']>;
   country?: InputMaybe<Scalars['String']['input']>;
+  dueDays?: InputMaybe<Scalars['Int64']['input']>;
   invoiceNote?: InputMaybe<Scalars['String']['input']>;
   invoicingStarted?: InputMaybe<Scalars['Time']['input']>;
   locality?: InputMaybe<Scalars['String']['input']>;
@@ -545,6 +547,7 @@ export type Contract = MetadataInterface & {
   addressLine2?: Maybe<Scalars['String']['output']>;
   /** @deprecated Use metadata instead. */
   appSource: Scalars['String']['output'];
+  attachments?: Maybe<Array<Attachment>>;
   autoRenew: Scalars['Boolean']['output'];
   /** @deprecated Use billingDetails instead. */
   billingCycle?: Maybe<ContractBillingCycle>;
@@ -625,6 +628,7 @@ export type ContractInput = {
   contractSigned?: InputMaybe<Scalars['Time']['input']>;
   contractUrl?: InputMaybe<Scalars['String']['input']>;
   currency?: InputMaybe<Currency>;
+  dueDays?: InputMaybe<Scalars['Int64']['input']>;
   externalReference?: InputMaybe<ExternalSystemReferenceInput>;
   invoicingStartDate?: InputMaybe<Scalars['Time']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
@@ -2013,8 +2017,10 @@ export type Mutation = {
   contractLineItem_Close: Scalars['ID']['output'];
   contractLineItem_Create: ServiceLineItem;
   contractLineItem_Update: ServiceLineItem;
+  contract_AddAttachment: Contract;
   contract_Create: Contract;
   contract_Delete: DeleteResponse;
+  contract_RemoveAttachment: Contract;
   contract_Update: Contract;
   customFieldDeleteFromContactById: Result;
   customFieldDeleteFromContactByName: Result;
@@ -2266,12 +2272,22 @@ export type MutationContractLineItem_UpdateArgs = {
   input: ServiceLineItemUpdateInput;
 };
 
+export type MutationContract_AddAttachmentArgs = {
+  attachmentId: Scalars['ID']['input'];
+  contractId: Scalars['ID']['input'];
+};
+
 export type MutationContract_CreateArgs = {
   input: ContractInput;
 };
 
 export type MutationContract_DeleteArgs = {
   id: Scalars['ID']['input'];
+};
+
+export type MutationContract_RemoveAttachmentArgs = {
+  attachmentId: Scalars['ID']['input'];
+  contractId: Scalars['ID']['input'];
 };
 
 export type MutationContract_UpdateArgs = {
