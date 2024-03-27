@@ -52,7 +52,7 @@ export const EmptyContracts: FC<
         createdBy: [session?.user] as unknown as User,
         externalLinks: [],
         contractRenewalCycle: ContractRenewalCycle.None,
-        name: `${name?.length ? `${name}'s` : "Unnamed's"} contract`,
+        contractName: `${name?.length ? `${name}'s` : "Unnamed's"} contract`,
         owner: null,
         contractStatus: ContractStatus.Draft,
         contractLineItems: [],

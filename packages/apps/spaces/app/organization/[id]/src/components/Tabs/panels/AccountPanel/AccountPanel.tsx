@@ -78,7 +78,7 @@ const AccountPanelComponent = () => {
         createdBy: [session?.user] as unknown as User,
         externalLinks: [],
         contractRenewalCycle: ContractRenewalCycle.None,
-        name: `${
+        contractName: `${
           data?.organization?.name?.length
             ? `${data?.organization?.name}'s`
             : "Unnamed's"
