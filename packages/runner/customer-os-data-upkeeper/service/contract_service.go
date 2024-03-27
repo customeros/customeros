@@ -69,14 +69,14 @@ func (s *contractService) updateContractStatuses(ctx context.Context, referenceT
 			// continue as normal
 		}
 
-		records, err := s.repositories.ContractRepository.GetContractsForStatusRenewal(ctx, referenceTime)
+		records, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractsForStatusRenewal(ctx, referenceTime)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting contracts for status update: %v", err)
 			return
 		}
 
-		// no contracts found for next cycle date renew
+		// no contracts found for status update
 		if len(records) == 0 {
 			return
 		}
@@ -124,7 +124,7 @@ func (s *contractService) rolloutContractRenewals(ctx context.Context, reference
 			// continue as normal
 		}
 
-		records, err := s.repositories.ContractRepository.GetContractsForRenewalRollout(ctx, referenceTime)
+		records, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractsForRenewalRollout(ctx, referenceTime)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting contracts for renewal rollout: %v", err)

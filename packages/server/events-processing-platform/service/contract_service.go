@@ -141,9 +141,9 @@ func (s *contractService) RefreshContractStatus(ctx context.Context, request *co
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("id"))
 	}
 
-	if _, err := s.contractRequestHandler.HandleWithRetry(ctx, request.Tenant, request.Id, false, request); err != nil {
+	if _, err := s.contractRequestHandler.HandleTemp(ctx, request.Tenant, request.Id, request); err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("(RefreshContractStatus.HandleWithRetry) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		s.log.Errorf("(RefreshContractStatus.HandleTemp) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
 	}
 

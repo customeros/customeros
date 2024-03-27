@@ -14,6 +14,11 @@ import (
 	"time"
 )
 
+type TenantAndContractId struct {
+	Tenant     string
+	ContractId string
+}
+
 type ContractReadRepository interface {
 	GetContractById(ctx context.Context, tenant, contractId string) (*dbtype.Node, error)
 	GetContractByServiceLineItemId(ctx context.Context, tenant, serviceLineItemId string) (*dbtype.Node, error)
@@ -25,6 +30,8 @@ type ContractReadRepository interface {
 	CountContracts(ctx context.Context, tenant string) (int64, error)
 	GetContractsToGenerateCycleInvoices(ctx context.Context, referenceTime time.Time) ([]*utils.DbNodeAndTenant, error)
 	GetContractsToGenerateOffCycleInvoices(ctx context.Context, referenceTime time.Time) ([]*utils.DbNodeAndTenant, error)
+	GetContractsForStatusRenewal(ctx context.Context, referenceTime time.Time) ([]TenantAndContractId, error)
+	GetContractsForRenewalRollout(ctx context.Context, referenceTime time.Time) ([]TenantAndContractId, error)
 }
 
 type contractReadRepository struct {
@@ -411,4 +418,103 @@ func (r *contractReadRepository) GetContractsToGenerateOffCycleInvoices(ctx cont
 	}
 	span.LogFields(log.Int("result.count", len(result.([]*utils.DbNodeAndTenant))))
 	return result.([]*utils.DbNodeAndTenant), err
+}
+
+func (r *contractReadRepository) GetContractsForStatusRenewal(ctx context.Context, referenceTime time.Time) ([]TenantAndContractId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractRepository.GetContractsForStatusRenewal")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, "")
+	span.LogFields(log.Object("referenceTime", referenceTime))
+
+	cypher := `MATCH (t:Tenant)<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract)
+				WHERE c.techStatusRenewalRequestedAt IS NULL OR c.techStatusRenewalRequestedAt + duration({hours: 2}) < $referenceTime
+				OPTIONAL MATCH (c)-[:ACTIVE_RENEWAL]->(op:RenewalOpportunity)
+				WITH t, c, op.renewedAt as renewedAt
+				WHERE (c.status <> $endedStatus AND c.endedAt < $referenceTime) OR
+						((c.endedAt IS NULL OR c.endedAt > $referenceTime) AND 
+						(
+							(c.status in [$draftStatus, $endedStatus] AND c.serviceStartedAt < $referenceTime) OR 
+							(c.status = $outOfContractStatus AND (c.autoRenew = true OR renewedAt > $referenceTime)) OR
+							(c.status = $liveStatus AND c.autoRenew = false AND renewedAt < $referenceTime)
+						))
+				RETURN t.name, c.id LIMIT 100`
+	params := map[string]any{
+		"referenceTime":       referenceTime,
+		"endedStatus":         neo4jenum.ContractStatusEnded,
+		"liveStatus":          neo4jenum.ContractStatusLive,
+		"outOfContractStatus": neo4jenum.ContractStatusOutOfContract,
+		"draftStatus":         neo4jenum.ContractStatusDraft,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+
+	})
+	if err != nil {
+		return nil, err
+	}
+	output := make([]TenantAndContractId, 0)
+	for _, v := range records.([]*neo4j.Record) {
+		output = append(output,
+			TenantAndContractId{
+				Tenant:     v.Values[0].(string),
+				ContractId: v.Values[1].(string),
+			})
+	}
+	span.LogFields(log.Int("result.count", len(output)))
+	return output, nil
+}
+
+func (r *contractReadRepository) GetContractsForRenewalRollout(ctx context.Context, referenceTime time.Time) ([]TenantAndContractId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractRepository.GetContractsForStatusRenewal")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, "")
+	span.LogFields(log.Object("referenceTime", referenceTime))
+
+	cypher := `MATCH (t:Tenant)<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract),
+				(c)-[:ACTIVE_RENEWAL]->(op:RenewalOpportunity)
+				WHERE c.status = $liveStatus 
+					AND op.renewedAt < $referenceTime
+					AND (c.techRolloutRenewalRequestedAt IS NULL OR c.techRolloutRenewalRequestedAt + duration({hours: 2}) < $referenceTime)
+				RETURN t.name, c.id LIMIT 100`
+	params := map[string]any{
+		"referenceTime": referenceTime,
+		"liveStatus":    "LIVE",
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+
+	})
+	if err != nil {
+		return nil, err
+	}
+	output := make([]TenantAndContractId, 0)
+	for _, v := range records.([]*neo4j.Record) {
+		output = append(output,
+			TenantAndContractId{
+				Tenant:     v.Values[0].(string),
+				ContractId: v.Values[1].(string),
+			})
+	}
+	span.LogFields(log.Int("result.count", len(output)))
+	return output, nil
 }

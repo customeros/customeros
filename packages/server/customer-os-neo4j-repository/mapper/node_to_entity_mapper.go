@@ -379,6 +379,9 @@ func MapDbNodeToContractEntity(dbNode *dbtype.Node) *entity.ContractEntity {
 		AutoRenew:                       utils.GetBoolPropOrFalse(props, "autoRenew"),
 		DueDays:                         utils.GetInt64PropOrZero(props, "dueDays"),
 		Check:                           utils.GetBoolPropOrFalse(props, "check"),
+		ContractInternalFields: entity.ContractInternalFields{
+			StatusRenewalRequestedAt: utils.GetTimePropOrNil(props, "techStatusRenewalRequestedAt"),
+		},
 	}
 	return &contract
 }

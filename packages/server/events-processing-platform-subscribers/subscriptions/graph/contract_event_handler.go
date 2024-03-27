@@ -622,6 +622,22 @@ func (h *ContractEventHandler) deriveContractStatus(ctx context.Context, tenant 
 		return neo4jenum.ContractStatusDraft.String(), nil
 	}
 
+	// Check if contract is out of contract
+	if !contractEntity.AutoRenew {
+		// fetch active renewal opportunity for the contract
+		opportunityDbNode, err := h.repositories.Neo4jRepositories.OpportunityReadRepository.GetActiveRenewalOpportunityForContract(ctx, tenant, contractEntity.Id)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return "", err
+		}
+		if opportunityDbNode != nil {
+			opportunityEntity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
+			if opportunityEntity.RenewalDetails.RenewedAt != nil && opportunityEntity.RenewalDetails.RenewedAt.After(now) {
+				return neo4jenum.ContractStatusOutOfContract.String(), nil
+			}
+		}
+	}
+
 	// Otherwise, the contract is considered Live.
 	return neo4jenum.ContractStatusLive.String(), nil
 }
