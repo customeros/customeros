@@ -10,10 +10,10 @@ extend type Query {
 
 type Reminder implements MetadataInterface {
     metadata:           Metadata!
-    content:            String!
-    owner:              User! @goField(forceResolver: true)
-    dueDate:            Time!
-    dismissed:          Boolean!
+    content:            String
+    owner:              User @goField(forceResolver: true)
+    dueDate:            Time
+    dismissed:          Boolean
 }
 
 input ReminderInput {

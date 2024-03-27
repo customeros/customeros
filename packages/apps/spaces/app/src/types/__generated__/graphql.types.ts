@@ -3897,11 +3897,11 @@ export type QueryUsersArgs = {
 
 export type Reminder = MetadataInterface & {
   __typename?: 'Reminder';
-  content: Scalars['String']['output'];
-  dismissed: Scalars['Boolean']['output'];
-  dueDate: Scalars['Time']['output'];
+  content?: Maybe<Scalars['String']['output']>;
+  dismissed?: Maybe<Scalars['Boolean']['output']>;
+  dueDate?: Maybe<Scalars['Time']['output']>;
   metadata: Metadata;
-  owner: User;
+  owner?: Maybe<User>;
 };
 
 export type ReminderInput = {

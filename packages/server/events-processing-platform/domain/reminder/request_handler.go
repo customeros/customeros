@@ -101,7 +101,7 @@ func (h *reminderRequestHandler) HandleWithRetry(ctx context.Context, tenant, ob
 		if err == nil {
 
 			if reminderAggregate.Reminder.Dismissed {
-				err := h.deleteParkedReminderNotification(ctx, reminderAggregate, reminderAggregate.GetID(), request)
+				err := h.deleteParkedReminderNotification(ctx, reminderAggregate.GetID())
 				if err != nil {
 					tracing.TraceErr(span, err)
 					return nil, err
@@ -165,7 +165,7 @@ func (h *reminderRequestHandler) parkReminderNotification(ctx context.Context, a
 }
 
 func (h *reminderRequestHandler) updateParkedReminderNotification(ctx context.Context, agg *ReminderAggregate, reminderId string, request any) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderRequestHandler.parkReminderNotification")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderRequestHandler.updateParkedReminderNotification")
 	defer span.Finish()
 
 	req, ok := request.(*reminderpb.UpdateReminderGrpcRequest)
@@ -206,8 +206,8 @@ func (h *reminderRequestHandler) updateParkedReminderNotification(ctx context.Co
 	return nil
 }
 
-func (h *reminderRequestHandler) deleteParkedReminderNotification(ctx context.Context, agg *ReminderAggregate, reminderId string, request any) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderRequestHandler.parkReminderNotification")
+func (h *reminderRequestHandler) deleteParkedReminderNotification(ctx context.Context, reminderId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderRequestHandler.deleteParkedReminderNotification")
 	defer span.Finish()
 
 	parkedReminder, err := h.ebs.GetById(reminderId)

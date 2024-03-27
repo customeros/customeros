@@ -20,10 +20,9 @@ func MapEntityToReminder(entity *neo4jentity.ReminderEntity) *model.Reminder {
 	}
 
 	return &model.Reminder{
-		Metadata: metadata,
-		Content:  entity.Content,
-		// Owner:     MapEntityToUser(entity.Owner),
-		DueDate:   entity.DueDate,
-		Dismissed: entity.Dismissed,
+		Metadata:  metadata,
+		Content:   &entity.Content,
+		DueDate:   &entity.DueDate,
+		Dismissed: &entity.Dismissed,
 	}
 }
