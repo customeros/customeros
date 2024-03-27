@@ -443,7 +443,7 @@ func TestGraphOrganizationEventHandler_OnRefreshRenewalSummary(t *testing.T) {
 	require.Equal(t, orgId, organization.ID)
 	require.Equal(t, int64(20), *organization.RenewalSummary.RenewalLikelihoodOrder)
 	require.Equal(t, "LOW", organization.RenewalSummary.RenewalLikelihood)
-	require.Equal(t, tomorrow, *organization.RenewalSummary.NextRenewalAt)
+	require.Equal(t, utils.ToDatePtr(&tomorrow), organization.RenewalSummary.NextRenewalAt)
 
 	// Check no events were generated
 	eventsMap := aggregateStore.GetEventMap()

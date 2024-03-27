@@ -50,6 +50,7 @@ type RenewalOpportunityCreateFields struct {
 	InternalType      string       `json:"internalType"`
 	InternalStage     string       `json:"internalStage"`
 	RenewalLikelihood string       `json:"renewalLikelihood"`
+	RenewalApproved   bool         `json:"renewalApproved"`
 }
 
 type RenewalOpportunityUpdateFields struct {
@@ -241,7 +242,8 @@ func (r *opportunityWriteRepository) CreateRenewal(ctx context.Context, tenant, 
 								op.appSource=$appSource,
 								op.internalType=$internalType,
 								op.internalStage=$internalStage,
-								op.renewalLikelihood=$renewalLikelihood
+								op.renewalLikelihood=$renewalLikelihood,
+								op.renewalApproved=$renewalApproved
 							WITH op, c
 							MERGE (c)-[:ACTIVE_RENEWAL]->(op)
 							`, tenant)
@@ -257,6 +259,7 @@ func (r *opportunityWriteRepository) CreateRenewal(ctx context.Context, tenant, 
 		"internalType":      data.InternalType,
 		"internalStage":     data.InternalStage,
 		"renewalLikelihood": data.RenewalLikelihood,
+		"renewalApproved":   data.RenewalApproved,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -287,7 +290,7 @@ func (r *opportunityWriteRepository) UpdateRenewal(ctx context.Context, tenant, 
 					op.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE op.sourceOfTruth END`, tenant)
 	if data.SetUpdatedByUserId {
 		params["renewalUpdatedByUserId"] = data.UpdatedByUserId
-		cypher += ` op.renewalUpdatedByUserAt = $updatedAt, 
+		cypher += `, op.renewalUpdatedByUserAt = $updatedAt, 
 					op.renewalUpdatedByUserId = $renewalUpdatedByUserId `
 	}
 	if data.UpdateComments {

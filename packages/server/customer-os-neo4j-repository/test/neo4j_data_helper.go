@@ -808,7 +808,7 @@ func CreateOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, ten
 		"generalNotes":           opportunity.GeneralNotes,
 		"nextSteps":              opportunity.NextSteps,
 		"comments":               opportunity.Comments,
-		"renewedAt":              utils.ToDatePtr(opportunity.RenewalDetails.RenewedAt),
+		"renewedAt":              utils.ToNeo4jDateAsAny(opportunity.RenewalDetails.RenewedAt),
 		"renewalLikelihood":      opportunity.RenewalDetails.RenewalLikelihood,
 		"renewalUpdatedByUserId": opportunity.RenewalDetails.RenewalUpdatedByUserId,
 		"renewalUpdateByUserAt":  utils.TimePtrFirstNonNilNillableAsAny(opportunity.RenewalDetails.RenewalUpdatedByUserAt),
