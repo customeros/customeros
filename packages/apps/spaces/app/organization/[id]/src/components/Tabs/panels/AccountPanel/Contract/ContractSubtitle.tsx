@@ -1,18 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 
-import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { DateTimeUtils } from '@spaces/utils/date';
-import { Contract, ContractStatus, ContractRenewalCycle } from '@graphql/types';
+import { Contract, ContractRenewalCycle } from '@graphql/types';
+import { billingFrequencyOptions } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 
-function getLabelFromValue(value: string): string | undefined {
-  if (ContractRenewalCycle.AnnualRenewal === value) {
-    return 'annually';
-  }
-  if (ContractRenewalCycle.MonthlyRenewal === value) {
-    return 'monthly';
-  }
-}
 export const ContractSubtitle = ({ data }: { data: Contract }) => {
   const hasStartedService =
     data?.serviceStarted && !DateTimeUtils.isFuture(data.serviceStarted);
@@ -30,20 +22,38 @@ export const ContractSubtitle = ({ data }: { data: Contract }) => {
         DateTimeUtils.dateWithAbreviatedMonth,
       )
     : null;
-  if (
-    !renewalDate &&
-    hasStartedService &&
-    data?.contractStatus !== ContractStatus.Ended
-  ) {
-    const serviceStarted = hasStartedService
-      ? DateTimeUtils.format(
-          data.serviceStarted,
+  const calcContractEndDate = useMemo(() => {
+    switch (data?.contractRenewalCycle) {
+      case ContractRenewalCycle.AnnualRenewal:
+        return DateTimeUtils.format(
+          DateTimeUtils.addYears(
+            data.serviceStarted,
+            data?.committedPeriods ?? 1,
+          ).toISOString(),
           DateTimeUtils.dateWithAbreviatedMonth,
-        )
-      : null;
+        );
+      case ContractRenewalCycle.MonthlyRenewal:
+        return DateTimeUtils.format(
+          DateTimeUtils.addMonth(
+            data.serviceStarted,
+            data.committedPeriods ?? 1,
+          ).toISOString(),
+          DateTimeUtils.dateWithAbreviatedMonth,
+        );
+      case ContractRenewalCycle.QuarterlyRenewal:
+        return DateTimeUtils.format(
+          DateTimeUtils.addMonth(data.serviceStarted, 3).toISOString(),
+          DateTimeUtils.dateWithAbreviatedMonth,
+        );
 
-    return <Text>Service started {serviceStarted}</Text>;
-  }
+      default:
+        return null;
+    }
+  }, [
+    data?.contractRenewalCycle,
+    data?.serviceStarted,
+    data?.committedPeriods,
+  ]);
 
   const endDate = data?.contractEnded
     ? DateTimeUtils.format(
@@ -52,27 +62,44 @@ export const ContractSubtitle = ({ data }: { data: Contract }) => {
       )
     : null;
 
-  const isActiveAndRenewable =
-    hasStartedService &&
-    data.contractStatus !== ContractStatus.Ended &&
-    !!data.contractRenewalCycle &&
-    data.contractRenewalCycle !== ContractRenewalCycle.None;
+  const renewalPeriod = billingFrequencyOptions.find(
+    (e) => e.value === data?.contractRenewalCycle,
+  )?.label;
 
-  return (
-    <Flex flexDir='column' alignItems='flex-start' justifyContent='center'>
-      {serviceStartDate && <Text>Service starts {serviceStartDate}</Text>}
-      {isActiveAndRenewable && (
-        <Text>
-          Renews {getLabelFromValue(data.contractRenewalCycle)} on {renewalDate}
-        </Text>
-      )}
-      {data?.contractEnded && DateTimeUtils.isFuture(data.contractEnded) && (
-        <Text>Ends {endDate}</Text>
-      )}
+  if (!hasStartedService && !serviceStartDate && data?.contractRenewalCycle) {
+    return <Text>{renewalPeriod} contract starting ... Edit contract</Text>;
+  }
+  if (!hasStartedService && serviceStartDate && data?.contractRenewalCycle) {
+    return (
+      <Text>
+        {renewalPeriod} contract starting {serviceStartDate}
+      </Text>
+    );
+  }
+  if (hasStartedService && endDate) {
+    return (
+      <Text>
+        {renewalPeriod} contract{' '}
+        {DateTimeUtils.isFuture(data.contractEnded) ? 'ending' : 'ended on'}{' '}
+        {endDate}
+      </Text>
+    );
+  }
+  if (hasStartedService && renewalDate && data?.autoRenew) {
+    return (
+      <Text>
+        {renewalPeriod} contract auto-renewing {renewalDate}
+      </Text>
+    );
+  }
 
-      {data.contractStatus === ContractStatus.Ended && (
-        <Text>Ended on {endDate}</Text>
-      )}
-    </Flex>
-  );
+  if (hasStartedService && !data?.autoRenew) {
+    return (
+      <Text>
+        {renewalPeriod} contract until {calcContractEndDate}, not auto-renewing
+      </Text>
+    );
+  }
+
+  return null;
 };
