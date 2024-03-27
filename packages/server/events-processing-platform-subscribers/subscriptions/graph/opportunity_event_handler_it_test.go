@@ -158,6 +158,7 @@ func TestOpportunityEventHandler_OnCreateRenewal(t *testing.T) {
 		opportunityAggregate,
 		contractId,
 		neo4jenum.RenewalLikelihoodLow.String(),
+		true,
 		commonmodel.Source{
 			Source:    constants.SourceOpenline,
 			AppSource: constants.AppSourceEventProcessingPlatform,
@@ -195,6 +196,7 @@ func TestOpportunityEventHandler_OnCreateRenewal(t *testing.T) {
 	require.Equal(t, neo4jenum.OpportunityInternalTypeRenewal, opportunity.InternalType)
 	require.Equal(t, neo4jenum.OpportunityInternalStageOpen, opportunity.InternalStage)
 	require.Equal(t, neo4jenum.RenewalLikelihoodLow, opportunity.RenewalDetails.RenewalLikelihood)
+	require.True(t, opportunity.RenewalDetails.RenewalApproved)
 
 	require.True(t, calledEventsPlatformToRefreshRenewalSummary)
 }
@@ -404,6 +406,7 @@ func TestOpportunityEventHandler_OnUpdateRenewal_AmountAndRenewalChangedByUser(t
 		"user-123",
 		"openline",
 		float64(10),
+		false,
 		now,
 		[]string{},
 		"user-123")
@@ -428,6 +431,7 @@ func TestOpportunityEventHandler_OnUpdateRenewal_AmountAndRenewalChangedByUser(t
 	require.Equal(t, now, *opportunity.RenewalDetails.RenewalUpdatedByUserAt)
 	require.Equal(t, float64(10), opportunity.Amount)
 	require.Equal(t, "some comments", opportunity.Comments)
+	require.False(t, opportunity.RenewalDetails.RenewalApproved)
 
 	require.True(t, calledEventsPlatformToRefreshRenewalSummary)
 	require.True(t, calledEventsPlatformToRefreshArr)
@@ -468,6 +472,7 @@ func TestOpportunityEventHandler_OnUpdateRenewal_OnlyCommentsChangedByUser_DoNot
 		"user-123",
 		"openline",
 		float64(10000),
+		false,
 		now,
 		[]string{},
 		"user-123")
@@ -570,6 +575,7 @@ func TestOpportunityEventHandler_OnUpdateRenewal_LikelihoodChangedByUser_Generat
 		"user-123",
 		"openline",
 		float64(10000),
+		false,
 		now,
 		[]string{},
 		"user-123")
@@ -803,6 +809,7 @@ func TestOpportunityEventHandler_OnUpdateRenewal_ChangeOwner(t *testing.T) {
 		"user-123",
 		"openline",
 		float64(10000),
+		false,
 		now,
 		[]string{},
 		userIdOwnerNew) //Changing the owner here
