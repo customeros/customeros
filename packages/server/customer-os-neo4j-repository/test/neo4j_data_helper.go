@@ -1159,76 +1159,41 @@ func CreateTag(ctx context.Context, driver *neo4j.DriverWithContext, tenant stri
 
 func CreateReminder(ctx context.Context, driver *neo4j.DriverWithContext, tenant, userId, orgId string, createdAt time.Time, reminderEntity entity.ReminderEntity) string {
 	reminderId := utils.NewUUIDIfEmpty(reminderEntity.Id)
-	query := `MATCH (t:Tenant {name:$tenant})
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
 				MERGE (t)<-[:REMINDER_BELONGS_TO_TENANT]-(r:Reminder {id:$id})
-				SET r += {
-					createdAt: datetime($createdAt),
-					updatedAt: datetime($createdAt),
-					source: $source,
-					sourceOfTruth: $source,
-					appSource: $appSource,
-					content: $content,
-					dueDate: datetime($dueDate),
-					dismissed: $dismissed
-				}`
+				ON CREATE SET  
+					r:Reminder_%s,
+					r.createdAt=$createdAt,
+					r.updatedAt=$createdAt,	
+					r.source=$source,
+					r.sourceOfTruth=$source,
+					r.appSource=$appSource,
+					r.content=$content,	
+					r.dueDate=$dueDate,
+					r.dismissed=$dismissed
+					
+				WITH t, r	
+			
+				MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$userId})
+				MERGE (u)<-[:REMINDER_BELONGS_TO_USER]-(r)
+
+				WITH t, r
+				MATCH (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {id:$organizationId})
+				MERGE (o)<-[:REMINDER_BELONGS_TO_ORGANIZATION]-(r)`, tenant)
 	params := map[string]interface{}{
-		"tenant":    tenant,
-		"id":        reminderId,
-		"userId":    userId,
-		"orgId":     orgId,
-		"content":   reminderEntity.Content,
-		"source":    reminderEntity.Source,
-		"appSource": reminderEntity.AppSource,
-		"createdAt": createdAt,
-		"dueDate":   reminderEntity.DueDate,
-		"dismissed": reminderEntity.Dismissed,
+		"tenant":         tenant,
+		"id":             reminderId,
+		"userId":         userId,
+		"organizationId": orgId,
+		"content":        reminderEntity.Content,
+		"source":         reminderEntity.Source,
+		"appSource":      reminderEntity.AppSource,
+		"createdAt":      createdAt,
+		"dueDate":        reminderEntity.DueDate,
+		"dismissed":      reminderEntity.Dismissed,
 	}
 	ExecuteWriteQuery(ctx, driver, query, params)
 	return reminderId
-}
-
-func LinkReminderToUser(ctx context.Context, driver *neo4j.DriverWithContext, tenant, reminderId, userId string) error {
-	cypher := `MATCH (u:User {id:$userId})
-				MATCH (:Tenant {name:$tenant})<-[:REMINDER_BELONGS_TO_TENANT]-(r:Reminder {id:$reminderId})
-				MERGE (u)<-[:REMINDER_BELONGS_TO_USER]-(r)`
-	params := map[string]interface{}{
-		"tenant":     tenant,
-		"userId":     userId,
-		"reminderId": reminderId,
-	}
-	ExecuteWriteQuery(ctx, driver, cypher, params)
-	return nil
-}
-
-func LinkReminderToOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, reminderId, orgId string) error {
-	cypher := `MATCH (o:Organization {id:$orgId})
-				MATCH (:Tenant {name:$tenant})<-[:REMINDER_BELONGS_TO_TENANT]-(r:Reminder {id:$reminderId})
-				MERGE (o)<-[:REMINDER_BELONGS_TO_ORGANIZATION]-(r)`
-	params := map[string]interface{}{
-		"tenant":     tenant,
-		"orgId":      orgId,
-		"reminderId": reminderId,
-	}
-	ExecuteWriteQuery(ctx, driver, cypher, params)
-	return nil
-}
-
-func UpdateReminder(ctx context.Context, driver *neo4j.DriverWithContext, tenant, reminderId string, reminderEntity entity.ReminderEntity) {
-	query := `MATCH (r:Reminder {id:$reminderId})
-				SET r += {
-					updatedAt: datetime($updatedAt),
-					content: $content,
-					dueDate: datetime($dueDate),
-					dismissed: $dismissed
-				}`
-	params := map[string]interface{}{
-		"reminderId": reminderId,
-		"content":    reminderEntity.Content,
-		"updatedAt":  reminderEntity.UpdatedAt,
-		"dueDate":    reminderEntity.DueDate,
-		"dismissed":  reminderEntity.Dismissed,
-	}
-	ExecuteWriteQuery(ctx, driver, query, params)
 }
 
 func CreateBankAccount(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, bankAccount entity.BankAccountEntity) string {

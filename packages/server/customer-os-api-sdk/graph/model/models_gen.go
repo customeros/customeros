@@ -2251,11 +2251,11 @@ type Query struct {
 }
 
 type Reminder struct {
-	Metadata  *Metadata `json:"metadata"`
-	Content   string    `json:"content"`
-	Owner     *User     `json:"owner"`
-	DueDate   time.Time `json:"dueDate"`
-	Dismissed bool      `json:"dismissed"`
+	Metadata  *Metadata  `json:"metadata"`
+	Content   *string    `json:"content,omitempty"`
+	Owner     *User      `json:"owner,omitempty"`
+	DueDate   *time.Time `json:"dueDate,omitempty"`
+	Dismissed *bool      `json:"dismissed,omitempty"`
 }
 
 func (Reminder) IsMetadataInterface()        {}

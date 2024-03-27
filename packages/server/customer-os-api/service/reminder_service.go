@@ -86,6 +86,19 @@ func (s *reminderService) UpdateReminder(ctx context.Context, id string, content
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagEntityId, id)
 
+	reminderExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), id, neo4jutil.NodeLabelReminder)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("error on checking if reminder reminderExists: %s", err.Error())
+		return err
+	}
+	if !reminderExists {
+		err := fmt.Errorf("(ReminderService.UpdateReminder) reminder with id {%s} not found", id)
+		s.log.Error(err.Error())
+		tracing.TraceErr(span, err)
+		return err
+	}
+
 	if content == nil && dueDate == nil && dismissed == nil {
 		return nil
 	}
@@ -117,7 +130,7 @@ func (s *reminderService) UpdateReminder(ctx context.Context, id string, content
 	grpcRequest.FieldsMask = fieldsMask
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := CallEventsPlatformGRPCWithRetry[*reminderpb.ReminderGrpcResponse](func() (*reminderpb.ReminderGrpcResponse, error) {
+	_, err = CallEventsPlatformGRPCWithRetry[*reminderpb.ReminderGrpcResponse](func() (*reminderpb.ReminderGrpcResponse, error) {
 		return s.grpcClients.ReminderClient.UpdateReminder(ctx, grpcRequest)
 	})
 	if err != nil {

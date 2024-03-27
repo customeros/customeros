@@ -21,11 +21,9 @@ type ReminderUpdateFields struct {
 }
 
 type ReminderWriteRepository interface {
-	CreateReminder(ctx context.Context, tenant, id, userId, orgId, content, source, appSource string, createdAt, dueDate time.Time) error
+	CreateReminder(ctx context.Context, tenant, id, userId, organizationId, content, source, appSource string, createdAt, dueDate time.Time) error
 	UpdateReminder(ctx context.Context, tenant, id string, data ReminderUpdateFields) error
 	DeleteReminder(ctx context.Context, tenant, id string) error
-	LinkReminderToUser(ctx context.Context, tenant, reminderId, userId string) error
-	LinkReminderToOrganization(ctx context.Context, tenant, reminderId, orgId string) error
 }
 
 type reminderWriteRepository struct {
@@ -40,7 +38,7 @@ func NewReminderWriteRepository(driver *neo4j.DriverWithContext, database string
 	}
 }
 
-func (r *reminderWriteRepository) CreateReminder(ctx context.Context, tenant, id, userId, orgId, content, source, appSource string, createdAt, dueDate time.Time) error {
+func (r *reminderWriteRepository) CreateReminder(ctx context.Context, tenant, id, userId, organizationId, content, source, appSource string, createdAt, dueDate time.Time) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderWriteRepository.CreateReminder")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
@@ -48,69 +46,36 @@ func (r *reminderWriteRepository) CreateReminder(ctx context.Context, tenant, id
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
 				MERGE (t)<-[:REMINDER_BELONGS_TO_TENANT]-(r:Reminder {id:$id})
-				SET 
+				ON CREATE SET  
 					r:Reminder_%s,
-					r.createdAt=datetime($createdAt),
-					r.updatedAt=datetime($createdAt),
+					r.createdAt=$createdAt,
+					r.updatedAt=$createdAt,	
 					r.source=$source,
 					r.sourceOfTruth=$source,
 					r.appSource=$appSource,
-					r.content=$content,
-					r.dueDate=datetime($dueDate),
-					r.dismissed=$dismissed`, tenant)
+					r.content=$content,	
+					r.dueDate=$dueDate,
+					r.dismissed=$dismissed
+					
+				WITH t, r	
+			
+				MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$userId})
+				MERGE (u)<-[:REMINDER_BELONGS_TO_USER]-(r)
+
+				WITH t, r
+				MATCH (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {id:$organizationId})
+				MERGE (o)<-[:REMINDER_BELONGS_TO_ORGANIZATION]-(r)`, tenant)
 	params := map[string]interface{}{
-		"tenant":    tenant,
-		"id":        id,
-		"userId":    userId,
-		"orgId":     orgId,
-		"content":   content,
-		"source":    source,
-		"appSource": appSource,
-		"createdAt": createdAt,
-		"dueDate":   dueDate,
-		"dismissed": false,
-	}
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
-	if err != nil {
-		tracing.TraceErr(span, err)
-	}
-	return err
-}
-
-func (r *reminderWriteRepository) LinkReminderToUser(ctx context.Context, tenant, reminderId, userId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderWriteRepository.LinkReminderToUser")
-	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, reminderId)
-
-	cypher := `MATCH (u:User {id:$userId})
-				MATCH (:Tenant {name:$tenant})<-[:REMINDER_BELONGS_TO_TENANT]-(r:Reminder {id:$reminderId})
-				MERGE (u)<-[:REMINDER_BELONGS_TO_USER]-(r)`
-	params := map[string]interface{}{
-		"tenant":     tenant,
-		"userId":     userId,
-		"reminderId": reminderId,
-	}
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
-	if err != nil {
-		tracing.TraceErr(span, err)
-	}
-	return err
-}
-
-func (r *reminderWriteRepository) LinkReminderToOrganization(ctx context.Context, tenant, reminderId, orgId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderWriteRepository.LinkReminderToOrganization")
-	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, reminderId)
-
-	cypher := `MATCH (o:Organization {id:$orgId})
-				MATCH (:Tenant {name:$tenant})<-[:REMINDER_BELONGS_TO_TENANT]-(r:Reminder {id:$reminderId})
-				MERGE (o)<-[:REMINDER_BELONGS_TO_ORGANIZATION]-(r)`
-	params := map[string]interface{}{
-		"tenant":     tenant,
-		"orgId":      orgId,
-		"reminderId": reminderId,
+		"tenant":         tenant,
+		"id":             id,
+		"userId":         userId,
+		"organizationId": organizationId,
+		"content":        content,
+		"source":         source,
+		"appSource":      appSource,
+		"createdAt":      createdAt,
+		"dueDate":        dueDate,
+		"dismissed":      false,
 	}
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {

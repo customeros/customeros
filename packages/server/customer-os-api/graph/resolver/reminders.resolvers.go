@@ -12,7 +12,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
-	"github.com/opentracing/opentracing-go/log"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 )
 
 // ReminderCreate is the resolver for the reminder_Create field.
@@ -29,14 +29,7 @@ func (r *mutationResolver) ReminderCreate(ctx context.Context, input model.Remin
 		return &model.Reminder{Metadata: &model.Metadata{ID: id}}, err
 	}
 
-	reminder, err := r.Services.ReminderService.GetReminderById(ctx, id)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "GetReminderById details not yet available. GetReminderById id: %s", id)
-		return &model.Reminder{Metadata: &model.Metadata{ID: id}}, nil
-	}
-	span.LogFields(log.String("response.ReminderId", id))
-	return mapper.MapEntityToReminder(reminder), nil
+	return mapper.MapEntityToReminder(&neo4jentity.ReminderEntity{Id: id}), nil
 }
 
 // ReminderUpdate is the resolver for the reminder_Update field.
@@ -53,14 +46,7 @@ func (r *mutationResolver) ReminderUpdate(ctx context.Context, input model.Remin
 		return &model.Reminder{Metadata: &model.Metadata{ID: input.ID}}, err
 	}
 
-	updatedReminderEntity, err := r.Services.ReminderService.GetReminderById(ctx, input.ID)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "GetReminderById details not yet available. GetReminderById id: %s", input.ID)
-		return &model.Reminder{Metadata: &model.Metadata{ID: input.ID}}, nil
-	}
-	span.LogFields(log.String("response.ReminderId", input.ID))
-	return mapper.MapEntityToReminder(updatedReminderEntity), nil
+	return mapper.MapEntityToReminder(&neo4jentity.ReminderEntity{Id: input.ID}), nil
 }
 
 // Reminder is the resolver for the reminder field.
