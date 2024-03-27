@@ -39,6 +39,12 @@ export type GetContractQuery = {
     currency?: Types.Currency | null;
     contractName: string;
     autoRenew: boolean;
+    attachments?: Array<{
+      __typename?: 'Attachment';
+      id: string;
+      basePath: string;
+      fileName: string;
+    }> | null;
     billingDetails?: {
       __typename?: 'BillingDetails';
       addressLine1?: string | null;
@@ -71,6 +77,11 @@ export const GetContractDocument = `
     currency
     contractName
     autoRenew
+    attachments {
+      id
+      basePath
+      fileName
+    }
     billingDetails {
       addressLine1
       addressLine2

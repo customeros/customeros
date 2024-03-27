@@ -167,7 +167,6 @@ export default async function RootLayout({
               />
             </Providers>
           </ThemeProvider>
-          <div id='tooltip-portal' className='absolute z-[1000]' />
         </body>
       </html>
     </>

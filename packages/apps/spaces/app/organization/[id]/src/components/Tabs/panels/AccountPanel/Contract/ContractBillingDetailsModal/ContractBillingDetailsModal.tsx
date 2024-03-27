@@ -330,6 +330,7 @@ export const ContractBillingDetailsModal = ({
             </ModalHeader>
             <ContractBillingDetailsForm
               formId={formId}
+              contractId={contractId}
               tenantBillingProfile={
                 tenantBillingProfile
                   ?.tenantBillingProfiles?.[0] as TenantBillingProfile

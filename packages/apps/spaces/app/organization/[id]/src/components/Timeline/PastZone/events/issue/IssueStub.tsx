@@ -67,16 +67,17 @@ export const IssueStub: FC<{ data: IssueWithAliases }> = ({ data }) => {
             {data?.subject ?? '[No subject]'}
           </CardHeader>
           <CardBody p={0} maxW='calc(476px - 77px)'>
-            <Text color='gray.500' noOfLines={3} fontSize='sm'>
-              {data?.description ? (
-                <MarkdownContentRenderer
-                  markdownContent={data?.description}
-                  showAsInlineText
-                />
-              ) : (
-                '[No description]'
-              )}
-            </Text>
+            {data?.description ? (
+              <MarkdownContentRenderer
+                showAsInlineText
+                markdownContent={data?.description}
+                className='text-gray-500 line-clamp-3 text-sm'
+              />
+            ) : (
+              <Text color='gray.500' noOfLines={3} fontSize='sm'>
+                {'[No description]'}
+              </Text>
+            )}
           </CardBody>
         </Flex>
         <CardFooter
