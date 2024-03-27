@@ -1,6 +1,7 @@
 package event
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/pkg/errors"
@@ -17,7 +18,7 @@ func NewOpportunityUpdateNextCycleDateEvent(aggregate eventstore.Aggregate, upda
 	eventData := OpportunityUpdateNextCycleDateEvent{
 		Tenant:    aggregate.GetTenant(),
 		UpdatedAt: updatedAt,
-		RenewedAt: renewedAt,
+		RenewedAt: utils.ToDatePtr(renewedAt),
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

@@ -188,7 +188,7 @@ func (h *OpportunityEventHandler) OnUpdateNextCycleDate(ctx context.Context, evt
 	}
 
 	opportunityId := aggregate.GetOpportunityObjectID(evt.GetAggregateID(), eventData.Tenant)
-	err := h.repositories.Neo4jRepositories.OpportunityWriteRepository.UpdateNextCycleDate(ctx, eventData.Tenant, opportunityId, eventData.UpdatedAt, eventData.RenewedAt)
+	err := h.repositories.Neo4jRepositories.OpportunityWriteRepository.UpdateNextRenewalDate(ctx, eventData.Tenant, opportunityId, eventData.UpdatedAt, eventData.RenewedAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while updating next cycle date for opportunity %s: %s", opportunityId, err.Error())
