@@ -26,17 +26,17 @@ export type CreateReminderMutation = {
   __typename?: 'Mutation';
   reminder_Create: {
     __typename?: 'Reminder';
-    content: string;
-    dueDate: any;
-    dismissed: boolean;
+    content?: string | null;
+    dueDate?: any | null;
+    dismissed?: boolean | null;
     metadata: { __typename?: 'Metadata'; id: string };
-    owner: {
+    owner?: {
       __typename?: 'User';
       id: string;
       firstName: string;
       lastName: string;
       name?: string | null;
-    };
+    } | null;
   };
 };
 

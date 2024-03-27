@@ -4,7 +4,7 @@ import path from 'path';
 import dotenv from 'dotenv';
 
 dotenv.config({
-  path: path.join(__dirname, '../', '.env.production'),
+  path: path.join(__dirname, '../', '.env.development'),
 });
 
 const config: CodegenConfig = {
@@ -14,7 +14,7 @@ const config: CodegenConfig = {
       [`${process.env.CUSTOMER_OS_API_PATH}/query`]: {
         headers: {
           'X-Openline-API-KEY': process.env.CUSTOMER_OS_API_KEY as string,
-          'X-Openline-USERNAME': 'edi@openline.ai',
+          'X-Openline-USERNAME': 'edi@customeros.ai',
         },
       },
     },
