@@ -183,6 +183,7 @@ func TestOpportunityService_UpdateRenewalOpportunity(t *testing.T) {
 		Amount:            10000,
 		OwnerUserId:       "user-id-123",
 		RenewalLikelihood: opportunitypb.RenewalLikelihood_MEDIUM_RENEWAL,
+		RenewalApproved:   true,
 		SourceFields: &commonpb.SourceFields{
 			Source:    "openline",
 			AppSource: "unit-test",
@@ -217,6 +218,7 @@ func TestOpportunityService_UpdateRenewalOpportunity(t *testing.T) {
 	require.Equal(t, "Some comments", eventData.Comments)
 	require.Equal(t, neo4jenum.RenewalLikelihoodMedium.String(), eventData.RenewalLikelihood)
 	require.Equal(t, "openline", eventData.Source)
+	require.True(t, eventData.RenewalApproved)
 }
 
 func TestOpportunityService_CloseLooseOpportunity(t *testing.T) {

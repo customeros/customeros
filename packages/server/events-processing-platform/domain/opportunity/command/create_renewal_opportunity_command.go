@@ -12,16 +12,18 @@ type CreateRenewalOpportunityCommand struct {
 	Source            commonmodel.Source
 	ContractId        string
 	RenewalLikelihood neo4jenum.RenewalLikelihood
+	RenewalApproved   bool
 	CreatedAt         *time.Time
 	UpdatedAt         *time.Time
 }
 
-func NewCreateRenewalOpportunityCommand(opportunityId, tenant, loggedInUserId, contractId string, renewalLikelihood neo4jenum.RenewalLikelihood, source commonmodel.Source, createdAt, updatedAt *time.Time) *CreateRenewalOpportunityCommand {
+func NewCreateRenewalOpportunityCommand(opportunityId, tenant, loggedInUserId, contractId string, renewalLikelihood neo4jenum.RenewalLikelihood, renewalApproved bool, source commonmodel.Source, createdAt, updatedAt *time.Time) *CreateRenewalOpportunityCommand {
 	return &CreateRenewalOpportunityCommand{
 		BaseCommand:       eventstore.NewBaseCommand(opportunityId, tenant, loggedInUserId),
 		Source:            source,
 		ContractId:        contractId,
 		RenewalLikelihood: renewalLikelihood,
+		RenewalApproved:   renewalApproved,
 		CreatedAt:         createdAt,
 		UpdatedAt:         updatedAt,
 	}
