@@ -1,0 +1,10 @@
+mutation CreateContract($orgId: ID!) {
+contract_Create(
+    input: {
+        organizationId: $orgId
+    }
+  ) {
+    id
+    contractName
+  }
+}

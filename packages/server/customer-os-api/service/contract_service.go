@@ -26,7 +26,7 @@ import (
 )
 
 type ContractService interface {
-	Create(ctx context.Context, contract *ContractCreateData) (string, error)
+	Create(ctx context.Context, contractDetails *ContractCreateData) (string, error)
 	Update(ctx context.Context, input model.ContractUpdateInput) error
 	SoftDeleteContract(ctx context.Context, contractId string) (bool, error)
 	GetById(ctx context.Context, id string) (*neo4jentity.ContractEntity, error)
@@ -52,8 +52,7 @@ func NewContractService(log logger.Logger, repositories *repository.Repositories
 }
 
 type ContractCreateData struct {
-	ContractEntity    *neo4jentity.ContractEntity
-	OrganizationId    string
+	Input             model.ContractInput
 	ExternalReference *neo4jentity.ExternalSystemEntity
 	Source            neo4jentity.DataSource
 	AppSource         string
@@ -64,12 +63,6 @@ func (s *contractService) Create(ctx context.Context, contractDetails *ContractC
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("contractDetails", contractDetails))
-
-	if contractDetails.ContractEntity == nil {
-		err := fmt.Errorf("contract entity is nil")
-		tracing.TraceErr(span, err)
-		return "", err
-	}
 
 	contractId, err := s.createContractWithEvents(ctx, contractDetails)
 	if err != nil {
@@ -88,32 +81,58 @@ func (s *contractService) createContractWithEvents(ctx context.Context, contract
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	createContractRequest := contractpb.CreateContractGrpcRequest{
-		Tenant:             common.GetTenantFromContext(ctx),
-		OrganizationId:     contractDetails.OrganizationId,
-		Name:               contractDetails.ContractEntity.Name,
-		ContractUrl:        contractDetails.ContractEntity.ContractUrl,
-		SignedAt:           utils.ConvertTimeToTimestampPtr(contractDetails.ContractEntity.SignedAt),
-		ServiceStartedAt:   utils.ConvertTimeToTimestampPtr(contractDetails.ContractEntity.ServiceStartedAt),
-		InvoicingStartDate: utils.ConvertTimeToTimestampPtr(contractDetails.ContractEntity.InvoicingStartDate),
-		InvoicingEnabled:   contractDetails.ContractEntity.InvoicingEnabled,
-		LoggedInUserId:     common.GetUserIdFromContext(ctx),
+		Tenant:           common.GetTenantFromContext(ctx),
+		OrganizationId:   contractDetails.Input.OrganizationID,
+		Name:             utils.IfNotNilString(contractDetails.Input.Name),
+		ContractUrl:      utils.IfNotNilString(contractDetails.Input.ContractURL),
+		InvoicingEnabled: utils.IfNotNilBool(contractDetails.Input.BillingEnabled),
+		LoggedInUserId:   common.GetUserIdFromContext(ctx),
 		SourceFields: &commonpb.SourceFields{
 			Source:    string(contractDetails.Source),
 			AppSource: contractDetails.AppSource,
 		},
-		RenewalPeriods:         contractDetails.ContractEntity.RenewalPeriods,
 		PayOnline:              true,
 		PayAutomatically:       true,
 		CanPayWithCard:         true,
 		CanPayWithDirectDebit:  true,
 		CanPayWithBankTransfer: true,
 		Check:                  true,
-		AutoRenew:              utils.IfNotNilBool(contractDetails.ContractEntity.AutoRenew, func() bool { return true }),
-		DueDays:                contractDetails.ContractEntity.DueDays,
+		AutoRenew:              utils.IfNotNilBool(contractDetails.Input.AutoRenew),
+		DueDays:                utils.IfNotNilInt64(contractDetails.Input.DueDays),
+	}
+
+	if contractDetails.Input.ContractSigned != nil {
+		createContractRequest.SignedAt = utils.ConvertTimeToTimestampPtr(contractDetails.Input.ContractSigned)
+	} else if contractDetails.Input.SignedAt != nil {
+		createContractRequest.SignedAt = utils.ConvertTimeToTimestampPtr(contractDetails.Input.SignedAt)
+	}
+	if contractDetails.Input.ServiceStarted != nil {
+		createContractRequest.ServiceStartedAt = utils.ConvertTimeToTimestampPtr(contractDetails.Input.ServiceStarted)
+	} else if contractDetails.Input.ServiceStartedAt != nil {
+		createContractRequest.ServiceStartedAt = utils.ConvertTimeToTimestampPtr(contractDetails.Input.ServiceStartedAt)
+	}
+
+	if contractDetails.Input.InvoicingStartDate != nil {
+		createContractRequest.InvoicingStartDate = utils.ConvertTimeToTimestampPtr(contractDetails.Input.InvoicingStartDate)
+	}
+
+	if contractDetails.Input.CommittedPeriods != nil {
+		createContractRequest.RenewalPeriods = contractDetails.Input.CommittedPeriods
+	} else {
+		createContractRequest.RenewalPeriods = contractDetails.Input.RenewalPeriods
+	}
+	if contractDetails.Input.ContractName != nil {
+		createContractRequest.Name = *contractDetails.Input.ContractName
 	}
 
 	// prepare renewal cycle
-	switch contractDetails.ContractEntity.RenewalCycle {
+	renewalCycle := neo4jenum.RenewalCycleNone
+	if contractDetails.Input.ContractRenewalCycle != nil {
+		renewalCycle = mapper.MapContractRenewalCycleFromModel(*contractDetails.Input.ContractRenewalCycle)
+	} else if contractDetails.Input.RenewalCycle != nil {
+		renewalCycle = mapper.MapContractRenewalCycleFromModel(*contractDetails.Input.RenewalCycle)
+	}
+	switch renewalCycle {
 	case neo4jenum.RenewalCycleMonthlyRenewal:
 		createContractRequest.RenewalCycle = contractpb.RenewalCycle_MONTHLY_RENEWAL
 	case neo4jenum.RenewalCycleQuarterlyRenewal:
@@ -124,21 +143,9 @@ func (s *contractService) createContractWithEvents(ctx context.Context, contract
 		createContractRequest.RenewalCycle = contractpb.RenewalCycle_NONE
 	}
 
-	// prepare billing cycle
-	switch contractDetails.ContractEntity.BillingCycle {
-	case neo4jenum.BillingCycleMonthlyBilling:
-		createContractRequest.BillingCycle = commonpb.BillingCycle_MONTHLY_BILLING
-	case neo4jenum.BillingCycleQuarterlyBilling:
-		createContractRequest.BillingCycle = commonpb.BillingCycle_QUARTERLY_BILLING
-	case neo4jenum.BillingCycleAnnuallyBilling:
-		createContractRequest.BillingCycle = commonpb.BillingCycle_ANNUALLY_BILLING
-	default:
-		createContractRequest.BillingCycle = commonpb.BillingCycle_NONE_BILLING
-	}
-
 	// prepare currency
-	if contractDetails.ContractEntity.Currency.String() != "" {
-		createContractRequest.Currency = contractDetails.ContractEntity.Currency.String()
+	if contractDetails.Input.Currency != nil && contractDetails.Input.Currency.String() != "" {
+		createContractRequest.Currency = contractDetails.Input.Currency.String()
 	} else {
 		// if not provided, get default currency from tenant settings
 		dbNode, err := s.repositories.Neo4jRepositories.TenantReadRepository.GetTenantSettings(ctx, common.GetTenantFromContext(ctx))

@@ -134,8 +134,7 @@ func (r *mutationResolver) ContractCreate(ctx context.Context, input model.Contr
 	tracing.LogObjectAsJson(span, "request.contractInput", input)
 
 	contractId, err := r.Services.ContractService.Create(ctx, &service.ContractCreateData{
-		ContractEntity:    mapper.MapContractInputToEntity(input),
-		OrganizationId:    input.OrganizationID,
+		Input:             input,
 		ExternalReference: mapper.MapExternalSystemReferenceInputToRelationship(input.ExternalReference),
 		Source:            neo4jentity.DataSourceOpenline,
 		AppSource:         utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
