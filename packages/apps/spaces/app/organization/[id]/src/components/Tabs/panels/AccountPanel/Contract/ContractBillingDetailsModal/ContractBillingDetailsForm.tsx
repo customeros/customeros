@@ -11,7 +11,6 @@ import { Text } from '@ui/typography/Text';
 import { FormInput } from '@ui/form/Input';
 import { ModalBody } from '@ui/overlay/Modal';
 import { Tooltip } from '@ui/overlay/Tooltip';
-import { FormUrlInput } from '@ui/form/UrlInput';
 import { FormSelect } from '@ui/form/SyncSelect';
 import { InfoCircle } from '@ui/media/icons/InfoCircle';
 import { FormSwitch } from '@ui/form/Switch/FromSwitch';
@@ -27,13 +26,15 @@ import {
 } from '@graphql/types';
 import { PaymentDetailsPopover } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/PaymentDetailsPopover';
 
+import { ContractUploader } from './ContractUploader';
+
 interface SubscriptionServiceModalProps {
   formId: string;
   currency?: string;
+  contractId: string;
   isEmailValid: boolean;
   organizationName: string;
   country?: SelectOption<string> | null;
-
   tenantBillingProfile?: TenantBillingProfile | null;
   bankAccounts: Array<BankAccount> | null | undefined;
   onSetIsBillingDetailsHovered: (newState: boolean) => void;
@@ -42,6 +43,7 @@ interface SubscriptionServiceModalProps {
 
 export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
   formId,
+  contractId,
   isEmailValid,
   onSetIsBillingDetailsFocused,
   onSetIsBillingDetailsHovered,
@@ -97,20 +99,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
 
   return (
     <ModalBody pb='0' gap={4} display='flex' flexDir='column' flex={1}>
-      <FormUrlInput
-        label='Link to contract'
-        isLabelVisible
-        labelProps={{
-          fontSize: 'sm',
-          mb: 0,
-          fontWeight: 'semibold',
-        }}
-        formId={formId}
-        name='contractUrl'
-        textOverflow='ellipsis'
-        placeholder='Paste or enter a contract link'
-        autoComplete='off'
-      />
+      <ContractUploader contractId={contractId} />
 
       <FormInput
         label='Organization legal name'

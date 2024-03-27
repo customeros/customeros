@@ -165,7 +165,7 @@ const AccountPanelComponent = () => {
             >
               Invoices •{' '}
               {isFetchingInvoicesCount ? (
-                <Skeleton height={3} width={2} ml={1} />
+                <Skeleton as='span' height={3} width={2} ml={1} />
               ) : (
                 invoicesCountData?.invoices.totalElements
               )}

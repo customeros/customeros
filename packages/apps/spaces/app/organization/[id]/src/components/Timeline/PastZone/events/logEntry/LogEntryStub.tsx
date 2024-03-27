@@ -125,6 +125,7 @@ export const LogEntryStub = ({ data }: LogEntryStubProps) => {
               wrote
             </Text>
             <HtmlContentRenderer
+              as='span'
               position='relative'
               zIndex={1}
               pointerEvents='none'

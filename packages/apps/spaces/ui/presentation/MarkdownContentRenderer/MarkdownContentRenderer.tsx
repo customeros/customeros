@@ -1,41 +1,34 @@
-import React, { useMemo } from 'react';
+import { FC } from 'react';
 import ReactMarkdown from 'react-markdown';
 
-import { ChakraProps } from '@chakra-ui/react';
-import { InteractivityProps } from '@chakra-ui/styled-system';
+import { twMerge } from 'tailwind-merge';
 
-import { Flex } from '@ui/layout/Flex';
-import { getTextRendererStyles } from '@ui/theme/textRendererStyles';
-
-interface MarkdownContentRendererProps extends InteractivityProps, ChakraProps {
+interface MarkdownContentRendererProps
+  extends React.HTMLAttributes<HTMLDivElement> {
   markdownContent: string;
   showAsInlineText?: boolean;
 }
 
-export const MarkdownContentRenderer: React.FC<
-  MarkdownContentRendererProps
-> = ({
+export const MarkdownContentRenderer: FC<MarkdownContentRendererProps> = ({
   markdownContent,
-  noOfLines,
-  pointerEvents,
   showAsInlineText,
+  className,
   ...rest
 }) => {
-  const textRendererStyles = useMemo(
-    () => getTextRendererStyles(showAsInlineText),
-    [showAsInlineText],
-  );
+  const textRendererClass = showAsInlineText
+    ? 'inline-text-renderer'
+    : 'block-text-renderer';
 
   return (
-    <Flex
-      as={ReactMarkdown}
-      flexDir='column'
-      pointerEvents={pointerEvents}
-      noOfLines={noOfLines}
+    <ReactMarkdown
       {...rest}
-      sx={textRendererStyles}
+      className={twMerge(
+        'flex flex-col block-text-renderer',
+        textRendererClass,
+        className,
+      )}
     >
       {markdownContent}
-    </Flex>
+    </ReactMarkdown>
   );
 };

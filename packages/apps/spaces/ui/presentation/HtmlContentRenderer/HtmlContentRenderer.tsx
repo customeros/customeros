@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 
 import linkifyHtml from 'linkify-html';
 import sanitizeHtml from 'sanitize-html';
-import { ChakraProps } from '@chakra-ui/react';
+import { FlexProps } from '@chakra-ui/react';
 import { InteractivityProps } from '@chakra-ui/styled-system';
 import parse, {
   Element,
@@ -15,7 +15,7 @@ import { getTextRendererStyles } from '@ui/theme/textRendererStyles';
 
 import { ImageAttachment } from './ImageAttachment';
 
-interface HtmlContentRendererProps extends InteractivityProps, ChakraProps {
+interface HtmlContentRendererProps extends InteractivityProps, FlexProps {
   htmlContent: string;
   showAsInlineText?: boolean;
 }

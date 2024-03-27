@@ -117,7 +117,7 @@ export const RootSidenav = () => {
             alt='CustomerOS'
             width={136}
             height={30}
-            className='pointer-events-none transition-opacity-250 ease-in-out max-h-8 w-auto'
+            className='pointer-events-none transition-opacity-250 ease-in-out h-[30px] w-auto'
           />
         ) : (
           <Skeleton className='w-full h-8 mr-2' />

@@ -1,4 +1,4 @@
-import React, { cloneElement } from 'react';
+import React, { forwardRef, cloneElement } from 'react';
 
 import { twMerge } from 'tailwind-merge';
 import { cva, type VariantProps } from 'class-variance-authority';
@@ -11,7 +11,7 @@ import {
   outlineButton,
 } from './Button.variants';
 
-const buttonSize = cva([], {
+export const buttonSize = cva([], {
   variants: {
     size: {
       sm: ['px-3', 'py-1', 'rounded-lg'],
@@ -39,78 +39,84 @@ export interface ButtonProps
   variant?: 'link' | 'ghost' | 'solid' | 'outline';
 }
 
-export const Button = ({
-  leftIcon,
-  children,
-  className,
-  rightIcon,
-  colorScheme,
-  spinner,
-  variant,
-  isLoading = false,
-  isDisabled = false,
-  size,
-  ...props
-}: ButtonProps) => {
-  const buttonVariant = (() => {
-    switch (variant) {
-      case 'link':
-        return linkButton;
-      case 'ghost':
-        return ghostButton;
-      case 'solid':
-        return solidButton;
-      case 'outline':
-        return outlineButton;
-      default:
-        return solidButton;
-    }
-  })();
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+  (
+    {
+      leftIcon,
+      children,
+      className,
+      rightIcon,
+      colorScheme,
+      spinner,
+      variant,
+      isLoading = false,
+      isDisabled = false,
+      size,
+      ...props
+    },
+    ref,
+  ) => {
+    const buttonVariant = (() => {
+      switch (variant) {
+        case 'link':
+          return linkButton;
+        case 'ghost':
+          return ghostButton;
+        case 'solid':
+          return solidButton;
+        case 'outline':
+          return outlineButton;
+        default:
+          return solidButton;
+      }
+    })();
 
-  return (
-    <button
-      {...props}
-      className={twMerge(
-        buttonVariant({ colorScheme, className }),
-        buttonSize({ className, size }),
-        isLoading ? 'opacity-50 cursor-not-allowed' : '',
-      )}
-      disabled={isLoading || isDisabled}
-    >
-      {isLoading && spinner && (
-        <span className='relative inline-flex'>{spinner}</span>
-      )}
+    return (
+      <button
+        ref={ref}
+        {...props}
+        className={twMerge(
+          buttonVariant({ colorScheme, className }),
+          buttonSize({ className, size }),
+          isLoading ? 'opacity-50 cursor-not-allowed' : '',
+        )}
+        disabled={isLoading || isDisabled}
+      >
+        {isLoading && spinner && (
+          <span className='relative inline-flex'>{spinner}</span>
+        )}
 
-      {!isLoading && leftIcon && (
-        <>
-          {cloneElement(leftIcon, {
-            className: twMerge(
-              iconVariant({
-                size,
-                variant,
-                colorScheme,
-                className: leftIcon.props.className,
-              }),
-            ),
-          })}
-        </>
-      )}
+        {!isLoading && leftIcon && (
+          <>
+            {cloneElement(leftIcon, {
+              className: twMerge(
+                iconVariant({
+                  size,
+                  variant,
+                  colorScheme,
+                  className: leftIcon.props.className,
+                }),
+              ),
+            })}
+          </>
+        )}
 
-      {!isLoading && children}
-      {!isLoading && rightIcon && (
-        <>
-          {cloneElement(rightIcon, {
-            className: twMerge(
-              iconVariant({
-                size,
-                variant,
-                colorScheme,
-                className: rightIcon.props.className,
-              }),
-            ),
-          })}
-        </>
-      )}
-    </button>
-  );
-};
+        {!isLoading && children}
+        {!isLoading && rightIcon && (
+          <>
+            {cloneElement(rightIcon, {
+              className: twMerge(
+                iconVariant({
+                  size,
+                  variant,
+                  colorScheme,
+                  className: rightIcon.props.className,
+                }),
+              ),
+            })}
+          </>
+        )}
+      </button>
+    );
+  },
+);

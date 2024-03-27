@@ -155,9 +155,10 @@ export const IssuePreviewModal: FC = () => {
             <TagLabel>#{issue?.externalLinks?.[0]?.externalId}</TagLabel>
           </Tag>
         </HStack>
-        <Text fontSize='sm' mb={2}>
-          <MarkdownContentRenderer markdownContent={issue?.description ?? ''} />
-        </Text>
+        <MarkdownContentRenderer
+          className='text-sm mb-2'
+          markdownContent={issue?.description ?? ''}
+        />
 
         {issue?.tags?.length && (
           <Text color='gray.500' fontSize='sm' mb={6}>
