@@ -28,7 +28,6 @@ func (dfi DialFactoryImpl) GetEventsProcessingPlatformConn() (*grpc.ClientConn, 
 	if dfi.eventsProcessingPlatformConn != nil {
 		return dfi.eventsProcessingPlatformConn, nil
 	}
-	// TODO: alexb investigate for required dial options
 	conn, err := grpc.Dial(dfi.conf.EventsProcessingPlatform.EventsProcessingPlatformUrl, grpc.WithInsecure(),
 		grpc.WithUnaryInterceptor(
 			interceptor.ApiKeyEnricher(dfi.conf.EventsProcessingPlatform.EventsProcessingPlatformApiKey),
