@@ -226,6 +226,7 @@ const AttachmentItem = ({
       <a
         href={href}
         target='_blank'
+        rel='noopener noreferrer'
         className='text-sm text-gray-500 underline group-hover:text-gray-700'
       >
         {fileName}
