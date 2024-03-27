@@ -7,10 +7,11 @@ import (
 )
 
 var contractStatusByModel = map[model.ContractStatus]neo4jenum.ContractStatus{
-	model.ContractStatusUndefined: neo4jenum.ContractStatusUndefined,
-	model.ContractStatusDraft:     neo4jenum.ContractStatusDraft,
-	model.ContractStatusLive:      neo4jenum.ContractStatusLive,
-	model.ContractStatusEnded:     neo4jenum.ContractStatusEnded,
+	model.ContractStatusUndefined:     neo4jenum.ContractStatusUndefined,
+	model.ContractStatusDraft:         neo4jenum.ContractStatusDraft,
+	model.ContractStatusLive:          neo4jenum.ContractStatusLive,
+	model.ContractStatusEnded:         neo4jenum.ContractStatusEnded,
+	model.ContractStatusOutOfContract: neo4jenum.ContractStatusOutOfContract,
 }
 
 var contractStatusByValue = utils.ReverseMap(contractStatusByModel)
