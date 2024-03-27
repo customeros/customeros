@@ -186,7 +186,7 @@ func (r *contractWriteRepository) CreateForOrganization(ctx context.Context, ten
 		"renewalCycle":           data.RenewalCycle,
 		"renewalPeriods":         data.RenewalPeriods,
 		"signedAt":               utils.TimePtrFirstNonNilNillableAsAny(data.SignedAt),
-		"serviceStartedAt":       utils.TimePtrFirstNonNilNillableAsAny(data.ServiceStartedAt),
+		"serviceStartedAt":       utils.ToNeo4jDateAsAny(data.ServiceStartedAt),
 		"createdByUserId":        data.CreatedByUserId,
 		"currency":               data.Currency.String(),
 		"billingCycle":           data.BillingCycle.String(),
@@ -252,7 +252,7 @@ func (r *contractWriteRepository) UpdateContract(ctx context.Context, tenant, co
 	}
 	if data.UpdateServiceStartedAt {
 		cypher += `, ct.serviceStartedAt = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $serviceStartedAt ELSE ct.serviceStartedAt END `
-		params["serviceStartedAt"] = utils.TimePtrFirstNonNilNillableAsAny(data.ServiceStartedAt)
+		params["serviceStartedAt"] = utils.ToNeo4jDateAsAny(data.ServiceStartedAt)
 	}
 	if data.UpdateSignedAt {
 		cypher += `, ct.signedAt = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $signedAt ELSE ct.signedAt END `

@@ -71,7 +71,7 @@ type OpportunityWriteRepository interface {
 	ReplaceOwner(ctx context.Context, tenant, opportunityId, userId string) error
 	CreateRenewal(ctx context.Context, tenant, opportunityId string, data RenewalOpportunityCreateFields) error
 	UpdateRenewal(ctx context.Context, tenant, opportunityId string, data RenewalOpportunityUpdateFields) error
-	UpdateNextCycleDate(ctx context.Context, tenant, opportunityId string, updatedAt time.Time, renewedAt *time.Time) error
+	UpdateNextRenewalDate(ctx context.Context, tenant, opportunityId string, updatedAt time.Time, renewedAt *time.Time) error
 	CloseWin(ctx context.Context, tenant, opportunityId string, updatedAt, closedAt time.Time) error
 	CloseLoose(ctx context.Context, tenant, opportunityId string, updatedAt, closedAt time.Time) error
 }
@@ -312,21 +312,22 @@ func (r *opportunityWriteRepository) UpdateRenewal(ctx context.Context, tenant, 
 	return err
 }
 
-func (r *opportunityWriteRepository) UpdateNextCycleDate(ctx context.Context, tenant, opportunityId string, updatedAt time.Time, renewedAt *time.Time) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityWriteRepository.UpdateNextCycleDate")
+func (r *opportunityWriteRepository) UpdateNextRenewalDate(ctx context.Context, tenant, opportunityId string, updatedAt time.Time, renewedAt *time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityWriteRepository.UpdateNextRenewalDate")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, opportunityId)
 
 	cypher := fmt.Sprintf(`MATCH (op:Opportunity {id:$opportunityId}) 
-							WHERE op:Opportunity_%s AND op.internalStage=$internalStage
-							SET op.updatedAt=$updatedAt, op.renewedAt=$renewedAt`, tenant)
+							WHERE op:RenewalOpportunity AND op:Opportunity_%s AND op.internalStage=$internalStage
+							SET op.updatedAt=$updatedAt, 
+								op.renewedAt=$renewedAt`, tenant)
 	params := map[string]any{
 		"tenant":        tenant,
 		"opportunityId": opportunityId,
 		"updatedAt":     updatedAt,
 		"internalStage": enum.OpportunityInternalStageOpen.String(),
-		"renewedAt":     utils.TimePtrFirstNonNilNillableAsAny(renewedAt),
+		"renewedAt":     utils.ToNeo4jDateAsAny(renewedAt),
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

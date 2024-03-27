@@ -47,12 +47,12 @@ type ContractUpdateEvent struct {
 	DueDays                int64                      `json:"dueDays,omitempty"`
 }
 
-func NewContractUpdateEvent(aggr eventstore.Aggregate, dataFields model.ContractDataFields, externalSystem commonmodel.ExternalSystem, source string, updatedAt time.Time, fieldsMask []string) (eventstore.Event, error) {
+func NewContractUpdateEvent(a eventstore.Aggregate, dataFields model.ContractDataFields, externalSystem commonmodel.ExternalSystem, source string, updatedAt time.Time, fieldsMask []string) (eventstore.Event, error) {
 	eventData := ContractUpdateEvent{
-		Tenant:                 aggr.GetTenant(),
+		Tenant:                 a.GetTenant(),
 		Name:                   dataFields.Name,
 		ContractUrl:            dataFields.ContractUrl,
-		ServiceStartedAt:       dataFields.ServiceStartedAt,
+		ServiceStartedAt:       utils.ToDatePtr(dataFields.ServiceStartedAt),
 		SignedAt:               dataFields.SignedAt,
 		EndedAt:                dataFields.EndedAt,
 		RenewalCycle:           dataFields.RenewalCycle,
@@ -81,6 +81,8 @@ func NewContractUpdateEvent(aggr eventstore.Aggregate, dataFields model.Contract
 	}
 	if eventData.DueDays < 0 {
 		eventData.DueDays = 0
+	} else if eventData.DueDays > 365 {
+		eventData.DueDays = 365
 	}
 	if eventData.UpdateNextInvoiceDate() {
 		eventData.NextInvoiceDate = utils.ToDatePtr(dataFields.NextInvoiceDate)
@@ -103,7 +105,7 @@ func NewContractUpdateEvent(aggr eventstore.Aggregate, dataFields model.Contract
 		return eventstore.Event{}, errors.Wrap(err, "failed to validate ContractUpdateEvent")
 	}
 
-	event := eventstore.NewBaseEvent(aggr, ContractUpdateV1)
+	event := eventstore.NewBaseEvent(a, ContractUpdateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, errors.Wrap(err, "error setting json data for ContractUpdateEvent")
 	}

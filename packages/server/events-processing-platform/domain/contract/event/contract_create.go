@@ -68,6 +68,8 @@ func NewContractCreateEvent(aggregate eventstore.Aggregate, dataFields model.Con
 	}
 	if eventData.DueDays < 0 {
 		eventData.DueDays = 0
+	} else if eventData.DueDays > 365 {
+		eventData.DueDays = 365
 	}
 	if externalSystem.Available() {
 		eventData.ExternalSystem = externalSystem
