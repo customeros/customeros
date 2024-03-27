@@ -6,6 +6,10 @@ import (
 	"time"
 )
 
+type ContractInternalFields struct {
+	StatusRenewalRequestedAt *time.Time
+}
+
 type ContractEntity struct {
 	DataLoaderKey
 	Id                              string
@@ -45,6 +49,7 @@ type ContractEntity struct {
 	AutoRenew                       bool
 	Check                           bool
 	DueDays                         int64
+	ContractInternalFields          ContractInternalFields
 }
 
 type ContractEntities []ContractEntity

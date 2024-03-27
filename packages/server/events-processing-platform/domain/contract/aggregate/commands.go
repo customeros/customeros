@@ -44,8 +44,6 @@ func (a *ContractAggregate) HandleRequest(ctx context.Context, request any) (any
 		return nil, a.updateContract(ctx, r)
 	case *contractpb.SoftDeleteContractGrpcRequest:
 		return nil, a.softDeleteContract(ctx, r)
-	case *contractpb.RefreshContractStatusGrpcRequest:
-		return nil, a.refreshContractStatus(ctx, r)
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
 		return nil, eventstore.ErrInvalidRequestType
@@ -56,7 +54,9 @@ func (a *ContractTempAggregate) HandleRequest(ctx context.Context, request any) 
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractTempAggregate.HandleRequest")
 	defer span.Finish()
 
-	switch request.(type) {
+	switch r := request.(type) {
+	case *contractpb.RefreshContractStatusGrpcRequest:
+		return nil, a.refreshContractStatus(ctx, r)
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
 		return nil, eventstore.ErrInvalidRequestType
@@ -224,7 +224,7 @@ func (a *ContractAggregate) updateContract(ctx context.Context, request *contrac
 	return a.Apply(updateEvent)
 }
 
-func (a *ContractAggregate) refreshContractStatus(ctx context.Context, request *contractpb.RefreshContractStatusGrpcRequest) error {
+func (a *ContractTempAggregate) refreshContractStatus(ctx context.Context, request *contractpb.RefreshContractStatusGrpcRequest) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "ContractAggregate.refreshContractStatus")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.Tenant)
