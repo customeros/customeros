@@ -32,7 +32,7 @@ export const Button = defineStyleConfig({
       }
 
       return {
-        bg: `${colorScheme}.50`,
+        bg: `${colorScheme}.50 !important`,
         color: `${colorScheme}.700`,
         border: `1px solid`,
         borderColor: `${colorScheme}.200`,
