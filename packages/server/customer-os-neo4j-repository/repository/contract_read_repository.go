@@ -315,7 +315,8 @@ func (r *contractReadRepository) GetContractsToGenerateCycleInvoices(ctx context
 				c.organizationLegalName <> "" AND
 				c.invoiceEmail IS NOT NULL AND
 				c.invoiceEmail <> "" AND
-				(c.billingCycle IN $validBillingCycles) AND
+				c.billingCycle IN $validBillingCycles AND
+				c.status IN $validContractStatuses AND
 				(c.nextInvoiceDate IS NULL OR date(c.nextInvoiceDate) <= date($referenceTime)) AND
 				(date(c.invoicingStartDate) <= date($referenceTime)) AND
 				(c.endedAt IS NULL OR date(c.endedAt) > date(coalesce(c.nextInvoiceDate, c.invoicingStartDate))) AND
@@ -326,6 +327,7 @@ func (r *contractReadRepository) GetContractsToGenerateCycleInvoices(ctx context
 		"validBillingCycles": []string{
 			neo4jenum.BillingCycleMonthlyBilling.String(), neo4jenum.BillingCycleQuarterlyBilling.String(), neo4jenum.BillingCycleAnnuallyBilling.String(),
 		},
+		"validContractStatuses": []string{neo4jenum.ContractStatusLive.String()},
 	}
 	span.LogFields(log.String("query", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -366,7 +368,8 @@ func (r *contractReadRepository) GetContractsToGenerateOffCycleInvoices(ctx cont
 				c.organizationLegalName <> "" AND
 				c.invoiceEmail IS NOT NULL AND
 				c.invoiceEmail <> "" AND
-				(c.billingCycle IN $validBillingCycles) AND
+				c.billingCycle IN $validBillingCycles AND
+				c.status IN $validContractStatuses AND
 				c.nextInvoiceDate IS NOT NULL AND
 				(c.endedAt IS NULL OR date(c.endedAt) > date($referenceTime)) AND
 				NOT EXISTS((sli)<-[:INVOICED]-(:InvoiceLine)) AND
@@ -386,6 +389,7 @@ func (r *contractReadRepository) GetContractsToGenerateOffCycleInvoices(ctx cont
 		"validBillingCycles": []string{
 			neo4jenum.BillingCycleMonthlyBilling.String(), neo4jenum.BillingCycleQuarterlyBilling.String(), neo4jenum.BillingCycleAnnuallyBilling.String(),
 		},
+		"validContractStatuses": []string{neo4jenum.ContractStatusLive.String()},
 	}
 	span.LogFields(log.String("query", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
