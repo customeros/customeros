@@ -58,6 +58,7 @@ export type GetContractsQuery = {
       billingEnabled: boolean;
       currency?: Types.Currency | null;
       invoiceEmail?: string | null;
+      autoRenew: boolean;
       metadata: {
         __typename?: 'Metadata';
         id: string;
@@ -78,6 +79,7 @@ export type GetContractsQuery = {
         billingCycle?: Types.ContractBillingCycle | null;
         invoicingStarted?: any | null;
         region?: string | null;
+        dueDays?: any | null;
       } | null;
       opportunities?: Array<{
         __typename?: 'Opportunity';
@@ -162,6 +164,7 @@ export const GetContractsDocument = `
       billingEnabled
       currency
       invoiceEmail
+      autoRenew
       billingDetails {
         nextInvoicing
         postalCode
@@ -174,6 +177,7 @@ export const GetContractsDocument = `
         billingCycle
         invoicingStarted
         region
+        dueDays
       }
       opportunities {
         id

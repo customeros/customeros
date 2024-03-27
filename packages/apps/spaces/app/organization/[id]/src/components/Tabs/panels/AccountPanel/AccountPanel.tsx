@@ -84,7 +84,7 @@ const AccountPanelComponent = () => {
             : "Unnamed's"
         } contract`,
         owner: null,
-
+        autoRenew: false,
         contractStatus: ContractStatus.Draft,
         contractLineItems: [],
         billingEnabled: false,

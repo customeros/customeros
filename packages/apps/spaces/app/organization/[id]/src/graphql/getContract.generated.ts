@@ -38,6 +38,7 @@ export type GetContractQuery = {
     organizationLegalName?: string | null;
     currency?: Types.Currency | null;
     contractName: string;
+    autoRenew: boolean;
     billingDetails?: {
       __typename?: 'BillingDetails';
       addressLine1?: string | null;
@@ -55,6 +56,7 @@ export type GetContractQuery = {
       nextInvoicing?: any | null;
       payAutomatically?: boolean | null;
       payOnline?: boolean | null;
+      dueDays?: any | null;
     } | null;
   };
 };
@@ -68,6 +70,7 @@ export const GetContractDocument = `
     organizationLegalName
     currency
     contractName
+    autoRenew
     billingDetails {
       addressLine1
       addressLine2
@@ -86,6 +89,7 @@ export const GetContractDocument = `
       payOnline
       invoicingStarted
       region
+      dueDays
     }
   }
 }

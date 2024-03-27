@@ -6,6 +6,7 @@ query getContract($id: ID!) {
     organizationLegalName
     currency
     contractName
+    autoRenew
     billingDetails {
       addressLine1
       addressLine2
@@ -24,6 +25,7 @@ query getContract($id: ID!) {
       payOnline
       invoicingStarted
       region
+      dueDays
 
     }
   }
