@@ -12098,29 +12098,102 @@ type Contract implements MetadataInterface {
     autoRenew:          Boolean!
     attachments:        [Attachment!] @goField(forceResolver: true)
 
+    """
+    Deprecated, use contractStatus instead.
+    """
     status:             ContractStatus! @deprecated(reason: "Use contractStatus instead.")
+    """
+    Deprecated, use serviceStarted instead.
+    """
     serviceStartedAt:   Time @deprecated(reason: "Use serviceStarted instead.")
+    """
+    Deprecated, use contractName instead.
+    """
     name:               String! @deprecated(reason: "Use contractName instead.")
+    """
+    Deprecated, use contractSigned instead.
+    """
     signedAt:           Time @deprecated(reason: "Use contractSigned instead.")
+    """
+    Deprecated, use contractRenewalCycle instead.
+
+    """
     renewalCycle:       ContractRenewalCycle! @deprecated(reason: "Use contractRenewalCycle instead.")
+    """
+    Deprecated, use billingDetails instead.
+    """
     organizationLegalName: String @deprecated(reason: "Use billingDetails instead.")
+    """
+    Deprecated, use billingDetails instead.
+    """
     invoiceEmail:       String @deprecated(reason: "Use billingDetails instead.")
+    """
+    Deprecated, use metadata instead.
+    """
     id:                 ID! @deprecated(reason: "Use metadata instead.")
+    """
+    Deprecated, use metadata instead.
+    """
     createdAt:          Time! @deprecated(reason: "Use metadata instead.")
+    """
+    Deprecated, use metadata instead.
+    """
     updatedAt:          Time! @deprecated(reason: "Use metadata instead.")
+    """
+    Deprecated, use metadata instead.
+    """
     source:             DataSource! @deprecated(reason: "Use metadata instead.")
+    """
+    Deprecated, use metadata instead.
+    """
     sourceOfTruth:      DataSource! @deprecated(reason: "Use metadata instead.")
+    """
+    Deprecated, use metadata instead.
+    """
     appSource:          String! @deprecated(reason: "Use metadata instead.")
+    """
+    Deprecated, use committedPeriods instead.
+    """
     renewalPeriods:     Int64 @deprecated(reason: "Use committedPeriods instead.")
+    """
+    Deprecated, use contractEnded instead.
+    """
     endedAt:            Time @deprecated(reason: "Use contractEnded instead.")
+    """
+    Deprecated, use contractLineItems instead.
+    """
     serviceLineItems:   [ServiceLineItem!] @goField(forceResolver: true) @deprecated(reason: "Use contractLineItems instead.")
+    """
+    Deprecated, use billingDetails instead.
+    """
     invoiceNote:        String @deprecated(reason: "Use billingDetails instead.")
+    """
+    Deprecated, use billingDetails instead.
+    """
     billingCycle:       ContractBillingCycle @deprecated(reason: "Use billingDetails instead.")
+    """
+    Deprecated, use billingDetails instead.
+    """
     invoicingStartDate: Time @deprecated(reason: "Use billingDetails instead.")
+    """
+    Deprecated, use billingDetails instead.
+    """
     addressLine1:       String @deprecated(reason: "Use billingDetails instead.")
+    """
+    Deprecated, use billingDetails instead.
+    """
     addressLine2:       String @deprecated(reason: "Use billingDetails instead.")
+    """
+    Deprecated, use billingDetails instead.
+    """
     zip:                String @deprecated(reason: "Use billingDetails instead.")
+    """
+    Deprecated, use billingDetails instead.
+    """
     locality:           String @deprecated(reason: "Use billingDetails instead.")
+    """
+    Deprecated, use billingDetails instead.
+    """
     country:            String @deprecated(reason: "Use billingDetails instead.")
 }
 
@@ -12247,6 +12320,7 @@ enum ContractStatus {
     DRAFT
     LIVE
     ENDED
+    OUT_OF_CONTRACT
 }`, BuiltIn: false},
 	{Name: "../schemas/country.graphqls", Input: `type Country {
     id: ID!

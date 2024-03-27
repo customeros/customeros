@@ -509,49 +509,73 @@ func (this ContactsPage) GetTotalPages() int { return this.TotalPages }
 func (this ContactsPage) GetTotalElements() int64 { return this.TotalElements }
 
 type Contract struct {
-	Metadata              *Metadata             `json:"metadata"`
-	BillingDetails        *BillingDetails       `json:"billingDetails,omitempty"`
-	CommittedPeriods      *int64                `json:"committedPeriods,omitempty"`
-	ContractEnded         *time.Time            `json:"contractEnded,omitempty"`
-	ContractLineItems     []*ServiceLineItem    `json:"contractLineItems,omitempty"`
-	ContractName          string                `json:"contractName"`
-	ContractRenewalCycle  ContractRenewalCycle  `json:"contractRenewalCycle"`
-	ContractSigned        *time.Time            `json:"contractSigned,omitempty"`
-	ContractURL           *string               `json:"contractUrl,omitempty"`
-	Currency              *Currency             `json:"currency,omitempty"`
-	CreatedBy             *User                 `json:"createdBy,omitempty"`
-	ExternalLinks         []*ExternalSystem     `json:"externalLinks"`
-	BillingEnabled        bool                  `json:"billingEnabled"`
-	Opportunities         []*Opportunity        `json:"opportunities,omitempty"`
-	Owner                 *User                 `json:"owner,omitempty"`
-	ServiceStarted        *time.Time            `json:"serviceStarted,omitempty"`
-	ContractStatus        ContractStatus        `json:"contractStatus"`
-	AutoRenew             bool                  `json:"autoRenew"`
-	Attachments           []*Attachment         `json:"attachments,omitempty"`
-	Status                ContractStatus        `json:"status"`
-	ServiceStartedAt      *time.Time            `json:"serviceStartedAt,omitempty"`
-	Name                  string                `json:"name"`
-	SignedAt              *time.Time            `json:"signedAt,omitempty"`
-	RenewalCycle          ContractRenewalCycle  `json:"renewalCycle"`
-	OrganizationLegalName *string               `json:"organizationLegalName,omitempty"`
-	InvoiceEmail          *string               `json:"invoiceEmail,omitempty"`
-	ID                    string                `json:"id"`
-	CreatedAt             time.Time             `json:"createdAt"`
-	UpdatedAt             time.Time             `json:"updatedAt"`
-	Source                DataSource            `json:"source"`
-	SourceOfTruth         DataSource            `json:"sourceOfTruth"`
-	AppSource             string                `json:"appSource"`
-	RenewalPeriods        *int64                `json:"renewalPeriods,omitempty"`
-	EndedAt               *time.Time            `json:"endedAt,omitempty"`
-	ServiceLineItems      []*ServiceLineItem    `json:"serviceLineItems,omitempty"`
-	InvoiceNote           *string               `json:"invoiceNote,omitempty"`
-	BillingCycle          *ContractBillingCycle `json:"billingCycle,omitempty"`
-	InvoicingStartDate    *time.Time            `json:"invoicingStartDate,omitempty"`
-	AddressLine1          *string               `json:"addressLine1,omitempty"`
-	AddressLine2          *string               `json:"addressLine2,omitempty"`
-	Zip                   *string               `json:"zip,omitempty"`
-	Locality              *string               `json:"locality,omitempty"`
-	Country               *string               `json:"country,omitempty"`
+	Metadata             *Metadata            `json:"metadata"`
+	BillingDetails       *BillingDetails      `json:"billingDetails,omitempty"`
+	CommittedPeriods     *int64               `json:"committedPeriods,omitempty"`
+	ContractEnded        *time.Time           `json:"contractEnded,omitempty"`
+	ContractLineItems    []*ServiceLineItem   `json:"contractLineItems,omitempty"`
+	ContractName         string               `json:"contractName"`
+	ContractRenewalCycle ContractRenewalCycle `json:"contractRenewalCycle"`
+	ContractSigned       *time.Time           `json:"contractSigned,omitempty"`
+	ContractURL          *string              `json:"contractUrl,omitempty"`
+	Currency             *Currency            `json:"currency,omitempty"`
+	CreatedBy            *User                `json:"createdBy,omitempty"`
+	ExternalLinks        []*ExternalSystem    `json:"externalLinks"`
+	BillingEnabled       bool                 `json:"billingEnabled"`
+	Opportunities        []*Opportunity       `json:"opportunities,omitempty"`
+	Owner                *User                `json:"owner,omitempty"`
+	ServiceStarted       *time.Time           `json:"serviceStarted,omitempty"`
+	ContractStatus       ContractStatus       `json:"contractStatus"`
+	AutoRenew            bool                 `json:"autoRenew"`
+	Attachments          []*Attachment        `json:"attachments,omitempty"`
+	// Deprecated, use contractStatus instead.
+	Status ContractStatus `json:"status"`
+	// Deprecated, use serviceStarted instead.
+	ServiceStartedAt *time.Time `json:"serviceStartedAt,omitempty"`
+	// Deprecated, use contractName instead.
+	Name string `json:"name"`
+	// Deprecated, use contractSigned instead.
+	SignedAt *time.Time `json:"signedAt,omitempty"`
+	// Deprecated, use contractRenewalCycle instead.
+	RenewalCycle ContractRenewalCycle `json:"renewalCycle"`
+	// Deprecated, use billingDetails instead.
+	OrganizationLegalName *string `json:"organizationLegalName,omitempty"`
+	// Deprecated, use billingDetails instead.
+	InvoiceEmail *string `json:"invoiceEmail,omitempty"`
+	// Deprecated, use metadata instead.
+	ID string `json:"id"`
+	// Deprecated, use metadata instead.
+	CreatedAt time.Time `json:"createdAt"`
+	// Deprecated, use metadata instead.
+	UpdatedAt time.Time `json:"updatedAt"`
+	// Deprecated, use metadata instead.
+	Source DataSource `json:"source"`
+	// Deprecated, use metadata instead.
+	SourceOfTruth DataSource `json:"sourceOfTruth"`
+	// Deprecated, use metadata instead.
+	AppSource string `json:"appSource"`
+	// Deprecated, use committedPeriods instead.
+	RenewalPeriods *int64 `json:"renewalPeriods,omitempty"`
+	// Deprecated, use contractEnded instead.
+	EndedAt *time.Time `json:"endedAt,omitempty"`
+	// Deprecated, use contractLineItems instead.
+	ServiceLineItems []*ServiceLineItem `json:"serviceLineItems,omitempty"`
+	// Deprecated, use billingDetails instead.
+	InvoiceNote *string `json:"invoiceNote,omitempty"`
+	// Deprecated, use billingDetails instead.
+	BillingCycle *ContractBillingCycle `json:"billingCycle,omitempty"`
+	// Deprecated, use billingDetails instead.
+	InvoicingStartDate *time.Time `json:"invoicingStartDate,omitempty"`
+	// Deprecated, use billingDetails instead.
+	AddressLine1 *string `json:"addressLine1,omitempty"`
+	// Deprecated, use billingDetails instead.
+	AddressLine2 *string `json:"addressLine2,omitempty"`
+	// Deprecated, use billingDetails instead.
+	Zip *string `json:"zip,omitempty"`
+	// Deprecated, use billingDetails instead.
+	Locality *string `json:"locality,omitempty"`
+	// Deprecated, use billingDetails instead.
+	Country *string `json:"country,omitempty"`
 }
 
 func (Contract) IsMetadataInterface()        {}
@@ -3090,10 +3114,11 @@ func (e ContractRenewalCycle) MarshalGQL(w io.Writer) {
 type ContractStatus string
 
 const (
-	ContractStatusUndefined ContractStatus = "UNDEFINED"
-	ContractStatusDraft     ContractStatus = "DRAFT"
-	ContractStatusLive      ContractStatus = "LIVE"
-	ContractStatusEnded     ContractStatus = "ENDED"
+	ContractStatusUndefined     ContractStatus = "UNDEFINED"
+	ContractStatusDraft         ContractStatus = "DRAFT"
+	ContractStatusLive          ContractStatus = "LIVE"
+	ContractStatusEnded         ContractStatus = "ENDED"
+	ContractStatusOutOfContract ContractStatus = "OUT_OF_CONTRACT"
 )
 
 var AllContractStatus = []ContractStatus{
@@ -3101,11 +3126,12 @@ var AllContractStatus = []ContractStatus{
 	ContractStatusDraft,
 	ContractStatusLive,
 	ContractStatusEnded,
+	ContractStatusOutOfContract,
 }
 
 func (e ContractStatus) IsValid() bool {
 	switch e {
-	case ContractStatusUndefined, ContractStatusDraft, ContractStatusLive, ContractStatusEnded:
+	case ContractStatusUndefined, ContractStatusDraft, ContractStatusLive, ContractStatusEnded, ContractStatusOutOfContract:
 		return true
 	}
 	return false
