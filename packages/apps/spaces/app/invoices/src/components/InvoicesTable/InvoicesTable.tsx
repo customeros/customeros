@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { useIsRestoring } from '@tanstack/react-query';
@@ -8,12 +8,8 @@ import { useIsRestoring } from '@tanstack/react-query';
 import { Box } from '@ui/layout/Box';
 import { Flex } from '@ui/layout/Flex';
 import { Heading } from '@ui/typography/Heading';
+import { Table, TableInstance } from '@ui/presentation/Table';
 import { EmptyState } from '@shared/components/Invoice/EmptyState/EmptyState';
-import {
-  Table,
-  TableInstance,
-  RowSelectionState,
-} from '@ui/presentation/Table';
 import {
   InvoiceTableData,
   useInfiniteInvoices,
@@ -26,13 +22,6 @@ export function InvoicesTable() {
   const searchParams = useSearchParams();
   const selectedInvoiceId = searchParams?.get('invoice');
   const router = useRouter();
-  const [selectedInvoice, setSelectedInvoice] = useState<RowSelectionState>();
-
-  useEffect(() => {
-    if (selectedInvoiceId) {
-      setSelectedInvoice({ [selectedInvoiceId]: true });
-    }
-  }, [selectedInvoiceId]);
 
   const tableRef = useRef<TableInstance<InvoiceTableData>>(null);
   const {
@@ -85,7 +74,6 @@ export function InvoicesTable() {
           onFullRowSelection={(id) => id && handleOpenInvoice(id)}
           enableRowSelection={false}
           fullRowSelection={true}
-          rowSelected={selectedInvoice}
           canFetchMore={hasNextPage}
           onFetchMore={fetchNextPage}
           isLoading={isRestoring ? false : isFetching}

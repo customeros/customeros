@@ -77,7 +77,6 @@ export const Table = <T extends object>({
   totalItems = 40,
   onSortingChange,
   sorting: _sorting,
-  rowSelected = {},
   renderTableActions,
   enableRowSelection,
   enableTableActions,
@@ -89,14 +88,11 @@ export const Table = <T extends object>({
 }: TableProps<T>) => {
   const scrollElementRef = useRef<HTMLDivElement>(null);
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const table = useReactTable<T>({
     data,
     columns,
-    onRowSelectionChange: setRowSelection,
     state: {
       sorting: _sorting ?? sorting,
-      rowSelection: rowSelection,
     },
     manualSorting: true,
     enableRowSelection: enableRowSelection || fullRowSelection,
@@ -201,9 +197,6 @@ export const Table = <T extends object>({
           )}
           {virtualRows.map((virtualRow) => {
             const row = rows[virtualRow.index];
-
-            const isSelected = row?.id === Object.keys(rowSelected || {})[0];
-
             const minH = `${virtualRow.size}px`;
 
             const minW =
@@ -230,13 +223,18 @@ export const Table = <T extends object>({
             const enabledRowPointer = enableRowSelection
               ? 'pointer-events-auto'
               : 'pointer-events-none';
-            const fullRowSelectionStyleDynamic = `group hover:after:contents-[""] hover:after:h-[2px] hover:after:w-full hover:after:bg-gray-200 hover:after:bottom-[-1px] hover:after:absolute hover:before:contents-[""] hover:before:w-full hover:before:bg-gray-200 hover:before:h-[2px] hover:before:absolute`;
+
+            const fullRowSelectionStyleDynamic = `hover:after:contents-[""] hover:after:h-[1px] hover:after:w-full hover:after:bg-gray-200 hover:after:bottom-[-1px] hover:after:absolute hover:before:contents-[""] hover:before:w-full hover:before:bg-gray-200 hover:before:h-[1px] hover:before:absolute`;
 
             const rowHoverStyle =
-              fullRowSelection && fullRowSelectionStyleDynamic;
-            const focusStyle = isSelected
-              ? 'border-b-2 border-gray-200 border-t-2'
-              : '';
+              fullRowSelection &&
+              !row.getIsSelected() &&
+              fullRowSelectionStyleDynamic;
+
+            const focusStyle =
+              row?.getIsSelected() && fullRowSelection
+                ? cn('border-b border-gray-200 border-t')
+                : '';
 
             return (
               <TRow
@@ -281,12 +279,9 @@ export const Table = <T extends object>({
                         key={`checkbox-${virtualRow.index}`}
                         isChecked={row?.getIsSelected()}
                         disabled={!row || !row?.getCanSelect()}
-                        onChange={(isChecked) => {
-                          row?.getToggleSelectedHandler()(isChecked);
-                          /// @ts-expect-error improve this later
-                          const rowId = (row.original as unknown)?.id;
-                          onFullRowSelection?.(rowId);
-                        }}
+                        onChange={(isChecked) =>
+                          row?.getToggleSelectedHandler()(isChecked)
+                        }
                       />
                     </div>
                   )}
