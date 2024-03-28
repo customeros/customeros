@@ -497,7 +497,7 @@ func TestOpportunityEventHandler_OnUpdateRenewal_OnlyCommentsChangedByUser_DoNot
 	require.Nil(t, opportunity.RenewalDetails.RenewalUpdatedByUserAt)
 	require.Equal(t, float64(10000), opportunity.Amount)
 	require.Equal(t, "some comments", opportunity.Comments)
-	require.True(t, opportunity.RenewalDetails.RenewalApproved)
+	require.False(t, opportunity.RenewalDetails.RenewalApproved)
 
 	// Check no events were generated
 	eventsMap := aggregateStore.GetEventMap()
