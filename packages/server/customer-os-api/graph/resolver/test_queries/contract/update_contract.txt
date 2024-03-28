@@ -21,13 +21,13 @@ contract_Update(
         invoiceNote: "test invoice note"
         billingCycle: ANNUAL_BILLING
         currency: USD
-        canPayWithCard: true
-        canPayWithDirectDebit: true
-        canPayWithBankTransfer: true
         autoRenew: true
         billingDetails: {
             payOnline: true
             payAutomatically: true
+            canPayWithCard: true
+            canPayWithDirectDebit: true
+            canPayWithBankTransfer: true
             region: "test region"
             check: true
             dueDays: 7
