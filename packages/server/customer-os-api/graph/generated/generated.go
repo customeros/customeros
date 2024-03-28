@@ -1079,10 +1079,10 @@ type ComplexityRoot struct {
 		Conditional           func(childComplexity int) int
 		Conditionals          func(childComplexity int) int
 		Currency              func(childComplexity int) int
-		DefaultPrice          func(childComplexity int) int
 		ExternalLinks         func(childComplexity int) int
 		Metadata              func(childComplexity int) int
 		Name                  func(childComplexity int) int
+		Price                 func(childComplexity int) int
 		PriceCalculated       func(childComplexity int) int
 		PriceCalculation      func(childComplexity int) int
 		PricingModel          func(childComplexity int) int
@@ -8338,13 +8338,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Offering.Currency(childComplexity), true
 
-	case "Offering.defaultPrice":
-		if e.complexity.Offering.DefaultPrice == nil {
-			break
-		}
-
-		return e.complexity.Offering.DefaultPrice(childComplexity), true
-
 	case "Offering.externalLinks":
 		if e.complexity.Offering.ExternalLinks == nil {
 			break
@@ -8365,6 +8358,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Offering.Name(childComplexity), true
+
+	case "Offering.price":
+		if e.complexity.Offering.Price == nil {
+			break
+		}
+
+		return e.complexity.Offering.Price(childComplexity), true
 
 	case "Offering.priceCalculated":
 		if e.complexity.Offering.PriceCalculated == nil {
@@ -14003,11 +14003,12 @@ type Offering implements MetadataInterface {
     pricingModel:           PricingModel
     pricingPeriodInMonths:  Int64!
     currency:               Currency
-    defaultPrice:           Float!
+    price:                  Float!
     priceCalculated:        Boolean!
-    conditional:            Boolean!
     taxable:                Boolean!
     priceCalculation:       PriceCalculation!
+
+    conditional:            Boolean!
     conditionals:           Conditionals!
     externalLinks:          [ExternalSystem!]! @goField(forceResolver: true)
 }
@@ -14019,7 +14020,7 @@ input OfferingCreateInput {
     pricingModel:                           PricingModel
     pricingPeriodInMonths:                  Int64
     currency:                               Currency
-    defaultPrice:                           Float
+    price:                                  Float
     priceCalculated:                        Boolean
     conditional:                            Boolean
     taxable:                                Boolean
@@ -14037,7 +14038,7 @@ input OfferingUpdateInput {
     pricingModel:                           PricingModel
     pricingPeriodInMonths:                  Int64
     currency:                               Currency
-    defaultPrice:                           Float
+    price:                                  Float
     priceCalculated:                        Boolean
     conditional:                            Boolean
     taxable:                                Boolean
@@ -58131,16 +58132,16 @@ func (ec *executionContext) fieldContext_Mutation_offering_Create(ctx context.Co
 				return ec.fieldContext_Offering_pricingPeriodInMonths(ctx, field)
 			case "currency":
 				return ec.fieldContext_Offering_currency(ctx, field)
-			case "defaultPrice":
-				return ec.fieldContext_Offering_defaultPrice(ctx, field)
+			case "price":
+				return ec.fieldContext_Offering_price(ctx, field)
 			case "priceCalculated":
 				return ec.fieldContext_Offering_priceCalculated(ctx, field)
-			case "conditional":
-				return ec.fieldContext_Offering_conditional(ctx, field)
 			case "taxable":
 				return ec.fieldContext_Offering_taxable(ctx, field)
 			case "priceCalculation":
 				return ec.fieldContext_Offering_priceCalculation(ctx, field)
+			case "conditional":
+				return ec.fieldContext_Offering_conditional(ctx, field)
 			case "conditionals":
 				return ec.fieldContext_Offering_conditionals(ctx, field)
 			case "externalLinks":
@@ -58246,16 +58247,16 @@ func (ec *executionContext) fieldContext_Mutation_offering_Update(ctx context.Co
 				return ec.fieldContext_Offering_pricingPeriodInMonths(ctx, field)
 			case "currency":
 				return ec.fieldContext_Offering_currency(ctx, field)
-			case "defaultPrice":
-				return ec.fieldContext_Offering_defaultPrice(ctx, field)
+			case "price":
+				return ec.fieldContext_Offering_price(ctx, field)
 			case "priceCalculated":
 				return ec.fieldContext_Offering_priceCalculated(ctx, field)
-			case "conditional":
-				return ec.fieldContext_Offering_conditional(ctx, field)
 			case "taxable":
 				return ec.fieldContext_Offering_taxable(ctx, field)
 			case "priceCalculation":
 				return ec.fieldContext_Offering_priceCalculation(ctx, field)
+			case "conditional":
+				return ec.fieldContext_Offering_conditional(ctx, field)
 			case "conditionals":
 				return ec.fieldContext_Offering_conditionals(ctx, field)
 			case "externalLinks":
@@ -66822,8 +66823,8 @@ func (ec *executionContext) fieldContext_Offering_currency(ctx context.Context, 
 	return fc, nil
 }
 
-func (ec *executionContext) _Offering_defaultPrice(ctx context.Context, field graphql.CollectedField, obj *model.Offering) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Offering_defaultPrice(ctx, field)
+func (ec *executionContext) _Offering_price(ctx context.Context, field graphql.CollectedField, obj *model.Offering) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Offering_price(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -66836,7 +66837,7 @@ func (ec *executionContext) _Offering_defaultPrice(ctx context.Context, field gr
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.DefaultPrice, nil
+		return obj.Price, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -66853,7 +66854,7 @@ func (ec *executionContext) _Offering_defaultPrice(ctx context.Context, field gr
 	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Offering_defaultPrice(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Offering_price(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Offering",
 		Field:      field,
@@ -66898,50 +66899,6 @@ func (ec *executionContext) _Offering_priceCalculated(ctx context.Context, field
 }
 
 func (ec *executionContext) fieldContext_Offering_priceCalculated(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Offering",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Offering_conditional(ctx context.Context, field graphql.CollectedField, obj *model.Offering) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Offering_conditional(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Conditional, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Offering_conditional(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Offering",
 		Field:      field,
@@ -67043,6 +67000,50 @@ func (ec *executionContext) fieldContext_Offering_priceCalculation(ctx context.C
 				return ec.fieldContext_PriceCalculation_revenueSharePercentage(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PriceCalculation", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Offering_conditional(ctx context.Context, field graphql.CollectedField, obj *model.Offering) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Offering_conditional(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Conditional, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Offering_conditional(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Offering",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -79738,16 +79739,16 @@ func (ec *executionContext) fieldContext_Query_offerings(ctx context.Context, fi
 				return ec.fieldContext_Offering_pricingPeriodInMonths(ctx, field)
 			case "currency":
 				return ec.fieldContext_Offering_currency(ctx, field)
-			case "defaultPrice":
-				return ec.fieldContext_Offering_defaultPrice(ctx, field)
+			case "price":
+				return ec.fieldContext_Offering_price(ctx, field)
 			case "priceCalculated":
 				return ec.fieldContext_Offering_priceCalculated(ctx, field)
-			case "conditional":
-				return ec.fieldContext_Offering_conditional(ctx, field)
 			case "taxable":
 				return ec.fieldContext_Offering_taxable(ctx, field)
 			case "priceCalculation":
 				return ec.fieldContext_Offering_priceCalculation(ctx, field)
+			case "conditional":
+				return ec.fieldContext_Offering_conditional(ctx, field)
 			case "conditionals":
 				return ec.fieldContext_Offering_conditionals(ctx, field)
 			case "externalLinks":
@@ -95819,7 +95820,7 @@ func (ec *executionContext) unmarshalInputOfferingCreateInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "active", "type", "pricingModel", "pricingPeriodInMonths", "currency", "defaultPrice", "priceCalculated", "conditional", "taxable", "priceCalculationType", "priceCalculationRevenueSharePercentage", "conditionalsMinimumChargePeriod", "conditionalsMinimumChargeAmount"}
+	fieldsInOrder := [...]string{"name", "active", "type", "pricingModel", "pricingPeriodInMonths", "currency", "price", "priceCalculated", "conditional", "taxable", "priceCalculationType", "priceCalculationRevenueSharePercentage", "conditionalsMinimumChargePeriod", "conditionalsMinimumChargeAmount"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -95868,13 +95869,13 @@ func (ec *executionContext) unmarshalInputOfferingCreateInput(ctx context.Contex
 				return it, err
 			}
 			it.Currency = data
-		case "defaultPrice":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("defaultPrice"))
+		case "price":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("price"))
 			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.DefaultPrice = data
+			it.Price = data
 		case "priceCalculated":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("priceCalculated"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
@@ -95937,7 +95938,7 @@ func (ec *executionContext) unmarshalInputOfferingUpdateInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "name", "active", "type", "pricingModel", "pricingPeriodInMonths", "currency", "defaultPrice", "priceCalculated", "conditional", "taxable", "priceCalculationType", "priceCalculationRevenueSharePercentage", "conditionalsMinimumChargePeriod", "conditionalsMinimumChargeAmount"}
+	fieldsInOrder := [...]string{"id", "name", "active", "type", "pricingModel", "pricingPeriodInMonths", "currency", "price", "priceCalculated", "conditional", "taxable", "priceCalculationType", "priceCalculationRevenueSharePercentage", "conditionalsMinimumChargePeriod", "conditionalsMinimumChargeAmount"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -95993,13 +95994,13 @@ func (ec *executionContext) unmarshalInputOfferingUpdateInput(ctx context.Contex
 				return it, err
 			}
 			it.Currency = data
-		case "defaultPrice":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("defaultPrice"))
+		case "price":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("price"))
 			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.DefaultPrice = data
+			it.Price = data
 		case "priceCalculated":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("priceCalculated"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
@@ -108113,18 +108114,13 @@ func (ec *executionContext) _Offering(ctx context.Context, sel ast.SelectionSet,
 			}
 		case "currency":
 			out.Values[i] = ec._Offering_currency(ctx, field, obj)
-		case "defaultPrice":
-			out.Values[i] = ec._Offering_defaultPrice(ctx, field, obj)
+		case "price":
+			out.Values[i] = ec._Offering_price(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "priceCalculated":
 			out.Values[i] = ec._Offering_priceCalculated(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "conditional":
-			out.Values[i] = ec._Offering_conditional(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
@@ -108135,6 +108131,11 @@ func (ec *executionContext) _Offering(ctx context.Context, sel ast.SelectionSet,
 			}
 		case "priceCalculation":
 			out.Values[i] = ec._Offering_priceCalculation(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "conditional":
+			out.Values[i] = ec._Offering_conditional(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}

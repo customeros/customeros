@@ -25,7 +25,7 @@ func MapEntityToOffering(entity *neo4jentity.OfferingEntity) *model.Offering {
 		PricingModel:          utils.ToPtr(MapPricingModelToModel(entity.PricingModel)),
 		PricingPeriodInMonths: entity.PricingPeriodInMonths,
 		Currency:              utils.ToPtr(MapCurrencyToModel(entity.Currency)),
-		DefaultPrice:          entity.Price,
+		Price:                 entity.Price,
 		PriceCalculated:       entity.PriceCalculated,
 		Conditional:           entity.Conditional,
 		Taxable:               entity.Taxable,

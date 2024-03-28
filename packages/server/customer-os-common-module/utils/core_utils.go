@@ -151,15 +151,24 @@ func IfNotNilStringWithDefault(check any, defaultValue string) string {
 func IfNotNilInt64(check any, valueExtractor ...func() int64) int64 {
 	if reflect.ValueOf(check).Kind() == reflect.Int64 {
 		return check.(int64)
+	} else if reflect.ValueOf(check).Kind() == reflect.Pointer {
+		if reflect.ValueOf(check).IsNil() {
+			if len(valueExtractor) > 0 {
+				return valueExtractor[0]()
+			} else {
+				return 0
+			}
+		} else {
+			out := check.(*int64)
+			return *out
+		}
+	} else {
+		if len(valueExtractor) > 0 {
+			return valueExtractor[0]()
+		} else {
+			return 0
+		}
 	}
-	if reflect.ValueOf(check).Kind() == reflect.Pointer && reflect.ValueOf(check).IsNil() {
-		return 0
-	}
-	if len(valueExtractor) > 0 {
-		return valueExtractor[0]()
-	}
-	out := check.(*int64)
-	return *out
 }
 
 func IfNotNilFloat64(check any, valueExtractor ...func() float64) float64 {

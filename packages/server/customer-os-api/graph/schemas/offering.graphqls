@@ -15,11 +15,12 @@ type Offering implements MetadataInterface {
     pricingModel:           PricingModel
     pricingPeriodInMonths:  Int64!
     currency:               Currency
-    defaultPrice:           Float!
+    price:                  Float!
     priceCalculated:        Boolean!
-    conditional:            Boolean!
     taxable:                Boolean!
     priceCalculation:       PriceCalculation!
+
+    conditional:            Boolean!
     conditionals:           Conditionals!
     externalLinks:          [ExternalSystem!]! @goField(forceResolver: true)
 }
@@ -31,7 +32,7 @@ input OfferingCreateInput {
     pricingModel:                           PricingModel
     pricingPeriodInMonths:                  Int64
     currency:                               Currency
-    defaultPrice:                           Float
+    price:                                  Float
     priceCalculated:                        Boolean
     conditional:                            Boolean
     taxable:                                Boolean
@@ -49,7 +50,7 @@ input OfferingUpdateInput {
     pricingModel:                           PricingModel
     pricingPeriodInMonths:                  Int64
     currency:                               Currency
-    defaultPrice:                           Float
+    price:                                  Float
     priceCalculated:                        Boolean
     conditional:                            Boolean
     taxable:                                Boolean

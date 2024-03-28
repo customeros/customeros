@@ -1,19 +1,22 @@
-mutation CreateOffering() {
-offering_Create(
-    input: {
-        currency: USD
-        bankName: "Bank of America"
-        bankTransferEnabled: true
-        allowInternational: true
-        accountNumber: "ACC-123456789"
-        iban: "IBAN-123456789"
-        routingNumber: "routing-123456789"
-        bic: "BIC-123456789"
-        sortCode: "sort-123456789"
-        otherDetails: "otherDetails-123"
-    }) {
+mutation CreateOffering {
+  offering_Create(input: {
+    name: "1",
+    active: true,
+    type: PRODUCT,
+    pricingModel: SUBSCRIPTION,
+    pricingPeriodInMonths: 2,
+    currency: AUD,
+    price: 3,
+    priceCalculated: true,
+    conditional: true,
+    taxable: true,
+    priceCalculationType: REVENUE_SHARE,
+    priceCalculationRevenueSharePercentage: 4,
+    conditionalsMinimumChargePeriod: MONTHLY,
+    conditionalsMinimumChargeAmount: 5
+  }) {
     metadata {
-        id
+      id
     }
   }
 }

@@ -14014,41 +14014,42 @@ type Offering implements MetadataInterface {
 }
 
 input OfferingCreateInput {
-    name:                               String
-    active:                             Boolean
-    type:                               OfferingType
-    pricingModel:                       PricingModel
-    pricingPeriodInMonths:              Int64
-    currency:                           Currency
-    defaultPrice:                       Float
-    priceCalculated:                    Boolean
-    conditional:                        Boolean
-    taxable:                            Boolean
-    priceCalculationType:               CalculationType
-    priceRevenueSharePercentage:        Float
-    conditionalsMinimumChargePeriod:    ChargePeriod
-    conditionalsMinimumChargeAmount:    Float
+    name:                                   String
+    active:                                 Boolean
+    type:                                   OfferingType
+    pricingModel:                           PricingModel
+    pricingPeriodInMonths:                  Int64
+    currency:                               Currency
+    defaultPrice:                           Float
+    priceCalculated:                        Boolean
+    conditional:                            Boolean
+    taxable:                                Boolean
+    priceCalculationType:                   CalculationType
+    priceCalculationRevenueSharePercentage: Float
+    conditionalsMinimumChargePeriod:        ChargePeriod
+    conditionalsMinimumChargeAmount:        Float
 }
 
 input OfferingUpdateInput {
-    id:                                 ID!
-    active:                             Boolean
-    type:                               OfferingType
-    pricingModel:                       PricingModel
-    pricingPeriodInMonths:              Int64
-    currency:                           Currency
-    defaultPrice:                       Float
-    priceCalculated:                    Boolean
-    conditional:                        Boolean
-    taxable:                            Boolean
-    priceCalculationType:               CalculationType
-    priceRevenueSharePercentage:        Float
-    conditionalsMinimumChargePeriod:    ChargePeriod
-    conditionalsMinimumChargeAmount:    Float
+    id:                                     ID!
+    name:                                   String
+    active:                                 Boolean
+    type:                                   OfferingType
+    pricingModel:                           PricingModel
+    pricingPeriodInMonths:                  Int64
+    currency:                               Currency
+    defaultPrice:                           Float
+    priceCalculated:                        Boolean
+    conditional:                            Boolean
+    taxable:                                Boolean
+    priceCalculationType:                   CalculationType
+    priceCalculationRevenueSharePercentage: Float
+    conditionalsMinimumChargePeriod:        ChargePeriod
+    conditionalsMinimumChargeAmount:        Float
 }
 
 type PriceCalculation {
-    calculationType:        CalculationType!
+    calculationType:        CalculationType
     revenueSharePercentage: Float!
 }
 
@@ -76482,14 +76483,11 @@ func (ec *executionContext) _PriceCalculation_calculationType(ctx context.Contex
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(model.CalculationType)
+	res := resTmp.(*model.CalculationType)
 	fc.Result = res
-	return ec.marshalNCalculationType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐCalculationType(ctx, field.Selections, res)
+	return ec.marshalOCalculationType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐCalculationType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PriceCalculation_calculationType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -95822,7 +95820,7 @@ func (ec *executionContext) unmarshalInputOfferingCreateInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "active", "type", "pricingModel", "pricingPeriodInMonths", "currency", "defaultPrice", "priceCalculated", "conditional", "taxable", "priceCalculationType", "priceRevenueSharePercentage", "conditionalsMinimumChargePeriod", "conditionalsMinimumChargeAmount"}
+	fieldsInOrder := [...]string{"name", "active", "type", "pricingModel", "pricingPeriodInMonths", "currency", "defaultPrice", "priceCalculated", "conditional", "taxable", "priceCalculationType", "priceCalculationRevenueSharePercentage", "conditionalsMinimumChargePeriod", "conditionalsMinimumChargeAmount"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -95906,13 +95904,13 @@ func (ec *executionContext) unmarshalInputOfferingCreateInput(ctx context.Contex
 				return it, err
 			}
 			it.PriceCalculationType = data
-		case "priceRevenueSharePercentage":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("priceRevenueSharePercentage"))
+		case "priceCalculationRevenueSharePercentage":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("priceCalculationRevenueSharePercentage"))
 			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.PriceRevenueSharePercentage = data
+			it.PriceCalculationRevenueSharePercentage = data
 		case "conditionalsMinimumChargePeriod":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("conditionalsMinimumChargePeriod"))
 			data, err := ec.unmarshalOChargePeriod2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐChargePeriod(ctx, v)
@@ -95940,7 +95938,7 @@ func (ec *executionContext) unmarshalInputOfferingUpdateInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "active", "type", "pricingModel", "pricingPeriodInMonths", "currency", "defaultPrice", "priceCalculated", "conditional", "taxable", "priceCalculationType", "priceRevenueSharePercentage", "conditionalsMinimumChargePeriod", "conditionalsMinimumChargeAmount"}
+	fieldsInOrder := [...]string{"id", "name", "active", "type", "pricingModel", "pricingPeriodInMonths", "currency", "defaultPrice", "priceCalculated", "conditional", "taxable", "priceCalculationType", "priceCalculationRevenueSharePercentage", "conditionalsMinimumChargePeriod", "conditionalsMinimumChargeAmount"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -95954,6 +95952,13 @@ func (ec *executionContext) unmarshalInputOfferingUpdateInput(ctx context.Contex
 				return it, err
 			}
 			it.ID = data
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
 		case "active":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("active"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
@@ -96024,13 +96029,13 @@ func (ec *executionContext) unmarshalInputOfferingUpdateInput(ctx context.Contex
 				return it, err
 			}
 			it.PriceCalculationType = data
-		case "priceRevenueSharePercentage":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("priceRevenueSharePercentage"))
+		case "priceCalculationRevenueSharePercentage":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("priceCalculationRevenueSharePercentage"))
 			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.PriceRevenueSharePercentage = data
+			it.PriceCalculationRevenueSharePercentage = data
 		case "conditionalsMinimumChargePeriod":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("conditionalsMinimumChargePeriod"))
 			data, err := ec.unmarshalOChargePeriod2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐChargePeriod(ctx, v)
@@ -110601,9 +110606,6 @@ func (ec *executionContext) _PriceCalculation(ctx context.Context, sel ast.Selec
 			out.Values[i] = graphql.MarshalString("PriceCalculation")
 		case "calculationType":
 			out.Values[i] = ec._PriceCalculation_calculationType(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "revenueSharePercentage":
 			out.Values[i] = ec._PriceCalculation_revenueSharePercentage(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -114488,16 +114490,6 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 		}
 	}
 	return res
-}
-
-func (ec *executionContext) unmarshalNCalculationType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐCalculationType(ctx context.Context, v interface{}) (model.CalculationType, error) {
-	var res model.CalculationType
-	err := res.UnmarshalGQL(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNCalculationType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐCalculationType(ctx context.Context, sel ast.SelectionSet, v model.CalculationType) graphql.Marshaler {
-	return v
 }
 
 func (ec *executionContext) marshalNCalendar2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐCalendarᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Calendar) graphql.Marshaler {

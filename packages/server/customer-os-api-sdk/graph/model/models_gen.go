@@ -1788,37 +1788,38 @@ func (Offering) IsMetadataInterface()        {}
 func (this Offering) GetMetadata() *Metadata { return this.Metadata }
 
 type OfferingCreateInput struct {
-	Name                            *string          `json:"name,omitempty"`
-	Active                          *bool            `json:"active,omitempty"`
-	Type                            *OfferingType    `json:"type,omitempty"`
-	PricingModel                    *PricingModel    `json:"pricingModel,omitempty"`
-	PricingPeriodInMonths           *int64           `json:"pricingPeriodInMonths,omitempty"`
-	Currency                        *Currency        `json:"currency,omitempty"`
-	DefaultPrice                    *float64         `json:"defaultPrice,omitempty"`
-	PriceCalculated                 *bool            `json:"priceCalculated,omitempty"`
-	Conditional                     *bool            `json:"conditional,omitempty"`
-	Taxable                         *bool            `json:"taxable,omitempty"`
-	PriceCalculationType            *CalculationType `json:"priceCalculationType,omitempty"`
-	PriceRevenueSharePercentage     *float64         `json:"priceRevenueSharePercentage,omitempty"`
-	ConditionalsMinimumChargePeriod *ChargePeriod    `json:"conditionalsMinimumChargePeriod,omitempty"`
-	ConditionalsMinimumChargeAmount *float64         `json:"conditionalsMinimumChargeAmount,omitempty"`
+	Name                                   *string          `json:"name,omitempty"`
+	Active                                 *bool            `json:"active,omitempty"`
+	Type                                   *OfferingType    `json:"type,omitempty"`
+	PricingModel                           *PricingModel    `json:"pricingModel,omitempty"`
+	PricingPeriodInMonths                  *int64           `json:"pricingPeriodInMonths,omitempty"`
+	Currency                               *Currency        `json:"currency,omitempty"`
+	DefaultPrice                           *float64         `json:"defaultPrice,omitempty"`
+	PriceCalculated                        *bool            `json:"priceCalculated,omitempty"`
+	Conditional                            *bool            `json:"conditional,omitempty"`
+	Taxable                                *bool            `json:"taxable,omitempty"`
+	PriceCalculationType                   *CalculationType `json:"priceCalculationType,omitempty"`
+	PriceCalculationRevenueSharePercentage *float64         `json:"priceCalculationRevenueSharePercentage,omitempty"`
+	ConditionalsMinimumChargePeriod        *ChargePeriod    `json:"conditionalsMinimumChargePeriod,omitempty"`
+	ConditionalsMinimumChargeAmount        *float64         `json:"conditionalsMinimumChargeAmount,omitempty"`
 }
 
 type OfferingUpdateInput struct {
-	ID                              string           `json:"id"`
-	Active                          *bool            `json:"active,omitempty"`
-	Type                            *OfferingType    `json:"type,omitempty"`
-	PricingModel                    *PricingModel    `json:"pricingModel,omitempty"`
-	PricingPeriodInMonths           *int64           `json:"pricingPeriodInMonths,omitempty"`
-	Currency                        *Currency        `json:"currency,omitempty"`
-	DefaultPrice                    *float64         `json:"defaultPrice,omitempty"`
-	PriceCalculated                 *bool            `json:"priceCalculated,omitempty"`
-	Conditional                     *bool            `json:"conditional,omitempty"`
-	Taxable                         *bool            `json:"taxable,omitempty"`
-	PriceCalculationType            *CalculationType `json:"priceCalculationType,omitempty"`
-	PriceRevenueSharePercentage     *float64         `json:"priceRevenueSharePercentage,omitempty"`
-	ConditionalsMinimumChargePeriod *ChargePeriod    `json:"conditionalsMinimumChargePeriod,omitempty"`
-	ConditionalsMinimumChargeAmount *float64         `json:"conditionalsMinimumChargeAmount,omitempty"`
+	ID                                     string           `json:"id"`
+	Name                                   *string          `json:"name,omitempty"`
+	Active                                 *bool            `json:"active,omitempty"`
+	Type                                   *OfferingType    `json:"type,omitempty"`
+	PricingModel                           *PricingModel    `json:"pricingModel,omitempty"`
+	PricingPeriodInMonths                  *int64           `json:"pricingPeriodInMonths,omitempty"`
+	Currency                               *Currency        `json:"currency,omitempty"`
+	DefaultPrice                           *float64         `json:"defaultPrice,omitempty"`
+	PriceCalculated                        *bool            `json:"priceCalculated,omitempty"`
+	Conditional                            *bool            `json:"conditional,omitempty"`
+	Taxable                                *bool            `json:"taxable,omitempty"`
+	PriceCalculationType                   *CalculationType `json:"priceCalculationType,omitempty"`
+	PriceCalculationRevenueSharePercentage *float64         `json:"priceCalculationRevenueSharePercentage,omitempty"`
+	ConditionalsMinimumChargePeriod        *ChargePeriod    `json:"conditionalsMinimumChargePeriod,omitempty"`
+	ConditionalsMinimumChargeAmount        *float64         `json:"conditionalsMinimumChargeAmount,omitempty"`
 }
 
 type OnboardingDetails struct {
@@ -2331,8 +2332,8 @@ type PlayerUser struct {
 }
 
 type PriceCalculation struct {
-	CalculationType        CalculationType `json:"calculationType"`
-	RevenueSharePercentage float64         `json:"revenueSharePercentage"`
+	CalculationType        *CalculationType `json:"calculationType,omitempty"`
+	RevenueSharePercentage float64          `json:"revenueSharePercentage"`
 }
 
 type Query struct {

@@ -6,14 +6,15 @@ package resolver
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"github.com/pkg/errors"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go/log"
 )
 
@@ -33,16 +34,8 @@ func (r *mutationResolver) OfferingCreate(ctx context.Context, input *model.Offe
 		}}, err
 	}
 
-	createdOfferingEntity, err := r.Services.OfferingService.GetOffering(ctx, offeringId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Offering not yet available.")
-		return &model.Offering{Metadata: &model.Metadata{
-			ID: offeringId,
-		}}, nil
-	}
 	span.LogFields(log.String("response.offeringId", offeringId))
-	return mapper.MapEntityToOffering(createdOfferingEntity), nil
+	return mapper.MapEntityToOffering(&neo4jentity.OfferingEntity{Id: offeringId}), nil
 }
 
 // OfferingUpdate is the resolver for the offering_Update field.
@@ -66,13 +59,7 @@ func (r *mutationResolver) OfferingUpdate(ctx context.Context, input *model.Offe
 		return nil, err
 	}
 
-	updatedOfferingEntity, err := r.Services.OfferingService.GetOffering(ctx, input.ID)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to fetch offering details")
-		return nil, nil
-	}
-	return mapper.MapEntityToOffering(updatedOfferingEntity), nil
+	return mapper.MapEntityToOffering(&neo4jentity.OfferingEntity{Id: input.ID}), nil
 }
 
 // ExternalLinks is the resolver for the externalLinks field.
@@ -82,7 +69,18 @@ func (r *offeringResolver) ExternalLinks(ctx context.Context, obj *model.Offerin
 
 // Offerings is the resolver for the offerings field.
 func (r *queryResolver) Offerings(ctx context.Context) ([]*model.Offering, error) {
-	panic(fmt.Errorf("not implemented: Offerings - offerings"))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Offerings", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	entities, err := r.Services.OfferingService.GetOfferings(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get offerings")
+		return nil, err
+	}
+
+	return mapper.MapEntitiesToOfferings(entities), nil
 }
 
 // Offering returns generated.OfferingResolver implementation.

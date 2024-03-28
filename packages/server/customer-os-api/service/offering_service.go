@@ -24,7 +24,7 @@ import (
 type OfferingService interface {
 	CreateOffering(ctx context.Context, input *model.OfferingCreateInput) (string, error)
 	UpdateOffering(ctx context.Context, input *model.OfferingUpdateInput) error
-	//GetOfferings(ctx context.Context) (*neo4jentity.OfferingEntities, error)
+	GetOfferings(ctx context.Context) (*neo4jentity.OfferingEntities, error)
 	GetOffering(ctx context.Context, id string) (*neo4jentity.OfferingEntity, error)
 }
 
@@ -42,24 +42,24 @@ func NewOfferingService(log logger.Logger, repository *repository.Repositories, 
 	}
 }
 
-//func (s *offeringService) GetTenantOfferings(ctx context.Context) (*neo4jentity.OfferingEntities, error) {
-//	span, ctx := opentracing.StartSpanFromContext(ctx, "OfferingService.GetTenantOfferings")
-//	defer span.Finish()
-//	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
-//
-//	dbNodes, err := s.repositories.Neo4jRepositories.OfferingReadRepository.GetOfferings(ctx, common.GetTenantFromContext(ctx))
-//	if err != nil {
-//		tracing.TraceErr(span, err)
-//		return nil, fmt.Errorf("GetTenantOfferings: %s", err.Error())
-//	}
-//
-//	tenantOfferings := neo4jentity.OfferingEntities{}
-//	for _, dbNode := range dbNodes {
-//		tenantOfferings = append(tenantOfferings, *neo4jmapper.MapDbNodeToOfferingEntity(dbNode))
-//	}
-//
-//	return &tenantOfferings, nil
-//}
+func (s *offeringService) GetOfferings(ctx context.Context) (*neo4jentity.OfferingEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OfferingService.GetTenantOfferings")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+
+	dbNodes, err := s.repositories.Neo4jRepositories.OfferingReadRepository.GetOfferings(ctx, common.GetTenantFromContext(ctx))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, fmt.Errorf("GetTenantOfferings: %s", err.Error())
+	}
+
+	tenantOfferings := neo4jentity.OfferingEntities{}
+	for _, dbNode := range dbNodes {
+		tenantOfferings = append(tenantOfferings, *neo4jmapper.MapDbNodeToOfferingEntity(dbNode))
+	}
+
+	return &tenantOfferings, nil
+}
 
 func (s *offeringService) GetOffering(ctx context.Context, id string) (*neo4jentity.OfferingEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OfferingService.GetOffering")
@@ -92,7 +92,7 @@ func (s *offeringService) CreateOffering(ctx context.Context, input *model.Offer
 		Name:                                   utils.IfNotNilString(input.Name),
 		Active:                                 utils.IfNotNilBool(input.Active),
 		PricingPeriodInMonths:                  utils.IfNotNilInt64(input.PricingPeriodInMonths, func() int64 { return 1 }),
-		Price:                                  utils.IfNotNilFloat64(input.DefaultPrice),
+		Price:                                  utils.IfNotNilFloat64(input.Price),
 		PriceCalculated:                        utils.IfNotNilBool(input.PriceCalculated),
 		Conditional:                            utils.IfNotNilBool(input.Conditional),
 		Taxable:                                utils.IfNotNilBool(input.Taxable),
@@ -124,8 +124,6 @@ func (s *offeringService) CreateOffering(ctx context.Context, input *model.Offer
 		s.log.Errorf("Error from events processing: %s", err.Error())
 		return "", err
 	}
-
-	WaitForNodeCreatedInNeo4j(ctx, s.repositories, response.Id, neo4jutil.NodeLabelOffering, span)
 
 	return response.Id, nil
 }
@@ -186,8 +184,8 @@ func (s *offeringService) UpdateOffering(ctx context.Context, input *model.Offer
 		updateRequest.PricingPeriodInMonths = *input.PricingPeriodInMonths
 		fieldsMask = append(fieldsMask, offeringpb.OfferingFieldMask_OFFERING_FIELD_PRICING_PERIOD_IN_MONTHS)
 	}
-	if input.DefaultPrice != nil {
-		updateRequest.Price = *input.DefaultPrice
+	if input.Price != nil {
+		updateRequest.Price = *input.Price
 		fieldsMask = append(fieldsMask, offeringpb.OfferingFieldMask_OFFERING_FIELD_PRICE)
 	}
 	if input.Currency != nil {

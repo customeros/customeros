@@ -12,18 +12,22 @@ message CreateOfferingGrpcRequest {
   string loggedInUserId = 2;
   google.protobuf.Timestamp createdAt = 3;
   SourceFields sourceFields = 4;
+
   string name = 5;
   bool active = 6;
   string type = 7;
-  string pricingModel = 8;
-  int64 pricingPeriodInMonths = 9;
-  string currency = 10;
+  string currency = 8;
+
+  string pricingModel = 9;
+  int64 pricingPeriodInMonths = 10;
   double price = 11;
   bool priceCalculated = 12;
-  bool conditional = 13;
-  bool taxable = 14;
-  string priceCalculationType = 15;
-  double priceCalculationRevenueSharePercentage = 16;
+  string priceCalculationType = 13;
+  double priceCalculationRevenueSharePercentage = 14;
+
+  bool taxable = 15;
+
+  bool conditional = 16;
   string conditionalsMinimumChargePeriod = 17;
   double conditionalsMinimumChargeAmount = 18;
 }
@@ -34,21 +38,26 @@ message UpdateOfferingGrpcRequest {
   string loggedInUserId = 3;
   google.protobuf.Timestamp updatedAt = 4;
   string appSource = 5;
+
   string name = 6;
   bool active = 7;
   string type = 8;
-  string pricingModel = 9;
-  int64 pricingPeriodInMonths = 10;
-  string currency = 11;
+  string currency = 9;
+
+  string pricingModel = 10;
+  int64 pricingPeriodInMonths = 11;
   double price = 12;
   bool priceCalculated = 13;
-  bool conditional = 14;
-  bool taxable = 15;
-  string priceCalculationType = 16;
-  double priceCalculationRevenueSharePercentage = 17;
+  string priceCalculationType = 14;
+  double priceCalculationRevenueSharePercentage = 15;
+
+  bool taxable = 16;
+
+  bool conditional = 17;
   string conditionalsMinimumChargePeriod = 18;
   double conditionalsMinimumChargeAmount = 19;
-  repeated OfferingFieldMask fieldsMask = 20;
+
+  repeated OfferingFieldMask fieldsMask = 99;
 }
 
 enum OfferingFieldMask {
