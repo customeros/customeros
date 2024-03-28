@@ -547,7 +547,7 @@ func (h *ContractEventHandler) updateStatus(ctx context.Context, tenant, contrac
 		return "", false, err
 	}
 	contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
-	status, err := h.deriveContractStatus(ctx, tenant, *contractEntity)
+	status, err := h.DeriveContractStatus(ctx, tenant, *contractEntity)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while deriving contract %s status: %s", contractId, err.Error())
@@ -609,19 +609,21 @@ func (h *ContractEventHandler) OnRefreshStatus(ctx context.Context, evt eventsto
 	return nil
 }
 
-func (h *ContractEventHandler) deriveContractStatus(ctx context.Context, tenant string, contractEntity neo4jentity.ContractEntity) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractEventHandler.deriveContractStatus")
+func (h *ContractEventHandler) DeriveContractStatus(ctx context.Context, tenant string, contractEntity neo4jentity.ContractEntity) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractEventHandler.DeriveContractStatus")
 	defer span.Finish()
 
 	now := utils.Now()
 
 	// If endedAt is not nil and is in the past, the contract is considered Ended.
 	if contractEntity.IsEnded() {
+		span.LogFields(log.String("result.status", neo4jenum.ContractStatusEnded.String()))
 		return neo4jenum.ContractStatusEnded.String(), nil
 	}
 
 	// If serviceStartedAt is nil or in the future, the contract is considered Draft.
 	if contractEntity.ServiceStartedAt == nil || contractEntity.ServiceStartedAt.After(now) {
+		span.LogFields(log.String("result.status", neo4jenum.ContractStatusDraft.String()))
 		return neo4jenum.ContractStatusDraft.String(), nil
 	}
 
@@ -635,12 +637,14 @@ func (h *ContractEventHandler) deriveContractStatus(ctx context.Context, tenant 
 		}
 		if opportunityDbNode != nil {
 			opportunityEntity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
-			if opportunityEntity.RenewalDetails.RenewedAt != nil && opportunityEntity.RenewalDetails.RenewedAt.After(now) {
+			if opportunityEntity.RenewalDetails.RenewedAt != nil && opportunityEntity.RenewalDetails.RenewedAt.Before(now) {
+				span.LogFields(log.String("result.status", neo4jenum.ContractStatusLive.String()))
 				return neo4jenum.ContractStatusOutOfContract.String(), nil
 			}
 		}
 	}
 
 	// Otherwise, the contract is considered Live.
+	span.LogFields(log.String("result.status", neo4jenum.ContractStatusLive.String()))
 	return neo4jenum.ContractStatusLive.String(), nil
 }
