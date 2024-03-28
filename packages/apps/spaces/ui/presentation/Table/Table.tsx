@@ -8,8 +8,7 @@ import type {
   Table as TableInstance,
 } from '@tanstack/react-table';
 
-import {
-  memo,
+import React, {
   useRef,
   useMemo,
   useState,
@@ -18,6 +17,7 @@ import {
   MutableRefObject,
 } from 'react';
 
+import { twMerge } from 'tailwind-merge';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import {
   createRow,
@@ -29,9 +29,10 @@ import {
   getFilteredRowModel,
 } from '@tanstack/react-table';
 
+import { cn } from '@ui/utils/cn';
 import { Center } from '@ui/layout/Center';
-import { Checkbox } from '@ui/form/Checkbox';
-import { Flex, FlexProps } from '@ui/layout/Flex';
+import { FlexProps } from '@ui/layout/Flex';
+import { Checkbox, CheckboxProps } from '@ui/form/Checkbox/Checkbox2';
 
 declare module '@tanstack/table-core' {
   // REASON: TData & TValue are not used in this interface but need to be defined
@@ -57,6 +58,7 @@ interface TableProps<T extends object> {
   columns: ColumnDef<T, any>[];
   enableRowSelection?: boolean;
   enableTableActions?: boolean;
+  rowSelected?: RowSelectionState;
   contentHeight?: number | string;
   onFullRowSelection?: (id?: string) => void;
   onSortingChange?: OnChangeFn<SortingState>;
@@ -64,25 +66,6 @@ interface TableProps<T extends object> {
   // REASON: Typing TValue is too exhaustive and has no benefit
   renderTableActions?: (table: TableInstance<T>) => React.ReactNode;
 }
-
-const fullRowSelectionStyle = (index: number) => ({
-  '&:after': {
-    content: '""',
-    height: '2px',
-    width: '100%',
-    background: 'gray.200',
-    bottom: '-1px',
-    position: 'absolute',
-  },
-  '&:before': {
-    content: '""',
-    height: '2px',
-    top: index === 0 ? '-1px' : '-2px',
-    width: '100%',
-    background: 'gray.200',
-    position: 'absolute',
-  },
-});
 
 export const Table = <T extends object>({
   data,
@@ -94,6 +77,7 @@ export const Table = <T extends object>({
   totalItems = 40,
   onSortingChange,
   sorting: _sorting,
+  rowSelected = {},
   renderTableActions,
   enableRowSelection,
   enableTableActions,
@@ -105,12 +89,14 @@ export const Table = <T extends object>({
 }: TableProps<T>) => {
   const scrollElementRef = useRef<HTMLDivElement>(null);
   const [sorting, setSorting] = useState<SortingState>([]);
-
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const table = useReactTable<T>({
     data,
     columns,
+    onRowSelectionChange: setRowSelection,
     state: {
       sorting: _sorting ?? sorting,
+      rowSelection: rowSelection,
     },
     manualSorting: true,
     enableRowSelection: enableRowSelection || fullRowSelection,
@@ -163,93 +149,113 @@ export const Table = <T extends object>({
     () => createRow<T>(table, 'SKELETON', {} as T, totalItems + 1, 0),
     [table, totalItems],
   );
+  const THeaderMinW =
+    table.getCenterTotalSize() + (enableRowSelection ? 28 : 0);
 
   return (
-    <Flex w='100%' flexDir='column' position='relative'>
+    <div className='flex w-full flex-col relative'>
       <TContent
         ref={scrollElementRef}
         height={contentHeight}
         borderColor={borderColor}
       >
-        <THeader
-          top='0'
-          position='sticky'
-          minW={table.getCenterTotalSize() + (enableRowSelection ? 28 : 0)}
-        >
-          {table.getHeaderGroups().map((headerGroup) => (
-            <THeaderGroup key={headerGroup.id}>
-              <THeaderCell p='0' w={enableRowSelection ? '28px' : 2} minH='8' />
-              {headerGroup.headers.map((header, index) => (
-                <THeaderCell
-                  key={header.id}
-                  flex={header.colSpan ?? '1'}
-                  minWidth={`${header.getSize()}px`}
-                  maxWidth={
-                    header.column.columnDef.fixWidth
-                      ? `${header.getSize()}px`
-                      : 'none'
-                  }
-                  pr={index === 0 ? '0' : undefined}
-                  pl={(() => {
-                    switch (index) {
-                      case 0:
-                        return '2';
-                      case 1:
-                        return '0';
-                      default:
-                        return '6';
-                    }
-                  })()}
-                >
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext(),
-                      )}
-                </THeaderCell>
-              ))}
-            </THeaderGroup>
-          ))}
+        <THeader className='top-0 sticky' style={{ minWidth: THeaderMinW }}>
+          {table.getHeaderGroups().map((headerGroup) => {
+            const width = enableRowSelection ? 'w-7' : 'w-2';
+
+            return (
+              <THeaderGroup key={headerGroup.id}>
+                <THeaderCell className={cn('p-0 min-h-8', width)} />
+                {headerGroup.headers.map((header, index) => {
+                  const minWidth = header.getSize();
+                  const maxWidth = header.column.columnDef.fixWidth
+                    ? `${header.getSize()}px`
+                    : 'none';
+                  const flex = header.colSpan ?? '1';
+                  const paddingRight = index === 0 && 'pr-0';
+                  const paddingLeft =
+                    index === 0 ? 'pl-2' : index === 1 ? 'pl-0' : 'pl-6';
+
+                  return (
+                    <THeaderCell
+                      key={header.id}
+                      className={cn(paddingRight, paddingLeft)}
+                      style={{ minWidth, maxWidth, flex }}
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                    </THeaderCell>
+                  );
+                })}
+              </THeaderGroup>
+            );
+          })}
         </THeader>
-        <TBody width='100%'>
+        <TBody className='w-full '>
           {!virtualRows.length && (
-            <TRow justifyContent='center'>No results found</TRow>
+            <TRow className='justify-center'>No results found</TRow>
           )}
           {virtualRows.map((virtualRow) => {
             const row = rows[virtualRow.index];
 
+            const isSelected = row?.id === Object.keys(rowSelected || {})[0];
+
+            const minH = `${virtualRow.size}px`;
+
+            const minW =
+              table.getCenterTotalSize() + (enableRowSelection ? 28 : 0);
+
+            const top = `${virtualRow.start}px`;
+
+            const backgroundColor =
+              virtualRow.index % 2 === 0 ? 'bg-gray-25' : 'bg-white';
+
+            const topPosition =
+              virtualRow.index === 0
+                ? '[&]:before:top[-1px]'
+                : '[&]:before:top-[-2px]';
+
+            const hoverStyle = fullRowSelection
+              ? 'hover:cursor-pointer'
+              : 'group';
+
+            const enabledRowOpacity = enableRowSelection
+              ? 'opacity-100'
+              : 'opacity-0';
+
+            const enabledRowPointer = enableRowSelection
+              ? 'pointer-events-auto'
+              : 'pointer-events-none';
+            const fullRowSelectionStyleDynamic = `group hover:after:contents-[""] hover:after:h-[2px] hover:after:w-full hover:after:bg-gray-200 hover:after:bottom-[-1px] hover:after:absolute hover:before:contents-[""] hover:before:w-full hover:before:bg-gray-200 hover:before:h-[2px] hover:before:absolute`;
+
+            const rowHoverStyle =
+              fullRowSelection && fullRowSelectionStyleDynamic;
+            const focusStyle = isSelected
+              ? 'border-b-2 border-gray-200 border-t-2'
+              : '';
+
             return (
               <TRow
+                className={cn(
+                  backgroundColor,
+                  topPosition,
+                  hoverStyle,
+                  rowHoverStyle,
+                  focusStyle,
+                  'group',
+                )}
+                style={{
+                  minHeight: minH,
+                  minWidth: minW,
+                  top: top,
+                }}
                 key={virtualRow.key}
                 data-index={virtualRow.index}
-                minH={`${virtualRow.size}px`}
-                minW={
-                  table.getCenterTotalSize() + (enableRowSelection ? 28 : 0)
-                }
-                top={`${virtualRow.start}px`}
                 ref={rowVirtualizer.measureElement}
-                bg={virtualRow.index % 2 === 0 ? 'gray.25' : 'white'}
-                _hover={
-                  fullRowSelection
-                    ? {
-                        '&': {
-                          cursor: fullRowSelection ? 'pointer' : 'default',
-                          ...fullRowSelectionStyle(virtualRow.index),
-                        },
-                      }
-                    : {
-                        '& .row-select-checkbox': {
-                          opacity: '1',
-                          visibility: 'visible',
-                        },
-                      }
-                }
-                sx={
-                  fullRowSelection && row?.getIsSelected()
-                    ? fullRowSelectionStyle(virtualRow.index)
-                    : undefined
-                }
                 onClick={
                   fullRowSelection
                     ? (s) => {
@@ -261,52 +267,50 @@ export const Table = <T extends object>({
                     : undefined
                 }
               >
-                <TCell pl='2' pr='0' maxW='fit-content'>
+                <TCell className='pl-2 pr-0 max-w-fit'>
                   {!fullRowSelection && (
-                    <Flex
-                      align='center'
-                      flexDir='row'
-                      h='full'
-                      opacity={enableRowSelection ? 1 : 0}
-                      pointerEvents={enableRowSelection ? 'auto' : 'none'}
+                    <div
+                      className={cn(
+                        enabledRowPointer,
+                        enabledRowOpacity,
+                        'items-center ',
+                      )}
                     >
                       <MemoizedCheckbox
+                        className='group-hover:visible group-hover:opacity-100 data-[state=checked]:bg-primary-100 data-[state=checked]:ring-primary-500 data-[state=checked]:visible data-[state=checked]:opacity-100 '
                         key={`checkbox-${virtualRow.index}`}
-                        isSelected={row?.getIsSelected()}
-                        isDisabled={!row || !row?.getCanSelect()}
-                        onChange={row?.getToggleSelectedHandler()}
+                        isChecked={row?.getIsSelected()}
+                        disabled={!row || !row?.getCanSelect()}
+                        onChange={(isChecked) => {
+                          row?.getToggleSelectedHandler()(isChecked);
+                          /// @ts-expect-error improve this later
+                          const rowId = (row.original as unknown)?.id;
+                          onFullRowSelection?.(rowId);
+                        }}
                       />
-                    </Flex>
+                    </div>
                   )}
                 </TCell>
                 {(row ?? skeletonRow).getAllCells()?.map((cell, index) => {
+                  const paddingRight = index === 0 && 'p-0';
+                  const paddingLeft =
+                    index === 0 ? 'pl-2' : index === 1 ? 'pl-0' : 'pl-6';
+                  const minWidth = cell.column.getSize();
+                  const maxWidth = cell.column.columnDef.fixWidth
+                    ? `${cell.column.getSize()}`
+                    : 'none';
+                  const flex =
+                    table
+                      .getFlatHeaders()
+                      .find((h) => h.id === cell.column.columnDef.id)
+                      ?.colSpan ?? '1';
+
                   return (
                     <TCell
                       key={cell.id}
+                      className={cn(paddingRight, paddingLeft, 'flex')}
+                      style={{ minWidth, maxWidth, flex }}
                       data-index={cell.row.index}
-                      pr={index === 0 ? '0' : undefined}
-                      pl={(() => {
-                        switch (index) {
-                          case 0:
-                            return '2';
-                          case 1:
-                            return '0';
-                          default:
-                            return '6';
-                        }
-                      })()}
-                      minW={`${cell.column.getSize()}px`}
-                      maxW={
-                        cell.column.columnDef.fixWidth
-                          ? `${cell.column.getSize()}px`
-                          : 'none'
-                      }
-                      flex={
-                        table
-                          .getFlatHeaders()
-                          .find((h) => h.id === cell.column.columnDef.id)
-                          ?.colSpan ?? '1'
-                      }
                     >
                       {row
                         ? flexRender(
@@ -324,120 +328,148 @@ export const Table = <T extends object>({
       </TContent>
 
       {enableTableActions && <TActions>{renderTableActions?.(table)}</TActions>}
-    </Flex>
+    </div>
   );
 };
 
-const TBody = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
-  return (
-    <Flex
-      ref={ref}
-      flex='1'
-      w='100%'
-      height='inherit'
-      position='relative'
-      {...props}
-    />
-  );
-});
+interface GenericProps {
+  tabIndex?: number;
+  className?: string;
+  children?: React.ReactNode;
+  style?: React.CSSProperties;
+  onClick?: (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => void;
+}
 
-const TRow = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
-  return (
-    <Flex
-      top='0'
-      left='0'
-      ref={ref}
-      flex='1'
-      width='100%'
-      fontSize='sm'
-      position='absolute'
-      borderBottom='1px solid'
-      borderBottomColor='gray.100'
-      {...props}
-    />
-  );
-});
-
-const TCell = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
-  return (
-    <Flex
-      px='6'
-      py='2'
-      flex='1'
-      flexDir='column'
-      whiteSpace='nowrap'
-      wordBreak='keep-all'
-      justify='center'
-      ref={ref}
-      {...props}
-    />
-  );
-});
-
-const TContent = forwardRef<HTMLDivElement, FlexProps>(
-  ({ height, borderColor, ...props }, ref) => {
+const TBody = forwardRef<HTMLDivElement, GenericProps>(
+  ({ className, children, style, ...props }, ref) => {
     return (
-      <Flex
+      <div
         ref={ref}
-        bg='gray.25'
-        overflow='auto'
-        flexDir='column'
-        borderStyle='hidden'
-        borderTop='1px solid'
-        borderColor={borderColor ? borderColor : 'gray.200'}
-        height={height ? height : 'calc(100vh - 48px)'}
-        sx={{
-          '&::-webkit-scrollbar': {
-            width: '8px',
-            height: '8px',
-            background: 'transparent',
-          },
-          '&::-webkit-scrollbar-track': {
-            width: '8px',
-            height: '8px',
-            background: 'transparent',
-          },
-          '&::-webkit-scrollbar-thumb': {
-            background: 'gray.500',
-            borderRadius: '8px',
-          },
-        }}
+        className={twMerge('flex w-full flex-1 relative', className)}
+        style={style}
         {...props}
-      />
+      >
+        {children}
+      </div>
     );
   },
 );
 
-const THeader = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
-  return (
-    <Flex
-      ref={ref}
-      bg='white'
-      width='inherit'
-      borderBottom='1px solid'
-      borderBottomColor='gray.100'
-      zIndex='docked'
-      {...props}
-    />
-  );
-});
+const TRow = forwardRef<HTMLDivElement, GenericProps>(
+  ({ className, style, tabIndex, onClick, children, ...props }, ref) => {
+    return (
+      <div
+        className={cn(
+          'top-0 left-0 flex-1 flex w-full text-sm absolute border-b border-gray-100',
+          className,
+        )}
+        ref={ref}
+        style={style}
+        onClick={onClick}
+        {...props}
+      >
+        {children}
+      </div>
+    );
+  },
+);
 
-const THeaderGroup = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
-  return <Flex ref={ref} flex='1' {...props} />;
-});
+const TCell = forwardRef<HTMLDivElement, GenericProps>(
+  ({ children, className, style, ...props }, ref) => {
+    return (
+      <div
+        className={twMerge(
+          'flex flex-1 py-2 px-6 h-full flex-col whitespace-nowrap justify-center self-center',
+          className,
+        )}
+        style={style}
+        ref={ref}
+        {...props}
+      >
+        {children}
+      </div>
+    );
+  },
+);
 
-const THeaderCell = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
-  return (
-    <Flex
-      align='center'
-      px='6'
-      py='1'
-      whiteSpace='nowrap'
-      ref={ref}
-      {...props}
-    />
-  );
-});
+interface TContentProps {
+  className?: string;
+  borderColor?: string;
+  height?: string | number;
+  children?: React.ReactNode;
+  style?: React.CSSProperties;
+}
+
+const TContent = forwardRef<HTMLDivElement, TContentProps>(
+  ({ height, borderColor, children, className, style, ...props }, ref) => {
+    const borderColorDynamic = borderColor ? borderColor : 'gray.200';
+    const heightDynamic = height ? height : 'calc(100vh - 48px)';
+    const scrollBarStyle =
+      '[&::-webkit-scrollbar-track]:size-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-500 [&::-webkit-scrollbar-thumb]:rounded-lg [&::-webkit-scrollbar]:size-2 [&::-webkit-scrollbar]:bg-transparent';
+
+    return (
+      <div
+        ref={ref}
+        className={twMerge(
+          'flex flex-col bg-gray-25 border-t border-hidden overflow-auto',
+          scrollBarStyle,
+          className,
+        )}
+        style={{
+          height: heightDynamic,
+          borderColor: borderColorDynamic,
+          ...style,
+        }}
+        {...props}
+      >
+        {children}
+      </div>
+    );
+  },
+);
+
+const THeader = forwardRef<HTMLDivElement, GenericProps>(
+  ({ className, children, style, ...props }, ref) => {
+    return (
+      <div
+        ref={ref}
+        {...props}
+        className={twMerge('bg-white border-b border-gray-100 z-50', className)}
+        style={style}
+      >
+        {children}
+      </div>
+    );
+  },
+);
+
+const THeaderGroup = forwardRef<HTMLDivElement, GenericProps>(
+  ({ className, children, ...props }, ref) => {
+    return (
+      <div ref={ref} className='flex' {...props}>
+        {children}
+      </div>
+    );
+  },
+);
+
+const THeaderCell = forwardRef<HTMLDivElement, GenericProps>(
+  ({ className, style, children, ...props }, ref) => {
+    return (
+      <div
+        ref={ref}
+        className={twMerge(
+          'flex items-center px-6 py-1 whitespace-nowrap',
+          className,
+        )}
+        style={style}
+        {...props}
+      >
+        {children}
+      </div>
+    );
+  },
+);
 
 const TActions = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
   return (
@@ -445,27 +477,25 @@ const TActions = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
   );
 });
 
-interface MemoizedCheckboxProps {
-  isSelected: boolean;
-  isDisabled: boolean;
-  onChange: (event: unknown) => void;
-}
-
-const MemoizedCheckbox = memo<MemoizedCheckboxProps>(
-  ({ isDisabled, isSelected, onChange }) => {
-    return (
-      <Checkbox
-        size='lg'
-        className='row-select-checkbox'
-        isChecked={isSelected}
-        disabled={isDisabled}
-        onChange={onChange}
-        opacity={isSelected ? '1' : '0'}
-        visibility={isSelected ? 'visible' : 'hidden'}
-      />
-    );
-  },
-);
+const MemoizedCheckbox = ({
+  className,
+  disabled,
+  isChecked,
+  onChange,
+}: CheckboxProps) => {
+  return (
+    <Checkbox
+      className={cn(
+        className,
+        isChecked ? 'opacity-100' : 'opacity-0',
+        isChecked ? 'visible' : 'hidden',
+      )}
+      isChecked={isChecked}
+      disabled={disabled}
+      onChange={onChange}
+    />
+  );
+};
 
 export type {
   RowSelectionState,
