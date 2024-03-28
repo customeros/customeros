@@ -58,7 +58,6 @@ interface TableProps<T extends object> {
   columns: ColumnDef<T, any>[];
   enableRowSelection?: boolean;
   enableTableActions?: boolean;
-  rowSelected?: RowSelectionState;
   contentHeight?: number | string;
   onFullRowSelection?: (id?: string) => void;
   onSortingChange?: OnChangeFn<SortingState>;
