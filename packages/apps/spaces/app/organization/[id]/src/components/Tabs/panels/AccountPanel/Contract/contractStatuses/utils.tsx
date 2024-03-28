@@ -6,11 +6,15 @@ import { Edit03 } from '@ui/media/icons/Edit03';
 import { XSquare } from '@ui/media/icons/XSquare';
 import { DotLive } from '@ui/media/icons/DotLive';
 import { DateTimeUtils } from '@spaces/utils/date';
+import { PauseCircle } from '@ui/media/icons/PauseCircle';
 
 export const contractOptionIcon: Record<ContractStatus, JSX.Element | null> = {
   [ContractStatus.Draft]: <Edit03 color='gray.500' boxSize='inherit' />,
   [ContractStatus.Ended]: <XSquare color='gray.500' boxSize='inherit' />,
   [ContractStatus.Live]: <DotLive color='inherit' boxSize='inherit' />,
+  [ContractStatus.OutOfContract]: (
+    <PauseCircle color='warning.500' boxSize='inherit' />
+  ),
   [ContractStatus.Undefined]: null,
 };
 

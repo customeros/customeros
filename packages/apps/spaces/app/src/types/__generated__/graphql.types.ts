@@ -541,15 +541,27 @@ export type ContactsPage = Pages & {
 
 export type Contract = MetadataInterface & {
   __typename?: 'Contract';
-  /** @deprecated Use billingDetails instead. */
+  /**
+   * Deprecated, use billingDetails instead.
+   * @deprecated Use billingDetails instead.
+   */
   addressLine1?: Maybe<Scalars['String']['output']>;
-  /** @deprecated Use billingDetails instead. */
+  /**
+   * Deprecated, use billingDetails instead.
+   * @deprecated Use billingDetails instead.
+   */
   addressLine2?: Maybe<Scalars['String']['output']>;
-  /** @deprecated Use metadata instead. */
+  /**
+   * Deprecated, use metadata instead.
+   * @deprecated Use metadata instead.
+   */
   appSource: Scalars['String']['output'];
   attachments?: Maybe<Array<Attachment>>;
   autoRenew: Scalars['Boolean']['output'];
-  /** @deprecated Use billingDetails instead. */
+  /**
+   * Deprecated, use billingDetails instead.
+   * @deprecated Use billingDetails instead.
+   */
   billingCycle?: Maybe<ContractBillingCycle>;
   billingDetails?: Maybe<BillingDetails>;
   billingEnabled: Scalars['Boolean']['output'];
@@ -561,52 +573,112 @@ export type Contract = MetadataInterface & {
   contractSigned?: Maybe<Scalars['Time']['output']>;
   contractStatus: ContractStatus;
   contractUrl?: Maybe<Scalars['String']['output']>;
-  /** @deprecated Use billingDetails instead. */
+  /**
+   * Deprecated, use billingDetails instead.
+   * @deprecated Use billingDetails instead.
+   */
   country?: Maybe<Scalars['String']['output']>;
-  /** @deprecated Use metadata instead. */
+  /**
+   * Deprecated, use metadata instead.
+   * @deprecated Use metadata instead.
+   */
   createdAt: Scalars['Time']['output'];
   createdBy?: Maybe<User>;
   currency?: Maybe<Currency>;
-  /** @deprecated Use contractEnded instead. */
+  /**
+   * Deprecated, use contractEnded instead.
+   * @deprecated Use contractEnded instead.
+   */
   endedAt?: Maybe<Scalars['Time']['output']>;
   externalLinks: Array<ExternalSystem>;
-  /** @deprecated Use metadata instead. */
+  /**
+   * Deprecated, use metadata instead.
+   * @deprecated Use metadata instead.
+   */
   id: Scalars['ID']['output'];
-  /** @deprecated Use billingDetails instead. */
+  /**
+   * Deprecated, use billingDetails instead.
+   * @deprecated Use billingDetails instead.
+   */
   invoiceEmail?: Maybe<Scalars['String']['output']>;
-  /** @deprecated Use billingDetails instead. */
+  /**
+   * Deprecated, use billingDetails instead.
+   * @deprecated Use billingDetails instead.
+   */
   invoiceNote?: Maybe<Scalars['String']['output']>;
-  /** @deprecated Use billingDetails instead. */
+  /**
+   * Deprecated, use billingDetails instead.
+   * @deprecated Use billingDetails instead.
+   */
   invoicingStartDate?: Maybe<Scalars['Time']['output']>;
-  /** @deprecated Use billingDetails instead. */
+  /**
+   * Deprecated, use billingDetails instead.
+   * @deprecated Use billingDetails instead.
+   */
   locality?: Maybe<Scalars['String']['output']>;
   metadata: Metadata;
-  /** @deprecated Use contractName instead. */
+  /**
+   * Deprecated, use contractName instead.
+   * @deprecated Use contractName instead.
+   */
   name: Scalars['String']['output'];
   opportunities?: Maybe<Array<Opportunity>>;
-  /** @deprecated Use billingDetails instead. */
+  /**
+   * Deprecated, use billingDetails instead.
+   * @deprecated Use billingDetails instead.
+   */
   organizationLegalName?: Maybe<Scalars['String']['output']>;
   owner?: Maybe<User>;
-  /** @deprecated Use contractRenewalCycle instead. */
+  /**
+   * Deprecated, use contractRenewalCycle instead.
+   * @deprecated Use contractRenewalCycle instead.
+   */
   renewalCycle: ContractRenewalCycle;
-  /** @deprecated Use committedPeriods instead. */
+  /**
+   * Deprecated, use committedPeriods instead.
+   * @deprecated Use committedPeriods instead.
+   */
   renewalPeriods?: Maybe<Scalars['Int64']['output']>;
-  /** @deprecated Use contractLineItems instead. */
+  /**
+   * Deprecated, use contractLineItems instead.
+   * @deprecated Use contractLineItems instead.
+   */
   serviceLineItems?: Maybe<Array<ServiceLineItem>>;
   serviceStarted?: Maybe<Scalars['Time']['output']>;
-  /** @deprecated Use serviceStarted instead. */
+  /**
+   * Deprecated, use serviceStarted instead.
+   * @deprecated Use serviceStarted instead.
+   */
   serviceStartedAt?: Maybe<Scalars['Time']['output']>;
-  /** @deprecated Use contractSigned instead. */
+  /**
+   * Deprecated, use contractSigned instead.
+   * @deprecated Use contractSigned instead.
+   */
   signedAt?: Maybe<Scalars['Time']['output']>;
-  /** @deprecated Use metadata instead. */
+  /**
+   * Deprecated, use metadata instead.
+   * @deprecated Use metadata instead.
+   */
   source: DataSource;
-  /** @deprecated Use metadata instead. */
+  /**
+   * Deprecated, use metadata instead.
+   * @deprecated Use metadata instead.
+   */
   sourceOfTruth: DataSource;
-  /** @deprecated Use contractStatus instead. */
+  /**
+   * Deprecated, use contractStatus instead.
+   * @deprecated Use contractStatus instead.
+   */
   status: ContractStatus;
-  /** @deprecated Use metadata instead. */
+  /**
+   * Deprecated, use metadata instead.
+   * @deprecated Use metadata instead.
+   */
   updatedAt: Scalars['Time']['output'];
-  /** @deprecated Use billingDetails instead. */
+  /**
+   * Deprecated, use billingDetails instead.
+   * @deprecated Use billingDetails instead.
+   */
   zip?: Maybe<Scalars['String']['output']>;
 };
 
@@ -651,6 +723,7 @@ export enum ContractStatus {
   Draft = 'DRAFT',
   Ended = 'ENDED',
   Live = 'LIVE',
+  OutOfContract = 'OUT_OF_CONTRACT',
   Undefined = 'UNDEFINED',
 }
 
@@ -3638,7 +3711,7 @@ export type Query = {
   organizationPlan: OrganizationPlan;
   organizationPlans: Array<OrganizationPlan>;
   organizationPlansForOrganization: Array<OrganizationPlan>;
-  organization_ByCustomerOsId?: Maybe<Organization>;
+  organization_ByCustomerOsId: Organization;
   organization_DistinctOwners: Array<User>;
   organizations: OrganizationPage;
   phoneNumber: PhoneNumber;
