@@ -53,7 +53,7 @@ func (s *contractService) UpkeepContracts() {
 	s.updateContractStatuses(ctx, now)
 	s.rolloutContractRenewals(ctx, now)
 	// this is a catch-all for contracts that have ended but still have active renewal opportunities
-	s.closeEndedContractOpportunityRenewals(ctx, now)
+	s.closeActiveRenewalOpportunitiesForEndedContracts(ctx)
 }
 
 func (s *contractService) updateContractStatuses(ctx context.Context, referenceTime time.Time) {
@@ -166,8 +166,8 @@ func (s *contractService) rolloutContractRenewals(ctx context.Context, reference
 	}
 }
 
-func (s *contractService) closeEndedContractOpportunityRenewals(ctx context.Context, referenceTime time.Time) {
-	span, ctx := tracing.StartTracerSpan(ctx, "ContractService.closeEndedContractOpportunityRenewals")
+func (s *contractService) closeActiveRenewalOpportunitiesForEndedContracts(ctx context.Context) {
+	span, ctx := tracing.StartTracerSpan(ctx, "ContractService.closeActiveRenewalOpportunitiesForEndedContracts")
 	defer span.Finish()
 
 	for {
@@ -179,7 +179,7 @@ func (s *contractService) closeEndedContractOpportunityRenewals(ctx context.Cont
 			// continue as normal
 		}
 
-		records, err := s.repositories.OpportunityRepository.GetRenewalOpportunitiesForClosingAsLost(ctx, referenceTime)
+		records, err := s.repositories.Neo4jRepositories.OpportunityReadRepository.GetRenewalOpportunitiesForClosingAsLost(ctx)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting opportunities for closing: %v", err)
@@ -203,6 +203,12 @@ func (s *contractService) closeEndedContractOpportunityRenewals(ctx context.Cont
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error closing renewal opportunity: %s", err.Error())
+			} else {
+				err = s.repositories.Neo4jRepositories.OpportunityWriteRepository.MarkRenewalRequested(ctx, record.Tenant, record.OpportunityId)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					s.log.Errorf("Error marking renewal rollout requested: %s", err.Error())
+				}
 			}
 		}
 

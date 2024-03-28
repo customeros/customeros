@@ -21,7 +21,6 @@ type Repositories struct {
 
 	Neo4jRepositories *neo4jRepository.Repositories
 
-	OpportunityRepository  neo4jrepo.OpportunityRepository
 	OrganizationRepository neo4jrepo.OrganizationRepository
 }
 
@@ -34,7 +33,6 @@ func InitRepositories(cfg *config.Config, driver *neo4j.DriverWithContext, gormD
 		CommonRepositories: commrepo.InitRepositories(gormDb, driver),
 		Neo4jRepositories:  neo4jRepository.InitNeo4jRepositories(driver, cfg.Neo4j.Database),
 
-		OpportunityRepository:  neo4jrepo.NewOpportunityRepository(driver),
 		OrganizationRepository: neo4jrepo.NewOrganizationRepository(driver),
 	}
 	return &repositories

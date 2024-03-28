@@ -380,7 +380,8 @@ func MapDbNodeToContractEntity(dbNode *dbtype.Node) *entity.ContractEntity {
 		DueDays:                         utils.GetInt64PropOrZero(props, "dueDays"),
 		Check:                           utils.GetBoolPropOrFalse(props, "check"),
 		ContractInternalFields: entity.ContractInternalFields{
-			StatusRenewalRequestedAt: utils.GetTimePropOrNil(props, "techStatusRenewalRequestedAt"),
+			StatusRenewalRequestedAt:  utils.GetTimePropOrNil(props, "techStatusRenewalRequestedAt"),
+			RolloutRenewalRequestedAt: utils.GetTimePropOrNil(props, "techRolloutRenewalRequestedAt"),
 		},
 	}
 	return &contract
@@ -692,6 +693,9 @@ func MapDbNodeToOpportunityEntity(node *dbtype.Node) *entity.OpportunityEntity {
 			RenewalUpdatedByUserId: utils.GetStringPropOrEmpty(props, "renewalUpdatedByUserId"),
 			RenewalUpdatedByUserAt: utils.GetTimePropOrNil(props, "renewalUpdatedByUserAt"),
 			RenewalApproved:        utils.GetBoolPropOrFalse(props, "renewalApproved"),
+		},
+		InternalFields: entity.OpportunityInternalFields{
+			RolloutRenewalRequestedAt: utils.GetTimePropOrNil(props, "techRolloutRenewalRequestedAt"),
 		},
 	}
 	return &opportunity

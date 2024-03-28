@@ -5,6 +5,10 @@ import (
 	"time"
 )
 
+type OpportunityInternalFields struct {
+	RolloutRenewalRequestedAt *time.Time
+}
+
 type OpportunityEntity struct {
 	Id                string
 	Name              string
@@ -26,6 +30,7 @@ type OpportunityEntity struct {
 	AppSource         string
 	OwnerUserId       string
 	RenewalDetails    RenewalDetails
+	InternalFields    OpportunityInternalFields
 }
 
 type RenewalDetails struct {

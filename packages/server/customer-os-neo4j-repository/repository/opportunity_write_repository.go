@@ -77,6 +77,7 @@ type OpportunityWriteRepository interface {
 	UpdateNextRenewalDate(ctx context.Context, tenant, opportunityId string, updatedAt time.Time, renewedAt *time.Time) error
 	CloseWin(ctx context.Context, tenant, opportunityId string, updatedAt, closedAt time.Time) error
 	CloseLoose(ctx context.Context, tenant, opportunityId string, updatedAt, closedAt time.Time) error
+	MarkRenewalRequested(ctx context.Context, tenant, opportunityId string) error
 }
 
 type opportunityWriteRepository struct {
@@ -397,6 +398,29 @@ func (r *opportunityWriteRepository) CloseLoose(ctx context.Context, tenant, opp
 		"updatedAt":     updatedAt,
 		"closedAt":      closedAt,
 		"internalStage": enum.OpportunityInternalStageClosedLost,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *opportunityWriteRepository) MarkRenewalRequested(ctx context.Context, tenant, opportunityId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.MarkRenewalRequested")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, opportunityId)
+
+	cypher := fmt.Sprintf(`MATCH (op:Opportunity {id:$opportunityId})
+				WHERE op:Opportunity_%s
+				SET op.techRolloutRenewalRequestedAt=$now`, tenant)
+	params := map[string]any{
+		"opportunityId": opportunityId,
+		"now":           utils.Now(),
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

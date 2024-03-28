@@ -483,6 +483,9 @@ func (h *OpportunityEventHandler) OnCloseLoose(ctx context.Context, evt eventsto
 	}
 
 	opportunityId := aggregate.GetOpportunityObjectID(evt.GetAggregateID(), eventData.Tenant)
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, opportunityId)
+
 	err := h.repositories.Neo4jRepositories.OpportunityWriteRepository.CloseLoose(ctx, eventData.Tenant, opportunityId, eventData.UpdatedAt, eventData.ClosedAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
