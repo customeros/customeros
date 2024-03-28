@@ -12,10 +12,16 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 )
 
+type TenantAndOpportunityId struct {
+	Tenant        string
+	OpportunityId string
+}
+
 type OpportunityReadRepository interface {
 	GetOpportunityById(ctx context.Context, tenant, opportunityId string) (*dbtype.Node, error)
 	GetActiveRenewalOpportunityForContract(ctx context.Context, tenant, contractId string) (*dbtype.Node, error)
 	GetActiveRenewalOpportunitiesForOrganization(ctx context.Context, tenant, organizationId string) ([]*dbtype.Node, error)
+	GetRenewalOpportunitiesForClosingAsLost(ctx context.Context) ([]TenantAndOpportunityId, error)
 }
 
 type opportunityReadRepository struct {
@@ -134,4 +140,50 @@ func (r *opportunityReadRepository) GetActiveRenewalOpportunitiesForOrganization
 	}
 	span.LogFields(log.Int("result.count", len(result.([]*dbtype.Node))))
 	return result.([]*dbtype.Node), nil
+}
+
+func (r *opportunityReadRepository) GetRenewalOpportunitiesForClosingAsLost(ctx context.Context) ([]TenantAndOpportunityId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractRepository.GetRenewalOpportunitiesForClosingAsLost")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, "")
+
+	cypher := `MATCH (t:Tenant)<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract)-[:ACTIVE_RENEWAL]->(op:RenewalOpportunity)
+				WHERE 
+					c.status = $endedStatus AND 
+					c.endedAt < $now AND 
+					op.internalStage = $internalStageOpen AND 
+					(op.techRolloutRenewalRequestedAt IS NULL OR op.techRolloutRenewalRequestedAt + duration({hours: 1}) < $now)
+				RETURN t.name, op.id LIMIT 100`
+	params := map[string]any{
+		"now":               utils.Now(),
+		"endedStatus":       enum.ContractStatusEnded.String(),
+		"internalStageOpen": enum.OpportunityInternalStageOpen.String(),
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+
+	})
+	if err != nil {
+		return nil, err
+	}
+	output := make([]TenantAndOpportunityId, 0)
+	for _, v := range records.([]*neo4j.Record) {
+		output = append(output,
+			TenantAndOpportunityId{
+				Tenant:        v.Values[0].(string),
+				OpportunityId: v.Values[1].(string),
+			})
+	}
+	span.LogFields(log.Int("result.count", len(output)))
+	return output, nil
 }
