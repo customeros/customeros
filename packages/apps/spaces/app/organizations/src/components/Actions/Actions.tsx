@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 
-import { Button } from '@ui/form/Button';
 import { useDisclosure } from '@ui/utils';
 import { Center } from '@ui/layout/Center';
 import { Organization } from '@graphql/types';
+import { Button } from '@ui/form/Button/Button';
 import { Copy07 } from '@ui/media/icons/Copy07';
 import { Archive } from '@ui/media/icons/Archive';
 import { ButtonGroup } from '@ui/form/ButtonGroup';
@@ -86,13 +86,10 @@ export const TableActions = ({
       <Center left='50%' position='absolute' bottom='32px'>
         <ButtonGroup size='md' isAttached left='-50%' position='relative'>
           <Button
-            bg='gray.700'
-            color='white'
-            leftIcon={<Archive />}
             onClick={onOpen}
-            _hover={{
-              bg: 'gray.800',
-            }}
+            colorScheme='gray'
+            leftIcon={<Archive />}
+            className='bg-gray-700 text-white hover:bg-gray-800'
           >
             {`Archive ${
               selectCount > 1 ? `these ${selectCount}` : ' this organization'
@@ -100,13 +97,10 @@ export const TableActions = ({
           </Button>
           {selectCount > 1 && (
             <Button
-              bg='gray.700'
-              color='white'
+              colorScheme='gray'
               leftIcon={<Copy07 />}
-              _hover={{
-                bg: 'gray.800',
-              }}
               onClick={handleMergeOrganizations}
+              className='bg-gray-700 text-white hover:bg-gray-800'
             >
               {`Merge these ${selectCount}`}
             </Button>
