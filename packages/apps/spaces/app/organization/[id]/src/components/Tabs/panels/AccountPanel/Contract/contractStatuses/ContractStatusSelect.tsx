@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { UseMutationResult } from '@tanstack/react-query';
 import {
@@ -11,6 +11,7 @@ import { useDisclosure } from '@ui/utils';
 import { Tag } from '@ui/presentation/Tag';
 import { DotLive } from '@ui/media/icons/DotLive';
 import { XSquare } from '@ui/media/icons/XSquare';
+import { RefreshCw02 } from '@ui/media/icons/RefreshCw02';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu';
 import { Exact, ContractStatus, ContractUpdateInput } from '@graphql/types';
@@ -39,7 +40,15 @@ export const contractStatusOptions: SelectOption<ContractStatus>[] = [
   { label: 'Draft', value: ContractStatus.Draft },
   { label: 'Ended', value: ContractStatus.Ended },
   { label: 'Live', value: ContractStatus.Live },
+  { label: 'Out of contract', value: ContractStatus.OutOfContract },
 ];
+
+const statusColorScheme: Record<string, string> = {
+  [ContractStatus.Live]: 'primary',
+  [ContractStatus.Draft]: 'gray',
+  [ContractStatus.Ended]: 'gray',
+  [ContractStatus.OutOfContract]: 'warning',
+};
 
 export const ContractStatusSelect: React.FC<ContractStatusSelectProps> = ({
   status,
@@ -64,29 +73,54 @@ export const ContractStatusSelect: React.FC<ContractStatusSelectProps> = ({
   } = useDisclosure({
     id: 'start-contract-modal',
   });
+
   const selected = contractStatusOptions.find((e) => e.value === status);
   const icon = contractOptionIcon?.[status];
+
+  const getStatusDisplay = useMemo(() => {
+    let icon, text;
+    switch (status) {
+      case ContractStatus.Live:
+        icon = <XSquare color='gray.500' mr={1} />;
+        text = 'End contract...';
+        break;
+      case ContractStatus.Ended:
+        icon = <DotLive color='gray.500' mr={1} />;
+        text = 'Make live';
+        break;
+      case ContractStatus.OutOfContract:
+        icon = <RefreshCw02 color='gray.500' mr={2} />;
+        text = 'Renew contract';
+        break;
+      default:
+        icon = null;
+        text = null;
+    }
+
+    return (
+      <>
+        {icon}
+        {text}
+      </>
+    );
+  }, [status]);
 
   return (
     <>
       <Menu>
         <MenuButton
           maxW={'auto'}
-          color={status === ContractStatus.Live ? 'primary.800' : 'gray.800'}
-          borderColor={
-            status === ContractStatus.Live ? 'primary.800' : 'gray.800'
-          }
-          bg={status === ContractStatus.Live ? 'primary.50' : 'gray.50'}
+          color={`${statusColorScheme[status]}.800`}
+          borderColor={`${statusColorScheme[status]}.800`}
+          bg={`${statusColorScheme[status]}.50`}
         >
           <Tag
             as={Flex}
             alignItems='center'
             gap={1}
             variant='outline'
-            colorScheme={
-              selected?.value === ContractStatus.Live ? 'primary' : 'gray'
-            }
-            color={status === ContractStatus.Live ? 'primary.800' : 'gray.800'}
+            colorScheme={statusColorScheme[status]}
+            color={`${statusColorScheme[status]}.700`}
           >
             {icon && (
               <Flex alignItems='center' boxSize={3}>
@@ -103,17 +137,7 @@ export const ContractStatusSelect: React.FC<ContractStatusSelectProps> = ({
               status === ContractStatus.Live ? onOpenEndModal : onOpenStartModal
             }
           >
-            {status === ContractStatus.Live ? (
-              <>
-                <XSquare color='gray.500' mr={1} />
-                End contract...
-              </>
-            ) : (
-              <>
-                <DotLive color='gray.500' mr={1} />
-                Make live
-              </>
-            )}
+            {getStatusDisplay}
           </MenuItem>
         </MenuList>
       </Menu>
