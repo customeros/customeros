@@ -69,6 +69,9 @@ type ContractUpdateFields struct {
 	InvoicingEnabled             bool                   `json:"invoicingEnabled"`
 	PayOnline                    bool                   `json:"payOnline"`
 	PayAutomatically             bool                   `json:"payAutomatically"`
+	CanPayWithCard               bool                   `json:"canPayWithCard"`
+	CanPayWithDirectDebit        bool                   `json:"canPayWithDirectDebit"`
+	CanPayWithBankTransfer       bool                   `json:"canPayWithBankTransfer"`
 	AutoRenew                    bool                   `json:"autoRenew"`
 	DueDays                      int64                  `json:"dueDays"`
 	Check                        bool                   `json:"check"`
@@ -317,15 +320,15 @@ func (r *contractWriteRepository) UpdateContract(ctx context.Context, tenant, co
 	}
 	if data.UpdateCanPayWithCard {
 		cypher += `, ct.canPayWithCard=$canPayWithCard `
-		params["canPayWithCard"] = data.UpdateCanPayWithCard
+		params["canPayWithCard"] = data.CanPayWithCard
 	}
 	if data.UpdateCanPayWithDirectDebit {
 		cypher += `, ct.canPayWithDirectDebit=$canPayWithDirectDebit `
-		params["canPayWithDirectDebit"] = data.UpdateCanPayWithDirectDebit
+		params["canPayWithDirectDebit"] = data.CanPayWithDirectDebit
 	}
 	if data.UpdateCanPayWithBankTransfer {
 		cypher += `, ct.canPayWithBankTransfer=$canPayWithBankTransfer `
-		params["canPayWithBankTransfer"] = data.UpdateCanPayWithBankTransfer
+		params["canPayWithBankTransfer"] = data.CanPayWithBankTransfer
 	}
 	if data.UpdateInvoicingEnabled {
 		cypher += `, ct.invoicingEnabled=$invoicingEnabled `
