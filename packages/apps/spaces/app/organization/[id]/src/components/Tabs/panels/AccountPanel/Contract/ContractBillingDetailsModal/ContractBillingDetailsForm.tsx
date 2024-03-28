@@ -17,9 +17,10 @@ import { FormSwitch } from '@ui/form/Switch/FromSwitch';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { countryOptions } from '@shared/util/countryOptions';
 import { FormCheckbox } from '@ui/form/Checkbox/FormCheckbox';
+import { currencyOptions } from '@shared/util/currencyOptions';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { getCurrencyOptions } from '@shared/util/currencyOptions';
 import {
+  Currency,
   BankAccount,
   ExternalSystemType,
   TenantBillingProfile,
@@ -34,6 +35,7 @@ interface SubscriptionServiceModalProps {
   contractId: string;
   isEmailValid: boolean;
   organizationName: string;
+  payAutomatically?: boolean | null;
   country?: SelectOption<string> | null;
   tenantBillingProfile?: TenantBillingProfile | null;
   bankAccounts: Array<BankAccount> | null | undefined;
@@ -52,12 +54,12 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
   organizationName,
   bankAccounts,
   country,
+  payAutomatically,
 }) => {
   const client = getGraphQLClient();
   const { data: tenantSettingsData } = useTenantSettingsQuery(client);
 
   const { data } = useGetExternalSystemInstancesQuery(client);
-  const currencyOptions = useMemo(() => getCurrencyOptions(), []);
   const availablePaymentMethodTypes = data?.externalSystemInstances.find(
     (e) => e.type === ExternalSystemType.Stripe,
   )?.stripeDetails?.paymentMethodTypes;
@@ -96,6 +98,22 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
 
     return '';
   }, [tenantBillingProfile, bankAccounts, currency]);
+
+  const paymentMethod = useMemo(() => {
+    let method;
+    switch (currency) {
+      case Currency.Gbp:
+        method = 'Bacs';
+        break;
+      case Currency.Usd:
+        method = 'ACH';
+        break;
+      default:
+        method = 'SEPA';
+    }
+
+    return method;
+  }, [currency]);
 
   return (
     <ModalBody pb='0' gap={4} display='flex' flexDir='column' flex={1}>
@@ -263,7 +281,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
                   }
                 />
               </PaymentDetailsPopover>
-              {isStripeActive && (
+              {isStripeActive && payAutomatically && (
                 <Flex flexDir='column' gap={2} ml={2}>
                   <Tooltip
                     label={
@@ -306,7 +324,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
                         }
                       >
                         <Text fontSize='sm' whiteSpace='nowrap'>
-                          Direct Debit via ACH
+                          Direct Debit via {paymentMethod}
                         </Text>
                       </FormCheckbox>
                     </Box>

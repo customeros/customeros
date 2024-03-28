@@ -16,7 +16,7 @@ import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { FormSwitch } from '@ui/form/Switch/FromSwitch';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { countryOptions } from '@shared/util/countryOptions';
-import { getCurrencyOptions } from '@shared/util/currencyOptions';
+import { currencyOptions } from '@shared/util/currencyOptions';
 
 export const TenantBillingPanelDetailsForm = ({
   setIsInvoiceProviderDetailsHovered,
@@ -33,8 +33,6 @@ export const TenantBillingPanelDetailsForm = ({
   setIsInvoiceProviderFocused: (newState: boolean) => void;
   setIsInvoiceProviderDetailsHovered: (newState: boolean) => void;
 }) => {
-  const currencyOptions = useMemo(() => getCurrencyOptions(), []);
-
   return (
     <CardBody as={Flex} flexDir='column' px='6' w='full' gap={4}>
       <LogoUploader />
@@ -62,7 +60,7 @@ export const TenantBillingPanelDetailsForm = ({
         isLabelVisible
         name='baseCurrency'
         formId={formId}
-        options={currencyOptions ?? []}
+        options={currencyOptions}
       />
 
       <Flex

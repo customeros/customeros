@@ -44,7 +44,7 @@ export const PaymentMethods = ({
           autoCreate: false,
         })
         .run({
-          input: '<input data>',
+          nodeKey: 'manual-sync-payment-methods',
         });
     } catch (err) {
       toastError('Integration failed', 'get-intergration-data');

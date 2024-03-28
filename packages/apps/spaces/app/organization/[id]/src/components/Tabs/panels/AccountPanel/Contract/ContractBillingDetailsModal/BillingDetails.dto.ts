@@ -1,7 +1,7 @@
 import { SelectOption } from '@shared/types/SelectOptions';
 import { countryOptions } from '@shared/util/countryOptions';
 import { Currency, ContractUpdateInput } from '@graphql/types';
-import { getCurrencyOptions } from '@shared/util/currencyOptions';
+import { currencyOptions } from '@shared/util/currencyOptions';
 import { GetContractQuery } from '@organization/src/graphql/getContract.generated';
 
 export interface BillingDetailsForm {
@@ -51,9 +51,7 @@ export class BillingDetailsDto implements BillingDetailsForm {
     this.country = countryOptions.find(
       (i) => data?.billingDetails?.country === i.value,
     );
-    this.currency = getCurrencyOptions().find(
-      (i) => data?.currency === i.value,
-    );
+    this.currency = currencyOptions.find((i) => data?.currency === i.value);
     this.addressLine2 = data?.billingDetails?.addressLine2 ?? '';
     this.organizationLegalName = data?.organizationLegalName ?? '';
     this.contractUrl = data?.contractUrl ?? '';

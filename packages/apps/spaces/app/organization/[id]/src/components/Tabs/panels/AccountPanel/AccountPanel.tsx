@@ -16,6 +16,7 @@ import { Spinner } from '@ui/feedback/Spinner';
 import { IconButton } from '@ui/form/IconButton';
 import { toastError } from '@ui/presentation/Toast';
 import { Skeleton } from '@ui/presentation/Skeleton';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { ChevronRight } from '@ui/media/icons/ChevronRight';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useCreateContractMutation } from '@organization/src/graphql/createContract.generated';
@@ -174,31 +175,34 @@ const AccountPanelComponent = () => {
         }
         actionItem={
           <Flex alignItems='center'>
-            <IconButton
-              color='gray.500'
-              mr={1}
-              variant='ghost'
-              isLoading={createContract.isPending}
-              isDisabled={createContract.isPending}
-              icon={createContract.isPending ? <Spinner /> : <Plus />}
-              size='xs'
-              aria-label='Create new contract'
-              onClick={() =>
-                createContract.mutate({
-                  input: {
-                    organizationId: id,
-                    currency:
-                      baseCurrencyData?.tenantSettings?.baseCurrency ||
-                      Currency.Usd,
-                    name: `${
-                      data?.organization?.name?.length
-                        ? `${data?.organization?.name}'s`
-                        : "Unnamed's"
-                    } contract`,
-                  },
-                })
-              }
-            />
+            <Tooltip label='Create new contract'>
+              <IconButton
+                color='gray.500'
+                mr={1}
+                variant='ghost'
+                isLoading={createContract.isPending}
+                isDisabled={createContract.isPending}
+                icon={createContract.isPending ? <Spinner /> : <Plus />}
+                size='xs'
+                aria-label='Create new contract'
+                onClick={() =>
+                  createContract.mutate({
+                    input: {
+                      organizationId: id,
+                      currency:
+                        baseCurrencyData?.tenantSettings?.baseCurrency ||
+                        Currency.Usd,
+                      name: `${
+                        data?.organization?.name?.length
+                          ? `${data?.organization?.name}'s`
+                          : "Unnamed's"
+                      } contract`,
+                    },
+                  })
+                }
+              />
+            </Tooltip>
+
             <RelationshipButton />
           </Flex>
         }

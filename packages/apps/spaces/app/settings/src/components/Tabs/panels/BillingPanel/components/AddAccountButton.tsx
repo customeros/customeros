@@ -5,10 +5,7 @@ import React, { useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useBankAccountsQuery } from '@settings/graphql/getBankAccounts.generated';
 import { useCreateBankAccountMutation } from '@settings/graphql/createBankAccount.generated';
-import {
-  currencyIcon,
-  mapCurrencyToOptions,
-} from '@settings/components/Tabs/panels/BillingPanel/components/utils';
+import { currencyIcon } from '@settings/components/Tabs/panels/BillingPanel/components/utils';
 
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
@@ -16,14 +13,12 @@ import { Plus } from '@ui/media/icons/Plus';
 import { Select } from '@ui/form/SyncSelect';
 import { IconButton } from '@ui/form/IconButton';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
+import { currencyOptions } from '@shared/util/currencyOptions';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 
 export const AddAccountButton = ({
   existingCurrencies,
-  organizationName,
 }: {
-  organizationName?: string | null;
-
   existingCurrencies: Array<string>;
 }) => {
   const [showCurrencySelect, setShowCurrencySelect] = useState(false);
@@ -39,7 +34,6 @@ export const AddAccountButton = ({
       setShowCurrencySelect(false);
     },
   });
-  const currencyOptions = useMemo(() => mapCurrencyToOptions(), []);
 
   return (
     <>
@@ -61,7 +55,8 @@ export const AddAccountButton = ({
           placeholder='Account currency'
           name='bankAccountCurrency'
           defaultMenuIsOpen
-          blurInputOnSelect
+          menuIsOpen
+          // blurInputOnSelect
           onChange={(e) => {
             mutate({
               input: {
@@ -71,17 +66,7 @@ export const AddAccountButton = ({
             });
           }}
           onBlur={() => setShowCurrencySelect(false)}
-          options={[
-            {
-              options: [
-                { label: 'USD', value: 'USD' },
-                { label: 'GBP', value: 'GBP' },
-                { label: 'EUR', value: 'EUR' },
-              ],
-            },
-
-            ...currencyOptions,
-          ]}
+          options={currencyOptions}
           isOptionDisabled={(option, selectValue) =>
             existingCurrencies?.indexOf(option.value) > -1
           }
@@ -89,10 +74,8 @@ export const AddAccountButton = ({
             return (
               <Flex alignItems='center'>
                 <Flex
-                  w={context === 'value' ? 'auto' : 7}
                   justifyContent={context === 'value' ? 'center' : 'flex-end'}
                   alignItems='center'
-                  minW={context === 'value' ? '14px' : 'auto'}
                 >
                   {currencyIcon?.[option.value]}
                 </Flex>
