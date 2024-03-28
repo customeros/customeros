@@ -216,7 +216,7 @@ func (h *reminderRequestHandler) deleteParkedReminderNotification(ctx context.Co
 		return err
 	}
 	if parkedReminder == nil {
-		return errors.New("parked reminder not found")
+		return nil
 	}
 
 	err = h.ebs.Delete(parkedReminder)

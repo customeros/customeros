@@ -38,7 +38,7 @@ func (r *dashboardCustomerMapResolver) Organization(ctx context.Context, obj *mo
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get organization by id %s", obj.OrganizationID)
-		return nil, err
+		return nil, nil
 	}
 	return mapper.MapEntityToOrganization(organizationEntityPtr), nil
 }

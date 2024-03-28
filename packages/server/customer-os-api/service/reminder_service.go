@@ -86,14 +86,21 @@ func (s *reminderService) UpdateReminder(ctx context.Context, id string, content
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagEntityId, id)
 
-	reminderExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), id, neo4jutil.NodeLabelReminder)
+	existingReminder, err := s.GetReminderById(ctx, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("error on checking if reminder reminderExists: %s", err.Error())
 		return err
 	}
-	if !reminderExists {
+	if existingReminder == nil {
 		err := fmt.Errorf("(ReminderService.UpdateReminder) reminder with id {%s} not found", id)
+		s.log.Error(err.Error())
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if existingReminder.DueDate.Before(time.Now().UTC()) {
+		err := fmt.Errorf("(ReminderService.UpdateReminder) reminder with id {%s} is already expired", id)
 		s.log.Error(err.Error())
 		tracing.TraceErr(span, err)
 		return err
