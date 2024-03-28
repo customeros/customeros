@@ -350,6 +350,11 @@ type Comment struct {
 	ExternalLinks []*ExternalSystem `json:"externalLinks"`
 }
 
+type Conditionals struct {
+	MinimumChargePeriod *ChargePeriod `json:"minimumChargePeriod,omitempty"`
+	MinimumChargeAmount float64       `json:"minimumChargeAmount"`
+}
+
 // A contact represents an individual in customerOS.
 // **A `response` object.**
 type Contact struct {
@@ -1760,6 +1765,61 @@ type NoteUpdateInput struct {
 	ContentType *string `json:"contentType,omitempty"`
 }
 
+type Offering struct {
+	Metadata              *Metadata         `json:"metadata"`
+	Name                  string            `json:"name"`
+	Active                bool              `json:"active"`
+	Type                  *OfferingType     `json:"type,omitempty"`
+	PricingModel          *PricingModel     `json:"pricingModel,omitempty"`
+	PricingPeriodInMonths int64             `json:"pricingPeriodInMonths"`
+	Currency              *Currency         `json:"currency,omitempty"`
+	Price                 float64           `json:"price"`
+	PriceCalculated       bool              `json:"priceCalculated"`
+	Taxable               bool              `json:"taxable"`
+	PriceCalculation      *PriceCalculation `json:"priceCalculation"`
+	Conditional           bool              `json:"conditional"`
+	Conditionals          *Conditionals     `json:"conditionals"`
+	ExternalLinks         []*ExternalSystem `json:"externalLinks"`
+}
+
+func (Offering) IsMetadataInterface()        {}
+func (this Offering) GetMetadata() *Metadata { return this.Metadata }
+
+type OfferingCreateInput struct {
+	Name                                   *string          `json:"name,omitempty"`
+	Active                                 *bool            `json:"active,omitempty"`
+	Type                                   *OfferingType    `json:"type,omitempty"`
+	PricingModel                           *PricingModel    `json:"pricingModel,omitempty"`
+	PricingPeriodInMonths                  *int64           `json:"pricingPeriodInMonths,omitempty"`
+	Currency                               *Currency        `json:"currency,omitempty"`
+	Price                                  *float64         `json:"price,omitempty"`
+	PriceCalculated                        *bool            `json:"priceCalculated,omitempty"`
+	Conditional                            *bool            `json:"conditional,omitempty"`
+	Taxable                                *bool            `json:"taxable,omitempty"`
+	PriceCalculationType                   *CalculationType `json:"priceCalculationType,omitempty"`
+	PriceCalculationRevenueSharePercentage *float64         `json:"priceCalculationRevenueSharePercentage,omitempty"`
+	ConditionalsMinimumChargePeriod        *ChargePeriod    `json:"conditionalsMinimumChargePeriod,omitempty"`
+	ConditionalsMinimumChargeAmount        *float64         `json:"conditionalsMinimumChargeAmount,omitempty"`
+}
+
+type OfferingUpdateInput struct {
+	ID                                     string           `json:"id"`
+	Name                                   *string          `json:"name,omitempty"`
+	Active                                 *bool            `json:"active,omitempty"`
+	Type                                   *OfferingType    `json:"type,omitempty"`
+	PricingModel                           *PricingModel    `json:"pricingModel,omitempty"`
+	PricingPeriodInMonths                  *int64           `json:"pricingPeriodInMonths,omitempty"`
+	Currency                               *Currency        `json:"currency,omitempty"`
+	Price                                  *float64         `json:"price,omitempty"`
+	PriceCalculated                        *bool            `json:"priceCalculated,omitempty"`
+	Conditional                            *bool            `json:"conditional,omitempty"`
+	Taxable                                *bool            `json:"taxable,omitempty"`
+	PriceCalculationType                   *CalculationType `json:"priceCalculationType,omitempty"`
+	PriceCalculationRevenueSharePercentage *float64         `json:"priceCalculationRevenueSharePercentage,omitempty"`
+	ConditionalsMinimumChargePeriod        *ChargePeriod    `json:"conditionalsMinimumChargePeriod,omitempty"`
+	ConditionalsMinimumChargeAmount        *float64         `json:"conditionalsMinimumChargeAmount,omitempty"`
+}
+
 type OnboardingDetails struct {
 	Status    OnboardingStatus `json:"status"`
 	Comments  *string          `json:"comments,omitempty"`
@@ -2267,6 +2327,11 @@ type PlayerUser struct {
 	User    *User  `json:"user"`
 	Default bool   `json:"default"`
 	Tenant  string `json:"tenant"`
+}
+
+type PriceCalculation struct {
+	CalculationType        *CalculationType `json:"calculationType,omitempty"`
+	RevenueSharePercentage float64          `json:"revenueSharePercentage"`
 }
 
 type Query struct {
@@ -2923,6 +2988,45 @@ func (e BilledType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
+type CalculationType string
+
+const (
+	CalculationTypeRevenueShare CalculationType = "REVENUE_SHARE"
+)
+
+var AllCalculationType = []CalculationType{
+	CalculationTypeRevenueShare,
+}
+
+func (e CalculationType) IsValid() bool {
+	switch e {
+	case CalculationTypeRevenueShare:
+		return true
+	}
+	return false
+}
+
+func (e CalculationType) String() string {
+	return string(e)
+}
+
+func (e *CalculationType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = CalculationType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid CalculationType", str)
+	}
+	return nil
+}
+
+func (e CalculationType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
 type CalendarType string
 
 const (
@@ -2961,6 +3065,49 @@ func (e *CalendarType) UnmarshalGQL(v interface{}) error {
 }
 
 func (e CalendarType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type ChargePeriod string
+
+const (
+	ChargePeriodMonthly   ChargePeriod = "MONTHLY"
+	ChargePeriodQuarterly ChargePeriod = "QUARTERLY"
+	ChargePeriodAnnually  ChargePeriod = "ANNUALLY"
+)
+
+var AllChargePeriod = []ChargePeriod{
+	ChargePeriodMonthly,
+	ChargePeriodQuarterly,
+	ChargePeriodAnnually,
+}
+
+func (e ChargePeriod) IsValid() bool {
+	switch e {
+	case ChargePeriodMonthly, ChargePeriodQuarterly, ChargePeriodAnnually:
+		return true
+	}
+	return false
+}
+
+func (e ChargePeriod) String() string {
+	return string(e)
+}
+
+func (e *ChargePeriod) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ChargePeriod(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ChargePeriod", str)
+	}
+	return nil
+}
+
+func (e ChargePeriod) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
@@ -4097,6 +4244,47 @@ func (e MeetingStatus) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
+type OfferingType string
+
+const (
+	OfferingTypeProduct OfferingType = "PRODUCT"
+	OfferingTypeService OfferingType = "SERVICE"
+)
+
+var AllOfferingType = []OfferingType{
+	OfferingTypeProduct,
+	OfferingTypeService,
+}
+
+func (e OfferingType) IsValid() bool {
+	switch e {
+	case OfferingTypeProduct, OfferingTypeService:
+		return true
+	}
+	return false
+}
+
+func (e OfferingType) String() string {
+	return string(e)
+}
+
+func (e *OfferingType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = OfferingType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid OfferingType", str)
+	}
+	return nil
+}
+
+func (e OfferingType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
 type OnboardingPlanMilestoneItemStatus string
 
 const (
@@ -4440,6 +4628,49 @@ func (e *PhoneNumberLabel) UnmarshalGQL(v interface{}) error {
 }
 
 func (e PhoneNumberLabel) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type PricingModel string
+
+const (
+	PricingModelSubscription PricingModel = "SUBSCRIPTION"
+	PricingModelOneTime      PricingModel = "ONE_TIME"
+	PricingModelUsage        PricingModel = "USAGE"
+)
+
+var AllPricingModel = []PricingModel{
+	PricingModelSubscription,
+	PricingModelOneTime,
+	PricingModelUsage,
+}
+
+func (e PricingModel) IsValid() bool {
+	switch e {
+	case PricingModelSubscription, PricingModelOneTime, PricingModelUsage:
+		return true
+	}
+	return false
+}
+
+func (e PricingModel) String() string {
+	return string(e)
+}
+
+func (e *PricingModel) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = PricingModel(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid PricingModel", str)
+	}
+	return nil
+}
+
+func (e PricingModel) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

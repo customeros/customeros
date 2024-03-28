@@ -2,6 +2,7 @@ package events_platform
 
 import (
 	"context"
+	offeringpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/offering"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
@@ -57,6 +58,7 @@ func (dfi TestDialFactoryImpl) GetEventsProcessingPlatformConn() (*grpc.ClientCo
 	invoicepb.RegisterInvoiceGrpcServiceServer(server, &MockInvoiceService{})
 	tenantpb.RegisterTenantGrpcServiceServer(server, &MockTenantService{})
 	reminderpb.RegisterReminderGrpcServiceServer(server, &MockReminderService{})
+	offeringpb.RegisterOfferingGrpcServiceServer(server, &MockOfferingService{})
 
 	go func() {
 		if err := server.Serve(listener); err != nil {
