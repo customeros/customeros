@@ -227,7 +227,6 @@ const AttachmentItem = ({
         href={href}
         target='_blank'
         rel='noopener noreferrer'
-        // onClick={() => window.open(href, '_blank')}
         className='text-sm text-gray-500 underline group-hover:text-gray-700'
       >
         {fileName}
