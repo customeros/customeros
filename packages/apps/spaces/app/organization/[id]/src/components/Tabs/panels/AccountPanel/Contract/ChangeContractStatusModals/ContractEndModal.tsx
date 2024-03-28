@@ -182,7 +182,7 @@ export const ContractEndModal = ({
               colorScheme='primary'
               display={renewsAt ? 'flex' : 'none'}
             >
-              End of current renewal period, {timeToRenewal}
+              End of renewal, {timeToRenewal}
             </Radio>
             <Radio value={EndContract.CustomDate} colorScheme='primary'>
               <Flex alignItems='center'>

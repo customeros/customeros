@@ -92,7 +92,7 @@ export const ContractStartModal = ({
       isOpen={isOpen}
       onClose={onClose}
       initialFocusRef={initialRef}
-      size='md'
+      size='lg'
     >
       <ModalOverlay />
       <ModalContent borderRadius='2xl'>

@@ -51,6 +51,9 @@ export const DatePickerUnderline: React.FC<DatePickerProps> = ({
     <Box
       display='inline'
       sx={{
+        '& .react-date-picker__wrapper': {
+          display: 'inline-flex',
+        },
         '& .react-date-picker': {
           height: 'unset',
           display: 'inline',
