@@ -435,6 +435,7 @@ func (r *contractReadRepository) GetContractsForStatusRenewal(ctx context.Contex
 						(
 							(c.status in [$draftStatus, $endedStatus] AND c.serviceStartedAt < $referenceTime) OR 
 							(c.status = $outOfContractStatus AND (c.autoRenew = true OR renewedAt > $referenceTime)) OR
+							(c.status = $outOfContractStatus AND renewedAt > $referenceTime) OR
 							(c.status = $liveStatus AND c.autoRenew = false AND renewedAt < $referenceTime)
 						))
 				RETURN t.name, c.id LIMIT 100`
