@@ -22,8 +22,7 @@ export const ContractStatusUpdatedAction: React.FC<
 
   // handle this situation
   if (!data.content || !status) return null;
-
-  const content = data.content.substring(0, data.content.lastIndexOf(' '));
+  const content = data.content.replace(status.split('_').join(' '), '');
 
   return (
     <Flex
@@ -53,7 +52,7 @@ export const ContractStatusUpdatedAction: React.FC<
           fontWeight={status === 'renewed' ? 'normal' : 'semibold'}
           ml={1}
         >
-          {status}
+          {status.split('_').join(' ')}
         </Text>
       </Text>
     </Flex>
