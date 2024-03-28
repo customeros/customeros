@@ -56,7 +56,7 @@ export const OrganizationSidenav = () => {
           icon={<Icons.ArrowNarrowLeft color='gray.700' boxSize='6' />}
         />
 
-        <div className='flex flex-col'>
+        <div className='flex flex-col line-clamp-1'>
           {parentOrg && (
             <a
               className='text-xs text-gray-600 truncate no-underline '
