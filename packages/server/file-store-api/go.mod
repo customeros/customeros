@@ -7,7 +7,7 @@ replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk => ../customer-os-api-sdk
 
 require (
-	github.com/aws/aws-sdk-go v1.51.5
+	github.com/aws/aws-sdk-go v1.51.9
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/cloudflare/cloudflare-go v0.91.0
 	github.com/gin-contrib/cors v1.7.1
