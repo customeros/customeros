@@ -26,7 +26,7 @@ func (r *mutationResolver) ReminderCreate(ctx context.Context, input model.Remin
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to create reminder")
-		return &model.Reminder{Metadata: &model.Metadata{ID: id}}, err
+		return nil, nil
 	}
 
 	return mapper.MapEntityToReminder(&neo4jentity.ReminderEntity{Id: id}), nil
@@ -43,7 +43,7 @@ func (r *mutationResolver) ReminderUpdate(ctx context.Context, input model.Remin
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to update reminder")
-		return &model.Reminder{Metadata: &model.Metadata{ID: input.ID}}, err
+		return nil, nil
 	}
 
 	return mapper.MapEntityToReminder(&neo4jentity.ReminderEntity{Id: input.ID}), nil

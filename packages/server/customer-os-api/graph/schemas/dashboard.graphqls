@@ -6,14 +6,14 @@ extend type Query {
     dashboardView_Renewals(pagination: Pagination!, where: Filter, sort: SortBy): RenewalsPage
 
     dashboard_CustomerMap: [DashboardCustomerMap!]
-    dashboard_MRRPerCustomer(period: DashboardPeriodInput): DashboardMRRPerCustomer
-    dashboard_GrossRevenueRetention(period: DashboardPeriodInput): DashboardGrossRevenueRetention
-    dashboard_ARRBreakdown(period: DashboardPeriodInput): DashboardARRBreakdown
-    dashboard_RevenueAtRisk(period: DashboardPeriodInput): DashboardRevenueAtRisk
-    dashboard_RetentionRate(period: DashboardPeriodInput): DashboardRetentionRate
-    dashboard_NewCustomers(period: DashboardPeriodInput): DashboardNewCustomers
-    dashboard_TimeToOnboard(period: DashboardPeriodInput): DashboardTimeToOnboard
-    dashboard_OnboardingCompletion(period: DashboardPeriodInput): DashboardOnboardingCompletion
+    dashboard_MRRPerCustomer(period: DashboardPeriodInput): DashboardMRRPerCustomer!
+    dashboard_GrossRevenueRetention(period: DashboardPeriodInput): DashboardGrossRevenueRetention!
+    dashboard_ARRBreakdown(period: DashboardPeriodInput): DashboardARRBreakdown!
+    dashboard_RevenueAtRisk(period: DashboardPeriodInput): DashboardRevenueAtRisk!
+    dashboard_RetentionRate(period: DashboardPeriodInput): DashboardRetentionRate!
+    dashboard_NewCustomers(period: DashboardPeriodInput): DashboardNewCustomers!
+    dashboard_TimeToOnboard(period: DashboardPeriodInput): DashboardTimeToOnboard!
+    dashboard_OnboardingCompletion(period: DashboardPeriodInput): DashboardOnboardingCompletion!
 }
 
 input DashboardPeriodInput {

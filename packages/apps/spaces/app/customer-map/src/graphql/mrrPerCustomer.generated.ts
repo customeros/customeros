@@ -30,7 +30,7 @@ export type MrrPerCustomerQueryVariables = Types.Exact<{
 
 export type MrrPerCustomerQuery = {
   __typename?: 'Query';
-  dashboard_MRRPerCustomer?: {
+  dashboard_MRRPerCustomer: {
     __typename?: 'DashboardMRRPerCustomer';
     mrrPerCustomer: number;
     increasePercentage: string;
@@ -39,7 +39,7 @@ export type MrrPerCustomerQuery = {
       month: number;
       value: number;
     } | null>;
-  } | null;
+  };
 };
 
 export const MrrPerCustomerDocument = `

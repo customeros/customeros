@@ -3606,15 +3606,15 @@ export type Query = {
   /** sort.By available options: ORGANIZATION, IS_CUSTOMER, DOMAIN, LOCATION, OWNER, LAST_TOUCHPOINT, RENEWAL_LIKELIHOOD, FORECAST_ARR, RENEWAL_DATE, ONBOARDING_STATUS */
   dashboardView_Organizations?: Maybe<OrganizationPage>;
   dashboardView_Renewals?: Maybe<RenewalsPage>;
-  dashboard_ARRBreakdown?: Maybe<DashboardArrBreakdown>;
+  dashboard_ARRBreakdown: DashboardArrBreakdown;
   dashboard_CustomerMap?: Maybe<Array<DashboardCustomerMap>>;
-  dashboard_GrossRevenueRetention?: Maybe<DashboardGrossRevenueRetention>;
-  dashboard_MRRPerCustomer?: Maybe<DashboardMrrPerCustomer>;
-  dashboard_NewCustomers?: Maybe<DashboardNewCustomers>;
-  dashboard_OnboardingCompletion?: Maybe<DashboardOnboardingCompletion>;
-  dashboard_RetentionRate?: Maybe<DashboardRetentionRate>;
-  dashboard_RevenueAtRisk?: Maybe<DashboardRevenueAtRisk>;
-  dashboard_TimeToOnboard?: Maybe<DashboardTimeToOnboard>;
+  dashboard_GrossRevenueRetention: DashboardGrossRevenueRetention;
+  dashboard_MRRPerCustomer: DashboardMrrPerCustomer;
+  dashboard_NewCustomers: DashboardNewCustomers;
+  dashboard_OnboardingCompletion: DashboardOnboardingCompletion;
+  dashboard_RetentionRate: DashboardRetentionRate;
+  dashboard_RevenueAtRisk: DashboardRevenueAtRisk;
+  dashboard_TimeToOnboard: DashboardTimeToOnboard;
   email: Email;
   entityTemplates: Array<EntityTemplate>;
   externalMeetings: MeetingsPage;

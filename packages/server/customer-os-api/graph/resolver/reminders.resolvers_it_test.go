@@ -143,7 +143,7 @@ func TestMutationResolver_ReminderUpdate(t *testing.T) {
 	userId := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{FirstName: "TEST", LastName: "USER"})
 	reminderId := neo4jtest.CreateReminder(ctx, driver, tenantName, userId, organizationId, now, neo4jentity.ReminderEntity{
 		Content:   "TEST CONTENT",
-		DueDate:   now,
+		DueDate:   now.AddDate(0, 0, 1),
 		Dismissed: false,
 	})
 
@@ -183,4 +183,31 @@ func TestMutationResolver_ReminderUpdate(t *testing.T) {
 	require.NotNil(t, reminderStruct.Reminder_Update)
 	require.True(t, calledUpdateReminder)
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Reminder"))
+}
+
+func TestMutationResolver_ExpiredReminderUpdate(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	now := utils.Now()
+	dueDate := utils.Now().AddDate(0, 0, -1)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "TEST ORG"})
+	userId := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{FirstName: "TEST", LastName: "USER"})
+	reminderId := neo4jtest.CreateReminder(ctx, driver, tenantName, userId, organizationId, now, neo4jentity.ReminderEntity{
+		Content:   "TEST CONTENT",
+		DueDate:   dueDate,
+		Dismissed: false,
+	})
+
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Reminder"))
+
+	response := callGraphQLExpectError(t, "reminder/update_reminder", map[string]interface{}{
+		"id":      reminderId,
+		"content": "UPDATED CONTENT",
+		"dueDate": now,
+	})
+
+	require.Contains(t, response.Message, "Failed to update reminder")
 }
