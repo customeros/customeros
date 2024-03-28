@@ -6,10 +6,10 @@ import { UseMutationResult } from '@tanstack/react-query';
 
 import { Box } from '@ui/layout/Box';
 import { Flex } from '@ui/layout/Flex';
-import { Button } from '@ui/form/Button';
 import { Text } from '@ui/typography/Text';
 import { ModalBody } from '@ui/overlay/Modal';
 import { FeaturedIcon } from '@ui/media/Icon';
+import { Button } from '@ui/form/Button/Button';
 import { Heading } from '@ui/typography/Heading';
 import { XSquare } from '@ui/media/icons/XSquare';
 import { DateTimeUtils } from '@spaces/utils/date';
@@ -207,15 +207,18 @@ export const ContractEndModal = ({
           </RadioGroup>
         </ModalBody>
         <ModalFooter p='6'>
-          <Button variant='outline' w='full' onClick={onClose}>
+          <Button
+            variant='outline'
+            colorScheme='gray'
+            className='w-full'
+            onClick={onClose}
+          >
             Cancel
           </Button>
           <Button
-            ml='3'
-            w='full'
+            className='ml-3 w-full'
             variant='outline'
             colorScheme='error'
-            loadingText='Applying changes...'
             onClick={handleApplyChanges}
           >
             End {value === EndContract.Now && 'now'}

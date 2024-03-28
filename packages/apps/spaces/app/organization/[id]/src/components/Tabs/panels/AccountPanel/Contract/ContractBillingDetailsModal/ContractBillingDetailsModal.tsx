@@ -10,8 +10,8 @@ import { useBankAccountsQuery } from '@settings/graphql/getBankAccounts.generate
 import { useTenantBillingProfilesQuery } from '@settings/graphql/getTenantBillingProfiles.generated';
 
 import { Box } from '@ui/layout/Box';
-import { Button } from '@ui/form/Button';
 import { FeaturedIcon } from '@ui/media/Icon';
+import { Button } from '@ui/form/Button/Button';
 import { File02 } from '@ui/media/icons/File02';
 import { Grid, GridItem } from '@ui/layout/Grid';
 import { Heading } from '@ui/typography/Heading';
@@ -344,15 +344,20 @@ export const ContractBillingDetailsModal = ({
               country={state?.values?.country}
             />
             <ModalFooter p='6'>
-              <Button variant='outline' w='full' onClick={onClose}>
+              <Button
+                variant='outline'
+                colorScheme='gray'
+                onClick={onClose}
+                className='w-full'
+                size='md'
+              >
                 Cancel
               </Button>
               <Button
-                ml='3'
-                w='full'
+                className='ml-3 w-full'
+                size='md'
                 variant='outline'
                 colorScheme='primary'
-                loadingText='Applying changes...'
                 onClick={handleApplyChanges}
               >
                 Done

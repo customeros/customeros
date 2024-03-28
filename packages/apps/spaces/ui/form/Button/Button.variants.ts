@@ -2369,12 +2369,13 @@ export const outlineButton = cva(
       colorScheme: {
         primary: [
           'text-primary-700',
+          'bg-primary-50',
           'border',
           'border-solid',
           'border-primary-300',
-          'hover:bg-primary-50',
+          'hover:bg-primary-100',
           'hover:text-primary-700',
-          'focus:bg-primary-50',
+          'focus:bg-primary-100',
         ],
         gray: [
           'text-gray-700',
@@ -2396,12 +2397,13 @@ export const outlineButton = cva(
         ],
         error: [
           'text-error-700',
+          'bg-error-50',
           'border',
           'border-solid',
           'border-error-300',
-          'hover:bg-error-50',
+          'hover:bg-error-100',
           'hover:text-error-700',
-          'focus:bg-error-50',
+          'focus:bg-error-100',
         ],
         rose: [
           'text-rose-700',
