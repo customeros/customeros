@@ -821,9 +821,9 @@ func CreateOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, ten
 
 func LinkContractWithOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, contractId, opportunityId string, renewal bool) {
 	query := `MATCH (c:Contract {id:$contractId}), (o:Opportunity {id:$opportunityId})
-				MERGE (c)-[:HAS_OPPORTUNITY]->(o) `
+				MERGE (c)-[:HAS_OPPORTUNITY]->(o)`
 	if renewal {
-		query += `MERGE (c)-[:ACTIVE_RENEWAL]->(o)`
+		query += ` MERGE (c)-[:ACTIVE_RENEWAL]->(o)`
 	}
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"contractId":    contractId,

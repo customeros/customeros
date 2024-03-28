@@ -1043,6 +1043,7 @@ func TestContractEventHandler_DeriveContractStatus_Ended(t *testing.T) {
 		EndedAt:        &yesterday,
 	}
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, contractEntity)
+	contractEntity.Id = contractId
 	neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
 		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
 		InternalStage: neo4jenum.OpportunityInternalStageOpen,
@@ -1133,6 +1134,7 @@ func TestContractEventHandler_DeriveContractStatus_Live_AutoRenew_ActiveRenewalO
 		ServiceStartedAt: &now,
 	}
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, contractEntity)
+	contractEntity.Id = contractId
 	neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
 		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
 		InternalStage: neo4jenum.OpportunityInternalStageOpen,
@@ -1199,13 +1201,13 @@ func TestContractEventHandler_DeriveContractStatus_OutOfContract_NoAutoRenew_Act
 		ServiceStartedAt: &now,
 	}
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, contractEntity)
+	contractEntity.Id = contractId
 	neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
 		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
 		InternalStage: neo4jenum.OpportunityInternalStageOpen,
 		RenewalDetails: neo4jentity.RenewalDetails{
-			RenewedAt:         &yesterday,
-			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
-			RenewalApproved:   false,
+			RenewedAt:       &yesterday,
+			RenewalApproved: false,
 		},
 	})
 

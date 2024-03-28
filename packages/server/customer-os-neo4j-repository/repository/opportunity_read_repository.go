@@ -71,9 +71,8 @@ func (r *opportunityReadRepository) GetActiveRenewalOpportunityForContract(ctx c
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.LogFields(log.String("contractId", contractId))
 
-	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})
-				MATCH (c)-[:ACTIVE_RENEWAL]->(op:Opportunity)
-				WHERE op:RenewalOpportunity AND op.internalStage=$internalStage
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})-[:ACTIVE_RENEWAL]->(op:RenewalOpportunity)
+				WHERE op.internalStage=$internalStage
 				RETURN op`
 	params := map[string]any{
 		"tenant":        tenant,
