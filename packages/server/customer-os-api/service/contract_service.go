@@ -210,19 +210,16 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 			Source:    neo4jentity.DataSourceOpenline.String(),
 			AppSource: utils.StringFirstNonEmpty(utils.IfNotNilString(input.AppSource), constants.AppSourceCustomerOsApi),
 		},
-		RenewalPeriods:         input.RenewalPeriods,
-		AddressLine1:           utils.IfNotNilString(input.AddressLine1),
-		AddressLine2:           utils.IfNotNilString(input.AddressLine2),
-		Locality:               utils.IfNotNilString(input.Locality),
-		Country:                utils.IfNotNilString(input.Country),
-		Zip:                    utils.IfNotNilString(input.Zip),
-		OrganizationLegalName:  utils.IfNotNilString(input.OrganizationLegalName),
-		InvoiceEmail:           utils.IfNotNilString(input.InvoiceEmail),
-		InvoiceNote:            utils.IfNotNilString(input.InvoiceNote),
-		CanPayWithCard:         utils.IfNotNilBool(input.CanPayWithCard),
-		CanPayWithDirectDebit:  utils.IfNotNilBool(input.CanPayWithDirectDebit),
-		CanPayWithBankTransfer: utils.IfNotNilBool(input.CanPayWithBankTransfer),
-		InvoicingEnabled:       utils.IfNotNilBool(input.BillingEnabled),
+		RenewalPeriods:        input.RenewalPeriods,
+		AddressLine1:          utils.IfNotNilString(input.AddressLine1),
+		AddressLine2:          utils.IfNotNilString(input.AddressLine2),
+		Locality:              utils.IfNotNilString(input.Locality),
+		Country:               utils.IfNotNilString(input.Country),
+		Zip:                   utils.IfNotNilString(input.Zip),
+		OrganizationLegalName: utils.IfNotNilString(input.OrganizationLegalName),
+		InvoiceEmail:          utils.IfNotNilString(input.InvoiceEmail),
+		InvoiceNote:           utils.IfNotNilString(input.InvoiceNote),
+		InvoicingEnabled:      utils.IfNotNilBool(input.BillingEnabled),
 	}
 	if input.Currency != nil {
 		contractUpdateRequest.Currency = mapper.MapCurrencyFromModel(*input.Currency).String()
@@ -449,13 +446,13 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 		if input.InvoiceNote != nil || (input.BillingDetails != nil && input.BillingDetails.InvoiceNote != nil) {
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_INVOICE_NOTE)
 		}
-		if input.CanPayWithCard != nil || (input.BillingDetails != nil && input.BillingDetails.CanPayWithCard != nil) {
+		if input.BillingDetails != nil && input.BillingDetails.CanPayWithCard != nil {
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_CAN_PAY_WITH_CARD)
 		}
-		if input.CanPayWithDirectDebit != nil || (input.BillingDetails != nil && input.BillingDetails.CanPayWithDirectDebit != nil) {
+		if input.BillingDetails != nil && input.BillingDetails.CanPayWithDirectDebit != nil {
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_CAN_PAY_WITH_DIRECT_DEBIT)
 		}
-		if input.CanPayWithBankTransfer != nil || (input.BillingDetails != nil && input.BillingDetails.CanPayWithBankTransfer != nil) {
+		if input.BillingDetails != nil && input.BillingDetails.CanPayWithBankTransfer != nil {
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_CAN_PAY_WITH_BANK_TRANSFER)
 		}
 		if input.BillingDetails != nil && input.BillingDetails.Check != nil {

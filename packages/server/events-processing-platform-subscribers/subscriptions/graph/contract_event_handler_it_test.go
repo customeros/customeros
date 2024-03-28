@@ -922,15 +922,17 @@ func TestContractEventHandler_OnUpdate_SubsetOfFiledsSet(t *testing.T) {
 	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
 	updateEvent, err := event.NewContractUpdateEvent(contractAggregate,
 		model.ContractDataFields{
-			CanPayWithCard: true,
-			AutoRenew:      true,
-			Check:          true,
-			DueDays:        60,
+			CanPayWithCard:         true,
+			CanPayWithBankTransfer: false,
+			AutoRenew:              true,
+			Check:                  true,
+			DueDays:                60,
 		},
 		commonmodel.ExternalSystem{},
 		constants.SourceOpenline,
 		now,
-		[]string{event.FieldMaskAutoRenew, event.FieldMaskCanPayWithCard, event.FieldMaskCheck, event.FieldMaskDueDays})
+		[]string{event.FieldMaskAutoRenew, event.FieldMaskCanPayWithCard, event.FieldMaskCheck, event.FieldMaskDueDays,
+			event.FieldMaskCanPayWithBankTransfer})
 	require.Nil(t, err, "failed to create event")
 
 	// EXECUTE
@@ -947,6 +949,7 @@ func TestContractEventHandler_OnUpdate_SubsetOfFiledsSet(t *testing.T) {
 	contract := mapper.MapDbNodeToContractEntity(contractDbNode)
 	require.Equal(t, contractId, contract.Id)
 	require.Equal(t, true, contract.CanPayWithCard)
+	require.Equal(t, false, contract.CanPayWithBankTransfer)
 	require.Equal(t, true, contract.AutoRenew)
 	require.Equal(t, true, contract.Check)
 	require.Equal(t, int64(60), contract.DueDays)
