@@ -685,7 +685,7 @@ func TestContractEventHandler_OnUpdate_EndDateSet(t *testing.T) {
 	require.Equal(t, contractId, contract.Id)
 	require.Equal(t, "test contract updated", contract.Name)
 	require.Equal(t, "http://contract.url/updated", contract.ContractUrl)
-	require.Equal(t, neo4jenum.ContractStatusOutOfContract, contract.ContractStatus)
+	require.Equal(t, neo4jenum.ContractStatusLive, contract.ContractStatus)
 	require.Equal(t, neo4jenum.RenewalCycleMonthlyRenewal, contract.RenewalCycle)
 	test.AssertRecentTime(t, contract.UpdatedAt)
 	require.True(t, utils.StartOfDayInUTC(yesterday).Equal(*contract.ServiceStartedAt))
@@ -901,7 +901,7 @@ func TestContractEventHandler_OnRefreshStatus_Live(t *testing.T) {
 	require.Equal(t, `{"status":"LIVE","contract-name":"test contract","comment":"test contract is now LIVE"}`, action.Metadata)
 }
 
-func TestContractEventHandler_OnUpdate_SubsetOfFiledsSet(t *testing.T) {
+func TestContractEventHandler_OnUpdate_SubsetOfFieldsSet(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
@@ -1025,4 +1025,198 @@ func TestContractEventHandler_OnDeleteV1(t *testing.T) {
 	// verify call to events platform
 	require.True(t, calledEventsPlatformToRefreshRenewalSummary)
 	require.True(t, calledEventsPlatformToRefreshArr)
+}
+
+func TestContractEventHandler_DeriveContractStatus_Ended(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// prepare neo4j data
+	now := utils.Now()
+	yesterday := now.AddDate(0, 0, -1)
+	tomorrow := now.AddDate(0, 0, 1)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractEntity := neo4jentity.ContractEntity{
+		Name:           "test contract",
+		ContractStatus: neo4jenum.ContractStatusDraft,
+		EndedAt:        &yesterday,
+	}
+	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, contractEntity)
+	neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewedAt:         &tomorrow,
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+			RenewalApproved:   false,
+		},
+	})
+
+	// prepare event handler
+	contractEventHandler := &ContractEventHandler{
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+	}
+	// EXECUTE
+	status, err := contractEventHandler.DeriveContractStatus(ctx, tenantName, contractEntity)
+	require.Nil(t, err)
+	require.Equal(t, neo4jenum.ContractStatusEnded.String(), status)
+}
+
+func TestContractEventHandler_DeriveContractStatus_Draft_NoServiceStartedAt(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// prepare neo4j data
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractEntity := neo4jentity.ContractEntity{
+		Name:             "test contract",
+		ContractStatus:   neo4jenum.ContractStatusDraft,
+		ServiceStartedAt: nil,
+	}
+	_ = neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, contractEntity)
+
+	// prepare event handler
+	contractEventHandler := &ContractEventHandler{
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+	}
+
+	// EXECUTE
+	status, err := contractEventHandler.DeriveContractStatus(ctx, tenantName, contractEntity)
+	require.Nil(t, err)
+	require.Equal(t, neo4jenum.ContractStatusDraft.String(), status)
+}
+
+func TestContractEventHandler_DeriveContractStatus_Draft_FutureServiceStartedAt(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// prepare neo4j data
+	tomorrow := utils.Now().AddDate(0, 0, 1)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractEntity := neo4jentity.ContractEntity{
+		Name:             "test contract",
+		ContractStatus:   neo4jenum.ContractStatusDraft,
+		ServiceStartedAt: &tomorrow,
+	}
+	_ = neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, contractEntity)
+
+	// prepare event handler
+	contractEventHandler := &ContractEventHandler{
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+	}
+
+	// EXECUTE
+	status, err := contractEventHandler.DeriveContractStatus(ctx, tenantName, contractEntity)
+	require.Nil(t, err)
+	require.Equal(t, neo4jenum.ContractStatusDraft.String(), status)
+}
+
+func TestContractEventHandler_DeriveContractStatus_Live_AutoRenew_ActiveRenewalOpportunity(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// prepare neo4j data
+	now := utils.Now()
+	tomorrow := now.AddDate(0, 0, 1)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractEntity := neo4jentity.ContractEntity{
+		Name:             "test contract",
+		ContractStatus:   neo4jenum.ContractStatusLive,
+		AutoRenew:        true,
+		ServiceStartedAt: &now,
+	}
+	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, contractEntity)
+	neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewedAt:         &tomorrow,
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+			RenewalApproved:   false,
+		},
+	})
+
+	// prepare event handler
+	contractEventHandler := &ContractEventHandler{
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+	}
+
+	// EXECUTE
+	status, err := contractEventHandler.DeriveContractStatus(ctx, tenantName, contractEntity)
+	require.Nil(t, err)
+	require.Equal(t, neo4jenum.ContractStatusLive.String(), status)
+}
+
+func TestContractEventHandler_DeriveContractStatus_Live_NoAutoRenew_NoActiveRenewalOpportunity(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// prepare neo4j data
+	now := utils.Now()
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractEntity := neo4jentity.ContractEntity{
+		Name:             "test contract",
+		ContractStatus:   neo4jenum.ContractStatusLive,
+		AutoRenew:        false,
+		ServiceStartedAt: &now,
+	}
+	_ = neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, contractEntity)
+
+	// prepare event handler
+	contractEventHandler := &ContractEventHandler{
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+	}
+
+	// EXECUTE
+	status, err := contractEventHandler.DeriveContractStatus(ctx, tenantName, contractEntity)
+	require.Nil(t, err)
+	require.Equal(t, neo4jenum.ContractStatusLive.String(), status)
+}
+
+func TestContractEventHandler_DeriveContractStatus_OutOfContract_NoAutoRenew_ActiveRenewalOpportunity(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// prepare neo4j data
+	now := utils.Now()
+	yesterday := now.AddDate(0, 0, -1)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractEntity := neo4jentity.ContractEntity{
+		Name:             "test contract",
+		ContractStatus:   neo4jenum.ContractStatusLive,
+		AutoRenew:        false,
+		ServiceStartedAt: &now,
+	}
+	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, contractEntity)
+	neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewedAt:         &yesterday,
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+			RenewalApproved:   false,
+		},
+	})
+
+	// prepare event handler
+	contractEventHandler := &ContractEventHandler{
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+	}
+
+	// EXECUTE
+	status, err := contractEventHandler.DeriveContractStatus(ctx, tenantName, contractEntity)
+	require.Nil(t, err)
+	require.Equal(t, neo4jenum.ContractStatusOutOfContract.String(), status)
 }
