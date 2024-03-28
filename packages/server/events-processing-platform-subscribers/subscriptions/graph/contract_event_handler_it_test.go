@@ -662,6 +662,7 @@ func TestContractEventHandler_OnUpdate_EndDateSet(t *testing.T) {
 			SignedAt:         &daysAgo2,
 			EndedAt:          &tomorrow,
 			RenewalCycle:     model.MonthlyRenewal.String(),
+			AutoRenew:        false,
 		},
 		commonmodel.ExternalSystem{},
 		constants.SourceOpenline,
@@ -684,7 +685,7 @@ func TestContractEventHandler_OnUpdate_EndDateSet(t *testing.T) {
 	require.Equal(t, contractId, contract.Id)
 	require.Equal(t, "test contract updated", contract.Name)
 	require.Equal(t, "http://contract.url/updated", contract.ContractUrl)
-	require.Equal(t, neo4jenum.ContractStatusLive, contract.ContractStatus)
+	require.Equal(t, neo4jenum.ContractStatusOutOfContract, contract.ContractStatus)
 	require.Equal(t, neo4jenum.RenewalCycleMonthlyRenewal, contract.RenewalCycle)
 	test.AssertRecentTime(t, contract.UpdatedAt)
 	require.True(t, utils.StartOfDayInUTC(yesterday).Equal(*contract.ServiceStartedAt))
