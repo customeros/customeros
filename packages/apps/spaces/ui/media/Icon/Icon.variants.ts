@@ -1,7 +1,7 @@
 import { cva } from 'class-variance-authority';
 
 export const featureIconVariant = cva(
-  ['flex', 'justify-center', 'items-center rounded-full'],
+  ['flex', 'justify-center', 'items-center , rounded-full'],
   {
     variants: {
       colorScheme: {

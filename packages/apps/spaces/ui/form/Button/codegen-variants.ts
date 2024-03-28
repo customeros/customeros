@@ -26,7 +26,9 @@ const solidButton = (color: string) => `
 ],`;
 
 const outlineButton = (color: string) => `
-    ${color}: [
+    ${color}: ${
+  color === 'gray'
+    ? `[
     'text-${color}-700',
     'border',
     'border-solid',
@@ -34,8 +36,18 @@ const outlineButton = (color: string) => `
     'hover:bg-${color}-50',
     'hover:text-${color}-700',
     'focus:bg-${color}-50',
-   
-],`;
+    ]`
+    : `[
+    'bg-${color}-50',
+    'text-${color}-700',
+    'border',
+    'border-solid',
+    'border-${color}-300',
+    'hover:bg-${color}-100',
+    'hover:text-${color}-700',
+    'focus:bg-${color}-100',
+    ]`
+},`;
 
 const ghostButton = (color: string) => `
     ${color}: ${
