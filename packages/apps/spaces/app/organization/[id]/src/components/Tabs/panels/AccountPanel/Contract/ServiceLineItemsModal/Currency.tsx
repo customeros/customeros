@@ -1,6 +1,8 @@
 import { useIMask } from 'react-imask';
 import React, { useEffect } from 'react';
 
+import { InputElement } from 'imask';
+
 import { VisuallyHidden } from '@ui/presentation/VisuallyHidden';
 import { Input, FormLabel, InputProps, FormControl } from '@ui/form/Input';
 
@@ -56,6 +58,14 @@ export const Currency = ({
     setValue(e.target.value);
   };
 
+  const handleFocusOnClick = () => {
+    // fixes cos-2594 - focus masked input on single click
+    (ref?.current as InputElement)?.focus();
+    if (unmaskedValue === '0') {
+      (ref?.current as InputElement)?.setSelectionRange(1, 5);
+    }
+  };
+
   return (
     <FormControl>
       {isLabelVisible ? (
@@ -70,6 +80,7 @@ export const Currency = ({
         ref={ref}
         {...props}
         onChange={handleValueChange}
+        onClick={handleFocusOnClick}
         autoComplete='off'
       />
     </FormControl>
