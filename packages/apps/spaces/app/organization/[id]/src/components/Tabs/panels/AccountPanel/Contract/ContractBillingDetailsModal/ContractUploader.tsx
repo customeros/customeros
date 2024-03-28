@@ -172,7 +172,7 @@ export const ContractUploader = ({ contractId }: ContractUploaderProps) => {
         </Tooltip>
       </div>
 
-      <div>
+      <div className='h-5'>
         {!attachments?.length && !files.length && (
           <label
             htmlFor='contractUpload'
@@ -184,11 +184,11 @@ export const ContractUploader = ({ contractId }: ContractUploaderProps) => {
 
         {attachments?.map(({ id, fileName }) => (
           <AttachmentItem
-            href='#'
             id={id}
             key={id}
             fileName={fileName}
             onRemove={handleRemoveAttachment}
+            href={`/fs/file/${id}/donwload`}
           />
         ))}
 
