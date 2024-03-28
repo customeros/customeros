@@ -50,7 +50,11 @@ export const ContractStatusSelect: React.FC<ContractStatusSelectProps> = ({
   onUpdateContract,
   nextInvoiceDate,
 }) => {
-  const { onOpen, onClose, isOpen } = useDisclosure({
+  const {
+    onOpen: onOpenEndModal,
+    onClose,
+    isOpen,
+  } = useDisclosure({
     id: 'end-contract-modal',
   });
   const {
@@ -67,7 +71,6 @@ export const ContractStatusSelect: React.FC<ContractStatusSelectProps> = ({
     <>
       <Menu>
         <MenuButton
-          disabled={status === ContractStatus.Draft}
           maxW={'auto'}
           color={status === ContractStatus.Live ? 'primary.800' : 'gray.800'}
           borderColor={
@@ -96,7 +99,9 @@ export const ContractStatusSelect: React.FC<ContractStatusSelectProps> = ({
         </MenuButton>
         <MenuList minW={'150px'}>
           <MenuItem
-            onClick={status === ContractStatus.Live ? onOpen : onOpenStartModal}
+            onClick={
+              status === ContractStatus.Live ? onOpenEndModal : onOpenStartModal
+            }
           >
             {status === ContractStatus.Live ? (
               <>
