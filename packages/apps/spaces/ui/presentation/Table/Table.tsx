@@ -155,7 +155,7 @@ export const Table = <T extends object>({
         height={contentHeight}
         borderColor={borderColor}
       >
-        <THeader className='top-0 sticky' style={{ minWidth: THeaderMinW }}>
+        <THeader className='top-0 sticky ' style={{ minWidth: THeaderMinW }}>
           {table.getHeaderGroups().map((headerGroup) => {
             const width = enableRowSelection ? 'w-7' : 'w-2';
 
@@ -207,11 +207,6 @@ export const Table = <T extends object>({
             const backgroundColor =
               virtualRow.index % 2 === 0 ? 'bg-gray-25' : 'bg-white';
 
-            const topPosition =
-              virtualRow.index === 0
-                ? '[&]:before:top[-1px]'
-                : '[&]:before:top-[-2px]';
-
             const hoverStyle = fullRowSelection
               ? 'hover:cursor-pointer'
               : 'group';
@@ -224,26 +219,36 @@ export const Table = <T extends object>({
               ? 'pointer-events-auto'
               : 'pointer-events-none';
 
-            const fullRowSelectionStyleDynamic = `hover:after:contents-[""] hover:after:h-[1px] hover:after:w-full hover:after:bg-gray-200 hover:after:bottom-[-1px] hover:after:absolute hover:before:contents-[""] hover:before:w-full hover:before:bg-gray-200 hover:before:h-[1px] hover:before:absolute`;
+            const fullRowSelectionStyleDynamic = cn(
+              virtualRow.index === 0
+                ? 'hover:before:top[-1px]'
+                : 'hover:before:top-[-2px]',
+              `
+              hover:after:contents-[""] hover:after:h-[2px] hover:after:w-full hover:after:bg-gray-200 hover:after:bottom-[-1px] hover:after:absolute
+              hover:before:contents-[""] hover:before:w-full  hover:before:bg-gray-200 hover:before:h-[2px] hover:before:absolute`,
+            );
 
-            const rowHoverStyle =
+            const rowHoverStyle = fullRowSelection
+              ? fullRowSelectionStyleDynamic
+              : undefined;
+
+            const selectedStyle =
               fullRowSelection &&
-              !row.getIsSelected() &&
-              fullRowSelectionStyleDynamic;
-
-            const focusStyle =
-              row?.getIsSelected() && fullRowSelection
-                ? cn('border-b border-gray-200 border-t')
-                : '';
+              cn(
+                'data-[selected=true]:before:contents-[""] data-[selected=true]:before:h-[2px] data-[selected=true]:before:w-full data-[selected=true]:before:bg-gray-200 data-[selected=true]:before:absolute',
+                'data-[selected=true]:after:contents-[""] data-[selected=true]:after:w-full data-[selected=true]:after:bottom-[-1px] data-[selected=true]:after:bg-gray-200 data-[selected=true]:after:h-[2px] data-[selected=true]:after:absolute',
+                virtualRow.index === 0
+                  ? 'data-[selected=true]:before:top[-1px]'
+                  : 'data-[selected=true]:before:top-[-2px]',
+              );
 
             return (
               <TRow
-                className={cn(
+                className={twMerge(
                   backgroundColor,
-                  topPosition,
                   hoverStyle,
                   rowHoverStyle,
-                  focusStyle,
+                  selectedStyle,
                   'group',
                 )}
                 style={{
@@ -252,6 +257,7 @@ export const Table = <T extends object>({
                   top: top,
                 }}
                 key={virtualRow.key}
+                data-selected={row?.getIsSelected()}
                 data-index={virtualRow.index}
                 ref={rowVirtualizer.measureElement}
                 onClick={
@@ -275,7 +281,7 @@ export const Table = <T extends object>({
                       )}
                     >
                       <MemoizedCheckbox
-                        className='group-hover:visible group-hover:opacity-100 data-[state=checked]:bg-primary-100 data-[state=checked]:ring-primary-500 data-[state=checked]:visible data-[state=checked]:opacity-100 '
+                        className='group-hover:visible group-hover:opacity-100  '
                         key={`checkbox-${virtualRow.index}`}
                         isChecked={row?.getIsSelected()}
                         disabled={!row || !row?.getCanSelect()}
@@ -406,7 +412,7 @@ const TContent = forwardRef<HTMLDivElement, TContentProps>(
       <div
         ref={ref}
         className={twMerge(
-          'flex flex-col bg-gray-25 border-t border-hidden overflow-auto',
+          'flex flex-col bg-gray-25 border-t overflow-auto',
           scrollBarStyle,
           className,
         )}
