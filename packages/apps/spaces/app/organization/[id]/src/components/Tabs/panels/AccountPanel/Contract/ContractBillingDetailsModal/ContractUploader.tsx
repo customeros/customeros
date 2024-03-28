@@ -188,7 +188,7 @@ export const ContractUploader = ({ contractId }: ContractUploaderProps) => {
             key={id}
             fileName={fileName}
             onRemove={handleRemoveAttachment}
-            href={`/fs/file/${id}/download`}
+            href={`/fs/file/${id}/download?inline=true`}
           />
         ))}
 
