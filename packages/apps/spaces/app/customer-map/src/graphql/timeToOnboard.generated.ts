@@ -30,7 +30,7 @@ export type TimeToOnboardQueryVariables = Types.Exact<{
 
 export type TimeToOnboardQuery = {
   __typename?: 'Query';
-  dashboard_TimeToOnboard: {
+  dashboard_TimeToOnboard?: {
     __typename?: 'DashboardTimeToOnboard';
     timeToOnboard?: number | null;
     increasePercentage?: number | null;
@@ -39,7 +39,7 @@ export type TimeToOnboardQuery = {
       month: number;
       value: number;
     }>;
-  };
+  } | null;
 };
 
 export const TimeToOnboardDocument = `

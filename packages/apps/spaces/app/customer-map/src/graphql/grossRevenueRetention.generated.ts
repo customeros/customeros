@@ -30,7 +30,7 @@ export type GrossRevenueRetentionQueryVariables = Types.Exact<{
 
 export type GrossRevenueRetentionQuery = {
   __typename?: 'Query';
-  dashboard_GrossRevenueRetention: {
+  dashboard_GrossRevenueRetention?: {
     __typename?: 'DashboardGrossRevenueRetention';
     grossRevenueRetention: number;
     increasePercentage: string;
@@ -39,7 +39,7 @@ export type GrossRevenueRetentionQuery = {
       month: number;
       percentage: number;
     } | null>;
-  };
+  } | null;
 };
 
 export const GrossRevenueRetentionDocument = `

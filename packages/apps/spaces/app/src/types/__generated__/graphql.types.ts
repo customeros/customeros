@@ -2186,8 +2186,8 @@ export type Mutation = {
   note_LinkAttachment: Note;
   note_UnlinkAttachment: Note;
   note_Update: Note;
-  offering_Create: Offering;
-  offering_Update: Offering;
+  offering_Create?: Maybe<Scalars['ID']['output']>;
+  offering_Update?: Maybe<Scalars['ID']['output']>;
   opportunityRenewalUpdate: Opportunity;
   opportunityUpdate: Opportunity;
   organizationPlanMilestone_BulkUpdate: Array<OrganizationPlanMilestone>;
@@ -3524,6 +3524,7 @@ export type OrganizationPlanUpdateInput = {
 export type OrganizationUpdateInput = {
   customId?: InputMaybe<Scalars['String']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
+  /** Deprecated */
   domains?: InputMaybe<Array<Scalars['String']['input']>>;
   employeeGrowthRate?: InputMaybe<Scalars['String']['input']>;
   employees?: InputMaybe<Scalars['Int64']['input']>;
@@ -3532,18 +3533,22 @@ export type OrganizationUpdateInput = {
   industry?: InputMaybe<Scalars['String']['input']>;
   industryGroup?: InputMaybe<Scalars['String']['input']>;
   isCustomer?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Deprecated, use public instead */
   isPublic?: InputMaybe<Scalars['Boolean']['input']>;
   lastFundingAmount?: InputMaybe<Scalars['String']['input']>;
   lastFundingRound?: InputMaybe<FundingRound>;
   logo?: InputMaybe<Scalars['String']['input']>;
+  /** Deprecated, use logo instead */
   logoUrl?: InputMaybe<Scalars['String']['input']>;
   market?: InputMaybe<Market>;
   name?: InputMaybe<Scalars['String']['input']>;
+  /** Deprecatedm, use notes instead */
   note?: InputMaybe<Scalars['String']['input']>;
   notes?: InputMaybe<Scalars['String']['input']>;
   /** Set to true when partial update is needed. Empty or missing fields will not be ignored. */
   patch?: InputMaybe<Scalars['Boolean']['input']>;
   public?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Deprecated, use customId instead */
   referenceId?: InputMaybe<Scalars['String']['input']>;
   slackChannelId?: InputMaybe<Scalars['String']['input']>;
   subIndustry?: InputMaybe<Scalars['String']['input']>;
@@ -3779,15 +3784,15 @@ export type Query = {
   /** sort.By available options: ORGANIZATION, IS_CUSTOMER, DOMAIN, LOCATION, OWNER, LAST_TOUCHPOINT, RENEWAL_LIKELIHOOD, FORECAST_ARR, RENEWAL_DATE, ONBOARDING_STATUS */
   dashboardView_Organizations?: Maybe<OrganizationPage>;
   dashboardView_Renewals?: Maybe<RenewalsPage>;
-  dashboard_ARRBreakdown: DashboardArrBreakdown;
+  dashboard_ARRBreakdown?: Maybe<DashboardArrBreakdown>;
   dashboard_CustomerMap?: Maybe<Array<DashboardCustomerMap>>;
-  dashboard_GrossRevenueRetention: DashboardGrossRevenueRetention;
-  dashboard_MRRPerCustomer: DashboardMrrPerCustomer;
-  dashboard_NewCustomers: DashboardNewCustomers;
-  dashboard_OnboardingCompletion: DashboardOnboardingCompletion;
-  dashboard_RetentionRate: DashboardRetentionRate;
-  dashboard_RevenueAtRisk: DashboardRevenueAtRisk;
-  dashboard_TimeToOnboard: DashboardTimeToOnboard;
+  dashboard_GrossRevenueRetention?: Maybe<DashboardGrossRevenueRetention>;
+  dashboard_MRRPerCustomer?: Maybe<DashboardMrrPerCustomer>;
+  dashboard_NewCustomers?: Maybe<DashboardNewCustomers>;
+  dashboard_OnboardingCompletion?: Maybe<DashboardOnboardingCompletion>;
+  dashboard_RetentionRate?: Maybe<DashboardRetentionRate>;
+  dashboard_RevenueAtRisk?: Maybe<DashboardRevenueAtRisk>;
+  dashboard_TimeToOnboard?: Maybe<DashboardTimeToOnboard>;
   email: Email;
   entityTemplates: Array<EntityTemplate>;
   externalMeetings: MeetingsPage;
@@ -3812,8 +3817,8 @@ export type Query = {
   organizationPlan: OrganizationPlan;
   organizationPlans: Array<OrganizationPlan>;
   organizationPlansForOrganization: Array<OrganizationPlan>;
-  organization_ByCustomId: Organization;
-  organization_ByCustomerOsId: Organization;
+  organization_ByCustomId?: Maybe<Organization>;
+  organization_ByCustomerOsId?: Maybe<Organization>;
   organization_DistinctOwners: Array<User>;
   organizations: OrganizationPage;
   phoneNumber: PhoneNumber;

@@ -49,9 +49,9 @@ const columns: Record<string, Column> = {
     cell: (props) => {
       return (
         <AvatarCell
-          id={props.getValue()?.id}
+          id={props.getValue()?.metadata?.id}
           name={props.getValue()?.name}
-          src={props.getValue()?.logoUrl}
+          src={props.getValue()?.logo}
         />
       );
     },
@@ -72,8 +72,9 @@ const columns: Record<string, Column> = {
     enableColumnFilter: false,
     enableSorting: false,
     cell: (props) => {
-      const contractName = props.getValue()?.contract?.name ?? 'Unnamed';
-      const orgId = props.getValue()?.organization?.id;
+      const contractName =
+        props.getValue()?.contract?.contractName ?? 'Unnamed';
+      const orgId = props.getValue()?.organization?.metadata?.id;
       const orgName = props.getValue()?.organization?.name ?? 'Unnamed';
 
       return (
@@ -224,7 +225,7 @@ const columns: Record<string, Column> = {
       </Flex>
     ),
   }),
-  OWNER: columnHelper.accessor('opportunity.owner', {
+  OWNER: columnHelper.accessor('organization.owner', {
     id: 'OWNER',
     minSize: 100,
     filterFn: filterOwnerFn,
@@ -260,9 +261,12 @@ const columns: Record<string, Column> = {
     filterFn: filterLastTouchpointFn,
     cell: (props) => (
       <LastTouchpointCell
-        lastTouchPointAt={props.row.original.organization.lastTouchPointAt}
+        lastTouchPointAt={
+          props.row.original?.organization?.lastTouchpoint?.lastTouchPointAt
+        }
         lastTouchPointTimelineEvent={
-          props.row.original.organization.lastTouchPointTimelineEvent
+          props.row.original.organization?.lastTouchpoint
+            ?.lastTouchPointTimelineEvent
         }
       />
     ),

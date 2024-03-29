@@ -41,11 +41,15 @@ export type GetRenewalsQuery = {
       __typename?: 'RenewalRecord';
       organization: {
         __typename?: 'Organization';
-        id: string;
         name: string;
-        logoUrl?: string | null;
-        lastTouchPointAt?: any | null;
-        lastTouchPointType?: Types.LastTouchpointType | null;
+        logo?: string | null;
+        metadata: { __typename?: 'Metadata'; id: string };
+        owner?: {
+          __typename?: 'User';
+          name?: string | null;
+          firstName: string;
+          lastName: string;
+        } | null;
         accountDetails?: {
           __typename?: 'OrgAccountDetails';
           renewalSummary?: {
@@ -56,113 +60,127 @@ export type GetRenewalsQuery = {
             maxArrForecast?: number | null;
           } | null;
         } | null;
-        lastTouchPointTimelineEvent?:
-          | {
-              __typename: 'Action';
-              id: string;
-              actionType: Types.ActionType;
-              createdAt: any;
-              source: Types.DataSource;
-              createdBy?: {
-                __typename?: 'User';
+        lastTouchpoint?: {
+          __typename?: 'LastTouchpoint';
+          lastTouchPointAt?: any | null;
+          lastTouchPointType?: Types.LastTouchpointType | null;
+          lastTouchPointTimelineEvent?:
+            | {
+                __typename: 'Action';
                 id: string;
-                firstName: string;
-                lastName: string;
-              } | null;
-            }
-          | { __typename: 'Analysis'; id: string }
-          | {
-              __typename: 'InteractionEvent';
-              id: string;
-              channel?: string | null;
-              eventType?: string | null;
-              externalLinks: Array<{
-                __typename?: 'ExternalSystem';
-                type: Types.ExternalSystemType;
-              }>;
-              sentBy: Array<
-                | {
-                    __typename: 'ContactParticipant';
-                    contactParticipant: {
-                      __typename?: 'Contact';
-                      id: string;
-                      name?: string | null;
-                      firstName?: string | null;
-                      lastName?: string | null;
-                    };
-                  }
-                | {
-                    __typename: 'EmailParticipant';
-                    type?: string | null;
-                    emailParticipant: {
-                      __typename?: 'Email';
-                      id: string;
-                      email?: string | null;
-                      rawEmail?: string | null;
-                    };
-                  }
-                | {
-                    __typename: 'JobRoleParticipant';
-                    jobRoleParticipant: {
-                      __typename?: 'JobRole';
-                      contact?: {
+                actionType: Types.ActionType;
+                createdAt: any;
+                source: Types.DataSource;
+                createdBy?: {
+                  __typename?: 'User';
+                  id: string;
+                  firstName: string;
+                  lastName: string;
+                } | null;
+              }
+            | { __typename: 'Analysis'; id: string }
+            | {
+                __typename: 'InteractionEvent';
+                id: string;
+                channel?: string | null;
+                eventType?: string | null;
+                externalLinks: Array<{
+                  __typename?: 'ExternalSystem';
+                  type: Types.ExternalSystemType;
+                }>;
+                sentBy: Array<
+                  | {
+                      __typename: 'ContactParticipant';
+                      contactParticipant: {
                         __typename?: 'Contact';
                         id: string;
                         name?: string | null;
                         firstName?: string | null;
                         lastName?: string | null;
-                      } | null;
-                    };
-                  }
-                | { __typename: 'OrganizationParticipant' }
-                | { __typename: 'PhoneNumberParticipant' }
-                | {
-                    __typename: 'UserParticipant';
-                    userParticipant: {
-                      __typename?: 'User';
-                      id: string;
-                      firstName: string;
-                      lastName: string;
-                    };
-                  }
-              >;
-            }
-          | { __typename: 'InteractionSession' }
-          | { __typename: 'Issue'; id: string; createdAt: any; updatedAt: any }
-          | {
-              __typename: 'LogEntry';
-              id: string;
-              createdBy?: {
-                __typename?: 'User';
-                lastName: string;
-                firstName: string;
-              } | null;
-            }
-          | {
-              __typename: 'Meeting';
-              id: string;
-              name?: string | null;
-              attendedBy: Array<
-                | { __typename: 'ContactParticipant' }
-                | { __typename: 'EmailParticipant' }
-                | { __typename: 'OrganizationParticipant' }
-                | { __typename: 'UserParticipant' }
-              >;
-            }
-          | {
-              __typename: 'Note';
-              id: string;
-              createdBy?: {
-                __typename?: 'User';
-                firstName: string;
-                lastName: string;
-              } | null;
-            }
-          | { __typename: 'Order' }
-          | { __typename: 'PageView'; id: string }
-          | null;
+                      };
+                    }
+                  | {
+                      __typename: 'EmailParticipant';
+                      type?: string | null;
+                      emailParticipant: {
+                        __typename?: 'Email';
+                        id: string;
+                        email?: string | null;
+                        rawEmail?: string | null;
+                      };
+                    }
+                  | {
+                      __typename: 'JobRoleParticipant';
+                      jobRoleParticipant: {
+                        __typename?: 'JobRole';
+                        contact?: {
+                          __typename?: 'Contact';
+                          id: string;
+                          name?: string | null;
+                          firstName?: string | null;
+                          lastName?: string | null;
+                        } | null;
+                      };
+                    }
+                  | { __typename: 'OrganizationParticipant' }
+                  | { __typename: 'PhoneNumberParticipant' }
+                  | {
+                      __typename: 'UserParticipant';
+                      userParticipant: {
+                        __typename?: 'User';
+                        id: string;
+                        firstName: string;
+                        lastName: string;
+                      };
+                    }
+                >;
+              }
+            | { __typename: 'InteractionSession' }
+            | {
+                __typename: 'Issue';
+                id: string;
+                createdAt: any;
+                updatedAt: any;
+              }
+            | {
+                __typename: 'LogEntry';
+                id: string;
+                createdBy?: {
+                  __typename?: 'User';
+                  lastName: string;
+                  firstName: string;
+                } | null;
+              }
+            | {
+                __typename: 'Meeting';
+                id: string;
+                name?: string | null;
+                attendedBy: Array<
+                  | { __typename: 'ContactParticipant' }
+                  | { __typename: 'EmailParticipant' }
+                  | { __typename: 'OrganizationParticipant' }
+                  | { __typename: 'UserParticipant' }
+                >;
+              }
+            | {
+                __typename: 'Note';
+                id: string;
+                createdBy?: {
+                  __typename?: 'User';
+                  firstName: string;
+                  lastName: string;
+                } | null;
+              }
+            | { __typename: 'Order' }
+            | { __typename: 'PageView'; id: string }
+            | null;
+        } | null;
       };
-      contract: { __typename?: 'Contract'; id: string; name: string };
+      contract: {
+        __typename?: 'Contract';
+        contractName: string;
+        metadata: { __typename?: 'Metadata'; id: string };
+      };
       opportunity?: {
         __typename?: 'Opportunity';
         owner?: {
@@ -182,9 +200,16 @@ export const GetRenewalsDocument = `
   dashboardView_Renewals(pagination: $pagination, where: $where, sort: $sort) {
     content {
       organization {
-        id
+        metadata {
+          id
+        }
         name
-        logoUrl
+        logo
+        owner {
+          name
+          firstName
+          lastName
+        }
         accountDetails {
           renewalSummary {
             renewalLikelihood
@@ -193,102 +218,106 @@ export const GetRenewalsDocument = `
             maxArrForecast
           }
         }
-        lastTouchPointAt
-        lastTouchPointType
-        lastTouchPointTimelineEvent {
-          __typename
-          ... on PageView {
-            id
-          }
-          ... on Issue {
-            id
-            createdAt
-            updatedAt
-          }
-          ... on LogEntry {
-            id
-            createdBy {
-              lastName
-              firstName
+        lastTouchpoint {
+          lastTouchPointAt
+          lastTouchPointType
+          lastTouchPointTimelineEvent {
+            __typename
+            ... on PageView {
+              id
             }
-          }
-          ... on Note {
-            id
-            createdBy {
-              firstName
-              lastName
+            ... on Issue {
+              id
+              createdAt
+              updatedAt
             }
-          }
-          ... on InteractionEvent {
-            id
-            channel
-            eventType
-            externalLinks {
-              type
+            ... on LogEntry {
+              id
+              createdBy {
+                lastName
+                firstName
+              }
             }
-            sentBy {
-              __typename
-              ... on EmailParticipant {
+            ... on Note {
+              id
+              createdBy {
+                firstName
+                lastName
+              }
+            }
+            ... on InteractionEvent {
+              id
+              channel
+              eventType
+              externalLinks {
                 type
-                emailParticipant {
-                  id
-                  email
-                  rawEmail
-                }
               }
-              ... on ContactParticipant {
-                contactParticipant {
-                  id
-                  name
-                  firstName
-                  lastName
+              sentBy {
+                __typename
+                ... on EmailParticipant {
+                  type
+                  emailParticipant {
+                    id
+                    email
+                    rawEmail
+                  }
                 }
-              }
-              ... on JobRoleParticipant {
-                jobRoleParticipant {
-                  contact {
+                ... on ContactParticipant {
+                  contactParticipant {
                     id
                     name
                     firstName
                     lastName
                   }
                 }
-              }
-              ... on UserParticipant {
-                userParticipant {
-                  id
-                  firstName
-                  lastName
+                ... on JobRoleParticipant {
+                  jobRoleParticipant {
+                    contact {
+                      id
+                      name
+                      firstName
+                      lastName
+                    }
+                  }
+                }
+                ... on UserParticipant {
+                  userParticipant {
+                    id
+                    firstName
+                    lastName
+                  }
                 }
               }
             }
-          }
-          ... on Analysis {
-            id
-          }
-          ... on Meeting {
-            id
-            name
-            attendedBy {
-              __typename
-            }
-          }
-          ... on Action {
-            id
-            actionType
-            createdAt
-            source
-            createdBy {
+            ... on Analysis {
               id
-              firstName
-              lastName
+            }
+            ... on Meeting {
+              id
+              name
+              attendedBy {
+                __typename
+              }
+            }
+            ... on Action {
+              id
+              actionType
+              createdAt
+              source
+              createdBy {
+                id
+                firstName
+                lastName
+              }
             }
           }
         }
       }
       contract {
-        id
-        name
+        metadata {
+          id
+        }
+        contractName
       }
       opportunity {
         owner {

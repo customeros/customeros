@@ -30,7 +30,7 @@ export type OnboardingCompletionQueryVariables = Types.Exact<{
 
 export type OnboardingCompletionQuery = {
   __typename?: 'Query';
-  dashboard_OnboardingCompletion: {
+  dashboard_OnboardingCompletion?: {
     __typename?: 'DashboardOnboardingCompletion';
     completionPercentage: number;
     increasePercentage: number;
@@ -39,7 +39,7 @@ export type OnboardingCompletionQuery = {
       month: number;
       value: number;
     }>;
-  };
+  } | null;
 };
 
 export const OnboardingCompletionDocument = `

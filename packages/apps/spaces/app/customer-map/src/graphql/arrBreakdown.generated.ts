@@ -30,7 +30,7 @@ export type ArrBreakdownQueryVariables = Types.Exact<{
 
 export type ArrBreakdownQuery = {
   __typename?: 'Query';
-  dashboard_ARRBreakdown: {
+  dashboard_ARRBreakdown?: {
     __typename?: 'DashboardARRBreakdown';
     arrBreakdown: number;
     increasePercentage: string;
@@ -45,7 +45,7 @@ export type ArrBreakdownQuery = {
       cancellations: number;
       churned: number;
     } | null>;
-  };
+  } | null;
 };
 
 export const ArrBreakdownDocument = `
