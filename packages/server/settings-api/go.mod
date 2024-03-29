@@ -16,7 +16,7 @@ require (
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240220064825-20118a9bac6a
 	golang.org/x/net v0.22.0
 	gorm.io/driver/postgres v1.5.7
-	gorm.io/gorm v1.25.8
+	gorm.io/gorm v1.25.9
 )
 
 require (
