@@ -10,8 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment/event"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
@@ -34,7 +33,7 @@ func (h *CommentEventHandler) OnCreate(ctx context.Context, evt eventstore.Event
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData event.CommentCreateEvent
+	var eventData comment.CommentCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
@@ -55,7 +54,7 @@ func (h *CommentEventHandler) OnCreate(ctx context.Context, evt eventstore.Event
 		}
 	}
 
-	commentId := aggregate.GetCommentObjectID(evt.AggregateID, eventData.Tenant)
+	commentId := comment.GetCommentObjectID(evt.AggregateID, eventData.Tenant)
 	data := neo4jrepository.CommentCreateFields{
 		Content:          eventData.Content,
 		ContentType:      eventData.ContentType,
@@ -101,13 +100,13 @@ func (h *CommentEventHandler) OnUpdate(ctx context.Context, evt eventstore.Event
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData event.CommentUpdateEvent
+	var eventData comment.CommentUpdateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	commentId := aggregate.GetCommentObjectID(evt.AggregateID, eventData.Tenant)
+	commentId := comment.GetCommentObjectID(evt.AggregateID, eventData.Tenant)
 	data := neo4jrepository.CommentUpdateFields{
 		Content:     eventData.Content,
 		ContentType: eventData.ContentType,

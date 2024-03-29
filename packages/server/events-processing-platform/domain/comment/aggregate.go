@@ -24,6 +24,10 @@ type CommentAggregate struct {
 	Comment *Comment
 }
 
+func GetCommentObjectID(aggregateID string, tenant string) string {
+	return aggregate.GetAggregateObjectID(aggregateID, tenant, CommentAggregateType)
+}
+
 func NewCommentAggregateWithTenantAndID(tenant, id string) *CommentAggregate {
 	commentAggregate := CommentAggregate{}
 	commentAggregate.CommonTenantIdAggregate = aggregate.NewCommonAggregateWithTenantAndId(CommentAggregateType, tenant, id)
