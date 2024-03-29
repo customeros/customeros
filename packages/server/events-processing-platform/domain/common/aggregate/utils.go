@@ -65,6 +65,7 @@ func LoadAggregate(ctx context.Context, eventStore eventstore.AggregateStore, ag
 			return err
 		}
 	}
+
 	return nil
 }
 

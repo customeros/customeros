@@ -6,7 +6,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
-	repository "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository/postgres"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -15,67 +14,38 @@ import (
 )
 
 type InvoiceRequestHandler interface {
-	Handle(ctx context.Context, tenant, objectId string, request any, params ...map[string]any) (any, error)
-	HandleWithRetry(ctx context.Context, tenant, objectId string, aggregateRequired bool, request any, params ...map[string]any) (any, error)
-	HandleTemp(ctx context.Context, tenant, objectId string, request any) (any, error)
+	Handle(ctx context.Context, tenant, objectId string, aggregateOptions eventstore.LoadAggregateOptions, request any, params ...map[string]any) (any, error)
 }
 
 type invoiceRequestHandler struct {
-	log               logger.Logger
-	es                eventstore.AggregateStore
-	cfg               config.Utils
-	invoiceRepository repository.InvoiceRepository
+	log logger.Logger
+	es  eventstore.AggregateStore
+	cfg config.Utils
 }
 
 func NewInvoiceRequestHandler(log logger.Logger, es eventstore.AggregateStore, cfg config.Utils) InvoiceRequestHandler {
 	return &invoiceRequestHandler{log: log, es: es, cfg: cfg}
 }
 
-func (h *invoiceRequestHandler) Handle(ctx context.Context, tenant, objectId string, request any, params ...map[string]any) (any, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceRequestHandler.Handle")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	tracing.LogObjectAsJson(span, "request", request)
-	if params != nil && len(params) > 0 {
-		span.LogFields(log.Object("params", params))
-	}
-
-	invoiceAggregate, err := LoadInvoiceAggregate(ctx, h.es, tenant, objectId, *eventstore.NewLoadAggregateOptions())
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-	var requestParams map[string]any
-	if params != nil && len(params) > 0 {
-		requestParams = params[0]
-	}
-	result, err := invoiceAggregate.HandleRequest(ctx, request, requestParams)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	return result, h.es.Save(ctx, invoiceAggregate)
-}
-
-func (h *invoiceRequestHandler) HandleWithRetry(ctx context.Context, tenant, objectId string, aggregateRequired bool, request any, params ...map[string]any) (any, error) {
+func (h *invoiceRequestHandler) Handle(ctx context.Context, tenant, objectId string, aggregateOptions eventstore.LoadAggregateOptions, request any, params ...map[string]any) (any, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceRequestHandler.HandleWithRetry")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
 	tracing.LogObjectAsJson(span, "request", request)
-	span.LogFields(log.Bool("aggregateRequired", aggregateRequired))
+	span.LogFields(log.Object("aggregateOptions", aggregateOptions))
+
 	if params != nil && len(params) > 0 {
 		span.LogFields(log.Object("params", params))
 	}
 
 	for attempt := 0; attempt == 0 || attempt < h.cfg.RetriesOnOptimisticLockException; attempt++ {
-		invoiceAggregate, err := LoadInvoiceAggregate(ctx, h.es, tenant, objectId, *eventstore.NewLoadAggregateOptions())
+		invoiceAggregate, err := LoadInvoiceAggregate(ctx, h.es, tenant, objectId, aggregateOptions)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
 		}
 
-		if aggregateRequired && eventstore.IsAggregateNotFound(invoiceAggregate) {
+		if aggregateOptions.Required && eventstore.IsAggregateNotFound(invoiceAggregate) {
 			tracing.TraceErr(span, eventstore.ErrAggregateNotFound)
 			return nil, eventstore.ErrAggregateNotFound
 		}
@@ -115,24 +85,4 @@ func (h *invoiceRequestHandler) HandleWithRetry(ctx context.Context, tenant, obj
 	err := errors.New("reached maximum number of retries")
 	tracing.TraceErr(span, err)
 	return nil, err
-}
-
-func (h *invoiceRequestHandler) HandleTemp(ctx context.Context, tenant, objectId string, request any) (any, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceRequestHandler.Handle")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	tracing.LogObjectAsJson(span, "request", request)
-
-	invoiceTempAggregate, err := LoadInvoiceTempAggregate(ctx, h.es, tenant, objectId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-	result, err := invoiceTempAggregate.HandleRequest(ctx, request)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	return result, h.es.Save(ctx, invoiceTempAggregate)
 }
