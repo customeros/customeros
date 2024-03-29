@@ -1,5 +1,5 @@
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
+import { twMerge } from 'tailwind-merge';
+
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 
 interface RenewalForecastCellProps {
@@ -21,18 +21,17 @@ export const RenewalForecastCell = ({
     formattedAmount !== formattedPotentialAmount;
 
   if (formattedAmount === 'Unknown')
-    return <Text color='gray.400'>Unknown</Text>;
+    return <span className='text-gray-400'>Unknown</span>;
+  const textColor = amount ? 'text-gray-700' : 'text-gray-500';
 
   return (
-    <Flex flexDir='column' justify='center'>
-      <Text fontSize='sm' color={amount ? 'gray.700' : 'gray.500'}>
-        {formattedAmount}
-      </Text>
+    <div className='flex flex-col justify-center'>
+      <span className={twMerge('text-sm', textColor)}>{formattedAmount}</span>
       {showPotentialAmount && (
-        <Text fontSize='sm' color='gray.500' textDecoration='line-through'>
+        <span className='text-sm text-gray-500 line-through'>
           {formattedPotentialAmount}
-        </Text>
+        </span>
       )}
-    </Flex>
+    </div>
   );
 };

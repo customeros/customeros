@@ -2,10 +2,7 @@ import { useRef, useState, useEffect } from 'react';
 
 import { useLocalStorage } from 'usehooks-ts';
 
-import { Flex } from '@ui/layout/Flex';
-import { Link } from '@ui/navigation/Link';
-import { Text } from '@ui/typography/Text';
-import { Tooltip } from '@ui/overlay/Tooltip';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 
 interface OrganizationCellProps {
   id: string;
@@ -40,28 +37,24 @@ export const OrganizationCell = ({
   return (
     <Tooltip
       hasArrow
-      placement='bottom-start'
-      fontWeight='normal'
+      align='start'
+      side='bottom'
       label={isOverflowing ? fullName : ''}
     >
-      <Flex isTruncated flexDir='column'>
+      <div className='flex flex-col line-clamp-1'>
         {isSubsidiary && (
-          <Text fontSize='xs' color='gray.500'>
+          <span className='text-xs text-gray-500'>
             {parentOrganizationName}
-          </Text>
+          </span>
         )}
-        <Link
+        <a
+          className='line-clamp-1 font-semibold text-gray-700 no-underline hover:no-underline'
           ref={linkRef}
           href={href}
-          color='gray.700'
-          fontWeight='semibold'
-          overflow='hidden'
-          textOverflow='ellipsis'
-          _hover={{ textDecoration: 'none' }}
         >
           {fullName}
-        </Link>
-      </Flex>
+        </a>
+      </div>
     </Tooltip>
   );
 };

@@ -2,8 +2,6 @@ import React from 'react';
 
 import { match } from 'ts-pattern';
 
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
 import { IconProps } from '@ui/media/Icon';
 import { File02 } from '@ui/media/icons/File02';
 import { Mail01 } from '@ui/media/icons/Mail01';
@@ -100,17 +98,13 @@ export const LastTouchpointCell = ({
     : '';
 
   return (
-    <Flex flexDir='column'>
-      <Flex align='center'>
+    <div className='flex flex-col'>
+      <div className='items-center'>
         <Icon boxSize='3' color='gray.700' />
-        <Text color='gray.700' ml='2'>
-          {label}
-        </Text>
-      </Flex>
+        <span className='text-gray-700 ml-2'>{label}</span>
+      </div>
 
-      <Text color='gray.500' ml='5'>
-        {subLabel}
-      </Text>
-    </Flex>
+      <span className='text-gray-500 ml-5'>{subLabel}</span>
+    </div>
   );
 };

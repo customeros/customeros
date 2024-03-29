@@ -38,8 +38,10 @@ export interface CheckboxProps
   id?: string;
   disabled?: boolean;
   className?: string;
+  defaultChecked?: boolean;
   children?: React.ReactNode;
   isChecked?: boolean | RadixCheckbox.CheckedState;
+  labelProps?: React.LabelHTMLAttributes<HTMLLabelElement>;
   onChange?: (checked: RadixCheckbox.CheckedState | undefined) => void;
 }
 
@@ -53,8 +55,10 @@ export const Checkbox = forwardRef<HTMLButtonElement, CheckboxProps>(
       colorScheme,
       iconColorScheme,
       id,
+      defaultChecked,
       onChange,
       children,
+      labelProps,
       ...props
     },
     ref,
@@ -63,10 +67,12 @@ export const Checkbox = forwardRef<HTMLButtonElement, CheckboxProps>(
       <div className='flex items-center'>
         <RadixCheckbox.Root
           ref={ref}
+          {...props}
           className={twMerge(
             className,
             CheckboxVariants({ size, colorScheme }),
           )}
+          defaultChecked={defaultChecked}
           checked={isChecked}
           disabled={disabled}
           onCheckedChange={onChange}
@@ -76,7 +82,7 @@ export const Checkbox = forwardRef<HTMLButtonElement, CheckboxProps>(
             <CheckIcon className={twMerge(iconColor({ iconColorScheme }))} />
           </RadixCheckbox.Indicator>
         </RadixCheckbox.Root>
-        <label className='text-[15px] leading-none text-white' htmlFor={id}>
+        <label {...labelProps} htmlFor={id}>
           {children}
         </label>
       </div>
@@ -104,5 +110,3 @@ const CheckIcon = ({
     </svg>
   );
 };
-
-// data-[state=checked]:bg-primary-200 data-[state=checked]:visible data-[state=checked]:opacity-100
