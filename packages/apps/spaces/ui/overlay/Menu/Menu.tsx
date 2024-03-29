@@ -32,11 +32,13 @@ interface MenuListProps extends DropdownMenuPrimitive.DropdownMenuContentProps {
   className?: string;
   hasArrow?: boolean;
   children: React.ReactNode;
+  align?: 'start' | 'end' | 'center';
+  side?: 'top' | 'right' | 'bottom' | 'left';
 }
 
 export const MenuList = React.forwardRef<HTMLDivElement, MenuListProps>(
   (
-    { children, hasArrow, align = 'end', className, ...props },
+    { children, hasArrow, side = 'right', align = 'end', className, ...props },
     forwardedRef,
   ) => {
     return (
@@ -45,9 +47,11 @@ export const MenuList = React.forwardRef<HTMLDivElement, MenuListProps>(
           {...props}
           ref={forwardedRef}
           align={align}
+          side={side}
+          sideOffset={5}
           className={twMerge(
             className,
-            'bg-white min-w-56 py-2 border-b-[1px] shadow-xs outline-offset-[2px] outline-[2px] rounded-md shadow-[0 1px 2px 0 rgba(0,0,0,0.05)] data-[side=top]:animate-slideDownAndFade data-[side=right]:animate-slideLeftAndFade data-[side=bottom]:animate-slideUpAndFade data-[side=left]:animate-slideRightAndFade ',
+            'bg-white min-w-[auto] py-2 border-b-[1px] shadow-xs outline-offset-[2px] outline-[2px] rounded-md shadow-[0 1px 2px 0 rgba(0,0,0,0.05)] data-[side=top]:animate-slideDownAndFade data-[side=right]:animate-slideLeftAndFade data-[side=bottom]:animate-slideUpAndFade data-[side=left]:animate-slideRightAndFade ',
           )}
         >
           {children}

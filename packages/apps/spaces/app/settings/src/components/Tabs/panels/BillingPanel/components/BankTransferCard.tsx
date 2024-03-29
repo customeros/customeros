@@ -110,15 +110,7 @@ export const BankTransferCard = ({
 
   return (
     <>
-      <Card
-        className='py-2 px-4 rounded-lg border-[1px] border-gray-200'
-
-        // _hover={{
-        //   '& #help-button': {
-        //     visibility: 'visible',
-        //   },
-        // }}
-      >
+      <Card className='py-2 px-4 rounded-lg border-[1px] border-gray-200'>
         <CardHeader className='p-0 pb-1 flex justify-between'>
           <BankNameInput formId={formId} metadata={account.metadata} />
 
