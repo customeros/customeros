@@ -34,7 +34,7 @@ type OpportunityEntity struct {
 }
 
 type RenewalDetails struct {
-	RenewedAt              *time.Time
+	RenewedAt              *time.Time // Date only
 	RenewalLikelihood      enum.RenewalLikelihood
 	RenewalUpdatedByUserId string
 	RenewalUpdatedByUserAt *time.Time

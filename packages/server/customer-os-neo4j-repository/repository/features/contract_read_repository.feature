@@ -8,7 +8,7 @@ Feature: Contract Read
     When the following SLIs are inserted in the database
       | billingType | price | quantity | startedAt                      | contractId                           |
       | MONTHLY     | 12    |2         | 2013-01-01T00:00:00.000000000Z | e1b9eac5-4d11-46dd-bb94-c9c7aa876f6c |
-      | ONCE        | 10    |3         | 2013-03-31T23:59:59.999999999Z | e1b9eac5-4d11-46dd-bb94-c9c7aa876f6c |
+      | ONCE        | 10    |3         | 2013-03-31T00:00:00.000000000Z | e1b9eac5-4d11-46dd-bb94-c9c7aa876f6c |
     Then the SLIs should exist in the neo4j database in a consistent format
 
   @tag_default_sLIs_are_properly_inserted

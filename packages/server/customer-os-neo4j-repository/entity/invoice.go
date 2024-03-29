@@ -12,9 +12,9 @@ type InvoiceEntity struct {
 	DryRun           bool          `neo4jDb:"property:dryRun;lookupName:DRY_RUN;supportCaseSensitive:false"`
 	Number           string        `neo4jDb:"property:number;lookupName:NUMBER;supportCaseSensitive:false"`
 	Currency         enum.Currency `neo4jDb:"property:currency;lookupName:CURRENCY;supportCaseSensitive:false"`
-	PeriodStartDate  time.Time
-	PeriodEndDate    time.Time
-	DueDate          time.Time
+	PeriodStartDate  time.Time     // Date only
+	PeriodEndDate    time.Time     // Date only
+	DueDate          time.Time     // Date only
 	Customer         InvoiceCustomer
 	Provider         InvoiceProvider
 	Amount           float64 `neo4jDb:"property:amount;lookupName:AMOUNT;supportCaseSensitive:false"`

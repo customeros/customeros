@@ -598,7 +598,7 @@ func (r *organizationWriteRepository) UpdateRenewalSummary(ctx context.Context, 
 		"organizationId":                organizationId,
 		"derivedRenewalLikelihood":      likelihood,
 		"derivedRenewalLikelihoodOrder": likelihoodOrder,
-		"derivedNextRenewalAt":          utils.TimePtrFirstNonNilNillableAsAny(nextRenewalDate),
+		"derivedNextRenewalAt":          utils.TimePtrAsAny(nextRenewalDate),
 		"now":                           utils.Now(),
 	}
 	span.LogFields(log.String("cypher", cypher))

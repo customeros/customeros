@@ -1,6 +1,7 @@
 package event
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/model"
@@ -38,7 +39,7 @@ func NewServiceLineItemCreateEvent(aggregate eventstore.Aggregate, dataFields mo
 		ParentId:          dataFields.ParentId,
 		CreatedAt:         createdAt,
 		UpdatedAt:         updatedAt,
-		StartedAt:         startedAt,
+		StartedAt:         utils.ToDate(startedAt),
 		EndedAt:           endedAt,
 		Source:            source,
 		Comments:          dataFields.Comments,

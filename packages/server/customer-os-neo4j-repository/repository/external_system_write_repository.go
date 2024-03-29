@@ -100,7 +100,7 @@ func (r *externalSystemWriteRepository) LinkWithEntityInTx(ctx context.Context, 
 		"externalUrl":      externalSystem.ExternalUrl,
 		"externalSource":   externalSystem.ExternalSource,
 		"externalIdSecond": externalSystem.ExternalIdSecond,
-		"syncDate":         utils.TimePtrFirstNonNilNillableAsAny(externalSystem.SyncDate),
+		"syncDate":         utils.TimePtrAsAny(externalSystem.SyncDate),
 		"entityId":         linkedEntityId,
 	}
 	span.LogFields(log.String("cypher", cypher))
