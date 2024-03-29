@@ -255,6 +255,10 @@ export type BillingProfileUpdateInput = {
   updatedAt?: InputMaybe<Scalars['Time']['input']>;
 };
 
+export enum CalculationType {
+  RevenueShare = 'REVENUE_SHARE',
+}
+
 /**
  * Describes the relationship a Contact has with a Organization.
  * **A `return` object**
@@ -275,6 +279,12 @@ export type Calendar = {
 export enum CalendarType {
   Calcom = 'CALCOM',
   Google = 'GOOGLE',
+}
+
+export enum ChargePeriod {
+  Annually = 'ANNUALLY',
+  Monthly = 'MONTHLY',
+  Quarterly = 'QUARTERLY',
 }
 
 export type ColumnDef = Node & {
@@ -326,6 +336,12 @@ export enum ComparisonOperator {
   Lte = 'LTE',
   StartsWith = 'STARTS_WITH',
 }
+
+export type Conditionals = {
+  __typename?: 'Conditionals';
+  minimumChargeAmount: Scalars['Float']['output'];
+  minimumChargePeriod?: Maybe<ChargePeriod>;
+};
 
 /**
  * A contact represents an individual in customerOS.
@@ -1780,7 +1796,7 @@ export enum LastTouchpointType {
 
 export type LinkOrganizationsInput = {
   organizationId: Scalars['ID']['input'];
-  subOrganizationId: Scalars['ID']['input'];
+  subsidiaryId: Scalars['ID']['input'];
   type?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -2170,6 +2186,8 @@ export type Mutation = {
   note_LinkAttachment: Note;
   note_UnlinkAttachment: Note;
   note_Update: Note;
+  offering_Create: Offering;
+  offering_Update: Offering;
   opportunityRenewalUpdate: Opportunity;
   opportunityUpdate: Opportunity;
   organizationPlanMilestone_BulkUpdate: Array<OrganizationPlanMilestone>;
@@ -2720,6 +2738,14 @@ export type MutationNote_UpdateArgs = {
   input: NoteUpdateInput;
 };
 
+export type MutationOffering_CreateArgs = {
+  input?: InputMaybe<OfferingCreateInput>;
+};
+
+export type MutationOffering_UpdateArgs = {
+  input?: InputMaybe<OfferingUpdateInput>;
+};
+
 export type MutationOpportunityRenewalUpdateArgs = {
   input: OpportunityRenewalUpdateInput;
   ownerUserId?: InputMaybe<Scalars['ID']['input']>;
@@ -3036,6 +3062,68 @@ export type NoteUpdateInput = {
 };
 
 export type NotedEntity = Contact | Organization;
+
+export type Offering = MetadataInterface & {
+  __typename?: 'Offering';
+  active: Scalars['Boolean']['output'];
+  conditional: Scalars['Boolean']['output'];
+  conditionals: Conditionals;
+  currency?: Maybe<Currency>;
+  externalLinks: Array<ExternalSystem>;
+  metadata: Metadata;
+  name: Scalars['String']['output'];
+  price: Scalars['Float']['output'];
+  priceCalculated: Scalars['Boolean']['output'];
+  priceCalculation: PriceCalculation;
+  pricingModel?: Maybe<PricingModel>;
+  pricingPeriodInMonths: Scalars['Int64']['output'];
+  taxable: Scalars['Boolean']['output'];
+  type?: Maybe<OfferingType>;
+};
+
+export type OfferingCreateInput = {
+  active?: InputMaybe<Scalars['Boolean']['input']>;
+  conditional?: InputMaybe<Scalars['Boolean']['input']>;
+  conditionalsMinimumChargeAmount?: InputMaybe<Scalars['Float']['input']>;
+  conditionalsMinimumChargePeriod?: InputMaybe<ChargePeriod>;
+  currency?: InputMaybe<Currency>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  price?: InputMaybe<Scalars['Float']['input']>;
+  priceCalculated?: InputMaybe<Scalars['Boolean']['input']>;
+  priceCalculationRevenueSharePercentage?: InputMaybe<
+    Scalars['Float']['input']
+  >;
+  priceCalculationType?: InputMaybe<CalculationType>;
+  pricingModel?: InputMaybe<PricingModel>;
+  pricingPeriodInMonths?: InputMaybe<Scalars['Int64']['input']>;
+  taxable?: InputMaybe<Scalars['Boolean']['input']>;
+  type?: InputMaybe<OfferingType>;
+};
+
+export enum OfferingType {
+  Product = 'PRODUCT',
+  Service = 'SERVICE',
+}
+
+export type OfferingUpdateInput = {
+  active?: InputMaybe<Scalars['Boolean']['input']>;
+  conditional?: InputMaybe<Scalars['Boolean']['input']>;
+  conditionalsMinimumChargeAmount?: InputMaybe<Scalars['Float']['input']>;
+  conditionalsMinimumChargePeriod?: InputMaybe<ChargePeriod>;
+  currency?: InputMaybe<Currency>;
+  id: Scalars['ID']['input'];
+  name?: InputMaybe<Scalars['String']['input']>;
+  price?: InputMaybe<Scalars['Float']['input']>;
+  priceCalculated?: InputMaybe<Scalars['Boolean']['input']>;
+  priceCalculationRevenueSharePercentage?: InputMaybe<
+    Scalars['Float']['input']
+  >;
+  priceCalculationType?: InputMaybe<CalculationType>;
+  pricingModel?: InputMaybe<PricingModel>;
+  pricingPeriodInMonths?: InputMaybe<Scalars['Int64']['input']>;
+  taxable?: InputMaybe<Scalars['Boolean']['input']>;
+  type?: InputMaybe<OfferingType>;
+};
 
 export type OnboardingDetails = {
   __typename?: 'OnboardingDetails';
@@ -3654,6 +3742,18 @@ export type PlayerUser = {
   user: User;
 };
 
+export type PriceCalculation = {
+  __typename?: 'PriceCalculation';
+  calculationType?: Maybe<CalculationType>;
+  revenueSharePercentage: Scalars['Float']['output'];
+};
+
+export enum PricingModel {
+  OneTime = 'ONE_TIME',
+  Subscription = 'SUBSCRIPTION',
+  Usage = 'USAGE',
+}
+
 export type Query = {
   __typename?: 'Query';
   analysis: Analysis;
@@ -3706,11 +3806,13 @@ export type Query = {
   masterPlan: MasterPlan;
   masterPlans: Array<MasterPlan>;
   meeting: Meeting;
+  offerings: Array<Offering>;
   opportunity?: Maybe<Opportunity>;
   organization?: Maybe<Organization>;
   organizationPlan: OrganizationPlan;
   organizationPlans: Array<OrganizationPlan>;
   organizationPlansForOrganization: Array<OrganizationPlan>;
+  organization_ByCustomId: Organization;
   organization_ByCustomerOsId: Organization;
   organization_DistinctOwners: Array<User>;
   organizations: OrganizationPage;
@@ -3894,6 +3996,10 @@ export type QueryOrganizationPlansArgs = {
 
 export type QueryOrganizationPlansForOrganizationArgs = {
   organizationId: Scalars['ID']['input'];
+};
+
+export type QueryOrganization_ByCustomIdArgs = {
+  customId: Scalars['String']['input'];
 };
 
 export type QueryOrganization_ByCustomerOsIdArgs = {

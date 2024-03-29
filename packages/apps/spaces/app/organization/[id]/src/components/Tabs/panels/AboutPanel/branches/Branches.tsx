@@ -101,11 +101,11 @@ export const Branches: React.FC<BranchesProps> = ({
       },
 
       onSuccess: (data, variables, context) => {
-        push(`/organization/${variables?.input?.subOrganizationId}`);
+        push(`/organization/${variables?.input?.subsidiaryId}`);
 
         toastSuccess(
           'Organization created',
-          `${variables?.input?.subOrganizationId}-created`,
+          `${variables?.input?.subsidiaryId}-created`,
         );
       },
       onError: (_, __, context) => {
@@ -176,7 +176,7 @@ export const Branches: React.FC<BranchesProps> = ({
       addSubsidiaryToOrganizationMutation.mutate({
         input: {
           organizationId: id,
-          subOrganizationId: createdOrgId,
+          subsidiaryId: createdOrgId,
         },
       });
     },
