@@ -79,6 +79,7 @@ export function useInfiniteInvoices(
   const totalInvoicesCount = useMemo(() => {
     return data?.pages?.[0]?.invoices?.totalElements ?? 0;
   }, [data?.pages?.[0]?.invoices?.totalElements]);
+
   useEffect(() => {
     setInvoicesMeta(
       produce(invoicesMeta, (draft) => {
