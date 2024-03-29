@@ -1796,7 +1796,7 @@ export enum LastTouchpointType {
 
 export type LinkOrganizationsInput = {
   organizationId: Scalars['ID']['input'];
-  subOrganizationId: Scalars['ID']['input'];
+  subsidiaryId: Scalars['ID']['input'];
   type?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -3812,6 +3812,7 @@ export type Query = {
   organizationPlan: OrganizationPlan;
   organizationPlans: Array<OrganizationPlan>;
   organizationPlansForOrganization: Array<OrganizationPlan>;
+  organization_ByCustomId: Organization;
   organization_ByCustomerOsId: Organization;
   organization_DistinctOwners: Array<User>;
   organizations: OrganizationPage;
@@ -3995,6 +3996,10 @@ export type QueryOrganizationPlansArgs = {
 
 export type QueryOrganizationPlansForOrganizationArgs = {
   organizationId: Scalars['ID']['input'];
+};
+
+export type QueryOrganization_ByCustomIdArgs = {
+  customId: Scalars['String']['input'];
 };
 
 export type QueryOrganization_ByCustomerOsIdArgs = {
