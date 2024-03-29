@@ -197,6 +197,45 @@ func TestQueryResolver_OrganizationByCustomerOsId_NotFound(t *testing.T) {
 	require.Equal(t, "organization_ByCustomerOsId", response.Path[0])
 }
 
+func TestQueryResolver_OrganizationByCustomId(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+		Name:        "Organization name",
+		ReferenceId: "R-123",
+	})
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, neo4jutil.NodeLabelOrganization))
+
+	rawResponse := callGraphQL(t, "organization/get_organization_by_custom_id", map[string]interface{}{"customId": "R-123"})
+
+	var organizationStruct struct {
+		Organization_ByCustomId model.Organization
+	}
+	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
+	require.Nil(t, err)
+	require.NotNil(t, organizationStruct)
+	require.Equal(t, organizationId, organizationStruct.Organization_ByCustomId.ID)
+	require.Equal(t, "Organization name", organizationStruct.Organization_ByCustomId.Name)
+	require.Equal(t, "R-123", *organizationStruct.Organization_ByCustomId.CustomID)
+}
+
+func TestQueryResolver_OrganizationByCustomId_NotFound(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+		Name:        "Organization name",
+		ReferenceId: "R-123-ABC",
+	})
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, neo4jutil.NodeLabelOrganization))
+
+	response := callGraphQLExpectError(t, "organization/get_organization_by_custom_id", map[string]interface{}{"customId": "R-0000"})
+
+	require.Equal(t, "Organization not found by customId R-0000", response.Message)
+	require.Equal(t, "organization_ByCustomId", response.Path[0])
+}
+
 func TestQueryResolver_Organizations_WithLocations(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)

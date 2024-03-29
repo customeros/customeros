@@ -1775,11 +1775,11 @@ type Offering struct {
 	PricingModel          *PricingModel     `json:"pricingModel,omitempty"`
 	PricingPeriodInMonths int64             `json:"pricingPeriodInMonths"`
 	Currency              *Currency         `json:"currency,omitempty"`
-	DefaultPrice          float64           `json:"defaultPrice"`
+	Price                 float64           `json:"price"`
 	PriceCalculated       bool              `json:"priceCalculated"`
-	Conditional           bool              `json:"conditional"`
 	Taxable               bool              `json:"taxable"`
 	PriceCalculation      *PriceCalculation `json:"priceCalculation"`
+	Conditional           bool              `json:"conditional"`
 	Conditionals          *Conditionals     `json:"conditionals"`
 	ExternalLinks         []*ExternalSystem `json:"externalLinks"`
 }
@@ -1794,7 +1794,7 @@ type OfferingCreateInput struct {
 	PricingModel                           *PricingModel    `json:"pricingModel,omitempty"`
 	PricingPeriodInMonths                  *int64           `json:"pricingPeriodInMonths,omitempty"`
 	Currency                               *Currency        `json:"currency,omitempty"`
-	DefaultPrice                           *float64         `json:"defaultPrice,omitempty"`
+	Price                                  *float64         `json:"price,omitempty"`
 	PriceCalculated                        *bool            `json:"priceCalculated,omitempty"`
 	Conditional                            *bool            `json:"conditional,omitempty"`
 	Taxable                                *bool            `json:"taxable,omitempty"`
@@ -1812,7 +1812,7 @@ type OfferingUpdateInput struct {
 	PricingModel                           *PricingModel    `json:"pricingModel,omitempty"`
 	PricingPeriodInMonths                  *int64           `json:"pricingPeriodInMonths,omitempty"`
 	Currency                               *Currency        `json:"currency,omitempty"`
-	DefaultPrice                           *float64         `json:"defaultPrice,omitempty"`
+	Price                                  *float64         `json:"price,omitempty"`
 	PriceCalculated                        *bool            `json:"priceCalculated,omitempty"`
 	Conditional                            *bool            `json:"conditional,omitempty"`
 	Taxable                                *bool            `json:"taxable,omitempty"`

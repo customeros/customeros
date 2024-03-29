@@ -1080,10 +1080,10 @@ type ComplexityRoot struct {
 		Conditional           func(childComplexity int) int
 		Conditionals          func(childComplexity int) int
 		Currency              func(childComplexity int) int
-		DefaultPrice          func(childComplexity int) int
 		ExternalLinks         func(childComplexity int) int
 		Metadata              func(childComplexity int) int
 		Name                  func(childComplexity int) int
+		Price                 func(childComplexity int) int
 		PriceCalculated       func(childComplexity int) int
 		PriceCalculation      func(childComplexity int) int
 		PricingModel          func(childComplexity int) int
@@ -1374,6 +1374,7 @@ type ComplexityRoot struct {
 		Offerings                             func(childComplexity int) int
 		Opportunity                           func(childComplexity int, id string) int
 		Organization                          func(childComplexity int, id string) int
+		OrganizationByCustomID                func(childComplexity int, customID string) int
 		OrganizationByCustomerOsID            func(childComplexity int, customerOsID string) int
 		OrganizationDistinctOwners            func(childComplexity int) int
 		OrganizationPlan                      func(childComplexity int, id string) int
@@ -2027,6 +2028,7 @@ type QueryResolver interface {
 	Organizations(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.OrganizationPage, error)
 	Organization(ctx context.Context, id string) (*model.Organization, error)
 	OrganizationByCustomerOsID(ctx context.Context, customerOsID string) (*model.Organization, error)
+	OrganizationByCustomID(ctx context.Context, customID string) (*model.Organization, error)
 	OrganizationDistinctOwners(ctx context.Context) ([]*model.User, error)
 	OrganizationPlan(ctx context.Context, id string) (*model.OrganizationPlan, error)
 	OrganizationPlansForOrganization(ctx context.Context, organizationID string) ([]*model.OrganizationPlan, error)
@@ -8339,13 +8341,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Offering.Currency(childComplexity), true
 
-	case "Offering.defaultPrice":
-		if e.complexity.Offering.DefaultPrice == nil {
-			break
-		}
-
-		return e.complexity.Offering.DefaultPrice(childComplexity), true
-
 	case "Offering.externalLinks":
 		if e.complexity.Offering.ExternalLinks == nil {
 			break
@@ -8366,6 +8361,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Offering.Name(childComplexity), true
+
+	case "Offering.price":
+		if e.complexity.Offering.Price == nil {
+			break
+		}
+
+		return e.complexity.Offering.Price(childComplexity), true
 
 	case "Offering.priceCalculated":
 		if e.complexity.Offering.PriceCalculated == nil {
@@ -10182,6 +10184,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Organization(childComplexity, args["id"].(string)), true
+
+	case "Query.organization_ByCustomId":
+		if e.complexity.Query.OrganizationByCustomID == nil {
+			break
+		}
+
+		args, err := ec.field_Query_organization_ByCustomId_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.OrganizationByCustomID(childComplexity, args["customId"].(string)), true
 
 	case "Query.organization_ByCustomerOsId":
 		if e.complexity.Query.OrganizationByCustomerOsID == nil {
@@ -14004,11 +14018,12 @@ type Offering implements MetadataInterface {
     pricingModel:           PricingModel
     pricingPeriodInMonths:  Int64!
     currency:               Currency
-    defaultPrice:           Float!
+    price:                  Float!
     priceCalculated:        Boolean!
-    conditional:            Boolean!
     taxable:                Boolean!
     priceCalculation:       PriceCalculation!
+
+    conditional:            Boolean!
     conditionals:           Conditionals!
     externalLinks:          [ExternalSystem!]! @goField(forceResolver: true)
 }
@@ -14020,7 +14035,7 @@ input OfferingCreateInput {
     pricingModel:                           PricingModel
     pricingPeriodInMonths:                  Int64
     currency:                               Currency
-    defaultPrice:                           Float
+    price:                                  Float
     priceCalculated:                        Boolean
     conditional:                            Boolean
     taxable:                                Boolean
@@ -14038,7 +14053,7 @@ input OfferingUpdateInput {
     pricingModel:                           PricingModel
     pricingPeriodInMonths:                  Int64
     currency:                               Currency
-    defaultPrice:                           Float
+    price:                                  Float
     priceCalculated:                        Boolean
     conditional:                            Boolean
     taxable:                                Boolean
@@ -14174,6 +14189,7 @@ input OpportunityUpdateInput {
     organizations(pagination: Pagination, where: Filter, sort: [SortBy!]): OrganizationPage! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization(id: ID!): Organization @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_ByCustomerOsId(customerOsId: String!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_ByCustomId(customId: String!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_DistinctOwners: [User!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
@@ -19688,6 +19704,21 @@ func (ec *executionContext) field_Query_organizationPlans_args(ctx context.Conte
 		}
 	}
 	args["retired"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_organization_ByCustomId_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["customId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("customId"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["customId"] = arg0
 	return args, nil
 }
 
@@ -58132,16 +58163,16 @@ func (ec *executionContext) fieldContext_Mutation_offering_Create(ctx context.Co
 				return ec.fieldContext_Offering_pricingPeriodInMonths(ctx, field)
 			case "currency":
 				return ec.fieldContext_Offering_currency(ctx, field)
-			case "defaultPrice":
-				return ec.fieldContext_Offering_defaultPrice(ctx, field)
+			case "price":
+				return ec.fieldContext_Offering_price(ctx, field)
 			case "priceCalculated":
 				return ec.fieldContext_Offering_priceCalculated(ctx, field)
-			case "conditional":
-				return ec.fieldContext_Offering_conditional(ctx, field)
 			case "taxable":
 				return ec.fieldContext_Offering_taxable(ctx, field)
 			case "priceCalculation":
 				return ec.fieldContext_Offering_priceCalculation(ctx, field)
+			case "conditional":
+				return ec.fieldContext_Offering_conditional(ctx, field)
 			case "conditionals":
 				return ec.fieldContext_Offering_conditionals(ctx, field)
 			case "externalLinks":
@@ -58247,16 +58278,16 @@ func (ec *executionContext) fieldContext_Mutation_offering_Update(ctx context.Co
 				return ec.fieldContext_Offering_pricingPeriodInMonths(ctx, field)
 			case "currency":
 				return ec.fieldContext_Offering_currency(ctx, field)
-			case "defaultPrice":
-				return ec.fieldContext_Offering_defaultPrice(ctx, field)
+			case "price":
+				return ec.fieldContext_Offering_price(ctx, field)
 			case "priceCalculated":
 				return ec.fieldContext_Offering_priceCalculated(ctx, field)
-			case "conditional":
-				return ec.fieldContext_Offering_conditional(ctx, field)
 			case "taxable":
 				return ec.fieldContext_Offering_taxable(ctx, field)
 			case "priceCalculation":
 				return ec.fieldContext_Offering_priceCalculation(ctx, field)
+			case "conditional":
+				return ec.fieldContext_Offering_conditional(ctx, field)
 			case "conditionals":
 				return ec.fieldContext_Offering_conditionals(ctx, field)
 			case "externalLinks":
@@ -66823,8 +66854,8 @@ func (ec *executionContext) fieldContext_Offering_currency(ctx context.Context, 
 	return fc, nil
 }
 
-func (ec *executionContext) _Offering_defaultPrice(ctx context.Context, field graphql.CollectedField, obj *model.Offering) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Offering_defaultPrice(ctx, field)
+func (ec *executionContext) _Offering_price(ctx context.Context, field graphql.CollectedField, obj *model.Offering) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Offering_price(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -66837,7 +66868,7 @@ func (ec *executionContext) _Offering_defaultPrice(ctx context.Context, field gr
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.DefaultPrice, nil
+		return obj.Price, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -66854,7 +66885,7 @@ func (ec *executionContext) _Offering_defaultPrice(ctx context.Context, field gr
 	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Offering_defaultPrice(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Offering_price(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Offering",
 		Field:      field,
@@ -66899,50 +66930,6 @@ func (ec *executionContext) _Offering_priceCalculated(ctx context.Context, field
 }
 
 func (ec *executionContext) fieldContext_Offering_priceCalculated(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Offering",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Offering_conditional(ctx context.Context, field graphql.CollectedField, obj *model.Offering) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Offering_conditional(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Conditional, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Offering_conditional(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Offering",
 		Field:      field,
@@ -67044,6 +67031,50 @@ func (ec *executionContext) fieldContext_Offering_priceCalculation(ctx context.C
 				return ec.fieldContext_PriceCalculation_revenueSharePercentage(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PriceCalculation", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Offering_conditional(ctx context.Context, field graphql.CollectedField, obj *model.Offering) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Offering_conditional(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Conditional, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Offering_conditional(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Offering",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -79739,16 +79770,16 @@ func (ec *executionContext) fieldContext_Query_offerings(ctx context.Context, fi
 				return ec.fieldContext_Offering_pricingPeriodInMonths(ctx, field)
 			case "currency":
 				return ec.fieldContext_Offering_currency(ctx, field)
-			case "defaultPrice":
-				return ec.fieldContext_Offering_defaultPrice(ctx, field)
+			case "price":
+				return ec.fieldContext_Offering_price(ctx, field)
 			case "priceCalculated":
 				return ec.fieldContext_Offering_priceCalculated(ctx, field)
-			case "conditional":
-				return ec.fieldContext_Offering_conditional(ctx, field)
 			case "taxable":
 				return ec.fieldContext_Offering_taxable(ctx, field)
 			case "priceCalculation":
 				return ec.fieldContext_Offering_priceCalculation(ctx, field)
+			case "conditional":
+				return ec.fieldContext_Offering_conditional(ctx, field)
 			case "conditionals":
 				return ec.fieldContext_Offering_conditionals(ctx, field)
 			case "externalLinks":
@@ -80404,6 +80435,219 @@ func (ec *executionContext) fieldContext_Query_organization_ByCustomerOsId(ctx c
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_organization_ByCustomerOsId_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_organization_ByCustomId(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_organization_ByCustomId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().OrganizationByCustomID(rctx, fc.Args["customId"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Organization); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model.Organization`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Organization)
+	fc.Result = res
+	return ec.marshalNOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐOrganization(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_organization_ByCustomId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "metadata":
+				return ec.fieldContext_Organization_metadata(ctx, field)
+			case "accountDetails":
+				return ec.fieldContext_Organization_accountDetails(ctx, field)
+			case "contracts":
+				return ec.fieldContext_Organization_contracts(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
+			case "customFields":
+				return ec.fieldContext_Organization_customFields(ctx, field)
+			case "customId":
+				return ec.fieldContext_Organization_customId(ctx, field)
+			case "description":
+				return ec.fieldContext_Organization_description(ctx, field)
+			case "domains":
+				return ec.fieldContext_Organization_domains(ctx, field)
+			case "slackChannelId":
+				return ec.fieldContext_Organization_slackChannelId(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "employees":
+				return ec.fieldContext_Organization_employees(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "industry":
+				return ec.fieldContext_Organization_industry(ctx, field)
+			case "industryGroup":
+				return ec.fieldContext_Organization_industryGroup(ctx, field)
+			case "isCustomer":
+				return ec.fieldContext_Organization_isCustomer(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastTouchpoint":
+				return ec.fieldContext_Organization_lastTouchpoint(ctx, field)
+			case "locations":
+				return ec.fieldContext_Organization_locations(ctx, field)
+			case "logo":
+				return ec.fieldContext_Organization_logo(ctx, field)
+			case "market":
+				return ec.fieldContext_Organization_market(ctx, field)
+			case "name":
+				return ec.fieldContext_Organization_name(ctx, field)
+			case "notes":
+				return ec.fieldContext_Organization_notes(ctx, field)
+			case "owner":
+				return ec.fieldContext_Organization_owner(ctx, field)
+			case "parentCompanies":
+				return ec.fieldContext_Organization_parentCompanies(ctx, field)
+			case "public":
+				return ec.fieldContext_Organization_public(ctx, field)
+			case "socialMedia":
+				return ec.fieldContext_Organization_socialMedia(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
+			case "subsidiaries":
+				return ec.fieldContext_Organization_subsidiaries(ctx, field)
+			case "tags":
+				return ec.fieldContext_Organization_tags(ctx, field)
+			case "targetAudience":
+				return ec.fieldContext_Organization_targetAudience(ctx, field)
+			case "timelineEvents":
+				return ec.fieldContext_Organization_timelineEvents(ctx, field)
+			case "valueProposition":
+				return ec.fieldContext_Organization_valueProposition(ctx, field)
+			case "website":
+				return ec.fieldContext_Organization_website(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "hide":
+				return ec.fieldContext_Organization_hide(ctx, field)
+			case "contacts":
+				return ec.fieldContext_Organization_contacts(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_Organization_jobRoles(ctx, field)
+			case "emails":
+				return ec.fieldContext_Organization_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
+			case "suggestedMergeTo":
+				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
+			case "fieldSets":
+				return ec.fieldContext_Organization_fieldSets(ctx, field)
+			case "entityTemplate":
+				return ec.fieldContext_Organization_entityTemplate(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "issueSummaryByStatus":
+				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
+			case "orders":
+				return ec.fieldContext_Organization_orders(ctx, field)
+			case "socials":
+				return ec.fieldContext_Organization_socials(ctx, field)
+			case "isPublic":
+				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "note":
+				return ec.fieldContext_Organization_note(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
+			case "id":
+				return ec.fieldContext_Organization_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Organization_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Organization_updatedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_Organization_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Organization_appSource(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_Organization_referenceId(ctx, field)
+			case "lastTouchPointAt":
+				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointType":
+				return ec.fieldContext_Organization_lastTouchPointType(ctx, field)
+			case "lastTouchPointTimelineEventId":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
+			case "lastTouchPointTimelineEvent":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
+			case "subsidiaryOf":
+				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_organization_ByCustomId_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -95820,7 +96064,7 @@ func (ec *executionContext) unmarshalInputOfferingCreateInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "active", "type", "pricingModel", "pricingPeriodInMonths", "currency", "defaultPrice", "priceCalculated", "conditional", "taxable", "priceCalculationType", "priceCalculationRevenueSharePercentage", "conditionalsMinimumChargePeriod", "conditionalsMinimumChargeAmount"}
+	fieldsInOrder := [...]string{"name", "active", "type", "pricingModel", "pricingPeriodInMonths", "currency", "price", "priceCalculated", "conditional", "taxable", "priceCalculationType", "priceCalculationRevenueSharePercentage", "conditionalsMinimumChargePeriod", "conditionalsMinimumChargeAmount"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -95869,13 +96113,13 @@ func (ec *executionContext) unmarshalInputOfferingCreateInput(ctx context.Contex
 				return it, err
 			}
 			it.Currency = data
-		case "defaultPrice":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("defaultPrice"))
+		case "price":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("price"))
 			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.DefaultPrice = data
+			it.Price = data
 		case "priceCalculated":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("priceCalculated"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
@@ -95938,7 +96182,7 @@ func (ec *executionContext) unmarshalInputOfferingUpdateInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "name", "active", "type", "pricingModel", "pricingPeriodInMonths", "currency", "defaultPrice", "priceCalculated", "conditional", "taxable", "priceCalculationType", "priceCalculationRevenueSharePercentage", "conditionalsMinimumChargePeriod", "conditionalsMinimumChargeAmount"}
+	fieldsInOrder := [...]string{"id", "name", "active", "type", "pricingModel", "pricingPeriodInMonths", "currency", "price", "priceCalculated", "conditional", "taxable", "priceCalculationType", "priceCalculationRevenueSharePercentage", "conditionalsMinimumChargePeriod", "conditionalsMinimumChargeAmount"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -95994,13 +96238,13 @@ func (ec *executionContext) unmarshalInputOfferingUpdateInput(ctx context.Contex
 				return it, err
 			}
 			it.Currency = data
-		case "defaultPrice":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("defaultPrice"))
+		case "price":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("price"))
 			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.DefaultPrice = data
+			it.Price = data
 		case "priceCalculated":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("priceCalculated"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
@@ -108114,18 +108358,13 @@ func (ec *executionContext) _Offering(ctx context.Context, sel ast.SelectionSet,
 			}
 		case "currency":
 			out.Values[i] = ec._Offering_currency(ctx, field, obj)
-		case "defaultPrice":
-			out.Values[i] = ec._Offering_defaultPrice(ctx, field, obj)
+		case "price":
+			out.Values[i] = ec._Offering_price(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "priceCalculated":
 			out.Values[i] = ec._Offering_priceCalculated(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "conditional":
-			out.Values[i] = ec._Offering_conditional(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
@@ -108136,6 +108375,11 @@ func (ec *executionContext) _Offering(ctx context.Context, sel ast.SelectionSet,
 			}
 		case "priceCalculation":
 			out.Values[i] = ec._Offering_priceCalculation(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "conditional":
+			out.Values[i] = ec._Offering_conditional(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
@@ -111525,6 +111769,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_organization_ByCustomerOsId(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "organization_ByCustomId":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_organization_ByCustomId(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
