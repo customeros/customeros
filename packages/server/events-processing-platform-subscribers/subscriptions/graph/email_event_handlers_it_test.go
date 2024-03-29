@@ -29,7 +29,7 @@ func TestGraphEmailEventHandler_OnEmailCreate(t *testing.T) {
 	event, err := emailEvents.NewEmailCreateEvent(emailAggregate, tenantName, email, cmnmod.Source{
 		Source:        "N/A",
 		SourceOfTruth: "N/A",
-		AppSource:     "unit-test",
+		AppSource:     "event-processing-platform",
 	}, curTime, curTime)
 	require.Nil(t, err)
 	err = emailEventHandler.OnEmailCreate(context.Background(), event)
@@ -46,7 +46,7 @@ func TestGraphEmailEventHandler_OnEmailCreate(t *testing.T) {
 
 	require.Equal(t, myMailId.String(), utils.GetStringPropOrEmpty(props, "id"))
 	require.Equal(t, email, utils.GetStringPropOrEmpty(props, "rawEmail"))
-	require.Equal(t, "unit-test", utils.GetStringPropOrEmpty(props, "appSource"))
+	require.Equal(t, "event-processing-platform", utils.GetStringPropOrEmpty(props, "appSource"))
 }
 
 func TestGraphEmailEventHandler_OnEmailUpdate(t *testing.T) {

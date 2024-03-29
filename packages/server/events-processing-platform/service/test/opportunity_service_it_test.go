@@ -51,7 +51,7 @@ func TestOpportunityService_CreateOpportunity(t *testing.T) {
 		NextSteps:          "Next steps to be taken",
 		SourceFields: &commonpb.SourceFields{
 			Source:    "openline",
-			AppSource: "unit-test",
+			AppSource: "event-processing-platform",
 		},
 		OrganizationId: orgId,
 		CreatedAt:      timestamppb.New(timeNow),
@@ -92,7 +92,7 @@ func TestOpportunityService_CreateOpportunity(t *testing.T) {
 	require.Equal(t, timeNow, eventData.EstimatedClosedAt.UTC())
 	require.Equal(t, "OwnerUser123", eventData.OwnerUserId)
 	require.Equal(t, "openline", eventData.Source.Source)
-	require.Equal(t, "unit-test", eventData.Source.AppSource)
+	require.Equal(t, "event-processing-platform", eventData.Source.AppSource)
 	require.Equal(t, "Org123", eventData.OrganizationId)
 	require.Equal(t, "Some general notes", eventData.GeneralNotes)
 	require.Equal(t, "Next steps to be taken", eventData.NextSteps)
@@ -186,7 +186,7 @@ func TestOpportunityService_UpdateRenewalOpportunity(t *testing.T) {
 		RenewalApproved:   true,
 		SourceFields: &commonpb.SourceFields{
 			Source:    "openline",
-			AppSource: "unit-test",
+			AppSource: "event-processing-platform",
 		},
 		LoggedInUserId: "user-id-123",
 		Comments:       "Some comments",
@@ -246,7 +246,7 @@ func TestOpportunityService_CloseLooseOpportunity(t *testing.T) {
 	response, err := opportunityClient.CloseLooseOpportunity(ctx, &opportunitypb.CloseLooseOpportunityGrpcRequest{
 		Tenant:         tenant,
 		Id:             opportunityId,
-		AppSource:      "unit-test",
+		AppSource:      "event-processing-platform",
 		LoggedInUserId: "user-id-123",
 	})
 	require.Nil(t, err, "Failed to close loose opportunity")

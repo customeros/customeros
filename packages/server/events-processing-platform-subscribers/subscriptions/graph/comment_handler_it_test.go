@@ -9,9 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/graph_db/entity"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/neo4j"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment/event"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
@@ -37,8 +35,8 @@ func TestGraphCommentEventHandler_OnCreate(t *testing.T) {
 	}
 	now := utils.Now()
 	commentId := uuid.New().String()
-	commentAggregate := aggregate.NewCommentAggregateWithTenantAndID(tenantName, commentId)
-	createEvent, err := event.NewCommentCreateEvent(commentAggregate, model.CommentDataFields{
+	commentAggregate := comment.NewCommentAggregateWithTenantAndID(tenantName, commentId)
+	createEvent, err := comment.NewCommentCreateEvent(commentAggregate, comment.CommentDataFields{
 		Content:          "test content",
 		ContentType:      "text",
 		AuthorUserId:     utils.StringPtr(authorUserId),
@@ -99,8 +97,8 @@ func TestGraphCommentEventHandler_OnUpdate(t *testing.T) {
 		repositories: testDatabase.Repositories,
 	}
 	now := utils.Now()
-	commentAggregate := aggregate.NewCommentAggregateWithTenantAndID(tenantName, commentId)
-	updateEvent, err := event.NewCommentUpdateEvent(commentAggregate, "test content update", "html", constants.SourceOpenline, commonmodel.ExternalSystem{}, now)
+	commentAggregate := comment.NewCommentAggregateWithTenantAndID(tenantName, commentId)
+	updateEvent, err := comment.NewCommentUpdateEvent(commentAggregate, "test content update", "html", constants.SourceOpenline, commonmodel.ExternalSystem{}, now)
 	require.Nil(t, err, "failed to create event")
 
 	// EXECUTE
@@ -140,8 +138,8 @@ func TestGraphCommentEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNon
 		repositories: testDatabase.Repositories,
 	}
 	now := utils.Now()
-	commentAggregate := aggregate.NewCommentAggregateWithTenantAndID(tenantName, commentId)
-	updateEvent, err := event.NewCommentUpdateEvent(commentAggregate, "test content updated", "type updated", "hubspot", commonmodel.ExternalSystem{}, now)
+	commentAggregate := comment.NewCommentAggregateWithTenantAndID(tenantName, commentId)
+	updateEvent, err := comment.NewCommentUpdateEvent(commentAggregate, "test content updated", "type updated", "hubspot", commonmodel.ExternalSystem{}, now)
 	require.Nil(t, err, "failed to create event")
 
 	// EXECUTE

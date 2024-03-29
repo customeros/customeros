@@ -43,7 +43,7 @@ func TestUserService_UpsertUser(t *testing.T) {
 		CreatedAt:       timestamppb.New(timeNow),
 		UpdatedAt:       timestamppb.New(timeNow),
 		SourceFields: &commonpb.SourceFields{
-			AppSource: "unit-test",
+			AppSource: "event-processing-platform",
 			Source:    "N/A",
 		},
 	})
@@ -65,7 +65,7 @@ func TestUserService_UpsertUser(t *testing.T) {
 	require.Equal(t, "Bob", eventData.FirstName)
 	require.Equal(t, "Dole", eventData.LastName)
 	require.Equal(t, "Bob Dole", eventData.Name)
-	require.Equal(t, "unit-test", eventData.SourceFields.AppSource)
+	require.Equal(t, "event-processing-platform", eventData.SourceFields.AppSource)
 	require.Equal(t, "N/A", eventData.SourceFields.Source)
 	require.Equal(t, "N/A", eventData.SourceFields.SourceOfTruth)
 	require.Equal(t, timeNow, eventData.CreatedAt)
@@ -101,7 +101,7 @@ func TestUserService_UpsertUserAndLinkJobRole(t *testing.T) {
 		CreatedAt: timestamppb.New(timeNow),
 		UpdatedAt: timestamppb.New(timeNow),
 		SourceFields: &commonpb.SourceFields{
-			AppSource: "unit-test",
+			AppSource: "event-processing-platform",
 			Source:    "N/A",
 		},
 	})
@@ -119,7 +119,7 @@ func TestUserService_UpsertUserAndLinkJobRole(t *testing.T) {
 		Description:   &description,
 		Source:        "N/A",
 		SourceOfTruth: "N/A",
-		AppSource:     "unit-test",
+		AppSource:     "event-processing-platform",
 		CreatedAt:     timestamppb.New(timeNow),
 		StartedAt:     timestamppb.New(timeStarted),
 		EndedAt:       timestamppb.New(timeEnded),
@@ -134,7 +134,7 @@ func TestUserService_UpsertUserAndLinkJobRole(t *testing.T) {
 		UserId:    createUserResponse.Id,
 		JobRoleId: createJobRoleResponse.Id,
 		Tenant:    "ziggy",
-		AppSource: "unit-test",
+		AppSource: "event-processing-platform",
 	})
 
 	if err != nil {

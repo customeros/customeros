@@ -30,7 +30,7 @@ func TestEmailService_UpsertEmail(t *testing.T) {
 		Tenant:   "ziggy",
 		RawEmail: "test@openline.ai",
 		SourceFields: &commonpb.SourceFields{
-			AppSource:     "unit-test",
+			AppSource:     "event-processing-platform",
 			Source:        "N/A",
 			SourceOfTruth: "N/A",
 		},
@@ -51,7 +51,7 @@ func TestEmailService_UpsertEmail(t *testing.T) {
 		t.Errorf("Failed to unmarshal event data: %v", err)
 	}
 	require.Equal(t, "test@openline.ai", eventData.RawEmail)
-	require.Equal(t, "unit-test", eventData.SourceFields.AppSource)
+	require.Equal(t, "event-processing-platform", eventData.SourceFields.AppSource)
 	require.Equal(t, "N/A", eventData.SourceFields.Source)
 	require.Equal(t, "N/A", eventData.SourceFields.SourceOfTruth)
 	require.Equal(t, timeNow, eventData.CreatedAt)

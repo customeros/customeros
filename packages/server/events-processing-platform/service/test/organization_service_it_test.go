@@ -54,7 +54,7 @@ func TestOrganizationsService_UpsertOrganization_NewOrganization(t *testing.T) {
 		SlackChannelId:     "channel-id",
 		LogoUrl:            "https://www.openline.ai/logo.png",
 		SourceFields: &commonpb.SourceFields{
-			AppSource: "unit-test",
+			AppSource: "event-processing-platform",
 			Source:    "N/A",
 		},
 		CreatedAt: timestamppb.New(timeNow),
@@ -75,7 +75,7 @@ func TestOrganizationsService_UpsertOrganization_NewOrganization(t *testing.T) {
 	if err := eventList[0].GetJsonData(&eventData); err != nil {
 		t.Errorf("Failed to unmarshal event data: %v", err)
 	}
-	require.Equal(t, "unit-test", eventData.AppSource)
+	require.Equal(t, "event-processing-platform", eventData.AppSource)
 	require.Equal(t, "N/A", eventData.Source)
 	require.Equal(t, "N/A", eventData.SourceOfTruth)
 	require.Equal(t, timeNow, eventData.CreatedAt)
@@ -170,7 +170,7 @@ func TestOrganizationService_UpdateOnboardingStatus(t *testing.T) {
 		LoggedInUserId:   "user-id-123",
 		OnboardingStatus: organizationpb.OnboardingStatus_ONBOARDING_STATUS_DONE,
 		Comments:         "Some comments",
-		AppSource:        "unit-test",
+		AppSource:        "event-processing-platform",
 	})
 	require.Nil(t, err)
 
@@ -219,7 +219,7 @@ func TestOrganizationService_CreateBillingProfile(t *testing.T) {
 		LoggedInUserId:   "user-id-123",
 		BillingProfileId: "",
 		SourceFields: &commonpb.SourceFields{
-			AppSource: "unit-test",
+			AppSource: "event-processing-platform",
 			Source:    "N/A",
 		},
 		LegalName: "Test Billing Profile",
@@ -251,7 +251,7 @@ func TestOrganizationService_CreateBillingProfile(t *testing.T) {
 	test.AssertRecentTime(t, eventData.CreatedAt)
 	test.AssertRecentTime(t, eventData.UpdatedAt)
 	require.Equal(t, "N/A", eventData.SourceFields.Source)
-	require.Equal(t, "unit-test", eventData.SourceFields.AppSource)
+	require.Equal(t, "event-processing-platform", eventData.SourceFields.AppSource)
 }
 
 func TestOrganizationService_LinkEmailToBillingProfile(t *testing.T) {

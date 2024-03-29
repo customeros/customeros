@@ -52,7 +52,7 @@ func TestGraphUserEventHandler_OnUserCreate(t *testing.T) {
 		cmnmod.Source{
 			Source:        "N/A",
 			SourceOfTruth: "N/A",
-			AppSource:     "unit-test",
+			AppSource:     "event-processing-platform",
 		},
 		cmnmod.ExternalSystem{},
 		curTime, curTime)
@@ -75,7 +75,7 @@ func TestGraphUserEventHandler_OnUserCreate(t *testing.T) {
 	require.Equal(t, "Bob Dole", utils.GetStringPropOrEmpty(props, "name"))
 	require.Equal(t, "N/A", utils.GetStringPropOrEmpty(props, "source"))
 	require.Equal(t, "N/A", utils.GetStringPropOrEmpty(props, "sourceOfTruth"))
-	require.Equal(t, "unit-test", utils.GetStringPropOrEmpty(props, "appSource"))
+	require.Equal(t, "event-processing-platform", utils.GetStringPropOrEmpty(props, "appSource"))
 	require.Equal(t, true, utils.GetBoolPropOrFalse(props, "syncedWithEventStore"))
 	require.Equal(t, true, utils.GetBoolPropOrFalse(props, "internal"))
 	require.Equal(t, true, utils.GetBoolPropOrFalse(props, "bot"))
@@ -113,7 +113,7 @@ func TestGraphUserEventHandler_OnUserCreate_WithExternalSystem(t *testing.T) {
 	}, cmnmod.Source{
 		Source:        "N/A",
 		SourceOfTruth: "N/A",
-		AppSource:     "unit-test",
+		AppSource:     "event-processing-platform",
 	}, cmnmod.ExternalSystem{
 		ExternalSystemId: "sf",
 		ExternalId:       "123",
@@ -143,7 +143,7 @@ func TestGraphUserEventHandler_OnUserCreate_WithExternalSystem(t *testing.T) {
 	require.Equal(t, "Bob Dole", utils.GetStringPropOrEmpty(props, "name"))
 	require.Equal(t, "N/A", utils.GetStringPropOrEmpty(props, "source"))
 	require.Equal(t, "N/A", utils.GetStringPropOrEmpty(props, "sourceOfTruth"))
-	require.Equal(t, "unit-test", utils.GetStringPropOrEmpty(props, "appSource"))
+	require.Equal(t, "event-processing-platform", utils.GetStringPropOrEmpty(props, "appSource"))
 	require.Equal(t, true, utils.GetBoolPropOrFalse(props, "syncedWithEventStore"))
 	require.Equal(t, true, utils.GetBoolPropOrFalse(props, "internal"))
 	require.Equal(t, true, utils.GetBoolPropOrFalse(props, "bot"))
@@ -181,7 +181,7 @@ func TestGraphUserEventHandler_OnUserCreateWithJobRole(t *testing.T) {
 		cmnmod.Source{
 			Source:        "N/A",
 			SourceOfTruth: "N/A",
-			AppSource:     "unit-test",
+			AppSource:     "event-processing-platform",
 		},
 		cmnmod.ExternalSystem{},
 		curTime, curTime)
@@ -193,7 +193,7 @@ func TestGraphUserEventHandler_OnUserCreateWithJobRole(t *testing.T) {
 	jobRoleCreateEvent, err := job_role_events.NewJobRoleCreateEvent(jobRoleAggregate,
 		job_role_model.NewCreateJobRoleCommand(myJobRoleId.String(),
 			tenantName, "Chief Janitor", &description,
-			false, "N/A", "N/A", "unit-test", &now, nil, &curTime))
+			false, "N/A", "N/A", "event-processing-platform", &now, nil, &curTime))
 
 	require.Nil(t, err)
 	err = jobRoleEventHandler.OnJobRoleCreate(context.Background(), jobRoleCreateEvent)
@@ -223,7 +223,7 @@ func TestGraphUserEventHandler_OnUserCreateWithJobRole(t *testing.T) {
 	require.Equal(t, "Bob Dole", utils.GetStringPropOrEmpty(userProps, "name"))
 	require.Equal(t, "N/A", utils.GetStringPropOrEmpty(userProps, "source"))
 	require.Equal(t, "N/A", utils.GetStringPropOrEmpty(userProps, "sourceOfTruth"))
-	require.Equal(t, "unit-test", utils.GetStringPropOrEmpty(userProps, "appSource"))
+	require.Equal(t, "event-processing-platform", utils.GetStringPropOrEmpty(userProps, "appSource"))
 	require.Equal(t, true, utils.GetBoolPropOrFalse(userProps, "syncedWithEventStore"))
 	require.Equal(t, "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png", utils.GetStringPropOrEmpty(userProps, "profilePhotoUrl"))
 	require.Equal(t, "Africa/Abidjan", utils.GetStringPropOrEmpty(userProps, "timezone"))
@@ -239,7 +239,7 @@ func TestGraphUserEventHandler_OnUserCreateWithJobRole(t *testing.T) {
 	require.Equal(t, myJobRoleId.String(), utils.GetStringPropOrEmpty(jobRoleProps, "id"))
 	require.Equal(t, "Chief Janitor", utils.GetStringPropOrEmpty(jobRoleProps, "jobTitle"))
 	require.Equal(t, description, utils.GetStringPropOrEmpty(jobRoleProps, "description"))
-	require.Equal(t, "unit-test", utils.GetStringPropOrEmpty(jobRoleProps, "appSource"))
+	require.Equal(t, "event-processing-platform", utils.GetStringPropOrEmpty(jobRoleProps, "appSource"))
 }
 
 func TestGraphUserEventHandler_OnUserCreateWithJobRoleOutOfOrder(t *testing.T) {
@@ -269,7 +269,7 @@ func TestGraphUserEventHandler_OnUserCreateWithJobRoleOutOfOrder(t *testing.T) {
 	}, cmnmod.Source{
 		Source:        "N/A",
 		SourceOfTruth: "N/A",
-		AppSource:     "unit-test",
+		AppSource:     "event-processing-platform",
 	}, cmnmod.ExternalSystem{}, curTime, curTime)
 	require.Nil(t, err)
 	err = userEventHandler.OnUserCreate(context.Background(), userCreateEvent)
@@ -283,7 +283,7 @@ func TestGraphUserEventHandler_OnUserCreateWithJobRoleOutOfOrder(t *testing.T) {
 	jobRoleCreateEvent, err := job_role_events.NewJobRoleCreateEvent(jobRoleAggregate,
 		job_role_model.NewCreateJobRoleCommand(myJobRoleId.String(),
 			tenantName, "Chief Janitor", &description,
-			false, "N/A", "N/A", "unit-test", nil, nil, &curTime))
+			false, "N/A", "N/A", "event-processing-platform", nil, nil, &curTime))
 
 	require.Nil(t, err)
 	err = jobRoleEventHandler.OnJobRoleCreate(context.Background(), jobRoleCreateEvent)
@@ -308,7 +308,7 @@ func TestGraphUserEventHandler_OnUserCreateWithJobRoleOutOfOrder(t *testing.T) {
 	require.Equal(t, "Bob Dole", utils.GetStringPropOrEmpty(userProps, "name"))
 	require.Equal(t, "N/A", utils.GetStringPropOrEmpty(userProps, "source"))
 	require.Equal(t, "N/A", utils.GetStringPropOrEmpty(userProps, "sourceOfTruth"))
-	require.Equal(t, "unit-test", utils.GetStringPropOrEmpty(userProps, "appSource"))
+	require.Equal(t, "event-processing-platform", utils.GetStringPropOrEmpty(userProps, "appSource"))
 	require.Equal(t, true, utils.GetBoolPropOrFalse(userProps, "syncedWithEventStore"))
 
 	dbJobRoleNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "JobRole_"+tenantName, myJobRoleId.String())
@@ -322,7 +322,7 @@ func TestGraphUserEventHandler_OnUserCreateWithJobRoleOutOfOrder(t *testing.T) {
 	require.Equal(t, myJobRoleId.String(), utils.GetStringPropOrEmpty(jobRoleProps, "id"))
 	require.Equal(t, "Chief Janitor", utils.GetStringPropOrEmpty(jobRoleProps, "jobTitle"))
 	require.Equal(t, description, utils.GetStringPropOrEmpty(jobRoleProps, "description"))
-	require.Equal(t, "unit-test", utils.GetStringPropOrEmpty(jobRoleProps, "appSource"))
+	require.Equal(t, "event-processing-platform", utils.GetStringPropOrEmpty(jobRoleProps, "appSource"))
 }
 
 func TestGraphUserEventHandler_OnUserUpdate(t *testing.T) {
@@ -651,7 +651,7 @@ func TestGraphUserEventHandler_OnAddPlayer(t *testing.T) {
 	playerInfoEvent, err := user_events.NewUserAddPlayerInfoEvent(userAggregate, playerInfoDataFields, cmnmod.Source{
 		Source:        "N/A",
 		SourceOfTruth: "N/A",
-		AppSource:     "unit-test",
+		AppSource:     "event-processing-platform",
 	},
 		playerCreateTime)
 	require.Nil(t, err)
@@ -669,7 +669,7 @@ func TestGraphUserEventHandler_OnAddPlayer(t *testing.T) {
 	require.Less(t, playerCreateTime, utils.GetTimePropOrNow(playerProps, "updatedAt"))
 	require.Equal(t, "N/A", utils.GetStringPropOrEmpty(playerProps, "sourceOfTruth"))
 	require.Equal(t, "N/A", utils.GetStringPropOrEmpty(playerProps, "source"))
-	require.Equal(t, "unit-test", utils.GetStringPropOrEmpty(playerProps, "appSource"))
+	require.Equal(t, "event-processing-platform", utils.GetStringPropOrEmpty(playerProps, "appSource"))
 	require.Equal(t, "PlayerInfoProvider", utils.GetStringPropOrEmpty(playerProps, "provider"))
 	require.Equal(t, "PlayerInfoAuthId", utils.GetStringPropOrEmpty(playerProps, "authId"))
 	require.Equal(t, "PlayerInfIdentityId", utils.GetStringPropOrEmpty(playerProps, "identityId"))

@@ -232,7 +232,7 @@ func TestContractService_UpdateContract(t *testing.T) {
 		Currency:         "USD",
 		SourceFields: &commonpb.SourceFields{
 			Source:    constants.SourceOpenline,
-			AppSource: "unit-test",
+			AppSource: "event-processing-platform",
 		},
 		ExternalSystemFields: &commonpb.ExternalSystemFields{
 			ExternalSystemId: "ExternalSystemID",

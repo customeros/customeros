@@ -36,7 +36,7 @@ func TestIssueService_UpsertIssue_CreateIssue(t *testing.T) {
 		CreatedAt:   timestamppb.New(timeNow),
 		SourceFields: &commonpb.SourceFields{
 			Source:    "openline",
-			AppSource: "unit-test",
+			AppSource: "event-processing-platform",
 		},
 		ReportedByOrganizationId:  utils.StringPtr("456"),
 		SubmittedByOrganizationId: utils.StringPtr("ABC"),
@@ -61,7 +61,7 @@ func TestIssueService_UpsertIssue_CreateIssue(t *testing.T) {
 	require.Nil(t, err)
 
 	require.Equal(t, tenant, eventData.Tenant)
-	require.Equal(t, "unit-test", eventData.AppSource)
+	require.Equal(t, "event-processing-platform", eventData.AppSource)
 	require.Equal(t, "openline", eventData.Source)
 	require.Equal(t, timeNow, eventData.CreatedAt)
 	require.Equal(t, timeNow, eventData.UpdatedAt)
@@ -115,7 +115,7 @@ func TestIssueService_UpsertIssue_UpdateIssue(t *testing.T) {
 		Priority:    "low",
 		SourceFields: &commonpb.SourceFields{
 			Source:    "openline",
-			AppSource: "unit-test",
+			AppSource: "event-processing-platform",
 		},
 		UpdatedAt: timestamppb.New(timeNow),
 	})

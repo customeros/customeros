@@ -41,7 +41,7 @@ func TestInvoiceService_NewOnCycleInvoiceForContract(t *testing.T) {
 		LoggedInUserId: "User123",
 		ContractId:     contractId,
 		SourceFields: &commonpb.SourceFields{
-			AppSource: "unit-test",
+			AppSource: "event-processing-platform",
 		},
 		CreatedAt:          timestamppb.New(timeNow),
 		Currency:           "USD",
@@ -78,7 +78,7 @@ func TestInvoiceService_NewOnCycleInvoiceForContract(t *testing.T) {
 	require.Nil(t, err, "Failed to unmarshal event data")
 	require.Equal(t, contractId, eventData.ContractId)
 	require.Equal(t, timeNow, eventData.CreatedAt)
-	require.Equal(t, "unit-test", eventData.SourceFields.AppSource)
+	require.Equal(t, "event-processing-platform", eventData.SourceFields.AppSource)
 	require.Equal(t, false, eventData.DryRun)
 	require.Equal(t, "USD", eventData.Currency)
 	require.Equal(t, yesterday, eventData.PeriodStartDate)

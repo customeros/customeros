@@ -31,7 +31,7 @@ func TestCommentService_UpsertComment_CreateComment(t *testing.T) {
 		CreatedAt:   timestamppb.New(timeNow),
 		SourceFields: &commonpb.SourceFields{
 			Source:    "openline",
-			AppSource: "unit-test",
+			AppSource: "event-processing-platform",
 		},
 		AuthorUserId:     utils.StringPtr("123"),
 		CommentedIssueId: utils.StringPtr("456"),
@@ -54,7 +54,7 @@ func TestCommentService_UpsertComment_CreateComment(t *testing.T) {
 	require.Nil(t, err, "Failed to unmarshal event data")
 
 	require.Equal(t, tenant, eventData.Tenant)
-	require.Equal(t, "unit-test", eventData.AppSource)
+	require.Equal(t, "event-processing-platform", eventData.AppSource)
 	require.Equal(t, "openline", eventData.Source)
 	require.Equal(t, timeNow, eventData.CreatedAt)
 	require.Equal(t, timeNow, eventData.UpdatedAt)
