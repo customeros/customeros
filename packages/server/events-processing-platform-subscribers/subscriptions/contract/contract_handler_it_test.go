@@ -124,7 +124,7 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_QuarterlyContract(t *te
 			require.Equal(t, opportunityId, op.OpportunityId)
 			require.Equal(t, constants.AppSourceEventProcessingPlatform, op.AppSource)
 			in1Quarter := yesterday.AddDate(0, 3, 0)
-			require.Equal(t, in1Quarter, *utils.TimestampProtoToTimePtr(op.RenewedAt))
+			require.Equal(t, utils.ToDate(in1Quarter), *utils.TimestampProtoToTimePtr(op.RenewedAt))
 			calledEventsPlatformToUpdateRenewalOpportunityNextCycleDate = true
 			return &opportunitypb.OpportunityIdGrpcResponse{
 				Id: opportunityId,
@@ -214,7 +214,7 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_MultiAnnualContract(t *
 			require.Equal(t, opportunityId, op.OpportunityId)
 			require.Equal(t, constants.AppSourceEventProcessingPlatform, op.AppSource)
 			in10Years := yesterday.AddDate(10, 0, 0)
-			require.Equal(t, in10Years, *utils.TimestampProtoToTimePtr(op.RenewedAt))
+			require.Equal(t, utils.ToDate(in10Years), *utils.TimestampProtoToTimePtr(op.RenewedAt))
 			calledEventsPlatformToUpdateRenewalOpportunityNextCycleDate = true
 			return &opportunitypb.OpportunityIdGrpcResponse{
 				Id: opportunityId,
@@ -436,8 +436,8 @@ func TestContractEventHandler_UpdateRenewalArrForecast_ContractEndsBeforeNextRen
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	in5Minutes := utils.Now().Add(time.Minute * 5)
-	in10Minutes := utils.Now().Add(time.Minute * 10)
+	tomorrow := utils.Now().AddDate(0, 0, 1)
+	afterTomorrow := utils.Now().AddDate(0, 0, 2)
 
 	// prepare neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
@@ -446,14 +446,14 @@ func TestContractEventHandler_UpdateRenewalArrForecast_ContractEndsBeforeNextRen
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ServiceStartedAt: serviceStartedAt,
 		RenewalCycle:     neo4jenum.RenewalCycleAnnualRenewal,
-		EndedAt:          utils.TimePtr(in5Minutes),
+		EndedAt:          utils.TimePtr(tomorrow),
 	})
 	opportunityId := neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
 		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
 		InternalStage: neo4jenum.OpportunityInternalStageOpen,
 		RenewalDetails: neo4jentity.RenewalDetails{
 			RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
-			RenewedAt:         utils.TimePtr(in10Minutes),
+			RenewedAt:         utils.TimePtr(afterTomorrow),
 		},
 	})
 	neo4jtest.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
