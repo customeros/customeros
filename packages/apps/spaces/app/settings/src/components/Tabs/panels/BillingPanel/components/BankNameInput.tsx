@@ -2,7 +2,7 @@
 import React, { useRef, useEffect } from 'react';
 
 import { Metadata } from '@graphql/types';
-import { FormInput } from '@ui/form/Input';
+import { FormInput } from '@ui/form/Input/FormInput2';
 
 export const BankNameInput = ({
   formId,
@@ -28,23 +28,14 @@ export const BankNameInput = ({
     <>
       <FormInput
         ref={nameRef}
-        fontSize='md'
-        fontWeight='semibold'
+        className='text-md font-semibold'
         autoComplete='off'
         label='Bank Name'
+        labelProps={{ className: 'hidden' }}
         placeholder='Bank name'
         name='bankName'
         formId={formId}
-        border='none'
-        _hover={{
-          border: 'none',
-        }}
-        _focus={{
-          border: 'none',
-        }}
-        _focusVisible={{
-          border: 'none',
-        }}
+        variant={'unstyled'}
       />
     </>
   );

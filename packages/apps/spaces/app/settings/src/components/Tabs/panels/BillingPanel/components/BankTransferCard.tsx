@@ -10,15 +10,29 @@ import { useUpdateBankAccountMutation } from '@settings/graphql/updateBankAccoun
 import { BankNameInput } from '@settings/components/Tabs/panels/BillingPanel/components/BankNameInput';
 
 import { Flex } from '@ui/layout/Flex';
-import { FormInput } from '@ui/form/Input';
-import { FormAutoresizeTextarea } from '@ui/form/Textarea';
+import { FormInput } from '@ui/form/Input/FormInput2';
+import { FormMaskInput } from '@ui/form/Input/FormMaskInput';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { Card, CardBody, CardHeader } from '@ui/presentation/Card';
+import { Card, CardHeader, CardContent } from '@ui/presentation/Card/Card';
 import { Currency, BankAccount, BankAccountUpdateInput } from '@graphql/types';
+import { FormAutoresizeTextarea } from '@ui/form/Textarea/FormAutoresizeTextarea';
 
 import { BankTransferMenu } from './BankTransferMenu';
-import { SortCodeInput, BankAccountInput } from './inputs';
 import { BankTransferCurrencySelect } from './BankTransferCurrencySelect';
+
+const bankOptions = {
+  mask: '00 0000 0000 0000 0000 0000 0000 ',
+  definitions: {
+    '0': /[0-9]/,
+  },
+};
+
+const sortCodeOptions = {
+  mask: '00-00-00',
+  definitions: {
+    '0': /[0-9]/,
+  },
+};
 
 export const BankTransferCard = ({
   account,
@@ -96,42 +110,29 @@ export const BankTransferCard = ({
 
   return (
     <>
-      <Card
-        py={2}
-        px={4}
-        borderRadius='lg'
-        boxShadow='none'
-        border='1px solid'
-        borderColor='gray.200'
-        _hover={{
-          '& #help-button': {
-            visibility: 'visible',
-          },
-        }}
-      >
-        <CardHeader p='0' pb={1} as={Flex}>
+      <Card className='py-2 px-4 rounded-lg border-[1px] border-gray-200'>
+        <CardHeader className='p-0 pb-1 flex justify-between'>
           <BankNameInput formId={formId} metadata={account.metadata} />
-          <BankTransferCurrencySelect
-            existingCurrencies={existingCurrencies}
-            currency={account.currency}
-            formId={formId}
-          />
 
-          <BankTransferMenu id={account?.metadata?.id} />
+          <div className='flex'>
+            <BankTransferCurrencySelect
+              existingCurrencies={existingCurrencies}
+              currency={account.currency}
+              formId={formId}
+            />
+
+            <BankTransferMenu id={account?.metadata?.id} />
+          </div>
         </CardHeader>
-        <CardBody p={0} gap={2}>
+        <CardContent className='p-0 gap-2'>
           {account.currency !== 'USD' && account.currency !== 'GBP' && (
             <>
-              <BankAccountInput
+              <FormMaskInput
+                options={{ opts: bankOptions }}
                 autoComplete='off'
                 label='IBAN'
                 placeholder='IBAN #'
-                isLabelVisible
-                labelProps={{
-                  fontSize: 'sm',
-                  mb: 0,
-                  fontWeight: 'semibold',
-                }}
+                labelProps={{ className: 'text-sm mb-0 font-semibold' }}
                 name='iban'
                 mb={1}
                 formId={formId}
@@ -140,12 +141,7 @@ export const BankTransferCard = ({
                 autoComplete='off'
                 label='BIC/Swift'
                 placeholder='BIC/Swift'
-                isLabelVisible
-                labelProps={{
-                  fontSize: 'sm',
-                  mb: 0,
-                  fontWeight: 'semibold',
-                }}
+                labelProps={{ className: 'text-sm mb-0 font-semibold' }}
                 name='bic'
                 formId={formId}
               />
@@ -154,30 +150,22 @@ export const BankTransferCard = ({
           <Flex pb={1} gap={2}>
             {account.currency === 'GBP' && (
               <>
-                <SortCodeInput
+                <FormMaskInput
+                  options={{ opts: sortCodeOptions }}
                   autoComplete='off'
                   label='Sort code'
                   placeholder='Sort code'
-                  isLabelVisible
-                  labelProps={{
-                    fontSize: 'sm',
-                    mb: 0,
-                    fontWeight: 'semibold',
-                  }}
+                  labelProps={{ className: 'text-sm mb-0 font-semibold' }}
                   name='sortCode'
                   formId={formId}
                   maxW='80px'
                 />
-                <BankAccountInput
+                <FormMaskInput
+                  options={{ opts: bankOptions }}
                   autoComplete='off'
                   label='Account number'
                   placeholder='Bank account #'
-                  isLabelVisible
-                  labelProps={{
-                    fontSize: 'sm',
-                    mb: 0,
-                    fontWeight: 'semibold',
-                  }}
+                  labelProps={{ className: 'text-sm mb-0 font-semibold' }}
                   name='accountNumber'
                   formId={formId}
                 />
@@ -188,28 +176,19 @@ export const BankTransferCard = ({
             <>
               <FormInput
                 autoComplete='off'
+                className='mb-1'
                 label='Routing number'
                 placeholder='Routing number'
-                isLabelVisible
-                labelProps={{
-                  fontSize: 'sm',
-                  mb: 0,
-                  fontWeight: 'semibold',
-                }}
+                labelProps={{ className: 'text-sm mb-0 font-semibold' }}
                 name='routingNumber'
                 formId={formId}
-                mb={1}
               />
-              <BankAccountInput
+              <FormMaskInput
+                options={{ opts: bankOptions }}
                 autoComplete='off'
                 label='Account number'
                 placeholder='Bank account #'
-                isLabelVisible
-                labelProps={{
-                  fontSize: 'sm',
-                  mb: 0,
-                  fontWeight: 'semibold',
-                }}
+                labelProps={{ className: 'text-sm mb-0 font-semibold' }}
                 name='accountNumber'
                 formId={formId}
               />
@@ -221,12 +200,7 @@ export const BankTransferCard = ({
                 autoComplete='off'
                 label='BIC/Swift'
                 placeholder='BIC/Swift'
-                isLabelVisible
-                labelProps={{
-                  fontSize: 'sm',
-                  mb: 0,
-                  fontWeight: 'semibold',
-                }}
+                labelProps={{ className: 'text-sm mb-0 font-semibold' }}
                 name='bic'
                 formId={formId}
               />
@@ -244,7 +218,7 @@ export const BankTransferCard = ({
               formId={formId}
             />
           )}
-        </CardBody>
+        </CardContent>
       </Card>
     </>
   );

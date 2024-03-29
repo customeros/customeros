@@ -3,20 +3,38 @@
 import React from 'react';
 
 import { LogoUploader } from '@settings/components/LogoUploadComponent/LogoUploader';
-import { VatInput } from '@settings/components/Tabs/panels/BillingPanel/components/VatInput';
 import { PaymentMethods } from '@settings/components/Tabs/panels/BillingPanel/components/PaymentMethods';
 
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
-import { CardBody } from '@ui/layout/Card';
-import { FormInput } from '@ui/form/Input';
 import { FormSelect } from '@ui/form/SyncSelect';
-import { Divider } from '@ui/presentation/Divider';
+import { FormInput } from '@ui/form/Input/FormInput2';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
-import { FormSwitch } from '@ui/form/Switch/FromSwitch';
+import { FormSwitch } from '@ui/form/Switch/FormSwitch2';
 import { SelectOption } from '@shared/types/SelectOptions';
+import { Divider } from '@ui/presentation/Divider/Divider';
 import { countryOptions } from '@shared/util/countryOptions';
+import { FormMaskInput } from '@ui/form/Input/FormMaskInput';
 import { currencyOptions } from '@shared/util/currencyOptions';
+
+const opts = {
+  mask: 'AA 000 000 000',
+  definitions: {
+    A: /[A-Za-z]/,
+    '0': /[0-9]/,
+  },
+  prepare: function (value: string, mask: { _value: string }) {
+    if (mask._value.length < 2) {
+      return value.toUpperCase();
+    }
+
+    return value;
+  },
+  format: function (value: string) {
+    return value.toUpperCase(); // Ensure the country code is uppercase
+  },
+  parse: function (value: string) {
+    return value.toUpperCase(); // Ensure the input is treated as uppercase
+  },
+};
 
 export const TenantBillingPanelDetailsForm = ({
   setIsInvoiceProviderDetailsHovered,
@@ -32,17 +50,14 @@ export const TenantBillingPanelDetailsForm = ({
   setIsInvoiceProviderDetailsHovered: (newState: boolean) => void;
 }) => {
   return (
-    <CardBody as={Flex} flexDir='column' px='6' w='full' gap={4}>
+    <div className='flex flex-col px-6 py-5 w-full gap-4'>
       <LogoUploader />
       <FormInput
         autoComplete='off'
         label='Organization legal name'
         placeholder='Legal name'
-        isLabelVisible
         labelProps={{
-          fontSize: 'sm',
-          mb: 0,
-          fontWeight: 'semibold',
+          className: 'text-sm mb-0 font-semibold',
         }}
         name='legalName'
         formId={formId}
@@ -61,14 +76,12 @@ export const TenantBillingPanelDetailsForm = ({
         options={currencyOptions}
       />
 
-      <Flex
-        flexDir='column'
+      <div
+        className='flex flex-col'
         onMouseEnter={() => setIsInvoiceProviderDetailsHovered(true)}
         onMouseLeave={() => setIsInvoiceProviderDetailsHovered(false)}
       >
-        <Text fontSize='sm' fontWeight='semibold'>
-          Billing address
-        </Text>
+        <div className='text-sm font-semibold'>Billing address</div>
         <FormSelect
           name='country'
           placeholder='Country'
@@ -80,6 +93,9 @@ export const TenantBillingPanelDetailsForm = ({
           autoComplete='off'
           label='Address line 1'
           placeholder='Address line 1'
+          labelProps={{
+            className: 'hidden',
+          }}
           name='addressLine1'
           formId={formId}
           onFocus={() => setIsInvoiceProviderFocused(true)}
@@ -90,6 +106,9 @@ export const TenantBillingPanelDetailsForm = ({
           label='Billing address line 2'
           name='addressLine2'
           placeholder='Address line 2'
+          labelProps={{
+            className: 'hidden',
+          }}
           formId={formId}
           onFocus={() => setIsInvoiceProviderFocused(true)}
           onBlur={() => setIsInvoiceProviderFocused(false)}
@@ -97,34 +116,43 @@ export const TenantBillingPanelDetailsForm = ({
 
         {country?.value === 'US' && (
           <FormInput
+            className='overflow-ellipsis'
             label='City'
             formId={formId}
             name='locality'
-            textOverflow='ellipsis'
             placeholder='City'
+            labelProps={{
+              className: 'hidden',
+            }}
             onFocus={() => setIsInvoiceProviderFocused(true)}
             onBlur={() => setIsInvoiceProviderFocused(false)}
             autoComplete='off'
           />
         )}
 
-        <Flex gap={2}>
+        <div className='flex gap-2'>
           {country?.value === 'US' ? (
             <FormInput
               label='State'
               name='region'
               placeholder='State'
+              labelProps={{
+                className: 'hidden',
+              }}
               formId={formId}
               onFocus={() => setIsInvoiceProviderFocused(true)}
               onBlur={() => setIsInvoiceProviderFocused(false)}
             />
           ) : (
             <FormInput
+              className='overflow-ellipsis'
               label='City'
               formId={formId}
               name='locality'
-              textOverflow='ellipsis'
               placeholder='City'
+              labelProps={{
+                className: 'hidden',
+              }}
               onFocus={() => setIsInvoiceProviderFocused(true)}
               onBlur={() => setIsInvoiceProviderFocused(false)}
               autoComplete='off'
@@ -135,53 +163,49 @@ export const TenantBillingPanelDetailsForm = ({
             label='Billing address zip/Postal code'
             name='zip'
             placeholder='ZIP/Postal code'
+            labelProps={{
+              className: 'hidden',
+            }}
             formId={formId}
             onFocus={() => setIsInvoiceProviderFocused(true)}
             onBlur={() => setIsInvoiceProviderFocused(false)}
           />
-        </Flex>
+        </div>
 
-        <VatInput
+        <FormMaskInput
           formId={formId}
           name='vatNumber'
           autoComplete='off'
           label='VAT number'
           isLabelVisible
+          options={{ opts }}
           labelProps={{
-            fontSize: 'sm',
-            mb: 0,
-            mt: 4,
-            fontWeight: 'semibold',
+            className: 'text-sm mb-0 mt-4 font-semibold inline-block ',
           }}
           textOverflow='ellipsis'
           placeholder='VAT number'
           onFocus={() => setIsInvoiceProviderFocused(true)}
           onBlur={() => setIsInvoiceProviderFocused(false)}
         />
-      </Flex>
-      <Flex flexDir='column'>
-        <Flex position='relative' alignItems='center'>
-          <Text fontSize='sm' whiteSpace='nowrap' mr={2} color='gray.500'>
+      </div>
+      <div className='flex flex-col'>
+        <div className='flex relative items-center'>
+          <span className='text-sm whitespace-nowrap mr-2 text-gray-500'>
             Email invoice
-          </Text>
-          <Divider background='gray.200' />
-        </Flex>
+          </span>
+          <Divider />
+        </div>
 
         {sendInvoicesFrom && (
           <Tooltip label='This email is configured by CustomerOS'>
             <FormInput
+              className='cursor-not-allowed read-only'
               formId={formId}
               autoComplete='off'
-              cursor='not-allowed'
               label='From'
               labelProps={{
-                fontSize: 'sm',
-                mb: 0,
-                mt: 4,
-                fontWeight: 'semibold',
+                className: 'text-sm mb-0 font-semibold inline-block pt-4',
               }}
-              isLabelVisible
-              isReadOnly
               name='sendInvoicesFrom'
               placeholder=''
               onFocus={() => setIsInvoiceProviderFocused(true)}
@@ -190,35 +214,30 @@ export const TenantBillingPanelDetailsForm = ({
         )}
 
         <FormInput
+          className='overflow-ellipsis'
           autoComplete='off'
           label='BCC'
           labelProps={{
-            fontSize: 'sm',
-            mb: 0,
-            mt: 4,
-            fontWeight: 'semibold',
+            className: 'text-sm mb-0 font-semibold inline-block pt-4',
           }}
-          isLabelVisible
           formId={formId}
           name='sendInvoicesBcc'
-          textOverflow='ellipsis'
           placeholder='BCC'
           type='email'
         />
-      </Flex>
+      </div>
       <PaymentMethods formId={formId} />
       <FormSwitch
         size='sm'
         name='check'
         formId={formId}
         label='Checks'
-        fontWeight='semibold'
         labelProps={{
           fontSize: 'sm',
           fontWeight: 'semibold',
           margin: 0,
         }}
       />
-    </CardBody>
+    </div>
   );
 };

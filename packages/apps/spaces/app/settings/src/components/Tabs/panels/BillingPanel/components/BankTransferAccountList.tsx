@@ -4,11 +4,8 @@ import React from 'react';
 
 import { useBankAccountsQuery } from '@settings/graphql/getBankAccounts.generated';
 
-import { Box } from '@ui/layout/Box';
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
 import { BankAccount } from '@graphql/types';
-import { FormSwitch } from '@ui/form/Switch/FromSwitch';
+import { FormSwitch } from '@ui/form/Switch/FormSwitch2';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 
 import { AddAccountButton } from './AddAccountButton';
@@ -24,23 +21,23 @@ export const BankTransferAccountList = ({ formId }: { formId: string }) => {
 
   return (
     <>
-      <Flex justifyContent='space-between' alignItems='center'>
-        <Text fontSize='sm' fontWeight='semibold' whiteSpace='nowrap'>
+      <div className='flex justify-between items-center'>
+        <span className='text-sm whitespace-nowrap font-semibold'>
           Bank transfer
-        </Text>
-        <Flex alignItems='center'>
+        </span>
+        <div className='flex items-center'>
           <AddAccountButton
             existingCurrencies={existingAccountCurrencies ?? []}
           />
-          <Box>
+          <div>
             <FormSwitch
               name='canPayWithBankTransfer'
               formId={formId}
               size='sm'
             />
-          </Box>
-        </Flex>
-      </Flex>
+          </div>
+        </div>
+      </div>
 
       {data?.bankAccounts?.map((account) => (
         <React.Fragment key={account.metadata.id}>
