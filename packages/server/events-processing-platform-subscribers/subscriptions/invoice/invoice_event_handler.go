@@ -472,8 +472,8 @@ func calculateSLIAmountForCycleInvoicing(quantity int64, price float64, billed n
 }
 
 func prorateAnnualSLIAmount(startDate, endDate time.Time, amount float64) float64 {
-	start := utils.StartOfDayInUTC(startDate)
-	end := utils.StartOfDayInUTC(endDate)
+	start := utils.ToDate(startDate)
+	end := utils.ToDate(endDate)
 	days := end.Sub(start).Hours() / 24
 	proratedAmount := amount * (days / 365)
 	if proratedAmount <= 0 {

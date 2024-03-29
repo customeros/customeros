@@ -64,7 +64,7 @@ func TestInvoiceEventHandler_OnInvoiceCreateForContractV1(t *testing.T) {
 			AppSource: constants.AppSourceEventProcessingPlatform,
 		},
 		contractId,
-		"EUR",
+		neo4jenum.CurrencyEUR.String(),
 		neo4jenum.BillingCycleMonthlyBilling.String(),
 		"some note",
 		true,
