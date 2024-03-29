@@ -162,9 +162,7 @@ func (s *invoiceService) GenerateCycleInvoices() {
 								AppSource: constants.AppSourceDataUpkeeper,
 							},
 							NextInvoiceDate: utils.ConvertTimeToTimestampPtr(nextInvoiceDate),
-							InvoiceNote:     "",
 							FieldsMask: []contractpb.ContractFieldMask{
-								contractpb.ContractFieldMask_CONTRACT_FIELD_INVOICE_NOTE,
 								contractpb.ContractFieldMask_CONTRACT_FIELD_NEXT_INVOICE_DATE},
 						})
 					})
