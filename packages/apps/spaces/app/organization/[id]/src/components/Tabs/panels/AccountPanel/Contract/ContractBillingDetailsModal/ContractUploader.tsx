@@ -7,11 +7,11 @@ import { cn } from '@ui/utils/cn';
 import { Plus } from '@ui/media/icons/Plus';
 import { Delete } from '@ui/media/icons/Delete';
 import { toastError } from '@ui/presentation/Toast';
-import { FileUploader } from '@ui/form/FileUploader';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { Spinner } from '@ui/feedback/Spinner/Spinner';
 import { ghostButton } from '@ui/form/Button/Button.variants';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { FileDropUploader, FileUploadTrigger } from '@ui/form/FileUploader';
 import { useGetContractQuery } from '@organization/src/graphql/getContract.generated';
 import { useAddContractAttachmentMutation } from '@organization/src/graphql/addContractAttachment.generated';
 import { useRemoveContractAttachmentMutation } from '@organization/src/graphql/removeContractAttachment.generated';
@@ -37,6 +37,7 @@ export const ContractUploader = ({ contractId }: ContractUploaderProps) => {
 
   const [files, setFiles] = useState<{ file: File; refId: number }[]>([]);
   const [loadingIds, setIsLoading] = useState<number[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
   const { data: attachments } = useGetContractQuery(
     client,
     { id: contractId },
@@ -147,7 +148,7 @@ export const ContractUploader = ({ contractId }: ContractUploaderProps) => {
           align='center'
           label='Upload a document'
         >
-          <FileUploader
+          <FileUploadTrigger
             name='contractUpload'
             apiBaseUrl='/fs'
             endpointOptions={{
@@ -168,40 +169,64 @@ export const ContractUploader = ({ contractId }: ContractUploaderProps) => {
             )}
           >
             <Plus tabIndex={-1} />
-          </FileUploader>
+          </FileUploadTrigger>
         </Tooltip>
       </div>
 
-      <div className='h-5'>
-        {!attachments?.length && !files.length && (
-          <label
-            htmlFor='contractUpload'
-            className='text-sm text-gray-500 underline cursor-pointer'
-          >
-            Upload a document
-          </label>
+      <FileDropUploader
+        apiBaseUrl='/fs'
+        endpointOptions={{
+          fileKeyName: 'file',
+          uploadUrl: '/file',
+        }}
+        onChange={(file, refId) => {
+          setFiles((prev) => [...prev, { file, refId }]);
+        }}
+        onError={handleError}
+        onLoadStart={handelLoad}
+        onLoadEnd={handleLoadEnd}
+        onSuccess={handleAddAttachment}
+        onDragOverChange={setIsDragging}
+      >
+        {isDragging ? (
+          <div className='p-4 border border-dashed border-gray-300 rounded-lg text-center'>
+            <p className='text-xs text-gray-500'>
+              Drag and drop attachments here
+            </p>
+          </div>
+        ) : (
+          <div className='min-h-5'>
+            {!attachments?.length && !files.length && (
+              <label
+                htmlFor='contractUpload'
+                className='text-sm text-gray-500 underline cursor-pointer'
+              >
+                Upload a document
+              </label>
+            )}
+
+            {attachments?.map(({ id, fileName }) => (
+              <AttachmentItem
+                id={id}
+                key={id}
+                fileName={fileName}
+                onRemove={handleRemoveAttachment}
+                href={`/fs/file/${id}/download?inline=true`}
+              />
+            ))}
+
+            {files.map(({ file, refId }) => (
+              <AttachmentItem
+                href='#'
+                key={refId}
+                fileName={file.name}
+                id={refId.toString()}
+                isLoading={loadingIds.includes(refId)}
+              />
+            ))}
+          </div>
         )}
-
-        {attachments?.map(({ id, fileName }) => (
-          <AttachmentItem
-            id={id}
-            key={id}
-            fileName={fileName}
-            onRemove={handleRemoveAttachment}
-            href={`/fs/file/${id}/download?inline=true`}
-          />
-        ))}
-
-        {files.map(({ file, refId }) => (
-          <AttachmentItem
-            href='#'
-            key={refId}
-            fileName={file.name}
-            id={refId.toString()}
-            isLoading={loadingIds.includes(refId)}
-          />
-        ))}
-      </div>
+      </FileDropUploader>
     </div>
   );
 };
