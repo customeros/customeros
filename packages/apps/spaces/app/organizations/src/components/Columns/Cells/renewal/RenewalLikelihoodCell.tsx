@@ -1,4 +1,3 @@
-import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { OpportunityRenewalLikelihood } from '@graphql/types';
 
@@ -12,13 +11,13 @@ export const RenewalLikelihoodCell = ({
   value,
 }: RenewalLikelihoodCellProps) => {
   return (
-    <Flex key={Math.random()} w='full'>
+    <div className='w-full' key={Math.random()}>
       <Text
         cursor='default'
         color={value ? getLikelihoodColor(value) : 'gray.400'}
       >
         {value ? getRenewalLikelihoodLabel(value) : 'Unknown'}
       </Text>
-    </Flex>
+    </div>
   );
 };

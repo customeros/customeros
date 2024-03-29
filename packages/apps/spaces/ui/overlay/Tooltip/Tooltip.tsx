@@ -5,6 +5,7 @@ import * as RadixTooltip from '@radix-ui/react-tooltip';
 interface TooltipProps {
   label: string;
   open?: boolean;
+  asChild?: boolean;
   tabIndex?: number;
   className?: string;
   hasArrow?: boolean;
@@ -28,7 +29,10 @@ export const Tooltip = ({
   defaultOpen,
   onOpenChange,
   delayDuration,
+  asChild = true,
 }: TooltipProps) => {
+  if (!label) return children;
+
   return (
     <RadixTooltip.Provider>
       <RadixTooltip.Root
@@ -37,7 +41,7 @@ export const Tooltip = ({
         onOpenChange={onOpenChange}
         delayDuration={delayDuration}
       >
-        <RadixTooltip.Trigger tabIndex={tabIndex} asChild>
+        <RadixTooltip.Trigger tabIndex={tabIndex} asChild={asChild}>
           {children}
         </RadixTooltip.Trigger>
         <RadixTooltip.Portal

@@ -6,8 +6,6 @@ import * as RadixAvatar from '@radix-ui/react-avatar';
 import { AvatarImageProps } from '@radix-ui/react-avatar';
 import { cva, VariantProps } from 'class-variance-authority';
 
-import { cn } from '@ui/utils/cn';
-
 const avatarBadgeSize = cva([], {
   variants: {
     badgeSize: {
@@ -128,9 +126,26 @@ const avatarStyle = cva(
   },
 );
 
+const textSize = cva([], {
+  variants: {
+    textSizes: {
+      xs: ['text-xs'],
+      sm: ['text-sm'],
+      md: ['text-base'],
+      lg: ['text-lg'],
+      xl: ['text-xl'],
+      '2xl': ['text-2xl'],
+    },
+  },
+  defaultVariants: {
+    textSizes: 'md',
+  },
+});
+
 interface AvatarProps
   extends VariantProps<typeof avatarStyle>,
     VariantProps<typeof avatarBadgeSize>,
+    VariantProps<typeof textSize>,
     AvatarImageProps {
   src?: string;
   name?: string;
@@ -144,6 +159,7 @@ export const Avatar: React.FC<AvatarProps> = ({
   name,
   src,
   size,
+  textSizes = 'md',
   variant,
   badgeSize,
   className,
@@ -151,7 +167,17 @@ export const Avatar: React.FC<AvatarProps> = ({
   badge,
   ...props
 }: AvatarProps) => {
-  const emptyFallbackLetters = name?.split(' ').map((word) => word[0]);
+  const emptyFallbackWords = name?.split(' ');
+
+  let emptyFallbackLetters = '';
+  if (!emptyFallbackWords) return null;
+  if (emptyFallbackWords.length > 1) {
+    emptyFallbackLetters = `${emptyFallbackWords[0]?.[0]}${
+      emptyFallbackWords[emptyFallbackWords.length - 1]?.[0]
+    }`;
+  } else {
+    emptyFallbackLetters = emptyFallbackWords[0]?.[0];
+  }
 
   return (
     <RadixAvatar.Root
@@ -165,18 +191,28 @@ export const Avatar: React.FC<AvatarProps> = ({
         />
       )}
       {icon && !name && !src && (
-        <RadixAvatar.Fallback className=' leading-1 flex h-full w-full items-center justify-center text-[15px] font-medium'>
+        <RadixAvatar.Fallback
+          className={twMerge(
+            'leading-1 flex h-full w-full items-center justify-center font-medium',
+            textSize({ textSizes }),
+          )}
+        >
           {icon}
         </RadixAvatar.Fallback>
       )}
       {!icon && !src && name && (
-        <RadixAvatar.Fallback className='leading-1 flex h-full w-full items-center justify-center text-[15px] font-semibold'>
+        <RadixAvatar.Fallback
+          className={twMerge(
+            'leading-1 flex h-full w-full items-center justify-center font-bold',
+            textSize({ textSizes }),
+          )}
+        >
           {emptyFallbackLetters}
         </RadixAvatar.Fallback>
       )}
       {badge &&
         cloneElement(badge, {
-          className: cn(
+          className: twMerge(
             avatarBadgeSize({
               badgeSize: size,
               badgePosition: size,

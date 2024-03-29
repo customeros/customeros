@@ -33,9 +33,9 @@ export const ContractStatusUpdatedAction: React.FC<
       <FeaturedIcon
         size='md'
         minW='10'
-        colorScheme={iconsByStatus[status].colorScheme as string}
+        colorScheme={iconsByStatus[status]?.colorScheme as string}
       >
-        {iconsByStatus[status].icon}
+        {iconsByStatus[status]?.icon}
       </FeaturedIcon>
 
       <Text
