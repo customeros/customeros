@@ -2,6 +2,7 @@ import { useForm } from 'react-inverted-form';
 import React, { useRef, useState, useEffect } from 'react';
 
 import { produce } from 'immer';
+import { UTCDate } from '@date-fns/utc';
 import { useQueryClient } from '@tanstack/react-query';
 import { useDebounce, useDeepCompareEffect } from 'rooks';
 
@@ -217,7 +218,7 @@ export const ContractCard = ({
               ContractDTO.toPayload({
                 contractId: data.metadata.id,
                 [action.payload.name]: action.payload.value
-                  ? action.payload.value
+                  ? new UTCDate(action.payload.value)
                   : '0001-01-01T00:00:00.000000Z',
               }),
             );
