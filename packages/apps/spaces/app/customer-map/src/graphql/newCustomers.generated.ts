@@ -30,7 +30,7 @@ export type NewCustomersQueryVariables = Types.Exact<{
 
 export type NewCustomersQuery = {
   __typename?: 'Query';
-  dashboard_NewCustomers: {
+  dashboard_NewCustomers?: {
     __typename?: 'DashboardNewCustomers';
     thisMonthCount: number;
     thisMonthIncreasePercentage: string;
@@ -40,7 +40,7 @@ export type NewCustomersQuery = {
       month: number;
       count: number;
     } | null>;
-  };
+  } | null;
 };
 
 export const NewCustomersDocument = `

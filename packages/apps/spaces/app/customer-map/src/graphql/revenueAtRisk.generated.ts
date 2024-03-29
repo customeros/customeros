@@ -30,11 +30,11 @@ export type RevenueAtRiskQueryVariables = Types.Exact<{
 
 export type RevenueAtRiskQuery = {
   __typename?: 'Query';
-  dashboard_RevenueAtRisk: {
+  dashboard_RevenueAtRisk?: {
     __typename?: 'DashboardRevenueAtRisk';
     highConfidence: number;
     atRisk: number;
-  };
+  } | null;
 };
 
 export const RevenueAtRiskDocument = `

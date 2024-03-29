@@ -9,7 +9,7 @@ import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useRenewalsMeta } from '@shared/state/RenewalsMeta.atom';
 import { useGetUsersQuery } from '@shared/graphql/getUsers.generated';
 
-type Owner = Pick<User, 'id' | 'firstName' | 'lastName'> | null;
+type Owner = Pick<User, 'id' | 'firstName' | 'lastName' | 'name'> | null;
 interface OwnerProps {
   id: string;
   owner?: Owner;
@@ -60,7 +60,7 @@ export const OwnerCell = ({ owner }: OwnerProps) => {
         },
       }}
     >
-      <Text cursor='default' color={value ? 'gray.700' : 'gray.400'}>
+      <Text cursor='default' color={name ? 'gray.700' : 'gray.400'}>
         {name || 'Owner'}
       </Text>
     </Flex>

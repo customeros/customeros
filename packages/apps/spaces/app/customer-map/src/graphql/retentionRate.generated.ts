@@ -30,7 +30,7 @@ export type RetentionRateQueryVariables = Types.Exact<{
 
 export type RetentionRateQuery = {
   __typename?: 'Query';
-  dashboard_RetentionRate: {
+  dashboard_RetentionRate?: {
     __typename?: 'DashboardRetentionRate';
     retentionRate: number;
     increasePercentage: string;
@@ -40,7 +40,7 @@ export type RetentionRateQuery = {
       renewCount: number;
       churnCount: number;
     } | null>;
-  };
+  } | null;
 };
 
 export const RetentionRateDocument = `
