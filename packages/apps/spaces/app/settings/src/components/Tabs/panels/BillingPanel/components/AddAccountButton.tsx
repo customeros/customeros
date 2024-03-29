@@ -15,6 +15,7 @@ import { IconButton } from '@ui/form/IconButton';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { currencyOptions } from '@shared/util/currencyOptions';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { useTenantNameQuery } from '@shared/graphql/tenantName.generated';
 
 export const AddAccountButton = ({
   existingCurrencies,
@@ -25,6 +26,7 @@ export const AddAccountButton = ({
   const queryKey = useBankAccountsQuery.getKey();
   const queryClient = useQueryClient();
   const client = getGraphQLClient();
+  const { data: tenantNameQuery } = useTenantNameQuery(client);
 
   const { mutate } = useCreateBankAccountMutation(client, {
     onSuccess: () => {
@@ -61,7 +63,7 @@ export const AddAccountButton = ({
             mutate({
               input: {
                 currency: e.value,
-                bankName: `${e.value} account`,
+                bankName: `${tenantNameQuery} account`,
               },
             });
           }}

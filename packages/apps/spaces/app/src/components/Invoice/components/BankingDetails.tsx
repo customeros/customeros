@@ -7,12 +7,14 @@ import { Currency, BankAccount } from '@graphql/types';
 
 type InvoiceHeaderProps = {
   currency?: string;
+  invoiceNumber?: string | null;
   availableBankAccount?: Partial<BankAccount> | null;
 };
 
 export const BankingDetails: FC<InvoiceHeaderProps> = ({
   availableBankAccount,
   currency,
+  invoiceNumber,
 }) => {
   const bankDetails: { label: string; value: string } = useMemo(() => {
     const details = {
@@ -75,6 +77,14 @@ export const BankingDetails: FC<InvoiceHeaderProps> = ({
           </Text>
           <Text fontSize='xs' color='gray.500'>
             {accountNumberValue || '-'}
+          </Text>
+        </Box>
+        <Box>
+          <Text fontSize='xs' fontWeight='medium'>
+            Reference
+          </Text>
+          <Text fontSize='xs' color='gray.500'>
+            {invoiceNumber || '-'}
           </Text>
         </Box>
       </Flex>
