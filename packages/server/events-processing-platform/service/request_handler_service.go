@@ -1,9 +1,10 @@
-package invoice
+package service
 
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -13,24 +14,23 @@ import (
 	"time"
 )
 
-type InvoiceRequestHandler interface {
-	Handle(ctx context.Context, tenant, objectId string, aggregateOptions eventstore.LoadAggregateOptions, request any, params ...map[string]any) (any, error)
+type RequestHandler interface {
+	HandleGRPCRequest(ctx context.Context, aggregate eventstore.Aggregate, aggregateOptions eventstore.LoadAggregateOptions, request any, params ...map[string]any) (any, error)
 }
 
-type invoiceRequestHandler struct {
+type requestHandler struct {
 	log logger.Logger
 	es  eventstore.AggregateStore
 	cfg config.Utils
 }
 
-func NewInvoiceRequestHandler(log logger.Logger, es eventstore.AggregateStore, cfg config.Utils) InvoiceRequestHandler {
-	return &invoiceRequestHandler{log: log, es: es, cfg: cfg}
+func NewRequestHandler(log logger.Logger, es eventstore.AggregateStore, cfg config.Utils) *requestHandler {
+	return &requestHandler{log: log, es: es, cfg: cfg}
 }
 
-func (h *invoiceRequestHandler) Handle(ctx context.Context, tenant, objectId string, aggregateOptions eventstore.LoadAggregateOptions, request any, params ...map[string]any) (any, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceRequestHandler.HandleWithRetry")
+func (h *requestHandler) HandleGRPCRequest(ctx context.Context, agg eventstore.Aggregate, aggregateOptions eventstore.LoadAggregateOptions, request any, params ...map[string]any) (any, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "RequestHandler.HandleGRPCRequest")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
 	tracing.LogObjectAsJson(span, "request", request)
 	span.LogFields(log.Object("aggregateOptions", aggregateOptions))
 
@@ -39,13 +39,13 @@ func (h *invoiceRequestHandler) Handle(ctx context.Context, tenant, objectId str
 	}
 
 	for attempt := 0; attempt == 0 || attempt < h.cfg.RetriesOnOptimisticLockException; attempt++ {
-		invoiceAggregate, err := LoadInvoiceAggregate(ctx, h.es, tenant, objectId, aggregateOptions)
+		err := aggregate.LoadAggregate(ctx, h.es, agg, aggregateOptions)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
 		}
 
-		if aggregateOptions.Required && eventstore.IsAggregateNotFound(invoiceAggregate) {
+		if aggregateOptions.Required && eventstore.IsAggregateNotFound(agg) {
 			tracing.TraceErr(span, eventstore.ErrAggregateNotFound)
 			return nil, eventstore.ErrAggregateNotFound
 		}
@@ -54,13 +54,13 @@ func (h *invoiceRequestHandler) Handle(ctx context.Context, tenant, objectId str
 		if params != nil && len(params) > 0 {
 			requestParams = params[0]
 		}
-		result, err := invoiceAggregate.HandleRequest(ctx, request, requestParams)
+		result, err := agg.HandleGRPCRequest(ctx, request, requestParams)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
 		}
 
-		err = h.es.Save(ctx, invoiceAggregate)
+		err = h.es.Save(ctx, agg)
 		if err == nil {
 			return result, nil // Save successful
 		}

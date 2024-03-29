@@ -44,6 +44,7 @@ type Subscriptions struct {
 	NotificationsSubscription         NotificationsSubscription
 	InvoiceSubscription               InvoiceSubscription
 	OrderSubscription                 OrderSubscription
+	ReminderSubscription              ReminderSubscription
 }
 
 type GraphSubscription struct {
@@ -146,12 +147,21 @@ type InvoiceSubscription struct {
 }
 
 type OrderSubscription struct {
-	Enabled          bool   `env:"EVENT_STORE_INVOICE_NOTIFICATIONS_ENABLED" envDefault:"true"`
-	GroupName        string `env:"EVENT_STORE_INVOICE_NOTIFICATIONS_GROUP_NAME" envDefault:"order-v1" validate:"required"`
-	PoolSize         int    `env:"EVENT_STORE_INVOICE_NOTIFICATIONS_POOL_SIZE" envDefault:"4" validate:"required,gte=0"`
-	BufferSizeClient uint32 `env:"EVENT_STORE_INVOICE_NOTIFICATIONS_CLIENT_BUFFER_SIZE" envDefault:"10" validate:"required,gte=0"`
-	StartPosition    uint64 `env:"EVENT_STORE_INVOICE_NOTIFICATIONS_START_POSITION" envDefault:"0"`
-	IgnoreEvents     bool   `env:"EVENT_STORE_INVOICE_NOTIFICATIONS_IGNORE_EVENTS" envDefault:"false"`
+	Enabled          bool   `env:"EVENT_STORE_SUBSCRIPTIONS_ORDER_ENABLED" envDefault:"true"`
+	GroupName        string `env:"EVENT_STORE_SUBSCRIPTIONS_ORDER_GROUP_NAME" envDefault:"order-v1" validate:"required"`
+	PoolSize         int    `env:"EVENT_STORE_SUBSCRIPTIONS_ORDER_POOL_SIZE" envDefault:"4" validate:"required,gte=0"`
+	BufferSizeClient uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_ORDER_CLIENT_BUFFER_SIZE" envDefault:"10" validate:"required,gte=0"`
+	StartPosition    uint64 `env:"EVENT_STORE_SUBSCRIPTIONS_ORDER_START_POSITION" envDefault:"0"`
+	IgnoreEvents     bool   `env:"EVENT_STORE_SUBSCRIPTIONS_ORDER_IGNORE_EVENTS" envDefault:"false"`
+}
+
+type ReminderSubscription struct {
+	Enabled          bool   `env:"EVENT_STORE_SUBSCRIPTIONS_REMINDER_ENABLED" envDefault:"true"`
+	GroupName        string `env:"EVENT_STORE_SUBSCRIPTIONS_REMINDER_GROUP_NAME" envDefault:"order-v1" validate:"required"`
+	PoolSize         int    `env:"EVENT_STORE_SUBSCRIPTIONS_REMINDER_POOL_SIZE" envDefault:"4" validate:"required,gte=0"`
+	BufferSizeClient uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_REMINDER_CLIENT_BUFFER_SIZE" envDefault:"10" validate:"required,gte=0"`
+	StartPosition    uint64 `env:"EVENT_STORE_SUBSCRIPTIONS_REMINDER_START_POSITION" envDefault:"0"`
+	IgnoreEvents     bool   `env:"EVENT_STORE_SUBSCRIPTIONS_REMINDER_IGNORE_EVENTS" envDefault:"false"`
 }
 
 type Services struct {

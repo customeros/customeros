@@ -1,6 +1,7 @@
 package eventstore
 
 import (
+	"context"
 	"fmt"
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 )
@@ -55,6 +56,7 @@ type Load interface {
 type Aggregate interface {
 	When
 	AggregateRoot
+	HandleGRPCRequest(ctx context.Context, request any, params map[string]any) (any, error)
 }
 
 // AggregateRoot contains all methods of AggregateBase
@@ -97,19 +99,6 @@ type AggregateBase struct {
 	streamMetadata    *esdb.StreamMetadata
 }
 
-// NewAggregateBase AggregateBase constructor, contains all main fields and methods,
-// main aggregate must realize When interface and pass as argument to constructor
-// Example of recommended aggregate constructor method:
-//
-//	func NewContactAggregate() *ContactAggregate {
-//		ContactAggregate := &ContactAggregate{
-//			Contact: models.NewContact(),
-//		}
-//		base := es.NewAggregateBase(ContactAggregate.When)
-//		base.SetType(ContactAggregateType)
-//		ContactAggregate.AggregateBase = base
-//		return ContactAggregate
-//	}
 func NewAggregateBase(when when) *AggregateBase {
 	if when == nil {
 		return nil

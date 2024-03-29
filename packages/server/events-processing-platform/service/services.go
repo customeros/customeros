@@ -14,6 +14,8 @@ type Services struct {
 	FileStoreApiService fsc.FileStoreApiService
 	CommonServices      *commonService.Services
 
+	RequestHandler *requestHandler // generic grpc request handler
+
 	//GRPC services
 	ContactService            *contactService
 	OrganizationService       *organizationService
@@ -46,6 +48,8 @@ func InitServices(cfg *config.Config, repositories *repository.Repositories, agg
 	services.FileStoreApiService = fsc.NewFileStoreApiService(&cfg.Services.FileStoreApiConfig)
 	services.CommonServices = commonService.InitServices(repositories.Drivers.GormDb, repositories.Drivers.Neo4jDriver)
 
+	services.RequestHandler = NewRequestHandler(log, aggregateStore, cfg.Utils)
+
 	//GRPC services
 	services.ContactService = NewContactService(log, commandHandlers.Contact, aggregateStore, cfg)
 	services.OrganizationService = NewOrganizationService(log, commandHandlers.Organization, aggregateStore, cfg)
@@ -65,7 +69,7 @@ func InitServices(cfg *config.Config, repositories *repository.Repositories, agg
 	services.MasterPlanService = NewMasterPlanService(log, commandHandlers.MasterPlan, aggregateStore)
 	services.OrganizationPlanService = NewOrganizationPlanService(log, commandHandlers.OrganizationPlan, aggregateStore)
 	services.InvoicingCycleService = NewInvoicingCycleService(log, commandHandlers.InvoicingCycle, aggregateStore)
-	services.InvoiceService = NewInvoiceService(log, aggregateStore, cfg, repositories.InvoiceRepository)
+	services.InvoiceService = NewInvoiceService(&services, log, aggregateStore, cfg, repositories.InvoiceRepository)
 	services.TenantService = NewTenantService(log, aggregateStore, cfg)
 	services.CountryService = NewCountryService(log, commandHandlers.Country)
 	services.ReminderService = NewReminderService(log, aggregateStore, cfg, ebs)
