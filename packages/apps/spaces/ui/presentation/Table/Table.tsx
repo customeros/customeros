@@ -279,15 +279,17 @@ export const Table = <T extends object>({
                         'items-center ',
                       )}
                     >
-                      <MemoizedCheckbox
-                        className='group-hover:visible group-hover:opacity-100  '
-                        key={`checkbox-${virtualRow.index}`}
-                        isChecked={row?.getIsSelected()}
-                        disabled={!row || !row?.getCanSelect()}
-                        onChange={(isChecked) =>
-                          row?.getToggleSelectedHandler()(isChecked)
-                        }
-                      />
+                      {enableRowSelection && (
+                        <MemoizedCheckbox
+                          className='group-hover:visible group-hover:opacity-100  '
+                          key={`checkbox-${virtualRow.index}`}
+                          isChecked={row?.getIsSelected()}
+                          disabled={!row || !row?.getCanSelect()}
+                          onChange={(isChecked) =>
+                            row?.getToggleSelectedHandler()(isChecked)
+                          }
+                        />
+                      )}
                     </div>
                   )}
                 </TCell>
@@ -297,8 +299,9 @@ export const Table = <T extends object>({
                     index === 0 ? 'pl-2' : index === 1 ? 'pl-0' : 'pl-6';
                   const minWidth = cell.column.getSize();
                   const maxWidth = cell.column.columnDef.fixWidth
-                    ? `${cell.column.getSize()}`
+                    ? cell.column.getSize()
                     : 'none';
+
                   const flex =
                     table
                       .getFlatHeaders()
@@ -308,7 +311,7 @@ export const Table = <T extends object>({
                   return (
                     <TCell
                       key={cell.id}
-                      className={cn(paddingRight, paddingLeft, 'flex')}
+                      className={cn(paddingRight, paddingLeft, flex)}
                       style={{ minWidth, maxWidth, flex }}
                       data-index={cell.row.index}
                     >
@@ -360,7 +363,7 @@ const TRow = forwardRef<HTMLDivElement, GenericProps>(
     return (
       <div
         className={cn(
-          'top-0 left-0 flex-1 flex w-full text-sm absolute border-b border-gray-100',
+          'top-0 left-0 flex flex-1 w-full text-sm absolute border-b border-gray-100',
           className,
         )}
         ref={ref}
@@ -379,7 +382,7 @@ const TCell = forwardRef<HTMLDivElement, GenericProps>(
     return (
       <div
         className={twMerge(
-          'flex flex-1 py-2 px-6 h-full flex-col whitespace-nowrap justify-center self-center',
+          'flex py-2 px-6 h-full flex-1 flex-col whitespace-nowrap justify-center self-center break-keep',
           className,
         )}
         style={style}
@@ -446,7 +449,7 @@ const THeader = forwardRef<HTMLDivElement, GenericProps>(
 const THeaderGroup = forwardRef<HTMLDivElement, GenericProps>(
   ({ className, children, ...props }, ref) => {
     return (
-      <div ref={ref} className='flex' {...props}>
+      <div ref={ref} className='flex flex-1' {...props}>
         {children}
       </div>
     );
@@ -459,7 +462,7 @@ const THeaderCell = forwardRef<HTMLDivElement, GenericProps>(
       <div
         ref={ref}
         className={twMerge(
-          'flex items-center px-6 py-1 whitespace-nowrap',
+          'flex items-center px-6 py-1 whitespace-nowrap ',
           className,
         )}
         style={style}
