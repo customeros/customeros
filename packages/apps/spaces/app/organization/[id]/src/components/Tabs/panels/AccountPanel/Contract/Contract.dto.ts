@@ -1,3 +1,5 @@
+import { utcToZonedTime } from 'date-fns-tz';
+
 import { SelectOption } from '@shared/types/SelectOptions';
 import { UpdateContractMutationVariables } from '@organization/src/graphql/updateContract.generated';
 import {
@@ -60,11 +62,15 @@ export class ContractDTO implements TimeToRenewalForm {
       [...contractBillingCycleOptions].find(
         ({ value }) => value === data?.billingDetails?.billingCycle,
       ) ?? undefined;
-    this.endedAt = data?.contractEnded && new Date(data.contractEnded);
+    this.endedAt =
+      data?.contractEnded && utcToZonedTime(data?.contractEnded, 'UTC');
     this.invoicingStartDate =
       data?.billingDetails?.invoicingStarted &&
-      new Date(data.billingDetails?.invoicingStarted);
-    this.serviceStarted = data?.serviceStarted && new Date(data.serviceStarted);
+      utcToZonedTime(data?.billingDetails?.invoicingStarted, 'UTC');
+
+    this.serviceStarted =
+      data?.serviceStarted && utcToZonedTime(data?.serviceStarted, 'UTC');
+
     this.name = data?.contractName?.length
       ? data?.contractName
       : `${
