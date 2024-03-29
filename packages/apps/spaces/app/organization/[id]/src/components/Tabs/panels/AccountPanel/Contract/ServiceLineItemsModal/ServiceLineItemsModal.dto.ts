@@ -1,3 +1,5 @@
+import { UTCDate } from '@date-fns/utc';
+
 import {
   BilledType,
   ServiceLineItem,
@@ -54,7 +56,9 @@ export class ServiceLineItemsDTO implements ServiceLineItemBulkUpdateItem {
       price: data?.price ?? 0,
       billed: data?.billingCycle ?? BilledType.Monthly,
       isDeleted: data?.serviceEnded ?? false,
-      serviceStarted: data?.serviceStarted,
+      serviceStarted: data?.serviceStarted
+        ? new UTCDate(data.serviceStarted)
+        : null,
       vatRate: data?.tax?.taxRate ?? 0,
       type: [
         BilledType.Quarterly,

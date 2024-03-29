@@ -2,6 +2,8 @@
 import React, { useRef, useEffect } from 'react';
 import { DatePicker as ReactDatePicker } from 'react-date-picker';
 
+import { utcToZonedTime } from 'date-fns-tz';
+
 import { Flex } from '@ui/layout/Flex';
 import { Input } from '@ui/form/Input';
 import { Text } from '@ui/typography/Text';
@@ -271,7 +273,11 @@ export const ServiceLineItemRow = ({
             name='startDate'
             clearIcon={null}
             onChange={(event) => handleDateInputChange(event as DateInputValue)}
-            defaultValue={service.serviceStarted}
+            defaultValue={
+              service.serviceStarted
+                ? utcToZonedTime(service.serviceStarted, 'UTC')
+                : null
+            }
             formatShortWeekday={(_, date) =>
               DateTimeUtils.format(
                 date.toISOString(),
