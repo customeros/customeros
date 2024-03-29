@@ -14388,7 +14388,7 @@ input OrganizationUpdateInput {
 
 input LinkOrganizationsInput {
     organizationId: ID!
-    subOrganizationId: ID!
+    subsidiaryId: ID!
     type: String
 }
 
@@ -95182,7 +95182,7 @@ func (ec *executionContext) unmarshalInputLinkOrganizationsInput(ctx context.Con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"organizationId", "subOrganizationId", "type"}
+	fieldsInOrder := [...]string{"organizationId", "subsidiaryId", "type"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -95196,13 +95196,13 @@ func (ec *executionContext) unmarshalInputLinkOrganizationsInput(ctx context.Con
 				return it, err
 			}
 			it.OrganizationID = data
-		case "subOrganizationId":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("subOrganizationId"))
+		case "subsidiaryId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("subsidiaryId"))
 			data, err := ec.unmarshalNID2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.SubOrganizationID = data
+			it.SubsidiaryID = data
 		case "type":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)

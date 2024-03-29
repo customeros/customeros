@@ -2,7 +2,7 @@ mutation AddSubsidiary($organizationId: ID!, $subsidiaryId: ID!, $type: String) 
   organization_AddSubsidiary(
     input: {
         organizationId: $organizationId
-        subOrganizationId: $subsidiaryId
+        subsidiaryId: $subsidiaryId
         type: $type
     })
     {

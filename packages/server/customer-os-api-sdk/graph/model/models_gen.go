@@ -1429,9 +1429,9 @@ type LastTouchpoint struct {
 }
 
 type LinkOrganizationsInput struct {
-	OrganizationID    string  `json:"organizationId"`
-	SubOrganizationID string  `json:"subOrganizationId"`
-	Type              *string `json:"type,omitempty"`
+	OrganizationID string  `json:"organizationId"`
+	SubsidiaryID   string  `json:"subsidiaryId"`
+	Type           *string `json:"type,omitempty"`
 }
 
 type LinkedOrganization struct {

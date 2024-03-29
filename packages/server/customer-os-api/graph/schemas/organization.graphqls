@@ -192,16 +192,31 @@ input OrganizationUpdateInput {
     yearFounded:        Int64
     slackChannelId:     String
 
+    """
+    Deprecated, use public instead
+    """
     isPublic:           Boolean @deprecated(reason: "Use public")
+    """
+    Deprecated, use logo instead
+    """
     logoUrl:            String @deprecated(reason: "Use logo")
+    """
+    Deprecated
+    """
     domains:            [String!] @deprecated(reason: "to be implemented in separate mutation, add and remove by domain")
+    """
+    Deprecatedm, use notes instead
+    """
     note:               String @deprecated(reason: "Use notes")
+    """
+    Deprecated, use customId instead
+    """
     referenceId: String @deprecated(reason: "Use customId")
 }
 
 input LinkOrganizationsInput {
     organizationId: ID!
-    subOrganizationId: ID!
+    subsidiaryId: ID!
     type: String
 }
 
