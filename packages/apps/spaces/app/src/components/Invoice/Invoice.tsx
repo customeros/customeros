@@ -181,6 +181,7 @@ export function Invoice({
           <BankingDetails
             availableBankAccount={availableBankAccount}
             currency={currency}
+            invoiceNumber={invoiceNumber}
           />
         )}
         {check && (

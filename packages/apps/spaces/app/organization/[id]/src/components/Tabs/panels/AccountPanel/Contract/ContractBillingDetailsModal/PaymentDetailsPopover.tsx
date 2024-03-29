@@ -38,7 +38,12 @@ export const PaymentDetailsPopover: FC<PaymentDetailsPopoverProps> = ({
           <Text mr={2}>{content}</Text>
 
           {withNavigation && (
-            <Text as={Link} href='/settings?tab=billing' color='white'>
+            <Text
+              as={Link}
+              href='/settings?tab=billing'
+              color='white'
+              textDecoration='underline'
+            >
               Go to Settings
             </Text>
           )}
