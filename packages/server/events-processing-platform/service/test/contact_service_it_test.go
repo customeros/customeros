@@ -40,7 +40,7 @@ func TestContactService_CreateContact(t *testing.T) {
 		Description:     "This is a contact description",
 		Timezone:        "America/Los_Angeles",
 		ProfilePhotoUrl: "https://www.google.com",
-		AppSource:       "unit-test",
+		AppSource:       "event-processing-platform",
 		Source:          "N/A",
 		SourceOfTruth:   "N/A",
 		CreatedAt:       timestamppb.New(timeNow),
@@ -63,9 +63,9 @@ func TestContactService_CreateContact(t *testing.T) {
 	require.Equal(t, "Mr.", eventData.Prefix)
 	require.Equal(t, "America/Los_Angeles", eventData.Timezone)
 	require.Equal(t, "https://www.google.com", eventData.ProfilePhotoUrl)
-	require.Equal(t, "unit-test", eventData.AppSource)
-	require.Equal(t, "N/A", eventData.Source)
-	require.Equal(t, "N/A", eventData.SourceOfTruth)
+	require.Equal(t, "event-processing-platform", eventData.AppSource)
+	require.Equal(t, "openline", eventData.Source)
+	require.Equal(t, "openline", eventData.SourceOfTruth)
 	require.Equal(t, timeNow, eventData.CreatedAt)
 	require.Equal(t, timeNow, eventData.UpdatedAt)
 	require.Equal(t, "ziggy", eventData.Tenant)
@@ -93,7 +93,7 @@ func TestContactService_CreateContactWithEmail(t *testing.T) {
 		Description:     "This is a contact description",
 		Timezone:        "America/Los_Angeles",
 		ProfilePhotoUrl: "https://www.google.com?id=123",
-		AppSource:       "unit-test",
+		AppSource:       "event-processing-platform",
 		Source:          "N/A",
 		SourceOfTruth:   "N/A",
 		CreatedAt:       timestamppb.New(timeNow),
@@ -115,7 +115,7 @@ func TestContactService_CreateContactWithEmail(t *testing.T) {
 	responseEmail, err := emailClient.UpsertEmail(ctx, &emailpb.UpsertEmailGrpcRequest{
 		Tenant:        "ziggy",
 		RawEmail:      "test@openline.ai",
-		AppSource:     "unit-test",
+		AppSource:     "event-processing-platform",
 		Source:        "N/A",
 		SourceOfTruth: "N/A",
 		CreatedAt:     timestamppb.New(timeNow),
@@ -143,7 +143,7 @@ func TestContactService_CreateContactWithEmail(t *testing.T) {
 		EmailId:   responseEmail.Id,
 		Primary:   true,
 		Label:     "WORK",
-		AppSource: "unit-test",
+		AppSource: "event-processing-platform",
 	})
 	if err != nil {
 		t.Errorf("Failed to link email to contact: %v", err)

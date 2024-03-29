@@ -40,7 +40,7 @@ func TestGraphContactEventHandler_OnContactCreate(t *testing.T) {
 		Description: "This is a test contact.",
 	}
 	source :=
-		cmnmod.Source{Source: "N/A", SourceOfTruth: "N/A", AppSource: "unit-test"}
+		cmnmod.Source{Source: "N/A", SourceOfTruth: "N/A", AppSource: "event-processing-platform"}
 	event, err := contactEvents.NewContactCreateEvent(contactAggregate, dataFields, source, cmnmod.ExternalSystem{}, curTime, curTime)
 	require.Nil(t, err)
 	err = contactEventHandler.OnContactCreate(context.Background(), event)
@@ -61,7 +61,7 @@ func TestGraphContactEventHandler_OnContactCreate(t *testing.T) {
 	require.Equal(t, "Mr.", utils.GetStringPropOrEmpty(contactProps, "prefix"))
 	require.Equal(t, "This is a test contact.", utils.GetStringPropOrEmpty(contactProps, "description"))
 
-	require.Equal(t, "unit-test", utils.GetStringPropOrEmpty(contactProps, "appSource"))
+	require.Equal(t, "event-processing-platform", utils.GetStringPropOrEmpty(contactProps, "appSource"))
 }
 
 func TestGraphContactEventHandler_OnLocationLinkToContact(t *testing.T) {
@@ -408,7 +408,7 @@ func TestGraphContactEventHandler_OnSocialAddedToContactV1(t *testing.T) {
 		cmnmod.Source{
 			Source:        constants.SourceOpenline,
 			SourceOfTruth: constants.SourceOpenline,
-			AppSource:     "unit-test",
+			AppSource:     "event-processing-platform",
 		}, now)
 	require.Nil(t, err)
 
@@ -427,7 +427,7 @@ func TestGraphContactEventHandler_OnSocialAddedToContactV1(t *testing.T) {
 	require.Equal(t, socialUrl, social.Url)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), social.Source)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), social.SourceOfTruth)
-	require.Equal(t, "unit-test", social.AppSource)
+	require.Equal(t, "event-processing-platform", social.AppSource)
 	require.Equal(t, now, social.CreatedAt)
 	require.Equal(t, now, social.UpdatedAt)
 }

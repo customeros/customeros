@@ -84,8 +84,7 @@ func (a *InvoiceAggregate) HandleGRPCRequest(ctx context.Context, request any, p
 	case *invoicepb.SimulateInvoiceRequest:
 		return nil, a.SimulateInvoice(ctx, r)
 	default:
-		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
-		return nil, eventstore.ErrInvalidRequestType
+		return nil, nil
 	}
 }
 

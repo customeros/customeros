@@ -36,7 +36,7 @@ func TestOrderService_UpsertOrder_MissingOrganization(t *testing.T) {
 		LoggedInUserId: "User123",
 		OrganizationId: organizationId,
 		SourceFields: &commonpb.SourceFields{
-			AppSource: "unit-test",
+			AppSource: "event-processing-platform",
 		},
 		CreatedAt:   timestamppb.New(timeNow),
 		ConfirmedAt: timestamppb.New(timeNow),
@@ -77,7 +77,7 @@ func TestOrderService_UpsertOrder_AllProperties(t *testing.T) {
 		LoggedInUserId: "User123",
 		OrganizationId: organizationId,
 		SourceFields: &commonpb.SourceFields{
-			AppSource: "unit-test",
+			AppSource: "event-processing-platform",
 		},
 		CreatedAt:   timestamppb.New(timeNow),
 		ConfirmedAt: timestamppb.New(timeNow),
@@ -114,7 +114,7 @@ func TestOrderService_UpsertOrder_AllProperties(t *testing.T) {
 	require.Nil(t, err, "Failed to unmarshal event data")
 	require.Equal(t, organizationId, eventData.OrganizationId)
 	require.Equal(t, timeNow, eventData.CreatedAt)
-	require.Equal(t, "unit-test", eventData.SourceFields.AppSource)
+	require.Equal(t, "event-processing-platform", eventData.SourceFields.AppSource)
 	require.Equal(t, timeNow, *eventData.ConfirmedAt)
 	require.Equal(t, timeNow, *eventData.PaidAt)
 	require.Equal(t, timeNow, *eventData.FulfilledAt)
@@ -145,7 +145,7 @@ func TestOrderService_UpsertOrder_PartialProperties(t *testing.T) {
 		LoggedInUserId: "User123",
 		OrganizationId: organizationId,
 		SourceFields: &commonpb.SourceFields{
-			AppSource: "unit-test",
+			AppSource: "event-processing-platform",
 		},
 		PaidAt: timestamppb.New(timeNow),
 	}
@@ -177,7 +177,7 @@ func TestOrderService_UpsertOrder_PartialProperties(t *testing.T) {
 	err = createEvent.GetJsonData(&eventData)
 	require.Nil(t, err, "Failed to unmarshal event data")
 	require.Equal(t, organizationId, eventData.OrganizationId)
-	require.Equal(t, "unit-test", eventData.SourceFields.AppSource)
+	require.Equal(t, "event-processing-platform", eventData.SourceFields.AppSource)
 	require.Nil(t, eventData.ConfirmedAt)
 	require.Equal(t, timeNow, *eventData.PaidAt)
 	require.Nil(t, eventData.FulfilledAt)

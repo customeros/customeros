@@ -1,4 +1,4 @@
-package model
+package comment
 
 import (
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -16,4 +16,11 @@ type Comment struct {
 	ExternalSystems  []commonmodel.ExternalSystem `json:"externalSystem"`
 	CreatedAt        time.Time                    `json:"createdAt,omitempty"`
 	UpdatedAt        time.Time                    `json:"updatedAt,omitempty"`
+}
+
+type CommentDataFields struct {
+	Content          string
+	ContentType      string
+	AuthorUserId     *string
+	CommentedIssueId *string
 }

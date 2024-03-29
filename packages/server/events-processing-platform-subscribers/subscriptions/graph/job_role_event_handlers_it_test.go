@@ -28,7 +28,7 @@ func TestGraphJobRoleEventHandler_OnJobRoleCreate(t *testing.T) {
 	createCommand, err :=
 		events.NewJobRoleCreateEvent(jobRoleAggregate, model.NewCreateJobRoleCommand(myJobRoleId.String(),
 			tenantName, "Chief Janitor", &description,
-			false, "N/A", "N/A", "unit-test", nil, nil, &curTime))
+			false, "N/A", "N/A", "event-processing-platform", nil, nil, &curTime))
 	require.Nil(t, err)
 	err = jobRoleEventHandler.OnJobRoleCreate(context.Background(), createCommand)
 	require.Nil(t, err)
@@ -44,5 +44,5 @@ func TestGraphJobRoleEventHandler_OnJobRoleCreate(t *testing.T) {
 	require.Equal(t, myJobRoleId.String(), utils.GetStringPropOrEmpty(props, "id"))
 	require.Equal(t, "Chief Janitor", utils.GetStringPropOrEmpty(props, "jobTitle"))
 	require.Equal(t, description, utils.GetStringPropOrEmpty(props, "description"))
-	require.Equal(t, "unit-test", utils.GetStringPropOrEmpty(props, "appSource"))
+	require.Equal(t, "event-processing-platform", utils.GetStringPropOrEmpty(props, "appSource"))
 }

@@ -2,14 +2,17 @@ package country
 
 import (
 	"context"
+	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	countrypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/country"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"strings"
+	"time"
 )
 
 const (
@@ -31,32 +34,6 @@ func getCountryObjectUUID(aggregateID string) string {
 	return fullUUID
 }
 
-func LoadCountryAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string) (*countryAggregate, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "LoadCountryAggregate")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.LogFields(log.String("ObjectID", objectID))
-
-	countryAggregate := NewCountryAggregateWithID(objectID)
-
-	err := eventStore.Exists(ctx, countryAggregate.GetID())
-	if err != nil {
-		if !errors.Is(err, eventstore.ErrAggregateNotFound) {
-			tracing.TraceErr(span, err)
-			return nil, err
-		} else {
-			return countryAggregate, nil
-		}
-	}
-
-	if err = eventStore.Load(ctx, countryAggregate); err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	return countryAggregate, nil
-}
-
 func NewCountryAggregateWithID(id string) *countryAggregate {
 	countryAggregate := countryAggregate{}
 	countryAggregate.CommonIdAggregate = aggregate.NewCommonAggregateWithId(CountryAggregateType, id)
@@ -64,6 +41,43 @@ func NewCountryAggregateWithID(id string) *countryAggregate {
 	countryAggregate.Country = &Country{}
 
 	return &countryAggregate
+}
+
+func (a *countryAggregate) HandleGRPCRequest(ctx context.Context, request any, params map[string]any) (any, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CountryAggregate.HandleRequest")
+	defer span.Finish()
+
+	switch r := request.(type) {
+	case *countrypb.CreateCountryRequest:
+		return nil, a.CreateCountryRequest(ctx, r)
+	default:
+		return nil, nil
+	}
+}
+
+func (a *countryAggregate) CreateCountryRequest(ctx context.Context, request *countrypb.CreateCountryRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "CountryAggregate.CreateCountryRequest")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("AggregateVersion", a.GetVersion()))
+
+	createEvent, err := NewCountryCreateEvent(a, request.Name, request.CodeA2, request.CodeA3, request.PhoneCode, time.Now().UTC())
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "CountryAggregate")
+	}
+
+	aggregate.EnrichEventWithMetadataExtended(&createEvent, span, aggregate.EventMetadata{
+		UserId: request.LoggedInUserId,
+		App:    request.SourceFields.AppSource,
+	})
+
+	streamMetadata := esdb.StreamMetadata{}
+	streamMetadata.SetMaxAge(time.Duration(constants.StreamMetadataMaxAgeSecondsExtended) * time.Second)
+	a.SetStreamMetadata(&streamMetadata)
+
+	return a.Apply(createEvent)
 }
 
 func (a *countryAggregate) When(evt eventstore.Event) error {

@@ -41,7 +41,7 @@ func (dfi TestDialFactoryImpl) GetEventsProcessingPlatformConn(repositories *rep
 		Encoder:  "console",
 	})
 	appLogger.InitLogger()
-	appLogger.WithName("unit-test")
+	appLogger.WithName("event-processing-platform")
 
 	myServer := server.NewServer(&config.Config{
 		Utils: config.Utils{

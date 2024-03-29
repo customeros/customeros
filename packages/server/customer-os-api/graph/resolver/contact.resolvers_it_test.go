@@ -283,7 +283,7 @@ func TestMutationResolver_CustomerContactCreate(t *testing.T) {
 			require.Equal(t, "Smith", contact.LastName)
 			require.Equal(t, "Mr.", contact.Prefix)
 			require.Equal(t, "This is a person", contact.Description)
-			require.Equal(t, "unit-test", contact.SourceFields.AppSource)
+			require.Equal(t, "event-processing-platform", contact.SourceFields.AppSource)
 			require.Equal(t, timeNow.Unix(), contact.CreatedAt.Seconds)
 			require.Equal(t, "openline", contact.Tenant)
 			calledCreateContact = true
@@ -322,7 +322,7 @@ func TestMutationResolver_CustomerContactCreate(t *testing.T) {
 		client.Var("lastName", "Smith"),
 		client.Var("prefix", "Mr."),
 		client.Var("description", "This is a person"),
-		client.Var("appSource", "unit-test"),
+		client.Var("appSource", "event-processing-platform"),
 		client.Var("createdAt", timeNow),
 	)
 	assertRawResponseSuccess(t, rawResponse, err)

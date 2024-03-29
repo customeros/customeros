@@ -58,8 +58,7 @@ func (a *TenantAggregate) HandleGRPCRequest(ctx context.Context, request any, pa
 	case *tenantpb.DeleteBankAccountGrpcRequest:
 		return nil, a.DeleteBankAccount(ctx, r)
 	default:
-		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
-		return nil, eventstore.ErrInvalidRequestType
+		return nil, nil
 	}
 }
 

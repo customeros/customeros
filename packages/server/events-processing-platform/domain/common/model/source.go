@@ -23,6 +23,7 @@ func (s *Source) String() string {
 
 func (s *Source) FromGrpc(grpcSource *grpccommon.SourceFields) {
 	if grpcSource == nil {
+		s.SetDefaultValues()
 		return
 	}
 	s.Source = grpcSource.Source

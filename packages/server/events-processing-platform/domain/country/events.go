@@ -2,9 +2,7 @@ package country
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/pkg/errors"
 	"time"
 )
@@ -14,8 +12,7 @@ const (
 )
 
 type CountryCreateEvent struct {
-	CreatedAt    time.Time          `json:"createdAt"`
-	SourceFields commonmodel.Source `json:"sourceFields"`
+	CreatedAt time.Time `json:"createdAt"`
 
 	Name      string `json:"name" validate:"required"`
 	CodeA2    string `json:"codeA2" validate:"required"`
@@ -23,10 +20,9 @@ type CountryCreateEvent struct {
 	PhoneCode string `json:"phoneCode" validate:"required"`
 }
 
-func NewCountryCreateEvent(aggregate eventstore.Aggregate, name, codeA2, codeA3, phoneCode string, createdAt time.Time, sourceFields commonmodel.Source) (eventstore.Event, error) {
+func NewCountryCreateEvent(aggregate eventstore.Aggregate, name, codeA2, codeA3, phoneCode string, createdAt time.Time) (eventstore.Event, error) {
 	eventData := CountryCreateEvent{
-		CreatedAt:    createdAt,
-		SourceFields: sourceFields,
+		CreatedAt: createdAt,
 
 		Name:      name,
 		CodeA2:    codeA2,
@@ -44,14 +40,4 @@ func NewCountryCreateEvent(aggregate eventstore.Aggregate, name, codeA2, codeA3,
 	}
 
 	return event, nil
-}
-
-type EventHandlers struct {
-	CountryCreate CountryCreateHandler
-}
-
-func NewEventHandlers(log logger.Logger, es eventstore.AggregateStore) *EventHandlers {
-	return &EventHandlers{
-		CountryCreate: NewCountryCreateHandler(log, es),
-	}
 }

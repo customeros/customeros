@@ -37,7 +37,7 @@ func TestLogEntryService_UpsertLogEntry_CreateLogEntry(t *testing.T) {
 		SourceFields: &commonpb.SourceFields{
 			Source:        "openline",
 			SourceOfTruth: "openline",
-			AppSource:     "unit-test",
+			AppSource:     "event-processing-platform",
 		},
 		AuthorUserId:         utils.StringPtr("123"),
 		LoggedOrganizationId: utils.StringPtr("456"),
@@ -60,7 +60,7 @@ func TestLogEntryService_UpsertLogEntry_CreateLogEntry(t *testing.T) {
 	require.Nil(t, err, "Failed to unmarshal event data")
 
 	require.Equal(t, tenant, eventData.Tenant)
-	require.Equal(t, "unit-test", eventData.AppSource)
+	require.Equal(t, "event-processing-platform", eventData.AppSource)
 	require.Equal(t, "openline", eventData.Source)
 	require.Equal(t, "openline", eventData.SourceOfTruth)
 	require.Equal(t, timeNow, eventData.CreatedAt)

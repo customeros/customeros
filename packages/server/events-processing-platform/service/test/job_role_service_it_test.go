@@ -32,7 +32,7 @@ func TestJobRoleService_CreateJobRole(t *testing.T) {
 		Description:   &description,
 		Source:        "N/A",
 		SourceOfTruth: "N/A",
-		AppSource:     "unit-test",
+		AppSource:     "event-processing-platform",
 		CreatedAt:     timestamppb.New(timeNow),
 		StartedAt:     timestamppb.New(timeStarted),
 		EndedAt:       timestamppb.New(timeEnded),
@@ -55,7 +55,7 @@ func TestJobRoleService_CreateJobRole(t *testing.T) {
 	require.Equal(t, "I clean things", *eventData.Description)
 	require.Equal(t, "N/A", eventData.Source)
 	require.Equal(t, "N/A", eventData.SourceOfTruth)
-	require.Equal(t, "unit-test", eventData.AppSource)
+	require.Equal(t, "event-processing-platform", eventData.AppSource)
 	require.Equal(t, timeNow, eventData.CreatedAt)
 	require.Equal(t, timeNow, eventData.UpdatedAt)
 	require.Equal(t, timeStarted, *eventData.StartedAt)

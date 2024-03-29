@@ -43,7 +43,7 @@ func TestServiceLineItemService_CreateServiceLineItem(t *testing.T) {
 		Price:          -1.0123456789,
 		Name:           "Test service line item",
 		SourceFields: &commonpb.SourceFields{
-			AppSource: "unit-test",
+			AppSource: "event-processing-platform",
 		},
 		CreatedAt: timestamppb.New(timeNow),
 		UpdatedAt: timestamppb.New(timeNow),
@@ -113,7 +113,7 @@ func TestServiceLineItemService_UpdateServiceLineItem(t *testing.T) {
 		UpdatedAt:               timestamppb.New(updatedAt),
 		SourceFields: &commonpb.SourceFields{
 			Source:    "openline",
-			AppSource: "unit-test",
+			AppSource: "event-processing-platform",
 		},
 	}
 
@@ -166,7 +166,7 @@ func TestServiceLineItemService_DeleteServiceLineItem(t *testing.T) {
 		Tenant:         tenant,
 		LoggedInUserId: "User456",
 		Id:             serviceLineItemId,
-		AppSource:      "unit-test",
+		AppSource:      "event-processing-platform",
 	}
 	// Execute
 	response, err := serviceLineItemClient.DeleteServiceLineItem(ctx, request)
@@ -230,7 +230,7 @@ func TestServiceLineItemService_UpdateServiceLineItemCreateNewVersion(t *testing
 		ParentId:                "SLI121",
 		SourceFields: &commonpb.SourceFields{
 			Source:    "openline",
-			AppSource: "unit-test",
+			AppSource: "event-processing-platform",
 		},
 	}
 
