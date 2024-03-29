@@ -1,7 +1,7 @@
 import { TenantBillingProfile } from '@graphql/types';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { countryOptions } from '@shared/util/countryOptions';
-import { getCurrencyOptions } from '@shared/util/currencyOptions';
+import { currencyOptions } from '@shared/util/currencyOptions';
 
 export interface TenantBillingDetails {
   zip?: string | null;
@@ -59,7 +59,7 @@ export class TenantBillingDetailsDto implements TenantBillingDetails {
     this.vatNumber = data?.vatNumber;
     this.check = data?.check;
     this.region = data?.region;
-    this.baseCurrency = getCurrencyOptions().find(
+    this.baseCurrency = currencyOptions.find(
       (i) => data?.baseCurrency === i.value,
     );
   }

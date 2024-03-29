@@ -20,7 +20,13 @@ import { BankTransferMenu } from './BankTransferMenu';
 import { SortCodeInput, BankAccountInput } from './inputs';
 import { BankTransferCurrencySelect } from './BankTransferCurrencySelect';
 
-export const BankTransferCard = ({ account }: { account: BankAccount }) => {
+export const BankTransferCard = ({
+  account,
+  existingCurrencies,
+}: {
+  account: BankAccount;
+  existingCurrencies: Array<string>;
+}) => {
   const formId = `bank-transfer-form-${account.metadata.id}`;
   const queryKey = useBankAccountsQuery.getKey();
   const queryClient = useQueryClient();
@@ -106,6 +112,7 @@ export const BankTransferCard = ({ account }: { account: BankAccount }) => {
         <CardHeader p='0' pb={1} as={Flex}>
           <BankNameInput formId={formId} metadata={account.metadata} />
           <BankTransferCurrencySelect
+            existingCurrencies={existingCurrencies}
             currency={account.currency}
             formId={formId}
           />
@@ -113,6 +120,37 @@ export const BankTransferCard = ({ account }: { account: BankAccount }) => {
           <BankTransferMenu id={account?.metadata?.id} />
         </CardHeader>
         <CardBody p={0} gap={2}>
+          {account.currency !== 'USD' && account.currency !== 'GBP' && (
+            <>
+              <BankAccountInput
+                autoComplete='off'
+                label='IBAN'
+                placeholder='IBAN #'
+                isLabelVisible
+                labelProps={{
+                  fontSize: 'sm',
+                  mb: 0,
+                  fontWeight: 'semibold',
+                }}
+                name='iban'
+                mb={1}
+                formId={formId}
+              />
+              <FormInput
+                autoComplete='off'
+                label='BIC/Swift'
+                placeholder='BIC/Swift'
+                isLabelVisible
+                labelProps={{
+                  fontSize: 'sm',
+                  mb: 0,
+                  fontWeight: 'semibold',
+                }}
+                name='bic'
+                formId={formId}
+              />
+            </>
+          )}
           <Flex pb={1} gap={2}>
             {account.currency === 'GBP' && (
               <>
@@ -145,36 +183,6 @@ export const BankTransferCard = ({ account }: { account: BankAccount }) => {
                 />
               </>
             )}
-            {account.currency !== 'USD' && account.currency !== 'GBP' && (
-              <>
-                <FormInput
-                  autoComplete='off'
-                  label='BIC/Swift'
-                  placeholder='BIC/Swift'
-                  isLabelVisible
-                  labelProps={{
-                    fontSize: 'sm',
-                    mb: 0,
-                    fontWeight: 'semibold',
-                  }}
-                  name='bic'
-                  formId={formId}
-                />
-                <BankAccountInput
-                  autoComplete='off'
-                  label='Iban'
-                  placeholder='Iban #'
-                  isLabelVisible
-                  labelProps={{
-                    fontSize: 'sm',
-                    mb: 0,
-                    fontWeight: 'semibold',
-                  }}
-                  name='iban'
-                  formId={formId}
-                />
-              </>
-            )}
           </Flex>
           {account.currency === 'USD' && (
             <>
@@ -190,6 +198,7 @@ export const BankTransferCard = ({ account }: { account: BankAccount }) => {
                 }}
                 name='routingNumber'
                 formId={formId}
+                mb={1}
               />
               <BankAccountInput
                 autoComplete='off'

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React from 'react';
 
 import { LogoUploader } from '@settings/components/LogoUploadComponent/LogoUploader';
 import { VatInput } from '@settings/components/Tabs/panels/BillingPanel/components/VatInput';
@@ -16,25 +16,21 @@ import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { FormSwitch } from '@ui/form/Switch/FromSwitch';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { countryOptions } from '@shared/util/countryOptions';
-import { getCurrencyOptions } from '@shared/util/currencyOptions';
+import { currencyOptions } from '@shared/util/currencyOptions';
 
 export const TenantBillingPanelDetailsForm = ({
   setIsInvoiceProviderDetailsHovered,
   setIsInvoiceProviderFocused,
   formId,
-  organizationName,
   sendInvoicesFrom,
   country,
 }: {
   formId: string;
   sendInvoicesFrom?: string;
-  organizationName?: string | null;
   country?: SelectOption<string> | null;
   setIsInvoiceProviderFocused: (newState: boolean) => void;
   setIsInvoiceProviderDetailsHovered: (newState: boolean) => void;
 }) => {
-  const currencyOptions = useMemo(() => getCurrencyOptions(), []);
-
   return (
     <CardBody as={Flex} flexDir='column' px='6' w='full' gap={4}>
       <LogoUploader />
@@ -62,7 +58,7 @@ export const TenantBillingPanelDetailsForm = ({
         isLabelVisible
         name='baseCurrency'
         formId={formId}
-        options={currencyOptions ?? []}
+        options={currencyOptions}
       />
 
       <Flex
@@ -210,7 +206,7 @@ export const TenantBillingPanelDetailsForm = ({
           type='email'
         />
       </Flex>
-      <PaymentMethods formId={formId} organizationName={organizationName} />
+      <PaymentMethods formId={formId} />
       <FormSwitch
         size='sm'
         name='check'

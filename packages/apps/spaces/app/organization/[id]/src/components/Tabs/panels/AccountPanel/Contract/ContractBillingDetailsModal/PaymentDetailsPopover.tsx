@@ -6,7 +6,6 @@ import { Text } from '@ui/typography/Text';
 import {
   Popover,
   PopoverBody,
-  PopoverArrow,
   PopoverContent,
   PopoverTrigger,
 } from '@ui/overlay/Popover';
@@ -23,7 +22,7 @@ export const PaymentDetailsPopover: FC<PaymentDetailsPopoverProps> = ({
   children,
 }) => {
   return (
-    <Popover placement='bottom-end' trigger='hover'>
+    <Popover placement='bottom' trigger='hover'>
       <PopoverTrigger>{children}</PopoverTrigger>
       <PopoverContent
         width='fit-content'
@@ -35,8 +34,6 @@ export const PaymentDetailsPopover: FC<PaymentDetailsPopoverProps> = ({
         border='none'
         display={content ? 'block' : 'none'}
       >
-        <PopoverArrow bg='gray.700' />
-
         <PopoverBody display='flex'>
           <Text mr={2}>{content}</Text>
 

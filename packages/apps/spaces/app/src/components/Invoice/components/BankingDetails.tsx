@@ -41,7 +41,7 @@ export const BankingDetails: FC<InvoiceHeaderProps> = ({
   }, [currency, availableBankAccount]);
 
   const accountNumberLabel =
-    currency === Currency.Eur ? 'Iban' : 'Account number';
+    currency === Currency.Eur ? 'IBAN' : 'Account number';
   const accountNumberValue =
     currency === Currency.Eur
       ? availableBankAccount?.iban

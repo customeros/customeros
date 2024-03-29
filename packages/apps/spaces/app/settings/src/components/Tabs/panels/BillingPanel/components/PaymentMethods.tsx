@@ -18,13 +18,7 @@ import { ExternalSystemType } from '@graphql/types';
 import { toastError } from '@ui/presentation/Toast';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 
-export const PaymentMethods = ({
-  formId,
-  organizationName,
-}: {
-  formId: string;
-  organizationName?: string | null;
-}) => {
+export const PaymentMethods = ({ formId }: { formId: string }) => {
   const client = getGraphQLClient();
   const { data } = useGetExternalSystemInstancesQuery(client);
   const iApp = useIntegrationApp();
@@ -44,7 +38,7 @@ export const PaymentMethods = ({
           autoCreate: false,
         })
         .run({
-          input: '<input data>',
+          nodeKey: 'manual-sync-payment-methods',
         });
     } catch (err) {
       toastError('Integration failed', 'get-intergration-data');
@@ -100,10 +94,7 @@ export const PaymentMethods = ({
         )}
       </Box>
 
-      <BankTransferAccountList
-        formId={formId}
-        organizationName={organizationName}
-      />
+      <BankTransferAccountList formId={formId} />
     </>
   );
 };

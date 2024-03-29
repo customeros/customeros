@@ -1,24 +1,26 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React from 'react';
 import { useField } from 'react-inverted-form';
 
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { Select } from '@ui/form/SyncSelect';
+import { currencyOptions } from '@shared/util/currencyOptions';
 
-import { currencyIcon, mapCurrencyToOptions } from './utils';
+import { currencyIcon } from './utils';
 
 export const BankTransferCurrencySelect = ({
   formId,
   currency,
+  existingCurrencies,
 }: {
   formId: string;
   currency?: string | null;
+  existingCurrencies: Array<string>;
 }) => {
   const { getInputProps } = useField('currency', formId);
   const { id, onChange } = getInputProps();
-  const currencyOptions = useMemo(() => mapCurrencyToOptions(), []);
 
   return (
     <Select
@@ -29,22 +31,11 @@ export const BankTransferCurrencySelect = ({
       onChange={(e) => {
         onChange(e);
       }}
-      options={[
-        {
-          options: [
-            { label: 'USD', value: 'USD' },
-            { label: 'GBP', value: 'GBP' },
-            { label: 'EUR', value: 'EUR' },
-          ],
-        },
-
-        ...currencyOptions,
-      ]}
+      options={currencyOptions}
       formatOptionLabel={(option, { context }) => {
         return (
           <Flex alignItems='center'>
             <Flex
-              w={context === 'value' ? 'auto' : 7}
               justifyContent={context === 'value' ? 'center' : 'flex-end'}
               alignItems='center'
               minW={context === 'value' ? '14px' : 'auto'}
@@ -58,6 +49,9 @@ export const BankTransferCurrencySelect = ({
           </Flex>
         );
       }}
+      isOptionDisabled={(option) =>
+        existingCurrencies?.indexOf(option.value) > -1
+      }
       defaultValue={{ label: currency, value: currency }}
       chakraStyles={{
         container: (props, state) => {
