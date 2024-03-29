@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"time"
 
@@ -33,9 +34,14 @@ func (repo *eventBufferRepository) GetByExpired(now time.Time) ([]entity.EventBu
 }
 
 func (repo *eventBufferRepository) GetByUUID(uuid string) (*entity.EventBuffer, error) {
-	var eventBuffer *entity.EventBuffer
-	err := repo.gormDb.Where("uuid = ?", uuid).Find(&eventBuffer).Error
-	return eventBuffer, err
+	var eventBuffer entity.EventBuffer
+	err := repo.gormDb.Where("uuid = ?", uuid).First(&eventBuffer).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+
+	return &eventBuffer, err
 }
 
 func (repo *eventBufferRepository) Delete(eventBuffer *entity.EventBuffer) error {

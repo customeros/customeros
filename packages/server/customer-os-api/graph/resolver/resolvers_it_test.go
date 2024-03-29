@@ -161,7 +161,7 @@ func assertRawResponseError(t *testing.T, response *client.Response, err error) 
 	if response.Errors != nil {
 		log.Println(fmt.Sprintf("Error in response: %v", string(response.Errors)))
 	}
-	require.Nil(t, response.Data)
+	require.NotNil(t, response.Data)
 	require.NotNil(t, response.Errors)
 }
 

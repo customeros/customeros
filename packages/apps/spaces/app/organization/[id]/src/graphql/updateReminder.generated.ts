@@ -24,38 +24,12 @@ export type UpdateReminderMutationVariables = Types.Exact<{
 
 export type UpdateReminderMutation = {
   __typename?: 'Mutation';
-  reminder_Update: {
-    __typename?: 'Reminder';
-    content?: string | null;
-    dueDate?: any | null;
-    dismissed?: boolean | null;
-    metadata: { __typename?: 'Metadata'; id: string };
-    owner?: {
-      __typename?: 'User';
-      id: string;
-      firstName: string;
-      lastName: string;
-      name?: string | null;
-    } | null;
-  };
+  reminder_Update?: string | null;
 };
 
 export const UpdateReminderDocument = `
     mutation updateReminder($input: ReminderUpdateInput!) {
-  reminder_Update(input: $input) {
-    metadata {
-      id
-    }
-    content
-    owner {
-      id
-      firstName
-      lastName
-      name
-    }
-    dueDate
-    dismissed
-  }
+  reminder_Update(input: $input)
 }
     `;
 

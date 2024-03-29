@@ -3,8 +3,8 @@ extend type Query {
 }
 
 extend type Mutation {
-    offering_Create(input: OfferingCreateInput): Offering! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    offering_Update(input: OfferingUpdateInput): Offering! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    offering_Create(input: OfferingCreateInput): ID @hasRole(roles: [ADMIN, USER]) @hasTenant
+    offering_Update(input: OfferingUpdateInput): ID @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type Offering implements MetadataInterface {

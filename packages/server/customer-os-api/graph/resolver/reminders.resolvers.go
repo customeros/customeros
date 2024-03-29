@@ -12,11 +12,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 )
 
 // ReminderCreate is the resolver for the reminder_Create field.
-func (r *mutationResolver) ReminderCreate(ctx context.Context, input model.ReminderInput) (*model.Reminder, error) {
+func (r *mutationResolver) ReminderCreate(ctx context.Context, input model.ReminderInput) (*string, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.CreateReminder", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
@@ -29,11 +28,11 @@ func (r *mutationResolver) ReminderCreate(ctx context.Context, input model.Remin
 		return nil, nil
 	}
 
-	return mapper.MapEntityToReminder(&neo4jentity.ReminderEntity{Id: id}), nil
+	return &id, nil
 }
 
 // ReminderUpdate is the resolver for the reminder_Update field.
-func (r *mutationResolver) ReminderUpdate(ctx context.Context, input model.ReminderUpdateInput) (*model.Reminder, error) {
+func (r *mutationResolver) ReminderUpdate(ctx context.Context, input model.ReminderUpdateInput) (*string, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.UpdateReminder", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
@@ -46,7 +45,7 @@ func (r *mutationResolver) ReminderUpdate(ctx context.Context, input model.Remin
 		return nil, nil
 	}
 
-	return mapper.MapEntityToReminder(&neo4jentity.ReminderEntity{Id: input.ID}), nil
+	return &input.ID, nil
 }
 
 // Reminder is the resolver for the reminder field.

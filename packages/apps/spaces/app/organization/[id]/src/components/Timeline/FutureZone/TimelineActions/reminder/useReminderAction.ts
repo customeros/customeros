@@ -65,8 +65,7 @@ export const useReminderAction = () => {
 
       setTimelineMeta((prev) =>
         produce(prev, (draft) => {
-          draft.reminders.recentlyCreatedId =
-            data?.reminder_Create?.metadata?.id ?? '';
+          draft.reminders.recentlyCreatedId = data?.reminder_Create ?? '';
           draft.reminders.recentlyUpdatedId = '';
         }),
       );

@@ -5,16 +5,5 @@ reminder_Update(
       content: $content
       dueDate: $dueDate
       dismissed: $dismissed
-    })  {
-        metadata {
-            id
-        }
-        content
-        dueDate
-        dismissed
-        owner {
-            id
-            firstName
-        }
-  }
+    })
 }

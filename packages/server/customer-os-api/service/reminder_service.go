@@ -86,26 +86,6 @@ func (s *reminderService) UpdateReminder(ctx context.Context, id string, content
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagEntityId, id)
 
-	existingReminder, err := s.GetReminderById(ctx, id)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("error on checking if reminder reminderExists: %s", err.Error())
-		return err
-	}
-	if existingReminder == nil {
-		err := fmt.Errorf("(ReminderService.UpdateReminder) reminder with id {%s} not found", id)
-		s.log.Error(err.Error())
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	if existingReminder.DueDate.Before(time.Now().UTC()) {
-		err := fmt.Errorf("(ReminderService.UpdateReminder) reminder with id {%s} is already expired", id)
-		s.log.Error(err.Error())
-		tracing.TraceErr(span, err)
-		return err
-	}
-
 	if content == nil && dueDate == nil && dismissed == nil {
 		return nil
 	}
@@ -137,7 +117,7 @@ func (s *reminderService) UpdateReminder(ctx context.Context, id string, content
 	grpcRequest.FieldsMask = fieldsMask
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = CallEventsPlatformGRPCWithRetry[*reminderpb.ReminderGrpcResponse](func() (*reminderpb.ReminderGrpcResponse, error) {
+	_, err := CallEventsPlatformGRPCWithRetry[*reminderpb.ReminderGrpcResponse](func() (*reminderpb.ReminderGrpcResponse, error) {
 		return s.grpcClients.ReminderClient.UpdateReminder(ctx, grpcRequest)
 	})
 	if err != nil {

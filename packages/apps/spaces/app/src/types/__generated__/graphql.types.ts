@@ -2227,8 +2227,8 @@ export type Mutation = {
   phoneNumberUpdateInOrganization: PhoneNumber;
   phoneNumberUpdateInUser: PhoneNumber;
   player_Merge: Result;
-  reminder_Create: Reminder;
-  reminder_Update: Reminder;
+  reminder_Create?: Maybe<Scalars['ID']['output']>;
+  reminder_Update?: Maybe<Scalars['ID']['output']>;
   serviceLineItem_BulkUpdate: Array<Scalars['ID']['output']>;
   serviceLineItem_Delete: DeleteResponse;
   social_Remove: Result;

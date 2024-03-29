@@ -5,14 +5,5 @@ reminder_Create(
       dueDate: $dueDate
       organizationId: $organizationId
       userId: $userId
-    })  {
-        metadata {
-            id
-        }
-        content
-        owner {
-            id
-            firstName
-        }
-  }
+    })
 }

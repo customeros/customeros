@@ -8,6 +8,7 @@ import (
 
 type MockOfferingServiceCallbacks struct {
 	CreateOffering func(context.Context, *offeringpb.CreateOfferingGrpcRequest) (*commonpb.IdResponse, error)
+	UpdateOffering func(context.Context, *offeringpb.UpdateOfferingGrpcRequest) (*commonpb.IdResponse, error)
 }
 
 var offeringCallbacks = &MockOfferingServiceCallbacks{}
@@ -25,4 +26,11 @@ func (MockOfferingService) CreateOffering(context context.Context, proto *offeri
 		panic("offeringCallbacks.CreateOffering is not set")
 	}
 	return offeringCallbacks.CreateOffering(context, proto)
+}
+
+func (MockOfferingService) UpdateOffering(context context.Context, proto *offeringpb.UpdateOfferingGrpcRequest) (*commonpb.IdResponse, error) {
+	if offeringCallbacks.UpdateOffering == nil {
+		panic("offeringCallbacks.UpdateOffering is not set")
+	}
+	return offeringCallbacks.UpdateOffering(context, proto)
 }

@@ -2,6 +2,7 @@ package resolver
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/google/uuid"
@@ -90,10 +91,6 @@ func TestMutationResolver_ReminderCreate(t *testing.T) {
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "TEST ORG"})
 	userId := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{FirstName: "TEST", LastName: "USER"})
 
-	neo4jtest.CreateReminder(ctx, driver, tenantName, userId, organizationId, utils.Now(), neo4jentity.ReminderEntity{
-		Id: reminderId,
-	})
-
 	calledCreateReminder := false
 	reminderServiceCallbacks := events_platform.MockReminderServiceCallbacks{
 		ReminderCreate: func(context context.Context, request *reminderpb.CreateReminderGrpcRequest) (*reminderpb.ReminderGrpcResponse, error) {
@@ -121,33 +118,23 @@ func TestMutationResolver_ReminderCreate(t *testing.T) {
 	})
 
 	var reminderStruct struct {
-		Reminder_Create model.Reminder
+		Reminder_Create *string
 	}
 	err := decode.Decode(rawResponse.Data.(map[string]any), &reminderStruct)
 	require.Nil(t, err)
 	require.True(t, calledCreateReminder)
 	require.NotNil(t, reminderStruct.Reminder_Create)
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Reminder"))
-	require.Equal(t, reminderId, reminderStruct.Reminder_Create.Metadata.ID)
+	require.Equal(t, reminderId, *reminderStruct.Reminder_Create)
 }
 
 func TestMutationResolver_ReminderUpdate(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
-	now := utils.Now()
 	dueDate := utils.Now()
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "TEST ORG"})
-	userId := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{FirstName: "TEST", LastName: "USER"})
-	reminderId := neo4jtest.CreateReminder(ctx, driver, tenantName, userId, organizationId, now, neo4jentity.ReminderEntity{
-		Content:   "TEST CONTENT",
-		DueDate:   now.AddDate(0, 0, 1),
-		Dismissed: false,
-	})
-
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Reminder"))
+	reminderId := uuid.New().String()
 
 	calledUpdateReminder := false
 	reminderServiceCallbacks := events_platform.MockReminderServiceCallbacks{
@@ -176,38 +163,39 @@ func TestMutationResolver_ReminderUpdate(t *testing.T) {
 	})
 
 	var reminderStruct struct {
-		Reminder_Update model.Reminder
+		Reminder_Update *string
 	}
 	err := decode.Decode(rawResponse.Data.(map[string]any), &reminderStruct)
 	require.Nil(t, err)
 	require.NotNil(t, reminderStruct.Reminder_Update)
 	require.True(t, calledUpdateReminder)
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Reminder"))
+	require.Equal(t, reminderId, *reminderStruct.Reminder_Update)
 }
 
-func TestMutationResolver_ExpiredReminderUpdate(t *testing.T) {
+func TestMutationResolver_ReminderUpdate_MissingAggregate(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	now := utils.Now()
-	dueDate := utils.Now().AddDate(0, 0, -1)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "TEST ORG"})
-	userId := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{FirstName: "TEST", LastName: "USER"})
-	reminderId := neo4jtest.CreateReminder(ctx, driver, tenantName, userId, organizationId, now, neo4jentity.ReminderEntity{
-		Content:   "TEST CONTENT",
-		DueDate:   dueDate,
-		Dismissed: false,
-	})
+	reminderId := uuid.New().String()
 
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Reminder"))
+	reminderServiceCallbacks := events_platform.MockReminderServiceCallbacks{
+		ReminderUpdate: func(context context.Context, request *reminderpb.UpdateReminderGrpcRequest) (*reminderpb.ReminderGrpcResponse, error) {
+
+			return nil, errors.New("reminder not found")
+		},
+	}
+	events_platform.SetReminderCallbacks(&reminderServiceCallbacks)
 
 	response := callGraphQLExpectError(t, "reminder/update_reminder", map[string]interface{}{
-		"id":      reminderId,
-		"content": "UPDATED CONTENT",
-		"dueDate": now,
+		"id":        reminderId,
+		"content":   "UPDATED CONTENT",
+		"dueDate":   now,
+		"dismissed": true,
 	})
 
+	require.NotNil(t, response.Message)
 	require.Contains(t, response.Message, "Failed to update reminder")
 }

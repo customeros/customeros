@@ -2,6 +2,7 @@ package servicet
 
 import (
 	"context"
+	"github.com/google/uuid"
 	"testing"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -126,4 +127,33 @@ func TestReminderService_UpdateReminder(t *testing.T) {
 
 	require.Equal(t, tenant, eventData.Tenant)
 	require.Equal(t, "Updated Reminder", eventData.Content)
+}
+
+func TestReminderService_UpdateReminder_MissingAggregate(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	tenant := "ziggy"
+
+	aggregateStore := eventstoret.NewTestAggregateStore()
+	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
+	require.Nil(t, err, "Failed to get grpc connection")
+
+	reminderClient := reminderpb.NewReminderGrpcServiceClient(grpcConnection)
+
+	reminderId := uuid.New().String()
+
+	updateResponse, err := reminderClient.UpdateReminder(ctx, &reminderpb.UpdateReminderGrpcRequest{
+		Tenant:         tenant,
+		ReminderId:     reminderId,
+		Content:        "Updated Reminder",
+		AppSource:      "app",
+		LoggedInUserId: "user",
+		FieldsMask: []reminderpb.ReminderFieldMask{
+			reminderpb.ReminderFieldMask_REMINDER_PROPERTY_CONTENT,
+		},
+	})
+	require.Nil(t, updateResponse)
+	require.NotNil(t, err)
+	require.Equal(t, "rpc error: code = NotFound desc = aggregate not found", err.Error())
 }

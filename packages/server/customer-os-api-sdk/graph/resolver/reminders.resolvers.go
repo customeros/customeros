@@ -13,12 +13,12 @@ import (
 )
 
 // ReminderCreate is the resolver for the reminder_Create field.
-func (r *mutationResolver) ReminderCreate(ctx context.Context, input model.ReminderInput) (*model.Reminder, error) {
+func (r *mutationResolver) ReminderCreate(ctx context.Context, input model.ReminderInput) (*string, error) {
 	panic(fmt.Errorf("not implemented: CreateReminder - reminder_Create"))
 }
 
 // ReminderUpdate is the resolver for the reminder_Update field.
-func (r *mutationResolver) ReminderUpdate(ctx context.Context, input model.ReminderUpdateInput) (*model.Reminder, error) {
+func (r *mutationResolver) ReminderUpdate(ctx context.Context, input model.ReminderUpdateInput) (*string, error) {
 	panic(fmt.Errorf("not implemented: UpdateReminder - reminder_Update"))
 }
 
