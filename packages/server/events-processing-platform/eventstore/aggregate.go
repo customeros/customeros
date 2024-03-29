@@ -12,11 +12,22 @@ const (
 )
 
 type LoadAggregateOptions struct {
+	Required       bool
 	SkipLoadEvents bool
 }
 
 func NewLoadAggregateOptions() *LoadAggregateOptions {
-	return &LoadAggregateOptions{}
+	return &LoadAggregateOptions{
+		Required:       false,
+		SkipLoadEvents: false,
+	}
+}
+
+func NewLoadAggregateOptionsWithRequired() *LoadAggregateOptions {
+	return &LoadAggregateOptions{
+		Required:       true,
+		SkipLoadEvents: false,
+	}
 }
 
 func (o *LoadAggregateOptions) WithSkipLoadEvents() *LoadAggregateOptions {
