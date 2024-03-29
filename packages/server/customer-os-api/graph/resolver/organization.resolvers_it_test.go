@@ -1147,9 +1147,9 @@ func TestQueryResolver_Organization_WithContracts(t *testing.T) {
 
 	now := utils.Now()
 	yesterday := now.Add(time.Duration(-24) * time.Hour)
-	hoursAgo1 := now.Add(time.Duration(-1) * time.Hour)
-	hoursAgo2 := now.Add(time.Duration(-2) * time.Hour)
-	hoursAgo3 := now.Add(time.Duration(-3) * time.Hour)
+	daysAgo1 := now.Add(time.Duration(-24) * time.Hour)
+	daysAgo2 := now.Add(time.Duration(-48) * time.Hour)
+	daysAgo3 := now.Add(time.Duration(-72) * time.Hour)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "org name"})
@@ -1158,9 +1158,9 @@ func TestQueryResolver_Organization_WithContracts(t *testing.T) {
 		Name:                  "contract 1",
 		CreatedAt:             now,
 		UpdatedAt:             now,
-		ServiceStartedAt:      &hoursAgo3,
-		SignedAt:              &hoursAgo2,
-		EndedAt:               &hoursAgo1,
+		ServiceStartedAt:      &daysAgo3,
+		SignedAt:              &daysAgo2,
+		EndedAt:               &daysAgo1,
 		RenewalCycle:          neo4jenum.RenewalCycleMonthlyRenewal,
 		ContractStatus:        neo4jenum.ContractStatusDraft,
 		ContractUrl:           "url1",
@@ -1177,9 +1177,9 @@ func TestQueryResolver_Organization_WithContracts(t *testing.T) {
 		Name:                  "contract 2",
 		CreatedAt:             yesterday,
 		UpdatedAt:             yesterday,
-		ServiceStartedAt:      &hoursAgo1,
-		SignedAt:              &hoursAgo3,
-		EndedAt:               &hoursAgo2,
+		ServiceStartedAt:      &daysAgo1,
+		SignedAt:              &daysAgo3,
+		EndedAt:               &daysAgo2,
 		RenewalCycle:          neo4jenum.RenewalCycleAnnualRenewal,
 		ContractStatus:        neo4jenum.ContractStatusLive,
 		ContractUrl:           "url2",
@@ -1222,9 +1222,9 @@ func TestQueryResolver_Organization_WithContracts(t *testing.T) {
 	require.Equal(t, "contract 1", firstContract.Name)
 	require.Equal(t, now, firstContract.CreatedAt)
 	require.Equal(t, now, firstContract.UpdatedAt)
-	require.Equal(t, hoursAgo3, *firstContract.ServiceStartedAt)
-	require.Equal(t, hoursAgo2, *firstContract.SignedAt)
-	require.Equal(t, hoursAgo1, *firstContract.EndedAt)
+	require.Equal(t, utils.ToDate(daysAgo3), *firstContract.ServiceStartedAt)
+	require.Equal(t, utils.ToDate(daysAgo2), *firstContract.SignedAt)
+	require.Equal(t, utils.ToDate(daysAgo1), *firstContract.EndedAt)
 	require.Equal(t, model.ContractRenewalCycleMonthlyRenewal, firstContract.RenewalCycle)
 	require.Equal(t, model.ContractStatusDraft, firstContract.Status)
 	require.Equal(t, "url1", *firstContract.ContractURL)
@@ -1242,9 +1242,9 @@ func TestQueryResolver_Organization_WithContracts(t *testing.T) {
 	require.Equal(t, "contract 2", secondContract.Name)
 	require.Equal(t, yesterday, secondContract.CreatedAt)
 	require.Equal(t, yesterday, secondContract.UpdatedAt)
-	require.Equal(t, hoursAgo1, *secondContract.ServiceStartedAt)
-	require.Equal(t, hoursAgo3, *secondContract.SignedAt)
-	require.Equal(t, hoursAgo2, *secondContract.EndedAt)
+	require.Equal(t, utils.ToDate(daysAgo1), *secondContract.ServiceStartedAt)
+	require.Equal(t, utils.ToDate(daysAgo3), *secondContract.SignedAt)
+	require.Equal(t, utils.ToDate(daysAgo2), *secondContract.EndedAt)
 	require.Equal(t, model.ContractRenewalCycleAnnualRenewal, secondContract.RenewalCycle)
 	require.Equal(t, model.ContractStatusLive, secondContract.Status)
 	require.Equal(t, "url2", *secondContract.ContractURL)
