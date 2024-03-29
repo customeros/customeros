@@ -250,8 +250,8 @@ func TestContractEventHandler_OnUpdate_FrequencySet(t *testing.T) {
 	require.Equal(t, neo4jenum.RenewalCycleMonthlyRenewal, contract.RenewalCycle)
 	test.AssertRecentTime(t, contract.UpdatedAt)
 	require.True(t, utils.ToDate(yesterday).Equal(*contract.ServiceStartedAt))
-	require.True(t, daysAgo2.Equal(*contract.SignedAt))
-	require.True(t, tomorrow.Equal(*contract.EndedAt))
+	require.Equal(t, utils.ToDate(daysAgo2), *contract.SignedAt)
+	require.Equal(t, utils.ToDate(tomorrow), *contract.EndedAt)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), contract.SourceOfTruth)
 
 	// Verify call to events platform
@@ -689,8 +689,8 @@ func TestContractEventHandler_OnUpdate_EndDateSet(t *testing.T) {
 	require.Equal(t, neo4jenum.RenewalCycleMonthlyRenewal, contract.RenewalCycle)
 	test.AssertRecentTime(t, contract.UpdatedAt)
 	require.True(t, utils.ToDate(yesterday).Equal(*contract.ServiceStartedAt))
-	require.True(t, daysAgo2.Equal(*contract.SignedAt))
-	require.True(t, tomorrow.Equal(*contract.EndedAt))
+	require.Equal(t, utils.ToDate(daysAgo2), *contract.SignedAt)
+	require.Equal(t, utils.ToDate(tomorrow), *contract.EndedAt)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), contract.SourceOfTruth)
 
 	// Verify event platform was called
@@ -763,9 +763,9 @@ func TestContractEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOpen
 	require.Equal(t, neo4jenum.ContractStatusEnded, contract.ContractStatus)
 	require.Equal(t, neo4jenum.RenewalCycleAnnualRenewal, contract.RenewalCycle)
 	test.AssertRecentTime(t, contract.UpdatedAt)
-	require.True(t, now.Equal(*contract.ServiceStartedAt))
-	require.True(t, now.Equal(*contract.SignedAt))
-	require.True(t, now.Equal(*contract.EndedAt))
+	require.Equal(t, utils.ToDate(now), *contract.ServiceStartedAt)
+	require.Equal(t, utils.ToDate(now), *contract.SignedAt)
+	require.Equal(t, utils.ToDate(now), *contract.EndedAt)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), contract.SourceOfTruth)
 }
 
