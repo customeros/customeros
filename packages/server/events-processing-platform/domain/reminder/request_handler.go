@@ -57,7 +57,9 @@ func (h *reminderRequestHandler) Handle(ctx context.Context, tenant, objectId st
 		return nil, err
 	}
 
-	if err := h.parkReminderNotification(ctx, reminderAggregate, reminderAggregate.GetID(), request); err != nil {
+	req := request.(*reminderpb.CreateReminderGrpcRequest)
+
+	if err := h.createAndParkReminderNotification(ctx, reminderAggregate, req.LoggedInUserId, req.OrganizationId, reminderAggregate.GetID(), req.SourceFields.AppSource, req.Content, req.DueDate.AsTime().UTC()); err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
@@ -138,17 +140,16 @@ func (h *reminderRequestHandler) HandleWithRetry(ctx context.Context, tenant, ob
 	return nil, err
 }
 
-func (h *reminderRequestHandler) parkReminderNotification(ctx context.Context, agg *ReminderAggregate, reminderId string, request any) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderRequestHandler.parkReminderNotification")
+func (h *reminderRequestHandler) createAndParkReminderNotification(ctx context.Context, agg *ReminderAggregate, userId, organizationId, reminderId, appSource, content string, createdAt time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderRequestHandler.createAndParkReminderNotification")
 	defer span.Finish()
 
-	createReq, ok := request.(*reminderpb.CreateReminderGrpcRequest)
-	if !ok {
+	if agg.Reminder.DueDate.Before(utils.Now()) {
 		return nil
 	}
 
 	// create notification event and Park it in the event buffer for notifications
-	event, err := createNotificationEvent(ctx, agg, createReq.LoggedInUserId, createReq.OrganizationId, createReq.SourceFields.AppSource, createReq.Content, createReq.CreatedAt.AsTime().UTC())
+	event, err := createNotificationEvent(ctx, agg, userId, organizationId, appSource, content, createdAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -173,13 +174,23 @@ func (h *reminderRequestHandler) updateParkedReminderNotification(ctx context.Co
 		return nil
 	}
 
+	if agg.Reminder.DueDate.Before(utils.Now()) {
+		return nil
+	}
+
 	parkedReminder, err := h.ebs.GetById(reminderId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
+	//if reminder is missing, we recreate it
 	if parkedReminder == nil {
-		return errors.New("parked reminder not found")
+		err := h.createAndParkReminderNotification(ctx, agg, req.LoggedInUserId, agg.Reminder.OrganizationID, reminderId, req.AppSource, req.Content, agg.Reminder.CreatedAt)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+		return nil
 	}
 
 	var parkedReminderEventData ReminderNotificationEvent

@@ -50,7 +50,7 @@ func (s *reminderService) UpdateReminder(ctx context.Context, request *reminderp
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.ReminderId)
 	tracing.LogObjectAsJson(span, "request", request)
 
-	_, err := s.requestHandler.HandleWithRetry(ctx, request.Tenant, request.ReminderId, false, request)
+	_, err := s.requestHandler.HandleWithRetry(ctx, request.Tenant, request.ReminderId, true, request)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(UpdateReminder.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())

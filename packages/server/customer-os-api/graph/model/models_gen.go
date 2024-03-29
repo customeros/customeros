@@ -2192,11 +2192,16 @@ type OrganizationUpdateInput struct {
 	Headquarters       *string       `json:"headquarters,omitempty"`
 	YearFounded        *int64        `json:"yearFounded,omitempty"`
 	SlackChannelID     *string       `json:"slackChannelId,omitempty"`
-	IsPublic           *bool         `json:"isPublic,omitempty"`
-	LogoURL            *string       `json:"logoUrl,omitempty"`
-	Domains            []string      `json:"domains,omitempty"`
-	Note               *string       `json:"note,omitempty"`
-	ReferenceID        *string       `json:"referenceId,omitempty"`
+	// Deprecated, use public instead
+	IsPublic *bool `json:"isPublic,omitempty"`
+	// Deprecated, use logo instead
+	LogoURL *string `json:"logoUrl,omitempty"`
+	// Deprecated
+	Domains []string `json:"domains,omitempty"`
+	// Deprecatedm, use notes instead
+	Note *string `json:"note,omitempty"`
+	// Deprecated, use customId instead
+	ReferenceID *string `json:"referenceId,omitempty"`
 }
 
 type PageView struct {

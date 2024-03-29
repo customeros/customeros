@@ -1,6 +1,6 @@
 extend type Mutation {
-    reminder_Create(input: ReminderInput!): Reminder!  @hasRole(roles: [ADMIN, USER]) @hasTenant
-    reminder_Update(input: ReminderUpdateInput!): Reminder!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+    reminder_Create(input: ReminderInput!): ID  @hasRole(roles: [ADMIN, USER]) @hasTenant
+    reminder_Update(input: ReminderUpdateInput!): ID  @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Query {

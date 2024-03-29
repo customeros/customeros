@@ -1895,8 +1895,8 @@ type MutationResolver interface {
 	PhoneNumberRemoveFromUserByE164(ctx context.Context, userID string, e164 string) (*model.Result, error)
 	PhoneNumberRemoveFromUserByID(ctx context.Context, userID string, id string) (*model.Result, error)
 	PlayerMerge(ctx context.Context, userID string, input model.PlayerInput) (*model.Result, error)
-	ReminderCreate(ctx context.Context, input model.ReminderInput) (*model.Reminder, error)
-	ReminderUpdate(ctx context.Context, input model.ReminderUpdateInput) (*model.Reminder, error)
+	ReminderCreate(ctx context.Context, input model.ReminderInput) (*string, error)
+	ReminderUpdate(ctx context.Context, input model.ReminderUpdateInput) (*string, error)
 	ContractLineItemCreate(ctx context.Context, input model.ServiceLineItemInput) (*model.ServiceLineItem, error)
 	ContractLineItemUpdate(ctx context.Context, input model.ServiceLineItemUpdateInput) (*model.ServiceLineItem, error)
 	ContractLineItemClose(ctx context.Context, input model.ServiceLineItemCloseInput) (string, error)
@@ -12759,14 +12759,14 @@ enum CustomFieldTemplateType {
     dashboardView_Renewals(pagination: Pagination!, where: Filter, sort: SortBy): RenewalsPage
 
     dashboard_CustomerMap: [DashboardCustomerMap!]
-    dashboard_MRRPerCustomer(period: DashboardPeriodInput): DashboardMRRPerCustomer!
-    dashboard_GrossRevenueRetention(period: DashboardPeriodInput): DashboardGrossRevenueRetention!
-    dashboard_ARRBreakdown(period: DashboardPeriodInput): DashboardARRBreakdown!
-    dashboard_RevenueAtRisk(period: DashboardPeriodInput): DashboardRevenueAtRisk!
-    dashboard_RetentionRate(period: DashboardPeriodInput): DashboardRetentionRate!
-    dashboard_NewCustomers(period: DashboardPeriodInput): DashboardNewCustomers!
-    dashboard_TimeToOnboard(period: DashboardPeriodInput): DashboardTimeToOnboard!
-    dashboard_OnboardingCompletion(period: DashboardPeriodInput): DashboardOnboardingCompletion!
+    dashboard_MRRPerCustomer(period: DashboardPeriodInput): DashboardMRRPerCustomer
+    dashboard_GrossRevenueRetention(period: DashboardPeriodInput): DashboardGrossRevenueRetention
+    dashboard_ARRBreakdown(period: DashboardPeriodInput): DashboardARRBreakdown
+    dashboard_RevenueAtRisk(period: DashboardPeriodInput): DashboardRevenueAtRisk
+    dashboard_RetentionRate(period: DashboardPeriodInput): DashboardRetentionRate
+    dashboard_NewCustomers(period: DashboardPeriodInput): DashboardNewCustomers
+    dashboard_TimeToOnboard(period: DashboardPeriodInput): DashboardTimeToOnboard
+    dashboard_OnboardingCompletion(period: DashboardPeriodInput): DashboardOnboardingCompletion
 }
 
 input DashboardPeriodInput {
@@ -14188,8 +14188,8 @@ input OpportunityUpdateInput {
 	{Name: "../../../customer-os-api/graph/schemas/organization.graphqls", Input: `extend type Query {
     organizations(pagination: Pagination, where: Filter, sort: [SortBy!]): OrganizationPage! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization(id: ID!): Organization @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organization_ByCustomerOsId(customerOsId: String!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organization_ByCustomId(customId: String!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_ByCustomerOsId(customerOsId: String!): Organization @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_ByCustomId(customId: String!): Organization @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_DistinctOwners: [User!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
@@ -14379,10 +14379,25 @@ input OrganizationUpdateInput {
     yearFounded:        Int64
     slackChannelId:     String
 
+    """
+    Deprecated, use public instead
+    """
     isPublic:           Boolean @deprecated(reason: "Use public")
+    """
+    Deprecated, use logo instead
+    """
     logoUrl:            String @deprecated(reason: "Use logo")
+    """
+    Deprecated
+    """
     domains:            [String!] @deprecated(reason: "to be implemented in separate mutation, add and remove by domain")
+    """
+    Deprecatedm, use notes instead
+    """
     note:               String @deprecated(reason: "Use notes")
+    """
+    Deprecated, use customId instead
+    """
     referenceId: String @deprecated(reason: "Use customId")
 }
 
@@ -14795,8 +14810,8 @@ extend type Mutation {
     entityTemplates(extends: EntityTemplateExtension) :[EntityTemplate!]!
 }`, BuiltIn: false},
 	{Name: "../../../customer-os-api/graph/schemas/reminders.graphqls", Input: `extend type Mutation {
-    reminder_Create(input: ReminderInput!): Reminder!  @hasRole(roles: [ADMIN, USER]) @hasTenant
-    reminder_Update(input: ReminderUpdateInput!): Reminder!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+    reminder_Create(input: ReminderInput!): ID  @hasRole(roles: [ADMIN, USER]) @hasTenant
+    reminder_Update(input: ReminderUpdateInput!): ID  @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Query {
@@ -63206,24 +63221,21 @@ func (ec *executionContext) _Mutation_reminder_Create(ctx context.Context, field
 		if tmp == nil {
 			return nil, nil
 		}
-		if data, ok := tmp.(*model.Reminder); ok {
+		if data, ok := tmp.(*string); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model.Reminder`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Reminder)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalNReminder2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐReminder(ctx, field.Selections, res)
+	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_reminder_Create(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -63233,19 +63245,7 @@ func (ec *executionContext) fieldContext_Mutation_reminder_Create(ctx context.Co
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "metadata":
-				return ec.fieldContext_Reminder_metadata(ctx, field)
-			case "content":
-				return ec.fieldContext_Reminder_content(ctx, field)
-			case "owner":
-				return ec.fieldContext_Reminder_owner(ctx, field)
-			case "dueDate":
-				return ec.fieldContext_Reminder_dueDate(ctx, field)
-			case "dismissed":
-				return ec.fieldContext_Reminder_dismissed(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Reminder", field.Name)
+			return nil, errors.New("field of type ID does not have child fields")
 		},
 	}
 	defer func() {
@@ -63303,24 +63303,21 @@ func (ec *executionContext) _Mutation_reminder_Update(ctx context.Context, field
 		if tmp == nil {
 			return nil, nil
 		}
-		if data, ok := tmp.(*model.Reminder); ok {
+		if data, ok := tmp.(*string); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model.Reminder`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Reminder)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalNReminder2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐReminder(ctx, field.Selections, res)
+	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_reminder_Update(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -63330,19 +63327,7 @@ func (ec *executionContext) fieldContext_Mutation_reminder_Update(ctx context.Co
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "metadata":
-				return ec.fieldContext_Reminder_metadata(ctx, field)
-			case "content":
-				return ec.fieldContext_Reminder_content(ctx, field)
-			case "owner":
-				return ec.fieldContext_Reminder_owner(ctx, field)
-			case "dueDate":
-				return ec.fieldContext_Reminder_dueDate(ctx, field)
-			case "dismissed":
-				return ec.fieldContext_Reminder_dismissed(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Reminder", field.Name)
+			return nil, errors.New("field of type ID does not have child fields")
 		},
 	}
 	defer func() {
@@ -77747,14 +77732,11 @@ func (ec *executionContext) _Query_dashboard_MRRPerCustomer(ctx context.Context,
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.DashboardMRRPerCustomer)
 	fc.Result = res
-	return ec.marshalNDashboardMRRPerCustomer2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardMRRPerCustomer(ctx, field.Selections, res)
+	return ec.marshalODashboardMRRPerCustomer2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardMRRPerCustomer(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_dashboard_MRRPerCustomer(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -77810,14 +77792,11 @@ func (ec *executionContext) _Query_dashboard_GrossRevenueRetention(ctx context.C
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.DashboardGrossRevenueRetention)
 	fc.Result = res
-	return ec.marshalNDashboardGrossRevenueRetention2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardGrossRevenueRetention(ctx, field.Selections, res)
+	return ec.marshalODashboardGrossRevenueRetention2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardGrossRevenueRetention(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_dashboard_GrossRevenueRetention(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -77875,14 +77854,11 @@ func (ec *executionContext) _Query_dashboard_ARRBreakdown(ctx context.Context, f
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.DashboardARRBreakdown)
 	fc.Result = res
-	return ec.marshalNDashboardARRBreakdown2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardARRBreakdown(ctx, field.Selections, res)
+	return ec.marshalODashboardARRBreakdown2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardARRBreakdown(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_dashboard_ARRBreakdown(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -77938,14 +77914,11 @@ func (ec *executionContext) _Query_dashboard_RevenueAtRisk(ctx context.Context, 
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.DashboardRevenueAtRisk)
 	fc.Result = res
-	return ec.marshalNDashboardRevenueAtRisk2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardRevenueAtRisk(ctx, field.Selections, res)
+	return ec.marshalODashboardRevenueAtRisk2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardRevenueAtRisk(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_dashboard_RevenueAtRisk(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -77999,14 +77972,11 @@ func (ec *executionContext) _Query_dashboard_RetentionRate(ctx context.Context, 
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.DashboardRetentionRate)
 	fc.Result = res
-	return ec.marshalNDashboardRetentionRate2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardRetentionRate(ctx, field.Selections, res)
+	return ec.marshalODashboardRetentionRate2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardRetentionRate(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_dashboard_RetentionRate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -78064,14 +78034,11 @@ func (ec *executionContext) _Query_dashboard_NewCustomers(ctx context.Context, f
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.DashboardNewCustomers)
 	fc.Result = res
-	return ec.marshalNDashboardNewCustomers2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardNewCustomers(ctx, field.Selections, res)
+	return ec.marshalODashboardNewCustomers2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardNewCustomers(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_dashboard_NewCustomers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -78127,14 +78094,11 @@ func (ec *executionContext) _Query_dashboard_TimeToOnboard(ctx context.Context, 
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.DashboardTimeToOnboard)
 	fc.Result = res
-	return ec.marshalNDashboardTimeToOnboard2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardTimeToOnboard(ctx, field.Selections, res)
+	return ec.marshalODashboardTimeToOnboard2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardTimeToOnboard(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_dashboard_TimeToOnboard(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -78190,14 +78154,11 @@ func (ec *executionContext) _Query_dashboard_OnboardingCompletion(ctx context.Co
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.DashboardOnboardingCompletion)
 	fc.Result = res
-	return ec.marshalNDashboardOnboardingCompletion2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardOnboardingCompletion(ctx, field.Selections, res)
+	return ec.marshalODashboardOnboardingCompletion2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardOnboardingCompletion(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_dashboard_OnboardingCompletion(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -80279,14 +80240,11 @@ func (ec *executionContext) _Query_organization_ByCustomerOsId(ctx context.Conte
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.Organization)
 	fc.Result = res
-	return ec.marshalNOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐOrganization(ctx, field.Selections, res)
+	return ec.marshalOOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐOrganization(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_organization_ByCustomerOsId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -80492,14 +80450,11 @@ func (ec *executionContext) _Query_organization_ByCustomId(ctx context.Context, 
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.Organization)
 	fc.Result = res
-	return ec.marshalNOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐOrganization(ctx, field.Selections, res)
+	return ec.marshalOOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐOrganization(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_organization_ByCustomId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -107897,16 +107852,10 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_reminder_Create(ctx, field)
 			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "reminder_Update":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_reminder_Update(ctx, field)
 			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "contractLineItem_Create":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_contractLineItem_Create(ctx, field)
@@ -111181,9 +111130,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_dashboard_MRRPerCustomer(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
 				return res
 			}
 
@@ -111203,9 +111149,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_dashboard_GrossRevenueRetention(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
 				return res
 			}
 
@@ -111225,9 +111168,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_dashboard_ARRBreakdown(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
 				return res
 			}
 
@@ -111247,9 +111187,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_dashboard_RevenueAtRisk(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
 				return res
 			}
 
@@ -111269,9 +111206,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_dashboard_RetentionRate(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
 				return res
 			}
 
@@ -111291,9 +111225,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_dashboard_NewCustomers(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
 				return res
 			}
 
@@ -111313,9 +111244,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_dashboard_TimeToOnboard(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
 				return res
 			}
 
@@ -111335,9 +111263,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_dashboard_OnboardingCompletion(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
 				return res
 			}
 
@@ -111769,9 +111694,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_organization_ByCustomerOsId(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
 				return res
 			}
 
@@ -111791,9 +111713,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_organization_ByCustomId(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
 				return res
 			}
 
@@ -115256,20 +115175,6 @@ func (ec *executionContext) marshalNCustomerUser2ᚖgithubᚗcomᚋopenlineᚑai
 	return ec._CustomerUser(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNDashboardARRBreakdown2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardARRBreakdown(ctx context.Context, sel ast.SelectionSet, v model.DashboardARRBreakdown) graphql.Marshaler {
-	return ec._DashboardARRBreakdown(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNDashboardARRBreakdown2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardARRBreakdown(ctx context.Context, sel ast.SelectionSet, v *model.DashboardARRBreakdown) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._DashboardARRBreakdown(ctx, sel, v)
-}
-
 func (ec *executionContext) marshalNDashboardARRBreakdownPerMonth2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardARRBreakdownPerMonth(ctx context.Context, sel ast.SelectionSet, v []*model.DashboardARRBreakdownPerMonth) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -115328,20 +115233,6 @@ func (ec *executionContext) marshalNDashboardCustomerMapState2githubᚗcomᚋope
 	return v
 }
 
-func (ec *executionContext) marshalNDashboardGrossRevenueRetention2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardGrossRevenueRetention(ctx context.Context, sel ast.SelectionSet, v model.DashboardGrossRevenueRetention) graphql.Marshaler {
-	return ec._DashboardGrossRevenueRetention(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNDashboardGrossRevenueRetention2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardGrossRevenueRetention(ctx context.Context, sel ast.SelectionSet, v *model.DashboardGrossRevenueRetention) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._DashboardGrossRevenueRetention(ctx, sel, v)
-}
-
 func (ec *executionContext) marshalNDashboardGrossRevenueRetentionPerMonth2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardGrossRevenueRetentionPerMonth(ctx context.Context, sel ast.SelectionSet, v []*model.DashboardGrossRevenueRetentionPerMonth) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -115378,20 +115269,6 @@ func (ec *executionContext) marshalNDashboardGrossRevenueRetentionPerMonth2ᚕ�
 	wg.Wait()
 
 	return ret
-}
-
-func (ec *executionContext) marshalNDashboardMRRPerCustomer2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardMRRPerCustomer(ctx context.Context, sel ast.SelectionSet, v model.DashboardMRRPerCustomer) graphql.Marshaler {
-	return ec._DashboardMRRPerCustomer(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNDashboardMRRPerCustomer2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardMRRPerCustomer(ctx context.Context, sel ast.SelectionSet, v *model.DashboardMRRPerCustomer) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._DashboardMRRPerCustomer(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNDashboardMRRPerCustomerPerMonth2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardMRRPerCustomerPerMonth(ctx context.Context, sel ast.SelectionSet, v []*model.DashboardMRRPerCustomerPerMonth) graphql.Marshaler {
@@ -115432,20 +115309,6 @@ func (ec *executionContext) marshalNDashboardMRRPerCustomerPerMonth2ᚕᚖgithub
 	return ret
 }
 
-func (ec *executionContext) marshalNDashboardNewCustomers2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardNewCustomers(ctx context.Context, sel ast.SelectionSet, v model.DashboardNewCustomers) graphql.Marshaler {
-	return ec._DashboardNewCustomers(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNDashboardNewCustomers2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardNewCustomers(ctx context.Context, sel ast.SelectionSet, v *model.DashboardNewCustomers) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._DashboardNewCustomers(ctx, sel, v)
-}
-
 func (ec *executionContext) marshalNDashboardNewCustomersPerMonth2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardNewCustomersPerMonth(ctx context.Context, sel ast.SelectionSet, v []*model.DashboardNewCustomersPerMonth) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -115482,20 +115345,6 @@ func (ec *executionContext) marshalNDashboardNewCustomersPerMonth2ᚕᚖgithub�
 	wg.Wait()
 
 	return ret
-}
-
-func (ec *executionContext) marshalNDashboardOnboardingCompletion2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardOnboardingCompletion(ctx context.Context, sel ast.SelectionSet, v model.DashboardOnboardingCompletion) graphql.Marshaler {
-	return ec._DashboardOnboardingCompletion(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNDashboardOnboardingCompletion2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardOnboardingCompletion(ctx context.Context, sel ast.SelectionSet, v *model.DashboardOnboardingCompletion) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._DashboardOnboardingCompletion(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNDashboardOnboardingCompletionPerMonth2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardOnboardingCompletionPerMonthᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.DashboardOnboardingCompletionPerMonth) graphql.Marshaler {
@@ -115552,20 +115401,6 @@ func (ec *executionContext) marshalNDashboardOnboardingCompletionPerMonth2ᚖgit
 	return ec._DashboardOnboardingCompletionPerMonth(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNDashboardRetentionRate2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardRetentionRate(ctx context.Context, sel ast.SelectionSet, v model.DashboardRetentionRate) graphql.Marshaler {
-	return ec._DashboardRetentionRate(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNDashboardRetentionRate2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardRetentionRate(ctx context.Context, sel ast.SelectionSet, v *model.DashboardRetentionRate) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._DashboardRetentionRate(ctx, sel, v)
-}
-
 func (ec *executionContext) marshalNDashboardRetentionRatePerMonth2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardRetentionRatePerMonth(ctx context.Context, sel ast.SelectionSet, v []*model.DashboardRetentionRatePerMonth) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -115602,34 +115437,6 @@ func (ec *executionContext) marshalNDashboardRetentionRatePerMonth2ᚕᚖgithub�
 	wg.Wait()
 
 	return ret
-}
-
-func (ec *executionContext) marshalNDashboardRevenueAtRisk2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardRevenueAtRisk(ctx context.Context, sel ast.SelectionSet, v model.DashboardRevenueAtRisk) graphql.Marshaler {
-	return ec._DashboardRevenueAtRisk(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNDashboardRevenueAtRisk2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardRevenueAtRisk(ctx context.Context, sel ast.SelectionSet, v *model.DashboardRevenueAtRisk) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._DashboardRevenueAtRisk(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalNDashboardTimeToOnboard2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardTimeToOnboard(ctx context.Context, sel ast.SelectionSet, v model.DashboardTimeToOnboard) graphql.Marshaler {
-	return ec._DashboardTimeToOnboard(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNDashboardTimeToOnboard2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardTimeToOnboard(ctx context.Context, sel ast.SelectionSet, v *model.DashboardTimeToOnboard) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._DashboardTimeToOnboard(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNDashboardTimeToOnboardPerMonth2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardTimeToOnboardPerMonthᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.DashboardTimeToOnboardPerMonth) graphql.Marshaler {
@@ -119903,6 +119710,13 @@ func (ec *executionContext) unmarshalOCustomFieldTemplateInput2ᚕᚖgithubᚗco
 	return res, nil
 }
 
+func (ec *executionContext) marshalODashboardARRBreakdown2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardARRBreakdown(ctx context.Context, sel ast.SelectionSet, v *model.DashboardARRBreakdown) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._DashboardARRBreakdown(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalODashboardARRBreakdownPerMonth2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardARRBreakdownPerMonth(ctx context.Context, sel ast.SelectionSet, v *model.DashboardARRBreakdownPerMonth) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -119957,11 +119771,25 @@ func (ec *executionContext) marshalODashboardCustomerMap2ᚕᚖgithubᚗcomᚋop
 	return ret
 }
 
+func (ec *executionContext) marshalODashboardGrossRevenueRetention2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardGrossRevenueRetention(ctx context.Context, sel ast.SelectionSet, v *model.DashboardGrossRevenueRetention) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._DashboardGrossRevenueRetention(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalODashboardGrossRevenueRetentionPerMonth2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardGrossRevenueRetentionPerMonth(ctx context.Context, sel ast.SelectionSet, v *model.DashboardGrossRevenueRetentionPerMonth) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._DashboardGrossRevenueRetentionPerMonth(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalODashboardMRRPerCustomer2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardMRRPerCustomer(ctx context.Context, sel ast.SelectionSet, v *model.DashboardMRRPerCustomer) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._DashboardMRRPerCustomer(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalODashboardMRRPerCustomerPerMonth2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardMRRPerCustomerPerMonth(ctx context.Context, sel ast.SelectionSet, v *model.DashboardMRRPerCustomerPerMonth) graphql.Marshaler {
@@ -119971,11 +119799,25 @@ func (ec *executionContext) marshalODashboardMRRPerCustomerPerMonth2ᚖgithubᚗ
 	return ec._DashboardMRRPerCustomerPerMonth(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalODashboardNewCustomers2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardNewCustomers(ctx context.Context, sel ast.SelectionSet, v *model.DashboardNewCustomers) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._DashboardNewCustomers(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalODashboardNewCustomersPerMonth2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardNewCustomersPerMonth(ctx context.Context, sel ast.SelectionSet, v *model.DashboardNewCustomersPerMonth) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._DashboardNewCustomersPerMonth(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalODashboardOnboardingCompletion2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardOnboardingCompletion(ctx context.Context, sel ast.SelectionSet, v *model.DashboardOnboardingCompletion) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._DashboardOnboardingCompletion(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalODashboardPeriodInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardPeriodInput(ctx context.Context, v interface{}) (*model.DashboardPeriodInput, error) {
@@ -119986,11 +119828,32 @@ func (ec *executionContext) unmarshalODashboardPeriodInput2ᚖgithubᚗcomᚋope
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalODashboardRetentionRate2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardRetentionRate(ctx context.Context, sel ast.SelectionSet, v *model.DashboardRetentionRate) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._DashboardRetentionRate(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalODashboardRetentionRatePerMonth2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardRetentionRatePerMonth(ctx context.Context, sel ast.SelectionSet, v *model.DashboardRetentionRatePerMonth) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._DashboardRetentionRatePerMonth(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalODashboardRevenueAtRisk2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardRevenueAtRisk(ctx context.Context, sel ast.SelectionSet, v *model.DashboardRevenueAtRisk) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._DashboardRevenueAtRisk(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalODashboardTimeToOnboard2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardTimeToOnboard(ctx context.Context, sel ast.SelectionSet, v *model.DashboardTimeToOnboard) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._DashboardTimeToOnboard(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOEmail2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐEmailᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Email) graphql.Marshaler {
