@@ -1,12 +1,16 @@
-package aggregate
+package comment
 
 import (
+	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment/event"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	commentpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/comment"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"strings"
 )
@@ -17,24 +21,80 @@ const (
 
 type CommentAggregate struct {
 	*aggregate.CommonTenantIdAggregate
-	Comment *model.Comment
+	Comment *Comment
 }
 
 func NewCommentAggregateWithTenantAndID(tenant, id string) *CommentAggregate {
 	commentAggregate := CommentAggregate{}
 	commentAggregate.CommonTenantIdAggregate = aggregate.NewCommonAggregateWithTenantAndId(CommentAggregateType, tenant, id)
 	commentAggregate.SetWhen(commentAggregate.When)
-	commentAggregate.Comment = &model.Comment{}
+	commentAggregate.Comment = &Comment{}
 	commentAggregate.Tenant = tenant
 
 	return &commentAggregate
 }
 
+func (a *CommentAggregate) HandleGRPCRequest(ctx context.Context, request any, params map[string]any) (any, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CommentAggregate.HandleGRPCRequest")
+	defer span.Finish()
+
+	switch r := request.(type) {
+	case *commentpb.UpsertCommentGrpcRequest:
+		return a.UpsertCommentGrpcRequest(ctx, r)
+	default:
+		return nil, nil
+	}
+}
+
+func (a *CommentAggregate) UpsertCommentGrpcRequest(ctx context.Context, request *commentpb.UpsertCommentGrpcRequest) (string, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "CommentAggregate.UpsertCommentGrpcRequest")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("AggregateVersion", a.GetVersion()))
+
+	var err error
+	var event eventstore.Event
+
+	dataFields := CommentDataFields{
+		Content:          request.Content,
+		ContentType:      request.ContentType,
+		AuthorUserId:     request.AuthorUserId,
+		CommentedIssueId: request.CommentedIssueId,
+	}
+
+	source := commonmodel.Source{}
+	source.FromGrpc(request.SourceFields)
+	externalSystem := commonmodel.ExternalSystem{}
+	externalSystem.FromGrpc(request.ExternalSystemFields)
+
+	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
+	updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.UpdatedAt), createdAtNotNil)
+
+	if eventstore.IsAggregateNotFound(a) {
+		event, err = NewCommentCreateEvent(a, dataFields, source, externalSystem, createdAtNotNil, updatedAtNotNil)
+	} else {
+		event, err = NewCommentUpdateEvent(a, dataFields.Content, dataFields.ContentType, source.Source, externalSystem, updatedAtNotNil)
+	}
+
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", errors.Wrap(err, "CommentAggregate.UpsertCommentGrpcRequest failed to create event")
+	}
+	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+		Tenant: request.Tenant,
+		UserId: request.UserId,
+		App:    source.AppSource,
+	})
+
+	return request.Id, a.Apply(event)
+}
+
 func (a *CommentAggregate) When(evt eventstore.Event) error {
 	switch evt.GetEventType() {
-	case event.CommentCreateV1:
+	case CommentCreateV1:
 		return a.onCommentCreate(evt)
-	case event.CommentUpdateV1:
+	case CommentUpdateV1:
 		return a.onCommentUpdate(evt)
 	default:
 		if strings.HasPrefix(evt.GetEventType(), constants.EsInternalStreamPrefix) {
@@ -47,7 +107,7 @@ func (a *CommentAggregate) When(evt eventstore.Event) error {
 }
 
 func (a *CommentAggregate) onCommentCreate(evt eventstore.Event) error {
-	var eventData event.CommentCreateEvent
+	var eventData CommentCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -71,7 +131,7 @@ func (a *CommentAggregate) onCommentCreate(evt eventstore.Event) error {
 }
 
 func (a *CommentAggregate) onCommentUpdate(evt eventstore.Event) error {
-	var eventData event.CommentUpdateEvent
+	var eventData CommentUpdateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}

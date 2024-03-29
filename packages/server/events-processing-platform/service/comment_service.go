@@ -3,10 +3,9 @@ package service
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment/command"
-	commentcmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment/command_handler"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment/model"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -15,14 +14,16 @@ import (
 
 type commentService struct {
 	commentpb.UnimplementedCommentGrpcServiceServer
-	log                    logger.Logger
-	commentCommandHandlers *commentcmdhandler.CommandHandlers
+	services       *Services
+	log            logger.Logger
+	aggregateStore eventstore.AggregateStore
 }
 
-func NewCommentService(log logger.Logger, commentCommandHandlers *commentcmdhandler.CommandHandlers) *commentService {
+func NewCommentService(services *Services, log logger.Logger, aggregateStore eventstore.AggregateStore, cfg *config.Config) *commentService {
 	return &commentService{
-		log:                    log,
-		commentCommandHandlers: commentCommandHandlers,
+		services:       services,
+		log:            log,
+		aggregateStore: aggregateStore,
 	}
 }
 
@@ -34,22 +35,12 @@ func (s *commentService) UpsertComment(ctx context.Context, request *commentpb.U
 
 	commentId := utils.NewUUIDIfEmpty(request.Id)
 
-	dataFields := model.CommentDataFields{
-		Content:          request.Content,
-		ContentType:      request.ContentType,
-		AuthorUserId:     request.AuthorUserId,
-		CommentedIssueId: request.CommentedIssueId,
-	}
-	source := commonmodel.Source{}
-	source.FromGrpc(request.SourceFields)
-	externalSystem := commonmodel.ExternalSystem{}
-	externalSystem.FromGrpc(request.ExternalSystemFields)
-
-	cmd := command.NewUpsertCommentCommand(commentId, request.Tenant, request.UserId, source, externalSystem, dataFields, utils.TimestampProtoToTimePtr(request.CreatedAt), utils.TimestampProtoToTimePtr(request.UpdatedAt))
-	if err := s.commentCommandHandlers.Upsert.Handle(ctx, cmd); err != nil {
+	commentAggregate := comment.NewCommentAggregateWithTenantAndID(request.Tenant, commentId)
+	_, err := s.services.RequestHandler.HandleGRPCRequest(ctx, commentAggregate, *eventstore.NewLoadAggregateOptions(), request)
+	if err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("(UpsertCommentCommand.Handle) tenant:{%s}, commentId:{%s} , err: %s", request.Tenant, commentId, err.Error())
-		return nil, s.errResponse(err)
+		s.log.Errorf("(UpsertComment) tenant:{%v}, commentId:{%s} ,err: %v", request.Tenant, commentId, err.Error())
+		return nil, grpcerr.ErrResponse(err)
 	}
 
 	return &commentpb.CommentIdGrpcResponse{Id: commentId}, nil

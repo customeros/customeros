@@ -4,8 +4,7 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment/event"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	eventstoret "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
 	commentpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/comment"
@@ -43,14 +42,14 @@ func TestCommentService_UpsertComment_CreateComment(t *testing.T) {
 	commentId := response.Id
 	eventsMap := aggregateStore.GetEventMap()
 	require.Equal(t, 1, len(eventsMap))
-	commentAggregate := aggregate.NewCommentAggregateWithTenantAndID(tenant, response.Id)
+	commentAggregate := comment.NewCommentAggregateWithTenantAndID(tenant, response.Id)
 	eventList := eventsMap[commentAggregate.ID]
 	require.Equal(t, 1, len(eventList))
 
-	require.Equal(t, event.CommentCreateV1, eventList[0].GetEventType())
-	require.Equal(t, string(aggregate.CommentAggregateType)+"-"+tenant+"-"+commentId, eventList[0].GetAggregateID())
+	require.Equal(t, comment.CommentCreateV1, eventList[0].GetEventType())
+	require.Equal(t, string(comment.CommentAggregateType)+"-"+tenant+"-"+commentId, eventList[0].GetAggregateID())
 
-	var eventData event.CommentCreateEvent
+	var eventData comment.CommentCreateEvent
 	err = eventList[0].GetJsonData(&eventData)
 	require.Nil(t, err, "Failed to unmarshal event data")
 
@@ -80,9 +79,9 @@ func TestCommentService_UpsertComment_UpdateComment(t *testing.T) {
 	tenant := "ziggy"
 
 	// prepare aggregate
-	commentAggregate := aggregate.NewCommentAggregateWithTenantAndID(tenant, commentId)
-	updateEvent := eventstore.NewBaseEvent(commentAggregate, event.CommentCreateV1)
-	preconfiguredEventData := event.CommentCreateEvent{
+	commentAggregate := comment.NewCommentAggregateWithTenantAndID(tenant, commentId)
+	updateEvent := eventstore.NewBaseEvent(commentAggregate, comment.CommentCreateV1)
+	preconfiguredEventData := comment.CommentCreateEvent{
 		Source: "openline",
 	}
 	err = updateEvent.SetJsonData(&preconfiguredEventData)
@@ -109,14 +108,14 @@ func TestCommentService_UpsertComment_UpdateComment(t *testing.T) {
 
 	eventsMap := aggregateStore.GetEventMap()
 	require.Equal(t, 1, len(eventsMap))
-	eventList := eventsMap[aggregate.NewCommentAggregateWithTenantAndID(tenant, response.Id).ID]
+	eventList := eventsMap[comment.NewCommentAggregateWithTenantAndID(tenant, response.Id).ID]
 	require.Equal(t, 2, len(eventList))
 
-	require.Equal(t, event.CommentCreateV1, eventList[0].GetEventType())
-	require.Equal(t, event.CommentUpdateV1, eventList[1].GetEventType())
-	require.Equal(t, string(aggregate.CommentAggregateType)+"-"+tenant+"-"+commentId, eventList[1].GetAggregateID())
+	require.Equal(t, comment.CommentCreateV1, eventList[0].GetEventType())
+	require.Equal(t, comment.CommentUpdateV1, eventList[1].GetEventType())
+	require.Equal(t, string(comment.CommentAggregateType)+"-"+tenant+"-"+commentId, eventList[1].GetAggregateID())
 
-	var eventData event.CommentUpdateEvent
+	var eventData comment.CommentUpdateEvent
 	err = eventList[1].GetJsonData(&eventData)
 	require.Nil(t, err, "Failed to unmarshal event data")
 

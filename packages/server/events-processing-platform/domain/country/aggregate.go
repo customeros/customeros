@@ -51,8 +51,7 @@ func (a *countryAggregate) HandleGRPCRequest(ctx context.Context, request any, p
 	case *countrypb.CreateCountryRequest:
 		return nil, a.CreateCountryRequest(ctx, r)
 	default:
-		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
-		return nil, eventstore.ErrInvalidRequestType
+		return nil, nil
 	}
 }
 

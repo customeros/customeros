@@ -62,7 +62,7 @@ func InitServices(cfg *config.Config, repositories *repository.Repositories, agg
 	services.InteractionSessionService = NewInteractionSessionService(log, commandHandlers.InteractionSession)
 	services.LogEntryService = NewLogEntryService(log, commandHandlers.LogEntry)
 	services.IssueService = NewIssueService(log, commandHandlers.Issue)
-	services.CommentService = NewCommentService(log, commandHandlers.Comment)
+	services.CommentService = NewCommentService(&services, log, aggregateStore, cfg)
 	services.OpportunityService = NewOpportunityService(log, commandHandlers.Opportunity, aggregateStore)
 	services.ContractService = NewContractService(log, commandHandlers.Contract, aggregateStore, cfg)
 	services.ServiceLineItemService = NewServiceLineItemService(log, commandHandlers.ServiceLineItem, aggregateStore)
