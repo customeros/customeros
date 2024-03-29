@@ -43,12 +43,25 @@ func ConvertTimeToTimestampPtr(input *time.Time) *timestamppb.Timestamp {
 	return timestamppb.New(*input)
 }
 
+func ToDate(t time.Time) time.Time {
+	val := t.UTC().Truncate(24 * time.Hour)
+	return val
+}
+
 func ToDatePtr(t *time.Time) *time.Time {
 	if t == nil {
 		return nil
 	}
-	val := t.Truncate(24 * time.Hour).UTC()
+	val := t.UTC().Truncate(24 * time.Hour)
 	return &val
+}
+
+func ToDateAsAny(t *time.Time) interface{} {
+	if t == nil {
+		return nil
+	}
+	val := t.UTC().Truncate(24 * time.Hour)
+	return val
 }
 
 func UnmarshalDateTime(input string) (*time.Time, error) {

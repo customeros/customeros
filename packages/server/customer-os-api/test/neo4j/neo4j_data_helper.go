@@ -606,7 +606,7 @@ func TagLogEntry(ctx context.Context, driver *neo4j.DriverWithContext, logEntryI
 	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tagId":      tagId,
 		"logEntryId": logEntryId,
-		"taggedAt":   utils.TimePtrFirstNonNilNillableAsAny(taggedAt, utils.NowPtr()),
+		"taggedAt":   utils.TimePtrAsAny(taggedAt, utils.NowPtr()),
 	})
 }
 
@@ -733,7 +733,7 @@ func CreateOrg(ctx context.Context, driver *neo4j.DriverWithContext, tenant stri
 		"targetAudience":                organization.TargetAudience,
 		"valueProposition":              organization.ValueProposition,
 		"hide":                          organization.Hide,
-		"lastTouchpointAt":              utils.TimePtrFirstNonNilNillableAsAny(organization.LastTouchpointAt, &now),
+		"lastTouchpointAt":              utils.TimePtrAsAny(organization.LastTouchpointAt, &now),
 		"lastTouchpointType":            organization.LastTouchpointType,
 		"lastFundingRound":              organization.LastFundingRound,
 		"lastFundingAmount":             organization.LastFundingAmount,
@@ -744,12 +744,12 @@ func CreateOrg(ctx context.Context, driver *neo4j.DriverWithContext, tenant stri
 		"employeeGrowthRate":            organization.EmployeeGrowthRate,
 		"renewalForecastArr":            organization.RenewalSummary.ArrForecast,
 		"renewalForecastMaxArr":         organization.RenewalSummary.MaxArrForecast,
-		"derivedNextRenewalAt":          utils.TimePtrFirstNonNilNillableAsAny(organization.RenewalSummary.NextRenewalAt),
+		"derivedNextRenewalAt":          utils.TimePtrAsAny(organization.RenewalSummary.NextRenewalAt),
 		"derivedRenewalLikelihood":      organization.RenewalSummary.RenewalLikelihood,
 		"derivedRenewalLikelihoodOrder": organization.RenewalSummary.RenewalLikelihoodOrder,
 		"onboardingStatus":              string(organization.OnboardingDetails.Status),
 		"onboardingStatusOrder":         organization.OnboardingDetails.SortingOrder,
-		"onboardingUpdatedAt":           utils.TimePtrFirstNonNilNillableAsAny(organization.OnboardingDetails.UpdatedAt),
+		"onboardingUpdatedAt":           utils.TimePtrAsAny(organization.OnboardingDetails.UpdatedAt),
 		"onboardingComments":            organization.OnboardingDetails.Comments,
 		"now":                           utils.Now(),
 	})
@@ -1505,7 +1505,7 @@ func CreateOpportunityForContract(ctx context.Context, driver *neo4j.DriverWithC
                     op.renewedAt=$renewedAt,
                     op.renewalLikelihood=$renewalLikelihood,
                     op.renewalUpdatedByUserId=$renewalUpdatedByUserId,
-                    op.renewalUpdateByUserAt=$renewalUpdateByUserAt,
+                    op.renewalUpdatedByUserAt=$renewalUpdatedByUserAt,
 					op.nextSteps=$nextSteps,
 					op.createdAt=$createdAt,
 					op.updatedAt=$updatedAt
@@ -1532,7 +1532,7 @@ func CreateOpportunityForContract(ctx context.Context, driver *neo4j.DriverWithC
 		"renewedAt":              opportunity.RenewedAt,
 		"renewalLikelihood":      opportunity.RenewalLikelihood,
 		"renewalUpdatedByUserId": opportunity.RenewalUpdatedByUserId,
-		"renewalUpdateByUserAt":  opportunity.RenewalUpdatedByUserAt,
+		"renewalUpdatedByUserAt": opportunity.RenewalUpdatedByUserAt,
 		"createdAt":              opportunity.CreatedAt,
 		"updatedAt":              opportunity.UpdatedAt,
 	})

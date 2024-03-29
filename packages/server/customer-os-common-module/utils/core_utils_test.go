@@ -181,7 +181,7 @@ func TestTimePtrFirstNonNil(t *testing.T) {
 	var time1 *time.Time
 	time2 := time.Now()
 
-	result := TimePtrFirstNonNilNillableAsAny(time1, &time2)
+	result := TimePtrAsAny(time1, &time2)
 
 	require.Equal(t, time2, result)
 }

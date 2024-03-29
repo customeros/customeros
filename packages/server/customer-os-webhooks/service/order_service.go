@@ -197,8 +197,8 @@ func (s *orderService) syncOrder(ctx context.Context, syncMutex *sync.Mutex, ord
 			PaidAt:         paidAt,
 			FulfilledAt:    fulfilledAt,
 			CanceledAt:     cancelledAt,
-			CreatedAt:      timestamppb.New(utils.TimePtrFirstNonNilNillableAsAny(orderInput.CreatedAt, utils.NowPtr()).(time.Time)),
-			UpdatedAt:      timestamppb.New(utils.TimePtrFirstNonNilNillableAsAny(orderInput.UpdatedAt, utils.NowPtr()).(time.Time)),
+			CreatedAt:      timestamppb.New(utils.TimePtrAsAny(orderInput.CreatedAt, utils.NowPtr()).(time.Time)),
+			UpdatedAt:      timestamppb.New(utils.TimePtrAsAny(orderInput.UpdatedAt, utils.NowPtr()).(time.Time)),
 			SourceFields: &commonpb.SourceFields{
 				Source:    orderInput.ExternalSystem,
 				AppSource: utils.StringFirstNonEmpty(orderInput.AppSource, constants.AppSourceCustomerOsWebhooks),

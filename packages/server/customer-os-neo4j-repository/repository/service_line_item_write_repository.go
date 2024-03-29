@@ -97,8 +97,8 @@ func (r *serviceLineItemWriteRepository) CreateForContract(ctx context.Context, 
 		"parentId":          data.ParentId,
 		"createdAt":         data.CreatedAt,
 		"updatedAt":         data.UpdatedAt,
-		"startedAt":         data.StartedAt,
-		"endedAt":           utils.TimePtrFirstNonNilNillableAsAny(data.EndedAt),
+		"startedAt":         utils.ToDate(data.StartedAt),
+		"endedAt":           utils.ToDatePtr(data.EndedAt),
 		"source":            data.SourceFields.Source,
 		"sourceOfTruth":     data.SourceFields.Source,
 		"appSource":         data.SourceFields.AppSource,
@@ -158,7 +158,7 @@ func (r *serviceLineItemWriteRepository) Update(ctx context.Context, tenant, ser
 		"overwrite":         data.Source == constants.SourceOpenline,
 	}
 	if data.StartedAt != nil {
-		params["startedAt"] = *data.StartedAt
+		params["startedAt"] = utils.ToDate(*data.StartedAt)
 		cypher += `, sli.startedAt = $startedAt`
 	}
 	span.LogFields(log.String("cypher", cypher))
@@ -203,7 +203,7 @@ func (r *serviceLineItemWriteRepository) Close(ctx context.Context, tenant, serv
 	params := map[string]any{
 		"serviceLineItemId": serviceLineItemId,
 		"updatedAt":         updatedAt,
-		"endedAt":           endedAt,
+		"endedAt":           utils.ToDate(endedAt),
 	}
 	cypher := fmt.Sprintf(`MATCH (sli:ServiceLineItem {id:$serviceLineItemId})
 							WHERE sli:ServiceLineItem_%s SET

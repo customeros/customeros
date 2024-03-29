@@ -1,6 +1,7 @@
 package event
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/pkg/errors"
@@ -17,7 +18,7 @@ type ServiceLineItemCloseEvent struct {
 func NewServiceLineItemCloseEvent(aggregate eventstore.Aggregate, endedAt, updatedAt time.Time, isCanceled bool) (eventstore.Event, error) {
 	eventData := ServiceLineItemCloseEvent{
 		Tenant:     aggregate.GetTenant(),
-		EndedAt:    endedAt,
+		EndedAt:    utils.ToDate(endedAt),
 		UpdatedAt:  updatedAt,
 		IsCanceled: isCanceled,
 	}

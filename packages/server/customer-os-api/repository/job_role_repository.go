@@ -212,8 +212,8 @@ func (r *jobRoleRepository) CreateJobRole(ctx context.Context, tx neo4j.ManagedT
 			"source":        input.Source,
 			"sourceOfTruth": input.SourceOfTruth,
 			"appSource":     input.AppSource,
-			"startedAt":     utils.TimePtrFirstNonNilNillableAsAny(input.StartedAt, utils.TimePtr(utils.Now())),
-			"endedAt":       utils.TimePtrFirstNonNilNillableAsAny(input.EndedAt),
+			"startedAt":     utils.TimePtrAsAny(input.StartedAt, utils.TimePtr(utils.Now())),
+			"endedAt":       utils.TimePtrAsAny(input.EndedAt),
 			"now":           utils.Now(),
 		}); err != nil {
 		return nil, err
@@ -249,8 +249,8 @@ func (r *jobRoleRepository) UpdateJobRoleDetails(ctx context.Context, tx neo4j.M
 			"primary":       input.Primary,
 			"sourceOfTruth": input.SourceOfTruth,
 			"now":           utils.Now(),
-			"startedAt":     utils.TimePtrFirstNonNilNillableAsAny(input.StartedAt),
-			"endedAt":       utils.TimePtrFirstNonNilNillableAsAny(input.EndedAt),
+			"startedAt":     utils.TimePtrAsAny(input.StartedAt),
+			"endedAt":       utils.TimePtrAsAny(input.EndedAt),
 		}); err != nil {
 		return nil, err
 	} else {

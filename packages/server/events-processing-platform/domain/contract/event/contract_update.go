@@ -53,8 +53,8 @@ func NewContractUpdateEvent(a eventstore.Aggregate, dataFields model.ContractDat
 		Name:                   dataFields.Name,
 		ContractUrl:            dataFields.ContractUrl,
 		ServiceStartedAt:       utils.ToDatePtr(dataFields.ServiceStartedAt),
-		SignedAt:               dataFields.SignedAt,
-		EndedAt:                dataFields.EndedAt,
+		SignedAt:               utils.ToDatePtr(dataFields.SignedAt),
+		EndedAt:                utils.ToDatePtr(dataFields.EndedAt),
 		RenewalCycle:           dataFields.RenewalCycle,
 		RenewalPeriods:         dataFields.RenewalPeriods,
 		Currency:               dataFields.Currency,
@@ -137,7 +137,7 @@ func (e ContractUpdateEvent) UpdateServiceStartedAt() bool {
 }
 
 func (e ContractUpdateEvent) UpdateInvoicingStartDate() bool {
-	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskInvoicingStartDate)
+	return utils.Contains(e.FieldsMask, FieldMaskInvoicingStartDate)
 }
 
 func (e ContractUpdateEvent) UpdateRenewalCycle() bool {

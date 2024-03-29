@@ -17,9 +17,9 @@ type ContractEntity struct {
 	Name                            string
 	CreatedAt                       time.Time
 	UpdatedAt                       time.Time
-	ServiceStartedAt                *time.Time
-	SignedAt                        *time.Time
-	EndedAt                         *time.Time
+	ServiceStartedAt                *time.Time // Date only
+	SignedAt                        *time.Time // Date only
+	EndedAt                         *time.Time // DateTime
 	RenewalCycle                    enum.RenewalCycle
 	RenewalPeriods                  *int64
 	ContractStatus                  enum.ContractStatus
@@ -27,8 +27,8 @@ type ContractEntity struct {
 	SourceOfTruth                   DataSource
 	AppSource                       string
 	ContractUrl                     string
-	InvoicingStartDate              *time.Time
-	NextInvoiceDate                 *time.Time
+	InvoicingStartDate              *time.Time // Date only
+	NextInvoiceDate                 *time.Time // Date only
 	BillingCycle                    enum.BillingCycle
 	Currency                        enum.Currency
 	TriggeredOnboardingStatusChange bool

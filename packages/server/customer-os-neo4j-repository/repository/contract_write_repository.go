@@ -188,8 +188,8 @@ func (r *contractWriteRepository) CreateForOrganization(ctx context.Context, ten
 		"status":                 data.Status,
 		"renewalCycle":           data.RenewalCycle,
 		"renewalPeriods":         data.RenewalPeriods,
-		"signedAt":               utils.TimePtrFirstNonNilNillableAsAny(data.SignedAt),
-		"serviceStartedAt":       utils.ToNeo4jDateAsAny(data.ServiceStartedAt),
+		"signedAt":               utils.ToDateAsAny(data.SignedAt),
+		"serviceStartedAt":       utils.ToDateAsAny(data.ServiceStartedAt),
 		"createdByUserId":        data.CreatedByUserId,
 		"currency":               data.Currency.String(),
 		"billingCycle":           data.BillingCycle.String(),
@@ -255,15 +255,15 @@ func (r *contractWriteRepository) UpdateContract(ctx context.Context, tenant, co
 	}
 	if data.UpdateServiceStartedAt {
 		cypher += `, ct.serviceStartedAt = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $serviceStartedAt ELSE ct.serviceStartedAt END `
-		params["serviceStartedAt"] = utils.ToNeo4jDateAsAny(data.ServiceStartedAt)
+		params["serviceStartedAt"] = utils.ToDateAsAny(data.ServiceStartedAt)
 	}
 	if data.UpdateSignedAt {
 		cypher += `, ct.signedAt = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $signedAt ELSE ct.signedAt END `
-		params["signedAt"] = utils.TimePtrFirstNonNilNillableAsAny(data.SignedAt)
+		params["signedAt"] = utils.ToDateAsAny(data.SignedAt)
 	}
 	if data.UpdateEndedAt {
 		cypher += `, ct.endedAt = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $endedAt ELSE ct.endedAt END `
-		params["endedAt"] = utils.TimePtrFirstNonNilNillableAsAny(data.EndedAt)
+		params["endedAt"] = utils.ToDateAsAny(data.EndedAt)
 	}
 	if data.UpdateBillingCycle {
 		cypher += `, ct.billingCycle = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $billingCycle ELSE ct.billingCycle END `

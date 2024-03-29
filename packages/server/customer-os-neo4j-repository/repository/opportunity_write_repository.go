@@ -138,7 +138,7 @@ func (r *opportunityWriteRepository) CreateForOrganization(ctx context.Context, 
 		"externalType":      data.ExternalType,
 		"internalStage":     data.InternalStage,
 		"externalStage":     data.ExternalStage,
-		"estimatedClosedAt": utils.TimePtrFirstNonNilNillableAsAny(data.EstimatedClosedAt),
+		"estimatedClosedAt": utils.TimePtrAsAny(data.EstimatedClosedAt),
 		"generalNotes":      data.GeneralNotes,
 		"nextSteps":         data.NextSteps,
 		"createdByUserId":   data.CreatedByUserId,
@@ -336,7 +336,7 @@ func (r *opportunityWriteRepository) UpdateNextRenewalDate(ctx context.Context, 
 		"opportunityId": opportunityId,
 		"updatedAt":     updatedAt,
 		"internalStage": enum.OpportunityInternalStageOpen.String(),
-		"renewedAt":     utils.ToNeo4jDateAsAny(renewedAt),
+		"renewedAt":     utils.ToDateAsAny(renewedAt),
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
