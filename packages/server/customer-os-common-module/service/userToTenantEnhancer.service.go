@@ -50,6 +50,12 @@ func TenantUserContextEnhancer(headerAllowance HeaderAllowance, cr *cr.Repositor
 			}
 		}()
 
+		//if API call is made with a tenant api key, the apiKeyChecker validated it already
+		tenantKh := c.GetHeader(TenantApiKeyHeader)
+		if tenantKh != "" {
+			return
+		}
+
 		tenantHeader := c.GetHeader(TenantHeader)
 		usernameHeader := c.GetHeader(UsernameHeader)
 		span.LogFields(

@@ -130,11 +130,7 @@ func ApiKeyCheckerHTTP(tenantApiKeyRepo repository.TenantWebhookApiKeyRepository
 				config.cache.SetTenantApiKey(tenantKh, apiKey.TenantName)
 			}
 
-			//todo check if tenant exists
-
-			//really important
-			//set the tenant name in the header for the next middleware
-			c.Request.Header.Set(TenantHeader, apiKey.TenantName)
+			c.Set(KEY_TENANT_NAME, apiKey.TenantName)
 			c.Set(KEY_USER_ROLES, []string{"USER"})
 
 			if !spanFinished {
