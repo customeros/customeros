@@ -18,6 +18,7 @@ type OrganizationReadRepository interface {
 	GetOrganizationByContractId(ctx context.Context, tenant, contractId string) (*dbtype.Node, error)
 	GetOrganizationByInvoiceId(ctx context.Context, tenant, invoiceId string) (*dbtype.Node, error)
 	GetOrganizationByCustomerOsId(ctx context.Context, tenant, customerOsId string) (*dbtype.Node, error)
+	GetOrganizationByReferenceId(ctx context.Context, tenant, referenceId string) (*dbtype.Node, error)
 	GetAllForInvoices(ctx context.Context, tenant string, invoiceIds []string) ([]*utils.DbNodeAndId, error)
 	GetAllForSlackChannels(ctx context.Context, tenant string, slackChannelIds []string) ([]*utils.DbNodeAndId, error)
 }
@@ -245,6 +246,42 @@ func (r *organizationReadRepository) GetOrganizationByCustomerOsId(ctx context.C
 	params := map[string]any{
 		"tenant":       tenant,
 		"customerOsId": customerOsId,
+	}
+	span.LogFields(log.String("query", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractFirstRecordFirstValueAsDbNodePtr(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	if result == nil {
+		span.LogFields(log.Bool("result.found", false))
+		return nil, nil
+	}
+	span.LogFields(log.Bool("result.found", true))
+	return result.(*dbtype.Node), nil
+}
+
+func (r *organizationReadRepository) GetOrganizationByReferenceId(ctx context.Context, tenant, referenceId string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationByReferenceId")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.LogFields(log.String("referenceId", referenceId))
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {referenceId:$referenceId}) RETURN org`
+	params := map[string]any{
+		"tenant":      tenant,
+		"referenceId": referenceId,
 	}
 	span.LogFields(log.String("query", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

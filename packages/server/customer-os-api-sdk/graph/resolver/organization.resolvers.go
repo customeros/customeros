@@ -233,6 +233,11 @@ func (r *queryResolver) OrganizationByCustomerOsID(ctx context.Context, customer
 	panic(fmt.Errorf("not implemented: OrganizationByCustomerOsID - organization_ByCustomerOsId"))
 }
 
+// OrganizationByCustomID is the resolver for the organization_ByCustomId field.
+func (r *queryResolver) OrganizationByCustomID(ctx context.Context, customID string) (*model.Organization, error) {
+	panic(fmt.Errorf("not implemented: OrganizationByCustomID - organization_ByCustomId"))
+}
+
 // OrganizationDistinctOwners is the resolver for the organization_DistinctOwners field.
 func (r *queryResolver) OrganizationDistinctOwners(ctx context.Context) ([]*model.User, error) {
 	panic(fmt.Errorf("not implemented: OrganizationDistinctOwners - organization_DistinctOwners"))

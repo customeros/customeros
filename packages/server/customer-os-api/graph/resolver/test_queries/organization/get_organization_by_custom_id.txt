@@ -1,0 +1,7 @@
+query GetOrganization($customId: String!){
+  organization_ByCustomId(customId: $customId) {
+    id
+    customId
+    name
+  }
+}
