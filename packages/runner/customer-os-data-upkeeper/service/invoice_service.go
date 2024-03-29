@@ -345,8 +345,8 @@ func (s *invoiceService) GenerateOffCycleInvoices() {
 				currency = s.getTenantBaseCurrency(ctx, tenant, cachedTenantBaseCurrencies).String()
 			}
 
-			invoicePeriodStart := utils.StartOfDayInUTC(referenceTime)
-			invoicePeriodEnd := utils.StartOfDayInUTC(utils.IfNotNilTimeWithDefault(contract.NextInvoiceDate, referenceTime).AddDate(0, 0, -1))
+			invoicePeriodStart := utils.ToDate(referenceTime)
+			invoicePeriodEnd := utils.ToDate(utils.IfNotNilTimeWithDefault(contract.NextInvoiceDate, referenceTime).AddDate(0, 0, -1))
 
 			readyToRequestInvoice := !invoicePeriodEnd.Before(invoicePeriodStart)
 			if readyToRequestInvoice {

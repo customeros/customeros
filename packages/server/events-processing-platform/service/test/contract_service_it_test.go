@@ -269,7 +269,7 @@ func TestContractService_UpdateContract(t *testing.T) {
 	require.Equal(t, "http://new.contract.url", eventData.ContractUrl)
 	require.Equal(t, model.MonthlyRenewal.String(), eventData.RenewalCycle)
 	require.Equal(t, timeNow, eventData.UpdatedAt)
-	require.Equal(t, utils.StartOfDayInUTC(timeNow), *eventData.ServiceStartedAt)
+	require.Equal(t, utils.ToDate(timeNow), *eventData.ServiceStartedAt)
 	require.Equal(t, utils.ToDate(timeNow), *eventData.SignedAt)
 	require.Equal(t, utils.ToDate(timeNow).AddDate(0, 1, 0), *eventData.EndedAt)
 	require.Equal(t, constants.SourceOpenline, eventData.Source)

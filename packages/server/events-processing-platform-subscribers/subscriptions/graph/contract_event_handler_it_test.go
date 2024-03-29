@@ -58,7 +58,7 @@ func TestContractEventHandler_OnCreate(t *testing.T) {
 			SignedAt:           &timeNow,
 			RenewalCycle:       model.MonthlyRenewal.String(),
 			BillingCycle:       model.MonthlyBilling.String(),
-			Currency:           "USD",
+			Currency:           neo4jenum.CurrencyUSD.String(),
 			InvoicingStartDate: &timeNow,
 			AutoRenew:          true,
 			Check:              true,
@@ -142,8 +142,8 @@ func TestContractEventHandler_OnCreate(t *testing.T) {
 	require.Equal(t, neo4jenum.RenewalCycleMonthlyRenewal, contract.RenewalCycle)
 	require.True(t, timeNow.Equal(contract.CreatedAt.UTC()))
 	test.AssertRecentTime(t, contract.UpdatedAt)
-	require.True(t, utils.StartOfDayInUTC(timeNow).Equal(*contract.ServiceStartedAt))
-	require.True(t, timeNow.Equal(*contract.SignedAt))
+	require.True(t, utils.ToDate(timeNow).Equal(*contract.ServiceStartedAt))
+	require.Equal(t, utils.ToDatePtr(&timeNow), contract.SignedAt)
 	require.True(t, utils.ToDatePtr(&timeNow).Equal(*contract.InvoicingStartDate))
 	require.Equal(t, neo4jenum.CurrencyUSD, contract.Currency)
 	require.Equal(t, neo4jenum.BillingCycleMonthlyBilling, contract.BillingCycle)
@@ -249,7 +249,7 @@ func TestContractEventHandler_OnUpdate_FrequencySet(t *testing.T) {
 	require.Equal(t, neo4jenum.ContractStatusLive, contract.ContractStatus)
 	require.Equal(t, neo4jenum.RenewalCycleMonthlyRenewal, contract.RenewalCycle)
 	test.AssertRecentTime(t, contract.UpdatedAt)
-	require.True(t, utils.StartOfDayInUTC(yesterday).Equal(*contract.ServiceStartedAt))
+	require.True(t, utils.ToDate(yesterday).Equal(*contract.ServiceStartedAt))
 	require.True(t, daysAgo2.Equal(*contract.SignedAt))
 	require.True(t, tomorrow.Equal(*contract.EndedAt))
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), contract.SourceOfTruth)
@@ -688,7 +688,7 @@ func TestContractEventHandler_OnUpdate_EndDateSet(t *testing.T) {
 	require.Equal(t, neo4jenum.ContractStatusLive, contract.ContractStatus)
 	require.Equal(t, neo4jenum.RenewalCycleMonthlyRenewal, contract.RenewalCycle)
 	test.AssertRecentTime(t, contract.UpdatedAt)
-	require.True(t, utils.StartOfDayInUTC(yesterday).Equal(*contract.ServiceStartedAt))
+	require.True(t, utils.ToDate(yesterday).Equal(*contract.ServiceStartedAt))
 	require.True(t, daysAgo2.Equal(*contract.SignedAt))
 	require.True(t, tomorrow.Equal(*contract.EndedAt))
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), contract.SourceOfTruth)

@@ -241,7 +241,7 @@ func TestOpportunityEventHandler_OnUpdateNextCycleDate(t *testing.T) {
 	opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
 	require.Equal(t, opportunityId, opportunity.Id)
 	require.Equal(t, updatedAt, opportunity.UpdatedAt)
-	require.Equal(t, utils.StartOfDayInUTC(renewedAt), *opportunity.RenewalDetails.RenewedAt)
+	require.Equal(t, utils.ToDate(renewedAt), *opportunity.RenewalDetails.RenewedAt)
 }
 
 func TestOpportunityEventHandler_OnUpdate(t *testing.T) {
