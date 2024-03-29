@@ -21,18 +21,18 @@ import (
 
 type invoiceService struct {
 	invoicepb.UnimplementedInvoiceGrpcServiceServer
-	log                   logger.Logger
-	invoiceRequestHandler invoice.InvoiceRequestHandler
-	aggregateStore        eventstore.AggregateStore
-	invoiceRepository     repository.InvoiceRepository
+	services          *Services
+	log               logger.Logger
+	aggregateStore    eventstore.AggregateStore
+	invoiceRepository repository.InvoiceRepository
 }
 
-func NewInvoiceService(log logger.Logger, aggregateStore eventstore.AggregateStore, cfg *config.Config, invoiceRepository repository.InvoiceRepository) *invoiceService {
+func NewInvoiceService(services *Services, log logger.Logger, aggregateStore eventstore.AggregateStore, cfg *config.Config, invoiceRepository repository.InvoiceRepository) *invoiceService {
 	return &invoiceService{
-		log:                   log,
-		invoiceRequestHandler: invoice.NewInvoiceRequestHandler(log, aggregateStore, cfg.Utils),
-		aggregateStore:        aggregateStore,
-		invoiceRepository:     invoiceRepository,
+		services:          services,
+		log:               log,
+		aggregateStore:    aggregateStore,
+		invoiceRepository: invoiceRepository,
 	}
 }
 
@@ -64,7 +64,8 @@ func (s *invoiceService) NewInvoiceForContract(ctx context.Context, request *inv
 
 	invoiceId := uuid.New().String()
 
-	if _, err := s.invoiceRequestHandler.Handle(ctx, request.Tenant, invoiceId, eventstore.LoadAggregateOptions{}, request); err != nil {
+	invoiceAggregate := invoice.NewInvoiceAggregateWithTenantAndID(request.Tenant, invoiceId)
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, invoiceAggregate, eventstore.LoadAggregateOptions{}, request); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(NewOnCycleInvoiceForContract) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
@@ -113,7 +114,8 @@ func (s *invoiceService) FillInvoice(ctx context.Context, request *invoicepb.Fil
 		invoice.PARAM_INVOICE_NUMBER: s.prepareInvoiceNumber(request.Tenant),
 	}
 
-	if _, err := s.invoiceRequestHandler.Handle(ctx, request.Tenant, request.InvoiceId, *eventstore.NewLoadAggregateOptionsWithRequired(), request, extraParams); err != nil {
+	invoiceAggregate := invoice.NewInvoiceAggregateWithTenantAndID(request.Tenant, request.InvoiceId)
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, invoiceAggregate, *eventstore.NewLoadAggregateOptionsWithRequired(), request, extraParams); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(FillInvoice) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
@@ -132,7 +134,8 @@ func (s *invoiceService) GenerateInvoicePdf(ctx context.Context, request *invoic
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("invoiceId"))
 	}
 
-	if _, err := s.invoiceRequestHandler.Handle(ctx, request.Tenant, request.InvoiceId, *eventstore.NewLoadAggregateOptionsWithRequired(), request); err != nil {
+	invoiceAggregate := invoice.NewInvoiceAggregateWithTenantAndID(request.Tenant, request.InvoiceId)
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, invoiceAggregate, *eventstore.NewLoadAggregateOptionsWithRequired(), request); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(GenerateInvoicePdf) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
@@ -151,7 +154,8 @@ func (s *invoiceService) PdfGeneratedInvoice(ctx context.Context, request *invoi
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("invoiceId"))
 	}
 
-	if _, err := s.invoiceRequestHandler.Handle(ctx, request.Tenant, request.InvoiceId, *eventstore.NewLoadAggregateOptionsWithRequired(), request); err != nil {
+	invoiceAggregate := invoice.NewInvoiceAggregateWithTenantAndID(request.Tenant, request.InvoiceId)
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, invoiceAggregate, *eventstore.NewLoadAggregateOptionsWithRequired(), request); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(PdfGeneratedInvoice) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
@@ -170,7 +174,8 @@ func (s *invoiceService) UpdateInvoice(ctx context.Context, request *invoicepb.U
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("invoiceId"))
 	}
 
-	if _, err := s.invoiceRequestHandler.Handle(ctx, request.Tenant, request.InvoiceId, *eventstore.NewLoadAggregateOptionsWithRequired(), request); err != nil {
+	invoiceAggregate := invoice.NewInvoiceAggregateWithTenantAndID(request.Tenant, request.InvoiceId)
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, invoiceAggregate, *eventstore.NewLoadAggregateOptionsWithRequired(), request); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(UpdateInvoice) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
@@ -189,7 +194,8 @@ func (s *invoiceService) PayInvoice(ctx context.Context, request *invoicepb.PayI
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("invoiceId"))
 	}
 
-	if _, err := s.invoiceRequestHandler.Handle(ctx, request.Tenant, request.InvoiceId, *eventstore.NewLoadAggregateOptionsWithRequired(), request); err != nil {
+	invoiceAggregate := invoice.NewInvoiceAggregateWithTenantAndID(request.Tenant, request.InvoiceId)
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, invoiceAggregate, *eventstore.NewLoadAggregateOptionsWithRequired(), request); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(PayInvoice) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
@@ -206,7 +212,8 @@ func (s *invoiceService) SimulateInvoice(ctx context.Context, request *invoicepb
 
 	invoiceId := uuid.New().String()
 
-	if _, err := s.invoiceRequestHandler.Handle(ctx, request.Tenant, invoiceId, *eventstore.NewLoadAggregateOptions(), request); err != nil {
+	invoiceAggregate := invoice.NewInvoiceAggregateWithTenantAndID(request.Tenant, invoiceId)
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, invoiceAggregate, *eventstore.NewLoadAggregateOptions(), request); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(NewInvoice) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
@@ -225,7 +232,8 @@ func (s *invoiceService) PayInvoiceNotification(ctx context.Context, request *in
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("invoiceId"))
 	}
 
-	if _, err := s.invoiceRequestHandler.Handle(ctx, request.Tenant, request.InvoiceId, *eventstore.NewLoadAggregateOptionsWithRequired(), request); err != nil {
+	invoiceAggregate := invoice.NewInvoiceAggregateWithTenantAndID(request.Tenant, request.InvoiceId)
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, invoiceAggregate, *eventstore.NewLoadAggregateOptionsWithRequired(), request); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(PayInvoiceNotification) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
@@ -258,7 +266,8 @@ func (s *invoiceService) RequestFillInvoice(ctx context.Context, request *invoic
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("invoiceId"))
 	}
 
-	if _, err := s.invoiceRequestHandler.Handle(ctx, request.Tenant, request.InvoiceId, *eventstore.NewLoadAggregateOptionsWithRequired(), request); err != nil {
+	invoiceAggregate := invoice.NewInvoiceAggregateWithTenantAndID(request.Tenant, request.InvoiceId)
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, invoiceAggregate, *eventstore.NewLoadAggregateOptionsWithRequired(), request); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(RequestFillInvoice) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
@@ -277,7 +286,8 @@ func (s *invoiceService) PermanentlyDeleteDraftInvoice(ctx context.Context, requ
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("invoiceId"))
 	}
 
-	if _, err := s.invoiceRequestHandler.Handle(ctx, request.Tenant, request.InvoiceId, *eventstore.NewLoadAggregateOptionsWithRequired(), request); err != nil {
+	invoiceAggregate := invoice.NewInvoiceAggregateWithTenantAndID(request.Tenant, request.InvoiceId)
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, invoiceAggregate, *eventstore.NewLoadAggregateOptionsWithRequired(), request); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(PermanentlyDeleteDraftInvoice) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
@@ -296,7 +306,8 @@ func (s *invoiceService) VoidInvoice(ctx context.Context, request *invoicepb.Voi
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("invoiceId"))
 	}
 
-	if _, err := s.invoiceRequestHandler.Handle(ctx, request.Tenant, request.InvoiceId, *eventstore.NewLoadAggregateOptionsWithRequired(), request); err != nil {
+	invoiceAggregate := invoice.NewInvoiceAggregateWithTenantAndID(request.Tenant, request.InvoiceId)
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, invoiceAggregate, *eventstore.NewLoadAggregateOptionsWithRequired(), request); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(VoidInvoice) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)

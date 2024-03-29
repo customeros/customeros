@@ -65,3 +65,7 @@ func (a *CommonTenantIdTempAggregate) SetWhen(when func(event eventstore.Event) 
 func (a *CommonTenantIdTempAggregate) IsTemporal() bool {
 	return true
 }
+
+func (a *CommonTenantIdTempAggregate) HandleGRPCRequest(ctx context.Context, request any, params map[string]any) (any, error) {
+	return nil, nil
+}

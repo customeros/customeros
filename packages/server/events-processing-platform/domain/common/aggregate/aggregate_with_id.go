@@ -54,3 +54,7 @@ func (a *CommonIdAggregate) When(event eventstore.Event) error {
 func (a *CommonIdAggregate) SetWhen(when func(event eventstore.Event) error) {
 	a.when = &when
 }
+
+func (a *CommonIdAggregate) HandleGRPCRequest(ctx context.Context, request any, params map[string]any) (any, error) {
+	return nil, nil
+}

@@ -39,23 +39,6 @@ func GetInvoiceObjectID(aggregateID string, tenant string) string {
 	return aggregate.GetAggregateObjectID(aggregateID, tenant, InvoiceAggregateType)
 }
 
-func LoadInvoiceAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string, options eventstore.LoadAggregateOptions) (*InvoiceAggregate, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "LoadInvoiceAggregate")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.LogFields(log.String("ObjectID", objectID))
-
-	invoiceAggregate := NewInvoiceAggregateWithTenantAndID(tenant, objectID)
-
-	err := aggregate.LoadAggregate(ctx, eventStore, invoiceAggregate, options)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	return invoiceAggregate, nil
-}
-
 func NewInvoiceAggregateWithTenantAndID(tenant, id string) *InvoiceAggregate {
 	invoiceAggregate := InvoiceAggregate{}
 	invoiceAggregate.CommonTenantIdAggregate = aggregate.NewCommonAggregateWithTenantAndId(InvoiceAggregateType, tenant, id)
@@ -66,14 +49,14 @@ func NewInvoiceAggregateWithTenantAndID(tenant, id string) *InvoiceAggregate {
 	return &invoiceAggregate
 }
 
-func (a *InvoiceAggregate) HandleRequest(ctx context.Context, request any, params ...map[string]any) (any, error) {
+func (a *InvoiceAggregate) HandleGRPCRequest(ctx context.Context, request any, params map[string]any) (any, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceAggregate.HandleRequest")
 	defer span.Finish()
 
 	invoiceNumber := ""
 	if params != nil {
-		if _, ok := params[0][PARAM_INVOICE_NUMBER]; ok {
-			invoiceNumber = params[0][PARAM_INVOICE_NUMBER].(string)
+		if _, ok := params[PARAM_INVOICE_NUMBER]; ok {
+			invoiceNumber = params[PARAM_INVOICE_NUMBER].(string)
 		}
 	}
 

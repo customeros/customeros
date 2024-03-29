@@ -1,6 +1,7 @@
 package aggregate
 
 import (
+	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"strings"
 )
@@ -48,4 +49,8 @@ func (a *CommonTenantIdAggregate) When(event eventstore.Event) error {
 
 func (a *CommonTenantIdAggregate) SetWhen(when func(event eventstore.Event) error) {
 	a.when = &when
+}
+
+func (a *CommonTenantIdAggregate) HandleGRPCRequest(ctx context.Context, request any, params map[string]any) (any, error) {
+	return nil, nil
 }
