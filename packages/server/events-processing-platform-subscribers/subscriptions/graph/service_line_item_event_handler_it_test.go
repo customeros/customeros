@@ -102,7 +102,7 @@ func TestServiceLineItemEventHandler_OnCreate(t *testing.T) {
 	require.Equal(t, "Test service line item", serviceLineItem.Name)
 	require.Equal(t, timeNow, serviceLineItem.CreatedAt)
 	require.Equal(t, timeNow, serviceLineItem.UpdatedAt)
-	require.Equal(t, timeNow, serviceLineItem.StartedAt)
+	require.Equal(t, utils.ToDate(timeNow), serviceLineItem.StartedAt)
 	require.Nil(t, serviceLineItem.EndedAt)
 }
 
@@ -446,7 +446,7 @@ func TestServiceLineItemEventHandler_OnClose(t *testing.T) {
 	serviceLineItem := neo4jmapper.MapDbNodeToServiceLineItemEntity(serviceLineItemDbNode)
 	require.Equal(t, serviceLineItemId, serviceLineItem.ID)
 	require.Equal(t, now, serviceLineItem.UpdatedAt)
-	require.Equal(t, now, *serviceLineItem.EndedAt)
+	require.Equal(t, utils.ToDate(now), *serviceLineItem.EndedAt)
 	require.True(t, serviceLineItem.IsCanceled)
 
 	// verify events platform was called
@@ -1140,7 +1140,7 @@ func TestServiceLineItemEventHandler_OnCreateRecurringMonthly(t *testing.T) {
 	require.Equal(t, "Service 1", serviceLineItem.Name)
 	require.Equal(t, timeNow, serviceLineItem.CreatedAt)
 	require.Equal(t, timeNow, serviceLineItem.UpdatedAt)
-	require.Equal(t, timeNow, serviceLineItem.StartedAt)
+	require.Equal(t, utils.ToDate(timeNow), serviceLineItem.StartedAt)
 	require.Nil(t, serviceLineItem.EndedAt)
 
 	// verify action
@@ -1239,7 +1239,7 @@ func TestServiceLineItemEventHandler_OnCreateRecurringAnnually(t *testing.T) {
 	require.Equal(t, "Service 1", serviceLineItem.Name)
 	require.Equal(t, timeNow, serviceLineItem.CreatedAt)
 	require.Equal(t, timeNow, serviceLineItem.UpdatedAt)
-	require.Equal(t, timeNow, serviceLineItem.StartedAt)
+	require.Equal(t, utils.ToDate(timeNow), serviceLineItem.StartedAt)
 	require.Nil(t, serviceLineItem.EndedAt)
 
 	// verify action
@@ -1338,7 +1338,7 @@ func TestServiceLineItemEventHandler_OnCreateRecurringQuarterly(t *testing.T) {
 	require.Equal(t, "Service 1", serviceLineItem.Name)
 	require.Equal(t, timeNow, serviceLineItem.CreatedAt)
 	require.Equal(t, timeNow, serviceLineItem.UpdatedAt)
-	require.Equal(t, timeNow, serviceLineItem.StartedAt)
+	require.Equal(t, utils.ToDate(timeNow), serviceLineItem.StartedAt)
 	require.Nil(t, serviceLineItem.EndedAt)
 
 	// verify action
@@ -1435,7 +1435,7 @@ func TestServiceLineItemEventHandler_OnCreateOnce(t *testing.T) {
 	require.Equal(t, "Service 1", serviceLineItem.Name)
 	require.Equal(t, timeNow, serviceLineItem.CreatedAt)
 	require.Equal(t, timeNow, serviceLineItem.UpdatedAt)
-	require.Equal(t, timeNow, serviceLineItem.StartedAt)
+	require.Equal(t, utils.ToDate(timeNow), serviceLineItem.StartedAt)
 	require.Nil(t, serviceLineItem.EndedAt)
 
 	// verify action
@@ -1532,7 +1532,7 @@ func TestServiceLineItemEventHandler_OnCreatePerUse(t *testing.T) {
 	require.Equal(t, "Service 1", serviceLineItem.Name)
 	require.Equal(t, timeNow, serviceLineItem.CreatedAt)
 	require.Equal(t, timeNow, serviceLineItem.UpdatedAt)
-	require.Equal(t, timeNow, serviceLineItem.StartedAt)
+	require.Equal(t, utils.ToDate(timeNow), serviceLineItem.StartedAt)
 	require.Nil(t, serviceLineItem.EndedAt)
 
 	// verify action
@@ -1634,7 +1634,7 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactiveQuantity
 	require.Equal(t, "reason for what change?", serviceLineItem.Comments)
 	require.Equal(t, timeNow, serviceLineItem.CreatedAt)
 	require.Equal(t, timeNow, serviceLineItem.UpdatedAt)
-	require.Equal(t, timeNow, serviceLineItem.StartedAt)
+	require.Equal(t, utils.ToDate(timeNow), serviceLineItem.StartedAt)
 	require.Nil(t, serviceLineItem.EndedAt)
 
 	// verify action
@@ -1736,7 +1736,7 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceInc
 	require.Equal(t, "Test service line item", serviceLineItem.Name)
 	require.Equal(t, timeNow, serviceLineItem.CreatedAt)
 	require.Equal(t, timeNow, serviceLineItem.UpdatedAt)
-	require.Equal(t, timeNow, serviceLineItem.StartedAt)
+	require.Equal(t, utils.ToDate(timeNow), serviceLineItem.StartedAt)
 	require.Nil(t, serviceLineItem.EndedAt)
 
 	// verify action
@@ -1837,7 +1837,7 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceInc
 	require.Equal(t, "This is a reason for change", serviceLineItem.Comments)
 	require.Equal(t, timeNow, serviceLineItem.CreatedAt)
 	require.Equal(t, timeNow, serviceLineItem.UpdatedAt)
-	require.Equal(t, timeNow, serviceLineItem.StartedAt)
+	require.Equal(t, utils.ToDate(timeNow), serviceLineItem.StartedAt)
 	require.Nil(t, serviceLineItem.EndedAt)
 
 	// verify action
@@ -1952,7 +1952,7 @@ func TestServiceLineItemEventHandler_OnUpdateBilledTypeNonRetroactiveForExisting
 	require.Equal(t, "Reason for change", serviceLineItem.Comments)
 	require.Equal(t, timeNow, serviceLineItem.CreatedAt)
 	require.Equal(t, timeNow, serviceLineItem.UpdatedAt)
-	require.Equal(t, timeNow, serviceLineItem.StartedAt)
+	require.Equal(t, utils.ToDate(timeNow), serviceLineItem.StartedAt)
 	require.Nil(t, serviceLineItem.EndedAt)
 
 	// verify action
@@ -2060,7 +2060,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceAndBilledTypeNonRetroactiveFor
 	require.Equal(t, "Service 1", serviceLineItem.Name)
 	require.Equal(t, timeNow, serviceLineItem.CreatedAt)
 	require.Equal(t, timeNow, serviceLineItem.UpdatedAt)
-	require.Equal(t, timeNow, serviceLineItem.StartedAt)
+	require.Equal(t, utils.ToDate(timeNow), serviceLineItem.StartedAt)
 	require.Nil(t, serviceLineItem.EndedAt)
 
 	// verify action
