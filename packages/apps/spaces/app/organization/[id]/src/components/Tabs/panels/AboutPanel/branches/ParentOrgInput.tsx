@@ -222,7 +222,7 @@ export const ParentOrgInput: React.FC<ParentOrgInputProps> = ({
           addSubsidiaryToOrganizationMutation.mutate({
             input: {
               organizationId: e.value,
-              subOrganizationId: id,
+              subsidiaryId: id,
             },
           });
         }
