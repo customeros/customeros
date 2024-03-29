@@ -12,9 +12,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	offeringpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/offering"
 	"github.com/opentracing/opentracing-go"
@@ -141,15 +139,6 @@ func (s *offeringService) UpdateOffering(ctx context.Context, input *model.Offer
 		return err
 	}
 
-	offeringExists, _ := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), input.ID, neo4jutil.NodeLabelOffering)
-	if !offeringExists {
-		err := fmt.Errorf("offering with id {%s} not found", input.ID)
-		s.log.Error(err.Error())
-		tracing.TraceErr(span, err)
-		return err
-	}
-	offeringEntity, err := s.GetOffering(ctx, input.ID)
-
 	var fieldsMask []offeringpb.OfferingFieldMask
 	updateRequest := offeringpb.UpdateOfferingGrpcRequest{
 		Tenant:         common.GetTenantFromContext(ctx),
@@ -171,12 +160,6 @@ func (s *offeringService) UpdateOffering(ctx context.Context, input *model.Offer
 		fieldsMask = append(fieldsMask, offeringpb.OfferingFieldMask_OFFERING_FIELD_TYPE)
 	}
 	if input.PricingModel != nil {
-		if offeringEntity.PricingModel != neo4jenum.PricingModelNone && offeringEntity.PricingModel.String() != input.PricingModel.String() {
-			err = fmt.Errorf("pricing model cannot be updated")
-			tracing.TraceErr(span, err)
-			s.log.Error(err.Error())
-			return err
-		}
 		updateRequest.PricingModel = input.PricingModel.String()
 		fieldsMask = append(fieldsMask, offeringpb.OfferingFieldMask_OFFERING_FIELD_PRICING_MODEL)
 	}
@@ -228,7 +211,7 @@ func (s *offeringService) UpdateOffering(ctx context.Context, input *model.Offer
 	updateRequest.FieldsMask = fieldsMask
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = CallEventsPlatformGRPCWithRetry[*commonpb.IdResponse](func() (*commonpb.IdResponse, error) {
+	_, err := CallEventsPlatformGRPCWithRetry[*commonpb.IdResponse](func() (*commonpb.IdResponse, error) {
 		return s.grpcClients.OfferingClient.UpdateOffering(ctx, &updateRequest)
 	})
 	if err != nil {

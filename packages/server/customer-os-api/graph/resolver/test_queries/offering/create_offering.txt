@@ -14,9 +14,5 @@ mutation CreateOffering {
     priceCalculationRevenueSharePercentage: 4,
     conditionalsMinimumChargePeriod: MONTHLY,
     conditionalsMinimumChargeAmount: 5
-  }) {
-    metadata {
-      id
-    }
-  }
+  })
 }

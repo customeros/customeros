@@ -14,12 +14,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go/log"
 )
 
 // OfferingCreate is the resolver for the offering_Create field.
-func (r *mutationResolver) OfferingCreate(ctx context.Context, input *model.OfferingCreateInput) (*model.Offering, error) {
+func (r *mutationResolver) OfferingCreate(ctx context.Context, input *model.OfferingCreateInput) (*string, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OfferingCreate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
@@ -29,17 +28,15 @@ func (r *mutationResolver) OfferingCreate(ctx context.Context, input *model.Offe
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to create offering")
-		return &model.Offering{Metadata: &model.Metadata{
-			ID: offeringId,
-		}}, err
+		return nil, err
 	}
 
 	span.LogFields(log.String("response.offeringId", offeringId))
-	return mapper.MapEntityToOffering(&neo4jentity.OfferingEntity{Id: offeringId}), nil
+	return &offeringId, nil
 }
 
 // OfferingUpdate is the resolver for the offering_Update field.
-func (r *mutationResolver) OfferingUpdate(ctx context.Context, input *model.OfferingUpdateInput) (*model.Offering, error) {
+func (r *mutationResolver) OfferingUpdate(ctx context.Context, input *model.OfferingUpdateInput) (*string, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OfferingUpdate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
@@ -59,7 +56,7 @@ func (r *mutationResolver) OfferingUpdate(ctx context.Context, input *model.Offe
 		return nil, err
 	}
 
-	return mapper.MapEntityToOffering(&neo4jentity.OfferingEntity{Id: input.ID}), nil
+	return &input.ID, nil
 }
 
 // ExternalLinks is the resolver for the externalLinks field.

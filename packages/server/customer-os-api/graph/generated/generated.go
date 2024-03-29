@@ -1853,8 +1853,8 @@ type MutationResolver interface {
 	NoteDelete(ctx context.Context, id string) (*model.Result, error)
 	NoteLinkAttachment(ctx context.Context, noteID string, attachmentID string) (*model.Note, error)
 	NoteUnlinkAttachment(ctx context.Context, noteID string, attachmentID string) (*model.Note, error)
-	OfferingCreate(ctx context.Context, input *model.OfferingCreateInput) (*model.Offering, error)
-	OfferingUpdate(ctx context.Context, input *model.OfferingUpdateInput) (*model.Offering, error)
+	OfferingCreate(ctx context.Context, input *model.OfferingCreateInput) (*string, error)
+	OfferingUpdate(ctx context.Context, input *model.OfferingUpdateInput) (*string, error)
 	OpportunityUpdate(ctx context.Context, input model.OpportunityUpdateInput) (*model.Opportunity, error)
 	OpportunityRenewalUpdate(ctx context.Context, input model.OpportunityRenewalUpdateInput, ownerUserID *string) (*model.Opportunity, error)
 	OrganizationCreate(ctx context.Context, input model.OrganizationInput) (*model.Organization, error)
@@ -14005,8 +14005,8 @@ input NoteUpdateInput {
 }
 
 extend type Mutation {
-    offering_Create(input: OfferingCreateInput): Offering! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    offering_Update(input: OfferingUpdateInput): Offering! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    offering_Create(input: OfferingCreateInput): ID @hasRole(roles: [ADMIN, USER]) @hasTenant
+    offering_Update(input: OfferingUpdateInput): ID @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type Offering implements MetadataInterface {
@@ -58135,24 +58135,21 @@ func (ec *executionContext) _Mutation_offering_Create(ctx context.Context, field
 		if tmp == nil {
 			return nil, nil
 		}
-		if data, ok := tmp.(*model.Offering); ok {
+		if data, ok := tmp.(*string); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.Offering`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Offering)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalNOffering2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOffering(ctx, field.Selections, res)
+	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_offering_Create(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -58162,37 +58159,7 @@ func (ec *executionContext) fieldContext_Mutation_offering_Create(ctx context.Co
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "metadata":
-				return ec.fieldContext_Offering_metadata(ctx, field)
-			case "name":
-				return ec.fieldContext_Offering_name(ctx, field)
-			case "active":
-				return ec.fieldContext_Offering_active(ctx, field)
-			case "type":
-				return ec.fieldContext_Offering_type(ctx, field)
-			case "pricingModel":
-				return ec.fieldContext_Offering_pricingModel(ctx, field)
-			case "pricingPeriodInMonths":
-				return ec.fieldContext_Offering_pricingPeriodInMonths(ctx, field)
-			case "currency":
-				return ec.fieldContext_Offering_currency(ctx, field)
-			case "price":
-				return ec.fieldContext_Offering_price(ctx, field)
-			case "priceCalculated":
-				return ec.fieldContext_Offering_priceCalculated(ctx, field)
-			case "taxable":
-				return ec.fieldContext_Offering_taxable(ctx, field)
-			case "priceCalculation":
-				return ec.fieldContext_Offering_priceCalculation(ctx, field)
-			case "conditional":
-				return ec.fieldContext_Offering_conditional(ctx, field)
-			case "conditionals":
-				return ec.fieldContext_Offering_conditionals(ctx, field)
-			case "externalLinks":
-				return ec.fieldContext_Offering_externalLinks(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Offering", field.Name)
+			return nil, errors.New("field of type ID does not have child fields")
 		},
 	}
 	defer func() {
@@ -58250,24 +58217,21 @@ func (ec *executionContext) _Mutation_offering_Update(ctx context.Context, field
 		if tmp == nil {
 			return nil, nil
 		}
-		if data, ok := tmp.(*model.Offering); ok {
+		if data, ok := tmp.(*string); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.Offering`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Offering)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalNOffering2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOffering(ctx, field.Selections, res)
+	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_offering_Update(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -58277,37 +58241,7 @@ func (ec *executionContext) fieldContext_Mutation_offering_Update(ctx context.Co
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "metadata":
-				return ec.fieldContext_Offering_metadata(ctx, field)
-			case "name":
-				return ec.fieldContext_Offering_name(ctx, field)
-			case "active":
-				return ec.fieldContext_Offering_active(ctx, field)
-			case "type":
-				return ec.fieldContext_Offering_type(ctx, field)
-			case "pricingModel":
-				return ec.fieldContext_Offering_pricingModel(ctx, field)
-			case "pricingPeriodInMonths":
-				return ec.fieldContext_Offering_pricingPeriodInMonths(ctx, field)
-			case "currency":
-				return ec.fieldContext_Offering_currency(ctx, field)
-			case "price":
-				return ec.fieldContext_Offering_price(ctx, field)
-			case "priceCalculated":
-				return ec.fieldContext_Offering_priceCalculated(ctx, field)
-			case "taxable":
-				return ec.fieldContext_Offering_taxable(ctx, field)
-			case "priceCalculation":
-				return ec.fieldContext_Offering_priceCalculation(ctx, field)
-			case "conditional":
-				return ec.fieldContext_Offering_conditional(ctx, field)
-			case "conditionals":
-				return ec.fieldContext_Offering_conditionals(ctx, field)
-			case "externalLinks":
-				return ec.fieldContext_Offering_externalLinks(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Offering", field.Name)
+			return nil, errors.New("field of type ID does not have child fields")
 		},
 	}
 	defer func() {
@@ -107576,16 +107510,10 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_offering_Create(ctx, field)
 			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "offering_Update":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_offering_Update(ctx, field)
 			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "opportunityUpdate":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_opportunityUpdate(ctx, field)
@@ -117410,10 +117338,6 @@ func (ec *executionContext) marshalNNotedEntity2ᚕgithubᚗcomᚋopenlineᚑai�
 	}
 
 	return ret
-}
-
-func (ec *executionContext) marshalNOffering2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOffering(ctx context.Context, sel ast.SelectionSet, v model.Offering) graphql.Marshaler {
-	return ec._Offering(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNOffering2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOfferingᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Offering) graphql.Marshaler {
