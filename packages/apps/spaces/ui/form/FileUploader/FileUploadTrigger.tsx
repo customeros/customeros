@@ -2,13 +2,6 @@ import { forwardRef } from 'react';
 
 import { useFileUploader, FileUploaderProps } from './useFileUploader';
 
-export interface EndpointOptions {
-  uploadUrl: string;
-  fileKeyName: string;
-  downloadUrl?: string;
-  payload?: Record<string, string>;
-}
-
 interface FileUploadTriggerProps extends FileUploaderProps {
   name?: string;
   accept?: string;
