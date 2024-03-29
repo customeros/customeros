@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 	"github.com/google/uuid"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/country"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
@@ -14,14 +14,18 @@ import (
 
 type countryService struct {
 	countrypb.UnimplementedCountryGrpcServiceServer
-	log           logger.Logger
-	eventHandlers *country.EventHandlers
+	services       *Services
+	log            logger.Logger
+	aggregateStore eventstore.AggregateStore
+	cfg            *config.Config
 }
 
-func NewCountryService(log logger.Logger, eventHandlers *country.EventHandlers) *countryService {
+func NewCountryService(services *Services, log logger.Logger, aggregateStore eventstore.AggregateStore, cfg *config.Config) *countryService {
 	return &countryService{
-		log:           log,
-		eventHandlers: eventHandlers,
+		services:       services,
+		log:            log,
+		aggregateStore: aggregateStore,
+		cfg:            cfg,
 	}
 }
 
@@ -33,9 +37,8 @@ func (s *countryService) CreateCountry(ctx context.Context, request *countrypb.C
 
 	countryId := uuid.New().String()
 
-	baseRequest := eventstore.NewBaseRequest(countryId, "", request.LoggedInUserId, commonmodel.SourceFromGrpc(request.SourceFields))
-
-	if err := s.eventHandlers.CountryCreate.Handle(ctx, baseRequest, request); err != nil {
+	countryAggregate := country.NewCountryAggregateWithID(countryId)
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, countryAggregate, eventstore.LoadAggregateOptions{}, request); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(CountryService.CountryCreate), err: %v", err.Error())
 		return nil, grpcerr.ErrResponse(err)

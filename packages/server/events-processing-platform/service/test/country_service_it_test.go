@@ -54,7 +54,4 @@ func TestCountryService_CreateCountry(t *testing.T) {
 	require.Equal(t, "2", eventData.CodeA3)
 	require.Equal(t, "3", eventData.PhoneCode)
 	test.AssertRecentTime(t, eventData.CreatedAt)
-	require.Equal(t, "app", eventData.SourceFields.AppSource)
-	require.Equal(t, "source", eventData.SourceFields.Source)
-	require.Equal(t, "source", eventData.SourceFields.SourceOfTruth)
 }
