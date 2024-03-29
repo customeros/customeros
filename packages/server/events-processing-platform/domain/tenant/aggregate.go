@@ -30,22 +30,6 @@ func GetTenantName(aggregateID string) string {
 	return strings.ReplaceAll(aggregateID, string(TenantAggregateType)+"-", "")
 }
 
-func LoadTenantAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant string, options eventstore.LoadAggregateOptions) (*TenantAggregate, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "LoadTenantAggregate")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-
-	tenantAggregate := NewTenantAggregate(tenant)
-
-	err := aggregate.LoadAggregate(ctx, eventStore, tenantAggregate, options)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	return tenantAggregate, nil
-}
-
 func NewTenantAggregate(tenant string) *TenantAggregate {
 	tenantAggregate := TenantAggregate{}
 	tenantAggregate.CommonIdAggregate = aggregate.NewCommonAggregateWithId(TenantAggregateType, tenant)
@@ -56,8 +40,8 @@ func NewTenantAggregate(tenant string) *TenantAggregate {
 	return &tenantAggregate
 }
 
-func (a *TenantAggregate) HandleRequest(ctx context.Context, request any) (any, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantAggregate.HandleRequest")
+func (a *TenantAggregate) HandleGRPCRequest(ctx context.Context, request any, params map[string]any) (any, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantAggregate.HandleGRPCRequest")
 	defer span.Finish()
 
 	switch r := request.(type) {
