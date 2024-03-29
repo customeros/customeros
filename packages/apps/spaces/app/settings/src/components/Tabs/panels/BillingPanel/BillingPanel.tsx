@@ -436,7 +436,6 @@ export const BillingPanel = () => {
             setIsInvoiceProviderDetailsHovered={
               setIsInvoiceProviderDetailsHovered
             }
-            organizationName={state.values?.legalName}
             sendInvoicesFrom={state.values?.sendInvoicesFrom}
             country={state.values?.country}
           />

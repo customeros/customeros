@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React from 'react';
 
 import { LogoUploader } from '@settings/components/LogoUploadComponent/LogoUploader';
 import { VatInput } from '@settings/components/Tabs/panels/BillingPanel/components/VatInput';
@@ -22,13 +22,11 @@ export const TenantBillingPanelDetailsForm = ({
   setIsInvoiceProviderDetailsHovered,
   setIsInvoiceProviderFocused,
   formId,
-  organizationName,
   sendInvoicesFrom,
   country,
 }: {
   formId: string;
   sendInvoicesFrom?: string;
-  organizationName?: string | null;
   country?: SelectOption<string> | null;
   setIsInvoiceProviderFocused: (newState: boolean) => void;
   setIsInvoiceProviderDetailsHovered: (newState: boolean) => void;
@@ -208,7 +206,7 @@ export const TenantBillingPanelDetailsForm = ({
           type='email'
         />
       </Flex>
-      <PaymentMethods formId={formId} organizationName={organizationName} />
+      <PaymentMethods formId={formId} />
       <FormSwitch
         size='sm'
         name='check'
