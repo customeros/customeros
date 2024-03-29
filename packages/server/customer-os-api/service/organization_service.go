@@ -41,8 +41,8 @@ type OrganizationService interface {
 	GetOrganizationsForPhoneNumbers(ctx context.Context, phoneNumberIds []string) (*entity.OrganizationEntities, error)
 	GetSubsidiariesForOrganizations(ctx context.Context, parentOrganizationIds []string) (*entity.OrganizationEntities, error)
 	GetSubsidiariesOfForOrganizations(ctx context.Context, organizationIds []string) (*entity.OrganizationEntities, error)
-	AddSubsidiary(ctx context.Context, parentOrganizationId, subOrganizationId, subsidiaryType string) error
-	RemoveSubsidiary(ctx context.Context, parentOrganizationId, subOrganizationId string) error
+	AddSubsidiary(ctx context.Context, parentOrganizationId, subsidiaryOrganizationId, subsidiaryType string) error
+	RemoveSubsidiary(ctx context.Context, parentOrganizationId, subsidiaryOrganizationId string) error
 	ReplaceOwner(ctx context.Context, organizationId, userId string) (*entity.OrganizationEntity, error)
 	RemoveOwner(ctx context.Context, organizationId string) (*entity.OrganizationEntity, error)
 	UpdateLastTouchpoint(ctx context.Context, organizationId string)
@@ -383,11 +383,11 @@ func (s *organizationService) GetSubsidiariesForOrganizations(ctx context.Contex
 	return &organizationEntities, nil
 }
 
-func (s *organizationService) AddSubsidiary(ctx context.Context, parentOrganizationId, subOrganizationId, subsidiaryType string) error {
+func (s *organizationService) AddSubsidiary(ctx context.Context, parentOrganizationId, subsidiaryOrganizationId, subsidiaryType string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.AddSubsidiary")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("parentOrganizationId", parentOrganizationId), log.String("subOrganizationId", subOrganizationId), log.String("subsidiaryType", subsidiaryType))
+	span.LogFields(log.String("parentOrganizationId", parentOrganizationId), log.String("subsidiaryOrganizationId", subsidiaryOrganizationId), log.String("subsidiaryType", subsidiaryType))
 
 	parentExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), parentOrganizationId, neo4jutil.NodeLabelOrganization)
 	if err != nil {
@@ -402,14 +402,14 @@ func (s *organizationService) AddSubsidiary(ctx context.Context, parentOrganizat
 		return err
 	}
 
-	subExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), subOrganizationId, neo4jutil.NodeLabelOrganization)
+	subExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), subsidiaryOrganizationId, neo4jutil.NodeLabelOrganization)
 	if err != nil {
 		s.log.Errorf("error checking if sub organization exists: {%v}", err.Error())
 		tracing.TraceErr(span, err)
 		return err
 	}
 	if !subExists {
-		err = fmt.Errorf("sub organization with id {%s} not found", subOrganizationId)
+		err = fmt.Errorf("subsidiary organization with id {%s} not found", subsidiaryOrganizationId)
 		s.log.Errorf("%v", err.Error())
 		tracing.TraceErr(span, err)
 		return err
@@ -423,7 +423,7 @@ func (s *organizationService) AddSubsidiary(ctx context.Context, parentOrganizat
 		return err
 	}
 	for _, subsidiary := range *existingSubsidiaries {
-		if subsidiary.ID != subOrganizationId {
+		if subsidiary.ID != subsidiaryOrganizationId {
 			err = s.RemoveSubsidiary(ctx, parentOrganizationId, subsidiary.ID)
 			if err != nil {
 				tracing.TraceErr(span, err)
@@ -436,7 +436,7 @@ func (s *organizationService) AddSubsidiary(ctx context.Context, parentOrganizat
 	_, err = CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
 		return s.grpcClients.OrganizationClient.AddParentOrganization(ctx, &organizationpb.AddParentOrganizationGrpcRequest{
 			Tenant:               common.GetTenantFromContext(ctx),
-			OrganizationId:       subOrganizationId,
+			OrganizationId:       subsidiaryOrganizationId,
 			ParentOrganizationId: parentOrganizationId,
 			Type:                 subsidiaryType,
 			LoggedInUserId:       common.GetUserIdFromContext(ctx),
@@ -450,11 +450,11 @@ func (s *organizationService) AddSubsidiary(ctx context.Context, parentOrganizat
 	return err
 }
 
-func (s *organizationService) RemoveSubsidiary(ctx context.Context, parentOrganizationId, subOrganizationId string) error {
+func (s *organizationService) RemoveSubsidiary(ctx context.Context, parentOrganizationId, subsidiaryOrganizationId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.AddSubsidiary")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("parentOrganizationId", parentOrganizationId), log.String("subOrganizationId", subOrganizationId))
+	span.LogFields(log.String("parentOrganizationId", parentOrganizationId), log.String("subsidiaryOrganizationId", subsidiaryOrganizationId))
 
 	parentExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), parentOrganizationId, neo4jutil.NodeLabelOrganization)
 	if err != nil {
@@ -469,14 +469,14 @@ func (s *organizationService) RemoveSubsidiary(ctx context.Context, parentOrgani
 		return err
 	}
 
-	subExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), subOrganizationId, neo4jutil.NodeLabelOrganization)
+	subExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), subsidiaryOrganizationId, neo4jutil.NodeLabelOrganization)
 	if err != nil {
 		s.log.Errorf("error checking if sub organization exists: {%v}", err.Error())
 		tracing.TraceErr(span, err)
 		return err
 	}
 	if !subExists {
-		err = fmt.Errorf("sub organization with id {%s} not found", subOrganizationId)
+		err = fmt.Errorf("sub organization with id {%s} not found", subsidiaryOrganizationId)
 		s.log.Errorf("%v", err.Error())
 		tracing.TraceErr(span, err)
 		return err
@@ -486,7 +486,7 @@ func (s *organizationService) RemoveSubsidiary(ctx context.Context, parentOrgani
 	_, err = CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
 		return s.grpcClients.OrganizationClient.RemoveParentOrganization(ctx, &organizationpb.RemoveParentOrganizationGrpcRequest{
 			Tenant:               common.GetTenantFromContext(ctx),
-			OrganizationId:       subOrganizationId,
+			OrganizationId:       subsidiaryOrganizationId,
 			ParentOrganizationId: parentOrganizationId,
 			LoggedInUserId:       common.GetUserIdFromContext(ctx),
 			AppSource:            constants.AppSourceCustomerOsApi,

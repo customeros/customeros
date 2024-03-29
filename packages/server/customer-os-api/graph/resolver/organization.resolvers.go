@@ -586,15 +586,12 @@ func (r *mutationResolver) OrganizationAddSubsidiary(ctx context.Context, input 
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationAddSubsidiary", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(
-		log.String("request.organizationID", input.OrganizationID),
-		log.String("request.subOrganizationID", input.SubOrganizationID),
-		log.String("request.type", utils.IfNotNilString(input.Type)))
+	tracing.LogObjectAsJson(span, "input", input)
 
-	err := r.Services.OrganizationService.AddSubsidiary(ctx, input.OrganizationID, input.SubOrganizationID, utils.IfNotNilString(input.Type))
+	err := r.Services.OrganizationService.AddSubsidiary(ctx, input.OrganizationID, input.SubsidiaryID, utils.IfNotNilString(input.Type))
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "failed to add subsidiary %s to organization %s", input.SubOrganizationID, input.OrganizationID)
+		graphql.AddErrorf(ctx, "failed to add subsidiary %s to organization %s", input.SubsidiaryID, input.OrganizationID)
 		return nil, nil
 	}
 	organizationEntity, err := r.Services.OrganizationService.GetById(ctx, input.OrganizationID)
