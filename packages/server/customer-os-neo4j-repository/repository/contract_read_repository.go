@@ -483,13 +483,16 @@ func (r *contractReadRepository) GetContractsForRenewalRollout(ctx context.Conte
 
 	cypher := `MATCH (t:Tenant)<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract),
 				(c)-[:ACTIVE_RENEWAL]->(op:RenewalOpportunity)
-				WHERE c.status = $liveStatus 
-					AND op.renewedAt < $referenceTime
-					AND (c.techRolloutRenewalRequestedAt IS NULL OR c.techRolloutRenewalRequestedAt + duration({hours: 2}) < $referenceTime)
+				WHERE
+					(c.techRolloutRenewalRequestedAt IS NULL OR c.techRolloutRenewalRequestedAt + duration({hours: 2}) < $referenceTime) AND
+					op.renewedAt < $referenceTime AND
+					(c.autoRenew = true OR c.renewalApproved = true) AND
+					c.status IN [$liveStatus, $outOfContractStatus]
 				RETURN t.name, c.id LIMIT 100`
 	params := map[string]any{
-		"referenceTime": referenceTime,
-		"liveStatus":    "LIVE",
+		"referenceTime":       referenceTime,
+		"liveStatus":          neo4jenum.ContractStatusLive.String(),
+		"outOfContractStatus": neo4jenum.ContractStatusOutOfContract.String(),
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
