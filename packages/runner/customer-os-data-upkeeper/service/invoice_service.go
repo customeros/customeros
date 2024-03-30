@@ -186,33 +186,33 @@ func (s *invoiceService) GenerateCycleInvoices() {
 }
 
 func (s *invoiceService) calculateInvoiceCycleEnd(ctx context.Context, start time.Time, tenant string, contractEntity neo4jentity.ContractEntity) time.Time {
-	var end time.Time
+	var nextStart time.Time
 
 	switch contractEntity.BillingCycle {
 	case neo4jenum.BillingCycleMonthlyBilling:
-		end = start.AddDate(0, 1, 0)
+		nextStart = start.AddDate(0, 1, 0)
 	case neo4jenum.BillingCycleQuarterlyBilling:
-		end = start.AddDate(0, 3, 0)
+		nextStart = start.AddDate(0, 3, 0)
 	case neo4jenum.BillingCycleAnnuallyBilling:
-		end = start.AddDate(1, 0, 0)
+		nextStart = start.AddDate(1, 0, 0)
 	default:
 		return start
 	}
 	if start.Day() == 1 {
 		// if previous invoice was generated end of month, we need to substract extra 1 day
 		previousCycleInvoiceDbNode, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetPreviousCycleInvoice(ctx, tenant, contractEntity.Id)
-		if err == nil {
+		if err != nil {
 			tracing.TraceErr(nil, err)
 		}
 		if previousCycleInvoiceDbNode != nil {
-			invoice := neo4jmapper.MapDbNodeToInvoiceEntity(previousCycleInvoiceDbNode)
-			if utils.IsEndOfMonth(invoice.PeriodStartDate) {
-				end = end.AddDate(0, 0, -1)
+			previousInvoice := neo4jmapper.MapDbNodeToInvoiceEntity(previousCycleInvoiceDbNode)
+			if previousInvoice.PeriodStartDate.Day() != 1 {
+				nextStart = nextStart.AddDate(0, -1, 0)
+				nextStart = time.Date(nextStart.Year(), nextStart.Month(), previousInvoice.PeriodStartDate.Day(), 0, 0, 0, 0, nextStart.Location())
 			}
 		}
 	}
-	previousDay := end.AddDate(0, 0, -1)
-	return previousDay
+	return nextStart.AddDate(0, 0, -1)
 }
 
 func (s *invoiceService) getTenantBaseCurrency(ctx context.Context, tenant string, cachedTenantBaseCurrencies map[string]neo4jenum.Currency) neo4jenum.Currency {
