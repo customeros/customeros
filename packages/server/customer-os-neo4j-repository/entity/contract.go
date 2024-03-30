@@ -17,8 +17,8 @@ type ContractEntity struct {
 	Name                            string
 	CreatedAt                       time.Time
 	UpdatedAt                       time.Time
-	ServiceStartedAt                *time.Time // Date only
-	SignedAt                        *time.Time // Date only
+	ServiceStartedAt                *time.Time // DateTime
+	SignedAt                        *time.Time // DateTime
 	EndedAt                         *time.Time // DateTime
 	RenewalCycle                    enum.RenewalCycle
 	RenewalPeriods                  *int64

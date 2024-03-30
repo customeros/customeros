@@ -161,7 +161,8 @@ func (h *InvoiceEventHandler) fillCycleInvoice(ctx context.Context, tenant, cont
 			continue
 		}
 
-		if sliEntity.Quantity <= 0 || sliEntity.Price <= 0 {
+		// skip SLI if quantity or price is negative
+		if sliEntity.Quantity < 0 || sliEntity.Price < 0 {
 			continue
 		}
 
