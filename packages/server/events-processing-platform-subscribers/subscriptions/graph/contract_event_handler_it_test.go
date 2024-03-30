@@ -63,6 +63,7 @@ func TestContractEventHandler_OnCreate(t *testing.T) {
 			AutoRenew:          true,
 			Check:              true,
 			DueDays:            30,
+			Country:            "US",
 		},
 		commonmodel.Source{
 			Source:    constants.SourceOpenline,
@@ -153,6 +154,7 @@ func TestContractEventHandler_OnCreate(t *testing.T) {
 	require.True(t, contract.AutoRenew)
 	require.True(t, contract.Check)
 	require.Equal(t, int64(30), contract.DueDays)
+	require.Equal(t, "US", contract.Country)
 
 	// Verify events platform was called
 	require.True(t, calledEventsPlatformForOnboardingStatusChange)

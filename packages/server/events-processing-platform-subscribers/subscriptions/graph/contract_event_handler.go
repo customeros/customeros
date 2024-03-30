@@ -84,6 +84,7 @@ func (h *ContractEventHandler) OnCreate(ctx context.Context, evt eventstore.Even
 		CanPayWithBankTransfer: eventData.CanPayWithBankTransfer,
 		Check:                  eventData.Check,
 		DueDays:                eventData.DueDays,
+		Country:                eventData.Country,
 		SourceFields: neo4jmodel.Source{
 			Source:        helper.GetSource(eventData.Source.Source),
 			AppSource:     helper.GetAppSource(eventData.Source.AppSource),

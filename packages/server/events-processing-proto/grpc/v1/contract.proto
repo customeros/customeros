@@ -77,6 +77,7 @@ message CreateContractGrpcRequest {
   bool autoRenew = 25;
   bool check = 26;
   int64 dueDays = 27;
+  string country = 28;
 }
 
 message UpdateContractGrpcRequest {

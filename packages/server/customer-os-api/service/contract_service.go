@@ -143,20 +143,30 @@ func (s *contractService) createContractWithEvents(ctx context.Context, contract
 		createContractRequest.RenewalCycle = contractpb.RenewalCycle_NONE
 	}
 
-	// prepare currency
+	// set default fields
+	// set currency
 	if contractDetails.Input.Currency != nil && contractDetails.Input.Currency.String() != "" {
 		createContractRequest.Currency = contractDetails.Input.Currency.String()
 	} else {
 		// if not provided, get default currency from tenant settings
-		dbNode, err := s.repositories.Neo4jRepositories.TenantReadRepository.GetTenantSettings(ctx, common.GetTenantFromContext(ctx))
+		tenantSettingsEntity, err := s.services.TenantService.GetTenantSettings(ctx)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return "", err
 		}
-		tenantSettingsEntity := neo4jmapper.MapDbNodeToTenantSettingsEntity(dbNode)
 		if tenantSettingsEntity.BaseCurrency.String() != "" {
 			createContractRequest.Currency = tenantSettingsEntity.BaseCurrency.String()
 		}
+	}
+
+	tenantBillingProfileEntity, err := s.services.TenantService.GetDefaultTenantBillingProfile(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+	if tenantBillingProfileEntity != nil {
+		// set country
+		createContractRequest.Country = tenantBillingProfileEntity.Country
 	}
 
 	// prepare external system fields
