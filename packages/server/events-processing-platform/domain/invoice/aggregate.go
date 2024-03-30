@@ -35,6 +35,13 @@ func (a *InvoiceAggregate) IsTemporal() bool {
 	return false
 }
 
+func (a *InvoiceAggregate) PrepareStreamMetadata() esdb.StreamMetadata {
+	streamMetadata := esdb.StreamMetadata{}
+	// set duration for 1 year
+	streamMetadata.SetMaxAge(time.Duration(int64(365*24)) * time.Hour)
+	return streamMetadata
+}
+
 func GetInvoiceObjectID(aggregateID string, tenant string) string {
 	return aggregate.GetAggregateObjectID(aggregateID, tenant, InvoiceAggregateType)
 }

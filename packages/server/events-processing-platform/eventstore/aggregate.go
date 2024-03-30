@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
+	"time"
 )
 
 const (
@@ -79,6 +81,7 @@ type AggregateRoot interface {
 	IsTemporal() bool
 	SetStreamMetadata(streamMetadata *esdb.StreamMetadata)
 	GetStreamMetadata() *esdb.StreamMetadata
+	PrepareStreamMetadata() esdb.StreamMetadata
 	Load
 	Apply
 }
@@ -187,6 +190,15 @@ func (a *AggregateBase) GetStreamMetadata() *esdb.StreamMetadata {
 
 func (a *AggregateBase) SetStreamMetadata(streamMetadata *esdb.StreamMetadata) {
 	a.streamMetadata = streamMetadata
+}
+
+func (a *AggregateBase) PrepareStreamMetadata() esdb.StreamMetadata {
+	streamMetadata := esdb.StreamMetadata{}
+	if a.IsTemporal() {
+		streamMetadata.SetMaxCount(constants.StreamMetadataMaxCount)
+		streamMetadata.SetMaxAge(time.Duration(constants.StreamMetadataMaxAgeSeconds) * time.Second)
+	}
+	return streamMetadata
 }
 
 // Load add existing events from event store to aggregate using When interface method

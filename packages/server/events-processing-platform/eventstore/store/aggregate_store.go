@@ -3,7 +3,6 @@ package store
 import (
 	"context"
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	es "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -12,7 +11,6 @@ import (
 	"github.com/pkg/errors"
 	"io"
 	"math"
-	"time"
 )
 
 const (
@@ -148,9 +146,7 @@ func (as *aggregateStore) Save(ctx context.Context, aggregate es.Aggregate) erro
 		as.log.Debugf("(Save) stream: {%+v}", appendStream)
 
 		if aggregate.IsTemporal() {
-			streamMetadata := esdb.StreamMetadata{}
-			streamMetadata.SetMaxCount(constants.StreamMetadataMaxCount)
-			streamMetadata.SetMaxAge(time.Duration(constants.StreamMetadataMaxAgeSeconds) * time.Second)
+			streamMetadata := aggregate.PrepareStreamMetadata()
 			_, err = as.esdbClient.SetStreamMetadata(ctx, aggregate.GetID(), esdb.AppendToStreamOptions{}, streamMetadata)
 			if err != nil {
 				tracing.TraceErr(span, err)
