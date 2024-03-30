@@ -2,6 +2,7 @@ package grpc_client
 
 import (
 	commentpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/comment"
+	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
 	interactioneventpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/interaction_event"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
@@ -29,6 +30,7 @@ type Clients struct {
 	OpportunityClient      opportunitypb.OpportunityGrpcServiceClient
 	InvoiceClient          invoicepb.InvoiceGrpcServiceClient
 	ReminderClient         reminderpb.ReminderGrpcServiceClient
+	ContractClient         contractpb.ContractGrpcServiceClient
 }
 
 func InitGrpcClients(conn *grpc.ClientConn) *Clients {
@@ -48,6 +50,7 @@ func InitGrpcClients(conn *grpc.ClientConn) *Clients {
 		OpportunityClient:      opportunitypb.NewOpportunityGrpcServiceClient(conn),
 		InvoiceClient:          invoicepb.NewInvoiceGrpcServiceClient(conn),
 		ReminderClient:         reminderpb.NewReminderGrpcServiceClient(conn),
+		ContractClient:         contractpb.NewContractGrpcServiceClient(conn),
 	}
 	return &clients
 }
