@@ -424,6 +424,7 @@ func (a *ContractAggregate) onContractCreate(evt eventstore.Event) error {
 	a.Contract.AutoRenew = eventData.AutoRenew
 	a.Contract.Check = eventData.Check
 	a.Contract.DueDays = eventData.DueDays
+	a.Contract.Country = eventData.Country
 	return nil
 }
 
