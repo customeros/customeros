@@ -620,6 +620,156 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_MultipleServi
 	require.True(t, calledFillInvoice)
 }
 
+func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_IncludeZeroQuantityInvoiceLines(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// test data
+	invoiceStartPeriod := time.Date(2024, time.February, 1, 0, 0, 0, 0, time.UTC)
+	invoiceEndPeriod := time.Date(2024, time.February, 29, 0, 0, 0, 0, time.UTC)
+
+	// prepare neo4j data
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenantSettings(ctx, testDatabase.Driver, tenantName, neo4jentity.TenantSettingsEntity{})
+	neo4jtest.CreateTenantBillingProfile(ctx, testDatabase.Driver, tenantName, neo4jentity.TenantBillingProfileEntity{})
+	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{})
+	neo4jtest.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
+		StartedAt: invoiceStartPeriod,
+		Quantity:  0,
+		Price:     100,
+		Billed:    neo4jenum.BilledTypeMonthly,
+	})
+	neo4jtest.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
+		StartedAt: invoiceStartPeriod.AddDate(0, 0, -1),
+		Quantity:  2,
+		Price:     10,
+		Billed:    neo4jenum.BilledTypeMonthly,
+	})
+	neo4jtest.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
+		StartedAt: invoiceStartPeriod,
+		Quantity:  3,
+		Price:     3,
+		Billed:    neo4jenum.BilledTypeOnce,
+	})
+	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		PeriodStartDate: invoiceStartPeriod,
+		PeriodEndDate:   invoiceEndPeriod,
+		BillingCycle:    neo4jenum.BillingCycleMonthlyBilling,
+	})
+
+	// prepare event handler
+	invoiceEventHandler := prepareInvoiceEventHandler()
+	// prepare aggregate
+	invoiceAggregate := invoice.NewInvoiceAggregateWithTenantAndID(tenantName, invoiceId)
+	// prepare event
+	invoiceFillRequestedEvent, _ := invoice.NewInvoiceFillRequestedEvent(invoiceAggregate, contractId)
+
+	// prepare grpc mock
+	calledFillInvoice := false
+	invoiceGrpcServiceCallbacks := mocked_grpc.MockInvoiceServiceCallbacks{
+		FillInvoice: func(context context.Context, inv *invoicepb.FillInvoiceRequest) (*invoicepb.InvoiceIdResponse, error) {
+			require.Equal(t, tenantName, inv.Tenant)
+			require.Equal(t, invoiceId, inv.InvoiceId)
+			require.Equal(t, "", inv.LoggedInUserId)
+			require.Equal(t, float64(29), inv.Amount)
+			require.Equal(t, float64(29), inv.Total)
+			require.Equal(t, float64(0), inv.Vat)
+			require.Equal(t, 3, len(inv.InvoiceLines))
+			require.ElementsMatch(t, []float64{0, 20, 9}, []float64{inv.InvoiceLines[0].Amount, inv.InvoiceLines[1].Amount, inv.InvoiceLines[2].Amount})
+			require.ElementsMatch(t, []int64{0, 2, 3}, []int64{inv.InvoiceLines[0].Quantity, inv.InvoiceLines[1].Quantity, inv.InvoiceLines[2].Quantity})
+			require.ElementsMatch(t, []float64{100, 10, 3}, []float64{inv.InvoiceLines[0].Price, inv.InvoiceLines[1].Price, inv.InvoiceLines[2].Price})
+			calledFillInvoice = true
+			return &invoicepb.InvoiceIdResponse{
+				Id: invoiceId,
+			}, nil
+		},
+	}
+	mocked_grpc.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
+
+	// EXECUTE
+	err := invoiceEventHandler.onInvoiceFillRequestedV1(context.Background(), invoiceFillRequestedEvent)
+	require.Nil(t, err, "invoicing failed")
+
+	// VERIFY
+	require.True(t, calledFillInvoice)
+}
+
+func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_IncludeZeroPriceInvoiceLines(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// test data
+	invoiceStartPeriod := time.Date(2024, time.February, 1, 0, 0, 0, 0, time.UTC)
+	invoiceEndPeriod := time.Date(2024, time.February, 29, 0, 0, 0, 0, time.UTC)
+
+	// prepare neo4j data
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenantSettings(ctx, testDatabase.Driver, tenantName, neo4jentity.TenantSettingsEntity{})
+	neo4jtest.CreateTenantBillingProfile(ctx, testDatabase.Driver, tenantName, neo4jentity.TenantBillingProfileEntity{})
+	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{})
+	neo4jtest.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
+		StartedAt: invoiceStartPeriod,
+		Quantity:  1,
+		Price:     0,
+		Billed:    neo4jenum.BilledTypeMonthly,
+	})
+	neo4jtest.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
+		StartedAt: invoiceStartPeriod.AddDate(0, 0, -1),
+		Quantity:  2,
+		Price:     10,
+		Billed:    neo4jenum.BilledTypeMonthly,
+	})
+	neo4jtest.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
+		StartedAt: invoiceStartPeriod,
+		Quantity:  3,
+		Price:     3,
+		Billed:    neo4jenum.BilledTypeOnce,
+	})
+	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		PeriodStartDate: invoiceStartPeriod,
+		PeriodEndDate:   invoiceEndPeriod,
+		BillingCycle:    neo4jenum.BillingCycleMonthlyBilling,
+	})
+
+	// prepare event handler
+	invoiceEventHandler := prepareInvoiceEventHandler()
+	// prepare aggregate
+	invoiceAggregate := invoice.NewInvoiceAggregateWithTenantAndID(tenantName, invoiceId)
+	// prepare event
+	invoiceFillRequestedEvent, _ := invoice.NewInvoiceFillRequestedEvent(invoiceAggregate, contractId)
+
+	// prepare grpc mock
+	calledFillInvoice := false
+	invoiceGrpcServiceCallbacks := mocked_grpc.MockInvoiceServiceCallbacks{
+		FillInvoice: func(context context.Context, inv *invoicepb.FillInvoiceRequest) (*invoicepb.InvoiceIdResponse, error) {
+			require.Equal(t, tenantName, inv.Tenant)
+			require.Equal(t, invoiceId, inv.InvoiceId)
+			require.Equal(t, "", inv.LoggedInUserId)
+			require.Equal(t, float64(29), inv.Amount)
+			require.Equal(t, float64(29), inv.Total)
+			require.Equal(t, float64(0), inv.Vat)
+			require.Equal(t, 3, len(inv.InvoiceLines))
+			require.ElementsMatch(t, []float64{0, 20, 9}, []float64{inv.InvoiceLines[0].Amount, inv.InvoiceLines[1].Amount, inv.InvoiceLines[2].Amount})
+			require.ElementsMatch(t, []int64{1, 2, 3}, []int64{inv.InvoiceLines[0].Quantity, inv.InvoiceLines[1].Quantity, inv.InvoiceLines[2].Quantity})
+			require.ElementsMatch(t, []float64{0, 10, 3}, []float64{inv.InvoiceLines[0].Price, inv.InvoiceLines[1].Price, inv.InvoiceLines[2].Price})
+			calledFillInvoice = true
+			return &invoicepb.InvoiceIdResponse{
+				Id: invoiceId,
+			}, nil
+		},
+	}
+	mocked_grpc.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
+
+	// EXECUTE
+	err := invoiceEventHandler.onInvoiceFillRequestedV1(context.Background(), invoiceFillRequestedEvent)
+	require.Nil(t, err, "invoicing failed")
+
+	// VERIFY
+	require.True(t, calledFillInvoice)
+}
+
 func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_Postpaid_MultipleServiceLineItems(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
