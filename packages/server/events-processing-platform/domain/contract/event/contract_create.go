@@ -37,6 +37,7 @@ type ContractCreateEvent struct {
 	AutoRenew              bool                       `json:"autoRenew,omitempty"`
 	Check                  bool                       `json:"check,omitempty"`
 	DueDays                int64                      `json:"dueDays,omitempty"`
+	Country                string                     `json:"country"`
 }
 
 func NewContractCreateEvent(aggregate eventstore.Aggregate, dataFields model.ContractDataFields, source commonmodel.Source, externalSystem commonmodel.ExternalSystem, createdAt, updatedAt time.Time) (eventstore.Event, error) {
@@ -65,6 +66,7 @@ func NewContractCreateEvent(aggregate eventstore.Aggregate, dataFields model.Con
 		CreatedAt:              createdAt,
 		UpdatedAt:              updatedAt,
 		Source:                 source,
+		Country:                dataFields.Country,
 	}
 	if eventData.DueDays < 0 {
 		eventData.DueDays = 0

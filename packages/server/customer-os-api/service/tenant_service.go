@@ -29,6 +29,7 @@ type TenantService interface {
 	Merge(ctx context.Context, tenantEntity neo4jentity.TenantEntity) (*neo4jentity.TenantEntity, error)
 	GetTenantBillingProfiles(ctx context.Context) (*neo4jentity.TenantBillingProfileEntities, error)
 	GetTenantBillingProfile(ctx context.Context, id string) (*neo4jentity.TenantBillingProfileEntity, error)
+	GetDefaultTenantBillingProfile(ctx context.Context) (*neo4jentity.TenantBillingProfileEntity, error)
 	CreateTenantBillingProfile(ctx context.Context, input model.TenantBillingProfileInput) (string, error)
 	UpdateTenantBillingProfile(ctx context.Context, input model.TenantBillingProfileUpdateInput) error
 	GetTenantSettings(ctx context.Context) (*neo4jentity.TenantSettingsEntity, error)
@@ -351,4 +352,21 @@ func (s *tenantService) UpdateTenantSettings(ctx context.Context, input *model.T
 	}
 
 	return nil
+}
+
+func (s *tenantService) GetDefaultTenantBillingProfile(ctx context.Context) (*neo4jentity.TenantBillingProfileEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantService.GetDefaultTenantBillingProfile")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+
+	tenantBillingProfiles, err := s.GetTenantBillingProfiles(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, fmt.Errorf("GetDefaultTenantBillingProfile: %w", err)
+	}
+	if tenantBillingProfiles == nil || len(*tenantBillingProfiles) == 0 {
+		return nil, nil
+	} else {
+		return &(*tenantBillingProfiles)[0], nil
+	}
 }

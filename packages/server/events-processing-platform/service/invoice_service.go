@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -27,7 +26,7 @@ type invoiceService struct {
 	invoiceRepository repository.InvoiceRepository
 }
 
-func NewInvoiceService(services *Services, log logger.Logger, aggregateStore eventstore.AggregateStore, cfg *config.Config, invoiceRepository repository.InvoiceRepository) *invoiceService {
+func NewInvoiceService(services *Services, log logger.Logger, aggregateStore eventstore.AggregateStore, invoiceRepository repository.InvoiceRepository) *invoiceService {
 	return &invoiceService{
 		services:          services,
 		log:               log,

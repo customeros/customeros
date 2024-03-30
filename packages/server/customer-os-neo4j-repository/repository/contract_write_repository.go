@@ -40,6 +40,7 @@ type ContractCreateFields struct {
 	AutoRenew              bool                   `json:"autoRenew"`
 	Check                  bool                   `json:"check"`
 	DueDays                int64                  `json:"dueDays"`
+	Country                string                 `json:"country"`
 }
 
 type ContractUpdateFields struct {
@@ -167,6 +168,7 @@ func (r *contractWriteRepository) CreateForOrganization(ctx context.Context, ten
 								ct.canPayWithBankTransfer=$canPayWithBankTransfer,
 								ct.autoRenew=$autoRenew,
 								ct.check=$check,
+								ct.country=$country,
 								ct.dueDays=$dueDays
 							WITH ct, t
 							OPTIONAL MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$createdByUserId}) 
@@ -203,6 +205,7 @@ func (r *contractWriteRepository) CreateForOrganization(ctx context.Context, ten
 		"autoRenew":              data.AutoRenew,
 		"check":                  data.Check,
 		"dueDays":                data.DueDays,
+		"country":                data.Country,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

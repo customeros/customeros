@@ -2,14 +2,8 @@ package service
 
 import (
 	"github.com/google/uuid"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/command"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/command_handler"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/aggregate"
+	organizationaggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
@@ -24,18 +18,16 @@ import (
 
 type contractService struct {
 	contractpb.UnimplementedContractGrpcServiceServer
-	log                     logger.Logger
-	contractCommandHandlers *command_handler.CommandHandlers
-	contractRequestHandler  contract.ContractRequestHandler
-	aggregateStore          eventstore.AggregateStore
+	services       *Services
+	log            logger.Logger
+	aggregateStore eventstore.AggregateStore
 }
 
-func NewContractService(log logger.Logger, commandHandlers *command_handler.CommandHandlers, aggregateStore eventstore.AggregateStore, cfg *config.Config) *contractService {
+func NewContractService(log logger.Logger, aggregateStore eventstore.AggregateStore, services *Services) *contractService {
 	return &contractService{
-		log:                     log,
-		contractCommandHandlers: commandHandlers,
-		aggregateStore:          aggregateStore,
-		contractRequestHandler:  contract.NewContractRequestHandler(log, aggregateStore, cfg.Utils),
+		services:       services,
+		log:            log,
+		aggregateStore: aggregateStore,
 	}
 }
 
@@ -49,6 +41,7 @@ func (s *contractService) CreateContract(ctx context.Context, request *contractp
 	if request.OrganizationId == "" {
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("organizationId"))
 	}
+
 	// Check if the organization aggregate exists
 	orgExists, err := s.checkOrganizationExists(ctx, request.Tenant, request.OrganizationId)
 	if err != nil {
@@ -61,49 +54,10 @@ func (s *contractService) CreateContract(ctx context.Context, request *contractp
 
 	contractId := uuid.New().String()
 
-	createdAt, updatedAt := convertCreateAndUpdateProtoTimestampsToTime(request.CreatedAt, request.UpdatedAt)
-
-	source := commonmodel.Source{}
-	source.FromGrpc(request.SourceFields)
-
-	externalSystem := commonmodel.ExternalSystem{}
-	externalSystem.FromGrpc(request.ExternalSystemFields)
-
-	createContractCommand := command.NewCreateContractCommand(
-		contractId,
-		request.Tenant,
-		request.LoggedInUserId,
-		model.ContractDataFields{
-			OrganizationId:         request.OrganizationId,
-			Name:                   request.Name,
-			ContractUrl:            request.ContractUrl,
-			CreatedByUserId:        utils.StringFirstNonEmpty(request.CreatedByUserId, request.LoggedInUserId),
-			ServiceStartedAt:       utils.TimestampProtoToTimePtr(request.ServiceStartedAt),
-			SignedAt:               utils.TimestampProtoToTimePtr(request.SignedAt),
-			RenewalCycle:           model.RenewalCycle(request.RenewalCycle).String(),
-			RenewalPeriods:         request.RenewalPeriods,
-			Currency:               request.Currency,
-			BillingCycle:           model.BillingCycle(request.BillingCycle).String(),
-			InvoicingStartDate:     utils.TimestampProtoToTimePtr(request.InvoicingStartDate),
-			InvoicingEnabled:       request.InvoicingEnabled,
-			PayOnline:              request.PayOnline,
-			PayAutomatically:       request.PayAutomatically,
-			CanPayWithCard:         request.CanPayWithCard,
-			CanPayWithDirectDebit:  request.CanPayWithDirectDebit,
-			CanPayWithBankTransfer: request.CanPayWithBankTransfer,
-			AutoRenew:              request.AutoRenew,
-			Check:                  request.Check,
-			DueDays:                request.DueDays,
-		},
-		source,
-		externalSystem,
-		createdAt,
-		updatedAt,
-	)
-
-	if err := s.contractCommandHandlers.CreateContract.Handle(ctx, createContractCommand); err != nil {
+	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(request.Tenant, contractId)
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, contractAggregate, eventstore.LoadAggregateOptions{}, request); err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("(CreateContract.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		s.log.Errorf("(CreateContract) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
 	}
 
@@ -122,7 +76,8 @@ func (s *contractService) UpdateContract(ctx context.Context, request *contractp
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("id"))
 	}
 
-	if _, err := s.contractRequestHandler.HandleWithRetry(ctx, request.Tenant, request.Id, false, request); err != nil {
+	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(request.Tenant, request.Id)
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, contractAggregate, eventstore.LoadAggregateOptions{}, request); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(UpdateContract.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
@@ -141,7 +96,10 @@ func (s *contractService) RefreshContractStatus(ctx context.Context, request *co
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("id"))
 	}
 
-	if _, err := s.contractRequestHandler.HandleTemp(ctx, request.Tenant, request.Id, request); err != nil {
+	contractTempAggregate := aggregate.NewContractTempAggregateWithTenantAndID(request.Tenant, request.Id)
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, contractTempAggregate, eventstore.LoadAggregateOptions{
+		SkipLoadEvents: true,
+	}, request); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(RefreshContractStatus.HandleTemp) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
@@ -160,9 +118,8 @@ func (s *contractService) RolloutRenewalOpportunityOnExpiration(ctx context.Cont
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("id"))
 	}
 
-	cmd := command.NewRolloutRenewalOpportunityOnExpirationCommand(request.Id, request.Tenant, request.LoggedInUserId, request.AppSource)
-
-	if err := s.contractCommandHandlers.RolloutRenewalOpportunityOnExpiration.Handle(ctx, cmd); err != nil {
+	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(request.Tenant, request.Id)
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, contractAggregate, eventstore.LoadAggregateOptions{}, request); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(RolloutRenewalOpportunityOnExpiration.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
@@ -172,7 +129,7 @@ func (s *contractService) RolloutRenewalOpportunityOnExpiration(ctx context.Cont
 }
 
 func (s *contractService) checkOrganizationExists(ctx context.Context, tenant, organizationId string) (bool, error) {
-	organizationAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenant, organizationId)
+	organizationAggregate := organizationaggregate.NewOrganizationAggregateWithTenantAndID(tenant, organizationId)
 	err := s.aggregateStore.Exists(ctx, organizationAggregate.GetID())
 	if err != nil {
 		if errors.Is(err, eventstore.ErrAggregateNotFound) {
@@ -196,7 +153,8 @@ func (s *contractService) SoftDeleteContract(ctx context.Context, request *contr
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("id"))
 	}
 
-	if _, err := s.contractRequestHandler.HandleWithRetry(ctx, request.Tenant, request.Id, false, request); err != nil {
+	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(request.Tenant, request.Id)
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, contractAggregate, eventstore.LoadAggregateOptions{}, request); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(DeleteContract.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
