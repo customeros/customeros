@@ -207,3 +207,7 @@ func GenerateYearMonths(start, end time.Time) []YearMonth {
 
 	return yearMonths
 }
+
+func IsEndOfMonth(t time.Time) bool {
+	return t.Day() == LastDayOfMonth(t.Year(), int(t.Month())).Day()
+}

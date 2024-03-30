@@ -113,7 +113,7 @@ func (s *invoiceService) GenerateCycleInvoices() {
 			} else {
 				invoicePeriodStart = *contract.InvoicingStartDate
 			}
-			invoicePeriodEnd = calculateInvoiceCycleEnd(invoicePeriodStart, contract.BillingCycle)
+			invoicePeriodEnd = s.calculateInvoiceCycleEnd(ctx, invoicePeriodStart, tenant, *contract)
 
 			readyToRequestInvoice := false
 			if isPostpaid {
@@ -185,9 +185,10 @@ func (s *invoiceService) GenerateCycleInvoices() {
 	}
 }
 
-func calculateInvoiceCycleEnd(start time.Time, cycle neo4jenum.BillingCycle) time.Time {
+func (s *invoiceService) calculateInvoiceCycleEnd(ctx context.Context, start time.Time, tenant string, contractEntity neo4jentity.ContractEntity) time.Time {
 	var end time.Time
-	switch cycle {
+
+	switch contractEntity.BillingCycle {
 	case neo4jenum.BillingCycleMonthlyBilling:
 		end = start.AddDate(0, 1, 0)
 	case neo4jenum.BillingCycleQuarterlyBilling:
@@ -196,6 +197,19 @@ func calculateInvoiceCycleEnd(start time.Time, cycle neo4jenum.BillingCycle) tim
 		end = start.AddDate(1, 0, 0)
 	default:
 		return start
+	}
+	if start.Day() == 1 {
+		// if previous invoice was generated end of month, we need to substract extra 1 day
+		previousCycleInvoiceDbNode, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetPreviousCycleInvoice(ctx, tenant, contractEntity.Id)
+		if err == nil {
+			tracing.TraceErr(nil, err)
+		}
+		if previousCycleInvoiceDbNode != nil {
+			invoice := neo4jmapper.MapDbNodeToInvoiceEntity(previousCycleInvoiceDbNode)
+			if utils.IsEndOfMonth(invoice.PeriodStartDate) {
+				end = end.AddDate(0, 0, -1)
+			}
+		}
 	}
 	previousDay := end.AddDate(0, 0, -1)
 	return previousDay
