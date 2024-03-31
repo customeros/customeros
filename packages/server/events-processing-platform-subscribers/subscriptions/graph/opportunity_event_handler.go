@@ -381,9 +381,11 @@ func (h *OpportunityEventHandler) OnUpdateRenewal(ctx context.Context, evt event
 		Comments:                eventData.Comments,
 		Amount:                  eventData.Amount,
 		RenewalLikelihood:       eventData.RenewalLikelihood,
+		RenewalApproved:         eventData.RenewalApproved,
 		UpdateComments:          eventData.UpdateComments(),
 		UpdateAmount:            eventData.UpdateAmount(),
 		UpdateRenewalLikelihood: eventData.UpdateRenewalLikelihood(),
+		UpdateRenewalApproved:   eventData.UpdateRenewalApproved(),
 	}
 	err = h.repositories.Neo4jRepositories.OpportunityWriteRepository.UpdateRenewal(ctx, eventData.Tenant, opportunityId, data)
 	if err != nil {

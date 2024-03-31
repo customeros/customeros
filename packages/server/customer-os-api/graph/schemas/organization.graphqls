@@ -80,21 +80,69 @@ type Organization implements MetadataInterface {
     issueSummaryByStatus: [IssueSummaryByStatus!]! @goField(forceResolver: true)
     orders: [Order!]! @goField(forceResolver: true)
 
+    """
+    Deprecated
+    """
     socials: [Social!]! @goField(forceResolver: true) @deprecated(reason: "Use socialMedia")
+    """
+    Deprecated
+    """
     isPublic:    Boolean @deprecated(reason: "Use public")
+    """
+    Deprecated
+    """
     note:        String @deprecated(reason: "Use notes")
+    """
+    Deprecated
+    """
     logoUrl:                String @deprecated(reason: "Use logo")
+    """
+    Deprecated
+    """
     id: ID! @deprecated(reason: "Use metadata.id")
+    """
+    Deprecated
+    """
     createdAt:   Time! @deprecated(reason: "Use metadata.created")
+    """
+    Deprecated
+    """
     updatedAt:   Time! @deprecated(reason: "Use metadata.lastUpdated")
+    """
+    Deprecated
+    """
     source: DataSource! @deprecated(reason: "Use metadata.source")
+    """
+    Deprecated
+    """
     sourceOfTruth: DataSource! @deprecated(reason: "Use metadata.sourceOfTruth")
+    """
+    Deprecated
+    """
     appSource: String! @deprecated(reason: "Use metadata.appSource")
+    """
+    Deprecated
+    """
     referenceId: String @deprecated(reason: "Use customId")
+    """
+    Deprecated
+    """
     lastTouchPointAt: Time @deprecated(reason: "Use lastTouchpoint")
+    """
+    Deprecated
+    """
     lastTouchPointType: LastTouchpointType @deprecated(reason: "Use lastTouchpoint")
+    """
+    Deprecated
+    """
     lastTouchPointTimelineEventId: ID #we need this in order to use the dataloader for the lastTouchPointTimelineEvent if asked @deprecated(reason: "Use lastTouchpoint")
+    """
+    Deprecated
+    """
     lastTouchPointTimelineEvent: TimelineEvent @goField(forceResolver: true) @deprecated(reason: "Use lastTouchpoint")
+    """
+    Deprecated
+    """
     subsidiaryOf: [LinkedOrganization!]! @goField(forceResolver: true) @deprecated(reason: "Use parentCompany")
 }
 
@@ -156,11 +204,29 @@ input OrganizationInput {
     slackChannelId:     String
     appSource:     String
 
+    """
+    Deprecated
+    """
     fieldSets:     [FieldSetInput!] @deprecated
+    """
+    Deprecated
+    """
     templateId:    ID @deprecated
+    """
+    Deprecated
+    """
     isPublic:      Boolean @deprecated(reason: "Use public")
+    """
+    Deprecated
+    """
     referenceId:   String @deprecated(reason: "Use customId")
+    """
+    Deprecated
+    """
     note:          String @deprecated(reason: "Use notes")
+    """
+    Deprecated
+    """
     logoUrl:       String @deprecated(reason: "Use logo")
 }
 
@@ -168,7 +234,7 @@ input OrganizationUpdateInput {
     id:                 ID!
     customId:           String
     """
-    Set to true when partial update is needed. Empty or missing fields will not be ignored.
+    Deprecated
     """
     patch:              Boolean @deprecated(reason: "all updates are patched now")
     name:               String

@@ -1,0 +1,7 @@
+mutation RenewContract($contractId: ID!) {
+  contract_Renew(contractId: $contractId) {
+    metadata {
+        id
+    }
+  }
+}

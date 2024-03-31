@@ -9,6 +9,7 @@ type MockOpportunityServiceCallbacks struct {
 	CreateOpportunity        func(context.Context, *opportunitypb.CreateOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error)
 	UpdateOpportunity        func(context.Context, *opportunitypb.UpdateOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error)
 	UpdateRenewalOpportunity func(context.Context, *opportunitypb.UpdateRenewalOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error)
+	CreateRenewalOpportunity func(context.Context, *opportunitypb.CreateRenewalOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error)
 }
 
 var opportunityCallbacks = &MockOpportunityServiceCallbacks{}
@@ -40,4 +41,11 @@ func (MockOpportunityService) UpdateRenewalOpportunity(context context.Context, 
 		panic("opportunityCallbacks.UpdateRenewalOpportunity is not set")
 	}
 	return opportunityCallbacks.UpdateRenewalOpportunity(context, proto)
+}
+
+func (MockOpportunityService) CreateRenewalOpportunity(context context.Context, proto *opportunitypb.CreateRenewalOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
+	if opportunityCallbacks.CreateRenewalOpportunity == nil {
+		panic("opportunityCallbacks.CreateRenewalOpportunity is not set")
+	}
+	return opportunityCallbacks.CreateRenewalOpportunity(context, proto)
 }

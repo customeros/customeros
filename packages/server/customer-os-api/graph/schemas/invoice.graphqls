@@ -37,7 +37,13 @@ type Invoice implements MetadataInterface {
     invoiceLineItems:   [InvoiceLine!]! @goField(forceResolver: true)
     status:             InvoiceStatus
     note:               String
+    """
+    Deprecated
+    """
     domesticPaymentsBankInfo:       String @deprecated(reason: "not used")
+    """
+    Deprecated
+    """
     internationalPaymentsBankInfo:  String @deprecated(reason: "not used")
     customer:                   InvoiceCustomer!
     provider:                   InvoiceProvider!

@@ -4,8 +4,8 @@ extend type Query {
 extend type Mutation {
     contract_Create(input: ContractInput!): Contract!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     contract_Update(input: ContractUpdateInput!): Contract!  @hasRole(roles: [ADMIN, USER]) @hasTenant
-    contract_Delete(id: ID!): DeleteResponse!  @hasRole(roles: [ADMIN, USER]) @hasTenant
-
+    contract_Delete(id: ID!): DeleteResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    contract_Renew(contractId: ID!): Contract! @hasRole(roles: [ADMIN, USER]) @hasTenant
     contract_AddAttachment(contractId: ID!, attachmentId: ID!): Contract!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     contract_RemoveAttachment(contractId: ID!, attachmentId: ID!): Contract!  @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
@@ -166,13 +166,37 @@ input ContractInput {
     autoRenew:              Boolean
     dueDays:                Int64
 
+    """
+    Deprecated
+    """
     invoicingStartDate:     Time @deprecated(reason: "Removed from create input.")
+    """
+    Deprecated
+    """
     externalReference:      ExternalSystemReferenceInput @deprecated(reason: "Not used yet")
+    """
+    Deprecated
+    """
     billingCycle:           ContractBillingCycle @deprecated(reason: "Removed from create input.")
+    """
+    Deprecated
+    """
     renewalPeriods:         Int64 @deprecated(reason: "Use committedPeriods instead.")
+    """
+    Deprecated
+    """
     renewalCycle:       ContractRenewalCycle @deprecated(reason: "Use contractRenewalCycle instead.")
+    """
+    Deprecated
+    """
     signedAt:           Time @deprecated(reason: "Use contractSigned instead.")
+    """
+    Deprecated
+    """
     serviceStartedAt:   Time @deprecated(reason: "Use serviceStarted instead.")
+    """
+    Deprecated
+    """
     name:               String @deprecated(reason: "Use contractName instead.")
 }
 
@@ -192,24 +216,81 @@ input ContractUpdateInput {
     billingEnabled:         Boolean
     autoRenew:              Boolean
 
+    """
+    Deprecated
+    """
     canPayWithCard:         Boolean @deprecated(reason: "Use billingDetails instead.")
+    """
+    Deprecated
+    """
     canPayWithDirectDebit:  Boolean @deprecated(reason: "Use billingDetails instead.")
+    """
+    Deprecated
+    """
     canPayWithBankTransfer: Boolean @deprecated(reason: "Use billingDetails instead.")
+    """
+    Deprecated
+    """
     invoicingStartDate:     Time @deprecated(reason: "Use billingDetails instead.")
+    """
+    Deprecated
+    """
     addressLine1:           String @deprecated(reason: "Use billingDetails instead.")
+    """
+    Deprecated
+    """
     addressLine2:           String @deprecated(reason: "Use billingDetails instead.")
+    """
+    Deprecated
+    """
     locality:               String @deprecated(reason: "Use billingDetails instead.")
+    """
+    Deprecated
+    """
     country:                String @deprecated(reason: "Use billingDetails instead.")
+    """
+    Deprecated
+    """
     zip:                    String @deprecated(reason: "Use billingDetails instead.")
+    """
+    Deprecated
+    """
     billingCycle:           ContractBillingCycle @deprecated(reason: "Use billingDetails instead.")
+    """
+    Deprecated
+    """
     invoiceNote:            String @deprecated(reason: "Use billingDetails instead.")
+    """
+    Deprecated
+    """
     endedAt:                Time @deprecated(reason: "Use contractEnded instead.")
+    """
+    Deprecated
+    """
     renewalPeriods:         Int64 @deprecated(reason: "Use committedPeriods instead.")
+    """
+    Deprecated
+    """
     invoiceEmail:           String @deprecated(reason: "Use billingDetails instead.")
+    """
+    Deprecated
+    """
     organizationLegalName:  String @deprecated(reason: "Use billingDetails instead.")
+    """
+    Deprecated
+    """
     renewalCycle:       ContractRenewalCycle @deprecated(reason: "Use contractRenewalCycle instead.")
+    """
+    Deprecated
+    """
     signedAt:           Time @deprecated(reason: "Use contractSigned instead.")
+    """
+    Deprecated
+    """
     serviceStartedAt:   Time @deprecated(reason: "Use serviceStarted instead.")
+    """
+    Deprecated
+    """
     name:               String @deprecated(reason: "Use contractName instead.")
 }
 

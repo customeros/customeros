@@ -193,6 +193,29 @@ func (r *mutationResolver) ContractDelete(ctx context.Context, id string) (*mode
 	return &model.DeleteResponse{Accepted: true, Completed: deletionCompleted}, nil
 }
 
+// ContractRenew is the resolver for the contract_Renew field.
+func (r *mutationResolver) ContractRenew(ctx context.Context, contractID string) (*model.Contract, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContractRenew", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.contractId", contractID))
+
+	err := r.Services.ContractService.RenewContract(ctx, contractID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to renew contract %s", contractID)
+		return &model.Contract{Metadata: &model.Metadata{ID: contractID}}, nil
+	}
+	contractEntity, err := r.Services.ContractService.GetById(ctx, contractID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed fetching contract details. Contract id: %s", contractID)
+		return &model.Contract{Metadata: &model.Metadata{ID: contractID}}, nil
+	}
+
+	return mapper.MapEntityToContract(contractEntity), nil
+}
+
 // ContractAddAttachment is the resolver for the contract_AddAttachment field.
 func (r *mutationResolver) ContractAddAttachment(ctx context.Context, contractID string, attachmentID string) (*model.Contract, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContractAddAttachment", graphql.GetOperationContext(ctx))

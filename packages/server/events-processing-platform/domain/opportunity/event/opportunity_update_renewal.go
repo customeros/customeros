@@ -28,7 +28,7 @@ func NewOpportunityUpdateRenewalEvent(aggregate eventstore.Aggregate, renewalLik
 		UpdatedAt:         updatedAt,
 		Source:            source,
 		RenewalLikelihood: renewalLikelihood,
-		RenewalApproved:   true,
+		RenewalApproved:   renewalApproved,
 		Comments:          comments,
 		UpdatedByUserId:   updatedByUserId,
 		Amount:            amount,
@@ -60,5 +60,5 @@ func (e OpportunityUpdateRenewalEvent) UpdateRenewalLikelihood() bool {
 }
 
 func (e OpportunityUpdateRenewalEvent) UpdateRenewalApproved() bool {
-	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, model.FieldMaskRenewalApproved)
+	return utils.Contains(e.FieldsMask, model.FieldMaskRenewalApproved)
 }
