@@ -7,9 +7,10 @@ import (
 )
 
 type MockContractServiceCallbacks struct {
-	CreateContract     func(context.Context, *contractpb.CreateContractGrpcRequest) (*contractpb.ContractIdGrpcResponse, error)
-	UpdateContract     func(context.Context, *contractpb.UpdateContractGrpcRequest) (*contractpb.ContractIdGrpcResponse, error)
-	SoftDeleteContract func(context.Context, *contractpb.SoftDeleteContractGrpcRequest) (*emptypb.Empty, error)
+	CreateContract                        func(context.Context, *contractpb.CreateContractGrpcRequest) (*contractpb.ContractIdGrpcResponse, error)
+	UpdateContract                        func(context.Context, *contractpb.UpdateContractGrpcRequest) (*contractpb.ContractIdGrpcResponse, error)
+	SoftDeleteContract                    func(context.Context, *contractpb.SoftDeleteContractGrpcRequest) (*emptypb.Empty, error)
+	RolloutRenewalOpportunityOnExpiration func(context.Context, *contractpb.RolloutRenewalOpportunityOnExpirationGrpcRequest) (*contractpb.ContractIdGrpcResponse, error)
 }
 
 var contractCallbacks = &MockContractServiceCallbacks{}
@@ -41,4 +42,11 @@ func (MockContractService) SoftDeleteContract(context context.Context, proto *co
 		panic("contractCallbacks.SoftDeleteContract is not set")
 	}
 	return contractCallbacks.SoftDeleteContract(context, proto)
+}
+
+func (MockContractService) RolloutRenewalOpportunityOnExpiration(context context.Context, proto *contractpb.RolloutRenewalOpportunityOnExpirationGrpcRequest) (*contractpb.ContractIdGrpcResponse, error) {
+	if contractCallbacks.RolloutRenewalOpportunityOnExpiration == nil {
+		panic("contractCallbacks.RolloutRenewalOpportunityOnExpiration is not set")
+	}
+	return contractCallbacks.RolloutRenewalOpportunityOnExpiration(context, proto)
 }

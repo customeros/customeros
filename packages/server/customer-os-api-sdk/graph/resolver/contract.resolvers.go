@@ -62,6 +62,11 @@ func (r *mutationResolver) ContractDelete(ctx context.Context, id string) (*mode
 	panic(fmt.Errorf("not implemented: ContractDelete - contract_Delete"))
 }
 
+// ContractRenew is the resolver for the contract_Renew field.
+func (r *mutationResolver) ContractRenew(ctx context.Context, contractID string) (*model.Contract, error) {
+	panic(fmt.Errorf("not implemented: ContractRenew - contract_Renew"))
+}
+
 // ContractAddAttachment is the resolver for the contract_AddAttachment field.
 func (r *mutationResolver) ContractAddAttachment(ctx context.Context, contractID string, attachmentID string) (*model.Contract, error) {
 	panic(fmt.Errorf("not implemented: ContractAddAttachment - contract_AddAttachment"))

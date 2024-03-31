@@ -15,6 +15,7 @@ import (
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
+	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -505,7 +506,7 @@ func TestMutationResolver_ContractDelete(t *testing.T) {
 			require.Equal(t, tenantName, contract.Tenant)
 			require.Equal(t, contractId, contract.Id)
 			require.Equal(t, testUserId, contract.LoggedInUserId)
-			require.Equal(t, constants.AppSourceCustomerOsApi, constants.AppSourceCustomerOsApi)
+			require.Equal(t, constants.AppSourceCustomerOsApi, contract.AppSource)
 			calledDeleteContractEvent = true
 			return &emptypb.Empty{}, nil
 		},
@@ -613,4 +614,149 @@ func TestMutationResolver_RemoveAttachmentFromContract(t *testing.T) {
 	require.NotNil(t, meeting.Contract_RemoveAttachment.ID)
 	require.Len(t, meeting.Contract_RemoveAttachment.Attachments, 1)
 	require.Equal(t, meeting.Contract_RemoveAttachment.Attachments[0].ID, attachmentId1)
+}
+
+func TestMutationResolver_ContractRenew_NoActiveRenewalOpportunity_CreateRenewalOpportunity(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		RenewalCycle: neo4jenum.RenewalCycleMonthlyRenewal,
+	})
+
+	calledCreatedRenewalOpportunityGrpc := false
+
+	opportunityCallbacks := events_platform.MockOpportunityServiceCallbacks{
+		CreateRenewalOpportunity: func(context context.Context, opportunity *opportunitypb.CreateRenewalOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
+			require.Equal(t, tenantName, opportunity.Tenant)
+			require.Equal(t, testUserId, opportunity.LoggedInUserId)
+			require.Equal(t, contractId, opportunity.ContractId)
+			require.Equal(t, constants.AppSourceCustomerOsApi, opportunity.SourceFields.AppSource)
+			require.Equal(t, string(neo4jentity.DataSourceOpenline), opportunity.SourceFields.Source)
+			calledCreatedRenewalOpportunityGrpc = true
+			return &opportunitypb.OpportunityIdGrpcResponse{
+				Id: uuid.New().String(),
+			}, nil
+		},
+	}
+	events_platform.SetOpportunityCallbacks(&opportunityCallbacks)
+
+	rawResponse := callGraphQL(t, "contract/renew_contract", map[string]interface{}{
+		"contractId": contractId,
+	})
+
+	var response struct {
+		Contract_Renew model.Contract
+	}
+
+	require.Nil(t, rawResponse.Errors)
+	err := decode.Decode(rawResponse.Data.(map[string]any), &response)
+	require.Nil(t, err)
+	require.Equal(t, contractId, response.Contract_Renew.Metadata.ID)
+	require.True(t, calledCreatedRenewalOpportunityGrpc)
+}
+
+func TestMutationResolver_ContractRenew_ActiveRenewalNotExpired_ApproveRenewalOpportunity(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	tomorrow := utils.Now().Add(time.Duration(24) * time.Hour)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		RenewalCycle: neo4jenum.RenewalCycleMonthlyRenewal,
+	})
+	opportunityId := neo4jtest.CreateOpportunityForContract(ctx, driver, tenantName, contractId, neo4jentity.OpportunityEntity{
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewedAt:       &tomorrow,
+			RenewalApproved: false,
+		},
+	})
+
+	calledUpdateOpportunityGrpc := false
+
+	opportunityCallbacks := events_platform.MockOpportunityServiceCallbacks{
+		UpdateRenewalOpportunity: func(context context.Context, opportunity *opportunitypb.UpdateRenewalOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
+			require.Equal(t, tenantName, opportunity.Tenant)
+			require.Equal(t, testUserId, opportunity.LoggedInUserId)
+			require.Equal(t, opportunityId, opportunity.Id)
+			require.True(t, opportunity.RenewalApproved)
+			require.Equal(t, constants.AppSourceCustomerOsApi, opportunity.SourceFields.AppSource)
+			require.Equal(t, string(neo4jentity.DataSourceOpenline), opportunity.SourceFields.Source)
+			require.Equal(t, []opportunitypb.OpportunityMaskField{opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_RENEW_APPROVED}, opportunity.FieldsMask)
+			calledUpdateOpportunityGrpc = true
+			return &opportunitypb.OpportunityIdGrpcResponse{
+				Id: uuid.New().String(),
+			}, nil
+		},
+	}
+	events_platform.SetOpportunityCallbacks(&opportunityCallbacks)
+
+	rawResponse := callGraphQL(t, "contract/renew_contract", map[string]interface{}{
+		"contractId": contractId,
+	})
+
+	var response struct {
+		Contract_Renew model.Contract
+	}
+
+	require.Nil(t, rawResponse.Errors)
+	err := decode.Decode(rawResponse.Data.(map[string]any), &response)
+	require.Nil(t, err)
+	require.Equal(t, contractId, response.Contract_Renew.Metadata.ID)
+	require.True(t, calledUpdateOpportunityGrpc)
+}
+
+func TestMutationResolver_ContractRenew_ActiveRenewalExpired_RolloutRenewalOpportunity(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	yesterday := utils.Now().Add(time.Duration(-24) * time.Hour)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		RenewalCycle: neo4jenum.RenewalCycleMonthlyRenewal,
+	})
+	neo4jtest.CreateOpportunityForContract(ctx, driver, tenantName, contractId, neo4jentity.OpportunityEntity{
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewedAt:       &yesterday,
+			RenewalApproved: false,
+		},
+	})
+
+	calledRolloutRenewalOpportunity := false
+
+	contractCallbacks := events_platform.MockContractServiceCallbacks{
+		RolloutRenewalOpportunityOnExpiration: func(context context.Context, contract *contractpb.RolloutRenewalOpportunityOnExpirationGrpcRequest) (*contractpb.ContractIdGrpcResponse, error) {
+			require.Equal(t, tenantName, contract.Tenant)
+			require.Equal(t, testUserId, contract.LoggedInUserId)
+			require.Equal(t, contractId, contract.Id)
+			require.Equal(t, constants.AppSourceCustomerOsApi, contract.AppSource)
+			calledRolloutRenewalOpportunity = true
+			return &contractpb.ContractIdGrpcResponse{
+				Id: contractId,
+			}, nil
+		},
+	}
+	events_platform.SetContractCallbacks(&contractCallbacks)
+
+	rawResponse := callGraphQL(t, "contract/renew_contract", map[string]interface{}{
+		"contractId": contractId,
+	})
+
+	var response struct {
+		Contract_Renew model.Contract
+	}
+
+	require.Nil(t, rawResponse.Errors)
+	err := decode.Decode(rawResponse.Data.(map[string]any), &response)
+	require.Nil(t, err)
+	require.Equal(t, contractId, response.Contract_Renew.Metadata.ID)
+	require.True(t, calledRolloutRenewalOpportunity)
 }

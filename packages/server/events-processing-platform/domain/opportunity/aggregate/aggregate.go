@@ -198,6 +198,7 @@ func (a *OpportunityAggregate) onRenewalOpportunityUpdate(evt eventstore.Event) 
 	if eventData.OwnerUserId != "" {
 		a.Opportunity.OwnerUserId = eventData.OwnerUserId
 	}
+
 	return nil
 }
 

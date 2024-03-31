@@ -18,6 +18,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
+	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -34,6 +35,7 @@ type ContractService interface {
 	GetContractsForInvoices(ctx context.Context, invoiceIds []string) (*neo4jentity.ContractEntities, error)
 	ContractsExistForTenant(ctx context.Context) (bool, error)
 	CountContracts(ctx context.Context, tenant string) (int64, error)
+	RenewContract(ctx context.Context, contractId string) error
 }
 type contractService struct {
 	log          logger.Logger
@@ -194,18 +196,7 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", input)
 
-	if input.ContractID == "" {
-		err := fmt.Errorf("(ContractService.Update) contract id is missing")
-		s.log.Error(err.Error())
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	contractExists, _ := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), input.ContractID, neo4jutil.NodeLabelContract)
-	if !contractExists {
-		err := fmt.Errorf("(ContractService.Update) contract with id {%s} not found", input.ContractID)
-		s.log.Error(err.Error())
-		tracing.TraceErr(span, err)
+	if err := s.validateContractExists(ctx, input.ContractID, span); err != nil {
 		return err
 	}
 
@@ -583,16 +574,7 @@ func (s *contractService) SoftDeleteContract(ctx context.Context, contractId str
 	span.SetTag(tracing.SpanTagEntityId, contractId)
 
 	// check contract exists
-	contractExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), contractId, neo4jutil.NodeLabelContract)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("error on checking if contract exists: %s", err.Error())
-		return false, err
-	}
-	if !contractExists {
-		err := fmt.Errorf("contract with id {%s} not found", contractId)
-		tracing.TraceErr(span, err)
-		s.log.Errorf(err.Error())
+	if err := s.validateContractExists(ctx, contractId, span); err != nil {
 		return false, err
 	}
 
@@ -631,4 +613,119 @@ func (s *contractService) SoftDeleteContract(ctx context.Context, contractId str
 	WaitForNodeDeletedFromNeo4j(ctx, s.repositories, contractId, neo4jutil.NodeLabelContract, span)
 
 	return false, nil
+}
+
+func (s *contractService) RenewContract(ctx context.Context, contractId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.RenewContract")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.SetTag(tracing.SpanTagEntityId, contractId)
+
+	// check contract exists
+	if err := s.validateContractExists(ctx, contractId, span); err != nil {
+		return err
+	}
+
+	contractEntity, err := s.GetById(ctx, contractId)
+	if err != nil {
+		return err
+	}
+
+	// if contract is not renewable - return
+	if contractEntity.RenewalCycle == neo4jenum.RenewalCycleNone {
+		span.LogFields(log.Bool("result.contractRenewable", false))
+		return nil
+	}
+
+	opportunityDbNode, err := s.repositories.Neo4jRepositories.OpportunityReadRepository.GetActiveRenewalOpportunityForContract(ctx, common.GetTenantFromContext(ctx), contractId)
+	if err != nil {
+		return err
+	}
+	// if no active renewal opportunity found create new
+	if opportunityDbNode == nil {
+		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+		_, err := CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
+			return s.grpcClients.OpportunityClient.CreateRenewalOpportunity(ctx, &opportunitypb.CreateRenewalOpportunityGrpcRequest{
+				Tenant:         common.GetTenantFromContext(ctx),
+				LoggedInUserId: common.GetUserIdFromContext(ctx),
+				ContractId:     contractId,
+				SourceFields: &commonpb.SourceFields{
+					Source:    neo4jentity.DataSourceOpenline.String(),
+					AppSource: constants.AppSourceCustomerOsApi,
+				},
+			})
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error from events processing: %s", err.Error())
+			return err
+		}
+		return nil
+	}
+	opportunityEntity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
+
+	// if renewal opportunity is not expired - approve next renewal
+	if opportunityEntity.RenewalDetails.RenewedAt != nil && utils.Now().Before(*opportunityEntity.RenewalDetails.RenewedAt) {
+		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+		_, err := CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
+			return s.grpcClients.OpportunityClient.UpdateRenewalOpportunity(ctx, &opportunitypb.UpdateRenewalOpportunityGrpcRequest{
+				Id:              opportunityEntity.Id,
+				Tenant:          common.GetTenantFromContext(ctx),
+				LoggedInUserId:  common.GetUserIdFromContext(ctx),
+				RenewalApproved: true,
+				FieldsMask:      []opportunitypb.OpportunityMaskField{opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_RENEW_APPROVED},
+				SourceFields: &commonpb.SourceFields{
+					Source:    neo4jentity.DataSourceOpenline.String(),
+					AppSource: constants.AppSourceCustomerOsApi,
+				},
+			})
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error from events processing: %s", err.Error())
+			return err
+		}
+	} else {
+		// if renewal opportunity is expired - rollout renewal opportunity
+		// TODO alexbalexb add test case
+		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+		_, err := CallEventsPlatformGRPCWithRetry[*contractpb.ContractIdGrpcResponse](func() (*contractpb.ContractIdGrpcResponse, error) {
+			return s.grpcClients.ContractClient.RolloutRenewalOpportunityOnExpiration(ctx, &contractpb.RolloutRenewalOpportunityOnExpirationGrpcRequest{
+				Id:             contractId,
+				Tenant:         common.GetTenantFromContext(ctx),
+				LoggedInUserId: common.GetUserIdFromContext(ctx),
+				AppSource:      constants.AppSourceCustomerOsApi,
+			})
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error from events processing: %s", err.Error())
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *contractService) validateContractExists(ctx context.Context, contractId string, span opentracing.Span) error {
+	if contractId == "" {
+		err := fmt.Errorf("contract id is missing")
+		tracing.TraceErr(span, err)
+		s.log.Error(err.Error())
+		return err
+	}
+
+	contractExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), contractId, neo4jutil.NodeLabelContract)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Error(err.Error())
+		return err
+	}
+	if !contractExists {
+		err := fmt.Errorf("contract with id {%s} not found", contractId)
+		s.log.Error(err.Error())
+		tracing.TraceErr(span, err)
+		return err
+	}
+	return nil
 }

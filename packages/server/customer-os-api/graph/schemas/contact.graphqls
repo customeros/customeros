@@ -64,7 +64,9 @@ type Contact implements ExtensibleEntity & Node {
     """
     id: ID!
 
-    "The title associate with the contact in customerOS."
+    """
+    Deprecated
+    """
     title: String @deprecated(reason: "Use `prefix` instead")
 
     prefix: String
@@ -94,6 +96,9 @@ type Contact implements ExtensibleEntity & Node {
     createdAt: Time!
     updatedAt: Time!
 
+    """
+    Deprecated
+    """
     label: String @deprecated(reason: "Use `tags` instead")
 
     source: DataSource!
@@ -184,7 +189,9 @@ Create an individual in customerOS.
 """
 input ContactInput {
 
-    "The unique ID associated with the template of the contact in customerOS."
+    """
+    Deprecated
+    """
     templateId: ID  @deprecated(reason: "Not supported")
 
     "The prefix of the contact."
@@ -210,11 +217,13 @@ input ContactInput {
     createdAt: Time
 
     """
-    User defined metadata appended to contact.
-    **Required.**
+    Deprecated
     """
     customFields: [CustomFieldInput!] @deprecated(reason: "Not supported in create flow yet")
 
+    """
+    Deprecated
+    """
     fieldSets: [FieldSetInput!] @deprecated(reason: "Not supported in create flow yet")
 
     "An email addresses associated with the contact."
@@ -223,7 +232,9 @@ input ContactInput {
     "A phone number associated with the contact."
     phoneNumber: PhoneNumberInput
 
-    "Id of the contact owner (user)"
+    """
+    Deprecated
+    """
     ownerId: ID @deprecated(reason: "Not supported in create flow yet")
 
     externalReference: ExternalSystemReferenceInput

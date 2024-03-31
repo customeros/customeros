@@ -70,7 +70,13 @@ input InteractionEventInput {
 
 type InteractionSession implements Node {
     id: ID!
+    """
+    Deprecated
+    """
     startedAt: Time! @deprecated(reason: "Use createdAt instead")
+    """
+    Deprecated
+    """
     endedAt: Time @deprecated(reason: "Use updatedAt instead")
     createdAt: Time!
     updatedAt: Time!

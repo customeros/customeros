@@ -13,12 +13,12 @@ import (
 )
 
 // OfferingCreate is the resolver for the offering_Create field.
-func (r *mutationResolver) OfferingCreate(ctx context.Context, input *model.OfferingCreateInput) (*model.Offering, error) {
+func (r *mutationResolver) OfferingCreate(ctx context.Context, input *model.OfferingCreateInput) (*string, error) {
 	panic(fmt.Errorf("not implemented: OfferingCreate - offering_Create"))
 }
 
 // OfferingUpdate is the resolver for the offering_Update field.
-func (r *mutationResolver) OfferingUpdate(ctx context.Context, input *model.OfferingUpdateInput) (*model.Offering, error) {
+func (r *mutationResolver) OfferingUpdate(ctx context.Context, input *model.OfferingUpdateInput) (*string, error) {
 	panic(fmt.Errorf("not implemented: OfferingUpdate - offering_Update"))
 }
 

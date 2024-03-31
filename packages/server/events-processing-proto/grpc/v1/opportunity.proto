@@ -14,6 +14,7 @@ enum OpportunityMaskField {
   OPPORTUNITY_PROPERTY_COMMENTS = 4;
   OPPORTUNITY_PROPERTY_RENEWAL_LIKELIHOOD = 5;
   OPPORTUNITY_PROPERTY_MAX_AMOUNT = 6;
+  OPPORTUNITY_PROPERTY_RENEW_APPROVED = 7;
 }
 
 // Define an enum for internalType
@@ -81,7 +82,7 @@ message UpdateRenewalOpportunityGrpcRequest {
   SourceFields sourceFields = 8;
   repeated OpportunityMaskField fieldsMask = 9;
   string ownerUserId = 10;
-  bool RenewalApproved = 11;
+  bool renewalApproved = 11;
 }
 
 message UpdateOpportunityGrpcRequest {

@@ -20,6 +20,9 @@ type TenantSettings {
     baseCurrency:           Currency
     billingEnabled:         Boolean!
 
+    """
+    Deprecated
+    """
     logoUrl:                String! @deprecated(reason: "Use logoRepositoryFileId")
 }
 
@@ -30,6 +33,9 @@ type TenantBillingProfile implements SourceFields & Node {
     source:             DataSource!
     sourceOfTruth:      DataSource!
     appSource:          String!
+    """
+    Deprecated
+    """
     email:              String! @deprecated(reason: "Use sendInvoicesFrom")
     phone:              String!
     addressLine1:       String!
@@ -40,14 +46,32 @@ type TenantBillingProfile implements SourceFields & Node {
     region:             String!
     zip:                String!
     legalName:          String!
+    """
+    Deprecated
+    """
     domesticPaymentsBankInfo:       String @deprecated(reason: "Not used")
+    """
+    Deprecated
+    """
     internationalPaymentsBankInfo:  String @deprecated(reason: "Not used")
     vatNumber:                      String!
     sendInvoicesFrom:               String!
     sendInvoicesBcc:                String!
+    """
+    Deprecated
+    """
     canPayWithCard:                 Boolean @deprecated(reason: "Not used")
+    """
+    Deprecated
+    """
     canPayWithDirectDebitSEPA:      Boolean @deprecated(reason: "Not used")
+    """
+    Deprecated
+    """
     canPayWithDirectDebitACH:       Boolean @deprecated(reason: "Not used")
+    """
+    Deprecated
+    """
     canPayWithDirectDebitBacs:      Boolean @deprecated(reason: "Not used")
     canPayWithBankTransfer:         Boolean!
     canPayWithPigeon:               Boolean!
@@ -60,6 +84,9 @@ input TenantInput {
 }
 
 input TenantBillingProfileInput {
+    """
+    Deprecated
+    """
     email:              String @deprecated(reason: "Use sendInvoicesFrom")
     phone:              String
     addressLine1:       String
@@ -70,14 +97,32 @@ input TenantBillingProfileInput {
     region:             String
     zip:                String
     legalName:          String
+    """
+    Deprecated
+    """
     domesticPaymentsBankInfo:      String @deprecated(reason: "Not used")
+    """
+    Deprecated
+    """
     internationalPaymentsBankInfo: String @deprecated(reason: "Not used")
     vatNumber: String!
     sendInvoicesFrom: String!
     sendInvoicesBcc: String
+    """
+    Deprecated
+    """
     canPayWithCard: Boolean @deprecated(reason: "Not used")
+    """
+    Deprecated
+    """
     canPayWithDirectDebitSEPA: Boolean @deprecated(reason: "Not used")
+    """
+    Deprecated
+    """
     canPayWithDirectDebitACH: Boolean @deprecated(reason: "Not used")
+    """
+    Deprecated
+    """
     canPayWithDirectDebitBacs: Boolean @deprecated(reason: "Not used")
     canPayWithBankTransfer: Boolean!
     canPayWithPigeon:       Boolean!
@@ -87,6 +132,9 @@ input TenantBillingProfileInput {
 input TenantBillingProfileUpdateInput {
     id:                 ID!
     patch:              Boolean
+    """
+    Deprecated
+    """
     email:              String @deprecated(reason: "Use sendInvoicesFrom")
     phone:              String
     addressLine1:       String
@@ -97,14 +145,32 @@ input TenantBillingProfileUpdateInput {
     region:             String
     zip:                String
     legalName:          String
+    """
+    Deprecated
+    """
     domesticPaymentsBankInfo:      String @deprecated(reason: "Not used")
+    """
+    Deprecated
+    """
     internationalPaymentsBankInfo: String @deprecated(reason: "Not used")
     vatNumber:                  String
     sendInvoicesFrom:           String
     sendInvoicesBcc:            String
+    """
+    Deprecated
+    """
     canPayWithCard:             Boolean @deprecated(reason: "Not used")
+    """
+    Deprecated
+    """
     canPayWithDirectDebitSEPA:  Boolean @deprecated(reason: "Not used")
+    """
+    Deprecated
+    """
     canPayWithDirectDebitACH:   Boolean @deprecated(reason: "Not used")
+    """
+    Deprecated
+    """
     canPayWithDirectDebitBacs:  Boolean @deprecated(reason: "Not used")
     canPayWithBankTransfer:     Boolean
     canPayWithPigeon:           Boolean
