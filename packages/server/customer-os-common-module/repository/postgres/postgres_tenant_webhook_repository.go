@@ -3,6 +3,7 @@ package repository
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/helper"
+	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
@@ -27,7 +28,12 @@ func (r *TenantWebhookRepo) GetWebhook(tenant, event string) helper.QueryResult 
 		Where("event = ?", event).
 		First(&webhookEntity).Error
 
+	// Check if the error is ErrRecordNotFound, treat it as a non-error case
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return helper.QueryResult{Result: nil} // Record not found, return nil without error
+		}
+		// For all other errors, return the error
 		return helper.QueryResult{Error: err}
 	}
 

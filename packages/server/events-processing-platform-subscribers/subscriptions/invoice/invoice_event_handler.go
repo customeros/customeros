@@ -817,6 +817,7 @@ func (h *InvoiceEventHandler) dispatchInvoiceFinalizedEvent(ctx context.Context,
 	webhookPayload := webhook.PopulateInvoiceFinalizedPayload(&invoice, &organizationEntity, &contractEntity, ilEntities)
 	// dispatch the event
 	err = webhook.DispatchWebhook(
+		ctx,
 		tenant,
 		webhook.WebhookEventInvoiceFinalized,
 		webhookPayload,

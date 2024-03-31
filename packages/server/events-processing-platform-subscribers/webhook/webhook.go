@@ -4,6 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -18,15 +22,24 @@ import (
 	"go.temporal.io/sdk/temporal"
 )
 
-func DispatchWebhook(tenant string, event WebhookEvent, payload *InvoicePayload, db *repository.Repositories, cfg config.Config) error {
+func DispatchWebhook(ctx context.Context, tenant string, event WebhookEvent, payload *InvoicePayload, db *repository.Repositories, cfg config.Config) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "DispatchWebhook")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.LogFields(log.String("webhookEvent", event.String()))
+
 	if !cfg.Temporal.RunWorker {
-		return fmt.Errorf("temporal worker is not running")
+		err := errors.New("temporal worker is not running")
+		tracing.TraceErr(span, err)
+		return err
 	}
 
 	// fetch webhook data from db
 	webhookResult := db.CommonRepositories.TenantWebhookRepository.GetWebhook(tenant, event.String())
 	if webhookResult.Error != nil {
-		return fmt.Errorf("error fetching webhook data: %v", webhookResult.Error)
+		err := fmt.Errorf("error fetching webhook data: %v", webhookResult.Error)
+		tracing.TraceErr(span, err)
+		return err
 	}
 
 	// if webhook data is not found, return
@@ -42,11 +55,13 @@ func DispatchWebhook(tenant string, event WebhookEvent, payload *InvoicePayload,
 
 	requestBodyJSON, err := json.Marshal(payload)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return fmt.Errorf("(webhook.DispatchWebhook) error marshalling request body: %v", err)
 	}
 	// Start Temporal Client to queue webhook workflow
 	tClient, err := temporal_client.TemporalClient(cfg.Temporal.HostPort, cfg.Temporal.Namespace)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return fmt.Errorf("error creating Temporal client: %v", err)
 	}
 	defer tClient.Close()
@@ -89,6 +104,7 @@ func DispatchWebhook(tenant string, event WebhookEvent, payload *InvoicePayload,
 	// the workflow will run async, so we don't need to wait for it to finish
 	_, err = tClient.ExecuteWorkflow(context.Background(), workflowOptions, workflows.WebhookWorkflow, workflowParams)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return fmt.Errorf("error executing Temporal workflow: %v", err)
 	}
 
