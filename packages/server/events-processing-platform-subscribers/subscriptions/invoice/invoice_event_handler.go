@@ -1100,6 +1100,20 @@ func (h *InvoiceEventHandler) onInvoiceVoidV1(ctx context.Context, evt eventstor
 		return nil
 	}
 
+	// load contract
+	contractEntity := neo4jentity.ContractEntity{}
+	contractNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractForInvoice(ctx, eventData.Tenant, invoiceEntity.Id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "InvoiceSubscriber.onInvoicePaidV1.GetContractForInvoice")
+	}
+	if contractNode != nil {
+		contractEntity = *neo4jmapper.MapDbNodeToContractEntity(contractNode)
+	} else {
+		tracing.TraceErr(span, errors.New("contractNode is nil"))
+		return errors.New("contractNode is nil")
+	}
+
 	//load tenant billing profile from neo4j
 	tenantBillingProfileEntity, err := h.loadTenantBillingProfile(ctx, eventData.Tenant, false)
 	if err != nil {
@@ -1107,12 +1121,21 @@ func (h *InvoiceEventHandler) onInvoiceVoidV1(ctx context.Context, evt eventstor
 		return err
 	}
 
+	cc := contractEntity.InvoiceEmailCC
+	cc = utils.RemoveEmpties(cc)
+	cc = utils.RemoveDuplicates(cc)
+
+	bcc := utils.AddToListIfNotExists(contractEntity.InvoiceEmailBCC, tenantBillingProfileEntity.SendInvoicesBcc)
+	bcc = utils.RemoveEmpties(bcc)
+	bcc = utils.RemoveDuplicates(bcc)
+
 	postmarkEmail := postmark.PostmarkEmail{
 		WorkflowId:    notifications.WorkflowInvoiceVoided,
 		MessageStream: postmark.PostmarkMessageStreamInvoice,
 		From:          invoiceEntity.Provider.Email,
 		To:            invoiceEntity.Customer.Email,
-		BCC:           tenantBillingProfileEntity.SendInvoicesBcc,
+		CC:            cc,
+		BCC:           bcc,
 		Subject:       fmt.Sprintf(notifications.WorkflowInvoiceVoidedSubject, invoiceEntity.Number), // "Voided invoice " + invoiceEntity.Number,
 		TemplateData: map[string]string{
 			"{{userFirstName}}":  invoiceEntity.Customer.Name,
@@ -1205,12 +1228,21 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 		return err
 	}
 
+	cc := contractEntity.InvoiceEmailCC
+	cc = utils.RemoveEmpties(cc)
+	cc = utils.RemoveDuplicates(cc)
+
+	bcc := utils.AddToListIfNotExists(contractEntity.InvoiceEmailBCC, tenantBillingProfileEntity.SendInvoicesBcc)
+	bcc = utils.RemoveEmpties(bcc)
+	bcc = utils.RemoveDuplicates(bcc)
+
 	postmarkEmail := postmark.PostmarkEmail{
 		WorkflowId:    notifications.WorkflowInvoicePaid,
 		MessageStream: postmark.PostmarkMessageStreamInvoice,
 		From:          invoiceEntity.Provider.Email,
 		To:            contractEntity.InvoiceEmail,
-		BCC:           tenantBillingProfileEntity.SendInvoicesBcc,
+		CC:            cc,
+		BCC:           bcc,
 		Subject:       fmt.Sprintf(notifications.WorkflowInvoicePaidSubject, invoiceEntity.Number, invoiceEntity.Provider.Name),
 		TemplateData: map[string]string{
 			"{{userFirstName}}":  invoiceEntity.Customer.Name,
@@ -1317,12 +1349,21 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 		workflowId = notifications.WorkflowInvoiceReadyWithPaymentLink
 	}
 
+	cc := contractEntity.InvoiceEmailCC
+	cc = utils.RemoveEmpties(cc)
+	cc = utils.RemoveDuplicates(cc)
+
+	bcc := utils.AddToListIfNotExists(contractEntity.InvoiceEmailBCC, tenantBillingProfileEntity.SendInvoicesBcc)
+	bcc = utils.RemoveEmpties(bcc)
+	bcc = utils.RemoveDuplicates(bcc)
+
 	postmarkEmail := postmark.PostmarkEmail{
 		WorkflowId:    workflowId,
 		MessageStream: postmark.PostmarkMessageStreamInvoice,
 		From:          invoiceEntity.Provider.Email,
 		To:            contractEntity.InvoiceEmail,
-		BCC:           tenantBillingProfileEntity.SendInvoicesBcc,
+		CC:            cc,
+		BCC:           bcc,
 		Subject:       fmt.Sprintf(notifications.WorkflowInvoiceReadySubject, invoiceEntity.Number),
 		TemplateData: map[string]string{
 			"{{organizationName}}": invoiceEntity.Customer.Name,
