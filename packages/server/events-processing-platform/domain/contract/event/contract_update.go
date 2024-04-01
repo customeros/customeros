@@ -32,9 +32,9 @@ type ContractUpdateEvent struct {
 	Region                 string                     `json:"region,omitempty"`
 	Zip                    string                     `json:"zip,omitempty"`
 	OrganizationLegalName  string                     `json:"organizationLegalName,omitempty"`
-	InvoiceEmail           string                     `json:"invoiceEmail,omitempty"`
-	InvoiceEmailCC         []string                   `json:"invoiceEmailCC,omitempty"`
-	InvoiceEmailBCC        []string                   `json:"invoiceEmailBCC,omitempty"`
+	InvoiceEmail           string                     `json:"invoiceEmail,omitempty" validate:"omitempty,email"`
+	InvoiceEmailCC         []string                   `json:"invoiceEmailCC,omitempty" validate:"omitempty,dive,email"`
+	InvoiceEmailBCC        []string                   `json:"invoiceEmailBCC,omitempty" validate:"omitempty,dive,email"`
 	InvoiceNote            string                     `json:"invoiceNote,omitempty"`
 	FieldsMask             []string                   `json:"fieldsMask,omitempty"`
 	NextInvoiceDate        *time.Time                 `json:"nextInvoiceDate,omitempty"`

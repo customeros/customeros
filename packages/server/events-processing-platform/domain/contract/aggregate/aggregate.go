@@ -211,10 +211,6 @@ func (a *ContractAggregate) updateContract(ctx context.Context, request *contrac
 	if !isUpdated(event.FieldMaskEndedAt, fieldsMask) {
 		dataFields.EndedAt = a.Contract.EndedAt
 	}
-	// set status field mask if at least any other field is set
-	if len(fieldsMask) > 0 {
-		fieldsMask = append(fieldsMask, event.FieldMaskStatus)
-	}
 
 	// Set renewal periods
 	if !isUpdated(event.FieldMaskRenewalCycle, fieldsMask) {
