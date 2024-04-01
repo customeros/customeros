@@ -43,7 +43,9 @@ type InvoiceProps = {
   note?: string | null;
   invoiceNumber: string;
   check?: boolean | null;
+  invoicePeriodEnd?: string;
   isBilledToFocused?: boolean;
+  invoicePeriodStart?: string;
   isInvoiceProviderFocused?: boolean;
   isInvoiceBankDetailsHovered?: boolean;
   isInvoiceBankDetailsFocused?: boolean;
@@ -73,6 +75,8 @@ export function Invoice({
   canPayWithBankTransfer,
   availableBankAccount,
   check,
+  invoicePeriodStart,
+  invoicePeriodEnd,
 }: InvoiceProps) {
   const isInvoiceMetaSectionBlurred =
     isBilledToFocused || isInvoiceProviderFocused;
@@ -153,7 +157,12 @@ export function Invoice({
             invoiceMetaSectionFilterProperty,
           )}
         >
-          <ServicesTable services={lines} currency={currency} />
+          <ServicesTable
+            services={lines}
+            currency={currency}
+            invoicePeriodEnd={invoicePeriodEnd}
+            invoicePeriodStart={invoicePeriodStart}
+          />
           <InvoiceSummary
             tax={tax}
             total={total}
