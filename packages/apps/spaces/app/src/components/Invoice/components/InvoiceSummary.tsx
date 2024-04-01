@@ -2,9 +2,7 @@
 
 import React, { FC } from 'react';
 
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
-import { Divider } from '@ui/presentation/Divider';
+import { Divider } from '@ui/presentation/Divider/Divider';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 
 interface InvoiceSummaryProps {
@@ -25,55 +23,45 @@ export const InvoiceSummary: FC<InvoiceSummaryProps> = ({
   note,
 }) => {
   return (
-    <Flex flexDir='column' alignSelf='flex-end' w='50%' maxW='300px' mt={4}>
-      <Flex justifyContent='space-between'>
-        <Text fontSize='sm' fontWeight='medium' alignItems='center'>
-          Subtotal
-        </Text>
-        <Text fontSize='sm' ml={2} color='gray.600'>
+    <div className='flex flex-col self-end w-[50%] max-w-[300px] mt-4'>
+      <div className='flex justify-between'>
+        <span className='text-sm items-center font-medium'>Subtotal</span>
+        <span className='text-sm ml-2 span-gray-600'>
           {formatCurrency(subtotal, 2, currency)}
-        </Text>
-      </Flex>
-      <Divider orientation='horizontal' my={1} borderColor='gray.300' />
+        </span>
+      </div>
+      <Divider className='my-1 border-gray-300' />
 
-      <Flex justifyContent='space-between'>
-        <Text fontSize='sm'>Tax</Text>
-        <Text fontSize='sm' ml={2} color='gray.600'>
+      <div className='flex justify-between'>
+        <span className='text-sm'>Tax</span>
+        <span className='text-sm ml-2 span-gray-600'>
           {formatCurrency(tax, 2, currency)}
-        </Text>
-      </Flex>
-      <Divider orientation='horizontal' my={1} borderColor='gray.300' />
+        </span>
+      </div>
+      <Divider className='my-1 border-gray-300' />
 
-      <Flex justifyContent='space-between'>
-        <Text fontSize='sm' fontWeight='medium'>
-          Total
-        </Text>
-        <Text fontSize='sm' ml={2} color='gray.600'>
+      <div className='flex justify-between'>
+        <span className='text-sm font-medium'>Total</span>
+        <span className='text-sm ml-2 text-gray-600'>
           {formatCurrency(total, 2, currency)}
-        </Text>
-      </Flex>
-      <Divider orientation='horizontal' my={1} borderColor='gray.500' />
+        </span>
+      </div>
+      <Divider className='my-1 border-gray-500' />
 
-      <Flex justifyContent='space-between'>
-        <Text fontSize='sm' fontWeight='semibold'>
-          Amount due
-        </Text>
-        <Text fontSize='sm' fontWeight='semibold' ml={2}>
+      <div className='flex justify-between'>
+        <span className='text-sm font-medium'>Amount due</span>
+        <span className='text-sm font-semibold ml-2'>
           {formatCurrency(amountDue || total, 2, currency)}
-        </Text>
-      </Flex>
-      <Divider orientation='horizontal' my={1} borderColor='gray.500' />
+        </span>
+      </div>
+      <Divider className='my-1 border-gray-500' />
 
       {note && (
-        <Flex>
-          <Text fontSize='sm' fontWeight='medium'>
-            Note:
-          </Text>
-          <Text fontSize='sm' ml={2} color='gray.500'>
-            {note}
-          </Text>
-        </Flex>
+        <div>
+          <span className='text-sm font-medium'>Note:</span>
+          <span className='text-sm ml-2 text-gray-500'>{note}</span>
+        </div>
       )}
-    </Flex>
+    </div>
   );
 };

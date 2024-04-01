@@ -5,7 +5,6 @@ import React from 'react';
 import { produce } from 'immer';
 import { useQueryClient } from '@tanstack/react-query';
 
-import { Flex } from '@ui/layout/Flex';
 import { Clock } from '@ui/media/icons/Clock';
 import { InvoiceStatus } from '@graphql/types';
 import { CheckCircle } from '@ui/media/icons/CheckCircle';
@@ -13,7 +12,7 @@ import { SlashCircle01 } from '@ui/media/icons/SlashCircle01';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useInvoicesMeta } from '@shared/state/InvoicesMeta.atom';
 import { renderStatusNode } from '@shared/components/Invoice/Cells';
-import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu';
+import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 import { useVoidInvoiceMutation } from '@shared/graphql/voidInvoice.generated';
 import { useInfiniteGetInvoicesQuery } from '@shared/graphql/getInvoices.generated';
 import { useUpdateInvoiceStatusMutation } from '@shared/graphql/updateInvoiceStatus.generated';
@@ -139,13 +138,10 @@ export const StatusMenuButton = ({
 
   return (
     <Menu>
-      <MenuButton as={Flex} align='center' aria-label='Status' border='none'>
-        {renderStatusNode(status)}
-      </MenuButton>
-      <MenuList>
+      <MenuButton aria-label='Status'>{renderStatusNode(status)}</MenuButton>
+      <MenuList align='start' side='bottom' className='w-[200px] shadow-xl'>
         {status !== InvoiceStatus.Paid && (
           <MenuItem
-            alignItems='center'
             color='gray.700'
             onClick={() => handleUpdateStatus(InvoiceStatus.Paid)}
           >
@@ -154,11 +150,7 @@ export const StatusMenuButton = ({
           </MenuItem>
         )}
         {status !== InvoiceStatus.Void && (
-          <MenuItem
-            alignItems='center'
-            color='gray.700'
-            onClick={() => voidInvoice({ id })}
-          >
+          <MenuItem color='gray.700' onClick={() => voidInvoice({ id })}>
             <SlashCircle01 mr={2} color='gray.500' />
             Void
           </MenuItem>
@@ -166,7 +158,6 @@ export const StatusMenuButton = ({
 
         {status !== InvoiceStatus.Due && (
           <MenuItem
-            alignItems='center'
             color='gray.700'
             onClick={() => handleUpdateStatus(InvoiceStatus.Due)}
           >

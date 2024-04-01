@@ -2,10 +2,7 @@
 
 import React, { FC } from 'react';
 
-import { Box } from '@ui/layout/Box';
-import { Flex } from '@ui/layout/Flex';
 import { Tag } from '@ui/presentation/Tag';
-import { Heading } from '@ui/typography/Heading';
 import { Image as ChakraImage } from '@ui/media/Image';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
@@ -24,28 +21,21 @@ export const InvoiceHeader: FC<InvoiceHeaderProps> = ({
   const { data: globalCacheData } = useGlobalCacheQuery(client);
 
   return (
-    <Box>
-      <Flex alignItems='center' flex={1} justifyContent='space-between'>
-        <Flex alignItems='center'>
-          <Heading as='h1' fontSize='3xl' fontWeight='bold'>
-            Invoice
-          </Heading>
+    <div>
+      <div className='flex flex-1 justify-between items-center'>
+        <div className='flex items-center'>
+          <h1 className='text-3xl font-bold'>Invoice</h1>
           {status && (
-            <Box ml={4} mt={1}>
+            <div className='ml-4 mt-1'>
               <Tag variant='outline' colorScheme='gray'>
                 {status}
               </Tag>
-            </Box>
+            </div>
           )}
-        </Flex>
+        </div>
 
         {globalCacheData?.global_Cache?.cdnLogoUrl && (
-          <Flex
-            position='relative'
-            maxHeight={120}
-            width='full'
-            justifyContent='flex-end'
-          >
+          <div className='flex relative max-h-[120px] w-full justify-end'>
             <ChakraImage
               src={`${globalCacheData?.global_Cache?.cdnLogoUrl}`}
               alt='CustomerOS'
@@ -57,13 +47,11 @@ export const InvoiceHeader: FC<InvoiceHeaderProps> = ({
                 maxWidth: 'fit-content',
               }}
             />
-          </Flex>
+          </div>
         )}
-      </Flex>
+      </div>
 
-      <Heading as='h2' fontSize='sm' fontWeight='regular' color='gray.500'>
-        N° {invoiceNumber}
-      </Heading>
-    </Box>
+      <h2 className='text-sm text-gray-500 '>N° {invoiceNumber}</h2>
+    </div>
   );
 };

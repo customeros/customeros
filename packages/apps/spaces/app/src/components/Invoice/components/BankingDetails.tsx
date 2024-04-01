@@ -1,8 +1,5 @@
 import React, { FC, useMemo } from 'react';
 
-import { Box } from '@ui/layout/Box';
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
 import { Currency, BankAccount } from '@graphql/types';
 
 type InvoiceHeaderProps = {
@@ -50,44 +47,30 @@ export const BankingDetails: FC<InvoiceHeaderProps> = ({
       : availableBankAccount?.accountNumber;
 
   return (
-    <Flex flexDir='column' borderTop='1px solid' borderColor='gray.300' py={2}>
-      <Text fontSize='xs' fontWeight='semibold'>
-        Bank transfer
-      </Text>
-      <Flex justifyContent='space-between'>
-        <Box>
-          <Text fontSize='xs' fontWeight='medium'>
-            Bank name
-          </Text>
-          <Text fontSize='xs' color='gray.500'>
+    <div className='flex flex-col border-t border-gray-300 py-2'>
+      <span className='text-xs font-semibold'>Bank transfer</span>
+      <div className='flex justify-between'>
+        <div className='flex flex-col'>
+          <span className='text-xs font-medium'>Bank name</span>
+          <span className='text-xs text-gray-500'>
             {availableBankAccount?.bankName || '-'}
-          </Text>
-        </Box>
-        <Box>
-          <Text fontSize='xs' fontWeight='medium'>
-            {bankDetails.label}
-          </Text>
-          <Text fontSize='xs' color='gray.500'>
-            {bankDetails.value}
-          </Text>
-        </Box>
-        <Box>
-          <Text fontSize='xs' fontWeight='medium'>
-            {accountNumberLabel}
-          </Text>
-          <Text fontSize='xs' color='gray.500'>
+          </span>
+        </div>
+        <div className='flex flex-col'>
+          <span className='text-xs font-medium'>{bankDetails.label}</span>
+          <span className='text-xs text-gray-500'>{bankDetails.value}</span>
+        </div>
+        <div className='flex flex-col'>
+          <span className='text-xs font-medium'>{accountNumberLabel}</span>
+          <span className='text-xs text-gray-500'>
             {accountNumberValue || '-'}
-          </Text>
-        </Box>
-        <Box>
-          <Text fontSize='xs' fontWeight='medium'>
-            Reference
-          </Text>
-          <Text fontSize='xs' color='gray.500'>
-            {invoiceNumber || '-'}
-          </Text>
-        </Box>
-      </Flex>
-    </Flex>
+          </span>
+        </div>
+        <div className='flex flex-col'>
+          <span className='text-xs font-medium'>Reference</span>
+          <span className='text-xs text-gray-500'>{invoiceNumber || '-'}</span>
+        </div>
+      </div>
+    </div>
   );
 };

@@ -3,10 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 
-import { Box } from '@ui/layout/Box';
-import { Flex } from '@ui/layout/Flex';
-import { Link } from '@ui/navigation/Link';
-import { Text } from '@ui/typography/Text';
+import { cn } from '@ui/utils/cn';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { Invoice, BankAccount } from '@graphql/types';
 
@@ -76,57 +73,38 @@ export function Invoice({
   const isInvoiceMetaSectionBlurred =
     isBilledToFocused || isInvoiceProviderFocused;
 
+  const filterDynamicClass = isInvoiceMetaSectionBlurred
+    ? 'blur-[2px]'
+    : 'filter-none';
+
   return (
-    <Flex
-      px={4}
-      flexDir='column'
-      w='inherit'
-      overflowY='auto'
-      h='full'
-      justifyContent='space-between'
-      pb={4}
-    >
-      <Flex flexDir='column'>
-        <Flex flexDir='column' mt={2}>
+    <div className='px-4 flex flex-col w-full overflow-y-auto h-full justify-between pb-4'>
+      <div className='flex flex-col'>
+        <div className='flex flex-col mt-2'>
           <InvoiceHeader invoiceNumber={invoiceNumber} status={status} />
 
-          <Flex
-            mt={2}
-            justifyContent='space-evenly'
-            transition='filter 0.25s ease-in-out'
-          >
-            <Flex
-              flexDir='column'
-              flex={1}
-              w={170}
-              py={2}
-              px={2}
-              borderRight={'1px solid'}
-              filter={isInvoiceMetaSectionBlurred ? 'blur(2px)' : 'none'}
-              transition='filter 0.25s ease-in-out'
-              borderTop='1px solid'
-              borderBottom='1px solid'
-              borderColor='gray.300'
+          <div className='flex mt-2 justify-evenly transition duration-250 ease-in-out filter'>
+            <div
+              className={cn(
+                'flex flex-col w-170 py-2 px-2 border-r border-t border-b border-gray-300 transition duration-250 ease-in-out filter',
+                filterDynamicClass,
+              )}
             >
-              <Text fontWeight='semibold' mb={1} fontSize='sm'>
-                Issued
-              </Text>
-              <Text fontSize='sm' mb={4} color='gray.500'>
+              <span className='font-semibold mb-1 text-sm'>Issued</span>
+              <span className='text-sm mb-4 text-gray-500'>
                 {DateTimeUtils.format(
                   issueDate,
                   DateTimeUtils.dateWithAbreviatedMonth,
                 )}
-              </Text>
-              <Text fontWeight='semibold' mb={1} fontSize='sm'>
-                Due
-              </Text>
-              <Text fontSize='sm' color='gray.500'>
+              </span>
+              <span className='font-semibold mb-1 text-sm'>Due</span>
+              <span className='text-sm text-gray-500'>
                 {DateTimeUtils.format(
                   dueDate,
                   DateTimeUtils.dateWithAbreviatedMonth,
                 )}
-              </Text>
-            </Flex>
+              </span>
+            </div>
             <InvoicePartySection
               title='Billed to'
               isBlurred={isInvoiceProviderFocused}
@@ -155,14 +133,14 @@ export function Invoice({
               vatNumber={from?.vatNumber}
               region={from?.region}
             />
-          </Flex>
-        </Flex>
+          </div>
+        </div>
 
-        <Flex
-          mt={4}
-          flexDir='column'
-          filter={isInvoiceMetaSectionBlurred ? 'blur(2px)' : 'none'}
-          transition='filter 0.25s ease-in-out'
+        <div
+          className={cn(
+            'flex flex-col mt-4 transition duration-250 ease-in-out filter',
+            filterDynamicClass,
+          )}
         >
           <ServicesTable services={lines} currency={currency} />
           <InvoiceSummary
@@ -173,10 +151,10 @@ export function Invoice({
             amountDue={amountDue}
             note={note}
           />
-        </Flex>
-      </Flex>
+        </div>
+      </div>
 
-      <Box>
+      <div>
         {canPayWithBankTransfer && availableBankAccount && (
           <BankingDetails
             availableBankAccount={availableBankAccount}
@@ -185,42 +163,34 @@ export function Invoice({
           />
         )}
         {check && (
-          <Text fontSize='xs' color='gray.500' my={2}>
+          <span className='text-xs text-gray-500 my-2'>
             Want to pay by check? Contact{' '}
-            <Link href={`mailto:${from.email}`} textDecoration='underline'>
+            <a
+              className='underline text-gray-500'
+              href={`mailto:${from.email}`}
+            >
               {from.email}
-            </Link>
-          </Text>
+            </a>
+          </span>
         )}
-        <Flex
-          alignItems='center'
-          py={2}
-          borderTop='1px solid'
-          borderColor='gray.300'
-        >
-          <Box mr={2}>
+        <div className='flex items-center py-2 border-t border-gray-300'>
+          <div className='mr-2'>
             <Image
               src={logoCustomerOs}
               alt='CustomerOS'
               width={14}
               height={14}
             />
-          </Box>
-          <Text fontSize='xs' color='gray.500'>
+          </div>
+          <span className='text-xs text-gray-500'>
             Powered by
-            <Link
-              color='gray.500'
-              as='span'
-              href='/'
-              mx={1}
-              textDecoration='underline'
-            >
+            <span className='text-gray-500 mx-1 underline cursor-pointer'>
               CustomerOS
-            </Link>
+            </span>
             - Revenue Intelligence for B2B hyperscalers
-          </Text>
-        </Flex>
-      </Box>
-    </Flex>
+          </span>
+        </div>
+      </div>
+    </div>
   );
 }
