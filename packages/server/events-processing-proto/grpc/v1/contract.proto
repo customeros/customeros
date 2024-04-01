@@ -34,7 +34,6 @@ enum ContractFieldMask {
   CONTRACT_FIELD_COUNTRY = 14;
   CONTRACT_FIELD_ZIP = 15;
   CONTRACT_FIELD_ORGANIZATION_LEGAL_NAME = 16;
-  CONTRACT_FIELD_INVOICE_EMAIL = 17;
   CONTRACT_FIELD_INVOICE_NOTE = 18;
   CONTRACT_FIELD_NEXT_INVOICE_DATE = 19; // to update next invoice date field mask must be specified explicitly
   CONTRACT_FIELD_CAN_PAY_WITH_CARD = 20;
@@ -47,6 +46,9 @@ enum ContractFieldMask {
   CONTRACT_FIELD_REGION = 27;
   CONTRACT_FIELD_CHECK = 28;
   CONTRACT_FIELD_DUE_DAYS = 29;
+  CONTRACT_FIELD_INVOICE_EMAIL_CC = 30;
+  CONTRACT_FIELD_INVOICE_EMAIL_BCC = 31;
+  CONTRACT_FIELD_INVOICE_EMAIL_TO = 32;
 }
 
 // CreateContract request message
@@ -103,7 +105,6 @@ message UpdateContractGrpcRequest {
   string country = 20;
   string zip = 21;
   string organizationLegalName = 22;
-  string invoiceEmail = 23;
   repeated ContractFieldMask fieldsMask = 24;
   string invoiceNote = 25;
   google.protobuf.Timestamp nextInvoiceDate = 26;
@@ -117,6 +118,9 @@ message UpdateContractGrpcRequest {
   string region = 34;
   bool check = 35;
   int64 dueDays = 36;
+  string invoiceEmailTo = 37;
+  repeated string invoiceEmailCc = 38;
+  repeated string invoiceEmailBcc = 39;
 }
 
 message RolloutRenewalOpportunityOnExpirationGrpcRequest {

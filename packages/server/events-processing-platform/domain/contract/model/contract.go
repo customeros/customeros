@@ -36,6 +36,8 @@ type Contract struct {
 	Zip                    string                       `json:"zip"`
 	OrganizationLegalName  string                       `json:"organizationLegalName"`
 	InvoiceEmail           string                       `json:"invoiceEmail"`
+	InvoiceEmailCC         []string                     `json:"invoiceEmailCC"`
+	InvoiceEmailBCC        []string                     `json:"invoiceEmailBCC"`
 	InvoiceNote            string                       `json:"invoiceNote"`
 	NextInvoiceDate        *time.Time                   `json:"nextInvoiceDate,omitempty"`
 	CanPayWithCard         bool                         `json:"canPayWithCard"`
@@ -64,24 +66,26 @@ type ContractDataFields struct {
 	Currency               string
 	InvoicingStartDate     *time.Time
 	NextInvoiceDate        *time.Time
-	AddressLine1           string `json:"addressLine1"`
-	AddressLine2           string `json:"addressLine2"`
-	Locality               string `json:"locality"`
-	Country                string `json:"country"`
-	Region                 string `json:"region"`
-	Zip                    string `json:"zip"`
-	OrganizationLegalName  string `json:"organizationLegalName"`
-	InvoiceEmail           string `json:"invoiceEmail"`
-	InvoiceNote            string `json:"invoiceNote"`
-	CanPayWithCard         bool   `json:"canPayWithCard"`
-	CanPayWithDirectDebit  bool   `json:"canPayWithDirectDebit"`
-	CanPayWithBankTransfer bool   `json:"canPayWithBankTransfer"`
-	InvoicingEnabled       bool   `json:"invoicingEnabled"`
-	PayOnline              bool   `json:"payOnline"`
-	PayAutomatically       bool   `json:"payAutomatically"`
-	AutoRenew              bool   `json:"autoRenew"`
-	Check                  bool   `json:"check"`
-	DueDays                int64  `json:"dueDays"`
+	AddressLine1           string   `json:"addressLine1"`
+	AddressLine2           string   `json:"addressLine2"`
+	Locality               string   `json:"locality"`
+	Country                string   `json:"country"`
+	Region                 string   `json:"region"`
+	Zip                    string   `json:"zip"`
+	OrganizationLegalName  string   `json:"organizationLegalName"`
+	InvoiceEmail           string   `json:"invoiceEmail"`
+	InvoiceEmailCC         []string `json:"invoiceEmailCC"`
+	InvoiceEmailBCC        []string `json:"invoiceEmailBCC"`
+	InvoiceNote            string   `json:"invoiceNote"`
+	CanPayWithCard         bool     `json:"canPayWithCard"`
+	CanPayWithDirectDebit  bool     `json:"canPayWithDirectDebit"`
+	CanPayWithBankTransfer bool     `json:"canPayWithBankTransfer"`
+	InvoicingEnabled       bool     `json:"invoicingEnabled"`
+	PayOnline              bool     `json:"payOnline"`
+	PayAutomatically       bool     `json:"payAutomatically"`
+	AutoRenew              bool     `json:"autoRenew"`
+	Check                  bool     `json:"check"`
+	DueDays                int64    `json:"dueDays"`
 }
 
 // RenewalCycle represents the renewal cycle of a contract.

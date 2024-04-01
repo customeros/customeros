@@ -28,6 +28,8 @@ const (
 	FieldMaskLocality               = "locality"
 	FieldMaskOrganizationLegalName  = "organizationLegalName"
 	FieldMaskInvoiceEmail           = "invoiceEmail"
+	FieldMaskInvoiceEmailCC         = "invoiceEmailCC"
+	FieldMaskInvoiceEmailBCC        = "invoiceEmailBCC"
 	FieldMaskStatus                 = "status"
 	FieldMaskInvoiceNote            = "invoiceNote"
 	FieldMaskNextInvoiceDate        = "nextInvoiceDate"

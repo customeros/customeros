@@ -142,6 +142,8 @@ type BillingDetails {
     postalCode:             String
     organizationLegalName:  String
     billingEmail:           String
+    billingEmailCC:         [String!]
+    billingEmailBCC:        [String!]
     invoiceNote:            String
     canPayWithCard:         Boolean
     canPayWithDirectDebit:  Boolean
@@ -305,6 +307,8 @@ input BillingDetailsInput {
     postalCode:             String
     organizationLegalName:  String
     billingEmail:           String
+    billingEmailCC:         [String!]
+    billingEmailBCC:        [String!]
     invoiceNote:            String
     canPayWithCard:         Boolean
     canPayWithDirectDebit:  Boolean

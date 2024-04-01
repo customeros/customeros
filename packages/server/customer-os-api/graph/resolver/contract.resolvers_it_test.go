@@ -191,7 +191,7 @@ func TestMutationResolver_ContractUpdate(t *testing.T) {
 			require.Equal(t, "test region", contract.Region)
 			require.Equal(t, "test zip", contract.Zip)
 			require.Equal(t, "test organization legal name", contract.OrganizationLegalName)
-			require.Equal(t, "test invoice email", contract.InvoiceEmail)
+			require.Equal(t, "test invoice email", contract.InvoiceEmailTo)
 			require.Equal(t, "test invoice note", contract.InvoiceNote)
 			require.Equal(t, true, contract.CanPayWithCard)
 			require.Equal(t, true, contract.CanPayWithDirectDebit)
@@ -201,7 +201,8 @@ func TestMutationResolver_ContractUpdate(t *testing.T) {
 			require.Equal(t, true, contract.AutoRenew)
 			require.Equal(t, true, contract.Check)
 			require.Equal(t, int64(7), contract.DueDays)
-			require.Equal(t, 26, len(contract.FieldsMask))
+			require.Equal(t, []string{"cc1", "cc2"}, contract.InvoiceEmailCc)
+			require.Equal(t, 27, len(contract.FieldsMask))
 			calledUpdateContract = true
 			return &contractpb.ContractIdGrpcResponse{
 				Id: contractId,

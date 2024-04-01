@@ -181,7 +181,9 @@ func (a *ContractAggregate) updateContract(ctx context.Context, request *contrac
 		Region:                 request.Region,
 		Zip:                    request.Zip,
 		OrganizationLegalName:  request.OrganizationLegalName,
-		InvoiceEmail:           request.InvoiceEmail,
+		InvoiceEmail:           request.InvoiceEmailTo,
+		InvoiceEmailCC:         request.InvoiceEmailCc,
+		InvoiceEmailBCC:        request.InvoiceEmailBcc,
 		InvoiceNote:            request.InvoiceNote,
 		NextInvoiceDate:        utils.TimestampProtoToTimePtr(request.NextInvoiceDate),
 		CanPayWithCard:         request.CanPayWithCard,
@@ -312,8 +314,12 @@ func extractFieldsMask(requestFieldsMask []contractpb.ContractFieldMask) []strin
 			fieldsMask = append(fieldsMask, event.FieldMaskZip)
 		case contractpb.ContractFieldMask_CONTRACT_FIELD_ORGANIZATION_LEGAL_NAME:
 			fieldsMask = append(fieldsMask, event.FieldMaskOrganizationLegalName)
-		case contractpb.ContractFieldMask_CONTRACT_FIELD_INVOICE_EMAIL:
+		case contractpb.ContractFieldMask_CONTRACT_FIELD_INVOICE_EMAIL_TO:
 			fieldsMask = append(fieldsMask, event.FieldMaskInvoiceEmail)
+		case contractpb.ContractFieldMask_CONTRACT_FIELD_INVOICE_EMAIL_CC:
+			fieldsMask = append(fieldsMask, event.FieldMaskInvoiceEmailCC)
+		case contractpb.ContractFieldMask_CONTRACT_FIELD_INVOICE_EMAIL_BCC:
+			fieldsMask = append(fieldsMask, event.FieldMaskInvoiceEmailBCC)
 		case contractpb.ContractFieldMask_CONTRACT_FIELD_INVOICE_NOTE:
 			fieldsMask = append(fieldsMask, event.FieldMaskInvoiceNote)
 		case contractpb.ContractFieldMask_CONTRACT_FIELD_NEXT_INVOICE_DATE:
@@ -502,6 +508,12 @@ func (a *ContractAggregate) onContractUpdate(evt eventstore.Event) error {
 	}
 	if eventData.UpdateInvoiceEmail() {
 		a.Contract.InvoiceEmail = eventData.InvoiceEmail
+	}
+	if eventData.UpdateInvoiceEmailCC() {
+		a.Contract.InvoiceEmailCC = eventData.InvoiceEmailCC
+	}
+	if eventData.UpdateInvoiceEmailBCC() {
+		a.Contract.InvoiceEmailBCC = eventData.InvoiceEmailBCC
 	}
 	if eventData.UpdateInvoiceNote() {
 		a.Contract.InvoiceNote = eventData.InvoiceNote

@@ -148,6 +148,8 @@ type ComplexityRoot struct {
 		AddressLine2           func(childComplexity int) int
 		BillingCycle           func(childComplexity int) int
 		BillingEmail           func(childComplexity int) int
+		BillingEmailBcc        func(childComplexity int) int
+		BillingEmailCc         func(childComplexity int) int
 		CanPayWithBankTransfer func(childComplexity int) int
 		CanPayWithCard         func(childComplexity int) int
 		CanPayWithDirectDebit  func(childComplexity int) int
@@ -2429,6 +2431,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.BillingDetails.BillingEmail(childComplexity), true
+
+	case "BillingDetails.billingEmailBCC":
+		if e.complexity.BillingDetails.BillingEmailBcc == nil {
+			break
+		}
+
+		return e.complexity.BillingDetails.BillingEmailBcc(childComplexity), true
+
+	case "BillingDetails.billingEmailCC":
+		if e.complexity.BillingDetails.BillingEmailCc == nil {
+			break
+		}
+
+		return e.complexity.BillingDetails.BillingEmailCc(childComplexity), true
 
 	case "BillingDetails.canPayWithBankTransfer":
 		if e.complexity.BillingDetails.CanPayWithBankTransfer == nil {
@@ -12046,7 +12062,9 @@ type Contact implements ExtensibleEntity & Node {
     """
     id: ID!
 
-    "The title associate with the contact in customerOS."
+    """
+    Deprecated
+    """
     title: String @deprecated(reason: "Use ` + "`" + `prefix` + "`" + ` instead")
 
     prefix: String
@@ -12076,6 +12094,9 @@ type Contact implements ExtensibleEntity & Node {
     createdAt: Time!
     updatedAt: Time!
 
+    """
+    Deprecated
+    """
     label: String @deprecated(reason: "Use ` + "`" + `tags` + "`" + ` instead")
 
     source: DataSource!
@@ -12166,7 +12187,9 @@ Create an individual in customerOS.
 """
 input ContactInput {
 
-    "The unique ID associated with the template of the contact in customerOS."
+    """
+    Deprecated
+    """
     templateId: ID  @deprecated(reason: "Not supported")
 
     "The prefix of the contact."
@@ -12192,11 +12215,13 @@ input ContactInput {
     createdAt: Time
 
     """
-    User defined metadata appended to contact.
-    **Required.**
+    Deprecated
     """
     customFields: [CustomFieldInput!] @deprecated(reason: "Not supported in create flow yet")
 
+    """
+    Deprecated
+    """
     fieldSets: [FieldSetInput!] @deprecated(reason: "Not supported in create flow yet")
 
     "An email addresses associated with the contact."
@@ -12205,7 +12230,9 @@ input ContactInput {
     "A phone number associated with the contact."
     phoneNumber: PhoneNumberInput
 
-    "Id of the contact owner (user)"
+    """
+    Deprecated
+    """
     ownerId: ID @deprecated(reason: "Not supported in create flow yet")
 
     externalReference: ExternalSystemReferenceInput
@@ -12434,6 +12461,8 @@ type BillingDetails {
     postalCode:             String
     organizationLegalName:  String
     billingEmail:           String
+    billingEmailCC:         [String!]
+    billingEmailBCC:        [String!]
     invoiceNote:            String
     canPayWithCard:         Boolean
     canPayWithDirectDebit:  Boolean
@@ -12458,13 +12487,37 @@ input ContractInput {
     autoRenew:              Boolean
     dueDays:                Int64
 
+    """
+    Deprecated
+    """
     invoicingStartDate:     Time @deprecated(reason: "Removed from create input.")
+    """
+    Deprecated
+    """
     externalReference:      ExternalSystemReferenceInput @deprecated(reason: "Not used yet")
+    """
+    Deprecated
+    """
     billingCycle:           ContractBillingCycle @deprecated(reason: "Removed from create input.")
+    """
+    Deprecated
+    """
     renewalPeriods:         Int64 @deprecated(reason: "Use committedPeriods instead.")
+    """
+    Deprecated
+    """
     renewalCycle:       ContractRenewalCycle @deprecated(reason: "Use contractRenewalCycle instead.")
+    """
+    Deprecated
+    """
     signedAt:           Time @deprecated(reason: "Use contractSigned instead.")
+    """
+    Deprecated
+    """
     serviceStartedAt:   Time @deprecated(reason: "Use serviceStarted instead.")
+    """
+    Deprecated
+    """
     name:               String @deprecated(reason: "Use contractName instead.")
 }
 
@@ -12484,24 +12537,81 @@ input ContractUpdateInput {
     billingEnabled:         Boolean
     autoRenew:              Boolean
 
+    """
+    Deprecated
+    """
     canPayWithCard:         Boolean @deprecated(reason: "Use billingDetails instead.")
+    """
+    Deprecated
+    """
     canPayWithDirectDebit:  Boolean @deprecated(reason: "Use billingDetails instead.")
+    """
+    Deprecated
+    """
     canPayWithBankTransfer: Boolean @deprecated(reason: "Use billingDetails instead.")
+    """
+    Deprecated
+    """
     invoicingStartDate:     Time @deprecated(reason: "Use billingDetails instead.")
+    """
+    Deprecated
+    """
     addressLine1:           String @deprecated(reason: "Use billingDetails instead.")
+    """
+    Deprecated
+    """
     addressLine2:           String @deprecated(reason: "Use billingDetails instead.")
+    """
+    Deprecated
+    """
     locality:               String @deprecated(reason: "Use billingDetails instead.")
+    """
+    Deprecated
+    """
     country:                String @deprecated(reason: "Use billingDetails instead.")
+    """
+    Deprecated
+    """
     zip:                    String @deprecated(reason: "Use billingDetails instead.")
+    """
+    Deprecated
+    """
     billingCycle:           ContractBillingCycle @deprecated(reason: "Use billingDetails instead.")
+    """
+    Deprecated
+    """
     invoiceNote:            String @deprecated(reason: "Use billingDetails instead.")
+    """
+    Deprecated
+    """
     endedAt:                Time @deprecated(reason: "Use contractEnded instead.")
+    """
+    Deprecated
+    """
     renewalPeriods:         Int64 @deprecated(reason: "Use committedPeriods instead.")
+    """
+    Deprecated
+    """
     invoiceEmail:           String @deprecated(reason: "Use billingDetails instead.")
+    """
+    Deprecated
+    """
     organizationLegalName:  String @deprecated(reason: "Use billingDetails instead.")
+    """
+    Deprecated
+    """
     renewalCycle:       ContractRenewalCycle @deprecated(reason: "Use contractRenewalCycle instead.")
+    """
+    Deprecated
+    """
     signedAt:           Time @deprecated(reason: "Use contractSigned instead.")
+    """
+    Deprecated
+    """
     serviceStartedAt:   Time @deprecated(reason: "Use serviceStarted instead.")
+    """
+    Deprecated
+    """
     name:               String @deprecated(reason: "Use contractName instead.")
 }
 
@@ -12516,6 +12626,8 @@ input BillingDetailsInput {
     postalCode:             String
     organizationLegalName:  String
     billingEmail:           String
+    billingEmailCC:         [String!]
+    billingEmailBCC:        [String!]
     invoiceNote:            String
     canPayWithCard:         Boolean
     canPayWithDirectDebit:  Boolean
@@ -12636,6 +12748,9 @@ Describes a custom, user-defined field associated with a ` + "`" + `Contact` + "
 **A ` + "`" + `create` + "`" + ` object.**
 """
 input CustomFieldInput {
+    """
+    Deprecated
+    """
     id: ID @deprecated
     """
     The name of the custom field.
@@ -12810,6 +12925,9 @@ type DashboardMRRPerCustomerPerMonth {
 
 type DashboardGrossRevenueRetention {
     grossRevenueRetention: Float!
+    """
+    Deprecated
+    """
     increasePercentage: String! @deprecated(reason: "Use increasePercentageValue instead")
     increasePercentageValue: Float!
     perMonth: [DashboardGrossRevenueRetentionPerMonth]!
@@ -12843,6 +12961,9 @@ type DashboardRevenueAtRisk {
 
 type DashboardRetentionRate {
     retentionRate: Float!
+    """
+    Deprecated
+    """
     increasePercentage: String! @deprecated(reason: "Use increasePercentageValue instead")
     increasePercentageValue: Float!
     perMonth: [DashboardRetentionRatePerMonth]!
@@ -13300,7 +13421,13 @@ input InteractionEventInput {
 
 type InteractionSession implements Node {
     id: ID!
+    """
+    Deprecated
+    """
     startedAt: Time! @deprecated(reason: "Use createdAt instead")
+    """
+    Deprecated
+    """
     endedAt: Time @deprecated(reason: "Use updatedAt instead")
     createdAt: Time!
     updatedAt: Time!
@@ -13457,7 +13584,13 @@ type Invoice implements MetadataInterface {
     invoiceLineItems:   [InvoiceLine!]! @goField(forceResolver: true)
     status:             InvoiceStatus
     note:               String
+    """
+    Deprecated
+    """
     domesticPaymentsBankInfo:       String @deprecated(reason: "not used")
+    """
+    Deprecated
+    """
     internationalPaymentsBankInfo:  String @deprecated(reason: "not used")
     customer:                   InvoiceCustomer!
     provider:                   InvoiceProvider!
@@ -14165,6 +14298,9 @@ enum OpportunityRenewalLikelihood {
 
 input OpportunityRenewalUpdateInput {
     opportunityId:      ID!
+    """
+    Deprecated
+    """
     name:               String @deprecated(reason: "Not used")
     amount:             Float
     renewalLikelihood:  OpportunityRenewalLikelihood
@@ -14281,21 +14417,69 @@ type Organization implements MetadataInterface {
     issueSummaryByStatus: [IssueSummaryByStatus!]! @goField(forceResolver: true)
     orders: [Order!]! @goField(forceResolver: true)
 
+    """
+    Deprecated
+    """
     socials: [Social!]! @goField(forceResolver: true) @deprecated(reason: "Use socialMedia")
+    """
+    Deprecated
+    """
     isPublic:    Boolean @deprecated(reason: "Use public")
+    """
+    Deprecated
+    """
     note:        String @deprecated(reason: "Use notes")
+    """
+    Deprecated
+    """
     logoUrl:                String @deprecated(reason: "Use logo")
+    """
+    Deprecated
+    """
     id: ID! @deprecated(reason: "Use metadata.id")
+    """
+    Deprecated
+    """
     createdAt:   Time! @deprecated(reason: "Use metadata.created")
+    """
+    Deprecated
+    """
     updatedAt:   Time! @deprecated(reason: "Use metadata.lastUpdated")
+    """
+    Deprecated
+    """
     source: DataSource! @deprecated(reason: "Use metadata.source")
+    """
+    Deprecated
+    """
     sourceOfTruth: DataSource! @deprecated(reason: "Use metadata.sourceOfTruth")
+    """
+    Deprecated
+    """
     appSource: String! @deprecated(reason: "Use metadata.appSource")
+    """
+    Deprecated
+    """
     referenceId: String @deprecated(reason: "Use customId")
+    """
+    Deprecated
+    """
     lastTouchPointAt: Time @deprecated(reason: "Use lastTouchpoint")
+    """
+    Deprecated
+    """
     lastTouchPointType: LastTouchpointType @deprecated(reason: "Use lastTouchpoint")
+    """
+    Deprecated
+    """
     lastTouchPointTimelineEventId: ID #we need this in order to use the dataloader for the lastTouchPointTimelineEvent if asked @deprecated(reason: "Use lastTouchpoint")
+    """
+    Deprecated
+    """
     lastTouchPointTimelineEvent: TimelineEvent @goField(forceResolver: true) @deprecated(reason: "Use lastTouchpoint")
+    """
+    Deprecated
+    """
     subsidiaryOf: [LinkedOrganization!]! @goField(forceResolver: true) @deprecated(reason: "Use parentCompany")
 }
 
@@ -14357,11 +14541,29 @@ input OrganizationInput {
     slackChannelId:     String
     appSource:     String
 
+    """
+    Deprecated
+    """
     fieldSets:     [FieldSetInput!] @deprecated
+    """
+    Deprecated
+    """
     templateId:    ID @deprecated
+    """
+    Deprecated
+    """
     isPublic:      Boolean @deprecated(reason: "Use public")
+    """
+    Deprecated
+    """
     referenceId:   String @deprecated(reason: "Use customId")
+    """
+    Deprecated
+    """
     note:          String @deprecated(reason: "Use notes")
+    """
+    Deprecated
+    """
     logoUrl:       String @deprecated(reason: "Use logo")
 }
 
@@ -14369,7 +14571,7 @@ input OrganizationUpdateInput {
     id:                 ID!
     customId:           String
     """
-    Set to true when partial update is needed. Empty or missing fields will not be ignored.
+    Deprecated
     """
     patch:              Boolean @deprecated(reason: "all updates are patched now")
     name:               String
@@ -15115,6 +15317,9 @@ type TenantSettings {
     baseCurrency:           Currency
     billingEnabled:         Boolean!
 
+    """
+    Deprecated
+    """
     logoUrl:                String! @deprecated(reason: "Use logoRepositoryFileId")
 }
 
@@ -15125,6 +15330,9 @@ type TenantBillingProfile implements SourceFields & Node {
     source:             DataSource!
     sourceOfTruth:      DataSource!
     appSource:          String!
+    """
+    Deprecated
+    """
     email:              String! @deprecated(reason: "Use sendInvoicesFrom")
     phone:              String!
     addressLine1:       String!
@@ -15135,14 +15343,32 @@ type TenantBillingProfile implements SourceFields & Node {
     region:             String!
     zip:                String!
     legalName:          String!
+    """
+    Deprecated
+    """
     domesticPaymentsBankInfo:       String @deprecated(reason: "Not used")
+    """
+    Deprecated
+    """
     internationalPaymentsBankInfo:  String @deprecated(reason: "Not used")
     vatNumber:                      String!
     sendInvoicesFrom:               String!
     sendInvoicesBcc:                String!
+    """
+    Deprecated
+    """
     canPayWithCard:                 Boolean @deprecated(reason: "Not used")
+    """
+    Deprecated
+    """
     canPayWithDirectDebitSEPA:      Boolean @deprecated(reason: "Not used")
+    """
+    Deprecated
+    """
     canPayWithDirectDebitACH:       Boolean @deprecated(reason: "Not used")
+    """
+    Deprecated
+    """
     canPayWithDirectDebitBacs:      Boolean @deprecated(reason: "Not used")
     canPayWithBankTransfer:         Boolean!
     canPayWithPigeon:               Boolean!
@@ -15155,6 +15381,9 @@ input TenantInput {
 }
 
 input TenantBillingProfileInput {
+    """
+    Deprecated
+    """
     email:              String @deprecated(reason: "Use sendInvoicesFrom")
     phone:              String
     addressLine1:       String
@@ -15165,14 +15394,32 @@ input TenantBillingProfileInput {
     region:             String
     zip:                String
     legalName:          String
+    """
+    Deprecated
+    """
     domesticPaymentsBankInfo:      String @deprecated(reason: "Not used")
+    """
+    Deprecated
+    """
     internationalPaymentsBankInfo: String @deprecated(reason: "Not used")
     vatNumber: String!
     sendInvoicesFrom: String!
     sendInvoicesBcc: String
+    """
+    Deprecated
+    """
     canPayWithCard: Boolean @deprecated(reason: "Not used")
+    """
+    Deprecated
+    """
     canPayWithDirectDebitSEPA: Boolean @deprecated(reason: "Not used")
+    """
+    Deprecated
+    """
     canPayWithDirectDebitACH: Boolean @deprecated(reason: "Not used")
+    """
+    Deprecated
+    """
     canPayWithDirectDebitBacs: Boolean @deprecated(reason: "Not used")
     canPayWithBankTransfer: Boolean!
     canPayWithPigeon:       Boolean!
@@ -15182,6 +15429,9 @@ input TenantBillingProfileInput {
 input TenantBillingProfileUpdateInput {
     id:                 ID!
     patch:              Boolean
+    """
+    Deprecated
+    """
     email:              String @deprecated(reason: "Use sendInvoicesFrom")
     phone:              String
     addressLine1:       String
@@ -15192,14 +15442,32 @@ input TenantBillingProfileUpdateInput {
     region:             String
     zip:                String
     legalName:          String
+    """
+    Deprecated
+    """
     domesticPaymentsBankInfo:      String @deprecated(reason: "Not used")
+    """
+    Deprecated
+    """
     internationalPaymentsBankInfo: String @deprecated(reason: "Not used")
     vatNumber:                  String
     sendInvoicesFrom:           String
     sendInvoicesBcc:            String
+    """
+    Deprecated
+    """
     canPayWithCard:             Boolean @deprecated(reason: "Not used")
+    """
+    Deprecated
+    """
     canPayWithDirectDebitSEPA:  Boolean @deprecated(reason: "Not used")
+    """
+    Deprecated
+    """
     canPayWithDirectDebitACH:   Boolean @deprecated(reason: "Not used")
+    """
+    Deprecated
+    """
     canPayWithDirectDebitBacs:  Boolean @deprecated(reason: "Not used")
     canPayWithBankTransfer:     Boolean
     canPayWithPigeon:           Boolean
@@ -22486,6 +22754,88 @@ func (ec *executionContext) fieldContext_BillingDetails_billingEmail(ctx context
 	return fc, nil
 }
 
+func (ec *executionContext) _BillingDetails_billingEmailCC(ctx context.Context, field graphql.CollectedField, obj *model.BillingDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_BillingDetails_billingEmailCC(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.BillingEmailCc, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalOString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_BillingDetails_billingEmailCC(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingDetails_billingEmailBCC(ctx context.Context, field graphql.CollectedField, obj *model.BillingDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_BillingDetails_billingEmailBCC(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.BillingEmailBcc, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalOString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_BillingDetails_billingEmailBCC(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _BillingDetails_invoiceNote(ctx context.Context, field graphql.CollectedField, obj *model.BillingDetails) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_BillingDetails_invoiceNote(ctx, field)
 	if err != nil {
@@ -27070,6 +27420,10 @@ func (ec *executionContext) fieldContext_Contract_billingDetails(ctx context.Con
 				return ec.fieldContext_BillingDetails_organizationLegalName(ctx, field)
 			case "billingEmail":
 				return ec.fieldContext_BillingDetails_billingEmail(ctx, field)
+			case "billingEmailCC":
+				return ec.fieldContext_BillingDetails_billingEmailCC(ctx, field)
+			case "billingEmailBCC":
+				return ec.fieldContext_BillingDetails_billingEmailBCC(ctx, field)
 			case "invoiceNote":
 				return ec.fieldContext_BillingDetails_invoiceNote(ctx, field)
 			case "canPayWithCard":
@@ -92815,7 +93169,7 @@ func (ec *executionContext) unmarshalInputBillingDetailsInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"billingCycle", "invoicingStarted", "addressLine1", "addressLine2", "locality", "region", "country", "postalCode", "organizationLegalName", "billingEmail", "invoiceNote", "canPayWithCard", "canPayWithDirectDebit", "canPayWithBankTransfer", "payOnline", "payAutomatically", "check", "dueDays"}
+	fieldsInOrder := [...]string{"billingCycle", "invoicingStarted", "addressLine1", "addressLine2", "locality", "region", "country", "postalCode", "organizationLegalName", "billingEmail", "billingEmailCC", "billingEmailBCC", "invoiceNote", "canPayWithCard", "canPayWithDirectDebit", "canPayWithBankTransfer", "payOnline", "payAutomatically", "check", "dueDays"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -92892,6 +93246,20 @@ func (ec *executionContext) unmarshalInputBillingDetailsInput(ctx context.Contex
 				return it, err
 			}
 			it.BillingEmail = data
+		case "billingEmailCC":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingEmailCC"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BillingEmailCc = data
+		case "billingEmailBCC":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingEmailBCC"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BillingEmailBcc = data
 		case "invoiceNote":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("invoiceNote"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -100218,6 +100586,10 @@ func (ec *executionContext) _BillingDetails(ctx context.Context, sel ast.Selecti
 			out.Values[i] = ec._BillingDetails_organizationLegalName(ctx, field, obj)
 		case "billingEmail":
 			out.Values[i] = ec._BillingDetails_billingEmail(ctx, field, obj)
+		case "billingEmailCC":
+			out.Values[i] = ec._BillingDetails_billingEmailCC(ctx, field, obj)
+		case "billingEmailBCC":
+			out.Values[i] = ec._BillingDetails_billingEmailBCC(ctx, field, obj)
 		case "invoiceNote":
 			out.Values[i] = ec._BillingDetails_invoiceNote(ctx, field, obj)
 		case "canPayWithCard":

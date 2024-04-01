@@ -33,6 +33,8 @@ type ContractUpdateEvent struct {
 	Zip                    string                     `json:"zip,omitempty"`
 	OrganizationLegalName  string                     `json:"organizationLegalName,omitempty"`
 	InvoiceEmail           string                     `json:"invoiceEmail,omitempty"`
+	InvoiceEmailCC         []string                   `json:"invoiceEmailCC,omitempty"`
+	InvoiceEmailBCC        []string                   `json:"invoiceEmailBCC,omitempty"`
 	InvoiceNote            string                     `json:"invoiceNote,omitempty"`
 	FieldsMask             []string                   `json:"fieldsMask,omitempty"`
 	NextInvoiceDate        *time.Time                 `json:"nextInvoiceDate,omitempty"`
@@ -95,6 +97,12 @@ func NewContractUpdateEvent(a eventstore.Aggregate, dataFields model.ContractDat
 	}
 	if eventData.UpdateInvoiceEmail() {
 		eventData.InvoiceEmail = dataFields.InvoiceEmail
+	}
+	if eventData.UpdateInvoiceEmailCC() {
+		eventData.InvoiceEmailCC = dataFields.InvoiceEmailCC
+	}
+	if eventData.UpdateInvoiceEmailBCC() {
+		eventData.InvoiceEmailBCC = dataFields.InvoiceEmailBCC
 	}
 
 	if externalSystem.Available() {
@@ -186,6 +194,14 @@ func (e ContractUpdateEvent) UpdateOrganizationLegalName() bool {
 
 func (e ContractUpdateEvent) UpdateInvoiceEmail() bool {
 	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskInvoiceEmail)
+}
+
+func (e ContractUpdateEvent) UpdateInvoiceEmailCC() bool {
+	return utils.Contains(e.FieldsMask, FieldMaskInvoiceEmailCC)
+}
+
+func (e ContractUpdateEvent) UpdateInvoiceEmailBCC() bool {
+	return utils.Contains(e.FieldsMask, FieldMaskInvoiceEmailBCC)
 }
 
 func (e ContractUpdateEvent) UpdateInvoiceNote() bool {
