@@ -98,7 +98,7 @@ export const LinkComponent: React.FC<LinkComponentProps> = ({ isEditing }) => {
       sx={{
         '&': {
           position: 'relative',
-          paddingY: 2,
+          paddingY: 0,
           paddingX: 3,
           borderRadius: '8px',
           bg: 'gray.700',

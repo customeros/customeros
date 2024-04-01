@@ -54,7 +54,7 @@ export const Notes = ({ data, id }: NotesProps) => {
     },
     stateReducer: (state, action, next) => {
       if (action.type === 'FIELD_CHANGE') {
-        if (action.payload.value !== state.values.notes) {
+        if (action.payload.value === '<p style=""></p>') {
           updateNote(action.payload.value);
         }
       }
@@ -134,7 +134,7 @@ export const Notes = ({ data, id }: NotesProps) => {
             formId='account-notes-form'
             name='notes'
             showToolbar={false}
-          ></RichTextEditor>
+          />
         </Flex>
       </CardFooter>
     </Card>
