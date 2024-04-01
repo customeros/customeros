@@ -31,8 +31,8 @@ type PostmarkEmail struct {
 
 	From    string
 	To      string
-	CC      string
-	BCC     string
+	CC      []string
+	BCC     []string
 	Subject string
 
 	Attachments []PostmarkEmailAttachment
@@ -112,8 +112,8 @@ func (np *PostmarkProvider) SendNotification(ctx context.Context, postmarkEmail 
 	email := postmark.Email{
 		From:       postmarkEmail.From,
 		To:         postmarkEmail.To,
-		Cc:         postmarkEmail.CC,
-		Bcc:        postmarkEmail.BCC,
+		Cc:         strings.Join(postmarkEmail.CC, ","),
+		Bcc:        strings.Join(postmarkEmail.BCC, ","),
 		Subject:    postmarkEmail.Subject,
 		TextBody:   textContent,
 		HTMLBody:   htmlContent,
