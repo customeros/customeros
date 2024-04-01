@@ -37,6 +37,8 @@ type ProcessConfig struct {
 	RetrySendPayInvoiceNotificationDays      int `env:"RETRY_SEND_PAY_INVOICE_NOTIFICATION_DAYS" envDefault:"5"`
 	DelayRequestPaymentLinkInMinutes         int `env:"DELAY_REQUEST_PAYMENT_LINK_IN_MINUTES" envDefault:"10"`
 	RequestPaymentLinkLookBackWindowInDays   int `env:"REQUEST_PAYMENT_LINK_LOOK_BACK_WINDOW_IN_DAYS" envDefault:"5"`
+	DelayGenerateCycleInvoiceInMinutes       int `env:"DELAY_GENERATE_CYCLE_INVOICE_IN_MINUTES" envDefault:"240"`
+	DelayGenerateOffCycleInvoiceInMinutes    int `env:"DELAY_GENERATE_OFF_CYCLE_INVOICE_IN_MINUTES" envDefault:"60"`
 }
 
 type EventNotifications struct {
