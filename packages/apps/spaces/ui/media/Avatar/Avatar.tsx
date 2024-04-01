@@ -174,9 +174,9 @@ export const Avatar: React.FC<AvatarProps> = ({
   if (emptyFallbackWords.length > 1) {
     emptyFallbackLetters = `${emptyFallbackWords[0]?.[0]}${
       emptyFallbackWords[emptyFallbackWords.length - 1]?.[0]
-    }`;
+    }`.toLocaleUpperCase();
   } else {
-    emptyFallbackLetters = emptyFallbackWords[0]?.[0];
+    emptyFallbackLetters = emptyFallbackWords[0]?.[0].toLocaleUpperCase();
   }
 
   return (
