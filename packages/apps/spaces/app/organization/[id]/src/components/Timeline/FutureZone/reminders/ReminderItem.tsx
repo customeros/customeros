@@ -2,6 +2,7 @@ import { useForm } from 'react-inverted-form';
 import { useRef, useState, FormEvent, useEffect } from 'react';
 
 import { produce } from 'immer';
+import isEqual from 'lodash/isEqual';
 import { useDidMount, useDebounceFn } from 'rooks';
 
 import { Flex } from '@ui/layout/Flex';
@@ -42,8 +43,12 @@ export const ReminderItem = ({
   const { handleSubmit, setDefaultValues } = useForm<ReminderEditForm>({
     formId,
     defaultValues: data,
-    onSubmit: async (values) => onChange(values),
+    onSubmit: async (values) => {
+      !isEqual(values, data) ? onChange(values) : undefined;
+    },
     stateReducer: (_, action, next) => {
+      if (isMutating) return next;
+
       if (action.type === 'FIELD_CHANGE') {
         switch (action.payload.name) {
           case 'date': {

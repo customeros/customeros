@@ -15400,10 +15400,10 @@ react-infinite-scroll-component@^6.0.0:
   dependencies:
     throttle-debounce "^2.1.0"
 
-react-inverted-form@^1.2.15:
-  version "1.2.15"
-  resolved "https://registry.yarnpkg.com/react-inverted-form/-/react-inverted-form-1.2.15.tgz#29af2a238182f50a3392a5763bd4a30f3b87e857"
-  integrity sha512-5+pgdwzSHRrJ2rBwinEGyl3T6ZsKrTbdL5N9sQcZNQ8j2Gt2bb4/6h0/TCe9/0bvahZXaoxrv2SyZalUpdHanw==
+react-inverted-form@^1.2.16:
+  version "1.2.16"
+  resolved "https://registry.yarnpkg.com/react-inverted-form/-/react-inverted-form-1.2.16.tgz#9839993c17314aa6101dcad9d61cf394f2ebe419"
+  integrity sha512-BILWayHM5Ysv2ZId7/6H6Cl81NYvlkXWmvGohm3vA5qT7fVnT0Acdibwfs70toM7hpQtZ+KYg7JkvGLnzYBINA==
 
 react-is@^16.13.1, react-is@^16.7.0:
   version "16.13.1"
