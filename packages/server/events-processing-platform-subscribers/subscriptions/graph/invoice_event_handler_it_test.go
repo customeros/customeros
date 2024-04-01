@@ -70,6 +70,7 @@ func TestInvoiceEventHandler_OnInvoiceCreateForContractV1(t *testing.T) {
 		true,
 		true,
 		true,
+		true,
 		now,
 		yesterday,
 		tomorrow,
@@ -101,6 +102,7 @@ func TestInvoiceEventHandler_OnInvoiceCreateForContractV1(t *testing.T) {
 	require.Equal(t, true, createdInvoice.DryRun)
 	require.Equal(t, true, createdInvoice.OffCycle)
 	require.Equal(t, true, createdInvoice.Postpaid)
+	require.Equal(t, true, createdInvoice.Preview)
 	require.Equal(t, "", createdInvoice.Number)
 	require.Equal(t, utils.ToDate(yesterday), createdInvoice.PeriodStartDate)
 	require.Equal(t, utils.ToDate(tomorrow), createdInvoice.PeriodEndDate)
@@ -135,8 +137,18 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 	})
 
 	// prepare grpc mock
+	calledNextPreviewInvoiceForContractRequest := false
 	calledGenerateInvoicePdfGrpcRequest := false
 	invoiceGrpcServiceCallbacks := mocked_grpc.MockInvoiceServiceCallbacks{
+		NextPreviewInvoiceForContract: func(context context.Context, inv *invoicepb.NextPreviewInvoiceForContractRequest) (*invoicepb.InvoiceIdResponse, error) {
+			require.Equal(t, tenantName, inv.Tenant)
+			require.Equal(t, contractId, inv.ContractId)
+			require.Equal(t, constants.AppSourceEventProcessingPlatform, inv.AppSource)
+			calledNextPreviewInvoiceForContractRequest = true
+			return &invoicepb.InvoiceIdResponse{
+				Id: invoiceId,
+			}, nil
+		},
 		GenerateInvoicePdf: func(context context.Context, inv *invoicepb.GenerateInvoicePdfRequest) (*invoicepb.InvoiceIdResponse, error) {
 			require.Equal(t, tenantName, inv.Tenant)
 			require.Equal(t, invoiceId, inv.InvoiceId)
@@ -165,6 +177,8 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 		timeNow,
 		invoice.Invoice{
 			ContractId: contractId,
+			Preview:    true,
+			OffCycle:   false,
 		},
 		"customerName",
 		"customerAddressLine1",
@@ -314,7 +328,84 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 	require.Equal(t, "service-line-item-parent-id-2", secondInvoiceLine.ServiceLineItemParentId)
 	require.Equal(t, neo4jenum.BilledTypeAnnually, secondInvoiceLine.BilledType)
 
+	require.True(t, calledNextPreviewInvoiceForContractRequest)
 	require.True(t, calledGenerateInvoicePdfGrpcRequest)
+}
+
+func TestInvoiceEventHandler_OnInvoiceFillV1_GenerateNextInvoiceNotCalled(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// prepare neo4j data
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	organizationId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, organizationId, neo4jentity.ContractEntity{})
+	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		Currency: neo4jenum.CurrencyEUR,
+	})
+
+	// prepare grpc mock
+	invoiceGrpcServiceCallbacks := mocked_grpc.MockInvoiceServiceCallbacks{
+		GenerateInvoicePdf: func(context context.Context, inv *invoicepb.GenerateInvoicePdfRequest) (*invoicepb.InvoiceIdResponse, error) {
+			return &invoicepb.InvoiceIdResponse{
+				Id: invoiceId,
+			}, nil
+		},
+	}
+	mocked_grpc.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
+
+	// Prepare the event handler
+	eventHandler := &InvoiceEventHandler{
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
+	}
+
+	timeNow := utils.Now()
+
+	aggregate := invoice.NewInvoiceAggregateWithTenantAndID(tenantName, invoiceId)
+	fillEvent, err := invoice.NewInvoiceFillEvent(
+		aggregate,
+		timeNow,
+		invoice.Invoice{
+			ContractId: contractId,
+			DryRun:     true,
+			Preview:    false,
+		},
+		"customerName",
+		"customerAddressLine1",
+		"customerAddressLine2",
+		"customerAddressZip",
+		"customerAddressLocality",
+		"customerAddressCountry",
+		"customerAddressRegion",
+		"customerEmail",
+		"providerLogoRepositoryFileId",
+		"providerName",
+		"providerEmail",
+		"providerAddressLine1",
+		"providerAddressLine2",
+		"providerAddressZip",
+		"providerAddressLocality",
+		"providerAddressCountry",
+		"providerAddressRegion",
+		"note abc",
+		neo4jenum.InvoiceStatusDue.String(),
+		"INV-001",
+		100,
+		20,
+		120,
+		[]invoice.InvoiceLineEvent{},
+	)
+	require.Nil(t, err)
+
+	// EXECUTE
+	err = eventHandler.OnInvoiceFillV1(context.Background(), fillEvent)
+	require.Nil(t, err)
+
+	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelInvoice, invoiceId)
+	require.Nil(t, err)
+	require.NotNil(t, dbNode)
 }
 
 func TestInvoiceEventHandler_OnInvoicePdfGenerated(t *testing.T) {

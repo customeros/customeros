@@ -155,6 +155,14 @@ func (r *mutationResolver) InvoicePay(ctx context.Context, id string) (*model.In
 		}}, nil
 	}
 
+	if invoice.DryRun {
+		tracing.TraceErr(span, errors.New("Invoice is a dry run"))
+		graphql.AddErrorf(ctx, "Invoice is a dry run")
+		return &model.Invoice{Metadata: &model.Metadata{
+			ID: id,
+		}}, nil
+	}
+
 	if invoice.Status != neo4jenum.InvoiceStatusDue {
 		tracing.TraceErr(span, errors.New("Invoice is not due"))
 		graphql.AddErrorf(ctx, "Invoice is not due")
@@ -194,6 +202,14 @@ func (r *mutationResolver) InvoiceVoid(ctx context.Context, id string) (*model.I
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to fetch invoice %s", id)
+		return &model.Invoice{Metadata: &model.Metadata{
+			ID: id,
+		}}, nil
+	}
+
+	if invoice.DryRun {
+		tracing.TraceErr(span, errors.New("Invoice is a dry run"))
+		graphql.AddErrorf(ctx, "Invoice is a dry run")
 		return &model.Invoice{Metadata: &model.Metadata{
 			ID: id,
 		}}, nil

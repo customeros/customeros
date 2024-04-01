@@ -20,6 +20,7 @@ type InvoiceReadRepository interface {
 	CountNonDryRunInvoicesForContract(ctx context.Context, tenant, contractId string) (int, error)
 	GetInvoicesForPaymentLinkRequest(ctx context.Context, minutesFromLastUpdate, lookbackWindow int, referenceTime time.Time) ([]*utils.DbNodeAndTenant, error)
 	GetPreviousCycleInvoice(ctx context.Context, tenant, contractId string) (*dbtype.Node, error)
+	GetLastIssuedOnCycleInvoiceForContract(ctx context.Context, tenant, contractId string) (*dbtype.Node, error)
 }
 
 type invoiceReadRepository struct {
@@ -271,6 +272,42 @@ func (r *invoiceReadRepository) GetInvoicesForPaymentLinkRequest(ctx context.Con
 
 func (r *invoiceReadRepository) GetPreviousCycleInvoice(ctx context.Context, tenant, contractId string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceReadRepository.GetPreviousCycleInvoice")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagEntityId, contractId)
+
+	cypher := `MATCH (c:Contract {id:$contractId})-[:HAS_INVOICE]->(i:Invoice)-[:INVOICE_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
+			WHERE i.dryRun = false AND i.offCycle = false
+			RETURN i ORDER BY i.createdAt DESC LIMIT 1`
+	params := map[string]any{
+		"tenant":     tenant,
+		"contractId": contractId,
+	}
+	span.LogFields(log.String("query", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		return utils.ExtractFirstRecordFirstValueAsDbNodePtr(ctx, queryResult, err)
+
+	})
+	if err != nil {
+		span.LogFields(log.Bool("result.found", false))
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	if result == nil {
+		span.LogFields(log.Bool("result.found", false))
+		return nil, nil
+	}
+	span.LogFields(log.Bool("result.found", result != nil))
+	return result.(*dbtype.Node), nil
+}
+
+func (r *invoiceReadRepository) GetLastIssuedOnCycleInvoiceForContract(ctx context.Context, tenant, contractId string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceReadRepository.GetLastIssuedOnCycleInvoiceForContract")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagEntityId, contractId)
 

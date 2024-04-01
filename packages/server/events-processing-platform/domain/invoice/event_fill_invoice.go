@@ -18,6 +18,9 @@ type InvoiceFillEvent struct {
 	InvoiceLines    []InvoiceLineEvent       `json:"invoiceLines" validate:"required"`
 	ContractId      string                   `json:"contractId"`
 	DryRun          bool                     `json:"dryRun"`
+	OffCycle        bool                     `json:"offCycle"`
+	Preview         bool                     `json:"preview"`
+	Postpaid        bool                     `json:"postpaid"`
 	InvoiceNumber   string                   `json:"invoiceNumber"`
 	Currency        string                   `json:"currency"`
 	PeriodStartDate time.Time                `json:"periodStartDate"`
@@ -68,6 +71,9 @@ func NewInvoiceFillEvent(aggregate eventstore.Aggregate, updatedAt time.Time, in
 		PeriodEndDate:   invoice.PeriodEndDate,
 		InvoiceNumber:   invoiceNumber,
 		DryRun:          invoice.DryRun,
+		Preview:         invoice.Preview,
+		OffCycle:        invoice.OffCycle,
+		Postpaid:        invoice.Postpaid,
 		Status:          status,
 		Note:            note,
 		Customer: InvoiceFillCustomerEvent{

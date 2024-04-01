@@ -6,6 +6,7 @@ import (
 )
 
 type MockInvoiceServiceCallbacks struct {
+	NextPreviewInvoiceForContract func(ctx context.Context, proto *invoicepb.NextPreviewInvoiceForContractRequest) (*invoicepb.InvoiceIdResponse, error)
 	GenerateInvoicePdf            func(ctx context.Context, proto *invoicepb.GenerateInvoicePdfRequest) (*invoicepb.InvoiceIdResponse, error)
 	RequestFillInvoice            func(ctx context.Context, proto *invoicepb.RequestFillInvoiceRequest) (*invoicepb.InvoiceIdResponse, error)
 	FillInvoice                   func(ctx context.Context, proto *invoicepb.FillInvoiceRequest) (*invoicepb.InvoiceIdResponse, error)
@@ -20,6 +21,13 @@ func SetInvoiceCallbacks(callbacks *MockInvoiceServiceCallbacks) {
 
 type MockInvoiceService struct {
 	invoicepb.UnimplementedInvoiceGrpcServiceServer
+}
+
+func (MockInvoiceService) NextPreviewInvoiceForContract(ctx context.Context, proto *invoicepb.NextPreviewInvoiceForContractRequest) (*invoicepb.InvoiceIdResponse, error) {
+	if InvoiceCallbacks.NextPreviewInvoiceForContract == nil {
+		panic("InvoiceCallbacks.NextPreviewInvoiceForContract is not set")
+	}
+	return InvoiceCallbacks.NextPreviewInvoiceForContract(ctx, proto)
 }
 
 func (MockInvoiceService) GenerateInvoicePdf(ctx context.Context, proto *invoicepb.GenerateInvoicePdfRequest) (*invoicepb.InvoiceIdResponse, error) {

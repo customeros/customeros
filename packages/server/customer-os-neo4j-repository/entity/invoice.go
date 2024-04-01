@@ -27,6 +27,7 @@ type InvoiceEntity struct {
 	PaymentDetails   PaymentDetails
 	OffCycle         bool
 	Postpaid         bool
+	Preview          bool `neo4jDb:"property:preview;lookupName:PREVIEW;supportCaseSensitive:false"`
 
 	Source        DataSource
 	SourceOfTruth DataSource

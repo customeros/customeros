@@ -19,6 +19,7 @@ type Invoice struct {
 	SourceFields     commonmodel.Source      `json:"source"`
 	DryRun           bool                    `json:"dryRun"`
 	OffCycle         bool                    `json:"offCycle"`
+	Preview          bool                    `json:"preview"`
 	Postpaid         bool                    `json:"postpaid"`
 	InvoiceNumber    string                  `json:"invoiceNumber"`
 	Currency         string                  `json:"currency"`
@@ -121,6 +122,7 @@ type InvoiceStatus int32
 
 const (
 	NoneInvoiceStatus InvoiceStatus = iota
+	PreviewInvoiceStatus
 	DraftInvoiceStatus
 	DueInvoiceStatus
 	PaidInvoiceStatus
@@ -134,6 +136,8 @@ func (is InvoiceStatus) String() string {
 		return ""
 	case DraftInvoiceStatus:
 		return string(neo4jenum.InvoiceStatusDraft)
+	case PreviewInvoiceStatus:
+		return string(neo4jenum.InvoiceStatusPreview)
 	case DueInvoiceStatus:
 		return string(neo4jenum.InvoiceStatusDue)
 	case PaidInvoiceStatus:

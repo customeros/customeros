@@ -32,7 +32,7 @@ func TestGraphInteractionEventEventHandler_OnCreate(t *testing.T) {
 	issueId := neo4jt.CreateIssue(ctx, testDatabase.Driver, tenantName, entity.IssueEntity{})
 	neo4jt.LinkIssueReportedBy(ctx, testDatabase.Driver, issueId, orgId)
 	userId := neo4jtest.CreateUser(ctx, testDatabase.Driver, tenantName, neo4jentity.UserEntity{})
-	contactId := neo4jt.CreateContact(ctx, testDatabase.Driver, tenantName, entity.ContactEntity{})
+	contactId := neo4jtest.CreateContact(ctx, testDatabase.Driver, tenantName, neo4jentity.ContactEntity{})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"User": 1, "Contact": 1, "Organization": 1, "ExternalSystem": 1, "Issue": 1, "TimelineEvent": 1, "InteractionEvent": 0})
