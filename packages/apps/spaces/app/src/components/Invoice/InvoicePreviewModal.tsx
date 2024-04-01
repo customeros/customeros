@@ -66,6 +66,8 @@ export const InvoicePreviewModalContent: React.FC<InvoicePreviewModalProps> = ({
 
   return (
     <Invoice
+      invoicePeriodStart={data?.invoice?.invoicePeriodStart}
+      invoicePeriodEnd={data?.invoice?.invoicePeriodEnd}
       tax={data?.invoice?.taxDue}
       note={data?.invoice?.note}
       from={providerAddressData}
