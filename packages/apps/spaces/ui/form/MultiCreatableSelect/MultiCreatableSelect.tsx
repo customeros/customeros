@@ -107,6 +107,7 @@ export const MultiCreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
         Control,
         MultiValueLabel,
         MenuList,
+        // @ts-expect-error - this will be replaced by a new Select component
         MultiValue: (props?.MultiValue || MultiValue) as MultiValueComponent,
         DropdownIndicator: () => null,
         Option: (props?.Option || Option) as ComponentType<OptionProps>,
@@ -121,6 +122,7 @@ export const MultiCreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
         variant='unstyled'
         focusBorderColor='transparent'
         ref={ref}
+        // @ts-expect-error - this will be replaced by a new Select component
         components={components}
         tabSelectsValue={false}
         isMulti
