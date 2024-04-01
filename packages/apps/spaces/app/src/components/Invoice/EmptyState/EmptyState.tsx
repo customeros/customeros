@@ -1,7 +1,10 @@
+import { useRouter } from 'next/navigation';
+
 import { Flex } from '@ui/layout/Flex';
 import { Center } from '@ui/layout/Center';
 import { Text } from '@ui/typography/Text';
 import { FeaturedIcon } from '@ui/media/Icon';
+import { Button } from '@ui/form/Button/Button';
 import { File04 } from '@ui/media/icons/File04';
 
 import HalfCirclePattern from '../../../assets/HalfCirclePattern';
@@ -13,6 +16,8 @@ export const EmptyState = ({
   isDashboard?: boolean;
   maxW?: string | number;
 }) => {
+  const router = useRouter();
+
   return (
     <Center h='100%' width={maxW}>
       <Flex direction='column' h='100%' width={maxW} borderColor='gray.200'>
@@ -43,6 +48,15 @@ export const EmptyState = ({
             Create your first contract with services. Once issued, invoices will
             appear here.
           </Text>
+
+          <Button
+            variant='outline'
+            size='sm'
+            className={'mt-4 text-sm'}
+            onClick={() => router.push(`?tab=account`)}
+          >
+            Go back
+          </Button>
         </Flex>
       </Flex>
     </Center>
