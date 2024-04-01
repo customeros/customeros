@@ -2,7 +2,9 @@
 
 import React from 'react';
 
+import { useDeepCompareEffect } from 'rooks';
 import { useBankAccountsQuery } from '@settings/graphql/getBankAccounts.generated';
+import { useBankTransferSelectionContext } from '@settings/components/Tabs/panels/BillingPanel/context/BankTransferSelectionContext';
 
 import { BankAccount } from '@graphql/types';
 import { FormSwitch } from '@ui/form/Switch/FormSwitch2';
@@ -14,10 +16,16 @@ import { BankTransferCard } from './BankTransferCard';
 export const BankTransferAccountList = ({ formId }: { formId: string }) => {
   const client = getGraphQLClient();
   const { data } = useBankAccountsQuery(client);
-
+  const { setAccounts } = useBankTransferSelectionContext();
   const existingAccountCurrencies = data?.bankAccounts.map(
     (account) => account.currency as string,
   );
+
+  useDeepCompareEffect(() => {
+    if (data?.bankAccounts) {
+      setAccounts((data?.bankAccounts as BankAccount[]) ?? []);
+    }
+  }, [data?.bankAccounts]);
 
   return (
     <>
@@ -40,12 +48,12 @@ export const BankTransferAccountList = ({ formId }: { formId: string }) => {
       </div>
 
       {data?.bankAccounts?.map((account) => (
-        <React.Fragment key={account.metadata.id}>
+        <div key={account.metadata.id}>
           <BankTransferCard
             account={account as BankAccount}
             existingCurrencies={existingAccountCurrencies ?? []}
           />
-        </React.Fragment>
+        </div>
       ))}
     </>
   );

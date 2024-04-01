@@ -8,6 +8,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useBankAccountsQuery } from '@settings/graphql/getBankAccounts.generated';
 import { useUpdateBankAccountMutation } from '@settings/graphql/updateBankAccount.generated';
 import { BankNameInput } from '@settings/components/Tabs/panels/BillingPanel/components/BankNameInput';
+import { useBankTransferSelectionContext } from '@settings/components/Tabs/panels/BillingPanel/context/BankTransferSelectionContext';
 
 import { Flex } from '@ui/layout/Flex';
 import { FormInput } from '@ui/form/Input/FormInput2';
@@ -44,6 +45,8 @@ export const BankTransferCard = ({
   const formId = `bank-transfer-form-${account.metadata.id}`;
   const queryKey = useBankAccountsQuery.getKey();
   const queryClient = useQueryClient();
+  const { setFocusAccount, setHoverAccount } =
+    useBankTransferSelectionContext();
 
   const client = getGraphQLClient();
   const { mutate } = useUpdateBankAccountMutation(client, {
@@ -110,7 +113,11 @@ export const BankTransferCard = ({
 
   return (
     <>
-      <Card className='py-2 px-4 rounded-lg border-[1px] border-gray-200'>
+      <Card
+        className='py-2 px-4 rounded-lg border-[1px] border-gray-200'
+        onMouseEnter={() => setHoverAccount(account as BankAccount)}
+        onMouseLeave={() => setHoverAccount(null)}
+      >
         <CardHeader className='p-0 pb-1 flex justify-between'>
           <BankNameInput formId={formId} metadata={account.metadata} />
 
@@ -136,6 +143,8 @@ export const BankTransferCard = ({
                 name='iban'
                 mb={1}
                 formId={formId}
+                onFocus={() => setFocusAccount(account as BankAccount)}
+                onBlur={() => setFocusAccount(null)}
               />
               <FormInput
                 autoComplete='off'
@@ -144,6 +153,8 @@ export const BankTransferCard = ({
                 labelProps={{ className: 'text-sm mb-0 font-semibold' }}
                 name='bic'
                 formId={formId}
+                onFocus={() => setFocusAccount(account as BankAccount)}
+                onBlur={() => setFocusAccount(null)}
               />
             </>
           )}
@@ -159,6 +170,8 @@ export const BankTransferCard = ({
                   name='sortCode'
                   formId={formId}
                   maxW='80px'
+                  onFocus={() => setFocusAccount(account as BankAccount)}
+                  onBlur={() => setFocusAccount(null)}
                 />
                 <FormMaskInput
                   options={{ opts: bankOptions }}
@@ -168,6 +181,8 @@ export const BankTransferCard = ({
                   labelProps={{ className: 'text-sm mb-0 font-semibold' }}
                   name='accountNumber'
                   formId={formId}
+                  onFocus={() => setFocusAccount(account as BankAccount)}
+                  onBlur={() => setFocusAccount(null)}
                 />
               </>
             )}
@@ -182,6 +197,8 @@ export const BankTransferCard = ({
                 labelProps={{ className: 'text-sm mb-0 font-semibold' }}
                 name='routingNumber'
                 formId={formId}
+                onFocus={() => setFocusAccount(account as BankAccount)}
+                onBlur={() => setFocusAccount(null)}
               />
               <FormMaskInput
                 options={{ opts: bankOptions }}
@@ -191,6 +208,8 @@ export const BankTransferCard = ({
                 labelProps={{ className: 'text-sm mb-0 font-semibold' }}
                 name='accountNumber'
                 formId={formId}
+                onFocus={() => setFocusAccount(account as BankAccount)}
+                onBlur={() => setFocusAccount(null)}
               />
             </>
           )}
@@ -203,6 +222,8 @@ export const BankTransferCard = ({
                 labelProps={{ className: 'text-sm mb-0 font-semibold' }}
                 name='bic'
                 formId={formId}
+                onFocus={() => setFocusAccount(account as BankAccount)}
+                onBlur={() => setFocusAccount(null)}
               />
             )}
 
@@ -216,6 +237,8 @@ export const BankTransferCard = ({
               placeholder='Other details'
               name='otherDetails'
               formId={formId}
+              onFocus={() => setFocusAccount(account as BankAccount)}
+              onBlur={() => setFocusAccount(null)}
             />
           )}
         </CardContent>

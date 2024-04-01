@@ -45,6 +45,8 @@ type InvoiceProps = {
   check?: boolean | null;
   isBilledToFocused?: boolean;
   isInvoiceProviderFocused?: boolean;
+  isInvoiceBankDetailsHovered?: boolean;
+  isInvoiceBankDetailsFocused?: boolean;
   canPayWithBankTransfer?: boolean | null;
   lines: Partial<Invoice['invoiceLineItems']>;
   availableBankAccount?: Partial<BankAccount> | null;
@@ -65,6 +67,8 @@ export function Invoice({
   status,
   isBilledToFocused,
   isInvoiceProviderFocused,
+  isInvoiceBankDetailsHovered,
+  isInvoiceBankDetailsFocused,
   currency = 'USD',
   canPayWithBankTransfer,
   availableBankAccount,
@@ -73,13 +77,20 @@ export function Invoice({
   const isInvoiceMetaSectionBlurred =
     isBilledToFocused || isInvoiceProviderFocused;
 
-  const filterDynamicClass = isInvoiceMetaSectionBlurred
+  const invoiceMetaSectionFilterProperty = isInvoiceMetaSectionBlurred
+    ? 'blur-[2px]'
+    : 'filter-none';
+
+  const isInvoiceBankDetailsSectionFocused =
+    (isInvoiceBankDetailsHovered && !isInvoiceMetaSectionBlurred) ||
+    isInvoiceBankDetailsFocused;
+  const isInvoiceTopSectionFilterProperty = isInvoiceBankDetailsSectionFocused
     ? 'blur-[2px]'
     : 'filter-none';
 
   return (
-    <div className='px-4 flex flex-col w-full overflow-y-auto h-full justify-between pb-4'>
-      <div className='flex flex-col'>
+    <div className='px-4 flex flex-col w-full overflow-y-auto h-full justify-between pb-4 '>
+      <div className={cn('flex flex-col', isInvoiceTopSectionFilterProperty)}>
         <div className='flex flex-col mt-2'>
           <InvoiceHeader invoiceNumber={invoiceNumber} status={status} />
 
@@ -87,7 +98,7 @@ export function Invoice({
             <div
               className={cn(
                 'flex flex-col w-170 py-2 px-2 border-r border-t border-b border-gray-300 transition duration-250 ease-in-out filter',
-                filterDynamicClass,
+                invoiceMetaSectionFilterProperty,
               )}
             >
               <span className='font-semibold mb-1 text-sm'>Issued</span>
@@ -139,7 +150,7 @@ export function Invoice({
         <div
           className={cn(
             'flex flex-col mt-4 transition duration-250 ease-in-out filter',
-            filterDynamicClass,
+            invoiceMetaSectionFilterProperty,
           )}
         >
           <ServicesTable services={lines} currency={currency} />
@@ -154,14 +165,24 @@ export function Invoice({
         </div>
       </div>
 
-      <div>
-        {canPayWithBankTransfer && availableBankAccount && (
-          <BankingDetails
-            availableBankAccount={availableBankAccount}
-            currency={currency}
-            invoiceNumber={invoiceNumber}
-          />
-        )}
+      <div
+        className={isInvoiceMetaSectionBlurred ? 'filter-[2px]' : 'filter-none'}
+      >
+        <div
+          className={cn('w-full, border-y-2', {
+            'border-gray-900': isInvoiceBankDetailsSectionFocused,
+            'border-transparent': !isInvoiceBankDetailsSectionFocused,
+          })}
+        >
+          {canPayWithBankTransfer && availableBankAccount && (
+            <BankingDetails
+              availableBankAccount={availableBankAccount}
+              currency={currency}
+              invoiceNumber={invoiceNumber}
+            />
+          )}
+        </div>
+
         {check && (
           <span className='text-xs text-gray-500 my-2'>
             Want to pay by check? Contact{' '}
@@ -173,7 +194,7 @@ export function Invoice({
             </a>
           </span>
         )}
-        <div className='flex items-center py-2 border-t border-gray-300'>
+        <div className='flex items-center py-2 border-gray-300'>
           <div className='mr-2'>
             <Image
               src={logoCustomerOs}
