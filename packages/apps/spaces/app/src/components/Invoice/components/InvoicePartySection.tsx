@@ -49,7 +49,6 @@ export const InvoicePartySection: FC<InvoiceHeaderProps> = ({
         filterDynamicClass,
         oppacity,
       )}
-      style={{}}
       data-focus={isFocused}
     >
       <span className='font-semibold mb-1 text-sm'>{title}</span>

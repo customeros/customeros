@@ -26,7 +26,7 @@ export function InvoiceActionHeader({ status, id, number }: InvoiceProps) {
   };
 
   return (
-    <div className=' flex justify-between w-full'>
+    <div className='flex justify-between w-full'>
       {id ? (
         <StatusMenuButton status={status} id={id} />
       ) : (
@@ -36,9 +36,9 @@ export function InvoiceActionHeader({ status, id, number }: InvoiceProps) {
       <div className='flex'>
         <Button
           variant='outline'
-          colorScheme={'gray'}
-          size={'xs'}
-          className='rounded-full mr-2  bg-white'
+          colorScheme='gray'
+          size='xs'
+          className='rounded-full mr-2 bg-white'
           leftIcon={<Download02 className='size-3' />}
           onClick={handleDownload}
         >

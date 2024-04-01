@@ -1,9 +1,9 @@
 'use client';
 
+import Image from 'next/image';
 import React, { FC } from 'react';
 
 import { Tag } from '@ui/presentation/Tag';
-import { Image as ChakraImage } from '@ui/media/Image';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 
@@ -36,7 +36,7 @@ export const InvoiceHeader: FC<InvoiceHeaderProps> = ({
 
         {globalCacheData?.global_Cache?.cdnLogoUrl && (
           <div className='flex relative max-h-[120px] w-full justify-end'>
-            <ChakraImage
+            <Image
               src={`${globalCacheData?.global_Cache?.cdnLogoUrl}`}
               alt='CustomerOS'
               width={136}
