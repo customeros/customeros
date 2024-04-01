@@ -22,7 +22,7 @@ import {
   RangeSliderTrack,
   RangeSliderThumb,
   RangeSliderFilledTrack,
-} from '@ui/form/RangeSlider';
+} from '@ui/form/RangeSlider/RangeSlider';
 
 import { useForecastFilter } from './ForecastFilter.atom';
 import { FilterHeader, useFilterToggle } from '../shared/FilterHeader';
@@ -137,26 +137,15 @@ export const ForecastFilter = memo(
             min={0}
             step={10}
             max={1000 * 10}
-            colorScheme='gray'
             value={displayValue}
-            onChangeEnd={handleChange}
-            onChange={handleDragChange}
+            onValueCommit={handleChange}
+            onValueChange={handleDragChange}
           >
-            <RangeSliderTrack bg='gray.200' h='2px'>
-              <RangeSliderFilledTrack h='2px' bg='gray.400' />
+            <RangeSliderTrack className='bg-gray-200 h-[2px]'>
+              <RangeSliderFilledTrack className='bg-gray-400 h-[2px]' />
             </RangeSliderTrack>
-            <RangeSliderThumb
-              index={0}
-              boxSize='5'
-              border='2px solid'
-              borderColor='gray.400'
-            />
-            <RangeSliderThumb
-              index={1}
-              boxSize='5'
-              border='2px solid'
-              borderColor='gray.400'
-            />
+            <RangeSliderThumb className='border-2 border-gray-400' />
+            <RangeSliderThumb className='border-2 border-gray-400' />
           </RangeSlider>
         </Flex>
       </>
