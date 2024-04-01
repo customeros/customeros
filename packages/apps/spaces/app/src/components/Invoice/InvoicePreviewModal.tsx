@@ -3,10 +3,7 @@ import React from 'react';
 import { useBankAccountsQuery } from '@settings/graphql/getBankAccounts.generated';
 import { useTenantBillingProfilesQuery } from '@settings/graphql/getTenantBillingProfiles.generated';
 
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
 import { FeaturedIcon } from '@ui/media/Icon';
-import { Heading } from '@ui/typography/Heading';
 import { FileX02 } from '@ui/media/icons/FileX02';
 import { Invoice } from '@shared/components/Invoice/Invoice';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
@@ -52,26 +49,15 @@ export const InvoicePreviewModalContent: React.FC<InvoicePreviewModalProps> = ({
 
   if (!data?.invoice || isError) {
     return (
-      <Flex
-        as='article'
-        position='relative'
-        flexDirection='column'
-        alignItems='center'
-        px={4}
-        py={4}
-        mt={5}
-        overflow='hidden'
-      >
+      <div className='flex flex-col items-center px-4 py-4 mt-5 overflow-hidden'>
         <FeaturedIcon colorScheme='warning'>
           <FileX02 boxSize='7' />
         </FeaturedIcon>
-        <Heading fontSize='md' mt={4} mb={1}>
-          Preview not available
-        </Heading>
-        <Text textAlign='center' fontSize='sm' color='gray.500'>
+        <h2 className='text-md mt-4 mb-1'>Preview not available</h2>
+        <span className='text-center text-sm text-gray-500'>
           Sorry, selected invoice cannot be previewed at this moment
-        </Text>
-      </Flex>
+        </span>
+      </div>
     );
   }
 

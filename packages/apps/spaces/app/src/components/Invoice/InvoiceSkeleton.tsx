@@ -2,137 +2,91 @@
 
 import React from 'react';
 
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
-import { Heading } from '@ui/typography/Heading';
-import { Divider } from '@ui/presentation/Divider';
-import { Skeleton } from '@ui/presentation/Skeleton';
+import { Skeleton } from '@ui/feedback/Skeleton';
+import { Divider } from '@ui/presentation/Divider/Divider';
 
 import { ServicesTable } from './ServicesTable';
 
 export function InvoiceSkeleton() {
   return (
-    <Flex px={4} flexDir='column' w='inherit'>
-      <Flex flexDir='column' mt={2}>
-        <Flex alignItems='center'>
-          <Heading as='h1' fontSize='3xl' fontWeight='bold'>
-            Invoice
-          </Heading>
-        </Flex>
+    <div className='flex flex-col px-4'>
+      <div className='flex flex-col mt-2'>
+        <div className='flex items-center'>
+          <h1 className='text-3xl font-bold'>Invoice</h1>
+        </div>
 
-        <Flex
-          fontSize='sm'
-          fontWeight='regular'
-          color='gray.500'
-          alignItems='center'
-        >
-          N° <Skeleton width='60px' height='12px' ml={1} />
-        </Flex>
+        <div className='flex items-center text-gray-500 text-sm'>
+          N° <Skeleton className='w-[60px] h-3 ml-1' />
+        </div>
 
-        <Flex
-          mt={1}
-          borderTop='1px solid'
-          borderBottom='1px solid'
-          borderColor='gray.300'
-          justifyContent='space-evenly'
-          gap={3}
-        >
-          <Flex
-            flexDir='column'
-            flex={1}
-            minW={150}
-            py={2}
-            borderRight={'1px solid'}
-            borderColor='gray.300'
-            ml={2}
-          >
-            <Text fontWeight='semibold' mb={2} fontSize='sm'>
-              Issued
-            </Text>
-            <Skeleton width='70px' height='12px' />
-            <Text fontWeight='semibold' mt={5} mb={2} fontSize='sm'>
-              Due
-            </Text>
-            <Skeleton width='70px' height='12px' />
-          </Flex>
-          <Flex
-            flexDir='column'
-            flex={1}
-            minW={150}
-            py={2}
-            borderColor={'gray.300'}
-            position='relative'
-          >
-            <Text fontWeight='semibold' mb={2} fontSize='sm'>
-              Billed to
-            </Text>
-            <Skeleton width='90px' height='12px' mb={2} />
-            <Skeleton width='110px' height='12px' mb={1} />
-            <Skeleton width='50px' height='12px' mb={1} />
+        <div className='flex mt-1 justify-evenly gap-3 border-t border-b border-gray-300'>
+          <div className='flex flex-col flex-1 min-w-[150px] py-2 border-r border-gray-300 ml-2'>
+            <span className='font-semibold mb-2 text-sm'>Issued</span>
+            <Skeleton className='w-[70px] h-3' />
+            <span className='font-semibold mt-5 mb-2 text-sm'>Due</span>
+            <Skeleton className='w-[70px] h-3' />
+          </div>
+          <div className='flex flex-col flex-1 min-w-[150px] py-2 border-gray-300 relative'>
+            <span className='font-semibold mb-2 text-sm'>Billed to</span>
+            <Skeleton className='w-[90px] h-3 mb-2' />
+            <Skeleton className='w-[110px] h-3 mb-1' />
+            <Skeleton className='w-[50px] h-3 mb-1' />
 
-            <Flex>
-              <Skeleton width='60px' height='12px' mr={2} mb={1} />
-              <Skeleton width='40px' height='12px' mb={1} />
-            </Flex>
-            <Skeleton width='40px' height='12px' mb={2} />
-            <Skeleton width='90px' height='12px' />
-          </Flex>
-          <Flex flexDir='column' flex={1} minW={150} py={2}>
-            <Text fontWeight='semibold' mb={2} fontSize='sm'>
-              From
-            </Text>
-            <Skeleton width='100px' height='12px' mb={2} />
-            <Skeleton width='120px' height='12px' mb={1} />
-            <Skeleton width='50px' height='12px' mb={1} />
+            <div className='flex'>
+              <Skeleton className='w-15 h-3 mr-2 mb-1' />
+              <Skeleton className='w-10 h-3 mb-1' />
+            </div>
+            <Skeleton className='w-10 h-3 mb-2' />
+            <Skeleton className='w-[90px] h-3' />
+          </div>
+          <div className='flex flex-col flex-1 min-w-[150px] py-2'>
+            <span className='font-semibold mb-2 text-sm'>From</span>
+            <Skeleton className='w-25 h-3 mb-2' />
+            <Skeleton className='w-30 h-3 mb-1' />
+            <Skeleton className='w-[50px] h-3 mb-1' />
 
-            <Flex>
-              <Skeleton width='60px' height='12px' mr={2} mb={1} />
-              <Skeleton width='40px' height='12px' mb={1} />
-            </Flex>
-            <Skeleton width='40px' height='12px' mb={1} />
-            <Skeleton width='90px' height='12px' />
-          </Flex>
-        </Flex>
-      </Flex>
+            <div className='flex'>
+              <Skeleton className='w-15 h-3 mr-2 mb-1' />
+              <Skeleton className='w-10 h-3 mb-1' />
+            </div>
+            <Skeleton className='w-10 h-3 mb-1' />
+            <Skeleton className='w-[90px] h-3' />
+          </div>
+        </div>
+      </div>
 
-      <Flex mt={4} flexDir='column'>
+      <div className='flex flex-col mt-4'>
         <ServicesTable services={[]} currency='USD' />
-        <Flex my={5} justifyContent='space-between'>
-          <Skeleton width='55%' height='14px' mr={2} />
-          <Skeleton width='10%' height='14px' mr={2} />
-          <Skeleton width='20%' height='14px' mr={2} />
-          <Skeleton width='15%' height='14px' mr={2} />
-        </Flex>
+        <div className='flex my-5 justify-between'>
+          <Skeleton className='w-[55%] h-[14px] mr-2' />
+          <Skeleton className='w-[10%] h-[14px] mr-2' />
+          <Skeleton className='w-[20%] h-[14px] mr-2' />
+          <Skeleton className='w-[15%] h-[14px] mr-2' />
+        </div>
 
-        <Flex flexDir='column' alignSelf='flex-end' w='50%' maxW='300px' mt={4}>
-          <Flex justifyContent='space-between' alignItems='center'>
-            <Text fontSize='sm' fontWeight='medium'>
-              Subtotal
-            </Text>
-            <Skeleton width='20px' height='12px' />
-          </Flex>
-          <Divider orientation='horizontal' my={1} borderColor='gray.300' />
-          <Flex justifyContent='space-between' alignItems='center'>
-            <Text fontSize='sm'>Tax</Text>
-            <Skeleton width='20px' height='12px' />
-          </Flex>
-          <Divider orientation='horizontal' my={1} borderColor='gray.300' />
-          <Flex justifyContent='space-between' alignItems='center'>
-            <Text fontSize='sm' fontWeight='medium'>
-              Total
-            </Text>
-            <Skeleton width='20px' height='12px' />
-          </Flex>
-          <Divider orientation='horizontal' my={1} borderColor='gray.500' />
-          <Flex justifyContent='space-between' alignItems='center'>
-            <Text fontSize='sm' fontWeight='semibold'>
-              Amount due
-            </Text>
-            <Skeleton width='20px' height='12px' />
-          </Flex>
-          <Divider orientation='horizontal' my={1} borderColor='gray.500' />
-        </Flex>
-      </Flex>
-    </Flex>
+        <div className='flex flex-col self-end w-[50%] max-w-[300px] mt-4'>
+          <div className='flex justify-between items-center'>
+            <span className='text-sm font-medium'>Subtotal</span>
+            <Skeleton className='w-5 h-3' />
+          </div>
+          <Divider className='my-1' />
+          <div className='flex justify-between items-center'>
+            <span className='text-sm'>Tax</span>
+            <Skeleton className='w-5 h-3' />
+          </div>
+          <Divider className='my-1' />
+          <div className='flex justify-between items-center'>
+            <span className='text-sm font-medium'>Total</span>
+            <Skeleton className='w-5 h-3' />
+          </div>
+          <Divider className='my-1 border-gray-500' />
+          <div className='flex justify-between items-center'>
+            <span className='text-sm font-semibold'>Amount due</span>
+            <Skeleton className='w-5 h-3' />
+          </div>
+          <Divider className='my-1 border-gray-500' />
+        </div>
+      </div>
+    </div>
   );
 }
