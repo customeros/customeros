@@ -45,6 +45,8 @@ type InvoiceProps = {
   check?: boolean | null;
   isBilledToFocused?: boolean;
   isInvoiceProviderFocused?: boolean;
+  isInvoiceBankDetailsHovered?: boolean;
+  isInvoiceBankDetailsFocused?: boolean;
   canPayWithBankTransfer?: boolean | null;
   lines: Partial<Invoice['invoiceLineItems']>;
   availableBankAccount?: Partial<BankAccount> | null;
@@ -65,6 +67,8 @@ export function Invoice({
   status,
   isBilledToFocused,
   isInvoiceProviderFocused,
+  isInvoiceBankDetailsHovered,
+  isInvoiceBankDetailsFocused,
   currency = 'USD',
   canPayWithBankTransfer,
   availableBankAccount,
@@ -76,6 +80,10 @@ export function Invoice({
   const filterDynamicClass = isInvoiceMetaSectionBlurred
     ? 'blur-[2px]'
     : 'filter-none';
+
+  const isInvoiceBankDetailsSectionFocused =
+    (isInvoiceBankDetailsHovered && !isInvoiceMetaSectionBlurred) ||
+    isInvoiceBankDetailsFocused;
 
   return (
     <div className='px-4 flex flex-col w-full overflow-y-auto h-full justify-between pb-4'>
@@ -154,14 +162,17 @@ export function Invoice({
         </div>
       </div>
 
-      <div>
-        {canPayWithBankTransfer && availableBankAccount && (
-          <BankingDetails
-            availableBankAccount={availableBankAccount}
-            currency={currency}
-            invoiceNumber={invoiceNumber}
-          />
-        )}
+      <div className={isInvoiceMetaSectionBlurred ? 'filter-[2px]' : 'filter-none'}>
+        <div className={cn('w-full, border-top')}>
+            {canPayWithBankTransfer && availableBankAccount && (
+                <BankingDetails
+                    availableBankAccount={availableBankAccount}
+                    currency={currency}
+                    invoiceNumber={invoiceNumber}
+                />
+            )}
+        </div>  
+ 
         {check && (
           <span className='text-xs text-gray-500 my-2'>
             Want to pay by check? Contact{' '}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useForm } from 'react-inverted-form';
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { produce } from 'immer';
 import { useQueryClient } from '@tanstack/react-query';
@@ -9,12 +9,14 @@ import { useDebounce, useDeepCompareEffect } from 'rooks';
 import { validateEmail } from '@settings/components/Tabs/panels/BillingPanel/utils';
 import { useUpdateTenantSettingsMutation } from '@settings/graphql/updateTenantSettings.generated';
 import { useTenantBillingProfilesQuery } from '@settings/graphql/getTenantBillingProfiles.generated';
+import { BillingPanelInvoice } from '@settings/components/Tabs/panels/BillingPanel/BillingPanelInvoice';
 import { useCreateBillingProfileMutation } from '@settings/graphql/createTenantBillingProfile.generated';
 import { useTenantUpdateBillingProfileMutation } from '@settings/graphql/updateTenantBillingProfile.generated';
 import {
   TenantSettingsQuery,
   useTenantSettingsQuery,
 } from '@settings/graphql/getTenantSettings.generated';
+import { BankTransferSelectionContextProvider } from '@settings/components/Tabs/panels/BillingPanel/context/BankTransferSelectionContext';
 
 import { cn } from '@ui/utils/cn';
 import { useDisclosure } from '@ui/utils';
@@ -22,16 +24,13 @@ import { Button } from '@ui/form/Button/Button';
 import { IconButton } from '@ui/form/IconButton';
 import { DotsVertical } from '@ui/media/icons/DotsVertical';
 import { SlashOctagon } from '@ui/media/icons/SlashOctagon';
-import { Invoice } from '@shared/components/Invoice/Invoice';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu';
-import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog2';
 import {
-  DataSource,
-  InvoiceLine,
   TenantBillingProfile,
   TenantBillingProfileUpdateInput,
 } from '@graphql/types';
+import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog2';
 
 import { TenantBillingPanelDetailsForm } from './components';
 import { TenantBillingDetailsDto } from './TenantBillingProfile.dto';
@@ -111,49 +110,6 @@ export const BillingPanel = () => {
     },
   );
   const formId = 'tenant-billing-profile-form';
-  const invoicePreviewStaticData = useMemo(
-    () => ({
-      status: 'Preview',
-      invoiceNumber: 'INV-003',
-      lines: [
-        {
-          subtotal: 100,
-          createdAt: new Date().toISOString(),
-          metadata: {
-            id: 'dummy-id',
-            created: new Date().toISOString(),
-            lastUpdated: new Date().toISOString(),
-            source: DataSource.Openline,
-            sourceOfTruth: DataSource.Openline,
-            appSource: DataSource.Openline,
-          },
-          description: 'Professional tier',
-          price: 50,
-          quantity: 2,
-          total: 100,
-          taxDue: 0,
-        } as InvoiceLine,
-      ],
-      tax: 0,
-      note: '',
-      total: 100,
-      dueDate: new Date().toISOString(),
-      subtotal: 100,
-      issueDate: new Date().toISOString(),
-      billedTo: {
-        addressLine1: '29 Maple Lane',
-        addressLine2: 'Springfield, Haven County',
-        locality: 'San Francisco',
-        region: 'CA',
-        zip: '89302',
-        country: 'United States of America',
-        email: 'invoices@acme.com',
-        name: 'Acme Corp.',
-      },
-    }),
-    [],
-  );
-
   const defaultValues = new TenantBillingDetailsDto({
     ...data?.tenantBillingProfiles?.[0],
     baseCurrency: tenantSettingsData?.tenantSettings?.baseCurrency,
@@ -342,97 +298,85 @@ export const BillingPanel = () => {
 
   return (
     <div className='flex'>
-      <div className='flex-1 w-full h-[100vh] bg-gray-25 flex-col shadow-none max-w-[400px] min-w-[400px] border-r border-gray-300 overflow-y-scroll pr-0 '>
-        <div className='flex items-center justify-between px-6 pb-0 pt-4'>
-          <h1 className='text-lg text-gray-700 pt-1'>
-            <b>Billing</b>
-          </h1>
+      <BankTransferSelectionContextProvider>
+        <div className='flex-1 w-full h-[100vh] bg-gray-25 flex-col shadow-none max-w-[400px] min-w-[400px] border-r border-gray-300 overflow-y-scroll pr-0 '>
+          <div className='flex items-center justify-between px-6 pb-0 pt-4'>
+            <h1 className='text-lg text-gray-700 pt-1'>
+              <b>Billing</b>
+            </h1>
+
+            {tenantSettingsData?.tenantSettings.billingEnabled && (
+              <Menu>
+                <MenuButton>
+                  <IconButton
+                    size='xs'
+                    aria-label='Options'
+                    icon={<DotsVertical />}
+                    variant='ghost'
+                    colorScheme='gray'
+                  />
+                </MenuButton>
+                <MenuList>
+                  <MenuItem onClick={handleToggleInvoices}>
+                    <SlashOctagon marginRight={1} color='gray.500' /> Disable
+                    Customer billing
+                  </MenuItem>
+                </MenuList>
+              </Menu>
+            )}
+          </div>
+
+          {!tenantSettingsData?.tenantSettings.billingEnabled && (
+            <div
+              className={cn(
+                billingEnabledStyle,
+                'flex flex-col px-6 w-full gap-4',
+              )}
+            >
+              <span className='text-sm'>
+                Master your revenue lifecycle from contract to cash by enabling
+                customer billing for your customers.
+              </span>
+
+              <ul className='pl-6 text-sm'>
+                <li>
+                  Automatically send customer invoices based on their contract
+                  service line items
+                </li>
+                <li>Let customers pay using a connected payment provider</li>
+              </ul>
+              <div className='items-center'>
+                <Button
+                  colorScheme='primary'
+                  variant='outline'
+                  size='sm'
+                  onClick={handleToggleInvoices}
+                >
+                  Enable invoicing
+                </Button>
+              </div>
+            </div>
+          )}
 
           {tenantSettingsData?.tenantSettings.billingEnabled && (
-            <Menu>
-              <MenuButton>
-                <IconButton
-                  size='xs'
-                  aria-label='Options'
-                  icon={<DotsVertical />}
-                  variant='ghost'
-                  colorScheme='gray'
-                />
-              </MenuButton>
-              <MenuList>
-                <MenuItem onClick={handleToggleInvoices}>
-                  <SlashOctagon marginRight={1} color='gray.500' /> Disable
-                  Customer billing
-                </MenuItem>
-              </MenuList>
-            </Menu>
+            <TenantBillingPanelDetailsForm
+              formId={formId}
+              setIsInvoiceProviderFocused={setIsInvoiceProviderFocused}
+              setIsInvoiceProviderDetailsHovered={
+                setIsInvoiceProviderDetailsHovered
+              }
+              sendInvoicesFrom={state.values?.sendInvoicesFrom}
+              country={state.values?.country}
+            />
           )}
         </div>
-
-        {!tenantSettingsData?.tenantSettings.billingEnabled && (
-          <div
-            className={cn(
-              billingEnabledStyle,
-              'flex flex-col px-6 w-full gap-4',
-            )}
-          >
-            <span className='text-sm'>
-              Master your revenue lifecycle from contract to cash by enabling
-              customer billing for your customers.
-            </span>
-
-            <ul className='pl-6 text-sm'>
-              <li>
-                Automatically send customer invoices based on their contract
-                service line items
-              </li>
-              <li>Let customers pay using a connected payment provider</li>
-            </ul>
-            <div className='items-center'>
-              <Button
-                colorScheme='primary'
-                variant='outline'
-                size='sm'
-                onClick={handleToggleInvoices}
-              >
-                Enable invoicing
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {tenantSettingsData?.tenantSettings.billingEnabled && (
-          <TenantBillingPanelDetailsForm
-            formId={formId}
-            setIsInvoiceProviderFocused={setIsInvoiceProviderFocused}
-            setIsInvoiceProviderDetailsHovered={
-              setIsInvoiceProviderDetailsHovered
-            }
-            sendInvoicesFrom={state.values?.sendInvoicesFrom}
-            country={state.values?.country}
-          />
-        )}
-      </div>
-      <div className='border-r border-gray-300 max-h-[100vh]'>
-        <Invoice
-          isInvoiceProviderFocused={
-            isInvoiceProviderFocused || isInvoiceProviderDetailsHovered
-          }
-          from={{
-            addressLine1: state.values.addressLine1 ?? '',
-            addressLine2: state.values.addressLine2 ?? '',
-            locality: state.values.locality ?? '',
-            zip: state.values.zip ?? '',
-            country: state?.values?.country?.label ?? '',
-            region: state?.values?.region ?? '',
-            email: state?.values?.sendInvoicesFrom ?? '',
-            name: state.values?.legalName ?? '',
-            vatNumber: state.values?.vatNumber ?? '',
-          }}
-          check={state.values?.check}
-          {...invoicePreviewStaticData}
+        <BillingPanelInvoice
+          values={state.values}
+          isInvoiceProviderFocused={isInvoiceProviderFocused}
+          isInvoiceProviderDetailsHovered={isInvoiceProviderDetailsHovered}
         />
-      </div>
+      </BankTransferSelectionContextProvider>
+
       <ConfirmDeleteDialog
         label='Disable Customer billing?'
         icon={<SlashOctagon color='error.600' />}
