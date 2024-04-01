@@ -568,6 +568,9 @@ func (h *InvoiceEventHandler) callFillInvoice(ctx context.Context, tenant, invoi
 	note string, amount, vat, total float64, invoiceLines []*invoicepb.InvoiceLine, span opentracing.Span) error {
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	now := time.Now()
+	if invoiceStatus == invoicepb.InvoiceStatus_INVOICE_STATUS_DUE && total == 0 {
+		invoiceStatus = invoicepb.InvoiceStatus_INVOICE_STATUS_PAID
+	}
 	_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
 		return h.grpcClients.InvoiceClient.FillInvoice(ctx, &invoicepb.FillInvoiceRequest{
 			Tenant:    tenant,
