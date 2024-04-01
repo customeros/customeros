@@ -56,16 +56,6 @@ func (h *InvoiceEventHandler) OnInvoiceCreateForContractV1(ctx context.Context, 
 	}
 	contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
 
-	// delete the preview invoice if exists
-	if eventData.Preview {
-		err := h.repositories.Neo4jRepositories.InvoiceWriteRepository.DeletePreviewInvoice(ctx, eventData.Tenant, eventData.ContractId)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("Error while deleting preview invoice for contract %s: %s", eventData.ContractId, err.Error())
-			return err
-		}
-	}
-
 	data := neo4jrepository.InvoiceCreateFields{
 		ContractId:      eventData.ContractId,
 		Currency:        neo4jenum.DecodeCurrency(eventData.Currency),
@@ -195,8 +185,15 @@ func (h *InvoiceEventHandler) OnInvoiceFillV1(ctx context.Context, evt eventstor
 }
 
 func (s *InvoiceEventHandler) callNextPreviewOnCycleInvoiceGRPC(ctx context.Context, tenant, contractId string, span opentracing.Span) error {
+	err := s.repositories.Neo4jRepositories.InvoiceWriteRepository.DeletePreviewInvoice(ctx, tenant, contractId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error while deleting preview invoice for contract %s: %s", contractId, err.Error())
+		return err
+	}
+
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
+	_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
 		return s.grpcClients.InvoiceClient.NextPreviewInvoiceForContract(ctx, &invoicepb.NextPreviewInvoiceForContractRequest{
 			Tenant:     tenant,
 			ContractId: contractId,

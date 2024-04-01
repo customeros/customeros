@@ -19,6 +19,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/model"
+	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/stretchr/testify/require"
@@ -159,6 +160,63 @@ func TestContractEventHandler_OnCreate(t *testing.T) {
 	// Verify events platform was called
 	require.True(t, calledEventsPlatformForOnboardingStatusChange)
 	require.True(t, calledEventsPlatformToCreateRenewalOpportunity)
+}
+
+func TestContractEventHandler_OnCreate_GenerateFirstPreviewInvoice(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// Prepare neo4j data
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	organizationId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
+
+	// Prepare the event handler
+	contractEventHandler := &ContractEventHandler{
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
+	}
+
+	// Create a ContractCreateEvent
+	contractId := uuid.New().String()
+	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
+	timeNow := utils.Now()
+	createEvent, err := event.NewContractCreateEvent(
+		contractAggregate,
+		model.ContractDataFields{
+			OrganizationId:     organizationId,
+			BillingCycle:       model.MonthlyBilling.String(),
+			InvoicingStartDate: &timeNow,
+			InvoicingEnabled:   true,
+		},
+		commonmodel.Source{},
+		commonmodel.ExternalSystem{},
+		timeNow,
+		timeNow,
+	)
+	require.Nil(t, err)
+
+	// prepare grpc mock
+	calledNextPreviewInvoiceForContractRequest := false
+	invoiceGrpcServiceCallbacks := mocked_grpc.MockInvoiceServiceCallbacks{
+		NextPreviewInvoiceForContract: func(context context.Context, inv *invoicepb.NextPreviewInvoiceForContractRequest) (*invoicepb.InvoiceIdResponse, error) {
+			require.Equal(t, tenantName, inv.Tenant)
+			require.Equal(t, contractId, inv.ContractId)
+			require.Equal(t, constants.AppSourceEventProcessingPlatform, inv.AppSource)
+			calledNextPreviewInvoiceForContractRequest = true
+			return &invoicepb.InvoiceIdResponse{
+				Id: "1",
+			}, nil
+		},
+	}
+	mocked_grpc.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
+
+	// Execute
+	err = contractEventHandler.OnCreate(context.Background(), createEvent)
+	require.Nil(t, err, "failed to execute contract create event handler")
+
+	// Verify events platform was called
+	require.True(t, calledNextPreviewInvoiceForContractRequest)
 }
 
 func TestContractEventHandler_OnUpdate_FrequencySet(t *testing.T) {
@@ -967,6 +1025,312 @@ func TestContractEventHandler_OnUpdate_SubsetOfFieldsSet(t *testing.T) {
 	require.Equal(t, "to@gmail.com", contract.InvoiceEmail)
 	require.Equal(t, []string{"cc1@gmail.com", "cc2@gmail.com"}, contract.InvoiceEmailCC)
 	require.Equal(t, []string{"bcc1@gmail.com", "bcc2@gmail.com"}, contract.InvoiceEmailBCC)
+}
+
+func TestContractEventHandler_OnUpdate_GenerateNextInvoice_NotInvoked_InvoicingEnabled_False(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	now := utils.Now()
+
+	// prepare neo4j data
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
+		InvoicingEnabled:   true,
+		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
+		InvoicingStartDate: &now,
+	})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Contract": 1})
+
+	// prepare grpc mock
+	calledNextPreviewInvoiceForContractRequest := false
+	invoiceGrpcServiceCallbacks := mocked_grpc.MockInvoiceServiceCallbacks{
+		NextPreviewInvoiceForContract: func(context context.Context, inv *invoicepb.NextPreviewInvoiceForContractRequest) (*invoicepb.InvoiceIdResponse, error) {
+			require.Equal(t, tenantName, inv.Tenant)
+			require.Equal(t, contractId, inv.ContractId)
+			require.Equal(t, constants.AppSourceEventProcessingPlatform, inv.AppSource)
+			calledNextPreviewInvoiceForContractRequest = true
+			return &invoicepb.InvoiceIdResponse{
+				Id: "1",
+			}, nil
+		},
+	}
+	mocked_grpc.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
+
+	// prepare event handler
+	contractEventHandler := &ContractEventHandler{
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
+	}
+
+	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
+	updateEvent, err := event.NewContractUpdateEvent(contractAggregate,
+		model.ContractDataFields{
+			InvoicingEnabled:   false,
+			BillingCycle:       model.MonthlyBilling.String(),
+			InvoicingStartDate: &now,
+		},
+		commonmodel.ExternalSystem{},
+		constants.SourceOpenline,
+		now,
+		[]string{})
+	require.Nil(t, err, "failed to create event")
+
+	// EXECUTE
+	err = contractEventHandler.OnUpdate(context.Background(), updateEvent)
+	require.Nil(t, err, "failed to execute event handler")
+
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Contract": 1, "Contract_" + tenantName: 1})
+
+	// Verify call to events platform
+	require.False(t, calledNextPreviewInvoiceForContractRequest)
+}
+
+func TestContractEventHandler_OnUpdate_GenerateNextInvoice_NotInvoked_BillingCycle_None(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	now := utils.Now()
+
+	// prepare neo4j data
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
+		InvoicingEnabled:   true,
+		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
+		InvoicingStartDate: &now,
+	})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Contract": 1})
+
+	// prepare grpc mock
+	calledNextPreviewInvoiceForContractRequest := false
+	invoiceGrpcServiceCallbacks := mocked_grpc.MockInvoiceServiceCallbacks{
+		NextPreviewInvoiceForContract: func(context context.Context, inv *invoicepb.NextPreviewInvoiceForContractRequest) (*invoicepb.InvoiceIdResponse, error) {
+			require.Equal(t, tenantName, inv.Tenant)
+			require.Equal(t, contractId, inv.ContractId)
+			require.Equal(t, constants.AppSourceEventProcessingPlatform, inv.AppSource)
+			calledNextPreviewInvoiceForContractRequest = true
+			return &invoicepb.InvoiceIdResponse{
+				Id: "1",
+			}, nil
+		},
+	}
+	mocked_grpc.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
+
+	// prepare event handler
+	contractEventHandler := &ContractEventHandler{
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
+	}
+
+	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
+	updateEvent, err := event.NewContractUpdateEvent(contractAggregate,
+		model.ContractDataFields{
+			InvoicingEnabled:   false,
+			BillingCycle:       model.NoneBilling.String(),
+			InvoicingStartDate: &now,
+		},
+		commonmodel.ExternalSystem{},
+		constants.SourceOpenline,
+		now,
+		[]string{})
+	require.Nil(t, err, "failed to create event")
+
+	// EXECUTE
+	err = contractEventHandler.OnUpdate(context.Background(), updateEvent)
+	require.Nil(t, err, "failed to execute event handler")
+
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Contract": 1, "Contract_" + tenantName: 1})
+
+	// Verify call to events platform
+	require.False(t, calledNextPreviewInvoiceForContractRequest)
+}
+
+func TestContractEventHandler_OnUpdate_GenerateNextInvoice_NotInvoked_InvoicingStartDate_Empty(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	now := utils.Now()
+
+	// prepare neo4j data
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
+		InvoicingEnabled:   true,
+		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
+		InvoicingStartDate: &now,
+	})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Contract": 1})
+
+	// prepare grpc mock
+	calledNextPreviewInvoiceForContractRequest := false
+	invoiceGrpcServiceCallbacks := mocked_grpc.MockInvoiceServiceCallbacks{
+		NextPreviewInvoiceForContract: func(context context.Context, inv *invoicepb.NextPreviewInvoiceForContractRequest) (*invoicepb.InvoiceIdResponse, error) {
+			require.Equal(t, tenantName, inv.Tenant)
+			require.Equal(t, contractId, inv.ContractId)
+			require.Equal(t, constants.AppSourceEventProcessingPlatform, inv.AppSource)
+			calledNextPreviewInvoiceForContractRequest = true
+			return &invoicepb.InvoiceIdResponse{
+				Id: "1",
+			}, nil
+		},
+	}
+	mocked_grpc.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
+
+	// prepare event handler
+	contractEventHandler := &ContractEventHandler{
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
+	}
+
+	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
+	updateEvent, err := event.NewContractUpdateEvent(contractAggregate,
+		model.ContractDataFields{
+			InvoicingEnabled:   false,
+			BillingCycle:       model.NoneBilling.String(),
+			InvoicingStartDate: nil,
+		},
+		commonmodel.ExternalSystem{},
+		constants.SourceOpenline,
+		now,
+		[]string{})
+	require.Nil(t, err, "failed to create event")
+
+	// EXECUTE
+	err = contractEventHandler.OnUpdate(context.Background(), updateEvent)
+	require.Nil(t, err, "failed to execute event handler")
+
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Contract": 1, "Contract_" + tenantName: 1})
+
+	// Verify call to events platform
+	require.False(t, calledNextPreviewInvoiceForContractRequest)
+}
+
+func TestContractEventHandler_OnUpdate_GenerateNextInvoice_BillingCycle_Changed(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	now := utils.Now()
+
+	// prepare neo4j data
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
+		InvoicingEnabled:   true,
+		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
+		InvoicingStartDate: &now,
+	})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Contract": 1})
+
+	// prepare grpc mock
+	calledNextPreviewInvoiceForContractRequest := false
+	invoiceGrpcServiceCallbacks := mocked_grpc.MockInvoiceServiceCallbacks{
+		NextPreviewInvoiceForContract: func(context context.Context, inv *invoicepb.NextPreviewInvoiceForContractRequest) (*invoicepb.InvoiceIdResponse, error) {
+			require.Equal(t, tenantName, inv.Tenant)
+			require.Equal(t, contractId, inv.ContractId)
+			require.Equal(t, constants.AppSourceEventProcessingPlatform, inv.AppSource)
+			calledNextPreviewInvoiceForContractRequest = true
+			return &invoicepb.InvoiceIdResponse{
+				Id: "1",
+			}, nil
+		},
+	}
+	mocked_grpc.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
+
+	// prepare event handler
+	contractEventHandler := &ContractEventHandler{
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
+	}
+
+	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
+	updateEvent, err := event.NewContractUpdateEvent(contractAggregate,
+		model.ContractDataFields{
+			InvoicingEnabled:   true,
+			BillingCycle:       model.QuarterlyBilling.String(),
+			InvoicingStartDate: &now,
+		},
+		commonmodel.ExternalSystem{},
+		constants.SourceOpenline,
+		now,
+		[]string{})
+	require.Nil(t, err, "failed to create event")
+
+	// EXECUTE
+	err = contractEventHandler.OnUpdate(context.Background(), updateEvent)
+	require.Nil(t, err, "failed to execute event handler")
+
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Contract": 1, "Contract_" + tenantName: 1})
+
+	// Verify call to events platform
+	require.True(t, calledNextPreviewInvoiceForContractRequest)
+}
+
+func TestContractEventHandler_OnUpdate_GenerateNextInvoice_InvoicingStartDate_Changed(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	now := utils.Now()
+	tomorrow := now.AddDate(0, 0, 1)
+
+	// prepare neo4j data
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
+		InvoicingEnabled:   true,
+		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
+		InvoicingStartDate: &now,
+	})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Contract": 1})
+
+	// prepare grpc mock
+	calledNextPreviewInvoiceForContractRequest := false
+	invoiceGrpcServiceCallbacks := mocked_grpc.MockInvoiceServiceCallbacks{
+		NextPreviewInvoiceForContract: func(context context.Context, inv *invoicepb.NextPreviewInvoiceForContractRequest) (*invoicepb.InvoiceIdResponse, error) {
+			require.Equal(t, tenantName, inv.Tenant)
+			require.Equal(t, contractId, inv.ContractId)
+			require.Equal(t, constants.AppSourceEventProcessingPlatform, inv.AppSource)
+			calledNextPreviewInvoiceForContractRequest = true
+			return &invoicepb.InvoiceIdResponse{
+				Id: "1",
+			}, nil
+		},
+	}
+	mocked_grpc.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
+
+	// prepare event handler
+	contractEventHandler := &ContractEventHandler{
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
+	}
+
+	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
+	updateEvent, err := event.NewContractUpdateEvent(contractAggregate,
+		model.ContractDataFields{
+			InvoicingEnabled:   true,
+			BillingCycle:       model.QuarterlyBilling.String(),
+			InvoicingStartDate: &tomorrow,
+		},
+		commonmodel.ExternalSystem{},
+		constants.SourceOpenline,
+		now,
+		[]string{})
+	require.Nil(t, err, "failed to create event")
+
+	// EXECUTE
+	err = contractEventHandler.OnUpdate(context.Background(), updateEvent)
+	require.Nil(t, err, "failed to execute event handler")
+
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Contract": 1, "Contract_" + tenantName: 1})
+
+	// Verify call to events platform
+	require.True(t, calledNextPreviewInvoiceForContractRequest)
 }
 
 func TestContractEventHandler_OnDeleteV1(t *testing.T) {

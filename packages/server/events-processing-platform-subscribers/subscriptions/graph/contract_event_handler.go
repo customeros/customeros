@@ -21,6 +21,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
+	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/opentracing/opentracing-go"
@@ -141,6 +142,8 @@ func (h *ContractEventHandler) OnCreate(ctx context.Context, evt eventstore.Even
 	}
 
 	h.startOnboardingIfEligible(ctx, eventData.Tenant, contractId, span)
+
+	h.generateNextPreviewInvoice(ctx, eventData.Tenant, contractId, span)
 
 	return nil
 }
@@ -336,6 +339,14 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 
 	h.startOnboardingIfEligible(ctx, eventData.Tenant, contractId, span)
 
+	if beforeUpdateContractEntity.InvoicingEnabled &&
+		(beforeUpdateContractEntity.BillingCycle != afterUpdateContractEntity.BillingCycle ||
+			beforeUpdateContractEntity.InvoicingStartDate != afterUpdateContractEntity.InvoicingStartDate ||
+			beforeUpdateContractEntity.InvoiceNote != afterUpdateContractEntity.InvoiceNote) {
+
+		h.generateNextPreviewInvoice(ctx, eventData.Tenant, contractId, span)
+	}
+
 	return nil
 }
 
@@ -485,6 +496,41 @@ func (h *ContractEventHandler) startOnboardingIfEligible(ctx context.Context, te
 	}
 }
 
+func (h *ContractEventHandler) generateNextPreviewInvoice(ctx context.Context, tenant, contractId string, span opentracing.Span) {
+	contractDbNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, tenant, contractId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return
+	}
+	if contractDbNode == nil {
+		return
+	}
+	contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
+
+	if contractEntity.InvoicingEnabled && contractEntity.BillingCycle != neo4jenum.BillingCycleNone && contractEntity.InvoicingStartDate != nil {
+		err := h.repositories.Neo4jRepositories.InvoiceWriteRepository.DeletePreviewInvoice(ctx, tenant, contractId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error while deleting preview invoice for contract %s: %s", contractId, err.Error())
+			return
+		}
+
+		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+		_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
+			return h.grpcClients.InvoiceClient.NextPreviewInvoiceForContract(ctx, &invoicepb.NextPreviewInvoiceForContractRequest{
+				Tenant:     tenant,
+				ContractId: contractId,
+				AppSource:  constants.AppSourceEventProcessingPlatform,
+			})
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("error sending the next preview invoice request for contract {%s}: {%s}", contractId, err.Error())
+			return
+		}
+	}
+}
+
 func (h *ContractEventHandler) OnDeleteV1(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractEventHandler.OnDeleteV1")
 	defer span.Finish()
@@ -536,6 +582,13 @@ func (h *ContractEventHandler) OnDeleteV1(ctx context.Context, evt eventstore.Ev
 			AppSource:      constants.AppSourceEventProcessingPlatform,
 		})
 	})
+
+	err = h.repositories.Neo4jRepositories.InvoiceWriteRepository.DeletePreviewInvoice(ctx, eventData.Tenant, contractId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while deleting preview invoice for contract %s: %s", contractId, err.Error())
+		return err
+	}
 
 	return nil
 }
@@ -596,6 +649,12 @@ func (h *ContractEventHandler) OnRefreshStatus(ctx context.Context, evt eventsto
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("error while updating contract's {%s} renewal date: %s", contractId, err.Error())
+		}
+
+		err := h.repositories.Neo4jRepositories.InvoiceWriteRepository.DeletePreviewInvoice(ctx, eventData.Tenant, contractId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error while deleting preview invoice for contract %s: %s", contractId, err.Error())
 		}
 	}
 
