@@ -3,15 +3,15 @@ import React, { forwardRef } from 'react';
 import { twMerge } from 'tailwind-merge';
 import { cva, VariantProps } from 'class-variance-authority';
 
-const inputVariants = cva(
-  ['w-full', 'ease-in-out', 'delay-200', 'hover:transition'],
+export const inputVariants = cva(
+  ['w-full', 'ease-in-out', 'delay-50', 'hover:transition'],
   {
     variants: {
       size: {
-        xs: ['h-6'],
-        sm: ['h-8'],
-        md: ['h-10'],
-        lg: ['h-12'],
+        xs: ['min-h-6 text-xs'],
+        sm: ['min-h-8 text-sm'],
+        md: ['min-h-10 text-base'],
+        lg: ['min-h-12 text-lg'],
       },
       variant: {
         flushed: [
