@@ -205,9 +205,14 @@ export function Invoice({
           </div>
           <span className='text-xs text-gray-500'>
             Powered by
-            <span className='text-gray-500 mx-1 underline cursor-pointer'>
+            <a
+              className='text-gray-500 mx-1 underline cursor-pointer'
+              href='https://customeros.ai/'
+              target='blank'
+              rel='noopener noreferrer'
+            >
               CustomerOS
-            </span>
+            </a>
             - Revenue Intelligence for B2B hyperscalers
           </span>
         </div>
