@@ -67,7 +67,10 @@ export const BillingPanelInvoice = ({
     focusedAccount || hoveredAccount || defaultSelectedAccount;
 
   return (
-    <div className='border-r border-gray-300 max-h-[100vh]'>
+    <div
+      className='border-r border-gray-300 max-h-[100vh]'
+      style={{ maxWidth: '40rem' }}
+    >
       <Invoice
         isInvoiceProviderFocused={
           isInvoiceProviderFocused || isInvoiceProviderDetailsHovered
