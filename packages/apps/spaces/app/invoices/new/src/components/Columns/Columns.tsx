@@ -40,6 +40,8 @@ const columns: Record<string, Column> = {
   DUE_DATE: columnHelper.accessor('due', {
     id: 'DUE_DATE',
     minSize: 200,
+    enableColumnFilter: false,
+    enableSorting: false,
     header: (props) => (
       <THead id='dueDate' title='Due date' {...getTHeadProps(props)} />
     ),
@@ -49,6 +51,8 @@ const columns: Record<string, Column> = {
   CONTRACT: columnHelper.accessor('invoiceNumber', {
     id: 'CONTRACT',
     minSize: 100,
+    enableColumnFilter: false,
+    enableSorting: false,
     header: (props) => (
       <THead id='contract' title='Contract' {...getTHeadProps(props)} />
     ),
@@ -58,6 +62,8 @@ const columns: Record<string, Column> = {
   BILLING_CYCLE: columnHelper.accessor('invoiceNumber', {
     id: 'BILLING_CYCLE',
     minSize: 100,
+    enableColumnFilter: false,
+    enableSorting: false,
     header: (props) => (
       <THead
         id='billingCycle'
@@ -71,6 +77,8 @@ const columns: Record<string, Column> = {
   PAYMENT_TERMS: columnHelper.accessor('invoiceNumber', {
     id: 'PAYMENT_TERMS',
     minSize: 100,
+    enableColumnFilter: false,
+    enableSorting: false,
     header: (props) => (
       <THead
         id='paymentTerms'
@@ -84,6 +92,8 @@ const columns: Record<string, Column> = {
   AMOUNT: columnHelper.accessor('amountDue', {
     id: 'AMOUNT',
     minSize: 100,
+    enableColumnFilter: false,
+    enableSorting: false,
     header: (props) => (
       <THead id='amount' title='Amount' {...getTHeadProps(props)} />
     ),
@@ -106,6 +116,8 @@ const columns: Record<string, Column> = {
   INVOICE_PREVIEW: columnHelper.accessor('invoiceNumber', {
     id: 'INVOICE_PREVIEW',
     minSize: 100,
+    enableColumnFilter: false,
+    enableSorting: false,
     header: (props) => (
       <THead
         id='invoicePreview'
