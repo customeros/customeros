@@ -9,8 +9,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/graph_db/entity"
-	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/neo4j"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/aggregate"
 	contactEvents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event"
@@ -71,7 +69,7 @@ func TestGraphContactEventHandler_OnLocationLinkToContact(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 
 	contactName := "test_contact_name"
-	contactId := neo4jt.CreateContact(ctx, testDatabase.Driver, tenantName, entity.ContactEntity{
+	contactId := neo4jtest.CreateContact(ctx, testDatabase.Driver, tenantName, neo4jentity.ContactEntity{
 		Name: contactName,
 	})
 
@@ -115,7 +113,7 @@ func TestGraphContactEventHandler_OnPhoneNumberLinkToContact(t *testing.T) {
 
 	contactName := "test_contact_name"
 	now := utils.Now()
-	contactId := neo4jt.CreateContact(ctx, testDatabase.Driver, tenantName, entity.ContactEntity{
+	contactId := neo4jtest.CreateContact(ctx, testDatabase.Driver, tenantName, neo4jentity.ContactEntity{
 		Name:      contactName,
 		UpdatedAt: now,
 	})
@@ -175,7 +173,7 @@ func TestGraphContactEventHandler_OnEmailLinkToContactLinkToContact(t *testing.T
 
 	contactName := "test_contact_name"
 	now := utils.Now()
-	contactId := neo4jt.CreateContact(ctx, testDatabase.Driver, tenantName, entity.ContactEntity{
+	contactId := neo4jtest.CreateContact(ctx, testDatabase.Driver, tenantName, neo4jentity.ContactEntity{
 		Name:      contactName,
 		UpdatedAt: now,
 	})
@@ -234,7 +232,7 @@ func TestGraphContactEventHandler_OnContactLinkToOrganization(t *testing.T) {
 
 	contactName := "test_contact_name"
 	now := utils.Now()
-	contactId := neo4jt.CreateContact(ctx, testDatabase.Driver, tenantName, entity.ContactEntity{
+	contactId := neo4jtest.CreateContact(ctx, testDatabase.Driver, tenantName, neo4jentity.ContactEntity{
 		Name:      contactName,
 		UpdatedAt: now,
 	})
@@ -317,7 +315,7 @@ func TestGraphContactEventHandler_OnContactUpdate(t *testing.T) {
 	descriptionCreate := "Description Create"
 	sourceOfTruthCreate := constants.SourceOpenline
 	now := utils.Now()
-	contactId := neo4jt.CreateContact(ctx, testDatabase.Driver, tenantName, entity.ContactEntity{
+	contactId := neo4jtest.CreateContact(ctx, testDatabase.Driver, tenantName, neo4jentity.ContactEntity{
 		Name:            contactNameCreate,
 		FirstName:       contactFirstNameCreate,
 		LastName:        contactLastNameCreate,

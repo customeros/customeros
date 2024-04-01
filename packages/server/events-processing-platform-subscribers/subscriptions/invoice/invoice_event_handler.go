@@ -532,9 +532,16 @@ func (h *InvoiceEventHandler) prepareAndCallFillInvoice(ctx context.Context, ten
 		tenantBillingProfileCountry = countryEntity.Name
 	}
 
+	invoiceStatus := invoicepb.InvoiceStatus_INVOICE_STATUS_DUE
+	if invoiceEntity.Preview {
+		invoiceStatus = invoicepb.InvoiceStatus_INVOICE_STATUS_PREVIEW
+	}
+
 	err = h.callFillInvoice(ctx,
 		tenant,
 		invoiceEntity.Id,
+		invoiceEntity.DryRun,
+		invoiceStatus,
 		contractEntity.OrganizationLegalName,
 		contractEntity.InvoiceEmail,
 		contractEntity.AddressLine1, contractEntity.AddressLine2, contractEntity.Zip, contractEntity.Locality, contractCountry, contractEntity.Region,
@@ -555,7 +562,7 @@ func (h *InvoiceEventHandler) prepareAndCallFillInvoice(ctx context.Context, ten
 	return nil
 }
 
-func (h *InvoiceEventHandler) callFillInvoice(ctx context.Context, tenant, invoiceId,
+func (h *InvoiceEventHandler) callFillInvoice(ctx context.Context, tenant, invoiceId string, dryRun bool, invoiceStatus invoicepb.InvoiceStatus,
 	customerName, customerEmail, customerAddressLine1, customerAddressLine2, customerAddressZip, customerAddressLocality, customerAddressCountry, customerAddressRegion,
 	providerLogoRepositoryFileId, providerName, providerEmail, providerAddressLine1, providerAddressLine2, providerAddressZip, providerAddressLocality, providerAddressCountry, providerAddressRegion,
 	note string, amount, vat, total float64, invoiceLines []*invoicepb.InvoiceLine, span opentracing.Span) error {
@@ -565,6 +572,7 @@ func (h *InvoiceEventHandler) callFillInvoice(ctx context.Context, tenant, invoi
 		return h.grpcClients.InvoiceClient.FillInvoice(ctx, &invoicepb.FillInvoiceRequest{
 			Tenant:    tenant,
 			InvoiceId: invoiceId,
+			DryRun:    dryRun,
 			Note:      note,
 			Customer: &invoicepb.FillInvoiceCustomer{
 				Name:         customerName,
@@ -593,7 +601,7 @@ func (h *InvoiceEventHandler) callFillInvoice(ctx context.Context, tenant, invoi
 			InvoiceLines: invoiceLines,
 			UpdatedAt:    utils.ConvertTimeToTimestampPtr(&now),
 			AppSource:    constants.AppSourceEventProcessingPlatform,
-			Status:       invoicepb.InvoiceStatus_INVOICE_STATUS_DUE,
+			Status:       invoiceStatus,
 		})
 	})
 	if err != nil {

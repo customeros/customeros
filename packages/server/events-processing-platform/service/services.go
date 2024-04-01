@@ -69,7 +69,7 @@ func InitServices(cfg *config.Config, repositories *repository.Repositories, agg
 	services.MasterPlanService = NewMasterPlanService(log, commandHandlers.MasterPlan, aggregateStore)
 	services.OrganizationPlanService = NewOrganizationPlanService(log, commandHandlers.OrganizationPlan, aggregateStore)
 	services.InvoicingCycleService = NewInvoicingCycleService(log, commandHandlers.InvoicingCycle, aggregateStore)
-	services.InvoiceService = NewInvoiceService(&services, log, aggregateStore, repositories.InvoiceRepository)
+	services.InvoiceService = NewInvoiceService(repositories, &services, log, aggregateStore)
 	services.TenantService = NewTenantService(&services, log, aggregateStore, cfg)
 	services.CountryService = NewCountryService(&services, log, aggregateStore, cfg)
 	services.ReminderService = NewReminderService(log, aggregateStore, cfg, ebs)

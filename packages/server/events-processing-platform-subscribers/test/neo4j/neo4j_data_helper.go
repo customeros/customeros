@@ -11,42 +11,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/graph_db/entity"
 )
 
-func CreateSocial(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, social neo4jentity.SocialEntity) string {
-	socialId := utils.NewUUIDIfEmpty(social.Id)
-	query := fmt.Sprintf(`MERGE (s:Social:Social_%s {id: $id})
-				SET s.url=$url,
-					s.platformName=$platformName
-				`, tenant)
-
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"id":           socialId,
-		"url":          social.Url,
-		"platformName": social.PlatformName,
-	})
-	return socialId
-}
-
-func CreateContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, contact entity.ContactEntity) string {
-	contactId := contact.Id
-	if contactId == "" {
-		contactId = uuid.New().String()
-	}
-	query := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})
-			  MERGE (t)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$id})
-				SET c:Contact_%s,
-					c.firstName=$firstName,
-					c.lastName=$lastName
-				`, tenant)
-
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"tenant":    tenant,
-		"id":        contactId,
-		"firstName": contact.FirstName,
-		"lastName":  contact.LastName,
-	})
-	return contactId
-}
-
 func CreateJobRole(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, jobRole entity.JobRoleEntity) string {
 	jobRoleId := jobRole.Id
 	if jobRoleId == "" {

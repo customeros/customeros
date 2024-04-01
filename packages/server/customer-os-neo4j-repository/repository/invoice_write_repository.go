@@ -19,6 +19,7 @@ type InvoiceCreateFields struct {
 	DryRun          bool                    `json:"dryRun"`
 	OffCycle        bool                    `json:"offCycle"`
 	Postpaid        bool                    `json:"postpaid"`
+	Preview         bool                    `json:"preview"`
 	PeriodStartDate time.Time               `json:"periodStartDate"`
 	PeriodEndDate   time.Time               `json:"periodEndDate"`
 	CreatedAt       time.Time               `json:"createdAt"`
@@ -81,6 +82,7 @@ type InvoiceWriteRepository interface {
 	SetPaidInvoiceNotificationSentAt(ctx context.Context, tenant, invoiceId string) error
 	SetPayInvoiceNotificationSentAt(ctx context.Context, tenant, invoiceId string) error
 	DeleteInvoice(ctx context.Context, tenant, invoiceId string) error
+	DeletePreviewInvoice(ctx context.Context, tenant, contractId string) error
 }
 
 type invoiceWriteRepository struct {
@@ -117,6 +119,7 @@ func (r *invoiceWriteRepository) CreateInvoiceForContract(ctx context.Context, t
 								i.dryRun=$dryRun,
 								i.offCycle=$offCycle,
 								i.postpaid=$postpaid,
+								i.preview=$preview,
 								i.currency=$currency,
 								i.periodStartDate=$periodStart,
 								i.periodEndDate=$periodEnd,
@@ -137,13 +140,14 @@ func (r *invoiceWriteRepository) CreateInvoiceForContract(ctx context.Context, t
 		"appSource":     data.SourceFields.AppSource,
 		"dryRun":        data.DryRun,
 		"offCycle":      data.OffCycle,
+		"postpaid":      data.Postpaid,
+		"preview":       data.Preview,
 		"currency":      data.Currency.String(),
 		"periodStart":   utils.ToNeo4jDateAsAny(&data.PeriodStartDate),
 		"periodEnd":     utils.ToNeo4jDateAsAny(&data.PeriodEndDate),
 		"billingCycle":  data.BillingCycle.String(),
 		"status":        data.Status.String(),
 		"note":          data.Note,
-		"postpaid":      data.Postpaid,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -421,6 +425,30 @@ func (r *invoiceWriteRepository) DeleteInvoice(ctx context.Context, tenant, invo
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
+	return err
+}
+
+func (r *invoiceWriteRepository) DeletePreviewInvoice(ctx context.Context, tenant, contractId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceReadRepository.GetPreviewInvoiceForContract")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.LogFields(log.String("contractId", contractId))
+
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract{id:$contractId})-[:HAS_INVOICE]->(i:Invoice {preview: true, offCycle: false})
+			   OPTIONAL MATCH (i)-[:HAS_INVOICE_LINE]->(il:InvoiceLine) 
+			   DETACH DELETE i, il`
+	params := map[string]any{
+		"tenant":     tenant,
+		"contractId": contractId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+
 	return err
 }
 

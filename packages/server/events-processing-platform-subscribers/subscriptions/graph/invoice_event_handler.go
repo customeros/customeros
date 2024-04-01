@@ -56,12 +56,23 @@ func (h *InvoiceEventHandler) OnInvoiceCreateForContractV1(ctx context.Context, 
 	}
 	contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
 
+	// delete the preview invoice if exists
+	if eventData.Preview {
+		err := h.repositories.Neo4jRepositories.InvoiceWriteRepository.DeletePreviewInvoice(ctx, eventData.Tenant, eventData.ContractId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error while deleting preview invoice for contract %s: %s", eventData.ContractId, err.Error())
+			return err
+		}
+	}
+
 	data := neo4jrepository.InvoiceCreateFields{
 		ContractId:      eventData.ContractId,
 		Currency:        neo4jenum.DecodeCurrency(eventData.Currency),
 		DryRun:          eventData.DryRun,
 		OffCycle:        eventData.OffCycle,
 		Postpaid:        eventData.Postpaid,
+		Preview:         eventData.Preview,
 		BillingCycle:    neo4jenum.DecodeBillingCycle(eventData.BillingCycle),
 		PeriodStartDate: eventData.PeriodStartDate,
 		PeriodEndDate:   eventData.PeriodEndDate,
@@ -171,6 +182,32 @@ func (h *InvoiceEventHandler) OnInvoiceFillV1(ctx context.Context, evt eventstor
 		return err
 	}
 
+	if !eventData.DryRun && !eventData.OffCycle {
+		err = h.callNextPreviewOnCycleInvoiceGRPC(ctx, eventData.Tenant, eventData.ContractId, span)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error while calling next preview invoice for contract %s: %s", eventData.ContractId, err.Error())
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *InvoiceEventHandler) callNextPreviewOnCycleInvoiceGRPC(ctx context.Context, tenant, contractId string, span opentracing.Span) error {
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
+		return s.grpcClients.InvoiceClient.NextPreviewInvoiceForContract(ctx, &invoicepb.NextPreviewInvoiceForContractRequest{
+			Tenant:     tenant,
+			ContractId: contractId,
+			AppSource:  constants.AppSourceEventProcessingPlatform,
+		})
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("error sending the next preview invoice request for contract {%s}: {%s}", contractId, err.Error())
+		return err
+	}
 	return nil
 }
 

@@ -22,6 +22,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type InvoiceGrpcServiceClient interface {
+	NextPreviewInvoiceForContract(ctx context.Context, in *NextPreviewInvoiceForContractRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
 	NewInvoiceForContract(ctx context.Context, in *NewInvoiceForContractRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
 	FillInvoice(ctx context.Context, in *FillInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
 	GenerateInvoicePdf(ctx context.Context, in *GenerateInvoicePdfRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
@@ -41,6 +42,15 @@ type invoiceGrpcServiceClient struct {
 
 func NewInvoiceGrpcServiceClient(cc grpc.ClientConnInterface) InvoiceGrpcServiceClient {
 	return &invoiceGrpcServiceClient{cc}
+}
+
+func (c *invoiceGrpcServiceClient) NextPreviewInvoiceForContract(ctx context.Context, in *NextPreviewInvoiceForContractRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error) {
+	out := new(InvoiceIdResponse)
+	err := c.cc.Invoke(ctx, "/InvoiceGrpcService/NextPreviewInvoiceForContract", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *invoiceGrpcServiceClient) NewInvoiceForContract(ctx context.Context, in *NewInvoiceForContractRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error) {
@@ -146,6 +156,7 @@ func (c *invoiceGrpcServiceClient) VoidInvoice(ctx context.Context, in *VoidInvo
 // All implementations should embed UnimplementedInvoiceGrpcServiceServer
 // for forward compatibility
 type InvoiceGrpcServiceServer interface {
+	NextPreviewInvoiceForContract(context.Context, *NextPreviewInvoiceForContractRequest) (*InvoiceIdResponse, error)
 	NewInvoiceForContract(context.Context, *NewInvoiceForContractRequest) (*InvoiceIdResponse, error)
 	FillInvoice(context.Context, *FillInvoiceRequest) (*InvoiceIdResponse, error)
 	GenerateInvoicePdf(context.Context, *GenerateInvoicePdfRequest) (*InvoiceIdResponse, error)
@@ -163,6 +174,9 @@ type InvoiceGrpcServiceServer interface {
 type UnimplementedInvoiceGrpcServiceServer struct {
 }
 
+func (UnimplementedInvoiceGrpcServiceServer) NextPreviewInvoiceForContract(context.Context, *NextPreviewInvoiceForContractRequest) (*InvoiceIdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method NextPreviewInvoiceForContract not implemented")
+}
 func (UnimplementedInvoiceGrpcServiceServer) NewInvoiceForContract(context.Context, *NewInvoiceForContractRequest) (*InvoiceIdResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method NewInvoiceForContract not implemented")
 }
@@ -206,6 +220,24 @@ type UnsafeInvoiceGrpcServiceServer interface {
 
 func RegisterInvoiceGrpcServiceServer(s grpc.ServiceRegistrar, srv InvoiceGrpcServiceServer) {
 	s.RegisterService(&InvoiceGrpcService_ServiceDesc, srv)
+}
+
+func _InvoiceGrpcService_NextPreviewInvoiceForContract_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NextPreviewInvoiceForContractRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InvoiceGrpcServiceServer).NextPreviewInvoiceForContract(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/InvoiceGrpcService/NextPreviewInvoiceForContract",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InvoiceGrpcServiceServer).NextPreviewInvoiceForContract(ctx, req.(*NextPreviewInvoiceForContractRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _InvoiceGrpcService_NewInvoiceForContract_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -413,6 +445,10 @@ var InvoiceGrpcService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "InvoiceGrpcService",
 	HandlerType: (*InvoiceGrpcServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "NextPreviewInvoiceForContract",
+			Handler:    _InvoiceGrpcService_NextPreviewInvoiceForContract_Handler,
+		},
 		{
 			MethodName: "NewInvoiceForContract",
 			Handler:    _InvoiceGrpcService_NewInvoiceForContract_Handler,

@@ -4,7 +4,9 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	contractaggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
@@ -15,6 +17,79 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"testing"
 )
+
+func TestInvoiceService_NextPreviewInvoiceForContract(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// Setup test environment
+	aprilFirst := utils.FirstTimeOfMonth(2024, 4)
+	expectedPeriodStart := utils.FirstTimeOfMonth(2024, 4)
+	expectedPeriodEnd := utils.LastTimeOfMonth(2024, 4)
+	tenant := "tenant1"
+
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenant)
+	organizationId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenant, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenant, organizationId, neo4jentity.ContractEntity{
+		BillingCycle:    neo4jenum.BillingCycleMonthlyBilling,
+		NextInvoiceDate: utils.ToDatePtr(&aprilFirst),
+		Currency:        neo4jenum.CurrencyUSD,
+	})
+
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		"Tenant":       1,
+		"Organization": 1,
+		"Contract":     1,
+	})
+
+	aggregateStore := eventstoret.NewTestAggregateStore()
+	contractAggregate := contractaggregate.NewContractAggregateWithTenantAndID(tenant, contractId)
+	aggregateStore.Save(ctx, contractAggregate)
+
+	// Mock GRPC Connection and Invoice Client
+	grpcConnection, _ := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
+	invoiceClient := invoicepb.NewInvoiceGrpcServiceClient(grpcConnection)
+
+	// Prepare request
+	request := &invoicepb.NextPreviewInvoiceForContractRequest{
+		Tenant:     tenant,
+		ContractId: contractId,
+		AppSource:  "event-processing-platform",
+	}
+
+	// Execute service method
+	response, err := invoiceClient.NextPreviewInvoiceForContract(ctx, request)
+
+	// Validate response and error
+	require.Nil(t, err)
+	require.NotNil(t, response)
+	invoiceId := response.Id
+	require.NotEmpty(t, invoiceId)
+
+	// Validate created invoice in event store
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 2, len(eventsMap))
+
+	invoiceAggregate := invoice.NewInvoiceAggregateWithTenantAndID(tenant, invoiceId)
+	eventList := eventsMap[invoiceAggregate.GetID()]
+	require.Equal(t, 1, len(eventList))
+
+	// Validate event data
+	createEvent := eventList[0]
+	require.Equal(t, invoice.InvoiceCreateForContractV1, createEvent.GetEventType())
+	require.Equal(t, string(invoice.InvoiceAggregateType)+"-"+tenant+"-"+invoiceId, eventList[0].GetAggregateID())
+
+	var eventData invoice.InvoiceForContractCreateEvent
+	err = createEvent.GetJsonData(&eventData)
+	require.Nil(t, err, "Failed to unmarshal event data")
+	require.Equal(t, contractId, eventData.ContractId)
+	require.Equal(t, true, eventData.DryRun)
+	require.Equal(t, true, eventData.Preview)
+	require.Equal(t, false, eventData.OffCycle)
+	require.Equal(t, "USD", eventData.Currency)
+	require.Equal(t, expectedPeriodStart.Format("dd.MM.yyyy"), eventData.PeriodStartDate.Format("dd.MM.yyyy"))
+	require.Equal(t, expectedPeriodEnd.Format("dd.MM.yyyy"), eventData.PeriodEndDate.Format("dd.MM.yyyy"))
+}
 
 func TestInvoiceService_NewOnCycleInvoiceForContract(t *testing.T) {
 	ctx := context.Background()
@@ -97,7 +172,7 @@ func TestInvoiceService_FillInvoice(t *testing.T) {
 	aggregateStore := eventstoret.NewTestAggregateStore()
 	invoiceAggregate := invoice.NewInvoiceAggregateWithTenantAndID(tenant, invoiceId)
 
-	newEvent, _ := invoice.NewInvoiceForContractCreateEvent(invoiceAggregate, commonmodel.Source{}, "contract-1", "USD", "MONTHLY_BILLED", "test note", false, false, false, now, now, now)
+	newEvent, _ := invoice.NewInvoiceForContractCreateEvent(invoiceAggregate, commonmodel.Source{}, "contract-1", "USD", "MONTHLY_BILLED", "test note", false, false, false, false, now, now, now)
 	invoiceAggregate.UncommittedEvents = append(invoiceAggregate.UncommittedEvents, newEvent)
 	aggregateStore.Save(ctx, invoiceAggregate)
 
@@ -218,7 +293,7 @@ func TestInvoiceService_GenerateInvoicePdf(t *testing.T) {
 	aggregateStore := eventstoret.NewTestAggregateStore()
 	invoiceAggregate := invoice.NewInvoiceAggregateWithTenantAndID(tenant, invoiceId)
 
-	newEvent, _ := invoice.NewInvoiceForContractCreateEvent(invoiceAggregate, commonmodel.Source{}, "contract-1", "USD", "MONTHLY_BILLED", "test note", false, false, false, now, now, now)
+	newEvent, _ := invoice.NewInvoiceForContractCreateEvent(invoiceAggregate, commonmodel.Source{}, "contract-1", "USD", "MONTHLY_BILLED", "test note", false, false, false, false, now, now, now)
 	invoiceAggregate.UncommittedEvents = append(invoiceAggregate.UncommittedEvents, newEvent)
 	aggregateStore.Save(ctx, invoiceAggregate)
 
@@ -269,7 +344,7 @@ func TestInvoiceService_PayInvoiceNotification(t *testing.T) {
 	aggregateStore := eventstoret.NewTestAggregateStore()
 	invoiceAggregate := invoice.NewInvoiceAggregateWithTenantAndID(tenant, invoiceId)
 
-	newEvent, _ := invoice.NewInvoiceForContractCreateEvent(invoiceAggregate, commonmodel.Source{}, "contract-1", "USD", "MONTHLY_BILLED", "test note", false, false, false, now, now, now)
+	newEvent, _ := invoice.NewInvoiceForContractCreateEvent(invoiceAggregate, commonmodel.Source{}, "contract-1", "USD", "MONTHLY_BILLED", "test note", false, false, false, false, now, now, now)
 	invoiceAggregate.UncommittedEvents = append(invoiceAggregate.UncommittedEvents, newEvent)
 	aggregateStore.Save(ctx, invoiceAggregate)
 
@@ -320,7 +395,7 @@ func TestInvoiceService_UpdateInvoice(t *testing.T) {
 	aggregateStore := eventstoret.NewTestAggregateStore()
 	invoiceAggregate := invoice.NewInvoiceAggregateWithTenantAndID(tenant, invoiceId)
 
-	newEvent, _ := invoice.NewInvoiceForContractCreateEvent(invoiceAggregate, commonmodel.Source{}, "contract-1", "USD", "MONTHLY_BILLED", "test note", false, false, false, now, now, now)
+	newEvent, _ := invoice.NewInvoiceForContractCreateEvent(invoiceAggregate, commonmodel.Source{}, "contract-1", "USD", "MONTHLY_BILLED", "test note", false, false, false, false, now, now, now)
 	invoiceAggregate.UncommittedEvents = append(invoiceAggregate.UncommittedEvents, newEvent)
 	aggregateStore.Save(ctx, invoiceAggregate)
 
@@ -381,7 +456,7 @@ func TestInvoiceService_RequestFillInvoice(t *testing.T) {
 	aggregateStore := eventstoret.NewTestAggregateStore()
 	invoiceAggregate := invoice.NewInvoiceAggregateWithTenantAndID(tenant, invoiceId)
 
-	newEvent, _ := invoice.NewInvoiceForContractCreateEvent(invoiceAggregate, commonmodel.Source{}, "contract-1", "USD", "MONTHLY_BILLED", "test note", false, false, false, now, now, now)
+	newEvent, _ := invoice.NewInvoiceForContractCreateEvent(invoiceAggregate, commonmodel.Source{}, "contract-1", "USD", "MONTHLY_BILLED", "test note", false, false, false, false, now, now, now)
 	invoiceAggregate.UncommittedEvents = append(invoiceAggregate.UncommittedEvents, newEvent)
 	aggregateStore.Save(ctx, invoiceAggregate)
 
@@ -434,7 +509,7 @@ func TestInvoiceService_VoidInvoice(t *testing.T) {
 	aggregateStore := eventstoret.NewTestAggregateStore()
 	invoiceAggregate := invoice.NewInvoiceAggregateWithTenantAndID(tenant, invoiceId)
 
-	newEvent, _ := invoice.NewInvoiceForContractCreateEvent(invoiceAggregate, commonmodel.Source{}, "contract-1", "USD", "MONTHLY_BILLED", "test note", false, false, false, now, now, now)
+	newEvent, _ := invoice.NewInvoiceForContractCreateEvent(invoiceAggregate, commonmodel.Source{}, "contract-1", "USD", "MONTHLY_BILLED", "test note", false, false, false, false, now, now, now)
 	invoiceAggregate.UncommittedEvents = append(invoiceAggregate.UncommittedEvents, newEvent)
 	aggregateStore.Save(ctx, invoiceAggregate)
 
