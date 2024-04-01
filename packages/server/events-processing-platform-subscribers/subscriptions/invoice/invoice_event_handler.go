@@ -1104,7 +1104,7 @@ func (h *InvoiceEventHandler) onInvoiceVoidV1(ctx context.Context, evt eventstor
 		return errors.New("invoiceNode is nil")
 	}
 
-	if invoiceEntity.DryRun {
+	if invoiceEntity.DryRun || invoiceEntity.TotalAmount == float64(0) {
 		return nil
 	}
 
@@ -1209,6 +1209,10 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 		invoiceEntity = *neo4jmapper.MapDbNodeToInvoiceEntity(invoiceNode)
 	} else {
 		return errors.New("invoiceNode is nil")
+	}
+
+	if invoiceEntity.DryRun || invoiceEntity.TotalAmount == float64(0) {
+		return nil
 	}
 
 	// load contract
@@ -1324,6 +1328,10 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 	} else {
 		tracing.TraceErr(span, errors.New("invoiceNode is nil"))
 		return errors.New("invoiceNode is nil")
+	}
+
+	if invoiceEntity.DryRun || invoiceEntity.TotalAmount == float64(0) {
+		return nil
 	}
 
 	contractNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractForInvoice(ctx, eventData.Tenant, invoiceEntity.Id)
