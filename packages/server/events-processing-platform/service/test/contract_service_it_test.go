@@ -278,6 +278,72 @@ func TestContractService_UpdateContract(t *testing.T) {
 	require.Nil(t, eventData.NextInvoiceDate) // next invoice date was not mentioned in fields mask, hence it should be nil
 }
 
+func TestContractService_UpdateContract_OnlySelectedFieldsModified(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// Setup test environment
+	tenant := "ziggy"
+	contractId := uuid.New().String()
+
+	// Setup aggregate store and create initial contract
+	aggregateStore := eventstoret.NewTestAggregateStore()
+	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenant, contractId)
+	aggregateStore.Save(ctx, contractAggregate)
+
+	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
+	require.Nil(t, err, "Failed to connect to processing platform")
+	contractClient := contractpb.NewContractGrpcServiceClient(grpcConnection)
+
+	// Create update request
+	updateRequest := &contractpb.UpdateContractGrpcRequest{
+		Tenant:          tenant,
+		Id:              contractId,
+		InvoiceEmailTo:  "to@gmail.com",
+		InvoiceEmailCc:  []string{"cc1@gmail.com", "cc2@gmail.com"},
+		InvoiceEmailBcc: []string{"bcc1@gmail.com", "bcc2@gmail.com"},
+		SourceFields: &commonpb.SourceFields{
+			Source:    constants.SourceOpenline,
+			AppSource: "event-processing-platform",
+		},
+		FieldsMask: []contractpb.ContractFieldMask{
+			contractpb.ContractFieldMask_CONTRACT_FIELD_INVOICE_EMAIL_TO,
+			contractpb.ContractFieldMask_CONTRACT_FIELD_INVOICE_EMAIL_CC,
+			contractpb.ContractFieldMask_CONTRACT_FIELD_INVOICE_EMAIL_BCC,
+		},
+	}
+
+	// Execute update contract request
+	response, err := contractClient.UpdateContract(ctx, updateRequest)
+	require.Nil(t, err, "Failed to update contract")
+
+	// Assert response
+	require.NotNil(t, response)
+	require.Equal(t, contractId, response.Id)
+
+	// Retrieve and assert events
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+	contractEvents := eventsMap[contractAggregate.ID]
+	require.Equal(t, 1, len(contractEvents))
+
+	require.Equal(t, event.ContractUpdateV1, contractEvents[0].GetEventType())
+
+	var eventData event.ContractUpdateEvent
+	err = contractEvents[0].GetJsonData(&eventData)
+	require.Nil(t, err, "Failed to unmarshal event data")
+
+	// Assert event data
+	require.Equal(t, []string{
+		event.FieldMaskInvoiceEmail,
+		event.FieldMaskInvoiceEmailCC,
+		event.FieldMaskInvoiceEmailBCC}, eventData.FieldsMask)
+	require.Equal(t, "to@gmail.com", eventData.InvoiceEmail)
+	require.Equal(t, []string{"cc1@gmail.com", "cc2@gmail.com"}, eventData.InvoiceEmailCC)
+	require.Equal(t, []string{"bcc1@gmail.com", "bcc2@gmail.com"}, eventData.InvoiceEmailBCC)
+	require.Nil(t, eventData.NextInvoiceDate) // next invoice date was not mentioned in fields mask, hence it should be nil
+}
+
 func TestContractService_SoftDeleteContract(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
