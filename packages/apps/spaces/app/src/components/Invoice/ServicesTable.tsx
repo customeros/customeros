@@ -11,7 +11,7 @@ type ServicesTableProps = {
 export function ServicesTable({ services, currency }: ServicesTableProps) {
   return (
     <div className='w-full'>
-      <div className='flex flex-col w-full '>
+      <div className='flex flex-col w-full'>
         <div className='flex flex-row w-full justify-between border-b border-gray-300 py-2'>
           <div className='w-1/2 text-left text-sm capitalize font-bold'>
             Service
