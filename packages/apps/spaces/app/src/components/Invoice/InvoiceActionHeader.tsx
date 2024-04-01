@@ -2,9 +2,8 @@
 
 import React from 'react';
 
-import { Flex } from '@ui/layout/Flex';
-import { Button } from '@ui/form/Button';
 import { InvoiceStatus } from '@graphql/types';
+import { Button } from '@ui/form/Button/Button';
 import { Download02 } from '@ui/media/icons/Download02';
 import { renderStatusNode } from '@shared/components/Invoice/Cells';
 import { StatusMenuButton } from '@shared/components/Invoice/components/StatusMenuButton';
@@ -27,26 +26,25 @@ export function InvoiceActionHeader({ status, id, number }: InvoiceProps) {
   };
 
   return (
-    <Flex justifyContent='space-between' w='full'>
+    <div className='flex justify-between w-full'>
       {id ? (
         <StatusMenuButton status={status} id={id} />
       ) : (
-        <Flex align='center'>{renderStatusNode(status)}</Flex>
+        <div className='flex items-center'>{renderStatusNode(status)}</div>
       )}
 
-      <Flex>
+      <div className='flex'>
         <Button
           variant='outline'
+          colorScheme='gray'
           size='xs'
-          borderRadius='full'
-          leftIcon={<Download02 boxSize={3} />}
+          className='rounded-full mr-2 bg-white'
+          leftIcon={<Download02 className='size-3' />}
           onClick={handleDownload}
-          mr={2}
-          px={2}
         >
           Download
         </Button>
-      </Flex>
-    </Flex>
+      </div>
+    </div>
   );
 }
