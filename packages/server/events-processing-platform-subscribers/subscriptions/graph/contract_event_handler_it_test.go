@@ -929,12 +929,21 @@ func TestContractEventHandler_OnUpdate_SubsetOfFieldsSet(t *testing.T) {
 			AutoRenew:              true,
 			Check:                  true,
 			DueDays:                60,
+			InvoiceEmail:           "to@gmail.com",
+			InvoiceEmailCC:         []string{"cc1@gmail.com", "cc2@gmail.com"},
+			InvoiceEmailBCC:        []string{"bcc1@gmail.com", "bcc2@gmail.com"},
 		},
 		commonmodel.ExternalSystem{},
 		constants.SourceOpenline,
 		now,
-		[]string{event.FieldMaskAutoRenew, event.FieldMaskCanPayWithCard, event.FieldMaskCheck, event.FieldMaskDueDays,
-			event.FieldMaskCanPayWithBankTransfer})
+		[]string{event.FieldMaskAutoRenew,
+			event.FieldMaskCanPayWithCard,
+			event.FieldMaskCheck,
+			event.FieldMaskDueDays,
+			event.FieldMaskCanPayWithBankTransfer,
+			event.FieldMaskInvoiceEmail,
+			event.FieldMaskInvoiceEmailCC,
+			event.FieldMaskInvoiceEmailBCC})
 	require.Nil(t, err, "failed to create event")
 
 	// EXECUTE
@@ -955,6 +964,9 @@ func TestContractEventHandler_OnUpdate_SubsetOfFieldsSet(t *testing.T) {
 	require.Equal(t, true, contract.AutoRenew)
 	require.Equal(t, true, contract.Check)
 	require.Equal(t, int64(60), contract.DueDays)
+	require.Equal(t, "to@gmail.com", contract.InvoiceEmail)
+	require.Equal(t, []string{"cc1@gmail.com", "cc2@gmail.com"}, contract.InvoiceEmailCC)
+	require.Equal(t, []string{"bcc1@gmail.com", "bcc2@gmail.com"}, contract.InvoiceEmailBCC)
 }
 
 func TestContractEventHandler_OnDeleteV1(t *testing.T) {

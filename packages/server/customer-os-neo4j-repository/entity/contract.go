@@ -40,6 +40,8 @@ type ContractEntity struct {
 	Region                          string
 	OrganizationLegalName           string
 	InvoiceEmail                    string
+	InvoiceEmailCC                  []string
+	InvoiceEmailBCC                 []string
 	InvoiceNote                     string
 	CanPayWithCard                  bool
 	CanPayWithDirectDebit           bool

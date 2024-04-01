@@ -218,7 +218,7 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 		Country:               utils.IfNotNilString(input.Country),
 		Zip:                   utils.IfNotNilString(input.Zip),
 		OrganizationLegalName: utils.IfNotNilString(input.OrganizationLegalName),
-		InvoiceEmail:          utils.IfNotNilString(input.InvoiceEmail),
+		InvoiceEmailTo:        utils.IfNotNilString(input.InvoiceEmail),
 		InvoiceNote:           utils.IfNotNilString(input.InvoiceNote),
 		InvoicingEnabled:      utils.IfNotNilBool(input.BillingEnabled),
 	}
@@ -260,7 +260,15 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 			contractUpdateRequest.OrganizationLegalName = *input.BillingDetails.OrganizationLegalName
 		}
 		if input.BillingDetails.BillingEmail != nil {
-			contractUpdateRequest.InvoiceEmail = *input.BillingDetails.BillingEmail
+			contractUpdateRequest.InvoiceEmailTo = *input.BillingDetails.BillingEmail
+		}
+		if input.BillingDetails.BillingEmailCc != nil {
+			contractUpdateRequest.InvoiceEmailCc = input.BillingDetails.BillingEmailCc
+			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_INVOICE_EMAIL_CC)
+		}
+		if input.BillingDetails.BillingEmailBcc != nil {
+			contractUpdateRequest.InvoiceEmailBcc = input.BillingDetails.BillingEmailBcc
+			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_INVOICE_EMAIL_BCC)
 		}
 		if input.BillingDetails.InvoiceNote != nil {
 			contractUpdateRequest.InvoiceNote = *input.BillingDetails.InvoiceNote
@@ -442,7 +450,7 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_ORGANIZATION_LEGAL_NAME)
 		}
 		if input.InvoiceEmail != nil || (input.BillingDetails != nil && input.BillingDetails.BillingEmail != nil) {
-			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_INVOICE_EMAIL)
+			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_INVOICE_EMAIL_TO)
 		}
 		if input.InvoiceNote != nil || (input.BillingDetails != nil && input.BillingDetails.InvoiceNote != nil) {
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_INVOICE_NOTE)

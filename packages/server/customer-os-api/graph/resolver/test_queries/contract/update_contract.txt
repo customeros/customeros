@@ -31,6 +31,7 @@ contract_Update(
             region: "test region"
             check: true
             dueDays: 7
+            billingEmailCC: ["cc1","cc2"]
         }
     }
   ) {

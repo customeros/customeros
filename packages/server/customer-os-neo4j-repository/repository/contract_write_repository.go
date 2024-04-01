@@ -66,6 +66,8 @@ type ContractUpdateFields struct {
 	Zip                          string                 `json:"zip"`
 	OrganizationLegalName        string                 `json:"organizationLegalName"`
 	InvoiceEmail                 string                 `json:"invoiceEmail"`
+	InvoiceEmailCC               []string               `json:"invoiceEmailCC"`
+	InvoiceEmailBCC              []string               `json:"invoiceEmailBCC"`
 	InvoiceNote                  string                 `json:"invoiceNote"`
 	InvoicingEnabled             bool                   `json:"invoicingEnabled"`
 	PayOnline                    bool                   `json:"payOnline"`
@@ -96,6 +98,8 @@ type ContractUpdateFields struct {
 	UpdateZip                    bool                   `json:"updateZip"`
 	UpdateOrganizationLegalName  bool                   `json:"updateOrganizationLegalName"`
 	UpdateInvoiceEmail           bool                   `json:"updateInvoiceEmail"`
+	UpdateInvoiceEmailCC         bool                   `json:"UpdateInvoiceEmailCC"`
+	UpdateInvoiceEmailBCC        bool                   `json:"UpdateInvoiceEmailBCC"`
 	UpdateInvoiceNote            bool                   `json:"updateInvoiceNote"`
 	UpdateCanPayWithCard         bool                   `json:"updateCanPayWithCard"`
 	UpdateCanPayWithDirectDebit  bool                   `json:"updateCanPayWithDirectDebit"`
@@ -312,6 +316,14 @@ func (r *contractWriteRepository) UpdateContract(ctx context.Context, tenant, co
 	if data.UpdateInvoiceEmail {
 		cypher += `, ct.invoiceEmail = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $invoiceEmail ELSE ct.invoiceEmail END `
 		params["invoiceEmail"] = data.InvoiceEmail
+	}
+	if data.UpdateInvoiceEmailCC {
+		cypher += `, ct.invoiceEmailCC = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $invoiceEmailCC ELSE ct.invoiceEmailCC END `
+		params["invoiceEmailCC"] = data.InvoiceEmailCC
+	}
+	if data.UpdateInvoiceEmailBCC {
+		cypher += `, ct.invoiceEmailBCC = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $invoiceEmailBCC ELSE ct.invoiceEmailBCC END `
+		params["invoiceEmailBCC"] = data.InvoiceEmailBCC
 	}
 	if data.UpdateInvoiceNote {
 		cypher += `, ct.invoiceNote = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $invoiceNote ELSE ct.invoiceNote END `

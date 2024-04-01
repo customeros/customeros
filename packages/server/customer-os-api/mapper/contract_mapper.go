@@ -31,6 +31,8 @@ func MapEntityToContract(entity *neo4jentity.ContractEntity) *model.Contract {
 			PostalCode:             utils.ToPtr(entity.Zip),
 			OrganizationLegalName:  utils.ToPtr(entity.OrganizationLegalName),
 			BillingEmail:           utils.ToPtr(entity.InvoiceEmail),
+			BillingEmailCc:         entity.InvoiceEmailCC,
+			BillingEmailBcc:        entity.InvoiceEmailBCC,
 			InvoiceNote:            utils.ToPtr(entity.InvoiceNote),
 			CanPayWithCard:         utils.ToPtr(entity.CanPayWithCard),
 			CanPayWithDirectDebit:  utils.ToPtr(entity.CanPayWithDirectDebit),
