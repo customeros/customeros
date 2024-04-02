@@ -77,7 +77,9 @@ export const ServiceLineItemRow = ({
     if (!data) return handleChange('serviceStarted', false);
     const date = new Date(data);
 
-    const normalizedDate = new Date(DateTimeUtils.toISOMidnight(date));
+    const normalizedDate = new Date(
+      Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
+    );
     handleChange('serviceStarted', normalizedDate);
   };
 
