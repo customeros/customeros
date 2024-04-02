@@ -73,9 +73,7 @@ export const RenewalLikelihoodFilter = <T,>({
           isChecked={filter.value.includes(
             OpportunityRenewalLikelihood.HighRenewal,
           )}
-          onChange={() =>
-            handleSelect(OpportunityRenewalLikelihood.HighRenewal)
-          }
+          onChange={handleSelect(OpportunityRenewalLikelihood.HighRenewal)}
         >
           <span className='text-sm'>High</span>
         </Checkbox>
@@ -83,9 +81,7 @@ export const RenewalLikelihoodFilter = <T,>({
           isChecked={filter.value.includes(
             OpportunityRenewalLikelihood.MediumRenewal,
           )}
-          onChange={() =>
-            handleSelect(OpportunityRenewalLikelihood.MediumRenewal)
-          }
+          onChange={handleSelect(OpportunityRenewalLikelihood.MediumRenewal)}
         >
           <span className='text-sm'>Medium</span>
         </Checkbox>
@@ -93,7 +89,7 @@ export const RenewalLikelihoodFilter = <T,>({
           isChecked={filter.value.includes(
             OpportunityRenewalLikelihood.LowRenewal,
           )}
-          onChange={() => handleSelect(OpportunityRenewalLikelihood.LowRenewal)}
+          onChange={handleSelect(OpportunityRenewalLikelihood.LowRenewal)}
         >
           <span className='text-sm'>Low</span>
         </Checkbox>
@@ -101,9 +97,7 @@ export const RenewalLikelihoodFilter = <T,>({
           isChecked={filter.value.includes(
             OpportunityRenewalLikelihood.ZeroRenewal,
           )}
-          onChange={() =>
-            handleSelect(OpportunityRenewalLikelihood.ZeroRenewal)
-          }
+          onChange={handleSelect(OpportunityRenewalLikelihood.ZeroRenewal)}
         >
           <span className='text-sm'>Zero</span>
         </Checkbox>
