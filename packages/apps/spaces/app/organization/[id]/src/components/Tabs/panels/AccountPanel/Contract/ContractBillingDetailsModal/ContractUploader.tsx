@@ -191,7 +191,7 @@ export const ContractUploader = ({ contractId }: ContractUploaderProps) => {
         {isDragging ? (
           <div className='p-4 border border-dashed border-gray-300 rounded-lg text-center'>
             <p className='text-xs text-gray-500'>
-              Drag and drop attachments here
+              Drag and drop documents here
             </p>
           </div>
         ) : (
