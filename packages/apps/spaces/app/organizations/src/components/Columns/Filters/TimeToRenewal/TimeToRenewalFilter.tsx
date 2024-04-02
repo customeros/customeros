@@ -6,10 +6,8 @@ import addDays from 'date-fns/addDays';
 import { useRecoilValue } from 'recoil';
 import { Column } from '@tanstack/react-table';
 
-import { VStack } from '@ui/layout/Stack';
-import { Text } from '@ui/typography/Text';
 import { Organization } from '@graphql/types';
-import { Radio, RadioGroup } from '@ui/form/Radio';
+import { Radio, RadioGroup } from '@ui/form/Radio/Radio2';
 
 import { FilterHeader, useFilterToggle } from '../shared';
 import {
@@ -76,22 +74,21 @@ export const TimeToRenewalFilter = ({
       />
       <RadioGroup
         name='timeToRenewal'
-        colorScheme='primary'
         value={filter.value}
-        onChange={handleChange}
-        isDisabled={!filter.isActive}
+        onValueChange={handleChange}
+        disabled={!filter.isActive}
       >
-        <VStack spacing={2} align='flex-start'>
+        <div className='gap-2 flex flex-col items-start'>
           <Radio value={week}>
-            <Text fontSize='sm'>Next 7 days</Text>
+            <label className='text-sm'>Next 7 days</label>
           </Radio>
           <Radio value={month}>
-            <Text fontSize='sm'>Next 30 days</Text>
+            <label className='text-sm'>Next 30 days</label>
           </Radio>
           <Radio value={quarter}>
-            <Text fontSize='sm'>Next 90 days</Text>
+            <label className='text-sm'>Next 90 days</label>
           </Radio>
-        </VStack>
+        </div>
       </RadioGroup>
     </>
   );

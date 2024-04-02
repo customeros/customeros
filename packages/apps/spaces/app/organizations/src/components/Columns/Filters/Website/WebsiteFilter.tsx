@@ -1,19 +1,12 @@
 'use client';
-import {
-  useState,
-  useEffect,
-  RefObject,
-  useCallback,
-  ChangeEvent,
-} from 'react';
+import { useState, useEffect, RefObject, useCallback } from 'react';
 
 import { produce } from 'immer';
 import { useRecoilValue } from 'recoil';
 import { Column } from '@tanstack/react-table';
 
-import { Text } from '@ui/typography/Text';
-import { Checkbox } from '@ui/form/Checkbox';
 import { Organization } from '@graphql/types';
+import { Checkbox } from '@ui/form/Checkbox/Checkbox2';
 
 import { useWebsiteFilter, WebsiteFilterSelector } from './WebsiteFilter.atom';
 import { FilterHeader, useFilterToggle, DebouncedSearchInput } from '../shared';
@@ -73,9 +66,7 @@ export const WebsiteFilter = ({
   );
 
   const handleShowEmpty = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => {
-      const isChecked = event.target.checked;
-
+    (isChecked: boolean) => {
       setFilter((prev) => {
         const next = produce(prev, (draft) => {
           draft.showEmpty = isChecked;
@@ -111,12 +102,13 @@ export const WebsiteFilter = ({
       />
 
       <Checkbox
-        mt='2'
+        className='mt-2'
         size='md'
-        onChange={handleShowEmpty}
+        onChange={(isChecked) => handleShowEmpty(isChecked as boolean)}
         isChecked={filter.showEmpty}
+        labelProps={{ className: 'text-sm mt-2' }}
       >
-        <Text fontSize='sm'>Unknown</Text>
+        Unknown
       </Checkbox>
     </>
   );

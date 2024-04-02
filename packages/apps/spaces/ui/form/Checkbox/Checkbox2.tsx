@@ -64,7 +64,7 @@ export const Checkbox = forwardRef<HTMLButtonElement, CheckboxProps>(
     ref,
   ) => {
     return (
-      <div className='flex items-center'>
+      <div className='flex items-center gap-2'>
         <RadixCheckbox.Root
           ref={ref}
           {...props}
