@@ -70,8 +70,26 @@ export const ContractSubtitle = ({ data }: { data: Contract }) => {
     (e) => e.value === data?.contractRenewalCycle,
   )?.label;
 
+  if (
+    !renewalPeriod &&
+    !hasStartedService &&
+    !serviceStartDate &&
+    data?.contractRenewalCycle
+  ) {
+    return (
+      <p className='font-normal shadow-none text-sm  text-gray-500 focus:text-gray-500 hover:text-gray-500 hover:no-underline focus:no-underline'>
+        Contract starting...
+        <span className='underline ml-1'> Edit contract</span>
+      </p>
+    );
+  }
   if (!hasStartedService && !serviceStartDate && data?.contractRenewalCycle) {
-    return <Text>{renewalPeriod} contract starting ... Edit contract</Text>;
+    return (
+      <p className='font-normal shadow-none text-sm  text-gray-500 focus:text-gray-500 hover:text-gray-500 hover:no-underline focus:no-underline'>
+        {renewalPeriod} contract starting ...
+        <span className='underline ml-1'> Edit contract</span>
+      </p>
+    );
   }
   if (!hasStartedService && serviceStartDate && data?.contractRenewalCycle) {
     return (

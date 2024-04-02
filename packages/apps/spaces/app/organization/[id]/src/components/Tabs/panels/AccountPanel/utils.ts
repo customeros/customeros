@@ -78,7 +78,7 @@ export const currencyOptions: SelectOption<string>[] = [
 ];
 
 export const autorenewalOptions = [
-  { label: 'Does auto-renew', value: true },
+  { label: 'Auto-renews', value: true },
   { label: 'Does not auto-renew', value: false },
 ];
 export const paymentDueOptions: SelectOption<number>[] = [

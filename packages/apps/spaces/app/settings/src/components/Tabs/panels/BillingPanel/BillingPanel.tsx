@@ -367,6 +367,7 @@ export const BillingPanel = () => {
               }
               sendInvoicesFrom={state.values?.sendInvoicesFrom}
               country={state.values?.country}
+              legalName={state.values?.legalName}
             />
           )}
         </div>

@@ -23,12 +23,13 @@ export const PaymentDetailsPopover: FC<PaymentDetailsPopoverProps> = ({
 }) => {
   return (
     <Popover placement='bottom' trigger='hover'>
-      <PopoverTrigger>{children}</PopoverTrigger>
+      <PopoverTrigger>
+        <div className='w-full'>{children}</div>
+      </PopoverTrigger>
       <PopoverContent
         width='fit-content'
         bg='gray.700'
         color='white'
-        mt={4}
         borderRadius='md'
         boxShadow='none'
         border='none'

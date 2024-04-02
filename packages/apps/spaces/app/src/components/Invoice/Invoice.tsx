@@ -203,7 +203,7 @@ export function Invoice({
             </a>
           </span>
         )}
-        <div className='flex items-center py-2 border-gray-300'>
+        <div className='flex items-center py-2 mt-2 border-t border-gray-300'>
           <div className='mr-2'>
             <Image
               src={logoCustomerOs}
