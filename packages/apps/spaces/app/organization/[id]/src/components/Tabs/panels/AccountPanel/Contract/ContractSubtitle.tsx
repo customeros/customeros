@@ -3,7 +3,6 @@ import React, { useMemo } from 'react';
 import { utcToZonedTime } from 'date-fns-tz';
 
 import { Text } from '@ui/typography/Text';
-import { Button } from '@ui/form/Button/Button';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { Contract, ContractRenewalCycle } from '@graphql/types';
 import { billingFrequencyOptions } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
@@ -84,28 +83,18 @@ export const ContractSubtitle = ({
     data?.contractRenewalCycle
   ) {
     return (
-      <Button
-        variant='link'
-        size='xs'
-        colorScheme='gray'
-        className='pl-0 font-normal shadow-none text-sm  text-gray-500 focus:text-gray-500 hover:text-gray-500 hover:no-underline focus:no-underline'
-      >
+      <p className='font-normal shadow-none text-sm  text-gray-500 focus:text-gray-500 hover:text-gray-500 hover:no-underline focus:no-underline'>
         Contract starting...
-        <span className='underline'> Edit contract</span>
-      </Button>
+        <span className='underline ml-1'> Edit contract</span>
+      </p>
     );
   }
   if (!hasStartedService && !serviceStartDate && data?.contractRenewalCycle) {
     return (
-      <Button
-        variant='link'
-        size='xs'
-        colorScheme='gray'
-        className='pl-0 font-normal shadow-none text-sm  text-gray-500 focus:text-gray-500 hover:text-gray-500 hover:no-underline focus:no-underline'
-      >
+      <p className='font-normal shadow-none text-sm  text-gray-500 focus:text-gray-500 hover:text-gray-500 hover:no-underline focus:no-underline'>
         {renewalPeriod} contract starting ...
-        <span className='underline'> Edit contract</span>
-      </Button>
+        <span className='underline ml-1'> Edit contract</span>
+      </p>
     );
   }
   if (!hasStartedService && serviceStartDate && data?.contractRenewalCycle) {
