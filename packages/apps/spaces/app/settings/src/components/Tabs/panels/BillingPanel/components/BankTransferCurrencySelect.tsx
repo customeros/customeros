@@ -74,6 +74,8 @@ export const BankTransferCurrencySelect = ({
             ...props,
             w: '100%',
             overflow: 'visible',
+            minWidth: '100px',
+
             willChange: 'width',
             transition: 'width 0.2s',
             _hover: { cursor: 'pointer' },

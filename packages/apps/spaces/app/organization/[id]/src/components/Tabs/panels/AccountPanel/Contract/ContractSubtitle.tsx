@@ -3,11 +3,18 @@ import React, { useMemo } from 'react';
 import { utcToZonedTime } from 'date-fns-tz';
 
 import { Text } from '@ui/typography/Text';
+import { Button } from '@ui/form/Button/Button';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { Contract, ContractRenewalCycle } from '@graphql/types';
 import { billingFrequencyOptions } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 
-export const ContractSubtitle = ({ data }: { data: Contract }) => {
+export const ContractSubtitle = ({
+  data,
+  onOpenContract,
+}: {
+  data: Contract;
+  onOpenContract: () => void;
+}) => {
   const serviceStarted = data?.serviceStarted
     ? utcToZonedTime(data?.serviceStarted, 'UTC').toUTCString()
     : null;
@@ -70,8 +77,41 @@ export const ContractSubtitle = ({ data }: { data: Contract }) => {
     (e) => e.value === data?.contractRenewalCycle,
   )?.label;
 
+  if (
+    !renewalPeriod &&
+    !hasStartedService &&
+    !serviceStartDate &&
+    data?.contractRenewalCycle
+  ) {
+    return (
+      <Text>
+        Contract starting ...
+        <Button
+          variant='link'
+          size='xs'
+          colorScheme='gray'
+          className='font-normal shadow-none text-sm underline text-gray-500 focus:text-gray-500 hover:text-gray-500'
+        >
+          Edit contract
+        </Button>
+      </Text>
+    );
+  }
+
   if (!hasStartedService && !serviceStartDate && data?.contractRenewalCycle) {
-    return <Text>{renewalPeriod} contract starting ... Edit contract</Text>;
+    return (
+      <Text>
+        {renewalPeriod} contract starting ...
+        <Button
+          variant='link'
+          size='xs'
+          colorScheme='gray'
+          className='font-normal shadow-none text-sm underline text-gray-500 focus:text-gray-500 hover:text-gray-500'
+        >
+          Edit contract
+        </Button>
+      </Text>
+    );
   }
   if (!hasStartedService && serviceStartDate && data?.contractRenewalCycle) {
     return (

@@ -122,6 +122,10 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
             ...props,
             color: 'gray.400',
           }),
+          menu: (props) => ({
+            ...props,
+            zIndex: 6,
+          }),
           menuList: (props, state) => ({
             ...props,
             padding: '2',

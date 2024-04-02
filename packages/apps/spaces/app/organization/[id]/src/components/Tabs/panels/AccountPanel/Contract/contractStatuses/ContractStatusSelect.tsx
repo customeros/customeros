@@ -84,6 +84,7 @@ export const ContractStatusSelect: React.FC<ContractStatusSelectProps> = ({
         icon = <XSquare color='gray.500' mr={1} />;
         text = 'End contract...';
         break;
+      case ContractStatus.Draft:
       case ContractStatus.Ended:
         icon = <DotLive color='gray.500' mr={1} />;
         text = 'Make live';

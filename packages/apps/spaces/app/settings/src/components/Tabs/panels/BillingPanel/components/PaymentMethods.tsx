@@ -14,7 +14,13 @@ import { toastError } from '@ui/presentation/Toast';
 import { Divider } from '@ui/presentation/Divider/Divider';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 
-export const PaymentMethods = ({ formId }: { formId: string }) => {
+export const PaymentMethods = ({
+  formId,
+  legalName,
+}: {
+  formId: string;
+  legalName?: string | null;
+}) => {
   const client = getGraphQLClient();
   const { data } = useGetExternalSystemInstancesQuery(client);
   const iApp = useIntegrationApp();
@@ -79,7 +85,7 @@ export const PaymentMethods = ({ formId }: { formId: string }) => {
         )}
       </div>
 
-      <BankTransferAccountList formId={formId} />
+      <BankTransferAccountList formId={formId} legalName={legalName} />
     </>
   );
 };

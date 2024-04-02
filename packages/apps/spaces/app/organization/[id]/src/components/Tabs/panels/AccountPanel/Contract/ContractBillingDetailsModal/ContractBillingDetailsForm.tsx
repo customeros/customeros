@@ -347,7 +347,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
                 }}
                 label={
                   <Text fontSize='sm' fontWeight='normal' whiteSpace='nowrap'>
-                    Online payment via Stripe
+                    Pay online via Stripe
                   </Text>
                 }
               />

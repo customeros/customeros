@@ -42,8 +42,10 @@ export const TenantBillingPanelDetailsForm = ({
   formId,
   sendInvoicesFrom,
   country,
+  legalName,
 }: {
   formId: string;
+  legalName?: string | null;
   sendInvoicesFrom?: string;
   country?: SelectOption<string> | null;
   setIsInvoiceProviderFocused: (newState: boolean) => void;
@@ -226,7 +228,7 @@ export const TenantBillingPanelDetailsForm = ({
           type='email'
         />
       </div>
-      <PaymentMethods formId={formId} />
+      <PaymentMethods formId={formId} legalName={legalName} />
       <FormSwitch
         size='sm'
         name='check'
