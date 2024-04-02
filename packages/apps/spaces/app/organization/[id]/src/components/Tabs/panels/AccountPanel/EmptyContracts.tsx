@@ -51,7 +51,7 @@ export const EmptyContracts: FC<
         },
         createdBy: [session?.user] as unknown as User,
         externalLinks: [],
-        contractRenewalCycle: ContractRenewalCycle.None,
+        contractRenewalCycle: ContractRenewalCycle.MonthlyRenewal,
         contractName: `${name?.length ? `${name}'s` : "Unnamed's"} contract`,
         owner: null,
         contractStatus: ContractStatus.Draft,
@@ -117,6 +117,7 @@ export const EmptyContracts: FC<
                 organizationId: id,
                 currency: baseCurrency,
                 name: `${name?.length ? `${name}'s` : "Unnamed's"} contract`,
+                contractRenewalCycle: ContractRenewalCycle.MonthlyRenewal,
               },
             })
           }
