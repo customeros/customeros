@@ -60,7 +60,7 @@ func (s *timelineEventService) GetTimelineEventsForContact(ctx context.Context, 
 		startingDate = *from
 	}
 
-	dbNodes, err := s.repositories.TimelineEventRepository.GetTimelineEventsForContact(ctx, common.GetContext(ctx).Tenant, contactId, startingDate, size, nodeLabels)
+	dbNodes, err := s.repositories.Neo4jRepositories.TimelineEventReadRepository.GetTimelineEventsForContact(ctx, common.GetContext(ctx).Tenant, contactId, startingDate, size, nodeLabels)
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +91,7 @@ func (s *timelineEventService) GetTimelineEventsForOrganization(ctx context.Cont
 		startingDate = *from
 	}
 
-	dbNodes, err := s.repositories.TimelineEventRepository.GetTimelineEventsForOrganization(ctx, common.GetContext(ctx).Tenant, organizationId, startingDate, size, nodeLabels)
+	dbNodes, err := s.repositories.Neo4jRepositories.TimelineEventReadRepository.GetTimelineEventsForOrganization(ctx, common.GetContext(ctx).Tenant, organizationId, startingDate, size, nodeLabels)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +111,7 @@ func (s *timelineEventService) GetTimelineEventsTotalCountForContact(ctx context
 		nodeLabels = append(nodeLabels, entity.NodeLabelsByTimelineEventType[v.String()])
 	}
 
-	count, err := s.repositories.TimelineEventRepository.GetTimelineEventsTotalCountForContact(ctx, common.GetContext(ctx).Tenant, contactId, nodeLabels)
+	count, err := s.repositories.Neo4jRepositories.TimelineEventReadRepository.GetTimelineEventsTotalCountForContact(ctx, common.GetContext(ctx).Tenant, contactId, nodeLabels)
 	if err != nil {
 		return int64(0), err
 	}
@@ -130,7 +130,7 @@ func (s *timelineEventService) GetTimelineEventsTotalCountForOrganization(ctx co
 		nodeLabels = append(nodeLabels, entity.NodeLabelsByTimelineEventType[v.String()])
 	}
 
-	count, err := s.repositories.TimelineEventRepository.GetTimelineEventsTotalCountForOrganization(ctx, common.GetContext(ctx).Tenant, organizationId, nodeLabels)
+	count, err := s.repositories.Neo4jRepositories.TimelineEventReadRepository.GetTimelineEventsTotalCountForOrganization(ctx, common.GetContext(ctx).Tenant, organizationId, nodeLabels)
 	if err != nil {
 		return int64(0), err
 	}
@@ -177,7 +177,7 @@ func (s *timelineEventService) GetTimelineEventsWithIds(ctx context.Context, ids
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("ids", ids))
 
-	dbNodes, err := s.repositories.TimelineEventRepository.GetTimelineEventsWithIds(ctx, common.GetTenantFromContext(ctx), ids)
+	dbNodes, err := s.repositories.Neo4jRepositories.TimelineEventReadRepository.GetTimelineEventsWithIds(ctx, common.GetTenantFromContext(ctx), ids)
 	if err != nil {
 		return nil, err
 	}
