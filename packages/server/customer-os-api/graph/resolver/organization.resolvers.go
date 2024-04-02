@@ -1128,6 +1128,12 @@ func (r *queryResolver) Organizations(ctx context.Context, pagination *model.Pag
 		pagination = &model.Pagination{Page: 0, Limit: 0}
 	}
 	span.LogFields(log.Int("request.pagination.page", pagination.Page), log.Int("request.pagination.limit", pagination.Limit))
+	if where != nil {
+		tracing.LogObjectAsJson(span, "request.where", *where)
+	}
+	if sort != nil {
+		tracing.LogObjectAsJson(span, "request.sort", sort)
+	}
 
 	paginatedResult, err := r.Services.OrganizationService.FindAll(ctx, pagination.Page, pagination.Limit, where, sort)
 	if err != nil {

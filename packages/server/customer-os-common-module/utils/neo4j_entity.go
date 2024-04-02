@@ -14,6 +14,7 @@ const (
 )
 
 func GetPropertyDetailsByLookupName(T reflect.Type, lookupName string) (map[string]string, error) {
+	lookupName = strings.ToUpper(lookupName)
 	for i := 0; i < T.NumField(); i++ {
 		structField := T.Field(i)
 
@@ -45,5 +46,5 @@ func GetPropertyDetailsByLookupName(T reflect.Type, lookupName string) (map[stri
 			}
 		}
 	}
-	return nil, fmt.Errorf("Given field %s not found", lookupName)
+	return nil, fmt.Errorf("given field %s not found", lookupName)
 }
