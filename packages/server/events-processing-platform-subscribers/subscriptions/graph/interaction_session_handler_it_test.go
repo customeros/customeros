@@ -44,7 +44,7 @@ func TestGraphInteractionSessionEventHandler_OnCreate(t *testing.T) {
 		Type:        "test type",
 	}, commonmodel.Source{
 		Source:        constants.SourceOpenline,
-		AppSource:     constants.AppSourceEventProcessingPlatform,
+		AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
 		SourceOfTruth: constants.SourceOpenline,
 	}, commonmodel.ExternalSystem{
 		ExternalSystemId: "sf",
@@ -82,7 +82,7 @@ func TestGraphInteractionSessionEventHandler_OnCreate(t *testing.T) {
 	require.Equal(t, "test type", interactionEvent.Type)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), interactionEvent.Source)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), interactionEvent.SourceOfTruth)
-	require.Equal(t, constants.AppSourceEventProcessingPlatform, interactionEvent.AppSource)
+	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, interactionEvent.AppSource)
 	require.Equal(t, now, interactionEvent.CreatedAt)
 	require.Equal(t, now, interactionEvent.UpdatedAt)
 

@@ -216,7 +216,7 @@ func (h *OpportunityEventHandler) OnUpdateNextCycleDate(ctx context.Context, evt
 			return h.grpcClients.ContractClient.RefreshContractStatus(ctx, &contractpb.RefreshContractStatusGrpcRequest{
 				Tenant:    eventData.Tenant,
 				Id:        contractEntity.Id,
-				AppSource: constants.AppSourceEventProcessingPlatform,
+				AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 			})
 		})
 		if err != nil {
@@ -247,7 +247,7 @@ func (h *OpportunityEventHandler) sendEventToUpdateOrganizationRenewalSummary(ct
 		return h.grpcClients.OrganizationClient.RefreshRenewalSummary(ctx, &organizationpb.RefreshRenewalSummaryGrpcRequest{
 			Tenant:         tenant,
 			OrganizationId: organization.ID,
-			AppSource:      constants.AppSourceEventProcessingPlatform,
+			AppSource:      constants.AppSourceEventProcessingPlatformSubscribers,
 		})
 	})
 	if err != nil {
@@ -331,7 +331,7 @@ func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 			return h.grpcClients.OrganizationClient.RefreshArr(ctx, &organizationpb.OrganizationIdGrpcRequest{
 				Tenant:         eventData.Tenant,
 				OrganizationId: organization.ID,
-				AppSource:      constants.AppSourceEventProcessingPlatform,
+				AppSource:      constants.AppSourceEventProcessingPlatformSubscribers,
 			})
 		})
 		if err != nil {
@@ -434,7 +434,7 @@ func (h *OpportunityEventHandler) OnUpdateRenewal(ctx context.Context, evt event
 			return h.grpcClients.OrganizationClient.RefreshArr(ctx, &organizationpb.OrganizationIdGrpcRequest{
 				Tenant:         eventData.Tenant,
 				OrganizationId: organization.ID,
-				AppSource:      constants.AppSourceEventProcessingPlatform,
+				AppSource:      constants.AppSourceEventProcessingPlatformSubscribers,
 			})
 		})
 		if err != nil {
@@ -540,6 +540,6 @@ func (h *OpportunityEventHandler) saveLikelihoodChangeAction(ctx context.Context
 	extraActionProperties := map[string]interface{}{
 		"comments": eventData.Comments,
 	}
-	_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, contractId, neo4jenum.CONTRACT, neo4jenum.ActionRenewalLikelihoodUpdated, message, metadata, eventData.UpdatedAt, extraActionProperties)
+	_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, contractId, neo4jenum.CONTRACT, neo4jenum.ActionRenewalLikelihoodUpdated, message, metadata, eventData.UpdatedAt, constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
 	return err
 }

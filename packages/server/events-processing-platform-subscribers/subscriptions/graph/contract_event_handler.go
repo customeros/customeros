@@ -131,7 +131,7 @@ func (h *ContractEventHandler) OnCreate(ctx context.Context, evt eventstore.Even
 				ContractId: contractId,
 				SourceFields: &commonpb.SourceFields{
 					Source:    eventData.Source.Source,
-					AppSource: constants.AppSourceEventProcessingPlatform,
+					AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 				},
 			})
 		})
@@ -292,7 +292,7 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 			return h.grpcClients.OrganizationClient.RefreshRenewalSummary(ctx, &organizationpb.RefreshRenewalSummaryGrpcRequest{
 				Tenant:         eventData.Tenant,
 				OrganizationId: organization.ID,
-				AppSource:      constants.AppSourceEventProcessingPlatform,
+				AppSource:      constants.AppSourceEventProcessingPlatformSubscribers,
 			})
 		})
 		if err != nil {
@@ -303,7 +303,7 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 			return h.grpcClients.OrganizationClient.RefreshArr(ctx, &organizationpb.OrganizationIdGrpcRequest{
 				Tenant:         eventData.Tenant,
 				OrganizationId: organization.ID,
-				AppSource:      constants.AppSourceEventProcessingPlatform,
+				AppSource:      constants.AppSourceEventProcessingPlatformSubscribers,
 			})
 		})
 		if err != nil {
@@ -384,7 +384,7 @@ func (h *ContractEventHandler) OnRolloutRenewalOpportunity(ctx context.Context, 
 				return h.grpcClients.OpportunityClient.CloseWinOpportunity(ctx, &opportunitypb.CloseWinOpportunityGrpcRequest{
 					Tenant:    eventData.Tenant,
 					Id:        currentOpportunity.Id,
-					AppSource: constants.AppSourceEventProcessingPlatform,
+					AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 				})
 			})
 			if err != nil {
@@ -399,7 +399,7 @@ func (h *ContractEventHandler) OnRolloutRenewalOpportunity(ctx context.Context, 
 				ContractId: contractId,
 				SourceFields: &commonpb.SourceFields{
 					Source:    constants.SourceOpenline,
-					AppSource: constants.AppSourceEventProcessingPlatform,
+					AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 				},
 			})
 		})
@@ -414,7 +414,7 @@ func (h *ContractEventHandler) OnRolloutRenewalOpportunity(ctx context.Context, 
 	})
 	message := contractEntity.Name + " renewed"
 
-	_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.Create(ctx, eventData.Tenant, contractId, neo4jenum.CONTRACT, neo4jenum.ActionContractRenewed, message, metadata, utils.Now())
+	_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.Create(ctx, eventData.Tenant, contractId, neo4jenum.CONTRACT, neo4jenum.ActionContractRenewed, message, metadata, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Failed creating renewed action for contract %s: %s", contractId, err.Error())
@@ -450,7 +450,7 @@ func (h *ContractEventHandler) createActionForStatusChange(ctx context.Context, 
 	case string(neo4jenum.ContractStatusOutOfContract):
 		message = contractName + " is now out of contract"
 	}
-	_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.Create(ctx, tenant, contractId, neo4jenum.CONTRACT, neo4jenum.ActionContractStatusUpdated, message, metadata, utils.Now())
+	_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.Create(ctx, tenant, contractId, neo4jenum.CONTRACT, neo4jenum.ActionContractStatusUpdated, message, metadata, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Failed creating status update action for contract %s: %s", contractId, err.Error())
@@ -486,7 +486,7 @@ func (h *ContractEventHandler) startOnboardingIfEligible(ctx context.Context, te
 				OrganizationId:     organization.ID,
 				CausedByContractId: contractEntity.Id,
 				OnboardingStatus:   organizationpb.OnboardingStatus_ONBOARDING_STATUS_NOT_STARTED,
-				AppSource:          constants.AppSourceEventProcessingPlatform,
+				AppSource:          constants.AppSourceEventProcessingPlatformSubscribers,
 			})
 		})
 		if err != nil {
@@ -520,7 +520,7 @@ func (h *ContractEventHandler) generateNextPreviewInvoice(ctx context.Context, t
 			return h.grpcClients.InvoiceClient.NextPreviewInvoiceForContract(ctx, &invoicepb.NextPreviewInvoiceForContractRequest{
 				Tenant:     tenant,
 				ContractId: contractId,
-				AppSource:  constants.AppSourceEventProcessingPlatform,
+				AppSource:  constants.AppSourceEventProcessingPlatformSubscribers,
 			})
 		})
 		if err != nil {
@@ -570,7 +570,7 @@ func (h *ContractEventHandler) OnDeleteV1(ctx context.Context, evt eventstore.Ev
 		return h.grpcClients.OrganizationClient.RefreshRenewalSummary(ctx, &organizationpb.RefreshRenewalSummaryGrpcRequest{
 			Tenant:         eventData.Tenant,
 			OrganizationId: organization.ID,
-			AppSource:      constants.AppSourceEventProcessingPlatform,
+			AppSource:      constants.AppSourceEventProcessingPlatformSubscribers,
 		})
 	})
 
@@ -579,7 +579,7 @@ func (h *ContractEventHandler) OnDeleteV1(ctx context.Context, evt eventstore.Ev
 		return h.grpcClients.OrganizationClient.RefreshArr(ctx, &organizationpb.OrganizationIdGrpcRequest{
 			Tenant:         eventData.Tenant,
 			OrganizationId: organization.ID,
-			AppSource:      constants.AppSourceEventProcessingPlatform,
+			AppSource:      constants.AppSourceEventProcessingPlatformSubscribers,
 		})
 	})
 

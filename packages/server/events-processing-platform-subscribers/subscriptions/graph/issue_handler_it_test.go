@@ -41,7 +41,7 @@ func TestGraphIssueEventHandler_OnCreate(t *testing.T) {
 		RefreshLastTouchpoint: func(context context.Context, org *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 			require.Equal(t, tenantName, org.Tenant)
 			require.Equal(t, reporterOrgId, org.OrganizationId)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, org.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, org.AppSource)
 			lastTouchpointInvoked = true
 			return &organizationpb.OrganizationIdGrpcResponse{
 				Id: reporterOrgId,
@@ -68,7 +68,7 @@ func TestGraphIssueEventHandler_OnCreate(t *testing.T) {
 		SubmittedByUserId:         utils.StringPtr(submitterUserId),
 	}, cmnmod.Source{
 		Source:        constants.SourceOpenline,
-		AppSource:     constants.AppSourceEventProcessingPlatform,
+		AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
 		SourceOfTruth: constants.SourceOpenline,
 	}, cmnmod.ExternalSystem{
 		ExternalSystemId: "sf",
@@ -109,7 +109,7 @@ func TestGraphIssueEventHandler_OnCreate(t *testing.T) {
 	require.Equal(t, "high", issue.Priority)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), issue.Source)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), issue.SourceOfTruth)
-	require.Equal(t, constants.AppSourceEventProcessingPlatform, issue.AppSource)
+	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, issue.AppSource)
 	require.Equal(t, now, issue.CreatedAt)
 	require.Equal(t, now, issue.UpdatedAt)
 

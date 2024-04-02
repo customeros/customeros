@@ -43,7 +43,7 @@ func TestGraphCommentEventHandler_OnCreate(t *testing.T) {
 		CommentedIssueId: utils.StringPtr(commentedIssueId),
 	}, commonmodel.Source{
 		Source:        constants.SourceOpenline,
-		AppSource:     constants.AppSourceEventProcessingPlatform,
+		AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
 		SourceOfTruth: constants.SourceOpenline,
 	}, commonmodel.ExternalSystem{
 		ExternalSystemId: externalSystemId,
@@ -75,7 +75,7 @@ func TestGraphCommentEventHandler_OnCreate(t *testing.T) {
 	require.Equal(t, "text", comment.ContentType)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), comment.Source)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), comment.SourceOfTruth)
-	require.Equal(t, constants.AppSourceEventProcessingPlatform, comment.AppSource)
+	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, comment.AppSource)
 	require.Equal(t, now, comment.CreatedAt)
 	require.Equal(t, now, comment.UpdatedAt)
 }

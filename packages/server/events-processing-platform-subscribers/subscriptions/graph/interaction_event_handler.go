@@ -121,7 +121,7 @@ func (h *InteractionEventHandler) OnCreate(ctx context.Context, evt eventstore.E
 			return h.grpcClients.OrganizationClient.RefreshLastTouchpoint(ctx, &organizationpb.OrganizationIdGrpcRequest{
 				Tenant:         eventData.Tenant,
 				OrganizationId: organizationId,
-				AppSource:      constants.AppSourceEventProcessingPlatform,
+				AppSource:      constants.AppSourceEventProcessingPlatformSubscribers,
 			})
 		})
 		if err != nil {
@@ -197,7 +197,7 @@ func (h *InteractionEventHandler) OnSummaryReplace(ctx context.Context, evt even
 
 	interactionEventId := aggregate.GetInteractionEventObjectID(evt.AggregateID, eventData.Tenant)
 	err := h.repositories.Neo4jRepositories.InteractionEventWriteRepository.SetAnalysisForInteractionEvent(ctx, eventData.Tenant, interactionEventId, eventData.Summary,
-		eventData.ContentType, "summary", constants.SourceOpenline, constants.AppSourceEventProcessingPlatform, eventData.UpdatedAt)
+		eventData.ContentType, "summary", constants.SourceOpenline, constants.AppSourceEventProcessingPlatformSubscribers, eventData.UpdatedAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while saving analysis for email interaction event: %v", err)
@@ -231,7 +231,7 @@ func (h *InteractionEventHandler) OnActionItemsReplace(ctx context.Context, evt 
 	var repoError error = nil
 	for _, actionItem := range eventData.ActionItems {
 		err := h.repositories.Neo4jRepositories.InteractionEventWriteRepository.AddActionItemForInteractionEvent(ctx, eventData.Tenant, interactionEventId, actionItem,
-			constants.SourceOpenline, constants.AppSourceEventProcessingPlatform, eventData.UpdatedAt)
+			constants.SourceOpenline, constants.AppSourceEventProcessingPlatformSubscribers, eventData.UpdatedAt)
 		if err != nil {
 			repoError = err
 			tracing.TraceErr(span, err)

@@ -407,7 +407,7 @@ func (h *InvoiceEventHandler) fillOffCyclePrepaidInvoice(ctx context.Context, te
 			return h.grpcClients.InvoiceClient.PermanentlyDeleteDraftInvoice(ctx, &invoicepb.PermanentlyDeleteDraftInvoiceRequest{
 				Tenant:    tenant,
 				InvoiceId: invoiceEntity.Id,
-				AppSource: constants.AppSourceEventProcessingPlatform,
+				AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 			})
 		})
 		if err != nil {
@@ -603,7 +603,7 @@ func (h *InvoiceEventHandler) callFillInvoice(ctx context.Context, tenant, invoi
 			Total:        total,
 			InvoiceLines: invoiceLines,
 			UpdatedAt:    utils.ConvertTimeToTimestampPtr(&now),
-			AppSource:    constants.AppSourceEventProcessingPlatform,
+			AppSource:    constants.AppSourceEventProcessingPlatformSubscribers,
 			Status:       invoiceStatus,
 		})
 	})
@@ -1068,7 +1068,7 @@ func (s *InvoiceEventHandler) callPdfGeneratedInvoice(ctx context.Context, tenan
 			Tenant:           tenant,
 			InvoiceId:        invoiceId,
 			RepositoryFileId: repositoryFileId,
-			AppSource:        constants.AppSourceEventProcessingPlatform,
+			AppSource:        constants.AppSourceEventProcessingPlatformSubscribers,
 		})
 	})
 	if err != nil {

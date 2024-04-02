@@ -134,7 +134,7 @@ func (h *contractHandler) UpdateActiveRenewalOpportunityLikelihood(ctx context.C
 				Id:                opportunityEntity.Id,
 				RenewalLikelihood: renewalLikelihoodForGrpcRequest(renewalLikelihood),
 				SourceFields: &commonpb.SourceFields{
-					AppSource: constants.AppSourceEventProcessingPlatform,
+					AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 				},
 				FieldsMask: []opportunitypb.OpportunityMaskField{opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_RENEWAL_LIKELIHOOD},
 			})
@@ -156,7 +156,7 @@ func (h *contractHandler) updateRenewalNextCycleDate(ctx context.Context, tenant
 			return h.grpcClients.OpportunityClient.CloseLooseOpportunity(ctx, &opportunitypb.CloseLooseOpportunityGrpcRequest{
 				Tenant:    tenant,
 				Id:        renewalOpportunityEntity.Id,
-				AppSource: constants.AppSourceEventProcessingPlatform,
+				AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 			})
 		})
 		if err != nil {
@@ -174,7 +174,7 @@ func (h *contractHandler) updateRenewalNextCycleDate(ctx context.Context, tenant
 			return h.grpcClients.OpportunityClient.UpdateRenewalOpportunityNextCycleDate(ctx, &opportunitypb.UpdateRenewalOpportunityNextCycleDateGrpcRequest{
 				OpportunityId: renewalOpportunityEntity.Id,
 				Tenant:        tenant,
-				AppSource:     constants.AppSourceEventProcessingPlatform,
+				AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
 				RenewedAt:     utils.ConvertTimeToTimestampPtr(renewedAt),
 			})
 		})
@@ -241,7 +241,7 @@ func (h *contractHandler) updateRenewalArr(ctx context.Context, tenant string, c
 			Amount:    currentArr,
 			MaxAmount: maxArr,
 			SourceFields: &commonpb.SourceFields{
-				AppSource: constants.AppSourceEventProcessingPlatform,
+				AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 				Source:    constants.SourceOpenline,
 			},
 			FieldsMask: []opportunitypb.OpportunityMaskField{
@@ -384,7 +384,7 @@ func (h *contractHandler) assertContractAndRenewalOpportunity(ctx context.Contex
 					Tenant:     tenant,
 					ContractId: contractId,
 					SourceFields: &commonpb.SourceFields{
-						AppSource: constants.AppSourceEventProcessingPlatform,
+						AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 					},
 				})
 			})
