@@ -7,13 +7,7 @@ import { DateTimeUtils } from '@spaces/utils/date';
 import { Contract, ContractRenewalCycle } from '@graphql/types';
 import { billingFrequencyOptions } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 
-export const ContractSubtitle = ({
-  data,
-  onOpenContract,
-}: {
-  data: Contract;
-  onOpenContract: () => void;
-}) => {
+export const ContractSubtitle = ({ data }: { data: Contract }) => {
   const serviceStarted = data?.serviceStarted
     ? utcToZonedTime(data?.serviceStarted, 'UTC').toUTCString()
     : null;

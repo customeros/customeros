@@ -437,10 +437,7 @@ export const ContractCard = ({
             alignItems='flex-start'
             justifyContent='flex-start'
           >
-            <ContractSubtitle
-              data={data}
-              onOpenContract={() => setIsExpanded(true)}
-            />
+            <ContractSubtitle data={data} />
           </Flex>
         )}
       </CardHeader>
