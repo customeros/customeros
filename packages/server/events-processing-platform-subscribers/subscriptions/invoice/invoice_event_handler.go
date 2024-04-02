@@ -627,6 +627,7 @@ func (h *InvoiceEventHandler) onInvoicePdfGeneratedV1(ctx context.Context, evt e
 	}
 	tracing.LogObjectAsJson(span, "eventData", eventData)
 	invoiceId := invoice.GetInvoiceObjectID(evt.GetAggregateID(), eventData.Tenant)
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, invoiceId)
 
 	invoiceDbNode, err := h.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoiceById(ctx, eventData.Tenant, invoiceId)
