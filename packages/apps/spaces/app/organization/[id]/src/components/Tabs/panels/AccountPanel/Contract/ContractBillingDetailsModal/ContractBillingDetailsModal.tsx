@@ -288,10 +288,15 @@ export const ContractBillingDetailsModal = ({
     }
   }, [canAllowPayWithBankTransfer]);
 
+  const handleCloseModal = () => {
+    setDefaultValues(defaultValues);
+    onClose();
+  };
+
   return (
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={handleCloseModal}
       initialFocusRef={initialRef}
       size='4xl'
     >
@@ -348,7 +353,7 @@ export const ContractBillingDetailsModal = ({
               <Button
                 variant='outline'
                 colorScheme='gray'
-                onClick={onClose}
+                onClick={handleCloseModal}
                 className='w-full'
                 size='md'
               >
