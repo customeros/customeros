@@ -13,6 +13,7 @@ import (
 	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
 	commonRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/handler"
@@ -20,6 +21,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/service"
+	"github.com/opentracing/opentracing-go"
+	"io"
 	"log"
 	"os"
 	"os/signal"
@@ -50,10 +53,14 @@ func main() {
 
 	cfg := loadConfiguration()
 
-	// Initialize logger
-	appLogger := logger.NewExtendedAppLogger(&cfg.Logger)
-	appLogger.InitLogger()
-	appLogger.WithName(constants.ServiceName)
+	// Initialize Logging
+	appLogger := initLogger(cfg)
+
+	// Initialize Tracing
+	tracingCloser := initTracing(cfg, appLogger)
+	if tracingCloser != nil {
+		defer tracingCloser.Close()
+	}
 
 	// Setting up Neo4j
 	neo4jDriver, err := commonconf.NewNeo4jDriver(cfg.Neo4j)
@@ -218,4 +225,23 @@ func healthCheckHandler(c *gin.Context) {
 
 func MapFileEntityToDTO(cfg *config.Config, fileEntity *model.File) *fsc.FileDTO {
 	return mapper.MapFileEntityToDTO(fileEntity, cfg.ApiServiceUrl)
+}
+
+func initLogger(cfg *config.Config) logger.Logger {
+	appLogger := logger.NewExtendedAppLogger(&cfg.Logger)
+	appLogger.InitLogger()
+	appLogger.WithName(constants.ServiceName)
+	return appLogger
+}
+
+func initTracing(cfg *config.Config, appLogger logger.Logger) io.Closer {
+	if cfg.Jaeger.Enabled {
+		tracer, closer, err := tracing.NewJaegerTracer(&cfg.Jaeger, appLogger)
+		if err != nil {
+			appLogger.Fatalf("Could not initialize jaeger tracer: %v", err.Error())
+		}
+		opentracing.SetGlobalTracer(tracer)
+		return closer
+	}
+	return nil
 }
