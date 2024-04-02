@@ -84,33 +84,28 @@ export const ContractSubtitle = ({
     data?.contractRenewalCycle
   ) {
     return (
-      <Text>
-        Contract starting ...
-        <Button
-          variant='link'
-          size='xs'
-          colorScheme='gray'
-          className='font-normal shadow-none text-sm underline text-gray-500 focus:text-gray-500 hover:text-gray-500'
-        >
-          Edit contract
-        </Button>
-      </Text>
+      <Button
+        variant='link'
+        size='xs'
+        colorScheme='gray'
+        className='pl-0 font-normal shadow-none text-sm  text-gray-500 focus:text-gray-500 hover:text-gray-500 hover:no-underline focus:no-underline'
+      >
+        Contract starting...
+        <span className='underline'> Edit contract</span>
+      </Button>
     );
   }
-
   if (!hasStartedService && !serviceStartDate && data?.contractRenewalCycle) {
     return (
-      <Text>
+      <Button
+        variant='link'
+        size='xs'
+        colorScheme='gray'
+        className='pl-0 font-normal shadow-none text-sm  text-gray-500 focus:text-gray-500 hover:text-gray-500 hover:no-underline focus:no-underline'
+      >
         {renewalPeriod} contract starting ...
-        <Button
-          variant='link'
-          size='xs'
-          colorScheme='gray'
-          className='font-normal shadow-none text-sm underline text-gray-500 focus:text-gray-500 hover:text-gray-500'
-        >
-          Edit contract
-        </Button>
-      </Text>
+        <span className='underline'> Edit contract</span>
+      </Button>
     );
   }
   if (!hasStartedService && serviceStartDate && data?.contractRenewalCycle) {
