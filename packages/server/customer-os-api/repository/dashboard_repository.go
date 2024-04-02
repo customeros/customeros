@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
@@ -998,7 +999,7 @@ func (r *dashboardRepository) GetDashboardCustomerMapData(ctx context.Context, t
 	if dbRecords != nil {
 		for _, v := range dbRecords.([]*neo4j.Record) {
 			organizationId := v.Values[0].(string)
-			oldestServiceStartedAt := v.Values[1].(time.Time)
+			oldestServiceStartedAt := getCorrectValueTypeTime(v.Values[1])
 			state := v.Values[2].(string)
 			arr := getCorrectValueType(v.Values[3])
 
@@ -1921,6 +1922,22 @@ func getCorrectValueType(valueToExtract any) float64 {
 	default:
 		fmt.Errorf("unexpected type %T", val)
 		v = 0
+	}
+
+	return v
+}
+
+func getCorrectValueTypeTime(valueToExtract any) time.Time {
+	var v time.Time
+
+	switch val := valueToExtract.(type) {
+	case dbtype.Date:
+		v = val.Time()
+	case time.Time:
+		v = val
+	default:
+		fmt.Errorf("unexpected type %T", val)
+		v = time.Time{}
 	}
 
 	return v
