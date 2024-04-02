@@ -11,12 +11,10 @@ import {
 import { produce } from 'immer';
 import { Column } from '@tanstack/react-table';
 
-import { Flex } from '@ui/layout/Flex';
-import { Input } from '@ui/form/Input';
-import { Text } from '@ui/typography/Text';
+import { Input } from '@ui/form/Input/Input2';
 import { Organization } from '@graphql/types';
 import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
-import { InputGroup, InputLeftElement } from '@ui/form/InputGroup';
+import { InputGroup, LeftElement } from '@ui/form/Input/InputGroup';
 import {
   RangeSlider,
   RangeSliderTrack,
@@ -105,11 +103,9 @@ export const ForecastFilter = memo(
           onDisplayChange={toggle.handleClick}
         />
 
-        <Flex justify='space-between' mb='8' gap='2'>
-          <Flex flexDir='column' flex='1'>
-            <Text fontSize='sm' fontWeight='medium'>
-              Min
-            </Text>
+        <div className='flex justify-between mb-8 gap-2'>
+          <div className='flex flex-col flex-1'>
+            <span className='text-sm font-medium'>Min</span>
             <DebouncedNumberInput
               min={0}
               max={displayValue[1]}
@@ -118,21 +114,19 @@ export const ForecastFilter = memo(
               onChange={handleInputChange(0)}
               onDisplayChange={handleInputDisplayChange(0)}
             />
-          </Flex>
-          <Flex flexDir='column' flex='1'>
-            <Text fontSize='sm' fontWeight='medium'>
-              Max
-            </Text>
+          </div>
+          <div className='flex flex-col flex-1'>
+            <span className='text-sm font-medium'>Max</span>
             <DebouncedNumberInput
               min={displayValue[0]}
               value={displayValue[1]}
               onChange={handleInputChange(1)}
               onDisplayChange={handleInputDisplayChange(1)}
             />
-          </Flex>
-        </Flex>
+          </div>
+        </div>
 
-        <Flex px='1'>
+        <div className='flex px-1'>
           <RangeSlider
             min={0}
             step={10}
@@ -147,7 +141,7 @@ export const ForecastFilter = memo(
             <RangeSliderThumb className='border-2 border-gray-400' />
             <RangeSliderThumb className='border-2 border-gray-400' />
           </RangeSlider>
-        </Flex>
+        </div>
       </>
     );
   },
@@ -212,11 +206,11 @@ export const DebouncedNumberInput = memo(
 
       return (
         <InputGroup>
-          <InputLeftElement w='fit-content'>
+          <LeftElement className='mb-1' size={'sm'}>
             <CurrencyDollar color='gray.500' />
-          </InputLeftElement>
+          </LeftElement>
           <Input
-            pl='6'
+            className='border-transparent focus:border-0 hover:border-transparent'
             ref={ref}
             min={min}
             max={max}

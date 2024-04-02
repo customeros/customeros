@@ -41,14 +41,7 @@ export const LeftElement = ({
   };
 
   return (
-    <div
-      {...props}
-      className={twMerge(
-        className,
-        'text-gray-500 focus:border-primary-500 focus:border-b ',
-        iconSize({ size }),
-      )}
-    >
+    <div {...props} className={twMerge(className, iconSize({ size }))}>
       {isValidElement(children) && cloneElement(children, iconProps)}
     </div>
   );
@@ -72,7 +65,7 @@ export const RightElement = ({
       {...props}
       className={twMerge(
         className,
-        'text-gray-500 focus:border-primary-500 focus:border-b ',
+        'text-gray-500 focus:border-primary-500 focus:border-b',
         iconSize({ size }),
       )}
     >
@@ -99,7 +92,7 @@ export const InputGroup = ({ border, children }: InputGroupProps) => {
       <div
         className={cn(
           border ? ' border-gray-200' : 'border-transparent',
-          'flex items-center w-full border-b gap-3 hover:broder-b hover:border-gray-300 focus-within:hover:border-primary-500 focus-within:border-primary-500 focus-within:border-b hover:transition ease-in-out delay-200  ',
+          'flex items-center w-full border-b gap-3 hover:broder-b hover:border-gray-300 focus-within:hover:border-primary-500 focus-within:border-primary-500 focus-within:border-b hover:transition ease-in-out delay-200',
         )}
       >
         {leftElementSlot}
