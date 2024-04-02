@@ -78,7 +78,7 @@ const AccountPanelComponent = () => {
         },
         createdBy: [session?.user] as unknown as User,
         externalLinks: [],
-        contractRenewalCycle: ContractRenewalCycle.None,
+        contractRenewalCycle: ContractRenewalCycle.MonthlyRenewal,
         contractName: `${
           data?.organization?.name?.length
             ? `${data?.organization?.name}'s`
@@ -189,6 +189,7 @@ const AccountPanelComponent = () => {
                   createContract.mutate({
                     input: {
                       organizationId: id,
+                      contractRenewalCycle: ContractRenewalCycle.MonthlyRenewal,
                       currency:
                         baseCurrencyData?.tenantSettings?.baseCurrency ||
                         Currency.Usd,
