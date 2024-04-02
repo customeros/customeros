@@ -83,6 +83,7 @@ export const InvoicePreviewModal = () => {
         variant='outline'
         w={600}
         h='full'
+        overflowY='auto'
       >
         <CardBody as={Flex} p='0' align='center'>
           <InvoicePreviewModalContent
