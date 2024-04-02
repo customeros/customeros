@@ -34,7 +34,7 @@ func TestGetById(t *testing.T) {
 	}
 
 	// Call GetById method
-	file, err := fileSvc.GetById("test-user", "test-tenant", "test-id")
+	file, err := fileSvc.GetById(context.Background(), "test-user", "test-tenant", "test-id")
 	if err != nil {
 		t.Fatalf("GetById returned error: %v", err)
 	}
