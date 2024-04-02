@@ -1,8 +1,7 @@
 import { ColumnDef as ColumnDefinition } from '@tanstack/react-table';
 
-import { Flex } from '@ui/layout/Flex';
 import { RenewalRecord } from '@graphql/types';
-import { Skeleton } from '@ui/presentation/Skeleton';
+import { Skeleton } from '@ui/feedback/Skeleton';
 import { createColumnHelper } from '@ui/presentation/Table';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
 import { TableViewDefsQuery } from '@shared/graphql/tableViewDefs.generated';
@@ -55,15 +54,8 @@ const columns: Record<string, Column> = {
         />
       );
     },
-    header: () => <Flex w='42px' h='32px' />,
-    skeleton: () => (
-      <Skeleton
-        width='42px'
-        height='42px'
-        startColor='gray.300'
-        endColor='gray.300'
-      />
-    ),
+    header: () => <div className='w-[42px] h-8' />,
+    skeleton: () => <Skeleton className='w-[42px] h-[42px] bg-gray-300' />,
   }),
   NAME: columnHelper.accessor((row) => row, {
     id: 'NAME',
@@ -101,20 +93,10 @@ const columns: Record<string, Column> = {
       />
     ),
     skeleton: () => (
-      <Flex flexDir='column' h='42px' align='flex-start' gap='1'>
-        <Skeleton
-          width='100px'
-          height='18px'
-          startColor='gray.300'
-          endColor='gray.300'
-        />
-        <Skeleton
-          width='100px'
-          height='18px'
-          startColor='gray.300'
-          endColor='gray.300'
-        />
-      </Flex>
+      <div className='flex flex-col h-[42px] items-start gap-1'>
+        <Skeleton className='w-[100px] h-[18px] bg-gray-300' />
+        <Skeleton className='w-[100px] h-[18px] bg-gray-300' />
+      </div>
     ),
   }),
   RENEWAL_LIKELIHOOD: columnHelper.accessor('organization.accountDetails', {
@@ -135,14 +117,9 @@ const columns: Record<string, Column> = {
       />
     ),
     skeleton: () => (
-      <Flex flexDir='column' gap='1'>
-        <Skeleton
-          width='25%'
-          height='18px'
-          startColor='gray.300'
-          endColor='gray.300'
-        />
-      </Flex>
+      <div className='flex flex-col gap-1'>
+        <Skeleton className='w-[50%] h-[18px] bg-gray-300' />
+      </div>
     ),
   }),
   RENEWAL_DATE: columnHelper.accessor('organization.accountDetails', {
@@ -168,14 +145,7 @@ const columns: Record<string, Column> = {
         {...getTHeadProps<RenewalRecord>(props)}
       />
     ),
-    skeleton: () => (
-      <Skeleton
-        width='50%'
-        height='18px'
-        startColor='gray.300'
-        endColor='gray.300'
-      />
-    ),
+    skeleton: () => <Skeleton className='w-[50%] h-[18px] bg-gray-300' />,
   }),
   FORECAST_ARR: columnHelper.accessor('organization.accountDetails', {
     id: 'FORECAST_ARR',
@@ -209,20 +179,10 @@ const columns: Record<string, Column> = {
       />
     ),
     skeleton: () => (
-      <Flex flexDir='column' gap='1'>
-        <Skeleton
-          width='50%'
-          height='18px'
-          startColor='gray.300'
-          endColor='gray.300'
-        />
-        <Skeleton
-          width='25%'
-          height='18px'
-          startColor='gray.300'
-          endColor='gray.300'
-        />
-      </Flex>
+      <div className='flex flex-col gap-1'>
+        <Skeleton className='w-[50%] h-[18px] bg-gray-300' />
+        <Skeleton className='w-[25%] h-[18px] bg-gray-300' />
+      </div>
     ),
   }),
   OWNER: columnHelper.accessor('organization.owner', {
@@ -246,14 +206,7 @@ const columns: Record<string, Column> = {
         {...getTHeadProps<RenewalRecord>(props)}
       />
     ),
-    skeleton: () => (
-      <Skeleton
-        width='75%'
-        height='18px'
-        startColor='gray.300'
-        endColor='gray.300'
-      />
-    ),
+    skeleton: () => <Skeleton className='w-[75%] h-[18px] bg-gray-300' />,
   }),
   LAST_TOUCHPOINT: columnHelper.accessor((row) => row, {
     id: 'LAST_TOUCHPOINT',
@@ -283,20 +236,10 @@ const columns: Record<string, Column> = {
       />
     ),
     skeleton: () => (
-      <Flex flexDir='column' gap='1'>
-        <Skeleton
-          width='50%'
-          height='18px'
-          startColor='gray.300'
-          endColor='gray.300'
-        />
-        <Skeleton
-          width='75%'
-          height='18px'
-          startColor='gray.300'
-          endColor='gray.300'
-        />
-      </Flex>
+      <div className='flex flex-col gap-1'>
+        <Skeleton className='w-[50%] h-[18px] bg-gray-300' />
+        <Skeleton className='w-[75%] h-[18px] bg-gray-300' />
+      </div>
     ),
   }),
 };

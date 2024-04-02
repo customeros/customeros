@@ -5,15 +5,15 @@ export function getLikelihoodColor(
 ) {
   switch (likelihood) {
     case OpportunityRenewalLikelihood.HighRenewal:
-      return 'success.500';
+      return 'text-success-500';
     case OpportunityRenewalLikelihood.MediumRenewal:
-      return 'warning.500';
+      return 'text-warning-500';
     case OpportunityRenewalLikelihood.LowRenewal:
-      return 'error.500';
+      return 'text-error-500';
     case OpportunityRenewalLikelihood.ZeroRenewal:
-      return 'gray.500';
+      return 'text-gray-500';
     default:
-      return 'gray.500';
+      return 'text-gray-500';
   }
 }
 

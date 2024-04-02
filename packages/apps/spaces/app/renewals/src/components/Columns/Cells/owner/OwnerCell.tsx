@@ -2,9 +2,8 @@ import { useEffect } from 'react';
 
 import { produce } from 'immer';
 
+import { cn } from '@ui/utils/cn';
 import { User } from '@graphql/types';
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useRenewalsMeta } from '@shared/state/RenewalsMeta.atom';
 import { useGetUsersQuery } from '@shared/graphql/getUsers.generated';
@@ -50,19 +49,15 @@ export const OwnerCell = ({ owner }: OwnerProps) => {
   }, [getUsers.hasFetched]);
 
   return (
-    <Flex
-      w='full'
-      gap='1'
-      align='center'
-      _hover={{
-        '& #edit-button': {
-          opacity: 1,
-        },
-      }}
-    >
-      <Text cursor='default' color={name ? 'gray.700' : 'gray.400'}>
+    <div className='flex w-full gap-1 items-center'>
+      <span
+        className={cn(
+          'cursor-default',
+          name ? 'text-gray-700' : 'text-gray-400',
+        )}
+      >
         {name || 'Owner'}
-      </Text>
-    </Flex>
+      </span>
+    </div>
   );
 };

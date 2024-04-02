@@ -2,9 +2,8 @@ import { useRouter } from 'next/navigation';
 
 import { useLocalStorage } from 'usehooks-ts';
 
-import { Flex } from '@ui/layout/Flex';
-import { Avatar } from '@ui/media/Avatar';
-import { Tooltip } from '@ui/overlay/Tooltip';
+import { Avatar } from '@ui/media/Avatar/Avatar';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 
 interface AvatarCellProps {
   id: string;
@@ -23,19 +22,24 @@ export const AvatarCell = ({ name, id, src }: AvatarCellProps) => {
   const fullName = name || 'Unnamed';
 
   return (
-    <Flex align='center'>
-      <Tooltip label={fullName} fontWeight='normal'>
+    <div className='flex items-center'>
+      <Tooltip
+        align='center'
+        side='bottom'
+        label={fullName}
+        className='font-normal'
+        asChild={false}
+      >
         <Avatar
+          className='rounded-lg cursor-pointer text-primary-700'
           variant='outline'
           size='md'
           src={src || undefined}
-          borderRadius='lg'
           name={fullName}
-          cursor='pointer'
           onClick={() => router.push(href)}
         />
       </Tooltip>
-    </Flex>
+    </div>
   );
 };
 

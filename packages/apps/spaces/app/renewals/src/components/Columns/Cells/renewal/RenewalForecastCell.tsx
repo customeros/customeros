@@ -1,4 +1,4 @@
-import { Flex } from '@ui/layout/Flex';
+import { cn } from '@ui/utils/cn';
 import { Text } from '@ui/typography/Text';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 
@@ -24,15 +24,17 @@ export const RenewalForecastCell = ({
     return <Text color='gray.400'>Unknown</Text>;
 
   return (
-    <Flex flexDir='column' justify='center'>
-      <Text fontSize='sm' color={amount ? 'gray.700' : 'gray.500'}>
+    <span className='flex flex-col justify-center'>
+      <span
+        className={cn('text-sm', amount ? 'text-gray-700' : 'text-gray-500')}
+      >
         {formattedAmount}
-      </Text>
+      </span>
       {showPotentialAmount && (
-        <Text fontSize='sm' color='gray.500' textDecoration='line-through'>
+        <span className='text-sm text-gray-500 line-through'>
           {formattedPotentialAmount}
-        </Text>
+        </span>
       )}
-    </Flex>
+    </span>
   );
 };

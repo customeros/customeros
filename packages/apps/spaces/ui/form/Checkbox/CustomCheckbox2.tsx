@@ -4,7 +4,35 @@ import { twMerge } from 'tailwind-merge';
 import * as RadixCheckbox from '@radix-ui/react-checkbox';
 import { cva, VariantProps } from 'class-variance-authority';
 
-import { CheckboxVariants } from './Checkbox.variants';
+export const CheckboxVariants = cva(
+  [
+    'flex appearance-none items-center justify-center rounded-[4px] border border-gray-300 hover:border-[1px] hover:transition hover:ease-in hover:delay-150 data-[state=checked]:opacity-100 data-[state=checked]:visible',
+  ],
+  {
+    variants: {
+      size: {
+        sm: ['size-4'],
+        md: ['size-5'],
+        lg: ['size-6'],
+        xl: ['size-7'],
+      },
+      colorScheme: {
+        gray: [
+          'hover:border-primary-600',
+          'hover:bg-primary-100',
+          'data-[state=checked]:bg-white',
+          'data-[state=checked]:hover:bg-primary-100',
+          'data-[state=checked]:hover:border-primary-600',
+          'data-[state=checked]:border-gray-300',
+        ],
+      },
+    },
+    defaultVariants: {
+      size: 'md',
+      colorScheme: 'gray',
+    },
+  },
+);
 
 const iconColor = cva(
   ['transition duration-300 ease-in-out transform scale-100'],
@@ -12,18 +40,6 @@ const iconColor = cva(
     variants: {
       iconColorScheme: {
         primary: ['fill-primary-600'],
-        gray: ['fill-gray-600'],
-        warm: ['fill-warm-600'],
-        error: ['fill-error-600'],
-        rose: ['fill-rose-600'],
-        warning: ['fill-warning-600'],
-        blueDark: ['fill-blueDark-600'],
-        teal: ['fill-teal-600'],
-        success: ['fill-success-600'],
-        moss: ['fill-moss-600'],
-        greenLight: ['fill-greenLight-600'],
-        violet: ['fill-violet-600'],
-        fuchsia: ['fill-fuchsia-600'],
       },
       iconSize: {
         sm: ['size-2'],
@@ -52,7 +68,7 @@ export interface CheckboxProps
   onChange?: (checked: RadixCheckbox.CheckedState | undefined) => void;
 }
 
-export const Checkbox = forwardRef<HTMLButtonElement, CheckboxProps>(
+export const CustomCheckbox = forwardRef<HTMLButtonElement, CheckboxProps>(
   (
     {
       isChecked,
@@ -106,8 +122,9 @@ const CheckIcon = ({
 }: React.SVGAttributes<SVGElement>) => {
   return (
     <svg
-      className={twMerge('size-3', className)}
+      className={twMerge(className)}
       viewBox='0 0 9 9'
+      strokeWidth={2}
       fill='none'
       xmlns='http://www.w3.org/2000/svg'
       {...props}

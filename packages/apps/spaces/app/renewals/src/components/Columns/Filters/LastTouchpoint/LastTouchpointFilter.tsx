@@ -6,12 +6,9 @@ import subDays from 'date-fns/subDays';
 import { useRecoilValue } from 'recoil';
 import { Column } from '@tanstack/react-table';
 
-import { Flex } from '@ui/layout/Flex';
-import { VStack } from '@ui/layout/Stack';
-import { Text } from '@ui/typography/Text';
-import { Radio, RadioGroup } from '@ui/form/Radio';
-import { CustomCheckbox } from '@ui/form/Checkbox';
+import { Radio, RadioGroup } from '@ui/form/Radio/Radio2';
 import { Organization, LastTouchpointType } from '@graphql/types';
+import { CustomCheckbox } from '@ui/form/Checkbox/CustomCheckbox2';
 
 import { allTime, touchpoints } from './util';
 import { FilterHeader, useFilterToggle } from '../shared';
@@ -119,48 +116,36 @@ export const LastTouchpointFilter = ({
       />
 
       <RadioGroup
-        pb='2'
+        className='border-b pb-2 border-gray-200'
         name='last-touchpoint-before'
-        colorScheme='primary'
         value={filter.after}
-        borderBottom='1px solid'
-        borderBottomColor='gray.200'
-        onChange={handleDateChange}
-        isDisabled={!filter.isActive}
+        onValueChange={handleDateChange}
+        disabled={!filter.isActive}
       >
-        <VStack spacing={2} align='flex-start'>
+        <div className='flex flex-col gap-2 items-start'>
           <Radio value={week}>
-            <Text fontSize='sm'>Last 7 days</Text>
+            <span className='text-sm'>Last 7 days</span>
           </Radio>
           <Radio value={month}>
-            <Text fontSize='sm'>Last 30 days</Text>
+            <span className='text-sm'>Last 30 days</span>
           </Radio>
           <Radio value={quarter}>
-            <Text fontSize='sm'>Last 90 days</Text>
+            <span className='text-sm'>Last 90 days</span>
           </Radio>
           <Radio value={allTime}>
-            <Text fontSize='sm'>All time</Text>
+            <span className='text-sm'>All time</span>
           </Radio>
-        </VStack>
+        </div>
       </RadioGroup>
 
-      <VStack
-        spacing={2}
-        align='flex-start'
-        mt='2'
-        px='4px'
-        mx='-4px'
-        position='relative'
-        overflowX='hidden'
-        overflowY='auto'
-      >
+      <div className='flex flex-col space-y-2 items-start mt-2 px-[4px] mx-[-4px] relative overflow-x-hidden overflow-y-auto'>
         <Checkboxes
           value={filter.value}
           onCheck={handleSelect}
           onCheckAll={handleSelectAll}
           isAllSelected={isAllSelected}
         />
-      </VStack>
+      </div>
     </>
   );
 };
@@ -225,39 +210,27 @@ const Checkboxes = memo(
 
     return (
       <>
-        <Flex
-          top='0'
-          w='full'
-          zIndex='10'
-          bg='white'
-          position='sticky'
-          borderBottom='1px solid'
-          borderColor='gray.200'
-          pb='2'
-        >
+        <div className='sticky top-0 w-full z-10 bg-white border-b border-gray-200 pb-2'>
           <CustomCheckbox
-            top='0'
-            size='md'
-            zIndex='10'
+            size='sm'
             onChange={handleCheckAll}
             isChecked={_isAllChecked}
           >
-            <Text fontSize='sm'>
+            <span className='text-sm'>
               {_isAllChecked ? 'Deselect all' : 'Select all'}
-            </Text>
+            </span>
           </CustomCheckbox>
-        </Flex>
+        </div>
         {touchpoints.map(({ label, value }) => (
           <CustomCheckbox
             key={value}
-            size='md'
-            value={value}
-            onChange={handleCheck}
+            size='sm'
+            className='rounded-sm border border-gray-200'
+            iconSize='md'
+            onChange={() => handleCheck(value)}
             isChecked={checked[value]}
           >
-            <Text fontSize='sm' noOfLines={1}>
-              {label}
-            </Text>
+            <span className='text-sm line-clamp-1'>{label}</span>
           </CustomCheckbox>
         ))}
       </>

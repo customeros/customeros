@@ -1,7 +1,3 @@
-import { Flex } from '@ui/layout/Flex';
-import { Link } from '@ui/navigation/Link';
-import { Text } from '@ui/typography/Text';
-
 interface OrganizationCellProps {
   id: string;
   name: string;
@@ -19,20 +15,16 @@ export const OrganizationCell = ({
   const fullName = name || 'Unnamed';
 
   return (
-    <Flex isTruncated flexDir='column'>
+    <div className='flex flex-col line-clamp-1 '>
       {isSubsidiary && (
-        <Text fontSize='xs' color='gray.500'>
-          {parentOrganizationName}
-        </Text>
+        <span className='text-xs text-gray-500'>{parentOrganizationName}</span>
       )}
-      <Link
+      <a
+        className='text-gray-700 font-semibold hover:no-underline no-underline'
         href={href}
-        color='gray.700'
-        fontWeight='semibold'
-        _hover={{ textDecoration: 'none' }}
       >
         {fullName}
-      </Link>
-    </Flex>
+      </a>
+    </div>
   );
 };

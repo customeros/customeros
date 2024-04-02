@@ -7,12 +7,9 @@ import difference from 'lodash/difference';
 import intersection from 'lodash/intersection';
 import { Column } from '@tanstack/react-table';
 
-import { Flex } from '@ui/layout/Flex';
-import { VStack } from '@ui/layout/Stack';
-import { Text } from '@ui/typography/Text';
 import { Organization } from '@graphql/types';
+import { Checkbox } from '@ui/form/Checkbox/Checkbox2';
 import { Tumbleweed } from '@ui/media/icons/Tumbleweed';
-import { Checkbox, CheckboxGroup } from '@ui/form/Checkbox';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useGetUsersQuery } from '@shared/graphql/getUsers.generated';
 
@@ -143,76 +140,48 @@ export const OwnerFilter = ({
         onDisplayChange={(v) => setSearchValue(v)}
       />
 
-      <VStack
-        spacing={2}
-        align='flex-start'
-        maxH='13rem'
-        mt='2'
-        px='4px'
-        mx='-4px'
-        position='relative'
-        overflowX='hidden'
-        overflowY='auto'
-      >
-        <CheckboxGroup size='md' value={filter.value}>
-          {users.length > 1 && (
-            <Flex
-              top='0'
-              w='full'
-              zIndex='10'
-              bg='white'
-              gap='2'
-              flexDir='column'
-              position='sticky'
-              borderBottom='1px solid'
-              borderColor='gray.200'
-              pb='2'
+      <div className='flex flex-col w-full h-[13rem] items-start gap-2 mt-2 px-1 mx-[-4px] overflow-x-hidden overflow-y-auto'>
+        {users.length > 1 && (
+          <div className='sticky top-0 w-full z-10 bg-white gap-2 flex flex-col pb-2 border-b border-gray-200'>
+            <Checkbox
+              className='top-0 z-10'
+              isChecked={isAllSelected}
+              onChange={handleSelectAll}
             >
-              <Checkbox
-                top='0'
-                zIndex='10'
-                isChecked={isAllSelected}
-                onChange={handleSelectAll}
-              >
-                <Text fontSize='sm'>
-                  {isAllSelected
-                    ? 'Deselect all'
-                    : 'Select all' +
-                      (searchValue && users.length > 2
-                        ? ` ${users.length}`
-                        : '')}
-                </Text>
-              </Checkbox>
-            </Flex>
-          )}
+              <span className='text-sm'>
+                {isAllSelected
+                  ? 'Deselect all'
+                  : 'Select all' +
+                    (searchValue && users.length > 2 ? ` ${users.length}` : '')}
+              </span>
+            </Checkbox>
+          </div>
+        )}
 
-          {users.length > 0 ? (
-            users.map(({ value, label }) => (
-              <Checkbox
-                key={value}
-                value={value}
-                onChange={handleSelect(value)}
-              >
-                <Text fontSize='sm' noOfLines={1}>
-                  {label}
-                </Text>
-              </Checkbox>
-            ))
-          ) : (
-            <Flex w='full' justify='center' align='center' flexDir='column'>
-              <Tumbleweed
-                mr='10'
-                boxSize='8'
-                color='gray.400'
-                alignSelf='flex-end'
-              />
-              <Text fontSize='sm' color='gray.500'>
-                Empty here in <b>No Resultsville</b>
-              </Text>
-            </Flex>
-          )}
-        </CheckboxGroup>
-      </VStack>
+        {users.length > 0 ? (
+          users.map(({ value, label }) => (
+            <Checkbox
+              key={value}
+              isChecked={filter.value.includes(value)}
+              onChange={handleSelect(value)}
+            >
+              <span className='text-sm line-clamp-1'>{label}</span>
+            </Checkbox>
+          ))
+        ) : (
+          <div className='flex w-full justify-center items-center flex-col'>
+            <Tumbleweed
+              mr='10'
+              boxSize='8'
+              color='gray.400'
+              alignSelf='flex-end'
+            />
+            <span className='text-sm text-gray-500'>
+              Empty here in <b>No Resultsville</b>
+            </span>
+          </div>
+        )}
+      </div>
     </>
   );
 };
