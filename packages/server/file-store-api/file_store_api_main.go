@@ -9,16 +9,21 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/machinebox/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
+	commonconf "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
 	commonRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/config/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/handler"
+	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/service"
-	"github.com/sirupsen/logrus"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 const apiPort = "10000"
@@ -38,29 +43,32 @@ func InitDB(cfg *config.Config) (db *config.StorageDB, err error) {
 	return
 }
 
-func init() {
-	logger.Logger = logger.New(log.New(log.Default().Writer(), "", log.Ldate|log.Ltime|log.Lmicroseconds), logger.Config{
-		Colorful: true,
-		LogLevel: logger.Info,
-	})
-}
-
 func main() {
+	parentCtx := context.Background()
+	ctx, cancel := signal.NotifyContext(parentCtx, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
+	defer cancel()
+
 	cfg := loadConfiguration()
 
+	// Initialize logger
+	appLogger := logger.NewExtendedAppLogger(&cfg.Logger)
+	appLogger.InitLogger()
+	appLogger.WithName(constants.ServiceName)
+
+	// Setting up Neo4j
+	neo4jDriver, err := commonconf.NewNeo4jDriver(cfg.Neo4j)
+	if err != nil {
+		appLogger.Fatalf("Could not establish connection with neo4j at: %v, error: %v", cfg.Neo4j.Target, err.Error())
+	}
+	defer neo4jDriver.Close(ctx)
+
+	// initialize db
 	db, _ := InitDB(cfg)
 	defer db.SqlDB.Close()
 
-	neo4jDriver, err := config.NewDriver(cfg)
-	if err != nil {
-		logrus.Fatalf("Could not establish connection with neo4j at: %v, error: %v", cfg.Neo4j.Target, err.Error())
-	}
-	ctx := context.Background()
-	defer neo4jDriver.Close(ctx)
-
 	commonRepositoryContainer := commonRepository.InitRepositories(db.GormDB, &neo4jDriver)
 	graphqlClient := graphql.NewClient(cfg.Service.CustomerOsAPI)
-	services := service.InitServices(cfg, graphqlClient)
+	services := service.InitServices(cfg, graphqlClient, appLogger)
 
 	jwtTennantUserService := service.NewJWTTenantUserService(commonRepositoryContainer, cfg)
 
@@ -83,6 +91,7 @@ func main() {
 	commonCache := caches.NewCommonCache()
 
 	r.POST("/file",
+		handler.TracingEnhancer(ctx, "POST /file"),
 		jwtTennantUserService.GetJWTTenantUserEnhancer(),
 		commonservice.TenantUserContextEnhancer(commonservice.USERNAME_OR_TENANT, commonRepositoryContainer, commonservice.WithCache(commonCache)),
 		commonservice.ApiKeyCheckerHTTP(commonRepositoryContainer.TenantWebhookApiKeyRepository, commonRepositoryContainer.AppKeyRepository, commonservice.FILE_STORE_API, commonservice.WithCache(commonCache)),
@@ -100,7 +109,7 @@ func main() {
 				return
 			}
 
-			fileEntity, err := services.FileService.UploadSingleFile(userEmail, tenantName, basePath, fileId, multipartFileHeader, cdnUpload)
+			fileEntity, err := services.FileService.UploadSingleFile(ctx, userEmail, tenantName, basePath, fileId, multipartFileHeader, cdnUpload)
 			if err != nil {
 				ctx.AbortWithStatusJSON(500, map[string]string{"error": fmt.Sprintf("Error Uploading File %v", err)}) //todo
 				return
@@ -109,6 +118,7 @@ func main() {
 			ctx.JSON(200, MapFileEntityToDTO(cfg, fileEntity))
 		})
 	r.GET("/file/:id",
+		handler.TracingEnhancer(ctx, "GET /file/:id"),
 		jwtTennantUserService.GetJWTTenantUserEnhancer(),
 		commonservice.TenantUserContextEnhancer(commonservice.USERNAME_OR_TENANT, commonRepositoryContainer, commonservice.WithCache(commonCache)),
 		commonservice.ApiKeyCheckerHTTP(commonRepositoryContainer.TenantWebhookApiKeyRepository, commonRepositoryContainer.AppKeyRepository, commonservice.FILE_STORE_API, commonservice.WithCache(commonCache)),
@@ -116,7 +126,7 @@ func main() {
 			tenantName, _ := ctx.Keys["TenantName"].(string)
 			userEmail, _ := ctx.Keys["UserEmail"].(string)
 
-			byId, err := services.FileService.GetById(userEmail, tenantName, ctx.Param("id"))
+			byId, err := services.FileService.GetById(ctx, userEmail, tenantName, ctx.Param("id"))
 			if err != nil && err.Error() != "record not found" {
 				ctx.AbortWithStatus(500) //todo
 				return
@@ -129,6 +139,7 @@ func main() {
 			ctx.JSON(200, MapFileEntityToDTO(cfg, byId))
 		})
 	r.GET("/file/:id/download",
+		handler.TracingEnhancer(ctx, "GET /file/:id/download"),
 		jwtTennantUserService.GetJWTTenantUserEnhancer(),
 		commonservice.TenantUserContextEnhancer(commonservice.USERNAME_OR_TENANT, commonRepositoryContainer, commonservice.WithCache(commonCache)),
 		commonservice.ApiKeyCheckerHTTP(commonRepositoryContainer.TenantWebhookApiKeyRepository, commonRepositoryContainer.AppKeyRepository, commonservice.FILE_STORE_API, commonservice.WithCache(commonCache)),
@@ -136,7 +147,7 @@ func main() {
 			tenantName, _ := ctx.Keys["TenantName"].(string)
 			userEmail, _ := ctx.Keys["UserEmail"].(string)
 
-			_, err := services.FileService.DownloadSingleFile(userEmail, tenantName, ctx.Param("id"), ctx, ctx.Query("inline") == "true")
+			_, err := services.FileService.DownloadSingleFile(ctx, userEmail, tenantName, ctx.Param("id"), ctx, ctx.Query("inline") == "true")
 			if err != nil && err.Error() != "record not found" {
 				ctx.AbortWithStatus(500) //todo
 				return
@@ -147,6 +158,7 @@ func main() {
 			}
 		})
 	r.GET("/file/:id/base64",
+		handler.TracingEnhancer(ctx, "GET /file/:id/base64"),
 		jwtTennantUserService.GetJWTTenantUserEnhancer(),
 		commonservice.TenantUserContextEnhancer(commonservice.USERNAME_OR_TENANT, commonRepositoryContainer, commonservice.WithCache(commonCache)),
 		commonservice.ApiKeyCheckerHTTP(commonRepositoryContainer.TenantWebhookApiKeyRepository, commonRepositoryContainer.AppKeyRepository, commonservice.FILE_STORE_API, commonservice.WithCache(commonCache)),
@@ -154,7 +166,7 @@ func main() {
 			tenantName, _ := ctx.Keys["TenantName"].(string)
 			userEmail, _ := ctx.Keys["UserEmail"].(string)
 
-			base64Encoded, err := services.FileService.Base64Image(userEmail, tenantName, ctx.Param("id"))
+			base64Encoded, err := services.FileService.Base64Image(ctx, userEmail, tenantName, ctx.Param("id"))
 			if err != nil && err.Error() != "record not found" {
 				ctx.AbortWithStatus(500) //todo
 				return
@@ -172,6 +184,7 @@ func main() {
 	r.GET("/readiness", healthCheckHandler)
 
 	r.GET("/jwt",
+		handler.TracingEnhancer(ctx, "GET /jwt"),
 		commonservice.TenantUserContextEnhancer(commonservice.USERNAME, commonRepositoryContainer, commonservice.WithCache(commonCache)),
 		commonservice.ApiKeyCheckerHTTP(commonRepositoryContainer.TenantWebhookApiKeyRepository, commonRepositoryContainer.AppKeyRepository, commonservice.FILE_STORE_API, commonservice.WithCache(commonCache)),
 		func(ctx *gin.Context) {
