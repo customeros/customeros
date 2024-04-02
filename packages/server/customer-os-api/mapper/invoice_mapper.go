@@ -25,6 +25,7 @@ func MapEntityToInvoice(entity *neo4jentity.InvoiceEntity) *model.Invoice {
 		DryRun:             entity.DryRun,
 		Postpaid:           entity.Postpaid,
 		OffCycle:           entity.OffCycle,
+		Preview:            entity.Preview,
 		InvoiceNumber:      entity.Number,
 		InvoicePeriodStart: entity.PeriodStartDate,
 		InvoicePeriodEnd:   entity.PeriodEndDate,

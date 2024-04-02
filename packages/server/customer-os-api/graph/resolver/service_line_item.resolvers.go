@@ -53,7 +53,7 @@ func (r *mutationResolver) ContractLineItemCreate(ctx context.Context, input mod
 		data.SliVatRate = (*input.Tax).TaxRate
 	}
 
-	serviceLineItemId, err := r.Services.ServiceLineItemService.Create(ctx, data)
+	serviceLineItemId, err := r.Services.ServiceLineItemService.Create(ctx, data, false)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to create service line item")
@@ -96,7 +96,7 @@ func (r *mutationResolver) ContractLineItemUpdate(ctx context.Context, input mod
 		data.SliBilledType = neo4jenum.BilledTypeNone
 	}
 
-	err := r.Services.ServiceLineItemService.Update(ctx, data)
+	err := r.Services.ServiceLineItemService.Update(ctx, data, false)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "failed to update contract line item {%s}", utils.IfNotNilString(input.ID))
@@ -124,7 +124,7 @@ func (r *mutationResolver) ContractLineItemClose(ctx context.Context, input mode
 	if input.ServiceEnded != nil {
 		endedAt = input.ServiceEnded
 	}
-	err := r.Services.ServiceLineItemService.Close(ctx, input.ID, endedAt)
+	err := r.Services.ServiceLineItemService.Close(ctx, input.ID, endedAt, false)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "failed to close service line item %s", input.ID)

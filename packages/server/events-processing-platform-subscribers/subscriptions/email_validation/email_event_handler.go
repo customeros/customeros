@@ -122,7 +122,7 @@ func (h *emailEventHandler) ValidateEmail(ctx context.Context, evt eventstore.Ev
 		return h.grpcClients.EmailClient.PassEmailValidation(ctx, &emailpb.PassEmailValidationGrpcRequest{
 			Tenant:         eventData.Tenant,
 			EmailId:        emailId,
-			AppSource:      constants.AppSourceEventProcessingPlatform,
+			AppSource:      constants.AppSourceEventProcessingPlatformSubscribers,
 			RawEmail:       emailValidate.Email,
 			Email:          email,
 			IsReachable:    result.IsReachable,
@@ -156,7 +156,7 @@ func (h *emailEventHandler) sendEmailFailedValidationEvent(ctx context.Context, 
 		return h.grpcClients.EmailClient.FailEmailValidation(ctx, &emailpb.FailEmailValidationGrpcRequest{
 			Tenant:       tenant,
 			EmailId:      emailId,
-			AppSource:    constants.AppSourceEventProcessingPlatform,
+			AppSource:    constants.AppSourceEventProcessingPlatformSubscribers,
 			ErrorMessage: utils.StringFirstNonEmpty(errorMessage, "Error message not available"),
 		})
 	})

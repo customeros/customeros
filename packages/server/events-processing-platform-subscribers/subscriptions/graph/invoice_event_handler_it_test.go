@@ -47,7 +47,7 @@ func TestInvoiceEventHandler_OnInvoiceCreateForContractV1(t *testing.T) {
 			require.Equal(t, invoiceId, inv.InvoiceId)
 			require.Equal(t, "", inv.LoggedInUserId)
 			require.Equal(t, contractId, inv.ContractId)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, inv.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, inv.AppSource)
 			calledRequestFillInvoice = true
 			return &invoicepb.InvoiceIdResponse{
 				Id: invoiceId,
@@ -61,7 +61,7 @@ func TestInvoiceEventHandler_OnInvoiceCreateForContractV1(t *testing.T) {
 		aggregate,
 		commonmodel.Source{
 			Source:    constants.SourceOpenline,
-			AppSource: constants.AppSourceEventProcessingPlatform,
+			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 		},
 		contractId,
 		neo4jenum.CurrencyEUR.String(),
@@ -95,7 +95,7 @@ func TestInvoiceEventHandler_OnInvoiceCreateForContractV1(t *testing.T) {
 	require.Equal(t, invoiceId, createdInvoice.Id)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), createdInvoice.Source)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), createdInvoice.SourceOfTruth)
-	require.Equal(t, constants.AppSourceEventProcessingPlatform, createdInvoice.AppSource)
+	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, createdInvoice.AppSource)
 	require.Equal(t, now, createdInvoice.CreatedAt)
 	require.Equal(t, now, createdInvoice.UpdatedAt)
 	require.Equal(t, utils.ToDate(now).AddDate(0, 0, 2), createdInvoice.DueDate)
@@ -143,7 +143,7 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 		NextPreviewInvoiceForContract: func(context context.Context, inv *invoicepb.NextPreviewInvoiceForContractRequest) (*invoicepb.InvoiceIdResponse, error) {
 			require.Equal(t, tenantName, inv.Tenant)
 			require.Equal(t, contractId, inv.ContractId)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, inv.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, inv.AppSource)
 			calledNextPreviewInvoiceForContractRequest = true
 			return &invoicepb.InvoiceIdResponse{
 				Id: invoiceId,
@@ -153,7 +153,7 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 			require.Equal(t, tenantName, inv.Tenant)
 			require.Equal(t, invoiceId, inv.InvoiceId)
 			require.Equal(t, "", inv.LoggedInUserId)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, inv.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, inv.AppSource)
 			calledGenerateInvoicePdfGrpcRequest = true
 			return &invoicepb.InvoiceIdResponse{
 				Id: invoiceId,
@@ -209,7 +209,7 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 				CreatedAt: timeNow,
 				SourceFields: commonmodel.Source{
 					Source:    constants.SourceOpenline,
-					AppSource: constants.AppSourceEventProcessingPlatform,
+					AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 				},
 				Name:                    "test",
 				Price:                   50,
@@ -226,7 +226,7 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 				CreatedAt: timeNow,
 				SourceFields: commonmodel.Source{
 					Source:    constants.SourceOpenline,
-					AppSource: constants.AppSourceEventProcessingPlatform,
+					AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 				},
 				Name:                    "test02",
 				Price:                   50.2,
@@ -303,7 +303,7 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 	require.Equal(t, "invoice-line-id-1", firstInvoiceLine.Id)
 	require.Equal(t, timeNow, firstInvoiceLine.CreatedAt)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), firstInvoiceLine.Source)
-	require.Equal(t, constants.AppSourceEventProcessingPlatform, firstInvoiceLine.AppSource)
+	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, firstInvoiceLine.AppSource)
 	require.Equal(t, "test", firstInvoiceLine.Name)
 	require.Equal(t, float64(50), firstInvoiceLine.Price)
 	require.Equal(t, int64(2), firstInvoiceLine.Quantity)
@@ -317,7 +317,7 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 	require.Equal(t, "invoice-line-id-2", secondInvoiceLine.Id)
 	require.Equal(t, timeNow, secondInvoiceLine.CreatedAt)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), secondInvoiceLine.Source)
-	require.Equal(t, constants.AppSourceEventProcessingPlatform, secondInvoiceLine.AppSource)
+	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, secondInvoiceLine.AppSource)
 	require.Equal(t, "test02", secondInvoiceLine.Name)
 	require.Equal(t, 50.2, secondInvoiceLine.Price)
 	require.Equal(t, int64(22), secondInvoiceLine.Quantity)

@@ -69,7 +69,7 @@ func TestOpportunityEventHandler_OnCreate(t *testing.T) {
 		opportunityData,
 		commonmodel.Source{
 			Source:    constants.SourceOpenline,
-			AppSource: constants.AppSourceEventProcessingPlatform,
+			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 		},
 		commonmodel.ExternalSystem{
 			ExternalSystemId: "sf",
@@ -102,7 +102,7 @@ func TestOpportunityEventHandler_OnCreate(t *testing.T) {
 	opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
 	require.Equal(t, opportunityId, opportunity.Id)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), opportunity.Source)
-	require.Equal(t, constants.AppSourceEventProcessingPlatform, opportunity.AppSource)
+	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, opportunity.AppSource)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), opportunity.SourceOfTruth)
 	require.Equal(t, timeNow, opportunity.CreatedAt)
 	test.AssertRecentTime(t, opportunity.UpdatedAt)
@@ -134,7 +134,7 @@ func TestOpportunityEventHandler_OnCreateRenewal(t *testing.T) {
 		RefreshRenewalSummary: func(context context.Context, org *organizationpb.RefreshRenewalSummaryGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 			require.Equal(t, tenantName, org.Tenant)
 			require.Equal(t, orgId, org.OrganizationId)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, org.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, org.AppSource)
 			calledEventsPlatformToRefreshRenewalSummary = true
 			return &organizationpb.OrganizationIdGrpcResponse{
 				Id: orgId,
@@ -161,7 +161,7 @@ func TestOpportunityEventHandler_OnCreateRenewal(t *testing.T) {
 		true,
 		commonmodel.Source{
 			Source:    constants.SourceOpenline,
-			AppSource: constants.AppSourceEventProcessingPlatform,
+			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 		},
 		timeNow,
 		timeNow,
@@ -185,7 +185,7 @@ func TestOpportunityEventHandler_OnCreateRenewal(t *testing.T) {
 	opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
 	require.Equal(t, opportunityId, opportunity.Id)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), opportunity.Source)
-	require.Equal(t, constants.AppSourceEventProcessingPlatform, opportunity.AppSource)
+	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, opportunity.AppSource)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), opportunity.SourceOfTruth)
 	require.Equal(t, timeNow, opportunity.CreatedAt)
 	test.AssertRecentTime(t, opportunity.UpdatedAt)
@@ -373,7 +373,7 @@ func TestOpportunityEventHandler_OnUpdateRenewal_AmountAndRenewalChangedByUser(t
 		RefreshRenewalSummary: func(context context.Context, org *organizationpb.RefreshRenewalSummaryGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 			require.Equal(t, tenantName, org.Tenant)
 			require.Equal(t, orgId, org.OrganizationId)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, org.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, org.AppSource)
 			calledEventsPlatformToRefreshRenewalSummary = true
 			return &organizationpb.OrganizationIdGrpcResponse{
 				Id: orgId,
@@ -382,7 +382,7 @@ func TestOpportunityEventHandler_OnUpdateRenewal_AmountAndRenewalChangedByUser(t
 		RefreshArr: func(context context.Context, org *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 			require.Equal(t, tenantName, org.Tenant)
 			require.Equal(t, orgId, org.OrganizationId)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, org.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, org.AppSource)
 			calledEventsPlatformToRefreshArr = true
 			return &organizationpb.OrganizationIdGrpcResponse{
 				Id: orgId,
@@ -537,7 +537,7 @@ func TestOpportunityEventHandler_OnUpdateRenewal_LikelihoodChangedByUser_Generat
 			require.Equal(t, float64(0), op.MaxAmount)
 			require.Equal(t, []opportunitypb.OpportunityMaskField{opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_AMOUNT,
 				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_MAX_AMOUNT}, op.FieldsMask)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, op.SourceFields.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, op.SourceFields.AppSource)
 			require.Equal(t, constants.SourceOpenline, op.SourceFields.Source)
 			calledEventsPlatformToUpdateOpportunity = true
 			return &opportunitypb.OpportunityIdGrpcResponse{
@@ -610,7 +610,7 @@ func TestOpportunityEventHandler_OnUpdateRenewal_LikelihoodChangedByUser_Generat
 	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
 	require.NotNil(t, action.Id)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), action.Source)
-	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
+	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, action.AppSource)
 	require.Equal(t, neo4jenum.ActionRenewalLikelihoodUpdated, action.Type)
 	require.Equal(t, "Renewal likelihood set to Medium", action.Content)
 	require.Equal(t, fmt.Sprintf(`{"likelihood":"%s","reason":"%s"}`, "MEDIUM", "Updated likelihood"), action.Metadata)
@@ -717,7 +717,7 @@ func TestOpportunityEventHandler_OnUpdateRenewal_ChangeOwner(t *testing.T) {
 		RefreshRenewalSummary: func(context context.Context, org *organizationpb.RefreshRenewalSummaryGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 			require.Equal(t, tenantName, org.Tenant)
 			require.Equal(t, orgId, org.OrganizationId)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, org.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, org.AppSource)
 			calledEventsPlatformToRefreshRenewalSummary = true
 			return &organizationpb.OrganizationIdGrpcResponse{
 				Id: orgId,
@@ -756,7 +756,7 @@ func TestOpportunityEventHandler_OnUpdateRenewal_ChangeOwner(t *testing.T) {
 		opportunityData,
 		commonmodel.Source{
 			Source:    constants.SourceOpenline,
-			AppSource: constants.AppSourceEventProcessingPlatform,
+			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 		},
 		commonmodel.ExternalSystem{
 			ExternalSystemId: "sf",
@@ -789,7 +789,7 @@ func TestOpportunityEventHandler_OnUpdateRenewal_ChangeOwner(t *testing.T) {
 	opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
 	require.Equal(t, opportunityId, opportunity.Id)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), opportunity.Source)
-	require.Equal(t, constants.AppSourceEventProcessingPlatform, opportunity.AppSource)
+	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, opportunity.AppSource)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), opportunity.SourceOfTruth)
 	require.Equal(t, timeNow, opportunity.CreatedAt)
 	test.AssertRecentTime(t, opportunity.UpdatedAt)

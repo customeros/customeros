@@ -24,6 +24,7 @@ type Invoice implements MetadataInterface {
     dryRun:             Boolean!
     postpaid:           Boolean!
     offCycle:           Boolean!
+    preview:            Boolean!
     amountDue:          Float!
     amountPaid:         Float!
     amountRemaining:    Float!

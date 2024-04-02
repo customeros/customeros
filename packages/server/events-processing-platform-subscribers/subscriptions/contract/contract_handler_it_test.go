@@ -37,7 +37,7 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_CreateRenewalOpportunit
 			require.Nil(t, op.CreatedAt)
 			require.Nil(t, op.UpdatedAt)
 			require.Equal(t, opportunitypb.RenewalLikelihood_HIGH_RENEWAL, op.RenewalLikelihood)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, op.SourceFields.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, op.SourceFields.AppSource)
 			calledEventsPlatformToCreateRenewalOpportunity = true
 			return &opportunitypb.OpportunityIdGrpcResponse{
 				Id: "some-opportunity-id",
@@ -79,7 +79,7 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_MonthlyContract(t *test
 		UpdateRenewalOpportunityNextCycleDate: func(context context.Context, op *opportunitypb.UpdateRenewalOpportunityNextCycleDateGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
 			require.Equal(t, tenantName, op.Tenant)
 			require.Equal(t, opportunityId, op.OpportunityId)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, op.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, op.AppSource)
 			require.Equal(t, startOfNextMonth(utils.Now()), *utils.TimestampProtoToTimePtr(op.RenewedAt))
 			calledEventsPlatformToUpdateRenewalOpportunityNextCycleDate = true
 			return &opportunitypb.OpportunityIdGrpcResponse{
@@ -122,7 +122,7 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_QuarterlyContract(t *te
 		UpdateRenewalOpportunityNextCycleDate: func(context context.Context, op *opportunitypb.UpdateRenewalOpportunityNextCycleDateGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
 			require.Equal(t, tenantName, op.Tenant)
 			require.Equal(t, opportunityId, op.OpportunityId)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, op.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, op.AppSource)
 			in1Quarter := yesterday.AddDate(0, 3, 0)
 			require.Equal(t, utils.ToDate(in1Quarter), *utils.TimestampProtoToTimePtr(op.RenewedAt))
 			calledEventsPlatformToUpdateRenewalOpportunityNextCycleDate = true
@@ -167,7 +167,7 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_AnnualContract(t *testi
 		UpdateRenewalOpportunityNextCycleDate: func(context context.Context, op *opportunitypb.UpdateRenewalOpportunityNextCycleDateGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
 			require.Equal(t, tenantName, op.Tenant)
 			require.Equal(t, opportunityId, op.OpportunityId)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, op.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, op.AppSource)
 			require.Equal(t, startOfNextYear(utils.Now()), *utils.TimestampProtoToTimePtr(op.RenewedAt))
 			calledEventsPlatformToUpdateRenewalOpportunityNextCycleDate = true
 			return &opportunitypb.OpportunityIdGrpcResponse{
@@ -212,7 +212,7 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_MultiAnnualContract(t *
 		UpdateRenewalOpportunityNextCycleDate: func(context context.Context, op *opportunitypb.UpdateRenewalOpportunityNextCycleDateGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
 			require.Equal(t, tenantName, op.Tenant)
 			require.Equal(t, opportunityId, op.OpportunityId)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, op.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, op.AppSource)
 			in10Years := yesterday.AddDate(10, 0, 0)
 			require.Equal(t, utils.ToDate(in10Years), *utils.TimestampProtoToTimePtr(op.RenewedAt))
 			calledEventsPlatformToUpdateRenewalOpportunityNextCycleDate = true
@@ -286,7 +286,7 @@ func TestContractEventHandler_UpdateRenewalArrForecast_OnlyOnceBilled(t *testing
 			require.Equal(t, float64(0), op.MaxAmount)
 			require.Equal(t, []opportunitypb.OpportunityMaskField{opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_AMOUNT,
 				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_MAX_AMOUNT}, op.FieldsMask)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, op.SourceFields.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, op.SourceFields.AppSource)
 			require.Equal(t, constants.SourceOpenline, op.SourceFields.Source)
 			calledEventsPlatformToUpdateOpportunity = true
 			return &opportunitypb.OpportunityIdGrpcResponse{
@@ -354,7 +354,7 @@ func TestContractEventHandler_UpdateRenewalArrForecast_MultipleServices(t *testi
 			require.Equal(t, float64(2600), op.MaxAmount)
 			require.Equal(t, []opportunitypb.OpportunityMaskField{opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_AMOUNT,
 				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_MAX_AMOUNT}, op.FieldsMask)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, op.SourceFields.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, op.SourceFields.AppSource)
 			require.Equal(t, constants.SourceOpenline, op.SourceFields.Source)
 			calledEventsPlatformToUpdateOpportunity = true
 			return &opportunitypb.OpportunityIdGrpcResponse{
@@ -411,7 +411,7 @@ func TestContractEventHandler_UpdateRenewalArrForecast_MediumLikelihood(t *testi
 			require.Equal(t, float64(4000), op.MaxAmount)
 			require.Equal(t, []opportunitypb.OpportunityMaskField{opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_AMOUNT,
 				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_MAX_AMOUNT}, op.FieldsMask)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, op.SourceFields.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, op.SourceFields.AppSource)
 			require.Equal(t, constants.SourceOpenline, op.SourceFields.Source)
 			calledEventsPlatformToUpdateOpportunity = true
 			return &opportunitypb.OpportunityIdGrpcResponse{
@@ -473,7 +473,7 @@ func TestContractEventHandler_UpdateRenewalArrForecast_ContractEndsBeforeNextRen
 			require.Equal(t, float64(0), op.MaxAmount)
 			require.Equal(t, []opportunitypb.OpportunityMaskField{opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_AMOUNT,
 				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_MAX_AMOUNT}, op.FieldsMask)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, op.SourceFields.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, op.SourceFields.AppSource)
 			require.Equal(t, constants.SourceOpenline, op.SourceFields.Source)
 			calledEventsPlatformToUpdateOpportunity = true
 			return &opportunitypb.OpportunityIdGrpcResponse{
@@ -535,7 +535,7 @@ func TestContractEventHandler_UpdateRenewalArrForecast_ContractEndsIn6Months_Pro
 			require.Equal(t, float64(500), op.MaxAmount)
 			require.Equal(t, []opportunitypb.OpportunityMaskField{opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_AMOUNT,
 				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_MAX_AMOUNT}, op.FieldsMask)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, op.SourceFields.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, op.SourceFields.AppSource)
 			require.Equal(t, constants.SourceOpenline, op.SourceFields.Source)
 			calledEventsPlatformToUpdateOpportunity = true
 			return &opportunitypb.OpportunityIdGrpcResponse{
@@ -597,7 +597,7 @@ func TestContractEventHandler_UpdateRenewalArrForecast_ContractEndsInMoreThan12M
 			require.Equal(t, float64(1000), op.MaxAmount)
 			require.Equal(t, []opportunitypb.OpportunityMaskField{opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_AMOUNT,
 				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_MAX_AMOUNT}, op.FieldsMask)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, op.SourceFields.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, op.SourceFields.AppSource)
 			require.Equal(t, constants.SourceOpenline, op.SourceFields.Source)
 			calledEventsPlatformToUpdateOpportunity = true
 			return &opportunitypb.OpportunityIdGrpcResponse{
@@ -646,7 +646,7 @@ func TestContractEventHandler_UpdateActiveRenewalOpportunityLikelihood_EndedCont
 		UpdateRenewalOpportunity: func(context context.Context, op *opportunitypb.UpdateRenewalOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
 			require.Equal(t, tenantName, op.Tenant)
 			require.Equal(t, opportunityId, op.Id)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, op.SourceFields.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, op.SourceFields.AppSource)
 			require.Equal(t, opportunitypb.RenewalLikelihood_ZERO_RENEWAL, op.RenewalLikelihood)
 			require.Equal(t, []opportunitypb.OpportunityMaskField{opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_RENEWAL_LIKELIHOOD}, op.FieldsMask)
 			calledEventsPlatformToUpdateRenewalOpportunity = true
@@ -724,7 +724,7 @@ func TestContractEventHandler_UpdateActiveRenewalOpportunityLikelihood_Reinitiat
 		UpdateRenewalOpportunity: func(context context.Context, op *opportunitypb.UpdateRenewalOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
 			require.Equal(t, tenantName, op.Tenant)
 			require.Equal(t, opportunityId, op.Id)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, op.SourceFields.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, op.SourceFields.AppSource)
 			require.Equal(t, opportunitypb.RenewalLikelihood_MEDIUM_RENEWAL, op.RenewalLikelihood)
 			require.Equal(t, []opportunitypb.OpportunityMaskField{opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_RENEWAL_LIKELIHOOD}, op.FieldsMask)
 			calledEventsPlatformToUpdateRenewalOpportunity = true

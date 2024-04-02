@@ -43,7 +43,7 @@ func TestGraphInteractionEventEventHandler_OnCreate(t *testing.T) {
 		RefreshLastTouchpoint: func(context context.Context, org *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 			require.Equal(t, tenantName, org.Tenant)
 			require.Equal(t, orgId, org.OrganizationId)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, org.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, org.AppSource)
 			lastTouchpointInvoked = true
 			return &organizationpb.OrganizationIdGrpcResponse{
 				Id: orgId,
@@ -94,7 +94,7 @@ func TestGraphInteractionEventEventHandler_OnCreate(t *testing.T) {
 		},
 	}, commonmodel.Source{
 		Source:        constants.SourceOpenline,
-		AppSource:     constants.AppSourceEventProcessingPlatform,
+		AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
 		SourceOfTruth: constants.SourceOpenline,
 	}, commonmodel.ExternalSystem{
 		ExternalSystemId: "sf",
@@ -141,7 +141,7 @@ func TestGraphInteractionEventEventHandler_OnCreate(t *testing.T) {
 	require.Equal(t, true, interactionEvent.Hide)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), interactionEvent.Source)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), interactionEvent.SourceOfTruth)
-	require.Equal(t, constants.AppSourceEventProcessingPlatform, interactionEvent.AppSource)
+	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, interactionEvent.AppSource)
 	require.Equal(t, now, interactionEvent.CreatedAt)
 	require.Equal(t, now, interactionEvent.UpdatedAt)
 
@@ -318,7 +318,7 @@ func TestGraphInteractionEventEventHandler_OnSummaryReplace_Create(t *testing.T)
 	require.Equal(t, now, utils.GetTimePropOrNow(analysisProps, "createdAt"))
 	require.Equal(t, now, utils.GetTimePropOrNow(analysisProps, "updatedAt"))
 	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(analysisProps, "source"))
-	require.Equal(t, constants.AppSourceEventProcessingPlatform, utils.GetStringPropOrEmpty(analysisProps, "appSource"))
+	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, utils.GetStringPropOrEmpty(analysisProps, "appSource"))
 	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(analysisProps, "sourceOfTruth"))
 	require.Equal(t, "summary", utils.GetStringPropOrEmpty(analysisProps, "analysisType"))
 	require.Equal(t, "AnalysisContentType", utils.GetStringPropOrEmpty(analysisProps, "contentType"))
@@ -373,7 +373,7 @@ func TestGraphInteractionEventEventHandler_OnActionItemsReplace(t *testing.T) {
 	require.Equal(t, now, utils.GetTimePropOrNow(actionItemProps, "createdAt"))
 	require.Equal(t, now, utils.GetTimePropOrNow(actionItemProps, "updatedAt"))
 	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(actionItemProps, "source"))
-	require.Equal(t, constants.AppSourceEventProcessingPlatform, utils.GetStringPropOrEmpty(actionItemProps, "appSource"))
+	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, utils.GetStringPropOrEmpty(actionItemProps, "appSource"))
 	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(actionItemProps, "sourceOfTruth"))
 
 	//TODO update the following assertion when the implementation of the OnActionItemsReplace is fixed and the content contains the entire Array of ActionItems.

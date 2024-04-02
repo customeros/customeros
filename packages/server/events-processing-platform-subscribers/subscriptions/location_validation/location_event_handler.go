@@ -85,7 +85,7 @@ func (h *LocationEventHandler) OnLocationCreate(ctx context.Context, evt eventst
 			return h.grpcClients.LocationClient.SkipLocationValidation(ctx, &locationpb.SkipLocationValidationGrpcRequest{
 				Tenant:     tenant,
 				LocationId: locationId,
-				AppSource:  constants.AppSourceEventProcessingPlatform,
+				AppSource:  constants.AppSourceEventProcessingPlatformSubscribers,
 				RawAddress: "",
 				Reason:     "Missing raw Address",
 			})
@@ -104,7 +104,7 @@ func (h *LocationEventHandler) OnLocationCreate(ctx context.Context, evt eventst
 			return h.grpcClients.LocationClient.SkipLocationValidation(ctx, &locationpb.SkipLocationValidationGrpcRequest{
 				Tenant:     tenant,
 				LocationId: locationId,
-				AppSource:  constants.AppSourceEventProcessingPlatform,
+				AppSource:  constants.AppSourceEventProcessingPlatformSubscribers,
 				RawAddress: rawAddress,
 				Reason:     "Missing country",
 			})
@@ -169,7 +169,7 @@ func (h *LocationEventHandler) OnLocationCreate(ctx context.Context, evt eventst
 		request := locationpb.PassLocationValidationGrpcRequest{
 			Tenant:       tenant,
 			LocationId:   locationId,
-			AppSource:    constants.AppSourceEventProcessingPlatform,
+			AppSource:    constants.AppSourceEventProcessingPlatformSubscribers,
 			RawAddress:   rawAddress,
 			Country:      country,
 			Region:       result.Address.Region,
@@ -255,7 +255,7 @@ func (h *LocationEventHandler) sendLocationFailedValidationEvent(ctx context.Con
 		return h.grpcClients.LocationClient.FailLocationValidation(ctx, &locationpb.FailLocationValidationGrpcRequest{
 			Tenant:       tenant,
 			LocationId:   locationId,
-			AppSource:    constants.AppSourceEventProcessingPlatform,
+			AppSource:    constants.AppSourceEventProcessingPlatformSubscribers,
 			RawAddress:   rawAddress,
 			Country:      country,
 			ErrorMessage: utils.StringFirstNonEmpty(errorMessage, "Error message not available"),

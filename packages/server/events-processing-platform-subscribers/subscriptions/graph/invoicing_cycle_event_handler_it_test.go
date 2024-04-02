@@ -36,7 +36,7 @@ func TestInvoicingCycleEventHandler_OnCreate(t *testing.T) {
 		&timeNow,
 		commonmodel.Source{
 			Source:    constants.SourceOpenline,
-			AppSource: constants.AppSourceEventProcessingPlatform,
+			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 		},
 	)
 	require.Nil(t, err)
@@ -57,7 +57,7 @@ func TestInvoicingCycleEventHandler_OnCreate(t *testing.T) {
 	invoicingCycle := neo4jmapper.MapDbNodeToInvoicingCycleEntity(dbNode)
 	require.Equal(t, id, invoicingCycle.Id)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), invoicingCycle.Source)
-	require.Equal(t, constants.AppSourceEventProcessingPlatform, invoicingCycle.AppSource)
+	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, invoicingCycle.AppSource)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), invoicingCycle.SourceOfTruth)
 	require.Equal(t, timeNow, invoicingCycle.CreatedAt)
 	test.AssertRecentTime(t, invoicingCycle.UpdatedAt)
@@ -87,7 +87,7 @@ func TestInvoicingCycleEventHandler_OnUpdate(t *testing.T) {
 		&timeNow,
 		commonmodel.Source{
 			Source:    constants.SourceOpenline,
-			AppSource: constants.AppSourceEventProcessingPlatform,
+			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 		},
 	)
 	require.Nil(t, err)

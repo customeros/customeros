@@ -39,7 +39,7 @@ func TestGraphLogEntryEventHandler_OnCreate(t *testing.T) {
 		RefreshLastTouchpoint: func(context context.Context, org *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 			require.Equal(t, tenantName, org.Tenant)
 			require.Equal(t, orgId, org.OrganizationId)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, org.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, org.AppSource)
 			calledEventsPlatform = true
 			return &organizationpb.OrganizationIdGrpcResponse{
 				Id: orgId,
@@ -63,7 +63,7 @@ func TestGraphLogEntryEventHandler_OnCreate(t *testing.T) {
 		LoggedOrganizationId: utils.StringPtr(orgId),
 	}, cmnmod.Source{
 		Source:        constants.SourceOpenline,
-		AppSource:     constants.AppSourceEventProcessingPlatform,
+		AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
 		SourceOfTruth: constants.SourceOpenline,
 	}, cmnmod.ExternalSystem{
 		ExternalSystemId: "sf",
@@ -97,7 +97,7 @@ func TestGraphLogEntryEventHandler_OnCreate(t *testing.T) {
 	require.Equal(t, "test content", logEntry.Content)
 	require.Equal(t, "test content type", logEntry.ContentType)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), logEntry.Source)
-	require.Equal(t, constants.AppSourceEventProcessingPlatform, logEntry.AppSource)
+	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, logEntry.AppSource)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), logEntry.SourceOfTruth)
 	require.Equal(t, now, logEntry.CreatedAt)
 	require.Equal(t, now, logEntry.UpdatedAt)

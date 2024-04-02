@@ -1020,6 +1020,9 @@ func CreateInvoiceForContract(ctx context.Context, driver *neo4j.DriverWithConte
 				i.createdAt=$createdAt,
 				i.updatedAt=$updatedAt,
 				i.dryRun=$dryRun,
+				i.preview=$preview,
+				i.offCycle=$offCycle,
+				i.postpaid=$postpaid,
 				i.number=$number,
 				i.periodStartDate=$periodStartDate,
 				i.periodEndDate=$periodEndDate,
@@ -1033,8 +1036,6 @@ func CreateInvoiceForContract(ctx context.Context, driver *neo4j.DriverWithConte
 				i.note=$note,
 				i.customerEmail=$customerEmail,
 				i.paymentLink=$paymentLink,
-				i.offCycle=$offCycle,
-				i.postpaid=$postpaid,
 				i.billingCycle=$billingCycle
 			WITH c, i 
 			MERGE (c)-[:HAS_INVOICE]->(i) 
@@ -1050,6 +1051,9 @@ func CreateInvoiceForContract(ctx context.Context, driver *neo4j.DriverWithConte
 		"createdAt":        invoice.CreatedAt,
 		"updatedAt":        invoice.UpdatedAt,
 		"dryRun":           invoice.DryRun,
+		"offCycle":         invoice.OffCycle,
+		"postpaid":         invoice.Postpaid,
+		"preview":          invoice.Preview,
 		"number":           invoice.Number,
 		"periodStartDate":  utils.ToNeo4jDateAsAny(&invoice.PeriodStartDate),
 		"periodEndDate":    utils.ToNeo4jDateAsAny(&invoice.PeriodEndDate),
@@ -1063,8 +1067,6 @@ func CreateInvoiceForContract(ctx context.Context, driver *neo4j.DriverWithConte
 		"note":             invoice.Note,
 		"customerEmail":    invoice.Customer.Email,
 		"paymentLink":      invoice.PaymentDetails.PaymentLink,
-		"offCycle":         invoice.OffCycle,
-		"postpaid":         invoice.Postpaid,
 		"billingCycle":     invoice.BillingCycle.String(),
 	}
 

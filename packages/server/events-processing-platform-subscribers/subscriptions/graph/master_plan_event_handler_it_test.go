@@ -39,7 +39,7 @@ func TestMasterPlanEventHandler_OnCreate(t *testing.T) {
 		"master plan name",
 		commonmodel.Source{
 			Source:    constants.SourceOpenline,
-			AppSource: constants.AppSourceEventProcessingPlatform,
+			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 		},
 		timeNow,
 	)
@@ -61,7 +61,7 @@ func TestMasterPlanEventHandler_OnCreate(t *testing.T) {
 	masterPlan := neo4jmapper.MapDbNodeToMasterPlanEntity(masterPlanDbNode)
 	require.Equal(t, masterPlanId, masterPlan.Id)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), masterPlan.Source)
-	require.Equal(t, constants.AppSourceEventProcessingPlatform, masterPlan.AppSource)
+	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, masterPlan.AppSource)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), masterPlan.SourceOfTruth)
 	require.Equal(t, timeNow, masterPlan.CreatedAt)
 	test.AssertRecentTime(t, masterPlan.UpdatedAt)
@@ -100,7 +100,7 @@ func TestMasterPlanEventHandler_OnCreateMilestone(t *testing.T) {
 		true,
 		commonmodel.Source{
 			Source:    constants.SourceOpenline,
-			AppSource: constants.AppSourceEventProcessingPlatform,
+			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 		},
 		timeNow,
 	)
@@ -125,7 +125,7 @@ func TestMasterPlanEventHandler_OnCreateMilestone(t *testing.T) {
 	milestone := neo4jmapper.MapDbNodeToMasterPlanMilestoneEntity(masterPlanMilestoneDbNode)
 	require.Equal(t, milestoneId, milestone.Id)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), milestone.Source)
-	require.Equal(t, constants.AppSourceEventProcessingPlatform, milestone.AppSource)
+	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, milestone.AppSource)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), milestone.SourceOfTruth)
 	require.Equal(t, timeNow, milestone.CreatedAt)
 	test.AssertRecentTime(t, milestone.UpdatedAt)

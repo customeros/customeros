@@ -134,7 +134,7 @@ func (h *phoneNumberEventHandler) OnPhoneNumberCreate(ctx context.Context, evt e
 			PhoneNumber:   rawPhoneNumber,
 			E164:          result.E164,
 			CountryCodeA2: result.CountryA2,
-			AppSource:     constants.AppSourceEventProcessingPlatform,
+			AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
 		})
 	})
 	if err != nil {
@@ -158,7 +158,7 @@ func (h *phoneNumberEventHandler) sendPhoneNumberFailedValidationEvent(ctx conte
 			PhoneNumberId: phoneNumberId,
 			PhoneNumber:   rawPhoneNumber,
 			CountryCodeA2: countryCodeA2,
-			AppSource:     constants.AppSourceEventProcessingPlatform,
+			AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
 			ErrorMessage:  utils.StringFirstNonEmpty(errorMessage, "Error message not available"),
 		})
 	})

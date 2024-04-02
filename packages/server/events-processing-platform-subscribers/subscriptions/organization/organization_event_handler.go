@@ -214,7 +214,7 @@ func (h *organizationEventHandler) webScrapeOrganization(ctx context.Context, te
 		Tenant:         tenant,
 		OrganizationId: organizationId,
 		SourceFields: &commonpb.SourceFields{
-			AppSource: constants.AppSourceEventProcessingPlatform,
+			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 			Source:    constants.SourceWebscrape,
 		},
 		FieldsMask:         prepareFieldsMaskForGrpcRequests(fieldsMask),
@@ -290,7 +290,7 @@ func (h *organizationEventHandler) updateOrganizationNameIfEmpty(ctx context.Con
 				Tenant:         tenant,
 				OrganizationId: organization.ID,
 				SourceFields: &commonpb.SourceFields{
-					AppSource: constants.AppSourceEventProcessingPlatform,
+					AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 					Source:    constants.SourceWebscrape,
 				},
 				Name:       utils.ExtractFirstPart(utils.ExtractDomain(url), "."),
@@ -315,7 +315,7 @@ func (h *organizationEventHandler) addSocial(ctx context.Context, organizationId
 			Tenant:         tenant,
 			OrganizationId: organizationId,
 			SourceFields: &commonpb.SourceFields{
-				AppSource:     constants.AppSourceEventProcessingPlatform,
+				AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
 				Source:        constants.SourceWebscrape,
 				SourceOfTruth: constants.SourceWebscrape,
 			},
@@ -402,7 +402,7 @@ func (h *organizationEventHandler) callUpdateOrganizationCommand(ctx context.Con
 			Tenant:         tenant,
 			OrganizationId: organizationId,
 			SourceFields: &commonpb.SourceFields{
-				AppSource: constants.AppSourceEventProcessingPlatform,
+				AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 				Source:    source,
 			},
 			Market:   market,
@@ -463,7 +463,7 @@ func (h *organizationEventHandler) mapIndustryToGICSWithAI(ctx context.Context, 
 
 	promptLog1 := commonEntity.AiPromptLog{
 		CreatedAt:      utils.Now(),
-		AppSource:      constants.AppSourceEventProcessingPlatform,
+		AppSource:      constants.AppSourceEventProcessingPlatformSubscribers,
 		Provider:       constants.Anthropic,
 		Model:          "claude-2",
 		PromptType:     constants.PromptType_MapIndustry,
@@ -505,7 +505,7 @@ func (h *organizationEventHandler) mapIndustryToGICSWithAI(ctx context.Context, 
 
 	promptLog2 := commonEntity.AiPromptLog{
 		CreatedAt:      utils.Now(),
-		AppSource:      constants.AppSourceEventProcessingPlatform,
+		AppSource:      constants.AppSourceEventProcessingPlatformSubscribers,
 		Provider:       constants.Anthropic,
 		Model:          "claude-2",
 		PromptType:     constants.PromptType_ExtractIndustryValue,
