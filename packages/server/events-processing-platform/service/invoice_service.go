@@ -213,10 +213,14 @@ func (s *invoiceService) FillInvoice(ctx context.Context, request *invoicepb.Fil
 
 	extraParams := map[string]any{}
 
-	if !request.DryRun {
-		extraParams[invoice.PARAM_INVOICE_NUMBER] = s.prepareInvoiceNumber(request.Tenant)
+	if request.InvoiceNumber != "" {
+		extraParams[invoice.PARAM_INVOICE_NUMBER] = request.InvoiceNumber
 	} else {
-		extraParams[invoice.PARAM_INVOICE_NUMBER] = generateNewRandomInvoiceNumber()
+		if !request.DryRun || request.Preview {
+			extraParams[invoice.PARAM_INVOICE_NUMBER] = s.prepareInvoiceNumber(request.Tenant)
+		} else {
+			extraParams[invoice.PARAM_INVOICE_NUMBER] = generateNewRandomInvoiceNumber()
+		}
 	}
 
 	invoiceAggregate := invoice.NewInvoiceAggregateWithTenantAndID(request.Tenant, request.InvoiceId)

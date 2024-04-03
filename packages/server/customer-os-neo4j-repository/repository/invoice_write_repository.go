@@ -85,7 +85,7 @@ type InvoiceWriteRepository interface {
 	SetPaidInvoiceNotificationSentAt(ctx context.Context, tenant, invoiceId string) error
 	SetPayInvoiceNotificationSentAt(ctx context.Context, tenant, invoiceId string) error
 	DeleteInvoice(ctx context.Context, tenant, invoiceId string) error
-	DeletePreviewInvoice(ctx context.Context, tenant, contractId string) error
+	DeleteAllPreviewCycleInvoices(ctx context.Context, tenant, contractId, skipInvoiceId string) error
 }
 
 type invoiceWriteRepository struct {
@@ -437,18 +437,20 @@ func (r *invoiceWriteRepository) DeleteInvoice(ctx context.Context, tenant, invo
 	return err
 }
 
-func (r *invoiceWriteRepository) DeletePreviewInvoice(ctx context.Context, tenant, contractId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceReadRepository.GetPreviewInvoiceForContract")
+func (r *invoiceWriteRepository) DeleteAllPreviewCycleInvoices(ctx context.Context, tenant, contractId, skipInvoiceId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceReadRepository.DeleteAllPreviewCycleInvoices")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
-	span.LogFields(log.String("contractId", contractId))
+	span.LogFields(log.String("contractId", contractId), log.String("skipInvoiceId", skipInvoiceId))
 
-	cypher := `MATCH (:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract{id:$contractId})-[:HAS_INVOICE]->(i:Invoice {preview: true, offCycle: false})
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract{id:$contractId})-[:HAS_INVOICE]->(i:Invoice {dryRun:true, preview: true, offCycle: false})
+							   WHERE i.id <> $skipInvoiceId
 			   OPTIONAL MATCH (i)-[:HAS_INVOICE_LINE]->(il:InvoiceLine) 
 			   DETACH DELETE i, il`
 	params := map[string]any{
-		"tenant":     tenant,
-		"contractId": contractId,
+		"tenant":        tenant,
+		"contractId":    contractId,
+		"skipInvoiceId": skipInvoiceId,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

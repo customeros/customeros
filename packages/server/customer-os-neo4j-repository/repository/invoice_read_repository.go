@@ -339,7 +339,7 @@ func (r *invoiceReadRepository) GetFirstPreviewFilledInvoice(ctx context.Context
 	span.SetTag(tracing.SpanTagEntityId, contractId)
 
 	cypher := `MATCH (c:Contract {id:$contractId})-[:HAS_INVOICE]->(i:Invoice)-[:INVOICE_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
-			WHERE i.dryRun = true AND i.preview = true AND i.status <> $statusInitialized
+			WHERE i.dryRun = true AND i.preview = true AND i.status <> $statusInitialized AND i.number IS NOT NULL AND i.number <> ''
 			RETURN i ORDER BY i.createdAt DESC LIMIT 1`
 	params := map[string]any{
 		"tenant":            tenant,

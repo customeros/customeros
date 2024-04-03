@@ -590,11 +590,6 @@ func (s *serviceLineItemService) generateNextPreviewInvoice(ctx context.Context,
 	contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
 
 	if contractEntity.InvoicingEnabled && contractEntity.BillingCycle != neo4jenum.BillingCycleNone && contractEntity.InvoicingStartDate != nil {
-		err := s.repositories.Neo4jRepositories.InvoiceWriteRepository.DeletePreviewInvoice(ctx, tenant, contractId)
-		if err != nil {
-			return err
-		}
-
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err = CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
 			return s.grpcClients.InvoiceClient.NextPreviewInvoiceForContract(ctx, &invoicepb.NextPreviewInvoiceForContractRequest{
