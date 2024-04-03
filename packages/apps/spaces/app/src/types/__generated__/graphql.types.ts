@@ -176,6 +176,8 @@ export type BillingDetails = {
   addressLine2?: Maybe<Scalars['String']['output']>;
   billingCycle?: Maybe<ContractBillingCycle>;
   billingEmail?: Maybe<Scalars['String']['output']>;
+  billingEmailBCC?: Maybe<Array<Scalars['String']['output']>>;
+  billingEmailCC?: Maybe<Array<Scalars['String']['output']>>;
   canPayWithBankTransfer?: Maybe<Scalars['Boolean']['output']>;
   canPayWithCard?: Maybe<Scalars['Boolean']['output']>;
   canPayWithDirectDebit?: Maybe<Scalars['Boolean']['output']>;
@@ -198,6 +200,8 @@ export type BillingDetailsInput = {
   addressLine2?: InputMaybe<Scalars['String']['input']>;
   billingCycle?: InputMaybe<ContractBillingCycle>;
   billingEmail?: InputMaybe<Scalars['String']['input']>;
+  billingEmailBCC?: InputMaybe<Array<Scalars['String']['input']>>;
+  billingEmailCC?: InputMaybe<Array<Scalars['String']['input']>>;
   canPayWithBankTransfer?: InputMaybe<Scalars['Boolean']['input']>;
   canPayWithCard?: InputMaybe<Scalars['Boolean']['input']>;
   canPayWithDirectDebit?: InputMaybe<Scalars['Boolean']['input']>;
@@ -380,7 +384,10 @@ export type Contact = ExtensibleEntity &
      * **Required.  If no values it returns an empty array.**
      */
     jobRoles: Array<JobRole>;
-    /** @deprecated Use `tags` instead */
+    /**
+     * Deprecated
+     * @deprecated Use `tags` instead
+     */
     label?: Maybe<Scalars['String']['output']>;
     /** The last name of the contact in customerOS. */
     lastName?: Maybe<Scalars['String']['output']>;
@@ -414,7 +421,7 @@ export type Contact = ExtensibleEntity &
     timelineEventsTotalCount: Scalars['Int64']['output'];
     timezone?: Maybe<Scalars['String']['output']>;
     /**
-     * The title associate with the contact in customerOS.
+     * Deprecated
      * @deprecated Use `prefix` instead
      */
     title?: Maybe<Scalars['String']['output']>;
@@ -473,29 +480,27 @@ export type ContactInput = {
   appSource?: InputMaybe<Scalars['String']['input']>;
   /** An ISO8601 timestamp recording when the contact was created in customerOS. */
   createdAt?: InputMaybe<Scalars['Time']['input']>;
-  /**
-   * User defined metadata appended to contact.
-   * **Required.**
-   */
+  /** Deprecated */
   customFields?: InputMaybe<Array<CustomFieldInput>>;
   description?: InputMaybe<Scalars['String']['input']>;
   /** An email addresses associated with the contact. */
   email?: InputMaybe<EmailInput>;
   externalReference?: InputMaybe<ExternalSystemReferenceInput>;
+  /** Deprecated */
   fieldSets?: InputMaybe<Array<FieldSetInput>>;
   /** The first name of the contact. */
   firstName?: InputMaybe<Scalars['String']['input']>;
   /** The last name of the contact. */
   lastName?: InputMaybe<Scalars['String']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
-  /** Id of the contact owner (user) */
+  /** Deprecated */
   ownerId?: InputMaybe<Scalars['ID']['input']>;
   /** A phone number associated with the contact. */
   phoneNumber?: InputMaybe<PhoneNumberInput>;
   /** The prefix of the contact. */
   prefix?: InputMaybe<Scalars['String']['input']>;
   profilePhotoUrl?: InputMaybe<Scalars['String']['input']>;
-  /** The unique ID associated with the template of the contact in customerOS. */
+  /** Deprecated */
   templateId?: InputMaybe<Scalars['ID']['input']>;
   timezone?: InputMaybe<Scalars['String']['input']>;
 };
@@ -708,6 +713,7 @@ export enum ContractBillingCycle {
 export type ContractInput = {
   appSource?: InputMaybe<Scalars['String']['input']>;
   autoRenew?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Deprecated */
   billingCycle?: InputMaybe<ContractBillingCycle>;
   billingEnabled?: InputMaybe<Scalars['Boolean']['input']>;
   committedPeriods?: InputMaybe<Scalars['Int64']['input']>;
@@ -717,14 +723,21 @@ export type ContractInput = {
   contractUrl?: InputMaybe<Scalars['String']['input']>;
   currency?: InputMaybe<Currency>;
   dueDays?: InputMaybe<Scalars['Int64']['input']>;
+  /** Deprecated */
   externalReference?: InputMaybe<ExternalSystemReferenceInput>;
+  /** Deprecated */
   invoicingStartDate?: InputMaybe<Scalars['Time']['input']>;
+  /** Deprecated */
   name?: InputMaybe<Scalars['String']['input']>;
   organizationId: Scalars['ID']['input'];
+  /** Deprecated */
   renewalCycle?: InputMaybe<ContractRenewalCycle>;
+  /** Deprecated */
   renewalPeriods?: InputMaybe<Scalars['Int64']['input']>;
   serviceStarted?: InputMaybe<Scalars['Time']['input']>;
+  /** Deprecated */
   serviceStartedAt?: InputMaybe<Scalars['Time']['input']>;
+  /** Deprecated */
   signedAt?: InputMaybe<Scalars['Time']['input']>;
 };
 
@@ -744,15 +757,21 @@ export enum ContractStatus {
 }
 
 export type ContractUpdateInput = {
+  /** Deprecated */
   addressLine1?: InputMaybe<Scalars['String']['input']>;
+  /** Deprecated */
   addressLine2?: InputMaybe<Scalars['String']['input']>;
   appSource?: InputMaybe<Scalars['String']['input']>;
   autoRenew?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Deprecated */
   billingCycle?: InputMaybe<ContractBillingCycle>;
   billingDetails?: InputMaybe<BillingDetailsInput>;
   billingEnabled?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Deprecated */
   canPayWithBankTransfer?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Deprecated */
   canPayWithCard?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Deprecated */
   canPayWithDirectDebit?: InputMaybe<Scalars['Boolean']['input']>;
   committedPeriods?: InputMaybe<Scalars['Int64']['input']>;
   contractEnded?: InputMaybe<Scalars['Time']['input']>;
@@ -761,21 +780,34 @@ export type ContractUpdateInput = {
   contractRenewalCycle?: InputMaybe<ContractRenewalCycle>;
   contractSigned?: InputMaybe<Scalars['Time']['input']>;
   contractUrl?: InputMaybe<Scalars['String']['input']>;
+  /** Deprecated */
   country?: InputMaybe<Scalars['String']['input']>;
   currency?: InputMaybe<Currency>;
+  /** Deprecated */
   endedAt?: InputMaybe<Scalars['Time']['input']>;
+  /** Deprecated */
   invoiceEmail?: InputMaybe<Scalars['String']['input']>;
+  /** Deprecated */
   invoiceNote?: InputMaybe<Scalars['String']['input']>;
+  /** Deprecated */
   invoicingStartDate?: InputMaybe<Scalars['Time']['input']>;
+  /** Deprecated */
   locality?: InputMaybe<Scalars['String']['input']>;
+  /** Deprecated */
   name?: InputMaybe<Scalars['String']['input']>;
+  /** Deprecated */
   organizationLegalName?: InputMaybe<Scalars['String']['input']>;
   patch?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Deprecated */
   renewalCycle?: InputMaybe<ContractRenewalCycle>;
+  /** Deprecated */
   renewalPeriods?: InputMaybe<Scalars['Int64']['input']>;
   serviceStarted?: InputMaybe<Scalars['Time']['input']>;
+  /** Deprecated */
   serviceStartedAt?: InputMaybe<Scalars['Time']['input']>;
+  /** Deprecated */
   signedAt?: InputMaybe<Scalars['Time']['input']>;
+  /** Deprecated */
   zip?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -864,6 +896,7 @@ export type CustomFieldEntityType = {
 export type CustomFieldInput = {
   /** Datatype of the custom field. */
   datatype?: InputMaybe<CustomFieldDataType>;
+  /** Deprecated */
   id?: InputMaybe<Scalars['ID']['input']>;
   /** The name of the custom field. */
   name?: InputMaybe<Scalars['String']['input']>;
@@ -1007,7 +1040,10 @@ export enum DashboardCustomerMapState {
 export type DashboardGrossRevenueRetention = {
   __typename?: 'DashboardGrossRevenueRetention';
   grossRevenueRetention: Scalars['Float']['output'];
-  /** @deprecated Use increasePercentageValue instead */
+  /**
+   * Deprecated
+   * @deprecated Use increasePercentageValue instead
+   */
   increasePercentage: Scalars['String']['output'];
   increasePercentageValue: Scalars['Float']['output'];
   perMonth: Array<Maybe<DashboardGrossRevenueRetentionPerMonth>>;
@@ -1069,7 +1105,10 @@ export type DashboardPeriodInput = {
 
 export type DashboardRetentionRate = {
   __typename?: 'DashboardRetentionRate';
-  /** @deprecated Use increasePercentageValue instead */
+  /**
+   * Deprecated
+   * @deprecated Use increasePercentageValue instead
+   */
   increasePercentage: Scalars['String']['output'];
   increasePercentageValue: Scalars['Float']['output'];
   perMonth: Array<Maybe<DashboardRetentionRatePerMonth>>;
@@ -1488,7 +1527,10 @@ export type InteractionSession = Node & {
   channelData?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['Time']['output'];
   describedBy: Array<Analysis>;
-  /** @deprecated Use updatedAt instead */
+  /**
+   * Deprecated
+   * @deprecated Use updatedAt instead
+   */
   endedAt?: Maybe<Scalars['Time']['output']>;
   events: Array<InteractionEvent>;
   id: Scalars['ID']['output'];
@@ -1497,7 +1539,10 @@ export type InteractionSession = Node & {
   sessionIdentifier?: Maybe<Scalars['String']['output']>;
   source: DataSource;
   sourceOfTruth: DataSource;
-  /** @deprecated Use createdAt instead */
+  /**
+   * Deprecated
+   * @deprecated Use createdAt instead
+   */
   startedAt: Scalars['Time']['output'];
   status: Scalars['String']['output'];
   type?: Maybe<Scalars['String']['output']>;
@@ -1551,11 +1596,17 @@ export type Invoice = MetadataInterface & {
   contract: Contract;
   currency: Scalars['String']['output'];
   customer: InvoiceCustomer;
-  /** @deprecated not used */
+  /**
+   * Deprecated
+   * @deprecated not used
+   */
   domesticPaymentsBankInfo?: Maybe<Scalars['String']['output']>;
   dryRun: Scalars['Boolean']['output'];
   due: Scalars['Time']['output'];
-  /** @deprecated not used */
+  /**
+   * Deprecated
+   * @deprecated not used
+   */
   internationalPaymentsBankInfo?: Maybe<Scalars['String']['output']>;
   invoiceLineItems: Array<InvoiceLine>;
   invoiceNumber: Scalars['String']['output'];
@@ -1569,6 +1620,7 @@ export type Invoice = MetadataInterface & {
   paid: Scalars['Boolean']['output'];
   paymentLink?: Maybe<Scalars['String']['output']>;
   postpaid: Scalars['Boolean']['output'];
+  preview: Scalars['Boolean']['output'];
   provider: InvoiceProvider;
   repositoryFileId: Scalars['String']['output'];
   status?: Maybe<InvoiceStatus>;
@@ -2110,6 +2162,7 @@ export type Mutation = {
   contract_Create: Contract;
   contract_Delete: DeleteResponse;
   contract_RemoveAttachment: Contract;
+  contract_Renew: Contract;
   contract_Update: Contract;
   customFieldDeleteFromContactById: Result;
   customFieldDeleteFromContactByName: Result;
@@ -2378,6 +2431,10 @@ export type MutationContract_DeleteArgs = {
 
 export type MutationContract_RemoveAttachmentArgs = {
   attachmentId: Scalars['ID']['input'];
+  contractId: Scalars['ID']['input'];
+};
+
+export type MutationContract_RenewArgs = {
   contractId: Scalars['ID']['input'];
 };
 
@@ -3214,6 +3271,7 @@ export type OpportunityRenewalUpdateInput = {
   amount?: InputMaybe<Scalars['Float']['input']>;
   appSource?: InputMaybe<Scalars['String']['input']>;
   comments?: InputMaybe<Scalars['String']['input']>;
+  /** Deprecated */
   name?: InputMaybe<Scalars['String']['input']>;
   opportunityId: Scalars['ID']['input'];
   ownerUserId?: InputMaybe<Scalars['ID']['input']>;
@@ -3255,11 +3313,17 @@ export type OrgAccountDetails = {
 export type Organization = MetadataInterface & {
   __typename?: 'Organization';
   accountDetails?: Maybe<OrgAccountDetails>;
-  /** @deprecated Use metadata.appSource */
+  /**
+   * Deprecated
+   * @deprecated Use metadata.appSource
+   */
   appSource: Scalars['String']['output'];
   contacts: ContactsPage;
   contracts?: Maybe<Array<Contract>>;
-  /** @deprecated Use metadata.created */
+  /**
+   * Deprecated
+   * @deprecated Use metadata.created
+   */
   createdAt: Scalars['Time']['output'];
   customFields: Array<CustomField>;
   customId?: Maybe<Scalars['String']['output']>;
@@ -3274,33 +3338,55 @@ export type Organization = MetadataInterface & {
   fieldSets: Array<FieldSet>;
   headquarters?: Maybe<Scalars['String']['output']>;
   hide: Scalars['Boolean']['output'];
-  /** @deprecated Use metadata.id */
+  /**
+   * Deprecated
+   * @deprecated Use metadata.id
+   */
   id: Scalars['ID']['output'];
   industry?: Maybe<Scalars['String']['output']>;
   industryGroup?: Maybe<Scalars['String']['output']>;
   isCustomer?: Maybe<Scalars['Boolean']['output']>;
-  /** @deprecated Use public */
+  /**
+   * Deprecated
+   * @deprecated Use public
+   */
   isPublic?: Maybe<Scalars['Boolean']['output']>;
   issueSummaryByStatus: Array<IssueSummaryByStatus>;
   jobRoles: Array<JobRole>;
   lastFundingAmount?: Maybe<Scalars['String']['output']>;
   lastFundingRound?: Maybe<FundingRound>;
-  /** @deprecated Use lastTouchpoint */
+  /**
+   * Deprecated
+   * @deprecated Use lastTouchpoint
+   */
   lastTouchPointAt?: Maybe<Scalars['Time']['output']>;
-  /** @deprecated Use lastTouchpoint */
+  /**
+   * Deprecated
+   * @deprecated Use lastTouchpoint
+   */
   lastTouchPointTimelineEvent?: Maybe<TimelineEvent>;
+  /** Deprecated */
   lastTouchPointTimelineEventId?: Maybe<Scalars['ID']['output']>;
-  /** @deprecated Use lastTouchpoint */
+  /**
+   * Deprecated
+   * @deprecated Use lastTouchpoint
+   */
   lastTouchPointType?: Maybe<LastTouchpointType>;
   lastTouchpoint?: Maybe<LastTouchpoint>;
   locations: Array<Location>;
   logo?: Maybe<Scalars['String']['output']>;
-  /** @deprecated Use logo */
+  /**
+   * Deprecated
+   * @deprecated Use logo
+   */
   logoUrl?: Maybe<Scalars['String']['output']>;
   market?: Maybe<Market>;
   metadata: Metadata;
   name: Scalars['String']['output'];
-  /** @deprecated Use notes */
+  /**
+   * Deprecated
+   * @deprecated Use notes
+   */
   note?: Maybe<Scalars['String']['output']>;
   notes?: Maybe<Scalars['String']['output']>;
   orders: Array<Order>;
@@ -3308,26 +3394,44 @@ export type Organization = MetadataInterface & {
   parentCompanies: Array<LinkedOrganization>;
   phoneNumbers: Array<PhoneNumber>;
   public?: Maybe<Scalars['Boolean']['output']>;
-  /** @deprecated Use customId */
+  /**
+   * Deprecated
+   * @deprecated Use customId
+   */
   referenceId?: Maybe<Scalars['String']['output']>;
   slackChannelId?: Maybe<Scalars['String']['output']>;
   socialMedia: Array<Social>;
-  /** @deprecated Use socialMedia */
+  /**
+   * Deprecated
+   * @deprecated Use socialMedia
+   */
   socials: Array<Social>;
-  /** @deprecated Use metadata.source */
+  /**
+   * Deprecated
+   * @deprecated Use metadata.source
+   */
   source: DataSource;
-  /** @deprecated Use metadata.sourceOfTruth */
+  /**
+   * Deprecated
+   * @deprecated Use metadata.sourceOfTruth
+   */
   sourceOfTruth: DataSource;
   subIndustry?: Maybe<Scalars['String']['output']>;
   subsidiaries: Array<LinkedOrganization>;
-  /** @deprecated Use parentCompany */
+  /**
+   * Deprecated
+   * @deprecated Use parentCompany
+   */
   subsidiaryOf: Array<LinkedOrganization>;
   suggestedMergeTo: Array<SuggestedMergeOrganization>;
   tags?: Maybe<Array<Tag>>;
   targetAudience?: Maybe<Scalars['String']['output']>;
   timelineEvents: Array<TimelineEvent>;
   timelineEventsTotalCount: Scalars['Int64']['output'];
-  /** @deprecated Use metadata.lastUpdated */
+  /**
+   * Deprecated
+   * @deprecated Use metadata.lastUpdated
+   */
   updatedAt: Scalars['Time']['output'];
   valueProposition?: Maybe<Scalars['String']['output']>;
   website?: Maybe<Scalars['String']['output']>;
@@ -3362,22 +3466,28 @@ export type OrganizationInput = {
   domains?: InputMaybe<Array<Scalars['String']['input']>>;
   employeeGrowthRate?: InputMaybe<Scalars['String']['input']>;
   employees?: InputMaybe<Scalars['Int64']['input']>;
+  /** Deprecated */
   fieldSets?: InputMaybe<Array<FieldSetInput>>;
   headquarters?: InputMaybe<Scalars['String']['input']>;
   industry?: InputMaybe<Scalars['String']['input']>;
   industryGroup?: InputMaybe<Scalars['String']['input']>;
   isCustomer?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Deprecated */
   isPublic?: InputMaybe<Scalars['Boolean']['input']>;
   logo?: InputMaybe<Scalars['String']['input']>;
+  /** Deprecated */
   logoUrl?: InputMaybe<Scalars['String']['input']>;
   market?: InputMaybe<Market>;
   name?: InputMaybe<Scalars['String']['input']>;
+  /** Deprecated */
   note?: InputMaybe<Scalars['String']['input']>;
   notes?: InputMaybe<Scalars['String']['input']>;
   public?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Deprecated */
   referenceId?: InputMaybe<Scalars['String']['input']>;
   slackChannelId?: InputMaybe<Scalars['String']['input']>;
   subIndustry?: InputMaybe<Scalars['String']['input']>;
+  /** Deprecated */
   templateId?: InputMaybe<Scalars['ID']['input']>;
   website?: InputMaybe<Scalars['String']['input']>;
   yearFounded?: InputMaybe<Scalars['Int64']['input']>;
@@ -3545,7 +3655,7 @@ export type OrganizationUpdateInput = {
   /** Deprecatedm, use notes instead */
   note?: InputMaybe<Scalars['String']['input']>;
   notes?: InputMaybe<Scalars['String']['input']>;
-  /** Set to true when partial update is needed. Empty or missing fields will not be ignored. */
+  /** Deprecated */
   patch?: InputMaybe<Scalars['Boolean']['input']>;
   public?: InputMaybe<Scalars['Boolean']['input']>;
   /** Deprecated, use customId instead */
@@ -4367,24 +4477,45 @@ export type TenantBillingProfile = Node &
     addressLine3: Scalars['String']['output'];
     appSource: Scalars['String']['output'];
     canPayWithBankTransfer: Scalars['Boolean']['output'];
-    /** @deprecated Not used */
+    /**
+     * Deprecated
+     * @deprecated Not used
+     */
     canPayWithCard?: Maybe<Scalars['Boolean']['output']>;
-    /** @deprecated Not used */
+    /**
+     * Deprecated
+     * @deprecated Not used
+     */
     canPayWithDirectDebitACH?: Maybe<Scalars['Boolean']['output']>;
-    /** @deprecated Not used */
+    /**
+     * Deprecated
+     * @deprecated Not used
+     */
     canPayWithDirectDebitBacs?: Maybe<Scalars['Boolean']['output']>;
-    /** @deprecated Not used */
+    /**
+     * Deprecated
+     * @deprecated Not used
+     */
     canPayWithDirectDebitSEPA?: Maybe<Scalars['Boolean']['output']>;
     canPayWithPigeon: Scalars['Boolean']['output'];
     check: Scalars['Boolean']['output'];
     country: Scalars['String']['output'];
     createdAt: Scalars['Time']['output'];
-    /** @deprecated Not used */
+    /**
+     * Deprecated
+     * @deprecated Not used
+     */
     domesticPaymentsBankInfo?: Maybe<Scalars['String']['output']>;
-    /** @deprecated Use sendInvoicesFrom */
+    /**
+     * Deprecated
+     * @deprecated Use sendInvoicesFrom
+     */
     email: Scalars['String']['output'];
     id: Scalars['ID']['output'];
-    /** @deprecated Not used */
+    /**
+     * Deprecated
+     * @deprecated Not used
+     */
     internationalPaymentsBankInfo?: Maybe<Scalars['String']['output']>;
     legalName: Scalars['String']['output'];
     locality: Scalars['String']['output'];
@@ -4404,15 +4535,22 @@ export type TenantBillingProfileInput = {
   addressLine2?: InputMaybe<Scalars['String']['input']>;
   addressLine3?: InputMaybe<Scalars['String']['input']>;
   canPayWithBankTransfer: Scalars['Boolean']['input'];
+  /** Deprecated */
   canPayWithCard?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Deprecated */
   canPayWithDirectDebitACH?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Deprecated */
   canPayWithDirectDebitBacs?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Deprecated */
   canPayWithDirectDebitSEPA?: InputMaybe<Scalars['Boolean']['input']>;
   canPayWithPigeon: Scalars['Boolean']['input'];
   check: Scalars['Boolean']['input'];
   country?: InputMaybe<Scalars['String']['input']>;
+  /** Deprecated */
   domesticPaymentsBankInfo?: InputMaybe<Scalars['String']['input']>;
+  /** Deprecated */
   email?: InputMaybe<Scalars['String']['input']>;
+  /** Deprecated */
   internationalPaymentsBankInfo?: InputMaybe<Scalars['String']['input']>;
   legalName?: InputMaybe<Scalars['String']['input']>;
   locality?: InputMaybe<Scalars['String']['input']>;
@@ -4429,16 +4567,23 @@ export type TenantBillingProfileUpdateInput = {
   addressLine2?: InputMaybe<Scalars['String']['input']>;
   addressLine3?: InputMaybe<Scalars['String']['input']>;
   canPayWithBankTransfer?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Deprecated */
   canPayWithCard?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Deprecated */
   canPayWithDirectDebitACH?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Deprecated */
   canPayWithDirectDebitBacs?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Deprecated */
   canPayWithDirectDebitSEPA?: InputMaybe<Scalars['Boolean']['input']>;
   canPayWithPigeon?: InputMaybe<Scalars['Boolean']['input']>;
   check?: InputMaybe<Scalars['Boolean']['input']>;
   country?: InputMaybe<Scalars['String']['input']>;
+  /** Deprecated */
   domesticPaymentsBankInfo?: InputMaybe<Scalars['String']['input']>;
+  /** Deprecated */
   email?: InputMaybe<Scalars['String']['input']>;
   id: Scalars['ID']['input'];
+  /** Deprecated */
   internationalPaymentsBankInfo?: InputMaybe<Scalars['String']['input']>;
   legalName?: InputMaybe<Scalars['String']['input']>;
   locality?: InputMaybe<Scalars['String']['input']>;
@@ -4461,7 +4606,10 @@ export type TenantSettings = {
   baseCurrency?: Maybe<Currency>;
   billingEnabled: Scalars['Boolean']['output'];
   logoRepositoryFileId?: Maybe<Scalars['String']['output']>;
-  /** @deprecated Use logoRepositoryFileId */
+  /**
+   * Deprecated
+   * @deprecated Use logoRepositoryFileId
+   */
   logoUrl: Scalars['String']['output'];
 };
 

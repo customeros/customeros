@@ -20,6 +20,9 @@ export interface BillingDetailsForm {
   canPayWithDirectDebit?: boolean | null;
   canPayWithBankTransfer?: boolean | null;
   currency?: SelectOption<Currency> | null;
+  billingEmail?: SelectOption<string> | null;
+  billingEmailCC?: Array<SelectOption<string>> | null;
+  billingEmailBCC?: Array<SelectOption<string>> | null;
 }
 
 export class BillingDetailsDto implements BillingDetailsForm {
@@ -38,6 +41,9 @@ export class BillingDetailsDto implements BillingDetailsForm {
   canPayWithBankTransfer?: boolean | null;
   payAutomatically?: boolean | null;
   payOnline?: boolean | null;
+  billingEmail?: SelectOption<string> | null;
+  billingEmailCC?: Array<SelectOption<string>> | null;
+  billingEmailBCC?: Array<SelectOption<string>> | null;
 
   constructor(data?: Partial<GetContractQuery['contract']> | null) {
     this.zip = data?.billingDetails?.postalCode ?? '';
@@ -47,7 +53,6 @@ export class BillingDetailsDto implements BillingDetailsForm {
     this.canPayWithCard = data?.billingDetails?.canPayWithCard;
     this.canPayWithDirectDebit = data?.billingDetails?.canPayWithDirectDebit;
     this.canPayWithBankTransfer = data?.billingDetails?.canPayWithBankTransfer;
-
     this.country = countryOptions.find(
       (i) => data?.billingDetails?.country === i.value,
     );
@@ -58,6 +63,20 @@ export class BillingDetailsDto implements BillingDetailsForm {
     this.payOnline = data?.billingDetails?.payOnline;
     this.payAutomatically = data?.billingDetails?.payAutomatically;
     this.region = data?.billingDetails?.region;
+    this.billingEmail = data?.billingDetails?.billingEmail
+      ? {
+          label: data?.billingDetails?.billingEmail,
+          value: data?.billingDetails?.billingEmail,
+        }
+      : null;
+    this.billingEmailCC = data?.billingDetails?.billingEmailCC?.map((e) => ({
+      label: e,
+      value: e,
+    }));
+    this.billingEmailBCC = data?.billingDetails?.billingEmailBCC?.map((e) => ({
+      label: e,
+      value: e,
+    }));
   }
 
   static toForm(
@@ -95,6 +114,9 @@ export class BillingDetailsDto implements BillingDetailsForm {
         locality: data?.locality,
         country: data?.country?.value ?? '',
         postalCode: data?.zip,
+        billingEmail: data?.billingEmail?.value,
+        billingEmailCC: data?.billingEmailCC?.map((e) => e?.value),
+        billingEmailBCC: data?.billingEmailBCC?.map((e) => e?.value),
       },
       patch: true,
     };

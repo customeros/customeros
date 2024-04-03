@@ -1,11 +1,9 @@
 'use client';
 import React, { FC } from 'react';
 
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
+import { EmailFormMultiCreatableSelect } from '@shared/components/EmailMultiCreatableSelect';
 import { emailRegex } from '@organization/src/components/Timeline/PastZone/events/email/utils';
 
-import { EmailFormMultiCreatableSelect } from '../../../../../../../../../src/components/EmailMultiCreatableSelect';
 interface EmailParticipantSelect {
   formId: string;
   entryType: string;
@@ -13,29 +11,21 @@ interface EmailParticipantSelect {
   autofocus: boolean;
 }
 
-export const EmailParticipantSelect: FC<EmailParticipantSelect> = ({
+export const EmailSelect: FC<EmailParticipantSelect> = ({
   entryType,
   fieldName,
   formId,
   autofocus = false,
 }) => {
   return (
-    <Flex
-      alignItems='baseline'
-      marginBottom={-1}
-      marginTop={0}
-      flex={1}
-      overflow='visible'
-    >
-      <Text as={'span'} color='gray.700' fontWeight={600} mr={1}>
-        {entryType}:
-      </Text>
+    <div>
+      <label className='font-semibold text-sm'>{entryType}</label>
       <EmailFormMultiCreatableSelect
         autoFocus={autofocus}
         name={fieldName}
         formId={formId}
+        placeholder='Enter email'
         navigateAfterAddingToPeople={true}
-        placeholder='Enter name or email...'
         noOptionsMessage={() => null}
         allowCreateWhileLoading={false}
         formatCreateLabel={(input) => {
@@ -50,6 +40,6 @@ export const EmailParticipantSelect: FC<EmailParticipantSelect> = ({
           return `${d.label} - ${d.value}`;
         }}
       />
-    </Flex>
+    </div>
   );
 };

@@ -47,7 +47,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       children,
       className,
       rightIcon,
-      colorScheme,
+      colorScheme = 'gray',
       spinner,
       variant,
       isLoading = false,

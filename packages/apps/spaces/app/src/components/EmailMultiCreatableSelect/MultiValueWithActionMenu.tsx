@@ -8,6 +8,7 @@ import { useQueryClient } from '@tanstack/react-query';
 
 import { SelectOption } from '@ui/utils';
 import { Copy01 } from '@ui/media/icons/Copy01';
+import { toastSuccess } from '@ui/presentation/Toast';
 import { chakraComponents } from '@ui/form/SyncSelect';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
@@ -25,6 +26,7 @@ import { useAddOrganizationToContactMutation } from '@organization/src/graphql/a
 interface MultiValueWithActionMenuProps extends MultiValueProps<SelectOption> {
   name: string;
   formId: string;
+  navigateAfterAddingToPeople: boolean;
   existingContacts: Array<{ id: string; label: string; value?: string | null }>;
 }
 
@@ -32,6 +34,7 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
   existingContacts,
   name,
   formId,
+  navigateAfterAddingToPeople,
   ...rest
 }) => {
   const client = getGraphQLClient();
@@ -101,8 +104,15 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
             input: { contactId, organizationId },
           });
         },
-        onSettled: (data) =>
-          handleNavigateToContact(data?.contact_Create?.id as string, 'name'),
+        onSettled: (data) => {
+          if (navigateAfterAddingToPeople) {
+            handleNavigateToContact(data?.contact_Create?.id as string, 'name');
+          }
+          toastSuccess(
+            'Contact added to people list',
+            data?.contact_Create?.id as string,
+          );
+        },
       },
     );
   };

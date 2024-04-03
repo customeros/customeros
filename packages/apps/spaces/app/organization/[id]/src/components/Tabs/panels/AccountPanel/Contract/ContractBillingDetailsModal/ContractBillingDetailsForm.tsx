@@ -26,6 +26,7 @@ import {
   TenantBillingProfile,
 } from '@graphql/types';
 import { PaymentDetailsPopover } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/PaymentDetailsPopover';
+import { EmailsInputGroup } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/EmailsInputGroup/EmailsInputGroup';
 
 import { ContractUploader } from './ContractUploader';
 
@@ -35,8 +36,11 @@ interface SubscriptionServiceModalProps {
   contractId: string;
   isEmailValid: boolean;
   organizationName: string;
+  to?: SelectOption<string> | null;
   payAutomatically?: boolean | null;
   country?: SelectOption<string> | null;
+  cc?: Array<SelectOption<string>> | null;
+  bcc?: Array<SelectOption<string>> | null;
   tenantBillingProfile?: TenantBillingProfile | null;
   bankAccounts: Array<BankAccount> | null | undefined;
   onSetIsBillingDetailsHovered: (newState: boolean) => void;
@@ -55,6 +59,9 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
   bankAccounts,
   country,
   payAutomatically,
+  to,
+  cc,
+  bcc,
 }) => {
   const client = getGraphQLClient();
   const { data: tenantSettingsData } = useTenantSettingsQuery(client);
@@ -251,6 +258,13 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
             name='currency'
             formId={formId}
             options={currencyOptions ?? []}
+          />
+
+          <EmailsInputGroup
+            formId={formId}
+            to={to}
+            cc={cc || []}
+            bcc={bcc || []}
           />
 
           <Flex flexDirection='column' gap={2}>

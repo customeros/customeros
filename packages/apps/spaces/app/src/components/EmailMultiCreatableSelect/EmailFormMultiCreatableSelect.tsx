@@ -27,17 +27,17 @@ import {
   MultiCreatableSelect,
 } from '@ui/form/MultiCreatableSelect';
 import { emailRegex } from '@organization/src/components/Timeline/PastZone/events/email/utils';
+import { MultiValueWithActionMenu } from '@shared/components/EmailMultiCreatableSelect/MultiValueWithActionMenu';
 import {
   GetContactsEmailListDocument,
   useGetContactsEmailListQuery,
 } from '@organization/src/graphql/getContactsEmailList.generated';
-import { MultiValueWithActionMenu } from '@organization/src/components/Timeline/PastZone/events/email/compose-email/EmailMultiCreatableSelect/MultiValueWithActionMenu';
 
 type ExistingContact = { id: string; label: string; value?: string | null };
 export const EmailFormMultiCreatableSelect = forwardRef<
   SelectInstance,
-  FormSelectProps
->(({ name, formId, ...rest }, ref) => {
+  FormSelectProps & { navigateAfterAddingToPeople: boolean }
+>(({ name, formId, navigateAfterAddingToPeople, ...rest }, ref) => {
   const client = getGraphQLClient();
   const organizationId = useParams()?.id as string;
   const [existingContacts, setExistingContacts] = useState<
@@ -199,11 +199,13 @@ export const EmailFormMultiCreatableSelect = forwardRef<
   const components = useMemo(
     () => ({
       MultiValueRemove: () => null,
+      LoadingIndicator: () => null,
       MultiValue: (multiValueProps: MultiValueProps<SelectOption>) => (
         <MultiValueWithActionMenu
           {...multiValueProps}
           name={name}
           formId={formId}
+          navigateAfterAddingToPeople={navigateAfterAddingToPeople}
           existingContacts={existingContacts}
         />
       ),

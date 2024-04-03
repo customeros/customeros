@@ -63,6 +63,8 @@ export type GetContractQuery = {
       payAutomatically?: boolean | null;
       payOnline?: boolean | null;
       dueDays?: any | null;
+      billingEmailCC?: Array<string> | null;
+      billingEmailBCC?: Array<string> | null;
     } | null;
   };
 };
@@ -101,6 +103,9 @@ export const GetContractDocument = `
       invoicingStarted
       region
       dueDays
+      billingEmail
+      billingEmailCC
+      billingEmailBCC
     }
   }
 }
