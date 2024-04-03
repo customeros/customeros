@@ -1,5 +1,0 @@
-# Algolia-Crawler-Verif: 097156A15EBDC191
-
-User-agent: *
-Allow: /
-Sitemap: https://docs.customeros.ai/sitemap-index.xml
