@@ -8,6 +8,7 @@ volumes:
   neo4j_data:
   eventstore-volume-data:
   eventstore-volume-index:
+  provision:
 
 services:
 
@@ -70,10 +71,11 @@ services:
     depends_on:
       neo4j:
         condition: service_healthy
+    volumes:
+      - ./provision:/provision
     command: >
       /bin/bash -c "\
-      wget -O /tmp/customeros.cypher https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/provision/neo4j.cypher && \
-      cat /tmp/customeros.cypher | cypher-shell -u neo4j -p password --format plain -a bolt://neo4j:7687"
+      cat /provision/neo4j.cypher | cypher-shell -u neo4j -p password --format plain -a bolt://neo4j:7687"
 
   eventstore:
     image: eventstore/eventstore:22.10.3-alpha-arm64v8
