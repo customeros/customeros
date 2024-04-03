@@ -24,7 +24,7 @@ export function getDifferenceFromNow(targetDate: string) {
   if (weeks < 4) return [`${weeks}`, 'weeks'];
 
   if (years === 0) {
-    if (monthsAfterYears === 1) return ['1', 'month'];
+    if (monthsAfterYears === 1 || weeks === 4) return ['1', 'month'];
 
     return [months, 'months'];
   }
