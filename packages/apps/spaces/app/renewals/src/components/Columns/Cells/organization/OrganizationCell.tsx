@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 interface OrganizationCellProps {
   id: string;
   name: string;
@@ -19,12 +21,12 @@ export const OrganizationCell = ({
       {isSubsidiary && (
         <span className='text-xs text-gray-500'>{parentOrganizationName}</span>
       )}
-      <a
+      <Link
         className='text-gray-700 font-semibold hover:no-underline no-underline'
         href={href}
       >
         {fullName}
-      </a>
+      </Link>
     </div>
   );
 };
