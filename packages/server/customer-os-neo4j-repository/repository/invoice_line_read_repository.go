@@ -4,6 +4,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -105,11 +106,12 @@ func (r *invoiceLineReadRepository) GetLatestInvoiceLineWithInvoiceIdByServiceLi
 	span.LogFields(log.Object("sliParentId", sliParentId))
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice)-[:HAS_INVOICE_LINE]->(il:InvoiceLine)-[:INVOICED]->(sli:ServiceLineItem {parentId:$parentId})
-		WHERE i.status <> 'DRAFT' AND i.status <> 'VOID' AND i.dryRun = false
+		WHERE NOT i.status IN $skipStatuses AND i.dryRun = false
 		 RETURN il, i.id ORDER BY il.createdAt desc limit 1`
 	params := map[string]any{
-		"tenant":   tenant,
-		"parentId": sliParentId,
+		"tenant":       tenant,
+		"parentId":     sliParentId,
+		"skipStatuses": []string{neo4jenum.InvoiceStatusInitialized.String(), neo4jenum.InvoiceStatusVoid.String()},
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
