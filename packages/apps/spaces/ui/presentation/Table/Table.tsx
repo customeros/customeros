@@ -157,7 +157,7 @@ export const Table = <T extends object>({
       >
         <THeader className='top-0 sticky ' style={{ minWidth: THeaderMinW }}>
           {table.getHeaderGroups().map((headerGroup) => {
-            const width = enableRowSelection ? 'w-[36px]' : 'w-2';
+            const width = enableRowSelection ? 'w-7' : 'w-2';
 
             return (
               <THeaderGroup key={headerGroup.id}>
