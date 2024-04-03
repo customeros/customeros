@@ -16,6 +16,10 @@ const (
 	ActionServiceLineItemRemoved                    ActionType = "SERVICE_LINE_ITEM_REMOVED"
 	ActionOnboardingStatusChanged                   ActionType = "ONBOARDING_STATUS_CHANGED"
 	ActionRenewalLikelihoodUpdated                  ActionType = "RENEWAL_LIKELIHOOD_UPDATED"
+	ActionInvoiceIssued                             ActionType = "INVOICE_ISSUED"
+	ActionInvoicePaid                               ActionType = "INVOICE_PAID"
+	ActionInvoiceVoided                             ActionType = "INVOICE_VOIDED"
+	ActionInvoiceSent                               ActionType = "INVOICE_SENT"
 )
 
 var AllActionType = []ActionType{
@@ -31,6 +35,10 @@ var AllActionType = []ActionType{
 	ActionServiceLineItemRemoved,
 	ActionOnboardingStatusChanged,
 	ActionRenewalLikelihoodUpdated,
+	ActionInvoiceIssued,
+	ActionInvoicePaid,
+	ActionInvoiceVoided,
+	ActionInvoiceSent,
 }
 
 func GetActionType(s string) ActionType {

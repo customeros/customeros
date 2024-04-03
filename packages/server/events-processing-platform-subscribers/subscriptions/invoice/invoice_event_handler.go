@@ -54,6 +54,13 @@ type RequestBodyInvoiceFinalized struct {
 	} `json:"pay"`
 }
 
+type InvoiceActionMetadata struct {
+	Status        string  `json:"status"`
+	Currency      string  `json:"currency"`
+	Amount        float64 `json:"amount"`
+	InvoiceNumber string  `json:"number"`
+}
+
 type InvoiceEventHandler struct {
 	log              logger.Logger
 	repositories     *repository.Repositories
@@ -1420,6 +1427,8 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 		return wrappedErr
 	}
 
+	h.createInvoiceAction(ctx, eventData.Tenant, invoiceEntity)
+
 	// Request was successful
 	err = h.repositories.Neo4jRepositories.InvoiceWriteRepository.SetPayInvoiceNotificationSentAt(ctx, eventData.Tenant, invoiceId)
 	if err != nil {
@@ -1429,6 +1438,33 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 	}
 
 	return nil
+}
+
+func (h *InvoiceEventHandler) createInvoiceAction(ctx context.Context, tenant string, invoiceEntity neo4jentity.InvoiceEntity) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.createInvoiceAction")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.LogFields(log.String("InvoiceId", invoiceEntity.Id))
+
+	if invoiceEntity.DryRun || invoiceEntity.TotalAmount == float64(0) {
+		return
+	}
+
+	metadata, err := utils.ToJson(InvoiceActionMetadata{
+		Status:        invoiceEntity.Status.String(),
+		Currency:      invoiceEntity.Currency.String(),
+		Amount:        invoiceEntity.TotalAmount,
+		InvoiceNumber: invoiceEntity.Number,
+	})
+
+	actionType := neo4jenum.ActionInvoiceSent
+	message := "Sent invoice N° " + invoiceEntity.Number + " with an amount of " + invoiceEntity.Currency.Symbol() + utils.FormatAmount(invoiceEntity.TotalAmount, 2)
+
+	_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.MergeByActionType(ctx, tenant, invoiceEntity.Id, neo4jenum.INVOICE, actionType, message, metadata, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Failed creating invoice action for invoice %s: %s", invoiceEntity.Id, err.Error())
+	}
 }
 
 func (h *InvoiceEventHandler) appendInvoiceFileToEmailAsAttachment(ctx context.Context, tenant string, invoice neo4jentity.InvoiceEntity, postmarkEmail *postmark.PostmarkEmail) error {

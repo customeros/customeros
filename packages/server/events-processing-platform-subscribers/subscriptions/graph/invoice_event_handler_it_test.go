@@ -9,6 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/mocked_grpc"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
@@ -328,6 +329,19 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 	require.Equal(t, "service-line-item-parent-id-2", secondInvoiceLine.ServiceLineItemParentId)
 	require.Equal(t, neo4jenum.BilledTypeAnnually, secondInvoiceLine.BilledType)
 
+	// verify actions
+	dbNodes, err = neo4jtest.GetAllNodesByLabel(ctx, testDatabase.Driver, neo4jutil.NodeLabelAction)
+	require.Nil(t, err)
+	require.Equal(t, 1, len(dbNodes))
+	action := graph_db.MapDbNodeToActionEntity(*dbNodes[0])
+	require.NotNil(t, action.Id)
+	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), action.Source)
+	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, action.AppSource)
+	require.Equal(t, neo4jenum.ActionInvoiceIssued, action.Type)
+	require.Equal(t, "Invoice N° INV-001 issued with an amount of €120", action.Content)
+	require.Equal(t, `{"status":"DUE","currency":"EUR","amount":120,"number":"INV-001"}`, action.Metadata)
+
+	// verify grpc calls
 	require.True(t, calledNextPreviewInvoiceForContractRequest)
 	require.True(t, calledGenerateInvoicePdfGrpcRequest)
 }
@@ -463,7 +477,11 @@ func TestInvoiceEventHandler_OnInvoiceUpdateV1(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	organizationId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, organizationId, neo4jentity.ContractEntity{})
-	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.InvoiceEntity{})
+	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		TotalAmount: 120.2,
+		Currency:    neo4jenum.CurrencyUSD,
+		Number:      "INV-001",
+	})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		neo4jutil.NodeLabelInvoice:      1,
@@ -509,6 +527,18 @@ func TestInvoiceEventHandler_OnInvoiceUpdateV1(t *testing.T) {
 	require.Equal(t, timeNow, invoiceEntity.UpdatedAt)
 	require.Equal(t, neo4jenum.InvoiceStatusPaid, invoiceEntity.Status)
 	require.Equal(t, "link-1", invoiceEntity.PaymentDetails.PaymentLink)
+
+	// verify actions
+	dbNodes, err := neo4jtest.GetAllNodesByLabel(ctx, testDatabase.Driver, neo4jutil.NodeLabelAction)
+	require.Nil(t, err)
+	require.Equal(t, 1, len(dbNodes))
+	action := graph_db.MapDbNodeToActionEntity(*dbNodes[0])
+	require.NotNil(t, action.Id)
+	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), action.Source)
+	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, action.AppSource)
+	require.Equal(t, neo4jenum.ActionInvoicePaid, action.Type)
+	require.Equal(t, "Invoice N° INV-001 paid in full: $120.2", action.Content)
+	require.Equal(t, `{"status":"PAID","currency":"USD","amount":120.2,"number":"INV-001"}`, action.Metadata)
 }
 
 func TestInvoiceEventHandler_OnInvoiceVoidV1(t *testing.T) {
@@ -519,7 +549,11 @@ func TestInvoiceEventHandler_OnInvoiceVoidV1(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	organizationId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, organizationId, neo4jentity.ContractEntity{})
-	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.InvoiceEntity{})
+	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		TotalAmount: 55,
+		Currency:    neo4jenum.CurrencyUSD,
+		Number:      "INV-001",
+	})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		neo4jutil.NodeLabelInvoice:      1,
@@ -561,6 +595,18 @@ func TestInvoiceEventHandler_OnInvoiceVoidV1(t *testing.T) {
 	require.Equal(t, invoiceId, invoiceEntity.Id)
 	require.Equal(t, timeNow, invoiceEntity.UpdatedAt)
 	require.Equal(t, neo4jenum.InvoiceStatusVoid, invoiceEntity.Status)
+
+	// verify actions
+	dbNodes, err := neo4jtest.GetAllNodesByLabel(ctx, testDatabase.Driver, neo4jutil.NodeLabelAction)
+	require.Nil(t, err)
+	require.Equal(t, 1, len(dbNodes))
+	action := graph_db.MapDbNodeToActionEntity(*dbNodes[0])
+	require.NotNil(t, action.Id)
+	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), action.Source)
+	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, action.AppSource)
+	require.Equal(t, neo4jenum.ActionInvoiceVoided, action.Type)
+	require.Equal(t, "Invoice N° INV-001 voided", action.Content)
+	require.Equal(t, `{"status":"VOID","currency":"USD","amount":55,"number":"INV-001"}`, action.Metadata)
 }
 
 func TestInvoiceEventHandler_OnInvoiceDeleteV1(t *testing.T) {
