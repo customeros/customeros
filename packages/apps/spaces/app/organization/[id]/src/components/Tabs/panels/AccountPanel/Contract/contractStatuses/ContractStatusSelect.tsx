@@ -120,6 +120,7 @@ export const ContractStatusSelect: React.FC<ContractStatusSelectProps> = ({
             alignItems='center'
             gap={1}
             variant='outline'
+            whiteSpace='nowrap'
             colorScheme={statusColorScheme[status]}
             color={`${statusColorScheme[status]}.700`}
           >
