@@ -58,7 +58,7 @@ func (s *invoiceService) NextPreviewInvoiceForContract(ctx context.Context, requ
 		return nil, status.Errorf(codes.NotFound, "contract with ID %s not found", request.ContractId)
 	}
 
-	contract, err := s.GetContract(ctx, request.Tenant, request.ContractId)
+	contract, err := s.getContract(ctx, request.Tenant, request.ContractId)
 	if err != nil {
 		s.log.Errorf("Error while getting contract %s: %s", request.ContractId, err.Error())
 		tracing.TraceErr(span, err)
@@ -129,7 +129,7 @@ func (s *invoiceService) GetLastIssuedOnCycleInvoiceForContract(ctx context.Cont
 	}
 }
 
-func (s *invoiceService) GetContract(ctx context.Context, tenant, contractId string) (*neo4jentity.ContractEntity, error) {
+func (s *invoiceService) getContract(ctx context.Context, tenant, contractId string) (*neo4jentity.ContractEntity, error) {
 	contractNode, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, tenant, contractId)
 	if err != nil {
 		return nil, err
@@ -381,8 +381,8 @@ func (s *invoiceService) RequestFillInvoice(ctx context.Context, request *invoic
 	return &invoicepb.InvoiceIdResponse{Id: request.InvoiceId}, nil
 }
 
-func (s *invoiceService) PermanentlyDeleteDraftInvoice(ctx context.Context, request *invoicepb.PermanentlyDeleteDraftInvoiceRequest) (*invoicepb.InvoiceIdResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "InvoiceService.PermanentlyDeleteDraftInvoice")
+func (s *invoiceService) PermanentlyDeleteInitializedInvoice(ctx context.Context, request *invoicepb.PermanentlyDeleteInitializedInvoiceRequest) (*invoicepb.InvoiceIdResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "InvoiceService.PermanentlyDeleteInitializedInvoice")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	tracing.LogObjectAsJson(span, "request", request)
@@ -394,7 +394,7 @@ func (s *invoiceService) PermanentlyDeleteDraftInvoice(ctx context.Context, requ
 	invoiceAggregate := invoice.NewInvoiceAggregateWithTenantAndID(request.Tenant, request.InvoiceId)
 	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, invoiceAggregate, *eventstore.NewLoadAggregateOptionsWithRequired(), request); err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("(PermanentlyDeleteDraftInvoice) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		s.log.Errorf("(PermanentlyDeleteInitializedInvoice) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
 	}
 

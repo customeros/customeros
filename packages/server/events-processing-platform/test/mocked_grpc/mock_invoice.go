@@ -6,10 +6,10 @@ import (
 )
 
 type MockInvoiceServiceCallbacks struct {
-	GenerateInvoicePdf            func(ctx context.Context, proto *invoicepb.GenerateInvoicePdfRequest) (*invoicepb.InvoiceIdResponse, error)
-	RequestFillInvoice            func(ctx context.Context, proto *invoicepb.RequestFillInvoiceRequest) (*invoicepb.InvoiceIdResponse, error)
-	FillInvoice                   func(ctx context.Context, proto *invoicepb.FillInvoiceRequest) (*invoicepb.InvoiceIdResponse, error)
-	PermanentlyDeleteDraftInvoice func(ctx context.Context, proto *invoicepb.PermanentlyDeleteDraftInvoiceRequest) (*invoicepb.InvoiceIdResponse, error)
+	GenerateInvoicePdf                  func(ctx context.Context, proto *invoicepb.GenerateInvoicePdfRequest) (*invoicepb.InvoiceIdResponse, error)
+	RequestFillInvoice                  func(ctx context.Context, proto *invoicepb.RequestFillInvoiceRequest) (*invoicepb.InvoiceIdResponse, error)
+	FillInvoice                         func(ctx context.Context, proto *invoicepb.FillInvoiceRequest) (*invoicepb.InvoiceIdResponse, error)
+	PermanentlyDeleteInitializedInvoice func(ctx context.Context, proto *invoicepb.PermanentlyDeleteInitializedInvoiceRequest) (*invoicepb.InvoiceIdResponse, error)
 }
 
 var InvoiceCallbacks = &MockInvoiceServiceCallbacks{}
@@ -43,9 +43,9 @@ func (MockInvoiceService) FillInvoice(ctx context.Context, proto *invoicepb.Fill
 	return InvoiceCallbacks.FillInvoice(ctx, proto)
 }
 
-func (MockInvoiceService) PermanentlyDeleteDraftInvoice(ctx context.Context, proto *invoicepb.PermanentlyDeleteDraftInvoiceRequest) (*invoicepb.InvoiceIdResponse, error) {
-	if InvoiceCallbacks.PermanentlyDeleteDraftInvoice == nil {
-		panic("InvoiceCallbacks.PermanentlyDeleteDraftInvoice is not set")
+func (MockInvoiceService) PermanentlyDeleteInitializedInvoice(ctx context.Context, proto *invoicepb.PermanentlyDeleteInitializedInvoiceRequest) (*invoicepb.InvoiceIdResponse, error) {
+	if InvoiceCallbacks.PermanentlyDeleteInitializedInvoice == nil {
+		panic("InvoiceCallbacks.PermanentlyDeleteInitializedInvoice is not set")
 	}
-	return InvoiceCallbacks.PermanentlyDeleteDraftInvoice(ctx, proto)
+	return InvoiceCallbacks.PermanentlyDeleteInitializedInvoice(ctx, proto)
 }

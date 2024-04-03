@@ -43,7 +43,6 @@ message FillInvoiceRequest {
   string tenant = 1;
   string loggedInUserId = 2;
   string invoiceId = 3;
-  bool dryRun = 17;
   double amount = 4;
   double vat = 5;
   double subtotal = 6 [deprecated = true];
@@ -55,6 +54,8 @@ message FillInvoiceRequest {
   string Note = 12;
   FillInvoiceCustomer Customer = 15;
   FillInvoiceProvider Provider = 16;
+  bool dryRun = 17;
+  string invoiceNumber = 18;
 }
 
 message FillInvoiceCustomer {
@@ -160,7 +161,7 @@ message RequestFillInvoiceRequest {
   string appSource = 5;
 }
 
-message PermanentlyDeleteDraftInvoiceRequest {
+message PermanentlyDeleteInitializedInvoiceRequest {
   string tenant = 1;
   string invoiceId = 2;
   string loggedInUserId = 3;
@@ -196,6 +197,6 @@ service InvoiceGrpcService {
   rpc UpdateInvoice(UpdateInvoiceRequest) returns (InvoiceIdResponse);
   rpc PayInvoiceNotification(PayInvoiceNotificationRequest) returns (InvoiceIdResponse);
   rpc RequestFillInvoice(RequestFillInvoiceRequest) returns (InvoiceIdResponse);
-  rpc PermanentlyDeleteDraftInvoice(PermanentlyDeleteDraftInvoiceRequest) returns (InvoiceIdResponse);
+  rpc PermanentlyDeleteInitializedInvoice(PermanentlyDeleteInitializedInvoiceRequest) returns (InvoiceIdResponse);
   rpc VoidInvoice(VoidInvoiceRequest) returns (InvoiceIdResponse);
 }
