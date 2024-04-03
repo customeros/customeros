@@ -65,7 +65,6 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
 }) => {
   const client = getGraphQLClient();
   const { data: tenantSettingsData } = useTenantSettingsQuery(client);
-
   const { data } = useGetExternalSystemInstancesQuery(client);
   const availablePaymentMethodTypes = data?.externalSystemInstances.find(
     (e) => e.type === ExternalSystemType.Stripe,

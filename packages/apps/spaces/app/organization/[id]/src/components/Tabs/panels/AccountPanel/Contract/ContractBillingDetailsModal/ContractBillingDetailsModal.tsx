@@ -348,7 +348,11 @@ export const ContractBillingDetailsModal = ({
               bankAccounts={bankAccountsData?.bankAccounts as BankAccount[]}
               country={state?.values?.country}
               payAutomatically={state?.values?.payAutomatically}
-              to={state?.values?.billingEmail}
+              to={
+                state?.values?.billingEmail
+                  ? state.values.billingEmail?.[0]
+                  : null
+              }
               cc={state?.values?.billingEmailCC}
               bcc={state?.values?.billingEmailBCC}
             />
