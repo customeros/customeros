@@ -327,7 +327,7 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 	}
 
 	if beforeUpdateContractEntity.ContractStatus != afterUpdateContractEntity.ContractStatus {
-		h.createActionForStatusChange(ctx, eventData.Tenant, contractId, string(afterUpdateContractEntity.ContractStatus), afterUpdateContractEntity.Name, span)
+		h.createActionForStatusChange(ctx, eventData.Tenant, contractId, string(afterUpdateContractEntity.ContractStatus), afterUpdateContractEntity.Name)
 	}
 
 	contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.grpcClients)
@@ -423,8 +423,8 @@ func (h *ContractEventHandler) OnRolloutRenewalOpportunity(ctx context.Context, 
 	return nil
 }
 
-func (h *ContractEventHandler) createActionForStatusChange(ctx context.Context, tenant, contractId, status, contractName string, span opentracing.Span) {
-	span, ctx = opentracing.StartSpanFromContext(ctx, "ContractEventHandler.createActionForStatusChange")
+func (h *ContractEventHandler) createActionForStatusChange(ctx context.Context, tenant, contractId, status, contractName string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractEventHandler.createActionForStatusChange")
 	defer span.Finish()
 	var name string
 	span.SetTag(tracing.SpanTagTenant, tenant)
@@ -666,7 +666,7 @@ func (h *ContractEventHandler) OnRefreshStatus(ctx context.Context, evt eventsto
 	contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
 
 	if statusChanged {
-		h.createActionForStatusChange(ctx, eventData.Tenant, contractId, status, contractEntity.Name, span)
+		h.createActionForStatusChange(ctx, eventData.Tenant, contractId, status, contractEntity.Name)
 	}
 
 	h.startOnboardingIfEligible(ctx, eventData.Tenant, contractId, span)

@@ -2,6 +2,8 @@ package graph
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
@@ -17,8 +19,16 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 )
+
+type InvoiceActionMetadata struct {
+	Status        string  `json:"status"`
+	Currency      string  `json:"currency"`
+	Amount        float64 `json:"amount"`
+	InvoiceNumber string  `json:"number"`
+}
 
 type InvoiceEventHandler struct {
 	log          logger.Logger
@@ -100,6 +110,14 @@ func (h *InvoiceEventHandler) OnInvoiceFillV1(ctx context.Context, evt eventstor
 
 	invoiceId := invoice.GetInvoiceObjectID(evt.GetAggregateID(), eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, invoiceId)
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
+
+	invoiceEntityBeforeFill, err := h.getInvoice(ctx, eventData.Tenant, invoiceId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while getting invoice %s: %s", invoiceId, err.Error())
+		return err
+	}
 
 	data := neo4jrepository.InvoiceFillFields{
 		UpdatedAt:                    eventData.UpdatedAt,
@@ -136,7 +154,7 @@ func (h *InvoiceEventHandler) OnInvoiceFillV1(ctx context.Context, evt eventstor
 		TotalAmount:                  eventData.TotalAmount,
 		Status:                       neo4jenum.DecodeInvoiceStatus(eventData.Status),
 	}
-	err := h.repositories.Neo4jRepositories.InvoiceWriteRepository.FillInvoice(ctx, eventData.Tenant, invoiceId, data)
+	err = h.repositories.Neo4jRepositories.InvoiceWriteRepository.FillInvoice(ctx, eventData.Tenant, invoiceId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while filling invocie with details %s: %s", invoiceId, err.Error())
@@ -184,6 +202,15 @@ func (h *InvoiceEventHandler) OnInvoiceFillV1(ctx context.Context, evt eventstor
 		}
 	}
 
+	invoiceEntityAfterFill, err := h.getInvoice(ctx, eventData.Tenant, invoiceId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while getting invoice %s: %s", invoiceId, err.Error())
+		return err
+	}
+
+	h.createInvoiceAction(ctx, eventData.Tenant, invoiceEntityBeforeFill.Status, *invoiceEntityAfterFill)
+
 	return nil
 }
 
@@ -224,6 +251,14 @@ func (h *InvoiceEventHandler) OnInvoiceUpdateV1(ctx context.Context, evt eventst
 
 	invoiceId := invoice.GetInvoiceObjectID(evt.GetAggregateID(), eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, invoiceId)
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
+
+	invoiceEntityBeforeUpdate, err := h.getInvoice(ctx, eventData.Tenant, invoiceId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while getting invoice %s: %s", invoiceId, err.Error())
+		return err
+	}
 
 	data := neo4jrepository.InvoiceUpdateFields{
 		UpdatedAt:         eventData.UpdatedAt,
@@ -232,12 +267,21 @@ func (h *InvoiceEventHandler) OnInvoiceUpdateV1(ctx context.Context, evt eventst
 		UpdateStatus:      eventData.UpdateStatus(),
 		UpdatePaymentLink: eventData.UpdatePaymentLink(),
 	}
-	err := h.repositories.Neo4jRepositories.InvoiceWriteRepository.UpdateInvoice(ctx, eventData.Tenant, invoiceId, data)
+	err = h.repositories.Neo4jRepositories.InvoiceWriteRepository.UpdateInvoice(ctx, eventData.Tenant, invoiceId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while updating invoice %s: %s", invoiceId, err.Error())
 		return err
 	}
+
+	invoiceEntityAfterUpdate, err := h.getInvoice(ctx, eventData.Tenant, invoiceId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while getting invoice %s: %s", invoiceId, err.Error())
+		return err
+	}
+
+	h.createInvoiceAction(ctx, eventData.Tenant, invoiceEntityBeforeUpdate.Status, *invoiceEntityAfterUpdate)
 
 	return nil
 }
@@ -255,6 +299,7 @@ func (h *InvoiceEventHandler) OnInvoicePdfGenerated(ctx context.Context, evt eve
 
 	id := invoice.GetInvoiceObjectID(evt.GetAggregateID(), eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, id)
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
 	err := h.repositories.Neo4jRepositories.InvoiceWriteRepository.InvoicePdfGenerated(ctx, eventData.Tenant, id, eventData.RepositoryFileId, eventData.UpdatedAt)
 	if err != nil {
@@ -314,7 +359,14 @@ func (h *InvoiceEventHandler) OnInvoiceVoidV1(ctx context.Context, evt eventstor
 	span.SetTag(tracing.SpanTagEntityId, invoiceId)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
-	err := h.repositories.Neo4jRepositories.InvoiceWriteRepository.UpdateInvoice(ctx, eventData.Tenant, invoiceId, neo4jrepository.InvoiceUpdateFields{
+	invoiceEntityBeforeVoid, err := h.getInvoice(ctx, eventData.Tenant, invoiceId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while getting invoice {%s}: {%s}", invoiceId, err.Error())
+		return err
+	}
+
+	err = h.repositories.Neo4jRepositories.InvoiceWriteRepository.UpdateInvoice(ctx, eventData.Tenant, invoiceId, neo4jrepository.InvoiceUpdateFields{
 		UpdatedAt:    eventData.UpdatedAt,
 		UpdateStatus: true,
 		Status:       neo4jenum.InvoiceStatusVoid,
@@ -324,7 +376,16 @@ func (h *InvoiceEventHandler) OnInvoiceVoidV1(ctx context.Context, evt eventstor
 		h.log.Errorf("Error while voiding invoice {%s}: {%s}", invoiceId, err.Error())
 		return err
 	}
-	return err
+
+	invoiceEntityAfterVoid, err := h.getInvoice(ctx, eventData.Tenant, invoiceId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while getting invoice {%s}: {%s}", invoiceId, err.Error())
+		return err
+	}
+	h.createInvoiceAction(ctx, eventData.Tenant, invoiceEntityBeforeVoid.Status, *invoiceEntityAfterVoid)
+
+	return nil
 }
 
 func (h *InvoiceEventHandler) OnInvoiceDeleteV1(ctx context.Context, evt eventstore.Event) error {
@@ -348,4 +409,56 @@ func (h *InvoiceEventHandler) OnInvoiceDeleteV1(ctx context.Context, evt eventst
 		return err
 	}
 	return err
+}
+
+func (h *InvoiceEventHandler) createInvoiceAction(ctx context.Context, tenant string, previousStatus neo4jenum.InvoiceStatus, invoiceEntity neo4jentity.InvoiceEntity) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.createInvoiceAction")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.LogFields(log.String("InvoiceId", invoiceEntity.Id))
+	span.LogFields(log.String("PreviousStatus", previousStatus.String()))
+
+	if previousStatus == invoiceEntity.Status {
+		return
+	}
+	if invoiceEntity.DryRun || invoiceEntity.TotalAmount == float64(0) {
+		return
+	}
+
+	metadata, err := utils.ToJson(InvoiceActionMetadata{
+		Status:        invoiceEntity.Status.String(),
+		Currency:      invoiceEntity.Currency.String(),
+		Amount:        invoiceEntity.TotalAmount,
+		InvoiceNumber: invoiceEntity.Number,
+	})
+
+	actionType := neo4jenum.ActionNA
+	message := ""
+	switch invoiceEntity.Status {
+	case neo4jenum.InvoiceStatusDue:
+		message = "Invoice N° " + invoiceEntity.Number + " issued with an amount of " + invoiceEntity.Currency.Symbol() + utils.FormatAmount(invoiceEntity.TotalAmount, 2)
+		actionType = neo4jenum.ActionInvoiceIssued
+	case neo4jenum.InvoiceStatusPaid:
+		message = "Invoice N° " + invoiceEntity.Number + " paid in full: " + invoiceEntity.Currency.Symbol() + utils.FormatAmount(invoiceEntity.TotalAmount, 2)
+		actionType = neo4jenum.ActionInvoicePaid
+	case neo4jenum.InvoiceStatusVoid:
+		message = "Invoice N° " + invoiceEntity.Number + " voided"
+		actionType = neo4jenum.ActionInvoiceVoided
+	}
+	if actionType == neo4jenum.ActionNA {
+		return
+	}
+	_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.MergeByActionType(ctx, tenant, invoiceEntity.Id, neo4jenum.INVOICE, actionType, message, metadata, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Failed creating invoice action for invoice %s: %s", invoiceEntity.Id, err.Error())
+	}
+}
+
+func (h *InvoiceEventHandler) getInvoice(ctx context.Context, tenant, invoiceId string) (*neo4jentity.InvoiceEntity, error) {
+	invoiceDbNode, err := h.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoiceById(ctx, tenant, invoiceId)
+	if err != nil {
+		return nil, err
+	}
+	return neo4jmapper.MapDbNodeToInvoiceEntity(invoiceDbNode), nil
 }
