@@ -48,7 +48,7 @@ export const useGetInvoicesInfiniteQuery = <
           pagination: { ...variables.pagination, page: pageParam as number },
         },
       )(),
-    initialPageParam: 1,
+    initialPageParam: 0,
     getNextPageParam: (lastPage, pages) => {
       const content = pages.flatMap((page) => page.invoices?.content ?? []);
       const totalElements = lastPage.invoices?.totalElements ?? 0;

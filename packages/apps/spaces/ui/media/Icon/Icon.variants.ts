@@ -34,6 +34,12 @@ export const featureIconVariant = cva(
         ],
       },
       {
+        colorScheme: 'grayBlue',
+        className: [
+          'bg-grayBlue-100 ring-grayBlue-50 ring-offset-grayBlue-100 text-grayBlue-500',
+        ],
+      },
+      {
         colorScheme: 'warm',
         className: [
           'bg-warm-100 ring-warm-50 ring-offset-warm-100 text-warm-500',

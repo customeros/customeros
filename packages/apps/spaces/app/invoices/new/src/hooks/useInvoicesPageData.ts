@@ -2,7 +2,6 @@ import { useSearchParams } from 'next/navigation';
 import { useRef, useMemo, useEffect } from 'react';
 
 import { produce } from 'immer';
-// import { match } from 'ts-pattern';
 import { useLocalStorage } from 'usehooks-ts';
 
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
@@ -10,7 +9,7 @@ import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { SortingState, TableInstance } from '@ui/presentation/Table';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 import {
-  // Filter,
+  Filter,
   SortBy,
   Invoice,
   SortingDirection,
@@ -46,137 +45,18 @@ export const useInvoicesPageData = ({ sorting }: UseRenewalsPageDataProps) => {
   //   renewalLikelihood,
   // } = columnFilters;
 
-  // const where = useMemo(() => {
-  //   return produce<Filter>({ AND: [] }, (draft) => {
-  //     if (!draft.AND) {
-  //       draft.AND = [];
-  //     }
-  //     if (searchTerm) {
-  //       draft.AND.push({
-  //         filter: {
-  //           property: 'ORGANIZATION',
-  //           value: searchTerm,
-  //           operation: ComparisonOperator.Contains,
-  //           caseSensitive: false,
-  //         },
-  //       });
-  //     }
+  const where = useMemo(() => {
+    if (preset === '5') {
+      return {
+        filter: {
+          property: 'PREVIEW',
+          value: true,
+        },
+      } as Filter;
+    }
 
-  //     if (preset) {
-  //       // TODO: this should be transformed into it's own column with client side filter
-  //       // too and populated via useFilterSetter().
-  //       const value = match(preset)
-  //         .with('1', () => 'MONTHLY')
-  //         .with('2', () => 'QUARTERLY')
-  //         .with('3', () => 'ANNUALLY')
-  //         .otherwise(() => 'MONTHLY');
-
-  //       draft.AND.push({
-  //         filter: {
-  //           property: 'RENEWAL_CYCLE',
-  //           value,
-  //           operation: ComparisonOperator.Eq,
-  //           includeEmpty: false,
-  //         },
-  //       });
-  //     }
-
-  //     if (
-  //       organization?.isActive &&
-  //       (organization?.value || organization?.showEmpty)
-  //     ) {
-  //       draft.AND.push({
-  //         filter: {
-  //           property: 'NAME',
-  //           value: organization?.value,
-  //           operation: ComparisonOperator.Contains,
-  //           caseSensitive: false,
-  //           includeEmpty: organization?.showEmpty,
-  //         },
-  //       });
-  //     }
-
-  //     if (renewalLikelihood?.isActive && renewalLikelihood?.value) {
-  //       draft.AND.push({
-  //         filter: {
-  //           property: 'RENEWAL_LIKELIHOOD',
-  //           value: renewalLikelihood?.value,
-  //           operation: ComparisonOperator.In,
-  //         },
-  //       });
-  //     }
-
-  //     if (timeToRenewal?.isActive && timeToRenewal?.value) {
-  //       draft.AND.push({
-  //         filter: {
-  //           property: 'RENEWAL_DATE',
-  //           value: timeToRenewal?.value,
-  //           operation: ComparisonOperator.Lte,
-  //         },
-  //       });
-  //     }
-
-  //     if (forecast.isActive && forecast.value) {
-  //       draft.AND.push({
-  //         filter: {
-  //           property: 'FORECAST_ARR',
-  //           value: forecast.value,
-  //           operation: ComparisonOperator.Between,
-  //         },
-  //       });
-  //     }
-
-  //     if (owner.isActive && owner.value) {
-  //       draft.AND.push({
-  //         filter: {
-  //           property: 'OWNER_ID',
-  //           value: owner.value,
-  //           operation: ComparisonOperator.In,
-  //           includeEmpty: owner.showEmpty,
-  //         },
-  //       });
-  //     }
-  //     if (lastTouchpoint.isActive) {
-  //       if (lastTouchpoint.value.length) {
-  //         draft.AND.push({
-  //           filter: {
-  //             property: 'LAST_TOUCHPOINT_TYPE',
-  //             value: lastTouchpoint.value,
-  //             operation: ComparisonOperator.In,
-  //           },
-  //         });
-  //       }
-  //       if (lastTouchpoint.after) {
-  //         draft.AND.push({
-  //           filter: {
-  //             property: 'LAST_TOUCHPOINT_AT',
-  //             value: lastTouchpoint.after,
-  //             operation: ComparisonOperator.Gte,
-  //           },
-  //         });
-  //       }
-  //     }
-  //   });
-  // }, [
-  //   searchParams?.toString(),
-  //   globalCache?.global_Cache?.user.id,
-  //   organization?.isActive,
-  //   organization?.value,
-  //   organization?.showEmpty,
-  //   renewalLikelihood?.isActive,
-  //   renewalLikelihood?.value.length,
-  //   timeToRenewal?.isActive,
-  //   timeToRenewal?.value,
-  //   forecast?.isActive,
-  //   forecast?.value[0],
-  //   forecast?.value[1],
-  //   owner?.isActive,
-  //   owner?.value.length,
-  //   owner?.showEmpty,
-  //   lastTouchpoint?.isActive,
-  //   lastTouchpoint?.value,
-  //   lastTouchpoint?.after,
-  // ]);
+    return undefined;
+  }, [searchParams?.toString(), globalCache?.global_Cache?.user.id]);
 
   const sortBy: SortBy | undefined = useMemo(() => {
     if (!sorting.length) return;
@@ -189,21 +69,14 @@ export const useInvoicesPageData = ({ sorting }: UseRenewalsPageDataProps) => {
   }, [sorting]);
 
   const { data, isFetching, isLoading, hasNextPage, fetchNextPage } =
-    useGetInvoicesInfiniteQuery(
-      client,
-      {
-        pagination: {
-          page: 1,
-          limit: 40,
-        },
-        // sort: sortBy,
-        // where,
+    useGetInvoicesInfiniteQuery(client, {
+      pagination: {
+        page: 0,
+        limit: 40,
       },
-      {
-        enabled:
-          preset === 'portfolio' ? !!globalCache?.global_Cache?.user.id : true,
-      },
-    );
+      // sort: sortBy,
+      where,
+    });
 
   const totalCount = data?.pages?.[0].invoices?.totalElements;
   // const totalAvailable = data?.pages?.[0].invoices?.totalAvailable;

@@ -6,3 +6,5 @@ export * from './InvoiceStatus';
 export * from './IssueDate';
 export * from './DueDate';
 export * from './Amount';
+export * from './PaymentStatus';
+export * from './InvoiceNumber';

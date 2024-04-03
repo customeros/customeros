@@ -1,3 +1,3 @@
 export const InvoicePreviewCell = ({ value }: { value: number }) => {
-  return <span>{value}</span>;
+  return <span className='font-semibold'>{value}</span>;
 };
