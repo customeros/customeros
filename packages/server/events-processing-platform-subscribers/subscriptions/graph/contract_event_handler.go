@@ -508,13 +508,6 @@ func (h *ContractEventHandler) generateNextPreviewInvoice(ctx context.Context, t
 	contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
 
 	if contractEntity.InvoicingEnabled && contractEntity.BillingCycle != neo4jenum.BillingCycleNone && contractEntity.InvoicingStartDate != nil {
-		err := h.repositories.Neo4jRepositories.InvoiceWriteRepository.DeletePreviewInvoice(ctx, tenant, contractId)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("Error while deleting preview invoice for contract %s: %s", contractId, err.Error())
-			return
-		}
-
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
 			return h.grpcClients.InvoiceClient.NextPreviewInvoiceForContract(ctx, &invoicepb.NextPreviewInvoiceForContractRequest{
@@ -583,7 +576,7 @@ func (h *ContractEventHandler) OnDeleteV1(ctx context.Context, evt eventstore.Ev
 		})
 	})
 
-	err = h.repositories.Neo4jRepositories.InvoiceWriteRepository.DeletePreviewInvoice(ctx, eventData.Tenant, contractId)
+	err = h.repositories.Neo4jRepositories.InvoiceWriteRepository.DeleteAllPreviewCycleInvoices(ctx, eventData.Tenant, contractId, "")
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while deleting preview invoice for contract %s: %s", contractId, err.Error())
@@ -651,7 +644,7 @@ func (h *ContractEventHandler) OnRefreshStatus(ctx context.Context, evt eventsto
 			h.log.Errorf("error while updating contract's {%s} renewal date: %s", contractId, err.Error())
 		}
 
-		err := h.repositories.Neo4jRepositories.InvoiceWriteRepository.DeletePreviewInvoice(ctx, eventData.Tenant, contractId)
+		err := h.repositories.Neo4jRepositories.InvoiceWriteRepository.DeleteAllPreviewCycleInvoices(ctx, eventData.Tenant, contractId, "")
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while deleting preview invoice for contract %s: %s", contractId, err.Error())

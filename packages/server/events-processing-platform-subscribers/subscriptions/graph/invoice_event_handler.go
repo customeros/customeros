@@ -193,11 +193,25 @@ func (h *InvoiceEventHandler) OnInvoiceFillV1(ctx context.Context, evt eventstor
 		return err
 	}
 
-	if !eventData.DryRun && !eventData.OffCycle {
+	if !eventData.OffCycle && !eventData.DryRun {
+		err := h.repositories.Neo4jRepositories.InvoiceWriteRepository.DeleteAllPreviewCycleInvoices(ctx, eventData.Tenant, eventData.ContractId, "")
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error while deleting preview invoice for contract %s: %s", eventData.ContractId, err.Error())
+			return err
+		}
+
 		err = h.callNextPreviewOnCycleInvoiceGRPC(ctx, eventData.Tenant, eventData.ContractId, span)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while calling next preview invoice for contract %s: %s", eventData.ContractId, err.Error())
+			return err
+		}
+	} else if eventData.Preview && eventData.DryRun {
+		err := h.repositories.Neo4jRepositories.InvoiceWriteRepository.DeleteAllPreviewCycleInvoices(ctx, eventData.Tenant, eventData.ContractId, invoiceId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error while deleting preview invoice for contract %s: %s", eventData.ContractId, err.Error())
 			return err
 		}
 	}
@@ -214,17 +228,10 @@ func (h *InvoiceEventHandler) OnInvoiceFillV1(ctx context.Context, evt eventstor
 	return nil
 }
 
-func (s *InvoiceEventHandler) callNextPreviewOnCycleInvoiceGRPC(ctx context.Context, tenant, contractId string, span opentracing.Span) error {
-	err := s.repositories.Neo4jRepositories.InvoiceWriteRepository.DeletePreviewInvoice(ctx, tenant, contractId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("Error while deleting preview invoice for contract %s: %s", contractId, err.Error())
-		return err
-	}
-
+func (h *InvoiceEventHandler) callNextPreviewOnCycleInvoiceGRPC(ctx context.Context, tenant, contractId string, span opentracing.Span) error {
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
-		return s.grpcClients.InvoiceClient.NextPreviewInvoiceForContract(ctx, &invoicepb.NextPreviewInvoiceForContractRequest{
+	_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
+		return h.grpcClients.InvoiceClient.NextPreviewInvoiceForContract(ctx, &invoicepb.NextPreviewInvoiceForContractRequest{
 			Tenant:     tenant,
 			ContractId: contractId,
 			AppSource:  constants.AppSourceEventProcessingPlatformSubscribers,
@@ -232,7 +239,7 @@ func (s *InvoiceEventHandler) callNextPreviewOnCycleInvoiceGRPC(ctx context.Cont
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("error sending the next preview invoice request for contract {%s}: {%s}", contractId, err.Error())
+		h.log.Errorf("error sending the next preview invoice request for contract {%s}: {%s}", contractId, err.Error())
 		return err
 	}
 	return nil
@@ -310,10 +317,10 @@ func (h *InvoiceEventHandler) OnInvoicePdfGenerated(ctx context.Context, evt eve
 	return err
 }
 
-func (s *InvoiceEventHandler) callGeneratePdfRequestGRPC(ctx context.Context, tenant, invoiceId string, span opentracing.Span) error {
+func (h *InvoiceEventHandler) callGeneratePdfRequestGRPC(ctx context.Context, tenant, invoiceId string, span opentracing.Span) error {
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
-		return s.grpcClients.InvoiceClient.GenerateInvoicePdf(ctx, &invoicepb.GenerateInvoicePdfRequest{
+		return h.grpcClients.InvoiceClient.GenerateInvoicePdf(ctx, &invoicepb.GenerateInvoicePdfRequest{
 			Tenant:    tenant,
 			InvoiceId: invoiceId,
 			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
@@ -321,16 +328,16 @@ func (s *InvoiceEventHandler) callGeneratePdfRequestGRPC(ctx context.Context, te
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("error sending the generate pdf request for invoice {%s}: {%s}", invoiceId, err.Error())
+		h.log.Errorf("error sending the generate pdf request for invoice {%s}: {%s}", invoiceId, err.Error())
 		return err
 	}
 	return nil
 }
 
-func (s *InvoiceEventHandler) callRequestFillInvoiceGRPC(ctx context.Context, tenant, invoiceId, contractId string, span opentracing.Span) error {
+func (h *InvoiceEventHandler) callRequestFillInvoiceGRPC(ctx context.Context, tenant, invoiceId, contractId string, span opentracing.Span) error {
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
-		return s.grpcClients.InvoiceClient.RequestFillInvoice(ctx, &invoicepb.RequestFillInvoiceRequest{
+		return h.grpcClients.InvoiceClient.RequestFillInvoice(ctx, &invoicepb.RequestFillInvoiceRequest{
 			Tenant:     tenant,
 			InvoiceId:  invoiceId,
 			ContractId: contractId,
@@ -339,7 +346,7 @@ func (s *InvoiceEventHandler) callRequestFillInvoiceGRPC(ctx context.Context, te
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("error sending the request to fill invoice {%s}: {%s}", invoiceId, err.Error())
+		h.log.Errorf("error sending the request to fill invoice {%s}: {%s}", invoiceId, err.Error())
 		return err
 	}
 	return nil

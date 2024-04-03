@@ -544,10 +544,24 @@ func (h *InvoiceEventHandler) prepareAndCallFillInvoice(ctx context.Context, ten
 		invoiceStatus = invoicepb.InvoiceStatus_INVOICE_STATUS_PREVIEW
 	}
 
+	invoiceNumber := ""
+	if !invoiceEntity.OffCycle {
+		filledInvoiceDbNode, err := h.repositories.Neo4jRepositories.InvoiceReadRepository.GetFirstPreviewFilledInvoice(ctx, tenant, contractId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+		}
+		if filledInvoiceDbNode != nil {
+			filledInvoiceEntity := neo4jmapper.MapDbNodeToInvoiceEntity(filledInvoiceDbNode)
+			invoiceNumber = filledInvoiceEntity.Number
+		}
+	}
+
 	err = h.callFillInvoice(ctx,
 		tenant,
 		invoiceEntity.Id,
+		invoiceNumber,
 		invoiceEntity.DryRun,
+		invoiceEntity.Preview,
 		invoiceStatus,
 		contractEntity.OrganizationLegalName,
 		contractEntity.InvoiceEmail,
@@ -569,7 +583,7 @@ func (h *InvoiceEventHandler) prepareAndCallFillInvoice(ctx context.Context, ten
 	return nil
 }
 
-func (h *InvoiceEventHandler) callFillInvoice(ctx context.Context, tenant, invoiceId string, dryRun bool, invoiceStatus invoicepb.InvoiceStatus,
+func (h *InvoiceEventHandler) callFillInvoice(ctx context.Context, tenant, invoiceId, invoiceNumber string, dryRun, preview bool, invoiceStatus invoicepb.InvoiceStatus,
 	customerName, customerEmail, customerAddressLine1, customerAddressLine2, customerAddressZip, customerAddressLocality, customerAddressCountry, customerAddressRegion,
 	providerLogoRepositoryFileId, providerName, providerEmail, providerAddressLine1, providerAddressLine2, providerAddressZip, providerAddressLocality, providerAddressCountry, providerAddressRegion,
 	note string, amount, vat, total float64, invoiceLines []*invoicepb.InvoiceLine, span opentracing.Span) error {
@@ -583,6 +597,7 @@ func (h *InvoiceEventHandler) callFillInvoice(ctx context.Context, tenant, invoi
 			Tenant:    tenant,
 			InvoiceId: invoiceId,
 			DryRun:    dryRun,
+			Preview:   preview,
 			Note:      note,
 			Customer: &invoicepb.FillInvoiceCustomer{
 				Name:         customerName,
@@ -605,13 +620,14 @@ func (h *InvoiceEventHandler) callFillInvoice(ctx context.Context, tenant, invoi
 				Country:              providerAddressCountry,
 				Region:               providerAddressRegion,
 			},
-			Amount:       amount,
-			Vat:          vat,
-			Total:        total,
-			InvoiceLines: invoiceLines,
-			UpdatedAt:    utils.ConvertTimeToTimestampPtr(&now),
-			AppSource:    constants.AppSourceEventProcessingPlatformSubscribers,
-			Status:       invoiceStatus,
+			Amount:        amount,
+			Vat:           vat,
+			Total:         total,
+			InvoiceLines:  invoiceLines,
+			UpdatedAt:     utils.ConvertTimeToTimestampPtr(&now),
+			AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
+			Status:        invoiceStatus,
+			InvoiceNumber: invoiceNumber,
 		})
 	})
 	if err != nil {

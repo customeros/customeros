@@ -1447,7 +1447,7 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_OffCycleInvoice_Downgrade(
 	// prepare grpc mock
 	calledGrpc := false
 	invoiceGrpcServiceCallbacks := mocked_grpc.MockInvoiceServiceCallbacks{
-		PermanentlyDeleteDraftInvoice: func(context context.Context, inv *invoicepb.PermanentlyDeleteDraftInvoiceRequest) (*invoicepb.InvoiceIdResponse, error) {
+		PermanentlyDeleteInitializedInvoice: func(context context.Context, inv *invoicepb.PermanentlyDeleteInitializedInvoiceRequest) (*invoicepb.InvoiceIdResponse, error) {
 			require.Equal(t, tenantName, inv.Tenant)
 			require.Equal(t, invoiceId, inv.InvoiceId)
 			calledGrpc = true
