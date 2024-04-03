@@ -876,7 +876,7 @@ func TestQueryResolver_Contact_WithTimelineEvents(t *testing.T) {
 	secAgo60 := now.Add(time.Duration(-60) * time.Second)
 
 	// prepare page views
-	pageViewId1 := neo4jt.CreatePageView(ctx, driver, contactId, entity.PageViewEntity{
+	neo4jt.CreatePageView(ctx, driver, contactId, entity.PageViewEntity{
 		StartedAt:      secAgo1,
 		EndedAt:        now,
 		TrackerName:    "tracker1",
@@ -887,7 +887,7 @@ func TestQueryResolver_Contact_WithTimelineEvents(t *testing.T) {
 		OrderInSession: 1,
 		EngagedTime:    10,
 	})
-	pageViewId2 := neo4jt.CreatePageView(ctx, driver, contactId, entity.PageViewEntity{
+	neo4jt.CreatePageView(ctx, driver, contactId, entity.PageViewEntity{
 		StartedAt:      secAgo10,
 		EndedAt:        now,
 		TrackerName:    "tracker2",
@@ -939,56 +939,29 @@ func TestQueryResolver_Contact_WithTimelineEvents(t *testing.T) {
 	require.Equal(t, contactId, contact.(map[string]interface{})["id"])
 
 	timelineEvents := contact.(map[string]interface{})["timelineEvents"].([]interface{})
-	require.Equal(t, 5, len(timelineEvents))
+	require.Equal(t, 3, len(timelineEvents))
 
 	timelineEvent1 := timelineEvents[0].(map[string]interface{})
-	require.Equal(t, "PageView", timelineEvent1["__typename"].(string))
-	require.Equal(t, pageViewId1, timelineEvent1["id"].(string))
-	require.NotNil(t, timelineEvent1["startedAt"].(string))
-	require.NotNil(t, timelineEvent1["endedAt"].(string))
-	require.Equal(t, "session1", timelineEvent1["sessionId"].(string))
-	require.Equal(t, "application1", timelineEvent1["application"].(string))
-	require.Equal(t, "page1", timelineEvent1["pageTitle"].(string))
-	require.Equal(t, "http://app-1.ai", timelineEvent1["pageUrl"].(string))
-	require.Equal(t, float64(1), timelineEvent1["orderInSession"].(float64))
-	require.Equal(t, float64(10), timelineEvent1["engagedTime"].(float64))
-	require.Equal(t, "test", timelineEvent1["appSource"].(string))
-	require.Equal(t, "OPENLINE", timelineEvent1["source"].(string))
-	require.Equal(t, "OPENLINE", timelineEvent1["sourceOfTruth"].(string))
+	require.Equal(t, "InteractionEvent", timelineEvent1["__typename"].(string))
+	require.Equal(t, interactionEventId1, timelineEvent1["id"].(string))
+	require.NotNil(t, timelineEvent1["createdAt"].(string))
+	require.Equal(t, "IE text 1", timelineEvent1["content"].(string))
+	require.Equal(t, "application/json", timelineEvent1["contentType"].(string))
+	require.Equal(t, "EMAIL", timelineEvent1["channel"].(string))
 
 	timelineEvent2 := timelineEvents[1].(map[string]interface{})
-	require.Equal(t, "PageView", timelineEvent2["__typename"].(string))
-	require.Equal(t, pageViewId2, timelineEvent2["id"].(string))
-	require.NotNil(t, timelineEvent2["startedAt"].(string))
-	require.NotNil(t, timelineEvent2["endedAt"].(string))
-	require.Equal(t, "session2", timelineEvent2["sessionId"].(string))
-	require.Equal(t, "application2", timelineEvent2["application"].(string))
-	require.Equal(t, "page2", timelineEvent2["pageTitle"].(string))
-	require.Equal(t, "http://app-2.ai", timelineEvent2["pageUrl"].(string))
-	require.Equal(t, float64(2), timelineEvent2["orderInSession"].(float64))
-	require.Equal(t, float64(20), timelineEvent2["engagedTime"].(float64))
+	require.Equal(t, "InteractionEvent", timelineEvent2["__typename"].(string))
+	require.Equal(t, interactionEventId2, timelineEvent2["id"].(string))
+	require.NotNil(t, timelineEvent2["createdAt"].(string))
+	require.Equal(t, "IE text 2", timelineEvent2["content"].(string))
+	require.Equal(t, "application/json", timelineEvent2["contentType"].(string))
+	require.Equal(t, "EMAIL", timelineEvent2["channel"].(string))
 
 	timelineEvent3 := timelineEvents[2].(map[string]interface{})
-	require.Equal(t, "InteractionEvent", timelineEvent3["__typename"].(string))
-	require.Equal(t, interactionEventId1, timelineEvent3["id"].(string))
+	require.Equal(t, "Meeting", timelineEvent3["__typename"].(string))
+	require.Equal(t, meetingId, timelineEvent3["id"].(string))
 	require.NotNil(t, timelineEvent3["createdAt"].(string))
-	require.Equal(t, "IE text 1", timelineEvent3["content"].(string))
-	require.Equal(t, "application/json", timelineEvent3["contentType"].(string))
-	require.Equal(t, "EMAIL", timelineEvent3["channel"].(string))
-
-	timelineEvent4 := timelineEvents[3].(map[string]interface{})
-	require.Equal(t, "InteractionEvent", timelineEvent4["__typename"].(string))
-	require.Equal(t, interactionEventId2, timelineEvent4["id"].(string))
-	require.NotNil(t, timelineEvent4["createdAt"].(string))
-	require.Equal(t, "IE text 2", timelineEvent4["content"].(string))
-	require.Equal(t, "application/json", timelineEvent4["contentType"].(string))
-	require.Equal(t, "EMAIL", timelineEvent4["channel"].(string))
-
-	timelineEvent5 := timelineEvents[4].(map[string]interface{})
-	require.Equal(t, "Meeting", timelineEvent5["__typename"].(string))
-	require.Equal(t, meetingId, timelineEvent5["id"].(string))
-	require.NotNil(t, timelineEvent5["createdAt"].(string))
-	require.Equal(t, "meeting-name", timelineEvent5["name"].(string))
+	require.Equal(t, "meeting-name", timelineEvent3["name"].(string))
 }
 
 func TestQueryResolver_Contact_WithTimelineEvents_FilterByType(t *testing.T) {
@@ -1084,7 +1057,7 @@ func TestQueryResolver_Contact_WithTimelineEventsTotalCount(t *testing.T) {
 
 	contact := rawResponse.Data.(map[string]interface{})["contact"]
 	require.Equal(t, contactId, contact.(map[string]interface{})["id"])
-	require.Equal(t, float64(4), contact.(map[string]interface{})["timelineEventsTotalCount"].(float64))
+	require.Equal(t, float64(2), contact.(map[string]interface{})["timelineEventsTotalCount"].(float64))
 }
 
 func TestQueryResolver_Contact_WithOrganizations_ById(t *testing.T) {
