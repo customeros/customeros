@@ -11,10 +11,9 @@ import { Input } from './Input2';
 const iconSize = cva([], {
   variants: {
     size: {
-      xs: ['w-4', 'h-4'],
-      sm: ['w-5', 'h-5'],
-      md: ['w-6', 'h-6'],
-      lg: ['w-7', 'h-7'],
+      sm: ['size-3 mb-[8px]'],
+      md: ['size-4 mb-[5px]'],
+      lg: ['size-5 mb-[2px]'],
     },
   },
   defaultVariants: {
@@ -61,14 +60,7 @@ export const RightElement = ({
   };
 
   return (
-    <div
-      {...props}
-      className={twMerge(
-        className,
-        'text-gray-500 focus:border-primary-500 focus:border-b',
-        iconSize({ size }),
-      )}
-    >
+    <div {...props} className={twMerge(className, iconSize({ size }))}>
       {isValidElement(children) && cloneElement(children, iconProps)}
     </div>
   );
