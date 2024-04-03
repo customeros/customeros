@@ -15,7 +15,7 @@ require (
 	github.com/gin-contrib/zap v0.2.0
 	github.com/gin-gonic/gin v1.9.1
 	github.com/joho/godotenv v1.5.1
-	github.com/neo4j/neo4j-go-driver/v5 v5.18.0
+	github.com/neo4j/neo4j-go-driver/v5 v5.19.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20240206104907-b429ee046270
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240206104907-b429ee046270
 	github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20240206104907-b429ee046270
