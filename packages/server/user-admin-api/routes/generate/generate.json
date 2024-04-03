@@ -3,28 +3,28 @@
     {
       "firstName": "Jonty",
       "lastName": "Knox",
-      "email": "jonty@openline.ai",
+      "email": "jonty@customeros.ai",
       "profilePhotoUrl": "https://avatars.slack-edge.com/2022-11-02/4303022214486_f3ea9561724c2221162d_192.png"
 
     },
     {
       "firstName": "Matt",
       "lastName": "Brown",
-      "email": "matt@openline.ai",
+      "email": "matt@customeros.ai",
       "profilePhotoUrl": "https://avatars.slack-edge.com/2023-01-05/4600383510131_c4e50d2962044c01327e_192.png"
 
     },
     {
       "firstName": "Antoine",
       "lastName": "Valot",
-      "email": "antoine@openline.ai",
+      "email": "antoine@customeros.ai",
       "profilePhotoUrl": "https://avatars.slack-edge.com/2023-08-22/5772736958310_a64a246b4f237d7472f8_192.jpg"
 
     },
     {
       "firstName": "Vasi",
       "lastName": "Coscotin",
-      "email": "vasi@openline.ai",
+      "email": "vasi@customeros.ai",
       "profilePhotoUrl": "https://avatars.slack-edge.com/2022-10-19/4270750360112_7bfedcf03f1d0f092a68_192.png"
     }
   ],
@@ -81,7 +81,7 @@
   "tenantBillingProfiles": [
     {
       "legalName": "Openline Communications Ltd",
-      "email": "edi@openline.ai",
+      "email": "edi@customeros.ai",
       "addressLine1": "9th Floor, 107 Cheapside",
       "locality": " London",
       "country": "UK",
@@ -89,13 +89,14 @@
       "domesticPaymentsBankInfo": "ACH Routing Number: 026073150<br/>Account Number: 8311492202<br/>Account Type: Checking",
       "internationalPaymentsBankInfo": "ACH Routing Number: 026073150<br/>Account Number: 8311492202<br/>Account Type: Checking",
       "vatNumber":                     "123456",
-      "sendInvoicesFrom":              "jonty@openline.ai",
+      "sendInvoicesFrom":              "jonty@customeros.ai",
       "canPayWithCard":                false,
       "canPayWithDirectDebitSEPA":     false,
       "canPayWithDirectDebitACH":      false,
       "canPayWithDirectDebitBacs":     false,
       "canPayWithPigeon":              false,
-      "CanPayWithBankTransfer":        false
+      "CanPayWithBankTransfer":        false,
+      "Check":                         true
     }
   ],
   "organizations": [
@@ -124,34 +125,34 @@
           "invoiceNote":           "invoiceNote",
           "serviceLines": [
             {
-              "name":               "Service line 001 for BCC Contract Name 001",
-              "billed":             "MONTHLY",
+              "description":        "Service line 001 for BCC Contract Name 001",
+              "billingCycle":       "MONTHLY",
               "price":              12,
               "quantity":           4,
-              "startedAt":          "2023-07-04T09:00:00Z",
-              "endedAt":            "2023-07-08T09:00:00Z"
+              "serviceStarted":          "2023-07-04T09:00:00Z",
+              "serviceEnded":            "2023-07-08T09:00:00Z"
             },
             {
-              "name":               "Service line 002 for BCC Contract Name 001",
-              "billed":             "ANNUALLY",
+              "description":        "Service line 002 for BCC Contract Name 001",
+              "billingCycle":       "ANNUALLY",
               "price":              13,
               "quantity":           5,
-              "startedAt":          "2023-07-05T09:00:00Z",
-              "endedAt":            "2025-07-08T09:00:00Z"
+              "serviceStarted":          "2023-07-05T09:00:00Z",
+              "serviceEnded":            "2025-07-08T09:00:00Z"
             },
             {
-              "name":               "Service line 003 for BCC Contract Name 001",
-              "billed":             "ANNUALLY",
+              "description":        "Service line 003 for BCC Contract Name 001",
+              "billingCycle":       "ANNUALLY",
               "price":              11,
               "quantity":           3,
-              "startedAt":          "2023-07-04T09:00:00Z"
+              "serviceStarted":          "2023-07-04T09:00:00Z"
             },
             {
-              "name":               "Service line 004 for BCC Contract Name 001",
-              "billed":             "MONTHLY",
+              "description":        "Service line 004 for BCC Contract Name 001",
+              "billingCycle":       "MONTHLY",
               "price":              10,
               "quantity":           2,
-              "startedAt":          "2023-07-06T09:00:00Z"
+              "serviceStarted":          "2023-07-06T09:00:00Z"
             }
           ]
         },
@@ -175,19 +176,19 @@
           "invoiceNote":           "invoiceNote",
           "serviceLines": [
             {
-              "name":               "Service line 001 for BCC Contract Name 002",
-              "billed":             "ONCE",
+              "description":               "Service line 001 for BCC Contract Name 002",
+              "billingCycle":             "ONCE",
               "price":              30,
               "quantity":           10,
-              "startedAt":          "2023-08-05T09:00:00Z"
+              "serviceStarted":          "2023-08-05T09:00:00Z"
             },
             {
-              "name":               "Service line 002 for BCC Contract Name 002",
-              "billed":             "ONCE",
+              "description":               "Service line 002 for BCC Contract Name 002",
+              "billingCycle":             "ONCE",
               "price":              40,
               "quantity":           15,
-              "startedAt":          "2023-08-05T09:00:00Z",
-              "endedAt":            "2023-09-08T09:00:00Z"
+              "serviceStarted":          "2023-08-05T09:00:00Z",
+              "serviceEnded":            "2023-09-08T09:00:00Z"
             }
           ]
         }
@@ -207,7 +208,7 @@
       "emails": [
         {
           "from": "alfonso.perez@bcc.com",
-          "to": ["matt@openline.ai"],
+          "to": ["matt@customeros.ai"],
           "cc": [],
           "bcc": [],
           "subject": "Interest in Acme's Cloud Inventory Software for Small Businesses",
@@ -216,9 +217,9 @@
           "date": "2023-07-05T09:00:00Z"
         },
         {
-          "from": "jonty@openline.ai",
+          "from": "jonty@customeros.ai",
           "to": ["alfonso.perez@bcc.com", "jordan.davis@bcc.com"],
-          "cc": ["matt@openline.ai"],
+          "cc": ["matt@customeros.ai"],
           "bcc": [],
           "subject": "Re: Interest in Acme's Cloud Inventory Software for Small Businesses",
           "body": "Hello Alfonso, Thank you for reaching out. We're excited about the prospect of working with BCC. How about we jump on a demo this Thursday?",
@@ -226,7 +227,7 @@
           "date": "2023-07-06T10:30:00Z"
         },
         {
-          "from": "antoine@openline.ai",
+          "from": "antoine@customeros.ai",
           "to": ["alfonso.perez@bcc.com"],
           "cc": [],
           "bcc": [],
@@ -238,14 +239,14 @@
       ],
       "meetings": [
         {
-          "createdBy": "jonty@openline.ai",
-          "attendees": ["alfonso.perez@bcc.com", "jordan.davis@bcc.com", "matt@openline.ai"],
+          "createdBy": "jonty@customeros.ai",
+          "attendees": ["alfonso.perez@bcc.com", "jordan.davis@bcc.com", "matt@customeros.ai"],
           "subject": "Acme and BCC Solution Discussion",
           "agenda": "Discussion on the specifics of how Acme's solutions can benefit BCC",
           "startedAt": "2023-07-10T14:00:00Z",
           "endedAt": "2023-07-10T15:30:00Z"
         }, {
-          "createdBy": "antoine@openline.ai",
+          "createdBy": "antoine@customeros.ai",
           "attendees": ["alfonso.perez@bcc.com", "jordan.davis@bcc.com"],
           "subject": "Discussing Upgrade to Professional Plan for BCC",
           "agenda": "Discussion on upgrading to the Professional plan and the associated onboarding fees.",
@@ -255,7 +256,7 @@
       ],
       "logEntries": [
         {
-          "createdBy": "antoine@openline.ai",
+          "createdBy": "antoine@customeros.ai",
           "content": "Successfully implemented for BCC. The team at BCC is pleased with the setup and operational improvements.",
           "contentType": "text/plain",
           "date": "2023-08-01T12:00:00Z"
@@ -269,7 +270,7 @@
             "message": "We've reviewed the details from the meeting and are excited to proceed with the upgrade to the Professional plan. Let's get this started!"
           },
           {
-            "createdBy": "jonty@openline.ai",
+            "createdBy": "jonty@customeros.ai",
             "createdAt": "2023-08-08T10:45:00Z",
             "message": "Great to hear, Jordan! We're excited too. We'll begin the upgrade process and keep you updated every step of the way."
           }
@@ -329,7 +330,7 @@
       "emails": [
         {
           "from": "daniel.kim@acme.com",
-          "to": ["matt@openline.ai"],
+          "to": ["matt@customeros.ai"],
           "cc": ["julien.hubert@acme.com", "tobias.bauer@acme.com"],
           "bcc": [],
           "subject": "Inquiry About Acme's Advanced Tier Solutions",
@@ -338,16 +339,16 @@
           "date": "2023-09-05T08:30:00Z"
         },
         {
-          "from": "jonty@openline.ai",
+          "from": "jonty@customeros.ai",
           "to": ["daniel.kim@acme.com"],
-          "cc": ["julien.hubert@acme.com", "tobias.bauer@acme.com", "matt@openline.ai"],
+          "cc": ["julien.hubert@acme.com", "tobias.bauer@acme.com", "matt@customeros.ai"],
           "bcc": [],
           "subject": "Re: Inquiry About Acme's Advanced Tier Solutions",
           "body": "Hello Daniel, Thank you for reaching out. We're excited to discuss how our Advanced tier can help Acme Technologies. Let's set up a meeting to explore this further...",
           "contentType": "text/plain",
           "date": "2023-09-06T09:45:00Z"
         }, {
-          "from": "antoine@openline.ai",
+          "from": "antoine@customeros.ai",
           "to": ["benjamin.roberts@acme.com"],
           "cc": [],
           "bcc": [],
@@ -357,7 +358,7 @@
           "date": "2023-10-13T09:00:00Z"
         },
         {
-          "from": "antoine@openline.ai",
+          "from": "antoine@customeros.ai",
           "to": ["christopher.thompson@acme.com"],
           "cc": [],
           "bcc": [],
@@ -369,14 +370,14 @@
       ],
       "meetings": [
         {
-          "createdBy": "jonty@openline.ai",
-          "attendees": ["daniel.kim@acme.com", "julien.hubert@acme.com", "tobias.bauer@acme.com", "matt@openline.ai"],
+          "createdBy": "jonty@customeros.ai",
+          "attendees": ["daniel.kim@acme.com", "julien.hubert@acme.com", "tobias.bauer@acme.com", "matt@customeros.ai"],
           "subject": "Discussion of Acme's Advanced Tier for BCC Technologies",
           "agenda": "Presentation and discussion of features and benefits of the Advanced tier for BCC Technologies",
           "startedAt": "2023-09-10T15:00:00Z",
           "endedAt": "2023-09-10T16:30:00Z"
         }, {
-          "createdBy": "antoine@openline.ai",
+          "createdBy": "antoine@customeros.ai",
           "attendees": ["julien.hubert@acme.com"],
           "subject": "Acme Onboarding Session",
           "agenda": "Introduction to Acme's features and best practices for effective use.",
@@ -386,18 +387,18 @@
       ],
       "logEntries": [
         {
-          "createdBy": "antoine@openline.ai",
+          "createdBy": "antoine@customeros.ai",
           "content": "Successfully implemented Acme's Advanced tier solution for BCC Technologies. Contract signed for an annual subscription. The BCC team is onboarded and operational.",
           "contentType": "text/plain",
           "date": "2023-10-01T13:00:00Z"
         }, {
-          "createdBy": "jonty@openline.ai",
+          "createdBy": "jonty@customeros.ai",
           "content": "Received a call from BCC Technologies requesting the addition of 2 new full-access users: Benjamin Roberts, and Christopher Thompson. @antoine please proceed with onboarding them.",
           "contentType": "text/plain",
           "date": "2023-10-12T11:00:00Z"
         },
         {
-          "createdBy": "antoine@openline.ai",
+          "createdBy": "antoine@customeros.ai",
           "content": "Conducted an onboarding session for Benjamin Roberts. The second new user, Christopher Thompson, was a no-show and has not responded to messages. @jonty can you look into this please?",
           "contentType": "text/plain",
           "date": "2023-10-17T10:00:00Z"
@@ -405,7 +406,7 @@
       ],
       "issues": [
         {
-          "createdBy": "jonty@openline.ai",
+          "createdBy": "jonty@customeros.ai",
           "createdAt": "2023-10-03T09:00:00Z",
           "subject": "Difficulty with Report Generation",
           "status": "closed",
@@ -413,7 +414,7 @@
           "description": "BCC Technologies reported difficulty generating custom reports. Identified a user permission issue and swiftly adjusted settings. Provided a quick tutorial on managing permissions. Suggested a feature to alert users about permission-related issues, which was added to the product roadmap."
         },
         {
-          "createdBy": "antoine@openline.ai",
+          "createdBy": "antoine@customeros.ai",
           "createdAt": "2023-10-06T13:30:00Z",
           "subject": "Sync Error with Third-Party Platform",
           "status": "closed",
@@ -421,7 +422,7 @@
           "description": "Noticed irregular sync patterns with a third-party platform used by BCC. Proactively reached out and resolved a configuration mismatch before BCC experienced any operational disruptions. Enhanced monitoring tools to detect and alert such mismatches earlier."
         },
         {
-          "createdBy": "antoine@openline.ai",
+          "createdBy": "antoine@customeros.ai",
           "createdAt": "2023-10-10T16:45:00Z",
           "subject": "Unexpected Downtime Alert",
           "status": "closed",

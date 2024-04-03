@@ -53,6 +53,7 @@ type TenantBillingProfileInput struct {
 	CanPayWithDirectDebitBacs     bool   `json:"canPayWithDirectDebitBacs"`
 	CanPayWithPigeon              bool   `json:"canPayWithPigeon"`
 	CanPayWithBankTransfer        bool   `json:"canPayWithBankTransfer"`
+	Check                         bool   `json:"check"`
 }
 
 type NextDryRunInvoiceForContractInput struct {
@@ -94,22 +95,22 @@ type ContractUpdateInput struct {
 }
 
 type ServiceLineInput struct {
-	ContractId string    `json:"contractId,omitempty"`
-	Name       string    `json:"description"`
-	Billed     string    `json:"billingCycle"`
-	Price      int       `json:"price"`
-	Quantity   int       `json:"quantity"`
-	StartedAt  time.Time `json:"serviceStarted"`
+	ContractId     string     `json:"contractId,omitempty"`
+	Description    string     `json:"description"`
+	BillingCycle   string     `json:"billingCycle"`
+	Price          int        `json:"price"`
+	Quantity       int        `json:"quantity"`
+	ServiceStarted *time.Time `json:"serviceStarted"`
 }
 
 type ServiceLineEndedInput struct {
-	ContractId string    `json:"contractId,omitempty"`
-	Name       string    `json:"description"`
-	Billed     string    `json:"billingCycle"`
-	Price      int       `json:"price"`
-	Quantity   int       `json:"quantity"`
-	StartedAt  time.Time `json:"serviceStarted"`
-	EndedAt    time.Time `json:"endedAt"`
+	ContractId     string     `json:"contractId,omitempty"`
+	Description    string     `json:"description"`
+	BillingCycle   string     `json:"billingCycle"`
+	Price          int        `json:"price"`
+	Quantity       int        `json:"quantity"`
+	ServiceStarted *time.Time `json:"serviceStarted"`
+	ServiceEnded   *time.Time `json:"serviceEnded"`
 }
 
 type InteractionSessionParticipantInput struct {

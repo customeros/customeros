@@ -166,6 +166,13 @@ MATCH (t:Tenant {name:"customerosai"})<-[:USER_BELONGS_TO_TENANT]-(u:User) SET u
 MATCH (t:Tenant {name:"customerosai"})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact) SET c:Contact_customerosai;
 MATCH (t:Tenant {name:"customerosai"})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email) SET e:Email_customerosai;
 
+MATCH (t:Tenant {name:"customerosai"})
+MERGE (e:ExternalSystem {id:"calcom"})-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]->(t);
+MATCH (t:Tenant {name:"customerosai"})
+MERGE (e:ExternalSystem {id:"slack", name: "slack"})-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]->(t);
+MATCH (t:Tenant {name:"customerosai"})
+MERGE (e:ExternalSystem {id:"intercom", name: "intercom"})-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]->(t);
+
 CREATE CONSTRAINT tenant_name_unique IF NOT EXISTS FOR (t:Tenant) REQUIRE t.name IS UNIQUE;
 CREATE CONSTRAINT domain_domain_unique IF NOT EXISTS FOR (n:Domain) REQUIRE n.domain IS UNIQUE;
 

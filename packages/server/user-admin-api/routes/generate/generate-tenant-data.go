@@ -267,24 +267,24 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *s
 				for _, serviceLine := range contract.ServiceLines {
 
 					serviceLineInput := func() interface{} {
-						if serviceLine.EndedAt.IsZero() {
+						if serviceLine.ServiceEnded == nil {
 							return cosModel.ServiceLineInput{
-								ContractId: contractId,
-								Name:       serviceLine.Name,
-								Billed:     serviceLine.Billed,
-								Price:      serviceLine.Price,
-								Quantity:   serviceLine.Quantity,
-								StartedAt:  serviceLine.StartedAt,
+								ContractId:     contractId,
+								Description:    serviceLine.Description,
+								BillingCycle:   serviceLine.BillingCycle,
+								Price:          serviceLine.Price,
+								Quantity:       serviceLine.Quantity,
+								ServiceStarted: serviceLine.ServiceStarted,
 							}
 						}
 						return cosModel.ServiceLineEndedInput{
-							ContractId: contractId,
-							Name:       serviceLine.Name,
-							Billed:     serviceLine.Billed,
-							Price:      serviceLine.Price,
-							Quantity:   serviceLine.Quantity,
-							StartedAt:  serviceLine.StartedAt,
-							EndedAt:    serviceLine.EndedAt,
+							ContractId:     contractId,
+							Description:    serviceLine.Description,
+							BillingCycle:   serviceLine.BillingCycle,
+							Price:          serviceLine.Price,
+							Quantity:       serviceLine.Quantity,
+							ServiceStarted: serviceLine.ServiceStarted,
+							ServiceEnded:   serviceLine.ServiceEnded,
 						}
 					}()
 					serviceLineId, err := services.CustomerOsClient.CreateServiceLine(tenant, username, serviceLineInput)

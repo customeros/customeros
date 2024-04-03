@@ -599,7 +599,7 @@ func (s *customerOsClient) CreateServiceLine(tenant, username string, input inte
 
 	var graphqlResponse model.CreateServiceLineItemResponse
 	if err := s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
-		return "", fmt.Errorf("serviceLineItem_Create: %w", err)
+		return "", fmt.Errorf("contractLineItem_Create: %w", err)
 	}
 
 	return graphqlResponse.ContractLineItemCreate.Metadata.Id, nil

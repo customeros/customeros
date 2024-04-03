@@ -34,6 +34,7 @@ type SourceData struct {
 		CanPayWithDirectDebitBacs     bool   `json:"canPayWithDirectDebitBacs"`
 		CanPayWithPigeon              bool   `json:"canPayWithPigeon"`
 		CanPayWithBankTransfer        bool   `json:"canPayWithBankTransfer"`
+		Check                         bool   `json:"check"`
 	} `json:"tenantBillingProfiles"`
 	Organizations []struct {
 		Id                    string `json:"id"`
@@ -62,12 +63,12 @@ type SourceData struct {
 			InvoiceEmail          string     `json:"invoiceEmail"`
 			InvoiceNote           string     `json:"invoiceNote"`
 			ServiceLines          []struct {
-				Name      string    `json:"description"`
-				Billed    string    `json:"billingCycle"`
-				Price     int       `json:"price"`
-				Quantity  int       `json:"quantity"`
-				StartedAt time.Time `json:"serviceStarted"`
-				EndedAt   time.Time `json:"serviceEnded,omitempty"`
+				Description    string     `json:"description"`
+				BillingCycle   string     `json:"billingCycle"`
+				Price          int        `json:"price"`
+				Quantity       int        `json:"quantity"`
+				ServiceStarted *time.Time `json:"serviceStarted"`
+				ServiceEnded   *time.Time `json:"serviceEnded,omitempty"`
 			} `json:"serviceLines"`
 		} `json:"contracts,omitempty"`
 		People []struct {
