@@ -69,38 +69,18 @@ func NewDashboardRepository(driver *neo4j.DriverWithContext) DashboardRepository
 	}
 }
 
-func createStringCypherFilter(propertyName string, searchTerm any, comparator utils.ComparisonOperator) *utils.CypherFilter {
-	filter := utils.CypherFilter{}
-	filter.Details = new(utils.CypherFilterItem)
-	filter.Details.NodeProperty = propertyName
-	filter.Details.Value = &searchTerm
-	filter.Details.ComparisonOperator = comparator
-	filter.Details.SupportCaseSensitive = true
-	return &filter
-}
-
-func createCypherFilter(propertyName string, searchTerm any, comparator utils.ComparisonOperator, caseSensitive bool) *utils.CypherFilter {
-	filter := utils.CypherFilter{}
-	filter.Details = new(utils.CypherFilterItem)
-	filter.Details.NodeProperty = propertyName
-	filter.Details.Value = &searchTerm
-	filter.Details.ComparisonOperator = comparator
-	filter.Details.SupportCaseSensitive = caseSensitive
-	return &filter
-}
-
 func createStringCypherFilterWithValueOrEmpty(filter *model.FilterItem, propertyName string) *utils.CypherFilter {
 	if filter.IncludeEmpty != nil && *filter.IncludeEmpty {
 		orFilter := utils.CypherFilter{}
 		orFilter.LogicalOperator = utils.OR
 		orFilter.Details = new(utils.CypherFilterItem)
 
-		orFilter.Filters = append(orFilter.Filters, createStringCypherFilter(propertyName, *filter.Value.Str, utils.CONTAINS))
-		orFilter.Filters = append(orFilter.Filters, createCypherFilter(propertyName, "", utils.EQUALS, false))
-		orFilter.Filters = append(orFilter.Filters, createCypherFilter(propertyName, nil, utils.IS_NULL, false))
+		orFilter.Filters = append(orFilter.Filters, utils.CreateStringCypherFilter(propertyName, *filter.Value.Str, utils.CONTAINS))
+		orFilter.Filters = append(orFilter.Filters, utils.CreateCypherFilter(propertyName, "", utils.EQUALS, false))
+		orFilter.Filters = append(orFilter.Filters, utils.CreateCypherFilter(propertyName, nil, utils.IS_NULL, false))
 		return &orFilter
 	} else {
-		return createStringCypherFilter(propertyName, *filter.Value.Str, utils.CONTAINS)
+		return utils.CreateStringCypherFilter(propertyName, *filter.Value.Str, utils.CONTAINS)
 	}
 }
 
@@ -146,10 +126,10 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 				orFilter.LogicalOperator = utils.OR
 				orFilter.Details = new(utils.CypherFilterItem)
 
-				orFilter.Filters = append(orFilter.Filters, createStringCypherFilter("name", *filter.Filter.Value.Str, utils.CONTAINS))
-				orFilter.Filters = append(orFilter.Filters, createStringCypherFilter("website", *filter.Filter.Value.Str, utils.CONTAINS))
-				orFilter.Filters = append(orFilter.Filters, createStringCypherFilter("customerOsId", *filter.Filter.Value.Str, utils.CONTAINS))
-				orFilter.Filters = append(orFilter.Filters, createStringCypherFilter("referenceId", *filter.Filter.Value.Str, utils.CONTAINS))
+				orFilter.Filters = append(orFilter.Filters, utils.CreateStringCypherFilter("name", *filter.Filter.Value.Str, utils.CONTAINS))
+				orFilter.Filters = append(orFilter.Filters, utils.CreateStringCypherFilter("website", *filter.Filter.Value.Str, utils.CONTAINS))
+				orFilter.Filters = append(orFilter.Filters, utils.CreateStringCypherFilter("customerOsId", *filter.Filter.Value.Str, utils.CONTAINS))
+				orFilter.Filters = append(orFilter.Filters, utils.CreateStringCypherFilter("referenceId", *filter.Filter.Value.Str, utils.CONTAINS))
 
 				organizationFilter.Filters = append(organizationFilter.Filters, &orFilter)
 			} else if filter.Filter.Property == SearchSortParamName {
@@ -157,44 +137,44 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 			} else if filter.Filter.Property == SearchSortParamWebsite {
 				organizationFilter.Filters = append(organizationFilter.Filters, createStringCypherFilterWithValueOrEmpty(filter.Filter, "website"))
 			} else if filter.Filter.Property == SearchSortParamEmail {
-				emailFilter.Filters = append(emailFilter.Filters, createStringCypherFilter("email", *filter.Filter.Value.Str, utils.CONTAINS))
-				emailFilter.Filters = append(emailFilter.Filters, createStringCypherFilter("rawEmail", *filter.Filter.Value.Str, utils.CONTAINS))
+				emailFilter.Filters = append(emailFilter.Filters, utils.CreateStringCypherFilter("email", *filter.Filter.Value.Str, utils.CONTAINS))
+				emailFilter.Filters = append(emailFilter.Filters, utils.CreateStringCypherFilter("rawEmail", *filter.Filter.Value.Str, utils.CONTAINS))
 			} else if filter.Filter.Property == SearchSortParamCountry {
-				locationFilter.Filters = append(locationFilter.Filters, createStringCypherFilter("country", *filter.Filter.Value.Str, utils.EQUALS))
+				locationFilter.Filters = append(locationFilter.Filters, utils.CreateStringCypherFilter("country", *filter.Filter.Value.Str, utils.EQUALS))
 			} else if filter.Filter.Property == SearchSortParamRegion {
-				locationFilter.Filters = append(locationFilter.Filters, createStringCypherFilter("region", *filter.Filter.Value.Str, utils.EQUALS))
+				locationFilter.Filters = append(locationFilter.Filters, utils.CreateStringCypherFilter("region", *filter.Filter.Value.Str, utils.EQUALS))
 			} else if filter.Filter.Property == SearchSortParamLocality {
-				locationFilter.Filters = append(locationFilter.Filters, createStringCypherFilter("locality", *filter.Filter.Value.Str, utils.EQUALS))
+				locationFilter.Filters = append(locationFilter.Filters, utils.CreateStringCypherFilter("locality", *filter.Filter.Value.Str, utils.EQUALS))
 			} else if filter.Filter.Property == SearchSortParamOwnerId {
 				ownerId = *filter.Filter.Value.ArrayStr
 				ownerIncludeEmpty = *filter.Filter.IncludeEmpty
 			} else if filter.Filter.Property == SearchParamExternalId {
 				externalId = *filter.Filter.Value.Str
 			} else if filter.Filter.Property == SearchSortParamIsCustomer && filter.Filter.Value.ArrayBool != nil && len(*filter.Filter.Value.ArrayBool) >= 1 {
-				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("isCustomer", *filter.Filter.Value.ArrayBool, utils.IN, false))
+				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilter("isCustomer", *filter.Filter.Value.ArrayBool, utils.IN, false))
 			} else if filter.Filter.Property == SearchSortParamRenewalLikelihood && filter.Filter.Value.ArrayStr != nil && len(*filter.Filter.Value.ArrayStr) >= 1 {
 				renewalLikelihoodValues := make([]string, 0)
 				for _, v := range *filter.Filter.Value.ArrayStr {
 					renewalLikelihoodValues = append(renewalLikelihoodValues, mapper.MapOpportunityRenewalLikelihoodFromString(&v))
 				}
-				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("derivedRenewalLikelihood", renewalLikelihoodValues, utils.IN, false))
+				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilter("derivedRenewalLikelihood", renewalLikelihoodValues, utils.IN, false))
 			} else if filter.Filter.Property == SearchSortParamOnboardingStatus && filter.Filter.Value.ArrayStr != nil && len(*filter.Filter.Value.ArrayStr) >= 1 {
 				onboardingStatusValues := make([]string, 0)
 				for _, v := range *filter.Filter.Value.ArrayStr {
 					onboardingStatusValues = append(onboardingStatusValues, mapper.MapOnboardingStatusFromString(&v))
 				}
-				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("onboardingStatus", onboardingStatusValues, utils.IN, false))
+				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilter("onboardingStatus", onboardingStatusValues, utils.IN, false))
 			} else if filter.Filter.Property == SearchSortParamRenewalCycleNext && filter.Filter.Value.Time != nil {
-				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("billingDetailsRenewalCycleNext", *filter.Filter.Value.Time, utils.LTE, false))
+				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilter("billingDetailsRenewalCycleNext", *filter.Filter.Value.Time, utils.LTE, false))
 			} else if filter.Filter.Property == SearchSortParamRenewalDate && filter.Filter.Value.Time != nil {
-				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("derivedNextRenewalAt", *filter.Filter.Value.Time, utils.LTE, false))
+				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilter("derivedNextRenewalAt", *filter.Filter.Value.Time, utils.LTE, false))
 			} else if filter.Filter.Property == SearchSortParamForecastArr && filter.Filter.Value.ArrayInt != nil && len(*filter.Filter.Value.ArrayInt) == 2 {
-				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("renewalForecastArr", (*filter.Filter.Value.ArrayInt)[0], utils.GTE, false))
-				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("renewalForecastArr", (*filter.Filter.Value.ArrayInt)[1], utils.LTE, false))
+				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilter("renewalForecastArr", (*filter.Filter.Value.ArrayInt)[0], utils.GTE, false))
+				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilter("renewalForecastArr", (*filter.Filter.Value.ArrayInt)[1], utils.LTE, false))
 			} else if filter.Filter.Property == SearchSortParamLastTouchpointAt && filter.Filter.Value.Time != nil {
-				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("lastTouchpointAt", *filter.Filter.Value.Time, utils.GTE, false))
+				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilter("lastTouchpointAt", *filter.Filter.Value.Time, utils.GTE, false))
 			} else if filter.Filter.Property == SearchSortParamLastTouchpointType && filter.Filter.Value.ArrayStr != nil {
-				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("lastTouchpointType", *filter.Filter.Value.ArrayStr, utils.IN, false))
+				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilter("lastTouchpointType", *filter.Filter.Value.ArrayStr, utils.IN, false))
 			}
 		}
 
@@ -519,10 +499,10 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 				orFilter.LogicalOperator = utils.OR
 				orFilter.Details = new(utils.CypherFilterItem)
 
-				orFilter.Filters = append(orFilter.Filters, createStringCypherFilter("name", *filter.Filter.Value.Str, utils.CONTAINS))
-				orFilter.Filters = append(orFilter.Filters, createStringCypherFilter("website", *filter.Filter.Value.Str, utils.CONTAINS))
-				orFilter.Filters = append(orFilter.Filters, createStringCypherFilter("customerOsId", *filter.Filter.Value.Str, utils.CONTAINS))
-				orFilter.Filters = append(orFilter.Filters, createStringCypherFilter("referenceId", *filter.Filter.Value.Str, utils.CONTAINS))
+				orFilter.Filters = append(orFilter.Filters, utils.CreateStringCypherFilter("name", *filter.Filter.Value.Str, utils.CONTAINS))
+				orFilter.Filters = append(orFilter.Filters, utils.CreateStringCypherFilter("website", *filter.Filter.Value.Str, utils.CONTAINS))
+				orFilter.Filters = append(orFilter.Filters, utils.CreateStringCypherFilter("customerOsId", *filter.Filter.Value.Str, utils.CONTAINS))
+				orFilter.Filters = append(orFilter.Filters, utils.CreateStringCypherFilter("referenceId", *filter.Filter.Value.Str, utils.CONTAINS))
 
 				organizationFilter.Filters = append(organizationFilter.Filters, &orFilter)
 			} else if filter.Filter.Property == SearchSortParamName {
@@ -530,44 +510,44 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 			} else if filter.Filter.Property == SearchSortParamWebsite {
 				organizationFilter.Filters = append(organizationFilter.Filters, createStringCypherFilterWithValueOrEmpty(filter.Filter, "website"))
 			} else if filter.Filter.Property == SearchSortParamEmail {
-				emailFilter.Filters = append(emailFilter.Filters, createStringCypherFilter("email", *filter.Filter.Value.Str, utils.CONTAINS))
-				emailFilter.Filters = append(emailFilter.Filters, createStringCypherFilter("rawEmail", *filter.Filter.Value.Str, utils.CONTAINS))
+				emailFilter.Filters = append(emailFilter.Filters, utils.CreateStringCypherFilter("email", *filter.Filter.Value.Str, utils.CONTAINS))
+				emailFilter.Filters = append(emailFilter.Filters, utils.CreateStringCypherFilter("rawEmail", *filter.Filter.Value.Str, utils.CONTAINS))
 			} else if filter.Filter.Property == SearchSortParamCountry {
-				locationFilter.Filters = append(locationFilter.Filters, createStringCypherFilter("country", *filter.Filter.Value.Str, utils.EQUALS))
+				locationFilter.Filters = append(locationFilter.Filters, utils.CreateStringCypherFilter("country", *filter.Filter.Value.Str, utils.EQUALS))
 			} else if filter.Filter.Property == SearchSortParamRegion {
-				locationFilter.Filters = append(locationFilter.Filters, createStringCypherFilter("region", *filter.Filter.Value.Str, utils.EQUALS))
+				locationFilter.Filters = append(locationFilter.Filters, utils.CreateStringCypherFilter("region", *filter.Filter.Value.Str, utils.EQUALS))
 			} else if filter.Filter.Property == SearchSortParamLocality {
-				locationFilter.Filters = append(locationFilter.Filters, createStringCypherFilter("locality", *filter.Filter.Value.Str, utils.EQUALS))
+				locationFilter.Filters = append(locationFilter.Filters, utils.CreateStringCypherFilter("locality", *filter.Filter.Value.Str, utils.EQUALS))
 			} else if filter.Filter.Property == SearchSortParamOwnerId {
 				ownerId = *filter.Filter.Value.ArrayStr
 				ownerIncludeEmpty = *filter.Filter.IncludeEmpty
 			} else if filter.Filter.Property == SearchSortParamIsCustomer && filter.Filter.Value.ArrayBool != nil && len(*filter.Filter.Value.ArrayBool) >= 1 {
-				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("isCustomer", *filter.Filter.Value.ArrayBool, utils.IN, false))
+				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilter("isCustomer", *filter.Filter.Value.ArrayBool, utils.IN, false))
 			} else if filter.Filter.Property == SearchSortParamRenewalLikelihood && filter.Filter.Value.ArrayStr != nil && len(*filter.Filter.Value.ArrayStr) >= 1 {
 				renewalLikelihoodValues := make([]string, 0)
 				for _, v := range *filter.Filter.Value.ArrayStr {
 					renewalLikelihoodValues = append(renewalLikelihoodValues, mapper.MapOpportunityRenewalLikelihoodFromString(&v))
 				}
-				opportunityFilter.Filters = append(opportunityFilter.Filters, createCypherFilter("renewalLikelihood", renewalLikelihoodValues, utils.IN, false))
+				opportunityFilter.Filters = append(opportunityFilter.Filters, utils.CreateCypherFilter("renewalLikelihood", renewalLikelihoodValues, utils.IN, false))
 			} else if filter.Filter.Property == SearchSortParamOnboardingStatus && filter.Filter.Value.ArrayStr != nil && len(*filter.Filter.Value.ArrayStr) >= 1 {
 				onboardingStatusValues := make([]string, 0)
 				for _, v := range *filter.Filter.Value.ArrayStr {
 					onboardingStatusValues = append(onboardingStatusValues, mapper.MapOnboardingStatusFromString(&v))
 				}
-				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("onboardingStatus", onboardingStatusValues, utils.IN, false))
+				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilter("onboardingStatus", onboardingStatusValues, utils.IN, false))
 			} else if filter.Filter.Property == SearchSortParamRenewalCycleNext && filter.Filter.Value.Time != nil {
-				opportunityFilter.Filters = append(opportunityFilter.Filters, createCypherFilter("renewedAt", *filter.Filter.Value.Time, utils.LTE, false))
+				opportunityFilter.Filters = append(opportunityFilter.Filters, utils.CreateCypherFilter("renewedAt", *filter.Filter.Value.Time, utils.LTE, false))
 			} else if filter.Filter.Property == SearchSortParamRenewalDate && filter.Filter.Value.Time != nil {
-				opportunityFilter.Filters = append(opportunityFilter.Filters, createCypherFilter("renewedAt", *filter.Filter.Value.Time, utils.LTE, false))
+				opportunityFilter.Filters = append(opportunityFilter.Filters, utils.CreateCypherFilter("renewedAt", *filter.Filter.Value.Time, utils.LTE, false))
 			} else if filter.Filter.Property == SearchSortParamForecastArr && filter.Filter.Value.ArrayInt != nil && len(*filter.Filter.Value.ArrayInt) == 2 {
-				opportunityFilter.Filters = append(opportunityFilter.Filters, createCypherFilter("maxAmount", (*filter.Filter.Value.ArrayInt)[0], utils.GTE, false))
-				opportunityFilter.Filters = append(opportunityFilter.Filters, createCypherFilter("maxAmount", (*filter.Filter.Value.ArrayInt)[1], utils.LTE, false))
+				opportunityFilter.Filters = append(opportunityFilter.Filters, utils.CreateCypherFilter("maxAmount", (*filter.Filter.Value.ArrayInt)[0], utils.GTE, false))
+				opportunityFilter.Filters = append(opportunityFilter.Filters, utils.CreateCypherFilter("maxAmount", (*filter.Filter.Value.ArrayInt)[1], utils.LTE, false))
 			} else if filter.Filter.Property == SearchSortParamLastTouchpointAt && filter.Filter.Value.Time != nil {
-				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("lastTouchpointAt", *filter.Filter.Value.Time, utils.GTE, false))
+				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilter("lastTouchpointAt", *filter.Filter.Value.Time, utils.GTE, false))
 			} else if filter.Filter.Property == SearchSortParamLastTouchpointType && filter.Filter.Value.ArrayStr != nil {
-				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("lastTouchpointType", *filter.Filter.Value.ArrayStr, utils.IN, false))
+				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilter("lastTouchpointType", *filter.Filter.Value.ArrayStr, utils.IN, false))
 			} else if filter.Filter.Property == SearchSortParamRenewalCycle {
-				contractFilter.Filters = append(contractFilter.Filters, createStringCypherFilter("renewalCycle", *filter.Filter.Value.Str, utils.EQUALS))
+				contractFilter.Filters = append(contractFilter.Filters, utils.CreateStringCypherFilter("renewalCycle", *filter.Filter.Value.Str, utils.EQUALS))
 			}
 		}
 

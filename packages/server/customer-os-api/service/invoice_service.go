@@ -24,8 +24,19 @@ import (
 	"time"
 )
 
+const (
+	SortContractName               = "CONTRACT_NAME"
+	SearchSortContractBillingCycle = "CONTRACT_BILLING_CYCLE"
+	SearchInvoiceDryRunDeprecated  = "DRY_RUN"
+	SearchInvoiceDryRun            = "INVOICE_DRY_RUN"
+	SearchSortInvoiceStatus        = "INVOICE_STATUS"
+	SearchInvoiceNumberDeprecated  = "NUMBER"
+	SearchInvoiceNumber            = "INVOICE_NUMBER"
+	SearchInvoiceIssueDate         = "INVOICE_ISSUE_DATE"
+)
+
 type InvoiceService interface {
-	GetInvoices(ctx context.Context, organizationId string, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
+	GetInvoices(ctx context.Context, organizationId string, page, limit int, where *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	GetById(ctx context.Context, invoiceId string) (*neo4jentity.InvoiceEntity, error)
 	GetInvoiceLinesForInvoices(ctx context.Context, invoiceIds []string) (*neo4jentity.InvoiceLineEntities, error)
 	SimulateInvoice(ctx context.Context, invoiceData *SimulateInvoiceData) (string, error)
@@ -131,14 +142,14 @@ type SimulateInvoiceLineData struct {
 	Quantity          int
 }
 
-func (s *invoiceService) GetInvoices(ctx context.Context, organizationId string, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {
+func (s *invoiceService) GetInvoices(ctx context.Context, organizationId string, page, limit int, where *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.GetInvoices")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("organizationId", organizationId))
 	span.LogFields(log.Object("page", page))
 	span.LogFields(log.Object("limit", limit))
-	span.LogFields(log.Object("filter", filter))
+	span.LogFields(log.Object("where", where))
 	span.LogFields(log.Object("sortBy", sortBy))
 
 	var paginatedResult = utils.Pagination{
@@ -159,15 +170,102 @@ func (s *invoiceService) GetInvoices(ctx context.Context, organizationId string,
 	if err != nil {
 		return nil, err
 	}
-	cypherFilter, err := buildFilter(filter, reflect.TypeOf(neo4jentity.InvoiceEntity{}))
-	if err != nil {
-		return nil, err
+
+	organizationFilterCypher, organizationFilterParams := "", make(map[string]interface{})
+	contractFilterCypher, contractFilterParams := "", make(map[string]interface{})
+	invoiceFilterCypher, invoiceFilterParams := "", make(map[string]interface{})
+
+	organizationFilter := new(utils.CypherFilter)
+	organizationFilter.Negate = false
+	organizationFilter.LogicalOperator = utils.AND
+	organizationFilter.Filters = make([]*utils.CypherFilter, 0)
+
+	contractFilter := new(utils.CypherFilter)
+	contractFilter.Negate = false
+	contractFilter.LogicalOperator = utils.AND
+	contractFilter.Filters = make([]*utils.CypherFilter, 0)
+
+	invoiceFilter := new(utils.CypherFilter)
+	invoiceFilter.Negate = false
+	invoiceFilter.LogicalOperator = utils.AND
+	invoiceFilter.Filters = make([]*utils.CypherFilter, 0)
+
+	if organizationId != "" {
+		organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateStringCypherFilter("id", organizationId, utils.EQUALS))
+		organizationFilterCypher, organizationFilterParams = organizationFilter.BuildCypherFilterFragmentWithParamName("o", "o_param_")
 	}
 
-	dbNodesWithTotalCount, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetPaginatedInvoices(ctx, common.GetTenantFromContext(ctx), organizationId,
+	if where != nil {
+
+		for _, f := range where.And {
+			if f.Filter.Property == SearchSortContractBillingCycle {
+				contractFilter.Filters = append(contractFilter.Filters, utils.CreateCypherFilter("billingCycle", *f.Filter.Value.ArrayStr, utils.IN, false))
+			}
+			if f.Filter.Property == SearchSortInvoiceStatus {
+				invoiceFilter.Filters = append(invoiceFilter.Filters, utils.CreateCypherFilter("status", *f.Filter.Value.ArrayStr, utils.IN, false))
+			}
+			if f.Filter.Property == SearchInvoiceDryRunDeprecated {
+				invoiceFilter.Filters = append(invoiceFilter.Filters, utils.CreateCypherFilter("dryRun", *f.Filter.Value.Bool, utils.EQUALS, false))
+			}
+			if f.Filter.Property == SearchInvoiceDryRun {
+				invoiceFilter.Filters = append(invoiceFilter.Filters, utils.CreateCypherFilter("dryRun", *f.Filter.Value.Bool, utils.EQUALS, false))
+			}
+			if f.Filter.Property == SearchInvoiceNumberDeprecated {
+				invoiceFilter.Filters = append(invoiceFilter.Filters, utils.CreateCypherFilter("number", *f.Filter.Value.Str, utils.EQUALS, false))
+			}
+			if f.Filter.Property == SearchInvoiceNumber {
+				invoiceFilter.Filters = append(invoiceFilter.Filters, utils.CreateCypherFilter("number", *f.Filter.Value.Str, utils.EQUALS, false))
+			}
+			if f.Filter.Property == SearchInvoiceIssueDate && f.Filter.Value.ArrayTime != nil && len(*f.Filter.Value.ArrayTime) == 2 {
+				times := *f.Filter.Value.ArrayTime
+				invoiceFilter.Filters = append(invoiceFilter.Filters, utils.CreateCypherFilter("createdAt", times[0], utils.GTE, false))
+				invoiceFilter.Filters = append(invoiceFilter.Filters, utils.CreateCypherFilter("createdAt", times[1], utils.LTE, false))
+			}
+		}
+
+		if len(contractFilter.Filters) > 0 {
+			contractFilterCypher, contractFilterParams = contractFilter.BuildCypherFilterFragmentWithParamName("c", "c_param_")
+		}
+		if len(invoiceFilter.Filters) > 0 {
+			invoiceFilterCypher, invoiceFilterParams = invoiceFilter.BuildCypherFilterFragmentWithParamName("i", "i_param_")
+		}
+	}
+
+	filter := ""
+	params := map[string]any{}
+
+	utils.MergeMapToMap(organizationFilterParams, params)
+	utils.MergeMapToMap(contractFilterParams, params)
+	utils.MergeMapToMap(invoiceFilterParams, params)
+
+	if organizationFilterCypher != "" {
+		filter += organizationFilterCypher
+	}
+	if contractFilterCypher != "" {
+		if filter != "" {
+			filter += " AND "
+		}
+		filter += contractFilterCypher
+	}
+	if invoiceFilterCypher != "" {
+		if filter != "" {
+			filter += " AND "
+		}
+		filter += invoiceFilterCypher
+	}
+
+	if filter != "" {
+		filter = " WHERE " + filter
+	}
+
+	span.LogFields(log.String("filter", filter))
+	span.LogFields(log.Object("params", params))
+
+	dbNodesWithTotalCount, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetPaginatedInvoices(ctx, common.GetTenantFromContext(ctx),
 		paginatedResult.GetSkip(),
 		paginatedResult.GetLimit(),
-		cypherFilter,
+		filter,
+		params,
 		cypherSort)
 	if err != nil {
 		tracing.TraceErr(span, err)

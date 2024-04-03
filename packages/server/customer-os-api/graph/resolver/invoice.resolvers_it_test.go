@@ -107,59 +107,67 @@ func TestInvoiceResolver_Invoice(t *testing.T) {
 	require.Equal(t, contractId, invoice.Contract.ID)
 }
 
-func TestInvoiceResolver_Invoices(t *testing.T) {
+func TestInvoiceResolver_Invoices_DryRun_True(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
-	timeNow := utils.Now()
-	yesterday := timeNow.Add(-24 * time.Hour)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organizationId, neo4jentity.ContractEntity{})
 
-	invoice1Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
-		CreatedAt: timeNow,
-		UpdatedAt: timeNow,
-		Number:    "1",
-		DryRun:    false,
-	})
-	neo4jtest.CreateInvoiceLine(ctx, driver, tenantName, invoice1Id, neo4jentity.InvoiceLineEntity{
-		Name: "SLI 1",
+	neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		DryRun: false,
 	})
 
 	invoice2Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
-		CreatedAt: yesterday,
-		UpdatedAt: yesterday,
-		Number:    "2",
-		DryRun:    false,
-	})
-	neo4jtest.CreateInvoiceLine(ctx, driver, tenantName, invoice2Id, neo4jentity.InvoiceLineEntity{
-		Name: "SLI 2",
+		DryRun: true,
 	})
 
-	invoice3Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
-		CreatedAt: yesterday,
-		UpdatedAt: yesterday,
-		Number:    "11",
-		DryRun:    false,
+	rawResponse := callGraphQL(t, "invoice/get_invoices_filter_dry_run", map[string]interface{}{
+		"page":   0,
+		"limit":  10,
+		"dryRun": true,
 	})
-	neo4jtest.CreateInvoiceLine(ctx, driver, tenantName, invoice3Id, neo4jentity.InvoiceLineEntity{
-		Name: "SLI 3",
-	})
+	require.Nil(t, rawResponse.Errors)
 
-	invoice4Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
-		CreatedAt: yesterday,
-		UpdatedAt: yesterday,
-		Number:    "11",
-		DryRun:    true,
-	})
-	neo4jtest.CreateInvoiceLine(ctx, driver, tenantName, invoice4Id, neo4jentity.InvoiceLineEntity{
-		Name: "SLI 4",
-	})
+	var invoiceStruct struct {
+		Invoices model.InvoicesPage
+	}
 
-	rawResponse := callGraphQL(t, "invoice/get_invoices", map[string]interface{}{
-		"page":  0,
-		"limit": 10,
+	err := decode.Decode(rawResponse.Data.(map[string]any), &invoiceStruct)
+	require.Nil(t, err)
+
+	require.Equal(t, int64(1), invoiceStruct.Invoices.TotalElements)
+	require.Equal(t, 1, len(invoiceStruct.Invoices.Content))
+
+	require.Equal(t, invoice2Id, invoiceStruct.Invoices.Content[0].Metadata.ID)
+}
+
+func TestInvoiceResolver_Invoices_Contract_BillingCycle(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	contract1Id := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organizationId, neo4jentity.ContractEntity{
+		BillingCycle: neo4jenum.BillingCycleMonthlyBilling,
+	})
+	invoice1Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contract1Id, neo4jentity.InvoiceEntity{})
+
+	contract2Id := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organizationId, neo4jentity.ContractEntity{
+		BillingCycle: neo4jenum.BillingCycleQuarterlyBilling,
+	})
+	invoice2Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contract2Id, neo4jentity.InvoiceEntity{})
+
+	contract3Id := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organizationId, neo4jentity.ContractEntity{
+		BillingCycle: neo4jenum.BillingCycleAnnuallyBilling,
+	})
+	neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contract3Id, neo4jentity.InvoiceEntity{})
+
+	rawResponse := callGraphQL(t, "invoice/get_invoices_filter_contract_billing_cycle", map[string]interface{}{
+		"page":                 0,
+		"limit":                10,
+		"contractBillingCycle": []string{"MONTHLY", "QUARTERLY"},
 	})
 	require.Nil(t, rawResponse.Errors)
 
@@ -173,11 +181,169 @@ func TestInvoiceResolver_Invoices(t *testing.T) {
 	require.Equal(t, int64(2), invoiceStruct.Invoices.TotalElements)
 	require.Equal(t, 2, len(invoiceStruct.Invoices.Content))
 
+	require.Contains(t, []string{invoice1Id, invoice2Id}, invoiceStruct.Invoices.Content[0].Metadata.ID)
+	require.Contains(t, []string{invoice1Id, invoice2Id}, invoiceStruct.Invoices.Content[1].Metadata.ID)
+}
+
+func TestInvoiceResolver_Invoices_Status(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organizationId, neo4jentity.ContractEntity{})
+
+	invoice1Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		Status: neo4jenum.InvoiceStatusDue,
+	})
+	invoice2Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		Status: neo4jenum.InvoiceStatusPaid,
+	})
+	neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		Status: neo4jenum.InvoiceStatusVoid,
+	})
+
+	rawResponse := callGraphQL(t, "invoice/get_invoices_filter_status", map[string]interface{}{
+		"page":          0,
+		"limit":         10,
+		"invoiceStatus": []string{"DUE", "PAID"},
+	})
+	require.Nil(t, rawResponse.Errors)
+
+	var invoiceStruct struct {
+		Invoices model.InvoicesPage
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &invoiceStruct)
+	require.Nil(t, err)
+
+	require.Equal(t, int64(2), invoiceStruct.Invoices.TotalElements)
+	require.Equal(t, 2, len(invoiceStruct.Invoices.Content))
+
+	require.Contains(t, []string{invoice1Id, invoice2Id}, invoiceStruct.Invoices.Content[0].Metadata.ID)
+	require.Contains(t, []string{invoice1Id, invoice2Id}, invoiceStruct.Invoices.Content[1].Metadata.ID)
+}
+
+func TestInvoiceResolver_Invoices_IssueDate(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	now := utils.Now()
+	tenWeeksAgo := now.Add(-10 * 7 * 24 * time.Hour)
+	yesterday := now.Add(-24 * time.Hour)
+	tomorrow := now.Add(24 * time.Hour)
+	inTenWeeks := now.Add(10 * 7 * 24 * time.Hour)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organizationId, neo4jentity.ContractEntity{})
+
+	invoice1Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		CreatedAt: yesterday,
+	})
+	invoice2Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		CreatedAt: tomorrow,
+	})
+	neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		CreatedAt: tenWeeksAgo,
+	})
+	neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		CreatedAt: inTenWeeks,
+	})
+
+	rawResponse := callGraphQL(t, "invoice/get_invoices_filter_issue_date", map[string]interface{}{
+		"page":             0,
+		"limit":            10,
+		"invoiceIssueDate": []time.Time{yesterday, tomorrow},
+	})
+	require.Nil(t, rawResponse.Errors)
+
+	var invoiceStruct struct {
+		Invoices model.InvoicesPage
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &invoiceStruct)
+	require.Nil(t, err)
+
+	require.Equal(t, int64(2), invoiceStruct.Invoices.TotalElements)
+	require.Equal(t, 2, len(invoiceStruct.Invoices.Content))
+
+	require.Contains(t, []string{invoice1Id, invoice2Id}, invoiceStruct.Invoices.Content[0].Metadata.ID)
+	require.Contains(t, []string{invoice1Id, invoice2Id}, invoiceStruct.Invoices.Content[1].Metadata.ID)
+}
+
+func TestInvoiceResolver_Invoices_DryRun_False(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organizationId, neo4jentity.ContractEntity{})
+
+	invoice1Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		DryRun: false,
+	})
+
+	neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		DryRun: true,
+	})
+
+	rawResponse := callGraphQL(t, "invoice/get_invoices_filter_dry_run", map[string]interface{}{
+		"page":   0,
+		"limit":  10,
+		"dryRun": false,
+	})
+	require.Nil(t, rawResponse.Errors)
+
+	var invoiceStruct struct {
+		Invoices model.InvoicesPage
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &invoiceStruct)
+	require.Nil(t, err)
+
+	require.Equal(t, int64(1), invoiceStruct.Invoices.TotalElements)
+	require.Equal(t, 1, len(invoiceStruct.Invoices.Content))
+
 	require.Equal(t, invoice1Id, invoiceStruct.Invoices.Content[0].Metadata.ID)
-	require.Equal(t, "1", invoiceStruct.Invoices.Content[0].InvoiceNumber)
-	require.Equal(t, "SLI 1", invoiceStruct.Invoices.Content[0].InvoiceLineItems[0].Description)
-	require.Equal(t, "11", invoiceStruct.Invoices.Content[1].InvoiceNumber)
-	require.Equal(t, "SLI 3", invoiceStruct.Invoices.Content[1].InvoiceLineItems[0].Description)
+}
+
+func TestInvoiceResolver_Invoices_Number(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organizationId, neo4jentity.ContractEntity{})
+
+	invoice1Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		Number: "1",
+	})
+	neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		Number: "11",
+	})
+	neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		Number: "2",
+	})
+
+	rawResponse := callGraphQL(t, "invoice/get_invoices_filter_number", map[string]interface{}{
+		"page":          0,
+		"limit":         10,
+		"invoiceNumber": "1",
+	})
+	require.Nil(t, rawResponse.Errors)
+
+	var invoiceStruct struct {
+		Invoices model.InvoicesPage
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &invoiceStruct)
+	require.Nil(t, err)
+
+	require.Equal(t, int64(1), invoiceStruct.Invoices.TotalElements)
+	require.Equal(t, 1, len(invoiceStruct.Invoices.Content))
+
+	require.Equal(t, invoice1Id, invoiceStruct.Invoices.Content[0].Metadata.ID)
 }
 
 func TestInvoiceResolver_SimulateInvoice(t *testing.T) {

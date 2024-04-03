@@ -21,6 +21,7 @@ type AnyTypeValue struct {
 	ArrayStr  *[]string
 	ArrayInt  *[]int64
 	ArrayBool *[]bool
+	ArrayTime *[]time.Time
 }
 
 func (a *AnyTypeValue) TimeToStr() {
@@ -182,10 +183,21 @@ func UnmarshalAnyTypeValue(input any) (AnyTypeValue, error) {
 			return AnyTypeValue{ArrayBool: &arrayBool}, nil
 		case string:
 			var arrayStr []string
+			var arrayTime []time.Time
 			for _, v := range input {
-				arrayStr = append(arrayStr, v.(string))
+				dateTime, err := utils.UnmarshalDateTime(v.(string))
+				if err == nil {
+					arrayTime = append(arrayTime, *dateTime)
+					continue
+				} else {
+					arrayStr = append(arrayStr, v.(string))
+				}
 			}
-			return AnyTypeValue{ArrayStr: &arrayStr}, nil
+			if len(arrayTime) > 0 {
+				return AnyTypeValue{ArrayTime: &arrayTime}, nil
+			} else {
+				return AnyTypeValue{ArrayStr: &arrayStr}, nil
+			}
 		default:
 			return AnyTypeValue{}, fmt.Errorf("unknown type for input: %s", input)
 		}
