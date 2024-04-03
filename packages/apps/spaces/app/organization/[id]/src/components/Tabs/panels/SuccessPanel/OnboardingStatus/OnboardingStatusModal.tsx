@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { useForm } from 'react-inverted-form';
 
@@ -137,15 +137,20 @@ export const OnboardingStatusModal = ({
     },
   });
 
-  const defaultValues = OnboardingStatusDto.toForm(data);
-  const { state, handleSubmit } = useForm<OnboardingStatusForm>({
-    formId,
-    defaultValues,
-    onSubmit: async (values) => {
+  const onSubmit = useCallback(
+    async (values: OnboardingStatusForm) => {
       updateOnboardingStatus.mutate({
         input: OnboardingStatusDto.toPayload({ id, ...values }),
       });
     },
+    [updateOnboardingStatus.mutate],
+  );
+
+  const defaultValues = OnboardingStatusDto.toForm(data);
+  const { state, handleSubmit } = useForm<OnboardingStatusForm>({
+    formId,
+    defaultValues,
+    onSubmit,
     stateReducer: (_, action, next) => {
       if (action.type === 'HAS_SUBMITTED') {
         return { ...next, values: { ...next.values, comments: '' } };

@@ -1,5 +1,5 @@
 import { useForm } from 'react-inverted-form';
-import { useRef, useState, FormEvent, useEffect } from 'react';
+import { useRef, useState, FormEvent, useEffect, useCallback } from 'react';
 
 import { produce } from 'immer';
 import isEqual from 'lodash/isEqual';
@@ -40,12 +40,16 @@ export const ReminderItem = ({
   const isMutating = data.id === 'TEMP';
   const [isFocused, setIsFocused] = useState(false);
 
+  const onSubmit = useCallback(
+    async (values: ReminderEditForm) =>
+      !isEqual(values, data) ? onChange(values) : undefined,
+    [onChange],
+  );
+
   const { handleSubmit, setDefaultValues } = useForm<ReminderEditForm>({
     formId,
     defaultValues: data,
-    onSubmit: async (values) => {
-      !isEqual(values, data) ? onChange(values) : undefined;
-    },
+    onSubmit,
     stateReducer: (_, action, next) => {
       if (isMutating) return next;
 
