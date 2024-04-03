@@ -8,6 +8,7 @@ invoice(id: $id) {
     dryRun
     postpaid
     offCycle
+    preview
     amountDue
     amountPaid
     amountRemaining

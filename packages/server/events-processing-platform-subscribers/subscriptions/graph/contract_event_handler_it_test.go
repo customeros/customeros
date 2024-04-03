@@ -68,7 +68,7 @@ func TestContractEventHandler_OnCreate(t *testing.T) {
 		},
 		commonmodel.Source{
 			Source:    constants.SourceOpenline,
-			AppSource: constants.AppSourceEventProcessingPlatform,
+			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 		},
 		commonmodel.ExternalSystem{
 			ExternalSystemId: "sf",
@@ -85,7 +85,7 @@ func TestContractEventHandler_OnCreate(t *testing.T) {
 		UpdateOnboardingStatus: func(context context.Context, org *organizationpb.UpdateOnboardingStatusGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 			require.Equal(t, tenantName, org.Tenant)
 			require.Equal(t, orgId, org.OrganizationId)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, org.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, org.AppSource)
 			require.Equal(t, organizationpb.OnboardingStatus_ONBOARDING_STATUS_NOT_STARTED, org.OnboardingStatus)
 			require.Equal(t, "", org.LoggedInUserId)
 			require.Equal(t, "", org.Comments)
@@ -107,7 +107,7 @@ func TestContractEventHandler_OnCreate(t *testing.T) {
 			require.Nil(t, op.CreatedAt)
 			require.Nil(t, op.UpdatedAt)
 			require.Equal(t, opportunitypb.RenewalLikelihood_HIGH_RENEWAL, op.RenewalLikelihood)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, op.SourceFields.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, op.SourceFields.AppSource)
 			calledEventsPlatformToCreateRenewalOpportunity = true
 			return &opportunitypb.OpportunityIdGrpcResponse{
 				Id: "some-opportunity-id",
@@ -151,7 +151,7 @@ func TestContractEventHandler_OnCreate(t *testing.T) {
 	require.Equal(t, neo4jenum.BillingCycleMonthlyBilling, contract.BillingCycle)
 	require.Nil(t, contract.EndedAt)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), contract.Source)
-	require.Equal(t, constants.AppSourceEventProcessingPlatform, contract.AppSource)
+	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, contract.AppSource)
 	require.True(t, contract.AutoRenew)
 	require.True(t, contract.Check)
 	require.Equal(t, int64(30), contract.DueDays)
@@ -202,7 +202,7 @@ func TestContractEventHandler_OnCreate_GenerateFirstPreviewInvoice(t *testing.T)
 		NextPreviewInvoiceForContract: func(context context.Context, inv *invoicepb.NextPreviewInvoiceForContractRequest) (*invoicepb.InvoiceIdResponse, error) {
 			require.Equal(t, tenantName, inv.Tenant)
 			require.Equal(t, contractId, inv.ContractId)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, inv.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, inv.AppSource)
 			calledNextPreviewInvoiceForContractRequest = true
 			return &invoicepb.InvoiceIdResponse{
 				Id: "1",
@@ -238,7 +238,7 @@ func TestContractEventHandler_OnUpdate_FrequencySet(t *testing.T) {
 		CreateRenewalOpportunity: func(context context.Context, op *opportunitypb.CreateRenewalOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
 			require.Equal(t, tenantName, op.Tenant)
 			require.Equal(t, contractId, op.ContractId)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, op.SourceFields.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, op.SourceFields.AppSource)
 			require.Nil(t, op.CreatedAt)
 			require.Nil(t, op.UpdatedAt)
 			calledEventsPlatformCreateRenewalOpportunity = true
@@ -252,7 +252,7 @@ func TestContractEventHandler_OnUpdate_FrequencySet(t *testing.T) {
 		UpdateOnboardingStatus: func(context context.Context, org *organizationpb.UpdateOnboardingStatusGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 			require.Equal(t, tenantName, org.Tenant)
 			require.Equal(t, orgId, org.OrganizationId)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, org.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, org.AppSource)
 			require.Equal(t, organizationpb.OnboardingStatus_ONBOARDING_STATUS_NOT_STARTED, org.OnboardingStatus)
 			require.Equal(t, "", org.LoggedInUserId)
 			require.Equal(t, "", org.Comments)
@@ -344,7 +344,7 @@ func TestContractEventHandler_OnUpdate_FrequencyNotChanged(t *testing.T) {
 			require.Equal(t, float64(0), op.MaxAmount)
 			require.Equal(t, []opportunitypb.OpportunityMaskField{opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_AMOUNT,
 				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_MAX_AMOUNT}, op.FieldsMask)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, op.SourceFields.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, op.SourceFields.AppSource)
 			require.Equal(t, constants.SourceOpenline, op.SourceFields.Source)
 			calledEventsPlatformToUpdateOpportunity = true
 			return &opportunitypb.OpportunityIdGrpcResponse{
@@ -405,7 +405,7 @@ func TestContractEventHandler_OnUpdate_FrequencyChanged(t *testing.T) {
 			require.Equal(t, float64(0), op.MaxAmount)
 			require.Equal(t, []opportunitypb.OpportunityMaskField{opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_AMOUNT,
 				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_MAX_AMOUNT}, op.FieldsMask)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, op.SourceFields.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, op.SourceFields.AppSource)
 			require.Equal(t, constants.SourceOpenline, op.SourceFields.Source)
 			calledEventsPlatformToUpdateOpportunity = true
 			return &opportunitypb.OpportunityIdGrpcResponse{
@@ -462,7 +462,7 @@ func TestContractEventHandler_OnUpdate_FrequencyRemoved(t *testing.T) {
 		RefreshRenewalSummary: func(context context.Context, org *organizationpb.RefreshRenewalSummaryGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 			require.Equal(t, tenantName, org.Tenant)
 			require.Equal(t, orgId, org.OrganizationId)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, org.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, org.AppSource)
 			calledEventsPlatformToRefreshRenewalSummary = true
 			return &organizationpb.OrganizationIdGrpcResponse{
 				Id: orgId,
@@ -471,7 +471,7 @@ func TestContractEventHandler_OnUpdate_FrequencyRemoved(t *testing.T) {
 		RefreshArr: func(context context.Context, org *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 			require.Equal(t, tenantName, org.Tenant)
 			require.Equal(t, orgId, org.OrganizationId)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, org.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, org.AppSource)
 			calledEventsPlatformToRefreshArr = true
 			return &organizationpb.OrganizationIdGrpcResponse{
 				Id: orgId,
@@ -551,7 +551,7 @@ func TestContractEventHandler_OnUpdate_ServiceStartDateChanged(t *testing.T) {
 			require.Equal(t, float64(0), op.MaxAmount)
 			require.Equal(t, []opportunitypb.OpportunityMaskField{opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_AMOUNT,
 				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_MAX_AMOUNT}, op.FieldsMask)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, op.SourceFields.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, op.SourceFields.AppSource)
 			require.Equal(t, constants.SourceOpenline, op.SourceFields.Source)
 			calledEventsPlatformToUpdateOpportunity = true
 			return &opportunitypb.OpportunityIdGrpcResponse{
@@ -561,7 +561,7 @@ func TestContractEventHandler_OnUpdate_ServiceStartDateChanged(t *testing.T) {
 		UpdateRenewalOpportunityNextCycleDate: func(context context.Context, op *opportunitypb.UpdateRenewalOpportunityNextCycleDateGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
 			require.Equal(t, tenantName, op.Tenant)
 			require.Equal(t, opportunityId, op.OpportunityId)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, op.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, op.AppSource)
 			require.NotNil(t, op.RenewedAt)
 			calledEventsPlatformToUpdateRenewalOpportunityNextCycleDate = true
 			return &opportunitypb.OpportunityIdGrpcResponse{
@@ -577,7 +577,7 @@ func TestContractEventHandler_OnUpdate_ServiceStartDateChanged(t *testing.T) {
 		UpdateOnboardingStatus: func(context context.Context, org *organizationpb.UpdateOnboardingStatusGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 			require.Equal(t, tenantName, org.Tenant)
 			require.Equal(t, orgId, org.OrganizationId)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, org.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, org.AppSource)
 			require.Equal(t, organizationpb.OnboardingStatus_ONBOARDING_STATUS_NOT_STARTED, org.OnboardingStatus)
 			require.Equal(t, "", org.LoggedInUserId)
 			require.Equal(t, "", org.Comments)
@@ -649,7 +649,7 @@ func TestContractEventHandler_OnUpdate_EndDateSet(t *testing.T) {
 		UpdateRenewalOpportunity: func(context context.Context, op *opportunitypb.UpdateRenewalOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
 			require.Equal(t, tenantName, op.Tenant)
 			require.Equal(t, opportunityId, op.Id)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, op.SourceFields.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, op.SourceFields.AppSource)
 			require.Equal(t, opportunitypb.RenewalLikelihood_ZERO_RENEWAL, op.RenewalLikelihood)
 			require.Equal(t, []opportunitypb.OpportunityMaskField{opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_RENEWAL_LIKELIHOOD}, op.FieldsMask)
 			calledEventsPlatformToUpdateRenewalOpportunity = true
@@ -660,7 +660,7 @@ func TestContractEventHandler_OnUpdate_EndDateSet(t *testing.T) {
 		UpdateRenewalOpportunityNextCycleDate: func(context context.Context, op *opportunitypb.UpdateRenewalOpportunityNextCycleDateGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
 			require.Equal(t, tenantName, op.Tenant)
 			require.Equal(t, opportunityId, op.OpportunityId)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, op.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, op.AppSource)
 			require.NotNil(t, op.RenewedAt)
 			calledEventsPlatformToUpdateRenewalOpportunityNextCycleDate = true
 			return &opportunitypb.OpportunityIdGrpcResponse{
@@ -674,7 +674,7 @@ func TestContractEventHandler_OnUpdate_EndDateSet(t *testing.T) {
 			require.Equal(t, float64(0), op.MaxAmount)
 			require.Equal(t, []opportunitypb.OpportunityMaskField{opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_AMOUNT,
 				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_MAX_AMOUNT}, op.FieldsMask)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, op.SourceFields.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, op.SourceFields.AppSource)
 			require.Equal(t, constants.SourceOpenline, op.SourceFields.Source)
 			calledEventsPlatformToUpdateOpportunity = true
 			return &opportunitypb.OpportunityIdGrpcResponse{
@@ -690,7 +690,7 @@ func TestContractEventHandler_OnUpdate_EndDateSet(t *testing.T) {
 		UpdateOnboardingStatus: func(context context.Context, org *organizationpb.UpdateOnboardingStatusGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 			require.Equal(t, tenantName, org.Tenant)
 			require.Equal(t, orgId, org.OrganizationId)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, org.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, org.AppSource)
 			require.Equal(t, organizationpb.OnboardingStatus_ONBOARDING_STATUS_NOT_STARTED, org.OnboardingStatus)
 			require.Equal(t, "", org.LoggedInUserId)
 			require.Equal(t, "", org.Comments)
@@ -878,7 +878,7 @@ func TestContractEventHandler_OnRefreshStatus_Ended(t *testing.T) {
 	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
 	require.NotNil(t, action.Id)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), action.Source)
-	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
+	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, action.AppSource)
 	require.Equal(t, neo4jenum.ActionContractStatusUpdated, action.Type)
 	require.Equal(t, "test contract has ended", action.Content)
 	require.Equal(t, `{"status":"ENDED","contract-name":"test contract","comment":"test contract is now ENDED"}`, action.Metadata)
@@ -915,7 +915,7 @@ func TestContractEventHandler_OnRefreshStatus_Live(t *testing.T) {
 		UpdateOnboardingStatus: func(context context.Context, org *organizationpb.UpdateOnboardingStatusGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 			require.Equal(t, tenantName, org.Tenant)
 			require.Equal(t, orgId, org.OrganizationId)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, org.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, org.AppSource)
 			require.Equal(t, organizationpb.OnboardingStatus_ONBOARDING_STATUS_NOT_STARTED, org.OnboardingStatus)
 			require.Equal(t, "", org.LoggedInUserId)
 			require.Equal(t, "", org.Comments)
@@ -955,7 +955,7 @@ func TestContractEventHandler_OnRefreshStatus_Live(t *testing.T) {
 	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
 	require.NotNil(t, action.Id)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), action.Source)
-	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
+	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, action.AppSource)
 	require.Equal(t, neo4jenum.ActionContractStatusUpdated, action.Type)
 	require.Equal(t, "test contract is now live", action.Content)
 	require.Equal(t, `{"status":"LIVE","contract-name":"test contract","comment":"test contract is now LIVE"}`, action.Metadata)
@@ -1049,7 +1049,7 @@ func TestContractEventHandler_OnUpdate_GenerateNextInvoice_NotInvoked_InvoicingE
 		NextPreviewInvoiceForContract: func(context context.Context, inv *invoicepb.NextPreviewInvoiceForContractRequest) (*invoicepb.InvoiceIdResponse, error) {
 			require.Equal(t, tenantName, inv.Tenant)
 			require.Equal(t, contractId, inv.ContractId)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, inv.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, inv.AppSource)
 			calledNextPreviewInvoiceForContractRequest = true
 			return &invoicepb.InvoiceIdResponse{
 				Id: "1",
@@ -1110,7 +1110,7 @@ func TestContractEventHandler_OnUpdate_GenerateNextInvoice_NotInvoked_BillingCyc
 		NextPreviewInvoiceForContract: func(context context.Context, inv *invoicepb.NextPreviewInvoiceForContractRequest) (*invoicepb.InvoiceIdResponse, error) {
 			require.Equal(t, tenantName, inv.Tenant)
 			require.Equal(t, contractId, inv.ContractId)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, inv.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, inv.AppSource)
 			calledNextPreviewInvoiceForContractRequest = true
 			return &invoicepb.InvoiceIdResponse{
 				Id: "1",
@@ -1171,7 +1171,7 @@ func TestContractEventHandler_OnUpdate_GenerateNextInvoice_NotInvoked_InvoicingS
 		NextPreviewInvoiceForContract: func(context context.Context, inv *invoicepb.NextPreviewInvoiceForContractRequest) (*invoicepb.InvoiceIdResponse, error) {
 			require.Equal(t, tenantName, inv.Tenant)
 			require.Equal(t, contractId, inv.ContractId)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, inv.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, inv.AppSource)
 			calledNextPreviewInvoiceForContractRequest = true
 			return &invoicepb.InvoiceIdResponse{
 				Id: "1",
@@ -1232,7 +1232,7 @@ func TestContractEventHandler_OnUpdate_GenerateNextInvoice_BillingCycle_Changed(
 		NextPreviewInvoiceForContract: func(context context.Context, inv *invoicepb.NextPreviewInvoiceForContractRequest) (*invoicepb.InvoiceIdResponse, error) {
 			require.Equal(t, tenantName, inv.Tenant)
 			require.Equal(t, contractId, inv.ContractId)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, inv.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, inv.AppSource)
 			calledNextPreviewInvoiceForContractRequest = true
 			return &invoicepb.InvoiceIdResponse{
 				Id: "1",
@@ -1294,7 +1294,7 @@ func TestContractEventHandler_OnUpdate_GenerateNextInvoice_InvoicingStartDate_Ch
 		NextPreviewInvoiceForContract: func(context context.Context, inv *invoicepb.NextPreviewInvoiceForContractRequest) (*invoicepb.InvoiceIdResponse, error) {
 			require.Equal(t, tenantName, inv.Tenant)
 			require.Equal(t, contractId, inv.ContractId)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, inv.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, inv.AppSource)
 			calledNextPreviewInvoiceForContractRequest = true
 			return &invoicepb.InvoiceIdResponse{
 				Id: "1",
@@ -1352,7 +1352,7 @@ func TestContractEventHandler_OnDeleteV1(t *testing.T) {
 		RefreshRenewalSummary: func(context context.Context, org *organizationpb.RefreshRenewalSummaryGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 			require.Equal(t, tenantName, org.Tenant)
 			require.Equal(t, orgId, org.OrganizationId)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, org.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, org.AppSource)
 			calledEventsPlatformToRefreshRenewalSummary = true
 			return &organizationpb.OrganizationIdGrpcResponse{
 				Id: orgId,
@@ -1361,7 +1361,7 @@ func TestContractEventHandler_OnDeleteV1(t *testing.T) {
 		RefreshArr: func(context context.Context, org *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 			require.Equal(t, tenantName, org.Tenant)
 			require.Equal(t, orgId, org.OrganizationId)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, org.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, org.AppSource)
 			calledEventsPlatformToRefreshArr = true
 			return &organizationpb.OrganizationIdGrpcResponse{
 				Id: orgId,

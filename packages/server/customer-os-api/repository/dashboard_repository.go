@@ -998,7 +998,7 @@ func (r *dashboardRepository) GetDashboardCustomerMapData(ctx context.Context, t
 	if dbRecords != nil {
 		for _, v := range dbRecords.([]*neo4j.Record) {
 			organizationId := v.Values[0].(string)
-			oldestServiceStartedAt := v.Values[1].(time.Time)
+			oldestServiceStartedAt := utils.GetTimePropFromNeo4jOrZeroTime(v.Values[1])
 			state := v.Values[2].(string)
 			arr := getCorrectValueType(v.Values[3])
 

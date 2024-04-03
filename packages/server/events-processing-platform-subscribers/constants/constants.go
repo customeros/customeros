@@ -1,7 +1,7 @@
 package constants
 
 const (
-	AppSourceEventProcessingPlatform = "event-processing-platform"
+	AppSourceEventProcessingPlatformSubscribers = "event-processing-platform-subscribers"
 
 	ComponentSubscriptionGraph   = "subscriptionGraph"
 	ComponentSubscriptionInvoice = "subscriptionInvoice"

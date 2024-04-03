@@ -138,7 +138,7 @@ func (ds *DomainScraperV1) runCompanyPrompt(text *string, tenant, organizationId
 
 	promptLog := commonEntity.AiPromptLog{
 		CreatedAt:      utils.Now(),
-		AppSource:      constants.AppSourceEventProcessingPlatform,
+		AppSource:      constants.AppSourceEventProcessingPlatformSubscribers,
 		Provider:       constants.OpenAI,
 		Model:          "gpt-3.5-turbo",
 		PromptType:     constants.PromptType_WebscrapeCompanyPrompt,
@@ -273,7 +273,7 @@ func (ds *DomainScraperV1) runDataPrompt(analysis, domainUrl, socials, jsonStruc
 
 	promptLog := commonEntity.AiPromptLog{
 		CreatedAt:      utils.Now(),
-		AppSource:      constants.AppSourceEventProcessingPlatform,
+		AppSource:      constants.AppSourceEventProcessingPlatformSubscribers,
 		Provider:       constants.OpenAI,
 		Model:          "gpt-3.5-turbo",
 		PromptType:     constants.PromptType_WebscrapeExtractCompanyData,

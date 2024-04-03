@@ -88,7 +88,7 @@ func (h *interactionEventHandler) GenerateSummaryForEmail(ctx context.Context, e
 
 	promptLog := commonEntity.AiPromptLog{
 		CreatedAt:      utils.Now(),
-		AppSource:      constants.AppSourceEventProcessingPlatform,
+		AppSource:      constants.AppSourceEventProcessingPlatformSubscribers,
 		Provider:       constants.Anthropic,
 		Model:          "claude-2",
 		PromptType:     constants.PromptType_EmailSummary,
@@ -130,7 +130,7 @@ func (h *interactionEventHandler) GenerateSummaryForEmail(ctx context.Context, e
 		return h.grpcClients.InteractionEventClient.ReplaceSummary(ctx, &interactioneventpb.ReplaceSummaryGrpcRequest{
 			Tenant:             eventData.Tenant,
 			InteractionEventId: interactionEventId,
-			AppSource:          constants.AppSourceEventProcessingPlatform,
+			AppSource:          constants.AppSourceEventProcessingPlatformSubscribers,
 			Summary:            summary,
 			ContentType:        "text/plain",
 		})
@@ -182,7 +182,7 @@ func (h *interactionEventHandler) GenerateActionItemsForEmail(ctx context.Contex
 
 	promptLog := commonEntity.AiPromptLog{
 		CreatedAt:      utils.Now(),
-		AppSource:      constants.AppSourceEventProcessingPlatform,
+		AppSource:      constants.AppSourceEventProcessingPlatformSubscribers,
 		Provider:       constants.Anthropic,
 		Model:          "claude-2",
 		PromptType:     constants.PromptType_EmailActionItems,
@@ -243,7 +243,7 @@ func (h *interactionEventHandler) GenerateActionItemsForEmail(ctx context.Contex
 		return h.grpcClients.InteractionEventClient.ReplaceActionItems(ctx, &interactioneventpb.ReplaceActionItemsGrpcRequest{
 			Tenant:             eventData.Tenant,
 			InteractionEventId: interactionEventId,
-			AppSource:          constants.AppSourceEventProcessingPlatform,
+			AppSource:          constants.AppSourceEventProcessingPlatformSubscribers,
 			ActionItems:        actionItems,
 		})
 	})

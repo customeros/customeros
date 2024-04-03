@@ -139,6 +139,11 @@ func (s *invoiceService) GetInvoices(ctx context.Context, organizationId string,
 	span.LogFields(log.Object("filter", filter))
 	span.LogFields(log.Object("sortBy", sortBy))
 
+	var paginatedResult = utils.Pagination{
+		Limit: limit,
+		Page:  page,
+	}
+
 	if len(sortBy) == 0 {
 		sortBy = []*model.SortBy{
 			{
@@ -158,18 +163,13 @@ func (s *invoiceService) GetInvoices(ctx context.Context, organizationId string,
 	}
 
 	dbNodesWithTotalCount, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetPaginatedInvoices(ctx, common.GetTenantFromContext(ctx), organizationId,
-		page,
-		limit,
+		paginatedResult.GetSkip(),
+		paginatedResult.GetLimit(),
 		cypherFilter,
 		cypherSort)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
-	}
-
-	var paginatedResult = utils.Pagination{
-		Limit: page,
-		Page:  limit,
 	}
 
 	paginatedResult.SetTotalRows(dbNodesWithTotalCount.Count)

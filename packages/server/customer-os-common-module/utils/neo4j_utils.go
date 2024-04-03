@@ -559,6 +559,21 @@ func GetTimePropOrNil(props map[string]any, key string) *time.Time {
 	return nil
 }
 
+func GetTimePropFromNeo4jOrZeroTime(valueToExtract any) time.Time {
+	if valueToExtract != nil {
+		valueOrNil := GetTimePropOrNil(map[string]any{
+			"key": valueToExtract,
+		}, "key")
+		if valueOrNil != nil {
+			return *valueOrNil
+		} else {
+			return ZeroTime()
+		}
+	}
+
+	return ZeroTime()
+}
+
 func ExecuteWriteQueryOnDb(ctx context.Context, driver neo4j.DriverWithContext, database, cypher string, params map[string]any) error {
 	session := NewNeo4jWriteSession(ctx, driver, WithDatabaseName(database))
 	defer session.Close(ctx)

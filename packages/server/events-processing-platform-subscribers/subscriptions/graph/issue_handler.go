@@ -98,7 +98,7 @@ func (h *IssueEventHandler) OnCreate(ctx context.Context, evt eventstore.Event) 
 			return h.grpcClients.OrganizationClient.RefreshLastTouchpoint(ctx, &organizationpb.OrganizationIdGrpcRequest{
 				Tenant:         eventData.Tenant,
 				OrganizationId: eventData.ReportedByOrganizationId,
-				AppSource:      constants.AppSourceEventProcessingPlatform,
+				AppSource:      constants.AppSourceEventProcessingPlatformSubscribers,
 			})
 		})
 		if err != nil {

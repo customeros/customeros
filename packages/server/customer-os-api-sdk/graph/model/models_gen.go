@@ -1241,6 +1241,7 @@ type Invoice struct {
 	DryRun             bool           `json:"dryRun"`
 	Postpaid           bool           `json:"postpaid"`
 	OffCycle           bool           `json:"offCycle"`
+	Preview            bool           `json:"preview"`
 	AmountDue          float64        `json:"amountDue"`
 	AmountPaid         float64        `json:"amountPaid"`
 	AmountRemaining    float64        `json:"amountRemaining"`

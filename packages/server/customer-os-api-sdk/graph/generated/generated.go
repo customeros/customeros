@@ -655,6 +655,7 @@ type ComplexityRoot struct {
 		Paid                          func(childComplexity int) int
 		PaymentLink                   func(childComplexity int) int
 		Postpaid                      func(childComplexity int) int
+		Preview                       func(childComplexity int) int
 		Provider                      func(childComplexity int) int
 		RepositoryFileID              func(childComplexity int) int
 		Status                        func(childComplexity int) int
@@ -4976,6 +4977,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Invoice.Postpaid(childComplexity), true
+
+	case "Invoice.preview":
+		if e.complexity.Invoice.Preview == nil {
+			break
+		}
+
+		return e.complexity.Invoice.Preview(childComplexity), true
 
 	case "Invoice.provider":
 		if e.complexity.Invoice.Provider == nil {
@@ -13571,6 +13579,7 @@ type Invoice implements MetadataInterface {
     dryRun:             Boolean!
     postpaid:           Boolean!
     offCycle:           Boolean!
+    preview:            Boolean!
     amountDue:          Float!
     amountPaid:         Float!
     amountRemaining:    Float!
@@ -39435,6 +39444,50 @@ func (ec *executionContext) fieldContext_Invoice_offCycle(ctx context.Context, f
 	return fc, nil
 }
 
+func (ec *executionContext) _Invoice_preview(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Invoice_preview(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Preview, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Invoice_preview(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Invoice",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Invoice_amountDue(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Invoice_amountDue(ctx, field)
 	if err != nil {
@@ -41468,6 +41521,8 @@ func (ec *executionContext) fieldContext_InvoicesPage_content(ctx context.Contex
 				return ec.fieldContext_Invoice_postpaid(ctx, field)
 			case "offCycle":
 				return ec.fieldContext_Invoice_offCycle(ctx, field)
+			case "preview":
+				return ec.fieldContext_Invoice_preview(ctx, field)
 			case "amountDue":
 				return ec.fieldContext_Invoice_amountDue(ctx, field)
 			case "amountPaid":
@@ -54555,6 +54610,8 @@ func (ec *executionContext) fieldContext_Mutation_invoice_Update(ctx context.Con
 				return ec.fieldContext_Invoice_postpaid(ctx, field)
 			case "offCycle":
 				return ec.fieldContext_Invoice_offCycle(ctx, field)
+			case "preview":
+				return ec.fieldContext_Invoice_preview(ctx, field)
 			case "amountDue":
 				return ec.fieldContext_Invoice_amountDue(ctx, field)
 			case "amountPaid":
@@ -54696,6 +54753,8 @@ func (ec *executionContext) fieldContext_Mutation_invoice_Pay(ctx context.Contex
 				return ec.fieldContext_Invoice_postpaid(ctx, field)
 			case "offCycle":
 				return ec.fieldContext_Invoice_offCycle(ctx, field)
+			case "preview":
+				return ec.fieldContext_Invoice_preview(ctx, field)
 			case "amountDue":
 				return ec.fieldContext_Invoice_amountDue(ctx, field)
 			case "amountPaid":
@@ -54837,6 +54896,8 @@ func (ec *executionContext) fieldContext_Mutation_invoice_Void(ctx context.Conte
 				return ec.fieldContext_Invoice_postpaid(ctx, field)
 			case "offCycle":
 				return ec.fieldContext_Invoice_offCycle(ctx, field)
+			case "preview":
+				return ec.fieldContext_Invoice_preview(ctx, field)
 			case "amountDue":
 				return ec.fieldContext_Invoice_amountDue(ctx, field)
 			case "amountPaid":
@@ -79313,6 +79374,8 @@ func (ec *executionContext) fieldContext_Query_invoice(ctx context.Context, fiel
 				return ec.fieldContext_Invoice_postpaid(ctx, field)
 			case "offCycle":
 				return ec.fieldContext_Invoice_offCycle(ctx, field)
+			case "preview":
+				return ec.fieldContext_Invoice_preview(ctx, field)
 			case "amountDue":
 				return ec.fieldContext_Invoice_amountDue(ctx, field)
 			case "amountPaid":
@@ -105210,6 +105273,11 @@ func (ec *executionContext) _Invoice(ctx context.Context, sel ast.SelectionSet, 
 			}
 		case "offCycle":
 			out.Values[i] = ec._Invoice_offCycle(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "preview":
+			out.Values[i] = ec._Invoice_preview(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}

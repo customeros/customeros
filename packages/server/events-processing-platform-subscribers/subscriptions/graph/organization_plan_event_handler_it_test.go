@@ -41,7 +41,7 @@ func TestOrganizationPlanEventHandler_OnCreate(t *testing.T) {
 	})
 	mpid := neo4jtest.CreateMasterPlan(ctx, testDatabase.Driver, tenantName, neo4jentity.MasterPlanEntity{
 		Source:        constants.SourceOpenline,
-		AppSource:     constants.AppSourceEventProcessingPlatform,
+		AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
 		Name:          "master plan name",
 		SourceOfTruth: constants.SourceOpenline,
 		CreatedAt:     timeNow,
@@ -51,7 +51,7 @@ func TestOrganizationPlanEventHandler_OnCreate(t *testing.T) {
 
 	neo4jtest.CreateMasterPlanMilestone(ctx, testDatabase.Driver, tenantName, mpid, neo4jentity.MasterPlanMilestoneEntity{
 		Source:        constants.SourceOpenline,
-		AppSource:     constants.AppSourceEventProcessingPlatform,
+		AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
 		Name:          "milestone name",
 		SourceOfTruth: constants.SourceOpenline,
 		CreatedAt:     timeNow,
@@ -80,7 +80,7 @@ func TestOrganizationPlanEventHandler_OnCreate(t *testing.T) {
 		"org plan name",
 		commonmodel.Source{
 			Source:    constants.SourceOpenline,
-			AppSource: constants.AppSourceEventProcessingPlatform,
+			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 		},
 		timeNow,
 	)
@@ -102,7 +102,7 @@ func TestOrganizationPlanEventHandler_OnCreate(t *testing.T) {
 	orgPlan := neo4jmapper.MapDbNodeToOrganizationPlanEntity(orgPlanDbNode)
 	require.Equal(t, orgPlanId, orgPlan.Id)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), orgPlan.Source)
-	require.Equal(t, constants.AppSourceEventProcessingPlatform, orgPlan.AppSource)
+	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, orgPlan.AppSource)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), orgPlan.SourceOfTruth)
 	require.Equal(t, timeNow, orgPlan.CreatedAt)
 	require.Equal(t, timeNow, orgPlan.UpdatedAt)
@@ -136,7 +136,7 @@ func TestOrganizationPlanEventHandler_OnCreateMilestone(t *testing.T) {
 	timeNow := utils.Now()
 	mpid := neo4jtest.CreateMasterPlan(ctx, testDatabase.Driver, tenantName, neo4jentity.MasterPlanEntity{
 		Source:        neo4jentity.DataSource(constants.SourceOpenline),
-		AppSource:     constants.AppSourceEventProcessingPlatform,
+		AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
 		Name:          "master plan name",
 		SourceOfTruth: neo4jentity.DataSource(constants.SourceOpenline),
 		CreatedAt:     timeNow,
@@ -146,7 +146,7 @@ func TestOrganizationPlanEventHandler_OnCreateMilestone(t *testing.T) {
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{Name: "test org"})
 	opid := neo4jtest.CreateOrganizationPlan(ctx, testDatabase.Driver, tenantName, mpid, orgId, neo4jentity.OrganizationPlanEntity{
 		Source:        neo4jentity.DataSource(constants.SourceOpenline),
-		AppSource:     constants.AppSourceEventProcessingPlatform,
+		AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
 		Name:          "org plan name",
 		SourceOfTruth: neo4jentity.DataSource(constants.SourceOpenline),
 		CreatedAt:     timeNow,
@@ -183,7 +183,7 @@ func TestOrganizationPlanEventHandler_OnCreateMilestone(t *testing.T) {
 		false, // adhoc
 		commonmodel.Source{
 			Source:    constants.SourceOpenline,
-			AppSource: constants.AppSourceEventProcessingPlatform,
+			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 		},
 		timeNow,
 		timeNow.Add(time.Hour*24), // due date
@@ -209,7 +209,7 @@ func TestOrganizationPlanEventHandler_OnCreateMilestone(t *testing.T) {
 	milestone := neo4jmapper.MapDbNodeToOrganizationPlanMilestoneEntity(orgPlanMilestoneDbNode)
 	require.Equal(t, milestoneId, milestone.Id)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), milestone.Source)
-	require.Equal(t, constants.AppSourceEventProcessingPlatform, milestone.AppSource)
+	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, milestone.AppSource)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), milestone.SourceOfTruth)
 	require.Equal(t, timeNow, milestone.CreatedAt)
 	test.AssertRecentTime(t, milestone.UpdatedAt)
@@ -235,7 +235,7 @@ func TestOrganizationPlanEventHandler_OnUpdate(t *testing.T) {
 	timeNow := utils.Now()
 	mpid := neo4jtest.CreateMasterPlan(ctx, testDatabase.Driver, tenantName, neo4jentity.MasterPlanEntity{
 		Source:        neo4jentity.DataSource(constants.SourceOpenline),
-		AppSource:     constants.AppSourceEventProcessingPlatform,
+		AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
 		Name:          "master plan name",
 		SourceOfTruth: neo4jentity.DataSource(constants.SourceOpenline),
 		CreatedAt:     timeNow,
@@ -245,7 +245,7 @@ func TestOrganizationPlanEventHandler_OnUpdate(t *testing.T) {
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{Name: "test org"})
 	opid := neo4jtest.CreateOrganizationPlan(ctx, testDatabase.Driver, tenantName, mpid, orgId, neo4jentity.OrganizationPlanEntity{
 		Source:        neo4jentity.DataSource(constants.SourceOpenline),
-		AppSource:     constants.AppSourceEventProcessingPlatform,
+		AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
 		Name:          "org plan name",
 		SourceOfTruth: neo4jentity.DataSource(constants.SourceOpenline),
 		CreatedAt:     timeNow,
@@ -317,7 +317,7 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestone(t *testing.T) {
 	timeNow := utils.Now()
 	mpid := neo4jtest.CreateMasterPlan(ctx, testDatabase.Driver, tenantName, neo4jentity.MasterPlanEntity{
 		Source:        neo4jentity.DataSource(constants.SourceOpenline),
-		AppSource:     constants.AppSourceEventProcessingPlatform,
+		AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
 		Name:          "master plan name",
 		SourceOfTruth: neo4jentity.DataSource(constants.SourceOpenline),
 		CreatedAt:     timeNow,
@@ -327,7 +327,7 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestone(t *testing.T) {
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{Name: "test org"})
 	opid := neo4jtest.CreateOrganizationPlan(ctx, testDatabase.Driver, tenantName, mpid, orgId, neo4jentity.OrganizationPlanEntity{
 		Source:        neo4jentity.DataSource(constants.SourceOpenline),
-		AppSource:     constants.AppSourceEventProcessingPlatform,
+		AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
 		Name:          "org plan name",
 		SourceOfTruth: neo4jentity.DataSource(constants.SourceOpenline),
 		CreatedAt:     timeNow,
@@ -342,7 +342,7 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestone(t *testing.T) {
 
 	milestoneId := neo4jtest.CreateOrganizationPlanMilestone(ctx, testDatabase.Driver, tenantName, opid, neo4jentity.OrganizationPlanMilestoneEntity{
 		Source:        neo4jentity.DataSource(constants.SourceOpenline),
-		AppSource:     constants.AppSourceEventProcessingPlatform,
+		AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
 		Name:          "milestone name",
 		SourceOfTruth: neo4jentity.DataSource(constants.SourceOpenline),
 		CreatedAt:     timeNow,
@@ -452,7 +452,7 @@ func TestOrganizationPlanEventHandler_OnReorderMilestones(t *testing.T) {
 	timeNow := utils.Now()
 	mpid := neo4jtest.CreateMasterPlan(ctx, testDatabase.Driver, tenantName, neo4jentity.MasterPlanEntity{
 		Source:        neo4jentity.DataSource(constants.SourceOpenline),
-		AppSource:     constants.AppSourceEventProcessingPlatform,
+		AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
 		Name:          "master plan name",
 		SourceOfTruth: neo4jentity.DataSource(constants.SourceOpenline),
 		CreatedAt:     timeNow,
@@ -462,7 +462,7 @@ func TestOrganizationPlanEventHandler_OnReorderMilestones(t *testing.T) {
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{Name: "test org"})
 	opid := neo4jtest.CreateOrganizationPlan(ctx, testDatabase.Driver, tenantName, mpid, orgId, neo4jentity.OrganizationPlanEntity{
 		Source:        neo4jentity.DataSource(constants.SourceOpenline),
-		AppSource:     constants.AppSourceEventProcessingPlatform,
+		AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
 		Name:          "org plan name",
 		SourceOfTruth: neo4jentity.DataSource(constants.SourceOpenline),
 		CreatedAt:     timeNow,
@@ -477,7 +477,7 @@ func TestOrganizationPlanEventHandler_OnReorderMilestones(t *testing.T) {
 
 	milestoneId1 := neo4jtest.CreateOrganizationPlanMilestone(ctx, testDatabase.Driver, tenantName, opid, neo4jentity.OrganizationPlanMilestoneEntity{
 		Source:        neo4jentity.DataSource(constants.SourceOpenline),
-		AppSource:     constants.AppSourceEventProcessingPlatform,
+		AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
 		Name:          "milestone name 1",
 		SourceOfTruth: neo4jentity.DataSource(constants.SourceOpenline),
 		CreatedAt:     timeNow,
@@ -495,7 +495,7 @@ func TestOrganizationPlanEventHandler_OnReorderMilestones(t *testing.T) {
 	})
 	milestoneId2 := neo4jtest.CreateOrganizationPlanMilestone(ctx, testDatabase.Driver, tenantName, opid, neo4jentity.OrganizationPlanMilestoneEntity{
 		Source:        neo4jentity.DataSource(constants.SourceOpenline),
-		AppSource:     constants.AppSourceEventProcessingPlatform,
+		AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
 		Name:          "milestone name 2",
 		SourceOfTruth: neo4jentity.DataSource(constants.SourceOpenline),
 		CreatedAt:     timeNow,
@@ -571,7 +571,7 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestoneLate(t *testing.T) {
 	timeNow := utils.Now()
 	mpid := neo4jtest.CreateMasterPlan(ctx, testDatabase.Driver, tenantName, neo4jentity.MasterPlanEntity{
 		Source:        neo4jentity.DataSource(constants.SourceOpenline),
-		AppSource:     constants.AppSourceEventProcessingPlatform,
+		AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
 		Name:          "master plan name",
 		SourceOfTruth: neo4jentity.DataSource(constants.SourceOpenline),
 		CreatedAt:     timeNow,
@@ -581,7 +581,7 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestoneLate(t *testing.T) {
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{Name: "test org"})
 	opid := neo4jtest.CreateOrganizationPlan(ctx, testDatabase.Driver, tenantName, mpid, orgId, neo4jentity.OrganizationPlanEntity{
 		Source:        neo4jentity.DataSource(constants.SourceOpenline),
-		AppSource:     constants.AppSourceEventProcessingPlatform,
+		AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
 		Name:          "org plan name",
 		SourceOfTruth: neo4jentity.DataSource(constants.SourceOpenline),
 		CreatedAt:     timeNow,
@@ -596,7 +596,7 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestoneLate(t *testing.T) {
 
 	milestoneId := neo4jtest.CreateOrganizationPlanMilestone(ctx, testDatabase.Driver, tenantName, opid, neo4jentity.OrganizationPlanMilestoneEntity{
 		Source:        neo4jentity.DataSource(constants.SourceOpenline),
-		AppSource:     constants.AppSourceEventProcessingPlatform,
+		AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
 		Name:          "milestone name",
 		SourceOfTruth: neo4jentity.DataSource(constants.SourceOpenline),
 		CreatedAt:     timeNow,
@@ -706,7 +706,7 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestoneAllDoneLate(t *testing.T)
 	timeNow := utils.Now()
 	mpid := neo4jtest.CreateMasterPlan(ctx, testDatabase.Driver, tenantName, neo4jentity.MasterPlanEntity{
 		Source:        neo4jentity.DataSource(constants.SourceOpenline),
-		AppSource:     constants.AppSourceEventProcessingPlatform,
+		AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
 		Name:          "master plan name",
 		SourceOfTruth: neo4jentity.DataSource(constants.SourceOpenline),
 		CreatedAt:     timeNow,
@@ -716,7 +716,7 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestoneAllDoneLate(t *testing.T)
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{Name: "test org"})
 	opid := neo4jtest.CreateOrganizationPlan(ctx, testDatabase.Driver, tenantName, mpid, orgId, neo4jentity.OrganizationPlanEntity{
 		Source:        neo4jentity.DataSource(constants.SourceOpenline),
-		AppSource:     constants.AppSourceEventProcessingPlatform,
+		AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
 		Name:          "org plan name",
 		SourceOfTruth: neo4jentity.DataSource(constants.SourceOpenline),
 		CreatedAt:     timeNow,
@@ -731,7 +731,7 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestoneAllDoneLate(t *testing.T)
 
 	milestoneId := neo4jtest.CreateOrganizationPlanMilestone(ctx, testDatabase.Driver, tenantName, opid, neo4jentity.OrganizationPlanMilestoneEntity{
 		Source:        neo4jentity.DataSource(constants.SourceOpenline),
-		AppSource:     constants.AppSourceEventProcessingPlatform,
+		AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
 		Name:          "milestone name",
 		SourceOfTruth: neo4jentity.DataSource(constants.SourceOpenline),
 		CreatedAt:     timeNow,
@@ -837,7 +837,7 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestoneDueDateLate(t *testing.T)
 	timeNow := utils.Now()
 	mpid := neo4jtest.CreateMasterPlan(ctx, testDatabase.Driver, tenantName, neo4jentity.MasterPlanEntity{
 		Source:        neo4jentity.DataSource(constants.SourceOpenline),
-		AppSource:     constants.AppSourceEventProcessingPlatform,
+		AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
 		Name:          "master plan name",
 		SourceOfTruth: neo4jentity.DataSource(constants.SourceOpenline),
 		CreatedAt:     timeNow,
@@ -847,7 +847,7 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestoneDueDateLate(t *testing.T)
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{Name: "test org"})
 	opid := neo4jtest.CreateOrganizationPlan(ctx, testDatabase.Driver, tenantName, mpid, orgId, neo4jentity.OrganizationPlanEntity{
 		Source:        neo4jentity.DataSource(constants.SourceOpenline),
-		AppSource:     constants.AppSourceEventProcessingPlatform,
+		AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
 		Name:          "org plan name",
 		SourceOfTruth: neo4jentity.DataSource(constants.SourceOpenline),
 		CreatedAt:     timeNow,
@@ -862,7 +862,7 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestoneDueDateLate(t *testing.T)
 
 	milestoneId := neo4jtest.CreateOrganizationPlanMilestone(ctx, testDatabase.Driver, tenantName, opid, neo4jentity.OrganizationPlanMilestoneEntity{
 		Source:        neo4jentity.DataSource(constants.SourceOpenline),
-		AppSource:     constants.AppSourceEventProcessingPlatform,
+		AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
 		Name:          "milestone name",
 		SourceOfTruth: neo4jentity.DataSource(constants.SourceOpenline),
 		CreatedAt:     timeNow,
@@ -972,7 +972,7 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestoneDueDateOnTrack(t *testing
 	timeNow := utils.Now()
 	mpid := neo4jtest.CreateMasterPlan(ctx, testDatabase.Driver, tenantName, neo4jentity.MasterPlanEntity{
 		Source:        neo4jentity.DataSource(constants.SourceOpenline),
-		AppSource:     constants.AppSourceEventProcessingPlatform,
+		AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
 		Name:          "master plan name",
 		SourceOfTruth: neo4jentity.DataSource(constants.SourceOpenline),
 		CreatedAt:     timeNow,
@@ -982,7 +982,7 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestoneDueDateOnTrack(t *testing
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{Name: "test org"})
 	opid := neo4jtest.CreateOrganizationPlan(ctx, testDatabase.Driver, tenantName, mpid, orgId, neo4jentity.OrganizationPlanEntity{
 		Source:        neo4jentity.DataSource(constants.SourceOpenline),
-		AppSource:     constants.AppSourceEventProcessingPlatform,
+		AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
 		Name:          "org plan name",
 		SourceOfTruth: neo4jentity.DataSource(constants.SourceOpenline),
 		CreatedAt:     timeNow,
@@ -997,7 +997,7 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestoneDueDateOnTrack(t *testing
 
 	milestoneId := neo4jtest.CreateOrganizationPlanMilestone(ctx, testDatabase.Driver, tenantName, opid, neo4jentity.OrganizationPlanMilestoneEntity{
 		Source:        neo4jentity.DataSource(constants.SourceOpenline),
-		AppSource:     constants.AppSourceEventProcessingPlatform,
+		AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
 		Name:          "milestone name",
 		SourceOfTruth: neo4jentity.DataSource(constants.SourceOpenline),
 		CreatedAt:     timeNow,

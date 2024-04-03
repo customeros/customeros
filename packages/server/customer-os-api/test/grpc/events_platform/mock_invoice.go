@@ -6,11 +6,12 @@ import (
 )
 
 type MockInvoiceServiceCallbacks struct {
-	NewInvoiceForContract func(context.Context, *invoicepb.NewInvoiceForContractRequest) (*invoicepb.InvoiceIdResponse, error)
-	SimulateInvoice       func(context.Context, *invoicepb.SimulateInvoiceRequest) (*invoicepb.InvoiceIdResponse, error)
-	UpdateInvoice         func(context.Context, *invoicepb.UpdateInvoiceRequest) (*invoicepb.InvoiceIdResponse, error)
-	PayInvoice            func(context.Context, *invoicepb.PayInvoiceRequest) (*invoicepb.InvoiceIdResponse, error)
-	VoidInvoice           func(context.Context, *invoicepb.VoidInvoiceRequest) (*invoicepb.InvoiceIdResponse, error)
+	NextPreviewInvoiceForContract func(context.Context, *invoicepb.NextPreviewInvoiceForContractRequest) (*invoicepb.InvoiceIdResponse, error)
+	NewInvoiceForContract         func(context.Context, *invoicepb.NewInvoiceForContractRequest) (*invoicepb.InvoiceIdResponse, error)
+	SimulateInvoice               func(context.Context, *invoicepb.SimulateInvoiceRequest) (*invoicepb.InvoiceIdResponse, error)
+	UpdateInvoice                 func(context.Context, *invoicepb.UpdateInvoiceRequest) (*invoicepb.InvoiceIdResponse, error)
+	PayInvoice                    func(context.Context, *invoicepb.PayInvoiceRequest) (*invoicepb.InvoiceIdResponse, error)
+	VoidInvoice                   func(context.Context, *invoicepb.VoidInvoiceRequest) (*invoicepb.InvoiceIdResponse, error)
 }
 
 var invoiceCallbacks = &MockInvoiceServiceCallbacks{}
@@ -21,6 +22,13 @@ func SetInvoiceCallbacks(callbacks *MockInvoiceServiceCallbacks) {
 
 type MockInvoiceService struct {
 	invoicepb.UnimplementedInvoiceGrpcServiceServer
+}
+
+func (MockInvoiceService) NextPreviewInvoiceForContract(context context.Context, proto *invoicepb.NextPreviewInvoiceForContractRequest) (*invoicepb.InvoiceIdResponse, error) {
+	if invoiceCallbacks.NextPreviewInvoiceForContract == nil {
+		panic("invoiceCallbacks.NextPreviewInvoiceForContract is not set")
+	}
+	return invoiceCallbacks.NextPreviewInvoiceForContract(context, proto)
 }
 
 func (MockInvoiceService) NewInvoiceForContract(context context.Context, proto *invoicepb.NewInvoiceForContractRequest) (*invoicepb.InvoiceIdResponse, error) {

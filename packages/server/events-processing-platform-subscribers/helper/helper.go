@@ -15,5 +15,5 @@ func GetSource(input string) string {
 }
 
 func GetAppSource(input string) string {
-	return utils.StringFirstNonEmpty(strings.TrimSpace(input), constants.AppSourceEventProcessingPlatform)
+	return utils.StringFirstNonEmpty(strings.TrimSpace(input), constants.AppSourceEventProcessingPlatformSubscribers)
 }

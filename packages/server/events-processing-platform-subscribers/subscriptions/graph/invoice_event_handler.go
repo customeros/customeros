@@ -106,6 +106,9 @@ func (h *InvoiceEventHandler) OnInvoiceFillV1(ctx context.Context, evt eventstor
 		ContractId:                   eventData.ContractId,
 		Currency:                     neo4jenum.DecodeCurrency(eventData.Currency),
 		DryRun:                       eventData.DryRun,
+		Preview:                      eventData.Preview,
+		OffCycle:                     eventData.OffCycle,
+		Postpaid:                     eventData.Postpaid,
 		InvoiceNumber:                eventData.InvoiceNumber,
 		PeriodStartDate:              eventData.PeriodStartDate,
 		PeriodEndDate:                eventData.PeriodEndDate,
@@ -197,7 +200,7 @@ func (s *InvoiceEventHandler) callNextPreviewOnCycleInvoiceGRPC(ctx context.Cont
 		return s.grpcClients.InvoiceClient.NextPreviewInvoiceForContract(ctx, &invoicepb.NextPreviewInvoiceForContractRequest{
 			Tenant:     tenant,
 			ContractId: contractId,
-			AppSource:  constants.AppSourceEventProcessingPlatform,
+			AppSource:  constants.AppSourceEventProcessingPlatformSubscribers,
 		})
 	})
 	if err != nil {
@@ -268,7 +271,7 @@ func (s *InvoiceEventHandler) callGeneratePdfRequestGRPC(ctx context.Context, te
 		return s.grpcClients.InvoiceClient.GenerateInvoicePdf(ctx, &invoicepb.GenerateInvoicePdfRequest{
 			Tenant:    tenant,
 			InvoiceId: invoiceId,
-			AppSource: constants.AppSourceEventProcessingPlatform,
+			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 		})
 	})
 	if err != nil {
@@ -286,7 +289,7 @@ func (s *InvoiceEventHandler) callRequestFillInvoiceGRPC(ctx context.Context, te
 			Tenant:     tenant,
 			InvoiceId:  invoiceId,
 			ContractId: contractId,
-			AppSource:  constants.AppSourceEventProcessingPlatform,
+			AppSource:  constants.AppSourceEventProcessingPlatformSubscribers,
 		})
 	})
 	if err != nil {

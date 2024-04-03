@@ -32,7 +32,10 @@ func TestInvoiceResolver_Invoice(t *testing.T) {
 	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
 		CreatedAt:        timeNow,
 		UpdatedAt:        timeNow,
-		DryRun:           false,
+		DryRun:           true,
+		Preview:          true,
+		OffCycle:         true,
+		Postpaid:         true,
 		Number:           "1",
 		Currency:         "RON",
 		PeriodStartDate:  yesterday,
@@ -72,9 +75,10 @@ func TestInvoiceResolver_Invoice(t *testing.T) {
 	require.Equal(t, invoiceId, invoice.Metadata.ID)
 	require.Equal(t, timeNow, invoice.Metadata.Created)
 	require.Equal(t, timeNow, invoice.Metadata.LastUpdated)
-	require.False(t, invoice.DryRun)
-	require.False(t, invoice.Postpaid)
-	require.False(t, invoice.OffCycle)
+	require.True(t, invoice.DryRun)
+	require.True(t, invoice.Postpaid)
+	require.True(t, invoice.OffCycle)
+	require.True(t, invoice.Preview)
 	require.Equal(t, "1", invoice.InvoiceNumber)
 	require.Equal(t, fmt.Sprintf(constants.UrlFileStoreFileDownloadUrlTemplate, invoice.RepositoryFileID), invoice.InvoiceURL)
 	require.Equal(t, "RON", invoice.Currency)

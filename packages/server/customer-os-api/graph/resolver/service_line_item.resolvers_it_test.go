@@ -7,26 +7,37 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
+	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	servicelineitempb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/service_line_item"
 	"github.com/stretchr/testify/require"
 	"testing"
+	"time"
 )
 
 func TestMutationResolver_ServiceLineItemCreate(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 
+	now := utils.Now()
+
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		InvoicingEnabled:   true,
+		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
+		InvoicingStartDate: &now,
+	})
 	serviceLineItemId := uuid.New().String()
-	calledCreateServiceLineItem := false
 
+	// mock grpc
+	calledCreateServiceLineItem := false
 	serviceLineItemServiceCallbacks := events_platform.MockServiceLineItemServiceCallbacks{
 		CreateServiceLineItem: func(context context.Context, serviceLineItem *servicelineitempb.CreateServiceLineItemGrpcRequest) (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
 			require.Equal(t, tenantName, serviceLineItem.Tenant)
@@ -52,9 +63,26 @@ func TestMutationResolver_ServiceLineItemCreate(t *testing.T) {
 	}
 	events_platform.SetServiceLineItemCallbacks(&serviceLineItemServiceCallbacks)
 
+	calledNextPreviewInvoiceForContractRequest := false
+	invoiceGrpcServiceCallbacks := events_platform.MockInvoiceServiceCallbacks{
+		NextPreviewInvoiceForContract: func(context context.Context, inv *invoicepb.NextPreviewInvoiceForContractRequest) (*invoicepb.InvoiceIdResponse, error) {
+			require.Equal(t, tenantName, inv.Tenant)
+			require.Equal(t, contractId, inv.ContractId)
+			require.Equal(t, constants.AppSourceCustomerOsApi, inv.AppSource)
+			calledNextPreviewInvoiceForContractRequest = true
+			return &invoicepb.InvoiceIdResponse{
+				Id: "1",
+			}, nil
+		},
+	}
+	events_platform.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
+
 	rawResponse := callGraphQL(t, "service_line_item/create_service_line_item", map[string]interface{}{
 		"contractId": contractId,
 	})
+
+	//wait for generate preview invoice grpc call
+	time.Sleep(4 * time.Second)
 
 	var serviceLineItemStruct struct {
 		ContractLineItem_Create model.ServiceLineItem
@@ -67,19 +95,29 @@ func TestMutationResolver_ServiceLineItemCreate(t *testing.T) {
 	require.Equal(t, serviceLineItemId, serviceLineItem.Metadata.ID)
 	require.Equal(t, serviceLineItemId, serviceLineItem.ParentID)
 	require.True(t, calledCreateServiceLineItem)
+	require.True(t, calledNextPreviewInvoiceForContractRequest)
 }
 
 func TestMutationResolver_ServiceLineItemUpdate(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 
+	now := utils.Now()
+
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		InvoicingEnabled:   true,
+		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
+		InvoicingStartDate: &now,
+	})
 	serviceLineItemIdParentId := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{Name: "service"})
+
 	//Using serviceLineItemIdParentId as the parent id
 	serviceLineItemId := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{Name: "service", ParentID: serviceLineItemIdParentId})
+
+	//mock grpc
 	calledUpdateServiceLineItem := false
 	serviceLineItemServiceCallbacks := events_platform.MockServiceLineItemServiceCallbacks{
 		UpdateServiceLineItem: func(context context.Context, serviceLineItem *servicelineitempb.UpdateServiceLineItemGrpcRequest) (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
@@ -102,9 +140,26 @@ func TestMutationResolver_ServiceLineItemUpdate(t *testing.T) {
 	}
 	events_platform.SetServiceLineItemCallbacks(&serviceLineItemServiceCallbacks)
 
+	calledNextPreviewInvoiceForContractRequest := false
+	invoiceGrpcServiceCallbacks := events_platform.MockInvoiceServiceCallbacks{
+		NextPreviewInvoiceForContract: func(context context.Context, inv *invoicepb.NextPreviewInvoiceForContractRequest) (*invoicepb.InvoiceIdResponse, error) {
+			require.Equal(t, tenantName, inv.Tenant)
+			require.Equal(t, contractId, inv.ContractId)
+			require.Equal(t, constants.AppSourceCustomerOsApi, inv.AppSource)
+			calledNextPreviewInvoiceForContractRequest = true
+			return &invoicepb.InvoiceIdResponse{
+				Id: "1",
+			}, nil
+		},
+	}
+	events_platform.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
+
 	rawResponse := callGraphQL(t, "service_line_item/update_service_line_item", map[string]interface{}{
 		"serviceLineItemId": serviceLineItemId,
 	})
+
+	//wait for generate preview invoice grpc call
+	time.Sleep(4 * time.Second)
 
 	var serviceLineItemStruct struct {
 		ContractLineItem_Update model.ServiceLineItem
@@ -117,16 +172,23 @@ func TestMutationResolver_ServiceLineItemUpdate(t *testing.T) {
 	require.Equal(t, serviceLineItemId, serviceLineItem.Metadata.ID)
 	require.Equal(t, serviceLineItemIdParentId, serviceLineItem.ParentID)
 	require.True(t, calledUpdateServiceLineItem)
+	require.True(t, calledNextPreviewInvoiceForContractRequest)
 }
 
 func TestMutationResolver_ServiceLineItemDelete(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 
+	now := utils.Now()
+
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		InvoicingEnabled:   true,
+		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
+		InvoicingStartDate: &now,
+	})
 	serviceLineItemId := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{})
 
 	calledDeleteServiceLineItem := false
@@ -144,9 +206,26 @@ func TestMutationResolver_ServiceLineItemDelete(t *testing.T) {
 	}
 	events_platform.SetServiceLineItemCallbacks(&serviceLineItemServiceCallbacks)
 
+	calledNextPreviewInvoiceForContractRequest := false
+	invoiceGrpcServiceCallbacks := events_platform.MockInvoiceServiceCallbacks{
+		NextPreviewInvoiceForContract: func(context context.Context, inv *invoicepb.NextPreviewInvoiceForContractRequest) (*invoicepb.InvoiceIdResponse, error) {
+			require.Equal(t, tenantName, inv.Tenant)
+			require.Equal(t, contractId, inv.ContractId)
+			require.Equal(t, constants.AppSourceCustomerOsApi, inv.AppSource)
+			calledNextPreviewInvoiceForContractRequest = true
+			return &invoicepb.InvoiceIdResponse{
+				Id: "1",
+			}, nil
+		},
+	}
+	events_platform.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
+
 	rawResponse := callGraphQL(t, "service_line_item/delete_service_line_item", map[string]interface{}{
 		"serviceLineItemId": serviceLineItemId,
 	})
+
+	//wait for generate preview invoice grpc call
+	time.Sleep(4 * time.Second)
 
 	var response struct {
 		ServiceLineItem_Delete model.DeleteResponse
@@ -158,18 +237,26 @@ func TestMutationResolver_ServiceLineItemDelete(t *testing.T) {
 	require.True(t, response.ServiceLineItem_Delete.Accepted)
 	require.False(t, response.ServiceLineItem_Delete.Completed)
 	require.True(t, calledDeleteServiceLineItem)
+	require.True(t, calledNextPreviewInvoiceForContractRequest)
 }
 
 func TestMutationResolver_ServiceLineItemClose(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 
+	now := utils.Now()
+
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		InvoicingEnabled:   true,
+		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
+		InvoicingStartDate: &now,
+	})
 	serviceLineItemId := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{})
 
+	//mock grpc
 	calledCloseServiceLineItem := false
 	serviceLineItemServiceCallbacks := events_platform.MockServiceLineItemServiceCallbacks{
 		CloseServiceLineItem: func(context context.Context, serviceLineItem *servicelineitempb.CloseServiceLineItemGrpcRequest) (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
@@ -187,15 +274,33 @@ func TestMutationResolver_ServiceLineItemClose(t *testing.T) {
 	}
 	events_platform.SetServiceLineItemCallbacks(&serviceLineItemServiceCallbacks)
 
+	calledNextPreviewInvoiceForContractRequest := false
+	invoiceGrpcServiceCallbacks := events_platform.MockInvoiceServiceCallbacks{
+		NextPreviewInvoiceForContract: func(context context.Context, inv *invoicepb.NextPreviewInvoiceForContractRequest) (*invoicepb.InvoiceIdResponse, error) {
+			require.Equal(t, tenantName, inv.Tenant)
+			require.Equal(t, contractId, inv.ContractId)
+			require.Equal(t, constants.AppSourceCustomerOsApi, inv.AppSource)
+			calledNextPreviewInvoiceForContractRequest = true
+			return &invoicepb.InvoiceIdResponse{
+				Id: "1",
+			}, nil
+		},
+	}
+	events_platform.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
+
 	rawResponse := callGraphQL(t, "service_line_item/close_service_line_item", map[string]interface{}{
 		"serviceLineItemId": serviceLineItemId,
 	})
+
+	//wait for generate preview invoice grpc call
+	time.Sleep(4 * time.Second)
 
 	var response map[string]interface{}
 
 	require.Nil(t, rawResponse.Errors)
 	err := decode.Decode(rawResponse.Data.(map[string]any), &response)
 	require.Nil(t, err)
-	require.True(t, calledCloseServiceLineItem)
 	require.Equal(t, serviceLineItemId, response["id"])
+	require.True(t, calledCloseServiceLineItem)
+	require.True(t, calledNextPreviewInvoiceForContractRequest)
 }

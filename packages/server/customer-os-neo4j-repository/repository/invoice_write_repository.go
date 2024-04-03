@@ -38,6 +38,9 @@ type InvoiceFillFields struct {
 	ContractId                   string                  `json:"contractId"`
 	Currency                     neo4jenum.Currency      `json:"currency"`
 	DryRun                       bool                    `json:"dryRun"`
+	OffCycle                     bool                    `json:"offCycle"`
+	Postpaid                     bool                    `json:"postpaid"`
+	Preview                      bool                    `json:"preview"`
 	InvoiceNumber                string                  `json:"invoiceNumber"`
 	PeriodStartDate              time.Time               `json:"periodStartDate"`
 	PeriodEndDate                time.Time               `json:"periodEndDate"`
@@ -171,6 +174,9 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tenant, invoic
 								i:Invoice_%s,
 								i.currency=$currency,
 								i.dryRun=$dryRun,
+								i.offCycle=$offCycle,
+								i.postpaid=$postpaid,
+								i.preview=$preview,
 								i.periodStartDate=$periodStart,
 								i.periodEndDate=$periodEnd,
 								i.billingCycle=$billingCycle
@@ -211,6 +217,9 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tenant, invoic
 		"vat":                          data.VAT,
 		"totalAmount":                  data.TotalAmount,
 		"dryRun":                       data.DryRun,
+		"offCycle":                     data.OffCycle,
+		"postpaid":                     data.Postpaid,
+		"preview":                      data.Preview,
 		"number":                       data.InvoiceNumber,
 		"currency":                     data.Currency.String(),
 		"periodStart":                  utils.ToNeo4jDateAsAny(&data.PeriodStartDate),

@@ -51,7 +51,7 @@ func TestGraphOrganizationEventHandler_OnOrganizationCreate(t *testing.T) {
 		RefreshLastTouchpoint: func(context context.Context, org *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 			require.Equal(t, tenantName, org.Tenant)
 			require.Equal(t, orgId, org.OrganizationId)
-			require.Equal(t, constants.AppSourceEventProcessingPlatform, org.AppSource)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, org.AppSource)
 			lastTouchpointInvoked = true
 			return &organizationpb.OrganizationIdGrpcResponse{
 				Id: orgId,
@@ -114,7 +114,7 @@ func TestGraphOrganizationEventHandler_OnOrganizationCreate(t *testing.T) {
 	require.NotNil(t, action.Id)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), action.SourceOfTruth)
-	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
+	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, action.AppSource)
 	require.Equal(t, now, action.CreatedAt)
 	require.Equal(t, neo4jenum.ActionCreated, action.Type)
 	require.Equal(t, "", action.Content)
@@ -211,7 +211,7 @@ func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_New(t *testin
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 
-	event, err := events.NewOrganizationAddSocialEvent(orgAggregate, socialId, platformName, socialUrl, constants.SourceOpenline, constants.SourceOpenline, constants.AppSourceEventProcessingPlatform, now, now)
+	event, err := events.NewOrganizationAddSocialEvent(orgAggregate, socialId, platformName, socialUrl, constants.SourceOpenline, constants.SourceOpenline, constants.AppSourceEventProcessingPlatformSubscribers, now, now)
 	require.Nil(t, err)
 	err = orgEventHandler.OnSocialAddedToOrganization(context.Background(), event)
 	require.Nil(t, err)
@@ -229,7 +229,7 @@ func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_New(t *testin
 	require.Equal(t, platformName, social.PlatformName)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), social.Source)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), social.SourceOfTruth)
-	require.Equal(t, constants.AppSourceEventProcessingPlatform, social.AppSource)
+	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, social.AppSource)
 	require.Equal(t, now, social.CreatedAt)
 	require.Equal(t, now, social.UpdatedAt)
 }
@@ -257,7 +257,7 @@ func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_SocialUrlAlre
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 
-	event, err := events.NewOrganizationAddSocialEvent(orgAggregate, socialId, "other platform name", socialUrl, constants.SourceOpenline, constants.SourceOpenline, constants.AppSourceEventProcessingPlatform, now, now)
+	event, err := events.NewOrganizationAddSocialEvent(orgAggregate, socialId, "other platform name", socialUrl, constants.SourceOpenline, constants.SourceOpenline, constants.AppSourceEventProcessingPlatformSubscribers, now, now)
 	require.Nil(t, err)
 	err = orgEventHandler.OnSocialAddedToOrganization(context.Background(), event)
 	require.Nil(t, err)
@@ -502,7 +502,7 @@ func TestGraphOrganizationEventHandler_OnUpdateOnboardingStatus(t *testing.T) {
 	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
 	require.NotNil(t, action.Id)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), action.Source)
-	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
+	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, action.AppSource)
 	require.Equal(t, neo4jenum.ActionOnboardingStatusChanged, action.Type)
 	require.Equal(t, "Olivia Rhye changed the onboarding status to Done", action.Content)
 	require.Equal(t, fmt.Sprintf(`{"status":"%s","comments":"%s","userId":"%s","contractId":"%s"}`, "DONE", "Some comments", userId, ""), action.Metadata)
@@ -563,7 +563,7 @@ func TestGraphOrganizationEventHandler_OnUpdateOnboardingStatus_CausedByContract
 	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
 	require.NotNil(t, action.Id)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), action.Source)
-	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
+	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, action.AppSource)
 	require.Equal(t, neo4jenum.ActionOnboardingStatusChanged, action.Type)
 	require.Equal(t, "The onboarding status was automatically set to Not started", action.Content)
 	require.Equal(t, fmt.Sprintf(`{"status":"%s","comments":"%s","userId":"%s","contractId":"%s"}`, "NOT_STARTED", "Some comments", "", contractId), action.Metadata)
@@ -589,7 +589,7 @@ func TestGraphOrganizationEventHandler_OnCreateBillingProfile(t *testing.T) {
 	event, err := events.NewBillingProfileCreateEvent(orgAggregate, billingProfileId, "Billing profile", "Tax id",
 		cmnmod.Source{
 			Source:    constants.SourceOpenline,
-			AppSource: constants.AppSourceEventProcessingPlatform,
+			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 		}, now, now)
 	require.Nil(t, err)
 	err = orgEventHandler.OnCreateBillingProfile(context.Background(), event)
@@ -613,7 +613,7 @@ func TestGraphOrganizationEventHandler_OnCreateBillingProfile(t *testing.T) {
 	require.Equal(t, "Tax id", billingProfile.TaxId)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), billingProfile.Source)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), billingProfile.SourceOfTruth)
-	require.Equal(t, constants.AppSourceEventProcessingPlatform, billingProfile.AppSource)
+	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, billingProfile.AppSource)
 	require.Equal(t, now, billingProfile.CreatedAt)
 	require.Equal(t, now, billingProfile.UpdatedAt)
 }
