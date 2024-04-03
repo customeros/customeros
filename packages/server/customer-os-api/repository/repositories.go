@@ -8,7 +8,6 @@ import (
 type Repositories struct {
 	Drivers                       Drivers
 	Neo4jRepositories             *neo4jrepository.Repositories
-	TimelineEventRepository       TimelineEventRepository
 	OrganizationRepository        OrganizationRepository
 	ContactRepository             ContactRepository
 	CustomFieldTemplateRepository CustomFieldTemplateRepository
@@ -56,7 +55,6 @@ func InitRepos(driver *neo4j.DriverWithContext, database string) *Repositories {
 		},
 	}
 	repositories.Neo4jRepositories = neo4jrepository.InitNeo4jRepositories(driver, database)
-	repositories.TimelineEventRepository = NewTimelineEventRepository(driver, database)
 	repositories.OrganizationRepository = NewOrganizationRepository(driver, database)
 	repositories.ContactRepository = NewContactRepository(driver, database)
 	repositories.CustomFieldTemplateRepository = NewCustomFieldTemplateRepository(driver, database)
