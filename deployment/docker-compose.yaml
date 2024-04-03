@@ -48,7 +48,7 @@ services:
     networks:
       - openline
     volumes:
-      - neo4j_data:/data hello how a
+      - neo4j_data:/data
     ports:
       - "7474:7474" # HTTP
       - "7687:7687" # Bolt

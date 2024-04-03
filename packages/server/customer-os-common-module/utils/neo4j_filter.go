@@ -142,6 +142,26 @@ func (f CypherFilterItem) String() string {
 	return res.String()
 }
 
+func CreateStringCypherFilter(propertyName string, searchTerm any, comparator ComparisonOperator) *CypherFilter {
+	filter := CypherFilter{}
+	filter.Details = new(CypherFilterItem)
+	filter.Details.NodeProperty = propertyName
+	filter.Details.Value = &searchTerm
+	filter.Details.ComparisonOperator = comparator
+	filter.Details.SupportCaseSensitive = true
+	return &filter
+}
+
+func CreateCypherFilter(propertyName string, searchTerm any, comparator ComparisonOperator, caseSensitive bool) *CypherFilter {
+	filter := CypherFilter{}
+	filter.Details = new(CypherFilterItem)
+	filter.Details.NodeProperty = propertyName
+	filter.Details.Value = &searchTerm
+	filter.Details.ComparisonOperator = comparator
+	filter.Details.SupportCaseSensitive = caseSensitive
+	return &filter
+}
+
 func (f *CypherFilter) CypherFilterFragment(nodeAlias string) (Cypher, map[string]any) {
 	if f == nil || (f.Details == nil && (f.Filters == nil || len(f.Filters) == 0)) {
 		return "", map[string]any{}

@@ -1,8 +1,7 @@
-query GetInvoice($page: Int!, $limit: Int!) {
+query GetInvoice($page: Int!, $limit: Int!, $invoiceIssueDate: Any!) {
   invoices(pagination: {page: $page, limit: $limit}
               where: {AND:[
-                            {filter: {property:"NUMBER" value:"1" operation:CONTAINS}}
-                            {filter: {property:"DRY_RUN" value:false operation:EQ}}
+                            {filter: {property:"INVOICE_ISSUE_DATE" value: $invoiceIssueDate operation:EQ}}
                           ]
                      }
               sort:[{by: "NUMBER" direction:ASC }]

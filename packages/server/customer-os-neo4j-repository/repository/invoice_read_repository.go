@@ -15,7 +15,7 @@ import (
 
 type InvoiceReadRepository interface {
 	GetInvoiceById(ctx context.Context, tenant, invoiceId string) (*dbtype.Node, error)
-	GetPaginatedInvoices(ctx context.Context, tenant, organizationId string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
+	GetPaginatedInvoices(ctx context.Context, tenant string, skip, limit int, filterCypher string, filterParams map[string]interface{}, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	GetInvoicesForPayNotifications(ctx context.Context, minutesFromLastUpdate, lookbackWindow int, referenceTime time.Time) ([]*utils.DbNodeAndTenant, error)
 	CountNonDryRunInvoicesForContract(ctx context.Context, tenant, contractId string) (int, error)
 	GetInvoicesForPaymentLinkRequest(ctx context.Context, minutesFromLastUpdate, lookbackWindow int, referenceTime time.Time) ([]*utils.DbNodeAndTenant, error)
@@ -39,13 +39,14 @@ func (r *invoiceReadRepository) prepareReadSession(ctx context.Context) neo4j.Se
 	return utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 }
 
-func (r *invoiceReadRepository) GetPaginatedInvoices(ctx context.Context, tenant, organizationId string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {
+func (r *invoiceReadRepository) GetPaginatedInvoices(ctx context.Context, tenant string, skip, limit int, filterCypher string, filterParams map[string]interface{}, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceReadRepository.GetPaginatedInvoices")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.LogFields(log.Int("skip", skip))
 	span.LogFields(log.Int("limit", limit))
-	span.LogFields(log.Object("filter", filter))
+	span.LogFields(log.String("filterCypher", filterCypher))
+	span.LogFields(log.Object("filterParams", filterParams))
 	span.LogFields(log.Object("sorting", sorting))
 
 	session := r.prepareReadSession(ctx)
@@ -54,7 +55,6 @@ func (r *invoiceReadRepository) GetPaginatedInvoices(ctx context.Context, tenant
 	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
 
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		filterCypherStr, filterParams := filter.CypherFilterFragment("i")
 
 		countParams := map[string]any{
 			"tenant": tenant,
@@ -65,21 +65,11 @@ func (r *invoiceReadRepository) GetPaginatedInvoices(ctx context.Context, tenant
 			"limit":  limit,
 		}
 
-		if organizationId != "" {
-			if filterCypherStr != "" {
-				filterCypherStr += " AND "
-			} else {
-				filterCypherStr += " WHERE "
-			}
-			filterCypherStr += " o.id=$organizationId"
-			filterParams["organizationId"] = organizationId
-		}
-
 		utils.MergeMapToMap(filterParams, countParams)
 
 		countCypher := fmt.Sprintf(` MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(c:Contract_%s)-[:HAS_INVOICE]->(i:Invoice_%s) 
 				 %s 
-				 RETURN count(i) as count`, tenant, tenant, tenant, filterCypherStr)
+				 RETURN count(i) as count`, tenant, tenant, tenant, filterCypher)
 
 		span.LogFields(log.String("countCypher", countCypher))
 		tracing.LogObjectAsJson(span, "countParams", countParams)
@@ -97,7 +87,7 @@ func (r *invoiceReadRepository) GetPaginatedInvoices(ctx context.Context, tenant
 				 %s 
 				 RETURN i 
 				 %s 
-				 SKIP $skip LIMIT $limit`, tenant, tenant, tenant, filterCypherStr, sorting.SortingCypherFragment("i"))
+				 SKIP $skip LIMIT $limit`, tenant, tenant, tenant, filterCypher, sorting.SortingCypherFragment("i"))
 
 		span.LogFields(log.String("cypher", cypher))
 		tracing.LogObjectAsJson(span, "queryParams", queryParams)
