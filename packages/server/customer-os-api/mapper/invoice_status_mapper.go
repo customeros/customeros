@@ -7,10 +7,11 @@ import (
 )
 
 var invoiceStatusByModel = map[model.InvoiceStatus]neo4jenum.InvoiceStatus{
-	model.InvoiceStatusDraft: neo4jenum.InvoiceStatusDraft,
-	model.InvoiceStatusDue:   neo4jenum.InvoiceStatusDue,
-	model.InvoiceStatusPaid:  neo4jenum.InvoiceStatusPaid,
-	model.InvoiceStatusVoid:  neo4jenum.InvoiceStatusVoid,
+	model.InvoiceStatusDraft:       neo4jenum.InvoiceStatusInitialized,
+	model.InvoiceStatusInitialized: neo4jenum.InvoiceStatusInitialized,
+	model.InvoiceStatusDue:         neo4jenum.InvoiceStatusDue,
+	model.InvoiceStatusPaid:        neo4jenum.InvoiceStatusPaid,
+	model.InvoiceStatusVoid:        neo4jenum.InvoiceStatusVoid,
 }
 
 var invoiceStatusByValue = utils.ReverseMap(invoiceStatusByModel)

@@ -123,7 +123,7 @@ type InvoiceStatus int32
 const (
 	NoneInvoiceStatus InvoiceStatus = iota
 	PreviewInvoiceStatus
-	DraftInvoiceStatus
+	InitializedInvoiceStatus
 	DueInvoiceStatus
 	PaidInvoiceStatus
 	VoidInvoiceStatus
@@ -134,8 +134,8 @@ func (is InvoiceStatus) String() string {
 	switch is {
 	case NoneInvoiceStatus:
 		return ""
-	case DraftInvoiceStatus:
-		return string(neo4jenum.InvoiceStatusDraft)
+	case InitializedInvoiceStatus:
+		return string(neo4jenum.InvoiceStatusInitialized)
 	case PreviewInvoiceStatus:
 		return string(neo4jenum.InvoiceStatusPreview)
 	case DueInvoiceStatus:
