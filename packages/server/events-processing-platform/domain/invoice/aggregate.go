@@ -84,8 +84,8 @@ func (a *InvoiceAggregate) HandleGRPCRequest(ctx context.Context, request any, p
 		return nil, a.CreatePayInvoiceNotificationEvent(ctx, r)
 	case *invoicepb.RequestFillInvoiceRequest:
 		return nil, a.CreateFillRequestedEvent(ctx, r)
-	case *invoicepb.PermanentlyDeleteDraftInvoiceRequest:
-		return nil, a.PermanentlyDeleteDraftInvoice(ctx, r)
+	case *invoicepb.PermanentlyDeleteInitializedInvoiceRequest:
+		return nil, a.PermanentlyDeleteInitializedInvoice(ctx, r)
 	case *invoicepb.VoidInvoiceRequest:
 		return nil, a.VoidInvoice(ctx, r)
 	case *invoicepb.SimulateInvoiceRequest:
@@ -368,8 +368,8 @@ func (a *InvoiceAggregate) PayInvoice(ctx context.Context, request *invoicepb.Pa
 	return a.Apply(payEvent)
 }
 
-func (a *InvoiceAggregate) PermanentlyDeleteDraftInvoice(ctx context.Context, request *invoicepb.PermanentlyDeleteDraftInvoiceRequest) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "InvoiceAggregate.PermanentlyDeleteDraftInvoice")
+func (a *InvoiceAggregate) PermanentlyDeleteInitializedInvoice(ctx context.Context, request *invoicepb.PermanentlyDeleteInitializedInvoiceRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "InvoiceAggregate.PermanentlyDeleteInitializedInvoice")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())

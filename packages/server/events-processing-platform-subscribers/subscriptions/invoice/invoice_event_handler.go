@@ -411,7 +411,7 @@ func (h *InvoiceEventHandler) fillOffCyclePrepaidInvoice(ctx context.Context, te
 
 	if totalAmount == 0 || len(invoiceLines) == 0 {
 		_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
-			return h.grpcClients.InvoiceClient.PermanentlyDeleteDraftInvoice(ctx, &invoicepb.PermanentlyDeleteDraftInvoiceRequest{
+			return h.grpcClients.InvoiceClient.PermanentlyDeleteInitializedInvoice(ctx, &invoicepb.PermanentlyDeleteInitializedInvoiceRequest{
 				Tenant:    tenant,
 				InvoiceId: invoiceEntity.Id,
 				AppSource: constants.AppSourceEventProcessingPlatformSubscribers,

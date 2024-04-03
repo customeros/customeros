@@ -32,7 +32,7 @@ type InvoiceGrpcServiceClient interface {
 	UpdateInvoice(ctx context.Context, in *UpdateInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
 	PayInvoiceNotification(ctx context.Context, in *PayInvoiceNotificationRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
 	RequestFillInvoice(ctx context.Context, in *RequestFillInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
-	PermanentlyDeleteDraftInvoice(ctx context.Context, in *PermanentlyDeleteDraftInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
+	PermanentlyDeleteInitializedInvoice(ctx context.Context, in *PermanentlyDeleteInitializedInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
 	VoidInvoice(ctx context.Context, in *VoidInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
 }
 
@@ -134,9 +134,9 @@ func (c *invoiceGrpcServiceClient) RequestFillInvoice(ctx context.Context, in *R
 	return out, nil
 }
 
-func (c *invoiceGrpcServiceClient) PermanentlyDeleteDraftInvoice(ctx context.Context, in *PermanentlyDeleteDraftInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error) {
+func (c *invoiceGrpcServiceClient) PermanentlyDeleteInitializedInvoice(ctx context.Context, in *PermanentlyDeleteInitializedInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error) {
 	out := new(InvoiceIdResponse)
-	err := c.cc.Invoke(ctx, "/InvoiceGrpcService/PermanentlyDeleteDraftInvoice", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/InvoiceGrpcService/PermanentlyDeleteInitializedInvoice", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -166,7 +166,7 @@ type InvoiceGrpcServiceServer interface {
 	UpdateInvoice(context.Context, *UpdateInvoiceRequest) (*InvoiceIdResponse, error)
 	PayInvoiceNotification(context.Context, *PayInvoiceNotificationRequest) (*InvoiceIdResponse, error)
 	RequestFillInvoice(context.Context, *RequestFillInvoiceRequest) (*InvoiceIdResponse, error)
-	PermanentlyDeleteDraftInvoice(context.Context, *PermanentlyDeleteDraftInvoiceRequest) (*InvoiceIdResponse, error)
+	PermanentlyDeleteInitializedInvoice(context.Context, *PermanentlyDeleteInitializedInvoiceRequest) (*InvoiceIdResponse, error)
 	VoidInvoice(context.Context, *VoidInvoiceRequest) (*InvoiceIdResponse, error)
 }
 
@@ -204,8 +204,8 @@ func (UnimplementedInvoiceGrpcServiceServer) PayInvoiceNotification(context.Cont
 func (UnimplementedInvoiceGrpcServiceServer) RequestFillInvoice(context.Context, *RequestFillInvoiceRequest) (*InvoiceIdResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RequestFillInvoice not implemented")
 }
-func (UnimplementedInvoiceGrpcServiceServer) PermanentlyDeleteDraftInvoice(context.Context, *PermanentlyDeleteDraftInvoiceRequest) (*InvoiceIdResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method PermanentlyDeleteDraftInvoice not implemented")
+func (UnimplementedInvoiceGrpcServiceServer) PermanentlyDeleteInitializedInvoice(context.Context, *PermanentlyDeleteInitializedInvoiceRequest) (*InvoiceIdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PermanentlyDeleteInitializedInvoice not implemented")
 }
 func (UnimplementedInvoiceGrpcServiceServer) VoidInvoice(context.Context, *VoidInvoiceRequest) (*InvoiceIdResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method VoidInvoice not implemented")
@@ -402,20 +402,20 @@ func _InvoiceGrpcService_RequestFillInvoice_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
-func _InvoiceGrpcService_PermanentlyDeleteDraftInvoice_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PermanentlyDeleteDraftInvoiceRequest)
+func _InvoiceGrpcService_PermanentlyDeleteInitializedInvoice_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PermanentlyDeleteInitializedInvoiceRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(InvoiceGrpcServiceServer).PermanentlyDeleteDraftInvoice(ctx, in)
+		return srv.(InvoiceGrpcServiceServer).PermanentlyDeleteInitializedInvoice(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/InvoiceGrpcService/PermanentlyDeleteDraftInvoice",
+		FullMethod: "/InvoiceGrpcService/PermanentlyDeleteInitializedInvoice",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(InvoiceGrpcServiceServer).PermanentlyDeleteDraftInvoice(ctx, req.(*PermanentlyDeleteDraftInvoiceRequest))
+		return srv.(InvoiceGrpcServiceServer).PermanentlyDeleteInitializedInvoice(ctx, req.(*PermanentlyDeleteInitializedInvoiceRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -486,8 +486,8 @@ var InvoiceGrpcService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _InvoiceGrpcService_RequestFillInvoice_Handler,
 		},
 		{
-			MethodName: "PermanentlyDeleteDraftInvoice",
-			Handler:    _InvoiceGrpcService_PermanentlyDeleteDraftInvoice_Handler,
+			MethodName: "PermanentlyDeleteInitializedInvoice",
+			Handler:    _InvoiceGrpcService_PermanentlyDeleteInitializedInvoice_Handler,
 		},
 		{
 			MethodName: "VoidInvoice",
