@@ -1,10 +1,10 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 
 import { utcToZonedTime } from 'date-fns-tz';
 
+import { Contract } from '@graphql/types';
 import { Text } from '@ui/typography/Text';
 import { DateTimeUtils } from '@spaces/utils/date';
-import { Contract, ContractRenewalCycle } from '@graphql/types';
 import { billingFrequencyOptions } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 
 export const ContractSubtitle = ({ data }: { data: Contract }) => {
@@ -31,36 +31,6 @@ export const ContractSubtitle = ({ data }: { data: Contract }) => {
           DateTimeUtils.dateWithAbreviatedMonth,
         )
       : null;
-
-  const calcContractEndDate = useMemo(() => {
-    if (!serviceStarted) return null;
-    switch (data?.contractRenewalCycle) {
-      case ContractRenewalCycle.AnnualRenewal:
-        return DateTimeUtils.format(
-          DateTimeUtils.addYears(
-            serviceStarted,
-            data?.committedPeriods ?? 1,
-          ).toISOString(),
-          DateTimeUtils.dateWithAbreviatedMonth,
-        );
-      case ContractRenewalCycle.MonthlyRenewal:
-        return DateTimeUtils.format(
-          DateTimeUtils.addMonth(
-            serviceStarted,
-            data.committedPeriods ?? 1,
-          ).toISOString(),
-          DateTimeUtils.dateWithAbreviatedMonth,
-        );
-      case ContractRenewalCycle.QuarterlyRenewal:
-        return DateTimeUtils.format(
-          DateTimeUtils.addMonth(serviceStarted, 3).toISOString(),
-          DateTimeUtils.dateWithAbreviatedMonth,
-        );
-
-      default:
-        return null;
-    }
-  }, [data?.contractRenewalCycle, serviceStarted, data?.committedPeriods]);
 
   const endDate = contractEnded
     ? DateTimeUtils.format(contractEnded, DateTimeUtils.dateWithAbreviatedMonth)
@@ -120,7 +90,7 @@ export const ContractSubtitle = ({ data }: { data: Contract }) => {
   if (hasStartedService && !data?.autoRenew) {
     return (
       <Text>
-        {renewalPeriod} contract until {calcContractEndDate}, not auto-renewing
+        {renewalPeriod} contract until {renewalDate}, not auto-renewing
       </Text>
     );
   }
