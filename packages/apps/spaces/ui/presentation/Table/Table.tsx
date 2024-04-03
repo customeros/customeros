@@ -156,7 +156,7 @@ export const Table = <T extends object>({
       >
         <THeader className='top-0 sticky ' style={{ minWidth: THeaderMinW }}>
           {table.getHeaderGroups().map((headerGroup) => {
-            const width = enableRowSelection ? 'w-7' : 'w-2';
+            const width = enableRowSelection ? 'w-[36px]' : 'w-2';
 
             return (
               <THeaderGroup key={headerGroup.id}>
@@ -294,7 +294,7 @@ export const Table = <T extends object>({
                   )}
                 </TCell>
                 {(row ?? skeletonRow).getAllCells()?.map((cell, index) => {
-                  const paddingRight = index === 0 && 'p-0';
+                  const paddingRight = index === 0 ? 'pr-0' : '';
                   const paddingLeft =
                     index === 0 ? 'pl-2' : index === 1 ? 'pl-0' : 'pl-6';
                   const minWidth = cell.column.getSize();
@@ -311,7 +311,7 @@ export const Table = <T extends object>({
                   return (
                     <TCell
                       key={cell.id}
-                      className={cn(paddingRight, paddingLeft, flex)}
+                      className={cn(paddingRight, paddingLeft)}
                       style={{ minWidth, maxWidth, flex }}
                       data-index={cell.row.index}
                     >
@@ -381,13 +381,13 @@ const TCell = forwardRef<HTMLDivElement, GenericProps>(
   ({ children, className, style, ...props }, ref) => {
     return (
       <div
+        {...props}
         className={twMerge(
-          'flex py-2 px-6 h-full flex-1 flex-col whitespace-nowrap justify-center self-center break-keep',
+          'flex py-2 px-6 h-auto flex-1 flex-col whitespace-nowrap justify-center break-keep',
           className,
         )}
         style={style}
         ref={ref}
-        {...props}
       >
         {children}
       </div>
@@ -462,7 +462,7 @@ const THeaderCell = forwardRef<HTMLDivElement, GenericProps>(
       <div
         ref={ref}
         className={twMerge(
-          'flex items-center px-6 py-1 whitespace-nowrap ',
+          'flex items-center px-6 py-1 whitespace-nowrap',
           className,
         )}
         style={style}

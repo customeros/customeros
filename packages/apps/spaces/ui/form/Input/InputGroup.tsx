@@ -1,4 +1,4 @@
-import { cloneElement, isValidElement } from 'react';
+import { forwardRef, cloneElement, isValidElement } from 'react';
 
 import { twMerge } from 'tailwind-merge';
 import { cva, VariantProps } from 'class-variance-authority';
@@ -11,10 +11,9 @@ import { Input } from './Input2';
 const iconSize = cva([], {
   variants: {
     size: {
-      xs: ['w-4', 'h-4'],
-      sm: ['w-5', 'h-5'],
-      md: ['w-6', 'h-6'],
-      lg: ['w-7', 'h-7'],
+      sm: ['size-3 mb-[8px]'],
+      md: ['size-4 mb-[5px]'],
+      lg: ['size-5'],
     },
   },
   defaultVariants: {
@@ -41,7 +40,10 @@ export const LeftElement = ({
   };
 
   return (
-    <div {...props} className={twMerge(className, iconSize({ size }))}>
+    <div
+      {...props}
+      className={twMerge('self-center', className, iconSize({ size }))}
+    >
       {isValidElement(children) && cloneElement(children, iconProps)}
     </div>
   );
@@ -63,42 +65,41 @@ export const RightElement = ({
   return (
     <div
       {...props}
-      className={twMerge(
-        className,
-        'text-gray-500 focus:border-primary-500 focus:border-b',
-        iconSize({ size }),
-      )}
+      className={twMerge(className, 'self-center', iconSize({ size }))}
     >
       {isValidElement(children) && cloneElement(children, iconProps)}
     </div>
   );
 };
 
-interface InputGroupProps {
+interface InputGroupProps extends React.InputHTMLAttributes<HTMLInputElement> {
   border?: boolean;
   children: React.ReactNode;
+  ref?: React.Ref<HTMLInputElement>;
 }
 
-export const InputGroup = ({ border, children }: InputGroupProps) => {
-  const [inputSlot, leftElementSlot, rightElementSlot] = useSlots(
-    children,
-    Input,
-    LeftElement,
-    RightElement,
-  );
+export const InputGroup = forwardRef<HTMLInputElement, InputGroupProps>(
+  ({ border, children }, ref) => {
+    const [inputSlot, leftElementSlot, rightElementSlot] = useSlots(
+      children,
+      Input,
+      LeftElement,
+      RightElement,
+    );
 
-  return (
-    <>
-      <div
-        className={cn(
-          border ? ' border-gray-200' : 'border-transparent',
-          'flex items-center w-full border-b gap-3 hover:broder-b hover:border-gray-300 focus-within:hover:border-primary-500 focus-within:border-primary-500 focus-within:border-b hover:transition ease-in-out delay-200',
-        )}
-      >
-        {leftElementSlot}
-        {inputSlot}
-        {rightElementSlot}
-      </div>
-    </>
-  );
-};
+    return (
+      <>
+        <div
+          className={cn(
+            border ? ' border-gray-200' : 'border-transparent',
+            'flex items-center  w-full border-b gap-1 hover:broder-b hover:border-gray-300 focus-within:hover:border-primary-500 focus-within:border-primary-500 focus-within:border-b hover:transition ease-in-out delay-200',
+          )}
+        >
+          {leftElementSlot}
+          {inputSlot}
+          {rightElementSlot}
+        </div>
+      </>
+    );
+  },
+);

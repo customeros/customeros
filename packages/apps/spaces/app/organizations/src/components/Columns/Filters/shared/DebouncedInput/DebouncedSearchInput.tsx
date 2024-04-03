@@ -58,15 +58,18 @@ export const DebouncedSearchInput = memo(
         };
       }, []);
 
+      useEffect(() => {
+        innerRef.current?.focus();
+      }, []);
+
       return (
-        <InputGroup>
+        <InputGroup ref={innerRef}>
           <LeftElement>
             <SearchSm color='gray.500' />
           </LeftElement>
           <Input
-            className='pl-6 border-transparent focus:border-0 hover:border-transparent'
+            className='border-transparent focus:border-0 hover:border-transparent'
             value={value}
-            ref={innerRef}
             variant='flushed'
             autoComplete='off'
             placeholder='Search'
