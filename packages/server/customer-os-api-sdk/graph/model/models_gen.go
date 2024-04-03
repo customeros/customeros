@@ -4104,6 +4104,8 @@ func (e InternalType) MarshalGQL(w io.Writer) {
 type InvoiceStatus string
 
 const (
+	InvoiceStatusInitialized InvoiceStatus = "INITIALIZED"
+	// Deprecated, replaced by INITIALIZED
 	InvoiceStatusDraft InvoiceStatus = "DRAFT"
 	InvoiceStatusDue   InvoiceStatus = "DUE"
 	InvoiceStatusPaid  InvoiceStatus = "PAID"
@@ -4111,6 +4113,7 @@ const (
 )
 
 var AllInvoiceStatus = []InvoiceStatus{
+	InvoiceStatusInitialized,
 	InvoiceStatusDraft,
 	InvoiceStatusDue,
 	InvoiceStatusPaid,
@@ -4119,7 +4122,7 @@ var AllInvoiceStatus = []InvoiceStatus{
 
 func (e InvoiceStatus) IsValid() bool {
 	switch e {
-	case InvoiceStatusDraft, InvoiceStatusDue, InvoiceStatusPaid, InvoiceStatusVoid:
+	case InvoiceStatusInitialized, InvoiceStatusDraft, InvoiceStatusDue, InvoiceStatusPaid, InvoiceStatusVoid:
 		return true
 	}
 	return false

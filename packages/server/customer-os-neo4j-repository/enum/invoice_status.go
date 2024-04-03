@@ -3,18 +3,18 @@ package enum
 type InvoiceStatus string
 
 const (
-	InvoiceStatusNone    InvoiceStatus = ""
-	InvoiceStatusPreview InvoiceStatus = "PREVIEW"
-	InvoiceStatusDraft   InvoiceStatus = "DRAFT"
-	InvoiceStatusDue     InvoiceStatus = "DUE"
-	InvoiceStatusPaid    InvoiceStatus = "PAID"
-	InvoiceStatusVoid    InvoiceStatus = "VOID"
+	InvoiceStatusNone        InvoiceStatus = ""
+	InvoiceStatusPreview     InvoiceStatus = "PREVIEW"
+	InvoiceStatusInitialized InvoiceStatus = "INITIALIZED"
+	InvoiceStatusDue         InvoiceStatus = "DUE"
+	InvoiceStatusPaid        InvoiceStatus = "PAID"
+	InvoiceStatusVoid        InvoiceStatus = "VOID"
 )
 
 var AllInvoiceStatuses = []InvoiceStatus{
 	InvoiceStatusNone,
 	InvoiceStatusPreview,
-	InvoiceStatusDraft,
+	InvoiceStatusInitialized,
 	InvoiceStatusDue,
 	InvoiceStatusPaid,
 	InvoiceStatusVoid,

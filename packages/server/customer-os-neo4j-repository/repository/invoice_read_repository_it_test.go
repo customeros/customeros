@@ -106,7 +106,7 @@ func TestInvoiceReadRepository_GetInvoicesForPayNotifications_StatusIsDraft(t *t
 			Email: "email",
 		},
 		DryRun: false,
-		Status: enum.InvoiceStatusDraft,
+		Status: enum.InvoiceStatusInitialized,
 	})
 
 	result, err := repositories.InvoiceReadRepository.GetInvoicesForPayNotifications(ctx, 60, 1, referenceDate)

@@ -13669,7 +13669,11 @@ input InvoiceUpdateInput {
 }
 
 enum InvoiceStatus {
-    DRAFT
+    INITIALIZED
+    """
+    Deprecated, replaced by INITIALIZED
+    """
+    DRAFT @deprecated(reason: "use INITIALIZED instead")
     DUE
     PAID
     VOID

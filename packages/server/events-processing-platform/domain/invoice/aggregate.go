@@ -380,8 +380,8 @@ func (a *InvoiceAggregate) PermanentlyDeleteDraftInvoice(ctx context.Context, re
 		tracing.TraceErr(span, err)
 		return err
 	}
-	if a.Invoice.Status != neo4jenum.InvoiceStatusDraft.String() {
-		err := errors.New("invoice status is not draft")
+	if a.Invoice.Status != neo4jenum.InvoiceStatusInitialized.String() {
+		err := errors.New("invoice status is not initialized")
 		tracing.TraceErr(span, err)
 		return err
 	}
@@ -490,7 +490,7 @@ func (a *InvoiceAggregate) onInvoiceCreateEvent(evt eventstore.Event) error {
 	a.Invoice.PeriodEndDate = eventData.PeriodEndDate
 	a.Invoice.BillingCycle = eventData.BillingCycle
 	a.Invoice.Note = eventData.Note
-	a.Invoice.Status = neo4jenum.InvoiceStatusDraft.String()
+	a.Invoice.Status = neo4jenum.InvoiceStatusInitialized.String()
 
 	return nil
 }
