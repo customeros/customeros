@@ -8,7 +8,7 @@ require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/google/uuid v1.6.0
 	github.com/h2non/filetype v1.1.3
-	github.com/neo4j/neo4j-go-driver/v5 v5.18.0
+	github.com/neo4j/neo4j-go-driver/v5 v5.19.0
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.3
