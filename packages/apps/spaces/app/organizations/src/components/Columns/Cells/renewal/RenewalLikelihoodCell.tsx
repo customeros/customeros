@@ -1,4 +1,4 @@
-import { Text } from '@ui/typography/Text';
+import { cn } from '@ui/utils/cn';
 import { OpportunityRenewalLikelihood } from '@graphql/types';
 
 import { getLikelihoodColor, getRenewalLikelihoodLabel } from './utils';
@@ -10,14 +10,13 @@ interface RenewalLikelihoodCellProps {
 export const RenewalLikelihoodCell = ({
   value,
 }: RenewalLikelihoodCellProps) => {
+  const colors = value ? getLikelihoodColor(value) : 'text-gray-400';
+
   return (
     <div className='w-full' key={Math.random()}>
-      <Text
-        cursor='default'
-        color={value ? getLikelihoodColor(value) : 'gray.400'}
-      >
+      <span className={cn('cursor-default', colors)}>
         {value ? getRenewalLikelihoodLabel(value) : 'Unknown'}
-      </Text>
+      </span>
     </div>
   );
 };

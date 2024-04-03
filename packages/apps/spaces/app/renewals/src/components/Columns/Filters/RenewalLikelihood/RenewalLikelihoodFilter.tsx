@@ -5,9 +5,7 @@ import { produce } from 'immer';
 import { useRecoilValue } from 'recoil';
 import { Column } from '@tanstack/react-table';
 
-import { VStack } from '@ui/layout/Stack';
-import { Text } from '@ui/typography/Text';
-import { Checkbox, CheckboxGroup } from '@ui/form/Checkbox';
+import { Checkbox } from '@ui/form/Checkbox/Checkbox2';
 import { OpportunityRenewalLikelihood } from '@graphql/types';
 
 import { FilterHeader, useFilterToggle } from '../shared';
@@ -64,38 +62,46 @@ export const RenewalLikelihoodFilter = <T,>({
   }, [filterValue.value.length, filterValue.isActive]);
 
   return (
-    <CheckboxGroup size='md' value={filter.value}>
+    <>
       <FilterHeader
         isChecked={toggle.isActive}
         onToggle={toggle.handleChange}
         onDisplayChange={toggle.handleClick}
       />
-      <VStack spacing={2} align='flex-start'>
+      <div className='flex flex-col space-y-2 items-start'>
         <Checkbox
-          value={OpportunityRenewalLikelihood.HighRenewal}
+          isChecked={filter.value.includes(
+            OpportunityRenewalLikelihood.HighRenewal,
+          )}
           onChange={handleSelect(OpportunityRenewalLikelihood.HighRenewal)}
         >
-          <Text fontSize='sm'>High</Text>
+          <span className='text-sm'>High</span>
         </Checkbox>
         <Checkbox
-          value={OpportunityRenewalLikelihood.MediumRenewal}
+          isChecked={filter.value.includes(
+            OpportunityRenewalLikelihood.MediumRenewal,
+          )}
           onChange={handleSelect(OpportunityRenewalLikelihood.MediumRenewal)}
         >
-          <Text fontSize='sm'>Medium</Text>
+          <span className='text-sm'>Medium</span>
         </Checkbox>
         <Checkbox
-          value={OpportunityRenewalLikelihood.LowRenewal}
+          isChecked={filter.value.includes(
+            OpportunityRenewalLikelihood.LowRenewal,
+          )}
           onChange={handleSelect(OpportunityRenewalLikelihood.LowRenewal)}
         >
-          <Text fontSize='sm'>Low</Text>
+          <span className='text-sm'>Low</span>
         </Checkbox>
         <Checkbox
-          value={OpportunityRenewalLikelihood.ZeroRenewal}
+          isChecked={filter.value.includes(
+            OpportunityRenewalLikelihood.ZeroRenewal,
+          )}
           onChange={handleSelect(OpportunityRenewalLikelihood.ZeroRenewal)}
         >
-          <Text fontSize='sm'>Zero</Text>
+          <span className='text-sm'>Zero</span>
         </Checkbox>
-      </VStack>
-    </CheckboxGroup>
+      </div>
+    </>
   );
 };
