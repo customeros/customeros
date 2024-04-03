@@ -80,6 +80,9 @@ export type GetContractsQuery = {
         invoicingStarted?: any | null;
         region?: string | null;
         dueDays?: any | null;
+        billingEmail?: string | null;
+        billingEmailCC?: Array<string> | null;
+        billingEmailBCC?: Array<string> | null;
       } | null;
       opportunities?: Array<{
         __typename?: 'Opportunity';
@@ -178,6 +181,9 @@ export const GetContractsDocument = `
         invoicingStarted
         region
         dueDays
+        billingEmail
+        billingEmailCC
+        billingEmailBCC
       }
       opportunities {
         id

@@ -31,6 +31,9 @@ query getContract($id: ID!) {
       invoicingStarted
       region
       dueDays
+      billingEmail
+      billingEmailCC
+      billingEmailBCC
     }
   }
 }

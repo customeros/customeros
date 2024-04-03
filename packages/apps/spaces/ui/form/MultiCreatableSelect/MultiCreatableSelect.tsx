@@ -35,13 +35,22 @@ export interface FormSelectProps extends AsyncCreatableProps<any, any, any> {
   withTooltip?: boolean;
   // TODO: discard customStyles in favour of existing chakraStyles
   customStyles?: CustomStylesFn;
+  navigateAfterAddingToContract?: boolean;
   optionAction?: (data: string) => JSX.Element;
   Option?: ComponentType<OptionProps<SelectOption>>;
   MultiValue?: ComponentType<MultiValueProps<SelectOption>>;
 }
 
 export const MultiCreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
-  ({ chakraStyles, components: _components, ...props }, ref) => {
+  (
+    {
+      chakraStyles,
+      components: _components,
+      navigateAfterAddingToContract,
+      ...props
+    },
+    ref,
+  ) => {
     const Control = useCallback(({ children, ...rest }: ControlProps) => {
       return (
         <chakraComponents.Control {...rest}>

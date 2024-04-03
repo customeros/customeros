@@ -348,6 +348,9 @@ export const ContractBillingDetailsModal = ({
               bankAccounts={bankAccountsData?.bankAccounts as BankAccount[]}
               country={state?.values?.country}
               payAutomatically={state?.values?.payAutomatically}
+              to={state?.values?.billingEmail}
+              cc={state?.values?.billingEmailCC}
+              bcc={state?.values?.billingEmailBCC}
             />
             <ModalFooter p='6'>
               <Button
