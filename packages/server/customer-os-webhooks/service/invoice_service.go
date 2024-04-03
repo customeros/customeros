@@ -189,7 +189,7 @@ func (s *invoiceService) syncInvoice(ctx context.Context, syncMutex *sync.Mutex,
 		if invoiceInput.Status != "" {
 			switch strings.ToLower(invoiceInput.Status) {
 			case "draft":
-				invoiceGrpcRequest.Status = invoicepb.InvoiceStatus_INVOICE_STATUS_DRAFT
+				invoiceGrpcRequest.Status = invoicepb.InvoiceStatus_INVOICE_STATUS_INITIALIZED
 			case "paid":
 				invoiceGrpcRequest.Status = invoicepb.InvoiceStatus_INVOICE_STATUS_PAID
 			case "due":

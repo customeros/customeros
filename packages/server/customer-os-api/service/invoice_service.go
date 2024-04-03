@@ -72,8 +72,10 @@ func (s *invoiceService) UpdateInvoice(ctx context.Context, input model.InvoiceU
 	// prepare invoice status
 	if input.Status != nil {
 		switch *input.Status {
+		case model.InvoiceStatusInitialized:
+			invoiceUpdateRequest.Status = invoicepb.InvoiceStatus_INVOICE_STATUS_INITIALIZED
 		case model.InvoiceStatusDraft:
-			invoiceUpdateRequest.Status = invoicepb.InvoiceStatus_INVOICE_STATUS_DRAFT
+			invoiceUpdateRequest.Status = invoicepb.InvoiceStatus_INVOICE_STATUS_INITIALIZED
 		case model.InvoiceStatusDue:
 			invoiceUpdateRequest.Status = invoicepb.InvoiceStatus_INVOICE_STATUS_DUE
 		case model.InvoiceStatusPaid:
