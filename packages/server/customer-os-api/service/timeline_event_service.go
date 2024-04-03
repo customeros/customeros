@@ -52,6 +52,11 @@ func (s *timelineEventService) GetTimelineEventsForContact(ctx context.Context, 
 	for _, v := range types {
 		nodeLabels = append(nodeLabels, entity.NodeLabelsByTimelineEventType[v.String()])
 	}
+	if len(nodeLabels) == 0 {
+		for _, v := range entity.NodeLabelsByTimelineEventType {
+			nodeLabels = append(nodeLabels, v)
+		}
+	}
 
 	var startingDate time.Time
 	if from == nil {
@@ -83,6 +88,11 @@ func (s *timelineEventService) GetTimelineEventsForOrganization(ctx context.Cont
 	for _, v := range types {
 		nodeLabels = append(nodeLabels, entity.NodeLabelsByTimelineEventType[v.String()])
 	}
+	if len(nodeLabels) == 0 {
+		for _, v := range entity.NodeLabelsByTimelineEventType {
+			nodeLabels = append(nodeLabels, v)
+		}
+	}
 
 	var startingDate time.Time
 	if from == nil {
@@ -110,6 +120,11 @@ func (s *timelineEventService) GetTimelineEventsTotalCountForContact(ctx context
 	for _, v := range types {
 		nodeLabels = append(nodeLabels, entity.NodeLabelsByTimelineEventType[v.String()])
 	}
+	if len(nodeLabels) == 0 {
+		for _, v := range entity.NodeLabelsByTimelineEventType {
+			nodeLabels = append(nodeLabels, v)
+		}
+	}
 
 	count, err := s.repositories.Neo4jRepositories.TimelineEventReadRepository.GetTimelineEventsTotalCountForContact(ctx, common.GetContext(ctx).Tenant, contactId, nodeLabels)
 	if err != nil {
@@ -126,8 +141,13 @@ func (s *timelineEventService) GetTimelineEventsTotalCountForOrganization(ctx co
 	span.LogFields(log.String("organizationId", organizationId), log.Object("types", types))
 
 	var nodeLabels = []string{}
-	for _, v := range types {
-		nodeLabels = append(nodeLabels, entity.NodeLabelsByTimelineEventType[v.String()])
+	for _, value := range types {
+		nodeLabels = append(nodeLabels, entity.NodeLabelsByTimelineEventType[value.String()])
+	}
+	if len(nodeLabels) == 0 {
+		for _, v := range entity.NodeLabelsByTimelineEventType {
+			nodeLabels = append(nodeLabels, v)
+		}
 	}
 
 	count, err := s.repositories.Neo4jRepositories.TimelineEventReadRepository.GetTimelineEventsTotalCountForOrganization(ctx, common.GetContext(ctx).Tenant, organizationId, nodeLabels)

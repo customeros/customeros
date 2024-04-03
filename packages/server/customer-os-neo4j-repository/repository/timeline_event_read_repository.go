@@ -16,9 +16,9 @@ import (
 )
 
 var (
-	relationshipsWithOrganization           = []string{"LOGGED", "NOTED", "REPORTED_BY", "SENT_TO", "SENT_BY", "ACTION_ON"}
+	relationshipsWithOrganization           = []string{"LOGGED", "REPORTED_BY", "SENT_TO", "SENT_BY", "ACTION_ON"}
 	relationshipsWithOrganizationProperties = []string{"SENT_TO", "SENT_BY", "PART_OF", "DESCRIBES", "ATTENDED_BY", "CREATED_BY"}
-	relationshipsWithContact                = []string{"HAS_ACTION", "PARTICIPATES", "SENT_TO", "SENT_BY", "PART_OF", "REPORTED_BY", "NOTED", "DESCRIBES", "ATTENDED_BY", "CREATED_BY"}
+	relationshipsWithContact                = []string{"HAS_ACTION", "PARTICIPATES", "SENT_TO", "SENT_BY", "PART_OF", "REPORTED_BY", "DESCRIBES", "ATTENDED_BY", "CREATED_BY"}
 	relationshipsWithContactProperties      = []string{"SENT_TO", "SENT_BY", "PART_OF", "DESCRIBES", "ATTENDED_BY", "CREATED_BY"}
 	relationshipsWithOrganizationContracts  = []string{"ACTION_ON"}
 	relationshipsWithOrganizationInvoices   = []string{"ACTION_ON"}
@@ -471,10 +471,9 @@ func (r *timelineEventReadRepository) GetTimelineEventsTotalCountForOrganization
 		" return a as timelineEvent "+
 		" UNION "+
 		// get all timeline events for the organization invoices
-		" WITH o MATCH (o)-[:HAS_CONTRACT]-(:Contract)-[:HAS_INVOICE]->(n:Invoice), "+
-		" p = (n)--(a:TimelineEvent) "+
+		" WITH o MATCH (o)-[:HAS_CONTRACT]-(:Contract)-[:HAS_INVOICE]->(i:Invoice), "+
+		" p = (i)--(a:TimelineEvent) "+
 		" WHERE all(r IN relationships(p) WHERE type(r) in $relationshipsWithOrganizationInvoices)"+
-		" AND coalesce(a.startedAt, a.createdAt) < datetime($startingDate) "+
 		" AND (a.hide IS NULL OR a.hide = false) "+
 		" %s "+
 		" return a as timelineEvent "+

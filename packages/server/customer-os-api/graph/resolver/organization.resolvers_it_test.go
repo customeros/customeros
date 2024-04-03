@@ -640,7 +640,6 @@ func TestQueryResolver_Organization_WithTimelineEventsTotalCount(t *testing.T) {
 
 	now := time.Now().UTC()
 
-	// prepare contact amd org notes
 	neo4jt.CreateActionForOrganization(ctx, driver, tenantName, organizationId, entity.ActionCreated, now)
 
 	neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId1, "contact note 1", "text/plain", now)
@@ -687,6 +686,7 @@ func TestQueryResolver_Organization_WithTimelineEventsTotalCount(t *testing.T) {
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "PhoneNumber"))
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Action"))
 	require.Equal(t, 9, neo4jtest.GetCountOfNodes(ctx, driver, "TimelineEvent"))
+	require.Equal(t, 0, neo4jtest.GetCountOfNodes(ctx, driver, neo4jutil.NodeLabelContract))
 
 	rawResponse, err := c.RawPost(getQuery("organization/get_organization_with_timeline_events_total_count"),
 		client.Var("organizationId", organizationId))

@@ -26,8 +26,8 @@ const (
 var NodeLabelsByTimelineEventType = map[string]string{
 	//model.TimelineEventTypePageView.String():           neo4jutil.NodeLabelPageView,
 	//model.TimelineEventTypeInteractionSession.String(): neo4jutil.NodeLabelInteractionSession,
-	model.TimelineEventTypeIssue.String(): neo4jutil.NodeLabelIssue,
 	//model.TimelineEventTypeNote.String():               neo4jutil.NodeLabelNote,
+	model.TimelineEventTypeIssue.String():            neo4jutil.NodeLabelIssue,
 	model.TimelineEventTypeInteractionEvent.String(): neo4jutil.NodeLabelInteractionEvent,
 	model.TimelineEventTypeMeeting.String():          neo4jutil.NodeLabelMeeting,
 	model.TimelineEventTypeAction.String():           neo4jutil.NodeLabelAction,
