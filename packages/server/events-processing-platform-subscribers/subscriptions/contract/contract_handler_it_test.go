@@ -50,7 +50,7 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_CreateRenewalOpportunit
 	handler := NewContractHandler(testLogger, testDatabase.Repositories, testMockedGrpcClient)
 
 	// EXECUTE
-	err := handler.UpdateActiveRenewalOpportunityNextCycleDate(ctx, tenantName, contractId)
+	err := handler.UpdateActiveRenewalOpportunityRenewDateAndArr(ctx, tenantName, contractId)
 	require.Nil(t, err)
 
 	// Check
@@ -68,6 +68,7 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_MonthlyContract(t *test
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ServiceStartedAt: serviceStartedAt,
 		RenewalCycle:     neo4jenum.RenewalCycleMonthlyRenewal,
+		AutoRenew:        true,
 	})
 	opportunityId := neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
 		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
@@ -86,6 +87,11 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_MonthlyContract(t *test
 				Id: opportunityId,
 			}, nil
 		},
+		UpdateOpportunity: func(context context.Context, op *opportunitypb.UpdateOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
+			return &opportunitypb.OpportunityIdGrpcResponse{
+				Id: opportunityId,
+			}, nil
+		},
 	}
 	mocked_grpc.SetOpportunityCallbacks(&opportunityCallbacks)
 
@@ -93,7 +99,57 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_MonthlyContract(t *test
 	handler := NewContractHandler(testLogger, testDatabase.Repositories, testMockedGrpcClient)
 
 	// EXECUTE
-	err := handler.UpdateActiveRenewalOpportunityNextCycleDate(ctx, tenantName, contractId)
+	err := handler.UpdateActiveRenewalOpportunityRenewDateAndArr(ctx, tenantName, contractId)
+	require.Nil(t, err)
+
+	// Check
+	require.True(t, calledEventsPlatformToUpdateRenewalOpportunityNextCycleDate)
+}
+
+func TestContractEventHandler_UpdateRenewalNextCycleDate_MonthlyContract_NotAutoRenewed(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// prepare neo4j data
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	serviceStartedAt, _ := utils.UnmarshalDateTime("2021-01-01T00:00:00Z")
+	expectedRenewalDate, _ := utils.UnmarshalDateTime("2021-02-01T00:00:00Z")
+	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
+		ServiceStartedAt: serviceStartedAt,
+		RenewalCycle:     neo4jenum.RenewalCycleMonthlyRenewal,
+		AutoRenew:        false,
+	})
+	opportunityId := neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+	})
+
+	calledEventsPlatformToUpdateRenewalOpportunityNextCycleDate := false
+	opportunityCallbacks := mocked_grpc.MockOpportunityServiceCallbacks{
+		UpdateRenewalOpportunityNextCycleDate: func(context context.Context, op *opportunitypb.UpdateRenewalOpportunityNextCycleDateGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
+			require.Equal(t, tenantName, op.Tenant)
+			require.Equal(t, opportunityId, op.OpportunityId)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, op.AppSource)
+			require.Equal(t, expectedRenewalDate, utils.TimestampProtoToTimePtr(op.RenewedAt))
+			calledEventsPlatformToUpdateRenewalOpportunityNextCycleDate = true
+			return &opportunitypb.OpportunityIdGrpcResponse{
+				Id: opportunityId,
+			}, nil
+		},
+		UpdateOpportunity: func(context context.Context, op *opportunitypb.UpdateOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
+			return &opportunitypb.OpportunityIdGrpcResponse{
+				Id: opportunityId,
+			}, nil
+		},
+	}
+	mocked_grpc.SetOpportunityCallbacks(&opportunityCallbacks)
+
+	// prepare event handler
+	handler := NewContractHandler(testLogger, testDatabase.Repositories, testMockedGrpcClient)
+
+	// EXECUTE
+	err := handler.UpdateActiveRenewalOpportunityRenewDateAndArr(ctx, tenantName, contractId)
 	require.Nil(t, err)
 
 	// Check
@@ -111,6 +167,7 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_QuarterlyContract(t *te
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ServiceStartedAt: &yesterday,
 		RenewalCycle:     neo4jenum.RenewalCycleQuarterlyRenewal,
+		AutoRenew:        true,
 	})
 	opportunityId := neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
 		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
@@ -130,6 +187,11 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_QuarterlyContract(t *te
 				Id: opportunityId,
 			}, nil
 		},
+		UpdateOpportunity: func(context context.Context, op *opportunitypb.UpdateOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
+			return &opportunitypb.OpportunityIdGrpcResponse{
+				Id: opportunityId,
+			}, nil
+		},
 	}
 	mocked_grpc.SetOpportunityCallbacks(&opportunityCallbacks)
 
@@ -137,7 +199,7 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_QuarterlyContract(t *te
 	handler := NewContractHandler(testLogger, testDatabase.Repositories, testMockedGrpcClient)
 
 	// EXECUTE
-	err := handler.UpdateActiveRenewalOpportunityNextCycleDate(ctx, tenantName, contractId)
+	err := handler.UpdateActiveRenewalOpportunityRenewDateAndArr(ctx, tenantName, contractId)
 	require.Nil(t, err)
 
 	// Check
@@ -155,6 +217,7 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_AnnualContract(t *testi
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ServiceStartedAt: serviceStartedAt,
 		RenewalCycle:     neo4jenum.RenewalCycleAnnualRenewal,
+		AutoRenew:        true,
 	})
 	opportunityId := neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
 		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
@@ -174,6 +237,11 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_AnnualContract(t *testi
 				Id: opportunityId,
 			}, nil
 		},
+		UpdateOpportunity: func(context context.Context, op *opportunitypb.UpdateOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
+			return &opportunitypb.OpportunityIdGrpcResponse{
+				Id: opportunityId,
+			}, nil
+		},
 	}
 	mocked_grpc.SetOpportunityCallbacks(&opportunityCallbacks)
 
@@ -181,7 +249,7 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_AnnualContract(t *testi
 	handler := NewContractHandler(testLogger, testDatabase.Repositories, testMockedGrpcClient)
 
 	// EXECUTE
-	err := handler.UpdateActiveRenewalOpportunityNextCycleDate(ctx, tenantName, contractId)
+	err := handler.UpdateActiveRenewalOpportunityRenewDateAndArr(ctx, tenantName, contractId)
 	require.Nil(t, err)
 
 	// Check
@@ -200,6 +268,7 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_MultiAnnualContract(t *
 		ServiceStartedAt: &yesterday,
 		RenewalCycle:     neo4jenum.RenewalCycleAnnualRenewal,
 		RenewalPeriods:   utils.Int64Ptr(10),
+		AutoRenew:        true,
 	})
 	opportunityId := neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
 		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
@@ -220,6 +289,11 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_MultiAnnualContract(t *
 				Id: opportunityId,
 			}, nil
 		},
+		UpdateOpportunity: func(context context.Context, op *opportunitypb.UpdateOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
+			return &opportunitypb.OpportunityIdGrpcResponse{
+				Id: opportunityId,
+			}, nil
+		},
 	}
 	mocked_grpc.SetOpportunityCallbacks(&opportunityCallbacks)
 
@@ -227,7 +301,7 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_MultiAnnualContract(t *
 	handler := NewContractHandler(testLogger, testDatabase.Repositories, testMockedGrpcClient)
 
 	// EXECUTE
-	err := handler.UpdateActiveRenewalOpportunityNextCycleDate(ctx, tenantName, contractId)
+	err := handler.UpdateActiveRenewalOpportunityRenewDateAndArr(ctx, tenantName, contractId)
 	require.Nil(t, err)
 
 	// Check

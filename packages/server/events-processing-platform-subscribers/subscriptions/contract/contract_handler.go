@@ -46,7 +46,7 @@ func (h *contractHandler) UpdateActiveRenewalOpportunityRenewDateAndArr(ctx cont
 		return nil
 	}
 
-	err := h.updateRenewalNextCycleDate(ctx, tenant, contract, renewalOpportunity, span)
+	err := h.updateRenewalOpportunityRenewedAt(ctx, tenant, contract, renewalOpportunity)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil
@@ -57,20 +57,6 @@ func (h *contractHandler) UpdateActiveRenewalOpportunityRenewDateAndArr(ctx cont
 		return nil
 	}
 	return nil
-}
-
-func (h *contractHandler) UpdateActiveRenewalOpportunityNextCycleDate(ctx context.Context, tenant, contractId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractHandler.CalculateNextCycleDate")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.LogFields(log.String("contractId", contractId))
-
-	contract, renewalOpportunity, done := h.assertContractAndRenewalOpportunity(ctx, tenant, contractId)
-	if done {
-		return nil
-	}
-
-	return h.updateRenewalNextCycleDate(ctx, tenant, contract, renewalOpportunity, span)
 }
 
 func (h *contractHandler) UpdateActiveRenewalOpportunityArr(ctx context.Context, tenant, contractId string) error {
@@ -149,7 +135,12 @@ func (h *contractHandler) UpdateActiveRenewalOpportunityLikelihood(ctx context.C
 	return nil
 }
 
-func (h *contractHandler) updateRenewalNextCycleDate(ctx context.Context, tenant string, contractEntity *neo4jentity.ContractEntity, renewalOpportunityEntity *neo4jentity.OpportunityEntity, span opentracing.Span) error {
+func (h *contractHandler) updateRenewalOpportunityRenewedAt(ctx context.Context, tenant string, contractEntity *neo4jentity.ContractEntity, renewalOpportunityEntity *neo4jentity.OpportunityEntity) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractHandler.updateRenewalOpportunityRenewedAt")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
+
+	// IF contract already ended, close the renewal opportunity
 	if contractEntity.IsEnded() && renewalOpportunityEntity != nil {
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
@@ -167,7 +158,27 @@ func (h *contractHandler) updateRenewalNextCycleDate(ctx context.Context, tenant
 		return nil
 	}
 
-	renewedAt := h.calculateNextCycleDate(contractEntity.ServiceStartedAt, contractEntity.RenewalCycle, contractEntity.RenewalPeriods)
+	// Choose starting date for renewal calculation
+	startRenewalDateCalculation := contractEntity.ServiceStartedAt
+	previousClosedWonRenewalDbNode, err := h.repositories.Neo4jRepositories.OpportunityReadRepository.GetPreviousClosedWonRenewalOpportunityForContract(ctx, tenant, contractEntity.Id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil
+	}
+	if previousClosedWonRenewalDbNode != nil {
+		previousRenewalOpportunityEntity := neo4jmapper.MapDbNodeToOpportunityEntity(previousClosedWonRenewalDbNode)
+		if previousRenewalOpportunityEntity.RenewalDetails.RenewedAt != nil {
+			startRenewalDateCalculation = previousRenewalOpportunityEntity.RenewalDetails.RenewedAt
+		}
+	}
+	span.LogFields(log.Object("startRenewalDateCalculation", startRenewalDateCalculation))
+
+	// Calculate until first future date if auto-renew is enabled or renewal is approved
+	calculateUntilFirstFutureDate := contractEntity.AutoRenew
+	span.LogFields(log.Bool("calculateUntilFirstFutureDate", calculateUntilFirstFutureDate))
+
+	renewedAt := h.calculateNextCycleDate(startRenewalDateCalculation, contractEntity.RenewalCycle, contractEntity.RenewalPeriods, calculateUntilFirstFutureDate)
+	span.LogFields(log.Object("result.renewedAt", renewedAt))
 	if !utils.IsEqualTimePtr(renewedAt, renewalOpportunityEntity.RenewalDetails.RenewedAt) {
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
@@ -188,12 +199,12 @@ func (h *contractHandler) updateRenewalNextCycleDate(ctx context.Context, tenant
 	return nil
 }
 
-func (h *contractHandler) calculateNextCycleDate(serviceStartedAt *time.Time, renewalCycle neo4jenum.RenewalCycle, renewalPeriods *int64) *time.Time {
-	if serviceStartedAt == nil {
+func (h *contractHandler) calculateNextCycleDate(from *time.Time, renewalCycle neo4jenum.RenewalCycle, renewalPeriods *int64, calculateUntilFirstFutureDate bool) *time.Time {
+	if from == nil {
 		return nil
 	}
 
-	renewalCycleNext := *serviceStartedAt
+	renewalCycleNext := *from
 	for {
 		switch renewalCycle {
 		case neo4jenum.RenewalCycleMonthlyRenewal:
@@ -205,12 +216,12 @@ func (h *contractHandler) calculateNextCycleDate(serviceStartedAt *time.Time, re
 			if renewalPeriods != nil {
 				renewalYears = int(*renewalPeriods)
 			}
-			renewalCycleNext = renewalCycleNext.AddDate(int(renewalYears), 0, 0)
+			renewalCycleNext = renewalCycleNext.AddDate(renewalYears, 0, 0)
 		default:
 			return nil // invalid
 		}
 
-		if renewalCycleNext.After(utils.Now()) {
+		if renewalCycleNext.After(utils.Now()) || !calculateUntilFirstFutureDate {
 			break
 		}
 	}

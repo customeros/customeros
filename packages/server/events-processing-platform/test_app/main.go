@@ -29,7 +29,7 @@ import (
 const grpcApiKey = "082c1193-a5a2-42fc-87fc-e960e692fffd"
 const appSource = "test_app"
 
-var tenant = "openlineai"
+var tenant = "customerosai"
 var orgId = "ceae019f-d1e3-49b3-87c5-35ebb68a5ff1"
 
 type Clients struct {
@@ -106,7 +106,7 @@ func main() {
 	//testUpdateIssue()
 	//testCreateComment()
 	//testUserLinkWithEmail()
-	//testCreateContract()
+	testCreateContract()
 	//testUpdateContract()
 	//testAddContractService()
 	//testCloseLooseOpportunity()
@@ -636,16 +636,18 @@ func testUserLinkWithEmail() {
 
 func testCreateContract() {
 	userId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
-	organizationId := "85d19ca8-ff7e-460b-b1b3-22c5bbf0efa4"
-	yesterday := utils.Now().AddDate(0, 0, -1)
+	organizationId := "cd00e7a7-4752-4b72-8d94-71fa569f08f1"
+	now := utils.Now()
+	aYearAgo := now.AddDate(-1, 0, 0)
 
 	result, err := clients.ContractClient.CreateContract(context.Background(), &contractpb.CreateContractGrpcRequest{
 		Tenant:           tenant,
 		OrganizationId:   organizationId,
 		LoggedInUserId:   userId,
 		RenewalCycle:     contractpb.RenewalCycle_MONTHLY_RENEWAL,
-		ServiceStartedAt: utils.ConvertTimeToTimestampPtr(&yesterday),
-		Name:             "test contract 1",
+		ServiceStartedAt: utils.ConvertTimeToTimestampPtr(&aYearAgo),
+		Name:             "year ago contract",
+		AutoRenew:        false,
 	})
 	if err != nil {
 		log.Fatalf("Failed: %v", err.Error())
