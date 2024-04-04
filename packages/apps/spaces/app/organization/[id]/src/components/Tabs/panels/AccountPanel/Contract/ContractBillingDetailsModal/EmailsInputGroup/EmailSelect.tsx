@@ -9,6 +9,7 @@ interface EmailParticipantSelect {
   entryType: string;
   fieldName: string;
   autofocus: boolean;
+  placeholder?: string;
 }
 
 export const EmailSelect: FC<EmailParticipantSelect> = ({
@@ -16,6 +17,7 @@ export const EmailSelect: FC<EmailParticipantSelect> = ({
   fieldName,
   formId,
   autofocus = false,
+  placeholder = 'Enter email',
 }) => {
   return (
     <div>
@@ -24,7 +26,7 @@ export const EmailSelect: FC<EmailParticipantSelect> = ({
         autoFocus={autofocus}
         name={fieldName}
         formId={formId}
-        placeholder='Enter email'
+        placeholder={placeholder}
         navigateAfterAddingToPeople={true}
         noOptionsMessage={() => null}
         allowCreateWhileLoading={false}

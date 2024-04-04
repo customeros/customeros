@@ -138,14 +138,24 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
           {rest.children}
         </chakraComponents.MultiValue>
       </MenuButton>
-      <ChakraMenuList maxW={300}>
+      <ChakraMenuList maxW={300} p={2}>
         {rest?.data?.value ? (
           <MenuItem
             display='flex'
+            borderRadius='md'
+            border='1px solid'
+            borderColor='transparent'
+            _hover={{
+              bg: 'gray.50',
+              borderColor: 'gray.100',
+            }}
+            _focus={{
+              borderColor: 'gray.200',
+            }}
             justifyContent='space-between'
             onClick={(e) => {
               e.stopPropagation();
-              copyToClipboard(rest?.data?.value, 'Email copied!');
+              copyToClipboard(rest?.data?.value, 'Email copied');
             }}
           >
             {rest?.data?.value}
@@ -153,6 +163,16 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
           </MenuItem>
         ) : (
           <MenuItem
+            borderRadius='md'
+            border='1px solid'
+            borderColor='transparent'
+            _hover={{
+              bg: 'gray.50',
+              borderColor: 'gray.100',
+            }}
+            _focus={{
+              borderColor: 'gray.200',
+            }}
             onClick={() =>
               isContactInOrg &&
               handleNavigateToContact(isContactInOrg.id, 'email')
@@ -163,6 +183,16 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
         )}
 
         <MenuItem
+          borderRadius='md'
+          border='1px solid'
+          borderColor='transparent'
+          _hover={{
+            bg: 'gray.50',
+            borderColor: 'gray.100',
+          }}
+          _focus={{
+            borderColor: 'gray.200',
+          }}
           onClick={() => {
             const newValue = (
               (rest?.selectProps?.value as Array<SelectOption>) ?? []
@@ -173,7 +203,21 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
           Remove address
         </MenuItem>
         {!isContactInOrg && (
-          <MenuItem onClick={handleAddContact}>Add to people</MenuItem>
+          <MenuItem
+            onClick={handleAddContact}
+            borderRadius='md'
+            border='1px solid'
+            borderColor='transparent'
+            _hover={{
+              bg: 'gray.50',
+              borderColor: 'gray.100',
+            }}
+            _focus={{
+              borderColor: 'gray.200',
+            }}
+          >
+            Add to people
+          </MenuItem>
         )}
       </ChakraMenuList>
     </Menu>

@@ -188,7 +188,7 @@ export const EmailFormMultiCreatableSelect = forwardRef<
             icon={<Copy01 boxSize={3} color='gray.500' />}
             onClick={(e) => {
               e.stopPropagation();
-              copyToClipboard(rest.data.value, 'Email copied!');
+              copyToClipboard(rest.data.value, 'Email copied');
             }}
           />
         )}

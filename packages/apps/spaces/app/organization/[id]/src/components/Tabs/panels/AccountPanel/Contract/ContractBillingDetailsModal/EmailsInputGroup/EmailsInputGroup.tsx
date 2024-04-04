@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
 import { cn } from '@ui/utils/cn';
-import { Box } from '@ui/layout/Box';
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
 import { InputProps } from '@ui/form/Input';
 import { useOutsideClick } from '@ui/utils';
 import { Button } from '@ui/form/Button/Button';
@@ -13,8 +10,12 @@ import { EmailSelect } from '@organization/src/components/Tabs/panels/AccountPan
 interface EmailsInputGroupProps extends InputProps {
   formId: string;
   modal?: boolean;
-  cc: Array<{ label: string; value: string }>;
+  onBlur: () => void;
 
+  onFocus: () => void;
+  onMouseEnter: () => void;
+  onMouseLeave: () => void;
+  cc: Array<{ label: string; value: string }>;
   to?: { label: string; value: string } | null;
   bcc: Array<{ label: string; value: string }>;
 }
@@ -24,6 +25,10 @@ export const EmailsInputGroup = ({
   cc = [],
   bcc = [],
   formId,
+  onMouseEnter,
+  onMouseLeave,
+  onFocus,
+  onBlur,
 }: EmailsInputGroupProps) => {
   const [showCC, setShowCC] = useState(false);
   const [showBCC, setShowBCC] = useState(false);
@@ -39,12 +44,14 @@ export const EmailsInputGroup = ({
       setFocusedItemIndex(false);
       setShowCC(false);
       setShowBCC(false);
+      onBlur();
     },
   });
 
   const handleFocus = (index: number) => {
     setIsFocused(true);
     setFocusedItemIndex(index);
+    onFocus();
   };
 
   useEffect(() => {
@@ -60,8 +67,8 @@ export const EmailsInputGroup = ({
   }, [showBCC]);
 
   return (
-    <div ref={ref}>
-      <div className='flex relative items-center h-8'>
+    <div ref={ref} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
+      <div className='flex relative items-center h-8 mb-3'>
         <p className='text-sm text-gray-500 after:border-t-2 w-fit whitespace-nowrap mr-2'>
           Send invoice
         </p>
@@ -100,20 +107,25 @@ export const EmailsInputGroup = ({
         </div>
       </div>
 
-      <Box width='100%'>
+      <div className='flex-col flex-1 w-full gap-4'>
+        {(isFocused || !to) && (
+          <EmailSelect
+            formId={formId}
+            fieldName='billingEmail'
+            entryType='To'
+            placeholder='To email address'
+            autofocus={focusedItemIndex === 0}
+          />
+        )}
+
         {isFocused && (
           <>
-            <EmailSelect
-              formId={formId}
-              fieldName='billingEmail'
-              entryType='To'
-              autofocus={focusedItemIndex === 0}
-            />
             {(showCC || !!cc.length) && (
               <EmailSelect
                 formId={formId}
                 fieldName='billingEmailCC'
                 entryType='CC'
+                placeholder='CC email addresses'
                 autofocus={focusedItemIndex === 1}
               />
             )}
@@ -121,29 +133,34 @@ export const EmailsInputGroup = ({
               <EmailSelect
                 formId={formId}
                 fieldName='billingEmailBCC'
+                placeholder='BCC email addresses'
                 entryType='BCC'
                 autofocus={focusedItemIndex === 2}
               />
             )}
           </>
         )}
-      </Box>
+      </div>
 
       {!isFocused && (
-        <Flex flexDir='column' flex={1}>
-          <div
-            onClick={() => handleFocus(0)}
-            role='button'
-            aria-label='Click to input participant data'
-            className={cn('overflow-hidden', {
-              'flex-1': !bcc.length,
-            })}
-          >
-            <span className='text-sm font-semibold text-gray-700 mr-1'>To</span>
-            <Text color='gray.500' noOfLines={1}>
-              {to && <>{to.value ? to.value : `⚠️ [invalid email]`}</>}
-            </Text>
-          </div>
+        <div className='flex-col flex-1 gap-4'>
+          {to && (
+            <div
+              onClick={() => handleFocus(0)}
+              role='button'
+              aria-label='Click to input participant data'
+              className={cn('overflow-hidden', {
+                'flex-1': !bcc.length,
+              })}
+            >
+              <span className='text-sm font-semibold text-gray-700 mr-1'>
+                To
+              </span>
+              <p className='text-gray-500 whitespace-nowrap overflow-ellipsis overflow-hidden h-8'>
+                {to && <>{to.value ? to.value : `⚠️ [invalid email]`}</>}
+              </p>
+            </div>
+          )}
 
           {!!cc.length && (
             <div
@@ -157,7 +174,7 @@ export const EmailsInputGroup = ({
               <span className='text-sm font-semibold text-gray-700 mr-1'>
                 CC
               </span>
-              <p className='text-gray-500 whitespace-nowrap overflow-ellipsis overflow-hidden'>
+              <p className='text-gray-500 whitespace-nowrap overflow-ellipsis overflow-hidden h-8'>
                 {[...cc].map((email) => email.value).join(', ')}
               </p>
             </div>
@@ -174,12 +191,12 @@ export const EmailsInputGroup = ({
               <span className='text-sm font-semibold text-gray-700 mr-1'>
                 BCC
               </span>
-              <p className='text-gray-500 whitespace-nowrap overflow-ellipsis overflow-hidden'>
+              <p className='text-gray-500 whitespace-nowrap overflow-ellipsis overflow-hidden h-8'>
                 {[...bcc].map((email) => email.value).join(', ')}
               </p>
             </div>
           )}
-        </Flex>
+        </div>
       )}
     </div>
   );

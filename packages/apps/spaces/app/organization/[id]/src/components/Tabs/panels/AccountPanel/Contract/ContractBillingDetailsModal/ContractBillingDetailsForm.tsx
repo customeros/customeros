@@ -230,26 +230,6 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
 
       {tenantSettingsData?.tenantSettings?.billingEnabled && (
         <>
-          <FormInput
-            label='Send invoice to'
-            isLabelVisible
-            labelProps={{
-              fontSize: 'sm',
-              mb: 0,
-              fontWeight: 'semibold',
-            }}
-            formId={formId}
-            name='invoiceEmail'
-            textOverflow='ellipsis'
-            placeholder='Email'
-            type='email'
-            isInvalid={isEmailValid}
-            onMouseEnter={() => onSetIsBillingDetailsHovered(true)}
-            onMouseLeave={() => onSetIsBillingDetailsHovered(false)}
-            onFocus={() => onSetIsBillingDetailsFocused(true)}
-            onBlur={() => onSetIsBillingDetailsFocused(false)}
-            autoComplete='off'
-          />
           <FormSelect
             label='Billing currency'
             placeholder='Invoice currency'
@@ -264,6 +244,10 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
             to={to}
             cc={cc || []}
             bcc={bcc || []}
+            onMouseEnter={() => onSetIsBillingDetailsHovered(true)}
+            onMouseLeave={() => onSetIsBillingDetailsHovered(false)}
+            onFocus={() => onSetIsBillingDetailsFocused(true)}
+            onBlur={() => onSetIsBillingDetailsFocused(false)}
           />
 
           <Flex flexDirection='column' gap={2}>
