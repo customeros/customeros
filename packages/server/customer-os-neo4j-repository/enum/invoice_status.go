@@ -8,6 +8,7 @@ const (
 	InvoiceStatusDue         InvoiceStatus = "DUE"
 	InvoiceStatusPaid        InvoiceStatus = "PAID"
 	InvoiceStatusVoid        InvoiceStatus = "VOID"
+	InvoiceStatusScheduled   InvoiceStatus = "SCHEDULED"
 )
 
 var AllInvoiceStatuses = []InvoiceStatus{
@@ -16,6 +17,7 @@ var AllInvoiceStatuses = []InvoiceStatus{
 	InvoiceStatusDue,
 	InvoiceStatusPaid,
 	InvoiceStatusVoid,
+	InvoiceStatusScheduled,
 }
 
 func DecodeInvoiceStatus(s string) InvoiceStatus {

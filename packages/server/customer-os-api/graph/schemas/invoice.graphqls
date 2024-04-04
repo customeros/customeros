@@ -123,4 +123,5 @@ enum InvoiceStatus {
     DUE
     PAID
     VOID
+    SCHEDULED
 }

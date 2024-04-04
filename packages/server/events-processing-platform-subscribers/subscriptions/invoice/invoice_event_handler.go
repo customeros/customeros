@@ -585,7 +585,9 @@ func (h *InvoiceEventHandler) callFillInvoice(ctx context.Context, tenant, invoi
 	now := time.Now()
 
 	invoiceStatus := invoicepb.InvoiceStatus_INVOICE_STATUS_DUE
-	if total == 0 {
+	if dryRun && preview {
+		invoiceStatus = invoicepb.InvoiceStatus_INVOICE_STATUS_SCHEDULED
+	} else if total == 0 {
 		invoiceStatus = invoicepb.InvoiceStatus_INVOICE_STATUS_PAID
 	}
 	_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {

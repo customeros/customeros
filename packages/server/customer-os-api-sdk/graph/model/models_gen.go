@@ -4106,10 +4106,11 @@ type InvoiceStatus string
 const (
 	InvoiceStatusInitialized InvoiceStatus = "INITIALIZED"
 	// Deprecated, replaced by INITIALIZED
-	InvoiceStatusDraft InvoiceStatus = "DRAFT"
-	InvoiceStatusDue   InvoiceStatus = "DUE"
-	InvoiceStatusPaid  InvoiceStatus = "PAID"
-	InvoiceStatusVoid  InvoiceStatus = "VOID"
+	InvoiceStatusDraft     InvoiceStatus = "DRAFT"
+	InvoiceStatusDue       InvoiceStatus = "DUE"
+	InvoiceStatusPaid      InvoiceStatus = "PAID"
+	InvoiceStatusVoid      InvoiceStatus = "VOID"
+	InvoiceStatusScheduled InvoiceStatus = "SCHEDULED"
 )
 
 var AllInvoiceStatus = []InvoiceStatus{
@@ -4118,11 +4119,12 @@ var AllInvoiceStatus = []InvoiceStatus{
 	InvoiceStatusDue,
 	InvoiceStatusPaid,
 	InvoiceStatusVoid,
+	InvoiceStatusScheduled,
 }
 
 func (e InvoiceStatus) IsValid() bool {
 	switch e {
-	case InvoiceStatusInitialized, InvoiceStatusDraft, InvoiceStatusDue, InvoiceStatusPaid, InvoiceStatusVoid:
+	case InvoiceStatusInitialized, InvoiceStatusDraft, InvoiceStatusDue, InvoiceStatusPaid, InvoiceStatusVoid, InvoiceStatusScheduled:
 		return true
 	}
 	return false
