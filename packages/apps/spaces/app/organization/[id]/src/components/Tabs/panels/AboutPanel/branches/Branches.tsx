@@ -187,7 +187,7 @@ export const Branches: React.FC<BranchesProps> = ({
   }, [createOrganization]);
 
   return (
-    <Card className='w-full mt-2 p-4'>
+    <Card className='w-full mt-2 p-4 bg-white rounded-md border-1 shadow-lg'>
       <CardHeader className='flex mb-4 items-center justify-between'>
         <h2 className='text-base'>Branches</h2>
         {!isReadOnly && (
