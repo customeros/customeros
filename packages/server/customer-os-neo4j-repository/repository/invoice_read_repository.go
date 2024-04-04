@@ -15,7 +15,7 @@ import (
 
 type InvoiceReadRepository interface {
 	GetInvoiceById(ctx context.Context, tenant, invoiceId string) (*dbtype.Node, error)
-	GetPaginatedInvoices(ctx context.Context, tenant string, skip, limit int, filterCypher string, filterParams map[string]interface{}, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
+	GetPaginatedInvoices(ctx context.Context, tenant string, skip, limit int, filterCypher string, filterParams map[string]interface{}, sorting *utils.Cypher) (*utils.DbNodesWithTotalCount, error)
 	GetInvoicesForPayNotifications(ctx context.Context, minutesFromLastUpdate, lookbackWindow int, referenceTime time.Time) ([]*utils.DbNodeAndTenant, error)
 	CountNonDryRunInvoicesForContract(ctx context.Context, tenant, contractId string) (int, error)
 	GetInvoicesForPaymentLinkRequest(ctx context.Context, minutesFromLastUpdate, lookbackWindow int, referenceTime time.Time) ([]*utils.DbNodeAndTenant, error)
@@ -40,7 +40,7 @@ func (r *invoiceReadRepository) prepareReadSession(ctx context.Context) neo4j.Se
 	return utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 }
 
-func (r *invoiceReadRepository) GetPaginatedInvoices(ctx context.Context, tenant string, skip, limit int, filterCypher string, filterParams map[string]interface{}, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {
+func (r *invoiceReadRepository) GetPaginatedInvoices(ctx context.Context, tenant string, skip, limit int, filterCypher string, filterParams map[string]interface{}, sorting *utils.Cypher) (*utils.DbNodesWithTotalCount, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceReadRepository.GetPaginatedInvoices")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
@@ -86,9 +86,10 @@ func (r *invoiceReadRepository) GetPaginatedInvoices(ctx context.Context, tenant
 
 		cypher := fmt.Sprintf(` MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(c:Contract_%s)-[:HAS_INVOICE]->(i:Invoice_%s) 
 				 %s 
-				 RETURN i 
+				 WITH c, i 
 				 %s 
-				 SKIP $skip LIMIT $limit`, tenant, tenant, tenant, filterCypher, sorting.SortingCypherFragment("i"))
+				 RETURN i
+				 SKIP $skip LIMIT $limit`, tenant, tenant, tenant, filterCypher, *sorting)
 
 		span.LogFields(log.String("cypher", cypher))
 		tracing.LogObjectAsJson(span, "queryParams", queryParams)

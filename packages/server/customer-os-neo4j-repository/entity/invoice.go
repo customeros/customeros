@@ -14,7 +14,7 @@ type InvoiceEntity struct {
 	Currency         enum.Currency `neo4jDb:"property:currency;lookupName:CURRENCY;supportCaseSensitive:false"`
 	PeriodStartDate  time.Time     // Date only
 	PeriodEndDate    time.Time     // Date only
-	DueDate          time.Time     // Date only
+	DueDate          time.Time     `neo4jDb:"property:dueDate;lookupName:DUE_DATE;supportCaseSensitive:false"` // Date only
 	Customer         InvoiceCustomer
 	Provider         InvoiceProvider
 	Amount           float64 `neo4jDb:"property:amount;lookupName:AMOUNT;supportCaseSensitive:false"`
@@ -22,7 +22,7 @@ type InvoiceEntity struct {
 	TotalAmount      float64 `neo4jDb:"property:totalAmount;lookupName:TOTAL_AMOUNT;supportCaseSensitive:false"`
 	RepositoryFileId string
 	BillingCycle     enum.BillingCycle
-	Status           enum.InvoiceStatus
+	Status           enum.InvoiceStatus `neo4jDb:"property:status;lookupName:STATUS;supportCaseSensitive:false"`
 	Note             string
 	PaymentDetails   PaymentDetails
 	OffCycle         bool

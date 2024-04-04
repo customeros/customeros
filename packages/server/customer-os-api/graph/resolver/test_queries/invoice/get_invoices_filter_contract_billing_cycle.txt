@@ -4,7 +4,6 @@ query GetInvoice($page: Int!, $limit: Int!, $contractBillingCycle: Any!) {
                             {filter: {property:"CONTRACT_BILLING_CYCLE" value: $contractBillingCycle operation:IN}}
                           ]
                      }
-              sort:[{by: "NUMBER" direction:ASC }]
   )
   {
       totalPages

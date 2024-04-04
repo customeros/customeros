@@ -4,7 +4,6 @@ type InvoiceStatus string
 
 const (
 	InvoiceStatusNone        InvoiceStatus = ""
-	InvoiceStatusPreview     InvoiceStatus = "PREVIEW"
 	InvoiceStatusInitialized InvoiceStatus = "INITIALIZED"
 	InvoiceStatusDue         InvoiceStatus = "DUE"
 	InvoiceStatusPaid        InvoiceStatus = "PAID"
@@ -13,7 +12,6 @@ const (
 
 var AllInvoiceStatuses = []InvoiceStatus{
 	InvoiceStatusNone,
-	InvoiceStatusPreview,
 	InvoiceStatusInitialized,
 	InvoiceStatusDue,
 	InvoiceStatusPaid,
