@@ -141,7 +141,7 @@ export const EmailsInputGroup = ({
           >
             <span className='text-sm font-semibold text-gray-700 mr-1'>To</span>
             <Text color='gray.500' noOfLines={1}>
-              <>{to?.value ? to.value : `⚠️ [invalid email]`}</>
+              {to && <>{to.value ? to.value : `⚠️ [invalid email]`}</>}
             </Text>
           </div>
 
