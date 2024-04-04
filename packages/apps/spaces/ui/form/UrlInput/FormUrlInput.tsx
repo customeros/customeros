@@ -20,7 +20,5 @@ export const FormUrlInput: React.FC<FormUrlInputProps> = ({
 }) => {
   const { getInputProps } = useField(name, formId);
 
-  const inputProps = getInputProps();
-
-  return <UrlInput {...inputProps} {...props} />;
+  return <UrlInput {...getInputProps()} {...props} />;
 };
