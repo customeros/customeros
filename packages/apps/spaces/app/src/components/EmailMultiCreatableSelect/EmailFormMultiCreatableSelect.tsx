@@ -166,6 +166,7 @@ export const EmailFormMultiCreatableSelect = forwardRef<
       `${rest.data.label} - ${rest.data.value}`;
     const emailOnly =
       !rest?.data?.label && rest?.data?.value && `${rest.data.value}`;
+
     const noEmail = rest?.data?.label && !rest?.data?.value && (
       <Text>
         {rest.data.label} -

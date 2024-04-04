@@ -6,7 +6,6 @@ import React, { useState, useEffect } from 'react';
 import { produce } from 'immer';
 import { useQueryClient } from '@tanstack/react-query';
 import { useDebounce, useDeepCompareEffect } from 'rooks';
-import { validateEmail } from '@settings/components/Tabs/panels/BillingPanel/utils';
 import { useUpdateTenantSettingsMutation } from '@settings/graphql/updateTenantSettings.generated';
 import { useTenantBillingProfilesQuery } from '@settings/graphql/getTenantBillingProfiles.generated';
 import { BillingPanelInvoice } from '@settings/components/Tabs/panels/BillingPanel/BillingPanelInvoice';
@@ -24,6 +23,7 @@ import { Button } from '@ui/form/Button/Button';
 import { IconButton } from '@ui/form/IconButton';
 import { DotsVertical } from '@ui/media/icons/DotsVertical';
 import { SlashOctagon } from '@ui/media/icons/SlashOctagon';
+import { validateEmail } from '@shared/util/emailValidation';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu';
 import {
