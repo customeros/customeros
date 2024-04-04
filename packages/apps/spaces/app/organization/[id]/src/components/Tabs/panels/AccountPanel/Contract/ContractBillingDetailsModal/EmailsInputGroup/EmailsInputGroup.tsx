@@ -4,7 +4,10 @@ import { cn } from '@ui/utils/cn';
 import { InputProps } from '@ui/form/Input';
 import { useOutsideClick } from '@ui/utils';
 import { Button } from '@ui/form/Button/Button';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
+import { SelectOption } from '@shared/types/SelectOptions';
 import { Divider } from '@ui/presentation/Divider/Divider';
+import { validateEmail } from '@shared/util/emailValidation';
 import { EmailSelect } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/EmailsInputGroup/EmailSelect';
 
 interface EmailsInputGroupProps extends InputProps {
@@ -19,6 +22,35 @@ interface EmailsInputGroupProps extends InputProps {
   to?: { label: string; value: string } | null;
   bcc: Array<{ label: string; value: string }>;
 }
+
+const EmailList = ({
+  emailList,
+}: {
+  emailList: Array<SelectOption<string>>;
+}) => {
+  return (
+    <p className='text-gray-500 whitespace-nowrap overflow-ellipsis overflow-hidden h-8'>
+      {[...emailList].map((email, i) => {
+        const validationMessage = validateEmail(email.value);
+
+        return (
+          <React.Fragment key={email.value}>
+            <Tooltip label={validationMessage || ''}>
+              <span
+                className={cn('mr-1', {
+                  'text-warning-700': validateEmail(email.value),
+                })}
+              >
+                {email.value}
+                {i < emailList.length - 1 && ','}
+              </span>
+            </Tooltip>
+          </React.Fragment>
+        );
+      })}
+    </p>
+  );
+};
 
 export const EmailsInputGroup = ({
   to,
@@ -156,9 +188,7 @@ export const EmailsInputGroup = ({
               <span className='text-sm font-semibold text-gray-700 mr-1'>
                 To
               </span>
-              <p className='text-gray-500 whitespace-nowrap overflow-ellipsis overflow-hidden h-8'>
-                {to && <>{to.value ? to.value : `⚠️ [invalid email]`}</>}
-              </p>
+              <EmailList emailList={[to]} />
             </div>
           )}
 
@@ -174,9 +204,7 @@ export const EmailsInputGroup = ({
               <span className='text-sm font-semibold text-gray-700 mr-1'>
                 CC
               </span>
-              <p className='text-gray-500 whitespace-nowrap overflow-ellipsis overflow-hidden h-8'>
-                {[...cc].map((email) => email.value).join(', ')}
-              </p>
+              <EmailList emailList={cc} />
             </div>
           )}
           {!!bcc.length && (
@@ -191,9 +219,7 @@ export const EmailsInputGroup = ({
               <span className='text-sm font-semibold text-gray-700 mr-1'>
                 BCC
               </span>
-              <p className='text-gray-500 whitespace-nowrap overflow-ellipsis overflow-hidden h-8'>
-                {[...bcc].map((email) => email.value).join(', ')}
-              </p>
+              <EmailList emailList={bcc} />
             </div>
           )}
         </div>
