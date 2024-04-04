@@ -4,6 +4,7 @@ import React, { memo, useRef, useState } from 'react';
 import { Icons } from '@ui/media/Icon';
 
 import { Input } from '../Input/Input2';
+import { formatSocialUrl } from './util';
 import { IconButton } from '../IconButton/IconButton';
 
 export interface UrlInputProps
@@ -28,7 +29,8 @@ export const UrlInput = memo(
     const inputRef = useRef<HTMLInputElement>(null);
 
     const href = value?.startsWith('http') ? value : `https://${value}`;
-    const formattedUrl = value; // You need to define how you want to format the URL with Tailwind
+
+    const formattedUrl = formatSocialUrl(value);
 
     const handleFocus = () => {
       setIsFocused(true);
