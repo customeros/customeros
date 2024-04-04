@@ -143,7 +143,8 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
       <Tooltip label={validationMessage ? validationMessage : ''}>
         <Input
           autoFocus
-          className='w-auto inline text-warning-700 h-8 hover:border-transparent focus:border-transparent'
+          className='w-auto inline text-warning-700 h-8'
+          variant='unstyled'
           onBlur={(e) => {
             handleChangeValue(e);
           }}
