@@ -15,11 +15,11 @@ const buttonSize = cva([], {
   variants: {
     size: {
       xs: ['rounded-lg'],
-      sm: ['px-2', 'py-1', 'rounded-lg'],
-      md: ['px-4', 'py-2.5', 'rounded-lg'],
-      lg: ['px-[1.125rem]', 'py-2.5', 'rounded-lg', 'text-base'],
-      xl: ['px-5', 'py-3', 'rounded-lg', 'text-base'],
-      '2xl': ['px-7', 'py-4', 'gap-3', 'rounded-lg', 'text-lg'],
+      sm: ['p-1', 'rounded-lg'],
+      md: ['p-2.5', 'rounded-lg'],
+      lg: ['p-2.5', 'rounded-lg', 'text-base'],
+      xl: ['p-3', 'rounded-lg', 'text-base'],
+      '2xl': ['p-4', 'gap-3', 'rounded-lg', 'text-lg'],
     },
   },
   defaultVariants: {

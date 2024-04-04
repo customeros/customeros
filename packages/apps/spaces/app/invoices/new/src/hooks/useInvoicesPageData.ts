@@ -49,13 +49,22 @@ export const useInvoicesPageData = ({ sorting }: UseRenewalsPageDataProps) => {
     if (preset === '5') {
       return {
         filter: {
-          property: 'PREVIEW',
+          property: 'INVOICE_PREVIEW',
           value: true,
         },
       } as Filter;
+    } else {
+      return {
+        AND: [
+          {
+            filter: {
+              property: 'INVOICE_DRY_RUN',
+              value: false,
+            },
+          },
+        ],
+      } as Filter;
     }
-
-    return undefined;
   }, [searchParams?.toString(), globalCache?.global_Cache?.user.id]);
 
   const sortBy: SortBy | undefined = useMemo(() => {

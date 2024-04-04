@@ -438,7 +438,10 @@ const THeader = forwardRef<HTMLDivElement, GenericProps>(
       <div
         ref={ref}
         {...props}
-        className={twMerge('bg-white border-b border-gray-100 z-50', className)}
+        className={twMerge(
+          'bg-white border-b border-gray-100 z-[1]',
+          className,
+        )}
         style={style}
       >
         {children}
