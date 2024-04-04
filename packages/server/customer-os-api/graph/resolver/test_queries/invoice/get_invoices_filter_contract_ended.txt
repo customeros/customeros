@@ -1,0 +1,22 @@
+query GetInvoice($page: Int!, $limit: Int!, $contractEnded: Any!) {
+  invoices(pagination: {page: $page, limit: $limit}
+              where: {AND:[
+                            {filter: {property:"CONTRACT_ENDED" value: $contractEnded operation:EQ}}
+                          ]
+                     }
+              sort:[{by: "NUMBER" direction:ASC }]
+  )
+  {
+      totalPages
+      totalElements
+      content {
+        metadata {
+            id
+        }
+        invoiceNumber
+        invoiceLineItems {
+            description
+        }
+      }
+  }
+}

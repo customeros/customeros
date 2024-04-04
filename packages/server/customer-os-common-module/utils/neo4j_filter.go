@@ -16,6 +16,7 @@ type LogicalOperator int
 const (
 	C_NONE ComparisonOperator = iota
 	IS_NULL
+	IS_NOT_NULL
 	EQUALS
 	CONTAINS
 	STARTS_WITH
@@ -32,6 +33,8 @@ func (c ComparisonOperator) String() string {
 		return "NONE"
 	case IS_NULL:
 		return "IS_NULL"
+	case IS_NOT_NULL:
+		return "IS_NOT_NULL"
 	case EQUALS:
 		return "EQUALS"
 	case CONTAINS:
@@ -59,6 +62,8 @@ func (c ComparisonOperator) CypherString() string {
 		return ""
 	case IS_NULL:
 		return "is null"
+	case IS_NOT_NULL:
+		return "is not null"
 	case EQUALS:
 		return "="
 	case CONTAINS:
@@ -152,14 +157,30 @@ func CreateStringCypherFilter(propertyName string, searchTerm any, comparator Co
 	return &filter
 }
 
-func CreateCypherFilter(propertyName string, searchTerm any, comparator ComparisonOperator, caseSensitive bool) *CypherFilter {
+func CreateCypherFilter(propertyName string, searchTerm any, comparator ComparisonOperator) *CypherFilter {
 	filter := CypherFilter{}
 	filter.Details = new(CypherFilterItem)
 	filter.Details.NodeProperty = propertyName
 	filter.Details.Value = &searchTerm
 	filter.Details.ComparisonOperator = comparator
-	filter.Details.SupportCaseSensitive = caseSensitive
+	filter.Details.SupportCaseSensitive = false
 	return &filter
+}
+
+func CreateCypherFilterIsNull(propertyName string) *CypherFilter {
+	return CreateCypherFilter(propertyName, "", IS_NULL)
+}
+
+func CreateCypherFilterIsNotNull(propertyName string) *CypherFilter {
+	return CreateCypherFilter(propertyName, "", IS_NOT_NULL)
+}
+
+func CreateCypherFilterIn(propertyName string, arrayValues any) *CypherFilter {
+	return CreateCypherFilter(propertyName, arrayValues, IN)
+}
+
+func CreateCypherFilterEq(propertyName string, value any) *CypherFilter {
+	return CreateCypherFilter(propertyName, value, EQUALS)
 }
 
 func (f *CypherFilter) CypherFilterFragment(nodeAlias string) (Cypher, map[string]any) {
@@ -248,7 +269,7 @@ func (f *CypherFilter) BuildCypherFilterFragmentWithParamName(nodeAlias string, 
 			cypherStr.WriteString("toLower(")
 		}
 
-		if f.Details.ComparisonOperator != IS_NULL {
+		if f.Details.ComparisonOperator != IS_NULL && f.Details.ComparisonOperator != IS_NOT_NULL {
 			f.paramCount++
 			paramSuffix := strconv.Itoa(f.paramCount)
 			cypherStr.WriteString("$" + customParamPrefix + paramSuffix)
