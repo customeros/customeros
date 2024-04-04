@@ -27,6 +27,7 @@ import (
 const (
 	SortContractName               = "CONTRACT_NAME"
 	SearchSortContractBillingCycle = "CONTRACT_BILLING_CYCLE"
+	SearchSortContractEnded        = "CONTRACT_ENDED"
 	SearchInvoiceDryRunDeprecated  = "DRY_RUN"
 	SearchInvoiceDryRun            = "INVOICE_DRY_RUN"
 	SearchSortInvoiceStatus        = "INVOICE_STATUS"
@@ -199,27 +200,34 @@ func (s *invoiceService) GetInvoices(ctx context.Context, organizationId string,
 
 		for _, f := range where.And {
 			if f.Filter.Property == SearchSortContractBillingCycle {
-				contractFilter.Filters = append(contractFilter.Filters, utils.CreateCypherFilter("billingCycle", *f.Filter.Value.ArrayStr, utils.IN, false))
+				contractFilter.Filters = append(contractFilter.Filters, utils.CreateCypherFilterIn("billingCycle", *f.Filter.Value.ArrayStr))
+			}
+			if f.Filter.Property == SearchSortContractEnded {
+				if f.Filter.Value.Bool != nil && *f.Filter.Value.Bool {
+					contractFilter.Filters = append(contractFilter.Filters, utils.CreateCypherFilterIsNotNull("endedAt"))
+				} else {
+					contractFilter.Filters = append(contractFilter.Filters, utils.CreateCypherFilterIsNull("endedAt"))
+				}
 			}
 			if f.Filter.Property == SearchSortInvoiceStatus {
-				invoiceFilter.Filters = append(invoiceFilter.Filters, utils.CreateCypherFilter("status", *f.Filter.Value.ArrayStr, utils.IN, false))
+				invoiceFilter.Filters = append(invoiceFilter.Filters, utils.CreateCypherFilterIn("status", *f.Filter.Value.ArrayStr))
 			}
 			if f.Filter.Property == SearchInvoiceDryRunDeprecated {
-				invoiceFilter.Filters = append(invoiceFilter.Filters, utils.CreateCypherFilter("dryRun", *f.Filter.Value.Bool, utils.EQUALS, false))
+				invoiceFilter.Filters = append(invoiceFilter.Filters, utils.CreateCypherFilterEq("dryRun", *f.Filter.Value.Bool))
 			}
 			if f.Filter.Property == SearchInvoiceDryRun {
-				invoiceFilter.Filters = append(invoiceFilter.Filters, utils.CreateCypherFilter("dryRun", *f.Filter.Value.Bool, utils.EQUALS, false))
+				invoiceFilter.Filters = append(invoiceFilter.Filters, utils.CreateCypherFilterEq("dryRun", *f.Filter.Value.Bool))
 			}
 			if f.Filter.Property == SearchInvoiceNumberDeprecated {
-				invoiceFilter.Filters = append(invoiceFilter.Filters, utils.CreateCypherFilter("number", *f.Filter.Value.Str, utils.EQUALS, false))
+				invoiceFilter.Filters = append(invoiceFilter.Filters, utils.CreateCypherFilterEq("number", *f.Filter.Value.Str))
 			}
 			if f.Filter.Property == SearchInvoiceNumber {
-				invoiceFilter.Filters = append(invoiceFilter.Filters, utils.CreateCypherFilter("number", *f.Filter.Value.Str, utils.EQUALS, false))
+				invoiceFilter.Filters = append(invoiceFilter.Filters, utils.CreateCypherFilterEq("number", *f.Filter.Value.Str))
 			}
 			if f.Filter.Property == SearchInvoiceIssueDate && f.Filter.Value.ArrayTime != nil && len(*f.Filter.Value.ArrayTime) == 2 {
 				times := *f.Filter.Value.ArrayTime
-				invoiceFilter.Filters = append(invoiceFilter.Filters, utils.CreateCypherFilter("createdAt", times[0], utils.GTE, false))
-				invoiceFilter.Filters = append(invoiceFilter.Filters, utils.CreateCypherFilter("createdAt", times[1], utils.LTE, false))
+				invoiceFilter.Filters = append(invoiceFilter.Filters, utils.CreateCypherFilter("createdAt", times[0], utils.GTE))
+				invoiceFilter.Filters = append(invoiceFilter.Filters, utils.CreateCypherFilter("createdAt", times[1], utils.LTE))
 			}
 		}
 
