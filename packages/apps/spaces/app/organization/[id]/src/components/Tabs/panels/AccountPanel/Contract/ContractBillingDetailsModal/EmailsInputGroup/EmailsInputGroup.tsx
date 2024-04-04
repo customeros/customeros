@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
 import { cn } from '@ui/utils/cn';
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
 import { InputProps } from '@ui/form/Input';
 import { useOutsideClick } from '@ui/utils';
 import { Button } from '@ui/form/Button/Button';
@@ -109,7 +107,7 @@ export const EmailsInputGroup = ({
         </div>
       </div>
 
-      <Flex flexDir='column' flex={1} width='100%' gap={4}>
+      <div className='flex-col flex-1 w-full gap-4'>
         {(isFocused || !to) && (
           <EmailSelect
             formId={formId}
@@ -142,10 +140,10 @@ export const EmailsInputGroup = ({
             )}
           </>
         )}
-      </Flex>
+      </div>
 
       {!isFocused && (
-        <Flex flexDir='column' flex={1} gap={4}>
+        <div className='flex-col flex-1 gap-4'>
           {to && (
             <div
               onClick={() => handleFocus(0)}
@@ -158,9 +156,9 @@ export const EmailsInputGroup = ({
               <span className='text-sm font-semibold text-gray-700 mr-1'>
                 To
               </span>
-              <Text color='gray.500' noOfLines={1} minH='8'>
+              <p className='text-gray-500 whitespace-nowrap overflow-ellipsis overflow-hidden h-8'>
                 {to && <>{to.value ? to.value : `⚠️ [invalid email]`}</>}
-              </Text>
+              </p>
             </div>
           )}
 
@@ -198,7 +196,7 @@ export const EmailsInputGroup = ({
               </p>
             </div>
           )}
-        </Flex>
+        </div>
       )}
     </div>
   );
