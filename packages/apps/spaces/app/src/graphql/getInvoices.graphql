@@ -1,51 +1,59 @@
 query getInvoices(
-    $pagination: Pagination!
-    $organizationId: ID
-    $where: Filter,
+  $pagination: Pagination!
+  $organizationId: ID
+  $where: Filter
 ) {
-    invoices(
-        pagination: $pagination
-        organizationId: $organizationId
-        where: $where
-
-    ) {
-        content {
-            metadata {
-                id
-                created
-            }
-            organization {
-                id
-                name
-            }
-            invoiceNumber
-            invoicePeriodStart
-            invoicePeriodEnd
-            due
-            amountDue
-            currency
-            dryRun
-            status
-
-            invoiceLineItems {
-                metadata {
-                    id
-                    created
-                    lastUpdated
-                    source
-                    sourceOfTruth
-                    appSource
-                }
-                quantity
-                subtotal
-                taxDue
-                total
-                price
-                description
-
-            }
+  invoices(
+    pagination: $pagination
+    organizationId: $organizationId
+    where: $where
+  ) {
+    content {
+      metadata {
+        id
+        created
+      }
+      organization {
+        metadata {
+          id
         }
-        totalPages
-        totalElements
+        name
+      }
+      contract {
+        metadata {
+          id
+        }
+        billingDetails {
+          billingCycle
+        }
+        contractEnded
+      }
+      invoiceNumber
+      invoicePeriodStart
+      invoicePeriodEnd
+      due
+      amountDue
+      currency
+      dryRun
+      status
+      invoiceLineItems {
+        metadata {
+          id
+          created
+          lastUpdated
+          source
+          sourceOfTruth
+          appSource
+        }
+        quantity
+        subtotal
+        taxDue
+        total
+        price
+        description
+      }
     }
+    totalPages
+    totalElements
+  }
 }

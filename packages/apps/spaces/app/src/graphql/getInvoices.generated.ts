@@ -47,7 +47,20 @@ export type GetInvoicesQuery = {
       dryRun: boolean;
       status?: Types.InvoiceStatus | null;
       metadata: { __typename?: 'Metadata'; id: string; created: any };
-      organization: { __typename?: 'Organization'; id: string; name: string };
+      organization: {
+        __typename?: 'Organization';
+        name: string;
+        metadata: { __typename?: 'Metadata'; id: string };
+      };
+      contract: {
+        __typename?: 'Contract';
+        contractEnded?: any | null;
+        metadata: { __typename?: 'Metadata'; id: string };
+        billingDetails?: {
+          __typename?: 'BillingDetails';
+          billingCycle?: Types.ContractBillingCycle | null;
+        } | null;
+      };
       invoiceLineItems: Array<{
         __typename?: 'InvoiceLine';
         quantity: number;
@@ -83,8 +96,19 @@ export const GetInvoicesDocument = `
         created
       }
       organization {
-        id
+        metadata {
+          id
+        }
         name
+      }
+      contract {
+        metadata {
+          id
+        }
+        billingDetails {
+          billingCycle
+        }
+        contractEnded
       }
       invoiceNumber
       invoicePeriodStart

@@ -1680,8 +1680,13 @@ export type InvoiceSimulateInput = {
 };
 
 export enum InvoiceStatus {
+  /**
+   * Deprecated, replaced by INITIALIZED
+   * @deprecated use INITIALIZED instead
+   */
   Draft = 'DRAFT',
   Due = 'DUE',
+  Initialized = 'INITIALIZED',
   Paid = 'PAID',
   Void = 'VOID',
 }

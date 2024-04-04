@@ -1,12 +1,13 @@
 import { cva } from 'class-variance-authority';
 
 export const featureIconVariant = cva(
-  ['flex', 'justify-center', 'items-center , rounded-full'],
+  ['flex', 'justify-center', 'items-center', 'rounded-full'],
   {
     variants: {
       colorScheme: {
         primary: [],
         gray: [],
+        grayBlue: [],
         warm: [],
         error: [],
         rose: [],
@@ -31,6 +32,12 @@ export const featureIconVariant = cva(
         colorScheme: 'gray',
         className: [
           'bg-gray-100 ring-gray-50 ring-offset-gray-100 text-gray-500',
+        ],
+      },
+      {
+        colorScheme: 'grayBlue',
+        className: [
+          'bg-grayBlue-100 ring-grayBlue-50 ring-offset-grayBlue-100 text-grayBlue-500',
         ],
       },
       {
