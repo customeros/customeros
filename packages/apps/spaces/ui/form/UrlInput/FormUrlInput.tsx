@@ -11,7 +11,6 @@ interface FormUrlInputProps extends FormInputProps {
   isLabelVisible?: boolean;
   leftElement?: React.ReactNode;
   rightElement?: React.ReactNode;
-  labelProps?: React.LabelHTMLAttributes<HTMLLabelElement>;
 }
 
 export const FormUrlInput: React.FC<FormUrlInputProps> = ({
