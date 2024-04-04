@@ -19,7 +19,7 @@ export const BillingCycleFilterAtom = atom<BillingCycleFilterState>({
 });
 
 export const BillingCycleFilterSelector = selector({
-  key: 'onboarding-filter-selector',
+  key: 'billing-cycle-filter-selector',
   get: ({ get }) => get(BillingCycleFilterAtom),
 });
 

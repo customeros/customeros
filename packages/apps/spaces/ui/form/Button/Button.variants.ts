@@ -2560,13 +2560,14 @@ export const outlineButton = cva(
           'focus:bg-gray-50',
         ],
         grayBlue: [
+          'bg-grayBlue-50',
           'text-grayBlue-700',
           'border',
           'border-solid',
           'border-grayBlue-300',
-          'hover:bg-grayBlue-50',
+          'hover:bg-grayBlue-100',
           'hover:text-grayBlue-700',
-          'focus:bg-grayBlue-50',
+          'focus:bg-grayBlue-100',
         ],
         warm: [
           'bg-warm-50',
