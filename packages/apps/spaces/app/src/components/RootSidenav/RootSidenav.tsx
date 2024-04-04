@@ -55,7 +55,10 @@ export const RootSidenav = () => {
   );
   const { data, isLoading } = useGlobalCacheQuery(client);
   const globalCache = data?.global_Cache;
-  const myViews = tableViewDefsData?.tableViewDefs?.content ?? [];
+  const myViews =
+    tableViewDefsData?.tableViewDefs?.content.filter((c) =>
+      ['1', '2', '3'].includes(c.id),
+    ) ?? [];
 
   const handleItemClick = (path: string) => {
     setLastActivePosition({ ...lastActivePosition, root: path });

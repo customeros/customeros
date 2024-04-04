@@ -19,7 +19,7 @@ export function renderStatusNode(type: InvoiceStatus | null | undefined) {
     //       <TagLabel>Scheduled</TagLabel>
     //     </Tag>
     //   );
-    case InvoiceStatus.Draft:
+    case InvoiceStatus.Initialized:
       return (
         <Tag colorScheme='gray' variant='outline'>
           <TagLeftIcon>

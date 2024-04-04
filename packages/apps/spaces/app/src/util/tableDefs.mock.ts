@@ -389,17 +389,6 @@ export const mockedTableDefs: TableViewDef[] = [
         createdAt: '2021-08-10T14:00:00.000Z',
         updatedAt: '2021-08-10T14:00:00.000Z',
         columnType: {
-          id: '10',
-          name: 'PAYMENT_TERMS',
-          createdAt: '2021-08-10T14:00:00.000Z',
-          updatedAt: '2021-08-10T14:00:00.000Z',
-        },
-      },
-      {
-        id: '11',
-        createdAt: '2021-08-10T14:00:00.000Z',
-        updatedAt: '2021-08-10T14:00:00.000Z',
-        columnType: {
           id: '11',
           name: 'PAYMENT_STATUS',
           createdAt: '2021-08-10T14:00:00.000Z',
