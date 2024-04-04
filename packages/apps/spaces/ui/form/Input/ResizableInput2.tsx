@@ -14,7 +14,7 @@ export const ResizableInput = forwardRef<HTMLInputElement, InputProps>(
         }
       };
       measureWidth();
-    }, [props.value]);
+    }, [props.value, props.defaultValue]);
 
     return (
       <>
@@ -22,7 +22,7 @@ export const ResizableInput = forwardRef<HTMLInputElement, InputProps>(
           ref={spanRef}
           className={`z-[-1] absolute h-0 inline-block invisible`}
         >
-          {props.value}
+          {props.value || props.defaultValue || ''}
         </span>
 
         <Input ref={ref} data-1p-ignore {...props} style={{ width: width }} />

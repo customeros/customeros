@@ -2,7 +2,6 @@
 import React, { FC } from 'react';
 
 import { EmailFormMultiCreatableSelect } from '@shared/components/EmailMultiCreatableSelect';
-import { emailRegex } from '@organization/src/components/Timeline/PastZone/events/email/utils';
 
 interface EmailParticipantSelect {
   formId: string;
@@ -33,7 +32,6 @@ export const EmailSelect: FC<EmailParticipantSelect> = ({
         formatCreateLabel={(input) => {
           return input;
         }}
-        isValidNewOption={(input) => emailRegex.test(input)}
         getOptionLabel={(d) => {
           if (d?.__isNew__) {
             return `${d.label}`;

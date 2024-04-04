@@ -36,6 +36,7 @@ export interface FormSelectProps extends AsyncCreatableProps<any, any, any> {
   // TODO: discard customStyles in favour of existing chakraStyles
   customStyles?: CustomStylesFn;
   navigateAfterAddingToContract?: boolean;
+  removeValue?: (value: SelectOption) => void;
   optionAction?: (data: string) => JSX.Element;
   Option?: ComponentType<OptionProps<SelectOption>>;
   MultiValue?: ComponentType<MultiValueProps<SelectOption>>;

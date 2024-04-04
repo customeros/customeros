@@ -1,5 +1,5 @@
-import React, { FC } from 'react';
 import { useField } from 'react-inverted-form';
+import React, { FC, useState, ReactEventHandler } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 
 import { useLocalStorage } from 'usehooks-ts';
@@ -7,9 +7,13 @@ import { MultiValueProps } from 'chakra-react-select';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { SelectOption } from '@ui/utils';
+import { Input } from '@ui/form/Input/Input2';
+import { Edit03 } from '@ui/media/icons/Edit03';
 import { Copy01 } from '@ui/media/icons/Copy01';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { toastSuccess } from '@ui/presentation/Toast';
 import { chakraComponents } from '@ui/form/SyncSelect';
+import { validateEmail } from '@shared/util/emailValidation';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import { useContactCardMeta } from '@organization/src/state/ContactCardMeta.atom';
@@ -37,6 +41,8 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
   navigateAfterAddingToPeople,
   ...rest
 }) => {
+  const [showEditInput, setEditInput] = useState(false);
+
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
@@ -44,7 +50,7 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
   const organizationId = useParams()?.id as string;
   const [_d, setExpandedCardId] = useContactCardMeta();
   const { getInputProps } = useField(name, formId);
-  const { onChange } = getInputProps();
+  const { onChange, value } = getInputProps();
   const createContact = useCreateContactMutation(client);
   const addContactToOrganization = useAddOrganizationToContactMutation(client, {
     onSuccess: () => invalidateQuery(queryClient, organizationId),
@@ -61,8 +67,10 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
         : rest.data.label?.trim() === (data as SelectOption)?.label?.trim();
     },
   );
+  const validationMessage = validateEmail(rest?.data?.value);
 
-  const isContactWithoutEmail = isContactInOrg && !rest?.data?.value;
+  const isContactWithoutEmail =
+    (isContactInOrg && !rest?.data?.value) || validationMessage;
 
   const handleNavigateToContact = (
     contactId: string,
@@ -117,28 +125,98 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
     );
   };
 
+  if (showEditInput) {
+    const handleChangeValue: ReactEventHandler<HTMLElement> = (event) => {
+      const newValue = value.map((e: SelectOption<string>) =>
+        e.value === rest?.data?.value
+          ? {
+              label: (event?.target as HTMLInputElement)?.value,
+              value: (event?.target as HTMLInputElement)?.value,
+            }
+          : e,
+      );
+      onChange(newValue);
+      setEditInput(false);
+    };
+
+    return (
+      <Tooltip label={validationMessage ? validationMessage : ''}>
+        <Input
+          autoFocus
+          className='w-auto inline text-warning-700 h-8 hover:border-transparent focus:border-transparent'
+          onBlur={(e) => {
+            handleChangeValue(e);
+          }}
+          onKeyDown={(e) => {
+            e.stopPropagation();
+            if (e.key === 'Enter') {
+              handleChangeValue(e);
+            }
+          }}
+          defaultValue={rest?.data?.value}
+        />
+      </Tooltip>
+    );
+  }
+
   return (
     <Menu>
-      <MenuButton
-        sx={{
-          '&[aria-expanded="true"] > span > span': {
-            bg: isContactWithoutEmail
-              ? 'warning.50 !important'
-              : 'primary.50 !important',
-            color: isContactWithoutEmail
-              ? 'warning.700 !important'
-              : 'primary.700 !important',
-            borderColor: isContactWithoutEmail
-              ? 'warning.200 !important'
-              : 'primary.200 !important',
-          },
-        }}
-      >
-        <chakraComponents.MultiValue {...rest}>
-          {rest.children}
-        </chakraComponents.MultiValue>
-      </MenuButton>
+      <Tooltip label={validationMessage ? validationMessage : ''}>
+        <MenuButton
+          onClick={() => {}}
+          sx={{
+            '&[aria-expanded="false"] > span > span': {
+              bg: isContactWithoutEmail
+                ? 'warning.50 !important'
+                : 'gray.50 !important',
+              color: isContactWithoutEmail
+                ? 'warning.700 !important'
+                : 'gray.700 !important',
+              borderColor: isContactWithoutEmail
+                ? 'warning.200 !important'
+                : 'gray.200 !important',
+            },
+            '&[aria-expanded="true"] > span > span': {
+              bg: isContactWithoutEmail
+                ? 'warning.50 !important'
+                : 'primary.50 !important',
+              color: isContactWithoutEmail
+                ? 'warning.700 !important'
+                : 'primary.700 !important',
+              borderColor: isContactWithoutEmail
+                ? 'warning.200 !important'
+                : 'primary.200 !important',
+            },
+          }}
+        >
+          <chakraComponents.MultiValue {...rest}>
+            {rest.children}
+          </chakraComponents.MultiValue>
+        </MenuButton>
+      </Tooltip>
+
       <ChakraMenuList maxW={300} p={2}>
+        <MenuItem
+          display='flex'
+          borderRadius='md'
+          border='1px solid'
+          borderColor='transparent'
+          _hover={{
+            bg: 'gray.50',
+            borderColor: 'gray.100',
+          }}
+          _focus={{
+            borderColor: 'gray.200',
+          }}
+          justifyContent='space-between'
+          onClick={(e) => {
+            e.stopPropagation();
+            setEditInput(true);
+          }}
+        >
+          Edit address
+          <Edit03 boxSize={3} color='gray.500' ml={2} />
+        </MenuItem>
         {rest?.data?.value ? (
           <MenuItem
             display='flex'
