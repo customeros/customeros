@@ -22,11 +22,49 @@ type OpportunityReadRepository interface {
 	GetActiveRenewalOpportunityForContract(ctx context.Context, tenant, contractId string) (*dbtype.Node, error)
 	GetActiveRenewalOpportunitiesForOrganization(ctx context.Context, tenant, organizationId string) ([]*dbtype.Node, error)
 	GetRenewalOpportunitiesForClosingAsLost(ctx context.Context) ([]TenantAndOpportunityId, error)
+	GetPreviousClosedWonRenewalOpportunityForContract(ctx context.Context, tenant, contractId string) (*dbtype.Node, error)
 }
 
 type opportunityReadRepository struct {
 	driver   *neo4j.DriverWithContext
 	database string
+}
+
+func (r *opportunityReadRepository) GetPreviousClosedWonRenewalOpportunityForContract(ctx context.Context, tenant, contractId string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityReadRepository.GetPreviousClosedWonRenewalOpportunityForContract")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.LogFields(log.String("contractId", contractId))
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})-[:HAS_OPPORTUNITY]->(op:RenewalOpportunity)
+				WHERE op.internalStage=$internalStage AND op.renewedAt < $now
+				RETURN op ORDER BY op.renewedAt DESC limit 1`
+	params := map[string]any{
+		"tenant":        tenant,
+		"contractId":    contractId,
+		"now":           utils.Now(),
+		"internalStage": enum.OpportunityInternalStageClosedWon.String(),
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.Run(ctx, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	if result.Next(ctx) {
+		node := result.Record().Values[0].(dbtype.Node)
+		span.LogFields(log.Bool("result.found", true))
+		return &node, nil
+	}
+
+	span.LogFields(log.Bool("result.found", false))
+	return nil, nil
 }
 
 func NewOpportunityReadRepository(driver *neo4j.DriverWithContext, database string) OpportunityReadRepository {

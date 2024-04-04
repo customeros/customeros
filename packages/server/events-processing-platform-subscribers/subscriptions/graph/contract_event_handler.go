@@ -638,7 +638,7 @@ func (h *ContractEventHandler) OnRefreshStatus(ctx context.Context, evt eventsto
 
 	if status == neo4jenum.ContractStatusEnded.String() {
 		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.grpcClients)
-		err = contractHandler.UpdateActiveRenewalOpportunityNextCycleDate(ctx, eventData.Tenant, contractId)
+		err = contractHandler.UpdateActiveRenewalOpportunityRenewDateAndArr(ctx, eventData.Tenant, contractId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("error while updating contract's {%s} renewal date: %s", contractId, err.Error())
