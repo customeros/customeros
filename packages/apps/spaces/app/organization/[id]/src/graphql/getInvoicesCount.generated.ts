@@ -38,7 +38,7 @@ export const GetInvoicesCountDocument = `
   invoices(
     pagination: {page: 0, limit: 0}
     organizationId: $organizationId
-    where: {filter: {property: "DRY_RUN", operation: EQ, value: false}}
+    where: {AND: [{filter: {property: "DRY_RUN", operation: EQ, value: false}}]}
   ) {
     totalElements
   }

@@ -11,11 +11,13 @@ interface InvoicesMeta {
       limit: number;
     };
     where: {
-      filter: {
-        value: boolean;
-        property: string;
-        operation: ComparisonOperator;
-      };
+      AND: Array<{
+        filter: {
+          value: boolean;
+          property: string;
+          operation: ComparisonOperator;
+        };
+      }>;
     };
   };
 }
