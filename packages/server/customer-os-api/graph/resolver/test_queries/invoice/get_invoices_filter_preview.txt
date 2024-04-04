@@ -1,7 +1,7 @@
-query GetInvoice($page: Int!, $limit: Int!, $dryRun: Any!) {
+query GetInvoice($page: Int!, $limit: Int!, $preview: Any!) {
   invoices(pagination: {page: $page, limit: $limit}
               where: {AND:[
-                            {filter: {property:"INVOICE_DRY_RUN" value: $dryRun operation:EQ}}
+                            {filter: {property:"INVOICE_PREVIEW" value: $preview operation:EQ}}
                           ]
                      }
   )

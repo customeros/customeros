@@ -106,43 +106,6 @@ func TestInvoiceResolver_Invoice(t *testing.T) {
 	require.Equal(t, organizationId, invoice.Organization.ID)
 	require.Equal(t, contractId, invoice.Contract.ID)
 }
-
-func TestInvoiceResolver_Invoices_DryRun_True(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organizationId, neo4jentity.ContractEntity{})
-
-	neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
-		DryRun: false,
-	})
-
-	invoice2Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
-		DryRun: true,
-	})
-
-	rawResponse := callGraphQL(t, "invoice/get_invoices_filter_dry_run", map[string]interface{}{
-		"page":   0,
-		"limit":  10,
-		"dryRun": true,
-	})
-	require.Nil(t, rawResponse.Errors)
-
-	var invoiceStruct struct {
-		Invoices model.InvoicesPage
-	}
-
-	err := decode.Decode(rawResponse.Data.(map[string]any), &invoiceStruct)
-	require.Nil(t, err)
-
-	require.Equal(t, int64(1), invoiceStruct.Invoices.TotalElements)
-	require.Equal(t, 1, len(invoiceStruct.Invoices.Content))
-
-	require.Equal(t, invoice2Id, invoiceStruct.Invoices.Content[0].Metadata.ID)
-}
-
 func TestInvoiceResolver_Invoices_Contract_BillingCycle(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
@@ -350,6 +313,114 @@ func TestInvoiceResolver_Invoices_IssueDate(t *testing.T) {
 
 	require.Contains(t, []string{invoice1Id, invoice2Id}, invoiceStruct.Invoices.Content[0].Metadata.ID)
 	require.Contains(t, []string{invoice1Id, invoice2Id}, invoiceStruct.Invoices.Content[1].Metadata.ID)
+}
+
+func TestInvoiceResolver_Invoices_Preview_True(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organizationId, neo4jentity.ContractEntity{})
+
+	neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		Preview: false,
+	})
+
+	invoice2Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		Preview: true,
+	})
+
+	rawResponse := callGraphQL(t, "invoice/get_invoices_filter_preview", map[string]interface{}{
+		"page":    0,
+		"limit":   10,
+		"preview": true,
+	})
+	require.Nil(t, rawResponse.Errors)
+
+	var invoiceStruct struct {
+		Invoices model.InvoicesPage
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &invoiceStruct)
+	require.Nil(t, err)
+
+	require.Equal(t, int64(1), invoiceStruct.Invoices.TotalElements)
+	require.Equal(t, 1, len(invoiceStruct.Invoices.Content))
+
+	require.Equal(t, invoice2Id, invoiceStruct.Invoices.Content[0].Metadata.ID)
+}
+
+func TestInvoiceResolver_Invoices_Preview_False(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organizationId, neo4jentity.ContractEntity{})
+
+	invoice1Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		Preview: false,
+	})
+
+	neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		Preview: true,
+	})
+
+	rawResponse := callGraphQL(t, "invoice/get_invoices_filter_preview", map[string]interface{}{
+		"page":    0,
+		"limit":   10,
+		"preview": false,
+	})
+	require.Nil(t, rawResponse.Errors)
+
+	var invoiceStruct struct {
+		Invoices model.InvoicesPage
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &invoiceStruct)
+	require.Nil(t, err)
+
+	require.Equal(t, int64(1), invoiceStruct.Invoices.TotalElements)
+	require.Equal(t, 1, len(invoiceStruct.Invoices.Content))
+
+	require.Equal(t, invoice1Id, invoiceStruct.Invoices.Content[0].Metadata.ID)
+}
+
+func TestInvoiceResolver_Invoices_DryRun_True(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organizationId, neo4jentity.ContractEntity{})
+
+	neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		DryRun: false,
+	})
+
+	invoice2Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		DryRun: true,
+	})
+
+	rawResponse := callGraphQL(t, "invoice/get_invoices_filter_dry_run", map[string]interface{}{
+		"page":   0,
+		"limit":  10,
+		"dryRun": true,
+	})
+	require.Nil(t, rawResponse.Errors)
+
+	var invoiceStruct struct {
+		Invoices model.InvoicesPage
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &invoiceStruct)
+	require.Nil(t, err)
+
+	require.Equal(t, int64(1), invoiceStruct.Invoices.TotalElements)
+	require.Equal(t, 1, len(invoiceStruct.Invoices.Content))
+
+	require.Equal(t, invoice2Id, invoiceStruct.Invoices.Content[0].Metadata.ID)
 }
 
 func TestInvoiceResolver_Invoices_DryRun_False(t *testing.T) {

@@ -29,6 +29,7 @@ const (
 	SearchSortContractBillingCycle = "CONTRACT_BILLING_CYCLE"
 	SearchSortContractEnded        = "CONTRACT_ENDED"
 	SearchInvoiceDryRunDeprecated  = "DRY_RUN"
+	SearchInvoicePreview           = "INVOICE_PREVIEW"
 	SearchInvoiceDryRun            = "INVOICE_DRY_RUN"
 	SearchSortInvoiceStatus        = "INVOICE_STATUS"
 	SearchInvoiceNumberDeprecated  = "NUMBER"
@@ -235,6 +236,9 @@ func (s *invoiceService) GetInvoices(ctx context.Context, organizationId string,
 			}
 			if f.Filter.Property == SearchInvoiceDryRun {
 				invoiceFilter.Filters = append(invoiceFilter.Filters, utils.CreateCypherFilterEq("dryRun", *f.Filter.Value.Bool))
+			}
+			if f.Filter.Property == SearchInvoicePreview {
+				invoiceFilter.Filters = append(invoiceFilter.Filters, utils.CreateCypherFilterEq("preview", *f.Filter.Value.Bool))
 			}
 			if f.Filter.Property == SearchInvoiceNumberDeprecated {
 				invoiceFilter.Filters = append(invoiceFilter.Filters, utils.CreateCypherFilterEq("number", *f.Filter.Value.Str))
