@@ -13677,6 +13677,7 @@ enum InvoiceStatus {
     DUE
     PAID
     VOID
+    SCHEDULED
 }`, BuiltIn: false},
 	{Name: "../schemas/invoicing_cycle.graphqls", Input: `extend type Mutation {
     invoicingCycle_Create(input: InvoicingCycleInput!): InvoicingCycle!  @hasRole(roles: [ADMIN, USER]) @hasTenant
