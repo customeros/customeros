@@ -1,18 +1,16 @@
+import Link from 'next/link';
 import React, { useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { produce } from 'immer';
 import { InfiniteData, useQueryClient } from '@tanstack/react-query';
 
-import { VStack } from '@ui/layout/Stack';
-import { Link } from '@ui/navigation/Link';
 import { Plus } from '@ui/media/icons/Plus';
 import { Organization } from '@graphql/types';
 import { IconButton } from '@ui/form/IconButton';
-import { Heading } from '@ui/typography/Heading';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { toastError, toastSuccess } from '@ui/presentation/Toast';
-import { Card, CardBody, CardHeader } from '@ui/presentation/Card';
+import { Card, CardHeader, CardContent } from '@ui/presentation/Card/Card';
 import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
 import { useCreateOrganizationMutation } from '@organizations/graphql/createOrganization.generated';
 import {
@@ -189,14 +187,9 @@ export const Branches: React.FC<BranchesProps> = ({
   }, [createOrganization]);
 
   return (
-    <Card size='sm' width='full' mt={2}>
-      <CardHeader
-        display='flex'
-        alignItems='center'
-        justifyContent='space-between'
-        pb={4}
-      >
-        <Heading fontSize={'md'}>Branches</Heading>
+    <Card className='w-full mt-2 p-4'>
+      <CardHeader className='flex mb-4 items-center justify-between'>
+        <h2 className='text-base'>Branches</h2>
         {!isReadOnly && (
           <IconButton
             size='xs'
@@ -207,22 +200,19 @@ export const Branches: React.FC<BranchesProps> = ({
           />
         )}
       </CardHeader>
-      <CardBody as={VStack} pt={0} gap={2} alignItems='baseline'>
+      <CardContent className='flex flex-col p-0 pt-0 gap-2 items-baseline'>
         {branches.map(({ organization }) =>
           organization?.id ? (
             <Link
-              noOfLines={1}
-              wordBreak='keep-all'
+              className='line-clamp-1 break-keep text-gray-700 hover:text-primary-600 no-underline hover:underline'
               href={`/organization/${organization.id}?tab=about`}
               key={`subsidiaries-${organization.id}`}
-              color='gray.700'
-              _hover={{ color: 'primary.600' }}
             >
               {organization?.name || 'Unknown'}
             </Link>
           ) : null,
         )}
-      </CardBody>
+      </CardContent>
     </Card>
   );
 };

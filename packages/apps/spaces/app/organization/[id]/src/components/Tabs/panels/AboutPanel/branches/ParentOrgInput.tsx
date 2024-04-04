@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { produce } from 'immer';
 import { InfiniteData, useQueryClient } from '@tanstack/react-query';
 
-import { Select } from '@ui/form/SyncSelect';
+import { Select } from '@ui/form/Select';
 import { ComparisonOperator } from '@graphql/types';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';

@@ -3,8 +3,8 @@ import { useRef, useMemo, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { User } from '@graphql/types';
+import { Select } from '@ui/form/Select';
 import { User02 } from '@ui/media/icons/User02';
-import { Select } from '@ui/form/SyncSelect/Select';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useGetUsersQuery } from '@shared/graphql/getUsers.generated';

@@ -1,19 +1,20 @@
+import Link from 'next/link';
 import { memo, useRef, useState } from 'react';
 
-import { Flex } from '@ui/layout/Flex';
+import { cn } from '@ui/utils/cn';
 import { Icons } from '@ui/media/Icon';
-import { Link } from '@ui/navigation/Link';
-import { Text } from '@ui/typography/Text';
-import { IconButton } from '@ui/form/IconButton';
-import { Input, InputProps } from '@ui/form/Input';
 import { formatSocialUrl } from '@ui/form/UrlInput/util';
-import { InputGroup, InputLeftElement } from '@ui/form/InputGroup';
+import { Input, InputProps } from '@ui/form/Input/Input2';
+import { IconButton } from '@ui/form/IconButton/IconButton';
+import { InputGroup, LeftElement } from '@ui/form/Input/InputGroup';
 
 import { SocialIcon } from './SocialIcons';
 
 interface SocialInputGroupProps extends InputProps {
+  bg?: string;
   value: string;
   index?: number;
+  isReadOnly?: boolean;
   leftElement?: React.ReactNode;
 }
 
@@ -45,50 +46,73 @@ export const SocialInput = memo(
     };
 
     return (
-      <InputGroup
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
-        {leftElement && (
-          <InputLeftElement w='4'>
-            <SocialIcon url={value}>{leftElement}</SocialIcon>
-          </InputLeftElement>
-        )}
-        <Input
-          pl='30px'
-          value={value}
-          ref={inputRef}
-          onBlur={handleBlur}
-          isReadOnly={isReadOnly}
-          {...rest}
-        />
-
-        {!isFocused && !!value && (
-          <Flex
-            bg={bg ?? 'white'}
-            w='calc(100% - 30px)'
-            left='30px'
-            align='center'
-            position='absolute'
-            h='calc(100% - 1px)'
-          >
-            <Text mr='1' cursor='auto' onClick={handleFocus}>
-              {formattedUrl}
-            </Text>
-            {isHovered && (
-              <IconButton
-                size='sm'
-                as={Link}
-                href={href}
-                target='_blank'
-                variant='ghost'
-                aria-label='social link'
-                icon={<Icons.LinkExternal2 color='gray.500' />}
+      <>
+        <div
+          className='w-full '
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
+          <div className='relative w-full'>
+            <InputGroup
+              className={cn(
+                isHovered
+                  ? 'border-b border-transparent hover:border-transparent hover:border-b-none text-md focus-whithin:hover:border-b focus-whithin:hover:border-transparent focus-whithin:border-b focus-whithin:border-transparent'
+                  : '',
+              )}
+            >
+              {leftElement && (
+                <LeftElement>
+                  <SocialIcon url={value}>{leftElement}</SocialIcon>
+                </LeftElement>
+              )}
+              <Input
+                readOnly={isReadOnly}
+                value={isFocused ? value : ''}
+                ref={inputRef}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+                className={
+                  'border-b border-transparent hover:border-transparent hover:border-b-none text-md focus:hover:border-b focus:hover:border-transparent focus:border-b focus:border-transparent'
+                }
+                {...rest}
               />
+            </InputGroup>
+
+            {!isFocused && !!value && (
+              <div className='w-full h-full'>
+                <div
+                  className={
+                    'w-[calc(100%-30px] items-center absolute h-full top-[6px] left-7  hover:outline-none border-b border-transparent'
+                  }
+                >
+                  <p
+                    className='top-0 text-base cursor-auto'
+                    onClick={handleFocus}
+                  >
+                    {formattedUrl}
+                  </p>
+                  {isHovered && (
+                    <Link
+                      href={href}
+                      target='_blank'
+                      className='cursor-pointer absolute top-[1px] -right-[30px] flex items-center text-gray-500 '
+                    >
+                      <IconButton
+                        size='sm'
+                        className='hover:bg-gray-200'
+                        variant='ghost'
+                        colorScheme='gray'
+                        aria-label='social link'
+                        icon={<Icons.LinkExternal2 color='gray.500' />}
+                      />
+                    </Link>
+                  )}
+                </div>
+              </div>
             )}
-          </Flex>
-        )}
-      </InputGroup>
+          </div>
+        </div>
+      </>
     );
   },
 );

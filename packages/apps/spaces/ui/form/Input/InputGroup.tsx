@@ -11,9 +11,9 @@ import { Input } from './Input2';
 const iconSize = cva([], {
   variants: {
     size: {
-      sm: ['size-3 mb-[8px]'],
-      md: ['size-4 mb-[5px]'],
-      lg: ['size-5 mb-[2px]'],
+      sm: ['size-4'],
+      md: ['size-5'],
+      lg: ['size-6'],
     },
   },
   defaultVariants: {
@@ -35,12 +35,12 @@ export const LeftElement = ({
   const iconProps = {
     ...iconSize,
     ...props,
-    className: twMerge(iconSize({ size }), className),
+    className: twMerge(className, iconSize({ size })),
     children,
   };
 
   return (
-    <div {...props} className={twMerge(className, iconSize({ size }))}>
+    <div {...props} className={twMerge('flex', className, iconSize({ size }))}>
       {isValidElement(children) && cloneElement(children, iconProps)}
     </div>
   );
@@ -55,23 +55,29 @@ export const RightElement = ({
   const iconProps = {
     ...iconSize,
     ...props,
-    className: twMerge(iconSize({ size }), className),
+    className: twMerge(className, iconSize({ size })),
     children,
   };
 
   return (
-    <div {...props} className={twMerge(className, iconSize({ size }))}>
+    <div {...props} className={twMerge('flex', className, iconSize({ size }))}>
       {isValidElement(children) && cloneElement(children, iconProps)}
     </div>
   );
 };
 
-interface InputGroupProps {
+export interface InputGroupProps extends React.HTMLAttributes<HTMLDivElement> {
   border?: boolean;
-  children: React.ReactNode;
+  className?: string;
+  children?: React.ReactNode;
 }
 
-export const InputGroup = ({ border, children }: InputGroupProps) => {
+export const InputGroup = ({
+  border,
+  children,
+  className,
+  ...props
+}: InputGroupProps) => {
   const [inputSlot, leftElementSlot, rightElementSlot] = useSlots(
     children,
     Input,
@@ -82,9 +88,11 @@ export const InputGroup = ({ border, children }: InputGroupProps) => {
   return (
     <>
       <div
+        {...props}
         className={cn(
           border ? ' border-gray-200' : 'border-transparent',
           'flex items-center w-full border-b gap-3 hover:broder-b hover:border-gray-300 focus-within:hover:border-primary-500 focus-within:border-primary-500 focus-within:border-b hover:transition ease-in-out delay-200',
+          className,
         )}
       >
         {leftElementSlot}
