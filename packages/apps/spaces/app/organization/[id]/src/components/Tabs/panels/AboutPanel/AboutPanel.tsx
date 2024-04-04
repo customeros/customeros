@@ -6,11 +6,11 @@ import { useFeatureIsOn } from '@growthbook/growthbook-react';
 import { useDebounce, useWillUnmount, useDeepCompareEffect } from 'rooks';
 
 import { Icons } from '@ui/media/Icon';
-import { Tag } from '@ui/presentation/Tag';
 import { Organization } from '@graphql/types';
 import { FormUrlInput } from '@ui/form/UrlInput';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { FormSelect } from '@ui/form/Select/FormSelect';
+import { Tag, TagLabel } from '@ui/presentation/Tag/Tag';
 import { FormNumberInputGroup } from '@ui/form/InputGroup';
 import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
@@ -175,23 +175,20 @@ export const AboutPanel = () => {
           {data?.organization?.referenceId && (
             <div className='h-full ml-4'>
               <Tooltip label={'Copy ID'} asChild={false}>
-                <Tag
-                  colorScheme='gray'
-                  variant='outline'
-                  color='gray.500'
-                  borderRadius='full'
-                  boxShadow='unset'
-                  border='1px solid'
-                  cursor='pointer'
-                  borderColor='gray.300'
-                  onClick={() => {
-                    copyToClipboard(
-                      data?.organization?.referenceId ?? '',
-                      'Reference ID copied ',
-                    );
-                  }}
-                >
-                  <span>{data?.organization?.referenceId}</span>
+                <Tag>
+                  <TagLabel
+                    className='rounded-full border-1 border-gray-300 cursor-pointer'
+                    colorScheme='gray'
+                    variant='outline'
+                    onClick={() => {
+                      copyToClipboard(
+                        data?.organization?.referenceId ?? '',
+                        'Reference ID copied ',
+                      );
+                    }}
+                  >
+                    <span>{data?.organization?.referenceId}</span>
+                  </TagLabel>
                 </Tag>
               </Tooltip>
             </div>
