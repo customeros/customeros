@@ -4,7 +4,6 @@ query GetInvoice($page: Int!, $limit: Int!, $contractEnded: Any!) {
                             {filter: {property:"CONTRACT_ENDED" value: $contractEnded operation:EQ}}
                           ]
                      }
-              sort:[{by: "NUMBER" direction:ASC }]
   )
   {
       totalPages

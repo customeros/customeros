@@ -1,0 +1,20 @@
+query GetInvoice($page: Int!, $limit: Int!, $sortBy: String!, $sortDirection: SortingDirection!) {
+  invoices(pagination: {page: $page, limit: $limit}
+              sort:[{by: $sortBy , direction:$sortDirection }]
+  )
+  {
+      totalPages
+      totalElements
+      content {
+        metadata {
+          id
+          created
+        }
+        contract {
+            id
+            name
+        }
+        due
+      }
+  }
+}

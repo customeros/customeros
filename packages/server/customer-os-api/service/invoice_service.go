@@ -161,13 +161,31 @@ func (s *invoiceService) GetInvoices(ctx context.Context, organizationId string,
 	if len(sortBy) == 0 {
 		sortBy = []*model.SortBy{
 			{
-				By:        "CREATED_AT",
+				By:        "INVOICE_DUE_DATE",
 				Direction: model.SortingDirectionDesc,
 			},
 		}
 	}
 
-	cypherSort, err := buildSort(sortBy, reflect.TypeOf(neo4jentity.InvoiceEntity{}))
+	cypherSort, err := buildSortMultipleEntities(sortBy, []SortMultipleEntitiesDefinition{
+		{
+			EntityPrefix:  "CONTRACT",
+			EntityMapping: reflect.TypeOf(neo4jentity.ContractEntity{}),
+			EntityAlias:   "c",
+			EntityDefaults: []SortMultipleEntitiesDefinitionDefault{
+				{
+					PropertyName: "ENDED_AT",
+					AscDefault:   "date('2100-01-01')",
+					DescDefault:  "date('1900-01-01')",
+				},
+			},
+		},
+		{
+			EntityPrefix:  "INVOICE",
+			EntityMapping: reflect.TypeOf(neo4jentity.InvoiceEntity{}),
+			EntityAlias:   "i",
+		},
+	})
 	if err != nil {
 		return nil, err
 	}

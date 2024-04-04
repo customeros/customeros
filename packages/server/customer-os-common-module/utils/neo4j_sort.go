@@ -73,7 +73,39 @@ func (s *CypherSort) SortingCypherFragment(nodeAlias string) Cypher {
 	if len(s.sorts) == 0 {
 		return ""
 	}
+
 	var cypherStr strings.Builder
+
+	s.internalSort(&cypherStr, nodeAlias, "")
+
+	return Cypher(cypherStr.String())
+}
+
+func (s *CypherSort) SortingCypherFragmentWithDefaultIfNil(aliases, nodeAlias string, defaultValueIfNil string) Cypher {
+	s.normalize()
+	if len(s.sorts) == 0 {
+		return ""
+	}
+	var cypherStr strings.Builder
+
+	sortingPropertySuffix := ""
+	if defaultValueIfNil != "" {
+		sortingPropertySuffix = "_FOR_SORTING"
+		for i := 0; i < len(s.sorts); i++ {
+			sortingProperty := s.sorts[i]
+
+			propertyWithAlias := nodeAlias + "." + sortingProperty.nodeProperty
+			join := strings.Join([]string{"WITH", aliases, ",", "CASE WHEN", propertyWithAlias, "IS NULL THEN", defaultValueIfNil, "ELSE", propertyWithAlias, "END AS", sortingProperty.nodeProperty + sortingPropertySuffix}, " ")
+			cypherStr.WriteString(join)
+		}
+	}
+
+	s.internalSort(&cypherStr, nodeAlias, sortingPropertySuffix)
+
+	return Cypher(cypherStr.String())
+}
+
+func (s *CypherSort) internalSort(cypherStr *strings.Builder, nodeAlias, propertySuffix string) {
 	cypherStr.WriteString(" ORDER BY ")
 	inCoalesce := false
 	isLast := false
@@ -93,9 +125,12 @@ func (s *CypherSort) SortingCypherFragment(nodeAlias string) Cypher {
 		if toLower {
 			cypherStr.WriteString("toLower(")
 		}
-		cypherStr.WriteString(StringFirstNonEmpty(sortingProperty.nodeAlias, nodeAlias))
-		cypherStr.WriteString(".")
-		cypherStr.WriteString(sortingProperty.nodeProperty)
+
+		if propertySuffix == "" {
+			cypherStr.WriteString(StringFirstNonEmpty(sortingProperty.nodeAlias, nodeAlias))
+			cypherStr.WriteString(".")
+		}
+		cypherStr.WriteString(sortingProperty.nodeProperty + propertySuffix)
 		if toLower {
 			cypherStr.WriteString(")")
 		}
@@ -107,6 +142,4 @@ func (s *CypherSort) SortingCypherFragment(nodeAlias string) Cypher {
 			cypherStr.WriteString(" DESC ")
 		}
 	}
-
-	return Cypher(cypherStr.String())
 }

@@ -4,7 +4,6 @@ query GetInvoice($page: Int!, $limit: Int!, $invoiceStatus: Any!) {
                             {filter: {property:"INVOICE_STATUS" value: $invoiceStatus operation:IN}}
                           ]
                      }
-              sort:[{by: "NUMBER" direction:ASC }]
   )
   {
       totalPages

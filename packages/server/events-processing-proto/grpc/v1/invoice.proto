@@ -9,11 +9,10 @@ option go_package = "api/grpc/v1/invoice;invoice_grpc_service";
 
 enum InvoiceStatus {
   INVOICE_STATUS_NONE = 0;
-  INVOICE_STATUS_PREVIEW = 1;
-  INVOICE_STATUS_INITIALIZED = 2;
-  INVOICE_STATUS_DUE = 3;
-  INVOICE_STATUS_PAID = 4;
-  INVOICE_STATUS_VOID = 5;
+  INVOICE_STATUS_INITIALIZED = 1;
+  INVOICE_STATUS_DUE = 2;
+  INVOICE_STATUS_PAID = 3;
+  INVOICE_STATUS_VOID = 4;
 }
 
 enum InvoiceFieldMask {

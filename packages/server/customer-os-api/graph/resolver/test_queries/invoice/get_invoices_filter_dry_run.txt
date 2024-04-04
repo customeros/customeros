@@ -4,7 +4,6 @@ query GetInvoice($page: Int!, $limit: Int!, $dryRun: Any!) {
                             {filter: {property:"DRY_RUN" value: $dryRun operation:EQ}}
                           ]
                      }
-              sort:[{by: "NUMBER" direction:ASC }]
   )
   {
       totalPages

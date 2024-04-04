@@ -426,6 +426,84 @@ func TestInvoiceResolver_Invoices_Number(t *testing.T) {
 	require.Equal(t, invoice1Id, invoiceStruct.Invoices.Content[0].Metadata.ID)
 }
 
+func TestInvoiceResolver_Invoices_Sorting(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	now := utils.Now()
+	yesterday := now.Add(-24 * time.Hour)
+	tomorrow := now.Add(24 * time.Hour)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	contract1Id := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organizationId, neo4jentity.ContractEntity{
+		EndedAt: &yesterday,
+		Name:    "A",
+	})
+	contract2Id := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organizationId, neo4jentity.ContractEntity{
+		EndedAt: &now,
+		Name:    "B",
+	})
+	contract3Id := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organizationId, neo4jentity.ContractEntity{
+		EndedAt: &tomorrow,
+		Name:    "C",
+	})
+
+	invoice1Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contract1Id, neo4jentity.InvoiceEntity{
+		CreatedAt: yesterday,
+		DueDate:   yesterday,
+		Number:    "1",
+		Status:    neo4jenum.InvoiceStatusDue,
+	})
+	invoice2Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contract2Id, neo4jentity.InvoiceEntity{
+		CreatedAt: now,
+		DueDate:   now,
+		Number:    "2",
+		Status:    neo4jenum.InvoiceStatusPaid,
+	})
+	invoice3Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contract3Id, neo4jentity.InvoiceEntity{
+		CreatedAt: tomorrow,
+		DueDate:   tomorrow,
+		Number:    "3",
+		Status:    neo4jenum.InvoiceStatusVoid,
+	})
+
+	assertInvoicesSorted(t, "CONTRACT_NAME", "ASC", []string{invoice1Id, invoice2Id, invoice3Id})
+	assertInvoicesSorted(t, "CONTRACT_NAME", "DESC", []string{invoice3Id, invoice2Id, invoice1Id})
+	assertInvoicesSorted(t, "CONTRACT_ENDED_AT", "ASC", []string{invoice1Id, invoice2Id, invoice3Id})
+	assertInvoicesSorted(t, "CONTRACT_ENDED_AT", "DESC", []string{invoice3Id, invoice2Id, invoice1Id})
+	assertInvoicesSorted(t, "INVOICE_CREATED_AT", "ASC", []string{invoice1Id, invoice2Id, invoice3Id})
+	assertInvoicesSorted(t, "INVOICE_CREATED_AT", "DESC", []string{invoice3Id, invoice2Id, invoice1Id})
+	assertInvoicesSorted(t, "INVOICE_DUE_DATE", "ASC", []string{invoice1Id, invoice2Id, invoice3Id})
+	assertInvoicesSorted(t, "INVOICE_DUE_DATE", "DESC", []string{invoice3Id, invoice2Id, invoice1Id})
+	assertInvoicesSorted(t, "INVOICE_STATUS", "ASC", []string{invoice1Id, invoice2Id, invoice3Id})
+	assertInvoicesSorted(t, "INVOICE_STATUS", "DESC", []string{invoice3Id, invoice2Id, invoice1Id})
+}
+
+func assertInvoicesSorted(t *testing.T, sortBy string, sortDirection string, expectedInvoiceOrderIds []string) {
+	rawResponse := callGraphQL(t, "invoice/get_invoices_sort", map[string]interface{}{
+		"page":          0,
+		"limit":         10,
+		"sortBy":        sortBy,
+		"sortDirection": sortDirection,
+	})
+	require.Nil(t, rawResponse.Errors)
+
+	var invoiceStruct struct {
+		Invoices model.InvoicesPage
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &invoiceStruct)
+	require.Nil(t, err)
+
+	require.Equal(t, int64(3), invoiceStruct.Invoices.TotalElements)
+	require.Equal(t, 3, len(invoiceStruct.Invoices.Content))
+
+	for i, invoice := range invoiceStruct.Invoices.Content {
+		require.Equal(t, expectedInvoiceOrderIds[i], invoice.Metadata.ID)
+	}
+}
+
 func TestInvoiceResolver_SimulateInvoice(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
