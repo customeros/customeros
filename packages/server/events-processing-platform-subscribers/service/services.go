@@ -13,7 +13,7 @@ type Services struct {
 	FileStoreApiService fsc.FileStoreApiService
 	CommonServices      *commonService.Services
 
-	//notification servionces
+	//notification services
 	//NovuProvider NotificationProvider
 	PostmarkProvider *notifications.PostmarkProvider
 }

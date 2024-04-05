@@ -821,11 +821,13 @@ func TestMutationResolver_InvoicePay(t *testing.T) {
 	calledPayInvoice := false
 
 	invoiceServiceCallbacks := events_platform.MockInvoiceServiceCallbacks{
-		PayInvoice: func(context context.Context, invoice *invoicepb.PayInvoiceRequest) (*invoicepb.InvoiceIdResponse, error) {
+		UpdateInvoice: func(context context.Context, invoice *invoicepb.UpdateInvoiceRequest) (*invoicepb.InvoiceIdResponse, error) {
 			require.Equal(t, tenantName, invoice.Tenant)
 			require.Equal(t, invoiceId, invoice.InvoiceId)
 			require.Equal(t, testUserId, invoice.LoggedInUserId)
-			require.Equal(t, "customer-os-api", invoice.SourceFields.AppSource)
+			require.Equal(t, "customer-os-api", invoice.AppSource)
+			require.Equal(t, invoicepb.InvoiceStatus_INVOICE_STATUS_PAID, invoice.Status)
+			require.ElementsMatch(t, []invoicepb.InvoiceFieldMask{invoicepb.InvoiceFieldMask_INVOICE_FIELD_STATUS}, invoice.FieldsMask)
 
 			calledPayInvoice = true
 			return &invoicepb.InvoiceIdResponse{

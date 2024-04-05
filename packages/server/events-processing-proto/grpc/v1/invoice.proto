@@ -101,14 +101,6 @@ message GenerateInvoicePdfRequest {
   string appSource = 4;
 }
 
-message PayInvoiceRequest {
-  string tenant = 1;
-  string loggedInUserId = 2;
-  string invoiceId = 3;
-  google.protobuf.Timestamp updatedAt = 4;
-  SourceFields sourceFields = 5;
-}
-
 message PdfGeneratedInvoiceRequest {
   string tenant = 1;
   string loggedInUserId = 2;
@@ -193,7 +185,6 @@ service InvoiceGrpcService {
   rpc FillInvoice(FillInvoiceRequest) returns (InvoiceIdResponse);
   rpc GenerateInvoicePdf(GenerateInvoicePdfRequest) returns (InvoiceIdResponse);
   rpc PdfGeneratedInvoice(PdfGeneratedInvoiceRequest) returns (InvoiceIdResponse);
-  rpc PayInvoice(PayInvoiceRequest) returns (InvoiceIdResponse);
   rpc SimulateInvoice(SimulateInvoiceRequest) returns (InvoiceIdResponse);
   rpc UpdateInvoice(UpdateInvoiceRequest) returns (InvoiceIdResponse);
   rpc PayInvoiceNotification(PayInvoiceNotificationRequest) returns (InvoiceIdResponse);
