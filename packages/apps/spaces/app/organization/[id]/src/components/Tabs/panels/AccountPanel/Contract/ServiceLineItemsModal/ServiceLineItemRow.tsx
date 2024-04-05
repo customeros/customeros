@@ -102,7 +102,7 @@ export const ServiceLineItemRow = ({
         },
       }}
     >
-      <ServiceLineItemInputWrapper width='20%' isDeleted={service.isDeleted}>
+      <ServiceLineItemInputWrapper width='15%' isDeleted={service.isDeleted}>
         <Input
           name='name'
           aria-label='Name'
@@ -195,7 +195,7 @@ export const ServiceLineItemRow = ({
           }}
         />
       </ServiceLineItemInputWrapper>
-      <ServiceLineItemInputWrapper width='15%' isDeleted={service.isDeleted}>
+      <ServiceLineItemInputWrapper width='10%' isDeleted={service.isDeleted}>
         {service.type === 'RECURRING' ? (
           <Select
             aria-label='Recurring'
@@ -237,21 +237,22 @@ export const ServiceLineItemRow = ({
         )}
       </ServiceLineItemInputWrapper>
 
-      {/*<ServiceLineItemInputWrapper width='10%' isDeleted={service.isDeleted}>*/}
-      {/*  <NumberInput value={service.quantity}>*/}
-      {/*    <NumberInputField*/}
-      {/*      placeholder='0'*/}
-      {/*      aria-label='VAT'*/}
-      {/*      textDecoration={service.isDeleted ? 'line-through' : 'unset'}*/}
-      {/*      min={0}*/}
-      {/*      name='vatRate'*/}
-      {/*      fontSize='sm'*/}
-      {/*      value={service.vatRate}*/}
-      {/*      p={0}*/}
-      {/*      onChange={(event) => handleChange('vatRate', event.target.value)}*/}
-      {/*    />*/}
-      {/*  </NumberInput>*/}
-      {/*</ServiceLineItemInputWrapper>*/}
+      <ServiceLineItemInputWrapper width='10%' isDeleted={service.isDeleted}>
+        <NumberInput value={`${service.vatRate}%`} display='flex'>
+          <NumberInputField
+            placeholder='0'
+            aria-label='VAT'
+            textDecoration={service.isDeleted ? 'line-through' : 'unset'}
+            min={0}
+            name='vatRate'
+            fontSize='sm'
+            p={0}
+            onChange={(event) => {
+              handleChange('vatRate', event.target.value.replace('%', ''));
+            }}
+          />
+        </NumberInput>
+      </ServiceLineItemInputWrapper>
 
       <ServiceLineItemInputWrapper width='15%' isDeleted={service.isDeleted}>
         <Flex
