@@ -53,10 +53,10 @@ export const OrganizationPanel = ({
       <ScrollAreaRoot>
         <ScrollAreaViewport>
           <div
-            className='flex flex-col space-y-2 justify-stretch w-full h-full px-6 pb-8 transition-opacity duration-300 ease-in-out'
-            style={{
-              opacity: isMounted ? 1 : 0,
-            }}
+            className={cn(
+              isMounted ? 'opacity-100' : 'opacity-0',
+              'flex flex-col space-y-2 justify-stretch w-full h-full px-6 pb-8 transition-opacity duration-300 ease-in-out',
+            )}
           >
             {children}
           </div>

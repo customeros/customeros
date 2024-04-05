@@ -5,7 +5,6 @@ import { Icons } from '@ui/media/Icon';
 import { Button } from '@ui/form/Button/Button';
 import { Skeleton } from '@ui/feedback/Skeleton/Skeleton';
 import { Card, CardHeader } from '@ui/presentation/Card/Card';
-// import { Skeleton, SkeletonCircle } from '@ui/presentation/Skeleton';
 import { OrganizationPanel } from '@organization/src/components/Tabs/panels/OrganizationPanel/OrganizationPanel';
 
 export const PeoplePanelSkeleton = () => {

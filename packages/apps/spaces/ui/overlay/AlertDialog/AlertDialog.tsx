@@ -36,7 +36,7 @@ export const AlertDialogPortal = ({ children }: AlertDialogGenericProps) => {
     </RadixAlertDialog.Portal>
   );
 };
-
+//TODO:remove z-[5000] from overlay after chakra-ui is removed
 export const AlertDialogOverlay = forwardRef<
   ElementRef<typeof RadixAlertDialog.Overlay>,
   AlertDialogGenericProps
