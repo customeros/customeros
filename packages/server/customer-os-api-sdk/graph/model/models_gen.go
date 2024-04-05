@@ -1328,9 +1328,10 @@ type InvoiceUpdateInput struct {
 }
 
 type InvoicesPage struct {
-	Content       []*Invoice `json:"content"`
-	TotalPages    int        `json:"totalPages"`
-	TotalElements int64      `json:"totalElements"`
+	Content        []*Invoice `json:"content"`
+	TotalPages     int        `json:"totalPages"`
+	TotalElements  int64      `json:"totalElements"`
+	TotalAvailable int64      `json:"totalAvailable"`
 }
 
 func (InvoicesPage) IsPages() {}

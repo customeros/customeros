@@ -15,6 +15,7 @@ type InvoicesPage implements Pages {
     content: [Invoice!]!
     totalPages: Int!
     totalElements: Int64!
+    totalAvailable: Int64!
 }
 
 type Invoice implements MetadataInterface {

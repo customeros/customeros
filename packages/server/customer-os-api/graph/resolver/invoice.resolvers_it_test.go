@@ -346,6 +346,7 @@ func TestInvoiceResolver_Invoices_Preview_True(t *testing.T) {
 	require.Nil(t, err)
 
 	require.Equal(t, int64(1), invoiceStruct.Invoices.TotalElements)
+	require.Equal(t, int64(1), invoiceStruct.Invoices.TotalAvailable)
 	require.Equal(t, 1, len(invoiceStruct.Invoices.Content))
 
 	require.Equal(t, invoice2Id, invoiceStruct.Invoices.Content[0].Metadata.ID)
@@ -382,6 +383,7 @@ func TestInvoiceResolver_Invoices_Preview_False(t *testing.T) {
 	require.Nil(t, err)
 
 	require.Equal(t, int64(1), invoiceStruct.Invoices.TotalElements)
+	require.Equal(t, int64(1), invoiceStruct.Invoices.TotalAvailable)
 	require.Equal(t, 1, len(invoiceStruct.Invoices.Content))
 
 	require.Equal(t, invoice1Id, invoiceStruct.Invoices.Content[0].Metadata.ID)
@@ -418,6 +420,7 @@ func TestInvoiceResolver_Invoices_DryRun_True(t *testing.T) {
 	require.Nil(t, err)
 
 	require.Equal(t, int64(1), invoiceStruct.Invoices.TotalElements)
+	require.Equal(t, int64(1), invoiceStruct.Invoices.TotalAvailable)
 	require.Equal(t, 1, len(invoiceStruct.Invoices.Content))
 
 	require.Equal(t, invoice2Id, invoiceStruct.Invoices.Content[0].Metadata.ID)
@@ -454,6 +457,7 @@ func TestInvoiceResolver_Invoices_DryRun_False(t *testing.T) {
 	require.Nil(t, err)
 
 	require.Equal(t, int64(1), invoiceStruct.Invoices.TotalElements)
+	require.Equal(t, int64(1), invoiceStruct.Invoices.TotalAvailable)
 	require.Equal(t, 1, len(invoiceStruct.Invoices.Content))
 
 	require.Equal(t, invoice1Id, invoiceStruct.Invoices.Content[0].Metadata.ID)
@@ -492,9 +496,53 @@ func TestInvoiceResolver_Invoices_Number(t *testing.T) {
 	require.Nil(t, err)
 
 	require.Equal(t, int64(1), invoiceStruct.Invoices.TotalElements)
+	require.Equal(t, int64(3), invoiceStruct.Invoices.TotalAvailable)
 	require.Equal(t, 1, len(invoiceStruct.Invoices.Content))
 
 	require.Equal(t, invoice1Id, invoiceStruct.Invoices.Content[0].Metadata.ID)
+}
+
+func TestInvoiceResolver_Invoices_Exclude_INITIALIZED_Status(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organizationId, neo4jentity.ContractEntity{})
+
+	invoice1Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		Status: neo4jenum.InvoiceStatusInitialized,
+	})
+	neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		Status: neo4jenum.InvoiceStatusDue,
+	})
+	neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		Status: neo4jenum.InvoiceStatusPaid,
+	})
+	neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		Status: neo4jenum.InvoiceStatusVoid,
+	})
+
+	rawResponse := callGraphQL(t, "invoice/get_invoices_exclude_initialized_status", map[string]interface{}{
+		"page":  0,
+		"limit": 10,
+	})
+	require.Nil(t, rawResponse.Errors)
+
+	var invoiceStruct struct {
+		Invoices model.InvoicesPage
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &invoiceStruct)
+	require.Nil(t, err)
+
+	require.Equal(t, int64(3), invoiceStruct.Invoices.TotalElements)
+	require.Equal(t, int64(3), invoiceStruct.Invoices.TotalAvailable)
+	require.Equal(t, 3, len(invoiceStruct.Invoices.Content))
+
+	for _, invoice := range invoiceStruct.Invoices.Content {
+		require.NotEqual(t, invoice1Id, invoice.Metadata.ID)
+	}
 }
 
 func TestInvoiceResolver_Invoices_Sorting(t *testing.T) {
@@ -568,6 +616,7 @@ func assertInvoicesSorted(t *testing.T, sortBy string, sortDirection string, exp
 	require.Nil(t, err)
 
 	require.Equal(t, int64(3), invoiceStruct.Invoices.TotalElements)
+	require.Equal(t, int64(3), invoiceStruct.Invoices.TotalAvailable)
 	require.Equal(t, 3, len(invoiceStruct.Invoices.Content))
 
 	for i, invoice := range invoiceStruct.Invoices.Content {
@@ -692,6 +741,7 @@ func TestInvoiceResolver_InvoicesForOrganization(t *testing.T) {
 	require.Nil(t, err)
 
 	require.Equal(t, int64(2), invoiceStruct.Invoices.TotalElements)
+	require.Equal(t, int64(2), invoiceStruct.Invoices.TotalAvailable)
 	require.Equal(t, 2, len(invoiceStruct.Invoices.Content))
 
 	require.ElementsMatch(t, []string{invoice1Id, invoice2Id}, []string{invoiceStruct.Invoices.Content[0].Metadata.ID, invoiceStruct.Invoices.Content[1].Metadata.ID})

@@ -18,6 +18,7 @@ const (
 	IS_NULL
 	IS_NOT_NULL
 	EQUALS
+	NOT_EQUALS
 	CONTAINS
 	STARTS_WITH
 	LTE
@@ -37,6 +38,8 @@ func (c ComparisonOperator) String() string {
 		return "IS_NOT_NULL"
 	case EQUALS:
 		return "EQUALS"
+	case NOT_EQUALS:
+		return "NOT_EQUALS"
 	case CONTAINS:
 		return "CONTAINS"
 	case STARTS_WITH:
@@ -66,6 +69,8 @@ func (c ComparisonOperator) CypherString() string {
 		return "is not null"
 	case EQUALS:
 		return "="
+	case NOT_EQUALS:
+		return "<>"
 	case CONTAINS:
 		return "CONTAINS"
 	case STARTS_WITH:
@@ -181,6 +186,10 @@ func CreateCypherFilterIn(propertyName string, arrayValues any) *CypherFilter {
 
 func CreateCypherFilterEq(propertyName string, value any) *CypherFilter {
 	return CreateCypherFilter(propertyName, value, EQUALS)
+}
+
+func CreateCypherFilterNotEq(propertyName string, value any) *CypherFilter {
+	return CreateCypherFilter(propertyName, value, NOT_EQUALS)
 }
 
 func (f *CypherFilter) CypherFilterFragment(nodeAlias string) (Cypher, map[string]any) {

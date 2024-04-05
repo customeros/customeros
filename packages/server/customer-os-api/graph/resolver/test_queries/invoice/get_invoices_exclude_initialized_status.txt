@@ -1,7 +1,5 @@
-query GetInvoice($page: Int!, $limit: Int!, $organizationId: ID) {
-  invoices(pagination: {page: $page, limit: $limit}
-              organizationId: $organizationId
-  )
+query GetInvoice($page: Int!, $limit: Int!) {
+  invoices(pagination: {page: $page, limit: $limit})
   {
       totalPages
       totalElements

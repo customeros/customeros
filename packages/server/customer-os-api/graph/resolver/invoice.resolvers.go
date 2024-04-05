@@ -7,6 +7,7 @@ package resolver
 import (
 	"context"
 	"errors"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
@@ -288,10 +289,19 @@ func (r *queryResolver) Invoices(ctx context.Context, pagination *model.Paginati
 		graphql.AddErrorf(ctx, "Failed to get invoices")
 		return nil, err
 	}
+
+	countInvoices, err := r.Services.InvoiceService.CountInvoices(ctx, common.GetTenantFromContext(ctx), utils.IfNotNilString(organizationID), where)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get organizations and contacts data")
+		return nil, nil
+	}
+
 	return &model.InvoicesPage{
-		Content:       mapper.MapEntitiesToInvoices(paginatedResult.Rows.(*neo4jentity.InvoiceEntities)),
-		TotalPages:    paginatedResult.TotalPages,
-		TotalElements: paginatedResult.TotalRows,
+		Content:        mapper.MapEntitiesToInvoices(paginatedResult.Rows.(*neo4jentity.InvoiceEntities)),
+		TotalPages:     paginatedResult.TotalPages,
+		TotalElements:  paginatedResult.TotalRows,
+		TotalAvailable: countInvoices,
 	}, err
 }
 

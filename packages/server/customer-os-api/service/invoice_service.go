@@ -38,6 +38,7 @@ const (
 )
 
 type InvoiceService interface {
+	CountInvoices(ctx context.Context, tenant, organizationId string, where *model.Filter) (int64, error)
 	GetInvoices(ctx context.Context, organizationId string, page, limit int, where *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	GetById(ctx context.Context, invoiceId string) (*neo4jentity.InvoiceEntity, error)
 	GetInvoiceLinesForInvoices(ctx context.Context, invoiceIds []string) (*neo4jentity.InvoiceLineEntities, error)
@@ -142,6 +143,79 @@ type SimulateInvoiceLineData struct {
 	Billed            enum.BilledType
 	Price             float64
 	Quantity          int
+}
+
+func (s *invoiceService) CountInvoices(ctx context.Context, tenant, organizationId string, where *model.Filter) (int64, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.CountInvoices")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("tenant", tenant))
+	span.LogFields(log.Object("where", where))
+
+	organizationFilterCypher, organizationFilterParams := "", make(map[string]interface{})
+	invoiceFilterCypher, invoiceFilterParams := "", make(map[string]interface{})
+
+	organizationFilter := new(utils.CypherFilter)
+	organizationFilter.Negate = false
+	organizationFilter.LogicalOperator = utils.AND
+	organizationFilter.Filters = make([]*utils.CypherFilter, 0)
+
+	invoiceFilter := new(utils.CypherFilter)
+	invoiceFilter.Negate = false
+	invoiceFilter.LogicalOperator = utils.AND
+	invoiceFilter.Filters = make([]*utils.CypherFilter, 0)
+
+	if organizationId != "" {
+		organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateStringCypherFilter("id", organizationId, utils.EQUALS))
+		organizationFilterCypher, organizationFilterParams = organizationFilter.BuildCypherFilterFragmentWithParamName("o", "o_param_")
+	}
+
+	if where != nil {
+
+		for _, f := range where.And {
+			if f.Filter.Property == SearchInvoiceDryRunDeprecated {
+				invoiceFilter.Filters = append(invoiceFilter.Filters, utils.CreateCypherFilterEq("dryRun", *f.Filter.Value.Bool))
+			}
+			if f.Filter.Property == SearchInvoiceDryRun {
+				invoiceFilter.Filters = append(invoiceFilter.Filters, utils.CreateCypherFilterEq("dryRun", *f.Filter.Value.Bool))
+			}
+			if f.Filter.Property == SearchInvoicePreview {
+				invoiceFilter.Filters = append(invoiceFilter.Filters, utils.CreateCypherFilterEq("preview", *f.Filter.Value.Bool))
+			}
+		}
+
+	}
+
+	invoiceFilter.Filters = append(invoiceFilter.Filters, utils.CreateCypherFilterNotEq("status", "INITIALIZED"))
+
+	if len(invoiceFilter.Filters) > 0 {
+		invoiceFilterCypher, invoiceFilterParams = invoiceFilter.BuildCypherFilterFragmentWithParamName("i", "i_param_")
+	}
+
+	filter := ""
+	params := map[string]any{}
+
+	utils.MergeMapToMap(organizationFilterParams, params)
+	utils.MergeMapToMap(invoiceFilterParams, params)
+
+	if organizationFilterCypher != "" {
+		filter += organizationFilterCypher
+	}
+	if invoiceFilterCypher != "" {
+		if filter != "" {
+			filter += " AND "
+		}
+		filter += invoiceFilterCypher
+	}
+
+	if filter != "" {
+		filter = " WHERE " + filter
+	}
+
+	span.LogFields(log.String("filter", filter))
+	span.LogFields(log.Object("params", params))
+
+	return s.repositories.Neo4jRepositories.InvoiceReadRepository.CountInvoices(ctx, tenant, filter, params)
 }
 
 func (s *invoiceService) GetInvoices(ctx context.Context, organizationId string, page, limit int, where *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {
@@ -256,9 +330,11 @@ func (s *invoiceService) GetInvoices(ctx context.Context, organizationId string,
 		if len(contractFilter.Filters) > 0 {
 			contractFilterCypher, contractFilterParams = contractFilter.BuildCypherFilterFragmentWithParamName("c", "c_param_")
 		}
-		if len(invoiceFilter.Filters) > 0 {
-			invoiceFilterCypher, invoiceFilterParams = invoiceFilter.BuildCypherFilterFragmentWithParamName("i", "i_param_")
-		}
+	}
+
+	invoiceFilter.Filters = append(invoiceFilter.Filters, utils.CreateCypherFilterNotEq("status", "INITIALIZED"))
+	if len(invoiceFilter.Filters) > 0 {
+		invoiceFilterCypher, invoiceFilterParams = invoiceFilter.BuildCypherFilterFragmentWithParamName("i", "i_param_")
 	}
 
 	filter := ""
