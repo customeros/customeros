@@ -346,6 +346,7 @@ func TestInvoiceResolver_Invoices_Preview_True(t *testing.T) {
 	require.Nil(t, err)
 
 	require.Equal(t, int64(1), invoiceStruct.Invoices.TotalElements)
+	require.Equal(t, int64(1), invoiceStruct.Invoices.TotalAvailable)
 	require.Equal(t, 1, len(invoiceStruct.Invoices.Content))
 
 	require.Equal(t, invoice2Id, invoiceStruct.Invoices.Content[0].Metadata.ID)
@@ -382,6 +383,7 @@ func TestInvoiceResolver_Invoices_Preview_False(t *testing.T) {
 	require.Nil(t, err)
 
 	require.Equal(t, int64(1), invoiceStruct.Invoices.TotalElements)
+	require.Equal(t, int64(1), invoiceStruct.Invoices.TotalAvailable)
 	require.Equal(t, 1, len(invoiceStruct.Invoices.Content))
 
 	require.Equal(t, invoice1Id, invoiceStruct.Invoices.Content[0].Metadata.ID)
@@ -418,6 +420,7 @@ func TestInvoiceResolver_Invoices_DryRun_True(t *testing.T) {
 	require.Nil(t, err)
 
 	require.Equal(t, int64(1), invoiceStruct.Invoices.TotalElements)
+	require.Equal(t, int64(1), invoiceStruct.Invoices.TotalAvailable)
 	require.Equal(t, 1, len(invoiceStruct.Invoices.Content))
 
 	require.Equal(t, invoice2Id, invoiceStruct.Invoices.Content[0].Metadata.ID)
@@ -454,6 +457,7 @@ func TestInvoiceResolver_Invoices_DryRun_False(t *testing.T) {
 	require.Nil(t, err)
 
 	require.Equal(t, int64(1), invoiceStruct.Invoices.TotalElements)
+	require.Equal(t, int64(1), invoiceStruct.Invoices.TotalAvailable)
 	require.Equal(t, 1, len(invoiceStruct.Invoices.Content))
 
 	require.Equal(t, invoice1Id, invoiceStruct.Invoices.Content[0].Metadata.ID)
@@ -492,6 +496,7 @@ func TestInvoiceResolver_Invoices_Number(t *testing.T) {
 	require.Nil(t, err)
 
 	require.Equal(t, int64(1), invoiceStruct.Invoices.TotalElements)
+	require.Equal(t, int64(3), invoiceStruct.Invoices.TotalAvailable)
 	require.Equal(t, 1, len(invoiceStruct.Invoices.Content))
 
 	require.Equal(t, invoice1Id, invoiceStruct.Invoices.Content[0].Metadata.ID)
@@ -568,6 +573,7 @@ func assertInvoicesSorted(t *testing.T, sortBy string, sortDirection string, exp
 	require.Nil(t, err)
 
 	require.Equal(t, int64(3), invoiceStruct.Invoices.TotalElements)
+	require.Equal(t, int64(3), invoiceStruct.Invoices.TotalAvailable)
 	require.Equal(t, 3, len(invoiceStruct.Invoices.Content))
 
 	for i, invoice := range invoiceStruct.Invoices.Content {
@@ -692,6 +698,7 @@ func TestInvoiceResolver_InvoicesForOrganization(t *testing.T) {
 	require.Nil(t, err)
 
 	require.Equal(t, int64(2), invoiceStruct.Invoices.TotalElements)
+	require.Equal(t, int64(2), invoiceStruct.Invoices.TotalAvailable)
 	require.Equal(t, 2, len(invoiceStruct.Invoices.Content))
 
 	require.ElementsMatch(t, []string{invoice1Id, invoice2Id}, []string{invoiceStruct.Invoices.Content[0].Metadata.ID, invoiceStruct.Invoices.Content[1].Metadata.ID})

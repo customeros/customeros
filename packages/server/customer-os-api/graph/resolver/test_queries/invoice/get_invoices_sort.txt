@@ -5,6 +5,7 @@ query GetInvoice($page: Int!, $limit: Int!, $sortBy: String!, $sortDirection: So
   {
       totalPages
       totalElements
+      totalAvailable
       content {
         metadata {
           id

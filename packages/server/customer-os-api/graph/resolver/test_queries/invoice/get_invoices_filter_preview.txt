@@ -8,6 +8,7 @@ query GetInvoice($page: Int!, $limit: Int!, $preview: Any!) {
   {
       totalPages
       totalElements
+      totalAvailable
       content {
         metadata {
             id
