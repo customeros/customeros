@@ -634,7 +634,7 @@ func testCreateContract() {
 		Tenant:           tenant,
 		OrganizationId:   organizationId,
 		LoggedInUserId:   userId,
-		RenewalCycle:     contractpb.RenewalCycle_MONTHLY_RENEWAL,
+		LengthInMonths:   int64(1),
 		ServiceStartedAt: utils.ConvertTimeToTimestampPtr(&yesterday),
 		Name:             "test contract 1",
 	})
