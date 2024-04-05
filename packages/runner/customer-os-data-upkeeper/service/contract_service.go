@@ -240,21 +240,11 @@ func (s *contractService) ResyncContract(ctx context.Context, tenant, contractId
 		EndedAt:            utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(props, "endedAt")),
 		Currency:           utils.GetStringPropOrEmpty(props, "currency"),
 		InvoicingStartDate: utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(props, "invoicingStartDate")),
+		LengthInMonths:     utils.GetInt64PropOrZero(props, "lengthInMonths"),
 		SourceFields: &commonpb.SourceFields{
 			Source:    utils.GetStringPropOrEmpty(props, "sourceOfTruth"),
 			AppSource: constants.AppSourceDataUpkeeper,
 		},
-	}
-
-	switch utils.GetStringPropOrEmpty(props, "renewalCycle") {
-	case neo4jenum.RenewalCycleMonthlyRenewal.String():
-		request.RenewalCycle = contractpb.RenewalCycle_MONTHLY_RENEWAL
-	case neo4jenum.RenewalCycleQuarterlyRenewal.String():
-		request.RenewalCycle = contractpb.RenewalCycle_QUARTERLY_RENEWAL
-	case neo4jenum.RenewalCycleAnnualRenewal.String():
-		request.RenewalCycle = contractpb.RenewalCycle_ANNUALLY_RENEWAL
-	default:
-		request.RenewalCycle = contractpb.RenewalCycle_NONE
 	}
 
 	switch utils.GetStringPropOrEmpty(props, "billingCycle") {
