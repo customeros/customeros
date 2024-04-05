@@ -45,7 +45,7 @@ export const AlertDialogOverlay = forwardRef<
     <RadixAlertDialog.Overlay
       ref={ref}
       className={twMerge(
-        'z-[5000] backdrop-brightness-[.55] data-[state=open]:animate-overlayShow fixed inset-0 backdrop-brightness-50"',
+        'z-[5000] backdrop-brightness-[.55] data-[state=open]:animate-overlayShow fixed inset-0',
         className,
       )}
     >
@@ -63,7 +63,7 @@ export const AlertDialogContent = forwardRef<
       ref={ref}
       {...props}
       className={twMerge(
-        'z-[5000] data-[state=open]:animate-contentShow fixed top-[14%] left-[50%] max-h-[80vh] w-[100%] outline-offset-2 max-w-[448px] translate-x-[-50%] translate-y-[-50%] rounded-xl bg-white p-6 focus:outline-none',
+        ' data-[state=open]:animate-contentShow fixed top-[14%] left-[50%] max-h-[80vh] w-[100%] outline-offset-2 max-w-[448px] translate-x-[-50%] translate-y-[-50%] rounded-xl bg-white p-6 focus:outline-none',
         className,
       )}
     >
