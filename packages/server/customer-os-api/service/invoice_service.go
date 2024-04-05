@@ -292,6 +292,9 @@ func (s *invoiceService) GetInvoices(ctx context.Context, organizationId string,
 	if where != nil {
 
 		for _, f := range where.And {
+			if f.Filter.Property == SortContractName {
+				contractFilter.Filters = append(contractFilter.Filters, utils.CreateStringCypherFilter("name", *f.Filter.Value.Str, utils.CONTAINS))
+			}
 			if f.Filter.Property == SearchSortContractBillingCycle {
 				contractFilter.Filters = append(contractFilter.Filters, utils.CreateCypherFilterIn("billingCycle", *f.Filter.Value.ArrayStr))
 			}

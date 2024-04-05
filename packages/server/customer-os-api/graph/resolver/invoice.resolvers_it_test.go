@@ -106,6 +106,50 @@ func TestInvoiceResolver_Invoice(t *testing.T) {
 	require.Equal(t, organizationId, invoice.Organization.ID)
 	require.Equal(t, contractId, invoice.Contract.ID)
 }
+
+func TestInvoiceResolver_Invoices_Contract_Name(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	contract1Id := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organizationId, neo4jentity.ContractEntity{
+		Name: "A",
+	})
+	invoice1Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contract1Id, neo4jentity.InvoiceEntity{})
+
+	contract2Id := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organizationId, neo4jentity.ContractEntity{
+		Name: "AA",
+	})
+	invoice2Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contract2Id, neo4jentity.InvoiceEntity{})
+
+	contract3Id := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organizationId, neo4jentity.ContractEntity{
+		Name: "B",
+	})
+	neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contract3Id, neo4jentity.InvoiceEntity{})
+
+	rawResponse := callGraphQL(t, "invoice/get_invoices_filter_contract_name", map[string]interface{}{
+		"page":         0,
+		"limit":        10,
+		"contractName": "A",
+	})
+	require.Nil(t, rawResponse.Errors)
+
+	var invoiceStruct struct {
+		Invoices model.InvoicesPage
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &invoiceStruct)
+	require.Nil(t, err)
+
+	require.Equal(t, int64(2), invoiceStruct.Invoices.TotalElements)
+	require.Equal(t, int64(3), invoiceStruct.Invoices.TotalAvailable)
+	require.Equal(t, 2, len(invoiceStruct.Invoices.Content))
+
+	require.Contains(t, []string{invoice1Id, invoice2Id}, invoiceStruct.Invoices.Content[0].Metadata.ID)
+	require.Contains(t, []string{invoice1Id, invoice2Id}, invoiceStruct.Invoices.Content[1].Metadata.ID)
+}
+
 func TestInvoiceResolver_Invoices_Contract_BillingCycle(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
@@ -142,6 +186,7 @@ func TestInvoiceResolver_Invoices_Contract_BillingCycle(t *testing.T) {
 	require.Nil(t, err)
 
 	require.Equal(t, int64(2), invoiceStruct.Invoices.TotalElements)
+	require.Equal(t, int64(3), invoiceStruct.Invoices.TotalAvailable)
 	require.Equal(t, 2, len(invoiceStruct.Invoices.Content))
 
 	require.Contains(t, []string{invoice1Id, invoice2Id}, invoiceStruct.Invoices.Content[0].Metadata.ID)
@@ -183,6 +228,7 @@ func TestInvoiceResolver_Invoices_Contract_Ended_False(t *testing.T) {
 	require.Nil(t, err)
 
 	require.Equal(t, int64(1), invoiceStruct.Invoices.TotalElements)
+	require.Equal(t, int64(2), invoiceStruct.Invoices.TotalAvailable)
 	require.Equal(t, 1, len(invoiceStruct.Invoices.Content))
 
 	require.Equal(t, invoice2Id, invoiceStruct.Invoices.Content[0].Metadata.ID)
@@ -223,6 +269,7 @@ func TestInvoiceResolver_Invoices_Contract_Ended_True(t *testing.T) {
 	require.Nil(t, err)
 
 	require.Equal(t, int64(1), invoiceStruct.Invoices.TotalElements)
+	require.Equal(t, int64(2), invoiceStruct.Invoices.TotalAvailable)
 	require.Equal(t, 1, len(invoiceStruct.Invoices.Content))
 
 	require.Equal(t, invoice1Id, invoiceStruct.Invoices.Content[0].Metadata.ID)
