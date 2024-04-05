@@ -177,7 +177,9 @@ func (r *contractWriteRepository) CreateForOrganization(ctx context.Context, ten
 								ct.check=$check,
 								ct.country=$country,
 								ct.dueDays=$dueDays,
-								ct.lengthInMonths=$lengthInMonths
+								ct.lengthInMonths=$lengthInMonths,
+								ct.renewalCycle=$renewalCycle,
+								ct.renewalPeriods=$renewalPeriods
 							WITH ct, t
 							OPTIONAL MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$createdByUserId}) 
 							WHERE $createdByUserId <> ""
@@ -215,6 +217,19 @@ func (r *contractWriteRepository) CreateForOrganization(ctx context.Context, ten
 		"dueDays":                data.DueDays,
 		"country":                data.Country,
 		"lengthInMonths":         data.LengthInMonths,
+	}
+	if data.LengthInMonths == 0 {
+		params["renewalCycle"] = neo4jenum.RenewalCycleNone.String()
+		params["renewalPeriods"] = 0
+	} else if data.LengthInMonths < 3 {
+		params["renewalCycle"] = neo4jenum.RenewalCycleMonthlyRenewal.String()
+		params["renewalPeriods"] = 1
+	} else if data.LengthInMonths < 12 {
+		params["renewalCycle"] = neo4jenum.RenewalCycleQuarterlyRenewal.String()
+		params["renewalPeriods"] = 1
+	} else {
+		params["renewalCycle"] = neo4jenum.RenewalCycleAnnualRenewal.String()
+		params["renewalPeriods"] = data.LengthInMonths / 12
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -377,6 +392,27 @@ func (r *contractWriteRepository) UpdateContract(ctx context.Context, tenant, co
 	if data.UpdateLengthInMonths {
 		cypher += `, ct.lengthInMonths=$lengthInMonths `
 		params["lengthInMonths"] = data.LengthInMonths
+		if data.LengthInMonths == 0 {
+			cypher += `, ct.renewalCycle=$renewalCycle `
+			params["renewalCycle"] = neo4jenum.RenewalCycleNone.String()
+			cypher += `, ct.renewalPeriods=$renewalPeriods `
+			params["renewalPeriods"] = 0
+		} else if data.LengthInMonths < 3 {
+			cypher += `, ct.renewalCycle=$renewalCycle `
+			params["renewalCycle"] = neo4jenum.RenewalCycleMonthlyRenewal.String()
+			cypher += `, ct.renewalPeriods=$renewalPeriods `
+			params["renewalPeriods"] = 1
+		} else if data.LengthInMonths < 12 {
+			cypher += `, ct.renewalCycle=$renewalCycle `
+			params["renewalCycle"] = neo4jenum.RenewalCycleQuarterlyRenewal.String()
+			cypher += `, ct.renewalPeriods=$renewalPeriods `
+			params["renewalPeriods"] = 1
+		} else {
+			cypher += `, ct.renewalCycle=$renewalCycle `
+			params["renewalCycle"] = neo4jenum.RenewalCycleAnnualRenewal.String()
+			cypher += `, ct.renewalPeriods=$renewalPeriods `
+			params["renewalPeriods"] = data.LengthInMonths / 12
+		}
 	}
 
 	span.LogFields(log.String("cypher", cypher))

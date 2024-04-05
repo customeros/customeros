@@ -43,9 +43,8 @@ func TestMutationResolver_ContractCreate(t *testing.T) {
 			require.Equal(t, constants.AppSourceCustomerOsApi, contract.SourceFields.AppSource)
 			require.Equal(t, "Contract 1", contract.Name)
 			require.Equal(t, "https://contract.com", contract.ContractUrl)
-			require.Equal(t, contractpb.RenewalCycle_MONTHLY_RENEWAL, contract.RenewalCycle)
 			require.Equal(t, "USD", contract.Currency)
-			require.Equal(t, int64(7), *contract.RenewalPeriods)
+			require.Equal(t, int64(1), contract.LengthInMonths)
 			expectedServiceStartedAt, err := time.Parse(time.RFC3339, "2019-01-01T00:00:00Z")
 			if err != nil {
 				t.Fatalf("Failed to parse expected timestamp: %v", err)
@@ -104,7 +103,6 @@ func TestMutationResolver_ContractCreate_DefaultValues(t *testing.T) {
 			require.Equal(t, constants.AppSourceCustomerOsApi, contract.SourceFields.AppSource)
 			require.Equal(t, "", contract.Name)
 			require.Equal(t, "", contract.ContractUrl)
-			require.Equal(t, contractpb.RenewalCycle_NONE, contract.RenewalCycle)
 			require.Equal(t, "", contract.Currency)
 			require.False(t, contract.AutoRenew)
 			require.True(t, contract.PayOnline)
@@ -113,11 +111,11 @@ func TestMutationResolver_ContractCreate_DefaultValues(t *testing.T) {
 			require.True(t, contract.CanPayWithCard)
 			require.True(t, contract.CanPayWithDirectDebit)
 			require.True(t, contract.CanPayWithBankTransfer)
-			require.Nil(t, contract.RenewalPeriods)
 			require.Nil(t, contract.ServiceStartedAt)
 			require.Nil(t, contract.SignedAt)
 			require.Nil(t, contract.InvoicingStartDate)
 			require.Equal(t, int64(0), contract.DueDays)
+			require.Equal(t, int64(0), contract.LengthInMonths)
 			calledCreateContract = true
 			neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 				Id: contractId,
@@ -165,8 +163,7 @@ func TestMutationResolver_ContractUpdate(t *testing.T) {
 			require.Equal(t, "test app source", contract.SourceFields.AppSource)
 			require.Equal(t, "Updated Contract", contract.Name)
 			require.Equal(t, "https://contract.com/updated", contract.ContractUrl)
-			require.Equal(t, contractpb.RenewalCycle_ANNUALLY_RENEWAL, contract.RenewalCycle)
-			require.Equal(t, int64(3), *contract.RenewalPeriods)
+			require.Equal(t, int64(36), contract.LengthInMonths)
 			expectedServiceStartedAt, err := time.Parse(time.RFC3339, "2019-01-01T00:00:00Z")
 			if err != nil {
 				t.Fatalf("Failed to parse expected timestamp: %v", err)
@@ -202,7 +199,7 @@ func TestMutationResolver_ContractUpdate(t *testing.T) {
 			require.Equal(t, true, contract.Check)
 			require.Equal(t, int64(7), contract.DueDays)
 			require.Equal(t, []string{"cc1", "cc2"}, contract.InvoiceEmailCc)
-			require.Equal(t, 27, len(contract.FieldsMask))
+			require.Equal(t, 26, len(contract.FieldsMask))
 			calledUpdateContract = true
 			return &contractpb.ContractIdGrpcResponse{
 				Id: contractId,

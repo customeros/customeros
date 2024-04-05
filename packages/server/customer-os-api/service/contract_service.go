@@ -118,31 +118,36 @@ func (s *contractService) createContractWithEvents(ctx context.Context, contract
 		createContractRequest.InvoicingStartDate = utils.ConvertTimeToTimestampPtr(contractDetails.Input.InvoicingStartDate)
 	}
 
-	if contractDetails.Input.CommittedPeriods != nil {
-		createContractRequest.RenewalPeriods = contractDetails.Input.CommittedPeriods
+	if contractDetails.Input.CommittedPeriodInMonths != nil {
+		createContractRequest.LengthInMonths = *contractDetails.Input.CommittedPeriodInMonths
 	} else {
-		createContractRequest.RenewalPeriods = contractDetails.Input.RenewalPeriods
+		// prepare length in months from renewal cycle and periods
+		renewalCycle := neo4jenum.RenewalCycleNone
+		if contractDetails.Input.ContractRenewalCycle != nil {
+			renewalCycle = mapper.MapContractRenewalCycleFromModel(*contractDetails.Input.ContractRenewalCycle)
+		} else if contractDetails.Input.RenewalCycle != nil {
+			renewalCycle = mapper.MapContractRenewalCycleFromModel(*contractDetails.Input.RenewalCycle)
+		}
+		switch renewalCycle {
+		case neo4jenum.RenewalCycleMonthlyRenewal:
+			createContractRequest.LengthInMonths = 1
+		case neo4jenum.RenewalCycleQuarterlyRenewal:
+			createContractRequest.LengthInMonths = 3
+		case neo4jenum.RenewalCycleAnnualRenewal:
+			createContractRequest.LengthInMonths = 12
+		default:
+			createContractRequest.LengthInMonths = 0
+		}
+		if createContractRequest.LengthInMonths == 12 {
+			if contractDetails.Input.CommittedPeriods != nil && *contractDetails.Input.CommittedPeriods > 1 {
+				createContractRequest.LengthInMonths *= *contractDetails.Input.CommittedPeriods
+			} else if contractDetails.Input.RenewalPeriods != nil && *contractDetails.Input.RenewalPeriods > 1 {
+				createContractRequest.LengthInMonths *= *contractDetails.Input.RenewalPeriods
+			}
+		}
 	}
 	if contractDetails.Input.ContractName != nil {
 		createContractRequest.Name = *contractDetails.Input.ContractName
-	}
-
-	// prepare renewal cycle
-	renewalCycle := neo4jenum.RenewalCycleNone
-	if contractDetails.Input.ContractRenewalCycle != nil {
-		renewalCycle = mapper.MapContractRenewalCycleFromModel(*contractDetails.Input.ContractRenewalCycle)
-	} else if contractDetails.Input.RenewalCycle != nil {
-		renewalCycle = mapper.MapContractRenewalCycleFromModel(*contractDetails.Input.RenewalCycle)
-	}
-	switch renewalCycle {
-	case neo4jenum.RenewalCycleMonthlyRenewal:
-		createContractRequest.RenewalCycle = contractpb.RenewalCycle_MONTHLY_RENEWAL
-	case neo4jenum.RenewalCycleQuarterlyRenewal:
-		createContractRequest.RenewalCycle = contractpb.RenewalCycle_QUARTERLY_RENEWAL
-	case neo4jenum.RenewalCycleAnnualRenewal:
-		createContractRequest.RenewalCycle = contractpb.RenewalCycle_ANNUALLY_RENEWAL
-	default:
-		createContractRequest.RenewalCycle = contractpb.RenewalCycle_NONE
 	}
 
 	// set default fields
@@ -211,7 +216,6 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 			Source:    neo4jentity.DataSourceOpenline.String(),
 			AppSource: utils.StringFirstNonEmpty(utils.IfNotNilString(input.AppSource), constants.AppSourceCustomerOsApi),
 		},
-		RenewalPeriods:        input.RenewalPeriods,
 		AddressLine1:          utils.IfNotNilString(input.AddressLine1),
 		AddressLine2:          utils.IfNotNilString(input.AddressLine2),
 		Locality:              utils.IfNotNilString(input.Locality),
@@ -276,9 +280,7 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 		contractUpdateRequest.PayOnline = utils.IfNotNilBool(input.BillingDetails.PayOnline)
 		contractUpdateRequest.PayAutomatically = utils.IfNotNilBool(input.BillingDetails.PayAutomatically)
 	}
-	if input.CommittedPeriods != nil {
-		contractUpdateRequest.RenewalPeriods = input.CommittedPeriods
-	}
+
 	if input.ContractName != nil {
 		contractUpdateRequest.Name = *input.ContractName
 	}
@@ -345,29 +347,35 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 		}
 	}
 
-	// prepare renewal cycle
-	if input.RenewalCycle != nil {
-		switch *input.RenewalCycle {
-		case model.ContractRenewalCycleMonthlyRenewal:
-			contractUpdateRequest.RenewalCycle = contractpb.RenewalCycle_MONTHLY_RENEWAL
-		case model.ContractRenewalCycleQuarterlyRenewal:
-			contractUpdateRequest.RenewalCycle = contractpb.RenewalCycle_QUARTERLY_RENEWAL
-		case model.ContractRenewalCycleAnnualRenewal:
-			contractUpdateRequest.RenewalCycle = contractpb.RenewalCycle_ANNUALLY_RENEWAL
-		default:
-			contractUpdateRequest.RenewalCycle = contractpb.RenewalCycle_NONE
+	if input.CommittedPeriodInMonths != nil {
+		contractUpdateRequest.LengthInMonths = *input.CommittedPeriodInMonths
+		fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_LENGTH_IN_MONTHS)
+	} else {
+		// prepare length in months from renewal cycle and periods
+		renewalCycle := neo4jenum.RenewalCycleNone
+		if input.ContractRenewalCycle != nil {
+			renewalCycle = mapper.MapContractRenewalCycleFromModel(*input.ContractRenewalCycle)
+			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_LENGTH_IN_MONTHS)
+		} else if input.RenewalCycle != nil {
+			renewalCycle = mapper.MapContractRenewalCycleFromModel(*input.RenewalCycle)
+			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_LENGTH_IN_MONTHS)
 		}
-	}
-	if input.ContractRenewalCycle != nil {
-		switch *input.ContractRenewalCycle {
-		case model.ContractRenewalCycleMonthlyRenewal:
-			contractUpdateRequest.RenewalCycle = contractpb.RenewalCycle_MONTHLY_RENEWAL
-		case model.ContractRenewalCycleQuarterlyRenewal:
-			contractUpdateRequest.RenewalCycle = contractpb.RenewalCycle_QUARTERLY_RENEWAL
-		case model.ContractRenewalCycleAnnualRenewal:
-			contractUpdateRequest.RenewalCycle = contractpb.RenewalCycle_ANNUALLY_RENEWAL
+		switch renewalCycle {
+		case neo4jenum.RenewalCycleMonthlyRenewal:
+			contractUpdateRequest.LengthInMonths = 1
+		case neo4jenum.RenewalCycleQuarterlyRenewal:
+			contractUpdateRequest.LengthInMonths = 3
+		case neo4jenum.RenewalCycleAnnualRenewal:
+			contractUpdateRequest.LengthInMonths = 12
 		default:
-			contractUpdateRequest.RenewalCycle = contractpb.RenewalCycle_NONE
+			contractUpdateRequest.LengthInMonths = 0
+		}
+		if contractUpdateRequest.LengthInMonths == 12 {
+			if input.CommittedPeriods != nil && *input.CommittedPeriods > 1 {
+				contractUpdateRequest.LengthInMonths *= *input.CommittedPeriods
+			} else if input.RenewalPeriods != nil && *input.RenewalPeriods > 1 {
+				contractUpdateRequest.LengthInMonths *= *input.RenewalPeriods
+			}
 		}
 	}
 
@@ -403,12 +411,6 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 		}
 		if input.ContractURL != nil {
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_CONTRACT_URL)
-		}
-		if input.RenewalCycle != nil || input.ContractRenewalCycle != nil {
-			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_RENEWAL_CYCLE)
-		}
-		if input.RenewalPeriods != nil || input.CommittedPeriods != nil {
-			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_RENEWAL_PERIODS)
 		}
 		if input.ServiceStartedAt != nil || input.ServiceStarted != nil {
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_SERVICE_STARTED_AT)
