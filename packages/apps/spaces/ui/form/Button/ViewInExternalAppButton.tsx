@@ -1,9 +1,9 @@
 import React, { FC, useState, ReactElement } from 'react';
 
-import { Tooltip } from '@ui/overlay/Tooltip';
-import { Link03 } from '@ui/media/icons/Link03';
-import { IconButton } from '@ui/form/IconButton';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
+import { IconButton } from '@ui/form/IconButton/IconButton';
 import { getExternalUrl } from '@spaces/utils/getExternalLink';
+import { LinkExternal02 } from '@ui/media/icons/LinkExternal02';
 
 export const ViewInExternalAppButton: FC<{
   icon: ReactElement;
@@ -12,12 +12,11 @@ export const ViewInExternalAppButton: FC<{
   const [hovered, setHovered] = useState(false);
 
   return (
-    <Tooltip label={url ? 'View in Slack' : ''} variant='dark' hasArrow>
+    <Tooltip label={url ? 'View in Slack' : ''}>
       <IconButton
         aria-label='View in slack'
         size='xs'
-        position='absolute'
-        right={0}
+        className='absolute right-0'
         isDisabled={!url}
         variant={hovered ? 'ghost' : 'outline'}
         onMouseEnter={() => setHovered(true)}
@@ -29,7 +28,7 @@ export const ViewInExternalAppButton: FC<{
             window.open(getExternalUrl(url), '_blank', 'noopener');
           }
         }}
-        icon={hovered ? <Link03 height={16} color='gray.500' /> : icon}
+        icon={hovered ? <LinkExternal02 height={16} color='gray.500' /> : icon}
       />
     </Tooltip>
   );
