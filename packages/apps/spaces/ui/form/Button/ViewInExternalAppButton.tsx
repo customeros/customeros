@@ -16,7 +16,8 @@ export const ViewInExternalAppButton: FC<{
       <IconButton
         aria-label='View in slack'
         size='xs'
-        className='absolute right-0'
+        colorScheme='gray'
+        className='absolute right-0 h-6 w-6'
         isDisabled={!url}
         variant={hovered ? 'ghost' : 'outline'}
         onMouseEnter={() => setHovered(true)}
