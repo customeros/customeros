@@ -1,7 +1,7 @@
-query GetInvoice($page: Int!, $limit: Int!, $contractEnded: Any!) {
+query GetInvoice($page: Int!, $limit: Int!, $contractName: Any!) {
   invoices(pagination: {page: $page, limit: $limit}
               where: {AND:[
-                            {filter: {property:"CONTRACT_ENDED" value: $contractEnded operation:EQ}}
+                            {filter: {property:"CONTRACT_NAME" value: $contractName operation:CONTAINS}}
                           ]
                      }
   )
