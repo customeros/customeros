@@ -184,9 +184,12 @@ func (s *invoiceService) CountInvoices(ctx context.Context, tenant, organization
 			}
 		}
 
-		if len(invoiceFilter.Filters) > 0 {
-			invoiceFilterCypher, invoiceFilterParams = invoiceFilter.BuildCypherFilterFragmentWithParamName("i", "i_param_")
-		}
+	}
+
+	invoiceFilter.Filters = append(invoiceFilter.Filters, utils.CreateCypherFilterNotEq("status", "INITIALIZED"))
+
+	if len(invoiceFilter.Filters) > 0 {
+		invoiceFilterCypher, invoiceFilterParams = invoiceFilter.BuildCypherFilterFragmentWithParamName("i", "i_param_")
 	}
 
 	filter := ""
@@ -327,9 +330,11 @@ func (s *invoiceService) GetInvoices(ctx context.Context, organizationId string,
 		if len(contractFilter.Filters) > 0 {
 			contractFilterCypher, contractFilterParams = contractFilter.BuildCypherFilterFragmentWithParamName("c", "c_param_")
 		}
-		if len(invoiceFilter.Filters) > 0 {
-			invoiceFilterCypher, invoiceFilterParams = invoiceFilter.BuildCypherFilterFragmentWithParamName("i", "i_param_")
-		}
+	}
+
+	invoiceFilter.Filters = append(invoiceFilter.Filters, utils.CreateCypherFilterNotEq("status", "INITIALIZED"))
+	if len(invoiceFilter.Filters) > 0 {
+		invoiceFilterCypher, invoiceFilterParams = invoiceFilter.BuildCypherFilterFragmentWithParamName("i", "i_param_")
 	}
 
 	filter := ""

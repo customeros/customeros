@@ -502,6 +502,49 @@ func TestInvoiceResolver_Invoices_Number(t *testing.T) {
 	require.Equal(t, invoice1Id, invoiceStruct.Invoices.Content[0].Metadata.ID)
 }
 
+func TestInvoiceResolver_Invoices_Exclude_INITIALIZED_Status(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organizationId, neo4jentity.ContractEntity{})
+
+	invoice1Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		Status: neo4jenum.InvoiceStatusInitialized,
+	})
+	neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		Status: neo4jenum.InvoiceStatusDue,
+	})
+	neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		Status: neo4jenum.InvoiceStatusPaid,
+	})
+	neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		Status: neo4jenum.InvoiceStatusVoid,
+	})
+
+	rawResponse := callGraphQL(t, "invoice/get_invoices_exclude_initialized_status", map[string]interface{}{
+		"page":  0,
+		"limit": 10,
+	})
+	require.Nil(t, rawResponse.Errors)
+
+	var invoiceStruct struct {
+		Invoices model.InvoicesPage
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &invoiceStruct)
+	require.Nil(t, err)
+
+	require.Equal(t, int64(3), invoiceStruct.Invoices.TotalElements)
+	require.Equal(t, int64(3), invoiceStruct.Invoices.TotalAvailable)
+	require.Equal(t, 3, len(invoiceStruct.Invoices.Content))
+
+	for _, invoice := range invoiceStruct.Invoices.Content {
+		require.NotEqual(t, invoice1Id, invoice.Metadata.ID)
+	}
+}
+
 func TestInvoiceResolver_Invoices_Sorting(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
