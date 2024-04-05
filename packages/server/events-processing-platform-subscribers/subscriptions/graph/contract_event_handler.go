@@ -442,21 +442,25 @@ func (h *ContractEventHandler) createActionForStatusChange(ctx context.Context, 
 	} else {
 		name = "Unnamed contract"
 	}
-	metadata, err := utils.ToJson(ActionStatusMetadata{
+	actionStatusMetadata := ActionStatusMetadata{
 		Status:       status,
 		ContractName: name,
 		Comment:      name + " is now " + status,
-	})
+	}
 	message := ""
 
 	switch status {
 	case string(neo4jenum.ContractStatusLive):
 		message = contractName + " is now live"
+		actionStatusMetadata.Comment = contractName + " is now live"
 	case string(neo4jenum.ContractStatusEnded):
 		message = contractName + " has ended"
+		actionStatusMetadata.Comment = contractName + " has ended"
 	case string(neo4jenum.ContractStatusOutOfContract):
 		message = contractName + " is now out of contract"
+		actionStatusMetadata.Comment = contractName + " is now out of contract"
 	}
+	metadata, err := utils.ToJson(actionStatusMetadata)
 	_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.Create(ctx, tenant, contractId, neo4jenum.CONTRACT, neo4jenum.ActionContractStatusUpdated, message, metadata, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers)
 	if err != nil {
 		tracing.TraceErr(span, err)
