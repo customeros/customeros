@@ -28,6 +28,7 @@ export type GetInvoicesQueryVariables = Types.Exact<{
   pagination: Types.Pagination;
   organizationId?: Types.InputMaybe<Types.Scalars['ID']['input']>;
   where?: Types.InputMaybe<Types.Filter>;
+  sort?: Types.InputMaybe<Array<Types.SortBy> | Types.SortBy>;
 }>;
 
 export type GetInvoicesQuery = {
@@ -84,11 +85,12 @@ export type GetInvoicesQuery = {
 };
 
 export const GetInvoicesDocument = `
-    query getInvoices($pagination: Pagination!, $organizationId: ID, $where: Filter) {
+    query getInvoices($pagination: Pagination!, $organizationId: ID, $where: Filter, $sort: [SortBy!]) {
   invoices(
     pagination: $pagination
     organizationId: $organizationId
     where: $where
+    sort: $sort
   ) {
     content {
       metadata {

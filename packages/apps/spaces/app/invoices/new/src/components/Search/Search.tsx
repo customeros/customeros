@@ -11,7 +11,7 @@ export const Search = () => {
   const searchParams = useSearchParams();
   const defaultValue = searchParams?.get('search') ?? '';
 
-  const placeholder = 'Search organizations';
+  const placeholder = 'Search contracts';
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;

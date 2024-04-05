@@ -1,0 +1,13 @@
+import { Icon, IconProps } from '@ui/media/Icon';
+
+export const ArrowDropdown = (props: IconProps) => (
+  <Icon viewBox='0 0 24 24' fill='none' boxSize='4' {...props}>
+    <g id='arrow-dropdown'>
+      <path
+        id='Icon'
+        d='M14.7929 10H9.20711C8.76165 10 8.53857 10.5386 8.85355 10.8536L11.6464 13.6464C11.8417 13.8417 12.1583 13.8417 12.3536 13.6464L15.1464 10.8536C15.4614 10.5386 15.2383 10 14.7929 10Z'
+        fill='currentColor'
+      />
+    </g>
+  </Icon>
+);

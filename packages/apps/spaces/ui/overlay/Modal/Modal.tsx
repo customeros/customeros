@@ -30,7 +30,7 @@ export const ModalOverlay = ({ className, ...props }: DialogOverlayProps) => {
   return (
     <Dialog.Overlay
       className={twMerge(
-        'bg-gray-900/30 data-[state=open]:animate-overlayShow fixed inset-0 z-10',
+        'backdrop-brightness-[.55] data-[state=open]:animate-overlayShow fixed inset-0 z-10 cursor-pointer',
         className,
       )}
       {...props}

@@ -15,8 +15,11 @@ import { Skeleton } from '@ui/feedback/Skeleton';
 import { Receipt } from '@ui/media/icons/Receipt';
 import { Bubbles } from '@ui/media/icons/Bubbles';
 import { LogOut01 } from '@ui/media/icons/LogOut01';
+import { InvoiceCheck } from '@ui/media/icons/InvoiceCheck';
+import { ArrowDropdown } from '@ui/media/icons/ArrowDropdown';
 import { mockedTableDefs } from '@shared/util/tableDefs.mock';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { InvoiceUpcoming } from '@ui/media/icons/InvoiceUpcoming';
 import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
 import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
@@ -35,9 +38,18 @@ export const RootSidenav = () => {
   const searchParams = useSearchParams();
   const [_, setOrganizationsMeta] = useOrganizationsMeta();
   const showMyViewsItems = useFeatureIsOn('my-views-nav-item');
+  const isNewInvoicingActive = useFeatureIsOn('new-invoicing');
+
   const [lastActivePosition, setLastActivePosition] = useLocalStorage(
     `customeros-player-last-position`,
     { root: 'organization' },
+  );
+  const [preferences, setPreferences] = useLocalStorage(
+    'customeros-preferences',
+    {
+      isInvoicesOpen: true,
+      isMyViewsOpen: true,
+    },
   );
 
   const { data: tenantSettingsData } = useTenantSettingsQuery(client);
@@ -127,7 +139,7 @@ export const RootSidenav = () => {
         )}
       </div>
 
-      <div className='space-y-2 w-full mb-4'>
+      <div className='space-y-1 w-full mb-4'>
         <SidenavItem
           label='Customer map'
           isActive={checkIsActive('customer-map')}
@@ -169,66 +181,121 @@ export const RootSidenav = () => {
         />
 
         {showInvoices && (
-          <SidenavItem
-            label='Invoices'
-            isActive={checkIsActive('invoices')}
-            onClick={() => handleItemClick('invoices')}
-            icon={(isActive) => (
-              <Receipt
-                className={cn(
-                  'w-5 h-5 text-gray-500',
-                  isActive && 'text-gray-700',
-                )}
-              />
-            )}
-          />
+          <>
+            <div
+              className='w-full gap-1 flex justify-flex-start pl-3.5 cursor-pointer text-gray-500 hover:text-gray-700 transition-colors'
+              onClick={() =>
+                setPreferences((prev) => ({
+                  ...prev,
+                  isInvoicesOpen: !prev.isInvoicesOpen,
+                }))
+              }
+            >
+              <span className='text-sm'>Invoices</span>
+              <ArrowDropdown className='w-5 h-5' />
+            </div>
+
+            {preferences.isInvoicesOpen &&
+              (isNewInvoicingActive ? (
+                <>
+                  <SidenavItem
+                    label='Upcoming'
+                    isActive={checkIsActive('invoices', { preset: '4' })}
+                    onClick={() => handleItemClick('invoices/new?preset=4')}
+                    icon={(isActive) => (
+                      <InvoiceUpcoming
+                        className={cn(
+                          'w-5 h-5 text-gray-500',
+                          isActive && 'text-gray-700',
+                        )}
+                      />
+                    )}
+                  />
+                  <SidenavItem
+                    label='Past'
+                    isActive={checkIsActive('invoices', { preset: '5' })}
+                    onClick={() => handleItemClick('invoices/new?preset=5')}
+                    icon={(isActive) => (
+                      <InvoiceCheck
+                        className={cn(
+                          'w-5 h-5 text-gray-500',
+                          isActive && 'text-gray-700',
+                        )}
+                      />
+                    )}
+                  />
+                </>
+              ) : (
+                <SidenavItem
+                  label='Invoices'
+                  isActive={checkIsActive('invoices')}
+                  onClick={() => handleItemClick('invoices')}
+                  icon={(isActive) => (
+                    <Receipt
+                      className={cn(
+                        'w-5 h-5 text-gray-500',
+                        isActive && 'text-gray-700',
+                      )}
+                    />
+                  )}
+                />
+              ))}
+          </>
         )}
       </div>
 
-      <div className='space-y-2 w-full'>
+      <div className='space-y-1 w-full'>
         {(globalCache?.isOwner || showMyViewsItems) && (
           <div className='w-full flex justify-flex-start pl-3.5'>
             <span className='text-gray-500 text-sm'>My views</span>
           </div>
         )}
 
-        {globalCache?.isOwner && (
-          <SidenavItem
-            label='My portfolio'
-            isActive={checkIsActive('organizations', { preset: 'portfolio' })}
-            onClick={() => handleItemClick('organizations?preset=portfolio')}
-            icon={(isActive) => (
-              <Icons.Briefcase1
-                className={cn(
-                  'w-5 h-5 text-gray-500',
-                  isActive && 'text-gray-700',
+        {preferences.isMyViewsOpen && (
+          <>
+            {globalCache?.isOwner && (
+              <SidenavItem
+                label='My portfolio'
+                isActive={checkIsActive('organizations', {
+                  preset: 'portfolio',
+                })}
+                onClick={() =>
+                  handleItemClick('organizations?preset=portfolio')
+                }
+                icon={(isActive) => (
+                  <Icons.Briefcase1
+                    className={cn(
+                      'w-5 h-5 text-gray-500',
+                      isActive && 'text-gray-700',
+                    )}
+                  />
                 )}
               />
             )}
-          />
-        )}
-        {showMyViewsItems &&
-          myViews.map((view) => (
-            <SidenavItem
-              key={view.id}
-              label={view.name}
-              isActive={checkIsActive('renewals', { preset: view.id })}
-              onClick={() => handleItemClick(`renewals?preset=${view.id}`)}
-              icon={(isActive) => (
-                <ClockFastForward
-                  className={cn(
-                    'w-5 h-5 text-gray-500',
-                    isActive && 'text-gray-700',
+            {showMyViewsItems &&
+              myViews.map((view) => (
+                <SidenavItem
+                  key={view.id}
+                  label={view.name}
+                  isActive={checkIsActive('renewals', { preset: view.id })}
+                  onClick={() => handleItemClick(`renewals?preset=${view.id}`)}
+                  icon={(isActive) => (
+                    <ClockFastForward
+                      className={cn(
+                        'w-5 h-5 text-gray-500',
+                        isActive && 'text-gray-700',
+                      )}
+                    />
                   )}
                 />
-              )}
-            />
-          ))}
+              ))}
+          </>
+        )}
       </div>
 
       <div className='space-y-1 flex flex-col flex-wrap-grow justify-end mt-auto'>
-        <NotificationCenter />
         <GoogleSidebarNotification />
+        <NotificationCenter />
 
         <SidenavItem
           label='Settings'

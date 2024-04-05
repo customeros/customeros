@@ -7,15 +7,16 @@ export const filterInvoiceStatusFn: FilterFn<Invoice> = (
   id,
   filterValue,
 ) => {
-  const value = row.getValue<Invoice['contract']['contractEnded']>(
+  const value = !!row.getValue<Invoice['contract']['contractEnded']>(
     id,
   ) as boolean;
 
-  if (filterValue.length === 0) return true;
+  if (filterValue.length === 0 || filterValue.length === 2) return true;
 
-  return (filterValue as ('ON_HOLD' | 'SCHEDULED')[])
-    .map((v) => (v === 'ON_HOLD' ? true : false))
-    .includes(value);
+  return (
+    (filterValue[0] === 'ON_HOLD' && value) ||
+    (filterValue[0] === 'SCHEDULED' && !value)
+  );
 };
 
 filterInvoiceStatusFn.autoRemove = (filterValue) => {

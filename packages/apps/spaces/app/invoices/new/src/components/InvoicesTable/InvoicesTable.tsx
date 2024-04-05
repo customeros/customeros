@@ -16,7 +16,7 @@ export const InvoicesTable = () => {
   const client = getGraphQLClient();
   const searchParams = useSearchParams();
   const [sorting, setSorting] = useState<SortingState>([
-    { id: 'LAST_TOUCHPOINT', desc: true },
+    { id: 'INVOICE_DUE_DATE', desc: true },
   ]);
 
   const preset = searchParams?.get('preset');

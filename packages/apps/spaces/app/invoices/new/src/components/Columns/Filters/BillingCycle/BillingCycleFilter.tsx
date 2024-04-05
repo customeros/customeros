@@ -8,7 +8,6 @@ import { Column } from '@tanstack/react-table';
 import { VStack } from '@ui/layout/Stack';
 import { Text } from '@ui/typography/Text';
 import { SelectOption } from '@ui/utils/types';
-import { ContractBillingCycle } from '@graphql/types';
 import { Checkbox, CheckboxGroup } from '@ui/form/Checkbox';
 import {
   FilterHeader,
@@ -20,11 +19,11 @@ import {
   BillingCycleFilterSelector,
 } from './BillingCycleFilter.atom';
 
-const options: SelectOption<ContractBillingCycle>[] = [
-  { label: 'Monthly', value: ContractBillingCycle.MonthlyBilling },
-  { label: 'Quarterly', value: ContractBillingCycle.QuarterlyBilling },
-  { label: 'Annualy', value: ContractBillingCycle.AnnualBilling },
-  { label: 'None', value: ContractBillingCycle.None },
+const options: SelectOption<string>[] = [
+  { label: 'Monthly', value: 'MONTHLY' },
+  { label: 'Quarterly', value: 'QUARTERLY' },
+  { label: 'Annualy', value: 'ANNUALY' },
+  { label: 'None', value: '' },
 ];
 
 interface BillingCycleFilterProps<T> {
@@ -52,7 +51,7 @@ export const BillingCycleFilter = <T,>({
     },
   });
 
-  const handleSelect = (value: ContractBillingCycle) => () => {
+  const handleSelect = (value: string) => () => {
     setFilter((prev) => {
       const next = produce(prev, (draft) => {
         draft.isActive = true;
