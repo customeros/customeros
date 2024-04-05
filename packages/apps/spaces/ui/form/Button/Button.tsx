@@ -33,6 +33,7 @@ export interface ButtonProps
     VariantProps<typeof buttonSize> {
   asChild?: boolean;
   isLoading?: boolean;
+  loadingText?: string;
   isDisabled?: boolean;
   spinner?: React.ReactElement;
   leftIcon?: React.ReactElement;
@@ -53,6 +54,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       isLoading = false,
       isDisabled = false,
       size,
+      loadingText,
       ...props
     },
     ref,
@@ -84,7 +86,10 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={isLoading || isDisabled}
       >
         {isLoading && spinner && (
-          <span className='relative inline-flex'>{spinner}</span>
+          <span className='flex gap-1 relative '>
+            {spinner}
+            {loadingText}
+          </span>
         )}
 
         {!isLoading && leftIcon && (

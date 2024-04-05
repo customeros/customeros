@@ -32,25 +32,28 @@ export const CardFooter = ({ children, className, ...props }: CardProps) => {
   );
 };
 
-export const Card = ({ children, className, ...props }: CardProps) => {
-  const [contentSlot, footerSlot, headerSlot] = useSlots(
-    children,
-    CardContent,
-    CardFooter,
-    CardHeader,
-  );
+export const Card = React.forwardRef<HTMLDivElement, CardProps>(
+  ({ children, className, ...props }, ref) => {
+    const [contentSlot, footerSlot, headerSlot] = useSlots(
+      children,
+      CardContent,
+      CardFooter,
+      CardHeader,
+    );
 
-  return (
-    <div
-      className={twMerge(
-        'rounded-xl border bg-card text-card-foreground shadow',
-        className,
-      )}
-      {...props}
-    >
-      {headerSlot}
-      {contentSlot}
-      {footerSlot}
-    </div>
-  );
-};
+    return (
+      <div
+        className={twMerge(
+          'rounded-xl border bg-card text-card-foreground shadow',
+          className,
+        )}
+        ref={ref}
+        {...props}
+      >
+        {headerSlot}
+        {contentSlot}
+        {footerSlot}
+      </div>
+    );
+  },
+);

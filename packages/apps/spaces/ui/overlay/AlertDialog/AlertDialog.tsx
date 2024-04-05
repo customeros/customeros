@@ -28,7 +28,13 @@ export const AlertDialog = forwardRef<
 });
 
 export const AlertDialogPortal = ({ children }: AlertDialogGenericProps) => {
-  return <RadixAlertDialog.Portal>{children}</RadixAlertDialog.Portal>;
+  return (
+    <RadixAlertDialog.Portal
+      container={typeof window !== 'undefined' ? document?.body : null}
+    >
+      {children}
+    </RadixAlertDialog.Portal>
+  );
 };
 
 export const AlertDialogOverlay = forwardRef<
@@ -39,7 +45,7 @@ export const AlertDialogOverlay = forwardRef<
     <RadixAlertDialog.Overlay
       ref={ref}
       className={twMerge(
-        ' backdrop-brightness-[.55] bg-blackA6 data-[state=open]:animate-overlayShow fixed inset-0 backdrop-brightness-50"',
+        'z-[5000] backdrop-brightness-[.55] data-[state=open]:animate-overlayShow fixed inset-0 backdrop-brightness-50"',
         className,
       )}
     >
@@ -57,7 +63,7 @@ export const AlertDialogContent = forwardRef<
       ref={ref}
       {...props}
       className={twMerge(
-        ' data-[state=open]:animate-contentShow fixed top-[14%] left-[50%] max-h-[80vh] w-[100%] outline-offset-2 max-w-[448px] translate-x-[-50%] translate-y-[-50%] rounded-xl bg-white p-6 focus:outline-none',
+        'z-[5000] data-[state=open]:animate-contentShow fixed top-[14%] left-[50%] max-h-[80vh] w-[100%] outline-offset-2 max-w-[448px] translate-x-[-50%] translate-y-[-50%] rounded-xl bg-white p-6 focus:outline-none',
         className,
       )}
     >
@@ -97,7 +103,9 @@ export const AlertDialogFooter = ({
   className,
 }: AlertDialogGenericProps) => {
   return (
-    <div className={twMerge('flex pt-4 gap-3', className)}>{children}</div>
+    <div className={twMerge('grid grid-cols-2 pt-4 gap-3', className)}>
+      {children}
+    </div>
   );
 };
 export const AlertDialogCloseButton = forwardRef<
