@@ -37,6 +37,7 @@ type InvoiceService interface {
 	GenerateOffCycleInvoices()
 	SendPayNotifications()
 	GenerateInvoicePaymentLinks()
+	CleanupInvoices()
 }
 
 type invoiceService struct {
@@ -453,7 +454,7 @@ func (s *invoiceService) GenerateInvoicePaymentLinks() {
 			}
 
 			// mark payment link request first, before sending the event
-			err = s.repositories.Neo4jRepositories.InvoiceWriteRepository.MarkPaymentLinkRequested(ctx, tenant, invoice.Id, utils.Now())
+			err = s.repositories.Neo4jRepositories.InvoiceWriteRepository.MarkPaymentLinkRequested(ctx, tenant, invoice.Id)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error marking payment link requested for invoice %s: %s", invoice.Id, err.Error())
@@ -501,6 +502,48 @@ func (s *invoiceService) GenerateInvoicePaymentLinks() {
 			if resp.StatusCode != http.StatusOK {
 				tracing.TraceErr(span, fmt.Errorf("request failed with status code: %s", resp.Status))
 				s.log.Errorf("request failed with status code: %s", resp.Status)
+			}
+		}
+	}
+}
+
+func (s *invoiceService) CleanupInvoices() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // Cancel context on exit
+
+	span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.CleanupInvoices")
+	defer span.Finish()
+
+	for {
+		select {
+		case <-ctx.Done():
+			s.log.Infof("Context cancelled, stopping")
+			return
+		default:
+			// continue as normal
+		}
+
+		records, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetExpiredDryRunInvoices(ctx)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error getting invoices for payment links generation: %v", err)
+			return
+		}
+
+		// no invoices found
+		if len(records) == 0 {
+			return
+		}
+
+		//process records
+		for _, record := range records {
+			invoice := neo4jmapper.MapDbNodeToInvoiceEntity(record.Node)
+			tenant := record.Tenant
+
+			err = s.repositories.Neo4jRepositories.InvoiceWriteRepository.DeleteDryRunInvoice(ctx, tenant, invoice.Id)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error deleting dry run invoice %s: %v", invoice.Id, err)
 			}
 		}
 	}

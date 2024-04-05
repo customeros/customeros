@@ -409,7 +409,7 @@ func (h *InvoiceEventHandler) OnInvoiceDeleteV1(ctx context.Context, evt eventst
 	span.SetTag(tracing.SpanTagEntityId, invoiceId)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
-	err := h.repositories.Neo4jRepositories.InvoiceWriteRepository.DeleteInvoice(ctx, eventData.Tenant, invoiceId)
+	err := h.repositories.Neo4jRepositories.InvoiceWriteRepository.DeleteInitializedInvoice(ctx, eventData.Tenant, invoiceId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while deleting invoice {%s}: {%s}", invoiceId, err.Error())
