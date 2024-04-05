@@ -2,6 +2,7 @@ package enum
 
 type RenewalCycle string
 
+// Deprecated: RenewalCycle is deprecated
 const (
 	RenewalCycleNone             RenewalCycle = ""
 	RenewalCycleMonthlyRenewal   RenewalCycle = "MONTHLY"

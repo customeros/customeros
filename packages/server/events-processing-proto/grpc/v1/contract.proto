@@ -22,9 +22,9 @@ enum ContractFieldMask {
   CONTRACT_FIELD_SERVICE_STARTED_AT = 2;
   CONTRACT_FIELD_SIGNED_AT = 3;
   CONTRACT_FIELD_ENDED_AT = 4;
-  CONTRACT_FIELD_RENEWAL_CYCLE = 5;
+  CONTRACT_FIELD_RENEWAL_CYCLE = 5 [deprecated = true];
   CONTRACT_FIELD_CONTRACT_URL = 6;
-  CONTRACT_FIELD_RENEWAL_PERIODS = 7;
+  CONTRACT_FIELD_RENEWAL_PERIODS = 7 [deprecated = true];
   CONTRACT_FIELD_BILLING_CYCLE = 8;
   CONTRACT_FIELD_INVOICING_START_DATE = 9;
   CONTRACT_FIELD_CURRENCY = 10;
@@ -49,6 +49,7 @@ enum ContractFieldMask {
   CONTRACT_FIELD_INVOICE_EMAIL_CC = 30;
   CONTRACT_FIELD_INVOICE_EMAIL_BCC = 31;
   CONTRACT_FIELD_INVOICE_EMAIL_TO = 32;
+  CONTRACT_FIELD_LENGTH_IN_MONTHS = 33;
 }
 
 // CreateContract request message
@@ -62,11 +63,11 @@ message CreateContractGrpcRequest {
   google.protobuf.Timestamp updatedAt = 7;
   google.protobuf.Timestamp serviceStartedAt = 8;
   google.protobuf.Timestamp signedAt = 9;
-  RenewalCycle renewalCycle = 10;
+  RenewalCycle renewalCycle = 10 [deprecated = true];
   SourceFields sourceFields = 12;
   ExternalSystemFields externalSystemFields = 13;
   string contractUrl = 14;
-  optional int64 renewalPeriods = 15; // applicable only for yearly renewal
+  optional int64 renewalPeriods = 15 [deprecated = true];
   BillingCycle billingCycle = 16;
   google.protobuf.Timestamp invoicingStartDate = 17;
   string currency = 18;
@@ -80,6 +81,7 @@ message CreateContractGrpcRequest {
   bool check = 26;
   int64 dueDays = 27;
   string country = 28;
+  int64 lengthInMonths = 29;
 }
 
 message UpdateContractGrpcRequest {
@@ -91,11 +93,11 @@ message UpdateContractGrpcRequest {
   google.protobuf.Timestamp serviceStartedAt = 6;
   google.protobuf.Timestamp signedAt = 7;
   google.protobuf.Timestamp endedAt = 8;
-  RenewalCycle renewalCycle = 9;
+  RenewalCycle renewalCycle = 9 [deprecated = true];
   SourceFields sourceFields = 10;
   ExternalSystemFields externalSystemFields = 11;
   string contractUrl = 12;
-  optional int64 renewalPeriods = 13; // applicable only for yearly renewal
+  optional int64 renewalPeriods = 13 [deprecated = true];
   BillingCycle billingCycle = 14;
   google.protobuf.Timestamp invoicingStartDate = 15;
   string currency = 16;
@@ -121,6 +123,7 @@ message UpdateContractGrpcRequest {
   string invoiceEmailTo = 37;
   repeated string invoiceEmailCc = 38;
   repeated string invoiceEmailBcc = 39;
+  int64 lengthInMonths = 40;
 }
 
 message RolloutRenewalOpportunityOnExpirationGrpcRequest {

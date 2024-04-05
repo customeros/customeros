@@ -519,25 +519,28 @@ func (this ContactsPage) GetTotalPages() int { return this.TotalPages }
 func (this ContactsPage) GetTotalElements() int64 { return this.TotalElements }
 
 type Contract struct {
-	Metadata             *Metadata            `json:"metadata"`
-	BillingDetails       *BillingDetails      `json:"billingDetails,omitempty"`
-	CommittedPeriods     *int64               `json:"committedPeriods,omitempty"`
-	ContractEnded        *time.Time           `json:"contractEnded,omitempty"`
-	ContractLineItems    []*ServiceLineItem   `json:"contractLineItems,omitempty"`
-	ContractName         string               `json:"contractName"`
+	Metadata                *Metadata          `json:"metadata"`
+	BillingDetails          *BillingDetails    `json:"billingDetails,omitempty"`
+	ContractEnded           *time.Time         `json:"contractEnded,omitempty"`
+	ContractLineItems       []*ServiceLineItem `json:"contractLineItems,omitempty"`
+	ContractName            string             `json:"contractName"`
+	CommittedPeriodInMonths *int64             `json:"committedPeriodInMonths,omitempty"`
+	ContractSigned          *time.Time         `json:"contractSigned,omitempty"`
+	ContractURL             *string            `json:"contractUrl,omitempty"`
+	Currency                *Currency          `json:"currency,omitempty"`
+	CreatedBy               *User              `json:"createdBy,omitempty"`
+	ExternalLinks           []*ExternalSystem  `json:"externalLinks"`
+	BillingEnabled          bool               `json:"billingEnabled"`
+	Opportunities           []*Opportunity     `json:"opportunities,omitempty"`
+	Owner                   *User              `json:"owner,omitempty"`
+	ServiceStarted          *time.Time         `json:"serviceStarted,omitempty"`
+	ContractStatus          ContractStatus     `json:"contractStatus"`
+	AutoRenew               bool               `json:"autoRenew"`
+	Attachments             []*Attachment      `json:"attachments,omitempty"`
+	// Deprecated, use committedPeriodInMonths instead.
+	CommittedPeriods *int64 `json:"committedPeriods,omitempty"`
+	// Deprecated, use committedPeriodInMonths instead.
 	ContractRenewalCycle ContractRenewalCycle `json:"contractRenewalCycle"`
-	ContractSigned       *time.Time           `json:"contractSigned,omitempty"`
-	ContractURL          *string              `json:"contractUrl,omitempty"`
-	Currency             *Currency            `json:"currency,omitempty"`
-	CreatedBy            *User                `json:"createdBy,omitempty"`
-	ExternalLinks        []*ExternalSystem    `json:"externalLinks"`
-	BillingEnabled       bool                 `json:"billingEnabled"`
-	Opportunities        []*Opportunity       `json:"opportunities,omitempty"`
-	Owner                *User                `json:"owner,omitempty"`
-	ServiceStarted       *time.Time           `json:"serviceStarted,omitempty"`
-	ContractStatus       ContractStatus       `json:"contractStatus"`
-	AutoRenew            bool                 `json:"autoRenew"`
-	Attachments          []*Attachment        `json:"attachments,omitempty"`
 	// Deprecated, use contractStatus instead.
 	Status ContractStatus `json:"status"`
 	// Deprecated, use serviceStarted instead.
@@ -592,18 +595,21 @@ func (Contract) IsMetadataInterface()        {}
 func (this Contract) GetMetadata() *Metadata { return this.Metadata }
 
 type ContractInput struct {
-	OrganizationID       string                `json:"organizationId"`
-	ContractName         *string               `json:"contractName,omitempty"`
+	OrganizationID          string     `json:"organizationId"`
+	ContractName            *string    `json:"contractName,omitempty"`
+	CommittedPeriodInMonths *int64     `json:"committedPeriodInMonths,omitempty"`
+	AppSource               *string    `json:"appSource,omitempty"`
+	ContractURL             *string    `json:"contractUrl,omitempty"`
+	ServiceStarted          *time.Time `json:"serviceStarted,omitempty"`
+	ContractSigned          *time.Time `json:"contractSigned,omitempty"`
+	Currency                *Currency  `json:"currency,omitempty"`
+	BillingEnabled          *bool      `json:"billingEnabled,omitempty"`
+	AutoRenew               *bool      `json:"autoRenew,omitempty"`
+	DueDays                 *int64     `json:"dueDays,omitempty"`
+	// Deprecated, use committedPeriodInMonths instead.
 	ContractRenewalCycle *ContractRenewalCycle `json:"contractRenewalCycle,omitempty"`
-	CommittedPeriods     *int64                `json:"committedPeriods,omitempty"`
-	AppSource            *string               `json:"appSource,omitempty"`
-	ContractURL          *string               `json:"contractUrl,omitempty"`
-	ServiceStarted       *time.Time            `json:"serviceStarted,omitempty"`
-	ContractSigned       *time.Time            `json:"contractSigned,omitempty"`
-	Currency             *Currency             `json:"currency,omitempty"`
-	BillingEnabled       *bool                 `json:"billingEnabled,omitempty"`
-	AutoRenew            *bool                 `json:"autoRenew,omitempty"`
-	DueDays              *int64                `json:"dueDays,omitempty"`
+	// Deprecated, use committedPeriodInMonths instead.
+	CommittedPeriods *int64 `json:"committedPeriods,omitempty"`
 	// Deprecated
 	InvoicingStartDate *time.Time `json:"invoicingStartDate,omitempty"`
 	// Deprecated
@@ -623,20 +629,23 @@ type ContractInput struct {
 }
 
 type ContractUpdateInput struct {
-	ContractID           string                `json:"contractId"`
-	Patch                *bool                 `json:"patch,omitempty"`
-	ContractName         *string               `json:"contractName,omitempty"`
-	ContractURL          *string               `json:"contractUrl,omitempty"`
+	ContractID              string               `json:"contractId"`
+	Patch                   *bool                `json:"patch,omitempty"`
+	ContractName            *string              `json:"contractName,omitempty"`
+	ContractURL             *string              `json:"contractUrl,omitempty"`
+	CommittedPeriodInMonths *int64               `json:"committedPeriodInMonths,omitempty"`
+	ServiceStarted          *time.Time           `json:"serviceStarted,omitempty"`
+	ContractSigned          *time.Time           `json:"contractSigned,omitempty"`
+	ContractEnded           *time.Time           `json:"contractEnded,omitempty"`
+	Currency                *Currency            `json:"currency,omitempty"`
+	BillingDetails          *BillingDetailsInput `json:"billingDetails,omitempty"`
+	AppSource               *string              `json:"appSource,omitempty"`
+	BillingEnabled          *bool                `json:"billingEnabled,omitempty"`
+	AutoRenew               *bool                `json:"autoRenew,omitempty"`
+	// Deprecated, use committedPeriodInMonths instead.
 	ContractRenewalCycle *ContractRenewalCycle `json:"contractRenewalCycle,omitempty"`
-	CommittedPeriods     *int64                `json:"committedPeriods,omitempty"`
-	ServiceStarted       *time.Time            `json:"serviceStarted,omitempty"`
-	ContractSigned       *time.Time            `json:"contractSigned,omitempty"`
-	ContractEnded        *time.Time            `json:"contractEnded,omitempty"`
-	Currency             *Currency             `json:"currency,omitempty"`
-	BillingDetails       *BillingDetailsInput  `json:"billingDetails,omitempty"`
-	AppSource            *string               `json:"appSource,omitempty"`
-	BillingEnabled       *bool                 `json:"billingEnabled,omitempty"`
-	AutoRenew            *bool                 `json:"autoRenew,omitempty"`
+	// Deprecated, use committedPeriodInMonths instead.
+	CommittedPeriods *int64 `json:"committedPeriods,omitempty"`
 	// Deprecated
 	CanPayWithCard *bool `json:"canPayWithCard,omitempty"`
 	// Deprecated
@@ -3256,6 +3265,7 @@ func (e ComparisonOperator) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
+// Deprecated
 type ContractBillingCycle string
 
 const (
@@ -3301,6 +3311,7 @@ func (e ContractBillingCycle) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
+// Deprecated
 type ContractRenewalCycle string
 
 const (

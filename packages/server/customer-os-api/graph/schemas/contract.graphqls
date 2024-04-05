@@ -13,11 +13,10 @@ extend type Mutation {
 type Contract implements MetadataInterface {
     metadata:           Metadata!
     billingDetails:     BillingDetails
-    committedPeriods:   Int64
     contractEnded:      Time
     contractLineItems:  [ServiceLineItem!] @goField(forceResolver: true)
     contractName:       String!
-    contractRenewalCycle: ContractRenewalCycle!
+    committedPeriodInMonths: Int64
     contractSigned:     Time
     contractUrl:        String
     currency:           Currency
@@ -31,6 +30,14 @@ type Contract implements MetadataInterface {
     autoRenew:          Boolean!
     attachments:        [Attachment!] @goField(forceResolver: true)
 
+    """
+    Deprecated, use committedPeriodInMonths instead.
+    """
+    committedPeriods:   Int64 @deprecated(reason: "Use committedPeriodInMonths instead.")
+    """
+    Deprecated, use committedPeriodInMonths instead.
+    """
+    contractRenewalCycle: ContractRenewalCycle! @deprecated(reason: "Use committedPeriodInMonths instead.")
     """
     Deprecated, use contractStatus instead.
     """
@@ -155,19 +162,26 @@ type BillingDetails {
 }
 
 input ContractInput {
-    organizationId:         ID!
-    contractName:           String
-    contractRenewalCycle:   ContractRenewalCycle
-    committedPeriods:       Int64
-    appSource:              String
-    contractUrl:            String
-    serviceStarted:         Time
-    contractSigned:         Time
-    currency:               Currency
-    billingEnabled:         Boolean
-    autoRenew:              Boolean
-    dueDays:                Int64
+    organizationId:             ID!
+    contractName:               String
+    committedPeriodInMonths:   Int64
+    appSource:                  String
+    contractUrl:                String
+    serviceStarted:             Time
+    contractSigned:             Time
+    currency:                   Currency
+    billingEnabled:             Boolean
+    autoRenew:                  Boolean
+    dueDays:                    Int64
 
+    """
+    Deprecated, use committedPeriodInMonths instead.
+    """
+    contractRenewalCycle:   ContractRenewalCycle @deprecated(reason: "Use committedPeriodInMonths instead.")
+    """
+    Deprecated, use committedPeriodInMonths instead.
+    """
+    committedPeriods:       Int64 @deprecated(reason: "Use committedPeriodInMonths instead.")
     """
     Deprecated
     """
@@ -207,8 +221,7 @@ input ContractUpdateInput {
     patch:                  Boolean
     contractName:           String
     contractUrl:            String
-    contractRenewalCycle:   ContractRenewalCycle
-    committedPeriods:       Int64
+    committedPeriodInMonths: Int64
     serviceStarted:         Time
     contractSigned:         Time
     contractEnded:          Time
@@ -218,6 +231,14 @@ input ContractUpdateInput {
     billingEnabled:         Boolean
     autoRenew:              Boolean
 
+    """
+    Deprecated, use committedPeriodInMonths instead.
+    """
+    contractRenewalCycle:   ContractRenewalCycle @deprecated(reason: "Use committedPeriodInMonths instead.")
+    """
+    Deprecated, use committedPeriodInMonths instead.
+    """
+    committedPeriods:       Int64 @deprecated(reason: "Use committedPeriodInMonths instead.")
     """
     Deprecated
     """
@@ -319,6 +340,9 @@ input BillingDetailsInput {
     dueDays:                Int64
 }
 
+"""
+Deprecated
+"""
 enum ContractRenewalCycle {
     NONE
     MONTHLY_RENEWAL
@@ -326,6 +350,9 @@ enum ContractRenewalCycle {
     ANNUAL_RENEWAL
 }
 
+"""
+Deprecated
+"""
 enum ContractBillingCycle {
     NONE
     MONTHLY_BILLING
