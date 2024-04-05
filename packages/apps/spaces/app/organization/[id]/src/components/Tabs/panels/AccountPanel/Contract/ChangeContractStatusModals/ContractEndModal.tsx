@@ -184,8 +184,8 @@ export const ContractEndModal = ({
             >
               End of renewal, {timeToRenewal}
             </Radio>
-            <Radio value={EndContract.CustomDate} colorScheme='primary'>
-              <Flex alignItems='center'>
+            <Radio value={EndContract.CustomDate} colorScheme='primary' h={6}>
+              <Flex alignItems='center' maxH={6}>
                 On{' '}
                 {value === EndContract.CustomDate ? (
                   <Box ml={1}>
