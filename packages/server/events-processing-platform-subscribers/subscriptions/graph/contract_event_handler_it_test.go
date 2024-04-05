@@ -881,7 +881,7 @@ func TestContractEventHandler_OnRefreshStatus_Ended(t *testing.T) {
 	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, action.AppSource)
 	require.Equal(t, neo4jenum.ActionContractStatusUpdated, action.Type)
 	require.Equal(t, "test contract has ended", action.Content)
-	require.Equal(t, `{"status":"ENDED","contract-name":"test contract","comment":"test contract is now ENDED"}`, action.Metadata)
+	require.Equal(t, `{"status":"ENDED","contract-name":"test contract","comment":"test contract has ended"}`, action.Metadata)
 }
 
 func TestContractEventHandler_OnRefreshStatus_Live(t *testing.T) {
@@ -958,7 +958,7 @@ func TestContractEventHandler_OnRefreshStatus_Live(t *testing.T) {
 	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, action.AppSource)
 	require.Equal(t, neo4jenum.ActionContractStatusUpdated, action.Type)
 	require.Equal(t, "test contract is now live", action.Content)
-	require.Equal(t, `{"status":"LIVE","contract-name":"test contract","comment":"test contract is now LIVE"}`, action.Metadata)
+	require.Equal(t, `{"status":"LIVE","contract-name":"test contract","comment":"test contract is now live"}`, action.Metadata)
 }
 
 func TestContractEventHandler_OnUpdate_SubsetOfFieldsSet(t *testing.T) {
