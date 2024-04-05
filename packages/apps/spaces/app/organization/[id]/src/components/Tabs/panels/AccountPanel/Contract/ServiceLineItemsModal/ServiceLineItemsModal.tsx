@@ -70,6 +70,7 @@ interface SubscriptionServiceModalProps {
 const defaultValue = {
   name: 'Unnamed',
   quantity: 1,
+  vatRate: 0,
   price: 0,
   billed: BilledType.Monthly,
   type: 'RECURRING',
@@ -236,7 +237,7 @@ export const ServiceLineItemsModal = ({
             name: e.name,
             price: e.price,
             quantity: e.quantity,
-            // vatRate: e.vatRate,
+            vatRate: e.vatRate,
             serviceStarted: e.serviceStarted,
           })),
       },
@@ -248,7 +249,7 @@ export const ServiceLineItemsModal = ({
       isOpen={isOpen}
       onClose={onClose}
       initialFocusRef={initialRef}
-      size='2xl'
+      size='3xl'
       closeOnOverlayClick
     >
       <ModalOverlay />
@@ -292,7 +293,7 @@ export const ServiceLineItemsModal = ({
             borderColor='gray.300'
             pb={1}
           >
-            <Text fontSize='sm' fontWeight='medium' w='20%'>
+            <Text fontSize='sm' fontWeight='medium' w='15%'>
               Name
             </Text>
             <Text fontSize='sm' fontWeight='medium' w='15%'>
@@ -304,8 +305,11 @@ export const ServiceLineItemsModal = ({
             <Text fontSize='sm' fontWeight='medium' w='15%'>
               Unit Price
             </Text>
-            <Text fontSize='sm' fontWeight='medium' w='15%'>
+            <Text fontSize='sm' fontWeight='medium' w='10%'>
               Recurring
+            </Text>{' '}
+            <Text fontSize='sm' fontWeight='medium' w='10%'>
+              VAT
             </Text>{' '}
             <Text fontSize='sm' fontWeight='medium' w='15%'>
               Service Start
