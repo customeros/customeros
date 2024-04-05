@@ -3,11 +3,15 @@ import type {
   Props,
   ControlProps,
   SelectInstance,
+  ClassNamesConfig,
   ClearIndicatorProps,
 } from 'react-select';
 
 import ReactSelect from 'react-select';
 import { useMemo, forwardRef, useCallback } from 'react';
+
+import merge from 'lodash/merge';
+import { twMerge } from 'tailwind-merge';
 
 import { cn } from '@ui/utils/cn';
 import { Delete } from '@ui/media/icons/Delete';
@@ -23,7 +27,14 @@ export interface SelectProps extends Props<any, any, any> {
 
 export const Select = forwardRef<SelectInstance, SelectProps>(
   (
-    { isReadOnly, leftElement, size = 'md', components: _components, ...rest },
+    {
+      isReadOnly,
+      leftElement,
+      size = 'md',
+      components: _components,
+      classNames,
+      ...rest
+    },
     ref,
   ) => {
     const Control = useCallback(
@@ -91,6 +102,10 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
       }),
       [Control, _components],
     );
+    const defaultClassNames = useMemo(
+      () => merge(getDefaultClassNames({ size, isReadOnly }), classNames),
+      [size, isReadOnly, classNames],
+    );
 
     return (
       <ReactSelect
@@ -98,41 +113,58 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
         ref={ref}
         components={components}
         tabSelectsValue={false}
-        classNames={{
-          container: ({ isFocused }) =>
-            inputVariants({
-              variant: 'flushed',
-              size,
-              className: cn(
-                'flex mt-1 items-center cursor-pointer overflow-visible',
-                isReadOnly && 'pointer-events-none',
-                isFocused && 'border-primary-500',
-              ),
-            }),
-          menu: ({ menuPlacement }) =>
-            cn(
-              menuPlacement === 'top'
-                ? 'mb-2 animate-slideUpAndFade'
-                : 'mt-2 animate-slideDownAndFade',
-            ),
-          menuList: () =>
-            'p-2 max-h-[300px] border border-gray-200 bg-white outline-offset-[2px] outline-[2px] rounded-lg shadow-lg overflow-y-auto overscroll-auto',
-          option: ({ isFocused, isSelected }) =>
-            cn(
-              'my-[2px] px-3 py-1.5 rounded-md text-gray-700 line-clamp-1 transition ease-in-out delay-50 hover:bg-gray-50',
-              isSelected && 'bg-gray-50 font-medium leading-normal',
-              isFocused && 'ring-2 ring-gray-100',
-            ),
-          placeholder: () => 'text-gray-400',
-          multiValue: () =>
-            'flex items-center h-6 bg-gray-50 rounded-md pl-2 pr-1 ml-0 mr-1 mb-1 border border-gray-200',
-          multiValueLabel: () => 'text-gray-500 text-sm mr-1',
-          multiValueRemove: () => 'cursor-pointer *:size-5 *:text-gray-500',
-          groupHeading: () =>
-            'text-gray-400 text-sm px-3 py-1.5 font-normal uppercase',
-        }}
+        classNames={defaultClassNames}
         {...rest}
       />
     );
   },
 );
+
+const getDefaultClassNames = ({
+  size,
+  isReadOnly,
+}: Pick<SelectProps, 'size' | 'isReadOnly'>): ClassNamesConfig => ({
+  container: ({ isFocused }) =>
+    inputVariants({
+      variant: 'flushed',
+      size,
+      className: cn(
+        'flex mt-1 items-center cursor-pointer overflow-visible',
+        isReadOnly && 'pointer-events-none',
+        isFocused && 'border-primary-500',
+      ),
+    }),
+  menu: ({ menuPlacement }) =>
+    cn(
+      menuPlacement === 'top'
+        ? 'mb-2 animate-slideUpAndFade'
+        : 'mt-2 animate-slideDownAndFade',
+    ),
+  menuList: () =>
+    'p-2 max-h-[300px] border border-gray-200 bg-white outline-offset-[2px] outline-[2px] rounded-lg shadow-lg overflow-y-auto overscroll-auto',
+  option: ({ isFocused, isSelected }) =>
+    cn(
+      'my-[2px] px-3 py-1.5 rounded-md text-gray-700 line-clamp-1 transition ease-in-out delay-50 hover:bg-gray-50',
+      isSelected && 'bg-gray-50 font-medium leading-normal',
+      isFocused && 'ring-2 ring-gray-100',
+    ),
+  placeholder: () => 'text-gray-400',
+  multiValue: () =>
+    'flex items-center h-6 bg-gray-50 rounded-md pl-2 pr-1 ml-0 mr-1 mb-1 border border-gray-200',
+  multiValueLabel: () => 'text-gray-500 text-sm mr-1',
+  multiValueRemove: () => 'cursor-pointer *:size-5 *:text-gray-500',
+  groupHeading: () => 'text-gray-400 text-sm px-3 py-1.5 font-normal uppercase',
+});
+
+export const getMultiValueClassNames = (className?: string) => {
+  const defaultStyle =
+    'flex items-center h-6 bg-gray-50 rounded-md pl-2 pr-1 ml-0 mr-1 mb-1 border border-gray-200';
+
+  return twMerge(defaultStyle, className);
+};
+
+export const getMultiValueLabelClassNames = (className?: string) => {
+  const defaultStyle = 'text-gray-500 text-sm mr-1';
+
+  return twMerge(defaultStyle, className);
+};

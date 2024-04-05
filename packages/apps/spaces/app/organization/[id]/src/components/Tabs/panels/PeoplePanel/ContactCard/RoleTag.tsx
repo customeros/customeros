@@ -30,7 +30,7 @@ export const RoleTag: React.FC<RoleTagProps> = ({ label }) => {
 
   return (
     <Tag
-      size='sm'
+      size='md'
       variant='outline'
       colorScheme={colorScheme}
       className='min-h-6 '

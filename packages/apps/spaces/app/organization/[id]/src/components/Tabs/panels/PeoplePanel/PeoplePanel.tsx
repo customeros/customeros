@@ -76,6 +76,7 @@ export const PeoplePanel = () => {
           <Button
             size='sm'
             variant='outline'
+            className='text-gray-500'
             loadingText='Adding'
             isLoading={isLoading}
             spinner={
@@ -86,7 +87,7 @@ export const PeoplePanel = () => {
               />
             }
             onClick={handleAddContact}
-            leftIcon={<Icons.UsersPlus />}
+            leftIcon={<Icons.UsersPlus className='text-gray-500' />}
           >
             Add
           </Button>
