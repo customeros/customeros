@@ -15,12 +15,13 @@ const (
 	InvoiceFillV1              = "V1_INVOICE_FILL"
 	InvoicePdfRequestedV1      = "V1_INVOICE_PDF_REQUESTED"
 	InvoicePdfGeneratedV1      = "V1_INVOICE_PDF_GENERATED"
-	InvoicePayV1               = "V1_INVOICE_PAY"
 	InvoiceUpdateV1            = "V1_INVOICE_UPDATE"
 	InvoicePaidV1              = "V1_INVOICE_PAID"
 	InvoicePayNotificationV1   = "V1_INVOICE_PAY_NOTIFICATION"
 	InvoiceDeleteV1            = "V1_INVOICE_DELETE"
 	InvoiceVoidV1              = "V1_INVOICE_VOID"
+	// Deprecated
+	InvoicePayV1 = "V1_INVOICE_PAY"
 )
 
 const (
@@ -87,31 +88,6 @@ func NewInvoicePdfGeneratedEvent(aggregate eventstore.Aggregate, updatedAt time.
 	event := eventstore.NewBaseEvent(aggregate, InvoicePdfGeneratedV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, errors.Wrap(err, "error setting json data for InvoicePdfGeneratedEvent")
-	}
-
-	return event, nil
-}
-
-type InvoicePayEvent struct {
-	Tenant       string             `json:"tenant" validate:"required"`
-	UpdatedAt    time.Time          `json:"createdAt"`
-	SourceFields commonmodel.Source `json:"sourceFields"`
-}
-
-func NewInvoicePayEvent(aggregate eventstore.Aggregate, updatedAt *time.Time, sourceFields commonmodel.Source, request *invoicepb.PayInvoiceRequest) (eventstore.Event, error) {
-	eventData := InvoicePayEvent{
-		Tenant:       aggregate.GetTenant(),
-		UpdatedAt:    *updatedAt,
-		SourceFields: sourceFields,
-	}
-
-	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "failed to validate InvoicePayEvent")
-	}
-
-	event := eventstore.NewBaseEvent(aggregate, InvoicePayV1)
-	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for InvoicePayEvent")
 	}
 
 	return event, nil

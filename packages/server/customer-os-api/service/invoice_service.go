@@ -499,13 +499,13 @@ func (s *invoiceService) PayInvoice(ctx context.Context, invoiceId string) error
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	response, err := CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
-		return s.grpcClients.InvoiceClient.PayInvoice(ctx, &invoicepb.PayInvoiceRequest{
+		return s.grpcClients.InvoiceClient.UpdateInvoice(ctx, &invoicepb.UpdateInvoiceRequest{
 			Tenant:         tenant,
 			InvoiceId:      invoiceId,
 			LoggedInUserId: common.GetUserIdFromContext(ctx),
-			SourceFields: &commonpb.SourceFields{
-				AppSource: constants.AppSourceCustomerOsApi,
-			},
+			AppSource:      constants.AppSourceCustomerOsApi,
+			Status:         invoicepb.InvoiceStatus_INVOICE_STATUS_PAID,
+			FieldsMask:     []invoicepb.InvoiceFieldMask{invoicepb.InvoiceFieldMask_INVOICE_FIELD_STATUS},
 		})
 	})
 

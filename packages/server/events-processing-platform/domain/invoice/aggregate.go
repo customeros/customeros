@@ -76,8 +76,6 @@ func (a *InvoiceAggregate) HandleGRPCRequest(ctx context.Context, request any, p
 		return nil, a.CreatePdfRequestedEvent(ctx, r)
 	case *invoicepb.PdfGeneratedInvoiceRequest:
 		return nil, a.CreatePdfGeneratedEvent(ctx, r)
-	case *invoicepb.PayInvoiceRequest:
-		return nil, a.PayInvoice(ctx, r)
 	case *invoicepb.UpdateInvoiceRequest:
 		return nil, a.UpdateInvoice(ctx, r)
 	case *invoicepb.PayInvoiceNotificationRequest:
@@ -324,7 +322,7 @@ func (a *InvoiceAggregate) UpdateInvoice(ctx context.Context, r *invoicepb.Updat
 	events = append(events, updateEvent)
 
 	// if status updated, and set from non-paid to paid
-	if len(fieldsMask) == 0 || utils.Contains(fieldsMask, FieldMaskStatus) &&
+	if utils.Contains(fieldsMask, FieldMaskStatus) &&
 		a.Invoice.Status != neo4jenum.InvoiceStatusPaid.String() &&
 		status == neo4jenum.InvoiceStatusPaid.String() {
 		paidEvent, err := NewInvoicePaidEvent(a)
@@ -341,31 +339,6 @@ func (a *InvoiceAggregate) UpdateInvoice(ctx context.Context, r *invoicepb.Updat
 	}
 
 	return a.ApplyAll(events)
-}
-
-func (a *InvoiceAggregate) PayInvoice(ctx context.Context, request *invoicepb.PayInvoiceRequest) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "InvoiceAggregate.PayInvoice")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("AggregateVersion", a.GetVersion()))
-
-	sourceFields := commonmodel.Source{}
-	sourceFields.FromGrpc(request.SourceFields)
-
-	payEvent, err := NewInvoicePayEvent(a, utils.TimestampProtoToTimePtr(request.UpdatedAt), sourceFields, request)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "InvoicePayEvent")
-	}
-
-	aggregate.EnrichEventWithMetadataExtended(&payEvent, span, aggregate.EventMetadata{
-		Tenant: request.Tenant,
-		UserId: request.LoggedInUserId,
-		App:    request.SourceFields.AppSource,
-	})
-
-	return a.Apply(payEvent)
 }
 
 func (a *InvoiceAggregate) PermanentlyDeleteInitializedInvoice(ctx context.Context, request *invoicepb.PermanentlyDeleteInitializedInvoiceRequest) error {

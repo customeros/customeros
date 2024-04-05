@@ -413,7 +413,7 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		invoiceevents.InvoicePayNotificationV1:
 		return nil // do nothing
 	case invoiceevents.InvoicePayV1:
-		return nil // do nothing yet, not implemented
+		return nil
 
 	case orgplanevent.OrganizationPlanCreateV1:
 		return s.organizationPlanEventHandler.OnCreate(ctx, evt)

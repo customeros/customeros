@@ -293,26 +293,6 @@ func (s *invoiceService) UpdateInvoice(ctx context.Context, request *invoicepb.U
 	return &invoicepb.InvoiceIdResponse{Id: request.InvoiceId}, nil
 }
 
-func (s *invoiceService) PayInvoice(ctx context.Context, request *invoicepb.PayInvoiceRequest) (*invoicepb.InvoiceIdResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "InvoiceService.PayInvoiceRequest")
-	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	tracing.LogObjectAsJson(span, "request", request)
-
-	if request.InvoiceId == "" {
-		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("invoiceId"))
-	}
-
-	invoiceAggregate := invoice.NewInvoiceAggregateWithTenantAndID(request.Tenant, request.InvoiceId)
-	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, invoiceAggregate, *eventstore.NewLoadAggregateOptionsWithRequired(), request); err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("(PayInvoice) tenant:{%v}, err: %v", request.Tenant, err.Error())
-		return nil, grpcerr.ErrResponse(err)
-	}
-
-	return &invoicepb.InvoiceIdResponse{Id: request.InvoiceId}, nil
-}
-
 func (s *invoiceService) SimulateInvoice(ctx context.Context, request *invoicepb.SimulateInvoiceRequest) (*invoicepb.InvoiceIdResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "InvoiceService.NewInvoice")
 	defer span.Finish()
