@@ -1,7 +1,7 @@
 'use client';
 import { useRef, useEffect } from 'react';
 
-import { FormInput } from '@ui/form/Input';
+import { FormInput } from '@ui/form/Input/FormInput2';
 
 export const OrganizationNameInput = ({
   orgNameReadOnly,
@@ -22,19 +22,15 @@ export const OrganizationNameInput = ({
   return (
     <>
       <FormInput
-        display='block'
+        className='font-semibold text-lg border-none overflow-hidden overflow-ellipsis'
         name='name'
-        fontSize='lg'
         ref={nameRef}
         autoComplete='off'
-        fontWeight='semibold'
         variant='unstyled'
-        borderRadius='unset'
         placeholder='Company name'
         formId='organization-about'
-        isReadOnly={orgNameReadOnly}
-        textOverflow='ellipsis'
-        overflow='hidden'
+        disabled={orgNameReadOnly}
+        size='xs'
       />
     </>
   );

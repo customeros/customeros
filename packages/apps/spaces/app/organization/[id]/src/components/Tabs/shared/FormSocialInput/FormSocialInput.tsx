@@ -1,16 +1,16 @@
 import { useField } from 'react-inverted-form';
 import { useRef, useMemo, useState, useCallback } from 'react';
 
-import { Input } from '@ui/form/Input';
 import { Social } from '@graphql/types';
+import { Input } from '@ui/form/Input/Input2';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import {
-  InputGroup,
-  InputGroupProps,
-  InputLeftElement,
-} from '@ui/form/InputGroup';
 import { useUpdateSocialMutation } from '@organization/src/graphql/updateSocial.generated';
 import { useRemoveSocialMutation } from '@organization/src/graphql/removeSocial.generated';
+import {
+  InputGroup,
+  LeftElement,
+  InputGroupProps,
+} from '@ui/form/Input/InputGroup';
 
 import { SocialIcon } from './SocialIcons';
 import { SocialInput } from './SocialInput';
@@ -174,7 +174,6 @@ export const FormSocialInput = ({
           key={index}
           value={url}
           index={index}
-          bg={rest.bg}
           onBlur={handleBlur}
           isReadOnly={isReadOnly}
           onChange={handleChange}
@@ -186,14 +185,16 @@ export const FormSocialInput = ({
       {!isReadOnly && (
         <InputGroup {...rest}>
           {leftElement && (
-            <InputLeftElement w='4'>
+            <LeftElement>
               <SocialIcon url={newValue}>{leftElement}</SocialIcon>
-            </InputLeftElement>
+            </LeftElement>
           )}
           <Input
+            className={
+              'border-b border-transparent hover:border-transparent hover:border-b-none text-md focus:hover:border-b focus:hover:border-transparent focus:border-b focus:border-transparent'
+            }
             value={newValue}
             ref={newInputRef}
-            pl='30px'
             onBlur={handleAddBlur}
             onChange={handleAddChange}
             onKeyDown={handleAddKeyDown}

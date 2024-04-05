@@ -61,9 +61,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ size, variant, className, ...rest }, ref) => {
     return (
       <input
+        {...rest}
         ref={ref}
         className={twMerge(inputVariants({ className, size, variant }))}
-        {...rest}
       />
     );
   },

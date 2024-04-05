@@ -1,23 +1,18 @@
+import Link from 'next/link';
 import React, { memo, useRef, useState } from 'react';
 
-import { FormLabel, FormLabelProps, VisuallyHidden } from '@chakra-ui/react';
-
-import { Flex } from '@ui/layout/Flex';
 import { Icons } from '@ui/media/Icon';
-import { Link } from '@ui/navigation/Link';
-import { Text } from '@ui/typography/Text';
-import { IconButton } from '@ui/form/IconButton';
-import { InputGroup } from '@ui/form/InputGroup';
-import { formatSocialUrl } from '@ui/form/UrlInput/util';
-import { Input, InputProps, FormControl } from '@ui/form/Input';
 
-interface UrlInputProps extends InputProps {
+import { Input } from '../Input/Input2';
+import { formatSocialUrl } from './util';
+import { IconButton } from '../IconButton/IconButton';
+
+export interface UrlInputProps
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
   value: string;
   label?: string;
   isLabelVisible?: boolean;
-  labelProps?: FormLabelProps;
-  leftElement?: React.ReactNode;
-  rightElement?: React.ReactNode;
+  labelProps?: React.LabelHTMLAttributes<HTMLLabelElement>;
 }
 
 export const UrlInput = memo(
@@ -25,8 +20,8 @@ export const UrlInput = memo(
     value,
     onBlur,
     isLabelVisible,
-    labelProps,
     label,
+    labelProps,
     ...rest
   }: UrlInputProps) => {
     const [isFocused, setIsFocused] = useState(false);
@@ -34,6 +29,7 @@ export const UrlInput = memo(
     const inputRef = useRef<HTMLInputElement>(null);
 
     const href = value?.startsWith('http') ? value : `https://${value}`;
+
     const formattedUrl = formatSocialUrl(value);
 
     const handleFocus = () => {
@@ -47,69 +43,55 @@ export const UrlInput = memo(
     };
 
     return (
-      <FormControl>
+      <div className='w-full'>
         {isLabelVisible ? (
-          <FormLabel {...labelProps}>{label}</FormLabel>
+          <label {...labelProps}>{label}</label>
         ) : (
-          <VisuallyHidden>
-            <FormLabel>{label}</FormLabel>
-          </VisuallyHidden>
+          <label className='sr-only'>{label}</label>
         )}
 
-        <InputGroup
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-        >
+        <div className='relative'>
           <Input
             value={value}
             ref={inputRef}
             onFocus={handleFocus}
             onBlur={handleBlur}
+            size='xs'
+            className='border border-transparent text-md'
             {...rest}
           />
           {!isFocused && !!value && (
-            <Flex
-              bg='gray.25'
-              h='100%'
-              align='center'
-              w='100%'
-              position='absolute'
-              _hover={{
-                '&:after': {
-                  content: "''",
-                  position: 'absolute',
-                  width: '100%',
-                  height: '1px',
-                  bg: 'gray.300',
-                  bottom: 0,
-                },
-              }}
+            <div
+              className='bg-gray-25 w-full absolute top-[1px] hover:border-gray-300 hover:border-b border-b border-transparent'
+              onMouseEnter={() => setIsHovered(true)}
+              onMouseLeave={() => setIsHovered(false)}
             >
-              <Text
-                mr='-2px'
-                mt='-2px'
-                cursor='auto'
+              <p
+                className='text-gray-700 top-0 truncate text-base'
                 onClick={handleFocus}
-                noOfLines={1}
-                w='100%'
               >
                 {formattedUrl}
-              </Text>
+              </p>
               {isHovered && (
-                <IconButton
-                  size='xs'
-                  as={Link}
+                <Link
                   href={href}
                   target='_blank'
-                  variant='ghost'
-                  aria-label='social link'
-                  icon={<Icons.LinkExternal2 color='gray.500' boxSize='4' />}
-                />
+                  rel='noopener noreferrer'
+                  className='absolute -top-[1px] right-0 flex items-center text-gray-500 hover:text-gray-900'
+                >
+                  <IconButton
+                    size='sm'
+                    variant='ghost'
+                    colorScheme='gray'
+                    aria-label='social link'
+                    icon={<Icons.LinkExternal2 />}
+                  />
+                </Link>
               )}
-            </Flex>
+            </div>
           )}
-        </InputGroup>
-      </FormControl>
+        </div>
+      </div>
     );
   },
 );

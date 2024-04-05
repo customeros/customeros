@@ -71,6 +71,7 @@ export const DebouncedSearchInput = memo(
             className='border-transparent focus:border-0 hover:border-transparent'
             value={value}
             ref={innerRef}
+            size='sm'
             variant='flushed'
             autoComplete='off'
             placeholder='Search'
