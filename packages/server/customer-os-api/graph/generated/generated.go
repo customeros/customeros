@@ -274,49 +274,50 @@ type ComplexityRoot struct {
 	}
 
 	Contract struct {
-		AddressLine1          func(childComplexity int) int
-		AddressLine2          func(childComplexity int) int
-		AppSource             func(childComplexity int) int
-		Attachments           func(childComplexity int) int
-		AutoRenew             func(childComplexity int) int
-		BillingCycle          func(childComplexity int) int
-		BillingDetails        func(childComplexity int) int
-		BillingEnabled        func(childComplexity int) int
-		CommittedPeriods      func(childComplexity int) int
-		ContractEnded         func(childComplexity int) int
-		ContractLineItems     func(childComplexity int) int
-		ContractName          func(childComplexity int) int
-		ContractRenewalCycle  func(childComplexity int) int
-		ContractSigned        func(childComplexity int) int
-		ContractStatus        func(childComplexity int) int
-		ContractURL           func(childComplexity int) int
-		Country               func(childComplexity int) int
-		CreatedAt             func(childComplexity int) int
-		CreatedBy             func(childComplexity int) int
-		Currency              func(childComplexity int) int
-		EndedAt               func(childComplexity int) int
-		ExternalLinks         func(childComplexity int) int
-		ID                    func(childComplexity int) int
-		InvoiceEmail          func(childComplexity int) int
-		InvoiceNote           func(childComplexity int) int
-		InvoicingStartDate    func(childComplexity int) int
-		Locality              func(childComplexity int) int
-		Metadata              func(childComplexity int) int
-		Name                  func(childComplexity int) int
-		Opportunities         func(childComplexity int) int
-		OrganizationLegalName func(childComplexity int) int
-		Owner                 func(childComplexity int) int
-		RenewalCycle          func(childComplexity int) int
-		RenewalPeriods        func(childComplexity int) int
-		ServiceLineItems      func(childComplexity int) int
-		ServiceStarted        func(childComplexity int) int
-		ServiceStartedAt      func(childComplexity int) int
-		SignedAt              func(childComplexity int) int
-		Source                func(childComplexity int) int
-		SourceOfTruth         func(childComplexity int) int
-		Status                func(childComplexity int) int
-		UpdatedAt             func(childComplexity int) int
-		Zip                   func(childComplexity int) int
+		AddressLine1            func(childComplexity int) int
+		AddressLine2            func(childComplexity int) int
+		AppSource               func(childComplexity int) int
+		Attachments             func(childComplexity int) int
+		AutoRenew               func(childComplexity int) int
+		BillingCycle            func(childComplexity int) int
+		BillingDetails          func(childComplexity int) int
+		BillingEnabled          func(childComplexity int) int
+		CommittedPeriodInMonths func(childComplexity int) int
+		CommittedPeriods        func(childComplexity int) int
+		ContractEnded           func(childComplexity int) int
+		ContractLineItems       func(childComplexity int) int
+		ContractName            func(childComplexity int) int
+		ContractRenewalCycle    func(childComplexity int) int
+		ContractSigned          func(childComplexity int) int
+		ContractStatus          func(childComplexity int) int
+		ContractURL             func(childComplexity int) int
+		Country                 func(childComplexity int) int
+		CreatedAt               func(childComplexity int) int
+		CreatedBy               func(childComplexity int) int
+		Currency                func(childComplexity int) int
+		EndedAt                 func(childComplexity int) int
+		ExternalLinks           func(childComplexity int) int
+		ID                      func(childComplexity int) int
+		InvoiceEmail            func(childComplexity int) int
+		InvoiceNote             func(childComplexity int) int
+		InvoicingStartDate      func(childComplexity int) int
+		Locality                func(childComplexity int) int
+		Metadata                func(childComplexity int) int
+		Name                    func(childComplexity int) int
+		Opportunities           func(childComplexity int) int
+		OrganizationLegalName   func(childComplexity int) int
+		Owner                   func(childComplexity int) int
+		RenewalCycle            func(childComplexity int) int
+		RenewalPeriods          func(childComplexity int) int
+		ServiceLineItems        func(childComplexity int) int
+		ServiceStarted          func(childComplexity int) int
+		ServiceStartedAt        func(childComplexity int) int
+		SignedAt                func(childComplexity int) int
+		Source                  func(childComplexity int) int
+		SourceOfTruth           func(childComplexity int) int
+		Status                  func(childComplexity int) int
+		UpdatedAt               func(childComplexity int) int
+		Zip                     func(childComplexity int) int
 	}
 
 	Country struct {
@@ -3191,6 +3192,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Contract.BillingEnabled(childComplexity), true
+
+	case "Contract.committedPeriodInMonths":
+		if e.complexity.Contract.CommittedPeriodInMonths == nil {
+			break
+		}
+
+		return e.complexity.Contract.CommittedPeriodInMonths(childComplexity), true
 
 	case "Contract.committedPeriods":
 		if e.complexity.Contract.CommittedPeriods == nil {
@@ -12339,11 +12347,10 @@ extend type Mutation {
 type Contract implements MetadataInterface {
     metadata:           Metadata!
     billingDetails:     BillingDetails
-    committedPeriods:   Int64
     contractEnded:      Time
     contractLineItems:  [ServiceLineItem!] @goField(forceResolver: true)
     contractName:       String!
-    contractRenewalCycle: ContractRenewalCycle!
+    committedPeriodInMonths: Int64
     contractSigned:     Time
     contractUrl:        String
     currency:           Currency
@@ -12357,6 +12364,14 @@ type Contract implements MetadataInterface {
     autoRenew:          Boolean!
     attachments:        [Attachment!] @goField(forceResolver: true)
 
+    """
+    Deprecated, use committedPeriodInMonths instead.
+    """
+    committedPeriods:   Int64 @deprecated(reason: "Use committedPeriodInMonths instead.")
+    """
+    Deprecated, use committedPeriodInMonths instead.
+    """
+    contractRenewalCycle: ContractRenewalCycle! @deprecated(reason: "Use committedPeriodInMonths instead.")
     """
     Deprecated, use contractStatus instead.
     """
@@ -12481,19 +12496,26 @@ type BillingDetails {
 }
 
 input ContractInput {
-    organizationId:         ID!
-    contractName:           String
-    contractRenewalCycle:   ContractRenewalCycle
-    committedPeriods:       Int64
-    appSource:              String
-    contractUrl:            String
-    serviceStarted:         Time
-    contractSigned:         Time
-    currency:               Currency
-    billingEnabled:         Boolean
-    autoRenew:              Boolean
-    dueDays:                Int64
+    organizationId:             ID!
+    contractName:               String
+    committedPeriodInMonths:   Int64
+    appSource:                  String
+    contractUrl:                String
+    serviceStarted:             Time
+    contractSigned:             Time
+    currency:                   Currency
+    billingEnabled:             Boolean
+    autoRenew:                  Boolean
+    dueDays:                    Int64
 
+    """
+    Deprecated, use committedPeriodInMonths instead.
+    """
+    contractRenewalCycle:   ContractRenewalCycle @deprecated(reason: "Use committedPeriodInMonths instead.")
+    """
+    Deprecated, use committedPeriodInMonths instead.
+    """
+    committedPeriods:       Int64 @deprecated(reason: "Use committedPeriodInMonths instead.")
     """
     Deprecated
     """
@@ -12533,8 +12555,7 @@ input ContractUpdateInput {
     patch:                  Boolean
     contractName:           String
     contractUrl:            String
-    contractRenewalCycle:   ContractRenewalCycle
-    committedPeriods:       Int64
+    committedPeriodInMonths: Int64
     serviceStarted:         Time
     contractSigned:         Time
     contractEnded:          Time
@@ -12544,6 +12565,14 @@ input ContractUpdateInput {
     billingEnabled:         Boolean
     autoRenew:              Boolean
 
+    """
+    Deprecated, use committedPeriodInMonths instead.
+    """
+    contractRenewalCycle:   ContractRenewalCycle @deprecated(reason: "Use committedPeriodInMonths instead.")
+    """
+    Deprecated, use committedPeriodInMonths instead.
+    """
+    committedPeriods:       Int64 @deprecated(reason: "Use committedPeriodInMonths instead.")
     """
     Deprecated
     """
@@ -12645,6 +12674,9 @@ input BillingDetailsInput {
     dueDays:                Int64
 }
 
+"""
+Deprecated
+"""
 enum ContractRenewalCycle {
     NONE
     MONTHLY_RENEWAL
@@ -12652,6 +12684,9 @@ enum ContractRenewalCycle {
     ANNUAL_RENEWAL
 }
 
+"""
+Deprecated
+"""
 enum ContractBillingCycle {
     NONE
     MONTHLY_BILLING
@@ -27456,47 +27491,6 @@ func (ec *executionContext) fieldContext_Contract_billingDetails(ctx context.Con
 	return fc, nil
 }
 
-func (ec *executionContext) _Contract_committedPeriods(ctx context.Context, field graphql.CollectedField, obj *model.Contract) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Contract_committedPeriods(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.CommittedPeriods, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*int64)
-	fc.Result = res
-	return ec.marshalOInt642ᚖint64(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Contract_committedPeriods(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Contract",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int64 does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Contract_contractEnded(ctx context.Context, field graphql.CollectedField, obj *model.Contract) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Contract_contractEnded(ctx, field)
 	if err != nil {
@@ -27649,8 +27643,8 @@ func (ec *executionContext) fieldContext_Contract_contractName(ctx context.Conte
 	return fc, nil
 }
 
-func (ec *executionContext) _Contract_contractRenewalCycle(ctx context.Context, field graphql.CollectedField, obj *model.Contract) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Contract_contractRenewalCycle(ctx, field)
+func (ec *executionContext) _Contract_committedPeriodInMonths(ctx context.Context, field graphql.CollectedField, obj *model.Contract) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contract_committedPeriodInMonths(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -27663,31 +27657,28 @@ func (ec *executionContext) _Contract_contractRenewalCycle(ctx context.Context, 
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ContractRenewalCycle, nil
+		return obj.CommittedPeriodInMonths, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(model.ContractRenewalCycle)
+	res := resTmp.(*int64)
 	fc.Result = res
-	return ec.marshalNContractRenewalCycle2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContractRenewalCycle(ctx, field.Selections, res)
+	return ec.marshalOInt642ᚖint64(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Contract_contractRenewalCycle(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Contract_committedPeriodInMonths(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Contract",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ContractRenewalCycle does not have child fields")
+			return nil, errors.New("field of type Int64 does not have child fields")
 		},
 	}
 	return fc, nil
@@ -28356,6 +28347,91 @@ func (ec *executionContext) fieldContext_Contract_attachments(ctx context.Contex
 				return ec.fieldContext_Attachment_appSource(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Attachment", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Contract_committedPeriods(ctx context.Context, field graphql.CollectedField, obj *model.Contract) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contract_committedPeriods(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CommittedPeriods, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int64)
+	fc.Result = res
+	return ec.marshalOInt642ᚖint64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contract_committedPeriods(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contract",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Contract_contractRenewalCycle(ctx context.Context, field graphql.CollectedField, obj *model.Contract) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contract_contractRenewalCycle(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ContractRenewalCycle, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.ContractRenewalCycle)
+	fc.Result = res
+	return ec.marshalNContractRenewalCycle2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContractRenewalCycle(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contract_contractRenewalCycle(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contract",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ContractRenewalCycle does not have child fields")
 		},
 	}
 	return fc, nil
@@ -39223,16 +39299,14 @@ func (ec *executionContext) fieldContext_Invoice_contract(ctx context.Context, f
 				return ec.fieldContext_Contract_metadata(ctx, field)
 			case "billingDetails":
 				return ec.fieldContext_Contract_billingDetails(ctx, field)
-			case "committedPeriods":
-				return ec.fieldContext_Contract_committedPeriods(ctx, field)
 			case "contractEnded":
 				return ec.fieldContext_Contract_contractEnded(ctx, field)
 			case "contractLineItems":
 				return ec.fieldContext_Contract_contractLineItems(ctx, field)
 			case "contractName":
 				return ec.fieldContext_Contract_contractName(ctx, field)
-			case "contractRenewalCycle":
-				return ec.fieldContext_Contract_contractRenewalCycle(ctx, field)
+			case "committedPeriodInMonths":
+				return ec.fieldContext_Contract_committedPeriodInMonths(ctx, field)
 			case "contractSigned":
 				return ec.fieldContext_Contract_contractSigned(ctx, field)
 			case "contractUrl":
@@ -39257,6 +39331,10 @@ func (ec *executionContext) fieldContext_Invoice_contract(ctx context.Context, f
 				return ec.fieldContext_Contract_autoRenew(ctx, field)
 			case "attachments":
 				return ec.fieldContext_Contract_attachments(ctx, field)
+			case "committedPeriods":
+				return ec.fieldContext_Contract_committedPeriods(ctx, field)
+			case "contractRenewalCycle":
+				return ec.fieldContext_Contract_contractRenewalCycle(ctx, field)
 			case "status":
 				return ec.fieldContext_Contract_status(ctx, field)
 			case "serviceStartedAt":
@@ -50860,16 +50938,14 @@ func (ec *executionContext) fieldContext_Mutation_contract_Create(ctx context.Co
 				return ec.fieldContext_Contract_metadata(ctx, field)
 			case "billingDetails":
 				return ec.fieldContext_Contract_billingDetails(ctx, field)
-			case "committedPeriods":
-				return ec.fieldContext_Contract_committedPeriods(ctx, field)
 			case "contractEnded":
 				return ec.fieldContext_Contract_contractEnded(ctx, field)
 			case "contractLineItems":
 				return ec.fieldContext_Contract_contractLineItems(ctx, field)
 			case "contractName":
 				return ec.fieldContext_Contract_contractName(ctx, field)
-			case "contractRenewalCycle":
-				return ec.fieldContext_Contract_contractRenewalCycle(ctx, field)
+			case "committedPeriodInMonths":
+				return ec.fieldContext_Contract_committedPeriodInMonths(ctx, field)
 			case "contractSigned":
 				return ec.fieldContext_Contract_contractSigned(ctx, field)
 			case "contractUrl":
@@ -50894,6 +50970,10 @@ func (ec *executionContext) fieldContext_Mutation_contract_Create(ctx context.Co
 				return ec.fieldContext_Contract_autoRenew(ctx, field)
 			case "attachments":
 				return ec.fieldContext_Contract_attachments(ctx, field)
+			case "committedPeriods":
+				return ec.fieldContext_Contract_committedPeriods(ctx, field)
+			case "contractRenewalCycle":
+				return ec.fieldContext_Contract_contractRenewalCycle(ctx, field)
 			case "status":
 				return ec.fieldContext_Contract_status(ctx, field)
 			case "serviceStartedAt":
@@ -51033,16 +51113,14 @@ func (ec *executionContext) fieldContext_Mutation_contract_Update(ctx context.Co
 				return ec.fieldContext_Contract_metadata(ctx, field)
 			case "billingDetails":
 				return ec.fieldContext_Contract_billingDetails(ctx, field)
-			case "committedPeriods":
-				return ec.fieldContext_Contract_committedPeriods(ctx, field)
 			case "contractEnded":
 				return ec.fieldContext_Contract_contractEnded(ctx, field)
 			case "contractLineItems":
 				return ec.fieldContext_Contract_contractLineItems(ctx, field)
 			case "contractName":
 				return ec.fieldContext_Contract_contractName(ctx, field)
-			case "contractRenewalCycle":
-				return ec.fieldContext_Contract_contractRenewalCycle(ctx, field)
+			case "committedPeriodInMonths":
+				return ec.fieldContext_Contract_committedPeriodInMonths(ctx, field)
 			case "contractSigned":
 				return ec.fieldContext_Contract_contractSigned(ctx, field)
 			case "contractUrl":
@@ -51067,6 +51145,10 @@ func (ec *executionContext) fieldContext_Mutation_contract_Update(ctx context.Co
 				return ec.fieldContext_Contract_autoRenew(ctx, field)
 			case "attachments":
 				return ec.fieldContext_Contract_attachments(ctx, field)
+			case "committedPeriods":
+				return ec.fieldContext_Contract_committedPeriods(ctx, field)
+			case "contractRenewalCycle":
+				return ec.fieldContext_Contract_contractRenewalCycle(ctx, field)
 			case "status":
 				return ec.fieldContext_Contract_status(ctx, field)
 			case "serviceStartedAt":
@@ -51297,16 +51379,14 @@ func (ec *executionContext) fieldContext_Mutation_contract_Renew(ctx context.Con
 				return ec.fieldContext_Contract_metadata(ctx, field)
 			case "billingDetails":
 				return ec.fieldContext_Contract_billingDetails(ctx, field)
-			case "committedPeriods":
-				return ec.fieldContext_Contract_committedPeriods(ctx, field)
 			case "contractEnded":
 				return ec.fieldContext_Contract_contractEnded(ctx, field)
 			case "contractLineItems":
 				return ec.fieldContext_Contract_contractLineItems(ctx, field)
 			case "contractName":
 				return ec.fieldContext_Contract_contractName(ctx, field)
-			case "contractRenewalCycle":
-				return ec.fieldContext_Contract_contractRenewalCycle(ctx, field)
+			case "committedPeriodInMonths":
+				return ec.fieldContext_Contract_committedPeriodInMonths(ctx, field)
 			case "contractSigned":
 				return ec.fieldContext_Contract_contractSigned(ctx, field)
 			case "contractUrl":
@@ -51331,6 +51411,10 @@ func (ec *executionContext) fieldContext_Mutation_contract_Renew(ctx context.Con
 				return ec.fieldContext_Contract_autoRenew(ctx, field)
 			case "attachments":
 				return ec.fieldContext_Contract_attachments(ctx, field)
+			case "committedPeriods":
+				return ec.fieldContext_Contract_committedPeriods(ctx, field)
+			case "contractRenewalCycle":
+				return ec.fieldContext_Contract_contractRenewalCycle(ctx, field)
 			case "status":
 				return ec.fieldContext_Contract_status(ctx, field)
 			case "serviceStartedAt":
@@ -51470,16 +51554,14 @@ func (ec *executionContext) fieldContext_Mutation_contract_AddAttachment(ctx con
 				return ec.fieldContext_Contract_metadata(ctx, field)
 			case "billingDetails":
 				return ec.fieldContext_Contract_billingDetails(ctx, field)
-			case "committedPeriods":
-				return ec.fieldContext_Contract_committedPeriods(ctx, field)
 			case "contractEnded":
 				return ec.fieldContext_Contract_contractEnded(ctx, field)
 			case "contractLineItems":
 				return ec.fieldContext_Contract_contractLineItems(ctx, field)
 			case "contractName":
 				return ec.fieldContext_Contract_contractName(ctx, field)
-			case "contractRenewalCycle":
-				return ec.fieldContext_Contract_contractRenewalCycle(ctx, field)
+			case "committedPeriodInMonths":
+				return ec.fieldContext_Contract_committedPeriodInMonths(ctx, field)
 			case "contractSigned":
 				return ec.fieldContext_Contract_contractSigned(ctx, field)
 			case "contractUrl":
@@ -51504,6 +51586,10 @@ func (ec *executionContext) fieldContext_Mutation_contract_AddAttachment(ctx con
 				return ec.fieldContext_Contract_autoRenew(ctx, field)
 			case "attachments":
 				return ec.fieldContext_Contract_attachments(ctx, field)
+			case "committedPeriods":
+				return ec.fieldContext_Contract_committedPeriods(ctx, field)
+			case "contractRenewalCycle":
+				return ec.fieldContext_Contract_contractRenewalCycle(ctx, field)
 			case "status":
 				return ec.fieldContext_Contract_status(ctx, field)
 			case "serviceStartedAt":
@@ -51643,16 +51729,14 @@ func (ec *executionContext) fieldContext_Mutation_contract_RemoveAttachment(ctx 
 				return ec.fieldContext_Contract_metadata(ctx, field)
 			case "billingDetails":
 				return ec.fieldContext_Contract_billingDetails(ctx, field)
-			case "committedPeriods":
-				return ec.fieldContext_Contract_committedPeriods(ctx, field)
 			case "contractEnded":
 				return ec.fieldContext_Contract_contractEnded(ctx, field)
 			case "contractLineItems":
 				return ec.fieldContext_Contract_contractLineItems(ctx, field)
 			case "contractName":
 				return ec.fieldContext_Contract_contractName(ctx, field)
-			case "contractRenewalCycle":
-				return ec.fieldContext_Contract_contractRenewalCycle(ctx, field)
+			case "committedPeriodInMonths":
+				return ec.fieldContext_Contract_committedPeriodInMonths(ctx, field)
 			case "contractSigned":
 				return ec.fieldContext_Contract_contractSigned(ctx, field)
 			case "contractUrl":
@@ -51677,6 +51761,10 @@ func (ec *executionContext) fieldContext_Mutation_contract_RemoveAttachment(ctx 
 				return ec.fieldContext_Contract_autoRenew(ctx, field)
 			case "attachments":
 				return ec.fieldContext_Contract_attachments(ctx, field)
+			case "committedPeriods":
+				return ec.fieldContext_Contract_committedPeriods(ctx, field)
+			case "contractRenewalCycle":
+				return ec.fieldContext_Contract_contractRenewalCycle(ctx, field)
 			case "status":
 				return ec.fieldContext_Contract_status(ctx, field)
 			case "serviceStartedAt":
@@ -69744,16 +69832,14 @@ func (ec *executionContext) fieldContext_Organization_contracts(ctx context.Cont
 				return ec.fieldContext_Contract_metadata(ctx, field)
 			case "billingDetails":
 				return ec.fieldContext_Contract_billingDetails(ctx, field)
-			case "committedPeriods":
-				return ec.fieldContext_Contract_committedPeriods(ctx, field)
 			case "contractEnded":
 				return ec.fieldContext_Contract_contractEnded(ctx, field)
 			case "contractLineItems":
 				return ec.fieldContext_Contract_contractLineItems(ctx, field)
 			case "contractName":
 				return ec.fieldContext_Contract_contractName(ctx, field)
-			case "contractRenewalCycle":
-				return ec.fieldContext_Contract_contractRenewalCycle(ctx, field)
+			case "committedPeriodInMonths":
+				return ec.fieldContext_Contract_committedPeriodInMonths(ctx, field)
 			case "contractSigned":
 				return ec.fieldContext_Contract_contractSigned(ctx, field)
 			case "contractUrl":
@@ -69778,6 +69864,10 @@ func (ec *executionContext) fieldContext_Organization_contracts(ctx context.Cont
 				return ec.fieldContext_Contract_autoRenew(ctx, field)
 			case "attachments":
 				return ec.fieldContext_Contract_attachments(ctx, field)
+			case "committedPeriods":
+				return ec.fieldContext_Contract_committedPeriods(ctx, field)
+			case "contractRenewalCycle":
+				return ec.fieldContext_Contract_contractRenewalCycle(ctx, field)
 			case "status":
 				return ec.fieldContext_Contract_status(ctx, field)
 			case "serviceStartedAt":
@@ -78019,16 +78109,14 @@ func (ec *executionContext) fieldContext_Query_contract(ctx context.Context, fie
 				return ec.fieldContext_Contract_metadata(ctx, field)
 			case "billingDetails":
 				return ec.fieldContext_Contract_billingDetails(ctx, field)
-			case "committedPeriods":
-				return ec.fieldContext_Contract_committedPeriods(ctx, field)
 			case "contractEnded":
 				return ec.fieldContext_Contract_contractEnded(ctx, field)
 			case "contractLineItems":
 				return ec.fieldContext_Contract_contractLineItems(ctx, field)
 			case "contractName":
 				return ec.fieldContext_Contract_contractName(ctx, field)
-			case "contractRenewalCycle":
-				return ec.fieldContext_Contract_contractRenewalCycle(ctx, field)
+			case "committedPeriodInMonths":
+				return ec.fieldContext_Contract_committedPeriodInMonths(ctx, field)
 			case "contractSigned":
 				return ec.fieldContext_Contract_contractSigned(ctx, field)
 			case "contractUrl":
@@ -78053,6 +78141,10 @@ func (ec *executionContext) fieldContext_Query_contract(ctx context.Context, fie
 				return ec.fieldContext_Contract_autoRenew(ctx, field)
 			case "attachments":
 				return ec.fieldContext_Contract_attachments(ctx, field)
+			case "committedPeriods":
+				return ec.fieldContext_Contract_committedPeriods(ctx, field)
+			case "contractRenewalCycle":
+				return ec.fieldContext_Contract_contractRenewalCycle(ctx, field)
 			case "status":
 				return ec.fieldContext_Contract_status(ctx, field)
 			case "serviceStartedAt":
@@ -84016,16 +84108,14 @@ func (ec *executionContext) fieldContext_RenewalRecord_contract(ctx context.Cont
 				return ec.fieldContext_Contract_metadata(ctx, field)
 			case "billingDetails":
 				return ec.fieldContext_Contract_billingDetails(ctx, field)
-			case "committedPeriods":
-				return ec.fieldContext_Contract_committedPeriods(ctx, field)
 			case "contractEnded":
 				return ec.fieldContext_Contract_contractEnded(ctx, field)
 			case "contractLineItems":
 				return ec.fieldContext_Contract_contractLineItems(ctx, field)
 			case "contractName":
 				return ec.fieldContext_Contract_contractName(ctx, field)
-			case "contractRenewalCycle":
-				return ec.fieldContext_Contract_contractRenewalCycle(ctx, field)
+			case "committedPeriodInMonths":
+				return ec.fieldContext_Contract_committedPeriodInMonths(ctx, field)
 			case "contractSigned":
 				return ec.fieldContext_Contract_contractSigned(ctx, field)
 			case "contractUrl":
@@ -84050,6 +84140,10 @@ func (ec *executionContext) fieldContext_RenewalRecord_contract(ctx context.Cont
 				return ec.fieldContext_Contract_autoRenew(ctx, field)
 			case "attachments":
 				return ec.fieldContext_Contract_attachments(ctx, field)
+			case "committedPeriods":
+				return ec.fieldContext_Contract_committedPeriods(ctx, field)
+			case "contractRenewalCycle":
+				return ec.fieldContext_Contract_contractRenewalCycle(ctx, field)
 			case "status":
 				return ec.fieldContext_Contract_status(ctx, field)
 			case "serviceStartedAt":
@@ -93862,7 +93956,7 @@ func (ec *executionContext) unmarshalInputContractInput(ctx context.Context, obj
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"organizationId", "contractName", "contractRenewalCycle", "committedPeriods", "appSource", "contractUrl", "serviceStarted", "contractSigned", "currency", "billingEnabled", "autoRenew", "dueDays", "invoicingStartDate", "externalReference", "billingCycle", "renewalPeriods", "renewalCycle", "signedAt", "serviceStartedAt", "name"}
+	fieldsInOrder := [...]string{"organizationId", "contractName", "committedPeriodInMonths", "appSource", "contractUrl", "serviceStarted", "contractSigned", "currency", "billingEnabled", "autoRenew", "dueDays", "contractRenewalCycle", "committedPeriods", "invoicingStartDate", "externalReference", "billingCycle", "renewalPeriods", "renewalCycle", "signedAt", "serviceStartedAt", "name"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -93883,20 +93977,13 @@ func (ec *executionContext) unmarshalInputContractInput(ctx context.Context, obj
 				return it, err
 			}
 			it.ContractName = data
-		case "contractRenewalCycle":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contractRenewalCycle"))
-			data, err := ec.unmarshalOContractRenewalCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContractRenewalCycle(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.ContractRenewalCycle = data
-		case "committedPeriods":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("committedPeriods"))
+		case "committedPeriodInMonths":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("committedPeriodInMonths"))
 			data, err := ec.unmarshalOInt642ᚖint64(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.CommittedPeriods = data
+			it.CommittedPeriodInMonths = data
 		case "appSource":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -93953,6 +94040,20 @@ func (ec *executionContext) unmarshalInputContractInput(ctx context.Context, obj
 				return it, err
 			}
 			it.DueDays = data
+		case "contractRenewalCycle":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contractRenewalCycle"))
+			data, err := ec.unmarshalOContractRenewalCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContractRenewalCycle(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ContractRenewalCycle = data
+		case "committedPeriods":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("committedPeriods"))
+			data, err := ec.unmarshalOInt642ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CommittedPeriods = data
 		case "invoicingStartDate":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("invoicingStartDate"))
 			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
@@ -94022,7 +94123,7 @@ func (ec *executionContext) unmarshalInputContractUpdateInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"contractId", "patch", "contractName", "contractUrl", "contractRenewalCycle", "committedPeriods", "serviceStarted", "contractSigned", "contractEnded", "currency", "billingDetails", "appSource", "billingEnabled", "autoRenew", "canPayWithCard", "canPayWithDirectDebit", "canPayWithBankTransfer", "invoicingStartDate", "addressLine1", "addressLine2", "locality", "country", "zip", "billingCycle", "invoiceNote", "endedAt", "renewalPeriods", "invoiceEmail", "organizationLegalName", "renewalCycle", "signedAt", "serviceStartedAt", "name"}
+	fieldsInOrder := [...]string{"contractId", "patch", "contractName", "contractUrl", "committedPeriodInMonths", "serviceStarted", "contractSigned", "contractEnded", "currency", "billingDetails", "appSource", "billingEnabled", "autoRenew", "contractRenewalCycle", "committedPeriods", "canPayWithCard", "canPayWithDirectDebit", "canPayWithBankTransfer", "invoicingStartDate", "addressLine1", "addressLine2", "locality", "country", "zip", "billingCycle", "invoiceNote", "endedAt", "renewalPeriods", "invoiceEmail", "organizationLegalName", "renewalCycle", "signedAt", "serviceStartedAt", "name"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -94057,20 +94158,13 @@ func (ec *executionContext) unmarshalInputContractUpdateInput(ctx context.Contex
 				return it, err
 			}
 			it.ContractURL = data
-		case "contractRenewalCycle":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contractRenewalCycle"))
-			data, err := ec.unmarshalOContractRenewalCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContractRenewalCycle(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.ContractRenewalCycle = data
-		case "committedPeriods":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("committedPeriods"))
+		case "committedPeriodInMonths":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("committedPeriodInMonths"))
 			data, err := ec.unmarshalOInt642ᚖint64(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.CommittedPeriods = data
+			it.CommittedPeriodInMonths = data
 		case "serviceStarted":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("serviceStarted"))
 			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
@@ -94127,6 +94221,20 @@ func (ec *executionContext) unmarshalInputContractUpdateInput(ctx context.Contex
 				return it, err
 			}
 			it.AutoRenew = data
+		case "contractRenewalCycle":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contractRenewalCycle"))
+			data, err := ec.unmarshalOContractRenewalCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContractRenewalCycle(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ContractRenewalCycle = data
+		case "committedPeriods":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("committedPeriods"))
+			data, err := ec.unmarshalOInt642ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CommittedPeriods = data
 		case "canPayWithCard":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("canPayWithCard"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
@@ -101899,8 +102007,6 @@ func (ec *executionContext) _Contract(ctx context.Context, sel ast.SelectionSet,
 			}
 		case "billingDetails":
 			out.Values[i] = ec._Contract_billingDetails(ctx, field, obj)
-		case "committedPeriods":
-			out.Values[i] = ec._Contract_committedPeriods(ctx, field, obj)
 		case "contractEnded":
 			out.Values[i] = ec._Contract_contractEnded(ctx, field, obj)
 		case "contractLineItems":
@@ -101941,11 +102047,8 @@ func (ec *executionContext) _Contract(ctx context.Context, sel ast.SelectionSet,
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
-		case "contractRenewalCycle":
-			out.Values[i] = ec._Contract_contractRenewalCycle(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
+		case "committedPeriodInMonths":
+			out.Values[i] = ec._Contract_committedPeriodInMonths(ctx, field, obj)
 		case "contractSigned":
 			out.Values[i] = ec._Contract_contractSigned(ctx, field, obj)
 		case "contractUrl":
@@ -102137,6 +102240,13 @@ func (ec *executionContext) _Contract(ctx context.Context, sel ast.SelectionSet,
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "committedPeriods":
+			out.Values[i] = ec._Contract_committedPeriods(ctx, field, obj)
+		case "contractRenewalCycle":
+			out.Values[i] = ec._Contract_contractRenewalCycle(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
 		case "status":
 			out.Values[i] = ec._Contract_status(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

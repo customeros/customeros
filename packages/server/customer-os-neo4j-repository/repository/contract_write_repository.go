@@ -24,6 +24,7 @@ type ContractCreateFields struct {
 	SignedAt               *time.Time             `json:"signedAt,omitempty"`
 	RenewalCycle           string                 `json:"renewalCycle"`
 	RenewalPeriods         *int64                 `json:"renewalPeriods,omitempty"`
+	LengthInMonths         int64                  `json:"lengthInMonths"`
 	Status                 string                 `json:"status"`
 	CreatedAt              time.Time              `json:"createdAt"`
 	UpdatedAt              time.Time              `json:"updatedAt"`
@@ -50,6 +51,7 @@ type ContractUpdateFields struct {
 	Source                       string                 `json:"source"`
 	RenewalPeriods               *int64                 `json:"renewalPeriods"`
 	RenewalCycle                 string                 `json:"renewalCycle"`
+	LengthInMonths               int64                  `json:"lengthInMonths"`
 	UpdatedAt                    time.Time              `json:"updatedAt"`
 	ServiceStartedAt             *time.Time             `json:"serviceStartedAt"`
 	SignedAt                     *time.Time             `json:"signedAt"`
@@ -110,6 +112,7 @@ type ContractUpdateFields struct {
 	UpdateAutoRenew              bool                   `json:"updateAutoRenew"`
 	UpdateCheck                  bool                   `json:"updateCheck"`
 	UpdateDueDays                bool                   `json:"updateDueDays"`
+	UpdateLengthInMonths         bool                   `json:"updateLengthInMonths"`
 }
 
 type ContractWriteRepository interface {
@@ -173,7 +176,8 @@ func (r *contractWriteRepository) CreateForOrganization(ctx context.Context, ten
 								ct.autoRenew=$autoRenew,
 								ct.check=$check,
 								ct.country=$country,
-								ct.dueDays=$dueDays
+								ct.dueDays=$dueDays,
+								ct.lengthInMonths=$lengthInMonths
 							WITH ct, t
 							OPTIONAL MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$createdByUserId}) 
 							WHERE $createdByUserId <> ""
@@ -210,6 +214,7 @@ func (r *contractWriteRepository) CreateForOrganization(ctx context.Context, ten
 		"check":                  data.Check,
 		"dueDays":                data.DueDays,
 		"country":                data.Country,
+		"lengthInMonths":         data.LengthInMonths,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -368,6 +373,10 @@ func (r *contractWriteRepository) UpdateContract(ctx context.Context, tenant, co
 	if data.UpdateDueDays {
 		cypher += `, ct.dueDays=$dueDays `
 		params["dueDays"] = data.DueDays
+	}
+	if data.UpdateLengthInMonths {
+		cypher += `, ct.lengthInMonths=$lengthInMonths `
+		params["lengthInMonths"] = data.LengthInMonths
 	}
 
 	span.LogFields(log.String("cypher", cypher))
