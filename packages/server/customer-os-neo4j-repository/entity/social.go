@@ -1,19 +1,18 @@
 package entity
 
-import (
-	"time"
-)
+import "time"
 
 type SocialEntity struct {
-	DataLoaderKey
 	Id            string
-	PlatformName  string
-	Url           string
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 	Source        DataSource
 	SourceOfTruth DataSource
 	AppSource     string
+
+	Url string
+
+	DataLoaderKey
 }
 
 type SocialEntities []SocialEntity

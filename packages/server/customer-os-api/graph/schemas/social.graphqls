@@ -5,7 +5,6 @@ extend type Mutation {
 
 type Social implements SourceFields & Node {
     id: ID!
-    platformName: String
     url: String!
     createdAt: Time!
     updatedAt: Time!
@@ -15,13 +14,11 @@ type Social implements SourceFields & Node {
 }
 
 input SocialInput {
-    platformName: String
     url: String!
     appSource: String
 }
 
 input SocialUpdateInput {
     id: ID!
-    platformName: String
     url: String!
 }

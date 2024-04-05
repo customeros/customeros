@@ -2,14 +2,12 @@ mutation UpdateSocial($socialId: ID!) {
   social_Update(
     input: {
       id: $socialId
-      platformName: "new name"
       url: "new url"
     }
   ) {
     id
     updatedAt
     sourceOfTruth
-    platformName
     url
   }
 }

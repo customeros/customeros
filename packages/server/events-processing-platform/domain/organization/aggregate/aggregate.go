@@ -390,8 +390,7 @@ func (a *OrganizationAggregate) onAddSocial(event eventstore.Event) error {
 		a.Organization.Socials = make(map[string]model.Social)
 	}
 	a.Organization.Socials[eventData.SocialId] = model.Social{
-		PlatformName: eventData.PlatformName,
-		Url:          eventData.Url,
+		Url: eventData.Url,
 	}
 	return nil
 }

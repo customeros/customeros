@@ -4,7 +4,6 @@ query GetContact($contactId: ID!){
     socials {
             id
             url
-            platformName
             createdAt
             updatedAt
             appSource

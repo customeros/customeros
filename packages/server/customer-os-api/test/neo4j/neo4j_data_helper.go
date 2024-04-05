@@ -1397,7 +1397,7 @@ func CreateState(ctx context.Context, driver *neo4j.DriverWithContext, countryCo
 func CreateSocial(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, social entity.SocialEntity) string {
 	var socialId, _ = uuid.NewRandom()
 	query := " MERGE (s:Social {id:$id}) " +
-		" ON CREATE SET s.platformName=$platformName, " +
+		" ON CREATE SET " +
 		"				s.url=$url, " +
 		"				s.source=$source, " +
 		"				s.sourceOfTruth=$source, " +
@@ -1407,13 +1407,12 @@ func CreateSocial(ctx context.Context, driver *neo4j.DriverWithContext, tenant s
 		"				s:Social_%s"
 
 	neo4jtest.ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant), map[string]any{
-		"tenant":       tenant,
-		"id":           socialId.String(),
-		"source":       neo4jentity.DataSourceOpenline,
-		"appSource":    "test",
-		"platformName": social.PlatformName,
-		"url":          social.Url,
-		"now":          utils.Now(),
+		"tenant":    tenant,
+		"id":        socialId.String(),
+		"source":    neo4jentity.DataSourceOpenline,
+		"appSource": "test",
+		"url":       social.Url,
+		"now":       utils.Now(),
 	})
 	return socialId.String()
 }

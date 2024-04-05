@@ -234,7 +234,6 @@ func NewOrganizationLinkDomainEvent(aggregate eventstore.Aggregate, domain strin
 type OrganizationAddSocialEvent struct {
 	Tenant        string    `json:"tenant" validate:"required"`
 	SocialId      string    `json:"socialId" validate:"required"`
-	PlatformName  string    `json:"platformName,omitempty"`
 	Url           string    `json:"url" validate:"required"`
 	Source        string    `json:"source"`
 	SourceOfTruth string    `json:"sourceOfTruth"`
@@ -243,11 +242,10 @@ type OrganizationAddSocialEvent struct {
 	UpdatedAt     time.Time `json:"updatedAt"`
 }
 
-func NewOrganizationAddSocialEvent(aggregate eventstore.Aggregate, socialId, platformName, url, source, sourceOfTruth, appSource string, createdAt time.Time, updatedAt time.Time) (eventstore.Event, error) {
+func NewOrganizationAddSocialEvent(aggregate eventstore.Aggregate, socialId, url, source, sourceOfTruth, appSource string, createdAt time.Time, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := OrganizationAddSocialEvent{
 		Tenant:        aggregate.GetTenant(),
 		SocialId:      socialId,
-		PlatformName:  platformName,
 		Url:           url,
 		Source:        source,
 		SourceOfTruth: sourceOfTruth,

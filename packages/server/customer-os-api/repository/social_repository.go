@@ -46,7 +46,6 @@ func (r *socialRepository) CreateSocialForEntity(ctx context.Context, tenant str
 		  soc.source=$source, 
 		  soc.sourceOfTruth=$sourceOfTruth, 
 		  soc.appSource=$appSource, 
-		  soc.platformName=$platformName,
 		  soc.url=$url,
 		  soc:%s
 		 RETURN soc`
@@ -57,7 +56,6 @@ func (r *socialRepository) CreateSocialForEntity(ctx context.Context, tenant str
 				"tenant":        tenant,
 				"now":           utils.Now(),
 				"entityId":      linkedEntityId,
-				"platformName":  socialEntity.PlatformName,
 				"url":           socialEntity.Url,
 				"source":        socialEntity.SourceFields.Source,
 				"sourceOfTruth": socialEntity.SourceFields.SourceOfTruth,
@@ -81,7 +79,6 @@ func (r *socialRepository) Update(ctx context.Context, tenant string, socialEnti
 
 	query := `MATCH (soc:Social_%s {id:$id})
 			SET soc.updatedAt=$now,
-				soc.platformName=$platformName,
 				soc.url=$url,
 				soc.sourceOfTruth=$sourceOfTruth
 			RETURN soc`
@@ -91,7 +88,6 @@ func (r *socialRepository) Update(ctx context.Context, tenant string, socialEnti
 			map[string]any{
 				"now":           utils.Now(),
 				"id":            socialEntity.Id,
-				"platformName":  socialEntity.PlatformName,
 				"url":           socialEntity.Url,
 				"sourceOfTruth": socialEntity.SourceFields.SourceOfTruth,
 			})
@@ -113,7 +109,7 @@ func (r *socialRepository) GetAllForEntities(ctx context.Context, tenant string,
 
 	query := `MATCH (e:%s)-[:HAS]->(soc:Social)
 			WHERE e.id IN $entityIds
-			RETURN soc, e.id as entityId ORDER BY soc.platformName`
+			RETURN soc, e.id as entityId ORDER BY soc.url`
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, linkedEntityType.Neo4jLabel()+"_"+tenant),

@@ -1470,7 +1470,6 @@ type ComplexityRoot struct {
 		AppSource     func(childComplexity int) int
 		CreatedAt     func(childComplexity int) int
 		ID            func(childComplexity int) int
-		PlatformName  func(childComplexity int) int
 		Source        func(childComplexity int) int
 		SourceOfTruth func(childComplexity int) int
 		URL           func(childComplexity int) int
@@ -10785,13 +10784,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Social.ID(childComplexity), true
 
-	case "Social.platformName":
-		if e.complexity.Social.PlatformName == nil {
-			break
-		}
-
-		return e.complexity.Social.PlatformName(childComplexity), true
-
 	case "Social.source":
 		if e.complexity.Social.Source == nil {
 			break
@@ -15241,7 +15233,6 @@ type SlackChannel {
 
 type Social implements SourceFields & Node {
     id: ID!
-    platformName: String
     url: String!
     createdAt: Time!
     updatedAt: Time!
@@ -15251,14 +15242,12 @@ type Social implements SourceFields & Node {
 }
 
 input SocialInput {
-    platformName: String
     url: String!
     appSource: String
 }
 
 input SocialUpdateInput {
     id: ID!
-    platformName: String
     url: String!
 }`, BuiltIn: false},
 	{Name: "../schemas/source.graphqls", Input: `enum DataSource {
@@ -26450,8 +26439,6 @@ func (ec *executionContext) fieldContext_Contact_socials(ctx context.Context, fi
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Social_id(ctx, field)
-			case "platformName":
-				return ec.fieldContext_Social_platformName(ctx, field)
 			case "url":
 				return ec.fieldContext_Social_url(ctx, field)
 			case "createdAt":
@@ -50770,8 +50757,6 @@ func (ec *executionContext) fieldContext_Mutation_contact_AddSocial(ctx context.
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Social_id(ctx, field)
-			case "platformName":
-				return ec.fieldContext_Social_platformName(ctx, field)
 			case "url":
 				return ec.fieldContext_Social_url(ctx, field)
 			case "createdAt":
@@ -60932,8 +60917,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddSocial(ctx con
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Social_id(ctx, field)
-			case "platformName":
-				return ec.fieldContext_Social_platformName(ctx, field)
 			case "url":
 				return ec.fieldContext_Social_url(ctx, field)
 			case "createdAt":
@@ -64506,8 +64489,6 @@ func (ec *executionContext) fieldContext_Mutation_social_Update(ctx context.Cont
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Social_id(ctx, field)
-			case "platformName":
-				return ec.fieldContext_Social_platformName(ctx, field)
 			case "url":
 				return ec.fieldContext_Social_url(ctx, field)
 			case "createdAt":
@@ -70982,8 +70963,6 @@ func (ec *executionContext) fieldContext_Organization_socialMedia(ctx context.Co
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Social_id(ctx, field)
-			case "platformName":
-				return ec.fieldContext_Social_platformName(ctx, field)
 			case "url":
 				return ec.fieldContext_Social_url(ctx, field)
 			case "createdAt":
@@ -72136,8 +72115,6 @@ func (ec *executionContext) fieldContext_Organization_socials(ctx context.Contex
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Social_id(ctx, field)
-			case "platformName":
-				return ec.fieldContext_Social_platformName(ctx, field)
 			case "url":
 				return ec.fieldContext_Social_url(ctx, field)
 			case "createdAt":
@@ -85752,47 +85729,6 @@ func (ec *executionContext) fieldContext_Social_id(ctx context.Context, field gr
 	return fc, nil
 }
 
-func (ec *executionContext) _Social_platformName(ctx context.Context, field graphql.CollectedField, obj *model.Social) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Social_platformName(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.PlatformName, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Social_platformName(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Social",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Social_url(ctx context.Context, field graphql.CollectedField, obj *model.Social) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Social_url(ctx, field)
 	if err != nil {
@@ -98620,20 +98556,13 @@ func (ec *executionContext) unmarshalInputSocialInput(ctx context.Context, obj i
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"platformName", "url", "appSource"}
+	fieldsInOrder := [...]string{"url", "appSource"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "platformName":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("platformName"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.PlatformName = data
 		case "url":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("url"))
 			data, err := ec.unmarshalNString2string(ctx, v)
@@ -98661,7 +98590,7 @@ func (ec *executionContext) unmarshalInputSocialUpdateInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "platformName", "url"}
+	fieldsInOrder := [...]string{"id", "url"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -98675,13 +98604,6 @@ func (ec *executionContext) unmarshalInputSocialUpdateInput(ctx context.Context,
 				return it, err
 			}
 			it.ID = data
-		case "platformName":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("platformName"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.PlatformName = data
 		case "url":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("url"))
 			data, err := ec.unmarshalNString2string(ctx, v)
@@ -113477,8 +113399,6 @@ func (ec *executionContext) _Social(ctx context.Context, sel ast.SelectionSet, o
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "platformName":
-			out.Values[i] = ec._Social_platformName(ctx, field, obj)
 		case "url":
 			out.Values[i] = ec._Social_url(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

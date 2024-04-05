@@ -436,11 +436,10 @@ func (h *OrganizationEventHandler) OnSocialAddedToOrganization(ctx context.Conte
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
 	data := neo4jrepository.SocialFields{
-		SocialId:     eventData.SocialId,
-		Url:          eventData.Url,
-		PlatformName: eventData.PlatformName,
-		CreatedAt:    eventData.CreatedAt,
-		UpdatedAt:    eventData.UpdatedAt,
+		SocialId:  eventData.SocialId,
+		Url:       eventData.Url,
+		CreatedAt: eventData.CreatedAt,
+		UpdatedAt: eventData.UpdatedAt,
 		SourceFields: neo4jmodel.Source{
 			Source:        helper.GetSource(eventData.Source),
 			SourceOfTruth: helper.GetSource(eventData.SourceOfTruth),

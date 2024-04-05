@@ -544,7 +544,7 @@ func (a *OrganizationAggregate) addSocial(ctx context.Context, cmd *command.AddS
 		cmd.SocialId = utils.NewUUIDIfEmpty(cmd.SocialId)
 	}
 
-	event, err := events.NewOrganizationAddSocialEvent(a, cmd.SocialId, cmd.SocialPlatform, cmd.SocialUrl, localSource, localSourceOfTruth, localAppSource, createdAtNotNil, updatedAtNotNil)
+	event, err := events.NewOrganizationAddSocialEvent(a, cmd.SocialId, cmd.SocialUrl, localSource, localSourceOfTruth, localAppSource, createdAtNotNil, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationAddSocialEvent")

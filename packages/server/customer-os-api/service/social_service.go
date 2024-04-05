@@ -88,11 +88,10 @@ func (s *socialService) Remove(ctx context.Context, socialId string) error {
 func (s *socialService) mapDbNodeToSocialEntity(node dbtype.Node) *entity.SocialEntity {
 	props := utils.GetPropsFromNode(node)
 	return &entity.SocialEntity{
-		Id:           utils.GetStringPropOrEmpty(props, "id"),
-		PlatformName: utils.GetStringPropOrEmpty(props, "platformName"),
-		Url:          utils.GetStringPropOrEmpty(props, "url"),
-		CreatedAt:    utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:    utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		Id:        utils.GetStringPropOrEmpty(props, "id"),
+		Url:       utils.GetStringPropOrEmpty(props, "url"),
+		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		SourceFields: entity.SourceFields{
 			Source:        neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 			SourceOfTruth: neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),

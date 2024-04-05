@@ -15,7 +15,6 @@ import (
 type SocialFields struct {
 	SocialId     string       `json:"socialId"`
 	Url          string       `json:"url"`
-	PlatformName string       `json:"platformName"`
 	CreatedAt    time.Time    `json:"createdAt"`
 	UpdatedAt    time.Time    `json:"updatedAt"`
 	SourceFields model.Source `json:"sourceFields"`
@@ -55,7 +54,6 @@ func (r *socialWriteRepository) MergeSocialFor(ctx context.Context, tenant, link
 			soc.source=$source, 
 		  	soc.sourceOfTruth=$sourceOfTruth, 
 		  	soc.appSource=$appSource, 
-		  	soc.platformName=$platformName,
 		  	soc.url=$url,
 		  	soc.syncedWithEventStore=true,
 		  	soc:Social_%s
@@ -66,7 +64,6 @@ func (r *socialWriteRepository) MergeSocialFor(ctx context.Context, tenant, link
 		"id":            data.SocialId,
 		"createdAt":     data.CreatedAt,
 		"updatedAt":     data.UpdatedAt,
-		"platformName":  data.PlatformName,
 		"url":           data.Url,
 		"source":        data.SourceFields.Source,
 		"sourceOfTruth": data.SourceFields.SourceOfTruth,
