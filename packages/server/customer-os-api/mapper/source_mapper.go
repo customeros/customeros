@@ -20,6 +20,7 @@ var sourceByModel = map[model.DataSource]neo4jentity.DataSource{
 	model.DataSourceMixpanel:       neo4jentity.DataSourceMixpanel,
 	model.DataSourceClose:          neo4jentity.DataSourceClose,
 	model.DataSourceOutlook:        neo4jentity.DataSourceOutlook,
+	model.DataSourceUnthread:       neo4jentity.DataSourceUnthread,
 }
 
 var sourceByValue = utils.ReverseMap(sourceByModel)
