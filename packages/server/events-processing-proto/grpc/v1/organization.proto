@@ -268,9 +268,8 @@ message AddSocialGrpcRequest {
   SourceFields sourceFields = 4;
   string socialId = 5;
   string url = 6;
-  string platform = 7;
-  google.protobuf.Timestamp  createdAt = 8;
-  google.protobuf.Timestamp  updatedAt = 9;
+  google.protobuf.Timestamp  createdAt = 7;
+  google.protobuf.Timestamp  updatedAt = 8;
 }
 
 message UpdateOrganizationOwnerGrpcRequest {

@@ -941,12 +941,10 @@ func TestQueryResolver_Organization_WithSocials(t *testing.T) {
 	orgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
 
 	socialId1 := neo4jt.CreateSocial(ctx, driver, tenantName, entity.SocialEntity{
-		PlatformName: "p1",
-		Url:          "url1",
+		Url: "url1",
 	})
 	socialId2 := neo4jt.CreateSocial(ctx, driver, tenantName, entity.SocialEntity{
-		PlatformName: "p2",
-		Url:          "url2",
+		Url: "url2",
 	})
 	neo4jt.LinkSocialWithEntity(ctx, driver, orgId, socialId1)
 	neo4jt.LinkSocialWithEntity(ctx, driver, orgId, socialId2)
@@ -970,14 +968,12 @@ func TestQueryResolver_Organization_WithSocials(t *testing.T) {
 	require.Equal(t, 2, len(organization.Socials))
 
 	require.Equal(t, socialId1, organization.Socials[0].ID)
-	require.Equal(t, "p1", *organization.Socials[0].PlatformName)
 	require.Equal(t, "url1", organization.Socials[0].URL)
 	require.NotNil(t, organization.Socials[0].CreatedAt)
 	require.NotNil(t, organization.Socials[0].UpdatedAt)
 	require.Equal(t, "test", organization.Socials[0].AppSource)
 
 	require.Equal(t, socialId2, organization.Socials[1].ID)
-	require.Equal(t, "p2", *organization.Socials[1].PlatformName)
 	require.Equal(t, "url2", organization.Socials[1].URL)
 	require.NotNil(t, organization.Socials[1].CreatedAt)
 	require.NotNil(t, organization.Socials[1].UpdatedAt)

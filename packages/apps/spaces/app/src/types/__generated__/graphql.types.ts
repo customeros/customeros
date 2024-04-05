@@ -1688,6 +1688,7 @@ export enum InvoiceStatus {
   Due = 'DUE',
   Initialized = 'INITIALIZED',
   Paid = 'PAID',
+  Scheduled = 'SCHEDULED',
   Void = 'VOID',
 }
 
@@ -1700,6 +1701,7 @@ export type InvoiceUpdateInput = {
 export type InvoicesPage = Pages & {
   __typename?: 'InvoicesPage';
   content: Array<Invoice>;
+  totalAvailable: Scalars['Int64']['output'];
   totalElements: Scalars['Int64']['output'];
   totalPages: Scalars['Int']['output'];
 };
@@ -4348,7 +4350,6 @@ export type Social = Node &
     appSource: Scalars['String']['output'];
     createdAt: Scalars['Time']['output'];
     id: Scalars['ID']['output'];
-    platformName?: Maybe<Scalars['String']['output']>;
     source: DataSource;
     sourceOfTruth: DataSource;
     updatedAt: Scalars['Time']['output'];
@@ -4357,13 +4358,11 @@ export type Social = Node &
 
 export type SocialInput = {
   appSource?: InputMaybe<Scalars['String']['input']>;
-  platformName?: InputMaybe<Scalars['String']['input']>;
   url: Scalars['String']['input'];
 };
 
 export type SocialUpdateInput = {
   id: Scalars['ID']['input'];
-  platformName?: InputMaybe<Scalars['String']['input']>;
   url: Scalars['String']['input'];
 };
 

@@ -4,7 +4,6 @@ query GetOrganization($organizationId: ID!){
     socials {
             id
             url
-            platformName
             createdAt
             updatedAt
             appSource

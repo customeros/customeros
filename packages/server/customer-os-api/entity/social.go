@@ -8,7 +8,6 @@ import (
 
 type SocialEntity struct {
 	Id           string
-	PlatformName string
 	Url          string
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
@@ -18,7 +17,7 @@ type SocialEntity struct {
 }
 
 func (social SocialEntity) ToString() string {
-	return fmt.Sprintf("id: %s paltform: %s url: %s", social.Id, social.PlatformName, social.Url)
+	return fmt.Sprintf("id: %s url: %s", social.Id, social.Url)
 }
 
 type SocialEntities []SocialEntity

@@ -546,7 +546,6 @@ func MapDbNodeToSocialEntity(dbNode *dbtype.Node) *entity.SocialEntity {
 	props := utils.GetPropsFromNode(*dbNode)
 	social := entity.SocialEntity{
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		PlatformName:  utils.GetStringPropOrEmpty(props, "platformName"),
 		Url:           utils.GetStringPropOrEmpty(props, "url"),
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),

@@ -319,8 +319,7 @@ func (h *organizationEventHandler) addSocial(ctx context.Context, organizationId
 				Source:        constants.SourceWebscrape,
 				SourceOfTruth: constants.SourceWebscrape,
 			},
-			Platform: platform,
-			Url:      url,
+			Url: url,
 		})
 	})
 	if err != nil {

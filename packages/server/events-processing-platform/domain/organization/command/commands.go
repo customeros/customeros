@@ -68,23 +68,21 @@ func NewLinkDomainCommand(objectID, tenant, domain, loggedInUserId, appSource st
 
 type AddSocialCommand struct {
 	eventstore.BaseCommand
-	SocialId       string
-	SocialPlatform string
-	SocialUrl      string `json:"socialUrl" validate:"required"`
-	Source         cmnmod.Source
-	CreatedAt      *time.Time
-	UpdatedAt      *time.Time
+	SocialId  string
+	SocialUrl string `json:"socialUrl" validate:"required"`
+	Source    cmnmod.Source
+	CreatedAt *time.Time
+	UpdatedAt *time.Time
 }
 
-func NewAddSocialCommand(organizationId, tenant, loggedInUserId, socialId, socialPlatform, socialUrl string, sourceFields cmnmod.Source, createdAt, updatedAt *time.Time) *AddSocialCommand {
+func NewAddSocialCommand(organizationId, tenant, loggedInUserId, socialId, socialUrl string, sourceFields cmnmod.Source, createdAt, updatedAt *time.Time) *AddSocialCommand {
 	return &AddSocialCommand{
-		BaseCommand:    eventstore.NewBaseCommand(organizationId, tenant, loggedInUserId).WithAppSource(sourceFields.AppSource),
-		SocialId:       socialId,
-		SocialPlatform: socialPlatform,
-		SocialUrl:      socialUrl,
-		Source:         sourceFields,
-		CreatedAt:      createdAt,
-		UpdatedAt:      updatedAt,
+		BaseCommand: eventstore.NewBaseCommand(organizationId, tenant, loggedInUserId).WithAppSource(sourceFields.AppSource),
+		SocialId:    socialId,
+		SocialUrl:   socialUrl,
+		Source:      sourceFields,
+		CreatedAt:   createdAt,
+		UpdatedAt:   updatedAt,
 	}
 }
 

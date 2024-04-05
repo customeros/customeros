@@ -1305,7 +1305,6 @@ func TestMutationResolver_ContactAddSocial(t *testing.T) {
 	require.Equal(t, model.DataSourceOpenline, social.Source)
 	require.Equal(t, model.DataSourceOpenline, social.SourceOfTruth)
 	require.Equal(t, "social url", social.URL)
-	require.Equal(t, "social platform", *social.PlatformName)
 
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Contact"))
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Social"))
@@ -1320,12 +1319,10 @@ func TestQueryResolver_Contact_WithSocials(t *testing.T) {
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 
 	socialId1 := neo4jt.CreateSocial(ctx, driver, tenantName, entity.SocialEntity{
-		PlatformName: "p1",
-		Url:          "url1",
+		Url: "url1",
 	})
 	socialId2 := neo4jt.CreateSocial(ctx, driver, tenantName, entity.SocialEntity{
-		PlatformName: "p2",
-		Url:          "url2",
+		Url: "url2",
 	})
 	neo4jt.LinkSocialWithEntity(ctx, driver, contactId, socialId1)
 	neo4jt.LinkSocialWithEntity(ctx, driver, contactId, socialId2)
@@ -1348,14 +1345,12 @@ func TestQueryResolver_Contact_WithSocials(t *testing.T) {
 	require.Equal(t, 2, len(contact.Socials))
 
 	require.Equal(t, socialId1, contact.Socials[0].ID)
-	require.Equal(t, "p1", *contact.Socials[0].PlatformName)
 	require.Equal(t, "url1", contact.Socials[0].URL)
 	require.NotNil(t, contact.Socials[0].CreatedAt)
 	require.NotNil(t, contact.Socials[0].UpdatedAt)
 	require.Equal(t, "test", contact.Socials[0].AppSource)
 
 	require.Equal(t, socialId2, contact.Socials[1].ID)
-	require.Equal(t, "p2", *contact.Socials[1].PlatformName)
 	require.Equal(t, "url2", contact.Socials[1].URL)
 	require.NotNil(t, contact.Socials[1].CreatedAt)
 	require.NotNil(t, contact.Socials[1].UpdatedAt)

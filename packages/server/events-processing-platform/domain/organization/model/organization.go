@@ -47,8 +47,7 @@ const (
 )
 
 type Social struct {
-	PlatformName string `json:"platformName"`
-	Url          string `json:"url"`
+	Url string `json:"url"`
 }
 
 type CustomField struct {

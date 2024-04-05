@@ -43,7 +43,6 @@ query OrganizationPeoplePanel($id: ID!) {
         }
         socials {
           id
-          platformName
           url
         }
         profilePhotoUrl

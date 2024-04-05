@@ -2563,7 +2563,6 @@ func (this SlackChannelPage) GetTotalElements() int64 { return this.TotalElement
 
 type Social struct {
 	ID            string     `json:"id"`
-	PlatformName  *string    `json:"platformName,omitempty"`
 	URL           string     `json:"url"`
 	CreatedAt     time.Time  `json:"createdAt"`
 	UpdatedAt     time.Time  `json:"updatedAt"`
@@ -2581,15 +2580,13 @@ func (this Social) GetAppSource() string         { return this.AppSource }
 func (Social) IsNode() {}
 
 type SocialInput struct {
-	PlatformName *string `json:"platformName,omitempty"`
-	URL          string  `json:"url"`
-	AppSource    *string `json:"appSource,omitempty"`
+	URL       string  `json:"url"`
+	AppSource *string `json:"appSource,omitempty"`
 }
 
 type SocialUpdateInput struct {
-	ID           string  `json:"id"`
-	PlatformName *string `json:"platformName,omitempty"`
-	URL          string  `json:"url"`
+	ID  string `json:"id"`
+	URL string `json:"url"`
 }
 
 type SortBy struct {

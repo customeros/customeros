@@ -416,7 +416,7 @@ func (s *organizationService) AddSocial(ctx context.Context, request *organizati
 	sourceFields.FromGrpc(request.SourceFields)
 
 	cmd := command.NewAddSocialCommand(request.OrganizationId, request.Tenant, request.LoggedInUserId, request.SocialId,
-		request.Platform, request.Url, sourceFields, utils.TimestampProtoToTimePtr(request.CreatedAt), utils.TimestampProtoToTimePtr(request.UpdatedAt))
+		request.Url, sourceFields, utils.TimestampProtoToTimePtr(request.CreatedAt), utils.TimestampProtoToTimePtr(request.UpdatedAt))
 	if err := s.organizationCommands.AddSocialCommand.Handle(ctx, cmd); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(AddSocialCommand.Handle) tenant:{%s}, organization ID: {%s}, err: %s", request.Tenant, request.OrganizationId, err.Error())

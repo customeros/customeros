@@ -3,7 +3,6 @@ mutation AddSocialToContact($contactId: ID!) {
         contactId: $contactId,
         input: {
             url: "social url"
-            platformName: "Social PLATFORM"
         }) {
     id
     createdAt
@@ -12,6 +11,5 @@ mutation AddSocialToContact($contactId: ID!) {
     source
     sourceOfTruth
     url
-    platformName
   }
 }
