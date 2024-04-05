@@ -8,7 +8,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/event"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/model"
 	orgaggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	eventstoret "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
@@ -42,7 +41,7 @@ func TestContractService_CreateContract(t *testing.T) {
 		CreatedByUserId:  "User123",
 		ServiceStartedAt: timestamppb.New(timeNow),
 		SignedAt:         timestamppb.New(timeNow),
-		RenewalCycle:     contractpb.RenewalCycle_MONTHLY_RENEWAL,
+		LengthInMonths:   int64(1),
 		ExternalSystemFields: &commonpb.ExternalSystemFields{
 			ExternalSystemId: "ExternalSystemID",
 			ExternalUrl:      "http://external.url",
@@ -77,7 +76,7 @@ func TestContractService_CreateContract(t *testing.T) {
 	require.Equal(t, "User123", eventData.CreatedByUserId)
 	require.Equal(t, utils.ToDate(timeNow), *eventData.ServiceStartedAt)
 	require.Equal(t, utils.ToDate(timeNow), *eventData.SignedAt)
-	require.Equal(t, model.MonthlyRenewal.String(), eventData.RenewalCycle)
+	require.Equal(t, int64(1), eventData.LengthInMonths)
 	require.Equal(t, "ExternalSystemID", eventData.ExternalSystem.ExternalSystemId)
 	require.Equal(t, "http://external.url", eventData.ExternalSystem.ExternalUrl)
 	require.Equal(t, "ExternalID", eventData.ExternalSystem.ExternalId)
@@ -228,7 +227,7 @@ func TestContractService_UpdateContract(t *testing.T) {
 		SignedAt:         timestamppb.New(timeNow),
 		EndedAt:          timestamppb.New(timeNow.AddDate(0, 1, 0)),
 		NextInvoiceDate:  timestamppb.New(timeNow),
-		RenewalCycle:     contractpb.RenewalCycle_MONTHLY_RENEWAL,
+		LengthInMonths:   int64(1),
 		Currency:         "USD",
 		SourceFields: &commonpb.SourceFields{
 			Source:    constants.SourceOpenline,
@@ -267,7 +266,7 @@ func TestContractService_UpdateContract(t *testing.T) {
 	// Assert event data
 	require.Equal(t, "Updated Contract", eventData.Name)
 	require.Equal(t, "http://new.contract.url", eventData.ContractUrl)
-	require.Equal(t, model.MonthlyRenewal.String(), eventData.RenewalCycle)
+	require.Equal(t, int64(1), eventData.LengthInMonths)
 	require.Equal(t, timeNow, eventData.UpdatedAt)
 	require.Equal(t, utils.ToDate(timeNow), *eventData.ServiceStartedAt)
 	require.Equal(t, utils.ToDate(timeNow), *eventData.SignedAt)

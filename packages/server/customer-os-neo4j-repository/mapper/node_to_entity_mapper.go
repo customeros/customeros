@@ -389,7 +389,7 @@ func MapDbNodeToContractEntity(dbNode *dbtype.Node) *entity.ContractEntity {
 		},
 	}
 	// Calculate contract length in months if it is not set
-	if contract.LengthInMonths == 0 {
+	if contract.LengthInMonths == int64(0) {
 		switch contract.RenewalCycle {
 		case enum.RenewalCycleMonthlyRenewal:
 			contract.LengthInMonths = 1

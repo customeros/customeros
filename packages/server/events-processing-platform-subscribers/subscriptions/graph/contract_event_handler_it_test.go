@@ -57,7 +57,7 @@ func TestContractEventHandler_OnCreate(t *testing.T) {
 			CreatedByUserId:    userIdCreator,
 			ServiceStartedAt:   &timeNow,
 			SignedAt:           &timeNow,
-			RenewalCycle:       model.MonthlyRenewal.String(),
+			LengthInMonths:     int64(1),
 			BillingCycle:       model.MonthlyBilling.String(),
 			Currency:           neo4jenum.CurrencyUSD.String(),
 			InvoicingStartDate: &timeNow,
@@ -283,12 +283,12 @@ func TestContractEventHandler_OnUpdate_FrequencySet(t *testing.T) {
 			ServiceStartedAt: &yesterday,
 			SignedAt:         &daysAgo2,
 			EndedAt:          &tomorrow,
-			RenewalCycle:     model.MonthlyRenewal.String(),
+			LengthInMonths:   int64(1),
 		},
 		commonmodel.ExternalSystem{},
 		constants.SourceOpenline,
 		now,
-		[]string{})
+		[]string{event.FieldMaskLengthInMonths, event.FieldMaskName, event.FieldMaskServiceStartedAt, event.FieldMaskSignedAt, event.FieldMaskEndedAt, event.FieldMaskContractURL})
 	require.Nil(t, err, "failed to create event")
 
 	// EXECUTE
@@ -307,7 +307,7 @@ func TestContractEventHandler_OnUpdate_FrequencySet(t *testing.T) {
 	require.Equal(t, "test contract updated", contract.Name)
 	require.Equal(t, "http://contract.url/updated", contract.ContractUrl)
 	require.Equal(t, neo4jenum.ContractStatusLive, contract.ContractStatus)
-	require.Equal(t, neo4jenum.RenewalCycleMonthlyRenewal, contract.RenewalCycle)
+	require.Equal(t, int64(1), contract.LengthInMonths)
 	test.AssertRecentTime(t, contract.UpdatedAt)
 	require.True(t, utils.ToDate(yesterday).Equal(*contract.ServiceStartedAt))
 	require.Equal(t, utils.ToDate(daysAgo2), *contract.SignedAt)
@@ -363,8 +363,8 @@ func TestContractEventHandler_OnUpdate_FrequencyNotChanged(t *testing.T) {
 	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
 	updateEvent, err := event.NewContractUpdateEvent(contractAggregate,
 		model.ContractDataFields{
-			Name:         "test contract updated",
-			RenewalCycle: model.MonthlyRenewal.String(),
+			Name:           "test contract updated",
+			LengthInMonths: int64(1),
 		},
 		commonmodel.ExternalSystem{},
 		constants.SourceOpenline,
@@ -424,8 +424,8 @@ func TestContractEventHandler_OnUpdate_FrequencyChanged(t *testing.T) {
 	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
 	updateEvent, err := event.NewContractUpdateEvent(contractAggregate,
 		model.ContractDataFields{
-			Name:         "test contract updated",
-			RenewalCycle: model.AnnuallyRenewal.String(),
+			Name:           "test contract updated",
+			LengthInMonths: int64(12),
 		},
 		commonmodel.ExternalSystem{},
 		constants.SourceOpenline,
@@ -489,13 +489,13 @@ func TestContractEventHandler_OnUpdate_FrequencyRemoved(t *testing.T) {
 	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
 	updateEvent, err := event.NewContractUpdateEvent(contractAggregate,
 		model.ContractDataFields{
-			Name:         "test contract updated",
-			RenewalCycle: model.NoneRenewal.String(),
+			Name:           "test contract updated",
+			LengthInMonths: int64(0),
 		},
 		commonmodel.ExternalSystem{},
 		constants.SourceOpenline,
 		utils.Now(),
-		[]string{})
+		[]string{event.FieldMaskLengthInMonths, event.FieldMaskName})
 	require.Nil(t, err)
 
 	// EXECUTE
@@ -600,7 +600,7 @@ func TestContractEventHandler_OnUpdate_ServiceStartDateChanged(t *testing.T) {
 	updateEvent, err := event.NewContractUpdateEvent(contractAggregate,
 		model.ContractDataFields{
 			Name:             "test contract updated",
-			RenewalCycle:     model.MonthlyRenewal.String(),
+			LengthInMonths:   int64(1),
 			ServiceStartedAt: &now,
 		},
 		commonmodel.ExternalSystem{},
@@ -721,7 +721,7 @@ func TestContractEventHandler_OnUpdate_EndDateSet(t *testing.T) {
 			ServiceStartedAt: &yesterday,
 			SignedAt:         &daysAgo2,
 			EndedAt:          &tomorrow,
-			RenewalCycle:     model.MonthlyRenewal.String(),
+			LengthInMonths:   int64(1),
 			AutoRenew:        false,
 		},
 		commonmodel.ExternalSystem{},
@@ -797,7 +797,7 @@ func TestContractEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOpen
 			ServiceStartedAt: &yesterday,
 			SignedAt:         &daysAgo2,
 			EndedAt:          &tomorrow,
-			RenewalCycle:     model.MonthlyRenewal.String(),
+			LengthInMonths:   int64(1),
 		},
 		commonmodel.ExternalSystem{},
 		"hubspot",
