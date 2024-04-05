@@ -68,8 +68,7 @@ func (h *ContractEventHandler) OnCreate(ctx context.Context, evt eventstore.Even
 		CreatedByUserId:        eventData.CreatedByUserId,
 		ServiceStartedAt:       eventData.ServiceStartedAt,
 		SignedAt:               eventData.SignedAt,
-		RenewalCycle:           eventData.RenewalCycle,
-		RenewalPeriods:         eventData.RenewalPeriods,
+		LengthInMonths:         eventData.LengthInMonths,
 		Status:                 eventData.Status,
 		CreatedAt:              eventData.CreatedAt,
 		UpdatedAt:              eventData.UpdatedAt,
@@ -123,7 +122,7 @@ func (h *ContractEventHandler) OnCreate(ctx context.Context, evt eventstore.Even
 		return err
 	}
 
-	if neo4jenum.IsFrequencyBasedRenewalCycle(neo4jenum.RenewalCycle(eventData.RenewalCycle)) {
+	if eventData.LengthInMonths > 0 {
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
 			return h.grpcClients.OpportunityClient.CreateRenewalOpportunity(ctx, &opportunitypb.CreateRenewalOpportunityGrpcRequest{
@@ -178,8 +177,7 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 		ContractUrl:                  eventData.ContractUrl,
 		ServiceStartedAt:             eventData.ServiceStartedAt,
 		Source:                       helper.GetSource(eventData.Source),
-		RenewalPeriods:               eventData.RenewalPeriods,
-		RenewalCycle:                 eventData.RenewalCycle,
+		LengthInMonths:               eventData.LengthInMonths,
 		UpdatedAt:                    eventData.UpdatedAt,
 		SignedAt:                     eventData.SignedAt,
 		EndedAt:                      eventData.EndedAt,
@@ -213,8 +211,7 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 		UpdateSignedAt:               eventData.UpdateSignedAt(),
 		UpdateEndedAt:                eventData.UpdateEndedAt(),
 		UpdateInvoicingStartDate:     eventData.UpdateInvoicingStartDate(),
-		UpdateRenewalPeriods:         eventData.UpdateRenewalPeriods(),
-		UpdateRenewalCycle:           eventData.UpdateRenewalCycle(),
+		UpdateLengthInMonths:         eventData.UpdateLengthInMonths(),
 		UpdateBillingCycle:           eventData.UpdateBillingCycle(),
 		UpdateCurrency:               eventData.UpdateCurrency(),
 		UpdateAddressLine1:           eventData.UpdateAddressLine1(),

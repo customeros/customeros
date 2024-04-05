@@ -18,8 +18,6 @@ type ContractCreateEvent struct {
 	CreatedByUserId        string                     `json:"createdByUserId"`
 	ServiceStartedAt       *time.Time                 `json:"serviceStartedAt,omitempty"`
 	SignedAt               *time.Time                 `json:"signedAt,omitempty"`
-	RenewalCycle           string                     `json:"renewalCycle"`
-	RenewalPeriods         *int64                     `json:"renewalPeriods,omitempty"`
 	Status                 string                     `json:"status"`
 	CreatedAt              time.Time                  `json:"createdAt"`
 	UpdatedAt              time.Time                  `json:"updatedAt"`
@@ -38,6 +36,7 @@ type ContractCreateEvent struct {
 	Check                  bool                       `json:"check,omitempty"`
 	DueDays                int64                      `json:"dueDays,omitempty"`
 	Country                string                     `json:"country"`
+	LengthInMonths         int64                      `json:"lengthInMonths"`
 }
 
 func NewContractCreateEvent(aggregate eventstore.Aggregate, dataFields model.ContractDataFields, source commonmodel.Source, externalSystem commonmodel.ExternalSystem, createdAt, updatedAt time.Time) (eventstore.Event, error) {
@@ -49,8 +48,6 @@ func NewContractCreateEvent(aggregate eventstore.Aggregate, dataFields model.Con
 		CreatedByUserId:        dataFields.CreatedByUserId,
 		ServiceStartedAt:       utils.ToDatePtr(dataFields.ServiceStartedAt),
 		SignedAt:               utils.ToDatePtr(dataFields.SignedAt),
-		RenewalCycle:           dataFields.RenewalCycle,
-		RenewalPeriods:         dataFields.RenewalPeriods,
 		Currency:               dataFields.Currency,
 		BillingCycle:           dataFields.BillingCycle,
 		InvoicingStartDate:     utils.ToDatePtr(dataFields.InvoicingStartDate),
@@ -67,6 +64,12 @@ func NewContractCreateEvent(aggregate eventstore.Aggregate, dataFields model.Con
 		UpdatedAt:              updatedAt,
 		Source:                 source,
 		Country:                dataFields.Country,
+		LengthInMonths:         dataFields.LengthInMonths,
+	}
+	if eventData.LengthInMonths < 0 {
+		eventData.LengthInMonths = 0
+	} else if eventData.LengthInMonths > 1200 {
+		eventData.LengthInMonths = 1200
 	}
 	if eventData.DueDays < 0 {
 		eventData.DueDays = 0

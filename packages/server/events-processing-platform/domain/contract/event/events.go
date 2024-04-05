@@ -16,8 +16,6 @@ const (
 	FieldMaskEndedAt                = "endedAt"
 	FieldMaskServiceStartedAt       = "serviceStartedAt"
 	FieldMaskInvoicingStartDate     = "invoicingStartDate"
-	FieldMaskRenewalCycle           = "renewalCycle"
-	FieldMaskRenewalPeriods         = "renewalPeriods"
 	FieldMaskBillingCycle           = "billingCycle"
 	FieldMaskCurrency               = "currency"
 	FieldMaskAddressLine1           = "addressLine1"
@@ -42,4 +40,5 @@ const (
 	FieldMaskAutoRenew              = "autoRenew"
 	FieldMaskCheck                  = "check"
 	FieldMaskDueDays                = "dueDays"
+	FieldMaskLengthInMonths         = "lengthInMonths"
 )

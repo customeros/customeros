@@ -18,8 +18,6 @@ type ContractUpdateEvent struct {
 	ServiceStartedAt       *time.Time                 `json:"serviceStartedAt,omitempty"`
 	SignedAt               *time.Time                 `json:"signedAt,omitempty"`
 	EndedAt                *time.Time                 `json:"endedAt,omitempty"`
-	RenewalCycle           string                     `json:"renewalCycle"`
-	RenewalPeriods         *int64                     `json:"renewalPeriods,omitempty"`
 	ExternalSystem         commonmodel.ExternalSystem `json:"externalSystem,omitempty"`
 	Source                 string                     `json:"source"`
 	InvoicingStartDate     *time.Time                 `json:"invoicingStartDate,omitempty"`
@@ -47,6 +45,7 @@ type ContractUpdateEvent struct {
 	AutoRenew              bool                       `json:"autoRenew,omitempty"`
 	Check                  bool                       `json:"check,omitempty"`
 	DueDays                int64                      `json:"dueDays,omitempty"`
+	LengthInMonths         int64                      `json:"lengthInMonths,omitempty"`
 }
 
 func NewContractUpdateEvent(a eventstore.Aggregate, dataFields model.ContractDataFields, externalSystem commonmodel.ExternalSystem, source string, updatedAt time.Time, fieldsMask []string) (eventstore.Event, error) {
@@ -57,8 +56,6 @@ func NewContractUpdateEvent(a eventstore.Aggregate, dataFields model.ContractDat
 		ServiceStartedAt:       utils.ToDatePtr(dataFields.ServiceStartedAt),
 		SignedAt:               utils.ToDatePtr(dataFields.SignedAt),
 		EndedAt:                utils.ToDatePtr(dataFields.EndedAt),
-		RenewalCycle:           dataFields.RenewalCycle,
-		RenewalPeriods:         dataFields.RenewalPeriods,
 		Currency:               dataFields.Currency,
 		BillingCycle:           dataFields.BillingCycle,
 		AddressLine1:           dataFields.AddressLine1,
@@ -80,7 +77,15 @@ func NewContractUpdateEvent(a eventstore.Aggregate, dataFields model.ContractDat
 		UpdatedAt:              updatedAt,
 		Source:                 source,
 		FieldsMask:             fieldsMask,
+		LengthInMonths:         dataFields.LengthInMonths,
 	}
+
+	if eventData.LengthInMonths < 0 {
+		eventData.LengthInMonths = 0
+	} else if eventData.LengthInMonths > 1200 {
+		eventData.LengthInMonths = 1200
+	}
+
 	if eventData.DueDays < 0 {
 		eventData.DueDays = 0
 	} else if eventData.DueDays > 365 {
@@ -146,14 +151,6 @@ func (e ContractUpdateEvent) UpdateServiceStartedAt() bool {
 
 func (e ContractUpdateEvent) UpdateInvoicingStartDate() bool {
 	return utils.Contains(e.FieldsMask, FieldMaskInvoicingStartDate)
-}
-
-func (e ContractUpdateEvent) UpdateRenewalCycle() bool {
-	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskRenewalCycle)
-}
-
-func (e ContractUpdateEvent) UpdateRenewalPeriods() bool {
-	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskRenewalPeriods)
 }
 
 func (e ContractUpdateEvent) UpdateBillingCycle() bool {
@@ -246,4 +243,8 @@ func (e ContractUpdateEvent) UpdateCheck() bool {
 
 func (e ContractUpdateEvent) UpdateDueDays() bool {
 	return utils.Contains(e.FieldsMask, FieldMaskDueDays)
+}
+
+func (e ContractUpdateEvent) UpdateLengthInMonths() bool {
+	return utils.Contains(e.FieldsMask, FieldMaskLengthInMonths)
 }
