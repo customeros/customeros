@@ -43,7 +43,7 @@ export const IssueDateFilter = ({ onFilterValueChange }: IssueDateProps) => {
   const [week, month, quarter] = useMemo(
     () =>
       [7, 30, 90].map((value) => {
-        return addDays(new Date(), value).toISOString().split('T')[0];
+        return addDays(new Date(), value).toISOString();
       }),
     [],
   );

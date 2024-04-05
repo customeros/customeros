@@ -2,11 +2,13 @@ query getInvoices(
   $pagination: Pagination!
   $organizationId: ID
   $where: Filter
+  $sort: [SortBy!]
 ) {
   invoices(
     pagination: $pagination
     organizationId: $organizationId
     where: $where
+    sort: $sort
   ) {
     content {
       metadata {

@@ -38,7 +38,7 @@ const columnHelper = createColumnHelper<ColumnDatum>();
 
 const columns: Record<string, Column> = {
   ISSUE_DATE: columnHelper.accessor('metadata.created', {
-    id: 'INVOICE_ISSUE_DATE',
+    id: 'INVOICE_CREATED_AT',
     minSize: 50,
     maxSize: 50,
     enableColumnFilter: true,
@@ -58,7 +58,7 @@ const columns: Record<string, Column> = {
     skeleton: () => <Skeleton className='w-[200px]' />,
   }),
   DUE_DATE: columnHelper.accessor('due', {
-    id: 'DUE_DATE',
+    id: 'INVOICE_DUE_DATE',
     minSize: 50,
     maxSize: 50,
     enableColumnFilter: false,
@@ -69,7 +69,7 @@ const columns: Record<string, Column> = {
     cell: (props) => <DueDateCell value={props.getValue()} />,
     skeleton: () => <Skeleton className='w-[200px]' />,
   }),
-  CONTRACT: columnHelper.accessor('organization.name', {
+  CONTRACT: columnHelper.accessor('organization', {
     id: 'CONTRACT',
     minSize: 200,
     enableColumnFilter: false,
@@ -77,7 +77,12 @@ const columns: Record<string, Column> = {
     header: (props) => (
       <THead id='contract' title='Contract' {...getTHeadProps(props)} />
     ),
-    cell: (props) => <ContractCell value={props.getValue()} />,
+    cell: (props) => (
+      <ContractCell
+        value={props.getValue()?.name}
+        organizationId={props.getValue()?.metadata?.id}
+      />
+    ),
     skeleton: () => <Skeleton className='w-[100px]' />,
   }),
   BILLING_CYCLE: columnHelper.accessor('contract.billingDetails', {
@@ -98,7 +103,7 @@ const columns: Record<string, Column> = {
     skeleton: () => <Skeleton className='w-[100px]' />,
   }),
   PAYMENT_STATUS: columnHelper.accessor('status', {
-    id: 'PAYMENT_STATUS',
+    id: 'INVOICE_STATUS',
     minSize: 70,
     maxSize: 70,
     enableColumnFilter: true,
@@ -132,7 +137,7 @@ const columns: Record<string, Column> = {
     ),
     skeleton: () => <Skeleton className='w-[200px]' />,
   }),
-  INVOICE_NUMBER: columnHelper.accessor('invoiceNumber', {
+  INVOICE_NUMBER: columnHelper.accessor((row) => row, {
     id: 'INVOICE_NUMBER',
     minSize: 100,
     maxSize: 100,
@@ -141,11 +146,16 @@ const columns: Record<string, Column> = {
     header: (props) => (
       <THead id='invoiceNumber' title='Invoice' {...getTHeadProps(props)} />
     ),
-    cell: (props) => <InvoiceNumberCell value={props.getValue()} />,
+    cell: (props) => (
+      <InvoiceNumberCell
+        value={props.getValue()?.invoiceNumber}
+        invoiceId={props.getValue()?.metadata?.id}
+      />
+    ),
     skeleton: () => <Skeleton className='w-[100px]' />,
   }),
   INVOICE_STATUS: columnHelper.accessor('contract.contractEnded', {
-    id: 'INVOICE_STATUS',
+    id: 'CONTRACT_ENDED_AT',
     minSize: 100,
     maxSize: 100,
     enableColumnFilter: true,
@@ -162,7 +172,7 @@ const columns: Record<string, Column> = {
     cell: (props) => <InvoiceStatusCell isOutOfContract={props.getValue()} />,
     skeleton: () => <Skeleton className='w-[100px]' />,
   }),
-  INVOICE_PREVIEW: columnHelper.accessor('invoiceNumber', {
+  INVOICE_PREVIEW: columnHelper.accessor((row) => row, {
     id: 'INVOICE_PREVIEW',
     minSize: 100,
     maxSize: 100,
@@ -175,7 +185,12 @@ const columns: Record<string, Column> = {
         {...getTHeadProps(props)}
       />
     ),
-    cell: (props) => <InvoicePreviewCell value={props.getValue()} />,
+    cell: (props) => (
+      <InvoicePreviewCell
+        value={props.getValue()?.invoiceNumber}
+        invoiceId={props.getValue()?.metadata?.id}
+      />
+    ),
     skeleton: () => <Skeleton className='w-[100px]' />,
   }),
   PLACEHOLDER: columnHelper.accessor((row) => row, {

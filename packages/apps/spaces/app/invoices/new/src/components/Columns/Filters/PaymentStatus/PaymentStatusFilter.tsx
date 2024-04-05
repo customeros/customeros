@@ -21,7 +21,6 @@ import {
 } from './PaymentStatusFilter.atom';
 
 const options: SelectOption<InvoiceStatus>[] = [
-  { label: 'Draft', value: InvoiceStatus.Draft },
   { label: 'Due', value: InvoiceStatus.Due },
   { label: 'Paid', value: InvoiceStatus.Paid },
   { label: 'Void', value: InvoiceStatus.Void },

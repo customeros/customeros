@@ -1,11 +1,10 @@
 import { atom, selector, useRecoilState } from 'recoil';
 
-import { ContractBillingCycle } from '@graphql/types';
 import { makeServerToAtomMapper } from '@shared/components/Filters/makeServerToAtomMapper';
 
 export interface BillingCycleFilterState {
+  value: string[];
   isActive: boolean;
-  value: ContractBillingCycle[];
 }
 
 export const defaultState: BillingCycleFilterState = {

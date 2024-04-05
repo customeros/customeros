@@ -9,8 +9,8 @@ import {
 
 import { Invoice } from '@graphql/types';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useInvoicesMeta } from '@shared/state/InvoicesMeta.atom';
 import { filterOutDryRunInvoices } from '@shared/components/Invoice/utils';
+import { useOrganizationInvoicesMeta } from '@shared/state/OrganizationInvoicesMeta.atom';
 import {
   GetInvoicesQuery,
   useInfiniteGetInvoicesQuery,
@@ -36,7 +36,7 @@ export function useInfiniteInvoices(
   organizationId?: string,
 ): useInfiniteInvoicesReturn {
   const client = getGraphQLClient();
-  const [invoicesMeta, setInvoicesMeta] = useInvoicesMeta();
+  const [invoicesMeta, setInvoicesMeta] = useOrganizationInvoicesMeta();
 
   const { data, isFetching, isFetched, fetchNextPage, hasNextPage } =
     useInfiniteGetInvoicesQuery(

@@ -8,7 +8,7 @@ export interface IssueDateFilterState {
   isActive: boolean;
 }
 
-const defaultValue = addDays(new Date(), 7).toISOString().split('T')[0];
+const defaultValue = addDays(new Date(), 7).toISOString();
 
 export const defaultState: IssueDateFilterState = {
   value: defaultValue,

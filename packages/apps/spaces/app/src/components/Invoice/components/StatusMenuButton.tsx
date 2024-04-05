@@ -10,11 +10,11 @@ import { InvoiceStatus } from '@graphql/types';
 import { CheckCircle } from '@ui/media/icons/CheckCircle';
 import { SlashCircle01 } from '@ui/media/icons/SlashCircle01';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useInvoicesMeta } from '@shared/state/InvoicesMeta.atom';
 import { renderStatusNode } from '@shared/components/Invoice/Cells';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 import { useVoidInvoiceMutation } from '@shared/graphql/voidInvoice.generated';
 import { useInfiniteGetInvoicesQuery } from '@shared/graphql/getInvoices.generated';
+import { useOrganizationInvoicesMeta } from '@shared/state/OrganizationInvoicesMeta.atom';
 import { useUpdateInvoiceStatusMutation } from '@shared/graphql/updateInvoiceStatus.generated';
 import {
   GetInvoiceQuery,
@@ -30,7 +30,7 @@ export const StatusMenuButton = ({
 }) => {
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
-  const [invoicesMeta] = useInvoicesMeta();
+  const [invoicesMeta] = useOrganizationInvoicesMeta();
   const queryKey = useGetInvoiceQuery.getKey({ id });
   const invoicesList = useInfiniteGetInvoicesQuery.getKey({
     ...invoicesMeta.getInvoices,
