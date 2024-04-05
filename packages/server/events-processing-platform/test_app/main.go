@@ -644,7 +644,7 @@ func testCreateContract() {
 		Tenant:           tenant,
 		OrganizationId:   organizationId,
 		LoggedInUserId:   userId,
-		RenewalCycle:     contractpb.RenewalCycle_MONTHLY_RENEWAL,
+		LengthInMonths:   1,
 		ServiceStartedAt: utils.ConvertTimeToTimestampPtr(&aYearAgo),
 		Name:             "year ago contract",
 		AutoRenew:        false,

@@ -79,18 +79,6 @@ func (a *ContractAggregate) createContract(ctx context.Context, request *contrac
 	sourceFields.FromGrpc(request.SourceFields)
 	sourceFields.SetDefaultValues()
 
-	if request.RenewalCycle != contractpb.RenewalCycle_ANNUALLY_RENEWAL {
-		request.RenewalPeriods = nil
-	}
-	if request.RenewalPeriods != nil {
-		if *request.RenewalPeriods < 1 {
-			request.RenewalPeriods = utils.Int64Ptr(1)
-		}
-		if *request.RenewalPeriods > 100 {
-			request.RenewalPeriods = utils.Int64Ptr(100)
-		}
-	}
-
 	dataFields := model.ContractDataFields{
 		OrganizationId:         request.OrganizationId,
 		Name:                   request.Name,
@@ -98,8 +86,6 @@ func (a *ContractAggregate) createContract(ctx context.Context, request *contrac
 		CreatedByUserId:        utils.StringFirstNonEmpty(request.CreatedByUserId, request.LoggedInUserId),
 		ServiceStartedAt:       utils.TimestampProtoToTimePtr(request.ServiceStartedAt),
 		SignedAt:               utils.TimestampProtoToTimePtr(request.SignedAt),
-		RenewalCycle:           model.RenewalCycle(request.RenewalCycle).String(),
-		RenewalPeriods:         request.RenewalPeriods,
 		Currency:               request.Currency,
 		BillingCycle:           model.BillingCycle(request.BillingCycle).String(),
 		InvoicingStartDate:     utils.TimestampProtoToTimePtr(request.InvoicingStartDate),
@@ -113,6 +99,7 @@ func (a *ContractAggregate) createContract(ctx context.Context, request *contrac
 		Check:                  request.Check,
 		DueDays:                request.DueDays,
 		Country:                request.Country,
+		LengthInMonths:         request.LengthInMonths,
 	}
 
 	// Determine contract status based start and end dates
@@ -169,9 +156,7 @@ func (a *ContractAggregate) updateContract(ctx context.Context, request *contrac
 		SignedAt:               signedAt,
 		EndedAt:                endedAt,
 		InvoicingStartDate:     invoicingStartDate,
-		RenewalCycle:           model.RenewalCycle(request.RenewalCycle).String(),
 		ContractUrl:            request.ContractUrl,
-		RenewalPeriods:         request.RenewalPeriods,
 		Currency:               request.Currency,
 		BillingCycle:           model.BillingCycle(request.BillingCycle).String(),
 		AddressLine1:           request.AddressLine1,
@@ -195,6 +180,7 @@ func (a *ContractAggregate) updateContract(ctx context.Context, request *contrac
 		AutoRenew:              request.AutoRenew,
 		Check:                  request.Check,
 		DueDays:                request.DueDays,
+		LengthInMonths:         request.LengthInMonths,
 	}
 	fieldsMask := extractFieldsMask(request.FieldsMask)
 
@@ -213,20 +199,8 @@ func (a *ContractAggregate) updateContract(ctx context.Context, request *contrac
 	}
 
 	// Set renewal periods
-	if !isUpdated(event.FieldMaskRenewalCycle, fieldsMask) {
-		dataFields.RenewalCycle = a.Contract.RenewalCycle
-	}
-
-	if dataFields.RenewalCycle != model.AnnuallyRenewal.String() {
-		dataFields.RenewalPeriods = nil
-	}
-	if dataFields.RenewalPeriods != nil {
-		if *dataFields.RenewalPeriods < 1 {
-			dataFields.RenewalPeriods = utils.Int64Ptr(1)
-		}
-		if *dataFields.RenewalPeriods > 100 {
-			dataFields.RenewalPeriods = utils.Int64Ptr(100)
-		}
+	if !isUpdated(event.FieldMaskLengthInMonths, fieldsMask) {
+		dataFields.LengthInMonths = a.Contract.LengthInMonths
 	}
 
 	updateEvent, err := event.NewContractUpdateEvent(
@@ -284,12 +258,8 @@ func extractFieldsMask(requestFieldsMask []contractpb.ContractFieldMask) []strin
 			fieldsMask = append(fieldsMask, event.FieldMaskSignedAt)
 		case contractpb.ContractFieldMask_CONTRACT_FIELD_ENDED_AT:
 			fieldsMask = append(fieldsMask, event.FieldMaskEndedAt)
-		case contractpb.ContractFieldMask_CONTRACT_FIELD_RENEWAL_CYCLE:
-			fieldsMask = append(fieldsMask, event.FieldMaskRenewalCycle)
 		case contractpb.ContractFieldMask_CONTRACT_FIELD_CONTRACT_URL:
 			fieldsMask = append(fieldsMask, event.FieldMaskContractURL)
-		case contractpb.ContractFieldMask_CONTRACT_FIELD_RENEWAL_PERIODS:
-			fieldsMask = append(fieldsMask, event.FieldMaskRenewalPeriods)
 		case contractpb.ContractFieldMask_CONTRACT_FIELD_BILLING_CYCLE:
 			fieldsMask = append(fieldsMask, event.FieldMaskBillingCycle)
 		case contractpb.ContractFieldMask_CONTRACT_FIELD_INVOICING_START_DATE:
@@ -338,6 +308,8 @@ func extractFieldsMask(requestFieldsMask []contractpb.ContractFieldMask) []strin
 			fieldsMask = append(fieldsMask, event.FieldMaskCheck)
 		case contractpb.ContractFieldMask_CONTRACT_FIELD_DUE_DAYS:
 			fieldsMask = append(fieldsMask, event.FieldMaskDueDays)
+		case contractpb.ContractFieldMask_CONTRACT_FIELD_LENGTH_IN_MONTHS:
+			fieldsMask = append(fieldsMask, event.FieldMaskLengthInMonths)
 		}
 	}
 	fieldsMask = utils.RemoveDuplicates(fieldsMask)
@@ -406,7 +378,7 @@ func (a *ContractAggregate) onContractCreate(evt eventstore.Event) error {
 	a.Contract.CreatedByUserId = eventData.CreatedByUserId
 	a.Contract.ServiceStartedAt = eventData.ServiceStartedAt
 	a.Contract.SignedAt = eventData.SignedAt
-	a.Contract.RenewalCycle = eventData.RenewalCycle
+	a.Contract.LengthInMonths = eventData.LengthInMonths
 	a.Contract.Status = eventData.Status
 	a.Contract.Currency = eventData.Currency
 	a.Contract.BillingCycle = eventData.BillingCycle
@@ -460,8 +432,8 @@ func (a *ContractAggregate) onContractUpdate(evt eventstore.Event) error {
 	}
 
 	a.Contract.UpdatedAt = eventData.UpdatedAt
-	if eventData.UpdateRenewalCycle() {
-		a.Contract.RenewalCycle = eventData.RenewalCycle
+	if eventData.UpdateLengthInMonths() {
+		a.Contract.LengthInMonths = eventData.LengthInMonths
 	}
 	if eventData.UpdateServiceStartedAt() {
 		a.Contract.ServiceStartedAt = eventData.ServiceStartedAt

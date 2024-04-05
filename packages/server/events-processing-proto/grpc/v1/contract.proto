@@ -8,23 +8,13 @@ import "common/billing_cycle.proto";
 
 option go_package = "api/grpc/v1/contract;contract_grpc_service";
 
-// Enum for RenewalCycle
-enum RenewalCycle {
-  NONE = 0;
-  MONTHLY_RENEWAL = 1;
-  ANNUALLY_RENEWAL = 2;
-  QUARTERLY_RENEWAL = 3;
-}
-
 enum ContractFieldMask {
   CONTRACT_FIELD_NONE = 0; // No property, ignored by the server
   CONTRACT_FIELD_NAME = 1;
   CONTRACT_FIELD_SERVICE_STARTED_AT = 2;
   CONTRACT_FIELD_SIGNED_AT = 3;
   CONTRACT_FIELD_ENDED_AT = 4;
-  CONTRACT_FIELD_RENEWAL_CYCLE = 5 [deprecated = true];
   CONTRACT_FIELD_CONTRACT_URL = 6;
-  CONTRACT_FIELD_RENEWAL_PERIODS = 7 [deprecated = true];
   CONTRACT_FIELD_BILLING_CYCLE = 8;
   CONTRACT_FIELD_INVOICING_START_DATE = 9;
   CONTRACT_FIELD_CURRENCY = 10;
@@ -63,11 +53,9 @@ message CreateContractGrpcRequest {
   google.protobuf.Timestamp updatedAt = 7;
   google.protobuf.Timestamp serviceStartedAt = 8;
   google.protobuf.Timestamp signedAt = 9;
-  RenewalCycle renewalCycle = 10 [deprecated = true];
   SourceFields sourceFields = 12;
   ExternalSystemFields externalSystemFields = 13;
   string contractUrl = 14;
-  optional int64 renewalPeriods = 15 [deprecated = true];
   BillingCycle billingCycle = 16;
   google.protobuf.Timestamp invoicingStartDate = 17;
   string currency = 18;
@@ -93,11 +81,9 @@ message UpdateContractGrpcRequest {
   google.protobuf.Timestamp serviceStartedAt = 6;
   google.protobuf.Timestamp signedAt = 7;
   google.protobuf.Timestamp endedAt = 8;
-  RenewalCycle renewalCycle = 9 [deprecated = true];
   SourceFields sourceFields = 10;
   ExternalSystemFields externalSystemFields = 11;
   string contractUrl = 12;
-  optional int64 renewalPeriods = 13 [deprecated = true];
   BillingCycle billingCycle = 14;
   google.protobuf.Timestamp invoicingStartDate = 15;
   string currency = 16;

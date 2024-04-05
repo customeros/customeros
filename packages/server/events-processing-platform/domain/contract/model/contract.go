@@ -20,8 +20,6 @@ type Contract struct {
 	ServiceStartedAt       *time.Time                   `json:"serviceStartedAt,omitempty"`
 	SignedAt               *time.Time                   `json:"signedAt,omitempty"`
 	EndedAt                *time.Time                   `json:"endedAt,omitempty"`
-	RenewalCycle           string                       `json:"renewalCycle"`
-	RenewalPeriods         *int64                       `json:"renewalPeriods"`
 	Status                 string                       `json:"status"`
 	Source                 commonmodel.Source           `json:"source"`
 	ExternalSystems        []commonmodel.ExternalSystem `json:"externalSystems"`
@@ -50,6 +48,7 @@ type Contract struct {
 	AutoRenew              bool                         `json:"autoRenew"`
 	Check                  bool                         `json:"check"`
 	DueDays                int64                        `json:"dueDays"`
+	LengthInMonths         int64                        `json:"lengthInMonths"`
 }
 
 type ContractDataFields struct {
@@ -60,8 +59,6 @@ type ContractDataFields struct {
 	ServiceStartedAt       *time.Time
 	SignedAt               *time.Time
 	EndedAt                *time.Time
-	RenewalCycle           string
-	RenewalPeriods         *int64
 	BillingCycle           string
 	Currency               string
 	InvoicingStartDate     *time.Time
@@ -86,9 +83,11 @@ type ContractDataFields struct {
 	AutoRenew              bool     `json:"autoRenew"`
 	Check                  bool     `json:"check"`
 	DueDays                int64    `json:"dueDays"`
+	LengthInMonths         int64    `json:"lengthInMonths"`
 }
 
 // RenewalCycle represents the renewal cycle of a contract.
+// Deprecated: RenewalCycle is deprecated
 type RenewalCycle int32
 
 const (
