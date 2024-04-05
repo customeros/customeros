@@ -4,13 +4,10 @@ import { useParams } from 'next/navigation';
 
 import { useQueryClient } from '@tanstack/react-query';
 
-import { Box } from '@ui/layout/Box';
-import { Flex } from '@ui/layout/Flex';
 import { Icons } from '@ui/media/Icon';
-import { Button } from '@ui/form/Button';
 import { Contact } from '@graphql/types';
-import { Text } from '@ui/typography/Text';
-import { Fade } from '@ui/transitions/Fade';
+import { Button } from '@ui/form/Button/Button';
+import { Spinner } from '@ui/feedback/Spinner/Spinner';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { invalidateQuery } from '@organization/src/components/Tabs/panels/PeoplePanel/util';
 import { useCreateContactMutation } from '@organization/src/graphql/createContact.generated';
@@ -79,11 +76,18 @@ export const PeoplePanel = () => {
           <Button
             size='sm'
             variant='outline'
+            className='text-gray-500'
             loadingText='Adding'
             isLoading={isLoading}
+            spinner={
+              <Spinner
+                className='text-gray-300 fill-gray-400'
+                size='sm'
+                label='adding'
+              />
+            }
             onClick={handleAddContact}
-            leftIcon={<Icons.UsersPlus />}
-            type='button'
+            leftIcon={<Icons.UsersPlus className='text-gray-500' />}
           >
             Add
           </Button>
@@ -91,45 +95,45 @@ export const PeoplePanel = () => {
       }
     >
       {!contacts.length && (
-        <Flex direction='column' alignItems='center' mt='4'>
-          <Box
-            border='1px solid'
-            borderColor='gray.200'
-            padding={3}
-            borderRadius='md'
-            mb={6}
-          >
+        <div className='flex flex-col items-center mt-4'>
+          <div className='border-1 border-gray-200 p-3 rounded-md mb-6'>
             <Icons.Users2 color='gray.700' boxSize='6' />
-          </Box>
-          <Text color='gray.700' fontWeight={600}>
+          </div>
+          <span className='text-gray-700 font-semibold'>
             Let’s add some people
-          </Text>
-          <Text color='gray.500' mt={1} mb={6} textAlign='center'>
+          </span>
+          <span className='text-gray-500 mt-1 mb-6 text-center'>
             With the right people, you&apos;ll create meaningful interactions
             and results. Start by adding yourself, your colleagues or anyone
             from {data?.organization?.name}.
-          </Text>
+          </span>
           <div>
             <Button
               variant='outline'
               loadingText='Adding'
               isLoading={isLoading}
               onClick={handleAddContact}
+              spinner={
+                <Spinner
+                  className='text-gray-300 fill-gray-400'
+                  size='sm'
+                  label='adding'
+                />
+              }
             >
               Add someone
             </Button>
           </div>
-        </Flex>
+        </div>
       )}
-
       {!!contacts.length &&
         contacts.map((contact, index) => (
-          <Fade key={contact.id} in style={{ width: '100%' }}>
+          <div key={contact.id} style={{ width: '100%' }}>
             <ContactCard
               contact={contact as Contact}
               organizationName={data?.organization?.name}
             />
-          </Fade>
+          </div>
         ))}
     </OrganizationPanel>
   );

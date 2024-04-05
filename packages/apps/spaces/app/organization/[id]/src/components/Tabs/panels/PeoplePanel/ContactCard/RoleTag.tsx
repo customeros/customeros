@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Tag, TagLabel } from '@ui/presentation/Tag';
+import { Tag, TagLabel } from '@ui/presentation/Tag/Tag';
 
 interface RoleTagProps {
   label: string;
@@ -11,13 +11,13 @@ export const getTagColorScheme = (label: string) => {
     case 'Decision Maker':
       return 'primary';
     case 'Influencer':
-      return 'green';
+      return 'greenLight';
     case 'User':
-      return 'blue';
+      return 'blueDark';
     case 'Stakeholder':
-      return 'pink';
+      return 'rose';
     case 'Gatekeeper':
-      return 'orange';
+      return 'warning';
     case 'Champion':
       return 'error';
     default:
@@ -30,16 +30,10 @@ export const RoleTag: React.FC<RoleTagProps> = ({ label }) => {
 
   return (
     <Tag
-      size='sm'
+      size='md'
       variant='outline'
       colorScheme={colorScheme}
-      border='1px solid'
-      borderColor={`${[colorScheme]}.200`}
-      backgroundColor={`${[colorScheme]}.50`}
-      color={`${[colorScheme]}.700`}
-      boxShadow='none'
-      fontWeight='normal'
-      minHeight={6}
+      className='min-h-6 '
     >
       <TagLabel>{label}</TagLabel>
     </Tag>

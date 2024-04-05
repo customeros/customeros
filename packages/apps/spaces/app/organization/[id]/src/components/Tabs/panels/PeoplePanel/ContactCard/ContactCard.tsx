@@ -8,29 +8,29 @@ import { useQueryClient } from '@tanstack/react-query';
 import formatDistanceToNow from 'date-fns/formatDistanceToNow';
 import differenceInCalendarMonths from 'date-fns/differenceInCalendarMonths';
 
+import { cn } from '@ui/utils/cn';
 import { Flex } from '@ui/layout/Flex';
 import { Icons } from '@ui/media/Icon';
 import { Contact } from '@graphql/types';
 import { Avatar } from '@ui/media/Avatar';
 import { useDisclosure } from '@ui/utils';
-import { FormInput } from '@ui/form/Input';
 import { Text } from '@ui/typography/Text';
 import { useOutsideClick } from '@ui/utils';
-import { Fade } from '@ui/transitions/Fade';
 import { User01 } from '@ui/media/icons/User01';
-import { IconButton } from '@ui/form/IconButton';
-import { Collapse } from '@ui/transitions/Collapse';
-import { FormInputGroup } from '@ui/form/InputGroup';
-import { FormAutoresizeTextarea } from '@ui/form/Textarea';
+import { FormInput } from '@ui/form/Input/FormInput2';
 import { SelectOption } from '@shared/types/SelectOptions';
+import { IconButton } from '@ui/form/IconButton/IconButton';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { Card, CardBody, CardHeader } from '@ui/presentation/Card';
+import { PhoneOutgoing02 } from '@ui/media/icons/PhoneOutgoing02';
+import { FormInputGroup } from '@ui/form/InputGroup/FormInputGroup2';
+import { Card, CardHeader, CardContent } from '@ui/presentation/Card/Card';
 import { useContactCardMeta } from '@organization/src/state/ContactCardMeta.atom';
-import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
+import { FormAutoresizeTextarea } from '@ui/form/Textarea/FormAutoresizeTextarea2';
 import { useUpdateContactMutation } from '@organization/src/graphql/updateContact.generated';
 import { useDeleteContactMutation } from '@organization/src/graphql/deleteContact.generated';
 import { useAddContactEmailMutation } from '@organization/src/graphql/addContactEmail.generated';
 import { useAddContactSocialMutation } from '@organization/src/graphql/addContactSocial.generated';
+import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog2';
 import { useRemoveContactEmailMutation } from '@organization/src/graphql/removeContactEmail.generated';
 import { useUpdateContactRoleMutation } from '@organization/src/graphql/updateContactJobRole.generated';
 import { useAddContactPhoneNumberMutation } from '@organization/src/graphql/addContactPhoneNumber.generated';
@@ -300,30 +300,17 @@ export const ContactCard = ({
   return (
     <>
       <Card
+        className={cn(
+          'bg-white w-full group rounded-lg border-[1px] border-gray-200 cursor-pointer hover:shadow-md ',
+          isExpanded ? 'shadow-md' : 'shadow-xs',
+          'ease-linear',
+          'transition-all',
+          'duration-1000',
+        )}
         key={data.id}
-        w='full'
         ref={cardRef}
-        boxShadow={isExpanded ? 'md' : 'xs'}
-        cursor='pointer'
-        borderRadius='lg'
-        border='1px solid'
-        borderColor='gray.200'
-        _hover={{
-          boxShadow: 'md',
-          '& > div > #confirm-button': {
-            opacity: '1',
-            pointerEvents: 'auto',
-          },
-        }}
-        transition='all 0.2s ease-out'
       >
-        <CardHeader
-          as={Flex}
-          p='4'
-          pb={isExpanded ? 2 : 4}
-          position='relative'
-          onClick={toggle}
-        >
+        <CardHeader onClick={toggle} className={cn('flex p-4 relative')}>
           <Avatar
             name={state?.values?.name ?? data?.name}
             src={contact?.profilePhotoUrl ? contact.profilePhotoUrl : undefined}
@@ -331,21 +318,21 @@ export const ContactCard = ({
             variant='shadowed'
           />
 
-          <Flex ml='4' flexDir='column' flex='1'>
+          <div className='ml-4 flex flex-col flex-1'>
             <FormInput
-              h='6'
+              className='font-semibold text-base text-gray-700'
               name='name'
+              size='xs'
               formId={formId}
               ref={nameInputRef}
               placeholder='Name'
-              color='gray.700'
-              fontWeight='semibold'
             />
             <FormInput
-              h='6'
+              className='text-gray-500 text-base'
               name='title'
               color='gray.500'
               formId={formId}
+              size='xs'
               placeholder='Title'
             />
             <FormRoleSelect
@@ -357,119 +344,96 @@ export const ContactCard = ({
               setIsFocused={setRoleIsFocused}
               data={data.role}
             />
-          </Flex>
+          </div>
           {isExpanded && (
             <IconButton
+              className='absolute z-50 top-2 right-2 p-1 opacity-0 pointer-events-auto transition-opacity duration-300 group-hover:opacity-100 "'
               size='xs'
-              top='2'
-              right='2'
               variant='ghost'
               colorScheme='gray'
               id='collapse-button'
-              position='absolute'
               aria-label='Close'
               onClick={onClose}
-              icon={<Icons.Check color='gray.400' boxSize='5' />}
+              icon={<Icons.Check className='text-gray-500' />}
             />
           )}
 
           {!isExpanded && (
             <IconButton
-              size='xs'
-              top='2'
-              right='2'
+              className='hover:bg-error-100 *:hover:text-error-500 absolute z-50 top-2 right-2 p-1 opacity-0 pointer-events-auto transition-opacity duration-300 group-hover:opacity-100 "'
+              size='sm'
               variant='ghost'
-              color='gray.400'
               colorScheme='gray'
-              _hover={{
-                background: 'red.100',
-                color: 'red.400',
-              }}
-              opacity={0}
-              pointerEvents='none'
               id='confirm-button'
-              position='absolute'
               aria-label='Delete contact'
               isLoading={deleteContact.isPending}
               onClick={toggleConfirmDelete}
-              icon={<Icons.Trash1 boxSize='5' />}
+              icon={<Icons.Trash1 className='text-gray-400' />}
             />
           )}
         </CardHeader>
-
-        <Collapse
-          in={isExpanded}
-          style={{ overflow: 'unset' }}
-          delay={{
-            exit: 2,
-          }}
-        >
-          <Fade
-            in={isExpanded}
-            delay={{
-              enter: 0.2,
-            }}
+        {isExpanded && (
+          <CardContent
+            className={cn('flex flex-col', isExpanded ? 'h-auto' : 'h-0')}
           >
-            <CardBody pt={0}>
-              <FormInputGroup
-                formId={formId}
-                name='email'
-                ref={emailInputRef}
-                placeholder='Email'
-                leftElement={<Icons.Mail1 color='gray.500' />}
-                rightElement={
-                  <EmailValidationMessage
-                    email={data.email}
-                    validationDetails={
-                      contact?.emails?.[0]?.emailValidationDetails
-                    }
-                  />
-                }
-              />
-              <FormInputGroup
-                formId={formId}
-                name='phone'
-                placeholder='Phone number'
-                leftElement={<Icons.Phone2 color='gray.500' />}
-              />
-              {/* TODO: replace with FormInput. currently displayed as a text just for demoing purposes */}
-              {timeAt && (
-                <Flex align='center' h='39px'>
-                  <Icons.Calendar color='gray.500' />
-                  <Text ml='14px' cursor='text' textTransform='capitalize'>
-                    {timeAt}
-                  </Text>
-                </Flex>
-              )}
-              {/* END TODO */}
-              <FormSocialInput
-                invalidateQuery={invalidate}
-                addSocial={handleAddSocial}
-                name='socials'
-                formId={formId}
-                placeholder='Social link'
-                defaultValues={data?.socials}
-                organizationId={organizationId}
-                leftElement={<Icons.Share7 color='gray.500' />}
-              />
-              <FormTimezoneSelect
-                formId={formId}
-                isClearable
-                name='timezone'
-                placeholder='Timezone'
-                options={timezoneOptions}
-                leftElement={<Icons.Clock color='gray.500' mr='3' />}
-              />
-              <FormAutoresizeTextarea
-                pl='30px'
-                formId={formId}
-                name='note'
-                placeholder='Notes'
-                leftElement={<Icons.File2 color='gray.500' />}
-              />
-            </CardBody>
-          </Fade>
-        </Collapse>
+            <FormInputGroup
+              formId={formId}
+              name='email'
+              ref={emailInputRef}
+              placeholder='Email'
+              leftElement={<Icons.Mail1 color='gray.500' />}
+              rightElement={
+                <EmailValidationMessage
+                  email={data.email}
+                  validationDetails={
+                    contact?.emails?.[0]?.emailValidationDetails
+                  }
+                />
+              }
+            />
+            <FormInputGroup
+              formId={formId}
+              name='phone'
+              placeholder='Phone number'
+              leftElement={<PhoneOutgoing02 color='gray.500' />}
+            />
+            {/* TODO: replace with FormInput. currently displayed as a text just for demoing purposes */}
+            {timeAt && (
+              <Flex align='center' h='39px'>
+                <Icons.Calendar color='gray.500' />
+                <Text ml='14px' cursor='text' textTransform='capitalize'>
+                  {timeAt}
+                </Text>
+              </Flex>
+            )}
+            {/* END TODO */}
+            <FormSocialInput
+              invalidateQuery={invalidate}
+              addSocial={handleAddSocial}
+              name='socials'
+              formId={formId}
+              placeholder='Social link'
+              defaultValues={data?.socials}
+              organizationId={organizationId}
+              leftElement={<Icons.Share7 color='gray.500' />}
+            />
+            <FormTimezoneSelect
+              formId={formId}
+              isClearable
+              name='timezone'
+              placeholder='Timezone'
+              options={timezoneOptions}
+              leftElement={<Icons.Clock color='gray.500' />}
+            />
+            <FormAutoresizeTextarea
+              pl='30px'
+              formId={formId}
+              name='note'
+              placeholder='Notes'
+              leftElement={<Icons.File2 color='gray.500' />}
+            />
+          </CardContent>
+        )}
       </Card>
       <ConfirmDeleteDialog
         label='Delete this contact?'
@@ -477,6 +441,7 @@ export const ContactCard = ({
         isOpen={isOpen}
         onClose={onClose}
         onConfirm={handleDelete}
+        hideCloseButton
         isLoading={deleteContact.isPending}
       />
     </>

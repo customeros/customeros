@@ -1,6 +1,7 @@
 import React, { useRef, MouseEventHandler } from 'react';
 
 import { Icons, FeaturedIcon } from '@ui/media/Icon';
+import { Spinner } from '@ui/feedback/Spinner/Spinner';
 import { Button, ButtonProps } from '@ui/form/Button/Button';
 
 import {
@@ -48,7 +49,7 @@ export const ConfirmDeleteDialog = ({
   const cancelRef = useRef<HTMLButtonElement>(null);
 
   return (
-    <AlertDialog isOpen={isOpen} onClose={onClose}>
+    <AlertDialog isOpen={isOpen} onClose={onClose} className='z-[99999]'>
       <AlertDialogOverlay>
         <AlertDialogContent className='rounded-xl bg-no-repeat bg-[url(/backgrounds/organization/circular-bg-pattern.png)]'>
           {!hideCloseButton && (
@@ -93,7 +94,14 @@ export const ConfirmDeleteDialog = ({
                 colorScheme={colorScheme || 'error'}
                 onClick={onConfirm}
                 isLoading={isLoading}
-                // loadingText={loadingButtonLabel}
+                loadingText={loadingButtonLabel}
+                spinner={
+                  <Spinner
+                    size={'sm'}
+                    label='deleting'
+                    className='text-error-300 fill-error-700'
+                  />
+                }
               >
                 {confirmButtonLabel}
               </Button>

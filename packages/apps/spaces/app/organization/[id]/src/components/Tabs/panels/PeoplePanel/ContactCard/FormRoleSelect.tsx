@@ -1,12 +1,15 @@
 import { useRef } from 'react';
 
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
+import { cn } from '@ui/utils/cn';
 import { useOutsideClick } from '@ui/utils';
-import { FormSelect } from '@ui/form/SyncSelect';
+import { FormSelect } from '@ui/form/Select/FormSelect';
 import { SelectOption } from '@shared/types/SelectOptions';
+import {
+  getMultiValueClassNames,
+  getMultiValueLabelClassNames,
+} from '@ui/form/Select';
 
-import { RoleTag, getTagColorScheme } from './RoleTag';
+import { RoleTag } from './RoleTag';
 
 interface FormRoleSelectProps {
   name: string;
@@ -17,6 +20,37 @@ interface FormRoleSelectProps {
   data: SelectOption<string>[];
   setIsFocused: (isFocused: boolean) => void;
 }
+
+const options = [
+  {
+    value: 'Decision Maker',
+    label: 'Decision Maker',
+  },
+  {
+    value: 'Influencer',
+    label: 'Influencer',
+  },
+  {
+    value: 'User',
+    label: 'User',
+  },
+  {
+    value: 'Stakeholder',
+    label: 'Stakeholder',
+  },
+  {
+    value: 'Gatekeeper',
+    label: 'Gatekeeper',
+  },
+  {
+    value: 'Champion',
+    label: 'Champion',
+  },
+  {
+    value: 'Data Owner',
+    label: 'Data Owner',
+  },
+];
 
 export const FormRoleSelect = ({
   name,
@@ -33,7 +67,6 @@ export const FormRoleSelect = ({
     ref,
     handler: () => setIsFocused(false),
   });
-
   if (isFocused) {
     return (
       <span onClick={(e) => e.stopPropagation()} ref={ref}>
@@ -42,43 +75,39 @@ export const FormRoleSelect = ({
           autoFocus
           menuIsOpen
           name={name}
-          options={[
-            { value: 'Decision Maker', label: 'Decision Maker' },
-            { value: 'Influencer', label: 'Influencer' },
-            { value: 'User', label: 'User' },
-            { value: 'Stakeholder', label: 'Stakeholder' },
-            { value: 'Gatekeeper', label: 'Gatekeeper' },
-            { value: 'Champion', label: 'Champion' },
-            { value: 'Data Owner', label: 'Data Owner' },
-          ]}
+          options={options}
           formId={formId}
           placeholder='Role'
-          chakraStyles={{
-            multiValue: (props, data) => {
-              const colorScheme = (() => getTagColorScheme(data.data.label))();
-
-              return {
-                ...props,
-                fontSize: 'xs',
-                fontWeight: 'normal',
-                color: `${[colorScheme]}.700`,
-                border: '1px solid',
-                borderColor: `${[colorScheme]}.200`,
-                backgroundColor: `${[colorScheme]}.50`,
-
-                '& div[role="button"]': {
-                  position: 'relative',
-                  background: 'transparent',
-                  outline: 'none',
-                  marginInlineStart: '2px',
-                  display: 'initial',
-                  boxShadow: 'none !important',
-                },
-                '& div[data-focus="true"]': {
-                  opacity: 1,
-                },
-              };
-            },
+          classNames={{
+            multiValue: ({ data }) =>
+              getMultiValueClassNames(
+                cn({
+                  'bg-gray-50 border-gray-200': data.label === 'Data Owner',
+                  'bg-rose-50 border-rose-200': data.label === 'Stakeholder',
+                  'bg-warning-50 border-warning-200':
+                    data.label === 'Gatekeeper',
+                  'bg-error-50 border-error-200': data.label === 'Champion',
+                  'bg-primary-50 border-primary-200':
+                    data.label === 'Decision Maker',
+                  'bg-greenLight-50 border-greenLight-200':
+                    data.label === 'Influencer',
+                  'bg-blueDark-50 border-blueDark-200': data.label === 'User',
+                  'border-[1px]': true,
+                  'text-sm': true,
+                }),
+              ),
+            multiValueLabel: ({ data }) =>
+              getMultiValueLabelClassNames(
+                cn({
+                  'text-gray-700': data.label === 'Data Owner',
+                  'text-rose-700': data.label === 'Stakeholder',
+                  'text-warning-700': data.label === 'Gatekeeper',
+                  'text-error-700': data.label === 'Champion',
+                  'text-primary-700': data.label === 'Decision Maker',
+                  'text-greenLight-700': data.label === 'Influencer',
+                  'text-blueDark-700': data.label === 'User',
+                }),
+              ),
           }}
         />
       </span>
@@ -87,32 +116,23 @@ export const FormRoleSelect = ({
 
   if (!data.length) {
     return (
-      <Text
-        cursor='text'
-        color={'gray.400'}
+      <span
+        className='hover:border-gray-300 border-b border-transparent cursor-text text-gray-400 transition-colors duration-200 ease-in-out'
         onClick={(e) => {
           if (isCardOpen) {
             e.stopPropagation();
           }
           setIsFocused(true);
         }}
-        borderBottom='1px solid transparent'
-        transition='border-color 0.2s ease-in-out'
-        _hover={{
-          borderColor: 'gray.300',
-        }}
       >
         {placeholder}
-      </Text>
+      </span>
     );
   }
 
   return (
-    <Flex
-      gap={1}
-      mt={2}
-      pb={2}
-      flexWrap='wrap'
+    <div
+      className='flex gap-1 mt-2 pb-2 flex-wrap'
       onClick={(e) => {
         if (isCardOpen) {
           e.stopPropagation();
@@ -123,6 +143,6 @@ export const FormRoleSelect = ({
       {data.map((e) => (
         <RoleTag key={e.label} label={e.label} />
       ))}
-    </Flex>
+    </div>
   );
 };

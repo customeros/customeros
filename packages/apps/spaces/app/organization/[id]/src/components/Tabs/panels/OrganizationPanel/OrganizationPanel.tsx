@@ -1,12 +1,15 @@
 'use client';
 import { useState, ReactNode, useEffect } from 'react';
 
-import { Flex } from '@ui/layout/Flex';
-import { VStack } from '@ui/layout/Stack';
-import { Text } from '@ui/typography/Text';
-import { Box, BoxProps } from '@ui/layout/Box';
+import { cn } from '@ui/utils/cn';
+import {
+  ScrollAreaRoot,
+  ScrollAreaThumb,
+  ScrollAreaViewport,
+  ScrollAreaScrollbar,
+} from '@ui/utils/ScrollArea';
 
-interface OrganizationPanelProps extends BoxProps {
+interface OrganizationPanelProps extends React.HTMLAttributes<HTMLDivElement> {
   title: string;
   bgImage?: string;
   withFade?: boolean;
@@ -34,44 +37,35 @@ export const OrganizationPanel = ({
   }, []);
 
   return (
-    <Box
-      p={0}
-      flex={1}
-      as={Flex}
-      flexDirection='column'
-      height='100%'
-      backgroundImage={bgImage ? bgImage : ''}
-      backgroundRepeat='no-repeat'
-      backgroundSize='contain'
+    <div
+      className={cn('flex flex-1 flex-col h-full p-0 bg-no-repeat bg-contain')}
+      style={{ backgroundImage: bgImage ? `url(${bgImage})` : '' }}
       {...props}
     >
-      <Flex justify='space-between' pt='4' pb='4' px='6'>
-        <Flex alignItems='center'>
+      <div className='flex justify-between pt-4 pb-4 px-6'>
+        <div className='flex items-center'>
           {leftActionItem && leftActionItem}
-          <Text fontSize='lg' color='gray.700' fontWeight='semibold'>
-            {title}
-          </Text>
-        </Flex>
+          <span className='text-lg text-gray-700 font-semibold'>{title}</span>
+        </div>
 
         {actionItem && actionItem}
-      </Flex>
-
-      <VStack
-        spacing='2'
-        w='full'
-        h='100%'
-        justify='stretch'
-        position='relative'
-        overflowY={shouldBlockPanelScroll ? 'hidden' : 'auto'}
-        px={'6'}
-        pb={8}
-        opacity={isMounted ? 1 : 0}
-        transition='opacity 0.3s ease-in-out'
-      >
-        {children}
-      </VStack>
-
+      </div>
+      <ScrollAreaRoot>
+        <ScrollAreaViewport>
+          <div
+            className={cn(
+              isMounted ? 'opacity-100' : 'opacity-0',
+              'flex flex-col space-y-2 justify-stretch w-full h-full px-6 pb-8 transition-opacity duration-300 ease-in-out',
+            )}
+          >
+            {children}
+          </div>
+        </ScrollAreaViewport>
+        <ScrollAreaScrollbar orientation='vertical'>
+          <ScrollAreaThumb />
+        </ScrollAreaScrollbar>
+      </ScrollAreaRoot>
       {bottomActionItem && bottomActionItem}
-    </Box>
+    </div>
   );
 };
