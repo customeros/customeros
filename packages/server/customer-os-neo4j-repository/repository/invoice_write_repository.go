@@ -81,11 +81,12 @@ type InvoiceWriteRepository interface {
 	UpdateInvoice(ctx context.Context, tenant, invoiceId string, data InvoiceUpdateFields) error
 	MarkInvoiceFinalizedEventSent(ctx context.Context, tenant, invoiceId string) error
 	MarkPayNotificationRequested(ctx context.Context, tenant, invoiceId string, requestedAt time.Time) error
-	MarkPaymentLinkRequested(ctx context.Context, tenant, invoiceId string, requestedAt time.Time) error
+	MarkPaymentLinkRequested(ctx context.Context, tenant, invoiceId string) error
 	SetPaidInvoiceNotificationSentAt(ctx context.Context, tenant, invoiceId string) error
 	SetPayInvoiceNotificationSentAt(ctx context.Context, tenant, invoiceId string) error
-	DeleteInvoice(ctx context.Context, tenant, invoiceId string) error
+	DeleteInitializedInvoice(ctx context.Context, tenant, invoiceId string) error
 	DeleteAllPreviewCycleInvoices(ctx context.Context, tenant, contractId, skipInvoiceId string) error
+	DeleteDryRunInvoice(ctx context.Context, tenant, invoiceId string) error
 }
 
 type invoiceWriteRepository struct {
@@ -413,18 +414,19 @@ func (r *invoiceWriteRepository) SetPayInvoiceNotificationSentAt(ctx context.Con
 	return err
 }
 
-func (r *invoiceWriteRepository) DeleteInvoice(ctx context.Context, tenant, invoiceId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceWriteRepository.DeleteInvoice")
+func (r *invoiceWriteRepository) DeleteInitializedInvoice(ctx context.Context, tenant, invoiceId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceWriteRepository.DeleteInitializedInvoice")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, invoiceId)
 
 	cypher := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[r1:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$invoiceId})<-[r2:HAS_INVOICE]-(:Contract)
-							WHERE i:Invoice_%s
+							WHERE i:Invoice_%s AND i.status=$initializedStatus
 							DELETE r1,r2,i`, tenant)
 	params := map[string]any{
-		"tenant":    tenant,
-		"invoiceId": invoiceId,
+		"tenant":            tenant,
+		"invoiceId":         invoiceId,
+		"initializedStatus": neo4jenum.InvoiceStatusInitialized.String(),
 	}
 
 	span.LogFields(log.String("cypher", cypher))
@@ -463,7 +465,7 @@ func (r *invoiceWriteRepository) DeleteAllPreviewCycleInvoices(ctx context.Conte
 	return err
 }
 
-func (r *invoiceWriteRepository) MarkPaymentLinkRequested(ctx context.Context, tenant, invoiceId string, requestedAt time.Time) error {
+func (r *invoiceWriteRepository) MarkPaymentLinkRequested(ctx context.Context, tenant, invoiceId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceWriteRepository.MarkPaymentLinkRequested")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
@@ -485,5 +487,29 @@ func (r *invoiceWriteRepository) MarkPaymentLinkRequested(ctx context.Context, t
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
+	return err
+}
+
+func (r *invoiceWriteRepository) DeleteDryRunInvoice(ctx context.Context, tenant, invoiceId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceReadRepository.DeleteDryRunInvoice")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.LogFields(log.String("invoiceId", invoiceId))
+
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$invoiceId, dryRun:true})
+			   OPTIONAL MATCH (i)-[:HAS_INVOICE_LINE]->(il:InvoiceLine) 
+			   DETACH DELETE i, il`
+	params := map[string]any{
+		"tenant":    tenant,
+		"invoiceId": invoiceId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+
 	return err
 }
