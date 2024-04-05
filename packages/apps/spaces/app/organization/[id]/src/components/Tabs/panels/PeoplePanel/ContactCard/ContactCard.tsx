@@ -18,7 +18,6 @@ import { Text } from '@ui/typography/Text';
 import { useOutsideClick } from '@ui/utils';
 import { User01 } from '@ui/media/icons/User01';
 import { FormInput } from '@ui/form/Input/FormInput2';
-import { FormAutoresizeTextarea } from '@ui/form/Textarea';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
@@ -26,6 +25,7 @@ import { PhoneOutgoing02 } from '@ui/media/icons/PhoneOutgoing02';
 import { FormInputGroup } from '@ui/form/InputGroup/FormInputGroup2';
 import { Card, CardHeader, CardContent } from '@ui/presentation/Card/Card';
 import { useContactCardMeta } from '@organization/src/state/ContactCardMeta.atom';
+import { FormAutoresizeTextarea } from '@ui/form/Textarea/FormAutoresizeTextarea2';
 import { useUpdateContactMutation } from '@organization/src/graphql/updateContact.generated';
 import { useDeleteContactMutation } from '@organization/src/graphql/deleteContact.generated';
 import { useAddContactEmailMutation } from '@organization/src/graphql/addContactEmail.generated';
@@ -335,7 +335,6 @@ export const ContactCard = ({
               size='xs'
               placeholder='Title'
             />
-            {/* to be replace when about tab is merged */}
             <FormRoleSelect
               name='role'
               formId={formId}

@@ -43,6 +43,7 @@ export const FormInputGroup = forwardRef((props: FormInputGroupProps, ref) => {
           {...getInputProps()}
           autoComplete='off'
           {...rest}
+          variant='group'
           autoFocus={autoFocus}
         />
         {rightElement && <RightElement>{rightElement}</RightElement>}

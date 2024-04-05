@@ -125,7 +125,6 @@ export const PeoplePanel = () => {
           </div>
         </div>
       )}
-
       {!!contacts.length &&
         contacts.map((contact, index) => (
           <div key={contact.id} style={{ width: '100%' }}>

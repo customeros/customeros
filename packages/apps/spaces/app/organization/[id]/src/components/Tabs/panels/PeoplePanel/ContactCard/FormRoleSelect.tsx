@@ -1,9 +1,8 @@
 import { useRef } from 'react';
 
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
+import { colors } from '@ui/theme/colors';
 import { useOutsideClick } from '@ui/utils';
-import { FormSelect } from '@ui/form/SyncSelect';
+import { FormSelect } from '@ui/form/Select/FormSelect';
 import { SelectOption } from '@shared/types/SelectOptions';
 
 import { RoleTag, getTagColorScheme } from './RoleTag';
@@ -33,7 +32,6 @@ export const FormRoleSelect = ({
     ref,
     handler: () => setIsFocused(false),
   });
-
   if (isFocused) {
     return (
       <span onClick={(e) => e.stopPropagation()} ref={ref}>
@@ -53,7 +51,7 @@ export const FormRoleSelect = ({
           ]}
           formId={formId}
           placeholder='Role'
-          chakraStyles={{
+          styles={{
             multiValue: (props, data) => {
               const colorScheme = (() => getTagColorScheme(data.data.label))();
 
@@ -61,10 +59,10 @@ export const FormRoleSelect = ({
                 ...props,
                 fontSize: 'xs',
                 fontWeight: 'normal',
-                color: `${[colorScheme]}.700`,
+                color: colors[colorScheme][700],
                 border: '1px solid',
-                borderColor: `${[colorScheme]}.200`,
-                backgroundColor: `${[colorScheme]}.50`,
+                borderColor: colors[colorScheme][200],
+                backgroundColor: colors[colorScheme][50],
 
                 '& div[role="button"]': {
                   position: 'relative',
@@ -87,32 +85,23 @@ export const FormRoleSelect = ({
 
   if (!data.length) {
     return (
-      <Text
-        cursor='text'
-        color={'gray.400'}
+      <span
+        className='hover:border-gray-300 border-b border-transparent cursor-text text-gray-400 transition-colors duration-200 ease-in-out'
         onClick={(e) => {
           if (isCardOpen) {
             e.stopPropagation();
           }
           setIsFocused(true);
         }}
-        borderBottom='1px solid transparent'
-        transition='border-color 0.2s ease-in-out'
-        _hover={{
-          borderColor: 'gray.300',
-        }}
       >
         {placeholder}
-      </Text>
+      </span>
     );
   }
 
   return (
-    <Flex
-      gap={1}
-      mt={2}
-      pb={2}
-      flexWrap='wrap'
+    <div
+      className='flex gap-1 mt-2 pb-2 flex-wrap'
       onClick={(e) => {
         if (isCardOpen) {
           e.stopPropagation();
@@ -123,6 +112,6 @@ export const FormRoleSelect = ({
       {data.map((e) => (
         <RoleTag key={e.label} label={e.label} />
       ))}
-    </Flex>
+    </div>
   );
 };

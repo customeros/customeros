@@ -2,6 +2,12 @@
 import { useState, ReactNode, useEffect } from 'react';
 
 import { cn } from '@ui/utils/cn';
+import {
+  ScrollAreaRoot,
+  ScrollAreaThumb,
+  ScrollAreaViewport,
+  ScrollAreaScrollbar,
+} from '@ui/utils/ScrollArea';
 
 interface OrganizationPanelProps extends React.HTMLAttributes<HTMLDivElement> {
   title: string;
@@ -44,17 +50,21 @@ export const OrganizationPanel = ({
 
         {actionItem && actionItem}
       </div>
-
-      <div
-        className='flex flex-col space-y-2 justify-stretch w-full h-full px-6 pb-8 transition-opacity duration-300 ease-in-out'
-        style={{
-          opacity: isMounted ? 1 : 0,
-          overflowY: shouldBlockPanelScroll ? 'hidden' : 'auto',
-        }}
-      >
-        {children}
-      </div>
-
+      <ScrollAreaRoot>
+        <ScrollAreaViewport>
+          <div
+            className='flex flex-col space-y-2 justify-stretch w-full h-full px-6 pb-8 transition-opacity duration-300 ease-in-out'
+            style={{
+              opacity: isMounted ? 1 : 0,
+            }}
+          >
+            {children}
+          </div>
+        </ScrollAreaViewport>
+        <ScrollAreaScrollbar orientation='vertical'>
+          <ScrollAreaThumb />
+        </ScrollAreaScrollbar>
+      </ScrollAreaRoot>
       {bottomActionItem && bottomActionItem}
     </div>
   );

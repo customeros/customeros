@@ -104,7 +104,7 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
               variant: 'flushed',
               size,
               className: cn(
-                'flex items-center cursor-pointer overflow-visible',
+                'flex mt-1 items-center cursor-pointer overflow-visible',
                 isReadOnly && 'pointer-events-none',
                 isFocused && 'border-primary-500',
               ),
