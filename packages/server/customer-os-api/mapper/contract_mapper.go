@@ -10,7 +10,7 @@ func MapEntityToContract(entity *neo4jentity.ContractEntity) *model.Contract {
 	if entity == nil {
 		return nil
 	}
-	return &model.Contract{
+	contract := model.Contract{
 		Metadata: &model.Metadata{
 			ID:            entity.Id,
 			Created:       entity.CreatedAt,
@@ -42,17 +42,16 @@ func MapEntityToContract(entity *neo4jentity.ContractEntity) *model.Contract {
 			Check:                  utils.ToPtr(entity.Check),
 			DueDays:                utils.ToPtr(entity.DueDays),
 		},
-		CommittedPeriods:     entity.RenewalPeriods,
-		ContractEnded:        entity.EndedAt,
-		ContractName:         entity.Name,
-		ContractRenewalCycle: MapContractRenewalCycleToModel(entity.RenewalCycle),
-		ContractSigned:       entity.SignedAt,
-		ContractURL:          utils.StringPtrNillable(entity.ContractUrl),
-		Currency:             utils.ToPtr(MapCurrencyToModel(entity.Currency)),
-		BillingEnabled:       entity.InvoicingEnabled,
-		ServiceStarted:       entity.ServiceStartedAt,
-		ContractStatus:       MapContractStatusToModel(entity.ContractStatus),
-		AutoRenew:            entity.AutoRenew,
+		ContractEnded:           entity.EndedAt,
+		ContractName:            entity.Name,
+		ContractSigned:          entity.SignedAt,
+		ContractURL:             utils.StringPtrNillable(entity.ContractUrl),
+		Currency:                utils.ToPtr(MapCurrencyToModel(entity.Currency)),
+		BillingEnabled:          entity.InvoicingEnabled,
+		ServiceStarted:          entity.ServiceStartedAt,
+		ContractStatus:          MapContractStatusToModel(entity.ContractStatus),
+		AutoRenew:               entity.AutoRenew,
+		CommittedPeriodInMonths: utils.ToPtr[int64](entity.LengthInMonths),
 
 		// All below are deprecated
 		ID:                    entity.Id,
@@ -63,8 +62,6 @@ func MapEntityToContract(entity *neo4jentity.ContractEntity) *model.Contract {
 		SourceOfTruth:         MapDataSourceToModel(entity.SourceOfTruth),
 		AppSource:             entity.AppSource,
 		Status:                MapContractStatusToModel(entity.ContractStatus),
-		RenewalCycle:          MapContractRenewalCycleToModel(entity.RenewalCycle),
-		RenewalPeriods:        entity.RenewalPeriods,
 		ServiceStartedAt:      entity.ServiceStartedAt,
 		SignedAt:              entity.SignedAt,
 		EndedAt:               entity.EndedAt,
@@ -79,6 +76,30 @@ func MapEntityToContract(entity *neo4jentity.ContractEntity) *model.Contract {
 		InvoiceEmail:          utils.ToPtr(entity.InvoiceEmail),
 		InvoiceNote:           utils.ToPtr(entity.InvoiceNote),
 	}
+
+	if entity.LengthInMonths == int64(0) {
+		contract.RenewalPeriods = nil
+		contract.CommittedPeriods = nil
+		contract.ContractRenewalCycle = model.ContractRenewalCycleNone
+		contract.RenewalCycle = model.ContractRenewalCycleNone
+	} else if entity.LengthInMonths < int64(3) {
+		contract.RenewalPeriods = utils.ToPtr(int64(1))
+		contract.CommittedPeriods = utils.ToPtr(int64(1))
+		contract.ContractRenewalCycle = model.ContractRenewalCycleMonthlyRenewal
+		contract.RenewalCycle = model.ContractRenewalCycleMonthlyRenewal
+	} else if entity.LengthInMonths < int64(12) {
+		contract.RenewalPeriods = utils.ToPtr(int64(1))
+		contract.CommittedPeriods = utils.ToPtr(int64(1))
+		contract.ContractRenewalCycle = model.ContractRenewalCycleQuarterlyRenewal
+		contract.RenewalCycle = model.ContractRenewalCycleQuarterlyRenewal
+	} else {
+		contract.RenewalPeriods = utils.ToPtr(entity.LengthInMonths / 12)
+		contract.CommittedPeriods = utils.ToPtr(entity.LengthInMonths / 12)
+		contract.ContractRenewalCycle = model.ContractRenewalCycleAnnualRenewal
+		contract.RenewalCycle = model.ContractRenewalCycleAnnualRenewal
+	}
+
+	return &contract
 }
 
 func MapEntitiesToContracts(entities *neo4jentity.ContractEntities) []*model.Contract {

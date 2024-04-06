@@ -25,10 +25,9 @@ query GetContract($contractId: ID!) {
         check
         dueDays
     }
-    committedPeriods
+    committedPeriodInMonths
     contractEnded
     contractName
-    contractRenewalCycle
     contractSigned
     contractUrl
     currency

@@ -24,7 +24,7 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_CreateRenewalOpportunit
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ServiceStartedAt: serviceStartedAt,
-		RenewalCycle:     neo4jenum.RenewalCycleMonthlyRenewal,
+		LengthInMonths:   1,
 	})
 
 	// prepare grpc client
@@ -67,7 +67,7 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_MonthlyContract(t *test
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ServiceStartedAt: serviceStartedAt,
-		RenewalCycle:     neo4jenum.RenewalCycleMonthlyRenewal,
+		LengthInMonths:   1,
 		AutoRenew:        true,
 	})
 	opportunityId := neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
@@ -117,7 +117,7 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_MonthlyContract_NotAuto
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ServiceStartedAt: serviceStartedAt,
-		RenewalCycle:     neo4jenum.RenewalCycleMonthlyRenewal,
+		LengthInMonths:   1,
 		AutoRenew:        false,
 	})
 	opportunityId := neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
@@ -166,7 +166,7 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_QuarterlyContract(t *te
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ServiceStartedAt: &yesterday,
-		RenewalCycle:     neo4jenum.RenewalCycleQuarterlyRenewal,
+		LengthInMonths:   3,
 		AutoRenew:        true,
 	})
 	opportunityId := neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
@@ -216,7 +216,7 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_AnnualContract(t *testi
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ServiceStartedAt: serviceStartedAt,
-		RenewalCycle:     neo4jenum.RenewalCycleAnnualRenewal,
+		LengthInMonths:   12,
 		AutoRenew:        true,
 	})
 	opportunityId := neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
@@ -266,8 +266,7 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_MultiAnnualContract(t *
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ServiceStartedAt: &yesterday,
-		RenewalCycle:     neo4jenum.RenewalCycleAnnualRenewal,
-		RenewalPeriods:   utils.Int64Ptr(10),
+		LengthInMonths:   int64(120),
 		AutoRenew:        true,
 	})
 	opportunityId := neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
@@ -335,7 +334,7 @@ func TestContractEventHandler_UpdateRenewalArrForecast_OnlyOnceBilled(t *testing
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ServiceStartedAt: serviceStartedAt,
-		RenewalCycle:     neo4jenum.RenewalCycleAnnualRenewal,
+		LengthInMonths:   int64(12),
 	})
 	opportunityId := neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
 		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
@@ -391,7 +390,7 @@ func TestContractEventHandler_UpdateRenewalArrForecast_MultipleServices(t *testi
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ServiceStartedAt: serviceStartedAt,
-		RenewalCycle:     neo4jenum.RenewalCycleMonthlyRenewal,
+		LengthInMonths:   1,
 	})
 	opportunityId := neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
 		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
@@ -459,7 +458,7 @@ func TestContractEventHandler_UpdateRenewalArrForecast_MediumLikelihood(t *testi
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ServiceStartedAt: serviceStartedAt,
-		RenewalCycle:     neo4jenum.RenewalCycleMonthlyRenewal,
+		LengthInMonths:   1,
 	})
 	opportunityId := neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
 		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
@@ -519,7 +518,7 @@ func TestContractEventHandler_UpdateRenewalArrForecast_ContractEndsBeforeNextRen
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ServiceStartedAt: serviceStartedAt,
-		RenewalCycle:     neo4jenum.RenewalCycleAnnualRenewal,
+		LengthInMonths:   12,
 		EndedAt:          utils.TimePtr(tomorrow),
 	})
 	opportunityId := neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
@@ -581,7 +580,7 @@ func TestContractEventHandler_UpdateRenewalArrForecast_ContractEndsIn6Months_Pro
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ServiceStartedAt: serviceStartedAt,
-		RenewalCycle:     neo4jenum.RenewalCycleMonthlyRenewal,
+		LengthInMonths:   1,
 		EndedAt:          utils.TimePtr(in6Months),
 	})
 	opportunityId := neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
@@ -643,7 +642,7 @@ func TestContractEventHandler_UpdateRenewalArrForecast_ContractEndsInMoreThan12M
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ServiceStartedAt: serviceStartedAt,
-		RenewalCycle:     neo4jenum.RenewalCycleMonthlyRenewal,
+		LengthInMonths:   1,
 		EndedAt:          utils.TimePtr(in13Months),
 	})
 	opportunityId := neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
@@ -702,8 +701,8 @@ func TestContractEventHandler_UpdateActiveRenewalOpportunityLikelihood_EndedCont
 	afterTomorrow := utils.Now().AddDate(0, 0, 2)
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
-		EndedAt:      &tomorrow,
-		RenewalCycle: neo4jenum.RenewalCycleAnnualRenewal,
+		EndedAt:        &tomorrow,
+		LengthInMonths: 12,
 	})
 	opportunityId := neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
 		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
@@ -752,8 +751,8 @@ func TestContractEventHandler_UpdateActiveRenewalOpportunityLikelihood_EndedCont
 	afterTomorrow := utils.Now().AddDate(0, 0, 2)
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
-		EndedAt:      &tomorrow,
-		RenewalCycle: neo4jenum.RenewalCycleAnnualRenewal,
+		EndedAt:        &tomorrow,
+		LengthInMonths: 12,
 	})
 	neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
 		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
@@ -781,7 +780,7 @@ func TestContractEventHandler_UpdateActiveRenewalOpportunityLikelihood_Reinitiat
 	afterTomorrow := utils.Now().AddDate(0, 0, 2)
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
-		RenewalCycle: neo4jenum.RenewalCycleAnnualRenewal,
+		LengthInMonths: 12,
 	})
 	opportunityId := neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
 		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
@@ -829,7 +828,7 @@ func TestContractEventHandler_UpdateActiveRenewalOpportunityLikelihood_Reinitiat
 	afterTomorrow := utils.Now().AddDate(0, 0, 2)
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
-		RenewalCycle: neo4jenum.RenewalCycleAnnualRenewal,
+		LengthInMonths: 12,
 	})
 	neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
 		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,

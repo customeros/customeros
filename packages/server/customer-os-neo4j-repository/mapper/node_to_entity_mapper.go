@@ -352,8 +352,6 @@ func MapDbNodeToContractEntity(dbNode *dbtype.Node) *entity.ContractEntity {
 		EndedAt:                         utils.GetTimePropOrNil(props, "endedAt"),
 		ContractUrl:                     utils.GetStringPropOrEmpty(props, "contractUrl"),
 		ContractStatus:                  enum.DecodeContractStatus(utils.GetStringPropOrEmpty(props, "status")),
-		RenewalCycle:                    enum.DecodeRenewalCycle(utils.GetStringPropOrEmpty(props, "renewalCycle")),
-		RenewalPeriods:                  utils.GetInt64PropOrNil(props, "renewalPeriods"),
 		TriggeredOnboardingStatusChange: utils.GetBoolPropOrFalse(props, "triggeredOnboardingStatusChange"),
 		NextInvoiceDate:                 utils.GetTimePropOrNil(props, "nextInvoiceDate"),
 		Source:                          entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
@@ -387,29 +385,6 @@ func MapDbNodeToContractEntity(dbNode *dbtype.Node) *entity.ContractEntity {
 			StatusRenewalRequestedAt:  utils.GetTimePropOrNil(props, "techStatusRenewalRequestedAt"),
 			RolloutRenewalRequestedAt: utils.GetTimePropOrNil(props, "techRolloutRenewalRequestedAt"),
 		},
-	}
-	// Calculate contract length in months if it is not set
-	if contract.LengthInMonths == int64(0) {
-		switch contract.RenewalCycle {
-		case enum.RenewalCycleMonthlyRenewal:
-			contract.LengthInMonths = 1
-		case enum.RenewalCycleQuarterlyRenewal:
-			contract.LengthInMonths = 3
-		case enum.RenewalCycleAnnualRenewal:
-			contract.LengthInMonths = 12
-			if contract.RenewalPeriods != nil && *contract.RenewalPeriods > 1 {
-				contract.LengthInMonths *= *contract.RenewalPeriods
-			}
-		}
-	} else {
-		if contract.LengthInMonths < 3 {
-			contract.RenewalCycle = enum.RenewalCycleMonthlyRenewal
-		} else if contract.LengthInMonths < 12 {
-			contract.RenewalCycle = enum.RenewalCycleQuarterlyRenewal
-		} else {
-			contract.RenewalCycle = enum.RenewalCycleAnnualRenewal
-			contract.RenewalPeriods = utils.ToPtr[int64](contract.LengthInMonths / 12)
-		}
 	}
 
 	return &contract

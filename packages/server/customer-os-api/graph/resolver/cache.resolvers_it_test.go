@@ -22,7 +22,7 @@ func TestQueryGlobalCache_GCliCache_IsOwnerFalse(t *testing.T) {
 		FirstName: "a",
 		LastName:  "b",
 	})
-	neo4jt.CreateOrganization(ctx, driver, tenantName, "org1")
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "org1"})
 
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Tenant"))
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
@@ -57,7 +57,7 @@ func TestQueryGlobalCache_GCliCache_IsOwnerTrue(t *testing.T) {
 		FirstName: "a",
 		LastName:  "b",
 	})
-	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org1")
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "org1"})
 
 	neo4jt.UserOwnsOrganization(ctx, driver, testUserId, organizationId)
 

@@ -106,7 +106,7 @@ func main() {
 	//testUpdateIssue()
 	//testCreateComment()
 	//testUserLinkWithEmail()
-	testCreateContract()
+	//testCreateContract()
 	//testUpdateContract()
 	//testAddContractService()
 	//testCloseLooseOpportunity()

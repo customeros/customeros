@@ -25,7 +25,7 @@ func CustomSlisWereInserted(ctx context.Context, table *godog.Table) (context.Co
 func SlisWereInserted(ctx context.Context, inserted_slis int, contractId string) (context.Context, error) {
 	currentYear := 2023
 
-	sliStartedAt := test.FirstTimeOfMonth(currentYear, 1)
+	sliStartedAt := utils.FirstTimeOfMonth(currentYear, 1)
 	for i := 0; i < inserted_slis; i++ {
 		test.InsertServiceLineItem(ctx, driver, tenantName, contractId, enum.BilledTypeMonthly, 12, 2, sliStartedAt)
 	}

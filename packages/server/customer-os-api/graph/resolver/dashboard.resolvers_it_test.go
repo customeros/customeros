@@ -22,9 +22,9 @@ func TestQueryResolver_Search_Organization_By_Name(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateOrganization(ctx, driver, tenantName, "org 1")
-	neo4jt.CreateOrganization(ctx, driver, tenantName, "org 2")
-	neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "org 1"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "org 2"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 
 	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 	require.Equal(t, 3, neo4jtest.GetCountOfRelationships(ctx, driver, "ORGANIZATION_BELONGS_TO_TENANT"))
@@ -107,14 +107,14 @@ func TestQueryResolver_Search_Organization_By_ORGANIZATION_Filter(t *testing.T) 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateTenantOrganization(ctx, driver, tenantName, "org excluded")
-	organizationId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org 1")
-	organizationId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org 2")
-	neo4jt.CreateOrganization(ctx, driver, tenantName, "org 3")
-	neo4jt.CreateOrganization(ctx, driver, tenantName, "org 4")
-	neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+	organizationId1 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "org 1"})
+	organizationId2 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "org 2"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "org 3"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "org 4"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		ReferenceId: "100/200",
 	})
-	neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		CustomerOsId: "C-123-ABC",
 	})
 
@@ -839,10 +839,10 @@ func TestQueryResolver_Sort_Renewals_ByRenewalDate(t *testing.T) {
 		Name: "org3",
 	})
 
-	contractStartedAt := neo4jtest.FirstTimeOfMonth(2023, 6)
-	contract2StartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
+	contractStartedAt := utils.FirstTimeOfMonth(2023, 6)
+	contract2StartedAt := utils.FirstTimeOfMonth(2023, 7)
 
-	sli1StartedAt := neo4jtest.FirstTimeOfMonth(2023, 6)
+	sli1StartedAt := utils.FirstTimeOfMonth(2023, 6)
 	contractId1 := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, organizationId3, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contractStartedAt,
@@ -906,14 +906,14 @@ func TestQueryResolver_Sort_Renewals_ByForecastAmountASC(t *testing.T) {
 		Name: "org3",
 	})
 
-	contractStartedAt := neo4jtest.FirstTimeOfMonth(2023, 6)
-	contract2StartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
+	contractStartedAt := utils.FirstTimeOfMonth(2023, 6)
+	contract2StartedAt := utils.FirstTimeOfMonth(2023, 7)
 
-	sli1StartedAt := neo4jtest.FirstTimeOfMonth(2023, 6)
+	sli1StartedAt := utils.FirstTimeOfMonth(2023, 6)
 	contractId1 := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, organizationId3, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contractStartedAt,
-		RenewalCycle:     "MONTHLY",
+		LengthInMonths:   1,
 	}, neo4jentity.OpportunityEntity{
 		RenewalDetails: neo4jentity.RenewalDetails{
 			RenewedAt: &daysFromNow20,
@@ -924,7 +924,7 @@ func TestQueryResolver_Sort_Renewals_ByForecastAmountASC(t *testing.T) {
 	contractId2 := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, organizationId3, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2StartedAt,
-		RenewalCycle:     "MONTHLY",
+		LengthInMonths:   1,
 	}, neo4jentity.OpportunityEntity{
 		RenewalDetails: neo4jentity.RenewalDetails{
 			RenewedAt: &daysFromNow10,
@@ -976,14 +976,14 @@ func TestQueryResolver_Sort_Renewals_ByForecastAmountDESC(t *testing.T) {
 		Name: "org3",
 	})
 
-	contractStartedAt := neo4jtest.FirstTimeOfMonth(2023, 6)
-	contract2StartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
+	contractStartedAt := utils.FirstTimeOfMonth(2023, 6)
+	contract2StartedAt := utils.FirstTimeOfMonth(2023, 7)
 
-	sli1StartedAt := neo4jtest.FirstTimeOfMonth(2023, 6)
+	sli1StartedAt := utils.FirstTimeOfMonth(2023, 6)
 	contractId1 := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, organizationId3, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contractStartedAt,
-		RenewalCycle:     "MONTHLY",
+		LengthInMonths:   1,
 	}, neo4jentity.OpportunityEntity{
 		RenewalDetails: neo4jentity.RenewalDetails{
 			RenewedAt: &daysFromNow20,
@@ -995,7 +995,7 @@ func TestQueryResolver_Sort_Renewals_ByForecastAmountDESC(t *testing.T) {
 	contractId2 := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, organizationId3, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2StartedAt,
-		RenewalCycle:     "MONTHLY",
+		LengthInMonths:   1,
 	}, neo4jentity.OpportunityEntity{
 		RenewalDetails: neo4jentity.RenewalDetails{
 			RenewedAt: &daysFromNow10,
@@ -1048,14 +1048,14 @@ func TestQueryResolver_Sort_Renewals_ByRenewalLikelihood(t *testing.T) {
 		Name: "org3",
 	})
 
-	contractStartedAt := neo4jtest.FirstTimeOfMonth(2023, 6)
-	contract2StartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
+	contractStartedAt := utils.FirstTimeOfMonth(2023, 6)
+	contract2StartedAt := utils.FirstTimeOfMonth(2023, 7)
 
-	sli1StartedAt := neo4jtest.FirstTimeOfMonth(2023, 6)
+	sli1StartedAt := utils.FirstTimeOfMonth(2023, 6)
 	contractId1 := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, organizationId3, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contractStartedAt,
-		RenewalCycle:     "MONTHLY",
+		LengthInMonths:   1,
 	}, neo4jentity.OpportunityEntity{
 		RenewalDetails: neo4jentity.RenewalDetails{
 			RenewedAt:         &daysFromNow20,
@@ -1068,7 +1068,7 @@ func TestQueryResolver_Sort_Renewals_ByRenewalLikelihood(t *testing.T) {
 	contractId2 := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, organizationId3, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2StartedAt,
-		RenewalCycle:     "MONTHLY",
+		LengthInMonths:   1,
 	}, neo4jentity.OpportunityEntity{
 		RenewalDetails: neo4jentity.RenewalDetails{
 			RenewedAt:         &daysFromNow10,
@@ -1081,7 +1081,7 @@ func TestQueryResolver_Sort_Renewals_ByRenewalLikelihood(t *testing.T) {
 	contractId3 := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, organizationId3, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2StartedAt,
-		RenewalCycle:     "MONTHLY",
+		LengthInMonths:   1,
 	}, neo4jentity.OpportunityEntity{
 		RenewalDetails: neo4jentity.RenewalDetails{
 			RenewedAt:         &daysFromNow10,
@@ -1169,35 +1169,35 @@ func TestQueryResolver_Search_Renewals_By_Organization_Name(t *testing.T) {
 	org2 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{Name: "test 2"})
 	orgUnnamed := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
 
-	contractStartedAt := neo4jtest.FirstTimeOfMonth(2023, 6)
-	contract2StartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
+	contractStartedAt := utils.FirstTimeOfMonth(2023, 6)
+	contract2StartedAt := utils.FirstTimeOfMonth(2023, 7)
 
-	sli1StartedAt := neo4jtest.FirstTimeOfMonth(2023, 6)
+	sli1StartedAt := utils.FirstTimeOfMonth(2023, 6)
 	contractId1 := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, org1, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contractStartedAt,
-		RenewalCycle:     "MONTHLY",
+		LengthInMonths:   1,
 	}, neo4jentity.OpportunityEntity{})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId1, neo4jenum.BilledTypeAnnually, 3, 2, sli1StartedAt)
 
 	contractId2 := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, org1, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2StartedAt,
-		RenewalCycle:     "MONTHLY",
+		LengthInMonths:   1,
 	}, neo4jentity.OpportunityEntity{})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId2, neo4jenum.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	contractId3 := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgUnnamed, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2StartedAt,
-		RenewalCycle:     "MONTHLY",
+		LengthInMonths:   1,
 	}, neo4jentity.OpportunityEntity{})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId3, neo4jenum.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	contractId4 := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, org2, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2StartedAt,
-		RenewalCycle:     "MONTHLY",
+		LengthInMonths:   1,
 	}, neo4jentity.OpportunityEntity{})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId4, neo4jenum.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
@@ -1247,14 +1247,14 @@ func TestQueryResolver_Search_Renewals_ByRenewalCycle(t *testing.T) {
 		Name: "org3",
 	})
 
-	contractStartedAt := neo4jtest.FirstTimeOfMonth(2023, 6)
-	contract2StartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
+	contractStartedAt := utils.FirstTimeOfMonth(2023, 6)
+	contract2StartedAt := utils.FirstTimeOfMonth(2023, 7)
 
-	sli1StartedAt := neo4jtest.FirstTimeOfMonth(2023, 6)
+	sli1StartedAt := utils.FirstTimeOfMonth(2023, 6)
 	contractId1 := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, organizationId3, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contractStartedAt,
-		RenewalCycle:     "MONTHLY",
+		LengthInMonths:   1,
 	}, neo4jentity.OpportunityEntity{
 		RenewalDetails: neo4jentity.RenewalDetails{
 			RenewedAt:         &daysFromNow20,
@@ -1267,7 +1267,7 @@ func TestQueryResolver_Search_Renewals_ByRenewalCycle(t *testing.T) {
 	contractId2 := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, organizationId3, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2StartedAt,
-		RenewalCycle:     "MONTHLY",
+		LengthInMonths:   1,
 	}, neo4jentity.OpportunityEntity{
 		RenewalDetails: neo4jentity.RenewalDetails{
 			RenewedAt:         &daysFromNow10,
@@ -1280,7 +1280,7 @@ func TestQueryResolver_Search_Renewals_ByRenewalCycle(t *testing.T) {
 	contractId3 := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, organizationId3, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2StartedAt,
-		RenewalCycle:     "QUARTERLY",
+		LengthInMonths:   1,
 	}, neo4jentity.OpportunityEntity{
 		RenewalDetails: neo4jentity.RenewalDetails{
 			RenewedAt:         &daysFromNow10,
@@ -1293,7 +1293,7 @@ func TestQueryResolver_Search_Renewals_ByRenewalCycle(t *testing.T) {
 	contractId4 := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, organizationId3, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2StartedAt,
-		RenewalCycle:     "ANNUALLY",
+		LengthInMonths:   1,
 	}, neo4jentity.OpportunityEntity{
 		RenewalDetails: neo4jentity.RenewalDetails{
 			RenewedAt:         &daysFromNow10,

@@ -6,6 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
@@ -23,13 +24,13 @@ func TestQueryResolver_Dashboard_GRR_1_Contract_1_SLI_V1(t *testing.T) {
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		IsCustomer: true,
 	})
-	contractStartedAt := neo4jtest.FirstTimeOfMonth(2022, 1)
-	sli1StartedAt := neo4jtest.FirstTimeOfMonth(2022, 6)
+	contractStartedAt := utils.FirstTimeOfMonth(2022, 1)
+	sli1StartedAt := utils.FirstTimeOfMonth(2022, 6)
 
 	contractId := neo4jtest.InsertContractWithOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contractStartedAt,
-		RenewalCycle:     neo4jenum.RenewalCycleMonthlyRenewal,
+		LengthInMonths:   1,
 	}, neo4jentity.OpportunityEntity{})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeMonthly, 150, 2, sli1StartedAt)
 
@@ -75,16 +76,16 @@ func TestQueryResolver_Dashboard_GRR_1_Contract_1_SLI_Contract_Ended_V1(t *testi
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		IsCustomer: true,
 	})
-	contractStartedAt := neo4jtest.FirstTimeOfMonth(2022, 1)
-	contractEndedAt := neo4jtest.FirstTimeOfMonth(2022, 9)
+	contractStartedAt := utils.FirstTimeOfMonth(2022, 1)
+	contractEndedAt := utils.FirstTimeOfMonth(2022, 9)
 
-	sli1StartedAt := neo4jtest.FirstTimeOfMonth(2022, 6)
+	sli1StartedAt := utils.FirstTimeOfMonth(2022, 6)
 
 	contractId := neo4jtest.InsertContractWithOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contractStartedAt,
 		EndedAt:          &contractEndedAt,
-		RenewalCycle:     neo4jenum.RenewalCycleMonthlyRenewal,
+		LengthInMonths:   1,
 	}, neo4jentity.OpportunityEntity{})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeMonthly, 150, 2, sli1StartedAt)
 
@@ -130,23 +131,23 @@ func TestQueryResolver_Dashboard_GRR_2_Contracts_1_SLI_Each(t *testing.T) {
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		IsCustomer: true,
 	})
-	contract1StartedAt := neo4jtest.FirstTimeOfMonth(2022, 1)
-	contract2StartedAt := neo4jtest.FirstTimeOfMonth(2022, 1)
+	contract1StartedAt := utils.FirstTimeOfMonth(2022, 1)
+	contract2StartedAt := utils.FirstTimeOfMonth(2022, 1)
 
-	sli1StartedAt := neo4jtest.FirstTimeOfMonth(2022, 6)
-	sli2StartedAt := neo4jtest.FirstTimeOfMonth(2022, 6)
+	sli1StartedAt := utils.FirstTimeOfMonth(2022, 6)
+	sli2StartedAt := utils.FirstTimeOfMonth(2022, 6)
 
 	contract1Id := neo4jtest.InsertContractWithOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1StartedAt,
-		RenewalCycle:     neo4jenum.RenewalCycleMonthlyRenewal,
+		LengthInMonths:   1,
 	}, neo4jentity.OpportunityEntity{})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contract1Id, neo4jenum.BilledTypeMonthly, 150, 2, sli1StartedAt)
 
 	contract2Id := neo4jtest.InsertContractWithOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2StartedAt,
-		RenewalCycle:     neo4jenum.RenewalCycleMonthlyRenewal,
+		LengthInMonths:   1,
 	}, neo4jentity.OpportunityEntity{})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contract2Id, neo4jenum.BilledTypeMonthly, 150, 2, sli2StartedAt)
 
@@ -193,25 +194,25 @@ func TestQueryResolver_Dashboard_GRR_2_Contracts_1_SLI_Each_Both_Contracts_Ended
 		IsCustomer: true,
 	})
 
-	contract1StartedAt := neo4jtest.FirstTimeOfMonth(2022, 1)
-	contract1EndedAt := neo4jtest.FirstTimeOfMonth(2022, 9)
-	sli1StartedAt := neo4jtest.FirstTimeOfMonth(2022, 6)
+	contract1StartedAt := utils.FirstTimeOfMonth(2022, 1)
+	contract1EndedAt := utils.FirstTimeOfMonth(2022, 9)
+	sli1StartedAt := utils.FirstTimeOfMonth(2022, 6)
 	contract1Id := neo4jtest.InsertContractWithOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusEnded,
 		ServiceStartedAt: &contract1StartedAt,
 		EndedAt:          &contract1EndedAt,
-		RenewalCycle:     neo4jenum.RenewalCycleMonthlyRenewal,
+		LengthInMonths:   1,
 	}, neo4jentity.OpportunityEntity{})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contract1Id, neo4jenum.BilledTypeMonthly, 1, 1, sli1StartedAt)
 
-	contract2StartedAt := neo4jtest.FirstTimeOfMonth(2022, 1)
-	contract2EndedAt := neo4jtest.FirstTimeOfMonth(2022, 8)
-	sli2StartedAt := neo4jtest.FirstTimeOfMonth(2022, 7)
+	contract2StartedAt := utils.FirstTimeOfMonth(2022, 1)
+	contract2EndedAt := utils.FirstTimeOfMonth(2022, 8)
+	sli2StartedAt := utils.FirstTimeOfMonth(2022, 7)
 	contract2Id := neo4jtest.InsertContractWithOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusEnded,
 		ServiceStartedAt: &contract2StartedAt,
 		EndedAt:          &contract2EndedAt,
-		RenewalCycle:     neo4jenum.RenewalCycleMonthlyRenewal,
+		LengthInMonths:   1,
 	}, neo4jentity.OpportunityEntity{})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contract2Id, neo4jenum.BilledTypeMonthly, 2, 1, sli2StartedAt)
 
@@ -258,23 +259,23 @@ func TestQueryResolver_Dashboard_GRR_2_Contracts_1_SLI_1_Contract_Ended(t *testi
 		IsCustomer: true,
 	})
 
-	contract1StartedAt := neo4jtest.FirstTimeOfMonth(2022, 1)
-	contract1EndedAt := neo4jtest.FirstTimeOfMonth(2022, 9)
-	sli1StartedAt := neo4jtest.FirstTimeOfMonth(2022, 6)
+	contract1StartedAt := utils.FirstTimeOfMonth(2022, 1)
+	contract1EndedAt := utils.FirstTimeOfMonth(2022, 9)
+	sli1StartedAt := utils.FirstTimeOfMonth(2022, 6)
 	contract1Id := neo4jtest.InsertContractWithOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusEnded,
 		ServiceStartedAt: &contract1StartedAt,
 		EndedAt:          &contract1EndedAt,
-		RenewalCycle:     neo4jenum.RenewalCycleMonthlyRenewal,
+		LengthInMonths:   1,
 	}, neo4jentity.OpportunityEntity{})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contract1Id, neo4jenum.BilledTypeMonthly, 1, 1, sli1StartedAt)
 
-	contract2StartedAt := neo4jtest.FirstTimeOfMonth(2022, 1)
-	sli2StartedAt := neo4jtest.FirstTimeOfMonth(2022, 7)
+	contract2StartedAt := utils.FirstTimeOfMonth(2022, 1)
+	sli2StartedAt := utils.FirstTimeOfMonth(2022, 7)
 	contract2Id := neo4jtest.InsertContractWithOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2StartedAt,
-		RenewalCycle:     neo4jenum.RenewalCycleMonthlyRenewal,
+		LengthInMonths:   1,
 	}, neo4jentity.OpportunityEntity{})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contract2Id, neo4jenum.BilledTypeMonthly, 2, 1, sli2StartedAt)
 
@@ -321,8 +322,8 @@ func TestQueryResolver_Dashboard_GRR_2_Contracts_1_SLI_1_SLI_Ended(t *testing.T)
 		IsCustomer: true,
 	})
 
-	//contract1StartedAt := neo4jtest.FirstTimeOfMonth(2022, 1)
-	//sli1StartedAt := neo4jtest.FirstTimeOfMonth(2022, 6)
+	//contract1StartedAt := utils.FirstTimeOfMonth(2022, 1)
+	//sli1StartedAt := utils.FirstTimeOfMonth(2022, 6)
 	//contract1Id := neo4jtest.InsertContractWithOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 	//	ContractStatus:   neo4jenum.ContractStatusLive,
 	//	ServiceStartedAt: &contract1StartedAt,
@@ -330,13 +331,13 @@ func TestQueryResolver_Dashboard_GRR_2_Contracts_1_SLI_1_SLI_Ended(t *testing.T)
 	//}, entity.OpportunityEntity{})
 	//neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contract1Id, neo4jenum.BilledTypeMonthly, 1, 1, sli1StartedAt)
 
-	contract2StartedAt := neo4jtest.FirstTimeOfMonth(2022, 1)
-	sli2StartedAt := neo4jtest.FirstTimeOfMonth(2022, 7)
-	sli2EndedAt := neo4jtest.FirstTimeOfMonth(2022, 9)
+	contract2StartedAt := utils.FirstTimeOfMonth(2022, 1)
+	sli2StartedAt := utils.FirstTimeOfMonth(2022, 7)
+	sli2EndedAt := utils.FirstTimeOfMonth(2022, 9)
 	contract2Id := neo4jtest.InsertContractWithOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2StartedAt,
-		RenewalCycle:     neo4jenum.RenewalCycleMonthlyRenewal,
+		LengthInMonths:   1,
 	}, neo4jentity.OpportunityEntity{})
 	sliId := neo4jtest.InsertServiceLineItemEnded(ctx, driver, tenantName, contract2Id, neo4jenum.BilledTypeMonthly, 2, 1, sli2StartedAt, sli2EndedAt)
 	neo4jtest.InsertServiceLineItemCanceledWithParent(ctx, driver, tenantName, contract2Id, neo4jenum.BilledTypeMonthly, 5, 1, neo4jenum.BilledTypeMonthly, 2, 1, sli2EndedAt, sli2EndedAt.Add(time.Hour*24), sliId)
@@ -384,22 +385,22 @@ func TestQueryResolver_Dashboard_GRR_2_Contracts_1_SLI_1_SLI_Canceld(t *testing.
 		IsCustomer: true,
 	})
 
-	contract1StartedAt := neo4jtest.FirstTimeOfMonth(2022, 1)
-	sli1StartedAt := neo4jtest.FirstTimeOfMonth(2022, 6)
+	contract1StartedAt := utils.FirstTimeOfMonth(2022, 1)
+	sli1StartedAt := utils.FirstTimeOfMonth(2022, 6)
 	contract1Id := neo4jtest.InsertContractWithOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1StartedAt,
-		RenewalCycle:     neo4jenum.RenewalCycleMonthlyRenewal,
+		LengthInMonths:   1,
 	}, neo4jentity.OpportunityEntity{})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contract1Id, neo4jenum.BilledTypeMonthly, 1, 1, sli1StartedAt)
 
-	contract2StartedAt := neo4jtest.FirstTimeOfMonth(2022, 1)
-	sli2StartedAt := neo4jtest.FirstTimeOfMonth(2022, 7)
-	sli2EndedAt := neo4jtest.FirstTimeOfMonth(2022, 9)
+	contract2StartedAt := utils.FirstTimeOfMonth(2022, 1)
+	sli2StartedAt := utils.FirstTimeOfMonth(2022, 7)
+	sli2EndedAt := utils.FirstTimeOfMonth(2022, 9)
 	contract2Id := neo4jtest.InsertContractWithOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2StartedAt,
-		RenewalCycle:     neo4jenum.RenewalCycleMonthlyRenewal,
+		LengthInMonths:   1,
 	}, neo4jentity.OpportunityEntity{})
 	neo4jtest.InsertServiceLineItemCanceled(ctx, driver, tenantName, contract2Id, neo4jenum.BilledTypeMonthly, 2, 1, sli2StartedAt, sli2EndedAt)
 

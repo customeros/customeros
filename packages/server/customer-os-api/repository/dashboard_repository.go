@@ -1415,35 +1415,38 @@ func (r *dashboardRepository) GetDashboardARRBreakdownRenewalsData(ctx context.C
 					WITH DISTINCT currentDate.YEAR AS year, currentDate.MONTH AS month, beginOfMonth, endOfMonth, startOfNextMonth
 					
 					OPTIONAL MATCH (t:Tenant {name: $tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(c:Contract_%s)-[:HAS_SERVICE]->(sli:ServiceLineItem_%s)
-					WITH year, month, beginOfMonth, endOfMonth, c.serviceStartedAt AS cssa, c.renewalCycle AS crc, c.renewalPeriods as crp, sli ORDER BY sli.startedAt ASC
+					WITH year, month, beginOfMonth, endOfMonth, c.serviceStartedAt AS cssa, c.lengthInMonths AS clim, sli ORDER BY sli.startedAt ASC
 
 					WHERE o.hide = false AND o.isCustomer = true AND c.serviceStartedAt IS NOT NULL AND (c.endedAt IS NULL OR c.endedAt > beginOfMonth) AND (sli.endedAt IS NULL OR sli.endedAt > beginOfMonth) AND sli.startedAt < beginOfMonth AND (sli.billed = 'MONTHLY' OR sli.billed = 'QUARTERLY' OR sli.billed = 'ANNUALLY')
-					WITH year, month, beginOfMonth, endOfMonth, cssa, crc, crp, sli.parentId AS pp, COLLECT(sli) AS versions
-					WITH year, month, beginOfMonth, endOfMonth, cssa, crc, crp, pp, LAST(versions) AS lastSliVersion
-					WITH year, month, beginOfMonth, endOfMonth, cssa, crc, crp, pp, lastSliVersion
+					WITH year, month, beginOfMonth, endOfMonth, cssa, clim, sli.parentId AS pp, COLLECT(sli) AS versions
+					WITH year, month, beginOfMonth, endOfMonth, cssa, clim, pp, LAST(versions) AS lastSliVersion
+					WITH year, month, beginOfMonth, endOfMonth, cssa, clim, pp, lastSliVersion
 					WHERE
-						CASE WHEN crc = 'ANNUALLY' THEN (CASE WHEN crp IS NULL THEN cssa.YEAR < beginOfMonth.YEAR AND cssa.MONTH = beginOfMonth.MONTH ELSE cssa.YEAR < beginOfMonth.YEAR AND cssa.MONTH = beginOfMonth.MONTH AND (beginOfMonth.YEAR - cssa.YEAR) %s = 0 END) ELSE 1 = 1 END AND
-						CASE WHEN crc = 'QUARTERLY' THEN
+						CASE WHEN clim = 12 THEN cssa.YEAR < beginOfMonth.YEAR AND cssa.MONTH = beginOfMonth.MONTH 
+						ELSE 1 = 1 END AND
+						CASE WHEN clim = 3 THEN
 							(lastSliVersion.billed IN ['MONTHLY', 'QUARTERLY'] AND beginOfMonth.MONTH IN [cssa.MONTH - 9, cssa.MONTH - 6, cssa.MONTH - 3, cssa.MONTH, cssa.MONTH + 3, cssa.MONTH + 6, cssa.MONTH + 9]) OR
 							(lastSliVersion.billed = 'ANNUALLY' AND beginOfMonth.MONTH = cssa.MONTH)
 						ELSE 1 = 1 END AND
-						CASE WHEN crc = 'MONTHLY' THEN
+						CASE WHEN clim = 1 THEN
 							lastSliVersion.billed = 'MONTHLY' OR
 							(lastSliVersion.billed = 'QUARTERLY' AND beginOfMonth.MONTH IN [cssa.MONTH - 9, cssa.MONTH - 6, cssa.MONTH - 3, cssa.MONTH, cssa.MONTH + 3, cssa.MONTH + 6, cssa.MONTH + 9]) OR
 							(lastSliVersion.billed = 'ANNUALLY' AND beginOfMonth.MONTH = cssa.MONTH)
 						ELSE 1 = 1 END
 					
-					WITH year, month, crc, crp, COLLECT(lastSliVersion) AS lasts
+					WITH year, month, clim, COLLECT(lastSliVersion) AS lasts
 					WITH year, month, 
 						REDUCE(s = 0.0, a IN lasts | s + 
 							TOFLOAT(
-							CASE WHEN crc = 'ANNUALLY' AND crp IS NULL THEN (CASE WHEN a.billed = 'MONTHLY' THEN 12 ELSE (CASE WHEN a.billed = 'QUARTERLY' THEN 4 ELSE (CASE WHEN a.billed = 'ANNUALLY' THEN 1 ELSE 0 END) END) END) ELSE 
-							CASE WHEN crc = 'ANNUALLY' AND crp IS NOT NULL THEN (CASE WHEN a.billed = 'MONTHLY' THEN crp * 12 ELSE (CASE WHEN a.billed = 'QUARTERLY' THEN crp * 4 ELSE (CASE WHEN a.billed = 'ANNUALLY' THEN crp * 1 ELSE 0 END) END) END) ELSE 
-							CASE WHEN crc = 'QUARTERLY' THEN (CASE WHEN a.billed = 'MONTHLY' THEN 3 ELSE (CASE WHEN a.billed = 'QUARTERLY' THEN 1 ELSE (CASE WHEN a.billed = 'ANNUALLY' THEN 1 ELSE 0 END) END) END) ELSE
-							CASE WHEN crc = 'MONTHLY' THEN 1 ELSE 0 END END END END * a.price * a.quantity)) AS amount
+							CASE a.billed 
+								WHEN 'MONTHLY' THEN clim 
+								WHEN 'QUARTERLY' THEN clim/4
+								WHEN 'ANNUALLY' THEN clim/12
+								ELSE 0.0 
+							END * a.price * a.quantity)) AS amount
 
 					RETURN year, month, SUM(amount)
-				`, "% 12 + 1", tenant, tenant, tenant, "% crp"),
+				`, "% 12 + 1", tenant, tenant, tenant),
 			map[string]any{
 				"tenant":    tenant,
 				"startDate": startDate,
@@ -1585,19 +1588,20 @@ func (r *dashboardRepository) GetDashboardRetentionRateContractsRenewalsData(ctx
 					WITH DISTINCT currentDate.YEAR AS year, currentDate.MONTH AS month, beginOfMonth, endOfMonth
 					
 					OPTIONAL MATCH (t:Tenant {name: $tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(c:Contract_%s)-[:HAS_SERVICE]->(sli:ServiceLineItem_%s)
-					WITH year, month, beginOfMonth, endOfMonth, c.id as cid, c.serviceStartedAt AS cssa, c.renewalCycle AS crc, c.renewalPeriods as crp, sli ORDER BY sli.startedAt ASC
+					WITH year, month, beginOfMonth, endOfMonth, c.id as cid, c.serviceStartedAt AS cssa, c.lengthInMonths AS clim, sli ORDER BY sli.startedAt ASC
 
 					WHERE o.hide = false AND o.isCustomer = true AND c.serviceStartedAt IS NOT NULL AND (c.endedAt IS NULL OR c.endedAt > endOfMonth) AND (sli.endedAt IS NULL OR sli.endedAt > beginOfMonth) AND sli.startedAt < beginOfMonth AND (sli.billed = 'MONTHLY' OR sli.billed = 'QUARTERLY' OR sli.billed = 'ANNUALLY')
-					WITH year, month, beginOfMonth, endOfMonth, cid, cssa, crc, crp, sli.parentId AS pp, COLLECT(sli) AS versions
-					WITH year, month, beginOfMonth, endOfMonth, cid, cssa, crc, crp, pp, LAST(versions) AS lastSliVersion
-					WITH year, month, beginOfMonth, endOfMonth, cid, cssa, crc, crp, pp, lastSliVersion
+					WITH year, month, beginOfMonth, endOfMonth, cid, cssa, clim, sli.parentId AS pp, COLLECT(sli) AS versions
+					WITH year, month, beginOfMonth, endOfMonth, cid, cssa, clim, pp, LAST(versions) AS lastSliVersion
+					WITH year, month, beginOfMonth, endOfMonth, cid, cssa, clim, pp, lastSliVersion
 					WHERE
-						CASE WHEN crc = 'ANNUALLY' THEN (CASE WHEN crp IS NULL THEN cssa.MONTH = beginOfMonth.MONTH ELSE cssa.MONTH = beginOfMonth.MONTH AND (beginOfMonth.YEAR - cssa.YEAR) %s = 0 END) ELSE 1 = 1 END AND
-						CASE WHEN crc = 'QUARTERLY' THEN
+						CASE WHEN clim = 12 THEN cssa.MONTH = beginOfMonth.MONTH 
+						ELSE 1 = 1 END AND
+						CASE WHEN clim = 3 THEN
 							(lastSliVersion.billed IN ['MONTHLY', 'QUARTERLY'] AND beginOfMonth.MONTH IN [cssa.MONTH - 9, cssa.MONTH - 6, cssa.MONTH - 3, cssa.MONTH, cssa.MONTH + 3, cssa.MONTH + 6, cssa.MONTH + 9]) OR
 							(lastSliVersion.billed = 'ANNUALLY' AND beginOfMonth.MONTH = cssa.MONTH)
 						ELSE 1 = 1 END AND
-						CASE WHEN crc = 'MONTHLY' THEN
+						CASE WHEN clim = 1 THEN
 							lastSliVersion.billed = 'MONTHLY' OR
 							(lastSliVersion.billed = 'QUARTERLY' AND beginOfMonth.MONTH IN [cssa.MONTH - 9, cssa.MONTH - 6, cssa.MONTH - 3, cssa.MONTH, cssa.MONTH + 3, cssa.MONTH + 6, cssa.MONTH + 9]) OR
 							(lastSliVersion.billed = 'ANNUALLY' AND beginOfMonth.MONTH = cssa.MONTH)
@@ -1605,7 +1609,7 @@ func (r *dashboardRepository) GetDashboardRetentionRateContractsRenewalsData(ctx
 					
 					WITH year, month, cid, lastSliVersion
 					return year, month, COUNT(DISTINCT(cid)) AS contractsWithRenewals
-				`, "% 12 + 1", tenant, tenant, tenant, "% crp"),
+				`, "% 12 + 1", tenant, tenant, tenant),
 			map[string]any{
 				"tenant":    tenant,
 				"startDate": startDate,
