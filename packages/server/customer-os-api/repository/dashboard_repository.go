@@ -1417,12 +1417,18 @@ func (r *dashboardRepository) GetDashboardARRBreakdownRenewalsData(ctx context.C
 					OPTIONAL MATCH (t:Tenant {name: $tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(c:Contract_%s)-[:HAS_SERVICE]->(sli:ServiceLineItem_%s)
 					WITH year, month, beginOfMonth, endOfMonth, c.serviceStartedAt AS cssa, c.lengthInMonths AS clim, sli ORDER BY sli.startedAt ASC
 
-					WHERE o.hide = false AND o.isCustomer = true AND c.serviceStartedAt IS NOT NULL AND (c.endedAt IS NULL OR c.endedAt > beginOfMonth) AND (sli.endedAt IS NULL OR sli.endedAt > beginOfMonth) AND sli.startedAt < beginOfMonth AND (sli.billed = 'MONTHLY' OR sli.billed = 'QUARTERLY' OR sli.billed = 'ANNUALLY')
+					WHERE 	o.hide = false AND 
+							o.isCustomer = true AND 
+							c.serviceStartedAt IS NOT NULL AND 
+							(c.endedAt IS NULL OR c.endedAt > beginOfMonth) AND 
+							(sli.endedAt IS NULL OR sli.endedAt > beginOfMonth) AND 
+							sli.startedAt < beginOfMonth AND 
+							(sli.billed = 'MONTHLY' OR sli.billed = 'QUARTERLY' OR sli.billed = 'ANNUALLY')
 					WITH year, month, beginOfMonth, endOfMonth, cssa, clim, sli.parentId AS pp, COLLECT(sli) AS versions
 					WITH year, month, beginOfMonth, endOfMonth, cssa, clim, pp, LAST(versions) AS lastSliVersion
 					WITH year, month, beginOfMonth, endOfMonth, cssa, clim, pp, lastSliVersion
 					WHERE
-						CASE WHEN clim = 12 THEN cssa.YEAR < beginOfMonth.YEAR AND cssa.MONTH = beginOfMonth.MONTH 
+						CASE WHEN clim >= 12 THEN cssa.YEAR < beginOfMonth.YEAR AND cssa.MONTH = beginOfMonth.MONTH AND (beginOfMonth.YEAR - cssa.YEAR) %s = 0
 						ELSE 1 = 1 END AND
 						CASE WHEN clim = 3 THEN
 							(lastSliVersion.billed IN ['MONTHLY', 'QUARTERLY'] AND beginOfMonth.MONTH IN [cssa.MONTH - 9, cssa.MONTH - 6, cssa.MONTH - 3, cssa.MONTH, cssa.MONTH + 3, cssa.MONTH + 6, cssa.MONTH + 9]) OR
@@ -1438,15 +1444,21 @@ func (r *dashboardRepository) GetDashboardARRBreakdownRenewalsData(ctx context.C
 					WITH year, month, 
 						REDUCE(s = 0.0, a IN lasts | s + 
 							TOFLOAT(
-							CASE a.billed 
-								WHEN 'MONTHLY' THEN clim 
-								WHEN 'QUARTERLY' THEN clim/4
-								WHEN 'ANNUALLY' THEN clim/12
-								ELSE 0.0 
-							END * a.price * a.quantity)) AS amount
+								CASE WHEN clim = 0 THEN 0.0 ELSE
+									CASE a.billed 
+										WHEN 'MONTHLY' THEN 
+                    						clim
+										WHEN 'QUARTERLY' THEN 
+                    						CASE WHEN clim / 3 = 0 THEN 1 ELSE clim / 3 END
+										WHEN 'ANNUALLY' THEN 
+                    						CASE WHEN clim / 12 = 0 THEN 1 ELSE clim / 12 END
+										ELSE 0.0
+									END
+								END * a.price * a.quantity)
+							) AS amount
 
 					RETURN year, month, SUM(amount)
-				`, "% 12 + 1", tenant, tenant, tenant),
+				`, "% 12 + 1", tenant, tenant, tenant, "% (clim/12)"),
 			map[string]any{
 				"tenant":    tenant,
 				"startDate": startDate,
