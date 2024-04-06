@@ -13,7 +13,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
@@ -121,19 +120,18 @@ func (s *contractService) createContractWithEvents(ctx context.Context, contract
 	if contractDetails.Input.CommittedPeriodInMonths != nil {
 		createContractRequest.LengthInMonths = *contractDetails.Input.CommittedPeriodInMonths
 	} else {
-		// prepare length in months from renewal cycle and periods
-		renewalCycle := neo4jenum.RenewalCycleNone
+		renewalCycle := ""
 		if contractDetails.Input.ContractRenewalCycle != nil {
-			renewalCycle = mapper.MapContractRenewalCycleFromModel(*contractDetails.Input.ContractRenewalCycle)
+			renewalCycle = utils.IfNotNilString(contractDetails.Input.ContractRenewalCycle)
 		} else if contractDetails.Input.RenewalCycle != nil {
-			renewalCycle = mapper.MapContractRenewalCycleFromModel(*contractDetails.Input.RenewalCycle)
+			renewalCycle = utils.IfNotNilString(contractDetails.Input.RenewalCycle)
 		}
 		switch renewalCycle {
-		case neo4jenum.RenewalCycleMonthlyRenewal:
+		case model.ContractRenewalCycleMonthlyRenewal.String():
 			createContractRequest.LengthInMonths = 1
-		case neo4jenum.RenewalCycleQuarterlyRenewal:
+		case model.ContractRenewalCycleQuarterlyRenewal.String():
 			createContractRequest.LengthInMonths = 3
-		case neo4jenum.RenewalCycleAnnualRenewal:
+		case model.ContractRenewalCycleAnnualRenewal.String():
 			createContractRequest.LengthInMonths = 12
 		default:
 			createContractRequest.LengthInMonths = 0
@@ -352,20 +350,20 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 		fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_LENGTH_IN_MONTHS)
 	} else {
 		// prepare length in months from renewal cycle and periods
-		renewalCycle := neo4jenum.RenewalCycleNone
+		renewalCycle := ""
 		if input.ContractRenewalCycle != nil {
-			renewalCycle = mapper.MapContractRenewalCycleFromModel(*input.ContractRenewalCycle)
+			renewalCycle = utils.IfNotNilString(*input.ContractRenewalCycle)
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_LENGTH_IN_MONTHS)
 		} else if input.RenewalCycle != nil {
-			renewalCycle = mapper.MapContractRenewalCycleFromModel(*input.RenewalCycle)
+			renewalCycle = utils.IfNotNilString(*input.RenewalCycle)
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_LENGTH_IN_MONTHS)
 		}
 		switch renewalCycle {
-		case neo4jenum.RenewalCycleMonthlyRenewal:
+		case model.ContractRenewalCycleMonthlyRenewal.String():
 			contractUpdateRequest.LengthInMonths = 1
-		case neo4jenum.RenewalCycleQuarterlyRenewal:
+		case model.ContractRenewalCycleQuarterlyRenewal.String():
 			contractUpdateRequest.LengthInMonths = 3
-		case neo4jenum.RenewalCycleAnnualRenewal:
+		case model.ContractRenewalCycleAnnualRenewal.String():
 			contractUpdateRequest.LengthInMonths = 12
 		default:
 			contractUpdateRequest.LengthInMonths = 0
@@ -642,7 +640,7 @@ func (s *contractService) RenewContract(ctx context.Context, contractId string) 
 	}
 
 	// if contract is not renewable - return
-	if contractEntity.RenewalCycle == neo4jenum.RenewalCycleNone {
+	if contractEntity.LengthInMonths == 0 {
 		span.LogFields(log.Bool("result.contractRenewable", false))
 		return nil
 	}

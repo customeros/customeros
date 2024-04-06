@@ -44,7 +44,7 @@ func TestMutationResolver_ContractCreate(t *testing.T) {
 			require.Equal(t, "Contract 1", contract.Name)
 			require.Equal(t, "https://contract.com", contract.ContractUrl)
 			require.Equal(t, "USD", contract.Currency)
-			require.Equal(t, int64(1), contract.LengthInMonths)
+			require.Equal(t, int64(7), contract.LengthInMonths)
 			expectedServiceStartedAt, err := time.Parse(time.RFC3339, "2019-01-01T00:00:00Z")
 			if err != nil {
 				t.Fatalf("Failed to parse expected timestamp: %v", err)
@@ -270,9 +270,9 @@ func TestMutationResolver_ContractUpdate_NullDateFields(t *testing.T) {
 	require.Nil(t, err)
 	contract := contractStruct.Contract_Update
 	require.Equal(t, contractId, contract.ID)
-	require.Nil(t, contract.SignedAt)
+	require.Nil(t, contract.ContractSigned)
 	require.Nil(t, contract.ServiceStartedAt)
-	require.Nil(t, contract.EndedAt)
+	require.Nil(t, contract.ContractEnded)
 	require.Nil(t, contract.InvoicingStartDate)
 
 	require.True(t, calledUpdateContract)
@@ -621,7 +621,7 @@ func TestMutationResolver_ContractRenew_NoActiveRenewalOpportunity_CreateRenewal
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
-		RenewalCycle: neo4jenum.RenewalCycleMonthlyRenewal,
+		LengthInMonths: 1,
 	})
 
 	calledCreatedRenewalOpportunityGrpc := false
@@ -664,7 +664,7 @@ func TestMutationResolver_ContractRenew_ActiveRenewalNotExpired_ApproveRenewalOp
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
-		RenewalCycle: neo4jenum.RenewalCycleMonthlyRenewal,
+		LengthInMonths: 1,
 	})
 	opportunityId := neo4jtest.CreateOpportunityForContract(ctx, driver, tenantName, contractId, neo4jentity.OpportunityEntity{
 		InternalStage: neo4jenum.OpportunityInternalStageOpen,
@@ -717,7 +717,7 @@ func TestMutationResolver_ContractRenew_ActiveRenewalExpired_RolloutRenewalOppor
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
-		RenewalCycle: neo4jenum.RenewalCycleMonthlyRenewal,
+		LengthInMonths: 1,
 	})
 	neo4jtest.CreateOpportunityForContract(ctx, driver, tenantName, contractId, neo4jentity.OpportunityEntity{
 		InternalStage: neo4jenum.OpportunityInternalStageOpen,

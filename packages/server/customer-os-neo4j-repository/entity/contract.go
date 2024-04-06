@@ -13,17 +13,13 @@ type ContractInternalFields struct {
 
 type ContractEntity struct {
 	DataLoaderKey
-	Id               string
-	Name             string `neo4jDb:"property:name;lookupName:NAME;supportCaseSensitive:true"`
-	CreatedAt        time.Time
-	UpdatedAt        time.Time
-	ServiceStartedAt *time.Time // DateTime
-	SignedAt         *time.Time // DateTime
-	EndedAt          *time.Time `neo4jDb:"property:endedAt;lookupName:ENDED_AT;supportCaseSensitive:false"` // DateTime
-	// Deprecated
-	RenewalCycle enum.RenewalCycle
-	// Deprecated
-	RenewalPeriods                  *int64
+	Id                              string
+	Name                            string `neo4jDb:"property:name;lookupName:NAME;supportCaseSensitive:true"`
+	CreatedAt                       time.Time
+	UpdatedAt                       time.Time
+	ServiceStartedAt                *time.Time // DateTime
+	SignedAt                        *time.Time // DateTime
+	EndedAt                         *time.Time `neo4jDb:"property:endedAt;lookupName:ENDED_AT;supportCaseSensitive:false"` // DateTime
 	ContractStatus                  enum.ContractStatus
 	Source                          DataSource
 	SourceOfTruth                   DataSource

@@ -141,7 +141,7 @@ func TestContractEventHandler_OnCreate(t *testing.T) {
 	require.Equal(t, "New Contract", contract.Name)
 	require.Equal(t, "http://contract.url", contract.ContractUrl)
 	require.Equal(t, neo4jenum.ContractStatusLive, contract.ContractStatus)
-	require.Equal(t, neo4jenum.RenewalCycleMonthlyRenewal, contract.RenewalCycle)
+	require.Equal(t, 1, contract.LengthInMonths)
 	require.True(t, timeNow.Equal(contract.CreatedAt.UTC()))
 	test.AssertRecentTime(t, contract.UpdatedAt)
 	require.True(t, utils.ToDate(timeNow).Equal(*contract.ServiceStartedAt))
@@ -327,7 +327,7 @@ func TestContractEventHandler_OnUpdate_FrequencyNotChanged(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
-		RenewalCycle: neo4jenum.RenewalCycleMonthlyRenewal,
+		LengthInMonths: 1,
 	})
 	opportunityId := neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
 		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
@@ -388,7 +388,7 @@ func TestContractEventHandler_OnUpdate_FrequencyChanged(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
-		RenewalCycle: neo4jenum.RenewalCycleMonthlyRenewal,
+		LengthInMonths: 1,
 	})
 	opportunityId := neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
 		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
@@ -449,7 +449,7 @@ func TestContractEventHandler_OnUpdate_FrequencyRemoved(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
-		RenewalCycle: neo4jenum.RenewalCycleMonthlyRenewal,
+		LengthInMonths: 1,
 	})
 	opportunityId := neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
 		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
@@ -514,7 +514,7 @@ func TestContractEventHandler_OnUpdate_FrequencyRemoved(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, contractDbNode)
 	contract := mapper.MapDbNodeToContractEntity(contractDbNode)
-	require.Equal(t, neo4jenum.RenewalCycleNone, contract.RenewalCycle)
+	require.Equal(t, 0, contract.LengthInMonths)
 
 	// verify call to events platform
 	require.True(t, calledEventsPlatformToRefreshRenewalSummary)
@@ -532,7 +532,7 @@ func TestContractEventHandler_OnUpdate_ServiceStartDateChanged(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
-		RenewalCycle:     neo4jenum.RenewalCycleMonthlyRenewal,
+		LengthInMonths:   1,
 		ServiceStartedAt: &yesterday,
 	})
 	opportunityId := neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
@@ -627,9 +627,9 @@ func TestContractEventHandler_OnUpdate_EndDateSet(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
-		Name:         "test contract",
-		ContractUrl:  "http://contract.url",
-		RenewalCycle: neo4jenum.RenewalCycleMonthlyRenewal,
+		Name:           "test contract",
+		ContractUrl:    "http://contract.url",
+		LengthInMonths: 1,
 	})
 	opportunityId := neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
 		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
@@ -746,7 +746,7 @@ func TestContractEventHandler_OnUpdate_EndDateSet(t *testing.T) {
 	require.Equal(t, "test contract updated", contract.Name)
 	require.Equal(t, "http://contract.url/updated", contract.ContractUrl)
 	require.Equal(t, neo4jenum.ContractStatusLive, contract.ContractStatus)
-	require.Equal(t, neo4jenum.RenewalCycleMonthlyRenewal, contract.RenewalCycle)
+	require.Equal(t, 1, contract.LengthInMonths)
 	test.AssertRecentTime(t, contract.UpdatedAt)
 	require.True(t, utils.ToDate(yesterday).Equal(*contract.ServiceStartedAt))
 	require.Equal(t, utils.ToDate(daysAgo2), *contract.SignedAt)
@@ -772,7 +772,7 @@ func TestContractEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOpen
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
 		Name:             "test contract",
 		ContractUrl:      "http://contract.url",
-		RenewalCycle:     "ANNUALLY",
+		LengthInMonths:   12,
 		ContractStatus:   neo4jenum.ContractStatusEnded,
 		ServiceStartedAt: &now,
 		SignedAt:         &now,
@@ -821,7 +821,7 @@ func TestContractEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOpen
 	require.Equal(t, "test contract", contract.Name)
 	require.Equal(t, "http://contract.url", contract.ContractUrl)
 	require.Equal(t, neo4jenum.ContractStatusEnded, contract.ContractStatus)
-	require.Equal(t, neo4jenum.RenewalCycleAnnualRenewal, contract.RenewalCycle)
+	require.Equal(t, 12, contract.LengthInMonths)
 	test.AssertRecentTime(t, contract.UpdatedAt)
 	require.Equal(t, utils.ToDate(now), *contract.ServiceStartedAt)
 	require.Equal(t, utils.ToDate(now), *contract.SignedAt)

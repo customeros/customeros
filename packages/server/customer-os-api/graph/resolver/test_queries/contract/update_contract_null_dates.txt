@@ -10,9 +10,9 @@ contract_Update(
     }
   ) {
     id
-    signedAt
+    contractSigned
     serviceStartedAt
-    endedAt
+    contractEnded
     invoicingStartDate
   }
 }

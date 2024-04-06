@@ -799,8 +799,8 @@ func TestInvoiceResolver_NextDryRunForContract(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
-	nextInvoiceDate := neo4jtest.FirstTimeOfMonth(2023, 6)
-	periodStartExpected := neo4jtest.FirstTimeOfMonth(2023, 6)
+	nextInvoiceDate := utils.FirstTimeOfMonth(2023, 6)
+	periodStartExpected := utils.FirstTimeOfMonth(2023, 6)
 	periodEndExpected := utils.LastDayOfMonth(2023, 6)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)

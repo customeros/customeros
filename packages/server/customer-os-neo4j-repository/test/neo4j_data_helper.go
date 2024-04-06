@@ -677,8 +677,6 @@ func CreateContractForOrganization(ctx context.Context, driver *neo4j.DriverWith
 					c.name=$name,
 					c.contractUrl=$contractUrl,
 					c.status=$status,
-					c.renewalCycle=$renewalCycle,
-					c.renewalPeriods=$renewalPeriods,
 					c.signedAt=$signedAt,
 					c.serviceStartedAt=$serviceStartedAt,
 					c.endedAt=$endedAt,
@@ -719,8 +717,6 @@ func CreateContractForOrganization(ctx context.Context, driver *neo4j.DriverWith
 		"name":                   contract.Name,
 		"contractUrl":            contract.ContractUrl,
 		"status":                 contract.ContractStatus.String(),
-		"renewalCycle":           contract.RenewalCycle.String(),
-		"renewalPeriods":         contract.RenewalPeriods,
 		"signedAt":               utils.ToDateAsAny(contract.SignedAt),
 		"serviceStartedAt":       utils.ToDateAsAny(contract.ServiceStartedAt),
 		"endedAt":                utils.ToDateAsAny(contract.EndedAt),
@@ -1340,19 +1336,4 @@ func CreateOrder(ctx context.Context, driver *neo4j.DriverWithContext, tenant, o
 
 	ExecuteWriteQuery(ctx, driver, query, params)
 	return orderId
-}
-
-// Deprecated
-func FirstTimeOfMonth(year, month int) time.Time {
-	return time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
-}
-
-// Deprecated
-func MiddleTimeOfMonth(year, month int) time.Time {
-	return FirstTimeOfMonth(year, month).AddDate(0, 0, 15)
-}
-
-// Deprecated
-func LastTimeOfMonth(year, month int) time.Time {
-	return FirstTimeOfMonth(year, month).AddDate(0, 1, 0).Add(-time.Nanosecond)
 }

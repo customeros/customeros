@@ -197,7 +197,7 @@ func TestServiceLineItemEventHandler_OnDeleteUnnamed(t *testing.T) {
 
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
-		RenewalCycle: neo4jenum.RenewalCycleAnnualRenewal,
+		LengthInMonths: 12,
 	})
 	serviceLineItemId := neo4jtest.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
 		Billed: neo4jenum.BilledTypeMonthly,
@@ -290,8 +290,8 @@ func TestServiceLineItemEventHandler_OnDelete(t *testing.T) {
 	})
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
-		Name:         "Contract 1",
-		RenewalCycle: neo4jenum.RenewalCycleAnnualRenewal,
+		Name:           "Contract 1",
+		LengthInMonths: 12,
 	})
 	serviceLineItemId := neo4jtest.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
 		Name:   "Service 1",
@@ -381,7 +381,7 @@ func TestServiceLineItemEventHandler_OnClose(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
-		RenewalCycle: neo4jenum.RenewalCycleAnnualRenewal,
+		LengthInMonths: 12,
 	})
 	serviceLineItemId := neo4jtest.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
 		Billed: neo4jenum.BilledTypeMonthly,

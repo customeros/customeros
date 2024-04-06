@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
@@ -68,7 +69,7 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_Draft_Contract(t *testing.T) {
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
 
-	contract1ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 8)
+	contract1ServiceStartedAt := utils.FirstTimeOfMonth(2023, 8)
 	neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusDraft,
 		ServiceStartedAt: &contract1ServiceStartedAt,
@@ -111,8 +112,8 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_Closed_Contract(t *testing.T) {
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
 
-	contract1ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 8)
-	contract1EndeddAt := neo4jtest.FirstTimeOfMonth(2023, 9)
+	contract1ServiceStartedAt := utils.FirstTimeOfMonth(2023, 8)
+	contract1EndeddAt := utils.FirstTimeOfMonth(2023, 9)
 	neo4jtest.InsertContractWithOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusEnded,
 		ServiceStartedAt: &contract1ServiceStartedAt,
@@ -159,7 +160,7 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_Hidden_Organization_With_Contra
 		IsCustomer: true,
 	})
 
-	contract1ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 8)
+	contract1ServiceStartedAt := utils.FirstTimeOfMonth(2023, 8)
 	neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
@@ -204,7 +205,7 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_Prospect_Organization_With_Cont
 		IsCustomer: false,
 	})
 
-	contract1ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 8)
+	contract1ServiceStartedAt := utils.FirstTimeOfMonth(2023, 8)
 	neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
@@ -246,7 +247,7 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_Organization_With_1_Live_Renewa
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
 
-	contract1ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 8)
+	contract1ServiceStartedAt := utils.FirstTimeOfMonth(2023, 8)
 	neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
@@ -272,7 +273,7 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_Organization_With_1_Live_Renewa
 		IsCustomer: true,
 	})
 
-	contract1ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 8)
+	contract1ServiceStartedAt := utils.FirstTimeOfMonth(2023, 8)
 	neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
@@ -298,7 +299,7 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_Organization_With_1_Live_Renewa
 		IsCustomer: true,
 	})
 
-	contract1ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 8)
+	contract1ServiceStartedAt := utils.FirstTimeOfMonth(2023, 8)
 	neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
@@ -324,7 +325,7 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_Organization_With_1_Live_Contra
 		IsCustomer: true,
 	})
 
-	contract1ServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 8)
+	contract1ServiceStartedAt := utils.FirstTimeOfMonth(2023, 8)
 	neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
@@ -350,7 +351,7 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_Organization_With_1_High_1_At_R
 		IsCustomer: true,
 	})
 
-	contractServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 8)
+	contractServiceStartedAt := utils.FirstTimeOfMonth(2023, 8)
 	neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contractServiceStartedAt,
@@ -407,7 +408,7 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_Organization_With_2_Opportuniti
 		IsCustomer: true,
 	})
 
-	contractServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 8)
+	contractServiceStartedAt := utils.FirstTimeOfMonth(2023, 8)
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contractServiceStartedAt,
@@ -463,7 +464,7 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_Organization_With_2_Opportuniti
 		IsCustomer: true,
 	})
 
-	contractServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 8)
+	contractServiceStartedAt := utils.FirstTimeOfMonth(2023, 8)
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contractServiceStartedAt,
@@ -519,7 +520,7 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_2_Organizations_With_1_High_1_A
 		IsCustomer: true,
 	})
 
-	contractServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 8)
+	contractServiceStartedAt := utils.FirstTimeOfMonth(2023, 8)
 	neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, org1Id, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contractServiceStartedAt,

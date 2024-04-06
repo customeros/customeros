@@ -22,8 +22,6 @@ type ContractCreateFields struct {
 	CreatedByUserId        string                 `json:"createdByUserId"`
 	ServiceStartedAt       *time.Time             `json:"serviceStartedAt,omitempty"`
 	SignedAt               *time.Time             `json:"signedAt,omitempty"`
-	RenewalCycle           string                 `json:"renewalCycle"`
-	RenewalPeriods         *int64                 `json:"renewalPeriods,omitempty"`
 	LengthInMonths         int64                  `json:"lengthInMonths"`
 	Status                 string                 `json:"status"`
 	CreatedAt              time.Time              `json:"createdAt"`
@@ -49,8 +47,6 @@ type ContractUpdateFields struct {
 	ContractUrl                  string                 `json:"contractUrl"`
 	Status                       string                 `json:"status"`
 	Source                       string                 `json:"source"`
-	RenewalPeriods               *int64                 `json:"renewalPeriods"`
-	RenewalCycle                 string                 `json:"renewalCycle"`
 	LengthInMonths               int64                  `json:"lengthInMonths"`
 	UpdatedAt                    time.Time              `json:"updatedAt"`
 	ServiceStartedAt             *time.Time             `json:"serviceStartedAt"`
@@ -83,8 +79,6 @@ type ContractUpdateFields struct {
 	UpdateName                   bool                   `json:"updateName"`
 	UpdateContractUrl            bool                   `json:"updateContractUrl"`
 	UpdateStatus                 bool                   `json:"updateStatus"`
-	UpdateRenewalPeriods         bool                   `json:"updateRenewalPeriods"`
-	UpdateRenewalCycle           bool                   `json:"updateRenewalCycle"`
 	UpdateServiceStartedAt       bool                   `json:"updateServiceStartedAt"`
 	UpdateSignedAt               bool                   `json:"updateSignedAt"`
 	UpdateEndedAt                bool                   `json:"updateEndedAt"`
@@ -160,8 +154,6 @@ func (r *contractWriteRepository) CreateForOrganization(ctx context.Context, ten
 								ct.name=$name,
 								ct.contractUrl=$contractUrl,
 								ct.status=$status,
-								ct.renewalCycle=$renewalCycle,
-								ct.renewalPeriods=$renewalPeriods,
 								ct.signedAt=$signedAt,
 								ct.serviceStartedAt=$serviceStartedAt,
 								ct.currency=$currency,
@@ -177,9 +169,7 @@ func (r *contractWriteRepository) CreateForOrganization(ctx context.Context, ten
 								ct.check=$check,
 								ct.country=$country,
 								ct.dueDays=$dueDays,
-								ct.lengthInMonths=$lengthInMonths,
-								ct.renewalCycle=$renewalCycle,
-								ct.renewalPeriods=$renewalPeriods
+								ct.lengthInMonths=$lengthInMonths
 							WITH ct, t
 							OPTIONAL MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$createdByUserId}) 
 							WHERE $createdByUserId <> ""
@@ -198,8 +188,6 @@ func (r *contractWriteRepository) CreateForOrganization(ctx context.Context, ten
 		"name":                   data.Name,
 		"contractUrl":            data.ContractUrl,
 		"status":                 data.Status,
-		"renewalCycle":           data.RenewalCycle,
-		"renewalPeriods":         data.RenewalPeriods,
 		"signedAt":               utils.ToDateAsAny(data.SignedAt),
 		"serviceStartedAt":       utils.ToDateAsAny(data.ServiceStartedAt),
 		"createdByUserId":        data.CreatedByUserId,
@@ -218,19 +206,7 @@ func (r *contractWriteRepository) CreateForOrganization(ctx context.Context, ten
 		"country":                data.Country,
 		"lengthInMonths":         data.LengthInMonths,
 	}
-	if data.LengthInMonths == 0 {
-		params["renewalCycle"] = neo4jenum.RenewalCycleNone.String()
-		params["renewalPeriods"] = 0
-	} else if data.LengthInMonths < 3 {
-		params["renewalCycle"] = neo4jenum.RenewalCycleMonthlyRenewal.String()
-		params["renewalPeriods"] = 1
-	} else if data.LengthInMonths < 12 {
-		params["renewalCycle"] = neo4jenum.RenewalCycleQuarterlyRenewal.String()
-		params["renewalPeriods"] = 1
-	} else {
-		params["renewalCycle"] = neo4jenum.RenewalCycleAnnualRenewal.String()
-		params["renewalPeriods"] = data.LengthInMonths / 12
-	}
+
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
@@ -271,14 +247,6 @@ func (r *contractWriteRepository) UpdateContract(ctx context.Context, tenant, co
 	if data.UpdateStatus {
 		cypher += `, ct.status = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $status ELSE ct.status END `
 		params["status"] = data.Status
-	}
-	if data.UpdateRenewalPeriods {
-		cypher += `, ct.renewalPeriods = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $renewalPeriods ELSE ct.renewalPeriods END `
-		params["renewalPeriods"] = data.RenewalPeriods
-	}
-	if data.UpdateRenewalCycle {
-		cypher += `, ct.renewalCycle = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $renewalCycle ELSE ct.renewalCycle END `
-		params["renewalCycle"] = data.RenewalCycle
 	}
 	if data.UpdateServiceStartedAt {
 		cypher += `, ct.serviceStartedAt = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $serviceStartedAt ELSE ct.serviceStartedAt END `
@@ -392,27 +360,6 @@ func (r *contractWriteRepository) UpdateContract(ctx context.Context, tenant, co
 	if data.UpdateLengthInMonths {
 		cypher += `, ct.lengthInMonths=$lengthInMonths `
 		params["lengthInMonths"] = data.LengthInMonths
-		if data.LengthInMonths == 0 {
-			cypher += `, ct.renewalCycle=$renewalCycle `
-			params["renewalCycle"] = neo4jenum.RenewalCycleNone.String()
-			cypher += `, ct.renewalPeriods=$renewalPeriods `
-			params["renewalPeriods"] = 0
-		} else if data.LengthInMonths < 3 {
-			cypher += `, ct.renewalCycle=$renewalCycle `
-			params["renewalCycle"] = neo4jenum.RenewalCycleMonthlyRenewal.String()
-			cypher += `, ct.renewalPeriods=$renewalPeriods `
-			params["renewalPeriods"] = 1
-		} else if data.LengthInMonths < 12 {
-			cypher += `, ct.renewalCycle=$renewalCycle `
-			params["renewalCycle"] = neo4jenum.RenewalCycleQuarterlyRenewal.String()
-			cypher += `, ct.renewalPeriods=$renewalPeriods `
-			params["renewalPeriods"] = 1
-		} else {
-			cypher += `, ct.renewalCycle=$renewalCycle `
-			params["renewalCycle"] = neo4jenum.RenewalCycleAnnualRenewal.String()
-			cypher += `, ct.renewalPeriods=$renewalPeriods `
-			params["renewalPeriods"] = data.LengthInMonths / 12
-		}
 	}
 
 	span.LogFields(log.String("cypher", cypher))

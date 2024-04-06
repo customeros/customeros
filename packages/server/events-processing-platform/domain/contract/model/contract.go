@@ -86,33 +86,6 @@ type ContractDataFields struct {
 	LengthInMonths         int64    `json:"lengthInMonths"`
 }
 
-// RenewalCycle represents the renewal cycle of a contract.
-// Deprecated: RenewalCycle is deprecated
-type RenewalCycle int32
-
-const (
-	NoneRenewal RenewalCycle = iota
-	MonthlyRenewal
-	AnnuallyRenewal
-	QuarterlyRenewal
-)
-
-// This function provides a string representation of the RenewalCycle enum.
-func (rc RenewalCycle) String() string {
-	switch rc {
-	case NoneRenewal:
-		return ""
-	case MonthlyRenewal:
-		return enum.RenewalCycleMonthlyRenewal.String()
-	case QuarterlyRenewal:
-		return enum.RenewalCycleQuarterlyRenewal.String()
-	case AnnuallyRenewal:
-		return enum.RenewalCycleAnnualRenewal.String()
-	default:
-		return ""
-	}
-}
-
 // BillingCycle represents the billing cycle of a contract.
 type BillingCycle int32
 

@@ -177,7 +177,7 @@ func (h *contractHandler) updateRenewalOpportunityRenewedAt(ctx context.Context,
 	calculateUntilFirstFutureDate := contractEntity.AutoRenew
 	span.LogFields(log.Bool("calculateUntilFirstFutureDate", calculateUntilFirstFutureDate))
 
-	renewedAt := h.calculateNextCycleDate(startRenewalDateCalculation, contractEntity.RenewalCycle, contractEntity.RenewalPeriods, calculateUntilFirstFutureDate)
+	renewedAt := h.calculateNextCycleDate(startRenewalDateCalculation, contractEntity.LengthInMonths, calculateUntilFirstFutureDate)
 	span.LogFields(log.Object("result.renewedAt", renewedAt))
 	if !utils.IsEqualTimePtr(renewedAt, renewalOpportunityEntity.RenewalDetails.RenewedAt) {
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
@@ -199,28 +199,16 @@ func (h *contractHandler) updateRenewalOpportunityRenewedAt(ctx context.Context,
 	return nil
 }
 
-func (h *contractHandler) calculateNextCycleDate(from *time.Time, renewalCycle neo4jenum.RenewalCycle, renewalPeriods *int64, calculateUntilFirstFutureDate bool) *time.Time {
-	if from == nil {
+func (h *contractHandler) calculateNextCycleDate(from *time.Time, lengthInMonths int64, calculateUntilFirstFutureDate bool) *time.Time {
+	if from == nil || lengthInMonths <= 0 {
 		return nil
 	}
 
 	renewalCycleNext := *from
 	for {
-		switch renewalCycle {
-		case neo4jenum.RenewalCycleMonthlyRenewal:
-			renewalCycleNext = renewalCycleNext.AddDate(0, 1, 0)
-		case neo4jenum.RenewalCycleQuarterlyRenewal:
-			renewalCycleNext = renewalCycleNext.AddDate(0, 3, 0)
-		case neo4jenum.RenewalCycleAnnualRenewal:
-			renewalYears := 1
-			if renewalPeriods != nil {
-				renewalYears = int(*renewalPeriods)
-			}
-			renewalCycleNext = renewalCycleNext.AddDate(renewalYears, 0, 0)
-		default:
-			return nil // invalid
-		}
-
+		renewalCycleNext = renewalCycleNext.AddDate(0, int(lengthInMonths), 0)
+		// Break the loop either when the next cycle date is in the future
+		// or if we are not calculating until the first future date.
 		if renewalCycleNext.After(utils.Now()) || !calculateUntilFirstFutureDate {
 			break
 		}
@@ -375,7 +363,7 @@ func (h *contractHandler) assertContractAndRenewalOpportunity(ctx context.Contex
 	contract := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
 
 	// if contract is not frequency based, return
-	if !neo4jenum.IsFrequencyBasedRenewalCycle(contract.RenewalCycle) {
+	if contract.LengthInMonths == 0 {
 		return nil, nil, true
 	}
 

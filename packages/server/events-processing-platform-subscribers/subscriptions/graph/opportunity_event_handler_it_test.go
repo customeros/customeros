@@ -355,7 +355,7 @@ func TestOpportunityEventHandler_OnUpdateRenewal_AmountAndRenewalChangedByUser(t
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
-		RenewalCycle: neo4jenum.RenewalCycleMonthlyRenewal,
+		LengthInMonths: 1,
 	})
 	opportunityId := neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
 		Name:         "test opportunity",
@@ -512,7 +512,7 @@ func TestOpportunityEventHandler_OnUpdateRenewal_LikelihoodChangedByUser_Generat
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
-		RenewalCycle: neo4jenum.RenewalCycleMonthlyRenewal,
+		LengthInMonths: 1,
 	})
 	opportunityId := neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
 		Amount:        10000,
