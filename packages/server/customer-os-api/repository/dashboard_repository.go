@@ -18,27 +18,28 @@ import (
 )
 
 const (
-	SearchSortParamOrganization       = "ORGANIZATION"
-	SearchSortParamWebsite            = "WEBSITE"
-	SearchSortParamEmail              = "EMAIL"
-	SearchSortParamCountry            = "COUNTRY"
-	SearchSortParamOnboardingStatus   = "ONBOARDING_STATUS"
-	SearchSortParamIsCustomer         = "IS_CUSTOMER"
-	SearchSortParamName               = "NAME"
-	SearchSortParamRenewalLikelihood  = "RENEWAL_LIKELIHOOD"
-	SearchSortParamRenewalCycleNext   = "RENEWAL_CYCLE_NEXT"
-	SearchSortParamRenewalDate        = "RENEWAL_DATE"
-	SearchSortParamLastTouchpoint     = "LAST_TOUCHPOINT"
-	SearchSortParamForecastArr        = "FORECAST_ARR"
-	SearchSortParamRegion             = "REGION"
-	SearchSortParamLocality           = "LOCALITY"
-	SearchSortParamOwnerId            = "OWNER_ID"
-	SearchSortParamLocation           = "LOCATION"
-	SearchSortParamOwner              = "OWNER"
-	SearchSortParamLastTouchpointAt   = "LAST_TOUCHPOINT_AT"
-	SearchSortParamLastTouchpointType = "LAST_TOUCHPOINT_TYPE"
-	SearchSortParamRenewalCycle       = "RENEWAL_CYCLE"
-	SearchParamExternalId             = "EXTERNAL_ID"
+	SearchSortParamOrganization           = "ORGANIZATION"
+	SearchSortParamWebsite                = "WEBSITE"
+	SearchSortParamEmail                  = "EMAIL"
+	SearchSortParamCountry                = "COUNTRY"
+	SearchSortParamOnboardingStatus       = "ONBOARDING_STATUS"
+	SearchSortParamIsCustomer             = "IS_CUSTOMER"
+	SearchSortParamName                   = "NAME"
+	SearchSortParamRenewalLikelihood      = "RENEWAL_LIKELIHOOD"
+	SearchSortParamRenewalCycleNext       = "RENEWAL_CYCLE_NEXT"
+	SearchSortParamRenewalDate            = "RENEWAL_DATE"
+	SearchSortParamLastTouchpoint         = "LAST_TOUCHPOINT"
+	SearchSortParamForecastArr            = "FORECAST_ARR"
+	SearchSortParamRegion                 = "REGION"
+	SearchSortParamLocality               = "LOCALITY"
+	SearchSortParamOwnerId                = "OWNER_ID"
+	SearchSortParamLocation               = "LOCATION"
+	SearchSortParamOwner                  = "OWNER"
+	SearchSortParamLastTouchpointAt       = "LAST_TOUCHPOINT_AT"
+	SearchSortParamLastTouchpointType     = "LAST_TOUCHPOINT_TYPE"
+	SearchSortParamRenewalCycle           = "RENEWAL_CYCLE"
+	SearchSortParamContractLengthInMonths = "CONTRACT_LENGTH_IN_MONTHS"
+	SearchParamExternalId                 = "EXTERNAL_ID"
 )
 
 type DashboardRepository interface {
@@ -547,7 +548,20 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 			} else if filter.Filter.Property == SearchSortParamLastTouchpointType && filter.Filter.Value.ArrayStr != nil {
 				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterIn("lastTouchpointType", *filter.Filter.Value.ArrayStr))
 			} else if filter.Filter.Property == SearchSortParamRenewalCycle {
-				contractFilter.Filters = append(contractFilter.Filters, utils.CreateStringCypherFilter("renewalCycle", *filter.Filter.Value.Str, utils.EQUALS))
+				if filter.Filter.Value.Str != nil {
+					switch *filter.Filter.Value.Str {
+					case "MONTHLY":
+						contractFilter.Filters = append(contractFilter.Filters, utils.CreateCypherFilter("lengthInMonths", 1, utils.EQUALS))
+					case "QUARTERLY":
+						contractFilter.Filters = append(contractFilter.Filters, utils.CreateCypherFilter("lengthInMonths", 3, utils.EQUALS))
+					case "ANNUALLY":
+						contractFilter.Filters = append(contractFilter.Filters, utils.CreateCypherFilter("lengthInMonths", 12, utils.GTE))
+					}
+				}
+			} else if filter.Filter.Property == SearchSortParamContractLengthInMonths {
+				if filter.Filter.Value.Int != nil {
+					contractFilter.Filters = append(contractFilter.Filters, utils.CreateCypherFilter("lengthInMonths", *filter.Filter.Value.Int, utils.EQUALS))
+				}
 			}
 		}
 
@@ -734,6 +748,14 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 			}
 			aliases += ", RENEWAL_DATE_FOR_SORTING "
 		}
+		if sort != nil && sort.By == SearchSortParamContractLengthInMonths {
+			if sort.Direction == model.SortingDirectionAsc {
+				query += ", CASE WHEN contract.lengthInMonths IS NOT NULL AND contract.lengthInMonths > 0 THEN contract.lengthInMonths ELSE 9999 END as CONTRACT_LENGTH_FOR_SORTING "
+			} else {
+				query += ", CASE WHEN contract.lengthInMonths IS NOT NULL THEN contract.lengthInMonths ELSE -1 END as CONTRACT_LENGTH_FOR_SORTING "
+			}
+			aliases += ", RENEWAL_LIKELIHOOD_FOR_SORTING "
+		}
 		if sort != nil && sort.By == SearchSortParamOnboardingStatus {
 			if sort.Direction == model.SortingDirectionAsc {
 				query += ", CASE WHEN o.onboardingStatusOrder IS NOT NULL THEN o.onboardingStatusOrder ELSE 9999 END as ONBOARDING_STATUS_FOR_SORTING "
@@ -789,6 +811,8 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 			} else if sort.By == SearchSortParamLastTouchpointType {
 				cypherSort.NewSortRule("LAST_TOUCHPOINT_TYPE", sort.Direction.String(), false, reflect.TypeOf(entity.OrganizationEntity{}))
 				query += string(cypherSort.SortingCypherFragment("o"))
+			} else if sort.By == SearchSortParamContractLengthInMonths {
+				query += " ORDER BY CONTRACT_LENGTH_FOR_SORTING " + string(sort.Direction)
 			}
 		} else {
 			cypherSort.NewSortRule("UPDATED_AT", string(model.SortingDirectionDesc), false, reflect.TypeOf(entity.OrganizationEntity{}))
