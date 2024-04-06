@@ -1096,7 +1096,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_2_Multi_Year_Contract(t
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		IsCustomer: true,
 	})
 

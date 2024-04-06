@@ -1631,7 +1631,7 @@ func (r *dashboardRepository) GetDashboardRetentionRateContractsRenewalsData(ctx
 					WITH year, month, beginOfMonth, endOfMonth, cid, cssa, clim, pp, LAST(versions) AS lastSliVersion
 					WITH year, month, beginOfMonth, endOfMonth, cid, cssa, clim, pp, lastSliVersion
 					WHERE
-						CASE WHEN clim = 12 THEN cssa.MONTH = beginOfMonth.MONTH 
+						CASE WHEN clim >= 12 THEN cssa.YEAR < beginOfMonth.YEAR AND cssa.MONTH = beginOfMonth.MONTH AND (beginOfMonth.YEAR - cssa.YEAR) %s = 0
 						ELSE 1 = 1 END AND
 						CASE WHEN clim = 3 THEN
 							(lastSliVersion.billed IN ['MONTHLY', 'QUARTERLY'] AND beginOfMonth.MONTH IN [cssa.MONTH - 9, cssa.MONTH - 6, cssa.MONTH - 3, cssa.MONTH, cssa.MONTH + 3, cssa.MONTH + 6, cssa.MONTH + 9]) OR
@@ -1645,7 +1645,7 @@ func (r *dashboardRepository) GetDashboardRetentionRateContractsRenewalsData(ctx
 					
 					WITH year, month, cid, lastSliVersion
 					return year, month, COUNT(DISTINCT(cid)) AS contractsWithRenewals
-				`, "% 12 + 1", tenant, tenant, tenant),
+				`, "% 12 + 1", tenant, tenant, tenant, "% (clim/12)"),
 			map[string]any{
 				"tenant":    tenant,
 				"startDate": startDate,
