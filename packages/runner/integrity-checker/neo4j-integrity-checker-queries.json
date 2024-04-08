@@ -105,7 +105,7 @@
     },
     {
       "name": "Check for multiple renewal opportunities for same contract",
-      "query": "CALL {MATCH (c:Contract)-[:ACTIVE_RENEWAL]->(op:Opportunity) WITH c, count(op) AS sizeOps WHERE sizeOps > 1 RETURN count(c) AS cnt UNION ALL MATCH (c:Contract)-[:HAS_OPPORTUNITY]->(op:RenewalOpportunity) WHERE op.internalStage='OPEN' WITH c, count(op) AS sizeOps WHERE sizeOps > 1 RETURN count(c) AS cnt} return sum(cnt)",
+      "query": "CALL {\n    MATCH (c:Contract)-[:ACTIVE_RENEWAL]->(op:Opportunity) WITH c, count(op) AS sizeOps WHERE sizeOps > 1 RETURN count(c) AS cnt \n    UNION ALL \n    MATCH (c:Contract)-[:HAS_OPPORTUNITY]->(op:RenewalOpportunity) WHERE op.internalStage='OPEN' WITH c, count(op) AS sizeOps WHERE sizeOps > 1 RETURN count(c) AS cnt\n    } return sum(cnt)",
       "description": "Checks: 1 - Contract with multiple active renewal opportunities. 2 - Contract with multiple open renewal opportunities."
     },
     {
@@ -120,7 +120,7 @@
     },
     {
       "name": "Check organization derived data consistency",
-      "query": "CALL {\n     MATCH (org:Organization) WHERE org.derivedNextRenewalAt < datetime()-duration({minutes: 30}) RETURN count(org) as cnt\n     UNION ALL\n     MATCH (org:Organization) WHERE org.derivedRenewalLikelihood IS NOT NULL AND NOT org.derivedRenewalLikelihood IN ['','ZERO','LOW','MEDIUM','HIGH'] RETURN count(org) as cnt\n     UNION ALL\n     MATCH (org:Organization) WHERE org.derivedRenewalLikelihood IS NULL AND NOT org.derivedRenewalLikelihood IS NULL RETURN count(org) as cnt\n     UNION ALL MATCH (org:Organization)--(c:Contract)-[:ACTIVE_RENEWAL]->(op:RenewalOpportunity) WHERE (org.renewalForecastMaxArr IS NULL OR org.renewalForecastMaxArr = 0) AND (op.maxAmount > 0) return count(org) AS cnt\n} RETURN sum(cnt)",
+      "query": "CALL {\n     MATCH (org:Organization) OPTIONAL MATCH (org)--(c:Contract) WITH org, c WHERE (c IS NULL or c.status <> 'OUT_OF_CONTRACT') AND org.derivedNextRenewalAt < datetime()-duration({minutes: 30}) RETURN count(org) as cnt\n     UNION ALL\n     MATCH (org:Organization) WHERE org.derivedRenewalLikelihood IS NOT NULL AND NOT org.derivedRenewalLikelihood IN ['','ZERO','LOW','MEDIUM','HIGH'] RETURN count(org) as cnt\n     UNION ALL\n     MATCH (org:Organization) WHERE org.derivedRenewalLikelihood IS NULL AND NOT org.derivedRenewalLikelihood IS NULL RETURN count(org) as cnt\n     UNION ALL MATCH (org:Organization)--(c:Contract)-[:ACTIVE_RENEWAL]->(op:RenewalOpportunity) WHERE (org.renewalForecastMaxArr IS NULL OR org.renewalForecastMaxArr = 0) AND (op.maxAmount > 0) return count(org) AS cnt\n} RETURN sum(cnt)",
       "description": "Checks: 1 - Organizations with wrong derivedNextRenewalAt date. 2 - Organizations with wrong derivedRenewalLikelihood value. 3 - Organization with renewal likelihood but without renewal date. 4 - Organizations with missing ARR"
     },
     {
@@ -130,7 +130,7 @@
     },
     {
       "name": "Check renewal opportunity data consistency",
-      "query": "CALL {\n     MATCH (op:RenewalOpportunity) WHERE op.renewedAt < datetime()-duration({minutes: 30}) AND op.internalStage = 'OPEN' RETURN count(op) as cnt\n     UNION ALL\n     MATCH (op:RenewalOpportunity) WHERE op.renewalLikelihood IS NOT NULL AND NOT op.renewalLikelihood IN ['','ZERO','LOW','MEDIUM','HIGH'] RETURN count(op) as cnt\n} RETURN sum(cnt)",
+      "query": "CALL {\n     MATCH (op:RenewalOpportunity) WHERE NOT (op)--(:DeletedContract) WITH op OPTIONAL MATCH (op)-[:ACTIVE_RENEWAL]-(c:Contract) WITH op, c WHERE (c IS NULL OR c.status <> 'OUT_OF_CONTRACT') AND op.renewedAt < datetime()-duration({minutes: 30}) AND op.internalStage = 'OPEN' RETURN count(op) as cnt\n     UNION ALL\n     MATCH (op:RenewalOpportunity) WHERE op.renewalLikelihood IS NOT NULL AND NOT op.renewalLikelihood IN ['','ZERO','LOW','MEDIUM','HIGH'] RETURN count(op) as cnt\n} RETURN sum(cnt)",
       "description": "Checks: 1 - Renewal opportunity with wrong renewedAt date and open internal stage. 2 - Renewal opportunity with wrong renewalLikelihood value."
     },
     {

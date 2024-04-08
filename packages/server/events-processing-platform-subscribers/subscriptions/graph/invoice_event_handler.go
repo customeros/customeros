@@ -80,8 +80,8 @@ func (h *InvoiceEventHandler) OnInvoiceCreateForContractV1(ctx context.Context, 
 		DueDate:         eventData.CreatedAt.AddDate(0, 0, int(contractEntity.DueDays)),
 		Status:          neo4jenum.InvoiceStatusInitialized,
 		SourceFields: neo4jmodel.Source{
-			Source:    eventData.SourceFields.Source,
-			AppSource: eventData.SourceFields.AppSource,
+			Source:    helper.GetSource(eventData.SourceFields.Source),
+			AppSource: helper.GetAppSource(eventData.SourceFields.AppSource),
 		},
 		Note: eventData.Note,
 	}
