@@ -30,15 +30,15 @@ type neo4jIntegrityCheckerService struct {
 }
 
 type integrityCheckerResult struct {
-	name                 string
-	success              bool
-	countOfDataWithIssue int64
-	techError            string
+	Name                 string `json:"name"`
+	Success              bool   `json:"success"`
+	CountOfDataWithIssue int64  `json:"countOfDataWithIssue"`
+	TechError            string `json:"techError"`
 }
 
 func (i integrityCheckerResult) String() string {
 	return fmt.Sprintf("(name: %s, success: %t, countOfDataWithIssue: %d, techError: %s)",
-		i.name, i.success, i.countOfDataWithIssue, i.techError)
+		i.Name, i.Success, i.CountOfDataWithIssue, i.TechError)
 }
 
 func NewNeo4jIntegrityCheckerService(cfg *config.Config, log logger.Logger, repositories *repository.Repositories) Neo4jIntegrityCheckerService {
@@ -63,6 +63,7 @@ func (s *neo4jIntegrityCheckerService) RunIntegrityCheckerQueries() {
 		s.log.Errorf("Error getting queries from S3: %v", err)
 	}
 	result := s.executeQueries(ctx, integrityCheckerQueries)
+	tracing.LogObjectAsJson(span, "integrityCheckerResult", result)
 	s.log.Infof("Integrity checker result: %v", result)
 
 	s.sendMetrics(ctx, result)
@@ -119,12 +120,12 @@ func (s *neo4jIntegrityCheckerService) executeQueries(ctx context.Context, queri
 
 		count, err := s.repositories.Neo4jRepository.ExecuteIntegrityCheckerQuery(ctx, query.Name, query.Query)
 		checkerResult := integrityCheckerResult{
-			name:                 query.Name,
-			success:              err == nil && count == int64(0),
-			countOfDataWithIssue: count,
+			Name:                 query.Name,
+			Success:              err == nil && count == int64(0),
+			CountOfDataWithIssue: count,
 		}
 		if err != nil {
-			checkerResult.techError = err.Error()
+			checkerResult.TechError = err.Error()
 		}
 		output = append(output, checkerResult)
 	}
@@ -158,16 +159,16 @@ func (s *neo4jIntegrityCheckerService) sendMetrics(ctx context.Context, results 
 
 	for _, result := range results {
 		metrics = append(metrics, &cloudwatch.MetricDatum{
-			MetricName: aws.String(strings.ReplaceAll(strings.ToLower(result.name), " ", "_")),
-			Value:      aws.Float64(float64(result.countOfDataWithIssue)),
+			MetricName: aws.String(strings.ReplaceAll(strings.ToLower(result.Name), " ", "_")),
+			Value:      aws.Float64(float64(result.CountOfDataWithIssue)),
 			Unit:       aws.String("Count"),
 			Timestamp:  utils.TimePtr(utils.Now()),
 			Dimensions: dimensions,
 		})
-		if result.techError != "" {
+		if result.TechError != "" {
 			totalFailedQueries++
 		}
-		totalProblematicNodes += result.countOfDataWithIssue
+		totalProblematicNodes += result.CountOfDataWithIssue
 	}
 
 	metrics = append(metrics, &cloudwatch.MetricDatum{
