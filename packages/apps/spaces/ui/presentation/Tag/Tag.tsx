@@ -76,13 +76,8 @@ export const TagRightIcon = ({ className, children, ...rest }: TagProps) => {
 };
 
 export const TagLabel = ({ className, children, ...rest }: TagProps) => {
-  if (!isValidElement(children)) {
-    return (
-      typeof children === 'string' && (
-        <span className={twMerge(className)}>{children}</span>
-      )
-    );
-  }
+  if (!isValidElement(children))
+    return <span className={twMerge(className)}>{children}</span>;
 
   return cloneElement(children as React.ReactElement, {
     className: twMerge(className),

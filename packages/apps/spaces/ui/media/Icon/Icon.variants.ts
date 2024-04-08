@@ -19,6 +19,7 @@ export const featureIconVariant = cva(
         greenLight: [],
         violet: [],
         fuchsia: [],
+        blue: [],
       },
     },
     compoundVariants: [

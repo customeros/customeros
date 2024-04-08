@@ -12,13 +12,13 @@ import { ChevronDown } from '@ui/media/icons/ChevronDown';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useGetIssuesQuery } from '@organization/src/graphql/getIssues.generated';
 import { IssueCard } from '@organization/src/components/Tabs/panels/IssuesPanel/IssueCard/IssueCard';
+import { IssuesPanelSkeleton } from '@organization/src/components/Tabs/panels/IssuesPanel/IssuesPanelSkeleton';
+import { OrganizationPanel } from '@organization/src/components/Tabs/panels/OrganizationPanel/OrganizationPanel';
 import {
-  Collapsible,
+  CollapsibleRoot,
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@ui/transitions/Collapse/Collapse';
-import { IssuesPanelSkeleton } from '@organization/src/components/Tabs/panels/IssuesPanel/IssuesPanelSkeleton';
-import { OrganizationPanel } from '@organization/src/components/Tabs/panels/OrganizationPanel/OrganizationPanel';
 import { EmptyIssueMessage } from '@organization/src/components/Tabs/panels/IssuesPanel/EmptyIssueMessage/EmptyIssueMessage';
 
 import { ChannelLinkSelect } from './ChannelLinkSelect';
@@ -150,7 +150,7 @@ export const IssuesPanel = () => {
         />
       )}
       {!!closedIssues.length && (
-        <Collapsible
+        <CollapsibleRoot
           open={isExpanded}
           onOpenChange={(value) => setIsExpanded(value)}
           className='flex flex-col w-full mt-2'
@@ -158,7 +158,7 @@ export const IssuesPanel = () => {
           {isExpanded}
           <div className='flex justify-between w-full items-center pb-2'>
             <h2 className='font-semibold text-base'>Closed</h2>
-            <CollapsibleTrigger>
+            <CollapsibleTrigger asChild={false}>
               {isExpanded ? <ChevronDown /> : <ChevronUp />}
             </CollapsibleTrigger>
           </div>
@@ -178,7 +178,7 @@ export const IssuesPanel = () => {
               </div>
             )}
           </CollapsibleContent>
-        </Collapsible>
+        </CollapsibleRoot>
       )}
     </OrganizationPanel>
   );

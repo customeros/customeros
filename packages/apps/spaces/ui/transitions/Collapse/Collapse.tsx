@@ -8,7 +8,7 @@ interface CollapsibleProps extends RadixCollapsible.CollapsibleProps {
   children: React.ReactNode;
 }
 
-export const Collapsible = ({
+export const CollapsibleRoot = ({
   children,
   className,
   ...props
@@ -20,25 +20,43 @@ export const Collapsible = ({
   );
 };
 
+interface CollapsibleTriggerProps
+  extends RadixCollapsible.CollapsibleTriggerProps {
+  className?: string;
+  children?: React.ReactNode;
+}
+
 export const CollapsibleTrigger = ({
   children,
-}: {
-  children: React.ReactNode;
-}) => {
+  className,
+  ...props
+}: CollapsibleTriggerProps) => {
   return (
-    <RadixCollapsible.Trigger asChild={false}>
+    <RadixCollapsible.Trigger className={twMerge(className)} {...props}>
       {children}
     </RadixCollapsible.Trigger>
   );
 };
 
+interface CollapsibleContentProps
+  extends RadixCollapsible.CollapsibleContentProps {
+  className?: string;
+  children?: React.ReactNode;
+}
+
 export const CollapsibleContent = ({
   children,
-}: {
-  children: React.ReactNode;
-}) => {
+  className,
+  ...props
+}: CollapsibleContentProps) => {
   return (
-    <RadixCollapsible.Content className='data-[state="open"]:animate-collapseDown data-[state="closed"]:animate-collapseUp'>
+    <RadixCollapsible.Content
+      {...props}
+      className={twMerge(
+        'data-[state="open"]:animate-collapseDown data-[state="closed"]:animate-collapseUp',
+        className,
+      )}
+    >
       {children}
     </RadixCollapsible.Content>
   );

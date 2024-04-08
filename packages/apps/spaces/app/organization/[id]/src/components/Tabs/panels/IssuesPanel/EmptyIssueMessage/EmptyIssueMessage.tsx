@@ -14,7 +14,7 @@ export const EmptyIssueMessage: FC<{
     </FeaturedIcon>
     {title && <span className='text-gray-700 font-semibold mb-1'>{title}</span>}
 
-    <span className='mt-1 mb-6 text-center text-gray-500' color='gray.500'>
+    <span className='mt-1 mb-6 text-center text-gray-500'>
       {children ?? description}
     </span>
   </div>
