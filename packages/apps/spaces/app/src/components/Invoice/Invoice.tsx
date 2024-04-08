@@ -99,7 +99,7 @@ export function Invoice({
   return (
     <div className='px-4 flex flex-col w-full overflow-y-auto h-full justify-between pb-4 '>
       <div className={cn('flex flex-col', isInvoiceTopSectionFilterProperty)}>
-        <div className='flex flex-col mt-2'>
+        <div className='flex relative flex-col mt-2'>
           <InvoiceHeader invoiceNumber={invoiceNumber} status={status} />
 
           <div className='flex mt-2 justify-evenly transition duration-250 ease-in-out filter'>

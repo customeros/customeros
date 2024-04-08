@@ -33,10 +33,10 @@ export const InvoiceHeader: FC<InvoiceHeaderProps> = ({
           {isPreview && (
             <Image
               src={previewStamp}
-              width={112}
-              height={42}
+              width={95}
+              height={35}
               alt='Preview Stamp'
-              className='absolute left-32 top-3 rotate-[-10deg]'
+              className='absolute left-[6.5rem] top-2 rotate-[-10deg]'
             />
           )}
           {status && !isPreview && (
