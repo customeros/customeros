@@ -2,92 +2,36 @@
 
 import React from 'react';
 
-import { Flex } from '@ui/layout/Flex';
-import { Card } from '@ui/layout/Card';
-import { CardBody } from '@ui/presentation/Card';
-import { Skeleton, SkeletonCircle } from '@ui/presentation/Skeleton';
+import { Skeleton } from '@ui/feedback/Skeleton';
+import { Card, CardContent } from '@ui/presentation/Card/Card';
 import { OrganizationPanel } from '@organization/src/components/Tabs/panels/OrganizationPanel/OrganizationPanel';
 
 export const IssuesPanelSkeleton = () => {
   return (
     <OrganizationPanel title='Issues'>
-      <Flex w='full' justify='flex-start'>
-        <Skeleton
-          borderRadius='full'
-          w='50px'
-          mb='1'
-          h='16px'
-          startColor='gray.300'
-          endColor='gray.100'
-        />
-      </Flex>
+      <div className='flex w-full justify-start'>
+        <Skeleton className='rounded-lg w-[50px] mb-1 h-[16px]' />
+      </div>
       {Array.from({ length: 3 }).map((_, i) => (
         <Card
+          className='w-full shadow-xs cursor-pointer bg-white border-1 border-gray-200 rounded-lg p-3'
           key={i}
-          w='full'
-          boxShadow={'xs'}
-          cursor='pointer'
-          size='sm'
-          borderRadius='lg'
-          border='1px solid'
-          borderColor='gray.200'
-          _hover={{
-            boxShadow: 'md',
-            '& > div > #confirm-button': {
-              opacity: '1',
-              pointerEvents: 'auto',
-            },
-          }}
-          transition='all 0.2s ease-out'
         >
-          <CardBody>
-            <Flex flex='1' gap='4' alignItems='flex-start' flexWrap='wrap'>
-              <SkeletonCircle
-                height={10}
-                width={10}
-                startColor='gray.300'
-                endColor='gray.100'
-              />
+          <CardContent className='p-0'>
+            <div className='flex flex-1 gap-4 items-start flex-wrap'>
+              <Skeleton className='rounded-full size-10' />
 
-              <Flex direction='column' flex={1}>
-                <Flex justifyContent='space-between'>
-                  <Skeleton
-                    borderRadius='full'
-                    h={3}
-                    w={'50%'}
-                    mb={2}
-                    startColor='gray.300'
-                    endColor='gray.100'
-                  />
-                </Flex>
+              <div className='flex flex-col flex-1'>
+                <div className='flex justify-between'>
+                  <Skeleton className='rounded-full h-3 w-[50%] mb-2' />
+                </div>
 
-                <Skeleton
-                  borderRadius='full'
-                  h={3}
-                  w={'55%'}
-                  mb={2}
-                  startColor='gray.300'
-                  endColor='gray.100'
-                />
-                <Skeleton
-                  borderRadius='full'
-                  h={3}
-                  w={'45%'}
-                  startColor='gray.300'
-                  endColor='gray.100'
-                />
-              </Flex>
-              <Skeleton
-                display='block'
-                position='static'
-                borderRadius='md'
-                h={6}
-                w={10}
-                startColor='gray.300'
-                endColor='gray.100'
-              />
-            </Flex>
-          </CardBody>
+                <Skeleton className='rounded-full h-3 w-[55%] mb-2' />
+                <Skeleton className='rounded-full h-3 w-[45%]' />
+              </div>
+              <Skeleton className='block static rounded-md h-6 w-10' />
+            </div>
+          </CardContent>
         </Card>
       ))}
     </OrganizationPanel>

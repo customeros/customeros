@@ -1,21 +1,22 @@
 'use client';
+import Link from 'next/link';
 import React, { useState } from 'react';
 import { useParams } from 'next/navigation';
 
 import { useConnections } from '@integration-app/react';
 
-import { Flex } from '@ui/layout/Flex';
 import { Issue } from '@graphql/types';
-import { VStack } from '@ui/layout/Stack';
-import { Link } from '@ui/navigation/Link';
 import { Fade } from '@ui/transitions/Fade';
-import { Heading } from '@ui/typography/Heading';
-import { Collapse } from '@ui/transitions/Collapse';
 import { ChevronUp } from '@ui/media/icons/ChevronUp';
 import { ChevronDown } from '@ui/media/icons/ChevronDown';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useGetIssuesQuery } from '@organization/src/graphql/getIssues.generated';
 import { IssueCard } from '@organization/src/components/Tabs/panels/IssuesPanel/IssueCard/IssueCard';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@ui/transitions/Collapse/Collapse';
 import { IssuesPanelSkeleton } from '@organization/src/components/Tabs/panels/IssuesPanel/IssuesPanelSkeleton';
 import { OrganizationPanel } from '@organization/src/components/Tabs/panels/OrganizationPanel/OrganizationPanel';
 import { EmptyIssueMessage } from '@organization/src/components/Tabs/panels/IssuesPanel/EmptyIssueMessage/EmptyIssueMessage';
@@ -74,7 +75,11 @@ export const IssuesPanel = () => {
       <OrganizationPanel title='Issues' withFade>
         <EmptyIssueMessage title='Connect your customer support app'>
           To see your customers support issues here,{' '}
-          <Link color='primary.600' as='span' href='/settings?tab=integrations'>
+          <Link
+            className='text-primary-600'
+            color='primary.600'
+            href='/settings?tab=integrations'
+          >
             Go to settings
           </Link>{' '}
           and connect an app like Zendesk or Unthread.
@@ -122,11 +127,9 @@ export const IssuesPanel = () => {
       withFade
       actionItem={<ChannelLinkSelect from={NEW_DATE} />}
     >
-      <Flex as='article' w='full' direction='column'>
-        <Heading fontWeight='semibold' fontSize='md' mb={2}>
-          Open
-        </Heading>
-        <VStack>
+      <article className='w-full flex flex-col'>
+        <h2 className='text-base font-semibold mb-2'>Open</h2>
+        <div className='flex flex-col'>
           {!!openIssues?.length &&
             openIssues.map((issue, index) => (
               <Fade
@@ -137,8 +140,8 @@ export const IssuesPanel = () => {
                 <IssueCard issue={issue} />
               </Fade>
             ))}
-        </VStack>
-      </Flex>
+        </div>
+      </article>
       {!openIssues.length && (
         <EmptyIssueMessage
           description={`It looks like ${
@@ -147,51 +150,35 @@ export const IssuesPanel = () => {
         />
       )}
       {!!closedIssues.length && (
-        <Flex as='article' w='full' direction='column' mt={2}>
-          <Flex
-            justifyContent='space-between'
-            alignItems='center'
-            w='full'
-            as='button'
-            pb={2}
-            onClick={() => setIsExpanded((prev) => !prev)}
-          >
-            <Heading fontWeight='semibold' fontSize='md'>
-              Closed
-            </Heading>
-            {isExpanded ? <ChevronDown /> : <ChevronUp />}
-          </Flex>
-
-          <Collapse
-            in={isExpanded}
-            style={{ overflow: 'unset' }}
-            delay={{
-              exit: 2,
-            }}
-          >
-            <Fade
-              in={isExpanded}
-              delay={{
-                enter: 0.2,
-              }}
-            >
-              {!closedIssues.length && (
-                <EmptyIssueMessage
-                  description={`It looks like ${
-                    data?.organization?.name ?? '[Unknown]'
-                  } has no closed issues at the moment`}
-                />
-              )}
-              {!!closedIssues?.length && (
-                <VStack>
-                  {closedIssues.map((issue, index) => (
-                    <IssueCard issue={issue} key={`issue-panel-${issue.id}`} />
-                  ))}
-                </VStack>
-              )}
-            </Fade>
-          </Collapse>
-        </Flex>
+        <Collapsible
+          open={isExpanded}
+          onOpenChange={(value) => setIsExpanded(value)}
+          className='flex flex-col w-full mt-2'
+        >
+          {isExpanded}
+          <div className='flex justify-between w-full items-center pb-2'>
+            <h2 className='font-semibold text-base'>Closed</h2>
+            <CollapsibleTrigger>
+              {isExpanded ? <ChevronDown /> : <ChevronUp />}
+            </CollapsibleTrigger>
+          </div>
+          <CollapsibleContent>
+            {!closedIssues.length && (
+              <EmptyIssueMessage
+                description={`It looks like ${
+                  data?.organization?.name ?? '[Unknown]'
+                } has no closed issues at the moment`}
+              />
+            )}
+            {!!closedIssues?.length && (
+              <div className='flex flex-col space-y-2'>
+                {closedIssues.map((issue, index) => (
+                  <IssueCard issue={issue} key={`issue-panel-${issue.id}`} />
+                ))}
+              </div>
+            )}
+          </CollapsibleContent>
+        </Collapsible>
       )}
     </OrganizationPanel>
   );

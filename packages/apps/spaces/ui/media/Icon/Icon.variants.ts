@@ -83,6 +83,12 @@ export const featureIconVariant = cva(
         ],
       },
       {
+        colorScheme: 'blue',
+        className: [
+          'bg-blue-100 ring-blue-50 ring-offset-blue-100 text-blue-500',
+        ],
+      },
+      {
         colorScheme: 'moss',
         className: [
           'bg-moss-100 ring-moss-50 ring-offset-moss-100 text-moss-500',

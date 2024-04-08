@@ -45,7 +45,28 @@ module.exports = {
           },
           to: { opacity: '1', transform: 'translate(-50%, -50%) scale(1)' },
         },
+        collapseDown: {
+          from: {
+            height: 0,
+            opacity: 0,
+          },
+          to: {
+            height: 'var(--radix-collapsible-content-height)',
+            opacity: 1,
+          },
+        },
+        collapseUp: {
+          from: {
+            height: 'var(--radix-collapsible-content-height)',
+            opacity: 1,
+          },
+          to: {
+            height: 0,
+            opacity: 0,
+          },
+        },
       },
+
       animation: {
         slideDownAndFade:
           'slideDownAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
@@ -56,6 +77,8 @@ module.exports = {
           'slideRightAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
         overlayShow: 'overlayShow 150ms cubic-bezier(0.16, 1, 0.3, 1)',
         contentShow: 'contentShow 150ms cubic-bezier(0.16, 1, 0.3, 1)',
+        collapseDown: 'collapseDown 400ms cubic-bezier(0.16, 1, 0.3, 1)',
+        collapseUp: 'collapseUp 400ms cubic-bezier(0.16, 1, 0.3, 1)',
       },
     },
   },
