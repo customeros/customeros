@@ -110,7 +110,7 @@
     },
     {
       "name": "Check for contracts with wrong status",
-      "query": "CALL {MATCH (c:Contract) WHERE c.status <> 'ENDED' AND datetime(c.endedAt) < datetime() RETURN count(c) AS cnt UNION ALL MATCH (c:Contract) WHERE (c.endedAt is null OR datetime(c.endedAt) > datetime()) AND c.status <> 'LIVE' AND datetime(c.serviceStartedAt) < datetime() RETURN count(c) AS cnt} return sum(cnt)",
+      "query": "CALL {MATCH (c:Contract) WHERE c.status <> 'ENDED' AND date(c.endedAt) < date() RETURN count(c) AS cnt UNION ALL MATCH (c:Contract) WHERE (c.endedAt is null OR date(c.endedAt) > date()) AND c.status <> 'LIVE' AND date(c.serviceStartedAt) < date() RETURN count(c) AS cnt} return sum(cnt)",
       "description": "Checks: 1 - Contract with wrong status and endedAt date. 2 - Contract with wrong status and serviceStartedAt date."
     },
     {
