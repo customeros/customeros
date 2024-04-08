@@ -33,6 +33,7 @@ import {
 import { cn } from '@ui/utils/cn';
 import { Center } from '@ui/layout/Center';
 import { FlexProps } from '@ui/layout/Flex';
+import { Tumbleweed } from '@ui/media/icons/Tumbleweed';
 import { Checkbox, CheckboxProps } from '@ui/form/Checkbox/Checkbox2';
 
 declare module '@tanstack/table-core' {
@@ -192,9 +193,7 @@ export const Table = <T extends object>({
           })}
         </THeader>
         <TBody className='w-full '>
-          {!virtualRows.length && (
-            <TRow className='justify-center'>No results found</TRow>
-          )}
+          {!virtualRows.length && <NoResults />}
           {virtualRows.map((virtualRow) => {
             const row = rows[virtualRow.index];
             const minH = `${virtualRow.size}px`;
@@ -483,6 +482,26 @@ const TActions = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
     <Center left='50%' position='absolute' bottom='32px' ref={ref} {...props} />
   );
 });
+
+const NoResults = () => {
+  return (
+    <div className='pt-12 mx-auto text-gray-700 text-center'>
+      <Tumbleweed
+        color='gray.500'
+        boxSize={12}
+        className='w-12 h-12 text-gray-500'
+      />
+      <p>
+        Empty here in{' '}
+        <span className='text-md font-medium'>No Resultsville</span>
+      </p>
+      <p>
+        Try using different keywords, checking for typos,
+        <br /> or adjusting your filters.
+      </p>
+    </div>
+  );
+};
 
 const MemoizedCheckbox = ({
   className,

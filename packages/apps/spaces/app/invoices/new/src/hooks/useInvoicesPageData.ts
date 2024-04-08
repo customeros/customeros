@@ -29,15 +29,18 @@ export const useInvoicesPageData = ({ sorting }: UseRenewalsPageDataProps) => {
   const { columnFilters } = useTableState();
   const { data: globalCache } = useGlobalCacheQuery(client);
   const [invoicesMeta, setInvoicesMeta] = useInvoicesMeta();
-  const [_, setLastActivePosition] = useLocalStorage<{
-    [key: string]: string;
-  }>(`customeros-player-last-position`, { root: 'invoices' });
   const tableRef = useRef<TableInstance<Invoice> | null>(null);
 
   const preset = searchParams?.get('preset');
   const searchTerm = searchParams?.get('search');
   const { issueDate, billingCycle, invoiceStatus, paymentStatus } =
     columnFilters;
+
+  const [_, setLastActivePosition] = useLocalStorage<{
+    [key: string]: string;
+  }>(`customeros-player-last-position`, {
+    root: `invoices/new?preset=${preset}`,
+  });
 
   const where = useMemo(() => {
     return produce<Filter>({ AND: [] }, (draft) => {
@@ -50,8 +53,6 @@ export const useInvoicesPageData = ({ sorting }: UseRenewalsPageDataProps) => {
           filter: {
             property: 'CONTRACT_NAME',
             value: searchTerm,
-            caseSensitive: false,
-            operation: ComparisonOperator.Contains,
           },
         });
       }
@@ -160,8 +161,7 @@ export const useInvoicesPageData = ({ sorting }: UseRenewalsPageDataProps) => {
     });
 
   const totalCount = data?.pages?.[0].invoices?.totalElements;
-  // const totalAvailable = data?.pages?.[0].invoices?.totalAvailable;
-  const totalAvailable = (data?.pages?.[0].invoices?.totalPages ?? 0) * 40;
+  const totalAvailable = data?.pages?.[0].invoices?.totalAvailable;
 
   const flatData = useMemo(
     () => (data?.pages?.flatMap((o) => o.invoices?.content) as Invoice[]) || [],

@@ -36,6 +36,7 @@ export type GetInvoicesQuery = {
   invoices: {
     __typename?: 'InvoicesPage';
     totalPages: number;
+    totalAvailable: any;
     totalElements: any;
     content: Array<{
       __typename?: 'Invoice';
@@ -55,6 +56,7 @@ export type GetInvoicesQuery = {
       };
       contract: {
         __typename?: 'Contract';
+        name: string;
         contractEnded?: any | null;
         metadata: { __typename?: 'Metadata'; id: string };
         billingDetails?: {
@@ -107,6 +109,7 @@ export const GetInvoicesDocument = `
         metadata {
           id
         }
+        name
         billingDetails {
           billingCycle
         }
@@ -138,6 +141,7 @@ export const GetInvoicesDocument = `
       }
     }
     totalPages
+    totalAvailable
     totalElements
   }
 }

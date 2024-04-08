@@ -25,6 +25,7 @@ query getInvoices(
         metadata {
           id
         }
+        name
         billingDetails {
           billingCycle
         }
@@ -56,6 +57,7 @@ query getInvoices(
       }
     }
     totalPages
+    totalAvailable
     totalElements
   }
 }

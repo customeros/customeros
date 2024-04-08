@@ -246,8 +246,17 @@ export const RootSidenav = () => {
 
       <div className='space-y-1 w-full'>
         {(globalCache?.isOwner || showMyViewsItems) && (
-          <div className='w-full flex justify-flex-start pl-3.5'>
-            <span className='text-gray-500 text-sm'>My views</span>
+          <div
+            className='w-full gap-1 flex justify-flex-start pl-3.5 cursor-pointer text-gray-500 hover:text-gray-700 transition-colors'
+            onClick={() =>
+              setPreferences((prev) => ({
+                ...prev,
+                isMyViewsOpen: !prev.isMyViewsOpen,
+              }))
+            }
+          >
+            <span className='text-sm'>My views</span>
+            <ArrowDropdown className='w-5 h-5' />
           </div>
         )}
 

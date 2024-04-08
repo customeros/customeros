@@ -24,7 +24,7 @@ export const Preview = () => {
     router.push(`?${newParams.toString()}`);
   };
 
-  const { data, isFetching, isError } = useGetInvoiceQuery(
+  const { data, isLoading, isError } = useGetInvoiceQuery(
     client,
     {
       id: invoiceId ?? '',
@@ -38,11 +38,12 @@ export const Preview = () => {
     <Modal open={!!invoiceId} onOpenChange={onOpenChange}>
       <ModalPortal>
         <ModalOverlay />
-        <ModalContent className='max-w-[700px]'>
+        {/* width and height of A4 */}
+        <ModalContent className='max-w-[794px] h-[1123px]'>
           <InvoicePreviewModalContent
             data={data}
             isError={isError}
-            isFetching={isFetching}
+            isFetching={isLoading}
           />
         </ModalContent>
       </ModalPortal>
