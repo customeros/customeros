@@ -5,7 +5,11 @@ import Image from 'next/image';
 
 import { cn } from '@ui/utils/cn';
 import { DateTimeUtils } from '@spaces/utils/date';
-import { BankAccount, Invoice as InvoiceType } from '@graphql/types';
+import {
+  BankAccount,
+  InvoiceStatus,
+  Invoice as InvoiceType,
+} from '@graphql/types';
 
 import { ServicesTable } from './ServicesTable';
 import logoCustomerOs from './assets/customeros-logo-tiny.png';
@@ -34,7 +38,6 @@ type InvoiceProps = {
   from: Address;
   total: number;
   dueDate: string;
-  status?: string;
   subtotal: number;
   currency?: string;
   issueDate: string;
@@ -46,6 +49,7 @@ type InvoiceProps = {
   invoicePeriodEnd?: string;
   isBilledToFocused?: boolean;
   invoicePeriodStart?: string;
+  status?: InvoiceStatus | null;
   isInvoiceProviderFocused?: boolean;
   isInvoiceBankDetailsHovered?: boolean;
   isInvoiceBankDetailsFocused?: boolean;
@@ -101,7 +105,7 @@ export function Invoice({
           <div className='flex mt-2 justify-evenly transition duration-250 ease-in-out filter'>
             <div
               className={cn(
-                'flex flex-col w-170 py-2 px-2 border-r border-t border-b border-gray-300 transition duration-250 ease-in-out filter',
+                'flex flex-1 flex-col w-170 py-2 px-2 border-r border-t border-b border-gray-300 transition duration-250 ease-in-out filter',
                 invoiceMetaSectionFilterProperty,
               )}
             >

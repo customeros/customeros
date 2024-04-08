@@ -1,5 +1,7 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 
+import { Eye } from '@ui/media/icons/Eye';
+
 export const InvoicePreviewCell = ({
   value,
   invoiceId,
@@ -17,11 +19,17 @@ export const InvoicePreviewCell = ({
   };
 
   return (
-    <span
-      className='font-medium cursor-pointer hover:text-gray-900 transition-colors'
-      onClick={handleClick}
-    >
-      {value}
-    </span>
+    <div className='flex gap-1 items-center'>
+      <span
+        onClick={handleClick}
+        className='font-medium cursor-pointer hover:text-gray-900 transition-colors peer'
+      >
+        {value}
+      </span>
+      <Eye
+        boxSize='4'
+        className='opacity-0 peer-hover:opacity-100 transition-opacity text-gray-400'
+      />
+    </div>
   );
 };
