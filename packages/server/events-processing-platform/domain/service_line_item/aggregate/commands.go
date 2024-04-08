@@ -42,6 +42,13 @@ func (a *ServiceLineItemAggregate) createServiceLineItem(ctx context.Context, cm
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
 
+	// fail if quantity or price is negative
+	if cmd.DataFields.Quantity < 0 || cmd.DataFields.Price < 0 {
+		err := errors.New(constants.FieldValidation + ": quantity and price must not be negative")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
 	// Adjust vat rate
 	if cmd.DataFields.VatRate < 0 {
 		cmd.DataFields.VatRate = 0
@@ -95,6 +102,13 @@ func (a *ServiceLineItemAggregate) updateServiceLineItem(ctx context.Context, cm
 
 	if a.ServiceLineItem.IsDeleted {
 		err := errors.New(constants.Validate + ": cannot update a deleted service line item")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	// fail if quantity or price is negative
+	if cmd.DataFields.Quantity < 0 || cmd.DataFields.Price < 0 {
+		err := errors.New(constants.FieldValidation + ": quantity and price must not be negative")
 		tracing.TraceErr(span, err)
 		return err
 	}
