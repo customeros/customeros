@@ -595,7 +595,6 @@ func (h *InvoiceEventHandler) callFillInvoice(ctx context.Context, tenant, invoi
 			Tenant:    tenant,
 			InvoiceId: invoiceId,
 			DryRun:    dryRun,
-			Preview:   preview,
 			Note:      note,
 			Customer: &invoicepb.FillInvoiceCustomer{
 				Name:         customerName,
