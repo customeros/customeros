@@ -586,10 +586,19 @@ export type Contract = MetadataInterface & {
   billingCycle?: Maybe<ContractBillingCycle>;
   billingDetails?: Maybe<BillingDetails>;
   billingEnabled: Scalars['Boolean']['output'];
+  committedPeriodInMonths?: Maybe<Scalars['Int64']['output']>;
+  /**
+   * Deprecated, use committedPeriodInMonths instead.
+   * @deprecated Use committedPeriodInMonths instead.
+   */
   committedPeriods?: Maybe<Scalars['Int64']['output']>;
   contractEnded?: Maybe<Scalars['Time']['output']>;
   contractLineItems?: Maybe<Array<ServiceLineItem>>;
   contractName: Scalars['String']['output'];
+  /**
+   * Deprecated, use committedPeriodInMonths instead.
+   * @deprecated Use committedPeriodInMonths instead.
+   */
   contractRenewalCycle: ContractRenewalCycle;
   contractSigned?: Maybe<Scalars['Time']['output']>;
   contractStatus: ContractStatus;
@@ -703,6 +712,7 @@ export type Contract = MetadataInterface & {
   zip?: Maybe<Scalars['String']['output']>;
 };
 
+/** Deprecated */
 export enum ContractBillingCycle {
   AnnualBilling = 'ANNUAL_BILLING',
   MonthlyBilling = 'MONTHLY_BILLING',
@@ -716,8 +726,11 @@ export type ContractInput = {
   /** Deprecated */
   billingCycle?: InputMaybe<ContractBillingCycle>;
   billingEnabled?: InputMaybe<Scalars['Boolean']['input']>;
+  committedPeriodInMonths?: InputMaybe<Scalars['Int64']['input']>;
+  /** Deprecated, use committedPeriodInMonths instead. */
   committedPeriods?: InputMaybe<Scalars['Int64']['input']>;
   contractName?: InputMaybe<Scalars['String']['input']>;
+  /** Deprecated, use committedPeriodInMonths instead. */
   contractRenewalCycle?: InputMaybe<ContractRenewalCycle>;
   contractSigned?: InputMaybe<Scalars['Time']['input']>;
   contractUrl?: InputMaybe<Scalars['String']['input']>;
@@ -741,6 +754,7 @@ export type ContractInput = {
   signedAt?: InputMaybe<Scalars['Time']['input']>;
 };
 
+/** Deprecated */
 export enum ContractRenewalCycle {
   AnnualRenewal = 'ANNUAL_RENEWAL',
   MonthlyRenewal = 'MONTHLY_RENEWAL',
@@ -773,10 +787,13 @@ export type ContractUpdateInput = {
   canPayWithCard?: InputMaybe<Scalars['Boolean']['input']>;
   /** Deprecated */
   canPayWithDirectDebit?: InputMaybe<Scalars['Boolean']['input']>;
+  committedPeriodInMonths?: InputMaybe<Scalars['Int64']['input']>;
+  /** Deprecated, use committedPeriodInMonths instead. */
   committedPeriods?: InputMaybe<Scalars['Int64']['input']>;
   contractEnded?: InputMaybe<Scalars['Time']['input']>;
   contractId: Scalars['ID']['input'];
   contractName?: InputMaybe<Scalars['String']['input']>;
+  /** Deprecated, use committedPeriodInMonths instead. */
   contractRenewalCycle?: InputMaybe<ContractRenewalCycle>;
   contractSigned?: InputMaybe<Scalars['Time']['input']>;
   contractUrl?: InputMaybe<Scalars['String']['input']>;

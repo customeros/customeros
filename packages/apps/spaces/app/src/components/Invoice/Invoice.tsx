@@ -5,7 +5,7 @@ import Image from 'next/image';
 
 import { cn } from '@ui/utils/cn';
 import { DateTimeUtils } from '@spaces/utils/date';
-import { Invoice, BankAccount } from '@graphql/types';
+import { BankAccount, Invoice as InvoiceType } from '@graphql/types';
 
 import { ServicesTable } from './ServicesTable';
 import logoCustomerOs from './assets/customeros-logo-tiny.png';
@@ -50,7 +50,7 @@ type InvoiceProps = {
   isInvoiceBankDetailsHovered?: boolean;
   isInvoiceBankDetailsFocused?: boolean;
   canPayWithBankTransfer?: boolean | null;
-  lines: Partial<Invoice['invoiceLineItems']>;
+  lines: Partial<InvoiceType['invoiceLineItems']>;
   availableBankAccount?: Partial<BankAccount> | null;
 };
 

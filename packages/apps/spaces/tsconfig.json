@@ -21,6 +21,7 @@
       "@ui/*": ["ui/*"],
       "@spaces/utils/*": ["utils/*"],
       "@shared/components/*": ["app/src/components/*"],
+      "@shared/assets/*": ["app/src/assets/*"],
       "@shared/util/*": ["app/src/util/*"],
       "@shared/types/*": ["app/src/types/*"],
       "@shared/hooks/*": ["app/src/hooks/*"],
