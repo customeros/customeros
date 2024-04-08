@@ -122,9 +122,9 @@ func (s *contractService) createContractWithEvents(ctx context.Context, contract
 	} else {
 		renewalCycle := ""
 		if contractDetails.Input.ContractRenewalCycle != nil {
-			renewalCycle = utils.IfNotNilString(contractDetails.Input.ContractRenewalCycle)
+			renewalCycle = contractDetails.Input.ContractRenewalCycle.String()
 		} else if contractDetails.Input.RenewalCycle != nil {
-			renewalCycle = utils.IfNotNilString(contractDetails.Input.RenewalCycle)
+			renewalCycle = contractDetails.Input.RenewalCycle.String()
 		}
 		switch renewalCycle {
 		case model.ContractRenewalCycleMonthlyRenewal.String():
@@ -352,10 +352,12 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 		// prepare length in months from renewal cycle and periods
 		renewalCycle := ""
 		if input.ContractRenewalCycle != nil {
-			renewalCycle = utils.IfNotNilString(*input.ContractRenewalCycle)
+			renewalCycleEnum := *input.ContractRenewalCycle
+			renewalCycle = renewalCycleEnum.String()
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_LENGTH_IN_MONTHS)
 		} else if input.RenewalCycle != nil {
-			renewalCycle = utils.IfNotNilString(*input.RenewalCycle)
+			renewalCycleEnum := *input.RenewalCycle
+			renewalCycle = renewalCycleEnum.String()
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_LENGTH_IN_MONTHS)
 		}
 		switch renewalCycle {
