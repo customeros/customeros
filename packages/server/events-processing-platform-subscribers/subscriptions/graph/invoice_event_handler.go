@@ -193,7 +193,14 @@ func (h *InvoiceEventHandler) OnInvoiceFillV1(ctx context.Context, evt eventstor
 		return err
 	}
 
-	if !eventData.OffCycle && !eventData.DryRun {
+	invoiceEntityAfterFill, err := h.getInvoice(ctx, eventData.Tenant, invoiceId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while getting invoice %s: %s", invoiceId, err.Error())
+		return err
+	}
+
+	if !invoiceEntityAfterFill.OffCycle && !invoiceEntityAfterFill.DryRun {
 		err := h.repositories.Neo4jRepositories.InvoiceWriteRepository.DeleteAllPreviewCycleInvoices(ctx, eventData.Tenant, eventData.ContractId, "")
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -207,20 +214,13 @@ func (h *InvoiceEventHandler) OnInvoiceFillV1(ctx context.Context, evt eventstor
 			h.log.Errorf("Error while calling next preview invoice for contract %s: %s", eventData.ContractId, err.Error())
 			return err
 		}
-	} else if eventData.Preview && eventData.DryRun {
+	} else if invoiceEntityAfterFill.Preview && invoiceEntityAfterFill.DryRun {
 		err := h.repositories.Neo4jRepositories.InvoiceWriteRepository.DeleteAllPreviewCycleInvoices(ctx, eventData.Tenant, eventData.ContractId, invoiceId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while deleting preview invoice for contract %s: %s", eventData.ContractId, err.Error())
 			return err
 		}
-	}
-
-	invoiceEntityAfterFill, err := h.getInvoice(ctx, eventData.Tenant, invoiceId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error while getting invoice %s: %s", invoiceId, err.Error())
-		return err
 	}
 
 	h.createInvoiceAction(ctx, eventData.Tenant, invoiceEntityBeforeFill.Status, *invoiceEntityAfterFill)
