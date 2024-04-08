@@ -44,7 +44,6 @@ defmodule CustomerOsRealtime.ColorManager do
     :ets.new(:color_assignments, [:set, :named_table])
     :ets.new(:color_assignments_counter, [:set, :named_table])
     :ets.insert(:color_assignments_counter, {:counter, 0})
-    Logger.info("Creating ETS #{@name}")
 
     {:ok, self()}
   end
