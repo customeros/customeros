@@ -182,8 +182,11 @@ func (a *ServiceLineItemAggregate) closeServiceLineItem(ctx context.Context, cmd
 	}
 
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
-	endedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.EndedAt, utils.Now())
+	endedAtNotNil := utils.ToDate(utils.IfNotNilTimeWithDefault(cmd.EndedAt, utils.Now()))
 
+	if endedAtNotNil.Before(utils.ToDate(a.ServiceLineItem.StartedAt)) {
+		endedAtNotNil = utils.ToDate(a.ServiceLineItem.StartedAt)
+	}
 	closeEvent, err := event.NewServiceLineItemCloseEvent(a, endedAtNotNil, updatedAtNotNil, cmd.SliIsCanceled)
 	if err != nil {
 		tracing.TraceErr(span, err)
