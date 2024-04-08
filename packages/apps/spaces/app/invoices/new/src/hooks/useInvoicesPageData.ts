@@ -53,8 +53,6 @@ export const useInvoicesPageData = ({ sorting }: UseRenewalsPageDataProps) => {
           filter: {
             property: 'CONTRACT_NAME',
             value: searchTerm,
-            // caseSensitive: false,
-            // operation: ComparisonOperator.Contains,
           },
         });
       }
