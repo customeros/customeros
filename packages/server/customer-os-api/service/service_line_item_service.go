@@ -115,6 +115,13 @@ func (s *serviceLineItemService) createServiceLineItemWithEvents(ctx context.Con
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
+	// check that quantity and price are not negative
+	if serviceLineItemDetails.SliQuantity < 0 || serviceLineItemDetails.SliPrice < 0 {
+		err := errors.New("quantity and price must not be negative")
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+
 	createServiceLineItemRequest := servicelineitempb.CreateServiceLineItemGrpcRequest{
 		Tenant:         common.GetTenantFromContext(ctx),
 		ContractId:     serviceLineItemDetails.ContractId,
@@ -176,6 +183,13 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error on getting contract line item by id {%s}: %s", serviceLineItemDetails.Id, err.Error())
+		return err
+	}
+
+	// check that quantity and price are not negative
+	if serviceLineItemDetails.SliQuantity < 0 || serviceLineItemDetails.SliPrice < 0 {
+		err := errors.New("quantity and price must not be negative")
+		tracing.TraceErr(span, err)
 		return err
 	}
 
@@ -519,6 +533,15 @@ func (s *serviceLineItemService) CreateOrUpdateOrCloseInBulk(ctx context.Context
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Failed to close service line item: %s", err.Error())
 			}
+		}
+	}
+
+	for _, serviceLineItem := range sliBulkData {
+		// check all quantity or price are not negative
+		if serviceLineItem.Quantity < 0 || serviceLineItem.Price < 0 {
+			err = fmt.Errorf("quantity and price must not be negative")
+			tracing.TraceErr(span, err)
+			return []string{}, err
 		}
 	}
 
