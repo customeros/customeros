@@ -24,16 +24,16 @@ export const PeoplePanelSkeleton = () => {
     >
       {Array.from({ length: 3 }).map((_, i) => (
         <Card
-          className='bg-white w-full min-h-[106px] group cursor-pointer border-1 border-gray-200 rounded-lg shadow-xs transition-all duration-200 ease-out hover:shadow-md hover:opacity-1 hover:pointer-events-auto'
+          className='bg-white w-full min-h-[106px] group cursor-pointer border-1 border-gray-200 rounded-lg shadow-xs'
           key={i}
         >
           <CardHeader className='flex p-4 pb-2 relative'>
-            <Skeleton className='size-12 rounded-full ring-offset-1 ring-4 ring-offset-gray-200 ring-gray-100 bg-gradient-to-r from-gray-300 to-gray-100' />
+            <Skeleton className='size-12 rounded-full ring-offset-1 ring-4 ring-offset-gray-200 ring-gray-100' />
 
             <Flex ml='4' flexDir='column' flex='1'>
-              <Skeleton className='h-3 w-[100px] mb-3 bg-gradient-to-r from-gray-300 to-gray-100 rounded-full' />
-              <Skeleton className='h-3 w-[200px] mb-4 bg-gradient-to-r from-gray-300 to-gray-100 rounded-full' />
-              <Skeleton className='h-3 w-[250px] mb-3 bg-gradient-to-r from-gray-300 to-gray-100 rounded-full' />
+              <Skeleton className='h-3 w-[100px] mb-3 rounded-full' />
+              <Skeleton className='h-3 w-[200px] mb-4 rounded-full' />
+              <Skeleton className='h-3 w-[250px] mb-3 rounded-full' />
             </Flex>
           </CardHeader>
         </Card>

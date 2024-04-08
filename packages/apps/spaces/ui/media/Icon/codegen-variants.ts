@@ -53,6 +53,7 @@ export const featureIconVariant = cva(
         greenLight: [],
         violet: [],
         fuchsia: [],
+        blue:[],
       },
     },
     compoundVariants: ${JSON.stringify(compoundVariants, null, 2)}

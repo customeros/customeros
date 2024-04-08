@@ -1,15 +1,12 @@
 'use client';
 import React, { useRef, useMemo } from 'react';
 
-import { Flex } from '@ui/layout/Flex';
-import { Avatar } from '@ui/media/Avatar';
-import { Text } from '@ui/typography/Text';
 import { User01 } from '@ui/media/icons/User01';
 import { Issue, Contact } from '@graphql/types';
-import { Heading } from '@ui/typography/Heading';
+import { Avatar } from '@ui/media/Avatar/Avatar';
 import { DateTimeUtils } from '@spaces/utils/date';
-import { Tag, TagLabel } from '@ui/presentation/Tag';
-import { Card, CardHeader } from '@ui/presentation/Card';
+import { Tag, TagLabel } from '@ui/presentation/Tag/Tag';
+import { Card, CardHeader } from '@ui/presentation/Card/Card';
 import {
   getParticipant,
   getParticipantName,
@@ -58,18 +55,14 @@ export const IssueCard = ({ issue }: IssueCardProps) => {
 
   const participantName = useMemo(
     () => (
-      <Text display='inline'>
+      <span className='inline'>
         {reportedBy ? `Reported` : `Submitted`}
 
-        {(reportedBy || submittedBy) && (
-          <Text as='span' mx={1}>
-            by
-          </Text>
-        )}
-        <Text fontWeight='bold' as='span' mr={1}>
+        {(reportedBy || submittedBy) && <span className='mx-1'>by</span>}
+        <span className='font-bold mr-1'>
           {reportedBy ? reportedBy : submittedBy}
-        </Text>
-      </Text>
+        </span>
+      </span>
     ),
     [reportedBy, submittedBy],
   );
@@ -87,83 +80,57 @@ export const IssueCard = ({ issue }: IssueCardProps) => {
   return (
     <Card
       key={issue.id}
-      w='full'
+      className='w-full shadow-xs cursor-pointer rounded-lg border border-gray-200 bg-white hover:shadow-md p-3'
       ref={cardRef}
-      boxShadow={'xs'}
-      size='sm'
-      cursor='pointer'
-      borderRadius='lg'
-      border='1px solid'
-      borderColor='gray.200'
       onClick={() => openModal(issue.id)}
-      _hover={{
-        boxShadow: 'md',
-        '& > div > #confirm-button': {
-          opacity: '1',
-          pointerEvents: 'auto',
-        },
-      }}
-      transition='all 0.2s ease-out'
     >
       <CardHeader>
-        <Flex flex='1' gap='4' alignItems='flex-start' flexWrap='wrap'>
+        <div className='flex flex-1 gap-4 items-start flex-wrap relative'>
           <Avatar
             size='md'
             name={submittedBy ?? reportedBy}
-            variant='outlined'
+            variant='circle'
+            className='border border-primary-200 text-primary-700'
             src={
               (profilePhoto as unknown as Contact)?.profilePhotoUrl ?? undefined
             }
-            border={'1px solid var(--chakra-colors-primary-200)'}
             icon={<User01 color='primary.700' height='1.8rem' />}
           />
 
-          <Flex direction='column' flex={1}>
-            <Heading
-              mt={1}
-              size='sm'
-              fontSize='sm'
-              noOfLines={1}
-              maxW={titleWidth}
+          <div className='flex flex-col flex-1'>
+            <h2
+              className='mt-1 text-sm line-clamp-1 font-semibold'
+              style={{ maxWidth: titleWidth }}
             >
               {issue?.subject ?? '[No subject]'}
-            </Heading>
+            </h2>
 
-            <Text fontSize='sm' mt={1} mb='2px' lineHeight={1}>
+            <span className='text-sm mt-1 mb-[2px] leading-3 relative'>
               {participantName}
               {DateTimeUtils.timeAgo(issue?.createdAt, { addSuffix: true })}
-            </Text>
+            </span>
 
             {!!issue?.updatedAt && (
-              <Text fontSize='sm' color='gray.500' lineHeight={1}>
+              <span className='text-sm text-gray-500 leading-3'>
                 Last response was{' '}
                 {DateTimeUtils.timeAgo(issue.updatedAt, {
                   addSuffix: true,
                 })}
-              </Text>
+              </span>
             )}
-          </Flex>
+          </div>
 
           {!isStatusClosed && (
             <Tag
-              size='sm'
+              size='md'
               variant='outline'
-              colorScheme='blue'
-              border='1px solid'
-              background='white'
-              borderColor={`${[statusColorScheme]}.200`}
-              backgroundColor={`${[statusColorScheme]}.50`}
-              color={`${[statusColorScheme]}.700`}
-              boxShadow='none'
-              fontWeight='normal'
-              minHeight={6}
-              position='absolute'
-              right={3}
+              colorScheme={statusColorScheme}
+              style={{ position: 'absolute', right: '0' }}
             >
-              <TagLabel textTransform='capitalize'>{displayStatus}</TagLabel>
+              <TagLabel className='capitalize'>{displayStatus}</TagLabel>
             </Tag>
           )}
-        </Flex>
+        </div>
       </CardHeader>
     </Card>
   );

@@ -200,7 +200,7 @@ export const Avatar: React.FC<AvatarProps> = ({
           {icon}
         </RadixAvatar.Fallback>
       )}
-      {!icon && !src && name && (
+      {(!icon || name) && !src && (
         <RadixAvatar.Fallback
           className={twMerge(
             'leading-1 flex h-full w-full items-center justify-center font-bold',

@@ -19,6 +19,7 @@ export const featureIconVariant = cva(
         greenLight: [],
         violet: [],
         fuchsia: [],
+        blue: [],
       },
     },
     compoundVariants: [
@@ -80,6 +81,12 @@ export const featureIconVariant = cva(
         colorScheme: 'success',
         className: [
           'bg-success-100 ring-success-50 ring-offset-success-100 text-success-500',
+        ],
+      },
+      {
+        colorScheme: 'blue',
+        className: [
+          'bg-blue-100 ring-blue-50 ring-offset-blue-100 text-blue-500',
         ],
       },
       {
