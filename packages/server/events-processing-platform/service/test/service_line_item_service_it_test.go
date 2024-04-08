@@ -40,7 +40,7 @@ func TestServiceLineItemService_CreateServiceLineItem(t *testing.T) {
 		ContractId:     contractId,
 		Billed:         commonpb.BilledType_MONTHLY_BILLED,
 		Quantity:       10,
-		Price:          -1.0123456789,
+		Price:          1.0123456789,
 		Name:           "Test service line item",
 		SourceFields: &commonpb.SourceFields{
 			AppSource: "event-processing-platform",
@@ -76,7 +76,7 @@ func TestServiceLineItemService_CreateServiceLineItem(t *testing.T) {
 	require.Nil(t, err, "Failed to unmarshal event data")
 	require.Equal(t, model.MonthlyBilled.String(), eventData.Billed)
 	require.Equal(t, int64(10), eventData.Quantity)
-	require.Equal(t, -1.0123456789, eventData.Price)
+	require.Equal(t, 1.0123456789, eventData.Price)
 	require.Equal(t, "Test service line item", eventData.Name)
 	require.Equal(t, contractId, eventData.ContractId)
 }
