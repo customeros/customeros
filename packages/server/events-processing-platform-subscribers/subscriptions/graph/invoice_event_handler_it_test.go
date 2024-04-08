@@ -346,7 +346,7 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 	require.True(t, calledGenerateInvoicePdfGrpcRequest)
 }
 
-func TestInvoiceEventHandler_OnInvoiceFillV1_GenerateNextInvoiceNotCalled(t *testing.T) {
+func TestInvoiceEventHandler_OnInvoiceFillV1_GenerateNextInvoice_NotCalled(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
@@ -356,6 +356,8 @@ func TestInvoiceEventHandler_OnInvoiceFillV1_GenerateNextInvoiceNotCalled(t *tes
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, organizationId, neo4jentity.ContractEntity{})
 	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.InvoiceEntity{
 		Currency: neo4jenum.CurrencyEUR,
+		DryRun:   true,
+		Preview:  false,
 	})
 
 	// prepare grpc mock
