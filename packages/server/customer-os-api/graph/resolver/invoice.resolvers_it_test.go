@@ -126,28 +126,10 @@ func TestInvoiceResolver_Invoices_Contract_Name(t *testing.T) {
 	contract3Id := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organizationId, neo4jentity.ContractEntity{
 		Name: "B",
 	})
-	neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contract3Id, neo4jentity.InvoiceEntity{})
+	invoice3Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contract3Id, neo4jentity.InvoiceEntity{})
 
-	rawResponse := callGraphQL(t, "invoice/get_invoices_filter_contract_name", map[string]interface{}{
-		"page":         0,
-		"limit":        10,
-		"contractName": "A",
-	})
-	require.Nil(t, rawResponse.Errors)
-
-	var invoiceStruct struct {
-		Invoices model.InvoicesPage
-	}
-
-	err := decode.Decode(rawResponse.Data.(map[string]any), &invoiceStruct)
-	require.Nil(t, err)
-
-	require.Equal(t, int64(2), invoiceStruct.Invoices.TotalElements)
-	require.Equal(t, int64(3), invoiceStruct.Invoices.TotalAvailable)
-	require.Equal(t, 2, len(invoiceStruct.Invoices.Content))
-
-	require.Contains(t, []string{invoice1Id, invoice2Id}, invoiceStruct.Invoices.Content[0].Metadata.ID)
-	require.Contains(t, []string{invoice1Id, invoice2Id}, invoiceStruct.Invoices.Content[1].Metadata.ID)
+	assertInvoicesFilter(t, "CONTRACT_NAME", "A", []string{invoice1Id, invoice2Id}, int64(3))
+	assertInvoicesFilter(t, "CONTRACT_NAME", "B", []string{invoice3Id}, int64(3))
 }
 
 func TestInvoiceResolver_Invoices_Contract_BillingCycle(t *testing.T) {
@@ -169,12 +151,25 @@ func TestInvoiceResolver_Invoices_Contract_BillingCycle(t *testing.T) {
 	contract3Id := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organizationId, neo4jentity.ContractEntity{
 		BillingCycle: neo4jenum.BillingCycleAnnuallyBilling,
 	})
-	neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contract3Id, neo4jentity.InvoiceEntity{})
+	invoice3Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contract3Id, neo4jentity.InvoiceEntity{})
 
-	rawResponse := callGraphQL(t, "invoice/get_invoices_filter_contract_billing_cycle", map[string]interface{}{
-		"page":                 0,
-		"limit":                10,
-		"contractBillingCycle": []string{"MONTHLY", "QUARTERLY"},
+	contract4Id := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organizationId, neo4jentity.ContractEntity{
+		BillingCycle: neo4jenum.BillingCycleNone,
+	})
+	invoice4Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contract4Id, neo4jentity.InvoiceEntity{})
+
+	assertInvoicesFilter(t, "CONTRACT_BILLING_CYCLE", []string{"NONE"}, []string{invoice4Id}, int64(4))
+	assertInvoicesFilter(t, "CONTRACT_BILLING_CYCLE", []string{"MONTHLY"}, []string{invoice1Id}, int64(4))
+	assertInvoicesFilter(t, "CONTRACT_BILLING_CYCLE", []string{"QUARTERLY"}, []string{invoice2Id}, int64(4))
+	assertInvoicesFilter(t, "CONTRACT_BILLING_CYCLE", []string{"ANNUALLY"}, []string{invoice3Id}, int64(4))
+}
+
+func assertInvoicesFilter(t *testing.T, propertyName string, propertyValue any, expectedInvoiceOrderIds []string, totalAvailable int64) {
+	rawResponse := callGraphQL(t, "invoice/get_invoices_filter", map[string]interface{}{
+		"page":     0,
+		"limit":    10,
+		"property": propertyName,
+		"value":    propertyValue,
 	})
 	require.Nil(t, rawResponse.Errors)
 
@@ -185,12 +180,13 @@ func TestInvoiceResolver_Invoices_Contract_BillingCycle(t *testing.T) {
 	err := decode.Decode(rawResponse.Data.(map[string]any), &invoiceStruct)
 	require.Nil(t, err)
 
-	require.Equal(t, int64(2), invoiceStruct.Invoices.TotalElements)
-	require.Equal(t, int64(3), invoiceStruct.Invoices.TotalAvailable)
-	require.Equal(t, 2, len(invoiceStruct.Invoices.Content))
+	require.Equal(t, totalAvailable, invoiceStruct.Invoices.TotalAvailable)
+	require.Equal(t, int64(len(expectedInvoiceOrderIds)), invoiceStruct.Invoices.TotalElements)
+	require.Equal(t, len(expectedInvoiceOrderIds), len(invoiceStruct.Invoices.Content))
 
-	require.Contains(t, []string{invoice1Id, invoice2Id}, invoiceStruct.Invoices.Content[0].Metadata.ID)
-	require.Contains(t, []string{invoice1Id, invoice2Id}, invoiceStruct.Invoices.Content[1].Metadata.ID)
+	for _, invoice := range invoiceStruct.Invoices.Content {
+		require.Contains(t, expectedInvoiceOrderIds, invoice.Metadata.ID)
+	}
 }
 
 func TestInvoiceResolver_Invoices_Contract_Ended_False(t *testing.T) {

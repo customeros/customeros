@@ -1,0 +1,22 @@
+query GetInvoice($page: Int!, $limit: Int!, $property : String!, $value: Any!) {
+  invoices(pagination: {page: $page, limit: $limit}
+              where: {AND:[
+                            {filter: {property: $property value: $value operation:IN}}
+                          ]
+                     }
+  )
+  {
+      totalPages
+      totalElements
+      totalAvailable
+      content {
+        metadata {
+            id
+        }
+        invoiceNumber
+        invoiceLineItems {
+            description
+        }
+      }
+  }
+}
