@@ -1440,6 +1440,7 @@ type ComplexityRoot struct {
 
 	ServiceLineItem struct {
 		BillingCycle   func(childComplexity int) int
+		Closed         func(childComplexity int) int
 		Comments       func(childComplexity int) int
 		CreatedBy      func(childComplexity int) int
 		Description    func(childComplexity int) int
@@ -10638,6 +10639,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ServiceLineItem.BillingCycle(childComplexity), true
 
+	case "ServiceLineItem.closed":
+		if e.complexity.ServiceLineItem.Closed == nil {
+			break
+		}
+
+		return e.complexity.ServiceLineItem.Closed(childComplexity), true
+
 	case "ServiceLineItem.comments":
 		if e.complexity.ServiceLineItem.Comments == nil {
 			break
@@ -15183,6 +15191,7 @@ type ServiceLineItem implements MetadataInterface {
     tax:                Tax!
     createdBy:          User @goField(forceResolver: true)
     externalLinks:      [ExternalSystem!]! @goField(forceResolver: true)
+    closed:             Boolean!
 }
 
 input ServiceLineItemInput {
@@ -27597,6 +27606,8 @@ func (ec *executionContext) fieldContext_Contract_contractLineItems(ctx context.
 				return ec.fieldContext_ServiceLineItem_createdBy(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_ServiceLineItem_externalLinks(ctx, field)
+			case "closed":
+				return ec.fieldContext_ServiceLineItem_closed(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ServiceLineItem", field.Name)
 		},
@@ -29144,6 +29155,8 @@ func (ec *executionContext) fieldContext_Contract_serviceLineItems(ctx context.C
 				return ec.fieldContext_ServiceLineItem_createdBy(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_ServiceLineItem_externalLinks(ctx, field)
+			case "closed":
+				return ec.fieldContext_ServiceLineItem_closed(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ServiceLineItem", field.Name)
 		},
@@ -64179,6 +64192,8 @@ func (ec *executionContext) fieldContext_Mutation_contractLineItem_Create(ctx co
 				return ec.fieldContext_ServiceLineItem_createdBy(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_ServiceLineItem_externalLinks(ctx, field)
+			case "closed":
+				return ec.fieldContext_ServiceLineItem_closed(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ServiceLineItem", field.Name)
 		},
@@ -64290,6 +64305,8 @@ func (ec *executionContext) fieldContext_Mutation_contractLineItem_Update(ctx co
 				return ec.fieldContext_ServiceLineItem_createdBy(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_ServiceLineItem_externalLinks(ctx, field)
+			case "closed":
+				return ec.fieldContext_ServiceLineItem_closed(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ServiceLineItem", field.Name)
 		},
@@ -82338,6 +82355,8 @@ func (ec *executionContext) fieldContext_Query_serviceLineItem(ctx context.Conte
 				return ec.fieldContext_ServiceLineItem_createdBy(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_ServiceLineItem_externalLinks(ctx, field)
+			case "closed":
+				return ec.fieldContext_ServiceLineItem_closed(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ServiceLineItem", field.Name)
 		},
@@ -85336,6 +85355,50 @@ func (ec *executionContext) fieldContext_ServiceLineItem_externalLinks(ctx conte
 				return ec.fieldContext_ExternalSystem_externalSource(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ExternalSystem", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ServiceLineItem_closed(ctx context.Context, field graphql.CollectedField, obj *model.ServiceLineItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ServiceLineItem_closed(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Closed, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ServiceLineItem_closed(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ServiceLineItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -113425,6 +113488,11 @@ func (ec *executionContext) _ServiceLineItem(ctx context.Context, sel ast.Select
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "closed":
+			out.Values[i] = ec._ServiceLineItem_closed(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

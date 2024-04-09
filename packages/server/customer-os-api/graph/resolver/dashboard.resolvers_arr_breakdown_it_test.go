@@ -516,10 +516,10 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_No_Recurring_SLI(t *testing.T) {
 	sli1StartedAt := utils.FirstTimeOfMonth(2023, 7)
 
 	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
-		Price:      1,
-		Quantity:   2,
-		IsCanceled: true,
-		StartedAt:  sli1StartedAt,
+		Price:     1,
+		Quantity:  2,
+		Canceled:  true,
+		StartedAt: sli1StartedAt,
 	})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",

@@ -448,7 +448,7 @@ func TestServiceLineItemEventHandler_OnClose(t *testing.T) {
 	require.Equal(t, serviceLineItemId, serviceLineItem.ID)
 	require.Equal(t, now, serviceLineItem.UpdatedAt)
 	require.Equal(t, utils.ToDate(now), *serviceLineItem.EndedAt)
-	require.True(t, serviceLineItem.IsCanceled)
+	require.True(t, serviceLineItem.Canceled)
 
 	// verify events platform was called
 	require.True(t, calledEventsPlatformToUpdateOpportunity)

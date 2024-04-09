@@ -2497,6 +2497,7 @@ type ServiceLineItem struct {
 	Tax            *Tax              `json:"tax"`
 	CreatedBy      *User             `json:"createdBy,omitempty"`
 	ExternalLinks  []*ExternalSystem `json:"externalLinks"`
+	Closed         bool              `json:"closed"`
 }
 
 func (ServiceLineItem) IsMetadataInterface()        {}

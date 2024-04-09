@@ -29,6 +29,7 @@ func MapEntityToServiceLineItem(entity *neo4jentity.ServiceLineItemEntity) *mode
 		Tax: &model.Tax{
 			TaxRate: entity.VatRate,
 		},
+		Closed: entity.Canceled,
 	}
 }
 
