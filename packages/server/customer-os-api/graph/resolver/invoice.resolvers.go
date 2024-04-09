@@ -82,37 +82,6 @@ func (r *mutationResolver) InvoiceNextDryRunForContract(ctx context.Context, con
 	return invoiceId, nil
 }
 
-// InvoiceSimulate is the resolver for the invoice_Simulate field.
-func (r *mutationResolver) InvoiceSimulate(ctx context.Context, input model.InvoiceSimulateInput) (string, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InvoiceResolver.InvoiceSimulate", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.Object("request.input", input))
-
-	simulateInvoiceData := service.SimulateInvoiceData{
-		ContractId: input.ContractID,
-		Date:       input.PeriodStartDate,
-	}
-	for _, invoiceLine := range input.InvoiceLines {
-		simulateInvoiceData.InvoiceLines = append(simulateInvoiceData.InvoiceLines, service.SimulateInvoiceLineData{
-			ServiceLineItemID: invoiceLine.ServiceLineItemID,
-			Name:              invoiceLine.Name,
-			Billed:            mapper.MapBilledTypeFromModel(invoiceLine.Billed),
-			Price:             invoiceLine.Price,
-			Quantity:          invoiceLine.Quantity,
-		})
-	}
-
-	invoiceId, err := r.Services.InvoiceService.SimulateInvoice(ctx, &simulateInvoiceData)
-
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to simulate invoice")
-		return "", err
-	}
-	return invoiceId, nil
-}
-
 // InvoiceUpdate is the resolver for the invoice_Update field.
 func (r *mutationResolver) InvoiceUpdate(ctx context.Context, input model.InvoiceUpdateInput) (*model.Invoice, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.InvoiceUpdate", graphql.GetOperationContext(ctx))
@@ -242,6 +211,40 @@ func (r *mutationResolver) InvoiceVoid(ctx context.Context, id string) (*model.I
 	}
 
 	return mapper.MapEntityToInvoice(invoiceEntity), nil
+}
+
+// InvoiceSimulate is the resolver for the invoice_Simulate field.
+func (r *mutationResolver) InvoiceSimulate(ctx context.Context, input model.InvoiceSimulateInput) ([]*model.Invoice, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InvoiceResolver.InvoiceSimulate", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.Object("request.input", input))
+
+	simulateInvoiceData := service.SimulateInvoiceData{
+		ContractId: input.ContractID,
+	}
+	for _, serviceLine := range input.ServiceLines {
+		simulateInvoiceData.InvoiceLines = append(simulateInvoiceData.InvoiceLines, service.SimulateInvoiceLineData{
+			ServiceLineItemID: serviceLine.ServiceLineItemID,
+			ParentID:          serviceLine.ParentID,
+			Description:       serviceLine.Description,
+			Comments:          serviceLine.Comments,
+			BillingCycle:      mapper.MapBilledTypeFromModel(serviceLine.BillingCycle),
+			Price:             serviceLine.Price,
+			Quantity:          serviceLine.Quantity,
+			ServiceStarted:    serviceLine.ServiceStarted,
+			TaxRate:           serviceLine.TaxRate,
+		})
+	}
+
+	invoiceEntities, err := r.Services.InvoiceService.SimulateInvoice(ctx, &simulateInvoiceData)
+
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to simulate invoice")
+		return nil, err
+	}
+	return mapper.MapEntitiesToInvoices(invoiceEntities), nil
 }
 
 // Invoice is the resolver for the invoice field.

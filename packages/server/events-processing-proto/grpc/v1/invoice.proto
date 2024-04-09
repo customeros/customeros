@@ -110,24 +110,6 @@ message PdfGeneratedInvoiceRequest {
   string appSource = 6;
 }
 
-message SimulateInvoiceRequest {
-  string tenant = 1;
-  string loggedInUserId = 2;
-  string contractId = 3;
-  google.protobuf.Timestamp date = 4;
-  repeated DryRunServiceLineItem dryRunServiceLineItems = 6;
-  google.protobuf.Timestamp createdAt = 7;
-  SourceFields sourceFields = 8;
-}
-
-message DryRunServiceLineItem {
-  string serviceLineItemId = 1;
-  string name = 3;
-  BilledType billed = 4;
-  double price = 5;
-  int64 quantity = 6;
-}
-
 message UpdateInvoiceRequest {
   string tenant = 1;
   string loggedInUserId = 2;
@@ -185,7 +167,6 @@ service InvoiceGrpcService {
   rpc FillInvoice(FillInvoiceRequest) returns (InvoiceIdResponse);
   rpc GenerateInvoicePdf(GenerateInvoicePdfRequest) returns (InvoiceIdResponse);
   rpc PdfGeneratedInvoice(PdfGeneratedInvoiceRequest) returns (InvoiceIdResponse);
-  rpc SimulateInvoice(SimulateInvoiceRequest) returns (InvoiceIdResponse);
   rpc UpdateInvoice(UpdateInvoiceRequest) returns (InvoiceIdResponse);
   rpc PayInvoiceNotification(PayInvoiceNotificationRequest) returns (InvoiceIdResponse);
   rpc RequestFillInvoice(RequestFillInvoiceRequest) returns (InvoiceIdResponse);
