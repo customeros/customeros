@@ -172,7 +172,7 @@ export const AboutPanel = () => {
             isLoading={isLoading}
           />
 
-          {!data?.organization?.referenceId && (
+          {data?.organization?.referenceId && (
             <div className='h-full ml-4'>
               <Tooltip label={'Copy ID'} asChild={false}>
                 <Tag
@@ -186,9 +186,7 @@ export const AboutPanel = () => {
                     );
                   }}
                 >
-                  <TagLabel>
-                    {data?.organization?.referenceId ?? 'ASD'}
-                  </TagLabel>
+                  <TagLabel>{data?.organization?.referenceId}</TagLabel>
                 </Tag>
               </Tooltip>
             </div>
