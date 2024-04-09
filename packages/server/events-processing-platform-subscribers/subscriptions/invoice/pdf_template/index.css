@@ -40,7 +40,7 @@
   flex-grow: 1;
   align-items: flex-start;
   flex-shrink: 0;
-  flex-direction: column;
+  flex-direction: row;
 }
 .invoice-text-title {
   color: var(--dl-color-gray-700);
@@ -77,6 +77,16 @@
   max-height: 64px;
   display: block;
   margin-left: auto;
+}
+.invoice-preview-container {
+  display: flex;
+  margin-top: 6px;
+  margin-left: 16px;
+}
+.invoice-preview-logo {
+  transform: rotate(-10deg);
+  display: block;
+  width: 95px;
 }
 .invoice-issued-info-frame {
   gap: 40px;

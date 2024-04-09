@@ -113,14 +113,22 @@
             <div class="invoice-header">
                 <div class="invoice-header-frame">
                     <div class="invoice-title-container">
-                        <div class="InvoiceHeading">
-                            Invoice
-                        </div>
-                        <div class="invoice-number-container">
-                            <div class="invoice-number">
-                                N° {{.InvoiceNumber}}
+                        <div style="display: flex; flex-direction: column">
+                            <div class="InvoiceHeading">
+                                Invoice
+                            </div>
+                            <div class="invoice-number-container">
+                                <div class="invoice-number">
+                                    N° {{.InvoiceNumber}}
+                                </div>
                             </div>
                         </div>
+                        {{if .DryRun}}
+                        <div class="invoice-preview-container">
+                            <img alt="Preview" class="invoice-preview-logo" src="preview-stamp.png"/>
+                        </div>
+                        {{else}}
+                        {{end}}
                     </div>
                     <div class="invoice-logo-container">
                         {{if .ProviderLogoExtension}}
@@ -412,7 +420,8 @@
     {{if .CanPayByCheck}}
     <div class="invoice-printed-frame3615">
         <div class="invoice-text-left TextsmRegular">
-            Want to pay by check? Contact <a style="text-decoration: underline;" href="mailto:{{.ProviderEmail}}?subject=Payment by check for invoice {{.InvoiceNumber}}&body=Hi team, I would like to pay by check">{{.ProviderEmail}}</a>
+            Want to pay by check? Contact <a style="text-decoration: underline;"
+                                             href="mailto:{{.ProviderEmail}}?subject=Payment by check for invoice {{.InvoiceNumber}}&body=Hi team, I would like to pay by check">{{.ProviderEmail}}</a>
         </div>
     </div>
     {{end}}

@@ -127,13 +127,16 @@ func main() {
 func testCreateInvoice() {
 	today := utils.Now()
 	in1Month := today.AddDate(0, 1, 0)
+	contractId := "769d1fb8-50a1-44bc-aff0-0f4338bd8ff2"
 	result, err := clients.InvoiceClient.NewInvoiceForContract(context.Background(), &invoicepb.NewInvoiceForContractRequest{
 		Tenant:             tenant,
-		ContractId:         "e9833f2c-e4c6-43ed-a35c-3c7726b5bb0d",
+		ContractId:         contractId,
 		Currency:           "USD",
 		InvoicePeriodStart: utils.ConvertTimeToTimestampPtr(&today),
 		InvoicePeriodEnd:   utils.ConvertTimeToTimestampPtr(&in1Month),
-		OffCycle:           true,
+		OffCycle:           false,
+		BillingCycle:       commonpb.BillingCycle_MONTHLY_BILLING,
+		DryRun:             true,
 		SourceFields: &commonpb.SourceFields{
 			AppSource: appSource,
 		},
@@ -180,7 +183,7 @@ func testAddTenantBillingProfile() {
 }
 
 func testRequestGenerateSummaryRequest() {
-	tenant := "openline"
+
 	interactionEventId := "555263fe-2e39-48f0-a8c2-c4c7a5ffb23d"
 
 	result, _ := clients.InteractionEventClient.RequestGenerateSummary(context.Background(), &iepb.RequestGenerateSummaryGrpcRequest{
@@ -191,7 +194,7 @@ func testRequestGenerateSummaryRequest() {
 }
 
 func testRequestGenerateActionItemsRequest() {
-	tenant := "openline"
+
 	interactionEventId := "555263fe-2e39-48f0-a8c2-c4c7a5ffb23d"
 
 	result, _ := clients.InteractionEventClient.RequestGenerateActionItems(context.Background(), &iepb.RequestGenerateActionItemsGrpcRequest{
@@ -217,7 +220,7 @@ func testCreateOrganization() {
 }
 
 func testUpdateWithUpsertOrganization() {
-	tenant := "openline"
+
 	organizationId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
 	website := "xtz.com"
 	lastFoundingAmont := "1Million"
@@ -232,7 +235,7 @@ func testUpdateWithUpsertOrganization() {
 }
 
 func testUpdateOrganization() {
-	tenant := "openline"
+
 	organizationId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
 	name := "xtz.com"
 
@@ -246,7 +249,7 @@ func testUpdateOrganization() {
 }
 
 func testHideOrganization() {
-	tenant := "openline"
+
 	organizationId := "ccc"
 
 	result, _ := clients.OrganizationClient.HideOrganization(context.Background(), &organizationpb.OrganizationIdGrpcRequest{
@@ -257,7 +260,7 @@ func testHideOrganization() {
 }
 
 func testShowOrganization() {
-	tenant := "openline"
+
 	organizationId := "ccc"
 
 	result, _ := clients.OrganizationClient.ShowOrganization(context.Background(), &organizationpb.OrganizationIdGrpcRequest{
@@ -268,7 +271,7 @@ func testShowOrganization() {
 }
 
 func testCreateLogEntry() {
-	tenant := "openline"
+
 	organizationId := "2829263d-b489-4e92-b0ba-b1bca9ff4d04"
 	userId := "development@openline.ai"
 	authorId := "c61f8af2-0e46-4464-a5db-ded8e4fe242f"
@@ -288,7 +291,7 @@ func testCreateLogEntry() {
 }
 
 func testUpdateLogEntry() {
-	tenant := "openline"
+
 	userId := "development@openline.ai"
 	logEntryId := "ccffe134-4bcd-4fa0-955f-c79b9e1a985f"
 
@@ -304,7 +307,7 @@ func testUpdateLogEntry() {
 }
 
 func testAddCustomField() {
-	tenant := "openline"
+
 	organizationId := "5e72b6fb-5f20-4973-9b96-52f4543a0df3"
 	userId := "development@openline.ai"
 	result, _ := clients.OrganizationClient.UpsertCustomFieldToOrganization(context.Background(), &organizationpb.CustomFieldForOrganizationGrpcRequest{
@@ -337,7 +340,7 @@ func testCreateEmail() {
 }
 
 func testCreatePhoneNumber() {
-	tenant := "openline"
+
 	userId := "697563a8-171c-4950-a067-1aaaaf2de1d8"
 	rawPhoneNumber := "+12345"
 
@@ -350,7 +353,7 @@ func testCreatePhoneNumber() {
 }
 
 func testAddParentOrganization() {
-	tenant := "openline"
+
 	orgId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
 	parentOrgId := ""
 	relType := "store"
@@ -370,7 +373,7 @@ func testAddParentOrganization() {
 }
 
 func testRemoveParentOrganization() {
-	tenant := "openline"
+
 	orgId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
 	parentOrgId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
 	result, err := clients.OrganizationClient.RemoveParentOrganization(context.Background(), &organizationpb.RemoveParentOrganizationGrpcRequest{
@@ -401,7 +404,7 @@ func testCreateContact() {
 }
 
 func testUpdateContact() {
-	tenant := "openline"
+
 	contactId := "dd7bd45e-d6d3-405c-a7ba-cd4127479c20"
 	name := "hubspot contact 4"
 
@@ -418,7 +421,7 @@ func testUpdateContact() {
 }
 
 func testContactLinkWithLocation() {
-	tenant := "openline"
+
 	contactId := "dd7bd45e-d6d3-405c-a7ba-cd4127479c20"
 	locationId := "bafff70d-7e45-49e5-8732-6e2a362a3ee9"
 
@@ -432,7 +435,7 @@ func testContactLinkWithLocation() {
 }
 
 func testContactLinkWithPhoneNumber() {
-	tenant := "openline"
+
 	contactId := "dd7bd45e-d6d3-405c-a7ba-cd4127479c20"
 	phoneNumberId := "c21c0352-14d8-474a-afcd-167daa99e321"
 
@@ -448,7 +451,7 @@ func testContactLinkWithPhoneNumber() {
 }
 
 func testContactLinkWithEmail() {
-	tenant := "openline"
+
 	contactId := "dd7bd45e-d6d3-405c-a7ba-cd4127479c20"
 	emailId := "548a69d2-90fe-439d-b5bb-ee7b68e17d34"
 
@@ -464,7 +467,7 @@ func testContactLinkWithEmail() {
 }
 
 func testOrganizationLinkWithLocation() {
-	tenant := "openline"
+
 	orgId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
 	locationId := "bafff70d-7e45-49e5-8732-6e2a362a3ee9"
 
@@ -477,7 +480,7 @@ func testOrganizationLinkWithLocation() {
 }
 
 func testOrganizationLinkWithPhoneNumber() {
-	tenant := "openline"
+
 	orgId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
 	phoneNumberId := "c21c0352-14d8-474a-afcd-167daa99e321"
 
@@ -492,7 +495,7 @@ func testOrganizationLinkWithPhoneNumber() {
 }
 
 func testOrganizationLinkWithEmail() {
-	tenant := "openline"
+
 	orgId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
 	emailId := "548a69d2-90fe-439d-b5bb-ee7b68e17d34"
 
@@ -527,7 +530,7 @@ func testContactLinkWithOrganization() {
 }
 
 func testCreateIssue() {
-	tenant := "openline"
+
 	userId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
 	subject := "test issue"
 	description := "nice issue"
@@ -558,7 +561,7 @@ func testCreateIssue() {
 }
 
 func testUpdateIssue() {
-	tenant := "openline"
+
 	userId := "697563a8-171c-4950-a067-1aaaaf2de1d8"
 	issueId := "ed17dbab-e79b-4e87-8914-2d93ed55324b"
 	desription := "updated description"
@@ -586,7 +589,7 @@ func testUpdateIssue() {
 }
 
 func testCreateComment() {
-	tenant := "openline"
+
 	userId := "0fe25c46-bdac-485d-a5d5-a4a0390778ad"
 	content := "hellow world"
 	contentType := "text/plain"
@@ -613,7 +616,7 @@ func testCreateComment() {
 }
 
 func testUserLinkWithEmail() {
-	tenant := "openline"
+
 	userId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
 	emailId := "548a69d2-90fe-439d-b5bb-ee7b68e17d34"
 	appSource := "integration.app"
@@ -636,7 +639,7 @@ func testUserLinkWithEmail() {
 
 func testCreateContract() {
 	userId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
-	organizationId := "cd00e7a7-4752-4b72-8d94-71fa569f08f1"
+	organizationId := "0f4114c4-c010-4303-a42a-460cf66ac598"
 	now := utils.Now()
 	aYearAgo := now.AddDate(-1, 0, 0)
 
@@ -656,7 +659,7 @@ func testCreateContract() {
 }
 
 func testUpdateContract() {
-	tenant := "openline"
+
 	userId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
 	contractId := "c5486341-c7d8-47eb-b75a-4016b8e3d6d5"
 	in10Days := utils.Now().AddDate(0, 0, 10)
@@ -682,9 +685,8 @@ func testUpdateContract() {
 }
 
 func testAddContractService() {
-	tenant := "openline"
 	userId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
-	contractId := "c5486341-c7d8-47eb-b75a-4016b8e3d6d5"
+	contractId := "769d1fb8-50a1-44bc-aff0-0f4338bd8ff2"
 	price := 0.004
 	billed := commonpb.BilledType_ONCE_BILLED
 
@@ -707,7 +709,7 @@ func testAddContractService() {
 }
 
 func testCloseLooseOpportunity() {
-	tenant := "openline"
+
 	userId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
 	opportunityId := "d8305351-8568-4d97-9fe9-c6cf701636d0"
 
@@ -724,7 +726,7 @@ func testCloseLooseOpportunity() {
 }
 
 func testUpdateOnboardingStatus() {
-	tenant := "openline"
+
 	userId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
 	orgId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
 
@@ -743,7 +745,7 @@ func testUpdateOnboardingStatus() {
 }
 
 func testUpdateOrgOwner() {
-	tenant := "openline"
+
 	userId := "f7634527-ccda-4cbb-80d8-cc4af9124ef5"
 	actorId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
 	orgId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
