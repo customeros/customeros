@@ -76,8 +76,8 @@ export const InvoicesTable = () => {
         canFetchMore={hasNextPage}
         onSortingChange={setSorting}
         onFetchMore={handleFetchMore}
-        isLoading={isFetching || isLoading}
-        totalItems={isFetching ? 40 : totalCount || 0}
+        isLoading={isLoading}
+        totalItems={isLoading ? 40 : totalCount || 0}
       />
     </>
   );

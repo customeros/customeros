@@ -5,8 +5,8 @@ import React, { useMemo } from 'react';
 import { TenantBillingDetailsDto } from '@settings/components/Tabs/panels/BillingPanel/TenantBillingProfile.dto';
 import { useBankTransferSelectionContext } from '@settings/components/Tabs/panels/BillingPanel/context/BankTransferSelectionContext';
 
-import { DataSource, InvoiceLine } from '@graphql/types';
 import { Invoice } from '@shared/components/Invoice/Invoice';
+import { DataSource, InvoiceLine, InvoiceStatus } from '@graphql/types';
 
 export const BillingPanelInvoice = ({
   values,
@@ -22,7 +22,7 @@ export const BillingPanelInvoice = ({
 
   const invoicePreviewStaticData = useMemo(
     () => ({
-      status: 'Preview',
+      status: InvoiceStatus.Scheduled,
       invoiceNumber: 'INV-003',
       lines: [
         {
@@ -68,8 +68,7 @@ export const BillingPanelInvoice = ({
 
   return (
     <div
-      className='border-r border-gray-300 max-h-[100vh]'
-      style={{ maxWidth: '40rem' }}
+      className='border-r border-gray-300 max-h-[100vh] w-full max-w-[794px]'
     >
       <Invoice
         isInvoiceProviderFocused={

@@ -22,12 +22,6 @@ import { toastError, toastSuccess } from '@ui/presentation/Toast';
 import { useGetContractQuery } from '@organization/src/graphql/getContract.generated';
 import { useUpdateContractMutation } from '@organization/src/graphql/updateContract.generated';
 import {
-  DataSource,
-  BankAccount,
-  InvoiceLine,
-  TenantBillingProfile,
-} from '@graphql/types';
-import {
   Modal,
   ModalFooter,
   ModalHeader,
@@ -38,6 +32,13 @@ import {
   GetContractsQuery,
   useGetContractsQuery,
 } from '@organization/src/graphql/getContracts.generated';
+import {
+  DataSource,
+  BankAccount,
+  InvoiceLine,
+  InvoiceStatus,
+  TenantBillingProfile,
+} from '@graphql/types';
 
 import { BillingDetailsDto } from './BillingDetails.dto';
 import { ContractBillingDetailsForm } from './ContractBillingDetailsForm';
@@ -195,7 +196,7 @@ export const ContractBillingDetailsModal = ({
   };
   const invoicePreviewStaticData = useMemo(
     () => ({
-      status: 'Preview',
+      status: InvoiceStatus.Scheduled,
       invoiceNumber: 'INV-003',
       lines: [
         {
