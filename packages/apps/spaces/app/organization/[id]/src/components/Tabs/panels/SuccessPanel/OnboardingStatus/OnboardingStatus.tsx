@@ -4,13 +4,11 @@ import { useState } from 'react';
 
 import { match } from 'ts-pattern';
 
-import { Flex } from '@ui/layout/Flex';
-import { useDisclosure } from '@ui/utils';
-import { Text } from '@ui/typography/Text';
+import { cn } from '@ui/utils/cn';
 import { Flag04 } from '@ui/media/icons/Flag04';
-import { pulseOpacity } from '@ui/utils/keyframes';
 import { Trophy01 } from '@ui/media/icons/Trophy01';
-import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
+import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
+import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import {
   getDifferenceFromNow,
   getDifferenceInMinutesOrHours,
@@ -41,7 +39,7 @@ export const OnboardingStatus = ({
   data,
   isLoading,
 }: OnboardingStatusProps) => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { open, onClose, onOpen } = useDisclosure();
   const [isFetching, setIsFetching] = useState(false);
 
   const handleIsFetching = (status: boolean) => setIsFetching(status);
@@ -69,7 +67,8 @@ export const OnboardingStatus = ({
   const label =
     labelMap[data?.status ?? OnboardingStatusEnum.NotApplicable].toLowerCase();
 
-  const colorScheme = match(data?.status)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const colorScheme: any = match(data?.status)
     .returnType<string>()
     .with(
       OnboardingStatusEnum.Successful,
@@ -88,21 +87,14 @@ export const OnboardingStatus = ({
 
   return (
     <>
-      <Flex
-        mt='1'
-        gap='4'
-        w='full'
+      <div
+        className={cn(
+          isFetching ? 'opacity-50' : 'opacity-100',
+          reason ? 'justify-start' : 'justify-center',
+          isFetching ? 'animate-pulseOpacity' : 'unset',
+          'flex mt-1 ml-[15px] gap-4 w-full items-center cursor-pointer overflow-visible justify-start',
+        )}
         onClick={onOpen}
-        cursor='pointer'
-        overflow='visible'
-        justify='flex-start'
-        opacity={isFetching ? 0.5 : 1}
-        align={reason ? 'flex-start' : 'center'}
-        animation={
-          isFetching
-            ? `${pulseOpacity} 0.7s infinite alternate ease-in-out`
-            : 'unset'
-        }
       >
         <FeaturedIcon colorScheme={colorScheme}>
           {data?.status === OnboardingStatusEnum.Successful ? (
@@ -111,32 +103,26 @@ export const OnboardingStatus = ({
             <Flag04 />
           )}
         </FeaturedIcon>
-
-        <Flex flexDir='column' display='inline-grid'>
-          <Flex>
-            <Text mr='1' fontWeight='semibold'>
-              Onboarding
-            </Text>
-            <Text color='gray.500'>{`${label} ${
+        <div className='flex-col inline-grid'>
+          <div className='flex'>
+            <span className='ml-1 mr-1 font-semibold'>Onboarding</span>
+            <span className='text-gray-500'>{`${label} ${
               isLoading ? '' : timeElapsed
-            }`}</Text>
-          </Flex>
+            }`}</span>
+          </div>
           {reason && (
-            <Text
-              noOfLines={2}
-              color='gray.500'
-              fontSize='sm'
-            >{`“${reason}”`}</Text>
+            <span className='line-clamp-2 text-gray-500 text-sm'>{`“${reason}”`}</span>
           )}
-        </Flex>
-      </Flex>
-
-      <OnboardingStatusModal
-        data={data}
-        isOpen={isOpen}
-        onClose={onClose}
-        onFetching={handleIsFetching}
-      />
+        </div>
+      </div>
+      {open && (
+        <OnboardingStatusModal
+          isOpen={open}
+          onClose={onClose}
+          data={data}
+          onFetching={handleIsFetching}
+        />
+      )}
     </>
   );
 };

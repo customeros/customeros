@@ -18,6 +18,14 @@ module.exports = {
     },
     extend: {
       keyframes: {
+        pulseOpacity: {
+          from: { opacity: '0.3' },
+          to: { opacity: '0.7' },
+        },
+        wave: {
+          '0%': { transform: 'rotate(0deg)' },
+          '100%': { transform: 'rotate(360deg)' },
+        },
         slideDownAndFade: {
           from: { opacity: '0', transform: 'translateY(-2px)' },
           to: { opacity: '1', transform: 'translateY(0)' },
@@ -79,6 +87,7 @@ module.exports = {
         contentShow: 'contentShow 150ms cubic-bezier(0.16, 1, 0.3, 1)',
         collapseDown: 'collapseDown 400ms cubic-bezier(0.16, 1, 0.3, 1)',
         collapseUp: 'collapseUp 400ms cubic-bezier(0.16, 1, 0.3, 1)',
+        pulseOpacity: 'pulseOpacity 0.7s infinite alternate ease-in-out',
       },
     },
   },

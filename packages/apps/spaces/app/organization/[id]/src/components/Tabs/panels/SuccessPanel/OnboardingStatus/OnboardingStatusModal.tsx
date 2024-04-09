@@ -1,30 +1,29 @@
 'use client';
 
-import { useRef, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { useForm } from 'react-inverted-form';
+import { SelectInstance } from 'react-select';
+import { components, OptionProps } from 'react-select';
+import { useRef, useEffect, FormEvent, useCallback } from 'react';
 
 import set from 'lodash/set';
 import { produce } from 'immer';
 import { match } from 'ts-pattern';
+import { useEffectOnce } from 'usehooks-ts';
 import { useQueryClient } from '@tanstack/react-query';
-import { OptionProps, chakraComponents } from 'chakra-react-select';
 
-import { Box } from '@ui/layout/Box';
-import { Flex } from '@ui/layout/Flex';
-import { Button } from '@ui/form/Button';
-import { Text } from '@ui/typography/Text';
 import { SelectOption } from '@ui/utils/types';
+import { Button } from '@ui/form/Button/Button';
 import { Flag04 } from '@ui/media/icons/Flag04';
 import { Heading } from '@ui/typography/Heading';
 import { toastError } from '@ui/presentation/Toast';
 import { Trophy01 } from '@ui/media/icons/Trophy01';
-import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
-import { FormAutoresizeTextarea } from '@ui/form/Textarea';
-import { FormSelect, SelectInstance } from '@ui/form/SyncSelect';
+import { FormSelect } from '@ui/form/Select/FormSelect';
+import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { OnboardingStatus, OnboardingDetails } from '@graphql/types';
 import { useTimelineMeta } from '@organization/src/components/Timeline/state';
+import { FormAutoresizeTextarea } from '@ui/form/Textarea/FormAutoresizeTextarea2';
 import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
 import { useUpdateOnboardingStatusMutation } from '@organization/src/graphql/updateOnboardingStatus.generated';
 import {
@@ -36,10 +35,11 @@ import {
   ModalBody,
   ModalFooter,
   ModalHeader,
+  ModalPortal,
   ModalContent,
   ModalOverlay,
   ModalCloseButton,
-} from '@ui/overlay/Modal';
+} from '@ui/overlay/Modal/Modal';
 
 import { options } from './util';
 import {
@@ -56,7 +56,8 @@ interface OnboardingStatusModalProps {
 
 const formId = 'onboarding-status-update-form';
 
-const getIconcolorScheme = (status: OnboardingStatus) =>
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const getIconcolorScheme: any = (status: OnboardingStatus) =>
   match(status)
     .returnType<string>()
     .with(
@@ -147,120 +148,129 @@ export const OnboardingStatusModal = ({
   );
 
   const defaultValues = OnboardingStatusDto.toForm(data);
-  const { state, handleSubmit } = useForm<OnboardingStatusForm>({
-    formId,
-    defaultValues,
-    onSubmit,
-    stateReducer: (_, action, next) => {
-      if (action.type === 'HAS_SUBMITTED') {
-        return { ...next, values: { ...next.values, comments: '' } };
-      }
+  const { state, handleSubmit, setDefaultValues } =
+    useForm<OnboardingStatusForm>({
+      formId,
+      defaultValues,
+      onSubmit,
+      stateReducer: (_, action, next) => {
+        if (action.type === 'HAS_SUBMITTED') {
+          return { ...next, values: { ...next.values, comments: '' } };
+        }
 
-      return next;
-    },
+        return next;
+      },
+    });
+
+  useEffect(() => {
+    if (isOpen) {
+      initialFocusRef.current?.focus();
+    }
+  }, [isOpen]);
+
+  useEffectOnce(() => {
+    setDefaultValues(defaultValues);
   });
 
   return (
-    <Modal
-      closeOnEsc
-      isOpen={isOpen}
-      onClose={onClose}
-      initialFocusRef={initialFocusRef}
-    >
-      <ModalOverlay />
-      <ModalContent
-        as='form'
-        onSubmit={handleSubmit}
-        borderRadius='2xl'
-        backgroundImage='/backgrounds/organization/circular-bg-pattern.png'
-        backgroundRepeat='no-repeat'
-        sx={{
-          backgroundPositionX: '1px',
-          backgroundPositionY: '-7px',
-        }}
-      >
-        <ModalCloseButton />
-        <ModalHeader>
-          <FeaturedIcon
-            size='lg'
-            colorScheme={getIconcolorScheme(
-              state?.values?.status?.value ?? OnboardingStatus.NotApplicable,
-            )}
-          >
-            {state?.values?.status?.value === OnboardingStatus.Successful ? (
-              <Trophy01 />
-            ) : (
-              <Flag04 />
-            )}
-          </FeaturedIcon>
-          <Heading fontSize='lg' mt='4'>
-            Update onboarding status
-          </Heading>
-        </ModalHeader>
-        <ModalBody pb='0' gap={4} as={Flex} flexDir='column'>
-          <FormSelect
-            name='status'
-            label='Status'
-            isLabelVisible
-            formId={formId}
-            options={options}
-            openMenuOnFocus
-            ref={initialFocusRef}
-            isDisabled={updateOnboardingStatus.isPending}
-            components={{
-              Option: ({
-                data,
-                children,
-                ...rest
-              }: OptionProps<SelectOption<OnboardingStatus>>) => {
-                const icon = getIcon(data.value);
-
-                return (
-                  <chakraComponents.Option data={data} {...rest}>
-                    {icon}
-                    {children}
-                  </chakraComponents.Option>
-                );
-              },
+    <Modal open={isOpen} onOpenChange={onClose}>
+      <ModalPortal>
+        <ModalOverlay>
+          <ModalContent
+            className='rounded-2xl top-[6%] translate-y-0'
+            style={{
+              backgroundPositionX: '1px',
+              backgroundPositionY: '-7px',
+              backgroundImage: `url('/backgrounds/organization/circular-bg-pattern.png')`,
+              backgroundRepeat: 'no-repeat',
             }}
-          />
-          {defaultValues.status.value !== state?.values?.status?.value && (
-            <Box>
-              <Text as='label' htmlFor='reason' fontSize='sm'>
-                <b>Reason for change</b> (optional)
-              </Text>
-              <FormAutoresizeTextarea
-                pt='0'
+          >
+            <ModalCloseButton />
+            <ModalHeader>
+              <FeaturedIcon
+                size='lg'
+                colorScheme={getIconcolorScheme(
+                  state?.values?.status?.value ??
+                    OnboardingStatus.NotApplicable,
+                )}
+                className='ml-[12px] mt-[5px]'
+              >
+                {state?.values?.status?.value ===
+                OnboardingStatus.Successful ? (
+                  <Trophy01 />
+                ) : (
+                  <Flag04 />
+                )}
+              </FeaturedIcon>
+              <Heading fontSize='lg' mt='6'>
+                Update onboarding status
+              </Heading>
+            </ModalHeader>
+            <ModalBody className='gap-4 flex flex-col'>
+              <FormSelect
+                name='status'
+                label='Status'
+                isLabelVisible
                 formId={formId}
-                name='comments'
-                spellCheck='false'
+                options={options}
+                ref={initialFocusRef}
+                openMenuOnFocus={true}
                 isDisabled={updateOnboardingStatus.isPending}
-                placeholder={`What is the reason for changing the onboarding status?`}
+                components={{ Option }}
               />
-            </Box>
-          )}
-        </ModalBody>
-        <ModalFooter p='6'>
-          <Button
-            w='full'
-            variant='outline'
-            onClick={onClose}
-            isDisabled={updateOnboardingStatus.isPending}
-          >
-            Cancel
-          </Button>
-          <Button
-            ml='3'
-            w='full'
-            type='submit'
-            variant='outline'
-            colorScheme='primary'
-            isLoading={updateOnboardingStatus.isPending}
-          >
-            Update status
-          </Button>
-        </ModalFooter>
-      </ModalContent>
+              {defaultValues.status.value !== state?.values?.status?.value && (
+                <div>
+                  <label className='text-sm' htmlFor='reason'>
+                    <b>Reason for change</b> (optional)
+                  </label>
+                  <FormAutoresizeTextarea
+                    pt='0'
+                    formId={formId}
+                    name='comments'
+                    spellCheck='false'
+                    isDisabled={updateOnboardingStatus.isPending}
+                    placeholder={`What is the reason for changing the onboarding status?`}
+                  />
+                </div>
+              )}
+            </ModalBody>
+            <ModalFooter className='p-6 flex '>
+              <Button
+                className='w-full'
+                variant='outline'
+                onClick={onClose}
+                isDisabled={updateOnboardingStatus.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                className='w-full ml-3'
+                onClick={() => handleSubmit({} as FormEvent<HTMLFormElement>)}
+                variant='outline'
+                colorScheme='primary'
+                isLoading={updateOnboardingStatus.isPending}
+              >
+                Update status
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </ModalOverlay>
+      </ModalPortal>
     </Modal>
+  );
+};
+
+export const Option = ({
+  data,
+  children,
+  ...rest
+}: OptionProps<SelectOption<OnboardingStatus>>) => {
+  const icon = getIcon(data.value);
+
+  return (
+    <components.Option data={data} {...rest}>
+      {icon}
+      {children}
+    </components.Option>
   );
 };
