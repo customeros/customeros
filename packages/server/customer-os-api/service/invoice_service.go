@@ -301,6 +301,11 @@ func (s *invoiceService) GetInvoices(ctx context.Context, organizationId string,
 				contractFilter.Filters = append(contractFilter.Filters, utils.CreateStringCypherFilter("name", *f.Filter.Value.Str, utils.CONTAINS))
 			}
 			if f.Filter.Property == SearchSortContractBillingCycle {
+				for i, v := range *f.Filter.Value.ArrayStr {
+					if v == "NONE" {
+						(*f.Filter.Value.ArrayStr)[i] = ""
+					}
+				}
 				contractFilter.Filters = append(contractFilter.Filters, utils.CreateCypherFilterIn("billingCycle", *f.Filter.Value.ArrayStr))
 			}
 			if f.Filter.Property == SearchSortContractEnded {
