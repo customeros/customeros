@@ -49,7 +49,7 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
         return (
           <div
             ref={innerRef}
-            className={`flex w-full items-center ${sizeClass}`}
+            className={`flex w-full items-center group ${sizeClass}`}
             {...innerProps}
           >
             {leftElement}
@@ -81,12 +81,17 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
         return (
           <div
             className={cn(
-              'flex rounded-md items-center justify-center hover:bg-gray-100',
+              'flex rounded-md items-center justify-center  hover:bg-gray-100',
               wrapperSize,
             )}
             {...restInnerProps}
           >
-            <Delete className={cn('text-gray-500', iconSize)} />
+            <Delete
+              className={cn(
+                ' text-transparent group-hover:text-gray-500',
+                iconSize,
+              )}
+            />
           </div>
         );
       },

@@ -30,7 +30,7 @@ export const ModalOverlay = ({ className, ...props }: DialogOverlayProps) => {
   return (
     <Dialog.Overlay
       className={twMerge(
-        'backdrop-brightness-[.55] data-[state=open]:animate-overlayShow fixed inset-0 z-10 cursor-pointer',
+        'backdrop-brightness-[.55] data-[state=open]:animate-overlayShow fixed inset-0 z-10 cursor-pointer overflow-y-auto top-0 left-0 bottom-0 right-0',
         className,
       )}
       {...props}
@@ -77,7 +77,7 @@ export const ModalContent = ({
   return (
     <Dialog.Content
       className={twMerge(
-        'data-[state=open]:animate-contentShow z-10 fixed top-[50%] left-[50%] max-h-[85vh] w-[90vw] max-w-[450px] translate-x-[-50%] translate-y-[-50%] rounded-[6px] bg-white shadow-[hsl(206_22%_7%_/_35%)_0px_10px_38px_-10px,_hsl(206_22%_7%_/_20%)_0px_10px_20px_-15px] focus:outline-none',
+        'data-[state=open]:animate-contentShow z-10 fixed top-[50%] left-[50%] w-[90vw] max-w-[450px] translate-y-[-50%] translate-x-[-50%] rounded-[6px] bg-white shadow-[hsl(206_22%_7%_/_35%)_0px_10px_38px_-10px,_hsl(206_22%_7%_/_20%)_0px_10px_20px_-15px] focus:outline-none',
         className,
       )}
       {...props}
