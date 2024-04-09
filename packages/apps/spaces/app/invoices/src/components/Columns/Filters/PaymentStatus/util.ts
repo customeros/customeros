@@ -7,7 +7,7 @@ export const filterPaymentStatusFn: FilterFn<Invoice> = (
   id,
   filterValue,
 ) => {
-  const value = row.getValue<Invoice['status']>(id);
+  const value = row.getValue<Invoice>(id).status;
 
   if (filterValue.length === 0) return true;
 

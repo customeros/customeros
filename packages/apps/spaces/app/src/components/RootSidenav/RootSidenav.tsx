@@ -12,7 +12,6 @@ import { useTenantSettingsQuery } from '@settings/graphql/getTenantSettings.gene
 import { cn } from '@ui/utils/cn';
 import { Icons } from '@ui/media/Icon';
 import { Skeleton } from '@ui/feedback/Skeleton';
-import { Receipt } from '@ui/media/icons/Receipt';
 import { Bubbles } from '@ui/media/icons/Bubbles';
 import { LogOut01 } from '@ui/media/icons/LogOut01';
 import { InvoiceCheck } from '@ui/media/icons/InvoiceCheck';
@@ -38,7 +37,6 @@ export const RootSidenav = () => {
   const searchParams = useSearchParams();
   const [_, setOrganizationsMeta] = useOrganizationsMeta();
   const showMyViewsItems = useFeatureIsOn('my-views-nav-item');
-  const isNewInvoicingActive = useFeatureIsOn('new-invoicing');
 
   const [lastActivePosition, setLastActivePosition] = useLocalStorage(
     `customeros-player-last-position`,
@@ -116,6 +114,8 @@ export const RootSidenav = () => {
       '/renewals?preset=1',
       '/renewals?preset=2',
       '/renewals?preset=3',
+      '/invoices?preset=4',
+      '/invoices?preset=5',
     ].forEach((path) => {
       router.prefetch(path);
     });
@@ -195,43 +195,14 @@ export const RootSidenav = () => {
               <ArrowDropdown className='w-5 h-5' />
             </div>
 
-            {preferences.isInvoicesOpen &&
-              (isNewInvoicingActive ? (
-                <>
-                  <SidenavItem
-                    label='Upcoming'
-                    isActive={checkIsActive('invoices', { preset: '4' })}
-                    onClick={() => handleItemClick('invoices/new?preset=4')}
-                    icon={(isActive) => (
-                      <InvoiceUpcoming
-                        className={cn(
-                          'w-5 h-5 text-gray-500',
-                          isActive && 'text-gray-700',
-                        )}
-                      />
-                    )}
-                  />
-                  <SidenavItem
-                    label='Past'
-                    isActive={checkIsActive('invoices', { preset: '5' })}
-                    onClick={() => handleItemClick('invoices/new?preset=5')}
-                    icon={(isActive) => (
-                      <InvoiceCheck
-                        className={cn(
-                          'w-5 h-5 text-gray-500',
-                          isActive && 'text-gray-700',
-                        )}
-                      />
-                    )}
-                  />
-                </>
-              ) : (
+            {preferences.isInvoicesOpen && (
+              <>
                 <SidenavItem
-                  label='Invoices'
-                  isActive={checkIsActive('invoices')}
-                  onClick={() => handleItemClick('invoices')}
+                  label='Upcoming'
+                  isActive={checkIsActive('invoices', { preset: '4' })}
+                  onClick={() => handleItemClick('invoices?preset=4')}
                   icon={(isActive) => (
-                    <Receipt
+                    <InvoiceUpcoming
                       className={cn(
                         'w-5 h-5 text-gray-500',
                         isActive && 'text-gray-700',
@@ -239,7 +210,21 @@ export const RootSidenav = () => {
                     />
                   )}
                 />
-              ))}
+                <SidenavItem
+                  label='Past'
+                  isActive={checkIsActive('invoices', { preset: '5' })}
+                  onClick={() => handleItemClick('invoices?preset=5')}
+                  icon={(isActive) => (
+                    <InvoiceCheck
+                      className={cn(
+                        'w-5 h-5 text-gray-500',
+                        isActive && 'text-gray-700',
+                      )}
+                    />
+                  )}
+                />
+              </>
+            )}
           </>
         )}
       </div>
