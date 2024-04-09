@@ -57,7 +57,7 @@ func NewInvoiceAggregateWithTenantAndID(tenant, id string) *InvoiceAggregate {
 }
 
 func (a *InvoiceAggregate) HandleGRPCRequest(ctx context.Context, request any, params map[string]any) (any, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceAggregate.HandleRequest")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceAggregate.HandleGRPCRequest")
 	defer span.Finish()
 
 	invoiceNumber := ""

@@ -342,6 +342,28 @@ func (s *serviceLineItemService) Delete(ctx context.Context, serviceLineItemId s
 		return false, err
 	}
 
+	// Check SLI is not invoiced
+	sliInvoiced, err := s.repositories.Neo4jRepositories.ServiceLineItemReadRepository.WasServiceLineItemInvoiced(ctx, common.GetTenantFromContext(ctx), serviceLineItemId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error on checking if service line item was invoiced: %s", err.Error())
+		return false, err
+	}
+	if sliInvoiced {
+		err := fmt.Errorf("service line item with id {%s} is included in invoice and cannot be deleted", serviceLineItemId)
+		tracing.TraceErr(span, err)
+		s.log.Errorf(err.Error())
+		return false, err
+	}
+
+	//regenerate invoice preview
+	contractNode, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractByServiceLineItemId(ctx, common.GetTenantFromContext(ctx), serviceLineItemId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error on getting contract by service line item id {%s}: %s", serviceLineItemId, err.Error())
+		return
+	}
+
 	deleteRequest := servicelineitempb.DeleteServiceLineItemGrpcRequest{
 		Tenant:         common.GetTenantFromContext(ctx),
 		Id:             serviceLineItemId,
@@ -359,27 +381,18 @@ func (s *serviceLineItemService) Delete(ctx context.Context, serviceLineItemId s
 		return false, err
 	}
 
-	//regenerate invoice preview
-	contractNode, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractByServiceLineItemId(ctx, common.GetTenantFromContext(ctx), serviceLineItemId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("Error on getting contract by service line item id {%s}: %s", serviceLineItemId, err.Error())
-		return
-	}
-	if contractNode != nil {
-		contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractNode)
-		err := s.generateNextPreviewInvoice(ctx, common.GetTenantFromContext(ctx), contractEntity.Id, span)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			s.log.Errorf("Error on generating next preview invoice: %s", err.Error())
-			return false, err
+	go func() {
+		time.Sleep(3 * time.Second)
+		if contractNode != nil {
+			contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractNode)
+			err = s.generateNextPreviewInvoice(ctx, common.GetTenantFromContext(ctx), contractEntity.Id, span)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error on generating next preview invoice: %s", err.Error())
+				return
+			}
 		}
-	} else {
-		err := fmt.Errorf("contract not found for service line item id {%s}", serviceLineItemId)
-		tracing.TraceErr(span, err)
-		s.log.Errorf(err.Error())
-		return false, err
-	}
+	}()
 
 	return false, nil
 }
@@ -389,6 +402,7 @@ func (s *serviceLineItemService) Close(ctx context.Context, serviceLineItemId st
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("serviceLineItemId", serviceLineItemId))
+	span.SetTag(tracing.SpanTagEntityId, serviceLineItemId)
 
 	sliExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), serviceLineItemId, neo4jutil.NodeLabelServiceLineItem)
 	if err != nil {
@@ -397,9 +411,16 @@ func (s *serviceLineItemService) Close(ctx context.Context, serviceLineItemId st
 		return err
 	}
 	if !sliExists {
-		err := fmt.Errorf("service line item with id {%s} not found", serviceLineItemId)
+		err = fmt.Errorf("service line item with id {%s} not found", serviceLineItemId)
 		tracing.TraceErr(span, err)
 		s.log.Errorf(err.Error())
+		return err
+	}
+
+	contractNode, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractByServiceLineItemId(ctx, common.GetTenantFromContext(ctx), serviceLineItemId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error on getting contract by service line item id {%s}: %s", serviceLineItemId, err.Error())
 		return err
 	}
 
@@ -424,16 +445,9 @@ func (s *serviceLineItemService) Close(ctx context.Context, serviceLineItemId st
 	if !bulk {
 		go func() {
 			time.Sleep(3 * time.Second)
-
-			contractNode, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractByServiceLineItemId(ctx, common.GetTenantFromContext(ctx), serviceLineItemId)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("Error on getting contract by service line item id {%s}: %s", serviceLineItemId, err.Error())
-				return
-			}
 			if contractNode != nil {
 				contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractNode)
-				err := s.generateNextPreviewInvoice(ctx, common.GetTenantFromContext(ctx), contractEntity.Id, span)
+				err = s.generateNextPreviewInvoice(ctx, common.GetTenantFromContext(ctx), contractEntity.Id, span)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					s.log.Errorf("Error on generating next preview invoice: %s", err.Error())

@@ -26,13 +26,15 @@ type serviceLineItemService struct {
 	log                            logger.Logger
 	serviceLineItemCommandHandlers *command_handler.CommandHandlers
 	aggregateStore                 eventstore.AggregateStore
+	services                       *Services
 }
 
-func NewServiceLineItemService(log logger.Logger, commandHandlers *command_handler.CommandHandlers, aggregateStore eventstore.AggregateStore) *serviceLineItemService {
+func NewServiceLineItemService(log logger.Logger, commandHandlers *command_handler.CommandHandlers, aggregateStore eventstore.AggregateStore, services *Services) *serviceLineItemService {
 	return &serviceLineItemService{
 		log:                            log,
 		serviceLineItemCommandHandlers: commandHandlers,
 		aggregateStore:                 aggregateStore,
+		services:                       services,
 	}
 }
 
@@ -246,12 +248,13 @@ func (s *serviceLineItemService) CloseServiceLineItem(ctx context.Context, reque
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("id"))
 	}
 
-	closeSliCommand := command.NewCloseServiceLineItemCommand(request.Id, request.Tenant, request.LoggedInUserId, request.AppSource, true,
-		utils.TimestampProtoToTimePtr(request.EndedAt), utils.TimestampProtoToTimePtr(request.UpdatedAt))
+	extraParams := map[string]any{}
+	extraParams[model.PARAM_CANCELLED] = true
 
-	if err := s.serviceLineItemCommandHandlers.CloseServiceLineItem.Handle(ctx, closeSliCommand); err != nil {
+	sliAggregate := sliaggregate.NewServiceLineItemAggregateWithTenantAndID(request.Tenant, request.Id)
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, sliAggregate, eventstore.LoadAggregateOptions{}, request, extraParams); err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("(CloseServiceLineItem.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		s.log.Errorf("(CloseServiceLineItem) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
 	}
 

@@ -51,6 +51,7 @@ type ServiceLineItemWriteRepository interface {
 	Update(ctx context.Context, tenant, serviceLineItemId string, data ServiceLineItemUpdateFields) error
 	Delete(ctx context.Context, tenant, serviceLineItemId string) error
 	Close(ctx context.Context, tenant, serviceLineItemId string, updatedAt, endedAt time.Time, isCanceled bool) error
+	AdjustEndDates(ctx context.Context, tenant, parentId string) error
 }
 
 type serviceLineItemWriteRepository struct {
@@ -179,6 +180,7 @@ func (r *serviceLineItemWriteRepository) Delete(ctx context.Context, tenant, ser
 
 	cypher := fmt.Sprintf(`MATCH (sli:ServiceLineItem {id:$serviceLineItemId})
 							WHERE sli:ServiceLineItem_%s
+							AND NOT (sli)--(:InvoiceLine)--(:Invoice {dryRun:false})
 							DETACH DELETE sli`, tenant)
 	params := map[string]any{
 		"serviceLineItemId": serviceLineItemId,
@@ -212,6 +214,40 @@ func (r *serviceLineItemWriteRepository) Close(ctx context.Context, tenant, serv
 	if isCanceled {
 		params["isCanceled"] = isCanceled
 		cypher += `, sli.isCanceled = $isCanceled`
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *serviceLineItemWriteRepository) AdjustEndDates(ctx context.Context, tenant, parentId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemWriteRepository.AdjustEndDates")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag("parentId", parentId)
+
+	cypher := fmt.Sprintf(`MATCH (sli:ServiceLineItem {parentId: $parentId})
+									WHERE sli:ServiceLineItem_%s
+									WITH sli
+									ORDER BY sli.startedAt ASC
+									WITH collect(sli) AS nodes
+									FOREACH(i in RANGE(0, size(nodes)-2) | 
+    									FOREACH(node in [nodes[i]] | 
+        									FOREACH(nextNode in [nodes[i+1]] | 
+            									SET node.endedAt = nextNode.startedAt
+        									)
+    									)
+									)
+									WITH nodes[size(nodes)-1] AS lastVersion
+									WHERE (lastVersion.isCanceled IS NULL OR lastVersion.isCanceled = false)
+									SET lastVersion.endedAt = null`, tenant)
+	params := map[string]any{
+		"parentId": parentId,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

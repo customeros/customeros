@@ -94,6 +94,8 @@ func (s *invoiceService) UpdateInvoice(ctx context.Context, input model.InvoiceU
 			invoiceUpdateRequest.Status = invoicepb.InvoiceStatus_INVOICE_STATUS_DUE
 		case model.InvoiceStatusPaid:
 			invoiceUpdateRequest.Status = invoicepb.InvoiceStatus_INVOICE_STATUS_PAID
+		case model.InvoiceStatusVoid:
+			invoiceUpdateRequest.Status = invoicepb.InvoiceStatus_INVOICE_STATUS_VOID
 		default:
 			invoiceUpdateRequest.Status = invoicepb.InvoiceStatus_INVOICE_STATUS_NONE
 		}

@@ -253,7 +253,7 @@ func TestServiceLineItemEventHandler_OnDeleteUnnamed(t *testing.T) {
 	require.Nil(t, err)
 
 	// Execute the event handler
-	err = serviceLineItemEventHandler.OnDelete(ctx, deleteEvent)
+	err = serviceLineItemEventHandler.OnDeleteV1(ctx, deleteEvent)
 	require.Nil(t, err)
 
 	// Assert Neo4j Node Counts
@@ -348,7 +348,7 @@ func TestServiceLineItemEventHandler_OnDelete(t *testing.T) {
 	require.Nil(t, err)
 
 	// Execute the event handler
-	err = serviceLineItemEventHandler.OnDelete(ctx, deleteEvent)
+	err = serviceLineItemEventHandler.OnDeleteV1(ctx, deleteEvent)
 	require.Nil(t, err)
 
 	// Assert Neo4j Node Counts
