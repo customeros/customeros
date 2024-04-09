@@ -39,7 +39,7 @@ export const useInvoicesPageData = ({ sorting }: UseRenewalsPageDataProps) => {
   const [_, setLastActivePosition] = useLocalStorage<{
     [key: string]: string;
   }>(`customeros-player-last-position`, {
-    root: `invoices/new?preset=${preset}`,
+    root: `invoices?preset=${preset}`,
   });
 
   const where = useMemo(() => {
@@ -94,7 +94,10 @@ export const useInvoicesPageData = ({ sorting }: UseRenewalsPageDataProps) => {
         draft.AND.push({
           filter: {
             property: 'INVOICE_ISSUE_DATE',
-            value: [new Date().toISOString(), issueDate.value],
+            value:
+              preset === '5'
+                ? [issueDate.value, new Date().toISOString()]
+                : [new Date().toISOString(), issueDate.value],
             operation: ComparisonOperator.In,
           },
         });

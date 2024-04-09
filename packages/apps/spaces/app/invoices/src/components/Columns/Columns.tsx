@@ -26,6 +26,7 @@ import {
   filterBillingCycleFn,
   filterPaymentStatusFn,
   filterInvoiceStatusFn,
+  filterIssueDatePastFn,
 } from './Filters';
 
 type ColumnDatum = Invoice;
@@ -50,6 +51,29 @@ const columns: Record<string, Column> = {
         title='Issue date'
         renderFilter={() => (
           <IssueDateFilter onFilterValueChange={props.column.setFilterValue} />
+        )}
+        {...getTHeadProps(props)}
+      />
+    ),
+    cell: (props) => <IssueDateCell value={props.getValue()} />,
+    skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
+  }),
+  ISSUE_DATE_PAST: columnHelper.accessor('metadata.created', {
+    id: 'INVOICE_CREATED_AT',
+    minSize: 50,
+    maxSize: 50,
+    enableColumnFilter: true,
+    enableSorting: true,
+    filterFn: filterIssueDatePastFn,
+    header: (props) => (
+      <THead
+        id='issueDate'
+        title='Issue date'
+        renderFilter={() => (
+          <IssueDateFilter
+            isPast
+            onFilterValueChange={props.column.setFilterValue}
+          />
         )}
         {...getTHeadProps(props)}
       />

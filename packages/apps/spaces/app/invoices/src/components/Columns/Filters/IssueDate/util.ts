@@ -14,3 +14,19 @@ export const filterIssueDateFn: FilterFn<Invoice> = (row, id, filterValue) => {
   return isBefore(leftDate, rightDate);
 };
 filterIssueDateFn.autoRemove = (filterValue) => !filterValue;
+
+export const filterIssueDatePastFn: FilterFn<Invoice> = (
+  row,
+  id,
+  filterValue,
+) => {
+  const value = row.getValue<Invoice['metadata']['created']>(id);
+
+  if (!value) return false;
+
+  const leftDate = new Date(filterValue);
+  const rightDate = new Date(value.split('T')[0]);
+
+  return isBefore(leftDate, rightDate);
+};
+filterIssueDatePastFn.autoRemove = (filterValue) => !filterValue;

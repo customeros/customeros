@@ -1,88 +1,106 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
+import { useMemo, useState, useCallback } from 'react';
 
-import { useIsRestoring } from '@tanstack/react-query';
+import { Invoice } from '@graphql/types';
+import { Table, SortingState } from '@ui/presentation/Table';
+import { mockedTableDefs } from '@shared/util/tableDefs.mock';
+import { SlashCircle01 } from '@ui/media/icons/SlashCircle01';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { useTableViewDefsQuery } from '@shared/graphql/tableViewDefs.generated';
+import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog2';
 
-import { Box } from '@ui/layout/Box';
-import { Flex } from '@ui/layout/Flex';
-import { Heading } from '@ui/typography/Heading';
-import { Table, TableInstance } from '@ui/presentation/Table';
-import { EmptyState } from '@shared/components/Invoice/EmptyState/EmptyState';
-import {
-  InvoiceTableData,
-  useInfiniteInvoices,
-} from '@shared/components/Invoice/hooks/useInfiniteInvoices';
+import { Empty } from '../Empty';
+import { Search } from '../Search';
+import { useTableActions } from '../../hooks/useTableActions';
+import { getColumnsConfig } from '../../components/Columns/Columns';
+import { useInvoicesPageData } from '../../hooks/useInvoicesPageData';
 
-import { columns } from './Columns/Columns';
-
-export function InvoicesTable() {
-  const isRestoring = useIsRestoring();
+export const InvoicesTable = () => {
+  const client = getGraphQLClient();
   const searchParams = useSearchParams();
-  const selectedInvoiceId = searchParams?.get('invoice');
-  const router = useRouter();
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: 'INVOICE_DUE_DATE', desc: true },
+  ]);
 
-  const tableRef = useRef<TableInstance<InvoiceTableData>>(null);
+  const preset = searchParams?.get('preset');
+
+  const { data: tableViewDefsData } = useTableViewDefsQuery(
+    client,
+    {
+      pagination: { limit: 100, page: 1 },
+    },
+    {
+      enabled: false,
+      placeholderData: { tableViewDefs: { content: mockedTableDefs } },
+    },
+  );
+
   const {
-    invoiceFlattenData,
-    totalInvoicesCount,
+    data,
+    tableRef,
+    isLoading,
     isFetching,
-    isFetched,
-    fetchNextPage,
+    totalCount,
     hasNextPage,
-  } = useInfiniteInvoices();
+    isRefetching,
+    fetchNextPage,
+    totalAvailable,
+  } = useInvoicesPageData({ sorting });
 
-  useEffect(() => {
-    if (!selectedInvoiceId && tableRef.current) {
-      const newParams = new URLSearchParams(searchParams ?? '');
-      const firstId = invoiceFlattenData?.[0]?.id;
-      if (!firstId) return;
-      newParams.set('invoice', firstId);
-      router.replace(`/invoices?${newParams.toString()}`);
-    }
-  }, [selectedInvoiceId, isFetched]);
+  const handleFetchMore = useCallback(() => {
+    !isFetching && fetchNextPage();
+  }, [fetchNextPage, isFetching]);
 
-  useEffect(() => {
-    if (tableRef.current && isFetched) {
-      tableRef.current
-        ?.getRowModel()
-        ?.rows?.find((e) => e.original.id === selectedInvoiceId)
-        ?.toggleSelected(true);
-    }
-  }, [tableRef, isFetched, selectedInvoiceId]);
+  const tableViewDef = tableViewDefsData?.tableViewDefs?.content?.find(
+    (t) => t.id === preset,
+  );
+  const columns = useMemo(
+    () => getColumnsConfig(tableViewDef),
+    [tableViewDef?.id],
+  );
 
-  if (totalInvoicesCount === 0) {
-    return <EmptyState maxW={500} isDashboard />;
+  const { reset, targetId, isConfirming, onConfirm, isPending } =
+    useTableActions();
+
+  const targetInvoice = data?.find((i) => i.metadata.id === targetId);
+  const targetInvoiceNumber = targetInvoice?.invoiceNumber || '';
+  const targetInvoiceEmail = targetInvoice?.customer?.email || '';
+
+  if (!columns.length || totalAvailable === 0) {
+    return (
+      <div className='flex justify-center'>
+        <Empty />
+      </div>
+    );
   }
 
-  const handleOpenInvoice = (id: string) => {
-    const params = new URLSearchParams(searchParams?.toString() ?? '');
-    params.set('invoice', id);
-    router.push(`?${params}`);
-  };
-
   return (
-    <Flex flexDir='column' as='article'>
-      <Heading fontSize='lg' pb={3}>
-        Invoices
-      </Heading>
-      <Box ml={-3}>
-        <Table<InvoiceTableData>
-          data={invoiceFlattenData ?? []}
-          columns={columns}
-          onFullRowSelection={(id) => id && handleOpenInvoice(id)}
-          enableRowSelection={false}
-          fullRowSelection={true}
-          canFetchMore={hasNextPage}
-          onFetchMore={fetchNextPage}
-          isLoading={isRestoring ? false : isFetching}
-          totalItems={isRestoring ? 10 : totalInvoicesCount || 0}
-          tableRef={tableRef}
-          borderColor='gray.100'
-          rowHeight={48}
-        />
-      </Box>
-    </Flex>
+    <>
+      <Search />
+      <Table<Invoice>
+        data={data}
+        columns={columns}
+        sorting={sorting}
+        tableRef={tableRef}
+        canFetchMore={hasNextPage}
+        onSortingChange={setSorting}
+        onFetchMore={handleFetchMore}
+        isLoading={isLoading && !isRefetching}
+        totalItems={isFetching ? 40 : totalCount || 0}
+      />
+      <ConfirmDeleteDialog
+        onClose={reset}
+        hideCloseButton
+        isLoading={isPending}
+        isOpen={isConfirming}
+        onConfirm={onConfirm}
+        icon={<SlashCircle01 />}
+        confirmButtonLabel='Void invoice'
+        label={`Void invoice ${targetInvoiceNumber}`}
+        description={`Voiding this invoice will send an email notification to ${targetInvoiceEmail}`}
+      />
+    </>
   );
-}
+};

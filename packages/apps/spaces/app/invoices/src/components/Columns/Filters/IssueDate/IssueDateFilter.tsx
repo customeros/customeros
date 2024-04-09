@@ -3,6 +3,7 @@ import { useMemo, useEffect } from 'react';
 
 import { produce } from 'immer';
 import addDays from 'date-fns/addDays';
+import subDays from 'date-fns/subDays';
 import { useRecoilValue } from 'recoil';
 import { Column } from '@tanstack/react-table';
 
@@ -18,10 +19,14 @@ import {
 } from './IssueDateFilter.atom';
 
 interface IssueDateProps {
+  isPast?: boolean;
   onFilterValueChange?: Column<Organization>['setFilterValue'];
 }
 
-export const IssueDateFilter = ({ onFilterValueChange }: IssueDateProps) => {
+export const IssueDateFilter = ({
+  onFilterValueChange,
+  isPast,
+}: IssueDateProps) => {
   const [filter, setFilter] = useIssueDateFilter();
   const filterValue = useRecoilValue(IssueDateFilterSelector);
 
@@ -43,7 +48,9 @@ export const IssueDateFilter = ({ onFilterValueChange }: IssueDateProps) => {
   const [week, month, quarter] = useMemo(
     () =>
       [7, 30, 90].map((value) => {
-        return addDays(new Date(), value).toISOString();
+        const op = isPast ? subDays : addDays;
+
+        return op(new Date(), value).toISOString();
       }),
     [],
   );
@@ -65,6 +72,13 @@ export const IssueDateFilter = ({ onFilterValueChange }: IssueDateProps) => {
     onFilterValueChange?.(filterValue.isActive ? filterValue.value : undefined);
   }, [filterValue.value, filterValue.isActive]);
 
+  useEffect(() => {
+    setFilter({
+      ...filter,
+      value: week,
+    });
+  }, []);
+
   return (
     <>
       <FilterHeader
@@ -81,13 +95,19 @@ export const IssueDateFilter = ({ onFilterValueChange }: IssueDateProps) => {
       >
         <VStack spacing={2} align='flex-start'>
           <Radio value={week}>
-            <Text fontSize='sm'>Next 7 days</Text>
+            <Text fontSize='sm'>{`${
+              isPast ? 'Previous' : 'Next'
+            } 7 days`}</Text>
           </Radio>
           <Radio value={month}>
-            <Text fontSize='sm'>Next 30 days</Text>
+            <Text fontSize='sm'>{`${
+              isPast ? 'Previous' : 'Next'
+            } 30 days`}</Text>
           </Radio>
           <Radio value={quarter}>
-            <Text fontSize='sm'>Next 90 days</Text>
+            <Text fontSize='sm'>{`${
+              isPast ? 'Previous' : 'Next'
+            } 90 days`}</Text>
           </Radio>
         </VStack>
       </RadioGroup>

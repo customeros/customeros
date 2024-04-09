@@ -22,8 +22,8 @@ import {
 const options: SelectOption<string>[] = [
   { label: 'Monthly', value: 'MONTHLY' },
   { label: 'Quarterly', value: 'QUARTERLY' },
-  { label: 'Annualy', value: 'ANNUALY' },
-  { label: 'None', value: '' },
+  { label: 'Annually', value: 'ANNUALLY' },
+  { label: 'None', value: 'NONE' },
 ];
 
 interface BillingCycleFilterProps<T> {

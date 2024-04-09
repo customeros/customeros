@@ -2,7 +2,7 @@ import { cn } from '@ui/utils/cn';
 import { ContractBillingCycle } from '@graphql/types';
 
 const billingCycleLabels: Record<ContractBillingCycle, string> = {
-  ANNUAL_BILLING: 'Annual',
+  ANNUAL_BILLING: 'Annually',
   MONTHLY_BILLING: 'Monthly',
   QUARTERLY_BILLING: 'Quarterly',
   NONE: 'None',
