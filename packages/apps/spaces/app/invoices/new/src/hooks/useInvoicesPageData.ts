@@ -150,15 +150,21 @@ export const useInvoicesPageData = ({ sorting }: UseRenewalsPageDataProps) => {
     ];
   }, [sorting]);
 
-  const { data, isFetching, isLoading, hasNextPage, fetchNextPage } =
-    useGetInvoicesInfiniteQuery(client, {
-      pagination: {
-        page: 0,
-        limit: 40,
-      },
-      sort: sortBy,
-      where,
-    });
+  const {
+    data,
+    isFetching,
+    isLoading,
+    hasNextPage,
+    isRefetching,
+    fetchNextPage,
+  } = useGetInvoicesInfiniteQuery(client, {
+    pagination: {
+      page: 0,
+      limit: 40,
+    },
+    sort: sortBy,
+    where,
+  });
 
   const totalCount = data?.pages?.[0].invoices?.totalElements;
   const totalAvailable = data?.pages?.[0].invoices?.totalAvailable;
@@ -181,8 +187,10 @@ export const useInvoicesPageData = ({ sorting }: UseRenewalsPageDataProps) => {
   useEffect(() => {
     setInvoicesMeta(
       produce(invoicesMeta, (draft) => {
-        draft.getInvoices.pagination.page = 1;
+        draft.getInvoices.pagination.page = 0;
         draft.getInvoices.pagination.limit = 40;
+        draft.getInvoices.sort = sortBy;
+        draft.getInvoices.where = where;
       }),
     );
     setLastActivePosition((prev) =>
@@ -201,6 +209,7 @@ export const useInvoicesPageData = ({ sorting }: UseRenewalsPageDataProps) => {
     isFetching,
     totalCount,
     hasNextPage,
+    isRefetching,
     fetchNextPage,
     data: flatData,
     totalAvailable,

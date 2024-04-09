@@ -54,6 +54,11 @@ export type GetInvoicesQuery = {
         name: string;
         metadata: { __typename?: 'Metadata'; id: string };
       };
+      customer: {
+        __typename?: 'InvoiceCustomer';
+        name?: string | null;
+        email?: string | null;
+      };
       contract: {
         __typename?: 'Contract';
         name: string;
@@ -104,6 +109,10 @@ export const GetInvoicesDocument = `
           id
         }
         name
+      }
+      customer {
+        name
+        email
       }
       contract {
         metadata {

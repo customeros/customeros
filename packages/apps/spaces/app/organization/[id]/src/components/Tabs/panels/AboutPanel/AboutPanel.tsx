@@ -166,7 +166,7 @@ export const AboutPanel = () => {
   return (
     <div className=' flex pt-4 px-6 w-full h-full overflow-y-auto flex-1 bg-gray-25 rounded-2xl'>
       <div className='flex h-full flex-col  overflow-visible w-full'>
-        <div className='flex items-center'>
+        <div className='flex items-center justify-between'>
           <OrganizationNameInput
             orgNameReadOnly={orgNameReadOnly}
             isLoading={isLoading}
@@ -175,20 +175,18 @@ export const AboutPanel = () => {
           {data?.organization?.referenceId && (
             <div className='h-full ml-4'>
               <Tooltip label={'Copy ID'} asChild={false}>
-                <Tag>
-                  <TagLabel
-                    className='rounded-full border-1 border-gray-300 cursor-pointer'
-                    colorScheme='gray'
-                    variant='outline'
-                    onClick={() => {
-                      copyToClipboard(
-                        data?.organization?.referenceId ?? '',
-                        'Reference ID copied ',
-                      );
-                    }}
-                  >
-                    <span>{data?.organization?.referenceId}</span>
-                  </TagLabel>
+                <Tag
+                  colorScheme='gray'
+                  variant='outline'
+                  className='rounded-full cursor-pointer'
+                  onClick={() => {
+                    copyToClipboard(
+                      data?.organization?.referenceId ?? '',
+                      'Reference ID copied ',
+                    );
+                  }}
+                >
+                  <TagLabel>{data?.organization?.referenceId}</TagLabel>
                 </Tag>
               </Tooltip>
             </div>

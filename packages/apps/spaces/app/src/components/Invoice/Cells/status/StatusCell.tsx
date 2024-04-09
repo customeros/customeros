@@ -6,19 +6,11 @@ import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
 import { Tag, TagLabel, TagLeftIcon } from '@ui/presentation/Tag/Tag';
 
 interface StatusCellProps {
+  className?: string;
   status?: InvoiceStatus | null;
 }
 export function renderStatusNode(type: InvoiceStatus | null | undefined) {
   switch (type) {
-    // case 'SCHEDULED':
-    //   return (
-    //     <Tag colorScheme='gray' variant='outline'>
-    //       <TagLeftIcon>
-    //         <ClockFastForward />
-    //       </TagLeftIcon>
-    //       <TagLabel>Scheduled</TagLabel>
-    //     </Tag>
-    //   );
     case InvoiceStatus.Initialized:
       return (
         <Tag colorScheme='gray' variant='outline'>
@@ -37,24 +29,6 @@ export function renderStatusNode(type: InvoiceStatus | null | undefined) {
           <TagLabel>Paid</TagLabel>
         </Tag>
       );
-    // case 'PARTIALLY_PAID':
-    //   return (
-    //     <Tag colorScheme='success' variant='outline'>
-    //       <TagLeftIcon>
-    //         <CheckCircle />
-    //       </TagLeftIcon>
-    //       <TagLabel>Partially paid</TagLabel>
-    //     </Tag>
-    //   );
-    // case 'OVERDUE':
-    //   return (
-    //     <Tag colorScheme='warning' variant='outline'>
-    //       <TagLeftIcon>
-    //         <AlertCircle />
-    //       </TagLeftIcon>
-    //       <TagLabel>Overdue</TagLabel>
-    //     </Tag>
-    //   );
     case 'DUE':
       return (
         <Tag colorScheme='primary' variant='outline'>
