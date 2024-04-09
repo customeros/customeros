@@ -32,11 +32,6 @@ func (r *mutationResolver) InvoiceNextDryRunForContract(ctx context.Context, con
 	panic(fmt.Errorf("not implemented: InvoiceNextDryRunForContract - invoice_NextDryRunForContract"))
 }
 
-// InvoiceSimulate is the resolver for the invoice_Simulate field.
-func (r *mutationResolver) InvoiceSimulate(ctx context.Context, input model.InvoiceSimulateInput) (string, error) {
-	panic(fmt.Errorf("not implemented: InvoiceSimulate - invoice_Simulate"))
-}
-
 // InvoiceUpdate is the resolver for the invoice_Update field.
 func (r *mutationResolver) InvoiceUpdate(ctx context.Context, input model.InvoiceUpdateInput) (*model.Invoice, error) {
 	panic(fmt.Errorf("not implemented: InvoiceUpdate - invoice_Update"))
@@ -50,6 +45,11 @@ func (r *mutationResolver) InvoicePay(ctx context.Context, id string) (*model.In
 // InvoiceVoid is the resolver for the invoice_Void field.
 func (r *mutationResolver) InvoiceVoid(ctx context.Context, id string) (*model.Invoice, error) {
 	panic(fmt.Errorf("not implemented: InvoiceVoid - invoice_Void"))
+}
+
+// InvoiceSimulate is the resolver for the invoice_Simulate field.
+func (r *mutationResolver) InvoiceSimulate(ctx context.Context, input model.InvoiceSimulateInput) ([]*model.Invoice, error) {
+	panic(fmt.Errorf("not implemented: InvoiceSimulate - invoice_Simulate"))
 }
 
 // Invoice is the resolver for the invoice field.

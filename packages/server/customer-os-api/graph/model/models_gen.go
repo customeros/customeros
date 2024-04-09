@@ -1301,14 +1301,6 @@ type InvoiceLine struct {
 func (InvoiceLine) IsMetadataInterface()        {}
 func (this InvoiceLine) GetMetadata() *Metadata { return this.Metadata }
 
-type InvoiceLineInput struct {
-	ServiceLineItemID *string    `json:"serviceLineItemId,omitempty"`
-	Name              string     `json:"name"`
-	Billed            BilledType `json:"billed"`
-	Price             float64    `json:"price"`
-	Quantity          int        `json:"quantity"`
-}
-
 type InvoiceProvider struct {
 	LogoURL              *string `json:"logoUrl,omitempty"`
 	LogoRepositoryFileID *string `json:"logoRepositoryFileId,omitempty"`
@@ -1322,10 +1314,22 @@ type InvoiceProvider struct {
 }
 
 type InvoiceSimulateInput struct {
-	ContractID      string              `json:"contractId"`
-	PeriodStartDate *time.Time          `json:"periodStartDate,omitempty"`
-	PeriodEndDate   *time.Time          `json:"periodEndDate,omitempty"`
-	InvoiceLines    []*InvoiceLineInput `json:"invoiceLines"`
+	ContractID      string                             `json:"contractId"`
+	PeriodStartDate *time.Time                         `json:"periodStartDate,omitempty"`
+	PeriodEndDate   *time.Time                         `json:"periodEndDate,omitempty"`
+	ServiceLines    []*InvoiceSimulateServiceLineInput `json:"serviceLines"`
+}
+
+type InvoiceSimulateServiceLineInput struct {
+	ServiceLineItemID *string    `json:"serviceLineItemId,omitempty"`
+	ParentID          *string    `json:"parentId,omitempty"`
+	Description       string     `json:"description"`
+	Comments          string     `json:"comments"`
+	BillingCycle      BilledType `json:"billingCycle"`
+	Price             float64    `json:"price"`
+	Quantity          int        `json:"quantity"`
+	ServiceStarted    time.Time  `json:"serviceStarted"`
+	TaxRate           *float64   `json:"taxRate,omitempty"`
 }
 
 type InvoiceUpdateInput struct {

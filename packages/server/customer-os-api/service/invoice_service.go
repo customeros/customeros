@@ -42,7 +42,7 @@ type InvoiceService interface {
 	GetInvoices(ctx context.Context, organizationId string, page, limit int, where *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	GetById(ctx context.Context, invoiceId string) (*neo4jentity.InvoiceEntity, error)
 	GetInvoiceLinesForInvoices(ctx context.Context, invoiceIds []string) (*neo4jentity.InvoiceLineEntities, error)
-	SimulateInvoice(ctx context.Context, invoiceData *SimulateInvoiceData) (string, error)
+	SimulateInvoice(ctx context.Context, invoiceData *SimulateInvoiceData) (*neo4jentity.InvoiceEntities, error)
 	NextInvoiceDryRun(ctx context.Context, contractId string) (string, error)
 	UpdateInvoice(ctx context.Context, input model.InvoiceUpdateInput) error
 	PayInvoice(ctx context.Context, invoiceId string) error
@@ -134,15 +134,18 @@ func NewInvoiceService(log logger.Logger, repositories *repository.Repositories,
 
 type SimulateInvoiceData struct {
 	ContractId   string
-	Date         *time.Time
 	InvoiceLines []SimulateInvoiceLineData
 }
 type SimulateInvoiceLineData struct {
 	ServiceLineItemID *string
-	Name              string
-	Billed            enum.BilledType
+	ParentID          *string
+	Description       string
+	Comments          string
+	BillingCycle      enum.BilledType
 	Price             float64
 	Quantity          int
+	ServiceStarted    time.Time
+	TaxRate           *float64
 }
 
 func (s *invoiceService) CountInvoices(ctx context.Context, tenant, organizationId string, where *model.Filter) (int64, error) {
@@ -421,7 +424,7 @@ func (s *invoiceService) GetInvoiceLinesForInvoices(ctx context.Context, invoice
 	return &invoiceLineEntities, nil
 }
 
-func (s *invoiceService) SimulateInvoice(ctx context.Context, invoiceData *SimulateInvoiceData) (string, error) {
+func (s *invoiceService) SimulateInvoice(ctx context.Context, invoiceData *SimulateInvoiceData) (*neo4jentity.InvoiceEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.SimulateInvoice")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -430,62 +433,10 @@ func (s *invoiceService) SimulateInvoice(ctx context.Context, invoiceData *Simul
 	if invoiceData.InvoiceLines == nil {
 		err := fmt.Errorf("no invoice lines to simulate")
 		tracing.TraceErr(span, err)
-		return "", err
+		return nil, err
 	}
 
-	now := time.Now()
-	simulateInvoiceRequest := invoicepb.SimulateInvoiceRequest{
-		Tenant:         common.GetTenantFromContext(ctx),
-		LoggedInUserId: common.GetUserIdFromContext(ctx),
-		ContractId:     invoiceData.ContractId,
-		CreatedAt:      utils.ConvertTimeToTimestampPtr(&now),
-		SourceFields: &commonpb.SourceFields{
-			Source:    neo4jentity.DataSourceOpenline.String(),
-			AppSource: constants.AppSourceCustomerOsApi,
-		},
-		Date:                   utils.ConvertTimeToTimestampPtr(invoiceData.Date),
-		DryRunServiceLineItems: make([]*invoicepb.DryRunServiceLineItem, 0, len(invoiceData.InvoiceLines)),
-	}
-	for _, invoiceLine := range invoiceData.InvoiceLines {
-		dryRunServiceLineItem := invoicepb.DryRunServiceLineItem{
-			ServiceLineItemId: utils.IfNotNilStringWithDefault(invoiceLine.ServiceLineItemID, ""),
-			Name:              invoiceLine.Name,
-			Price:             invoiceLine.Price,
-			Quantity:          int64(invoiceLine.Quantity),
-		}
-
-		switch invoiceLine.Billed {
-		case enum.BilledTypeMonthly:
-			dryRunServiceLineItem.Billed = commonpb.BilledType_MONTHLY_BILLED
-		case enum.BilledTypeQuarterly:
-			dryRunServiceLineItem.Billed = commonpb.BilledType_QUARTERLY_BILLED
-		case enum.BilledTypeAnnually:
-			dryRunServiceLineItem.Billed = commonpb.BilledType_ANNUALLY_BILLED
-		case enum.BilledTypeOnce:
-			dryRunServiceLineItem.Billed = commonpb.BilledType_ONCE_BILLED
-		case enum.BilledTypeUsage:
-			dryRunServiceLineItem.Billed = commonpb.BilledType_USAGE_BILLED
-		case enum.BilledTypeNone:
-			dryRunServiceLineItem.Billed = commonpb.BilledType_NONE_BILLED
-		}
-
-		simulateInvoiceRequest.DryRunServiceLineItems = append(simulateInvoiceRequest.DryRunServiceLineItems, &dryRunServiceLineItem)
-	}
-
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
-		return s.grpcClients.InvoiceClient.SimulateInvoice(ctx, &simulateInvoiceRequest)
-	})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("Error from events processing: %s", err.Error())
-		return "", err
-	}
-
-	WaitForNodeCreatedInNeo4j(ctx, s.repositories, response.Id, neo4jutil.NodeLabelInvoice, span)
-
-	span.LogFields(log.String("output - createdInvoiceId", response.Id))
-	return response.Id, nil
+	return nil, nil
 }
 
 func (s *invoiceService) NextInvoiceDryRun(ctx context.Context, contractId string) (string, error) {

@@ -86,8 +86,6 @@ func (a *InvoiceAggregate) HandleGRPCRequest(ctx context.Context, request any, p
 		return nil, a.PermanentlyDeleteInitializedInvoice(ctx, r)
 	case *invoicepb.VoidInvoiceRequest:
 		return nil, a.VoidInvoice(ctx, r)
-	case *invoicepb.SimulateInvoiceRequest:
-		return nil, a.SimulateInvoice(ctx, r)
 	default:
 		return nil, nil
 	}
@@ -115,30 +113,6 @@ func (a *InvoiceAggregate) CreatePdfGeneratedEvent(ctx context.Context, request 
 	})
 
 	return a.Apply(event)
-}
-
-func (a *InvoiceAggregate) SimulateInvoice(ctx context.Context, request *invoicepb.SimulateInvoiceRequest) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "InvoiceTempAggregate.SimulateInvoice")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("AggregateVersion", a.GetVersion()))
-
-	sourceFields := commonmodel.Source{}
-	sourceFields.FromGrpc(request.SourceFields)
-
-	createEvent, err := SimulateInvoiceNewEvent(a, sourceFields, request)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "SimulateInvoice")
-	}
-	aggregate.EnrichEventWithMetadataExtended(&createEvent, span, aggregate.EventMetadata{
-		Tenant: request.Tenant,
-		UserId: request.LoggedInUserId,
-		App:    request.SourceFields.AppSource,
-	})
-
-	return a.Apply(createEvent)
 }
 
 func (a *InvoiceAggregate) CreateNewInvoiceForContract(ctx context.Context, request *invoicepb.NewInvoiceForContractRequest) error {
