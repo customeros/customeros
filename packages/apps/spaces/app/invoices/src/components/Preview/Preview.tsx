@@ -39,7 +39,7 @@ export const Preview = () => {
       <ModalPortal>
         <ModalOverlay>
           {/* width and height of A4 */}
-          <ModalContent className='max-w-[794px] h-[1123px] top-[60%]'>
+          <ModalContent className='max-w-[794px] h-[1123px] top-[600px]'>
             <InvoicePreviewModalContent
               data={data}
               isError={isError}
