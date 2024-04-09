@@ -375,7 +375,7 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	case servicelineitemevent.ServiceLineItemUpdateV1:
 		return s.serviceLineItemEventHandler.OnUpdate(ctx, evt)
 	case servicelineitemevent.ServiceLineItemDeleteV1:
-		return s.serviceLineItemEventHandler.OnDelete(ctx, evt)
+		return s.serviceLineItemEventHandler.OnDeleteV1(ctx, evt)
 	case servicelineitemevent.ServiceLineItemCloseV1:
 		return s.serviceLineItemEventHandler.OnClose(ctx, evt)
 

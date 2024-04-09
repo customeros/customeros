@@ -16,6 +16,7 @@ type ServiceLineItemReadRepository interface {
 	GetServiceLineItemById(ctx context.Context, tenant, serviceLineItemId string) (*dbtype.Node, error)
 	GetAllForContract(ctx context.Context, tenant, contractId string) ([]*neo4j.Node, error)
 	GetLatestServiceLineItemByParentId(ctx context.Context, tenant, serviceLineItemParentId string, beforeDate *time.Time) (*dbtype.Node, error)
+	WasServiceLineItemInvoiced(ctx context.Context, tenant, serviceLineItemId string) (bool, error)
 }
 
 type serviceLineItemReadRepository struct {
@@ -135,4 +136,35 @@ func (r *serviceLineItemReadRepository) GetLatestServiceLineItemByParentId(ctx c
 	}
 	span.LogFields(log.Bool("result.found", result != nil))
 	return result.(*dbtype.Node), nil
+}
+
+func (r *serviceLineItemReadRepository) WasServiceLineItemInvoiced(ctx context.Context, tenant, serviceLineItemId string) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemReadRepository.WasServiceLineItemInvoiced")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, serviceLineItemId)
+
+	cypher := fmt.Sprintf(`MATCH (sli:ServiceLineItem {id:$id})<-[:INVOICED]-(il:InvoiceLine)--(i:Invoice {dryRun:false}) WHERE sli:ServiceLineItem_%s RETURN sli`, tenant)
+	params := map[string]any{
+		"id": serviceLineItemId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractFirstRecordFirstValueAsDbNodePtr(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return false, err
+	}
+	span.LogFields(log.Bool("result.found", result != nil))
+	return result != nil, nil
 }

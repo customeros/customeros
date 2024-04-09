@@ -7,6 +7,10 @@ import (
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 )
 
+const (
+	PARAM_CANCELLED = "cancelled"
+)
+
 // ServiceLineItem represents the state of a service line item aggregate.
 type ServiceLineItem struct {
 	ID         string             `json:"id"`

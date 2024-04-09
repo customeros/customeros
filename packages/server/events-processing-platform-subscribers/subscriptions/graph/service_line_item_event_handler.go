@@ -566,8 +566,8 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 	return nil
 }
 
-func (h *ServiceLineItemEventHandler) OnDelete(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemEventHandler.OnDelete")
+func (h *ServiceLineItemEventHandler) OnDeleteV1(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemEventHandler.OnDeleteV1")
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 	var user *dbtype.Node
@@ -626,6 +626,12 @@ func (h *ServiceLineItemEventHandler) OnDelete(ctx context.Context, evt eventsto
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while deleting service line item %s: %s", serviceLineItemId, err.Error())
+		return err
+	}
+	err = h.repositories.Neo4jRepositories.ServiceLineItemWriteRepository.AdjustEndDates(ctx, eventData.Tenant, serviceLineItemId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while adjusting end dates for service line item %s: %s", serviceLineItemId, err.Error())
 		return err
 	}
 
