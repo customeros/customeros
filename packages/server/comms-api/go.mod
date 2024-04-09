@@ -13,7 +13,7 @@ replace github.com/openline-ai/openline-customer-os/packages/server/events-proce
 require (
 	github.com/DusanKasan/parsemail v1.2.0
 	github.com/caarlos0/env/v6 v6.10.1
-	github.com/emersion/go-message v0.18.0
+	github.com/emersion/go-message v0.18.1
 	github.com/gin-contrib/cors v1.7.1
 	github.com/gin-gonic/gin v1.9.1
 	github.com/gorilla/websocket v1.5.1
@@ -46,7 +46,6 @@ require (
 	github.com/coocood/freecache v1.2.4 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
-	github.com/emersion/go-textwrapper v0.0.0-20200911093747-65d896831594 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
