@@ -144,7 +144,7 @@ func (r *serviceLineItemReadRepository) WasServiceLineItemInvoiced(ctx context.C
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, serviceLineItemId)
 
-	cypher := fmt.Sprintf(`MATCH (sli:ServiceLineItem {id:$id})<-[:INVOICED]-(il:InvoiceLine)--(i:Invoice {dryRun:false}) WHERE sli:ServiceLineItem_%s RETURN sli`, tenant)
+	cypher := fmt.Sprintf(`MATCH (sli:ServiceLineItem {id:$id})<-[:INVOICED]-(il:InvoiceLine)--(i:Invoice {dryRun:false}) WHERE sli:ServiceLineItem_%s RETURN count(sli)`, tenant)
 	params := map[string]any{
 		"id": serviceLineItemId,
 	}
@@ -155,16 +155,18 @@ func (r *serviceLineItemReadRepository) WasServiceLineItemInvoiced(ctx context.C
 	defer session.Close(ctx)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
-			return nil, err
-		} else {
-			return utils.ExtractFirstRecordFirstValueAsDbNodePtr(ctx, queryResult, err)
-		}
+		queryResult, err := tx.Run(ctx, cypher, params)
+		return utils.ExtractSingleRecordFirstValueAsType[int64](ctx, queryResult, err)
 	})
 	if err != nil {
+		span.LogFields(log.Bool("result.found", false))
 		tracing.TraceErr(span, err)
 		return false, err
 	}
-	span.LogFields(log.Bool("result.found", result != nil))
-	return result != nil, nil
+	if result.(int64) == 0 {
+		span.LogFields(log.Bool("result.found", false))
+		return false, nil
+	}
+	span.LogFields(log.Bool("result.found", true))
+	return true, nil
 }
