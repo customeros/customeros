@@ -23,6 +23,7 @@ type ServiceLineItem implements MetadataInterface {
     tax:                Tax!
     createdBy:          User @goField(forceResolver: true)
     externalLinks:      [ExternalSystem!]! @goField(forceResolver: true)
+    closed:             Boolean!
 }
 
 input ServiceLineItemInput {

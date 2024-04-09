@@ -876,7 +876,7 @@ func CreateServiceLineItemForContract(ctx context.Context, driver *neo4j.DriverW
 		"source":           serviceLineItem.Source,
 		"sourceOfTruth":    serviceLineItem.SourceOfTruth,
 		"appSource":        serviceLineItem.AppSource,
-		"isCanceled":       serviceLineItem.IsCanceled,
+		"isCanceled":       serviceLineItem.Canceled,
 		"billed":           serviceLineItem.Billed,
 		"quantity":         serviceLineItem.Quantity,
 		"price":            serviceLineItem.Price,
@@ -942,14 +942,14 @@ func InsertServiceLineItemCanceled(ctx context.Context, driver *neo4j.DriverWith
 	rand, _ := uuid.NewRandom()
 	id := rand.String()
 	CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{
-		ID:         id,
-		ParentID:   id,
-		Billed:     billedType,
-		Price:      price,
-		Quantity:   quantity,
-		IsCanceled: true,
-		StartedAt:  startedAt,
-		EndedAt:    &endedAt,
+		ID:        id,
+		ParentID:  id,
+		Billed:    billedType,
+		Price:     price,
+		Quantity:  quantity,
+		Canceled:  true,
+		StartedAt: startedAt,
+		EndedAt:   &endedAt,
 	})
 	return id
 }
@@ -999,7 +999,7 @@ func InsertServiceLineItemCanceledWithParent(ctx context.Context, driver *neo4j.
 		PreviousBilled:   previousBilledType,
 		PreviousPrice:    previousPrice,
 		PreviousQuantity: previousQuantity,
-		IsCanceled:       true,
+		Canceled:         true,
 		StartedAt:        startedAt,
 		EndedAt:          &endedAt,
 	})

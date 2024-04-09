@@ -14,7 +14,7 @@ type ServiceLineItemEntity struct {
 	UpdatedAt        time.Time
 	StartedAt        time.Time  // DateTime
 	EndedAt          *time.Time // DateTime
-	IsCanceled       bool
+	Canceled         bool
 	Billed           enum.BilledType
 	Price            float64
 	Quantity         int64
