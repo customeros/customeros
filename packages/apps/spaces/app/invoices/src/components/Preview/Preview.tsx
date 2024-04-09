@@ -35,17 +35,18 @@ export const Preview = () => {
   );
 
   return (
-    <Modal open={!!invoiceId} onOpenChange={onOpenChange}>
+    <Modal modal open={!!invoiceId} onOpenChange={onOpenChange}>
       <ModalPortal>
-        <ModalOverlay />
-        {/* width and height of A4 */}
-        <ModalContent className='max-w-[794px] h-[1123px]'>
-          <InvoicePreviewModalContent
-            data={data}
-            isError={isError}
-            isFetching={isLoading}
-          />
-        </ModalContent>
+        <ModalOverlay>
+          {/* width and height of A4 */}
+          <ModalContent className='max-w-[794px] h-[1123px] top-[60%]'>
+            <InvoicePreviewModalContent
+              data={data}
+              isError={isError}
+              isFetching={isLoading}
+            />
+          </ModalContent>
+        </ModalOverlay>
       </ModalPortal>
     </Modal>
   );
