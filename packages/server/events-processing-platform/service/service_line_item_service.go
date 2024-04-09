@@ -172,16 +172,6 @@ func (s *serviceLineItemService) UpdateServiceLineItem(ctx context.Context, requ
 			return nil, status.Errorf(codes.FailedPrecondition, "service line item with ID %s is already ended", request.Id)
 		}
 
-		//Close service line item
-		closeSliCommand := command.NewCloseServiceLineItemCommand(request.Id, request.Tenant, request.LoggedInUserId, source.AppSource, false,
-			versionDate, utils.TimestampProtoToTimePtr(request.UpdatedAt))
-
-		if err := s.serviceLineItemCommandHandlers.CloseServiceLineItem.Handle(ctx, closeSliCommand); err != nil {
-			tracing.TraceErr(span, err)
-			s.log.Errorf("(CloseServiceLineItem.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
-			return nil, grpcerr.ErrResponse(err)
-		}
-
 		//Create new service line item
 		serviceLineItemId := uuid.New().String()
 
@@ -225,15 +215,14 @@ func (s *serviceLineItemService) DeleteServiceLineItem(ctx context.Context, requ
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("id"))
 	}
 
-	deleteSliCommand := command.NewDeleteServiceLineItemCommand(request.Id, request.Tenant, request.LoggedInUserId, request.AppSource)
-
-	if err := s.serviceLineItemCommandHandlers.DeleteServiceLineItem.Handle(ctx, deleteSliCommand); err != nil {
+	sliAggregate := sliaggregate.NewServiceLineItemAggregateWithTenantAndID(request.Tenant, request.Id)
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, sliAggregate, eventstore.LoadAggregateOptions{}, request); err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("(DeleteServiceLineItem.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		s.log.Errorf("(DeleteServiceLineItem) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
 	}
 
-	// Return the ID of the updated service line item
+	// Return the ID of the deleted service line item
 	return &servicelineitempb.ServiceLineItemIdGrpcResponse{Id: request.Id}, nil
 }
 

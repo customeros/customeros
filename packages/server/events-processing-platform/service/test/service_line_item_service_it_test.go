@@ -247,7 +247,7 @@ func TestServiceLineItemService_UpdateServiceLineItemCreateNewVersion(t *testing
 	for _, value := range eventsMap {
 		eventList = append(eventList, value...)
 	}
-	createEvent := eventList[1]
+	createEvent := eventList[0]
 	var eventData event.ServiceLineItemCreateEvent
 	err = createEvent.GetJsonData(&eventData)
 

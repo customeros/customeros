@@ -371,9 +371,9 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.contractEventHandler.OnRefreshStatus(ctx, evt)
 
 	case servicelineitemevent.ServiceLineItemCreateV1:
-		return s.serviceLineItemEventHandler.OnCreate(ctx, evt)
+		return s.serviceLineItemEventHandler.OnCreateV1(ctx, evt)
 	case servicelineitemevent.ServiceLineItemUpdateV1:
-		return s.serviceLineItemEventHandler.OnUpdate(ctx, evt)
+		return s.serviceLineItemEventHandler.OnUpdateV1(ctx, evt)
 	case servicelineitemevent.ServiceLineItemDeleteV1:
 		return s.serviceLineItemEventHandler.OnDeleteV1(ctx, evt)
 	case servicelineitemevent.ServiceLineItemCloseV1:
