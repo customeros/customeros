@@ -139,6 +139,10 @@ func ConvertInvoiceHtmlToPdf(fsc fsc.FileStoreApiService, pdfConverterUrl string
 	if err != nil {
 		return nil, errors.Wrap(err, "addResourceFile customer-os.png")
 	}
+	err = addResourceFile(writer, resourcesPath, "/preview-stamp.png", "preview-stamp.png")
+	if err != nil {
+		return nil, errors.Wrap(err, "addResourceFile preview-stamp.png")
+	}
 	err = addResourceFile(writer, resourcesPath, "/line11681-7w4.svg", "line11681-7w4.svg")
 	if err != nil {
 		return nil, errors.Wrap(err, "addResourceFile line11681-7w4.svg")

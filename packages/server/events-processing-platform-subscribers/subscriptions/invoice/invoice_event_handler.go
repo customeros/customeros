@@ -953,6 +953,7 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 		"InvoiceLineItems":             []map[string]string{},
 		"Note":                         invoiceEntity.Note,
 		"CanPayByCheck":                contractEntity.Check,
+		"DryRun":                       invoiceEntity.DryRun,
 	}
 
 	// Include bank details
