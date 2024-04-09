@@ -21,7 +21,7 @@ require (
 	github.com/robfig/cron v1.2.0
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/net v0.24.0
-	google.golang.org/grpc v1.63.0
+	google.golang.org/grpc v1.63.2
 	gorm.io/gorm v1.25.9
 )
 
