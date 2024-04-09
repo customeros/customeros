@@ -78,7 +78,7 @@ func TestServiceLineItemEventHandler_OnCreate(t *testing.T) {
 	require.Nil(t, err)
 
 	// Execute the event handler
-	err = serviceLineItemEventHandler.OnCreate(ctx, createEvent)
+	err = serviceLineItemEventHandler.OnCreateV1(ctx, createEvent)
 	require.Nil(t, err, "failed to execute service line item create event handler")
 
 	// Assert Neo4j Node Counts
@@ -161,7 +161,7 @@ func TestServiceLineItemEventHandler_OnUpdate(t *testing.T) {
 	require.Nil(t, err)
 
 	// Execute the event handler
-	err = serviceLineItemEventHandler.OnUpdate(ctx, updateEvent)
+	err = serviceLineItemEventHandler.OnUpdateV1(ctx, updateEvent)
 	require.Nil(t, err, "failed to execute service line item update event handler")
 
 	// Assert Neo4j Node Counts
@@ -509,7 +509,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceIncreaseRetroactively_Timeline
 	require.Nil(t, err)
 
 	// Execute the event handler
-	err = serviceLineItemEventHandler.OnUpdate(ctx, updateEvent)
+	err = serviceLineItemEventHandler.OnUpdateV1(ctx, updateEvent)
 	require.Nil(t, err, "failed to execute service line item update event handler")
 
 	// Assert Neo4j Node Counts
@@ -596,7 +596,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceIncreasePerUseRetroactively_Ti
 	require.Nil(t, err)
 
 	// Execute the event handler
-	err = serviceLineItemEventHandler.OnUpdate(ctx, updateEvent)
+	err = serviceLineItemEventHandler.OnUpdateV1(ctx, updateEvent)
 	require.Nil(t, err, "failed to execute service line item update event handler")
 
 	// Assert Neo4j Node Counts
@@ -685,7 +685,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseRetroactively_Timeline
 	require.Nil(t, err)
 
 	// Execute the event handler
-	err = serviceLineItemEventHandler.OnUpdate(ctx, updateEvent)
+	err = serviceLineItemEventHandler.OnUpdateV1(ctx, updateEvent)
 	require.Nil(t, err, "failed to execute service line item update event handler")
 
 	// Assert Neo4j Node Counts
@@ -773,7 +773,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseOnceRetroactively_Time
 	require.Nil(t, err)
 
 	// Execute the event handler
-	err = serviceLineItemEventHandler.OnUpdate(ctx, updateEvent)
+	err = serviceLineItemEventHandler.OnUpdateV1(ctx, updateEvent)
 	require.Nil(t, err, "failed to execute service line item update event handler")
 
 	// Assert Neo4j Node Counts
@@ -858,7 +858,7 @@ func TestServiceLineItemEventHandler_OnUpdateQuantityIncreaseRetroactively_Timel
 	require.Nil(t, err)
 
 	// Execute the event handler
-	err = serviceLineItemEventHandler.OnUpdate(ctx, updateEvent)
+	err = serviceLineItemEventHandler.OnUpdateV1(ctx, updateEvent)
 	require.Nil(t, err, "failed to execute service line item update event handler")
 
 	// Assert Neo4j Node Counts
@@ -940,7 +940,7 @@ func TestServiceLineItemEventHandler_OnUpdateQuantityDecreaseRetroactively_Timel
 	err = updateEvent.SetMetadata(metadata)
 	require.Nil(t, err)
 	// Execute the event handler
-	err = serviceLineItemEventHandler.OnUpdate(ctx, updateEvent)
+	err = serviceLineItemEventHandler.OnUpdateV1(ctx, updateEvent)
 	require.Nil(t, err, "failed to execute service line item update event handler")
 
 	// Assert Neo4j Node Counts
@@ -1026,7 +1026,7 @@ func TestServiceLineItemEventHandler_OnUpdateBilledType_TimelineEvent(t *testing
 	err = updateEvent.SetMetadata(metadata)
 	require.Nil(t, err)
 	// Execute the event handler
-	err = serviceLineItemEventHandler.OnUpdate(ctx, updateEvent)
+	err = serviceLineItemEventHandler.OnUpdateV1(ctx, updateEvent)
 	require.Nil(t, err, "failed to execute service line item update event handler")
 
 	// Assert Neo4j Node Counts
@@ -1116,7 +1116,7 @@ func TestServiceLineItemEventHandler_OnCreateRecurringMonthly(t *testing.T) {
 	require.Nil(t, err)
 
 	// Execute the event handler
-	err = serviceLineItemEventHandler.OnCreate(ctx, createEvent)
+	err = serviceLineItemEventHandler.OnCreateV1(ctx, createEvent)
 	require.Nil(t, err, "failed to execute service line item create event handler")
 
 	// Assert Neo4j Node Counts
@@ -1215,7 +1215,7 @@ func TestServiceLineItemEventHandler_OnCreateRecurringAnnually(t *testing.T) {
 	require.Nil(t, err)
 
 	// Execute the event handler
-	err = serviceLineItemEventHandler.OnCreate(ctx, createEvent)
+	err = serviceLineItemEventHandler.OnCreateV1(ctx, createEvent)
 	require.Nil(t, err, "failed to execute service line item create event handler")
 
 	// Assert Neo4j Node Counts
@@ -1314,7 +1314,7 @@ func TestServiceLineItemEventHandler_OnCreateRecurringQuarterly(t *testing.T) {
 	require.Nil(t, err)
 
 	// Execute the event handler
-	err = serviceLineItemEventHandler.OnCreate(ctx, createEvent)
+	err = serviceLineItemEventHandler.OnCreateV1(ctx, createEvent)
 	require.Nil(t, err, "failed to execute service line item create event handler")
 
 	// Assert Neo4j Node Counts
@@ -1412,7 +1412,7 @@ func TestServiceLineItemEventHandler_OnCreateOnce(t *testing.T) {
 	require.Nil(t, err)
 
 	// Execute the event handler
-	err = serviceLineItemEventHandler.OnCreate(ctx, createEvent)
+	err = serviceLineItemEventHandler.OnCreateV1(ctx, createEvent)
 	require.Nil(t, err, "failed to execute service line item create event handler")
 
 	// Assert Neo4j Node Counts
@@ -1509,7 +1509,7 @@ func TestServiceLineItemEventHandler_OnCreatePerUse(t *testing.T) {
 	require.Nil(t, err)
 
 	// Execute the event handler
-	err = serviceLineItemEventHandler.OnCreate(ctx, createEvent)
+	err = serviceLineItemEventHandler.OnCreateV1(ctx, createEvent)
 	require.Nil(t, err, "failed to execute service line item create event handler")
 
 	// Assert Neo4j Node Counts
@@ -1610,7 +1610,7 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactiveQuantity
 	require.Nil(t, err)
 
 	// Execute the event handler
-	err = serviceLineItemEventHandler.OnCreate(ctx, createEvent)
+	err = serviceLineItemEventHandler.OnCreateV1(ctx, createEvent)
 	require.Nil(t, err, "failed to execute service line item create event handler")
 
 	// Assert Neo4j Node Counts
@@ -1713,7 +1713,7 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceInc
 	require.Nil(t, err)
 
 	// Execute the event handler
-	err = serviceLineItemEventHandler.OnCreate(ctx, createEvent)
+	err = serviceLineItemEventHandler.OnCreateV1(ctx, createEvent)
 	require.Nil(t, err, "failed to execute service line item create event handler")
 
 	// Assert Neo4j Node Counts
@@ -1814,7 +1814,7 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceInc
 	require.Nil(t, err)
 
 	// Execute the event handler
-	err = serviceLineItemEventHandler.OnCreate(ctx, createEvent)
+	err = serviceLineItemEventHandler.OnCreateV1(ctx, createEvent)
 	require.Nil(t, err, "failed to execute service line item create event handler")
 
 	// Assert Neo4j Node Counts
@@ -1927,7 +1927,7 @@ func TestServiceLineItemEventHandler_OnUpdateBilledTypeNonRetroactiveForExisting
 	require.Nil(t, err)
 
 	// Execute the event handler
-	err = serviceLineItemEventHandler.OnCreate(ctx, createEvent)
+	err = serviceLineItemEventHandler.OnCreateV1(ctx, createEvent)
 	require.Nil(t, err, "failed to execute service line item create event handler")
 
 	// Assert Neo4j Node Counts
@@ -2036,7 +2036,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceAndBilledTypeNonRetroactiveFor
 	require.Nil(t, err)
 
 	// Execute the event handler
-	err = serviceLineItemEventHandler.OnCreate(ctx, createEvent)
+	err = serviceLineItemEventHandler.OnCreateV1(ctx, createEvent)
 	require.Nil(t, err, "failed to execute service line item create event handler")
 
 	// Assert Neo4j Node Counts

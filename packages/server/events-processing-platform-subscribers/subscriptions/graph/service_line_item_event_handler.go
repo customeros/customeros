@@ -85,8 +85,8 @@ type ActionServiceLineItemRemovedMetadata struct {
 	Comment     string `json:"comment"`
 }
 
-func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemEventHandler.OnCreate")
+func (h *ServiceLineItemEventHandler) OnCreateV1(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemEventHandler.OnCreateV1")
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 	var user *dbtype.Node
@@ -159,6 +159,14 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 		h.log.Errorf("Error while saving service line item %s: %s", serviceLineItemId, err.Error())
 		return err
 	}
+
+	err = h.repositories.Neo4jRepositories.ServiceLineItemWriteRepository.AdjustEndDates(ctx, eventData.Tenant, eventData.ParentId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while adjusting end dates for service line item %s: %s", serviceLineItemId, err.Error())
+		return err
+	}
+
 	serviceLineItemDbNode, err := h.repositories.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemById(ctx, eventData.Tenant, serviceLineItemId)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -290,6 +298,7 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 			}
 		}
 	}
+
 	if isNewVersionForExistingSLI {
 		if priceChanged && (eventData.Billed == model.AnnuallyBilled.String() || eventData.Billed == model.QuarterlyBilled.String() || eventData.Billed == model.MonthlyBilled.String()) {
 			if eventData.Price > previousPrice {
@@ -357,8 +366,8 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 	return nil
 }
 
-func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemEventHandler.OnUpdate")
+func (h *ServiceLineItemEventHandler) OnUpdateV1(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemEventHandler.OnUpdateV1")
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 	var contractId string
@@ -398,6 +407,13 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while updating service line item %s: %s", serviceLineItemId, err.Error())
+		return err
+	}
+
+	err = h.repositories.Neo4jRepositories.ServiceLineItemWriteRepository.AdjustEndDates(ctx, eventData.Tenant, serviceLineItemEntity.ParentID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while adjusting end dates for service line item %s: %s", serviceLineItemId, err.Error())
 		return err
 	}
 
@@ -628,7 +644,7 @@ func (h *ServiceLineItemEventHandler) OnDeleteV1(ctx context.Context, evt events
 		h.log.Errorf("Error while deleting service line item %s: %s", serviceLineItemId, err.Error())
 		return err
 	}
-	err = h.repositories.Neo4jRepositories.ServiceLineItemWriteRepository.AdjustEndDates(ctx, eventData.Tenant, serviceLineItemId)
+	err = h.repositories.Neo4jRepositories.ServiceLineItemWriteRepository.AdjustEndDates(ctx, eventData.Tenant, serviceLineItemEntity.ParentID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while adjusting end dates for service line item %s: %s", serviceLineItemId, err.Error())

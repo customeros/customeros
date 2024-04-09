@@ -25,10 +25,6 @@ func (a *ServiceLineItemAggregate) HandleCommand(ctx context.Context, cmd events
 		return a.createServiceLineItem(ctx, c)
 	case *command.UpdateServiceLineItemCommand:
 		return a.updateServiceLineItem(ctx, c)
-	case *command.DeleteServiceLineItemCommand:
-		return a.deleteServiceLineItem(ctx, c)
-	case *command.CloseServiceLineItemCommand:
-		return a.closeServiceLineItem(ctx, c)
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidCommandType)
 		return eventstore.ErrInvalidCommandType
@@ -145,58 +141,4 @@ func (a *ServiceLineItemAggregate) updateServiceLineItem(ctx context.Context, cm
 	})
 
 	return a.Apply(updateEvent)
-}
-
-func (a *ServiceLineItemAggregate) deleteServiceLineItem(ctx context.Context, cmd *command.DeleteServiceLineItemCommand) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "ServiceLineItemAggregate.deleteServiceLineItem")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
-
-	deleteEvent, err := event.NewServiceLineItemDeleteEvent(a)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewServiceLineItemDeleteEvent")
-	}
-	aggregate.EnrichEventWithMetadataExtended(&deleteEvent, span, aggregate.EventMetadata{
-		Tenant: a.Tenant,
-		UserId: cmd.GetLoggedInUserId(),
-		App:    cmd.GetAppSource(),
-	})
-
-	return a.Apply(deleteEvent)
-}
-
-func (a *ServiceLineItemAggregate) closeServiceLineItem(ctx context.Context, cmd *command.CloseServiceLineItemCommand) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "ServiceLineItemAggregate.closeServiceLineItem")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
-
-	if a.ServiceLineItem.IsDeleted {
-		err := errors.New(constants.Validate + ": cannot close a deleted service line item")
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
-	endedAtNotNil := utils.ToDate(utils.IfNotNilTimeWithDefault(cmd.EndedAt, utils.Now()))
-
-	if endedAtNotNil.Before(utils.ToDate(a.ServiceLineItem.StartedAt)) {
-		endedAtNotNil = utils.ToDate(a.ServiceLineItem.StartedAt)
-	}
-	closeEvent, err := event.NewServiceLineItemCloseEvent(a, endedAtNotNil, updatedAtNotNil, cmd.SliIsCanceled)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewServiceLineItemCloseEvent")
-	}
-	aggregate.EnrichEventWithMetadataExtended(&closeEvent, span, aggregate.EventMetadata{
-		Tenant: a.Tenant,
-		UserId: cmd.GetLoggedInUserId(),
-		App:    cmd.GetAppSource(),
-	})
-
-	return a.Apply(closeEvent)
 }
