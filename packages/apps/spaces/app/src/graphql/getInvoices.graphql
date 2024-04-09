@@ -21,6 +21,10 @@ query getInvoices(
         }
         name
       }
+      customer {
+        name
+        email
+      }
       contract {
         metadata {
           id

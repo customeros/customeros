@@ -3,6 +3,9 @@ import React, { forwardRef, ElementRef } from 'react';
 import { twMerge } from 'tailwind-merge';
 import * as RadixAlertDialog from '@radix-ui/react-alert-dialog';
 
+import { XClose } from '@ui/media/icons/XClose';
+import { IconButton } from '@ui/form/IconButton/IconButton';
+
 interface AlertDialogGenericProps extends React.HTMLAttributes<HTMLDivElement> {
   asChild?: boolean;
   className?: string;
@@ -110,10 +113,10 @@ export const AlertDialogFooter = ({
 };
 export const AlertDialogCloseButton = forwardRef<
   ElementRef<typeof RadixAlertDialog.AlertDialogCancel>,
-  AlertDialogGenericProps
+  RadixAlertDialog.AlertDialogCancelProps
 >(({ asChild, children, ...props }, ref) => {
   return (
-    <RadixAlertDialog.Cancel ref={ref} asChild>
+    <RadixAlertDialog.Cancel ref={ref} asChild {...props}>
       {children}
     </RadixAlertDialog.Cancel>
   );
@@ -121,11 +124,31 @@ export const AlertDialogCloseButton = forwardRef<
 
 export const AlertDialogConfirmButton = forwardRef<
   ElementRef<typeof RadixAlertDialog.Action>,
-  AlertDialogGenericProps
->(({ asChild, children, ...props }, ref) => {
+  RadixAlertDialog.AlertDialogActionProps
+>(({ children, ...props }, ref) => {
   return (
-    <RadixAlertDialog.Action className='w-full' ref={ref} asChild={asChild}>
+    <RadixAlertDialog.Action className='w-full' ref={ref} {...props}>
       {children}
     </RadixAlertDialog.Action>
+  );
+});
+
+export const AlertDialogCloseIconButton = forwardRef<
+  ElementRef<typeof RadixAlertDialog.Cancel>,
+  RadixAlertDialog.AlertDialogCancelProps
+>(({ asChild, children, className, ...props }, ref) => {
+  return (
+    <RadixAlertDialog.Cancel
+      className={twMerge('absolute right-3 top-3', className)}
+      ref={ref}
+      {...props}
+    >
+      <IconButton
+        variant='ghost'
+        colorScheme='gray'
+        icon={<XClose />}
+        aria-label='Close dialog'
+      />
+    </RadixAlertDialog.Cancel>
   );
 });

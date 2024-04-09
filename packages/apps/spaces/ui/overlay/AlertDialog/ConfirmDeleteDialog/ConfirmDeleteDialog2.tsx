@@ -13,6 +13,7 @@ import {
   AlertDialogOverlay,
   AlertDialogCloseButton,
   AlertDialogConfirmButton,
+  AlertDialogCloseIconButton,
 } from '../AlertDialog';
 
 interface ConfirmDeleteDialogProps {
@@ -52,22 +53,16 @@ export const ConfirmDeleteDialog = ({
     <AlertDialog isOpen={isOpen} onClose={onClose} className='z-[99999]'>
       <AlertDialogOverlay>
         <AlertDialogContent className='rounded-xl bg-no-repeat bg-[url(/backgrounds/organization/circular-bg-pattern.png)]'>
-          {!hideCloseButton && (
-            <AlertDialogCloseButton>
-              <Button variant='solid' colorScheme='gray' onClick={onClose}>
-                Close
-              </Button>
-            </AlertDialogCloseButton>
-          )}
+          {!hideCloseButton && <AlertDialogCloseIconButton />}
           <FeaturedIcon size='lg' colorScheme={colorScheme as string}>
             {icon ? icon : <Icons.Trash1 />}
           </FeaturedIcon>
           <AlertDialogHeader className='text-lg font-bold mt-4'>
-            <span className='mt-4 pt-6 pb-0'>{label}</span>
+            <p className='pb-0'>{label}</p>
             {description && (
-              <span className='mt-4 text-base text-gray-600 '>
+              <p className='mt-1 text-sm text-gray-700 font-normal'>
                 {description}
-              </span>
+              </p>
             )}
           </AlertDialogHeader>
           {body && <AlertDialogBody>{body}</AlertDialogBody>}
@@ -76,7 +71,6 @@ export const ConfirmDeleteDialog = ({
             <AlertDialogCloseButton>
               <Button
                 ref={cancelRef}
-                onClick={onClose}
                 isDisabled={isLoading}
                 variant='outline'
                 colorScheme={'gray'}

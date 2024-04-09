@@ -103,7 +103,7 @@ const columns: Record<string, Column> = {
     cell: (props) => <BillingCycleCell value={props.getValue().billingCycle} />,
     skeleton: () => <Skeleton className='w-[100px] h-[18px]' />,
   }),
-  PAYMENT_STATUS: columnHelper.accessor('status', {
+  PAYMENT_STATUS: columnHelper.accessor((row) => row, {
     id: 'INVOICE_STATUS',
     minSize: 70,
     maxSize: 70,
@@ -118,7 +118,12 @@ const columns: Record<string, Column> = {
         {...getTHeadProps(props)}
       />
     ),
-    cell: (props) => <PaymentStatusCell value={props.getValue()} />,
+    cell: (props) => (
+      <PaymentStatusCell
+        value={props.getValue()?.status}
+        invoiceId={props.getValue()?.metadata?.id}
+      />
+    ),
     skeleton: () => <Skeleton className='w-[100px] h-[18px]' />,
   }),
   AMOUNT: columnHelper.accessor('amountDue', {

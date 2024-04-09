@@ -6,11 +6,14 @@ import { useMemo, useState, useCallback } from 'react';
 import { Invoice } from '@graphql/types';
 import { Table, SortingState } from '@ui/presentation/Table';
 import { mockedTableDefs } from '@shared/util/tableDefs.mock';
+import { SlashCircle01 } from '@ui/media/icons/SlashCircle01';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useTableViewDefsQuery } from '@shared/graphql/tableViewDefs.generated';
+import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog2';
 
 import { Empty } from '../Empty';
 import { Search } from '../Search';
+import { useTableActions } from '../../hooks/useTableActions';
 import { getColumnsConfig } from '../../components/Columns/Columns';
 import { useInvoicesPageData } from '../../hooks/useInvoicesPageData';
 
@@ -41,6 +44,7 @@ export const InvoicesTable = () => {
     isFetching,
     totalCount,
     hasNextPage,
+    isRefetching,
     fetchNextPage,
     totalAvailable,
   } = useInvoicesPageData({ sorting });
@@ -56,6 +60,13 @@ export const InvoicesTable = () => {
     () => getColumnsConfig(tableViewDef),
     [tableViewDef?.id],
   );
+
+  const { reset, targetId, isConfirming, onConfirm, isPending } =
+    useTableActions();
+
+  const targetInvoice = data?.find((i) => i.metadata.id === targetId);
+  const targetInvoiceNumber = targetInvoice?.invoiceNumber || '';
+  const targetInvoiceEmail = targetInvoice?.customer?.email || '';
 
   if (!columns.length || totalAvailable === 0) {
     return (
@@ -76,8 +87,19 @@ export const InvoicesTable = () => {
         canFetchMore={hasNextPage}
         onSortingChange={setSorting}
         onFetchMore={handleFetchMore}
-        isLoading={isLoading}
-        totalItems={isLoading ? 40 : totalCount || 0}
+        isLoading={isLoading && !isRefetching}
+        totalItems={isFetching ? 40 : totalCount || 0}
+      />
+      <ConfirmDeleteDialog
+        onClose={reset}
+        hideCloseButton
+        isLoading={isPending}
+        isOpen={isConfirming}
+        onConfirm={onConfirm}
+        icon={<SlashCircle01 />}
+        confirmButtonLabel='Void invoice'
+        label={`Void invoice ${targetInvoiceNumber}`}
+        description={`Voiding this invoice will send an email notification to ${targetInvoiceEmail}`}
       />
     </>
   );

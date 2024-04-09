@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { forwardRef } from 'react';
 
 import { twMerge } from 'tailwind-merge';
 import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu';
@@ -11,18 +11,18 @@ interface MenuItemProps extends DropdownMenuPrimitive.DropdownMenuItemProps {
   children: React.ReactNode;
 }
 
-export const MenuItem = React.forwardRef<HTMLDivElement, MenuItemProps>(
+export const MenuItem = forwardRef<HTMLDivElement, MenuItemProps>(
   ({ children, className, ...props }, forwardedRef) => {
     return (
       <DropdownMenuPrimitive.DropdownMenuItem
         {...props}
         ref={forwardedRef}
         className={twMerge(
-          'flex text-start py-[0.375rem] px-3 outline-none cursor-pointer hover:bg-gray-200 ',
+          'flex text-start py-[0.375rem] px-3 outline-none cursor-pointer hover:bg-gray-50 data-[highlighted]:bg-gray-50 data-[highlighted]:text-gray-700 data-[disabled]:text-gray-400 data-[disabled]:pointer-events-none',
           className,
         )}
       >
-        <span>{children}</span>
+        {children}
       </DropdownMenuPrimitive.DropdownMenuItem>
     );
   },
@@ -36,7 +36,7 @@ interface MenuListProps extends DropdownMenuPrimitive.DropdownMenuContentProps {
   side?: 'top' | 'right' | 'bottom' | 'left';
 }
 
-export const MenuList = React.forwardRef<HTMLDivElement, MenuListProps>(
+export const MenuList = forwardRef<HTMLDivElement, MenuListProps>(
   (
     { children, hasArrow, side = 'right', align = 'end', className, ...props },
     forwardedRef,
@@ -51,7 +51,7 @@ export const MenuList = React.forwardRef<HTMLDivElement, MenuListProps>(
           sideOffset={5}
           className={twMerge(
             className,
-            'bg-white min-w-[auto] py-2 border-b-[1px] shadow-xs outline-offset-[2px] outline-[2px] rounded-md shadow-[0 1px 2px 0 rgba(0,0,0,0.05)] data-[side=top]:animate-slideDownAndFade data-[side=right]:animate-slideLeftAndFade data-[side=bottom]:animate-slideUpAndFade data-[side=left]:animate-slideRightAndFade ',
+            'bg-white min-w-[auto] py-2 shadow-lg border rounded-md data-[side=top]:animate-slideDownAndFade data-[side=right]:animate-slideLeftAndFade data-[side=bottom]:animate-slideUpAndFade data-[side=left]:animate-slideRightAndFade ',
           )}
         >
           {children}
@@ -62,22 +62,7 @@ export const MenuList = React.forwardRef<HTMLDivElement, MenuListProps>(
   },
 );
 
-interface MenuButtonProps
-  extends DropdownMenuPrimitive.DropdownMenuTriggerProps {
-  className?: string;
-  children: React.ReactNode;
-}
-export const MenuButton = ({
-  className,
-  children,
-  ...props
-}: MenuButtonProps) => {
-  return (
-    <DropdownMenuPrimitive.Trigger
-      {...props}
-      className={twMerge('outline-none', className)}
-    >
-      {children}
-    </DropdownMenuPrimitive.Trigger>
-  );
+export const MenuButton = DropdownMenuPrimitive.Trigger;
+MenuButton.defaultProps = {
+  className: 'outline-none',
 };
