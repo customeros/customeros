@@ -141,7 +141,7 @@ func (r *invoiceWriteRepository) CreateInvoiceForContract(ctx context.Context, t
 		"createdAt":     data.CreatedAt,
 		"updatedAt":     data.CreatedAt,
 		"dueDate":       utils.ToNeo4jDateAsAny(&data.DueDate),
-		"issuedDate":    utils.ToNeo4jDateAsAny(&data.IssuedDate),
+		"issuedDate":    utils.ToDate(data.IssuedDate),
 		"source":        data.SourceFields.Source,
 		"sourceOfTruth": data.SourceFields.Source,
 		"appSource":     data.SourceFields.AppSource,

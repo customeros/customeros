@@ -317,27 +317,27 @@ func TestInvoiceResolver_Invoices_IssueDate(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
-	now := utils.Now()
-	tenWeeksAgo := now.Add(-10 * 7 * 24 * time.Hour)
-	yesterday := now.Add(-24 * time.Hour)
-	tomorrow := now.Add(24 * time.Hour)
-	inTenWeeks := now.Add(10 * 7 * 24 * time.Hour)
+	today := utils.ToDate(utils.Now())
+	tenWeeksAgo := today.Add(-10 * 7 * 24 * time.Hour)
+	yesterday := today.Add(-24 * time.Hour)
+	tomorrow := today.Add(24 * time.Hour)
+	inTenWeeks := today.Add(10 * 7 * 24 * time.Hour)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organizationId, neo4jentity.ContractEntity{})
 
 	invoice1Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
-		CreatedAt: yesterday,
+		IssuedDate: yesterday,
 	})
 	invoice2Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
-		CreatedAt: tomorrow,
+		IssuedDate: tomorrow,
 	})
 	neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
-		CreatedAt: tenWeeksAgo,
+		IssuedDate: tenWeeksAgo,
 	})
 	neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
-		CreatedAt: inTenWeeks,
+		IssuedDate: inTenWeeks,
 	})
 
 	rawResponse := callGraphQL(t, "invoice/get_invoices_filter_issue_date", map[string]interface{}{

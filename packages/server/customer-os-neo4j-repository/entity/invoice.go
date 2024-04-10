@@ -15,7 +15,7 @@ type InvoiceEntity struct {
 	PeriodStartDate  time.Time     // Date only
 	PeriodEndDate    time.Time     // Date only
 	DueDate          time.Time     `neo4jDb:"property:dueDate;lookupName:DUE_DATE;supportCaseSensitive:false"`       // Date only
-	IssuedDate       time.Time     `neo4jDb:"property:issuedDate;lookupName:ISSUED_DATE;supportCaseSensitive:false"` // Date only
+	IssuedDate       time.Time     `neo4jDb:"property:issuedDate;lookupName:ISSUED_DATE;supportCaseSensitive:false"` // Datetime
 	Customer         InvoiceCustomer
 	Provider         InvoiceProvider
 	Amount           float64 `neo4jDb:"property:amount;lookupName:AMOUNT;supportCaseSensitive:false"`
