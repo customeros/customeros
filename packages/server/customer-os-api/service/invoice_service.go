@@ -42,6 +42,7 @@ type InvoiceService interface {
 	GetInvoices(ctx context.Context, organizationId string, page, limit int, where *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	GetById(ctx context.Context, invoiceId string) (*neo4jentity.InvoiceEntity, error)
 	GetInvoiceLinesForInvoices(ctx context.Context, invoiceIds []string) (*neo4jentity.InvoiceLineEntities, error)
+	GetInvoicesForContracts(ctx context.Context, contractIds []string) (*neo4jentity.InvoiceEntities, error)
 	SimulateInvoice(ctx context.Context, invoiceData *SimulateInvoiceData) (*neo4jentity.InvoiceEntities, error)
 	NextInvoiceDryRun(ctx context.Context, contractId string) (string, error)
 	UpdateInvoice(ctx context.Context, input model.InvoiceUpdateInput) error
@@ -418,6 +419,11 @@ func (s *invoiceService) GetById(ctx context.Context, invoiceId string) (*neo4je
 }
 
 func (s *invoiceService) GetInvoiceLinesForInvoices(ctx context.Context, invoiceIds []string) (*neo4jentity.InvoiceLineEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.GetInvoiceLinesForInvoices")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("invoiceIds", invoiceIds))
+
 	invoiceLines, err := s.repositories.Neo4jRepositories.InvoiceLineReadRepository.GetAllForInvoices(ctx, common.GetTenantFromContext(ctx), invoiceIds)
 	if err != nil {
 		return nil, err
@@ -429,6 +435,25 @@ func (s *invoiceService) GetInvoiceLinesForInvoices(ctx context.Context, invoice
 		invoiceLineEntities = append(invoiceLineEntities, *invoiceLineEntity)
 	}
 	return &invoiceLineEntities, nil
+}
+
+func (s *invoiceService) GetInvoicesForContracts(ctx context.Context, contractIds []string) (*neo4jentity.InvoiceEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.GetInvoicesForContracts")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("contractIds", contractIds))
+
+	invoices, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetAllForContracts(ctx, common.GetTenantFromContext(ctx), contractIds)
+	if err != nil {
+		return nil, err
+	}
+	invoiceEntities := make(neo4jentity.InvoiceEntities, 0, len(invoices))
+	for _, v := range invoices {
+		invoiceEntity := mapper.MapDbNodeToInvoiceEntity(v.Node)
+		invoiceEntity.DataloaderKey = v.LinkedNodeId
+		invoiceEntities = append(invoiceEntities, *invoiceEntity)
+	}
+	return &invoiceEntities, nil
 }
 
 func (s *invoiceService) SimulateInvoice(ctx context.Context, invoiceData *SimulateInvoiceData) (*neo4jentity.InvoiceEntities, error) {

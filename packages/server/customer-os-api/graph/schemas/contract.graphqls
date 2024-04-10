@@ -29,6 +29,8 @@ type Contract implements MetadataInterface {
     contractStatus:     ContractStatus!
     autoRenew:          Boolean!
     attachments:        [Attachment!] @goField(forceResolver: true)
+    invoices:           [Invoice!]! @goField(forceResolver: true)
+    upcomingInvoices:   [Invoice!]! @goField(forceResolver: true)
 
     """
     Deprecated, use committedPeriodInMonths instead.

@@ -102,6 +102,7 @@ type Loaders struct {
 	InvoiceLinesForInvoice                        *dataloader.Loader
 	OrganizationPlanMilestonesForOrganizationPlan *dataloader.Loader
 	OrdersForOrganization                         *dataloader.Loader
+	InvoicesForContract                           *dataloader.Loader
 }
 
 type tagBatcher struct {
@@ -406,6 +407,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		InvoiceLinesForInvoice:                        dataloader.NewBatchedLoader(invoiceBatcher.getInvoiceLinesForInvoice, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		OrganizationPlanMilestonesForOrganizationPlan: dataloader.NewBatchedLoader(organizationPlanBatcher.getOrganizationPlanMilestonesForOrganizationPlans, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		OrdersForOrganization:                         dataloader.NewBatchedLoader(orderBatcher.getOrdersForOrganizations, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		InvoicesForContract:                           dataloader.NewBatchedLoader(invoiceBatcher.getInvoicesForContract, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 	}
 }
 

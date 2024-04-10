@@ -7,7 +7,6 @@ package resolver
 import (
 	"context"
 	"errors"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
@@ -110,6 +109,54 @@ func (r *contractResolver) Attachments(ctx context.Context, obj *model.Contract)
 		return nil, nil
 	}
 	return mapper.MapEntitiesToAttachment(attachmentEntities), nil
+}
+
+// Invoices is the resolver for the invoices field.
+func (r *contractResolver) Invoices(ctx context.Context, obj *model.Contract) ([]*model.Invoice, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	invoiceEntities, err := dataloader.For(ctx).GetInvoicesForContract(ctx, obj.Metadata.ID)
+
+	nonDryRunInvoiceEntities := make(neo4jentity.InvoiceEntities, 0)
+	if invoiceEntities != nil {
+		for _, invoice := range *invoiceEntities {
+			if !invoice.DryRun {
+				nonDryRunInvoiceEntities = append(nonDryRunInvoiceEntities, invoice)
+			}
+		}
+	}
+
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("failed to get invoices for contract %s: %s", obj.Metadata.ID, err.Error())
+		graphql.AddErrorf(ctx, "failed to get invoices for contract %s", obj.Metadata.ID)
+		return nil, nil
+	}
+	return mapper.MapEntitiesToInvoices(&nonDryRunInvoiceEntities), nil
+}
+
+// UpcomingInvoices is the resolver for the upcomingInvoices field.
+func (r *contractResolver) UpcomingInvoices(ctx context.Context, obj *model.Contract) ([]*model.Invoice, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	invoiceEntities, err := dataloader.For(ctx).GetInvoicesForContract(ctx, obj.Metadata.ID)
+
+	upcomingInvoiceEntities := make(neo4jentity.InvoiceEntities, 0)
+	if invoiceEntities != nil {
+		for _, invoice := range *invoiceEntities {
+			if invoice.DryRun && invoice.Preview && !invoice.IssuedDate.Before(utils.Today()) {
+				upcomingInvoiceEntities = append(upcomingInvoiceEntities, invoice)
+			}
+		}
+	}
+
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("failed to get upcoming invoices for contract %s: %s", obj.Metadata.ID, err.Error())
+		graphql.AddErrorf(ctx, "failed to get upcoming invoices for contract %s", obj.Metadata.ID)
+		return nil, nil
+	}
+	return mapper.MapEntitiesToInvoices(&upcomingInvoiceEntities), nil
 }
 
 // ServiceLineItems is the resolver for the serviceLineItems field.
