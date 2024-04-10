@@ -224,11 +224,10 @@ export const OnboardingStatusModal = ({
                     <b>Reason for change</b> (optional)
                   </label>
                   <FormAutoresizeTextarea
-                    pt='0'
                     formId={formId}
                     name='comments'
                     spellCheck='false'
-                    isDisabled={updateOnboardingStatus.isPending}
+                    disabled={updateOnboardingStatus.isPending}
                     placeholder={`What is the reason for changing the onboarding status?`}
                   />
                 </div>

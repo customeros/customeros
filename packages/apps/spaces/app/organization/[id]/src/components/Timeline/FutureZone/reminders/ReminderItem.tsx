@@ -122,14 +122,15 @@ export const ReminderItem = ({
       }}
     >
       <FormAutoresizeTextarea
-        className='px-4 pb-0 text-sm font-light border-b-0 font-sticky hover:border-b-0 focus:border-b-0'
+        className='px-4 pb-0 text-sm font-light font-sticky hover:border-transparent focus-within:border-transparent focus-within:hover:border-transparent'
         ref={ref}
+        border
         readOnly={isMutating}
         name='content'
         formId={formId}
         onBlur={updateReminder}
         onFocus={() => setIsFocused(true)}
-        cacheMeasurements={true}
+        cacheMeasurements
         maxRows={isFocused ? undefined : 3}
         placeholder='What should we remind you about?'
       />

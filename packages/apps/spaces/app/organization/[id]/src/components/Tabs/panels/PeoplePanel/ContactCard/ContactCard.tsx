@@ -426,7 +426,7 @@ export const ContactCard = ({
               leftElement={<Icons.Clock color='gray.500' />}
             />
             <FormAutoresizeTextarea
-              pl='30px'
+              className='items-start'
               formId={formId}
               name='note'
               placeholder='Notes'

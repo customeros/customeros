@@ -125,7 +125,7 @@ interface TimeInputProps extends Omit<InputProps, 'value' | 'onChange'> {
 const TimeInput = ({ onChange, value, ...rest }: TimeInputProps) => {
   return (
     <Input
-      className='text-gray-500 mb-[-2px] text-sm appearance-none leading-[1] [&::-webkit-calendar-picker-indicator]:hidden p-0 min-h-0 w-fit focus:text-gray-700 focus:border-primary-500 cursor-text list-none'
+      className='text-gray-500 mb-[-4px] text-sm appearance-none leading-[1] [&::-webkit-calendar-picker-indicator]:hidden p-0 min-h-0 w-fit focus:text-gray-700 focus:border-primary-500 cursor-text list-none'
       type='time'
       list='hidden'
       size='xs'
