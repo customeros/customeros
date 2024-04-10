@@ -69,7 +69,7 @@ func TestInvoiceEventHandler_OnInvoiceCreateForContractV1(t *testing.T) {
 		neo4jenum.BillingCycleMonthlyBilling.String(),
 		"some note",
 		true,
-		true,
+		false,
 		true,
 		true,
 		now,
@@ -99,9 +99,10 @@ func TestInvoiceEventHandler_OnInvoiceCreateForContractV1(t *testing.T) {
 	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, createdInvoice.AppSource)
 	require.Equal(t, now, createdInvoice.CreatedAt)
 	require.Equal(t, now, createdInvoice.UpdatedAt)
-	require.Equal(t, utils.ToDate(now).AddDate(0, 0, 2), createdInvoice.DueDate)
+	require.Equal(t, utils.ToDate(now).AddDate(0, 0, 2), createdInvoice.IssuedDate)
+	require.Equal(t, utils.ToDate(now).AddDate(0, 0, 4), createdInvoice.DueDate)
 	require.Equal(t, true, createdInvoice.DryRun)
-	require.Equal(t, true, createdInvoice.OffCycle)
+	require.Equal(t, false, createdInvoice.OffCycle)
 	require.Equal(t, true, createdInvoice.Postpaid)
 	require.Equal(t, true, createdInvoice.Preview)
 	require.Equal(t, "", createdInvoice.Number)

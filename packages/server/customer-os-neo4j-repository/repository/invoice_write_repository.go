@@ -23,6 +23,7 @@ type InvoiceCreateFields struct {
 	PeriodStartDate time.Time               `json:"periodStartDate"`
 	PeriodEndDate   time.Time               `json:"periodEndDate"`
 	CreatedAt       time.Time               `json:"createdAt"`
+	IssuedDate      time.Time               `json:"issuedDate"`
 	DueDate         time.Time               `json:"dueDate"`
 	SourceFields    model.Source            `json:"sourceFields"`
 	BillingCycle    neo4jenum.BillingCycle  `json:"billingCycle"`
@@ -117,6 +118,7 @@ func (r *invoiceWriteRepository) CreateInvoiceForContract(ctx context.Context, t
 								i:Invoice_%s,
 								i.createdAt=$createdAt,
 								i.dueDate=$dueDate,
+								i.issuedDate=$issuedDate,
 								i.source=$source,
 								i.sourceOfTruth=$sourceOfTruth,
 								i.appSource=$appSource,
@@ -139,6 +141,7 @@ func (r *invoiceWriteRepository) CreateInvoiceForContract(ctx context.Context, t
 		"createdAt":     data.CreatedAt,
 		"updatedAt":     data.CreatedAt,
 		"dueDate":       utils.ToNeo4jDateAsAny(&data.DueDate),
+		"issuedDate":    utils.ToNeo4jDateAsAny(&data.IssuedDate),
 		"source":        data.SourceFields.Source,
 		"sourceOfTruth": data.SourceFields.Source,
 		"appSource":     data.SourceFields.AppSource,

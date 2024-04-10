@@ -24,6 +24,7 @@ func TestInvoiceResolver_Invoice(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 
 	timeNow := utils.Now()
+	today := utils.ToDate(timeNow)
 	yesterday := timeNow.Add(-24 * time.Hour)
 	tomorrow := timeNow.Add(24 * time.Hour)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
@@ -41,6 +42,7 @@ func TestInvoiceResolver_Invoice(t *testing.T) {
 		PeriodStartDate:  yesterday,
 		PeriodEndDate:    tomorrow,
 		DueDate:          timeNow,
+		IssuedDate:       today,
 		Amount:           100,
 		Vat:              19,
 		TotalAmount:      119,
@@ -85,6 +87,7 @@ func TestInvoiceResolver_Invoice(t *testing.T) {
 	require.Equal(t, utils.ToDate(yesterday), invoice.InvoicePeriodStart)
 	require.Equal(t, utils.ToDate(tomorrow), invoice.InvoicePeriodEnd)
 	require.Equal(t, utils.ToDate(timeNow), invoice.Due)
+	require.Equal(t, today, invoice.Issued)
 	require.Equal(t, 100.0, invoice.Subtotal)
 	require.Equal(t, 19.0, invoice.TaxDue)
 	require.Equal(t, 119.0, invoice.AmountDue)
