@@ -56,7 +56,7 @@ message FillInvoiceRequest {
   FillInvoiceProvider Provider = 16;
   bool dryRun = 17;
   string invoiceNumber = 18;
-  bool preview = 19 [deprecated = true];
+  bool preview = 19;
 }
 
 message FillInvoiceCustomer {

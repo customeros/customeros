@@ -34,8 +34,10 @@ func (s *tenantService) AddBillingProfile(ctx context.Context, request *tenantpb
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	tracing.LogObjectAsJson(span, "request", request)
 
-	tenantAggregate := tenant.NewTenantAggregate(request.Tenant)
-	billingProfileId, err := s.services.RequestHandler.HandleGRPCRequest(ctx, tenantAggregate, *eventstore.NewLoadAggregateOptions(), request)
+	initAggregateFunc := func() eventstore.Aggregate {
+		return tenant.NewTenantAggregate(request.Tenant)
+	}
+	billingProfileId, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, *eventstore.NewLoadAggregateOptions(), request)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(AddBillingProfile) tenant:{%v}, err: %v", request.Tenant, err.Error())
@@ -51,8 +53,10 @@ func (s *tenantService) UpdateBillingProfile(ctx context.Context, request *tenan
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	tracing.LogObjectAsJson(span, "request", request)
 
-	tenantAggregate := tenant.NewTenantAggregate(request.Tenant)
-	_, err := s.services.RequestHandler.HandleGRPCRequest(ctx, tenantAggregate, *eventstore.NewLoadAggregateOptions(), request)
+	initAggregateFunc := func() eventstore.Aggregate {
+		return tenant.NewTenantAggregate(request.Tenant)
+	}
+	_, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, *eventstore.NewLoadAggregateOptions(), request)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(UpdateBillingProfile) tenant:{%v}, err: %v", request.Tenant, err.Error())
@@ -68,8 +72,10 @@ func (s *tenantService) UpdateTenantSettings(ctx context.Context, request *tenan
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	tracing.LogObjectAsJson(span, "request", request)
 
-	tenantAggregate := tenant.NewTenantAggregate(request.Tenant)
-	_, err := s.services.RequestHandler.HandleGRPCRequest(ctx, tenantAggregate, *eventstore.NewLoadAggregateOptions(), request)
+	initAggregateFunc := func() eventstore.Aggregate {
+		return tenant.NewTenantAggregate(request.Tenant)
+	}
+	_, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, *eventstore.NewLoadAggregateOptions(), request)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(UpdateTenantSettings) tenant:{%v}, err: %v", request.Tenant, err.Error())
@@ -85,8 +91,10 @@ func (s *tenantService) AddBankAccount(ctx context.Context, request *tenantpb.Ad
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	tracing.LogObjectAsJson(span, "request", request)
 
-	tenantAggregate := tenant.NewTenantAggregate(request.Tenant)
-	bankAccountId, err := s.services.RequestHandler.HandleGRPCRequest(ctx, tenantAggregate, *eventstore.NewLoadAggregateOptions(), request)
+	initAggregateFunc := func() eventstore.Aggregate {
+		return tenant.NewTenantAggregate(request.Tenant)
+	}
+	bankAccountId, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, *eventstore.NewLoadAggregateOptions(), request)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(AddBankAccount) tenant:{%v}, err: %v", request.Tenant, err.Error())
@@ -102,8 +110,10 @@ func (s *tenantService) UpdateBankAccount(ctx context.Context, request *tenantpb
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	tracing.LogObjectAsJson(span, "request", request)
 
-	tenantAggregate := tenant.NewTenantAggregate(request.Tenant)
-	_, err := s.services.RequestHandler.HandleGRPCRequest(ctx, tenantAggregate, *eventstore.NewLoadAggregateOptions(), request)
+	initAggregateFunc := func() eventstore.Aggregate {
+		return tenant.NewTenantAggregate(request.Tenant)
+	}
+	_, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, *eventstore.NewLoadAggregateOptions(), request)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(UpdateBankAccount) tenant:{%v}, err: %v", request.Tenant, err.Error())
@@ -119,8 +129,10 @@ func (s *tenantService) DeleteBankAccount(ctx context.Context, request *tenantpb
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	tracing.LogObjectAsJson(span, "request", request)
 
-	tenantAggregate := tenant.NewTenantAggregate(request.Tenant)
-	_, err := s.services.RequestHandler.HandleGRPCRequest(ctx, tenantAggregate, *eventstore.NewLoadAggregateOptions(), request)
+	initAggregateFunc := func() eventstore.Aggregate {
+		return tenant.NewTenantAggregate(request.Tenant)
+	}
+	_, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, *eventstore.NewLoadAggregateOptions(), request)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(DeleteBankAccount) tenant:{%v}, err: %v", request.Tenant, err.Error())

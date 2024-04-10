@@ -55,6 +55,8 @@ func (as *aggregateStore) Load(ctx context.Context, aggregate es.Aggregate) erro
 		esEvent := es.NewEventFromRecorded(event.Event)
 		if err := aggregate.RaiseEvent(esEvent); err != nil {
 			tracing.TraceErr(span, err)
+			span.LogFields(log.Object("error.esEvent.version", esEvent.Version))
+			span.LogFields(log.Object("error.aggregate.version", aggregate.GetVersion()))
 			as.log.Errorf("(Load) aggregate.RaiseEvent: {%+v}", err)
 			return errors.Wrap(err, "RaiseEvent")
 		}
