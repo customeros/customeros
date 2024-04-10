@@ -324,6 +324,27 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
                 }
               />
             </PaymentDetailsPopover>
+            <PaymentDetailsPopover
+              withNavigation
+              content={
+                tenantBillingProfile?.check ? '' : 'Check not enabled yet'
+              }
+            >
+              <FormSwitch
+                name='check'
+                isInvalid={!tenantBillingProfile?.check}
+                formId={formId}
+                size='sm'
+                labelProps={{
+                  margin: 0,
+                }}
+                label={
+                  <div className='text-sm font-normal whitespace-nowrap'>
+                    Check
+                  </div>
+                }
+              />
+            </PaymentDetailsPopover>
           </div>
         </>
       )}

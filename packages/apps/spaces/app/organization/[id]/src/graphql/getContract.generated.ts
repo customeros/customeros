@@ -68,6 +68,7 @@ export type GetContractQuery = {
       payOnline?: boolean | null;
       dueDays?: any | null;
       billingEmailCC?: Array<string> | null;
+      check?: boolean | null;
       billingEmailBCC?: Array<string> | null;
     } | null;
   };
@@ -113,6 +114,7 @@ export const GetContractDocument = `
       dueDays
       billingEmail
       billingEmailCC
+      check
       billingEmailBCC
     }
   }

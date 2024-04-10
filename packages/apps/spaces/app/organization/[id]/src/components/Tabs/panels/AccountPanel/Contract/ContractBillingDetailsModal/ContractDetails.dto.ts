@@ -12,6 +12,7 @@ import {
 import { paymentDueOptions, contractBillingCycleOptions } from '../../utils';
 
 export interface ContractDetailsForm {
+  check?: boolean | null;
   payOnline?: boolean | null;
   autoRenew?: boolean | null;
   contractEnded?: Date | null;
@@ -19,8 +20,8 @@ export interface ContractDetailsForm {
   invoicingStarted?: Date | null;
   canPayWithCard?: boolean | null;
   payAutomatically?: boolean | null;
-  dueDays?: SelectOption<number> | null;
 
+  dueDays?: SelectOption<number> | null;
   canPayWithDirectDebit?: boolean | null;
   committedPeriodInMonths?: number | null;
   canPayWithBankTransfer?: boolean | null;
@@ -42,6 +43,7 @@ export class ContractDetailsDto implements ContractDetailsForm {
   payAutomatically?: boolean | null;
   dueDays?: SelectOption<number> | null;
   autoRenew?: boolean | null;
+  check?: boolean | null;
 
   constructor(data?: Partial<GetContractQuery['contract']> | null) {
     this.committedPeriodInMonths = data?.committedPeriodInMonths;
@@ -65,6 +67,7 @@ export class ContractDetailsDto implements ContractDetailsForm {
       (e) => e.value === data?.billingDetails?.dueDays,
     );
     this.autoRenew = data?.autoRenew;
+    this.check = data?.billingDetails?.check ?? false;
   }
 
   static toForm(
@@ -94,6 +97,7 @@ export class ContractDetailsDto implements ContractDetailsForm {
         dueDays: data?.dueDays?.value,
         invoicingStarted: data?.invoicingStarted,
         billingCycle: data?.billingCycle?.value,
+        check: data?.check,
       },
       patch: true,
     };

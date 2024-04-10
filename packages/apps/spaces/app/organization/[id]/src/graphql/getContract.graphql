@@ -37,6 +37,7 @@ query getContract($id: ID!) {
       dueDays
       billingEmail
       billingEmailCC
+      check
       billingEmailBCC
     }
   }
