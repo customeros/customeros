@@ -5,7 +5,7 @@ import { Input, InputProps } from '@ui/form/Input/Input2';
 export const ResizableInput = forwardRef<HTMLInputElement, InputProps>(
   (props: InputProps, ref) => {
     const spanRef = useRef<HTMLSpanElement>(null);
-    const [width, setWidth] = useState('0px');
+    const [width, setWidth] = useState('10px');
     useEffect(() => {
       const measureWidth = () => {
         if (spanRef.current) {

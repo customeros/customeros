@@ -1,32 +1,33 @@
 'use client';
 import React, { FC, useMemo } from 'react';
+import { useField } from 'react-inverted-form';
 
 import { useConnections } from '@integration-app/react';
 import { useTenantSettingsQuery } from '@settings/graphql/getTenantSettings.generated';
 import { useGetExternalSystemInstancesQuery } from '@settings/graphql/getExternalSystemInstances.generated';
 
-import { Box } from '@ui/layout/Box';
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
-import { FormInput } from '@ui/form/Input';
-import { ModalBody } from '@ui/overlay/Modal';
-import { Tooltip } from '@ui/overlay/Tooltip';
-import { FormSelect } from '@ui/form/SyncSelect';
-import { InfoCircle } from '@ui/media/icons/InfoCircle';
+import { Button } from '@ui/form/Button/Button';
+import { ModalBody } from '@ui/overlay/Modal/Modal';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
+import { FormSelect } from '@ui/form/Select/FormSelect';
 import { FormSwitch } from '@ui/form/Switch/FromSwitch';
-import { SelectOption } from '@shared/types/SelectOptions';
-import { countryOptions } from '@shared/util/countryOptions';
+import { Divider } from '@ui/presentation/Divider/Divider';
 import { FormCheckbox } from '@ui/form/Checkbox/FormCheckbox';
 import { currencyOptions } from '@shared/util/currencyOptions';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { DatePickerUnderline } from '@ui/form/DatePicker/DatePickerUnderline';
 import {
   Currency,
   BankAccount,
   ExternalSystemType,
   TenantBillingProfile,
 } from '@graphql/types';
+import {
+  paymentDueOptions,
+  contractBillingCycleOptions,
+} from '@organization/src/components/Tabs/panels/AccountPanel/utils';
+import { CommittedPeriodInput } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/CommittedPeriodInput';
 import { PaymentDetailsPopover } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/PaymentDetailsPopover';
-import { EmailsInputGroup } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/EmailsInputGroup/EmailsInputGroup';
 
 import { ContractUploader } from './ContractUploader';
 
@@ -34,34 +35,18 @@ interface SubscriptionServiceModalProps {
   formId: string;
   currency?: string;
   contractId: string;
-  isEmailValid: boolean;
-  organizationName: string;
-  to?: SelectOption<string> | null;
   payAutomatically?: boolean | null;
-  country?: SelectOption<string> | null;
-  cc?: Array<SelectOption<string>> | null;
-  bcc?: Array<SelectOption<string>> | null;
   tenantBillingProfile?: TenantBillingProfile | null;
   bankAccounts: Array<BankAccount> | null | undefined;
-  onSetIsBillingDetailsHovered: (newState: boolean) => void;
-  onSetIsBillingDetailsFocused: (newState: boolean) => void;
 }
 
 export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
   formId,
   contractId,
-  isEmailValid,
-  onSetIsBillingDetailsFocused,
-  onSetIsBillingDetailsHovered,
   currency,
   tenantBillingProfile,
-  organizationName,
   bankAccounts,
-  country,
   payAutomatically,
-  to,
-  cc,
-  bcc,
 }) => {
   const client = getGraphQLClient();
   const { data: tenantSettingsData } = useTenantSettingsQuery(client);
@@ -73,14 +58,10 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
   const isStripeActive = !!iConnections
     .map((item) => item.integration?.key)
     .find((e) => e === 'stripe');
-  const tooltipContent = useMemo(() => {
-    if (availablePaymentMethodTypes?.length && isStripeActive) {
-      return `If auto-payment fails, ${organizationName} can still pay using one of the other enabled payment options.`;
-    }
 
-    return '';
-  }, [isStripeActive, availablePaymentMethodTypes, organizationName]);
-
+  const { getInputProps } = useField('autoRenew', formId);
+  const { onChange: onChangeAutoRenew, value: autoRenewValue } =
+    getInputProps();
   const bankTransferPopoverContent = useMemo(() => {
     if (!tenantBillingProfile?.canPayWithBankTransfer) {
       return 'Bank transfer not enabled yet';
@@ -122,145 +103,117 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
   }, [currency]);
 
   return (
-    <ModalBody pb='0' gap={4} display='flex' flexDir='column' flex={1}>
-      <ContractUploader contractId={contractId} />
+    <ModalBody className='flex flex-col flex-1 p-0'>
+      <ul className='mb-2 list-disc ml-5'>
+        <li className='text-sm '>
+          <div className='flex items-baseline'>
+            <CommittedPeriodInput formId={formId} />
 
-      <FormInput
-        label='Organization legal name'
-        isLabelVisible
-        labelProps={{
-          fontSize: 'sm',
-          mb: 0,
-          fontWeight: 'semibold',
-        }}
-        onMouseEnter={() => onSetIsBillingDetailsHovered(true)}
-        onMouseLeave={() => onSetIsBillingDetailsHovered(false)}
-        onFocus={() => onSetIsBillingDetailsFocused(true)}
-        onBlur={() => onSetIsBillingDetailsFocused(false)}
-        formId={formId}
-        name='organizationLegalName'
-        textOverflow='ellipsis'
-        placeholder='Organization legal name'
-        autoComplete='off'
-      />
+            <span className='whitespace-nowrap mr-1'>contract, starting </span>
 
-      <Flex
-        flexDir='column'
-        onMouseEnter={() => onSetIsBillingDetailsHovered(true)}
-        onMouseLeave={() => onSetIsBillingDetailsHovered(false)}
-      >
-        <Text fontSize='sm' fontWeight='semibold'>
-          Billing address
-        </Text>
-        <FormSelect
-          label='Country'
-          placeholder='Country'
-          name='country'
-          formId={formId}
-          options={countryOptions}
-          onFocus={() => onSetIsBillingDetailsFocused(true)}
-          onBlur={() => onSetIsBillingDetailsFocused(false)}
-        />
-        <FormInput
-          label='Address line 1'
-          formId={formId}
-          name='addressLine1'
-          textOverflow='ellipsis'
-          placeholder='Address line 1'
-          onFocus={() => onSetIsBillingDetailsFocused(true)}
-          onBlur={() => onSetIsBillingDetailsFocused(false)}
-          autoComplete='off'
-        />
-        <FormInput
-          label='Address line 2'
-          formId={formId}
-          name='addressLine2'
-          textOverflow='ellipsis'
-          placeholder='Address line 2'
-          onFocus={() => onSetIsBillingDetailsFocused(true)}
-          onBlur={() => onSetIsBillingDetailsFocused(false)}
-          autoComplete='off'
-        />
-        {country?.value === 'US' && (
-          <FormInput
-            label='City'
-            formId={formId}
-            name='locality'
-            textOverflow='ellipsis'
-            placeholder='City'
-            onFocus={() => onSetIsBillingDetailsFocused(true)}
-            onBlur={() => onSetIsBillingDetailsFocused(false)}
-            autoComplete='off'
-          />
-        )}
-        <Flex>
-          {country?.value === 'US' ? (
-            <FormInput
-              label='State'
-              name='region'
-              placeholder='State'
-              formId={formId}
-              onFocus={() => onSetIsBillingDetailsFocused(true)}
-              onBlur={() => onSetIsBillingDetailsFocused(false)}
-            />
-          ) : (
-            <FormInput
-              label='City'
-              formId={formId}
-              name='locality'
-              textOverflow='ellipsis'
-              placeholder='City'
-              onFocus={() => onSetIsBillingDetailsFocused(true)}
-              onBlur={() => onSetIsBillingDetailsFocused(false)}
-              autoComplete='off'
-            />
-          )}
-          <FormInput
-            label='ZIP/Postal code'
-            formId={formId}
-            name='zip'
-            textOverflow='ellipsis'
-            placeholder='ZIP/Postal code'
-            onFocus={() => onSetIsBillingDetailsFocused(true)}
-            onBlur={() => onSetIsBillingDetailsFocused(false)}
-            autoComplete='off'
-          />
-        </Flex>
-      </Flex>
+            <DatePickerUnderline formId={formId} name='serviceStarted' />
+          </div>
+        </li>
+        <li className='text-sm mt-1.5'>
+          Live until 2 Aug 2024,{' '}
+          <Button
+            variant='ghost'
+            size='sm'
+            className='font-normal text-sm p-0 underline text-gray-500 hover:bg-transparent focus:bg-transparent'
+            onClick={() => onChangeAutoRenew(!autoRenewValue)}
+          >
+            {autoRenewValue ? 'auto-renews' : 'non auto-renewing'}
+          </Button>
+        </li>
+        <li className='text-sm '>
+          <div className='flex items-baseline'>
+            <span className='whitespace-nowrap'>Contracting in</span>
+            <div>
+              <FormSelect
+                className='text-sm inline min-h-1 max-h-3 border-none hover:border-none focus:border-none w-fit ml-1 underline mt-0'
+                label='Currency'
+                placeholder='Invoice currency'
+                name='currency'
+                formId={formId}
+                options={currencyOptions ?? []}
+                size='xs'
+              />
+            </div>
+          </div>
+        </li>
+      </ul>
 
       {tenantSettingsData?.tenantSettings?.billingEnabled && (
         <>
-          <FormSelect
-            label='Billing currency'
-            placeholder='Invoice currency'
-            isLabelVisible
-            name='currency'
-            formId={formId}
-            options={currencyOptions ?? []}
-          />
+          <div className='flex relative items-center h-8 mb-1'>
+            <p className='text-sm text-gray-500 after:border-t-2 w-fit whitespace-nowrap mr-2'>
+              Billing policy
+            </p>
+            <Divider />
+          </div>
+          <ul className='mb-2 list-disc ml-5'>
+            <li className='text-sm '>
+              <div className='flex items-baseline'>
+                <span className='whitespace-nowrap mr-1'>Billing starts </span>
 
-          <EmailsInputGroup
-            formId={formId}
-            to={to}
-            cc={cc || []}
-            bcc={bcc || []}
-            onMouseEnter={() => onSetIsBillingDetailsHovered(true)}
-            onMouseLeave={() => onSetIsBillingDetailsHovered(false)}
-            onFocus={() => onSetIsBillingDetailsFocused(true)}
-            onBlur={() => onSetIsBillingDetailsFocused(false)}
-          />
+                <DatePickerUnderline formId={formId} name='invoicingStarted' />
+              </div>
+            </li>
+            <li className='text-sm '>
+              <div className='flex items-baseline'>
+                <span className='whitespace-nowrap mr-1'>
+                  Invoices are sent
+                </span>
+                <div>
+                  <FormSelect
+                    className='text-sm inline min-h-1 max-h-5 border-none hover:border-none focus:border-none w-fit underline mt-0 ml-0 mr-1'
+                    label='Contract term'
+                    placeholder='contract term'
+                    name='billingCycle'
+                    formId={formId}
+                    options={contractBillingCycleOptions}
+                    size='xs'
+                  />
+                </div>
+                <span className='whitespace-nowrap mr-1'>
+                  on the billing start day
+                </span>
+              </div>
+            </li>
+            <li className='text-sm '>
+              <div className='flex items-baseline'>
+                <span className='whitespace-nowrap mr-1'>Customer has</span>
+                <div>
+                  <FormSelect
+                    className='text-sm inline min-h-1 max-h-5 border-none hover:border-none focus:border-none w-fit underline mt-0 ml-0 mr-1'
+                    label='Payment due'
+                    placeholder='0 days'
+                    name='dueDays'
+                    formId={formId}
+                    options={paymentDueOptions}
+                    formatOptionLabel={(option, formatOptionLabelMeta) => {
+                      if (formatOptionLabelMeta.context === 'value') {
+                        return `${option.value} days`;
+                      }
 
-          <Flex flexDirection='column' gap={2}>
-            <Text fontSize='sm' fontWeight='semibold' whiteSpace='nowrap'>
+                      return option.label;
+                    }}
+                    size='xs'
+                  />
+                </div>
+                <span className='whitespace-nowrap mr-1'>to pay</span>
+              </div>
+            </li>
+          </ul>
+          <div className='flex relative items-center h-8 '>
+            <p className='text-sm text-gray-500 after:border-t-2 w-fit whitespace-nowrap mr-2'>
               Payment options
-              {tooltipContent && (
-                <Tooltip label={tooltipContent} hasArrow shouldWrapChildren>
-                  <InfoCircle boxSize={3} color='gray.400' ml={2} />
-                </Tooltip>
-              )}
-            </Text>
+            </p>
+            <Divider />
+          </div>
 
-            <Flex flexDir='column' gap={2}>
+          <div className='flex flex-col gap-1 mb-2'>
+            <div className='flex flex-col gap-1'>
               <PaymentDetailsPopover
                 content={isStripeActive ? '' : 'No payment provider enabled'}
                 withNavigation
@@ -272,23 +225,24 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
                   size='sm'
                   labelProps={{ margin: 0 }}
                   label={
-                    <Text fontSize='sm' fontWeight='normal' whiteSpace='nowrap'>
+                    <div className='text-sm font-normal whitespace-nowrap'>
                       Auto-payment via Stripe
-                    </Text>
+                    </div>
                   }
                 />
               </PaymentDetailsPopover>
               {isStripeActive && payAutomatically && (
-                <Flex flexDir='column' gap={2} ml={2}>
+                <div className='flex flex-col gap-1 ml-2'>
                   <Tooltip
                     label={
                       availablePaymentMethodTypes?.includes('card')
                         ? ''
                         : 'Credit or Debit card not enabled in Stripe'
                     }
-                    placement='bottom-start'
+                    side='bottom'
+                    align='end'
                   >
-                    <Box>
+                    <div>
                       <FormCheckbox
                         name='canPayWithCard'
                         formId={formId}
@@ -297,11 +251,11 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
                           !availablePaymentMethodTypes?.includes('card')
                         }
                       >
-                        <Text fontSize='sm' whiteSpace='nowrap'>
+                        <div className='text-sm whitespace-nowrap'>
                           Credit or Debit cards
-                        </Text>
+                        </div>
                       </FormCheckbox>
-                    </Box>
+                    </div>
                   </Tooltip>
                   <Tooltip
                     label={
@@ -309,9 +263,10 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
                         ? ''
                         : 'Direct debit not enabled in Stripe'
                     }
-                    placement='bottom-start'
+                    side='bottom'
+                    align='end'
                   >
-                    <Box>
+                    <div>
                       <FormCheckbox
                         name='canPayWithDirectDebit'
                         formId={formId}
@@ -320,15 +275,15 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
                           !availablePaymentMethodTypes?.includes('ach_debit')
                         }
                       >
-                        <Text fontSize='sm' whiteSpace='nowrap'>
+                        <div className='text-sm whitespace-nowrap'>
                           Direct Debit via {paymentMethod}
-                        </Text>
+                        </div>
                       </FormCheckbox>
-                    </Box>
+                    </div>
                   </Tooltip>
-                </Flex>
+                </div>
               )}
-            </Flex>
+            </div>
 
             <PaymentDetailsPopover
               content={isStripeActive ? '' : 'No payment provider enabled'}
@@ -343,9 +298,9 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
                   margin: 0,
                 }}
                 label={
-                  <Text fontSize='sm' fontWeight='normal' whiteSpace='nowrap'>
+                  <div className='text-sm font-normal whitespace-nowrap'>
                     Pay online via Stripe
-                  </Text>
+                  </div>
                 }
               />
             </PaymentDetailsPopover>
@@ -363,15 +318,17 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
                   margin: 0,
                 }}
                 label={
-                  <Text fontSize='sm' fontWeight='normal' whiteSpace='nowrap'>
+                  <div className='text-sm font-normal whitespace-nowrap'>
                     Bank transfer
-                  </Text>
+                  </div>
                 }
               />
             </PaymentDetailsPopover>
-          </Flex>
+          </div>
         </>
       )}
+
+      <ContractUploader contractId={contractId} />
     </ModalBody>
   );
 };

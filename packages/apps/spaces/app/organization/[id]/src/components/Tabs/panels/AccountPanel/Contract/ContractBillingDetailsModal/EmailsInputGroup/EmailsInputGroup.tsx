@@ -100,7 +100,7 @@ export const EmailsInputGroup = ({
 
   return (
     <div ref={ref} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
-      <div className='flex relative items-center h-8 mb-3'>
+      <div className='flex relative items-center h-8  mt-2'>
         <p className='text-sm text-gray-500 after:border-t-2 w-fit whitespace-nowrap mr-2'>
           Send invoice
         </p>

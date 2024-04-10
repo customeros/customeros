@@ -6,19 +6,16 @@ import {
   ContractStartModal,
 } from 'app/organization/[id]/src/components/Tabs/panels/AccountPanel/Contract/ChangeContractStatusModals';
 
-import { Flex } from '@ui/layout/Flex';
 import { useDisclosure } from '@ui/utils';
-import { Tag } from '@ui/presentation/Tag';
+import { Edit03 } from '@ui/media/icons/Edit03';
 import { DotLive } from '@ui/media/icons/DotLive';
 import { XSquare } from '@ui/media/icons/XSquare';
 import { RefreshCw02 } from '@ui/media/icons/RefreshCw02';
-import { SelectOption } from '@shared/types/SelectOptions';
-import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu';
+import { DotsVertical } from '@ui/media/icons/DotsVertical';
 import { Exact, ContractStatus, ContractUpdateInput } from '@graphql/types';
+import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 import { GetContractsQuery } from '@organization/src/graphql/getContracts.generated';
 import { UpdateContractMutation } from '@organization/src/graphql/updateContract.generated';
-
-import { contractOptionIcon } from './utils';
 
 interface ContractStatusSelectProps {
   renewsAt?: string;
@@ -27,6 +24,7 @@ interface ContractStatusSelectProps {
   serviceStarted?: string;
   organizationName: string;
   nextInvoiceDate?: string;
+  onOpenEditModal: () => void;
 
   onUpdateContract: UseMutationResult<
     UpdateContractMutation,
@@ -36,13 +34,6 @@ interface ContractStatusSelectProps {
   >;
 }
 
-export const contractStatusOptions: SelectOption<ContractStatus>[] = [
-  { label: 'Draft', value: ContractStatus.Draft },
-  { label: 'Ended', value: ContractStatus.Ended },
-  { label: 'Live', value: ContractStatus.Live },
-  { label: 'Out of contract', value: ContractStatus.OutOfContract },
-];
-
 const statusColorScheme: Record<string, string> = {
   [ContractStatus.Live]: 'primary',
   [ContractStatus.Draft]: 'gray',
@@ -50,7 +41,7 @@ const statusColorScheme: Record<string, string> = {
   [ContractStatus.OutOfContract]: 'warning',
 };
 
-export const ContractStatusSelect: React.FC<ContractStatusSelectProps> = ({
+export const ContractMenu: React.FC<ContractStatusSelectProps> = ({
   status,
   renewsAt,
   contractId,
@@ -58,6 +49,7 @@ export const ContractStatusSelect: React.FC<ContractStatusSelectProps> = ({
   serviceStarted,
   onUpdateContract,
   nextInvoiceDate,
+  onOpenEditModal,
 }) => {
   const {
     onOpen: onOpenEndModal,
@@ -73,9 +65,6 @@ export const ContractStatusSelect: React.FC<ContractStatusSelectProps> = ({
   } = useDisclosure({
     id: 'start-contract-modal',
   });
-
-  const selected = contractStatusOptions.find((e) => e.value === status);
-  const icon = contractOptionIcon?.[status];
 
   const getStatusDisplay = useMemo(() => {
     let icon, text;
@@ -110,30 +99,15 @@ export const ContractStatusSelect: React.FC<ContractStatusSelectProps> = ({
     <>
       <Menu>
         <MenuButton
-          maxW={'auto'}
-          color={`${statusColorScheme[status]}.800`}
-          borderColor={`${statusColorScheme[status]}.800`}
-          bg={`${statusColorScheme[status]}.50`}
+          className={`flex items-center max-h-5 text-${statusColorScheme[status]}.800} border-${statusColorScheme[status]}.800} bg-${statusColorScheme[status]}.50}`}
         >
-          <Tag
-            as={Flex}
-            alignItems='center'
-            gap={1}
-            variant='outline'
-            whiteSpace='nowrap'
-            colorScheme={statusColorScheme[status]}
-            color={`${statusColorScheme[status]}.700`}
-          >
-            {icon && (
-              <Flex alignItems='center' boxSize={3}>
-                {icon}
-              </Flex>
-            )}
-
-            {selected?.label}
-          </Tag>
+          <DotsVertical color='gray.400' />
         </MenuButton>
-        <MenuList minW={'150px'}>
+        <MenuList align='end' side='bottom'>
+          <MenuItem onClick={onOpenEditModal}>
+            <Edit03 mr={2} />
+            Edit contract
+          </MenuItem>
           <MenuItem
             onClick={
               status === ContractStatus.Live ? onOpenEndModal : onOpenStartModal

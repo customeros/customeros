@@ -25,11 +25,10 @@ export const DatePickerUnderline: React.FC<DatePickerProps> = ({
   name,
   formId,
   placeholder,
-  value,
   defaultOpen,
 }) => {
   const { getInputProps } = useField(name, formId);
-  const { id, onChange } = getInputProps();
+  const { id, onChange, value } = getInputProps();
   const handleDateInputChange = (data?: DateInputValue) => {
     if (!data) return onChange(null);
     const date = new Date(data);
@@ -69,7 +68,7 @@ export const DatePickerUnderline: React.FC<DatePickerProps> = ({
 
             height: '1px',
             width: '100%',
-            background: 'gray.700',
+            background: 'gray.400',
             borderBottom: 'none !important',
             display: 'block',
             mt: '-2px',

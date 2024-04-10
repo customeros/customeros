@@ -118,8 +118,8 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
         ref={ref}
         components={components}
         tabSelectsValue={false}
-        classNames={defaultClassNames}
         {...rest}
+        classNames={defaultClassNames}
       />
     );
   },
@@ -146,7 +146,7 @@ const getDefaultClassNames = ({
         : 'mt-2 animate-slideDownAndFade',
     ),
   menuList: () =>
-    'p-2 max-h-[300px] border border-gray-200 bg-white outline-offset-[2px] outline-[2px] rounded-lg shadow-lg overflow-y-auto overscroll-auto',
+    'p-2 max-h-[300px] border border-gray-200 bg-white outline-offset-[2px] outline-[2px] rounded-lg shadow-lg overflow-y-auto overscroll-auto min-w-[120px]',
   option: ({ isFocused, isSelected }) =>
     cn(
       'my-[2px] px-3 py-1.5 rounded-md text-gray-700 line-clamp-1 transition ease-in-out delay-50 hover:bg-gray-50',

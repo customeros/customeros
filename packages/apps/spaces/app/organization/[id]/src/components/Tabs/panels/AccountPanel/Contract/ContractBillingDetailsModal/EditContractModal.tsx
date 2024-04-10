@@ -1,7 +1,7 @@
 'use client';
 import { useParams } from 'next/navigation';
 import { useForm } from 'react-inverted-form';
-import React, { useRef, useMemo, useState, useEffect } from 'react';
+import React, { useRef, useMemo, useEffect } from 'react';
 
 import { produce } from 'immer';
 import { useDeepCompareEffect } from 'rooks';
@@ -9,12 +9,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useBankAccountsQuery } from '@settings/graphql/getBankAccounts.generated';
 import { useTenantBillingProfilesQuery } from '@settings/graphql/getTenantBillingProfiles.generated';
 
-import { Box } from '@ui/layout/Box';
-import { FeaturedIcon } from '@ui/media/Icon';
 import { Button } from '@ui/form/Button/Button';
-import { File02 } from '@ui/media/icons/File02';
-import { Grid, GridItem } from '@ui/layout/Grid';
-import { Heading } from '@ui/typography/Heading';
 import { Invoice } from '@shared/components/Invoice/Invoice';
 import { countryOptions } from '@shared/util/countryOptions';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
@@ -22,25 +17,24 @@ import { toastError, toastSuccess } from '@ui/presentation/Toast';
 import { useGetContractQuery } from '@organization/src/graphql/getContract.generated';
 import { useUpdateContractMutation } from '@organization/src/graphql/updateContract.generated';
 import {
-  Modal,
-  ModalFooter,
-  ModalHeader,
-  ModalContent,
-  ModalOverlay,
-} from '@ui/overlay/Modal';
+  DataSource,
+  BankAccount,
+  InvoiceLine,
+  TenantBillingProfile,
+} from '@graphql/types';
 import {
   GetContractsQuery,
   useGetContractsQuery,
 } from '@organization/src/graphql/getContracts.generated';
 import {
-  DataSource,
-  BankAccount,
-  InvoiceLine,
-  InvoiceStatus,
-  TenantBillingProfile,
-} from '@graphql/types';
+  Modal,
+  ModalFooter,
+  ModalHeader,
+  ModalContent,
+  ModalOverlay,
+} from '@ui/overlay/Modal/Modal';
 
-import { BillingDetailsDto } from './BillingDetails.dto';
+import { ContractDetailsDto } from './ContractDetails.dto';
 import { ContractBillingDetailsForm } from './ContractBillingDetailsForm';
 
 interface SubscriptionServiceModalProps {
@@ -49,17 +43,26 @@ interface SubscriptionServiceModalProps {
   onClose: () => void;
   notes?: string | null;
   organizationName: string;
+  billedTo: {
+    zip: string;
+    name: string;
+    email: string;
+    region: string;
+    country: string;
+    locality: string;
+    addressLine1: string;
+    addressLine2: string;
+  };
 }
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export const ContractBillingDetailsModal = ({
+export const EditContractModal = ({
   isOpen,
   onClose,
   contractId,
   organizationName,
   notes,
+  billedTo,
 }: SubscriptionServiceModalProps) => {
-  const initialRef = useRef(null);
   const formId = `billing-details-form-${contractId}`;
   const organizationId = useParams()?.id as string;
   const client = getGraphQLClient();
@@ -76,11 +79,6 @@ export const ContractBillingDetailsModal = ({
   );
   const { data: bankAccountsData } = useBankAccountsQuery(client);
 
-  const [isBillingDetailsFocused, setIsBillingDetailsFocused] =
-    useState<boolean>(false);
-
-  const [isBillingDetailsHovered, setIsBillingDetailsHovered] =
-    useState<boolean>(false);
   const queryKey = useGetContractsQuery.getKey({ id: organizationId });
 
   const queryClient = useQueryClient();
@@ -154,28 +152,12 @@ export const ContractBillingDetailsModal = ({
       }, 500);
     },
   });
-  const defaultValues = new BillingDetailsDto({
-    ...(data?.contract ?? {}),
-    organizationLegalName:
-      data?.contract?.organizationLegalName || organizationName,
-  });
+  const defaultValues = new ContractDetailsDto(data?.contract);
 
   const { state, setDefaultValues } = useForm({
     formId,
     defaultValues,
     stateReducer: (_, action, next) => {
-      if (action.type === 'FIELD_CHANGE') {
-        if (action.payload.name === 'invoiceEmail') {
-          return {
-            ...next,
-            values: {
-              ...next.values,
-              invoiceEmail: action.payload.value.split(' ').join('').trim(),
-            },
-          };
-        }
-      }
-
       return next;
     },
   });
@@ -185,8 +167,7 @@ export const ContractBillingDetailsModal = ({
   }, [defaultValues]);
 
   const handleApplyChanges = () => {
-    const payload = BillingDetailsDto.toPayload(state.values);
-
+    const payload = ContractDetailsDto.toPayload(state.values);
     updateContract.mutate({
       input: {
         contractId,
@@ -196,7 +177,7 @@ export const ContractBillingDetailsModal = ({
   };
   const invoicePreviewStaticData = useMemo(
     () => ({
-      status: InvoiceStatus.Scheduled,
+      status: null,
       invoiceNumber: 'INV-003',
       lines: [
         {
@@ -259,12 +240,7 @@ export const ContractBillingDetailsModal = ({
     }),
     [tenantBillingProfile?.tenantBillingProfiles?.[0]],
   );
-  const isEmailValid = useMemo(() => {
-    return (
-      !!state.values.invoiceEmail?.length &&
-      !emailRegex.test(state.values.invoiceEmail)
-    );
-  }, [state?.values?.invoiceEmail]);
+
   const availableCurrencies = useMemo(
     () => (bankAccountsData?.bankAccounts ?? []).map((e) => e.currency),
     [],
@@ -276,10 +252,8 @@ export const ContractBillingDetailsModal = ({
 
   useEffect(() => {
     if (!canAllowPayWithBankTransfer) {
-      const newDefaultValues = new BillingDetailsDto({
+      const newDefaultValues = new ContractDetailsDto({
         ...(data?.contract ?? {}),
-        organizationLegalName:
-          data?.contract?.organizationLegalName || organizationName,
         billingDetails: {
           ...(data?.contract?.billingDetails ?? {}),
           canPayWithBankTransfer: false,
@@ -295,123 +269,76 @@ export const ContractBillingDetailsModal = ({
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={handleCloseModal}
-      initialFocusRef={initialRef}
-      size='4xl'
-    >
+    <Modal open={isOpen} onOpenChange={onClose}>
       <ModalOverlay />
-      <ModalContent borderRadius='2xl'>
-        <Grid h='100%' templateColumns='356px 1fr'>
-          <GridItem
-            rowSpan={1}
-            colSpan={1}
-            h='100%'
-            display='flex'
-            flexDir='column'
-            justifyContent='space-between'
-            bg='gray.25'
-            borderRight='1px solid'
-            borderColor='gray.200'
-            borderTopLeftRadius='2xl'
-            borderBottomLeftRadius='2xl'
-            backgroundImage='/backgrounds/organization/circular-bg-pattern.png'
-            backgroundRepeat='no-repeat'
-            sx={{
-              backgroundPositionX: '1px',
-              backgroundPositionY: '-7px',
-            }}
-          >
-            <ModalHeader>
-              <FeaturedIcon size='lg' colorScheme='primary'>
-                <File02 color='primary.600' />
-              </FeaturedIcon>
-              <Heading fontSize='lg' mt='4'>
-                {data?.contract?.organizationLegalName ||
-                  organizationName ||
-                  "Unnamed's "}{' '}
-                contract details
-              </Heading>
-            </ModalHeader>
-            <ContractBillingDetailsForm
-              formId={formId}
-              contractId={contractId}
-              tenantBillingProfile={
-                tenantBillingProfile
-                  ?.tenantBillingProfiles?.[0] as TenantBillingProfile
-              }
-              organizationName={organizationName}
+      <ModalContent
+        className='border-r-2 flex gap-6 bg-transparent shadow-none border-none'
+        style={{ minWidth: '971px', minHeight: '80%', boxShadow: 'none' }}
+      >
+        <div
+          className='flex flex-col gap-4 px-6 pb-6 pt-4 bg-white h-auto rounded-lg justify-between'
+          style={{ width: '424px' }}
+        >
+          <ModalHeader className='p-0 text-lg font-semibold'>
+            {data?.contract?.organizationLegalName ||
+              organizationName ||
+              "Unnamed's "}{' '}
+            contract details
+          </ModalHeader>
+          <ContractBillingDetailsForm
+            formId={formId}
+            contractId={contractId}
+            tenantBillingProfile={
+              tenantBillingProfile
+                ?.tenantBillingProfiles?.[0] as TenantBillingProfile
+            }
+            currency={state?.values?.currency?.value}
+            bankAccounts={bankAccountsData?.bankAccounts as BankAccount[]}
+            payAutomatically={state?.values?.payAutomatically}
+          />
+          <ModalFooter className='p-0 flex'>
+            <Button
+              variant='outline'
+              colorScheme='gray'
+              onClick={handleCloseModal}
+              className='w-full'
+              size='md'
+            >
+              Cancel
+            </Button>
+            <Button
+              className='ml-3 w-full'
+              size='md'
+              variant='outline'
+              colorScheme='primary'
+              onClick={handleApplyChanges}
+            >
+              Confirm
+            </Button>
+          </ModalFooter>
+        </div>
+        <div style={{ width: '570px' }} className='bg-white rounded'>
+          <div className='w-full h-full'>
+            <Invoice
+              isBilledToFocused={false}
+              note={notes}
               currency={state?.values?.currency?.value}
-              isEmailValid={isEmailValid}
-              onSetIsBillingDetailsHovered={setIsBillingDetailsHovered}
-              onSetIsBillingDetailsFocused={setIsBillingDetailsFocused}
-              bankAccounts={bankAccountsData?.bankAccounts as BankAccount[]}
-              country={state?.values?.country}
-              payAutomatically={state?.values?.payAutomatically}
-              to={
-                state?.values?.billingEmail
-                  ? state.values.billingEmail?.[0]
-                  : null
+              billedTo={billedTo}
+              {...invoicePreviewStaticData}
+              canPayWithBankTransfer={
+                tenantBillingProfile?.tenantBillingProfiles?.[0]
+                  ?.canPayWithBankTransfer &&
+                state.values.canPayWithBankTransfer
               }
-              cc={state?.values?.billingEmailCC}
-              bcc={state?.values?.billingEmailBCC}
+              check={tenantBillingProfile?.tenantBillingProfiles?.[0]?.check}
+              availableBankAccount={
+                bankAccountsData?.bankAccounts?.find(
+                  (e) => e.currency === state?.values?.currency?.value,
+                ) as BankAccount
+              }
             />
-            <ModalFooter p='6'>
-              <Button
-                variant='outline'
-                colorScheme='gray'
-                onClick={handleCloseModal}
-                className='w-full'
-                size='md'
-              >
-                Cancel
-              </Button>
-              <Button
-                className='ml-3 w-full'
-                size='md'
-                variant='outline'
-                colorScheme='primary'
-                onClick={handleApplyChanges}
-              >
-                Done
-              </Button>
-            </ModalFooter>
-          </GridItem>
-          <GridItem>
-            <Box width='100%' h='full'>
-              <Invoice
-                isBilledToFocused={
-                  isBillingDetailsFocused || isBillingDetailsHovered
-                }
-                note={notes}
-                currency={state?.values?.currency?.value}
-                billedTo={{
-                  addressLine1: state.values.addressLine1 ?? '',
-                  addressLine2: state.values.addressLine2 ?? '',
-                  locality: state.values.locality ?? '',
-                  zip: state.values.zip ?? '',
-                  country: state?.values?.country?.label ?? '',
-                  email: state.values.invoiceEmail ?? '',
-                  name: state.values?.organizationLegalName ?? '',
-                  region: state.values?.region ?? '',
-                }}
-                {...invoicePreviewStaticData}
-                canPayWithBankTransfer={
-                  tenantBillingProfile?.tenantBillingProfiles?.[0]
-                    ?.canPayWithBankTransfer &&
-                  state.values.canPayWithBankTransfer
-                }
-                check={tenantBillingProfile?.tenantBillingProfiles?.[0]?.check}
-                availableBankAccount={
-                  bankAccountsData?.bankAccounts?.find(
-                    (e) => e.currency === state?.values?.currency?.value,
-                  ) as BankAccount
-                }
-              />
-            </Box>
-          </GridItem>
-        </Grid>
+          </div>
+        </div>
       </ModalContent>
     </Modal>
   );

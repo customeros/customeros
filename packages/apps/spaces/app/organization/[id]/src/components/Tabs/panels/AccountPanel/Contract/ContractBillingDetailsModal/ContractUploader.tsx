@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 
 import { produce } from 'immer';
 import { useQueryClient } from '@tanstack/react-query';
@@ -9,6 +9,7 @@ import { Delete } from '@ui/media/icons/Delete';
 import { toastError } from '@ui/presentation/Toast';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { Spinner } from '@ui/feedback/Spinner/Spinner';
+import { Divider } from '@ui/presentation/Divider/Divider';
 import { ghostButton } from '@ui/form/Button/Button.variants';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { FileDropUploader, FileUploadTrigger } from '@ui/form/FileUploader';
@@ -137,11 +138,11 @@ export const ContractUploader = ({ contractId }: ContractUploaderProps) => {
 
   return (
     <div className='flex flex-col'>
-      <div className='flex justify-between align-middle'>
-        <label className='font-semibold text-gray-700 text-sm'>
+      <div className='flex relative items-center h-8 '>
+        <p className='text-sm text-gray-500 after:border-t-2 w-fit whitespace-nowrap mr-2'>
           Contracts & documents
-        </label>
-
+        </p>
+        <Divider />
         <Tooltip
           hasArrow
           side='bottom'

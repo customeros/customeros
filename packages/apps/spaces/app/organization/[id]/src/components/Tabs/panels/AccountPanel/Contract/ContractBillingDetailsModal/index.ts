@@ -1,1 +1,1 @@
-export { ContractBillingDetailsModal } from './ContractBillingDetailsModal';
+export { EditContractModal } from './EditContractModal';

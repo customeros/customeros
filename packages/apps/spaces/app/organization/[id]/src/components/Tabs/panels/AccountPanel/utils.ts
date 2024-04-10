@@ -83,9 +83,9 @@ export const autorenewalOptions = [
 ];
 export const paymentDueOptions: SelectOption<number>[] = [
   { label: 'On receipt', value: 0 },
-  { label: 'Net 15', value: 15 },
-  { label: 'Net 30', value: 30 },
-  { label: 'Net 45', value: 45 },
-  { label: 'Net 60', value: 60 },
-  { label: 'Net 90', value: 90 },
+  { label: '15 days', value: 15 },
+  { label: '30 days', value: 30 },
+  { label: '45 days', value: 45 },
+  { label: '60 days', value: 60 },
+  { label: '90 days', value: 90 },
 ];

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import React, { memo, useRef, useState } from 'react';
 
-import { Icons } from '@ui/media/Icon';
+import { LinkExternal02 } from '@ui/media/icons/LinkExternal02';
 
 import { Input } from '../Input/Input2';
 import { formatSocialUrl } from './util';
@@ -84,7 +84,7 @@ export const UrlInput = memo(
                     variant='ghost'
                     colorScheme='gray'
                     aria-label='social link'
-                    icon={<Icons.LinkExternal2 />}
+                    icon={<LinkExternal02 />}
                   />
                 </Link>
               )}

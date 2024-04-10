@@ -36,8 +36,11 @@ export type GetContractQuery = {
     contractUrl?: string | null;
     billingEnabled: boolean;
     organizationLegalName?: string | null;
+    committedPeriodInMonths?: any | null;
     currency?: Types.Currency | null;
     contractName: string;
+    contractEnded?: any | null;
+    serviceStarted?: any | null;
     autoRenew: boolean;
     attachments?: Array<{
       __typename?: 'Attachment';
@@ -47,6 +50,7 @@ export type GetContractQuery = {
     }> | null;
     billingDetails?: {
       __typename?: 'BillingDetails';
+      billingCycle?: Types.ContractBillingCycle | null;
       addressLine1?: string | null;
       addressLine2?: string | null;
       locality?: string | null;
@@ -76,8 +80,11 @@ export const GetContractDocument = `
     contractUrl
     billingEnabled
     organizationLegalName
+    committedPeriodInMonths
     currency
     contractName
+    contractEnded
+    serviceStarted
     autoRenew
     attachments {
       id
@@ -85,6 +92,7 @@ export const GetContractDocument = `
       fileName
     }
     billingDetails {
+      billingCycle
       addressLine1
       addressLine2
       locality

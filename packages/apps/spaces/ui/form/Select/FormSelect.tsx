@@ -2,6 +2,8 @@ import { forwardRef } from 'react';
 import { SelectInstance } from 'react-select';
 import { useField } from 'react-inverted-form';
 
+import { cn } from '@ui/utils/cn';
+
 import { Select, SelectProps } from './Select';
 
 interface FormSelectProps extends SelectProps {
@@ -20,7 +22,16 @@ export const FormSelect = forwardRef<SelectInstance, FormSelectProps>(
 
     return (
       <div className='w-full'>
-        <label {...labelProps}>{label}</label>
+        <label
+          className={cn({
+            absolute: !isLabelVisible,
+            'top-[-999999px]': !isLabelVisible,
+          })}
+          {...labelProps}
+        >
+          {label}
+        </label>
+
         <Select
           ref={ref}
           id={id}

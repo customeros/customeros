@@ -1,8 +1,5 @@
 import React from 'react';
 
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
-import { Divider } from '@ui/presentation/Divider';
 import { BilledType, ServiceLineItem } from '@graphql/types';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 
@@ -15,7 +12,7 @@ function getBilledTypeLabel(billedType: BilledType): string {
     case BilledType.None:
       return '';
     case BilledType.Once:
-      return ' one-time';
+      return '';
     case BilledType.Usage:
       return '/use';
     case BilledType.Quarterly:
@@ -38,36 +35,19 @@ const ServiceItem = ({
 
   return (
     <>
-      <Flex
-        w='full'
-        as='button'
-        flexDir='column'
-        cursor='pointer'
+      <div
+        className='flex w-full justify-between cursor-pointer text-sm focus:outline-none'
         onClick={() => onOpen(data)}
-        _focusVisible={{
-          '&': {
-            boxShadow: 'var(--chakra-shadows-outline)',
-            outline: 'none',
-            borderRadius: 'md',
-          },
-        }}
-        sx={{ '& button': { opacity: 0 } }}
       >
-        {data.description && (
-          <Text fontSize='sm' color='gray.500' noOfLines={1} textAlign='left'>
-            {data.description}
-          </Text>
-        )}
-        <Flex justifyContent='space-between' w='full'>
-          <Text>
+        {data.description && <p>{data.description}</p>}
+        <div className='flex justify-between'>
+          <p>
             {![BilledType.Usage, BilledType.None].includes(
               data.billingCycle,
             ) && (
               <>
                 {data.quantity}
-                <Text as='span' fontSize='sm' mx={1}>
-                  ×
-                </Text>
+                <span className='text-sm mx-1'>×</span>
               </>
             )}
 
@@ -77,9 +57,9 @@ const ServiceItem = ({
               currency || 'USD',
             )}
             {getBilledTypeLabel(data.billingCycle)}
-          </Text>
-        </Flex>
-      </Flex>
+          </p>
+        </div>
+      </div>
     </>
   );
 };
@@ -95,22 +75,58 @@ export const ServicesList = ({
   currency,
   onModalOpen,
 }: ServicesListProps) => {
-  const filteredData = data?.filter(({ serviceEnded }) => !serviceEnded);
+  const filteredData = data?.filter(({ serviceEnded }) => !serviceEnded) ?? [];
+  const { subscription, once } = filteredData.reduce<{
+    once: Array<ServiceLineItem>;
+    subscription: Array<ServiceLineItem>;
+  }>(
+    (acc, service) => {
+      const key: 'subscription' | 'once' = [
+        BilledType.Monthly,
+        BilledType.Quarterly,
+        BilledType.Annually,
+      ].includes(service.billingCycle)
+        ? 'subscription'
+        : 'once';
+
+      acc[key].push(service);
+
+      return acc;
+    },
+    { subscription: [], once: [] },
+  );
 
   return (
-    <Flex flexDir='column' gap={1}>
-      {filteredData?.map((service, i) => (
-        <React.Fragment key={`service-item-${service.metadata.id}`}>
-          <ServiceItem
-            data={service}
-            onOpen={onModalOpen}
-            currency={currency}
-          />
-          {filteredData?.length > 1 && filteredData?.length - 1 !== i && (
-            <Divider w='full' orientation='horizontal' />
-          )}
-        </React.Fragment>
-      ))}
-    </Flex>
+    <div className='w-full flex flex-col gap-1'>
+      {subscription?.length > 0 && (
+        <article className='mb-1'>
+          <h1 className='font-semibold text-sm mb-1'>Subscriptions</h1>
+          {subscription?.map((service, i) => (
+            <React.Fragment key={`service-item-${service.metadata.id}`}>
+              <ServiceItem
+                data={service}
+                onOpen={onModalOpen}
+                currency={currency}
+              />
+            </React.Fragment>
+          ))}
+        </article>
+      )}
+
+      {once?.length > 0 && (
+        <article>
+          <h1 className='font-semibold text-sm mb-1'>One-time</h1>
+          {once?.map((service, i) => (
+            <React.Fragment key={`service-item-${service.metadata.id}`}>
+              <ServiceItem
+                data={service}
+                onOpen={onModalOpen}
+                currency={currency}
+              />
+            </React.Fragment>
+          ))}
+        </article>
+      )}
+    </div>
   );
 };

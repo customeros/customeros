@@ -1,11 +1,8 @@
 import React from 'react';
 
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
 import { Plus } from '@ui/media/icons/Plus';
-import { Edit03 } from '@ui/media/icons/Edit03';
-import { IconButton } from '@ui/form/IconButton';
 import { ServiceLineItem } from '@graphql/types';
+import { IconButton } from '@ui/form/IconButton/IconButton';
 import { ServicesList } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/Services/ServicesList';
 
 interface Props {
@@ -17,22 +14,24 @@ interface Props {
 export const Services: React.FC<Props> = ({ data, currency, onModalOpen }) => {
   return (
     <>
-      <Flex w='full' alignItems='center' justifyContent='space-between'>
-        <Text fontWeight='semibold' fontSize='sm'>
-          {!data?.length ? 'No services' : 'Services'}
-        </Text>
+      <p className='w-full flex items-center justify-between'>
+        {!data?.length && (
+          <p className='text-sm font-semibold mt-2'>No services</p>
+        )}
 
-        <IconButton
-          size='xs'
-          variant='ghost'
-          aria-label={!data?.length ? 'Add services' : 'Edit services'}
-          color='gray.400'
-          onClick={() => {
-            onModalOpen();
-          }}
-          icon={!data?.length ? <Plus boxSize='4' /> : <Edit03 />}
-        />
-      </Flex>
+        {!data?.length && (
+          <IconButton
+            size='xs'
+            variant='ghost'
+            colorScheme='gray'
+            aria-label={'Add services'}
+            onClick={() => {
+              onModalOpen();
+            }}
+            icon={<Plus boxSize='4' color='gray.400' />}
+          />
+        )}
+      </p>
 
       {data?.length && (
         <ServicesList
