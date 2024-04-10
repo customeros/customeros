@@ -2323,7 +2323,7 @@ export const linkButton = cva(
       },
     },
     defaultVariants: {
-      colorScheme: 'primary',
+      colorScheme: 'gray',
     },
   },
 );
@@ -2529,7 +2529,7 @@ export const solidButton = cva(
       },
     },
     defaultVariants: {
-      colorScheme: 'primary',
+      colorScheme: 'gray',
     },
   },
 );
@@ -2690,7 +2690,7 @@ export const ghostButton = cva(
       },
     },
     defaultVariants: {
-      colorScheme: 'primary',
+      colorScheme: 'gray',
     },
   },
 );
@@ -2865,7 +2865,7 @@ export const outlineButton = cva(
       },
     },
     defaultVariants: {
-      colorScheme: 'primary',
+      colorScheme: 'gray',
     },
   },
 );

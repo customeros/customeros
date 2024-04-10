@@ -29,7 +29,7 @@ export function renderStatusNode(type: InvoiceStatus | null | undefined) {
           <TagLabel>Paid</TagLabel>
         </Tag>
       );
-    case 'DUE':
+    case InvoiceStatus.Due:
       return (
         <Tag colorScheme='primary' variant='outline'>
           <TagLeftIcon>
@@ -38,13 +38,22 @@ export function renderStatusNode(type: InvoiceStatus | null | undefined) {
           <TagLabel>Due</TagLabel>
         </Tag>
       );
-    case 'VOID':
+    case InvoiceStatus.Void:
       return (
         <Tag colorScheme='gray' variant='outline'>
           <TagLeftIcon>
             <SlashCircle01 />
           </TagLeftIcon>
           <TagLabel>Voided</TagLabel>
+        </Tag>
+      );
+    case InvoiceStatus.Scheduled:
+      return (
+        <Tag colorScheme='gray' variant='outline'>
+          <TagLeftIcon>
+            <ClockFastForward />
+          </TagLeftIcon>
+          <TagLabel>Scheduled</TagLabel>
         </Tag>
       );
     default:

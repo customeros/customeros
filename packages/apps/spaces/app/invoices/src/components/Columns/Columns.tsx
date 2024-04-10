@@ -38,8 +38,8 @@ type Column = ColumnDefinition<ColumnDatum, any>;
 const columnHelper = createColumnHelper<ColumnDatum>();
 
 const columns: Record<string, Column> = {
-  ISSUE_DATE: columnHelper.accessor('metadata.created', {
-    id: 'INVOICE_CREATED_AT',
+  ISSUE_DATE: columnHelper.accessor('issued', {
+    id: 'INVOICE_ISSUED_DATE',
     minSize: 50,
     maxSize: 50,
     enableColumnFilter: true,

@@ -234,7 +234,7 @@ ${buttonTypes
       },
     },
     defaultVariants: {
-      colorScheme: 'primary',
+      colorScheme: 'gray',
     },
   })
  

@@ -46,7 +46,14 @@ module.exports = {
           from: { opacity: '0' },
           to: { opacity: '1' },
         },
-        contentShow: {
+        contentShowTop: {
+          from: {
+            opacity: '0',
+            transform: 'translate(-50%, -4%) scale(0.96)',
+          },
+          to: { opacity: '1', transform: 'translate(-50%, 0%) scale(1)' },
+        },
+        contentShowCenter: {
           from: {
             opacity: '0',
             transform: 'translate(-50%, -48%) scale(0.96)',
@@ -84,7 +91,9 @@ module.exports = {
         slideRightAndFade:
           'slideRightAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
         overlayShow: 'overlayShow 150ms cubic-bezier(0.16, 1, 0.3, 1)',
-        contentShow: 'contentShow 150ms cubic-bezier(0.16, 1, 0.3, 1)',
+        contentShowTop: 'contentShowTop 150ms cubic-bezier(0.16, 1, 0.3, 1)',
+        contentShowCenter:
+          'contentShowCenter 150ms cubic-bezier(0.16, 1, 0.3, 1)',
         collapseDown: 'collapseDown 400ms cubic-bezier(0.16, 1, 0.3, 1)',
         collapseUp: 'collapseUp 400ms cubic-bezier(0.16, 1, 0.3, 1)',
         pulseOpacity: 'pulseOpacity 0.7s infinite alternate ease-in-out',

@@ -6,6 +6,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { toastError } from '@ui/presentation/Toast';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useInvoicesMeta } from '@shared/state/InvoicesMeta.atom';
+import { useGetInvoiceQuery } from '@shared/graphql/getInvoice.generated';
 import { useInfiniteGetInvoicesQuery } from '@shared/graphql/getInvoices.generated';
 import { useUpdateInvoiceStatusMutation } from '@shared/graphql/updateInvoiceStatus.generated';
 
@@ -27,10 +28,15 @@ export const useTableActions = () => {
     });
   };
 
-  const queryKey = useInfiniteGetInvoicesQuery.getKey(invoicesMeta.getInvoices);
+  const invoicesQueryKey = useInfiniteGetInvoicesQuery.getKey(
+    invoicesMeta.getInvoices,
+  );
+  const invoiceQueryKey = useGetInvoiceQuery.getKey({ id: targetId });
   const updateInvoiceStatus = useUpdateInvoiceStatusMutation(client, {
     onMutate: ({ input }) => {
-      queryClient.cancelQueries({ queryKey });
+      queryClient.cancelQueries({ queryKey: invoicesQueryKey });
+      queryClient.cancelQueries({ queryKey: invoiceQueryKey });
+
       const page = invoicesMeta.getInvoices.pagination.page;
 
       const { previousEntries } = useInfiniteGetInvoicesQuery.mutateCacheEntry(
@@ -48,12 +54,24 @@ export const useTableActions = () => {
         }),
       );
 
-      return { previousEntries };
+      const { previousEntries: previousEntry } =
+        useGetInvoiceQuery.mutateCacheEntry(queryClient, {
+          id: tableActionState.targetId,
+        })((cache) =>
+          produce(cache, (draft) => {
+            draft.invoice.status = input.status;
+          }),
+        );
+
+      return { previousEntries, previousEntry };
     },
     onError: (_, __, context) => {
       reset();
       if (context?.previousEntries) {
-        queryClient.setQueryData(queryKey, context.previousEntries);
+        queryClient.setQueryData(invoicesQueryKey, context.previousEntries);
+      }
+      if (context?.previousEntry) {
+        queryClient.setQueryData(invoiceQueryKey, context.previousEntry);
       }
       toastError(
         `We couldn't update the invoice status`,
@@ -63,7 +81,8 @@ export const useTableActions = () => {
     onSettled: () => {
       reset();
       setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey });
+        queryClient.invalidateQueries({ queryKey: invoicesQueryKey });
+        queryClient.invalidateQueries({ queryKey: invoiceQueryKey });
       }, 500);
     },
   });

@@ -40,10 +40,12 @@ export type GetInvoicesQuery = {
     totalElements: any;
     content: Array<{
       __typename?: 'Invoice';
+      invoiceUrl: string;
       invoiceNumber: string;
       invoicePeriodStart: any;
       invoicePeriodEnd: any;
       due: any;
+      issued: any;
       amountDue: number;
       currency: string;
       dryRun: boolean;
@@ -124,10 +126,12 @@ export const GetInvoicesDocument = `
         }
         contractEnded
       }
+      invoiceUrl
       invoiceNumber
       invoicePeriodStart
       invoicePeriodEnd
       due
+      issued
       amountDue
       currency
       dryRun
