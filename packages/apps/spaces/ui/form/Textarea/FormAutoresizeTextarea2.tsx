@@ -1,12 +1,9 @@
 import { forwardRef } from 'react';
 import { useField } from 'react-inverted-form';
 
-import {
-  AutoresizeTextarea,
-  AutoresizeTextareaProps,
-} from './AutoresizeTextarea';
+import { Textarea, TextareaProps } from './Textarea';
 
-interface FormAutoresizeTextareaProps extends AutoresizeTextareaProps {
+interface FormAutoresizeTextareaProps extends TextareaProps {
   name: string;
   formId: string;
   label?: string;
@@ -30,7 +27,7 @@ export const FormAutoresizeTextarea = forwardRef<
         {label}
       </label>
 
-      <AutoresizeTextarea ref={ref} {...getInputProps()} {...props} />
+      <Textarea ref={ref} {...getInputProps()} {...props} />
     </div>
   );
 });

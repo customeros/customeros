@@ -14,7 +14,7 @@ import {
 export const buttonSize = cva([], {
   variants: {
     size: {
-      xs: ['px-2', 'rounded-lg', 'text-xs'],
+      xs: ['px-2', 'h-6', 'rounded-lg', 'text-xs'],
       sm: ['px-3', 'py-1', 'rounded-lg'],
       md: ['px-4', 'py-[7px]', 'rounded-lg'],
       lg: ['px-[1.125rem]', 'py-2.5', 'rounded-lg', 'text-base'],

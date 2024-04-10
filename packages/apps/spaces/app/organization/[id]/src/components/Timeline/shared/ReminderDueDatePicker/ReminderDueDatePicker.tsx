@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useField } from 'react-inverted-form';
 
 import set from 'date-fns/set';
@@ -7,19 +7,16 @@ import getHours from 'date-fns/getHours';
 import getMinutes from 'date-fns/getMinutes';
 
 import { Portal } from '@ui/utils/';
-import { Flex } from '@ui/layout/Flex';
-import { Button } from '@ui/form/Button';
-import { Text } from '@ui/typography/Text';
+import { Button } from '@ui/form/Button/Button';
 import { DateTimeUtils } from '@spaces/utils/date';
-import { Input, InputProps } from '@ui/form/Input';
 import { InlineDatePicker } from '@ui/form/DatePicker';
+import { Input, InputProps } from '@ui/form/Input/Input2';
+import { Divider } from '@ui/presentation/Divider/Divider';
 import {
   Popover,
-  PopoverBody,
-  PopoverFooter,
   PopoverContent,
   PopoverTrigger,
-} from '@ui/overlay/Popover';
+} from '@ui/overlay/Popover/Popover';
 
 interface DueDatePickerProps {
   name: string;
@@ -30,6 +27,7 @@ export const ReminderDueDatePicker = ({ name, formId }: DueDatePickerProps) => {
   const { getInputProps } = useField(name, formId);
   const { onChange, ...inputProps } = getInputProps();
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isOpen, setIsOpen] = useState(false);
 
   const time = (() => {
     const dateStr = inputProps.value;
@@ -68,62 +66,46 @@ export const ReminderDueDatePicker = ({ name, formId }: DueDatePickerProps) => {
   };
 
   return (
-    <Flex ref={containerRef} justify='flex-start' align='center'>
-      <Popover placement='top-start' matchWidth>
-        {({ isOpen, onClose }) => (
-          <>
-            <PopoverTrigger>
-              <Text
-                cursor='pointer'
-                whiteSpace='pre'
-                pb='1px'
-                fontSize='sm'
-                borderTop='1px solid transparent'
-                color={isOpen ? 'gray.700' : 'gray.500'}
-                _hover={{ color: 'gray.700' }}
-              >{`${DateTimeUtils.format(
-                inputProps.value,
-                DateTimeUtils.date,
-              )} • `}</Text>
-            </PopoverTrigger>
-            <Portal>
-              <PopoverContent w='fit-content'>
-                <PopoverBody w='fit-content'>
-                  <InlineDatePicker
-                    {...inputProps}
-                    onChange={(date) => {
-                      handleChange(date);
-                      onClose();
-                    }}
-                    minDate={new Date()}
-                  />
-                </PopoverBody>
-                <PopoverFooter
-                  display='flex'
-                  alignItems='center'
-                  justifyContent='right'
-                  px='6'
-                >
-                  <Button
-                    variant='outline'
-                    borderRadius='full'
-                    onClick={() => {
-                      handleClickTomorrow();
-                      onClose();
-                    }}
-                  >
-                    Tomorrow
-                  </Button>
-                </PopoverFooter>
-              </PopoverContent>
-            </Portal>
-          </>
-        )}
+    <div className='flex flex-start items-center' ref={containerRef}>
+      <Popover open={isOpen} onOpenChange={(value) => setIsOpen(value)}>
+        <PopoverTrigger className='data-[state=open]:text-gray-700 data-[state=closed]:text-gray-500'>
+          <span className=' cursor-pointer whitespace-pre pb-[1px] text-sm border-t-[1px] border-transparent hover:text-gray-700'>{`${DateTimeUtils.format(
+            inputProps.value,
+            DateTimeUtils.date,
+          )} • `}</span>
+        </PopoverTrigger>
+        <Portal>
+          <PopoverContent
+            align='start'
+            side='top'
+            className='items-end'
+            sticky='always'
+          >
+            <InlineDatePicker
+              {...inputProps}
+              onChange={(date) => {
+                handleChange(date);
+                setIsOpen(false);
+              }}
+              minDate={new Date()}
+            />
+
+            <Divider className='my-2' />
+            <Button
+              className='rounded-full mr-3'
+              variant='outline'
+              onClick={() => {
+                handleClickTomorrow();
+                setIsOpen(false);
+              }}
+            >
+              Tomorrow
+            </Button>
+          </PopoverContent>
+        </Portal>
       </Popover>
       <TimeInput
-        color='gray.500'
         value={time}
-        fontSize='sm'
         onChange={(v) => {
           const [hours, minutes] = v.split(':').map(Number);
           const date = set(new Date(inputProps.value), { hours, minutes });
@@ -131,7 +113,7 @@ export const ReminderDueDatePicker = ({ name, formId }: DueDatePickerProps) => {
           onChange(date.toISOString());
         }}
       />
-    </Flex>
+    </div>
   );
 };
 
@@ -143,27 +125,14 @@ interface TimeInputProps extends Omit<InputProps, 'value' | 'onChange'> {
 const TimeInput = ({ onChange, value, ...rest }: TimeInputProps) => {
   return (
     <Input
-      p='0'
+      className='text-gray-500 mb-[-2px] text-sm appearance-none leading-[1] [&::-webkit-calendar-picker-indicator]:hidden p-0 min-h-0 w-fit focus:text-gray-700 focus:border-primary-500 cursor-text list-none'
       type='time'
       list='hidden'
+      size='xs'
       value={value}
-      lineHeight='1'
-      h='min-content'
-      w='fit-content'
-      _focus={{
-        color: 'gray.700',
-        boxShadow: 'unset',
-        borderColor: 'primary.500',
-      }}
-      cursor='text'
       onChange={(e) => {
         const val = e.target.value;
         onChange?.(val);
-      }}
-      sx={{
-        '&::-webkit-calendar-picker-indicator': {
-          display: 'none',
-        },
       }}
       {...rest}
     />

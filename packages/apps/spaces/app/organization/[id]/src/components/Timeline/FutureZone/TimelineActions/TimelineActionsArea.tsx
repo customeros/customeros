@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Box } from '@ui/layout/Box';
+import { cn } from '@ui/utils/cn';
 import { useTimelineActionContext } from '@organization/src/components/Timeline/FutureZone/TimelineActions/context/TimelineActionContext';
 
 import { EmailTimelineAction } from './email/EmailTimelineAction';
@@ -10,16 +10,14 @@ export const TimelineActionsArea: React.FC = () => {
   const { openedEditor } = useTimelineActionContext();
 
   return (
-    <Box
-      bg={'#F9F9FB'}
-      borderTop='1px dashed'
-      borderTopColor='gray.200'
-      pt={openedEditor !== null ? 6 : 0}
-      pb={openedEditor !== null ? 2 : 8}
-      mt={-4}
+    <div
+      className={cn(
+        openedEditor !== null ? 'pt-6 pb-2' : 'pt-0 pb-8',
+        'mt-[-16px] bg-[#F9F9FB] border-t-[1px dashed] border-gray-200',
+      )}
     >
       {openedEditor === 'email' && <EmailTimelineAction />}
       {openedEditor === 'log-entry' && <LogEntryTimelineAction />}
-    </Box>
+    </div>
   );
 };

@@ -5,10 +5,10 @@ import { produce } from 'immer';
 import isEqual from 'lodash/isEqual';
 import { useDidMount, useDebounceFn } from 'rooks';
 
-import { Flex } from '@ui/layout/Flex';
-import { Button } from '@ui/form/Button';
-import { FormAutoresizeTextarea } from '@ui/form/Textarea';
+import { cn } from '@ui/utils/cn';
+import { Button } from '@ui/form/Button/Button';
 import { useTimelineMeta } from '@organization/src/components/Timeline/state';
+import { FormAutoresizeTextarea } from '@ui/form/Textarea/FormAutoresizeTextarea2';
 
 import { ReminderEditForm } from './types';
 import { ReminderPostit, ReminderDueDatePicker } from '../../shared';
@@ -107,10 +107,12 @@ export const ReminderItem = ({
   return (
     <ReminderPostit
       ref={containerRef}
+      className={cn(
+        data.id === recentlyUpdatedId ? 'shadow-ringWarning' : 'shadow-none',
+      )}
       owner={data?.owner === currentOwner ? undefined : data?.owner}
       isFocused={isFocused}
       isMutating={isMutating}
-      boxShadow={data.id === recentlyUpdatedId ? 'ringWarning' : 'unset'}
       onClickOutside={() => {
         setTimelineMeta((prev) =>
           produce(prev, (draft) => {
@@ -120,48 +122,30 @@ export const ReminderItem = ({
       }}
     >
       <FormAutoresizeTextarea
-        px='4'
-        pb='0'
+        className='px-4 pb-0 text-sm font-light border-b-0 font-sticky hover:border-b-0 focus:border-b-0'
         ref={ref}
-        isReadOnly={isMutating}
-        fontFamily='sticky'
-        fontWeight='300'
-        fontSize='sm'
+        readOnly={isMutating}
         name='content'
         formId={formId}
-        lineHeight='inherit'
         onBlur={updateReminder}
         onFocus={() => setIsFocused(true)}
-        cacheMeasurements
+        cacheMeasurements={true}
         maxRows={isFocused ? undefined : 3}
         placeholder='What should we remind you about?'
-        borderBottom='unset'
-        _hover={{
-          borderBottom: 'unset',
-        }}
-        _focus={{
-          borderBottom: 'unset',
-        }}
       />
-      <Flex align='center' px='4' w='full' justify='space-between' mb='2'>
+      <div className='flex items-center px-4 w-full justify-between mb-2'>
         <ReminderDueDatePicker name='date' formId={formId} />
 
         <Button
           size='sm'
           variant='ghost'
-          colorScheme='yellow'
-          _hover={{
-            bg: 'transparent',
-            color: 'yellow.900',
-          }}
-          _focus={{
-            boxShadow: 'ringWarning',
-          }}
+          colorScheme='warning'
+          className='text-[#B7791F] hover:bg-transparent hover:text-warning-900 focus:shadow-ringWarning'
           onClick={() => onDismiss(data.id)}
         >
           Dismiss
         </Button>
-      </Flex>
+      </div>
     </ReminderPostit>
   );
 };

@@ -7,7 +7,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { setHours, setSeconds, setMinutes, setMilliseconds } from 'date-fns';
 
 import { Flex } from '@ui/layout/Flex';
-import { Button } from '@ui/form/Button';
+import { Button } from '@ui/form/Button/Button';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { Meeting, ExternalSystemType } from '@graphql/types';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
@@ -38,11 +38,11 @@ import {
 const Header: FC<{ context?: any }> = ({ context: { loadMore, loading } }) => {
   return (
     <Button
+      className='mt-4'
       variant='outline'
       colorScheme='primary'
       loadingText='Loading'
       isLoading={loading}
-      mt={4}
       size='sm'
       onClick={loadMore}
       isDisabled={loading}

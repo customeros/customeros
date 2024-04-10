@@ -2,14 +2,12 @@ import React, { FC, useRef, useState, useEffect } from 'react';
 
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
-import { Box } from '@ui/layout/Box';
-import { Button } from '@ui/form/Button';
+import { Button } from '@ui/form/Button/Button';
 import { Send03 } from '@ui/media/icons/Send03';
 import { Mail01 } from '@ui/media/icons/Mail01';
-import { ButtonGroup } from '@ui/form/ButtonGroup';
 import { AlarmClockPlus } from '@ui/media/icons/AlarmClockPlus';
 import { MessageChatSquare } from '@ui/media/icons/MessageChatSquare';
-import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
+import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog2';
 import { useTimelineActionEmailContext } from '@organization/src/components/Timeline/FutureZone/TimelineActions/context/TimelineActionEmailContext';
 import { useTimelineActionLogEntryContext } from '@organization/src/components/Timeline/FutureZone/TimelineActions/context/TimelineActionLogEntryContext';
 import {
@@ -112,50 +110,41 @@ export const TimelineActionButtons: FC<{ invalidateQuery: () => void }> = ({
   };
 
   return (
-    <ButtonGroup
-      position='sticky'
-      border='1px solid'
-      borderColor='gray.200'
-      p='2'
-      borderRadius='full'
-      bg='white'
-      top='0'
-      left='6'
-      zIndex='1'
-      transform='translateY(5px)'
-    >
-      <Button
-        variant='outline'
-        onClick={() => handleToggleEditor('email')}
-        borderRadius='3xl'
-        size='xs'
-        colorScheme={openedEditor === 'email' ? 'primary' : 'gray'}
-        leftIcon={<Mail01 color='inherit' />}
-      >
-        Email
-      </Button>
-      <Button
-        variant='outline'
-        onClick={() => handleToggleEditor('log-entry')}
-        borderRadius='3xl'
-        size='xs'
-        colorScheme={openedEditor === 'log-entry' ? 'primary' : 'gray'}
-        leftIcon={<MessageChatSquare color='inherit' />}
-      >
-        Log
-      </Button>
-      {isRemindersEnabled && (
+    <>
+      <div className='sticky border border-gray-200 p-2 gap-2 rounded-full bg-white top-0 left-6 z-1 transform translate-y-[5px] inline-flex '>
         <Button
           variant='outline'
-          onClick={() => handleCreateReminder()}
-          borderRadius='3xl'
+          onClick={() => handleToggleEditor('email')}
           size='xs'
-          colorScheme={openedEditor === 'reminder' ? 'primary' : 'gray'}
-          leftIcon={<AlarmClockPlus color='inherit' />}
+          className='rounded-3xl'
+          colorScheme={openedEditor === 'email' ? 'primary' : 'gray'}
+          leftIcon={<Mail01 color='inherit' />}
         >
-          Reminder
+          Email
         </Button>
-      )}
+        <Button
+          className='rounded-3xl'
+          variant='outline'
+          onClick={() => handleToggleEditor('log-entry')}
+          size='xs'
+          colorScheme={openedEditor === 'log-entry' ? 'primary' : 'gray'}
+          leftIcon={<MessageChatSquare color='inherit' />}
+        >
+          Log
+        </Button>
+        {isRemindersEnabled && (
+          <Button
+            className='rounded-3xl'
+            variant='outline'
+            onClick={() => handleCreateReminder()}
+            size='xs'
+            colorScheme={openedEditor === 'reminder' ? 'primary' : 'gray'}
+            leftIcon={<AlarmClockPlus color='inherit' />}
+          >
+            Reminder
+          </Button>
+        )}
+      </div>
 
       <ConfirmDeleteDialog
         colorScheme='primary'
@@ -168,13 +157,11 @@ export const TimelineActionButtons: FC<{ invalidateQuery: () => void }> = ({
         onConfirm={handleConfirmEmail}
         isLoading={false}
         icon={
-          <Box>
-            <Send03
-              color='primary.700'
-              boxSize='inherit'
-              verticalAlign='initial'
-            />
-          </Box>
+          <Send03
+            color='primary.700'
+            boxSize='inherit'
+            verticalAlign='initial'
+          />
         }
       />
 
@@ -188,12 +175,8 @@ export const TimelineActionButtons: FC<{ invalidateQuery: () => void }> = ({
         onClose={handleDiscard}
         onConfirm={handleConfirmLogEntry}
         isLoading={false}
-        icon={
-          <Box>
-            <MessageChatSquare color='primary.700' boxSize='inherit' />
-          </Box>
-        }
+        icon={<MessageChatSquare color='primary.700' boxSize='inherit' />}
       />
-    </ButtonGroup>
+    </>
   );
 };

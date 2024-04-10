@@ -4,7 +4,6 @@ import { useParams } from 'next/navigation';
 import { produce } from 'immer';
 import { useQueryClient } from '@tanstack/react-query';
 
-import { VStack } from '@ui/layout/Stack';
 import { toastError } from '@ui/presentation/Toast';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
@@ -107,7 +106,7 @@ export const Reminders = () => {
   if (isPending) return null;
 
   return (
-    <VStack align='flex-start'>
+    <div className='flex flex-col items-start gap-[0.5rem]'>
       {data?.remindersForOrganization
         ?.filter((r) => !r.dismissed)
         .sort((a, b) => {
@@ -132,7 +131,7 @@ export const Reminders = () => {
             data={mapReminderToForm(r)}
           />
         ))}
-    </VStack>
+    </div>
   );
 };
 
