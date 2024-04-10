@@ -140,7 +140,7 @@
     },
     {
       "name": "Check invoices",
-      "query": "CALL {\n    MATCH (i:Invoice) WHERE i.dryRun IS NULL OR i.periodEndDate IS NULL OR i.periodStartDate IS NULL OR i.currency IS NULL RETURN count(i) AS cnt\n    UNION ALL\n    MATCH (i:Invoice) WHERE i.dryRun = false AND i.status = 'INITIALIZED' AND duration.between(i.createdAt, datetime()).minutes > 5 RETURN count(i) AS cnt\n} RETURN sum(cnt)",
+      "query": "CALL {\n    MATCH (i:Invoice) WHERE i.dryRun IS NULL OR i.periodEndDate IS NULL OR i.periodStartDate IS NULL OR i.currency IS NULL OR i.issuedDate IS NULL OR i.dueDate IS NULL OR i.preview IS NULL OR i.status IS NULL RETURN count(i) AS cnt\n    UNION ALL\n    MATCH (i:Invoice) WHERE i.dryRun = false AND i.status = 'INITIALIZED' AND duration.between(i.createdAt, datetime()).minutes > 5 RETURN count(i) AS cnt\n} RETURN sum(cnt)",
       "description": "Checks: 1 - Mandatory invoice properties. 2 - Invoices stuck in initialized status > 5 minutes."
     },
     {
