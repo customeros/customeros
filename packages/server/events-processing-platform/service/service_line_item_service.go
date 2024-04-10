@@ -215,8 +215,10 @@ func (s *serviceLineItemService) DeleteServiceLineItem(ctx context.Context, requ
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("id"))
 	}
 
-	sliAggregate := sliaggregate.NewServiceLineItemAggregateWithTenantAndID(request.Tenant, request.Id)
-	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, sliAggregate, eventstore.LoadAggregateOptions{}, request); err != nil {
+	initAggregateFunc := func() eventstore.Aggregate {
+		return sliaggregate.NewServiceLineItemAggregateWithTenantAndID(request.Tenant, request.Id)
+	}
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(DeleteServiceLineItem) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
@@ -240,8 +242,10 @@ func (s *serviceLineItemService) CloseServiceLineItem(ctx context.Context, reque
 	extraParams := map[string]any{}
 	extraParams[model.PARAM_CANCELLED] = true
 
-	sliAggregate := sliaggregate.NewServiceLineItemAggregateWithTenantAndID(request.Tenant, request.Id)
-	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, sliAggregate, eventstore.LoadAggregateOptions{}, request, extraParams); err != nil {
+	initAggregateFunc := func() eventstore.Aggregate {
+		return sliaggregate.NewServiceLineItemAggregateWithTenantAndID(request.Tenant, request.Id)
+	}
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request, extraParams); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(CloseServiceLineItem) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)

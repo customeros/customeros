@@ -54,8 +54,10 @@ func (s *contractService) CreateContract(ctx context.Context, request *contractp
 
 	contractId := uuid.New().String()
 
-	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(request.Tenant, contractId)
-	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, contractAggregate, eventstore.LoadAggregateOptions{}, request); err != nil {
+	initAggregateFunc := func() eventstore.Aggregate {
+		return aggregate.NewContractAggregateWithTenantAndID(request.Tenant, contractId)
+	}
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(CreateContract) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
@@ -76,8 +78,10 @@ func (s *contractService) UpdateContract(ctx context.Context, request *contractp
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("id"))
 	}
 
-	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(request.Tenant, request.Id)
-	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, contractAggregate, eventstore.LoadAggregateOptions{}, request); err != nil {
+	initAggregateFunc := func() eventstore.Aggregate {
+		return aggregate.NewContractAggregateWithTenantAndID(request.Tenant, request.Id)
+	}
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(UpdateContract.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
@@ -96,8 +100,10 @@ func (s *contractService) RefreshContractStatus(ctx context.Context, request *co
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("id"))
 	}
 
-	contractTempAggregate := aggregate.NewContractTempAggregateWithTenantAndID(request.Tenant, request.Id)
-	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, contractTempAggregate, eventstore.LoadAggregateOptions{
+	initAggregateFunc := func() eventstore.Aggregate {
+		return aggregate.NewContractTempAggregateWithTenantAndID(request.Tenant, request.Id)
+	}
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{
 		SkipLoadEvents: true,
 	}, request); err != nil {
 		tracing.TraceErr(span, err)
@@ -118,8 +124,10 @@ func (s *contractService) RolloutRenewalOpportunityOnExpiration(ctx context.Cont
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("id"))
 	}
 
-	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(request.Tenant, request.Id)
-	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, contractAggregate, eventstore.LoadAggregateOptions{}, request); err != nil {
+	initAggregateFunc := func() eventstore.Aggregate {
+		return aggregate.NewContractAggregateWithTenantAndID(request.Tenant, request.Id)
+	}
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(RolloutRenewalOpportunityOnExpiration.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
@@ -153,8 +161,10 @@ func (s *contractService) SoftDeleteContract(ctx context.Context, request *contr
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("id"))
 	}
 
-	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(request.Tenant, request.Id)
-	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, contractAggregate, eventstore.LoadAggregateOptions{}, request); err != nil {
+	initAggregateFunc := func() eventstore.Aggregate {
+		return aggregate.NewContractAggregateWithTenantAndID(request.Tenant, request.Id)
+	}
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(DeleteContract.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)

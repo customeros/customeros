@@ -37,8 +37,10 @@ func (s *countryService) CreateCountry(ctx context.Context, request *countrypb.C
 
 	countryId := uuid.New().String()
 
-	countryAggregate := country.NewCountryAggregateWithID(countryId)
-	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, countryAggregate, eventstore.LoadAggregateOptions{}, request); err != nil {
+	initAggregateFunc := func() eventstore.Aggregate {
+		return country.NewCountryAggregateWithID(countryId)
+	}
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(CountryService.CountryCreate), err: %v", err.Error())
 		return nil, grpcerr.ErrResponse(err)

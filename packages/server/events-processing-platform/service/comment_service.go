@@ -35,8 +35,10 @@ func (s *commentService) UpsertComment(ctx context.Context, request *commentpb.U
 
 	commentId := utils.NewUUIDIfEmpty(request.Id)
 
-	commentAggregate := comment.NewCommentAggregateWithTenantAndID(request.Tenant, commentId)
-	_, err := s.services.RequestHandler.HandleGRPCRequest(ctx, commentAggregate, *eventstore.NewLoadAggregateOptions(), request)
+	initAggregateFunc := func() eventstore.Aggregate {
+		return comment.NewCommentAggregateWithTenantAndID(request.Tenant, commentId)
+	}
+	_, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, *eventstore.NewLoadAggregateOptions(), request)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(UpsertComment) tenant:{%v}, commentId:{%s} ,err: %v", request.Tenant, commentId, err.Error())

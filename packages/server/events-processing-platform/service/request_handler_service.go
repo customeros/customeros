@@ -15,7 +15,7 @@ import (
 )
 
 type RequestHandler interface {
-	HandleGRPCRequest(ctx context.Context, aggregate eventstore.Aggregate, aggregateOptions eventstore.LoadAggregateOptions, request any, params ...map[string]any) (any, error)
+	HandleGRPCRequest(ctx context.Context, initAggregate func() eventstore.Aggregate, aggregateOptions eventstore.LoadAggregateOptions, request any, params ...map[string]any) (any, error)
 }
 
 type requestHandler struct {
@@ -28,7 +28,7 @@ func NewRequestHandler(log logger.Logger, es eventstore.AggregateStore, cfg conf
 	return &requestHandler{log: log, es: es, cfg: cfg}
 }
 
-func (h *requestHandler) HandleGRPCRequest(ctx context.Context, agg eventstore.Aggregate, aggregateOptions eventstore.LoadAggregateOptions, request any, params ...map[string]any) (any, error) {
+func (h *requestHandler) HandleGRPCRequest(ctx context.Context, initAggregate func() eventstore.Aggregate, aggregateOptions eventstore.LoadAggregateOptions, request any, params ...map[string]any) (any, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "RequestHandler.HandleGRPCRequest")
 	defer span.Finish()
 	tracing.LogObjectAsJson(span, "request", request)
@@ -39,6 +39,7 @@ func (h *requestHandler) HandleGRPCRequest(ctx context.Context, agg eventstore.A
 	}
 
 	for attempt := 0; attempt == 0 || attempt < h.cfg.RetriesOnOptimisticLockException; attempt++ {
+		agg := initAggregate()
 		err := aggregate.LoadAggregate(ctx, h.es, agg, aggregateOptions)
 		if err != nil {
 			tracing.TraceErr(span, err)
