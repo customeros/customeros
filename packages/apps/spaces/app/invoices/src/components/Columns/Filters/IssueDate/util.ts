@@ -4,7 +4,7 @@ import { FilterFn } from '@tanstack/react-table';
 import { Invoice } from '@graphql/types';
 
 export const filterIssueDateFn: FilterFn<Invoice> = (row, id, filterValue) => {
-  const value = row.getValue<Invoice['metadata']['created']>(id);
+  const value = row.getValue<Invoice['issued']>(id);
 
   if (!value) return false;
 
@@ -20,7 +20,7 @@ export const filterIssueDatePastFn: FilterFn<Invoice> = (
   id,
   filterValue,
 ) => {
-  const value = row.getValue<Invoice['metadata']['created']>(id);
+  const value = row.getValue<Invoice['issued']>(id);
 
   if (!value) return false;
 

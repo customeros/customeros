@@ -36,6 +36,7 @@ export type GetInvoiceQuery = {
     invoiceNumber: string;
     invoicePeriodStart: any;
     invoicePeriodEnd: any;
+    invoiceUrl: string;
     due: any;
     subtotal: number;
     taxDue: number;
@@ -108,6 +109,7 @@ export const GetInvoiceDocument = `
     invoiceNumber
     invoicePeriodStart
     invoicePeriodEnd
+    invoiceUrl
     due
     subtotal
     taxDue

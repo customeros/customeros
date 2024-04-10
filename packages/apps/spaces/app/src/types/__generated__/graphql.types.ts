@@ -1630,6 +1630,7 @@ export type Invoice = MetadataInterface & {
   invoicePeriodEnd: Scalars['Time']['output'];
   invoicePeriodStart: Scalars['Time']['output'];
   invoiceUrl: Scalars['String']['output'];
+  issued: Scalars['Time']['output'];
   metadata: Metadata;
   note?: Maybe<Scalars['String']['output']>;
   offCycle: Scalars['Boolean']['output'];
@@ -1668,14 +1669,6 @@ export type InvoiceLine = MetadataInterface & {
   total: Scalars['Float']['output'];
 };
 
-export type InvoiceLineInput = {
-  billed: BilledType;
-  name: Scalars['String']['input'];
-  price: Scalars['Float']['input'];
-  quantity: Scalars['Int']['input'];
-  serviceLineItemId?: InputMaybe<Scalars['ID']['input']>;
-};
-
 export type InvoiceProvider = {
   __typename?: 'InvoiceProvider';
   addressCountry?: Maybe<Scalars['String']['output']>;
@@ -1691,9 +1684,21 @@ export type InvoiceProvider = {
 
 export type InvoiceSimulateInput = {
   contractId: Scalars['ID']['input'];
-  invoiceLines: Array<InvoiceLineInput>;
   periodEndDate?: InputMaybe<Scalars['Time']['input']>;
   periodStartDate?: InputMaybe<Scalars['Time']['input']>;
+  serviceLines: Array<InvoiceSimulateServiceLineInput>;
+};
+
+export type InvoiceSimulateServiceLineInput = {
+  billingCycle: BilledType;
+  comments: Scalars['String']['input'];
+  description: Scalars['String']['input'];
+  parentId?: InputMaybe<Scalars['ID']['input']>;
+  price: Scalars['Float']['input'];
+  quantity: Scalars['Int']['input'];
+  serviceLineItemId?: InputMaybe<Scalars['ID']['input']>;
+  serviceStarted: Scalars['Time']['input'];
+  taxRate?: InputMaybe<Scalars['Float']['input']>;
 };
 
 export enum InvoiceStatus {
@@ -2222,7 +2227,7 @@ export type Mutation = {
   interactionSession_LinkAttachment: InteractionSession;
   invoice_NextDryRunForContract: Scalars['ID']['output'];
   invoice_Pay: Invoice;
-  invoice_Simulate: Scalars['ID']['output'];
+  invoice_Simulate: Array<Invoice>;
   invoice_Update: Invoice;
   invoice_Void: Invoice;
   invoicingCycle_Create: InvoicingCycle;
@@ -4282,6 +4287,7 @@ export enum Role {
 export type ServiceLineItem = MetadataInterface & {
   __typename?: 'ServiceLineItem';
   billingCycle: BilledType;
+  closed: Scalars['Boolean']['output'];
   comments: Scalars['String']['output'];
   createdBy?: Maybe<User>;
   description: Scalars['String']['output'];

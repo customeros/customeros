@@ -51,7 +51,7 @@ export const MenuList = forwardRef<HTMLDivElement, MenuListProps>(
           sideOffset={5}
           className={twMerge(
             className,
-            'bg-white min-w-[auto] py-2 shadow-lg border rounded-md data-[side=top]:animate-slideDownAndFade data-[side=right]:animate-slideLeftAndFade data-[side=bottom]:animate-slideUpAndFade data-[side=left]:animate-slideRightAndFade ',
+            'bg-white min-w-[auto] py-2 shadow-lg border rounded-md data-[side=top]:animate-slideDownAndFade data-[side=right]:animate-slideLeftAndFade data-[side=bottom]:animate-slideUpAndFade data-[side=left]:animate-slideRightAndFade z-10',
           )}
         >
           {children}

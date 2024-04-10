@@ -177,7 +177,7 @@ export const OnboardingStatusModal = ({
       <ModalPortal>
         <ModalOverlay>
           <ModalContent
-            className='rounded-2xl top-[6%] translate-y-0'
+            className='rounded-2xl'
             style={{
               backgroundPositionX: '1px',
               backgroundPositionY: '-7px',

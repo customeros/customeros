@@ -93,7 +93,7 @@ export const useInvoicesPageData = ({ sorting }: UseRenewalsPageDataProps) => {
       if (issueDate?.isActive) {
         draft.AND.push({
           filter: {
-            property: 'INVOICE_ISSUE_DATE',
+            property: 'INVOICE_ISSUED_DATE',
             value:
               preset === '5'
                 ? [issueDate.value, new Date().toISOString()]

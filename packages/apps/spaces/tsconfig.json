@@ -32,7 +32,8 @@
       "@organizations/*": ["app/organizations/src/*"],
       "@renewals/*": ["app/renewals/src/*"],
       "@customerMap/*": ["app/customer-map/src/*"],
-      "@settings/*": ["app/settings/src/*"]
+      "@settings/*": ["app/settings/src/*"],
+      "@invoices/*": ["app/invoices/src/*"]
     },
     "plugins": [
       {

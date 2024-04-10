@@ -35,10 +35,12 @@ query getInvoices(
         }
         contractEnded
       }
+      invoiceUrl
       invoiceNumber
       invoicePeriodStart
       invoicePeriodEnd
       due
+      issued
       amountDue
       currency
       dryRun

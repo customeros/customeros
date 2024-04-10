@@ -23,7 +23,7 @@ export const buttonSize = cva([], {
     },
   },
   defaultVariants: {
-    size: 'md',
+    size: 'sm',
   },
 });
 
@@ -50,7 +50,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       rightIcon,
       colorScheme = 'gray',
       spinner,
-      variant,
+      variant = 'outline',
       isLoading = false,
       isDisabled = false,
       size,
