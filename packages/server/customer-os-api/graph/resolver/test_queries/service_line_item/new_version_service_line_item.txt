@@ -1,0 +1,21 @@
+mutation CreateServiceLineItem($serviceLineItemId: ID!, $serviceStarted: Time) {
+contractLineItem_NewVersion(
+    input: {
+      id: $serviceLineItemId
+      description: "new version"
+      comments: "some comments"
+      price: 1.1
+      quantity: 2
+      tax: {
+        taxRate: 33
+      }
+      serviceStarted: $serviceStarted
+    }
+  ) {
+    metadata {
+      id
+    }
+    description
+    parentId
+  }
+}

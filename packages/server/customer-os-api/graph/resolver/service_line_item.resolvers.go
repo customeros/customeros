@@ -7,7 +7,6 @@ package resolver
 import (
 	"context"
 	"errors"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
@@ -67,6 +66,45 @@ func (r *mutationResolver) ContractLineItemCreate(ctx context.Context, input mod
 	}
 	span.LogFields(log.String("response.serviceLineItemID", serviceLineItemId))
 	return mapper.MapEntityToServiceLineItem(createdServiceLineItemEntity), nil
+}
+
+// ContractLineItemNewVersion is the resolver for the contractLineItem_NewVersion field.
+func (r *mutationResolver) ContractLineItemNewVersion(ctx context.Context, input model.ServiceLineItemNewVersionInput) (*model.ServiceLineItem, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContractLineItemNewVersion", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.input", input)
+
+	data := service.ServiceLineItemNewVersionData{
+		Id:        utils.IfNotNilString(input.ID),
+		Name:      utils.IfNotNilString(input.Description),
+		Price:     utils.IfNotNilFloat64(input.Price),
+		Quantity:  utils.IfNotNilInt64(input.Quantity),
+		Comments:  utils.IfNotNilString(input.Comments),
+		Source:    neo4jentity.DataSourceOpenline,
+		AppSource: utils.IfNotNilString(input.AppSource),
+		StartedAt: input.ServiceStarted,
+	}
+	if input.Tax != nil {
+		data.VatRate = (*input.Tax).TaxRate
+	}
+
+	serviceLineItemId, err := r.Services.ServiceLineItemService.NewVersion(ctx, data)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "failed to create new contract line item version")
+		graphql.AddError(ctx, err)
+		return &model.ServiceLineItem{Metadata: &model.Metadata{ID: utils.IfNotNilString(serviceLineItemId)}}, nil
+	}
+
+	serviceLineItemEntity, err := r.Services.ServiceLineItemService.GetById(ctx, utils.IfNotNilString(serviceLineItemId))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed fetching contract line item details. Contract line item id: {%s}", serviceLineItemId)
+		return &model.ServiceLineItem{Metadata: &model.Metadata{ID: utils.IfNotNilString(input.ID)}}, nil
+	}
+
+	return mapper.MapEntityToServiceLineItem(serviceLineItemEntity), nil
 }
 
 // ContractLineItemUpdate is the resolver for the contractLineItem_Update field.

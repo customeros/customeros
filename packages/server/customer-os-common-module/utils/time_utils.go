@@ -32,6 +32,10 @@ func Now() time.Time {
 	return time.Now().UTC()
 }
 
+func Today() time.Time {
+	return ToDate(Now())
+}
+
 func NowPtr() *time.Time {
 	return TimePtr(time.Now().UTC())
 }
