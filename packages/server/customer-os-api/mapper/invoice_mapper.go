@@ -30,6 +30,7 @@ func MapEntityToInvoice(entity *neo4jentity.InvoiceEntity) *model.Invoice {
 		InvoicePeriodStart: entity.PeriodStartDate,
 		InvoicePeriodEnd:   entity.PeriodEndDate,
 		Due:                entity.DueDate,
+		Issued:             entity.IssuedDate,
 		AmountDue:          entity.TotalAmount,
 		TaxDue:             entity.Vat,
 		Subtotal:           entity.Amount,

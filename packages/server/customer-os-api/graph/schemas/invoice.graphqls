@@ -35,6 +35,7 @@ type Invoice implements MetadataInterface {
     invoicePeriodEnd:   Time!
     invoiceUrl:         String!
     due:                Time!
+    issued:             Time!
     currency:           String!
     repositoryFileId:   String!
     invoiceLineItems:   [InvoiceLine!]! @goField(forceResolver: true)

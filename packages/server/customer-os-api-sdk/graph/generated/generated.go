@@ -649,6 +649,7 @@ type ComplexityRoot struct {
 		InvoicePeriodEnd              func(childComplexity int) int
 		InvoicePeriodStart            func(childComplexity int) int
 		InvoiceURL                    func(childComplexity int) int
+		Issued                        func(childComplexity int) int
 		Metadata                      func(childComplexity int) int
 		Note                          func(childComplexity int) int
 		OffCycle                      func(childComplexity int) int
@@ -4937,6 +4938,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Invoice.InvoiceURL(childComplexity), true
+
+	case "Invoice.issued":
+		if e.complexity.Invoice.Issued == nil {
+			break
+		}
+
+		return e.complexity.Invoice.Issued(childComplexity), true
 
 	case "Invoice.metadata":
 		if e.complexity.Invoice.Metadata == nil {
@@ -13633,6 +13641,7 @@ type Invoice implements MetadataInterface {
     invoicePeriodEnd:   Time!
     invoiceUrl:         String!
     due:                Time!
+    issued:             Time!
     currency:           String!
     repositoryFileId:   String!
     invoiceLineItems:   [InvoiceLine!]! @goField(forceResolver: true)
@@ -39937,6 +39946,50 @@ func (ec *executionContext) fieldContext_Invoice_due(ctx context.Context, field 
 	return fc, nil
 }
 
+func (ec *executionContext) _Invoice_issued(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Invoice_issued(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Issued, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Invoice_issued(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Invoice",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Invoice_currency(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Invoice_currency(ctx, field)
 	if err != nil {
@@ -41636,6 +41689,8 @@ func (ec *executionContext) fieldContext_InvoicesPage_content(ctx context.Contex
 				return ec.fieldContext_Invoice_invoiceUrl(ctx, field)
 			case "due":
 				return ec.fieldContext_Invoice_due(ctx, field)
+			case "issued":
+				return ec.fieldContext_Invoice_issued(ctx, field)
 			case "currency":
 				return ec.fieldContext_Invoice_currency(ctx, field)
 			case "repositoryFileId":
@@ -54692,6 +54747,8 @@ func (ec *executionContext) fieldContext_Mutation_invoice_Update(ctx context.Con
 				return ec.fieldContext_Invoice_invoiceUrl(ctx, field)
 			case "due":
 				return ec.fieldContext_Invoice_due(ctx, field)
+			case "issued":
+				return ec.fieldContext_Invoice_issued(ctx, field)
 			case "currency":
 				return ec.fieldContext_Invoice_currency(ctx, field)
 			case "repositoryFileId":
@@ -54835,6 +54892,8 @@ func (ec *executionContext) fieldContext_Mutation_invoice_Pay(ctx context.Contex
 				return ec.fieldContext_Invoice_invoiceUrl(ctx, field)
 			case "due":
 				return ec.fieldContext_Invoice_due(ctx, field)
+			case "issued":
+				return ec.fieldContext_Invoice_issued(ctx, field)
 			case "currency":
 				return ec.fieldContext_Invoice_currency(ctx, field)
 			case "repositoryFileId":
@@ -54978,6 +55037,8 @@ func (ec *executionContext) fieldContext_Mutation_invoice_Void(ctx context.Conte
 				return ec.fieldContext_Invoice_invoiceUrl(ctx, field)
 			case "due":
 				return ec.fieldContext_Invoice_due(ctx, field)
+			case "issued":
+				return ec.fieldContext_Invoice_issued(ctx, field)
 			case "currency":
 				return ec.fieldContext_Invoice_currency(ctx, field)
 			case "repositoryFileId":
@@ -55121,6 +55182,8 @@ func (ec *executionContext) fieldContext_Mutation_invoice_Simulate(ctx context.C
 				return ec.fieldContext_Invoice_invoiceUrl(ctx, field)
 			case "due":
 				return ec.fieldContext_Invoice_due(ctx, field)
+			case "issued":
+				return ec.fieldContext_Invoice_issued(ctx, field)
 			case "currency":
 				return ec.fieldContext_Invoice_currency(ctx, field)
 			case "repositoryFileId":
@@ -79599,6 +79662,8 @@ func (ec *executionContext) fieldContext_Query_invoice(ctx context.Context, fiel
 				return ec.fieldContext_Invoice_invoiceUrl(ctx, field)
 			case "due":
 				return ec.fieldContext_Invoice_due(ctx, field)
+			case "issued":
+				return ec.fieldContext_Invoice_issued(ctx, field)
 			case "currency":
 				return ec.fieldContext_Invoice_currency(ctx, field)
 			case "repositoryFileId":
@@ -105564,6 +105629,11 @@ func (ec *executionContext) _Invoice(ctx context.Context, sel ast.SelectionSet, 
 			}
 		case "due":
 			out.Values[i] = ec._Invoice_due(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "issued":
+			out.Values[i] = ec._Invoice_issued(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}

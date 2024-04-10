@@ -17,6 +17,7 @@ invoice(id: $id) {
     invoicePeriodEnd
     invoiceUrl
     due
+    issued
     currency
     repositoryFileId
     note

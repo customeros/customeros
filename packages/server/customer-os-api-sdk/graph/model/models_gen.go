@@ -1259,6 +1259,7 @@ type Invoice struct {
 	InvoicePeriodEnd   time.Time      `json:"invoicePeriodEnd"`
 	InvoiceURL         string         `json:"invoiceUrl"`
 	Due                time.Time      `json:"due"`
+	Issued             time.Time      `json:"issued"`
 	Currency           string         `json:"currency"`
 	RepositoryFileID   string         `json:"repositoryFileId"`
 	InvoiceLineItems   []*InvoiceLine `json:"invoiceLineItems"`

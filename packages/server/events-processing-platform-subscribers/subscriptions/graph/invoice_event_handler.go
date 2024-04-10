@@ -66,6 +66,14 @@ func (h *InvoiceEventHandler) OnInvoiceCreateForContractV1(ctx context.Context, 
 	}
 	contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
 
+	issuedDate := utils.ToDate(eventData.CreatedAt)
+	if eventData.DryRun {
+		issuedDate = utils.ToDate(eventData.PeriodStartDate)
+		if eventData.Postpaid {
+			issuedDate = utils.ToDate(eventData.PeriodEndDate).AddDate(0, 0, 1)
+		}
+	}
+	dueDate := issuedDate.AddDate(0, 0, int(contractEntity.DueDays))
 	data := neo4jrepository.InvoiceCreateFields{
 		ContractId:      eventData.ContractId,
 		Currency:        neo4jenum.DecodeCurrency(eventData.Currency),
@@ -77,7 +85,8 @@ func (h *InvoiceEventHandler) OnInvoiceCreateForContractV1(ctx context.Context, 
 		PeriodStartDate: eventData.PeriodStartDate,
 		PeriodEndDate:   eventData.PeriodEndDate,
 		CreatedAt:       eventData.CreatedAt,
-		DueDate:         eventData.CreatedAt.AddDate(0, 0, int(contractEntity.DueDays)),
+		IssuedDate:      issuedDate,
+		DueDate:         dueDate,
 		Status:          neo4jenum.InvoiceStatusInitialized,
 		SourceFields: neo4jmodel.Source{
 			Source:    helper.GetSource(eventData.SourceFields.Source),
