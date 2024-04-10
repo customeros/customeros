@@ -104,11 +104,12 @@ export const ContractMenu: React.FC<ContractStatusSelectProps> = ({
           <DotsVertical color='gray.400' />
         </MenuButton>
         <MenuList align='end' side='bottom'>
-          <MenuItem onClick={onOpenEditModal}>
+          <MenuItem onClick={onOpenEditModal} className='flex items-center'>
             <Edit03 mr={2} />
             Edit contract
           </MenuItem>
           <MenuItem
+            className='flex items-center'
             onClick={
               status === ContractStatus.Live ? onOpenEndModal : onOpenStartModal
             }
