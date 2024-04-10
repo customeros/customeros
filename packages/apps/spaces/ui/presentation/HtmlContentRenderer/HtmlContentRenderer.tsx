@@ -79,9 +79,15 @@ export const HtmlContentRenderer: React.FC<HtmlContentRendererProps> = ({
         switch (domNode.name) {
           case 'td': {
             return (
-              <Flex flexDir='column' noOfLines={noOfLines}>
+              <div
+                className='flex flex-col'
+                style={{
+                  lineClamp: `${noOfLines}`,
+                  WebkitLineClamp: `${noOfLines}`,
+                }}
+              >
                 {children}
-              </Flex>
+              </div>
             );
           }
           case 'img': {

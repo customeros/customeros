@@ -3,8 +3,6 @@ import { useParams } from 'next/navigation';
 
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
 import { useOrganization } from '@organization/src/hooks/useOrganization';
 import { TimelineActions } from '@organization/src/components/Timeline/FutureZone/TimelineActions/TimelineActions';
 
@@ -23,50 +21,27 @@ export const EmptyTimeline: React.FC<EmptyTimelineProps> = ({
   const { data } = useOrganization({ id });
 
   return (
-    <Flex direction='column' height='calc(100vh - 5rem)' overflow='auto'>
-      <Flex
-        direction='column'
-        alignItems='center'
-        flex={1}
-        backgroundImage='/backgrounds/organization/dotted-bg-pattern.svg'
-        backgroundRepeat='no-repeat'
-        backgroundSize='contain'
-        backgroundPosition='center'
-        maxH='50%'
-        as='article'
-      >
-        <Flex
-          direction='column'
-          alignItems='center'
-          justifyContent='center'
-          height='100%'
-          maxWidth='390px'
-        >
+    <div className='flex flex-col h-[calc(100vh-5rem)] overflow-auto'>
+      <div className='flex flex-col items-center flex-1 max-h-[50%] bg-[url(/backgrounds/organization/dotted-bg-pattern.svg)] bg-no-repeat bg-contain bg-center'>
+        <div className='flex flex-col items-center justify-center h-full max-w-[390px]'>
           <EmptyTimelineIllustration />
-          <Text
-            color='gray.900'
-            fontSize='lg'
-            as='h1'
-            fontWeight={600}
-            mt={3}
-            mb={2}
-          >
+          <h1 className='text-gray-900 text-lg font-semibold mt-3 mb-2'>
             {data?.organization?.name || 'Unknown'} has no events yet
-          </Text>
-          <Text color='gray.600' size='xs' textAlign='center'>
+          </h1>
+          <span className='text-gray-600 text-xs text-center'>
             This organization’s events will show up here once a data source has
             been linked
-          </Text>
-        </Flex>
-      </Flex>
-      <Flex bg='#F9F9FB' direction='column' flex={1}>
+          </span>
+        </div>
+      </div>
+      <div className='flex bg-[#F9F9FB] flex-col flex-1'>
         <div>
           <TimelineActions invalidateQuery={invalidateQuery} />
         </div>
-        <Flex flex={1} height='100%' bg='#F9F9FB'>
+        <div className='flex flex-1 h-full bg-[#F9F9FB]'>
           {isRemindersEnabled && <FutureZone />}
-        </Flex>
-      </Flex>
-    </Flex>
+        </div>
+      </div>
+    </div>
   );
 };

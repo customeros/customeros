@@ -3,13 +3,12 @@ import { FC, PropsWithChildren } from 'react';
 import { match } from 'ts-pattern';
 import { escapeForSlackWithMarkdown } from 'slack-to-html';
 
-import { Flex } from '@ui/layout/Flex';
-import { Avatar } from '@ui/media/Avatar';
-import { Text } from '@ui/typography/Text';
+import { cn } from '@ui/utils/cn';
 import { User01 } from '@ui/media/icons/User01';
+import { Avatar } from '@ui/media/Avatar/Avatar';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { ExternalSystemType } from '@graphql/types';
-import { Card, CardBody } from '@ui/presentation/Card';
+import { Card, CardContent } from '@ui/presentation/Card/Card';
 import { HtmlContentRenderer } from '@ui/presentation/HtmlContentRenderer';
 
 interface IssueCommentCardProps extends PropsWithChildren {
@@ -18,7 +17,7 @@ interface IssueCommentCardProps extends PropsWithChildren {
   type?: string;
   content: string;
   isPrivate?: boolean;
-  iscustomer?: boolean;
+  isCustomer?: boolean;
   showDateOnHover?: boolean;
   profilePhotoUrl?: null | string;
 }
@@ -29,52 +28,40 @@ export const IssueCommentCard: FC<IssueCommentCardProps> = ({
   type,
   content,
   isPrivate,
-  iscustomer,
+  isCustomer,
   profilePhotoUrl,
 }) => {
   return (
     <>
       <Card
-        ml={iscustomer ? 0 : 6}
-        variant='outline'
-        size='md'
-        fontSize='14px'
-        background='white'
-        flexDirection='row'
-        width='calc(100% - 24px)'
-        position='unset'
-        cursor='unset'
-        boxShadow={isPrivate ? 'none' : 'xs'}
-        borderColor={isPrivate ? 'transparent' : 'gray.200'}
-        bg={isPrivate ? 'transparent' : 'white'}
+        className={cn(
+          isPrivate ? '' : 'shadow-xs',
+          isPrivate ? 'bg-transparent' : 'bg-white',
+          isCustomer ? 'ml-0' : 'ml-6',
+          'text-[14px] flex flex-row w-[calc(100%-24px)] ',
+        )}
       >
-        <CardBody p={3} overflow={'hidden'}>
-          <Flex gap={3} flex={1}>
+        <CardContent className='p-3 overflow-hidden'>
+          <div className='flex gap-3 flex-1'>
             <Avatar
               name={name}
               size='md'
               icon={<User01 color='primary.500' boxSize='5' />}
-              border={
-                profilePhotoUrl
-                  ? 'none'
-                  : '1px solid var(--chakra-colors-primary-200)'
-              }
+              className={cn(profilePhotoUrl ? '' : 'border border-primary-200')}
               src={profilePhotoUrl || undefined}
             />
-            <Flex direction='column' flex={1} position='relative'>
-              <Flex justifyContent='space-between' flex={1}>
-                <Flex align='baseline'>
-                  <Text color='gray.700' fontWeight={600}>
-                    {name}
-                  </Text>
-                  <Text color='gray.500' ml={2} fontSize='xs'>
+            <div className='flex flex-col flex-1 relative'>
+              <div className='flex justify-between flex-1'>
+                <div className='flex items-baseline'>
+                  <span className='text-gray-700 font-semibold'>{name}</span>
+                  <span className='text-gray-500 ml-2 text-xs'>
                     {DateTimeUtils.formatTime(date)}
-                  </Text>
-                </Flex>
-              </Flex>
+                  </span>
+                </div>
+              </div>
               {match(type)
                 .with(ExternalSystemType.Slack, () => (
-                  <Text
+                  <span
                     className='slack-container'
                     dangerouslySetInnerHTML={{
                       __html: escapeForSlackWithMarkdown(content),
@@ -84,9 +71,9 @@ export const IssueCommentCard: FC<IssueCommentCardProps> = ({
                 .otherwise(() => (
                   <HtmlContentRenderer htmlContent={content} />
                 ))}
-            </Flex>
-          </Flex>
-        </CardBody>
+            </div>
+          </div>
+        </CardContent>
       </Card>
     </>
   );

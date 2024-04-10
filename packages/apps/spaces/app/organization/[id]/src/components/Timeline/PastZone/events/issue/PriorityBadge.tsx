@@ -1,7 +1,6 @@
 import React, { ReactNode } from 'react';
 
-import { Flex } from '@ui/layout/Flex';
-import { Tooltip } from '@ui/overlay/Tooltip';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { AlertSquare } from '@ui/media/icons/AlertSquare';
 import { PriorityLow } from '@ui/media/icons/PriorityLow';
 import { PriorityHigh } from '@ui/media/icons/PriorityHigh';
@@ -31,10 +30,10 @@ const colorMap: Record<Priority, ReactNode> = {
 
 export const PriorityBadge: React.FC<PriorityBadgeProps> = ({ priority }) => {
   return (
-    <Tooltip label={`${priority} priority`} textTransform='capitalize'>
-      <Flex alignItems='flex-end' role='presentation' aria-label={priority}>
+    <Tooltip label={`${priority} priority`} className='capitalize'>
+      <div className='flex items-end' aria-label={priority}>
         {colorMap[priority]}
-      </Flex>
+      </div>
     </Tooltip>
   );
 };

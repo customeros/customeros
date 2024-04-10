@@ -11,7 +11,6 @@ import { useRemirror } from '@remirror/react';
 import { htmlToProsemirrorNode } from 'remirror';
 
 import { Box } from '@ui/layout/Box';
-import { Flex } from '@ui/layout/Flex';
 import { useDisclosure } from '@ui/utils';
 import { Send03 } from '@ui/media/icons/Send03';
 import { CardBody } from '@ui/presentation/Card';
@@ -237,7 +236,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
 
   return (
     <TimelinePreviewBackdrop onCloseModal={handleClosePreview}>
-      <Flex flexDir='column' maxH='calc(100vh - 5rem)' fontSize='sm'>
+      <div className='flex flex-col max-h-[calc(100vh-5rem)] text-sm'>
         <TimelineEventPreviewHeader
           //@ts-expect-error alias
           date={event.date}
@@ -247,15 +246,8 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
         />
 
         <CardBody mt={0} p='6' pt='4' overflow='auto'>
-          <Flex direction='row' justify='space-between' mb={3}>
-            <Flex
-              direction='column'
-              align='flex-start'
-              maxWidth='calc(100% - 70px)'
-              overflow='hidden'
-              textOverflow='ellipsis'
-              fontSize='sm'
-            >
+          <div className='flex flex-row justify-between mb-3'>
+            <div className='flex flex-col items-start max-w-[calc(100%-70px)] overflow-hidden text-sm line-clamp-1'>
               <EmailMetaDataEntry entryType='From' content={event?.sentBy} />
               <EmailMetaDataEntry entryType='To' content={to} />
               {!!cc.length && (
@@ -265,7 +257,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
                 <EmailMetaDataEntry entryType='BCC' content={bcc} />
               )}
               <EmailMetaDataEntry entryType='Subject' content={subject} />
-            </Flex>
+            </div>
             <div>
               <Image
                 src={'/backgrounds/organization/post-stamp.webp'}
@@ -274,7 +266,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
                 height={70}
               />
             </div>
-          </Flex>
+          </div>
 
           {event?.content && (
             <HtmlContentRenderer htmlContent={event.content} />
@@ -322,7 +314,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
             </Box>
           }
         />
-      </Flex>
+      </div>
     </TimelinePreviewBackdrop>
   );
 };

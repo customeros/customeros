@@ -2,14 +2,12 @@ import React from 'react';
 
 import { escapeForSlackWithMarkdown } from 'slack-to-html';
 
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
 import { Link03 } from '@ui/media/icons/Link03';
 import { XClose } from '@ui/media/icons/XClose';
-import { IconButton } from '@ui/form/IconButton';
-import { CardHeader } from '@ui/presentation/Card';
 import { DateTimeUtils } from '@spaces/utils/date';
-import { Tooltip } from '@ui/presentation/Tooltip';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
+import { CardHeader } from '@ui/presentation/Card/Card';
+import { IconButton } from '@ui/form/IconButton/IconButton';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 
 interface TimelineEventPreviewHeaderProps {
@@ -31,61 +29,50 @@ export const TimelineEventPreviewHeader: React.FC<
 
   return (
     <CardHeader
-      py='4'
-      px='6'
-      pb='1'
-      position='sticky'
-      background='white'
-      top={0}
-      borderRadius='xl'
+      className='sticky py-4 px-6 pb-1 bg-white top-0 rounded-xl'
       onClick={(e) => e.stopPropagation()}
     >
-      <Flex
-        direction='row'
-        justifyContent='space-between'
-        alignItems='flex-start'
-      >
-        <div>
-          <Text
-            fontSize='lg'
-            fontWeight='semibold'
+      <div className={'flex justify-between items-center '}>
+        <div className='flex flex-col'>
+          <span
+            className='text-lg font-semibold'
             dangerouslySetInnerHTML={
               parse === 'slack' ? { __html: parsedName } : undefined
             }
           >
             {parse !== 'slack' ? name : null}
-          </Text>
+          </span>
           {date && (
-            <Text size='2xs' color='gray.500' fontSize='12px'>
+            <span className='text-[12px] text-gray-500'>
               {DateTimeUtils.format(date, DateTimeUtils.dateWithHour)}
-            </Text>
+            </span>
           )}
         </div>
-        <Flex direction='row' justifyContent='flex-end' alignItems='center'>
+        <div className='flex justify-end items-center'>
           {children}
-          <Tooltip label={copyLabel} placement='bottom'>
+          <Tooltip label={copyLabel} side='bottom' asChild={false}>
             <IconButton
+              className='mr-1'
               variant='ghost'
               aria-label={copyLabel}
-              color='gray.500'
-              size='sm'
-              mr={1}
+              colorScheme='gray'
+              size='md'
               icon={<Link03 color='gray.500' height='18px' />}
               onClick={() => copy(window.location.href)}
             />
           </Tooltip>
-          <Tooltip label='Close' aria-label='close' placement='bottom'>
+          <Tooltip label='Close' aria-label='close' side='bottom'>
             <IconButton
               variant='ghost'
               aria-label='Close preview'
-              color='gray.500'
-              size='sm'
+              colorScheme='gray'
+              size='md'
               icon={<XClose color='gray.500' height='24px' />}
               onClick={onClose}
             />
           </Tooltip>
-        </Flex>
-      </Flex>
+        </div>
+      </div>
     </CardHeader>
   );
 };
