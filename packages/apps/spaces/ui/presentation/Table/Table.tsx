@@ -193,7 +193,7 @@ export const Table = <T extends object>({
           })}
         </THeader>
         <TBody className='w-full '>
-          {!virtualRows.length && <NoResults />}
+          {!virtualRows.length && !isLoading && <NoResults />}
           {virtualRows.map((virtualRow) => {
             const row = rows[virtualRow.index];
             const minH = `${virtualRow.size}px`;

@@ -183,7 +183,7 @@ export const RootSidenav = () => {
         {showInvoices && (
           <>
             <div
-              className='w-full gap-1 flex justify-flex-start pl-3.5 cursor-pointer text-gray-500 hover:text-gray-700 transition-colors'
+              className='w-full pt-3 gap-1 flex justify-flex-start pl-3.5 cursor-pointer text-gray-500 hover:text-gray-700 transition-colors'
               onClick={() =>
                 setPreferences((prev) => ({
                   ...prev,
