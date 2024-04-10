@@ -11,7 +11,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/routes"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/routes/ContactHub"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/service"
-	commonRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/redis/go-redis/v9"
@@ -49,11 +48,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("could not connect to db: %v", err)
 	}
-	commonRepositoryContainer := commonRepository.InitRepositories(db.GormDB, nil)
 	services := service.InitServices(graphqlClient, redisClient, &config, db)
 	hub := ContactHub.NewContactHub()
 	go hub.Run()
-	routes.Run(&config, hub, services, commonRepositoryContainer) // run this as a background goroutine
+	routes.Run(&config, hub, services, services.PostgresRepositories) // run this as a background goroutine
 
 }
 

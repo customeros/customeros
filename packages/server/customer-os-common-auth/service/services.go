@@ -24,7 +24,7 @@ func InitServices(cfg *config.Config, commonServices *commonService.Services, db
 		OAuthTokenService:      NewOAuthTokenService(repositories),
 	}
 
-	services.GoogleService = NewGoogleService(cfg, commonServices.CommonRepositories, repositories, services)
+	services.GoogleService = NewGoogleService(cfg, commonServices.PostgresRepositories, repositories, services)
 
 	return services
 }

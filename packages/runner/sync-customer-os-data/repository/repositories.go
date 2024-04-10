@@ -4,7 +4,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/logger"
-	commonRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
+	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	"gorm.io/gorm"
 )
 
@@ -17,7 +17,7 @@ type Dbs struct {
 type Repositories struct {
 	Dbs Dbs
 
-	CommonRepositories *commonRepository.Repositories
+	PostgresRepositories *postgresRepository.Repositories
 
 	TenantSyncSettingsRepository TenantSyncSettingsRepository
 	TenantSettingsRepository     TenantSettingsRepository
@@ -42,7 +42,7 @@ func InitRepos(driver *neo4j.DriverWithContext, gormDB *gorm.DB, airbyteStoreDb 
 			GormDB:         gormDB,
 			RawDataStoreDB: airbyteStoreDb,
 		},
-		CommonRepositories:           commonRepository.InitRepositories(gormDB, driver),
+		PostgresRepositories:         postgresRepository.InitRepositories(gormDB),
 		TenantSyncSettingsRepository: NewTenantSyncSettingsRepository(gormDB),
 		TenantSettingsRepository:     NewTenantSettingsRepository(gormDB),
 		SyncRunRepository:            NewSyncRunRepository(gormDB),

@@ -9,8 +9,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/repository"
-	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/sirupsen/logrus"
 	"regexp"
 	"strings"
@@ -28,7 +28,7 @@ type emailService struct {
 type EmailService interface {
 	FindEmailForUser(tenant, userId string) (*entity.EmailEntity, error)
 
-	SyncEmailsForUser(externalSystemId, tenant string, userSource string, personalEmailProviderList []commonEntity.PersonalEmailProvider, organizationAllowedForImport []commonEntity.WhitelistDomain)
+	SyncEmailsForUser(externalSystemId, tenant string, userSource string, personalEmailProviderList []postgresEntity.PersonalEmailProvider, organizationAllowedForImport []postgresEntity.WhitelistDomain)
 
 	SyncEmailByEmailRawId(externalSystemId, tenant string, emailId uuid.UUID) (entity.RawState, *string, error)
 	SyncEmailByMessageId(externalSystemId, tenant, usernameSource, messageId string) (entity.RawState, *string, error)
@@ -49,7 +49,7 @@ func (s *emailService) FindEmailForUser(tenant, userId string) (*entity.EmailEnt
 	return s.mapDbNodeToEmailEntity(*email), nil
 }
 
-func (s *emailService) SyncEmailsForUser(externalSystemId, tenant string, userSource string, personalEmailProviderList []commonEntity.PersonalEmailProvider, organizationAllowedForImport []commonEntity.WhitelistDomain) {
+func (s *emailService) SyncEmailsForUser(externalSystemId, tenant string, userSource string, personalEmailProviderList []postgresEntity.PersonalEmailProvider, organizationAllowedForImport []postgresEntity.WhitelistDomain) {
 	emailsIdsForSync, err := s.repositories.RawEmailRepository.GetEmailsIdsForUserForSync(externalSystemId, tenant, userSource)
 	if err != nil {
 		logrus.Errorf("failed to get emails for sync: %v", err)
@@ -59,13 +59,13 @@ func (s *emailService) SyncEmailsForUser(externalSystemId, tenant string, userSo
 }
 
 func (s *emailService) SyncEmailByEmailRawId(externalSystemId, tenant string, emailId uuid.UUID) (entity.RawState, *string, error) {
-	personalEmailProviderList, err := s.services.Repositories.CommonRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
+	personalEmailProviderList, err := s.services.Repositories.PostgresRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
 	if err != nil {
 		logrus.Errorf("failed to get personal email provider list: %v", err)
 		panic(err) //todo handle error
 	}
 
-	organizationAllowedForImport, err := s.services.Repositories.CommonRepositories.WhitelistDomainRepository.GetWhitelistDomains(tenant)
+	organizationAllowedForImport, err := s.services.Repositories.PostgresRepositories.WhitelistDomainRepository.GetWhitelistDomains(tenant)
 	if err != nil {
 		logrus.Errorf("failed to check if organization is allowed for import: %v", err)
 		return entity.ERROR, nil, err
@@ -85,13 +85,13 @@ func (s *emailService) SyncEmailByMessageId(externalSystemId, tenant, usernameSo
 		return entity.ERROR, nil, fmt.Errorf("email with message id %v not found", messageId)
 	}
 
-	personalEmailProviderList, err := s.services.Repositories.CommonRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
+	personalEmailProviderList, err := s.services.Repositories.PostgresRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
 	if err != nil {
 		logrus.Errorf("failed to get personal email provider list: %v", err)
 		panic(err) //todo handle error
 	}
 
-	organizationAllowedForImport, err := s.services.Repositories.CommonRepositories.WhitelistDomainRepository.GetWhitelistDomains(tenant)
+	organizationAllowedForImport, err := s.services.Repositories.PostgresRepositories.WhitelistDomainRepository.GetWhitelistDomains(tenant)
 	if err != nil {
 		logrus.Errorf("failed to check if organization is allowed for import: %v", err)
 		return entity.ERROR, nil, err
@@ -100,7 +100,7 @@ func (s *emailService) SyncEmailByMessageId(externalSystemId, tenant, usernameSo
 	return s.syncEmail(externalSystemId, tenant, rawEmail.ID, personalEmailProviderList, organizationAllowedForImport)
 }
 
-func (s *emailService) syncEmails(externalSystemId, tenant string, emails []entity.RawEmail, personalEmailProviderList []commonEntity.PersonalEmailProvider, organizationAllowedForImport []commonEntity.WhitelistDomain) {
+func (s *emailService) syncEmails(externalSystemId, tenant string, emails []entity.RawEmail, personalEmailProviderList []postgresEntity.PersonalEmailProvider, organizationAllowedForImport []postgresEntity.WhitelistDomain) {
 	for _, email := range emails {
 		state, reason, err := s.syncEmail(externalSystemId, tenant, email.ID, personalEmailProviderList, organizationAllowedForImport)
 
@@ -119,7 +119,7 @@ func (s *emailService) syncEmails(externalSystemId, tenant string, emails []enti
 	}
 }
 
-func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.UUID, personalEmailProviderList []commonEntity.PersonalEmailProvider, whitelistDomainList []commonEntity.WhitelistDomain) (entity.RawState, *string, error) {
+func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.UUID, personalEmailProviderList []postgresEntity.PersonalEmailProvider, whitelistDomainList []postgresEntity.WhitelistDomain) (entity.RawState, *string, error) {
 	ctx := context.Background()
 
 	emailIdString := emailId.String()

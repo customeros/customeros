@@ -16,8 +16,8 @@ import (
 
 	ai "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data"
-	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
@@ -460,7 +460,7 @@ func (h *organizationEventHandler) mapIndustryToGICSWithAI(ctx context.Context, 
 
 	firstPrompt := fmt.Sprintf(h.cfg.Services.Anthropic.IndustryLookupPrompt1, inputIndustry)
 
-	promptLog1 := commonEntity.AiPromptLog{
+	promptLog1 := postgresEntity.AiPromptLog{
 		CreatedAt:      utils.Now(),
 		AppSource:      constants.AppSourceEventProcessingPlatformSubscribers,
 		Provider:       constants.Anthropic,
@@ -472,7 +472,7 @@ func (h *organizationEventHandler) mapIndustryToGICSWithAI(ctx context.Context, 
 		PromptTemplate: &h.cfg.Services.Anthropic.IndustryLookupPrompt1,
 		Prompt:         firstPrompt,
 	}
-	promptStoreLogId1, err := h.repositories.CommonRepositories.AiPromptLogRepository.Store(promptLog1)
+	promptStoreLogId1, err := h.repositories.PostgresRepositories.AiPromptLogRepository.Store(promptLog1)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error storing prompt log: %v", err)
@@ -484,14 +484,14 @@ func (h *organizationEventHandler) mapIndustryToGICSWithAI(ctx context.Context, 
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error invoking AI: %v", err)
-		storeErr := h.repositories.CommonRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId1, err.Error())
+		storeErr := h.repositories.PostgresRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId1, err.Error())
 		if storeErr != nil {
 			tracing.TraceErr(span, storeErr)
 			h.log.Errorf("Error updating prompt log with error: %v", storeErr)
 		}
 		return ""
 	} else {
-		storeErr := h.repositories.CommonRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId1, firstResult)
+		storeErr := h.repositories.PostgresRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId1, firstResult)
 		if storeErr != nil {
 			tracing.TraceErr(span, storeErr)
 			h.log.Errorf("Error updating prompt log with ai response: %v", storeErr)
@@ -502,7 +502,7 @@ func (h *organizationEventHandler) mapIndustryToGICSWithAI(ctx context.Context, 
 	}
 	secondPrompt := fmt.Sprintf(h.cfg.Services.Anthropic.IndustryLookupPrompt2, firstResult)
 
-	promptLog2 := commonEntity.AiPromptLog{
+	promptLog2 := postgresEntity.AiPromptLog{
 		CreatedAt:      utils.Now(),
 		AppSource:      constants.AppSourceEventProcessingPlatformSubscribers,
 		Provider:       constants.Anthropic,
@@ -514,7 +514,7 @@ func (h *organizationEventHandler) mapIndustryToGICSWithAI(ctx context.Context, 
 		PromptTemplate: &h.cfg.Services.Anthropic.IndustryLookupPrompt2,
 		Prompt:         secondPrompt,
 	}
-	promptStoreLogId2, err := h.repositories.CommonRepositories.AiPromptLogRepository.Store(promptLog2)
+	promptStoreLogId2, err := h.repositories.PostgresRepositories.AiPromptLogRepository.Store(promptLog2)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error storing prompt log with error: %v", err)
@@ -523,14 +523,14 @@ func (h *organizationEventHandler) mapIndustryToGICSWithAI(ctx context.Context, 
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error invoking AI: %v", err)
-		err = h.repositories.CommonRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId2, err.Error())
+		err = h.repositories.PostgresRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId2, err.Error())
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error updating prompt log with error: %v", err)
 		}
 		return ""
 	} else {
-		err = h.repositories.CommonRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId2, secondResult)
+		err = h.repositories.PostgresRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId2, secondResult)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error updating prompt log with ai response: %v", err)

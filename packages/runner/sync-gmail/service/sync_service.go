@@ -8,8 +8,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/repository"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/tracing"
-	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go/log"
 	"net/mail"
 	"strings"
@@ -25,16 +25,16 @@ type syncService struct {
 }
 
 type SyncService interface {
-	GetWhitelistedDomain(domain string, whitelistedDomains []commonEntity.WhitelistDomain) *commonEntity.WhitelistDomain
-	GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, interactionEventId, email string, whitelistDomain *commonEntity.WhitelistDomain, personalEmailProviderList []commonEntity.PersonalEmailProvider, now time.Time, source string) (string, error)
+	GetWhitelistedDomain(domain string, whitelistedDomains []postgresEntity.WhitelistDomain) *postgresEntity.WhitelistDomain
+	GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, interactionEventId, email string, whitelistDomain *postgresEntity.WhitelistDomain, personalEmailProviderList []postgresEntity.PersonalEmailProvider, now time.Time, source string) (string, error)
 
-	BuildEmailsListExcludingPersonalEmails(personalEmailProviderList []commonEntity.PersonalEmailProvider, usernameSource, from string, to []string, cc []string, bcc []string) ([]string, error)
+	BuildEmailsListExcludingPersonalEmails(personalEmailProviderList []postgresEntity.PersonalEmailProvider, usernameSource, from string, to []string, cc []string, bcc []string) ([]string, error)
 
 	ConvertToUTC(datetimeStr string) (time.Time, error)
 	IsValidEmailSyntax(email string) bool
 }
 
-func (s *syncService) GetWhitelistedDomain(domain string, whitelistedDomains []commonEntity.WhitelistDomain) *commonEntity.WhitelistDomain {
+func (s *syncService) GetWhitelistedDomain(domain string, whitelistedDomains []postgresEntity.WhitelistDomain) *postgresEntity.WhitelistDomain {
 	for _, allowedOrganization := range whitelistedDomains {
 		if strings.Contains(domain, allowedOrganization.Domain) {
 			return &allowedOrganization
@@ -43,7 +43,7 @@ func (s *syncService) GetWhitelistedDomain(domain string, whitelistedDomains []c
 	return nil
 }
 
-func (s *syncService) BuildEmailsListExcludingPersonalEmails(personalEmailProviderList []commonEntity.PersonalEmailProvider, usernameSource, from string, to []string, cc []string, bcc []string) ([]string, error) {
+func (s *syncService) BuildEmailsListExcludingPersonalEmails(personalEmailProviderList []postgresEntity.PersonalEmailProvider, usernameSource, from string, to []string, cc []string, bcc []string) ([]string, error) {
 	var allEmails []string
 
 	if from != "" && !hasPersonalEmailProvider(personalEmailProviderList, utils.ExtractDomain(from)) {
@@ -99,7 +99,7 @@ func (s *syncService) IsValidEmailSyntax(email string) bool {
 	return err == nil
 }
 
-func hasPersonalEmailProvider(providers []commonEntity.PersonalEmailProvider, domain string) bool {
+func hasPersonalEmailProvider(providers []postgresEntity.PersonalEmailProvider, domain string) bool {
 	for _, provider := range providers {
 		if provider.ProviderDomain == domain {
 			return true
@@ -108,7 +108,7 @@ func hasPersonalEmailProvider(providers []commonEntity.PersonalEmailProvider, do
 	return false
 }
 
-func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, interactionEventId, email string, whitelistDomain *commonEntity.WhitelistDomain, personalEmailProviderList []commonEntity.PersonalEmailProvider, now time.Time, source string) (string, error) {
+func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, interactionEventId, email string, whitelistDomain *postgresEntity.WhitelistDomain, personalEmailProviderList []postgresEntity.PersonalEmailProvider, now time.Time, source string) (string, error) {
 	span, ctx := tracing.StartTracerSpan(ctx, "EmailService.getEmailIdForEmail")
 	defer span.Finish()
 	span.LogFields(log.String("tenant", tenant))

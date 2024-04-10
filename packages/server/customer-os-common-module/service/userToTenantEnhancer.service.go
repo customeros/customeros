@@ -2,15 +2,12 @@ package service
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
-	cr "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
-	repository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"google.golang.org/grpc/metadata"
 	"net/http"
 )
 
@@ -34,7 +31,7 @@ const UsernameHeader = "X-Openline-USERNAME"
 const TenantHeader = "X-Openline-TENANT"
 const IdentityIdHeader = "X-Openline-IDENTITY-ID"
 
-func TenantUserContextEnhancer(headerAllowance HeaderAllowance, cr *cr.Repositories, opts ...CommonServiceOption) func(c *gin.Context) {
+func TenantUserContextEnhancer(headerAllowance HeaderAllowance, cr *repository.Repositories, opts ...CommonServiceOption) func(c *gin.Context) {
 	// Apply the options to configure the middleware
 	config := &Options{}
 	for _, opt := range opts {
@@ -140,7 +137,7 @@ func TenantUserContextEnhancer(headerAllowance HeaderAllowance, cr *cr.Repositor
 	}
 }
 
-func checkTenantHeader(c *gin.Context, tenantHeader string, cr *cr.Repositories, ctx context.Context, cache *caches.Cache) (bool, error) {
+func checkTenantHeader(c *gin.Context, tenantHeader string, cr *repository.Repositories, ctx context.Context, cache *caches.Cache) (bool, error) {
 	if tenantHeader == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"errors": []gin.H{{"message": "missing tenant header"}},
@@ -174,7 +171,7 @@ func checkTenantHeader(c *gin.Context, tenantHeader string, cr *cr.Repositories,
 	return true, nil
 }
 
-func checkUsernameHeader(c *gin.Context, usernameHeader string, cr *cr.Repositories, ctx context.Context, cache *caches.Cache) (string, string, []string, error) {
+func checkUsernameHeader(c *gin.Context, usernameHeader string, cr *repository.Repositories, ctx context.Context, cache *caches.Cache) (string, string, []string, error) {
 	if usernameHeader == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"errors": []gin.H{{"message": "missing username header"}},
@@ -210,40 +207,4 @@ func checkUsernameHeader(c *gin.Context, usernameHeader string, cr *cr.Repositor
 	}
 
 	return userId, tenantName, roles, nil
-}
-
-func GetUsernameMetadataForGRPC(ctx context.Context) (*string, error) {
-	md, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
-		return nil, errors.New("no metadata")
-	}
-
-	kh := md.Get(UsernameHeader)
-	if kh != nil && len(kh) == 1 {
-		return &kh[0], nil
-	}
-	return nil, errors.New("no username header")
-}
-
-func GetTenantForUsernameForGRPC(ctx context.Context, userRepository repository.UserRepository) (*string, []string, error) {
-	md, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
-		return nil, []string{}, errors.New("no metadata")
-	}
-
-	kh := md.Get(UsernameHeader)
-	if kh != nil && len(kh) == 1 {
-		_, tenant, roles, err := userRepository.FindUserByEmail(ctx, kh[0])
-
-		if err != nil {
-			return nil, []string{}, err
-		}
-
-		if len(tenant) == 0 {
-			return nil, []string{}, errors.New("no user found")
-		}
-
-		return &tenant, roles, nil
-	}
-	return nil, []string{}, errors.New("no username header")
 }

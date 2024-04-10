@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -12,8 +14,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/notifications"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/helper"
 	temporal_client "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/temporal/client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/temporal/workflows"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
@@ -35,7 +35,7 @@ func DispatchWebhook(ctx context.Context, tenant string, event WebhookEvent, pay
 	}
 
 	// fetch webhook data from db
-	webhookResult := db.CommonRepositories.TenantWebhookRepository.GetWebhook(tenant, event.String())
+	webhookResult := db.PostgresRepositories.TenantWebhookRepository.GetWebhook(tenant, event.String())
 	if webhookResult.Error != nil {
 		err := fmt.Errorf("error fetching webhook data: %v", webhookResult.Error)
 		tracing.TraceErr(span, err)
@@ -111,18 +111,18 @@ func DispatchWebhook(ctx context.Context, tenant string, event WebhookEvent, pay
 	return nil
 }
 
-func mapResultToWebhook(result helper.QueryResult) *entity.TenantWebhook {
+func mapResultToWebhook(result helper.QueryResult) *postgresEntity.TenantWebhook {
 	if result.Error != nil {
 		return nil
 	}
-	webhook, ok := result.Result.(*entity.TenantWebhook)
+	webhook, ok := result.Result.(*postgresEntity.TenantWebhook)
 	if !ok {
 		return nil
 	}
 	return webhook
 }
 
-func populateNotification(tenant, webhookName string, wh *entity.TenantWebhook) *notifications.NovuNotification {
+func populateNotification(tenant, webhookName string, wh *postgresEntity.TenantWebhook) *notifications.NovuNotification {
 	subject := fmt.Sprintf(notifications.WorkflowFailedWebhookSubject, webhookName)
 	payload := map[string]interface{}{
 		"subject":       subject,

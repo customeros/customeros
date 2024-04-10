@@ -1,7 +1,7 @@
 package service
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
+	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/repository"
 )
@@ -9,9 +9,9 @@ import (
 const CALCOM = "calcom"
 
 type PersonalIntegrationsService interface {
-	GetPersonalIntegration(tenantName, email, integration string) (*entity.PersonalIntegration, error)
-	SavePersonalIntegration(entity.PersonalIntegration) (*entity.PersonalIntegration, error)
-	GetPersonalIntegrations(tenantName, email string) ([]*entity.PersonalIntegration, error)
+	GetPersonalIntegration(tenantName, email, integration string) (*postgresEntity.PersonalIntegration, error)
+	SavePersonalIntegration(postgresEntity.PersonalIntegration) (*postgresEntity.PersonalIntegration, error)
+	GetPersonalIntegrations(tenantName, email string) ([]*postgresEntity.PersonalIntegration, error)
 }
 
 type personalIntegrationsService struct {
@@ -27,24 +27,24 @@ func NewPersonalIntegrationsService(repositories *repository.PostgresRepositorie
 	}
 }
 
-func (s *personalIntegrationsService) GetPersonalIntegrations(tenantName, email string) ([]*entity.PersonalIntegration, error) {
-	res := s.repositories.CommonRepositories.PersonalIntegrationRepository.FindIntegrations(tenantName, email)
+func (s *personalIntegrationsService) GetPersonalIntegrations(tenantName, email string) ([]*postgresEntity.PersonalIntegration, error) {
+	res := s.repositories.PostgresRepositories.PersonalIntegrationRepository.FindIntegrations(tenantName, email)
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	return res.Result.([]*entity.PersonalIntegration), nil
+	return res.Result.([]*postgresEntity.PersonalIntegration), nil
 }
-func (s *personalIntegrationsService) GetPersonalIntegration(tenantName, email, integration string) (*entity.PersonalIntegration, error) {
-	res := s.repositories.CommonRepositories.PersonalIntegrationRepository.FindIntegration(tenantName, email, integration)
+func (s *personalIntegrationsService) GetPersonalIntegration(tenantName, email, integration string) (*postgresEntity.PersonalIntegration, error) {
+	res := s.repositories.PostgresRepositories.PersonalIntegrationRepository.FindIntegration(tenantName, email, integration)
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	return res.Result.(*entity.PersonalIntegration), nil
+	return res.Result.(*postgresEntity.PersonalIntegration), nil
 }
-func (s *personalIntegrationsService) SavePersonalIntegration(integration entity.PersonalIntegration) (*entity.PersonalIntegration, error) {
-	res := s.repositories.CommonRepositories.PersonalIntegrationRepository.SaveIntegration(integration)
+func (s *personalIntegrationsService) SavePersonalIntegration(integration postgresEntity.PersonalIntegration) (*postgresEntity.PersonalIntegration, error) {
+	res := s.repositories.PostgresRepositories.PersonalIntegrationRepository.SaveIntegration(integration)
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	return res.Result.(*entity.PersonalIntegration), nil
+	return res.Result.(*postgresEntity.PersonalIntegration), nil
 }

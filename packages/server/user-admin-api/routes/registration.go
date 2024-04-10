@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/repository/postgres/entity"
-	commonPostgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	commonUtils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/service"
@@ -24,7 +24,7 @@ import (
 const APP_SOURCE = "user-admin-api"
 
 func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services *service.Services) {
-	personalEmailProviders, err := services.CommonServices.CommonRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
+	personalEmailProviders, err := services.CommonServices.PostgresRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
 	if err != nil {
 		panic(err)
 	}
@@ -222,7 +222,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 	})
 }
 
-func getTenant(cosClient service.CustomerOsClient, personalEmailProvider []commonPostgresEntity.PersonalEmailProvider, signInRequest model.SignInRequest, ginContext *gin.Context) (*string, error) {
+func getTenant(cosClient service.CustomerOsClient, personalEmailProvider []postgresEntity.PersonalEmailProvider, signInRequest model.SignInRequest, ginContext *gin.Context) (*string, error) {
 	domain := commonUtils.ExtractDomain(signInRequest.Email)
 	log.Printf("GetTenant - Domain extracted: %s", domain)
 

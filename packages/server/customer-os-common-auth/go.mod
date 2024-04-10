@@ -4,11 +4,14 @@ go 1.21
 
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ../customer-os-common-module
 
+replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository => ../customer-os-postgres-repository
+
 require (
 	github.com/docker/docker v24.0.7+incompatible
 	github.com/google/uuid v1.6.0
 	github.com/neo4j/neo4j-go-driver/v5 v5.19.0
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230810191455-3928c40ce17f
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20231227140027-08b87eac2360
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository v0.0.0-20240206104907-b429ee046270
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.9.0

@@ -4,6 +4,8 @@ go 1.21
 
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ./../../server/customer-os-common-module
 
+replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository => ./../../server/customer-os-postgres-repository
+
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth => ./../../server/customer-os-common-auth
 
 require (
@@ -14,6 +16,7 @@ require (
 	github.com/neo4j/neo4j-go-driver/v5 v5.19.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20240219173641-99951e96f1dc
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240219173641-99951e96f1dc
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository v0.0.0-20240219173641-99951e96f1dc
 	github.com/pkg/errors v0.9.1
 	github.com/robfig/cron v1.2.0
 	github.com/sirupsen/logrus v1.9.3

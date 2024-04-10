@@ -23,7 +23,7 @@ import (
 func AddInvoiceRoutes(ctx context.Context, route *gin.Engine, services *service.Services, log logger.Logger, cache *commoncaches.Cache) {
 	route.POST("/sync/invoice",
 		handler.TracingEnhancer(ctx, "/sync/invoice"),
-		commonservice.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.TenantWebhookApiKeyRepository, services.CommonServices.CommonRepositories.AppKeyRepository, commonservice.CUSTOMER_OS_WEBHOOKS, commonservice.WithCache(cache)),
+		commonservice.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, commonservice.CUSTOMER_OS_WEBHOOKS, commonservice.WithCache(cache)),
 		syncInvoiceHandler(services, log))
 }
 

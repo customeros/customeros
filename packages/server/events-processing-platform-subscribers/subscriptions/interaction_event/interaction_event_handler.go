@@ -6,9 +6,9 @@ import (
 	"fmt"
 	aiConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/config"
 	ai "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/service"
-	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
+	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/grpc_client"
@@ -86,7 +86,7 @@ func (h *interactionEventHandler) GenerateSummaryForEmail(ctx context.Context, e
 
 	summaryPrompt := fmt.Sprintf(h.cfg.Services.Anthropic.EmailSummaryPrompt, interactionEventContent)
 
-	promptLog := commonEntity.AiPromptLog{
+	promptLog := postgresEntity.AiPromptLog{
 		CreatedAt:      utils.Now(),
 		AppSource:      constants.AppSourceEventProcessingPlatformSubscribers,
 		Provider:       constants.Anthropic,
@@ -98,7 +98,7 @@ func (h *interactionEventHandler) GenerateSummaryForEmail(ctx context.Context, e
 		PromptTemplate: &h.cfg.Services.Anthropic.EmailSummaryPrompt,
 		Prompt:         summaryPrompt,
 	}
-	promptStoreLogId, err := h.repositories.CommonRepositories.AiPromptLogRepository.Store(promptLog)
+	promptStoreLogId, err := h.repositories.PostgresRepositories.AiPromptLogRepository.Store(promptLog)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error storing prompt log: %v", err)
@@ -110,14 +110,14 @@ func (h *interactionEventHandler) GenerateSummaryForEmail(ctx context.Context, e
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error invoking AI: %v", err.Error())
-		storeErr := h.repositories.CommonRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId, err.Error())
+		storeErr := h.repositories.PostgresRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId, err.Error())
 		if storeErr != nil {
 			tracing.TraceErr(span, storeErr)
 			h.log.Errorf("Error updating prompt log with error: %v", storeErr)
 		}
 		return nil
 	} else {
-		storeErr := h.repositories.CommonRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId, aiResponse)
+		storeErr := h.repositories.PostgresRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId, aiResponse)
 		if storeErr != nil {
 			tracing.TraceErr(span, storeErr)
 			h.log.Errorf("Error updating prompt log with ai response: %v", storeErr)
@@ -180,7 +180,7 @@ func (h *interactionEventHandler) GenerateActionItemsForEmail(ctx context.Contex
 
 	actionItemsPrompt := fmt.Sprintf(h.cfg.Services.Anthropic.EmailActionsItemsPrompt, interactionEventContent)
 
-	promptLog := commonEntity.AiPromptLog{
+	promptLog := postgresEntity.AiPromptLog{
 		CreatedAt:      utils.Now(),
 		AppSource:      constants.AppSourceEventProcessingPlatformSubscribers,
 		Provider:       constants.Anthropic,
@@ -192,7 +192,7 @@ func (h *interactionEventHandler) GenerateActionItemsForEmail(ctx context.Contex
 		PromptTemplate: &h.cfg.Services.Anthropic.EmailActionsItemsPrompt,
 		Prompt:         actionItemsPrompt,
 	}
-	promptStoreLogId, err := h.repositories.CommonRepositories.AiPromptLogRepository.Store(promptLog)
+	promptStoreLogId, err := h.repositories.PostgresRepositories.AiPromptLogRepository.Store(promptLog)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error storing prompt log: %v", err)
@@ -204,14 +204,14 @@ func (h *interactionEventHandler) GenerateActionItemsForEmail(ctx context.Contex
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error invoking AI: %v", err.Error())
-		storeErr := h.repositories.CommonRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId, err.Error())
+		storeErr := h.repositories.PostgresRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId, err.Error())
 		if storeErr != nil {
 			tracing.TraceErr(span, storeErr)
 			h.log.Errorf("Error updating prompt log with error: %v", storeErr)
 		}
 		return nil
 	} else {
-		storeErr := h.repositories.CommonRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId, aiResponse)
+		storeErr := h.repositories.PostgresRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId, aiResponse)
 		if storeErr != nil {
 			tracing.TraceErr(span, storeErr)
 			h.log.Errorf("Error updating prompt log with ai response: %v", storeErr)
@@ -223,7 +223,7 @@ func (h *interactionEventHandler) GenerateActionItemsForEmail(ctx context.Contex
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error extracting action items from ai response: %v", err)
-		storeErr := h.repositories.CommonRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId, err.Error())
+		storeErr := h.repositories.PostgresRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId, err.Error())
 		if storeErr != nil {
 			tracing.TraceErr(span, storeErr)
 			h.log.Errorf("Error updating prompt log with error: %v", storeErr)
@@ -231,7 +231,7 @@ func (h *interactionEventHandler) GenerateActionItemsForEmail(ctx context.Contex
 		return nil
 	}
 	if len(actionItems) == 0 {
-		storeErr := h.repositories.CommonRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId, err.Error())
+		storeErr := h.repositories.PostgresRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId, err.Error())
 		if storeErr != nil {
 			tracing.TraceErr(span, storeErr)
 			h.log.Errorf("Error updating prompt log with error: %v", storeErr)

@@ -8,6 +8,8 @@ replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-
 
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository => ../../server/customer-os-neo4j-repository
 
+replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository => ../../server/customer-os-postgres-repository
+
 require (
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/cenkalti/backoff/v4 v4.3.0
@@ -15,6 +17,7 @@ require (
 	github.com/neo4j/neo4j-go-driver/v5 v5.19.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240220064825-20118a9bac6a
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20240220064825-20118a9bac6a
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository v0.0.0-20240220064825-20118a9bac6a
 	github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20240220064825-20118a9bac6a
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1

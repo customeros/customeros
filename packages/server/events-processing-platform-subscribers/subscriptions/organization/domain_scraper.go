@@ -12,8 +12,8 @@ import (
 	md "github.com/JohannesKaufmann/html-to-markdown"
 	"github.com/PuerkitoBio/goquery"
 	ai "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/service"
-	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
@@ -136,7 +136,7 @@ func (ds *DomainScraperV1) runCompanyPrompt(text *string, tenant, organizationId
 	prompt := strings.ReplaceAll(p, "{{text}}", *text)
 	ctx := context.Background()
 
-	promptLog := commonEntity.AiPromptLog{
+	promptLog := postgresEntity.AiPromptLog{
 		CreatedAt:      utils.Now(),
 		AppSource:      constants.AppSourceEventProcessingPlatformSubscribers,
 		Provider:       constants.OpenAI,
@@ -150,14 +150,14 @@ func (ds *DomainScraperV1) runCompanyPrompt(text *string, tenant, organizationId
 	}
 
 	// ignore error from storing prompt log, since it's not critical
-	promptStoreLogId, _ := ds.repositories.CommonRepositories.AiPromptLogRepository.Store(promptLog)
+	promptStoreLogId, _ := ds.repositories.PostgresRepositories.AiPromptLogRepository.Store(promptLog)
 
 	aiResult, err := ds.aiModel.Inference(ctx, prompt)
 	if err != nil {
-		_ = ds.repositories.CommonRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId, err.Error())
+		_ = ds.repositories.PostgresRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId, err.Error())
 		return nil, errors.Wrap(err, "unable to get openai result")
 	}
-	_ = ds.repositories.CommonRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId, aiResult)
+	_ = ds.repositories.PostgresRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId, aiResult)
 
 	return &aiResult, nil
 }
@@ -271,7 +271,7 @@ func (ds *DomainScraperV1) runDataPrompt(analysis, domainUrl, socials, jsonStruc
 		prompt = strings.ReplaceAll(prompt, k, v)
 	}
 
-	promptLog := commonEntity.AiPromptLog{
+	promptLog := postgresEntity.AiPromptLog{
 		CreatedAt:      utils.Now(),
 		AppSource:      constants.AppSourceEventProcessingPlatformSubscribers,
 		Provider:       constants.OpenAI,
@@ -283,15 +283,15 @@ func (ds *DomainScraperV1) runDataPrompt(analysis, domainUrl, socials, jsonStruc
 		PromptTemplate: &ds.cfg.Services.OpenAi.ScrapeDataPrompt,
 		Prompt:         prompt,
 	}
-	promptStoreLogId, _ := ds.repositories.CommonRepositories.AiPromptLogRepository.Store(promptLog)
+	promptStoreLogId, _ := ds.repositories.PostgresRepositories.AiPromptLogRepository.Store(promptLog)
 
 	cleaned, err := ds.aiModel.Inference(context.Background(), prompt)
 
 	if err != nil {
-		_ = ds.repositories.CommonRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId, err.Error())
+		_ = ds.repositories.PostgresRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId, err.Error())
 		return nil, err
 	}
-	_ = ds.repositories.CommonRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId, cleaned)
+	_ = ds.repositories.PostgresRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId, cleaned)
 	ds.log.Printf("scrapeResponse: %s", cleaned)
 	scrapeResponse := WebscrapeResponseV1{}
 	err = json.Unmarshal([]byte(cleaned), &scrapeResponse)

@@ -1,12 +1,12 @@
 package postgrest
 
 import (
-	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
+	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"gorm.io/gorm"
 )
 
 func InsertTenantAPIKey(db *gorm.DB, tenantName, key, value string) error {
-	newRecord := &commonEntity.GoogleServiceAccountKey{
+	newRecord := &postgresEntity.GoogleServiceAccountKey{
 		TenantName: tenantName,
 		Key:        key,
 		Value:      value,

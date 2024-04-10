@@ -6,8 +6,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/config"
 	authRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/repository"
 	authEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/repository/postgres/entity"
-	commonRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
-	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
+	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/sirupsen/logrus"
@@ -21,10 +21,10 @@ import (
 )
 
 type googleService struct {
-	cfg                *config.Config
-	authRepositories   *authRepository.Repositories
-	commonRepositories *commonRepository.Repositories
-	services           *Services
+	cfg                  *config.Config
+	authRepositories     *authRepository.Repositories
+	postgresRepositories postgresRepository.Repositories
+	services             *Services
 }
 
 type GoogleService interface {
@@ -39,12 +39,12 @@ type GoogleService interface {
 	GetGCalServiceWithOauthToken(ctx context.Context, tokenEntity authEntity.OAuthTokenEntity) (*calendar.Service, error)
 }
 
-func NewGoogleService(cfg *config.Config, commonRepositories *commonRepository.Repositories, authRepositories *authRepository.Repositories, services *Services) GoogleService {
+func NewGoogleService(cfg *config.Config, postgresRepositories *postgresRepository.Repositories, authRepositories *authRepository.Repositories, services *Services) GoogleService {
 	return &googleService{
-		cfg:                cfg,
-		commonRepositories: commonRepositories,
-		authRepositories:   authRepositories,
-		services:           services,
+		cfg:                  cfg,
+		postgresRepositories: *postgresRepositories,
+		authRepositories:     authRepositories,
+		services:             services,
 	}
 }
 
@@ -53,12 +53,12 @@ func (s *googleService) ServiceAccountCredentialsExistsForTenant(ctx context.Con
 	defer span.Finish()
 	span.LogFields(log.String("tenant", tenant))
 
-	privateKey, err := s.commonRepositories.GoogleServiceAccountKeyRepository.GetApiKeyByTenantService(ctx, tenant, commonEntity.GSUITE_SERVICE_PRIVATE_KEY)
+	privateKey, err := s.postgresRepositories.GoogleServiceAccountKeyRepository.GetApiKeyByTenantService(ctx, tenant, postgresEntity.GSUITE_SERVICE_PRIVATE_KEY)
 	if err != nil {
 		return false, nil
 	}
 
-	serviceEmail, err := s.commonRepositories.GoogleServiceAccountKeyRepository.GetApiKeyByTenantService(ctx, tenant, commonEntity.GSUITE_SERVICE_EMAIL_ADDRESS)
+	serviceEmail, err := s.postgresRepositories.GoogleServiceAccountKeyRepository.GetApiKeyByTenantService(ctx, tenant, postgresEntity.GSUITE_SERVICE_EMAIL_ADDRESS)
 	if err != nil {
 		return false, nil
 	}
@@ -130,12 +130,12 @@ func (s *googleService) GetGmailServiceWithServiceAccount(ctx context.Context, u
 }
 
 func (s *googleService) getGmailServiceAccountAuthToken(ctx context.Context, identityId, tenant string) (*jwt.Config, error) {
-	privateKey, err := s.commonRepositories.GoogleServiceAccountKeyRepository.GetApiKeyByTenantService(ctx, tenant, commonEntity.GSUITE_SERVICE_PRIVATE_KEY)
+	privateKey, err := s.postgresRepositories.GoogleServiceAccountKeyRepository.GetApiKeyByTenantService(ctx, tenant, postgresEntity.GSUITE_SERVICE_PRIVATE_KEY)
 	if err != nil {
 		return nil, fmt.Errorf("unable to retrieve private key for gmail service: %v", err)
 	}
 
-	serviceEmail, err := s.commonRepositories.GoogleServiceAccountKeyRepository.GetApiKeyByTenantService(ctx, tenant, commonEntity.GSUITE_SERVICE_EMAIL_ADDRESS)
+	serviceEmail, err := s.postgresRepositories.GoogleServiceAccountKeyRepository.GetApiKeyByTenantService(ctx, tenant, postgresEntity.GSUITE_SERVICE_EMAIL_ADDRESS)
 	if err != nil {
 		return nil, fmt.Errorf("unable to retrieve service email for gmail service: %v", err)
 	}
@@ -164,12 +164,12 @@ func (s *googleService) GetGCalServiceWithServiceAccount(ctx context.Context, us
 }
 
 func (s *googleService) getGCalServiceAccountAuthToken(ctx context.Context, identityId, tenant string) (*jwt.Config, error) {
-	privateKey, err := s.commonRepositories.GoogleServiceAccountKeyRepository.GetApiKeyByTenantService(ctx, tenant, commonEntity.GSUITE_SERVICE_PRIVATE_KEY)
+	privateKey, err := s.postgresRepositories.GoogleServiceAccountKeyRepository.GetApiKeyByTenantService(ctx, tenant, postgresEntity.GSUITE_SERVICE_PRIVATE_KEY)
 	if err != nil {
 		return nil, fmt.Errorf("unable to retrieve private key for gmail service: %v", err)
 	}
 
-	serviceEmail, err := s.commonRepositories.GoogleServiceAccountKeyRepository.GetApiKeyByTenantService(ctx, tenant, commonEntity.GSUITE_SERVICE_EMAIL_ADDRESS)
+	serviceEmail, err := s.postgresRepositories.GoogleServiceAccountKeyRepository.GetApiKeyByTenantService(ctx, tenant, postgresEntity.GSUITE_SERVICE_EMAIL_ADDRESS)
 	if err != nil {
 		return nil, fmt.Errorf("unable to retrieve service email for gmail service: %v", err)
 	}

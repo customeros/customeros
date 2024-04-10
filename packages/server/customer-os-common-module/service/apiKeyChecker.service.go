@@ -6,9 +6,9 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	repository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -31,7 +31,7 @@ const (
 const ApiKeyHeader = "X-Openline-API-KEY"
 const TenantApiKeyHeader = "X-CUSTOMER-OS-API-KEY"
 
-func ApiKeyCheckerHTTP(tenantApiKeyRepo repository.TenantWebhookApiKeyRepository, appKeyRepo repository.AppKeyRepository, app App, opts ...CommonServiceOption) func(c *gin.Context) {
+func ApiKeyCheckerHTTP(tenantApiKeyRepo postgresRepository.TenantWebhookApiKeyRepository, appKeyRepo postgresRepository.AppKeyRepository, app App, opts ...CommonServiceOption) func(c *gin.Context) {
 	// Apply the options to configure the middleware
 	config := &Options{}
 	for _, opt := range opts {
@@ -73,7 +73,7 @@ func ApiKeyCheckerHTTP(tenantApiKeyRepo repository.TenantWebhookApiKeyRepository
 				return
 			}
 
-			appKey := keyResult.Result.(*entity.AppKey)
+			appKey := keyResult.Result.(*postgresEntity.AppKey)
 
 			if appKey == nil {
 				c.JSON(http.StatusUnauthorized, gin.H{
@@ -116,7 +116,7 @@ func ApiKeyCheckerHTTP(tenantApiKeyRepo repository.TenantWebhookApiKeyRepository
 				return
 			}
 
-			apiKey := keyResult.Result.(*entity.TenantWebhookApiKey)
+			apiKey := keyResult.Result.(*postgresEntity.TenantWebhookApiKey)
 
 			if apiKey == nil {
 				c.JSON(http.StatusUnauthorized, gin.H{
@@ -150,7 +150,7 @@ func ApiKeyCheckerHTTP(tenantApiKeyRepo repository.TenantWebhookApiKeyRepository
 	}
 }
 
-func ApiKeyCheckerGRPC(ctx context.Context, appKeyRepo repository.AppKeyRepository, app App) bool {
+func ApiKeyCheckerGRPC(ctx context.Context, appKeyRepo postgresRepository.AppKeyRepository, app App) bool {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return false
@@ -162,7 +162,7 @@ func ApiKeyCheckerGRPC(ctx context.Context, appKeyRepo repository.AppKeyReposito
 		if keyResult.Error != nil {
 			return false
 		}
-		appKey := keyResult.Result.(*entity.AppKey)
+		appKey := keyResult.Result.(*postgresEntity.AppKey)
 		return appKey != nil
 	}
 	return false

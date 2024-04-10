@@ -12,7 +12,7 @@ import (
 func InitUserSettingsRoutes(r *gin.Engine, ctx context.Context, services *service.Services) {
 	r.GET("/user/settings/google/:playerIdentityId",
 		commonService.TenantUserContextEnhancer(commonService.USERNAME, services.Repositories.CommonRepositories),
-		commonService.ApiKeyCheckerHTTP(services.Repositories.CommonRepositories.TenantWebhookApiKeyRepository, services.Repositories.CommonRepositories.AppKeyRepository, commonService.SETTINGS_API),
+		commonService.ApiKeyCheckerHTTP(services.Repositories.PostgresRepositories.TenantWebhookApiKeyRepository, services.Repositories.PostgresRepositories.AppKeyRepository, commonService.SETTINGS_API),
 
 		func(c *gin.Context) {
 			contextWithTimeout, cancel := commonUtils.GetLongLivedContext(context.Background())
@@ -29,7 +29,7 @@ func InitUserSettingsRoutes(r *gin.Engine, ctx context.Context, services *servic
 
 	r.GET("/user/settings/slack",
 		commonService.TenantUserContextEnhancer(commonService.USERNAME, services.Repositories.CommonRepositories),
-		commonService.ApiKeyCheckerHTTP(services.Repositories.CommonRepositories.TenantWebhookApiKeyRepository, services.Repositories.CommonRepositories.AppKeyRepository, commonService.SETTINGS_API),
+		commonService.ApiKeyCheckerHTTP(services.Repositories.PostgresRepositories.TenantWebhookApiKeyRepository, services.Repositories.PostgresRepositories.AppKeyRepository, commonService.SETTINGS_API),
 
 		func(c *gin.Context) {
 			tenant, _ := c.Get(commonService.KEY_TENANT_NAME)

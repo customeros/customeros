@@ -114,7 +114,7 @@ func (server *Server) Start(parentCtx context.Context) error {
 
 	server.Services = service.InitServices(server.Config, server.Repositories, server.Log)
 
-	eventBufferWatcher := eventbuffer.NewEventBufferWatcher(server.Repositories.CommonRepositories.EventBufferRepository, server.Log, server.AggregateStore)
+	eventBufferWatcher := eventbuffer.NewEventBufferWatcher(server.Repositories.PostgresRepositories.EventBufferRepository, server.Log, server.AggregateStore)
 	eventBufferWatcher.Start(ctx)
 	defer eventBufferWatcher.Stop()
 

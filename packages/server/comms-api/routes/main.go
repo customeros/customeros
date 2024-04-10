@@ -6,20 +6,20 @@ import (
 	c "github.com/openline-ai/openline-customer-os/packages/server/comms-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/routes/ContactHub"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/service"
-	commonRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
+	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	"log"
 	"strings"
 )
 
 // Run will start the server
-func Run(config *c.Config, hub *ContactHub.ContactHub, services *service.Services, container *commonRepository.Repositories) {
+func Run(config *c.Config, hub *ContactHub.ContactHub, services *service.Services, container *postgresRepository.Repositories) {
 	router := getRouter(config, hub, services, container)
 	if err := router.Run(config.Service.ServerAddress); err != nil {
 		log.Fatalf("could not run server: %v", err)
 	}
 }
 
-func getRouter(config *c.Config, hub *ContactHub.ContactHub, services *service.Services, container *commonRepository.Repositories) *gin.Engine {
+func getRouter(config *c.Config, hub *ContactHub.ContactHub, services *service.Services, container *postgresRepository.Repositories) *gin.Engine {
 	router := gin.New()
 	corsConfig := cors.DefaultConfig()
 

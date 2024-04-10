@@ -1,8 +1,8 @@
 package repository
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/helper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository/helper"
 	"gorm.io/gorm"
 )
 

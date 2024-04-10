@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
-	comentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
@@ -27,7 +27,7 @@ import (
 )
 
 type domains struct {
-	whitelistDomains       []comentity.WhitelistDomain
+	whitelistDomains       []postgresEntity.WhitelistDomain
 	personalEmailProviders []string
 }
 
@@ -91,15 +91,15 @@ func (s *organizationService) SyncOrganizations(ctx context.Context, organizatio
 	syncDate := utils.Now()
 	var statuses []SyncStatus
 
-	whitelistDomains, err := s.repositories.CommonRepositories.WhitelistDomainRepository.GetWhitelistDomains(common.GetTenantFromContext(ctx))
+	whitelistDomains, err := s.repositories.PostgresRepositories.WhitelistDomainRepository.GetWhitelistDomains(common.GetTenantFromContext(ctx))
 	if err != nil {
 		s.log.Errorf("error while getting whitelist domains: %v", err)
-		whitelistDomains = make([]comentity.WhitelistDomain, 0)
+		whitelistDomains = make([]postgresEntity.WhitelistDomain, 0)
 	}
 
 	personalEmailProviders := s.cache.GetPersonalEmailProviders()
 	if len(personalEmailProviders) == 0 {
-		personalEmailProviderEntities, err := s.repositories.CommonRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
+		personalEmailProviderEntities, err := s.repositories.PostgresRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
 		if err != nil {
 			s.log.Errorf("error while getting personal email providers: %v", err)
 		}

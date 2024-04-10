@@ -6,12 +6,16 @@ on:
     paths:
       - packages/server/customer-os-common-module/**
       - packages/server/customer-os-common-auth/**
+      - packages/server/customer-os-postgres-repository/**
+      - packages/server/customer-os-neo4j-repository/**
       - packages/runner/sync-gmail-raw/**
       - .github/workflows/build-sync-gmail-raw.yml
   pull_request:
     paths:
       - packages/server/customer-os-common-module/**
       - packages/server/customer-os-common-auth/**
+      - packages/server/customer-os-postgres-repository/**
+      - packages/server/customer-os-neo4j-repository/**
       - packages/runner/sync-gmail-raw/**
       - .github/workflows/build-sync-gmail-raw.yml
   release:
@@ -80,20 +84,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Prepare sources for docker build
-        run: |
-          mkdir tmp-sources
-          mkdir tmp-sources/customer-os-common-module
-          mkdir tmp-sources/customer-os-common-auth
-          mkdir tmp-sources/sync-gmail-raw
-          
-          rsync -av --progress --exclude="tmp-sources" * tmp-sources/sync-gmail-raw
-          cp .env tmp-sources/sync-gmail-raw/.env
-          cp -r ../../server/customer-os-common-module/* tmp-sources/customer-os-common-module
-          cp -r ../../server/customer-os-common-auth/* tmp-sources/customer-os-common-auth
-          
-          cp Dockerfile tmp-sources/Dockerfile
-
       - name: Log in to the Container registry
         uses: docker/login-action@v3.1.0
         with:
@@ -110,7 +100,8 @@ jobs:
       - name: Push Docker image
         uses: docker/build-push-action@v5.3.0
         with:
-          context: packages/runner/sync-gmail-raw/tmp-sources/.
+          context: ./packages/
+          file: ./packages/runner/sync-gmail-raw/Dockerfile
           push: ${{ github.ref_name == 'otter' || github.event_name == 'release' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

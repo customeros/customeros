@@ -22,7 +22,7 @@ import (
 func AddOrderRoutes(ctx context.Context, route *gin.Engine, services *service.Services, log logger.Logger, cache *commoncaches.Cache) {
 	route.POST("/sync/order",
 		handler.TracingEnhancer(ctx, "/sync/order"),
-		commonservice.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.TenantWebhookApiKeyRepository, services.CommonServices.CommonRepositories.AppKeyRepository, commonservice.CUSTOMER_OS_WEBHOOKS, commonservice.WithCache(cache)),
+		commonservice.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, commonservice.CUSTOMER_OS_WEBHOOKS, commonservice.WithCache(cache)),
 		syncOrderHandler(services, log))
 }
 

@@ -7,16 +7,16 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/model"
 	s "github.com/openline-ai/openline-customer-os/packages/server/comms-api/service"
 	cosModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	repository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	"github.com/sirupsen/logrus"
 	"io"
 	"log"
 	"net/http"
 )
 
-func AddCalComRoutes(rg *gin.RouterGroup, cosService s.CustomerOSService, secretsRepo repository.PersonalIntegrationRepository) {
+func AddCalComRoutes(rg *gin.RouterGroup, cosService s.CustomerOSService, secretsRepo postgresRepository.PersonalIntegrationRepository) {
 	var appSource = "calcom"
 	rg.POST("/calcom", func(ctx *gin.Context) {
 		body, err := io.ReadAll(ctx.Request.Body)
@@ -129,7 +129,7 @@ func AddCalComRoutes(rg *gin.RouterGroup, cosService s.CustomerOSService, secret
 	})
 }
 
-func bookingCanceledHandler(cosService s.CustomerOSService, request model.BookingCancelRequest, body []byte, secretsRepo repository.PersonalIntegrationRepository, hSignature, calcom string) (*string, error) {
+func bookingCanceledHandler(cosService s.CustomerOSService, request model.BookingCancelRequest, body []byte, secretsRepo postgresRepository.PersonalIntegrationRepository, hSignature, calcom string) (*string, error) {
 	_, tenant, err := getParticipantAndTenant(cosService, &request.Payload.Organizer.Email)
 	if err != nil {
 		return nil, fmt.Errorf("can't identify participant or tenant by for email: %v", err.Error())
@@ -159,7 +159,7 @@ func bookingCanceledHandler(cosService s.CustomerOSService, request model.Bookin
 	}
 }
 
-func bookingRescheduledHandler(cosService s.CustomerOSService, request model.BookingRescheduleRequest, body []byte, secretsRepo repository.PersonalIntegrationRepository, hSignature, calcom string, appSource string) (*string, error) {
+func bookingRescheduledHandler(cosService s.CustomerOSService, request model.BookingRescheduleRequest, body []byte, secretsRepo postgresRepository.PersonalIntegrationRepository, hSignature, calcom string, appSource string) (*string, error) {
 	_, tenant, err := getParticipantAndTenant(cosService, &request.Payload.Organizer.Email)
 	if err != nil {
 		return nil, fmt.Errorf("can't identify participant or tenant for email: %v", err.Error())
@@ -256,7 +256,7 @@ func bookingRescheduledHandler(cosService s.CustomerOSService, request model.Boo
 	}
 }
 
-func bookingCreatedHandler(cosService s.CustomerOSService, request model.BookingCreatedRequest, body []byte, secretsRepo repository.PersonalIntegrationRepository, hSignature, calcom, appSource string) (*string, error) {
+func bookingCreatedHandler(cosService s.CustomerOSService, request model.BookingCreatedRequest, body []byte, secretsRepo postgresRepository.PersonalIntegrationRepository, hSignature, calcom, appSource string) (*string, error) {
 	participant, tenant, err := getParticipantAndTenant(cosService, &request.Payload.Organizer.Email)
 
 	if err != nil {

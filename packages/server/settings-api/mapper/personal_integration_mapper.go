@@ -1,10 +1,10 @@
 package mapper
 
 import (
-	commonPgEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
+	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 )
 
-func MapPersonalIntegrationToDTO(personalIntegration *commonPgEntity.PersonalIntegration) *map[string]interface{} {
+func MapPersonalIntegrationToDTO(personalIntegration *postgresEntity.PersonalIntegration) *map[string]interface{} {
 	return &map[string]interface{}{
 		"id":         personalIntegration.ID,
 		"tenantName": personalIntegration.TenantName,

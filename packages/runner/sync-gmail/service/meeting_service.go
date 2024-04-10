@@ -10,8 +10,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/repository"
-	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/sirupsen/logrus"
 	"time"
 )
@@ -25,10 +25,10 @@ type meetingService struct {
 }
 
 type MeetingService interface {
-	SyncCalendarEvents(externalSystemId, tenant string, personalEmailProviderList []commonEntity.PersonalEmailProvider, organizationAllowedForImport []commonEntity.WhitelistDomain)
+	SyncCalendarEvents(externalSystemId, tenant string, personalEmailProviderList []postgresEntity.PersonalEmailProvider, organizationAllowedForImport []postgresEntity.WhitelistDomain)
 }
 
-func (s *meetingService) SyncCalendarEvents(externalSystemId, tenant string, personalEmailProviderList []commonEntity.PersonalEmailProvider, organizationAllowedForImport []commonEntity.WhitelistDomain) {
+func (s *meetingService) SyncCalendarEvents(externalSystemId, tenant string, personalEmailProviderList []postgresEntity.PersonalEmailProvider, organizationAllowedForImport []postgresEntity.WhitelistDomain) {
 	calendarEventsIdsForSync, err := s.repositories.RawCalendarEventRepository.GetCalendarEventsIdsForSync(externalSystemId, tenant)
 	if err != nil {
 		logrus.Errorf("failed to get emails for sync: %v", err)
@@ -37,7 +37,7 @@ func (s *meetingService) SyncCalendarEvents(externalSystemId, tenant string, per
 	s.syncCalendarEvents(externalSystemId, tenant, calendarEventsIdsForSync, personalEmailProviderList, organizationAllowedForImport)
 }
 
-func (s *meetingService) syncCalendarEvents(externalSystemId, tenant string, calendarEvents []entity.RawCalendarEvent, personalEmailProviderList []commonEntity.PersonalEmailProvider, organizationAllowedForImport []commonEntity.WhitelistDomain) {
+func (s *meetingService) syncCalendarEvents(externalSystemId, tenant string, calendarEvents []entity.RawCalendarEvent, personalEmailProviderList []postgresEntity.PersonalEmailProvider, organizationAllowedForImport []postgresEntity.WhitelistDomain) {
 	for _, calendarEvent := range calendarEvents {
 		state, reason, err := s.syncCalendarEvent(externalSystemId, tenant, calendarEvent.ID, personalEmailProviderList, organizationAllowedForImport)
 
@@ -56,7 +56,7 @@ func (s *meetingService) syncCalendarEvents(externalSystemId, tenant string, cal
 	}
 }
 
-func (s *meetingService) syncCalendarEvent(externalSystemId, tenant string, rawCalendarId uuid.UUID, personalEmailProviderList []commonEntity.PersonalEmailProvider, whitelistDomainList []commonEntity.WhitelistDomain) (entity.RawState, *string, error) {
+func (s *meetingService) syncCalendarEvent(externalSystemId, tenant string, rawCalendarId uuid.UUID, personalEmailProviderList []postgresEntity.PersonalEmailProvider, whitelistDomainList []postgresEntity.WhitelistDomain) (entity.RawState, *string, error) {
 	ctx := context.Background()
 
 	rawCalendarIdString := rawCalendarId.String()
@@ -201,7 +201,7 @@ func (s *meetingService) syncCalendarEvent(externalSystemId, tenant string, rawC
 	return entity.SENT, nil, err
 }
 
-func (s *meetingService) GetAttendeeEmailIdAndType(tx neo4j.ManagedTransaction, tenant, meetingId, emailAddress string, whitelistDomainList []commonEntity.WhitelistDomain, personalEmailProviderList []commonEntity.PersonalEmailProvider, now time.Time) (*string, error) {
+func (s *meetingService) GetAttendeeEmailIdAndType(tx neo4j.ManagedTransaction, tenant, meetingId, emailAddress string, whitelistDomainList []postgresEntity.WhitelistDomain, personalEmailProviderList []postgresEntity.PersonalEmailProvider, now time.Time) (*string, error) {
 	ctx := context.Background()
 
 	fromEmailId, err := s.repositories.EmailRepository.GetEmailIdInTx(ctx, tx, tenant, emailAddress)

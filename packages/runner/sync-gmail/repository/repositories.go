@@ -2,14 +2,14 @@ package repository
 
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	commonRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
+	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	"gorm.io/gorm"
 )
 
 type Repositories struct {
 	Neo4jDriver *neo4j.DriverWithContext
 
-	CommonRepositories *commonRepository.Repositories
+	PostgresRepositories *postgresRepository.Repositories
 
 	//pg repositories
 	RawEmailRepository         RawEmailRepository
@@ -35,7 +35,7 @@ func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB) *Repositories {
 	repositories := Repositories{
 		Neo4jDriver: driver,
 
-		CommonRepositories: commonRepository.InitRepositories(gormDb, driver),
+		PostgresRepositories: postgresRepository.InitRepositories(gormDb),
 
 		RawEmailRepository:         NewRawEmailRepository(gormDb),
 		RawCalendarEventRepository: NewRawCalendarEventRepository(gormDb),

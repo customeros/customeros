@@ -2,33 +2,33 @@ package service
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"time"
 )
 
 type SlackChannelService interface {
-	GetSlackChannels(ctx context.Context, tenant string) ([]*entity.SlackChannel, error)
-	GetPaginatedSlackChannels(ctx context.Context, tenant string, page, limit int) ([]*entity.SlackChannel, int64, error)
+	GetSlackChannels(ctx context.Context, tenant string) ([]*postgresEntity.SlackChannel, error)
+	GetPaginatedSlackChannels(ctx context.Context, tenant string, page, limit int) ([]*postgresEntity.SlackChannel, int64, error)
 
 	StoreSlackChannel(ctx context.Context, tenant, source, channelId, channelName string, organizationId *string) error
 }
 
 type slackChannelService struct {
-	repositories *repository.Repositories
+	repositories *postgresRepository.Repositories
 }
 
-func NewSlackChannelService(repositories *repository.Repositories) SlackChannelService {
+func NewSlackChannelService(repositories *postgresRepository.Repositories) SlackChannelService {
 	return &slackChannelService{
 		repositories: repositories,
 	}
 }
 
-func (s *slackChannelService) GetSlackChannels(ctx context.Context, tenant string) ([]*entity.SlackChannel, error) {
+func (s *slackChannelService) GetSlackChannels(ctx context.Context, tenant string) ([]*postgresEntity.SlackChannel, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GetSlackChannels.GetSlackChannels")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagComponent, "service")
@@ -42,7 +42,7 @@ func (s *slackChannelService) GetSlackChannels(ctx context.Context, tenant strin
 	return nodes, nil
 }
 
-func (s *slackChannelService) GetPaginatedSlackChannels(ctx context.Context, tenant string, page, limit int) ([]*entity.SlackChannel, int64, error) {
+func (s *slackChannelService) GetPaginatedSlackChannels(ctx context.Context, tenant string, page, limit int) ([]*postgresEntity.SlackChannel, int64, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GetSlackChannels.GetSlackChannels")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagComponent, "service")
@@ -72,7 +72,7 @@ func (s *slackChannelService) StoreSlackChannel(ctx context.Context, tenant, sou
 
 	if existing == nil {
 		now := time.Now()
-		slackChannel := entity.SlackChannel{
+		slackChannel := postgresEntity.SlackChannel{
 			CreatedAt:      now,
 			UpdatedAt:      now,
 			TenantName:     tenant,
