@@ -1057,7 +1057,7 @@ func CreateInvoiceForContract(ctx context.Context, driver *neo4j.DriverWithConte
 		"periodStartDate":  utils.ToNeo4jDateAsAny(&invoice.PeriodStartDate),
 		"periodEndDate":    utils.ToNeo4jDateAsAny(&invoice.PeriodEndDate),
 		"dueDate":          utils.ToNeo4jDateAsAny(&invoice.DueDate),
-		"issuedDate":       utils.ToNeo4jDateAsAny(&invoice.IssuedDate),
+		"issuedDate":       utils.ToDate(invoice.IssuedDate),
 		"currency":         invoice.Currency,
 		"amount":           invoice.Amount,
 		"vat":              invoice.Vat,

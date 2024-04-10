@@ -34,7 +34,7 @@ const (
 	SearchSortInvoiceStatus        = "INVOICE_STATUS"
 	SearchInvoiceNumberDeprecated  = "NUMBER"
 	SearchInvoiceNumber            = "INVOICE_NUMBER"
-	SearchInvoiceIssueDate         = "INVOICE_ISSUE_DATE"
+	SearchInvoiceIssueDate         = "INVOICE_ISSUED_DATE"
 )
 
 type InvoiceService interface {
@@ -335,8 +335,8 @@ func (s *invoiceService) GetInvoices(ctx context.Context, organizationId string,
 			}
 			if f.Filter.Property == SearchInvoiceIssueDate && f.Filter.Value.ArrayTime != nil && len(*f.Filter.Value.ArrayTime) == 2 {
 				times := *f.Filter.Value.ArrayTime
-				invoiceFilter.Filters = append(invoiceFilter.Filters, utils.CreateCypherFilter("createdAt", times[0], utils.GTE))
-				invoiceFilter.Filters = append(invoiceFilter.Filters, utils.CreateCypherFilter("createdAt", times[1], utils.LTE))
+				invoiceFilter.Filters = append(invoiceFilter.Filters, utils.CreateCypherFilter("issuedDate", times[0], utils.GTE))
+				invoiceFilter.Filters = append(invoiceFilter.Filters, utils.CreateCypherFilter("issuedDate", times[1], utils.LTE))
 			}
 		}
 
