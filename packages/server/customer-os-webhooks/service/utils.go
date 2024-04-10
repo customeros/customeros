@@ -3,8 +3,8 @@ package service
 import (
 	"encoding/json"
 	"github.com/cenkalti/backoff/v4"
-	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -50,7 +50,7 @@ func buildEmailChannelData(subject string, inReplyTo []string) (*string, error) 
 	return &jsonContentString, nil
 }
 
-func GetWhitelistedDomain(domain string, whitelistedDomains []commonEntity.WhitelistDomain) *commonEntity.WhitelistDomain {
+func GetWhitelistedDomain(domain string, whitelistedDomains []postgresEntity.WhitelistDomain) *postgresEntity.WhitelistDomain {
 	for _, allowedOrganization := range whitelistedDomains {
 		if strings.Contains(domain, allowedOrganization.Domain) {
 			return &allowedOrganization
@@ -120,7 +120,7 @@ func IsValidEmailSyntax(email string) bool {
 	return err == nil
 }
 
-func hasPersonalEmailProvider(providers []commonEntity.PersonalEmailProvider, domain string) bool {
+func hasPersonalEmailProvider(providers []postgresEntity.PersonalEmailProvider, domain string) bool {
 	for _, provider := range providers {
 		if provider.ProviderDomain == domain {
 			return true
@@ -190,7 +190,7 @@ func extractLines(input string) []string {
 	return lines
 }
 
-func buildEmailsListExcludingPersonalEmails(personalEmailProviderList []commonEntity.PersonalEmailProvider, usernameSource, from string, to []string, cc []string, bcc []string) ([]string, error) {
+func buildEmailsListExcludingPersonalEmails(personalEmailProviderList []postgresEntity.PersonalEmailProvider, usernameSource, from string, to []string, cc []string, bcc []string) ([]string, error) {
 	var allEmails []string
 
 	if from != "" && !hasPersonalEmailProvider(personalEmailProviderList, utils.ExtractDomain(from)) {

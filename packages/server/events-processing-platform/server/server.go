@@ -94,7 +94,7 @@ func (server *Server) Start(parentCtx context.Context) error {
 
 	server.AggregateStore = store.NewAggregateStore(server.Log, esdb)
 
-	bufferService := eventstore.NewEventBufferService(server.Repositories.CommonRepositories.EventBufferRepository)
+	bufferService := eventstore.NewEventBufferService(server.Repositories.PostgresRepositories.EventBufferRepository)
 	server.CommandHandlers = command.NewCommandHandlers(server.Log, server.Config, server.AggregateStore, bufferService)
 
 	//Server.runMetrics(cancel)

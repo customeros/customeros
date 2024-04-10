@@ -55,7 +55,7 @@ func main() {
 	r.Use(cors.New(corsConfig))
 
 	r.POST("/validateAddress",
-		commonService.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.TenantWebhookApiKeyRepository, services.CommonServices.CommonRepositories.AppKeyRepository, commonService.VALIDATION_API),
+		commonService.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, commonService.VALIDATION_API),
 		func(c *gin.Context) {
 			var request dto.ValidationAddressRequest
 			if err := c.BindJSON(&request); err != nil {
@@ -125,7 +125,7 @@ func main() {
 		})
 
 	r.POST("/validatePhoneNumber",
-		commonService.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.TenantWebhookApiKeyRepository, services.CommonServices.CommonRepositories.AppKeyRepository, commonService.VALIDATION_API),
+		commonService.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, commonService.VALIDATION_API),
 		func(c *gin.Context) {
 			var request dto.ValidationPhoneNumberRequest
 
@@ -152,7 +152,7 @@ func main() {
 		})
 
 	r.POST("/validateEmail",
-		commonService.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.TenantWebhookApiKeyRepository, services.CommonServices.CommonRepositories.AppKeyRepository, commonService.VALIDATION_API),
+		commonService.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, commonService.VALIDATION_API),
 		func(c *gin.Context) {
 			var request dto.ValidationEmailRequest
 

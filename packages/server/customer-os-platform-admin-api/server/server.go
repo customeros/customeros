@@ -6,11 +6,9 @@ import (
 	"github.com/gin-contrib/cors"
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
-	authEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/repository/postgres/entity"
 	commoncaches "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	commonconf "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
-	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-platform-admin-api/config"
@@ -18,10 +16,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-platform-admin-api/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-platform-admin-api/route"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-platform-admin-api/service"
+	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"gorm.io/gorm"
 	"os"
 	"os/signal"
 	"syscall"
@@ -60,8 +58,8 @@ func (server *server) Run(parentCtx context.Context) error {
 	postgresDb, _ := InitDB(server.cfg, server.log)
 	defer postgresDb.SqlDB.Close()
 
-	// Migrate db
-	MigrationDB(postgresDb.GormDB, server.log)
+	postgresRepositories := postgresRepository.InitRepositories(postgresDb.GormDB)
+	postgresRepositories.Migration(postgresDb.GormDB)
 
 	// Setting up Neo4j
 	neo4jDriver, err := commonconf.NewNeo4jDriver(server.cfg.Neo4j)
@@ -131,74 +129,6 @@ func InitDB(cfg *config.Config, log logger.Logger) (db *commonconf.StorageDB, er
 		log.Fatalf("Could not open db connection: %s", err.Error())
 	}
 	return
-}
-
-func MigrationDB(db *gorm.DB, log logger.Logger) {
-	var err error
-
-	err = db.AutoMigrate(&authEntity.OAuthTokenEntity{})
-	if err != nil {
-		panic(err)
-	}
-	err = db.AutoMigrate(&authEntity.SlackSettingsEntity{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&commonEntity.AppKey{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&commonEntity.AiPromptLog{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&commonEntity.WhitelistDomain{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&commonEntity.PersonalIntegration{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&commonEntity.PersonalEmailProvider{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&commonEntity.TenantWebhookApiKey{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&commonEntity.TenantWebhook{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&commonEntity.SlackChannel{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&commonEntity.PostmarkApiKey{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&commonEntity.GoogleServiceAccountKey{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&commonEntity.CurrencyRate{})
-	if err != nil {
-		panic(err)
-	}
 }
 
 func HealthCheckHandler(c *gin.Context) {

@@ -5,11 +5,17 @@ on:
     branches: [ "otter" ]
     paths:
       - packages/server/customer-os-common-module/**
+      - packages/server/customer-os-common-auth/**
+      - packages/server/customer-os-postgres-repository/**
+      - packages/server/customer-os-neo4j-repository/**
       - packages/runner/sync-gmail/**
       - .github/workflows/build-sync-gmail.yml
   pull_request:
     paths:
       - packages/server/customer-os-common-module/**
+      - packages/server/customer-os-common-auth/**
+      - packages/server/customer-os-postgres-repository/**
+      - packages/server/customer-os-neo4j-repository/**
       - packages/runner/sync-gmail/**
       - .github/workflows/build-sync-gmail.yml
   release:
@@ -94,7 +100,8 @@ jobs:
       - name: Push Docker image
         uses: docker/build-push-action@v5.3.0
         with:
-          context: packages/runner/sync-gmail/.
+          context: ./packages/
+          file: ./packages/runner/sync-gmail/Dockerfile
           push: ${{ github.ref_name == 'otter' || github.event_name == 'release' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

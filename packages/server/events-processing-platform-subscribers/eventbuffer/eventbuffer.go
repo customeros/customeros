@@ -3,8 +3,8 @@ package eventbuffer
 import (
 	"context"
 	"encoding/json"
-	repository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
+	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	orgaggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/reminder"
 	"os"
@@ -21,14 +21,14 @@ import (
 )
 
 type EventBufferWatcher struct {
-	ebr           repository.EventBufferRepository
+	ebr           postgresRepository.EventBufferRepository
 	logger        logger.Logger
 	es            eventstore.AggregateStore
 	signalChannel chan os.Signal
 	ticker        *time.Ticker
 }
 
-func NewEventBufferWatcher(ebr repository.EventBufferRepository, logger logger.Logger, es eventstore.AggregateStore) *EventBufferWatcher {
+func NewEventBufferWatcher(ebr postgresRepository.EventBufferRepository, logger logger.Logger, es eventstore.AggregateStore) *EventBufferWatcher {
 	return &EventBufferWatcher{ebr: ebr, logger: logger, es: es}
 }
 
@@ -96,7 +96,7 @@ func (eb *EventBufferWatcher) Dispatch(ctx context.Context) error {
 }
 
 // HandleEvent loads the event aggregate and applies the event to it and pushes it into event store
-func (eb *EventBufferWatcher) HandleEvent(ctx context.Context, eventBuffer entity.EventBuffer) error {
+func (eb *EventBufferWatcher) HandleEvent(ctx context.Context, eventBuffer postgresEntity.EventBuffer) error {
 	evt := eventstore.Event{
 		EventID:       eventBuffer.EventID,
 		EventType:     eventBuffer.EventType,

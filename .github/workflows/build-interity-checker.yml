@@ -4,10 +4,18 @@ on:
   push:
     branches: [ "otter" ]
     paths:
+      - packages/server/customer-os-common-module/**
+      - packages/server/customer-os-common-auth/**
+      - packages/server/customer-os-postgres-repository/**
+      - packages/server/customer-os-neo4j-repository/**
       - packages/runner/integrity-checker/**
       - .github/workflows/build-integrity-checker.yml
   pull_request:
     paths:
+      - packages/server/customer-os-common-module/**
+      - packages/server/customer-os-common-auth/**
+      - packages/server/customer-os-postgres-repository/**
+      - packages/server/customer-os-neo4j-repository/**
       - packages/runner/integrity-checker/**
       - .github/workflows/build-integrity-checker.yml
   release:
@@ -90,7 +98,8 @@ jobs:
       - name: Push Docker image
         uses: docker/build-push-action@v5.3.0
         with:
-          context: packages/runner/integrity-checker/.
+          context: ./packages/
+          file: ./packages/runner/integrity-checker/Dockerfile
           push: ${{ github.ref_name == 'otter' || github.event_name == 'release' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

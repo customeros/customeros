@@ -5,16 +5,18 @@ on:
     branches: [ "otter" ]
     paths:
       - packages/server/customer-os-common-module/**
-      - packages/server/customer-os-neo4j-repository/**
       - packages/server/customer-os-common-auth/**
+      - packages/server/customer-os-postgres-repository/**
+      - packages/server/customer-os-neo4j-repository/**
       - packages/server/events-processing-proto/**
       - packages/server/customer-os-api/**
       - .github/workflows/build-customer-os-api.yml
   pull_request:
     paths:
       - packages/server/customer-os-common-module/**
-      - packages/server/customer-os-neo4j-repository/**
       - packages/server/customer-os-common-auth/**
+      - packages/server/customer-os-postgres-repository/**
+      - packages/server/customer-os-neo4j-repository/**
       - packages/server/events-processing-proto/**
       - packages/server/customer-os-api/**
       - .github/workflows/build-customer-os-api.yml
@@ -106,24 +108,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Prepare sources for docker build
-        run: |
-          mkdir tmp-sources
-          mkdir tmp-sources/customer-os-common-module
-          mkdir tmp-sources/customer-os-neo4j-repository
-          mkdir tmp-sources/customer-os-api
-          mkdir tmp-sources/events-processing-proto
-          mkdir tmp-sources/customer-os-common-auth
-          
-          rsync -av --progress --exclude="tmp-sources" * tmp-sources/customer-os-api
-          cp .env tmp-sources/customer-os-api/.env
-          cp -r ../customer-os-common-module/* tmp-sources/customer-os-common-module
-          cp -r ../customer-os-neo4j-repository/* tmp-sources/customer-os-neo4j-repository
-          cp -r ../events-processing-proto/* tmp-sources/events-processing-proto
-          cp -r ../customer-os-common-auth/* tmp-sources/customer-os-common-auth
-          
-          cp Dockerfile tmp-sources/Dockerfile
-
       - name: Log in to the Container registry
         uses: docker/login-action@v3.1.0
         with:
@@ -140,7 +124,8 @@ jobs:
       - name: Push Docker image
         uses: docker/build-push-action@v5.3.0
         with:
-          context: packages/server/customer-os-api/tmp-sources/.
+          context: ./packages/server/
+          file: ./packages/server/customer-os-api/Dockerfile
           push: ${{ github.ref_name == 'otter' || github.event_name == 'release' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

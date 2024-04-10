@@ -2,7 +2,7 @@ package repository
 
 import (
 	"fmt"
-	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
+	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/repository/helper"
 	"gorm.io/gorm"
@@ -48,8 +48,8 @@ func (r *tenantSettingsRepo) CheckKeysExist(tenantName string, keyName []string)
 	exists := true
 	for _, key := range keyName {
 		log.Printf("CheckKeysExist: %s, %s", tenantName, key)
-		err := r.db.Model(&commonEntity.GoogleServiceAccountKey{}).
-			Where(&commonEntity.GoogleServiceAccountKey{TenantName: tenantName, Key: key}, "tenant_name", "key").Count(&rows).Error
+		err := r.db.Model(&postgresEntity.GoogleServiceAccountKey{}).
+			Where(&postgresEntity.GoogleServiceAccountKey{TenantName: tenantName, Key: key}, "tenant_name", "key").Count(&rows).Error
 
 		if err != nil {
 			return false, fmt.Errorf("CheckKeysExist: %w", err)
@@ -62,7 +62,7 @@ func (r *tenantSettingsRepo) CheckKeysExist(tenantName string, keyName []string)
 	return exists, nil
 }
 
-func (r *tenantSettingsRepo) SaveKeys(keys []commonEntity.GoogleServiceAccountKey) error {
+func (r *tenantSettingsRepo) SaveKeys(keys []postgresEntity.GoogleServiceAccountKey) error {
 
 	for _, key := range keys {
 		result := r.db.Clauses(clause.OnConflict{
@@ -76,9 +76,9 @@ func (r *tenantSettingsRepo) SaveKeys(keys []commonEntity.GoogleServiceAccountKe
 	return nil
 }
 
-func (r *tenantSettingsRepo) DeleteKeys(keys []commonEntity.GoogleServiceAccountKey) error {
+func (r *tenantSettingsRepo) DeleteKeys(keys []postgresEntity.GoogleServiceAccountKey) error {
 
-	var deletedItem commonEntity.GoogleServiceAccountKey
+	var deletedItem postgresEntity.GoogleServiceAccountKey
 	for _, key := range keys {
 		log.Printf("DeleteKeys: %s, %s", key.TenantName, key.Key)
 		err := r.db.

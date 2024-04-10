@@ -2,18 +2,20 @@ package repository
 
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	commonRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
+	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	repository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository/postgres"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository/postgres/entity"
 	"gorm.io/gorm"
 )
 
 type Repositories struct {
-	Drivers                      Drivers
-	neo4jDatabase                string
-	Neo4jRepositories            *neo4jrepository.Repositories
-	CommonRepositories           *commonRepository.Repositories
+	Drivers       Drivers
+	neo4jDatabase string
+
+	Neo4jRepositories    *neo4jrepository.Repositories
+	PostgresRepositories *postgresRepository.Repositories
+
 	SyncRunWebhookRepository     repository.SyncRunWebhookRepository
 	UserRepository               UserRepository
 	LocationRepository           LocationRepository
@@ -38,7 +40,7 @@ func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB, neo4jDatabase s
 			Neo4jDriver: driver,
 		},
 		neo4jDatabase:            neo4jDatabase,
-		CommonRepositories:       commonRepository.InitRepositories(gormDb, driver),
+		PostgresRepositories:     postgresRepository.InitRepositories(gormDb),
 		Neo4jRepositories:        neo4jrepository.InitNeo4jRepositories(driver, neo4jDatabase),
 		SyncRunWebhookRepository: repository.NewSyncRunWebhookRepository(gormDb),
 	}

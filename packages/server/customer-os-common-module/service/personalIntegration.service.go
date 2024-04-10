@@ -2,9 +2,9 @@ package service
 
 import (
 	"fmt"
-	repository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 )
 
 type Integration string
@@ -14,7 +14,7 @@ const (
 )
 const CalComHeader = "x-cal-signature-256"
 
-func SignatureCheck(hSignature string, body []byte, personalIntegrationRepository repository.PersonalIntegrationRepository, tenant, email, integration string) error {
+func SignatureCheck(hSignature string, body []byte, personalIntegrationRepository postgresRepository.PersonalIntegrationRepository, tenant, email, integration string) error {
 	if hSignature != "" {
 		result := personalIntegrationRepository.FindIntegration(tenant, email, integration)
 
@@ -22,7 +22,7 @@ func SignatureCheck(hSignature string, body []byte, personalIntegrationRepositor
 			return fmt.Errorf("SignatureCheck error: %v", result.Error.Error())
 		}
 
-		secret := result.Result.(*entity.PersonalIntegration)
+		secret := result.Result.(*postgresEntity.PersonalIntegration)
 
 		if secret == nil {
 			return fmt.Errorf("SignatureCheck error: no information found")

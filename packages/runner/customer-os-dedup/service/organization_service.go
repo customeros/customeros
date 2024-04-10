@@ -12,8 +12,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-dedup/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-dedup/repository"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-dedup/tracing"
-	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -414,7 +414,7 @@ func (s *organizationService) invokeAIForNamesCheck(ctx context.Context, str, te
 		span.LogFields(log.String("usedAI", "anthropic"))
 		prompt := fmt.Sprintf(s.cfg.Organizations.Anthropic.PromptSuggestNames, str)
 
-		promptLog := commonEntity.AiPromptLog{
+		promptLog := postgresEntity.AiPromptLog{
 			CreatedAt:      utils.Now(),
 			AppSource:      constants.AppSourceCustomerOsDedup,
 			Provider:       constants.Anthropic,
@@ -424,20 +424,20 @@ func (s *organizationService) invokeAIForNamesCheck(ctx context.Context, str, te
 			PromptTemplate: &s.cfg.Organizations.Anthropic.PromptSuggestNames,
 			Prompt:         prompt,
 		}
-		promptStoreLogId, err := s.repositories.CommonRepositories.AiPromptLogRepository.Store(promptLog)
+		promptStoreLogId, err := s.repositories.PostgresRepositories.AiPromptLogRepository.Store(promptLog)
 
 		response, err := s.invokeAnthropic(ctx, prompt)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Failed to invoke Anthropic: %v", err.Error())
-			storeErr := s.repositories.CommonRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId, err.Error())
+			storeErr := s.repositories.PostgresRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId, err.Error())
 			if storeErr != nil {
 				tracing.TraceErr(span, storeErr)
 				s.log.Errorf("Error updating prompt log with error: %v", storeErr)
 			}
 			return "", err
 		} else {
-			storeErr := s.repositories.CommonRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId, response)
+			storeErr := s.repositories.PostgresRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId, response)
 			if storeErr != nil {
 				tracing.TraceErr(span, storeErr)
 				s.log.Errorf("Error updating prompt log with error: %v", storeErr)
@@ -450,7 +450,7 @@ func (s *organizationService) invokeAIForNamesCheck(ctx context.Context, str, te
 		span.LogFields(log.String("usedAI", "openai"))
 		prompt := fmt.Sprintf(s.cfg.Organizations.OpenAI.PromptSuggestNames, str)
 
-		promptLog := commonEntity.AiPromptLog{
+		promptLog := postgresEntity.AiPromptLog{
 			CreatedAt:      utils.Now(),
 			AppSource:      constants.AppSourceCustomerOsDedup,
 			Provider:       constants.OpenAI,
@@ -460,20 +460,20 @@ func (s *organizationService) invokeAIForNamesCheck(ctx context.Context, str, te
 			PromptTemplate: &s.cfg.Organizations.Anthropic.PromptSuggestNames,
 			Prompt:         prompt,
 		}
-		promptStoreLogId, err := s.repositories.CommonRepositories.AiPromptLogRepository.Store(promptLog)
+		promptStoreLogId, err := s.repositories.PostgresRepositories.AiPromptLogRepository.Store(promptLog)
 
 		response, err := s.invokeOpenAI(ctx, prompt)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Failed to invoke OpenAI: %v", err.Error())
-			storeErr := s.repositories.CommonRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId, err.Error())
+			storeErr := s.repositories.PostgresRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId, err.Error())
 			if storeErr != nil {
 				tracing.TraceErr(span, storeErr)
 				s.log.Errorf("Error updating prompt log with error: %v", storeErr)
 			}
 			return "", err
 		} else {
-			storeErr := s.repositories.CommonRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId, response)
+			storeErr := s.repositories.PostgresRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId, response)
 			if storeErr != nil {
 				tracing.TraceErr(span, storeErr)
 				s.log.Errorf("Error updating prompt log with response: %v", storeErr)
@@ -494,7 +494,7 @@ func (s *organizationService) invokeAIForOrgsCompare(ctx context.Context, tenant
 		span.LogFields(log.String("usedAI", "anthropic"))
 		prompt := fmt.Sprintf(s.cfg.Organizations.Anthropic.PromptCompareOrgs, id1, details1, id2, details2)
 
-		promptLog := commonEntity.AiPromptLog{
+		promptLog := postgresEntity.AiPromptLog{
 			CreatedAt:      utils.Now(),
 			AppSource:      constants.AppSourceCustomerOsDedup,
 			Provider:       constants.Anthropic,
@@ -504,20 +504,20 @@ func (s *organizationService) invokeAIForOrgsCompare(ctx context.Context, tenant
 			PromptTemplate: &s.cfg.Organizations.Anthropic.PromptCompareOrgs,
 			Prompt:         prompt,
 		}
-		promptStoreLogId, err := s.repositories.CommonRepositories.AiPromptLogRepository.Store(promptLog)
+		promptStoreLogId, err := s.repositories.PostgresRepositories.AiPromptLogRepository.Store(promptLog)
 
 		response, err := s.invokeAnthropic(ctx, prompt)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Failed to invoke Anthropic: %v", err.Error())
-			storeErr := s.repositories.CommonRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId, err.Error())
+			storeErr := s.repositories.PostgresRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId, err.Error())
 			if storeErr != nil {
 				tracing.TraceErr(span, storeErr)
 				s.log.Errorf("Error updating prompt log with error: %v", storeErr)
 			}
 			return "", err
 		} else {
-			storeErr := s.repositories.CommonRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId, response)
+			storeErr := s.repositories.PostgresRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId, response)
 			if storeErr != nil {
 				tracing.TraceErr(span, storeErr)
 				s.log.Errorf("Error updating prompt log with response: %v", storeErr)
@@ -530,7 +530,7 @@ func (s *organizationService) invokeAIForOrgsCompare(ctx context.Context, tenant
 		span.LogFields(log.String("usedAI", "openai"))
 		prompt := fmt.Sprintf(s.cfg.Organizations.OpenAI.PromptCompareOrgs, id1, details1, id2, details2)
 
-		promptLog := commonEntity.AiPromptLog{
+		promptLog := postgresEntity.AiPromptLog{
 			CreatedAt:      utils.Now(),
 			AppSource:      constants.AppSourceCustomerOsDedup,
 			Provider:       constants.OpenAI,
@@ -540,20 +540,20 @@ func (s *organizationService) invokeAIForOrgsCompare(ctx context.Context, tenant
 			PromptTemplate: &s.cfg.Organizations.Anthropic.PromptCompareOrgs,
 			Prompt:         prompt,
 		}
-		promptStoreLogId, err := s.repositories.CommonRepositories.AiPromptLogRepository.Store(promptLog)
+		promptStoreLogId, err := s.repositories.PostgresRepositories.AiPromptLogRepository.Store(promptLog)
 
 		response, err := s.invokeOpenAI(ctx, prompt)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Failed to invoke OpenAI: %v", err.Error())
-			storeErr := s.repositories.CommonRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId, err.Error())
+			storeErr := s.repositories.PostgresRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId, err.Error())
 			if storeErr != nil {
 				tracing.TraceErr(span, storeErr)
 				s.log.Errorf("Error updating prompt log with error: %v", storeErr)
 			}
 			return "", err
 		} else {
-			storeErr := s.repositories.CommonRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId, response)
+			storeErr := s.repositories.PostgresRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId, response)
 			if storeErr != nil {
 				tracing.TraceErr(span, storeErr)
 				s.log.Errorf("Error updating prompt log with response: %v", storeErr)

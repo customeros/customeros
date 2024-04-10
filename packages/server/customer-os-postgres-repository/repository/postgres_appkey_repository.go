@@ -2,15 +2,15 @@ package repository
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository/helper"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"gorm.io/gorm"
 )
 
-type AppKeyRepo struct {
+type appKeyRepository struct {
 	db *gorm.DB
 }
 
@@ -18,11 +18,11 @@ type AppKeyRepository interface {
 	FindByKey(ctx context.Context, app string, key string) helper.QueryResult
 }
 
-func NewAppKeyRepo(db *gorm.DB) *AppKeyRepo {
-	return &AppKeyRepo{db: db}
+func NewAppKeyRepo(db *gorm.DB) AppKeyRepository {
+	return &appKeyRepository{db: db}
 }
 
-func (r *AppKeyRepo) FindByKey(ctx context.Context, app string, key string) helper.QueryResult {
+func (r *appKeyRepository) FindByKey(ctx context.Context, app string, key string) helper.QueryResult {
 	span, _ := opentracing.StartSpanFromContext(ctx, "AppKeyRepo.FindByKey")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagComponent, "postgresRepository")

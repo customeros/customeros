@@ -43,7 +43,7 @@ func TestEventBufferWatcher(t *testing.T) {
 	testLogger := test.SetupTestLogger()
 	es := testEventStore.NewTestAggregateStore()
 
-	eb := NewEventBufferWatcher(testDatabase.Repositories.CommonRepositories.EventBufferRepository, testLogger, es)
+	eb := NewEventBufferWatcher(testDatabase.Repositories.PostgresRepositories.EventBufferRepository, testLogger, es)
 
 	ctx := context.Background()
 

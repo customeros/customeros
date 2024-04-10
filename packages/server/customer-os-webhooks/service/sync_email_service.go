@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
-	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	repository2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
+	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
@@ -23,7 +23,7 @@ import (
 
 type SyncEmailService interface {
 	SyncEmail(ctx context.Context, email model.EmailData) (organizationSync SyncResult, interactionEventSync SyncResult, contactSync SyncResult, err error)
-	GetEmailIdForEmail(ctx context.Context, tenant string, email string, personalEmailProviderList []commonEntity.PersonalEmailProvider, source string) (string, error)
+	GetEmailIdForEmail(ctx context.Context, tenant string, email string, personalEmailProviderList []postgresEntity.PersonalEmailProvider, source string) (string, error)
 }
 
 type syncEmailService struct {
@@ -33,14 +33,14 @@ type syncEmailService struct {
 	services               *Services
 	cache                  *caches.Cache
 	maxWorkers             int
-	personalEmailProviders []commonEntity.PersonalEmailProvider
+	personalEmailProviders []postgresEntity.PersonalEmailProvider
 }
 
-func NewSyncEmailService(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients, services *Services, cache *caches.Cache, personalEmailProvidersList []commonEntity.PersonalEmailProvider) SyncEmailService {
+func NewSyncEmailService(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients, services *Services, cache *caches.Cache, personalEmailProvidersList []postgresEntity.PersonalEmailProvider) SyncEmailService {
 	personalEmailProviders := cache.GetPersonalEmailProviders()
 	var err error
 	if len(personalEmailProviders) == 0 {
-		personalEmailProvidersList, err = repositories.CommonRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
+		personalEmailProvidersList, err = repositories.PostgresRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
 		if err != nil {
 			log.Errorf("error while getting personal email providers: %v", err)
 		}
@@ -255,7 +255,7 @@ func (s syncEmailService) SyncEmail(ctx context.Context, emailData model.EmailDa
 	return orgSync, interactionEventSyncResult, contactsSync, nil
 }
 
-func (s *syncEmailService) GetEmailIdForEmail(ctx context.Context, tenant string, email string, personalEmailProviderList []commonEntity.PersonalEmailProvider, source string) (string, error) {
+func (s *syncEmailService) GetEmailIdForEmail(ctx context.Context, tenant string, email string, personalEmailProviderList []postgresEntity.PersonalEmailProvider, source string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SyncEmailService.GetEmailIdForEmail")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -291,7 +291,7 @@ func (s *syncEmailService) GetEmailIdForEmail(ctx context.Context, tenant string
 	return emailId, nil
 }
 
-func (s *syncEmailService) processEmail(ctx context.Context, name string, email string, emailData model.EmailData, personalEmailProviderList []commonEntity.PersonalEmailProvider, source string, interactionEventId string) (SyncResult, SyncResult, error) {
+func (s *syncEmailService) processEmail(ctx context.Context, name string, email string, emailData model.EmailData, personalEmailProviderList []postgresEntity.PersonalEmailProvider, source string, interactionEventId string) (SyncResult, SyncResult, error) {
 	from, to, cc, bcc, _ := extractEmailData(emailData)
 
 	emailId, err := s.GetEmailIdForEmail(ctx, common.GetTenantFromContext(ctx), email, personalEmailProviderList, source)

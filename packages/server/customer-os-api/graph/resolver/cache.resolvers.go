@@ -12,7 +12,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
-	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
+	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 )
 
 // GlobalCache is the resolver for the global_Cache field.
@@ -44,12 +44,12 @@ func (r *queryResolver) GlobalCache(ctx context.Context) (*model.GlobalCache, er
 	response.IsOwner = *isOwner
 
 	if userEmail != "" {
-		privateKey, err := r.Services.CommonServices.CommonRepositories.GoogleServiceAccountKeyRepository.GetApiKeyByTenantService(ctx, tenantName, commonEntity.GSUITE_SERVICE_PRIVATE_KEY)
+		privateKey, err := r.Services.CommonServices.PostgresRepositories.GoogleServiceAccountKeyRepository.GetApiKeyByTenantService(ctx, tenantName, postgresEntity.GSUITE_SERVICE_PRIVATE_KEY)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
 		}
-		serviceEmail, err := r.Services.CommonServices.CommonRepositories.GoogleServiceAccountKeyRepository.GetApiKeyByTenantService(ctx, tenantName, commonEntity.GSUITE_SERVICE_EMAIL_ADDRESS)
+		serviceEmail, err := r.Services.CommonServices.PostgresRepositories.GoogleServiceAccountKeyRepository.GetApiKeyByTenantService(ctx, tenantName, postgresEntity.GSUITE_SERVICE_EMAIL_ADDRESS)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err

@@ -4,6 +4,8 @@ go 1.21
 
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ./../customer-os-common-module
 
+replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository => ./../customer-os-postgres-repository
+
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk => ./../customer-os-api-sdk
 
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-api => ./../customer-os-api
@@ -23,6 +25,7 @@ require (
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk v0.0.0-00010101000000-000000000000
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20240207074840-2c0ad7517257
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240207193037-052750975350
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository v0.0.0-20240207193037-052750975350
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/redis/go-redis/v9 v9.5.1
 	github.com/sirupsen/logrus v1.9.3

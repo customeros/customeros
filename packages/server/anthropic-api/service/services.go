@@ -2,18 +2,18 @@ package service
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/anthorpic-api/config"
-	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 )
 
 type Services struct {
-	CommonServices *commonService.Services
+	PostgresRepositories *postgresRepository.Repositories
 
 	AnthropicService AnthropicService
 }
 
 func InitServices(cfg *config.Config, db *config.StorageDB) *Services {
 	services := &Services{
-		CommonServices: commonService.InitServices(db.GormDB, nil),
+		PostgresRepositories: postgresRepository.InitRepositories(db.GormDB),
 	}
 
 	services.AnthropicService = NewAnthropicService(cfg)

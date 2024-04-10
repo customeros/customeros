@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/repository"
-	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
+	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
@@ -57,7 +57,7 @@ func (s *openAiService) queryOpenAi(tenant, elementId, domain string) (map[strin
 	request.Header.Set("X-Openline-API-KEY", s.cfg.OpenAi.ApiKey)
 
 	nodeLabel := "RawEmail"
-	log := commonEntity.AiPromptLog{
+	log := postgresEntity.AiPromptLog{
 		CreatedAt:  time.Time{},
 		AppSource:  "sync-gmail",
 		Provider:   "anthropic",
@@ -68,7 +68,7 @@ func (s *openAiService) queryOpenAi(tenant, elementId, domain string) (map[strin
 		NodeLabel:  &nodeLabel,
 		Prompt:     prompt,
 	}
-	storeLogId, errLog := s.repositories.CommonRepositories.AiPromptLogRepository.Store(log)
+	storeLogId, errLog := s.repositories.PostgresRepositories.AiPromptLogRepository.Store(log)
 	if errLog != nil {
 		fmt.Println("Error:", errLog)
 	}
@@ -77,7 +77,7 @@ func (s *openAiService) queryOpenAi(tenant, elementId, domain string) (map[strin
 	response, err := client.Do(request)
 
 	if response == nil || response.Body == nil {
-		s.repositories.CommonRepositories.AiPromptLogRepository.UpdateError(storeLogId, "no response body")
+		s.repositories.PostgresRepositories.AiPromptLogRepository.UpdateError(storeLogId, "no response body")
 		fmt.Println("Error making the API request: no response body")
 		return nil, err
 	}
@@ -90,19 +90,19 @@ func (s *openAiService) queryOpenAi(tenant, elementId, domain string) (map[strin
 	}
 
 	bodyString := string(bodyBytes)
-	err = s.repositories.CommonRepositories.AiPromptLogRepository.UpdateResponse(storeLogId, bodyString)
+	err = s.repositories.PostgresRepositories.AiPromptLogRepository.UpdateResponse(storeLogId, bodyString)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return nil, err
 	}
 
 	if err != nil {
-		s.repositories.CommonRepositories.AiPromptLogRepository.UpdateError(storeLogId, err.Error())
+		s.repositories.PostgresRepositories.AiPromptLogRepository.UpdateError(storeLogId, err.Error())
 		fmt.Println("Error making the API request:", err)
 		return nil, err
 	}
 	if response.StatusCode != 200 {
-		s.repositories.CommonRepositories.AiPromptLogRepository.UpdateError(storeLogId, bodyString)
+		s.repositories.PostgresRepositories.AiPromptLogRepository.UpdateError(storeLogId, bodyString)
 		fmt.Println("Error making the API request:", response.Status)
 		return nil, fmt.Errorf("error making the API request: %s", response.Status)
 	}
@@ -111,7 +111,7 @@ func (s *openAiService) queryOpenAi(tenant, elementId, domain string) (map[strin
 	var result map[string]interface{}
 	err = json.Unmarshal(bodyBytes, &result)
 	if err != nil {
-		s.repositories.CommonRepositories.AiPromptLogRepository.UpdateError(storeLogId, err.Error())
+		s.repositories.PostgresRepositories.AiPromptLogRepository.UpdateError(storeLogId, err.Error())
 		fmt.Println("Error parsing the API response:", err)
 		return nil, err
 	}

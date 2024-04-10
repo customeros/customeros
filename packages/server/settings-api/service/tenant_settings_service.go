@@ -2,8 +2,8 @@ package service
 
 import (
 	"fmt"
-	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"golang.org/x/net/context"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/logger"
@@ -124,8 +124,8 @@ func NewTenantSettingsService(repositories *repository.PostgresRepositories, log
 		repositories: repositories,
 		serviceMap: map[string][]keyMapping{
 			SERVICE_GSUITE: {
-				keyMapping{"privateKey", commonEntity.GSUITE_SERVICE_PRIVATE_KEY},
-				keyMapping{"clientEmail", commonEntity.GSUITE_SERVICE_EMAIL_ADDRESS},
+				keyMapping{"privateKey", postgresEntity.GSUITE_SERVICE_PRIVATE_KEY},
+				keyMapping{"clientEmail", postgresEntity.GSUITE_SERVICE_EMAIL_ADDRESS},
 			},
 		},
 		log: log,
@@ -175,7 +175,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 	if err != nil {
 		return nil, nil, err
 	}
-	var keysToUpdate []commonEntity.GoogleServiceAccountKey
+	var keysToUpdate []postgresEntity.GoogleServiceAccountKey
 	legacyUpdate := false
 
 	if tenantSettings == nil {
@@ -203,7 +203,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 					if !ok {
 						return nil, nil, fmt.Errorf("invalid data for key %s in integration %s", mapping.ApiKeyName, integrationId)
 					}
-					keysToUpdate = append(keysToUpdate, commonEntity.GoogleServiceAccountKey{TenantName: tenantName, Key: mapping.DbKeyName, Value: valueStr})
+					keysToUpdate = append(keysToUpdate, postgresEntity.GoogleServiceAccountKey{TenantName: tenantName, Key: mapping.DbKeyName, Value: valueStr})
 					data[mapping.DbKeyName] = value
 				}
 			}
@@ -1306,7 +1306,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 	if keysToUpdate != nil {
 		for _, key := range keysToUpdate {
-			err = s.repositories.CommonRepositories.GoogleServiceAccountKeyRepository.SaveKey(ctx, key.TenantName, key.Key, key.Value)
+			err = s.repositories.PostgresRepositories.GoogleServiceAccountKeyRepository.SaveKey(ctx, key.TenantName, key.Key, key.Value)
 			if err != nil {
 				return nil, nil, fmt.Errorf("SaveIntegrationData: %v", err)
 			}
@@ -1337,7 +1337,7 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 		mappings, ok := s.serviceMap[identifier]
 		if ok {
 			for _, mapping := range mappings {
-				err := s.repositories.CommonRepositories.GoogleServiceAccountKeyRepository.DeleteKey(ctx, tenantName, mapping.DbKeyName)
+				err := s.repositories.PostgresRepositories.GoogleServiceAccountKeyRepository.DeleteKey(ctx, tenantName, mapping.DbKeyName)
 				if err != nil {
 					return nil, nil, fmt.Errorf("ClearIntegrationData: %v", err)
 				}

@@ -3,21 +3,29 @@ package repository
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	authRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/repository"
-	commonRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
+	commmonRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
+	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
+	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/repository/entity"
 	"gorm.io/gorm"
 )
 
 type PostgresRepositories struct {
-	CommonRepositories *commonRepository.Repositories
-	AuthRepositories   *authRepository.Repositories
+	PostgresRepositories *postgresRepository.Repositories
+	Neo4jRepositories    *neo4jrepository.Repositories
+	CommonRepositories   *commmonRepository.Repositories
+
+	AuthRepositories *authRepository.Repositories
 
 	TenantSettingsRepository TenantSettingsRepository
 }
 
-func InitRepositories(db *gorm.DB, driver *neo4j.DriverWithContext) *PostgresRepositories {
+func InitRepositories(cfg *config.Config, db *gorm.DB, driver *neo4j.DriverWithContext) *PostgresRepositories {
 	p := &PostgresRepositories{
-		CommonRepositories:       commonRepository.InitRepositories(db, driver),
+		PostgresRepositories:     postgresRepository.InitRepositories(db),
+		Neo4jRepositories:        neo4jrepository.InitNeo4jRepositories(driver, cfg.Neo4j.Database),
+		CommonRepositories:       commmonRepository.InitRepositories(driver),
 		AuthRepositories:         authRepository.InitRepositories(db),
 		TenantSettingsRepository: NewTenantSettingsRepository(db),
 	}

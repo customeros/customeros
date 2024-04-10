@@ -85,7 +85,7 @@ func (o *OrganizationData) IsSubsidiary() bool {
 func (o *OrganizationData) Normalize() {
 	o.SetTimes()
 
-	o.Domains = utils.FilterOutEmpty(o.Domains)
+	o.Domains = FilterOutEmpty(o.Domains)
 	o.Domains = utils.LowercaseSliceOfStrings(o.Domains)
 	o.Domains = utils.RemoveDuplicates(o.Domains)
 

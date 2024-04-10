@@ -38,7 +38,7 @@ func main() {
 	ctx := context.Background()
 	defer neo4jDriver.Close(ctx)
 
-	services := service.InitServices(db.GormDB, &neo4jDriver, appLogger)
+	services := service.InitServices(cfg, db.GormDB, &neo4jDriver, appLogger)
 
 	// Setting up Gin
 	r := gin.Default()

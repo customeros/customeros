@@ -1,9 +1,5 @@
 package entity
 
-import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-)
-
 type EmailMessageData struct {
 	BaseData
 	Html                string   `json:"html,omitempty"`
@@ -24,7 +20,17 @@ type EmailMessageData struct {
 
 func (m *EmailMessageData) Normalize() {
 	m.SetTimes()
-	m.ToEmail = utils.FilterOutEmpty(m.ToEmail)
-	m.CcEmail = utils.FilterOutEmpty(m.CcEmail)
-	m.BccEmail = utils.FilterOutEmpty(m.BccEmail)
+	m.ToEmail = FilterOutEmpty(m.ToEmail)
+	m.CcEmail = FilterOutEmpty(m.CcEmail)
+	m.BccEmail = FilterOutEmpty(m.BccEmail)
+}
+
+func FilterOutEmpty(emails []string) []string {
+	filtered := make([]string, 0)
+	for _, email := range emails {
+		if email != "" {
+			filtered = append(filtered, email)
+		}
+	}
+	return filtered
 }
