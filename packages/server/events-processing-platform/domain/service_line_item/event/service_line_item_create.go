@@ -11,20 +11,21 @@ import (
 )
 
 type ServiceLineItemCreateEvent struct {
-	Tenant            string             `json:"tenant" validate:"required"`
-	Billed            string             `json:"billed"`
-	Quantity          int64              `json:"quantity,omitempty" validate:"min=0"`
-	Price             float64            `json:"price,omitempty" validate:"min=0"`
-	Name              string             `json:"name"`
-	ContractId        string             `json:"contractId" validate:"required"`
-	ParentId          string             `json:"parentId" validate:"required"`
+	Tenant     string  `json:"tenant" validate:"required"`
+	Billed     string  `json:"billed"`
+	Quantity   int64   `json:"quantity,omitempty" validate:"min=0"`
+	Price      float64 `json:"price,omitempty" validate:"min=0"`
+	Name       string  `json:"name"`
+	ContractId string  `json:"contractId" validate:"required"`
+	ParentId   string  `json:"parentId" validate:"required"`
+	// Deprecated
 	PreviousVersionId string             `json:"previousVersionId"`
 	CreatedAt         time.Time          `json:"createdAt"`
 	UpdatedAt         time.Time          `json:"updatedAt"`
 	StartedAt         time.Time          `json:"startedAt"`
 	EndedAt           *time.Time         `json:"endedAt,omitempty"`
 	Source            commonmodel.Source `json:"source"`
-	Comments          string             `json:"comments"`
+	Comments          string             `json:"comments,omitempty"`
 	VatRate           float64            `json:"vatRate"`
 }
 
