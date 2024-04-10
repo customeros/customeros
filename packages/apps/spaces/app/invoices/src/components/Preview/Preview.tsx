@@ -1,9 +1,8 @@
 'use client';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-// import { DownloadInvoice } from 'services/fileStore';
-
 import { Button } from '@ui/form/Button/Button';
+import { Skeleton } from '@ui/feedback/Skeleton';
 import { Download02 } from '@ui/media/icons/Download02';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useGetInvoiceQuery } from '@shared/graphql/getInvoice.generated';
@@ -48,12 +47,14 @@ export const Preview = () => {
           {/* width and height of A4 */}
           <ModalContent className='max-w-[794px]'>
             <ModalHeader className='flex justify-between items-center py-3 px-4'>
-              {data?.invoice?.status && (
+              {data?.invoice?.status ? (
                 <PaymentStatusSelect
                   variant='invoice-preview'
                   value={data?.invoice?.status}
                   invoiceId={data?.invoice?.metadata?.id}
                 />
+              ) : (
+                <Skeleton className='w-[72px] h-[34px]' />
               )}
 
               <Button

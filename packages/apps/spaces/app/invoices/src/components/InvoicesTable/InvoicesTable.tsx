@@ -8,6 +8,7 @@ import { Table, SortingState } from '@ui/presentation/Table';
 import { mockedTableDefs } from '@shared/util/tableDefs.mock';
 import { SlashCircle01 } from '@ui/media/icons/SlashCircle01';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { GetInvoicesQuery } from '@shared/graphql/getInvoices.generated';
 import { useTableViewDefsQuery } from '@shared/graphql/tableViewDefs.generated';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog2';
 
@@ -17,7 +18,11 @@ import { useTableActions } from '../../hooks/useTableActions';
 import { getColumnsConfig } from '../../components/Columns/Columns';
 import { useInvoicesPageData } from '../../hooks/useInvoicesPageData';
 
-export const InvoicesTable = () => {
+interface InvoicesTableProps {
+  initialData?: GetInvoicesQuery;
+}
+
+export const InvoicesTable = ({ initialData }: InvoicesTableProps) => {
   const client = getGraphQLClient();
   const searchParams = useSearchParams();
   const [sorting, setSorting] = useState<SortingState>([
@@ -47,7 +52,7 @@ export const InvoicesTable = () => {
     isRefetching,
     fetchNextPage,
     totalAvailable,
-  } = useInvoicesPageData({ sorting });
+  } = useInvoicesPageData({ sorting, initialData });
 
   const handleFetchMore = useCallback(() => {
     !isFetching && fetchNextPage();
@@ -88,7 +93,7 @@ export const InvoicesTable = () => {
         onSortingChange={setSorting}
         onFetchMore={handleFetchMore}
         isLoading={isLoading && !isRefetching}
-        totalItems={isFetching ? 40 : totalCount || 0}
+        totalItems={isLoading ? 40 : totalCount || 0}
       />
       <ConfirmDeleteDialog
         onClose={reset}

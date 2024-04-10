@@ -7,6 +7,7 @@ import { useLocalStorage } from 'usehooks-ts';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useInvoicesMeta } from '@shared/state/InvoicesMeta.atom';
 import { SortingState, TableInstance } from '@ui/presentation/Table';
+import { GetInvoicesQuery } from '@shared/graphql/getInvoices.generated';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 import {
   Filter,
@@ -21,9 +22,13 @@ import { useGetInvoicesInfiniteQuery } from './useGetInvoicesInfiniteQuery';
 
 interface UseRenewalsPageDataProps {
   sorting: SortingState;
+  initialData?: GetInvoicesQuery;
 }
 
-export const useInvoicesPageData = ({ sorting }: UseRenewalsPageDataProps) => {
+export const useInvoicesPageData = ({
+  sorting,
+  initialData,
+}: UseRenewalsPageDataProps) => {
   const client = getGraphQLClient();
   const searchParams = useSearchParams();
   const { columnFilters } = useTableState();
@@ -157,17 +162,26 @@ export const useInvoicesPageData = ({ sorting }: UseRenewalsPageDataProps) => {
     data,
     isFetching,
     isLoading,
+    isPending,
     hasNextPage,
     isRefetching,
     fetchNextPage,
-  } = useGetInvoicesInfiniteQuery(client, {
-    pagination: {
-      page: 0,
-      limit: 40,
+  } = useGetInvoicesInfiniteQuery(
+    client,
+    {
+      pagination: {
+        page: 0,
+        limit: 40,
+      },
+      sort: sortBy,
+      where,
     },
-    sort: sortBy,
-    where,
-  });
+    {
+      placeholderData: initialData
+        ? { pageParams: [0], pages: [initialData] }
+        : undefined,
+    },
+  );
 
   const totalCount = data?.pages?.[0].invoices?.totalElements;
   const totalAvailable = data?.pages?.[0].invoices?.totalAvailable;
@@ -199,7 +213,7 @@ export const useInvoicesPageData = ({ sorting }: UseRenewalsPageDataProps) => {
     setLastActivePosition((prev) =>
       produce(prev, (draft) => {
         if (!draft?.root) return;
-        draft.root = `renewals?${searchParams?.toString()}`;
+        draft.root = `invoices?${searchParams?.toString()}`;
       }),
     );
 
@@ -210,6 +224,7 @@ export const useInvoicesPageData = ({ sorting }: UseRenewalsPageDataProps) => {
     tableRef,
     isLoading,
     isFetching,
+    isPending,
     totalCount,
     hasNextPage,
     isRefetching,
