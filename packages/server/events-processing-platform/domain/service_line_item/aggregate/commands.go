@@ -21,72 +21,12 @@ func (a *ServiceLineItemAggregate) HandleCommand(ctx context.Context, cmd events
 	defer span.Finish()
 
 	switch c := cmd.(type) {
-	case *command.CreateServiceLineItemCommand:
-		return a.createServiceLineItem(ctx, c)
 	case *command.UpdateServiceLineItemCommand:
 		return a.updateServiceLineItem(ctx, c)
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidCommandType)
 		return eventstore.ErrInvalidCommandType
 	}
-}
-
-func (a *ServiceLineItemAggregate) createServiceLineItem(ctx context.Context, cmd *command.CreateServiceLineItemCommand) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "ServiceLineItemAggregate.createServiceLineItem")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
-
-	// fail if quantity or price is negative
-	if cmd.DataFields.Quantity < 0 || cmd.DataFields.Price < 0 {
-		err := errors.New(constants.FieldValidation + ": quantity and price must not be negative")
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	// Adjust vat rate
-	if cmd.DataFields.VatRate < 0 {
-		cmd.DataFields.VatRate = 0
-	}
-	cmd.DataFields.VatRate = utils.TruncateFloat64(cmd.DataFields.VatRate, 2)
-
-	createdAtNotNil := utils.IfNotNilTimeWithDefault(cmd.CreatedAt, utils.Now())
-	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, createdAtNotNil)
-	startedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.StartedAt, createdAtNotNil)
-
-	if cmd.EndedAt != nil && cmd.EndedAt.Before(startedAtNotNil) {
-		err := errors.New(constants.FieldValidation + ": endedAt must be after startedAt")
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	// if this is parent service line item, set startedAt to start of day in UTC
-	if cmd.DataFields.ParentId == GetServiceLineItemObjectID(a.GetID(), a.Tenant) {
-		startedAtNotNil = utils.ToDate(startedAtNotNil)
-	}
-
-	createEvent, err := event.NewServiceLineItemCreateEvent(
-		a,
-		cmd.DataFields,
-		cmd.Source,
-		createdAtNotNil,
-		updatedAtNotNil,
-		startedAtNotNil,
-		cmd.EndedAt,
-		cmd.PreviousVersionId,
-	)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewServiceLineItemCreateEvent")
-	}
-	aggregate.EnrichEventWithMetadataExtended(&createEvent, span, aggregate.EventMetadata{
-		Tenant: a.Tenant,
-		UserId: cmd.LoggedInUserId,
-		App:    cmd.Source.AppSource,
-	})
-
-	return a.Apply(createEvent)
 }
 
 func (a *ServiceLineItemAggregate) updateServiceLineItem(ctx context.Context, cmd *command.UpdateServiceLineItemCommand) error {

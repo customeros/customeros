@@ -13,7 +13,7 @@ message CreateServiceLineItemGrpcRequest {
   string tenant = 1;
   string loggedInUserId = 2;
   BilledType billed = 3;
-  int64 quantity = 4; // Relevant only for Subscription type
+  int64 quantity = 4;
   double price = 5;
   string name = 6;
   string contractId = 7;
@@ -23,6 +23,8 @@ message CreateServiceLineItemGrpcRequest {
   google.protobuf.Timestamp startedAt = 11;
   google.protobuf.Timestamp endedAt = 12;
   double vatRate = 13;
+  string parentId = 14;
+  string comments = 15;
 }
 
 message UpdateServiceLineItemGrpcRequest {

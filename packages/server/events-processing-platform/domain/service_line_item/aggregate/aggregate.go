@@ -4,6 +4,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -44,9 +45,80 @@ func (a *ServiceLineItemAggregate) HandleGRPCRequest(ctx context.Context, reques
 		return nil, a.CloseServiceLineItem(ctx, r, params)
 	case *servicelineitempb.DeleteServiceLineItemGrpcRequest:
 		return nil, a.DeleteServiceLineItem(ctx, r)
+	case *servicelineitempb.CreateServiceLineItemGrpcRequest:
+		return nil, a.CreateServiceLineItem(ctx, r)
 	default:
 		return nil, nil
 	}
+}
+
+func (a *ServiceLineItemAggregate) CreateServiceLineItem(ctx context.Context, r *servicelineitempb.CreateServiceLineItemGrpcRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "ServiceLineItemAggregate.createServiceLineItem")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "request", r)
+
+	// fail if quantity or price is negative
+	if r.Quantity < 0 || r.Price < 0 {
+		err := errors.New(constants.FieldValidation + ": quantity and price must not be negative")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	// Adjust vat rate
+	if r.VatRate < 0 {
+		r.VatRate = 0
+	}
+	r.VatRate = utils.TruncateFloat64(r.VatRate, 2)
+
+	sourceFields := commonmodel.Source{}
+	sourceFields.FromGrpc(r.SourceFields)
+
+	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(r.CreatedAt), utils.Now())
+	updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(r.UpdatedAt), createdAtNotNil)
+	startedAtNotNil := utils.ToDate(utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(r.StartedAt), utils.Now()))
+	endedAtNillable := utils.ToDatePtr(utils.TimestampProtoToTimePtr(r.EndedAt))
+
+	if endedAtNillable != nil && endedAtNillable.Before(startedAtNotNil) {
+		err := errors.New(constants.FieldValidation + ": endedAt must be after startedAt")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	dataFields := model.ServiceLineItemDataFields{
+		Billed:     model.BilledType(r.Billed),
+		Quantity:   r.Quantity,
+		Price:      r.Price,
+		Name:       r.Name,
+		ContractId: r.ContractId,
+		ParentId:   utils.StringFirstNonEmpty(r.ParentId, GetServiceLineItemObjectID(a.GetID(), a.GetTenant())),
+		VatRate:    r.VatRate,
+		Comments:   r.Comments,
+	}
+
+	createEvent, err := event.NewServiceLineItemCreateEvent(
+		a,
+		dataFields,
+		sourceFields,
+		createdAtNotNil,
+		updatedAtNotNil,
+		startedAtNotNil,
+		endedAtNillable,
+		"",
+	)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewServiceLineItemCreateEvent")
+	}
+	aggregate.EnrichEventWithMetadataExtended(&createEvent, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: r.LoggedInUserId,
+		App:    sourceFields.AppSource,
+	})
+
+	return a.Apply(createEvent)
 }
 
 func (a *ServiceLineItemAggregate) CloseServiceLineItem(ctx context.Context, r *servicelineitempb.CloseServiceLineItemGrpcRequest, params map[string]any) error {

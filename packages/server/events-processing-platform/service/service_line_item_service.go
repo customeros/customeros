@@ -60,35 +60,12 @@ func (s *serviceLineItemService) CreateServiceLineItem(ctx context.Context, requ
 
 	serviceLineItemId := uuid.New().String()
 
-	source := commonmodel.Source{}
-	source.FromGrpc(request.SourceFields)
-
-	createdAt, updatedAt := convertCreateAndUpdateProtoTimestampsToTime(request.CreatedAt, request.UpdatedAt)
-
-	createCommand := command.NewCreateServiceLineItemCommand(
-		serviceLineItemId,
-		request.Tenant,
-		request.LoggedInUserId,
-		"",
-		model.ServiceLineItemDataFields{
-			Billed:     model.BilledType(request.Billed),
-			Quantity:   request.Quantity,
-			Price:      request.Price,
-			Name:       request.Name,
-			ContractId: request.ContractId,
-			ParentId:   serviceLineItemId,
-			VatRate:    request.VatRate,
-		},
-		source,
-		createdAt,
-		updatedAt,
-	)
-	createCommand.StartedAt = utils.TimestampProtoToTimePtr(request.StartedAt)
-	createCommand.EndedAt = utils.TimestampProtoToTimePtr(request.EndedAt)
-
-	if err = s.serviceLineItemCommandHandlers.CreateServiceLineItem.Handle(ctx, createCommand); err != nil {
+	initAggregateFunc := func() eventstore.Aggregate {
+		return sliaggregate.NewServiceLineItemAggregateWithTenantAndID(request.Tenant, serviceLineItemId)
+	}
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("(CreateServiceLineItem.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		s.log.Errorf("(CreateServiceLineItem) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
 	}
 
@@ -141,11 +118,6 @@ func (s *serviceLineItemService) UpdateServiceLineItem(ctx context.Context, requ
 		return &servicelineitempb.ServiceLineItemIdGrpcResponse{Id: request.Id}, nil
 
 	} else {
-		versionDate := utils.NowPtr()
-		if request.StartedAt != nil {
-			versionDate = utils.TimestampProtoToTimePtr(request.StartedAt)
-		}
-
 		// Validate contract ID
 		if request.ContractId == "" {
 			return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("contractId"))
@@ -175,31 +147,31 @@ func (s *serviceLineItemService) UpdateServiceLineItem(ctx context.Context, requ
 		//Create new service line item
 		serviceLineItemId := uuid.New().String()
 
-		createCommand := command.NewCreateServiceLineItemCommand(
-			serviceLineItemId,
-			request.Tenant,
-			request.LoggedInUserId,
-			request.Id,
-			model.ServiceLineItemDataFields{
-				Billed:     model.BilledType(request.Billed),
-				Quantity:   request.Quantity,
-				Price:      float64(request.Price),
-				Name:       request.Name,
-				ContractId: request.ContractId,
-				ParentId:   request.ParentId,
-				Comments:   request.Comments,
-			},
-			source,
-			utils.NowPtr(),
-			updatedAt,
-		)
-		createCommand.StartedAt = versionDate
+		createRequest := &servicelineitempb.CreateServiceLineItemGrpcRequest{
+			Tenant:         request.Tenant,
+			LoggedInUserId: request.LoggedInUserId,
+			Billed:         request.Billed,
+			Quantity:       request.Quantity,
+			Price:          request.Price,
+			Name:           request.Name,
+			ContractId:     request.ContractId,
+			SourceFields:   request.SourceFields,
+			UpdatedAt:      request.UpdatedAt,
+			StartedAt:      request.StartedAt,
+			VatRate:        request.VatRate,
+			ParentId:       request.ParentId,
+			Comments:       request.Comments,
+		}
 
-		if err = s.serviceLineItemCommandHandlers.CreateServiceLineItem.Handle(ctx, createCommand); err != nil {
+		initAggregateFunc := func() eventstore.Aggregate {
+			return sliaggregate.NewServiceLineItemAggregateWithTenantAndID(request.Tenant, serviceLineItemId)
+		}
+		if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, createRequest); err != nil {
 			tracing.TraceErr(span, err)
-			s.log.Errorf("(CreateServiceLineItem.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
+			s.log.Errorf("(CreateServiceLineItem) tenant:{%v}, err: %v", request.Tenant, err.Error())
 			return nil, grpcerr.ErrResponse(err)
 		}
+
 		return &servicelineitempb.ServiceLineItemIdGrpcResponse{Id: serviceLineItemId}, nil
 	}
 }
