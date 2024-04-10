@@ -35,6 +35,8 @@ type InvoiceEntity struct {
 	AppSource     string
 
 	InvoiceInternalFields InvoiceInternalFields
+
+	DataloaderKey string
 }
 
 type InvoiceCustomer struct {

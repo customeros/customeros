@@ -42,6 +42,16 @@ func (r *contractResolver) Attachments(ctx context.Context, obj *model.Contract)
 	panic(fmt.Errorf("not implemented: Attachments - attachments"))
 }
 
+// Invoices is the resolver for the invoices field.
+func (r *contractResolver) Invoices(ctx context.Context, obj *model.Contract) ([]*model.Invoice, error) {
+	panic(fmt.Errorf("not implemented: Invoices - invoices"))
+}
+
+// UpcomingInvoices is the resolver for the upcomingInvoices field.
+func (r *contractResolver) UpcomingInvoices(ctx context.Context, obj *model.Contract) ([]*model.Invoice, error) {
+	panic(fmt.Errorf("not implemented: UpcomingInvoices - upcomingInvoices"))
+}
+
 // ServiceLineItems is the resolver for the serviceLineItems field.
 func (r *contractResolver) ServiceLineItems(ctx context.Context, obj *model.Contract) ([]*model.ServiceLineItem, error) {
 	panic(fmt.Errorf("not implemented: ServiceLineItems - serviceLineItems"))

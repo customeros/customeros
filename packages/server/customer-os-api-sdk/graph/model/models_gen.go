@@ -537,6 +537,8 @@ type Contract struct {
 	ContractStatus          ContractStatus     `json:"contractStatus"`
 	AutoRenew               bool               `json:"autoRenew"`
 	Attachments             []*Attachment      `json:"attachments,omitempty"`
+	Invoices                []*Invoice         `json:"invoices"`
+	UpcomingInvoices        []*Invoice         `json:"upcomingInvoices"`
 	// Deprecated, use committedPeriodInMonths instead.
 	CommittedPeriods *int64 `json:"committedPeriods,omitempty"`
 	// Deprecated, use committedPeriodInMonths instead.

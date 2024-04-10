@@ -300,6 +300,7 @@ type ComplexityRoot struct {
 		ID                      func(childComplexity int) int
 		InvoiceEmail            func(childComplexity int) int
 		InvoiceNote             func(childComplexity int) int
+		Invoices                func(childComplexity int) int
 		InvoicingStartDate      func(childComplexity int) int
 		Locality                func(childComplexity int) int
 		Metadata                func(childComplexity int) int
@@ -316,6 +317,7 @@ type ComplexityRoot struct {
 		Source                  func(childComplexity int) int
 		SourceOfTruth           func(childComplexity int) int
 		Status                  func(childComplexity int) int
+		UpcomingInvoices        func(childComplexity int) int
 		UpdatedAt               func(childComplexity int) int
 		Zip                     func(childComplexity int) int
 	}
@@ -1669,6 +1671,8 @@ type ContractResolver interface {
 	Owner(ctx context.Context, obj *model.Contract) (*model.User, error)
 
 	Attachments(ctx context.Context, obj *model.Contract) ([]*model.Attachment, error)
+	Invoices(ctx context.Context, obj *model.Contract) ([]*model.Invoice, error)
+	UpcomingInvoices(ctx context.Context, obj *model.Contract) ([]*model.Invoice, error)
 
 	ServiceLineItems(ctx context.Context, obj *model.Contract) ([]*model.ServiceLineItem, error)
 }
@@ -3323,6 +3327,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Contract.InvoiceNote(childComplexity), true
 
+	case "Contract.invoices":
+		if e.complexity.Contract.Invoices == nil {
+			break
+		}
+
+		return e.complexity.Contract.Invoices(childComplexity), true
+
 	case "Contract.invoicingStartDate":
 		if e.complexity.Contract.InvoicingStartDate == nil {
 			break
@@ -3434,6 +3445,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Contract.Status(childComplexity), true
+
+	case "Contract.upcomingInvoices":
+		if e.complexity.Contract.UpcomingInvoices == nil {
+			break
+		}
+
+		return e.complexity.Contract.UpcomingInvoices(childComplexity), true
 
 	case "Contract.updatedAt":
 		if e.complexity.Contract.UpdatedAt == nil {
@@ -12394,6 +12412,8 @@ type Contract implements MetadataInterface {
     contractStatus:     ContractStatus!
     autoRenew:          Boolean!
     attachments:        [Attachment!] @goField(forceResolver: true)
+    invoices:           [Invoice!]! @goField(forceResolver: true)
+    upcomingInvoices:   [Invoice!]! @goField(forceResolver: true)
 
     """
     Deprecated, use committedPeriodInMonths instead.
@@ -28422,6 +28442,214 @@ func (ec *executionContext) fieldContext_Contract_attachments(ctx context.Contex
 	return fc, nil
 }
 
+func (ec *executionContext) _Contract_invoices(ctx context.Context, field graphql.CollectedField, obj *model.Contract) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contract_invoices(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Contract().Invoices(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Invoice)
+	fc.Result = res
+	return ec.marshalNInvoice2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInvoiceᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contract_invoices(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contract",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "metadata":
+				return ec.fieldContext_Invoice_metadata(ctx, field)
+			case "organization":
+				return ec.fieldContext_Invoice_organization(ctx, field)
+			case "contract":
+				return ec.fieldContext_Invoice_contract(ctx, field)
+			case "dryRun":
+				return ec.fieldContext_Invoice_dryRun(ctx, field)
+			case "postpaid":
+				return ec.fieldContext_Invoice_postpaid(ctx, field)
+			case "offCycle":
+				return ec.fieldContext_Invoice_offCycle(ctx, field)
+			case "preview":
+				return ec.fieldContext_Invoice_preview(ctx, field)
+			case "amountDue":
+				return ec.fieldContext_Invoice_amountDue(ctx, field)
+			case "amountPaid":
+				return ec.fieldContext_Invoice_amountPaid(ctx, field)
+			case "amountRemaining":
+				return ec.fieldContext_Invoice_amountRemaining(ctx, field)
+			case "invoiceNumber":
+				return ec.fieldContext_Invoice_invoiceNumber(ctx, field)
+			case "invoicePeriodStart":
+				return ec.fieldContext_Invoice_invoicePeriodStart(ctx, field)
+			case "invoicePeriodEnd":
+				return ec.fieldContext_Invoice_invoicePeriodEnd(ctx, field)
+			case "invoiceUrl":
+				return ec.fieldContext_Invoice_invoiceUrl(ctx, field)
+			case "due":
+				return ec.fieldContext_Invoice_due(ctx, field)
+			case "issued":
+				return ec.fieldContext_Invoice_issued(ctx, field)
+			case "currency":
+				return ec.fieldContext_Invoice_currency(ctx, field)
+			case "repositoryFileId":
+				return ec.fieldContext_Invoice_repositoryFileId(ctx, field)
+			case "invoiceLineItems":
+				return ec.fieldContext_Invoice_invoiceLineItems(ctx, field)
+			case "status":
+				return ec.fieldContext_Invoice_status(ctx, field)
+			case "note":
+				return ec.fieldContext_Invoice_note(ctx, field)
+			case "domesticPaymentsBankInfo":
+				return ec.fieldContext_Invoice_domesticPaymentsBankInfo(ctx, field)
+			case "internationalPaymentsBankInfo":
+				return ec.fieldContext_Invoice_internationalPaymentsBankInfo(ctx, field)
+			case "customer":
+				return ec.fieldContext_Invoice_customer(ctx, field)
+			case "provider":
+				return ec.fieldContext_Invoice_provider(ctx, field)
+			case "paid":
+				return ec.fieldContext_Invoice_paid(ctx, field)
+			case "subtotal":
+				return ec.fieldContext_Invoice_subtotal(ctx, field)
+			case "taxDue":
+				return ec.fieldContext_Invoice_taxDue(ctx, field)
+			case "paymentLink":
+				return ec.fieldContext_Invoice_paymentLink(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Invoice", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Contract_upcomingInvoices(ctx context.Context, field graphql.CollectedField, obj *model.Contract) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contract_upcomingInvoices(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Contract().UpcomingInvoices(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Invoice)
+	fc.Result = res
+	return ec.marshalNInvoice2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInvoiceᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contract_upcomingInvoices(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contract",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "metadata":
+				return ec.fieldContext_Invoice_metadata(ctx, field)
+			case "organization":
+				return ec.fieldContext_Invoice_organization(ctx, field)
+			case "contract":
+				return ec.fieldContext_Invoice_contract(ctx, field)
+			case "dryRun":
+				return ec.fieldContext_Invoice_dryRun(ctx, field)
+			case "postpaid":
+				return ec.fieldContext_Invoice_postpaid(ctx, field)
+			case "offCycle":
+				return ec.fieldContext_Invoice_offCycle(ctx, field)
+			case "preview":
+				return ec.fieldContext_Invoice_preview(ctx, field)
+			case "amountDue":
+				return ec.fieldContext_Invoice_amountDue(ctx, field)
+			case "amountPaid":
+				return ec.fieldContext_Invoice_amountPaid(ctx, field)
+			case "amountRemaining":
+				return ec.fieldContext_Invoice_amountRemaining(ctx, field)
+			case "invoiceNumber":
+				return ec.fieldContext_Invoice_invoiceNumber(ctx, field)
+			case "invoicePeriodStart":
+				return ec.fieldContext_Invoice_invoicePeriodStart(ctx, field)
+			case "invoicePeriodEnd":
+				return ec.fieldContext_Invoice_invoicePeriodEnd(ctx, field)
+			case "invoiceUrl":
+				return ec.fieldContext_Invoice_invoiceUrl(ctx, field)
+			case "due":
+				return ec.fieldContext_Invoice_due(ctx, field)
+			case "issued":
+				return ec.fieldContext_Invoice_issued(ctx, field)
+			case "currency":
+				return ec.fieldContext_Invoice_currency(ctx, field)
+			case "repositoryFileId":
+				return ec.fieldContext_Invoice_repositoryFileId(ctx, field)
+			case "invoiceLineItems":
+				return ec.fieldContext_Invoice_invoiceLineItems(ctx, field)
+			case "status":
+				return ec.fieldContext_Invoice_status(ctx, field)
+			case "note":
+				return ec.fieldContext_Invoice_note(ctx, field)
+			case "domesticPaymentsBankInfo":
+				return ec.fieldContext_Invoice_domesticPaymentsBankInfo(ctx, field)
+			case "internationalPaymentsBankInfo":
+				return ec.fieldContext_Invoice_internationalPaymentsBankInfo(ctx, field)
+			case "customer":
+				return ec.fieldContext_Invoice_customer(ctx, field)
+			case "provider":
+				return ec.fieldContext_Invoice_provider(ctx, field)
+			case "paid":
+				return ec.fieldContext_Invoice_paid(ctx, field)
+			case "subtotal":
+				return ec.fieldContext_Invoice_subtotal(ctx, field)
+			case "taxDue":
+				return ec.fieldContext_Invoice_taxDue(ctx, field)
+			case "paymentLink":
+				return ec.fieldContext_Invoice_paymentLink(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Invoice", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Contract_committedPeriods(ctx context.Context, field graphql.CollectedField, obj *model.Contract) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Contract_committedPeriods(ctx, field)
 	if err != nil {
@@ -39403,6 +39631,10 @@ func (ec *executionContext) fieldContext_Invoice_contract(ctx context.Context, f
 				return ec.fieldContext_Contract_autoRenew(ctx, field)
 			case "attachments":
 				return ec.fieldContext_Contract_attachments(ctx, field)
+			case "invoices":
+				return ec.fieldContext_Contract_invoices(ctx, field)
+			case "upcomingInvoices":
+				return ec.fieldContext_Contract_upcomingInvoices(ctx, field)
 			case "committedPeriods":
 				return ec.fieldContext_Contract_committedPeriods(ctx, field)
 			case "contractRenewalCycle":
@@ -51088,6 +51320,10 @@ func (ec *executionContext) fieldContext_Mutation_contract_Create(ctx context.Co
 				return ec.fieldContext_Contract_autoRenew(ctx, field)
 			case "attachments":
 				return ec.fieldContext_Contract_attachments(ctx, field)
+			case "invoices":
+				return ec.fieldContext_Contract_invoices(ctx, field)
+			case "upcomingInvoices":
+				return ec.fieldContext_Contract_upcomingInvoices(ctx, field)
 			case "committedPeriods":
 				return ec.fieldContext_Contract_committedPeriods(ctx, field)
 			case "contractRenewalCycle":
@@ -51263,6 +51499,10 @@ func (ec *executionContext) fieldContext_Mutation_contract_Update(ctx context.Co
 				return ec.fieldContext_Contract_autoRenew(ctx, field)
 			case "attachments":
 				return ec.fieldContext_Contract_attachments(ctx, field)
+			case "invoices":
+				return ec.fieldContext_Contract_invoices(ctx, field)
+			case "upcomingInvoices":
+				return ec.fieldContext_Contract_upcomingInvoices(ctx, field)
 			case "committedPeriods":
 				return ec.fieldContext_Contract_committedPeriods(ctx, field)
 			case "contractRenewalCycle":
@@ -51529,6 +51769,10 @@ func (ec *executionContext) fieldContext_Mutation_contract_Renew(ctx context.Con
 				return ec.fieldContext_Contract_autoRenew(ctx, field)
 			case "attachments":
 				return ec.fieldContext_Contract_attachments(ctx, field)
+			case "invoices":
+				return ec.fieldContext_Contract_invoices(ctx, field)
+			case "upcomingInvoices":
+				return ec.fieldContext_Contract_upcomingInvoices(ctx, field)
 			case "committedPeriods":
 				return ec.fieldContext_Contract_committedPeriods(ctx, field)
 			case "contractRenewalCycle":
@@ -51704,6 +51948,10 @@ func (ec *executionContext) fieldContext_Mutation_contract_AddAttachment(ctx con
 				return ec.fieldContext_Contract_autoRenew(ctx, field)
 			case "attachments":
 				return ec.fieldContext_Contract_attachments(ctx, field)
+			case "invoices":
+				return ec.fieldContext_Contract_invoices(ctx, field)
+			case "upcomingInvoices":
+				return ec.fieldContext_Contract_upcomingInvoices(ctx, field)
 			case "committedPeriods":
 				return ec.fieldContext_Contract_committedPeriods(ctx, field)
 			case "contractRenewalCycle":
@@ -51879,6 +52127,10 @@ func (ec *executionContext) fieldContext_Mutation_contract_RemoveAttachment(ctx 
 				return ec.fieldContext_Contract_autoRenew(ctx, field)
 			case "attachments":
 				return ec.fieldContext_Contract_attachments(ctx, field)
+			case "invoices":
+				return ec.fieldContext_Contract_invoices(ctx, field)
+			case "upcomingInvoices":
+				return ec.fieldContext_Contract_upcomingInvoices(ctx, field)
 			case "committedPeriods":
 				return ec.fieldContext_Contract_committedPeriods(ctx, field)
 			case "contractRenewalCycle":
@@ -70165,6 +70417,10 @@ func (ec *executionContext) fieldContext_Organization_contracts(ctx context.Cont
 				return ec.fieldContext_Contract_autoRenew(ctx, field)
 			case "attachments":
 				return ec.fieldContext_Contract_attachments(ctx, field)
+			case "invoices":
+				return ec.fieldContext_Contract_invoices(ctx, field)
+			case "upcomingInvoices":
+				return ec.fieldContext_Contract_upcomingInvoices(ctx, field)
 			case "committedPeriods":
 				return ec.fieldContext_Contract_committedPeriods(ctx, field)
 			case "contractRenewalCycle":
@@ -78442,6 +78698,10 @@ func (ec *executionContext) fieldContext_Query_contract(ctx context.Context, fie
 				return ec.fieldContext_Contract_autoRenew(ctx, field)
 			case "attachments":
 				return ec.fieldContext_Contract_attachments(ctx, field)
+			case "invoices":
+				return ec.fieldContext_Contract_invoices(ctx, field)
+			case "upcomingInvoices":
+				return ec.fieldContext_Contract_upcomingInvoices(ctx, field)
 			case "committedPeriods":
 				return ec.fieldContext_Contract_committedPeriods(ctx, field)
 			case "contractRenewalCycle":
@@ -84445,6 +84705,10 @@ func (ec *executionContext) fieldContext_RenewalRecord_contract(ctx context.Cont
 				return ec.fieldContext_Contract_autoRenew(ctx, field)
 			case "attachments":
 				return ec.fieldContext_Contract_attachments(ctx, field)
+			case "invoices":
+				return ec.fieldContext_Contract_invoices(ctx, field)
+			case "upcomingInvoices":
+				return ec.fieldContext_Contract_upcomingInvoices(ctx, field)
 			case "committedPeriods":
 				return ec.fieldContext_Contract_committedPeriods(ctx, field)
 			case "contractRenewalCycle":
@@ -102670,6 +102934,78 @@ func (ec *executionContext) _Contract(ctx context.Context, sel ast.SelectionSet,
 					}
 				}()
 				res = ec._Contract_attachments(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "invoices":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Contract_invoices(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "upcomingInvoices":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Contract_upcomingInvoices(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
 				return res
 			}
 

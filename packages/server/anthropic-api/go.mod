@@ -1,6 +1,7 @@
 module github.com/openline-ai/openline-customer-os/packages/server/anthorpic-api
 
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ./../customer-os-common-module
+
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository => ./../customer-os-postgres-repository
 
 go 1.21
@@ -11,7 +12,7 @@ require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/joho/godotenv v1.5.1
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240206104907-b429ee046270
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository v0.0.0-20240206104907-b429ee046270
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository v0.0.0-20240410144729-44cbe53c019c
 	github.com/sirupsen/logrus v1.9.3
 	gorm.io/driver/postgres v1.5.7
 	gorm.io/gorm v1.25.9
