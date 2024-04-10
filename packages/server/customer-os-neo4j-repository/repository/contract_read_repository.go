@@ -32,6 +32,7 @@ type ContractReadRepository interface {
 	GetContractsToGenerateOffCycleInvoices(ctx context.Context, referenceTime time.Time, delayMinutes int) ([]*utils.DbNodeAndTenant, error)
 	GetContractsForStatusRenewal(ctx context.Context, referenceTime time.Time) ([]TenantAndContractId, error)
 	GetContractsForRenewalRollout(ctx context.Context, referenceTime time.Time) ([]TenantAndContractId, error)
+	IsContractInvoiced(ctx context.Context, tenant, contractId string) (bool, error)
 }
 
 type contractReadRepository struct {
@@ -523,4 +524,34 @@ func (r *contractReadRepository) GetContractsForRenewalRollout(ctx context.Conte
 	}
 	span.LogFields(log.Int("result.count", len(output)))
 	return output, nil
+}
+
+func (r *contractReadRepository) IsContractInvoiced(ctx context.Context, tenant, contractId string) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractRepository.IsContractInvoiced")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, contractId)
+
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})-[:HAS_INVOICE]->(i:Invoice {dryRun:false})
+			RETURN count(i) > 0`
+	params := map[string]any{
+		"contractId": contractId,
+		"tenant":     tenant,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		return utils.ExtractSingleRecordFirstValueAsType[bool](ctx, queryResult, err)
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return false, err
+	}
+	span.LogFields(log.Bool("result", result.(bool)))
+	return result.(bool), err
 }

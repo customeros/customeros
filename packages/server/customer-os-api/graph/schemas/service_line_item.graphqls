@@ -3,6 +3,7 @@ extend type Query {
 }
 extend type Mutation {
     contractLineItem_Create(input: ServiceLineItemInput!): ServiceLineItem! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    contractLineItem_NewVersion(input: ServiceLineItemNewVersionInput!): ServiceLineItem! @hasRole(roles: [ADMIN, USER]) @hasTenant
     contractLineItem_Update(input: ServiceLineItemUpdateInput!): ServiceLineItem! @hasRole(roles: [ADMIN, USER]) @hasTenant
     contractLineItem_Close(input: ServiceLineItemCloseInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
@@ -41,7 +42,10 @@ input ServiceLineItemInput {
 input ServiceLineItemUpdateInput {
     id:                         ID
     description:                String
-    billingCycle:               BilledType
+    """
+    Deprecated: billing cycle is not updatable.
+    """
+    billingCycle:               BilledType @deprecated(reason: "billing cycle is not updatable.")
     price:                      Float
     quantity:                   Int64
     tax:                        TaxInput
@@ -50,6 +54,17 @@ input ServiceLineItemUpdateInput {
     isRetroactiveCorrection:    Boolean
     serviceStarted:             Time
     serviceEnded:               Time
+}
+
+input ServiceLineItemNewVersionInput {
+    id:                         ID
+    description:                String
+    price:                      Float
+    quantity:                   Int64
+    tax:                        TaxInput
+    comments:                   String
+    appSource:                  String
+    serviceStarted:             Time
 }
 
 input ServiceLineItemBulkUpdateInput {

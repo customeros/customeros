@@ -17,6 +17,11 @@ func (r *mutationResolver) ContractLineItemCreate(ctx context.Context, input mod
 	panic(fmt.Errorf("not implemented: ContractLineItemCreate - contractLineItem_Create"))
 }
 
+// ContractLineItemNewVersion is the resolver for the contractLineItem_NewVersion field.
+func (r *mutationResolver) ContractLineItemNewVersion(ctx context.Context, input model.ServiceLineItemNewVersionInput) (*model.ServiceLineItem, error) {
+	panic(fmt.Errorf("not implemented: ContractLineItemNewVersion - contractLineItem_NewVersion"))
+}
+
 // ContractLineItemUpdate is the resolver for the contractLineItem_Update field.
 func (r *mutationResolver) ContractLineItemUpdate(ctx context.Context, input model.ServiceLineItemUpdateInput) (*model.ServiceLineItem, error) {
 	panic(fmt.Errorf("not implemented: ContractLineItemUpdate - contractLineItem_Update"))

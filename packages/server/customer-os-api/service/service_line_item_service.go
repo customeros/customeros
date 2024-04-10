@@ -54,6 +54,18 @@ type ServiceLineItemUpdateData struct {
 	StartedAt               *time.Time             `json:"startedAt"`
 }
 
+type ServiceLineItemNewVersionData struct {
+	Id        string                 `json:"id"`
+	Name      string                 `json:"sliName"`
+	Price     float64                `json:"sliPrice"`
+	Quantity  int64                  `json:"sliQuantity"`
+	Comments  string                 `json:"sliComments"`
+	Source    neo4jentity.DataSource `json:"source"`
+	AppSource string                 `json:"appSource"`
+	VatRate   float64                `json:"sliVatRate"`
+	StartedAt *time.Time             `json:"startedAt"`
+}
+
 type ServiceLineItemService interface {
 	Create(ctx context.Context, serviceLineItemDetails ServiceLineItemCreateData, bulk bool) (string, error)
 	Update(ctx context.Context, serviceLineItemDetails ServiceLineItemUpdateData, bulk bool) error
@@ -62,6 +74,7 @@ type ServiceLineItemService interface {
 	GetServiceLineItemsForContracts(ctx context.Context, contractIds []string) (*neo4jentity.ServiceLineItemEntities, error)
 	Close(ctx context.Context, serviceLineItemId string, endedAt *time.Time, bulk bool) error
 	CreateOrUpdateOrCloseInBulk(ctx context.Context, contractId string, sliBulkData []*ServiceLineItemDetails) ([]string, error)
+	NewVersion(ctx context.Context, data ServiceLineItemNewVersionData) (string, error)
 }
 
 type serviceLineItemService struct {
@@ -163,6 +176,129 @@ func (s *serviceLineItemService) createServiceLineItemWithEvents(ctx context.Con
 	}
 
 	WaitForNodeCreatedInNeo4j(ctx, s.repositories, response.Id, neo4jutil.NodeLabelServiceLineItem, span)
+	return response.Id, err
+}
+
+func (s *serviceLineItemService) NewVersion(ctx context.Context, data ServiceLineItemNewVersionData) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItem.NewVersion")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "serviceLineItemDetails", data)
+
+	if data.Id == "" {
+		err := fmt.Errorf("(ServiceLineItemService.NewVersion) contract line item id is missing")
+		s.log.Error(err.Error())
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+
+	baseServiceLineItemEntity, err := s.GetById(ctx, data.Id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error on getting contract line item by id {%s}: %s", data.Id, err.Error())
+		return "", err
+	}
+	contractDbNode, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractByServiceLineItemId(ctx, common.GetTenantFromContext(ctx), data.Id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error on getting contract by service line item id {%s}: %s", data.Id, err.Error())
+		return "", err
+	}
+	if contractDbNode == nil {
+		err = fmt.Errorf("contract not found for service line item id {%s}", data.Id)
+		tracing.TraceErr(span, err)
+		s.log.Errorf(err.Error())
+		return "", err
+	}
+	contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
+
+	startedAt := utils.ToDate(utils.IfNotNilTimeWithDefault(data.StartedAt, utils.Now()))
+
+	// Validate new version creation
+	if baseServiceLineItemEntity.Billed == neo4jenum.BilledTypeOnce {
+		err = fmt.Errorf("cannot create new version for one time contract line item with id {%s}", data.Id)
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+	// Do not allow creating new version if there is an existing version with the same start date
+	serviceLineItems, err := s.GetServiceLineItemsForContracts(ctx, []string{contractEntity.Id})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error on getting service line items for contract {%s}: %s", contractEntity.Id, err.Error())
+		return "", err
+	}
+	for _, sli := range *serviceLineItems {
+		if utils.ToDate(sli.StartedAt).Equal(startedAt) {
+			err = fmt.Errorf("contract line item with id {%s} already exists with the same start date {%s}", sli.ID, startedAt.Format(time.DateOnly))
+			tracing.TraceErr(span, err)
+			return "", err
+		}
+	}
+	// If contract was invoiced - do not allow creating new version in the past
+	contractInvoiced, err := s.repositories.Neo4jRepositories.ContractReadRepository.IsContractInvoiced(ctx, common.GetTenantFromContext(ctx), contractEntity.Id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error on checking if contract was invoiced: %s", err.Error())
+		return "", err
+	}
+	if contractInvoiced && startedAt.Before(utils.Today()) {
+		err = fmt.Errorf("cannot create new version for contract line item with id {%s} in the past", data.Id)
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+
+	createServiceLineItemRequest := servicelineitempb.CreateServiceLineItemGrpcRequest{
+		Tenant:         common.GetTenantFromContext(ctx),
+		LoggedInUserId: common.GetUserIdFromContext(ctx),
+		ContractId:     contractEntity.Id,
+		ParentId:       baseServiceLineItemEntity.ParentID,
+		Name:           utils.StringFirstNonEmpty(data.Name, baseServiceLineItemEntity.Name),
+		Quantity:       data.Quantity,
+		Price:          data.Price,
+		VatRate:        data.VatRate,
+		StartedAt:      utils.ConvertTimeToTimestampPtr(&startedAt),
+		Comments:       utils.IfNotNilString(data.Comments),
+		SourceFields: &commonpb.SourceFields{
+			Source:    data.Source.String(),
+			AppSource: utils.StringFirstNonEmpty(data.AppSource, constants.AppSourceCustomerOsApi),
+		},
+	}
+
+	switch baseServiceLineItemEntity.Billed {
+	case neo4jenum.BilledTypeMonthly:
+		createServiceLineItemRequest.Billed = commonpb.BilledType_MONTHLY_BILLED
+	case neo4jenum.BilledTypeQuarterly:
+		createServiceLineItemRequest.Billed = commonpb.BilledType_QUARTERLY_BILLED
+	case neo4jenum.BilledTypeAnnually:
+		createServiceLineItemRequest.Billed = commonpb.BilledType_ANNUALLY_BILLED
+	case neo4jenum.BilledTypeOnce:
+		createServiceLineItemRequest.Billed = commonpb.BilledType_ONCE_BILLED
+	case neo4jenum.BilledTypeUsage:
+		createServiceLineItemRequest.Billed = commonpb.BilledType_USAGE_BILLED
+	default:
+		createServiceLineItemRequest.Billed = commonpb.BilledType_NONE_BILLED
+	}
+
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	response, err := CallEventsPlatformGRPCWithRetry[*servicelineitempb.ServiceLineItemIdGrpcResponse](func() (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
+		return s.grpcClients.ServiceLineItemClient.CreateServiceLineItem(ctx, &createServiceLineItemRequest)
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+
+	go func() {
+		time.Sleep(2 * time.Second)
+
+		err := s.generateNextPreviewInvoice(ctx, common.GetTenantFromContext(ctx), contractEntity.Id, span)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error on generating next preview invoice: %s", err.Error())
+			return
+		}
+	}()
+
 	return response.Id, err
 }
 

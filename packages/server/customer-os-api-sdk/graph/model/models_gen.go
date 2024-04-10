@@ -2540,9 +2540,21 @@ type ServiceLineItemInput struct {
 	ServiceEnded   *time.Time  `json:"serviceEnded,omitempty"`
 }
 
+type ServiceLineItemNewVersionInput struct {
+	ID             *string    `json:"id,omitempty"`
+	Description    *string    `json:"description,omitempty"`
+	Price          *float64   `json:"price,omitempty"`
+	Quantity       *int64     `json:"quantity,omitempty"`
+	Tax            *TaxInput  `json:"tax,omitempty"`
+	Comments       *string    `json:"comments,omitempty"`
+	AppSource      *string    `json:"appSource,omitempty"`
+	ServiceStarted *time.Time `json:"serviceStarted,omitempty"`
+}
+
 type ServiceLineItemUpdateInput struct {
-	ID                      *string     `json:"id,omitempty"`
-	Description             *string     `json:"description,omitempty"`
+	ID          *string `json:"id,omitempty"`
+	Description *string `json:"description,omitempty"`
+	// Deprecated: billing cycle is not updatable.
 	BillingCycle            *BilledType `json:"billingCycle,omitempty"`
 	Price                   *float64    `json:"price,omitempty"`
 	Quantity                *int64      `json:"quantity,omitempty"`
