@@ -12,6 +12,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
@@ -406,49 +407,71 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 	require.Equal(t, 0.2, secondContractLineItem.Tax.TaxRate)
 }
 
-func TestQueryResolver_Contract_WithOpportunities(t *testing.T) {
+func TestQueryResolver_Contract_WithInvoices(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	now := utils.Now()
+	tomorrow := now.Add(time.Duration(24) * time.Hour)
 	yesterday := now.Add(time.Duration(-24) * time.Hour)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
-
-	opportunityId1 := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, entity.OpportunityEntity{
-		Name:          "oppo 1",
-		CreatedAt:     now,
-		UpdatedAt:     now,
-		Amount:        49,
-		InternalType:  entity.InternalTypeUpsell,
-		InternalStage: entity.InternalStageOpen,
-		Source:        neo4jentity.DataSourceOpenline,
-		GeneralNotes:  "test notes 1",
-		Comments:      "test comments 1",
-		AppSource:     "test1",
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		AddressLine1:           "address line 1",
+		AddressLine2:           "address line 2",
+		Zip:                    "zip",
+		Locality:               "locality",
+		Country:                "country",
+		Region:                 "region",
+		OrganizationLegalName:  "organization legal name",
+		InvoiceEmail:           "invoice email",
+		InvoiceNote:            "invoice note",
+		BillingCycle:           neo4jenum.BillingCycleMonthlyBilling,
+		InvoicingStartDate:     &now,
+		NextInvoiceDate:        &tomorrow,
+		InvoicingEnabled:       true,
+		CanPayWithCard:         true,
+		CanPayWithDirectDebit:  true,
+		CanPayWithBankTransfer: true,
+		PayOnline:              true,
+		PayAutomatically:       true,
+		AutoRenew:              true,
+		Check:                  true,
+		DueDays:                int64(7),
 	})
-	opportunityId2 := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, entity.OpportunityEntity{
-		Name:          "oppo 2",
-		CreatedAt:     yesterday,
-		UpdatedAt:     yesterday,
-		Amount:        1239,
-		InternalType:  entity.InternalTypeNbo,
-		InternalStage: entity.InternalStageEvaluating,
-		Source:        neo4jentity.DataSourceOpenline,
-		GeneralNotes:  "test notes 2",
-		Comments:      "test comments 2",
-		AppSource:     "test2",
+
+	serviceLineItemId1 := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
+		Name:      "service line item 1",
+		CreatedAt: yesterday,
+		UpdatedAt: yesterday,
+		Billed:    neo4jenum.BilledTypeAnnually,
+		Price:     13,
+		Quantity:  2,
+		Source:    neo4jentity.DataSourceOpenline,
+		AppSource: "test1",
+		VatRate:   0.1,
+	})
+	serviceLineItemId2 := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
+		Name:      "service line item 2",
+		CreatedAt: now,
+		UpdatedAt: now,
+		Billed:    neo4jenum.BilledTypeUsage,
+		Price:     255,
+		Quantity:  23,
+		Source:    neo4jentity.DataSourceOpenline,
+		AppSource: "test2",
+		VatRate:   0.2,
 	})
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
-		"Organization": 1,
-		"Contract":     1,
-		"Opportunity":  2,
+		"Organization":    1,
+		"Contract":        1,
+		"ServiceLineItem": 2,
 	})
-	neo4jtest.AssertRelationship(ctx, t, driver, contractId, "HAS_OPPORTUNITY", opportunityId1)
+	neo4jtest.AssertRelationship(ctx, t, driver, contractId, "HAS_SERVICE", serviceLineItemId1)
+	neo4jtest.AssertRelationship(ctx, t, driver, contractId, "HAS_SERVICE", serviceLineItemId2)
 
-	rawResponse := callGraphQL(t, "contract/get_contract_with_opportunities",
+	rawResponse := callGraphQL(t, "contract/get_contract_with_service_line_items",
 		map[string]interface{}{"contractId": contractId})
 
 	var contractStruct struct {
@@ -460,33 +483,143 @@ func TestQueryResolver_Contract_WithOpportunities(t *testing.T) {
 
 	contract := contractStruct.Contract
 	require.NotNil(t, contract)
-	require.Equal(t, 2, len(contract.Opportunities))
+	require.Equal(t, contractId, contract.Metadata.ID)
+	require.True(t, contract.BillingEnabled)
+	require.True(t, contract.AutoRenew)
 
-	firstOpportunity := contract.Opportunities[0]
-	require.Equal(t, opportunityId1, firstOpportunity.ID)
-	require.Equal(t, "oppo 1", firstOpportunity.Name)
-	require.Equal(t, now, firstOpportunity.CreatedAt)
-	require.Equal(t, now, firstOpportunity.UpdatedAt)
-	require.Equal(t, float64(49), firstOpportunity.Amount)
-	require.Equal(t, model.InternalStageOpen, firstOpportunity.InternalStage)
-	require.Equal(t, model.InternalTypeUpsell, firstOpportunity.InternalType)
-	require.Equal(t, model.DataSourceOpenline, firstOpportunity.Source)
-	require.Equal(t, "test notes 1", firstOpportunity.GeneralNotes)
-	require.Equal(t, "test comments 1", firstOpportunity.Comments)
-	require.Equal(t, "test1", firstOpportunity.AppSource)
+	billingDetails := contract.BillingDetails
+	require.Equal(t, "address line 1", *billingDetails.AddressLine1)
+	require.Equal(t, "address line 2", *billingDetails.AddressLine2)
+	require.Equal(t, "zip", *billingDetails.PostalCode)
+	require.Equal(t, "locality", *billingDetails.Locality)
+	require.Equal(t, "country", *billingDetails.Country)
+	require.Equal(t, "region", *billingDetails.Region)
+	require.Equal(t, "organization legal name", *billingDetails.OrganizationLegalName)
+	require.Equal(t, "invoice email", *billingDetails.BillingEmail)
+	require.Equal(t, "invoice note", *billingDetails.InvoiceNote)
+	require.Equal(t, model.ContractBillingCycleMonthlyBilling, *billingDetails.BillingCycle)
+	require.True(t, *billingDetails.CanPayWithCard)
+	require.True(t, *billingDetails.CanPayWithDirectDebit)
+	require.True(t, *billingDetails.CanPayWithBankTransfer)
+	require.True(t, *billingDetails.Check)
+	require.True(t, *billingDetails.PayOnline)
+	require.True(t, *billingDetails.PayAutomatically)
+	require.Equal(t, utils.ToDate(now), *billingDetails.InvoicingStarted)
+	require.Equal(t, utils.ToDate(tomorrow), *billingDetails.NextInvoicing)
+	require.Equal(t, int64(7), *billingDetails.DueDays)
 
-	secondOpportunity := contract.Opportunities[1]
-	require.Equal(t, opportunityId2, secondOpportunity.ID)
-	require.Equal(t, "oppo 2", secondOpportunity.Name)
-	require.Equal(t, yesterday, secondOpportunity.CreatedAt)
-	require.Equal(t, yesterday, secondOpportunity.UpdatedAt)
-	require.Equal(t, float64(1239), secondOpportunity.Amount)
-	require.Equal(t, model.InternalStageEvaluating, secondOpportunity.InternalStage)
-	require.Equal(t, model.InternalTypeNbo, secondOpportunity.InternalType)
-	require.Equal(t, model.DataSourceOpenline, secondOpportunity.Source)
-	require.Equal(t, "test notes 2", secondOpportunity.GeneralNotes)
-	require.Equal(t, "test comments 2", secondOpportunity.Comments)
-	require.Equal(t, "test2", secondOpportunity.AppSource)
+	require.Equal(t, 2, len(contract.ContractLineItems))
+
+	firstContractLineItem := contract.ContractLineItems[0]
+	require.Equal(t, serviceLineItemId1, firstContractLineItem.Metadata.ID)
+	require.Equal(t, "service line item 1", firstContractLineItem.Description)
+	require.Equal(t, yesterday, firstContractLineItem.Metadata.Created)
+	require.Equal(t, yesterday, firstContractLineItem.Metadata.LastUpdated)
+	require.Equal(t, model.BilledTypeAnnually, firstContractLineItem.BillingCycle)
+	require.Equal(t, float64(13), firstContractLineItem.Price)
+	require.Equal(t, int64(2), firstContractLineItem.Quantity)
+	require.Equal(t, model.DataSourceOpenline, firstContractLineItem.Metadata.Source)
+	require.Equal(t, "test1", firstContractLineItem.Metadata.AppSource)
+	require.Equal(t, 0.1, firstContractLineItem.Tax.TaxRate)
+
+	secondContractLineItem := contract.ContractLineItems[1]
+	require.Equal(t, serviceLineItemId2, secondContractLineItem.Metadata.ID)
+	require.Equal(t, "service line item 2", secondContractLineItem.Description)
+	require.Equal(t, now, secondContractLineItem.Metadata.Created)
+	require.Equal(t, now, secondContractLineItem.Metadata.LastUpdated)
+	require.Equal(t, model.BilledTypeUsage, secondContractLineItem.BillingCycle)
+	require.Equal(t, float64(255), secondContractLineItem.Price)
+	require.Equal(t, int64(23), secondContractLineItem.Quantity)
+	require.Equal(t, model.DataSourceOpenline, secondContractLineItem.Metadata.Source)
+	require.Equal(t, "test2", secondContractLineItem.Metadata.AppSource)
+	require.Equal(t, 0.2, secondContractLineItem.Tax.TaxRate)
+}
+
+func TestQueryResolver_Contract_WithOpportunities(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	now := utils.Now()
+	yesterday := now.AddDate(0, 0, -1)
+	twoDaysAgo := now.AddDate(0, 0, -2)
+	threeDaysAgo := now.AddDate(0, 0, -3)
+	fourDaysAgo := now.AddDate(0, 0, -4)
+	tomorrow := now.AddDate(0, 0, 1)
+	afterTomorrow := now.AddDate(0, 0, 2)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
+	neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		IssuedDate: yesterday,
+		DryRun:     true,
+		Status:     neo4jenum.InvoiceStatusDue,
+	})
+	neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		IssuedDate: twoDaysAgo,
+		DryRun:     false,
+		Status:     neo4jenum.InvoiceStatusInitialized,
+	})
+	invoiceIdPaid := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		IssuedDate: threeDaysAgo,
+		DryRun:     false,
+		Status:     neo4jenum.InvoiceStatusPaid,
+	})
+	invoiceIdVoid := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		IssuedDate: fourDaysAgo,
+		DryRun:     false,
+		Status:     neo4jenum.InvoiceStatusVoid,
+	})
+	neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		IssuedDate: now,
+		DryRun:     true,
+		Preview:    false,
+		Status:     neo4jenum.InvoiceStatusDue,
+	})
+	neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		IssuedDate: now,
+		DryRun:     true,
+		Preview:    true,
+		Status:     neo4jenum.InvoiceStatusInitialized,
+	})
+	invoiceIdScheduled1 := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		IssuedDate: tomorrow,
+		DryRun:     true,
+		Preview:    true,
+		Status:     neo4jenum.InvoiceStatusScheduled,
+	})
+	invoiceIdScheduled2 := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		IssuedDate: afterTomorrow,
+		DryRun:     true,
+		Preview:    true,
+		Status:     neo4jenum.InvoiceStatusScheduled,
+	})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
+		neo4jutil.NodeLabelOrganization: 1,
+		neo4jutil.NodeLabelContract:     1,
+		neo4jutil.NodeLabelInvoice:      8,
+	})
+
+	rawResponse := callGraphQL(t, "contract/get_contract_with_invoices",
+		map[string]interface{}{"contractId": contractId})
+
+	var contractStruct struct {
+		Contract model.Contract
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &contractStruct)
+	require.Nil(t, err)
+
+	contract := contractStruct.Contract
+	require.NotNil(t, contract)
+
+	require.Equal(t, 2, len(contract.Invoices))
+	require.Equal(t, invoiceIdPaid, contract.Invoices[0].Metadata.ID)
+	require.Equal(t, invoiceIdVoid, contract.Invoices[1].Metadata.ID)
+
+	require.Equal(t, 2, len(contract.UpcomingInvoices))
+	require.Equal(t, invoiceIdScheduled1, contract.UpcomingInvoices[0].Metadata.ID)
+	require.Equal(t, invoiceIdScheduled2, contract.UpcomingInvoices[1].Metadata.ID)
 }
 
 func TestMutationResolver_ContractDelete(t *testing.T) {
