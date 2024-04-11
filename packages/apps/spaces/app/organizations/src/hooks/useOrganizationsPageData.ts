@@ -253,7 +253,7 @@ export const useOrganizationsPageData = ({
           preset === 'portfolio' ? !!globalCache?.global_Cache?.user.id : true,
         placeholderData: initialData
           ? {
-              pageParams: [0],
+              pageParams: [1],
               pages: [initialData],
             }
           : undefined,

@@ -1,7 +1,17 @@
 import { produce } from 'immer';
 
-import { Filter, ComparisonOperator } from '@graphql/types';
 import { getServerGraphQLClient } from '@shared/util/getServerGraphQLClient';
+import {
+  Filter,
+  SortBy,
+  SortingDirection,
+  ComparisonOperator,
+} from '@graphql/types';
+import {
+  GlobalCacheQuery,
+  GlobalCacheDocument,
+  GlobalCacheQueryVariables,
+} from '@shared/graphql/global_Cache.generated';
 import {
   GetOrganizationsQuery,
   GetOrganizationsDocument,
@@ -15,10 +25,56 @@ import { OrganizationsTable } from './src/components/OrganizationsTable';
 export default async function OrganizationsPage({
   searchParams,
 }: {
-  searchParams: { searchTerm?: string };
+  searchParams: { preset?: string; searchTerm?: string };
 }) {
   const client = getServerGraphQLClient();
-  const { searchTerm } = searchParams;
+  const { preset, searchTerm } = searchParams;
+
+  let initialData: GetOrganizationsQuery | undefined = undefined;
+
+  try {
+    const globalCache = await client.request<
+      GlobalCacheQuery,
+      GlobalCacheQueryVariables
+    >(GlobalCacheDocument);
+    const userId = globalCache?.global_Cache?.user?.id;
+
+    const filters = createFilters({ preset, userId, searchTerm });
+
+    initialData = await client.request<
+      GetOrganizationsQuery,
+      GetOrganizationsQueryVariables
+    >(GetOrganizationsDocument, {
+      pagination: { limit: 40, page: 1 },
+      ...filters,
+    });
+  } catch (e) {
+    console.error('Failed to fetch initial Organizations data', e);
+  }
+
+  return (
+    <>
+      <Search />
+      <OrganizationsTable initialData={initialData} />
+      <KMenu />
+    </>
+  );
+}
+
+function createFilters({
+  preset,
+  userId,
+  searchTerm,
+}: {
+  userId: string;
+  preset?: string;
+  searchTerm?: string;
+}) {
+  const sort: SortBy = {
+    by: 'LAST_TOUCHPOINT',
+    direction: SortingDirection.Desc,
+    caseSensitive: false,
+  };
 
   const where = (() => {
     return produce<Filter>({ AND: [] }, (draft) => {
@@ -36,28 +92,33 @@ export default async function OrganizationsPage({
           },
         });
       }
+
+      if (preset) {
+        const [property, value] = (() => {
+          if (preset === 'customer') {
+            return ['IS_CUSTOMER', [true]];
+          }
+          if (preset === 'portfolio') {
+            return ['OWNER_ID', [userId]];
+          }
+
+          return [];
+        })();
+        if (!property || !value) return;
+        draft.AND.push({
+          filter: {
+            property,
+            value,
+            operation: ComparisonOperator.Eq,
+            includeEmpty: false,
+          },
+        });
+      }
     });
   })();
 
-  let initialData: GetOrganizationsQuery | undefined = undefined;
-
-  try {
-    initialData = await client.request<
-      GetOrganizationsQuery,
-      GetOrganizationsQueryVariables
-    >(GetOrganizationsDocument, {
-      pagination: { limit: 40, page: 1 },
-      where,
-    });
-  } catch (e) {
-    console.error('Failed to fetch initial Organizations data', e);
-  }
-
-  return (
-    <>
-      <Search />
-      <OrganizationsTable initialData={initialData} />
-      <KMenu />
-    </>
-  );
+  return {
+    where,
+    sort,
+  };
 }
