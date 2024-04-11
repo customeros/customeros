@@ -1,6 +1,6 @@
 import { produce } from 'immer';
 
-import { Filter } from '@graphql/types';
+import { Filter, SortBy, SortingDirection } from '@graphql/types';
 import { getServerGraphQLClient } from '@shared/util/getServerGraphQLClient';
 import {
   GetInvoicesQuery,
@@ -18,6 +18,40 @@ export default async function InvoicesPage({
 }) {
   const client = getServerGraphQLClient();
   const { preset, searchTerm } = searchParams;
+
+  let initialData: GetInvoicesQuery | undefined = undefined;
+
+  try {
+    const filters = createFilters({ preset, searchTerm });
+
+    initialData = await client.request<
+      GetInvoicesQuery,
+      GetInvoicesQueryVariables
+    >(GetInvoicesDocument, { pagination: { limit: 40, page: 0 }, ...filters });
+  } catch (e) {
+    console.error('Failed to fetch initial Invoices data', e);
+  }
+
+  return (
+    <>
+      <InvoicesTable initialData={initialData} />
+      <Preview />
+    </>
+  );
+}
+
+function createFilters({
+  preset,
+  searchTerm,
+}: {
+  preset?: string;
+  searchTerm?: string;
+}) {
+  const sort: SortBy = {
+    by: 'INVOICE_DUE_DATE',
+    direction: SortingDirection.Desc,
+    caseSensitive: false,
+  };
 
   const where = (() => {
     if (!preset) return undefined;
@@ -61,21 +95,5 @@ export default async function InvoicesPage({
     });
   })();
 
-  let initialData: GetInvoicesQuery | undefined = undefined;
-
-  try {
-    initialData = await client.request<
-      GetInvoicesQuery,
-      GetInvoicesQueryVariables
-    >(GetInvoicesDocument, { pagination: { limit: 40, page: 0 }, where });
-  } catch (e) {
-    console.error('Failed to fetch initial Invoices data', e);
-  }
-
-  return (
-    <>
-      <InvoicesTable initialData={initialData} />
-      <Preview />
-    </>
-  );
+  return { sort, where };
 }
