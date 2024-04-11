@@ -3,12 +3,12 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
@@ -73,7 +73,7 @@ func (s *billingProfileService) CreateBillingProfile(ctx context.Context, organi
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := CallEventsPlatformGRPCWithRetry[*organizationpb.BillingProfileIdGrpcResponse](func() (*organizationpb.BillingProfileIdGrpcResponse, error) {
+	response, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.BillingProfileIdGrpcResponse](func() (*organizationpb.BillingProfileIdGrpcResponse, error) {
 		return s.grpcClients.OrganizationClient.CreateBillingProfile(ctx, &grpcRequest)
 	})
 	if err != nil {
@@ -129,7 +129,7 @@ func (s *billingProfileService) UpdateBillingProfile(ctx context.Context, organi
 	grpcRequest.FieldsMask = fieldsMask
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = CallEventsPlatformGRPCWithRetry[*organizationpb.BillingProfileIdGrpcResponse](func() (*organizationpb.BillingProfileIdGrpcResponse, error) {
+	_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.BillingProfileIdGrpcResponse](func() (*organizationpb.BillingProfileIdGrpcResponse, error) {
 		return s.grpcClients.OrganizationClient.UpdateBillingProfile(ctx, &grpcRequest)
 	})
 	if err != nil {
@@ -181,7 +181,7 @@ func (s *billingProfileService) LinkEmailToBillingProfile(ctx context.Context, o
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = CallEventsPlatformGRPCWithRetry[*organizationpb.BillingProfileIdGrpcResponse](func() (*organizationpb.BillingProfileIdGrpcResponse, error) {
+	_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.BillingProfileIdGrpcResponse](func() (*organizationpb.BillingProfileIdGrpcResponse, error) {
 		return s.grpcClients.OrganizationClient.LinkEmailToBillingProfile(ctx, &grpcRequest)
 	})
 	if err != nil {
@@ -232,7 +232,7 @@ func (s *billingProfileService) UnlinkEmailFromBillingProfile(ctx context.Contex
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = CallEventsPlatformGRPCWithRetry[*organizationpb.BillingProfileIdGrpcResponse](func() (*organizationpb.BillingProfileIdGrpcResponse, error) {
+	_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.BillingProfileIdGrpcResponse](func() (*organizationpb.BillingProfileIdGrpcResponse, error) {
 		return s.grpcClients.OrganizationClient.UnlinkEmailFromBillingProfile(ctx, &grpcRequest)
 	})
 	if err != nil {
@@ -283,7 +283,7 @@ func (s *billingProfileService) LinkLocationToBillingProfile(ctx context.Context
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = CallEventsPlatformGRPCWithRetry[*organizationpb.BillingProfileIdGrpcResponse](func() (*organizationpb.BillingProfileIdGrpcResponse, error) {
+	_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.BillingProfileIdGrpcResponse](func() (*organizationpb.BillingProfileIdGrpcResponse, error) {
 		return s.grpcClients.OrganizationClient.LinkLocationToBillingProfile(ctx, &grpcRequest)
 	})
 	if err != nil {
@@ -334,7 +334,7 @@ func (s *billingProfileService) UnlinkLocationFromBillingProfile(ctx context.Con
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = CallEventsPlatformGRPCWithRetry[*organizationpb.BillingProfileIdGrpcResponse](func() (*organizationpb.BillingProfileIdGrpcResponse, error) {
+	_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.BillingProfileIdGrpcResponse](func() (*organizationpb.BillingProfileIdGrpcResponse, error) {
 		return s.grpcClients.OrganizationClient.UnlinkLocationFromBillingProfile(ctx, &grpcRequest)
 	})
 	if err != nil {

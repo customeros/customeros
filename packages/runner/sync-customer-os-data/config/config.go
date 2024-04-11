@@ -4,6 +4,7 @@ import (
 	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
+	commconf "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"log"
 )
@@ -41,6 +42,8 @@ type Config struct {
 		TimeoutAfterTaskRun int `env:"TIMEOUT_AFTER_TASK_RUN_SEC" envDefault:"60"`
 		BatchSize           int `env:"SYNC_CUSTOMER_OS_DATA_BATCH_SIZE" envDefault:"10"`
 	}
+
+	GrpcClientConfig commconf.GrpcClientConfig
 	SyncToEventStore struct {
 		BatchSize           int  `env:"SYNC_TO_EVENT_STORE_BATCH_SIZE" envDefault:"100"`
 		Enabled             bool `env:"SYNC_TO_EVENT_STORE_ENABLED" envDefault:"false"`
@@ -70,11 +73,8 @@ type Config struct {
 	Logger           logger.Config
 	PostgresLogLevel string `env:"POSTGRES_LOG_LEVEL" envDefault:"WARN"`
 	Service          struct {
-		EventsProcessingPlatformEnabled bool   `env:"EVENTS_PROCESSING_PLATFORM_ENABLED" envDefault:"false"`
-		EventsProcessingPlatformUrl     string `env:"EVENTS_PROCESSING_PLATFORM_URL"`
-		EventsProcessingPlatformApiKey  string `env:"EVENTS_PROCESSING_PLATFORM_API_KEY"`
-		CustomerOsWebhooksAPI           string `env:"CUSTOMER_OS_WEBHOOKS_API,required"`
-		CustomerOsWebhooksAPIKey        string `env:"CUSTOMER_OS_WEBHOOKS_API_KEY,required"`
+		CustomerOsWebhooksAPI    string `env:"CUSTOMER_OS_WEBHOOKS_API,required"`
+		CustomerOsWebhooksAPIKey string `env:"CUSTOMER_OS_WEBHOOKS_API_KEY,required"`
 	}
 	Jaeger tracing.Config
 }

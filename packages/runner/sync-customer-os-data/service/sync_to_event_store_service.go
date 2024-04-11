@@ -2,9 +2,9 @@ package service
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"

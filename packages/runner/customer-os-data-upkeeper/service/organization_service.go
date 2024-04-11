@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/constants"
-	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/events_processing_client"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/repository"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/opentracing/opentracing-go/log"
 	"net/http"
@@ -23,10 +24,10 @@ type organizationService struct {
 	cfg                    *config.Config
 	log                    logger.Logger
 	repositories           *repository.Repositories
-	eventsProcessingClient *events_processing_client.Client
+	eventsProcessingClient *grpc_client.Clients
 }
 
-func NewOrganizationService(cfg *config.Config, log logger.Logger, repositories *repository.Repositories, client *events_processing_client.Client) OrganizationService {
+func NewOrganizationService(cfg *config.Config, log logger.Logger, repositories *repository.Repositories, client *grpc_client.Clients) OrganizationService {
 	return &organizationService{
 		cfg:                    cfg,
 		log:                    log,
@@ -66,7 +67,7 @@ func (s *organizationService) webScrapeOrganizations(ctx context.Context) {
 
 	// web scrape organizations
 	for _, record := range records {
-		_, err = CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+		_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
 			return s.eventsProcessingClient.OrganizationClient.WebScrapeOrganization(ctx, &organizationpb.WebScrapeOrganizationGrpcRequest{
 				Tenant:         record.Tenant,
 				OrganizationId: record.OrganizationId,

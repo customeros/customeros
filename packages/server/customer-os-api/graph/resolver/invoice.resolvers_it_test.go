@@ -797,7 +797,7 @@ func TestMutationResolver_InvoiceUpdate(t *testing.T) {
 			require.Equal(t, tenantName, invoice.Tenant)
 			require.Equal(t, invoiceId, invoice.InvoiceId)
 			require.Equal(t, testUserId, invoice.LoggedInUserId)
-			require.Equal(t, "customer-os-api", invoice.AppSource)
+			require.Equal(t, constants.AppSourceCustomerOsApi, invoice.AppSource)
 			require.Equal(t, invoicepb.InvoiceStatus_INVOICE_STATUS_PAID, invoice.Status)
 			require.Equal(t, 1, len(invoice.FieldsMask))
 			require.ElementsMatch(t, []invoicepb.InvoiceFieldMask{invoicepb.InvoiceFieldMask_INVOICE_FIELD_STATUS},
@@ -846,7 +846,7 @@ func TestMutationResolver_InvoicePay(t *testing.T) {
 			require.Equal(t, tenantName, invoice.Tenant)
 			require.Equal(t, invoiceId, invoice.InvoiceId)
 			require.Equal(t, testUserId, invoice.LoggedInUserId)
-			require.Equal(t, "customer-os-api", invoice.AppSource)
+			require.Equal(t, constants.AppSourceCustomerOsApi, invoice.AppSource)
 			require.Equal(t, invoicepb.InvoiceStatus_INVOICE_STATUS_PAID, invoice.Status)
 			require.ElementsMatch(t, []invoicepb.InvoiceFieldMask{invoicepb.InvoiceFieldMask_INVOICE_FIELD_STATUS}, invoice.FieldsMask)
 
@@ -892,7 +892,7 @@ func TestMutationResolver_InvoiceVoid(t *testing.T) {
 			require.Equal(t, tenantName, invoice.Tenant)
 			require.Equal(t, invoiceId, invoice.InvoiceId)
 			require.Equal(t, testUserId, invoice.LoggedInUserId)
-			require.Equal(t, "customer-os-api", invoice.AppSource)
+			require.Equal(t, constants.AppSourceCustomerOsApi, invoice.AppSource)
 
 			calledVoidInvoice = true
 			return &invoicepb.InvoiceIdResponse{

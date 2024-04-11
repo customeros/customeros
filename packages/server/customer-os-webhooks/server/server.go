@@ -9,6 +9,7 @@ import (
 	commonAuthService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/service"
 	commoncaches "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	commonconf "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -16,7 +17,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/route"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/service"
 	"github.com/opentracing/opentracing-go"
@@ -67,18 +67,18 @@ func (server *server) Run(parentCtx context.Context) error {
 	}
 	defer neo4jDriver.Close(ctx)
 
-	// Setting up Postgres repositories
-	commonServices := commonservice.InitServices(postgresDb.GormDB, &neo4jDriver, server.cfg.Neo4j.Database)
-	commonAuthServices := commonAuthService.InitServices(nil, commonServices, postgresDb.GormDB)
-
 	// Setting up gRPC client
-	df := grpc_client.NewDialFactory(server.cfg)
+	df := grpc_client.NewDialFactory(&server.cfg.GrpcClientConfig)
 	gRPCconn, err := df.GetEventsProcessingPlatformConn()
 	if err != nil {
 		server.log.Fatalf("Failed to connect: %v", err)
 	}
 	defer df.Close(gRPCconn)
 	grpcContainer := grpc_client.InitClients(gRPCconn)
+
+	// Setting up Postgres repositories
+	commonServices := commonservice.InitServices(postgresDb.GormDB, &neo4jDriver, server.cfg.Neo4j.Database, grpcContainer)
+	commonAuthServices := commonAuthService.InitServices(nil, commonServices, postgresDb.GormDB)
 
 	// Setting up Gin
 	r := gin.Default()

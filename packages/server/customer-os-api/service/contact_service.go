@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
@@ -151,7 +151,7 @@ func (s *contactService) createContactWithEvents(ctx context.Context, contactDet
 		}
 	}
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
+	response, err := utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
 		return s.grpcClients.ContactClient.UpsertContact(ctx, &upsertContactRequest)
 	})
 
@@ -171,7 +171,7 @@ func (s *contactService) linkEmailByEvents(ctx context.Context, contactId, appSo
 	}
 	if emailId != "" {
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
+		_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
 			return s.grpcClients.ContactClient.LinkEmailToContact(ctx, &contactpb.LinkEmailToContactGrpcRequest{
 				Tenant:         common.GetTenantFromContext(ctx),
 				LoggedInUserId: common.GetUserIdFromContext(ctx),
@@ -200,7 +200,7 @@ func (s *contactService) linkPhoneNumberByEvents(ctx context.Context, contactId,
 	}
 	if phoneNumberId != "" {
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
+		_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
 			return s.grpcClients.ContactClient.LinkPhoneNumberToContact(ctx, &contactpb.LinkPhoneNumberToContactGrpcRequest{
 				Tenant:         common.GetTenantFromContext(ctx),
 				LoggedInUserId: common.GetUserIdFromContext(ctx),
@@ -285,7 +285,7 @@ func (s *contactService) Update(ctx context.Context, input model.ContactUpdateIn
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
+	response, err := utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
 		return s.grpcClients.ContactClient.UpsertContact(ctx, &upsertContactRequest)
 	})
 	if err != nil {
@@ -464,7 +464,7 @@ func (s *contactService) GetContactsForOrganization(ctx context.Context, organiz
 func (s *contactService) Merge(ctx context.Context, primaryContactId, mergedContactId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.Merge")
 	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("primaryContactId", primaryContactId), log.String("mergedContactId", mergedContactId))
 
 	session := utils.NewNeo4jWriteSession(ctx, *s.repositories.Drivers.Neo4jDriver)
@@ -626,7 +626,7 @@ func (s *contactService) CustomerContactCreate(ctx context.Context, data *Custom
 	contextWithTimeout, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
+	response, err := utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
 		return s.grpcClients.ContactClient.UpsertContact(contextWithTimeout, contactCreateRequest)
 	})
 	if err != nil {
@@ -648,7 +648,7 @@ func (s *contactService) CustomerContactCreate(ctx context.Context, data *Custom
 		if data.ContactEntity.CreatedAt != nil {
 			emailCreate.CreatedAt = timestamppb.New(*data.ContactEntity.CreatedAt)
 		}
-		emailId, err := CallEventsPlatformGRPCWithRetry[*emailpb.EmailIdGrpcResponse](func() (*emailpb.EmailIdGrpcResponse, error) {
+		emailId, err := utils.CallEventsPlatformGRPCWithRetry[*emailpb.EmailIdGrpcResponse](func() (*emailpb.EmailIdGrpcResponse, error) {
 			return s.grpcClients.EmailClient.UpsertEmail(contextWithTimeout, emailCreate)
 		})
 		if err != nil {
@@ -659,7 +659,7 @@ func (s *contactService) CustomerContactCreate(ctx context.Context, data *Custom
 		result.Email = &model.CustomerEmail{
 			ID: emailId.Id,
 		}
-		_, err = CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
+		_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
 			return s.grpcClients.ContactClient.LinkEmailToContact(contextWithTimeout, &contactpb.LinkEmailToContactGrpcRequest{
 				Primary:   data.EmailEntity.Primary,
 				Label:     data.EmailEntity.Label,

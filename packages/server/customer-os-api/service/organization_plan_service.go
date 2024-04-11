@@ -6,13 +6,13 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
@@ -71,7 +71,7 @@ func (s *organizationPlanService) CreateOrganizationPlan(ctx context.Context, na
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := CallEventsPlatformGRPCWithRetry[*orgplanpb.OrganizationPlanIdGrpcResponse](func() (*orgplanpb.OrganizationPlanIdGrpcResponse, error) {
+	response, err := utils.CallEventsPlatformGRPCWithRetry[*orgplanpb.OrganizationPlanIdGrpcResponse](func() (*orgplanpb.OrganizationPlanIdGrpcResponse, error) {
 		return s.grpcClients.OrganizationPlanClient.CreateOrganizationPlan(ctx, &grpcRequest)
 	})
 	if err != nil {
@@ -135,7 +135,7 @@ func (s *organizationPlanService) UpdateOrganizationPlan(ctx context.Context, or
 	grpcRequest.FieldsMask = fieldsMask
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = CallEventsPlatformGRPCWithRetry[*orgplanpb.OrganizationPlanIdGrpcResponse](func() (*orgplanpb.OrganizationPlanIdGrpcResponse, error) {
+	_, err = utils.CallEventsPlatformGRPCWithRetry[*orgplanpb.OrganizationPlanIdGrpcResponse](func() (*orgplanpb.OrganizationPlanIdGrpcResponse, error) {
 		return s.grpcClients.OrganizationPlanClient.UpdateOrganizationPlan(ctx, &grpcRequest)
 	})
 	if err != nil {
@@ -207,7 +207,7 @@ func (s *organizationPlanService) CreateOrganizationPlanMilestone(ctx context.Co
 	tracing.LogObjectAsJson(span, "CreateOrganizationPlanMilestoneGrpcRequest", &grpcRequest)
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := CallEventsPlatformGRPCWithRetry[*orgplanpb.OrganizationPlanMilestoneIdGrpcResponse](func() (*orgplanpb.OrganizationPlanMilestoneIdGrpcResponse, error) {
+	response, err := utils.CallEventsPlatformGRPCWithRetry[*orgplanpb.OrganizationPlanMilestoneIdGrpcResponse](func() (*orgplanpb.OrganizationPlanMilestoneIdGrpcResponse, error) {
 		return s.grpcClients.OrganizationPlanClient.CreateOrganizationPlanMilestone(ctx, &grpcRequest)
 	})
 	if err != nil {
@@ -348,7 +348,7 @@ func (s *organizationPlanService) UpdateOrganizationPlanMilestone(ctx context.Co
 	grpcRequest.FieldsMask = fieldsMask
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = CallEventsPlatformGRPCWithRetry[*orgplanpb.OrganizationPlanMilestoneIdGrpcResponse](func() (*orgplanpb.OrganizationPlanMilestoneIdGrpcResponse, error) {
+	_, err = utils.CallEventsPlatformGRPCWithRetry[*orgplanpb.OrganizationPlanMilestoneIdGrpcResponse](func() (*orgplanpb.OrganizationPlanMilestoneIdGrpcResponse, error) {
 		return s.grpcClients.OrganizationPlanClient.UpdateOrganizationPlanMilestone(ctx, &grpcRequest)
 	})
 	if err != nil {
@@ -385,7 +385,7 @@ func (s *organizationPlanService) ReorderOrganizationPlanMilestones(ctx context.
 		OrgId:                        orgId,
 	}
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = CallEventsPlatformGRPCWithRetry[*orgplanpb.OrganizationPlanIdGrpcResponse](func() (*orgplanpb.OrganizationPlanIdGrpcResponse, error) {
+	_, err = utils.CallEventsPlatformGRPCWithRetry[*orgplanpb.OrganizationPlanIdGrpcResponse](func() (*orgplanpb.OrganizationPlanIdGrpcResponse, error) {
 		return s.grpcClients.OrganizationPlanClient.ReorderOrganizationPlanMilestones(ctx, &grpcRequest)
 	})
 	if err != nil {
@@ -440,7 +440,7 @@ func (s *organizationPlanService) DuplicateOrganizationPlanMilestone(ctx context
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := CallEventsPlatformGRPCWithRetry[*orgplanpb.OrganizationPlanMilestoneIdGrpcResponse](func() (*orgplanpb.OrganizationPlanMilestoneIdGrpcResponse, error) {
+	response, err := utils.CallEventsPlatformGRPCWithRetry[*orgplanpb.OrganizationPlanMilestoneIdGrpcResponse](func() (*orgplanpb.OrganizationPlanMilestoneIdGrpcResponse, error) {
 		return s.grpcClients.OrganizationPlanClient.CreateOrganizationPlanMilestone(ctx, &grpcRequest)
 	})
 	if err != nil {
@@ -487,7 +487,7 @@ func (s *organizationPlanService) DuplicateOrganizationPlan(ctx context.Context,
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := CallEventsPlatformGRPCWithRetry[*orgplanpb.OrganizationPlanIdGrpcResponse](func() (*orgplanpb.OrganizationPlanIdGrpcResponse, error) {
+	response, err := utils.CallEventsPlatformGRPCWithRetry[*orgplanpb.OrganizationPlanIdGrpcResponse](func() (*orgplanpb.OrganizationPlanIdGrpcResponse, error) {
 		return s.grpcClients.OrganizationPlanClient.CreateOrganizationPlan(ctx, &grpcRequest)
 	})
 	if err != nil {
@@ -519,7 +519,7 @@ func (s *organizationPlanService) DuplicateOrganizationPlan(ctx context.Context,
 				},
 				OrgId: orgId,
 			}
-			_, err = CallEventsPlatformGRPCWithRetry[*orgplanpb.OrganizationPlanMilestoneIdGrpcResponse](func() (*orgplanpb.OrganizationPlanMilestoneIdGrpcResponse, error) {
+			_, err = utils.CallEventsPlatformGRPCWithRetry[*orgplanpb.OrganizationPlanMilestoneIdGrpcResponse](func() (*orgplanpb.OrganizationPlanMilestoneIdGrpcResponse, error) {
 				return s.grpcClients.OrganizationPlanClient.CreateOrganizationPlanMilestone(ctx, &grpcRequestCreateMilestone)
 			})
 			if err != nil {

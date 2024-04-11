@@ -4,9 +4,9 @@ WORKDIR /app
 COPY customer-os-common-module/. ./customer-os-common-module/
 COPY customer-os-common-auth/. ./customer-os-common-auth/
 COPY customer-os-common-ai/. ./customer-os-common-ai/
-COPY events-processing-proto/. ./events-processing-proto/
 COPY customer-os-neo4j-repository/. ./customer-os-neo4j-repository/
 COPY customer-os-postgres-repository/. ./customer-os-postgres-repository/
+COPY events-processing-proto/. ./events-processing-proto/
 COPY events-processing-platform/. ./events-processing-platform
 COPY events-processing-platform-subscribers/. ./events-processing-platform-subscribers
 

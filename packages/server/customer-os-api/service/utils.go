@@ -3,15 +3,13 @@ package service
 import (
 	"fmt"
 	"github.com/cenkalti/backoff/v4"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"time"
 )
 
@@ -53,21 +51,4 @@ func WaitForNodeDeletedFromNeo4j(ctx context.Context, repositories *repository.R
 	} else {
 		span.LogFields(log.Bool("result.deleted", true))
 	}
-}
-
-func CallEventsPlatformGRPCWithRetry[T any](operation func() (T, error)) (T, error) {
-	operationWithData := func() (T, error) {
-		result, opErr := operation()
-		if opErr != nil {
-			grpcError, ok := status.FromError(opErr)
-			if ok && (grpcError.Code() == codes.Unavailable || grpcError.Code() == codes.DeadlineExceeded) {
-				return result, opErr
-			}
-			return result, backoff.Permanent(opErr)
-		}
-		return result, nil
-	}
-
-	response, err := backoff.RetryWithData(operationWithData, utils.BackOffForInvokingEventsPlatformGrpcClient())
-	return response, err
 }

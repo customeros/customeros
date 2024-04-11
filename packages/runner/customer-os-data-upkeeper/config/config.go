@@ -16,19 +16,13 @@ type Config struct {
 	Logger           logger.Config
 	Jaeger           tracing.JaegerConfig
 	Cron             cronconf.Config
-	EventsProcessing EventsProcessingConfig
+	GrpcClientConfig commconf.GrpcClientConfig
 	PlatformAdminApi struct {
 		Url    string `env:"PLATFORM_ADMIN_API_URL"`
 		ApiKey string `env:"PLATFORM_ADMIN_API_KEY"`
 	}
 	ProcessConfig      ProcessConfig
 	EventNotifications EventNotifications
-}
-
-type EventsProcessingConfig struct {
-	EventsProcessingPlatformEnabled bool   `env:"EVENTS_PROCESSING_PLATFORM_ENABLED" envDefault:"true"`
-	EventsProcessingPlatformUrl     string `env:"EVENTS_PROCESSING_PLATFORM_URL"`
-	EventsProcessingPlatformApiKey  string `env:"EVENTS_PROCESSING_PLATFORM_API_KEY"`
 }
 
 type ProcessConfig struct {

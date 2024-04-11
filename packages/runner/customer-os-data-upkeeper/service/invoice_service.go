@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/constants"
-	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/events_processing_client"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/repository"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
@@ -44,10 +44,10 @@ type invoiceService struct {
 	cfg                    *config.Config
 	log                    logger.Logger
 	repositories           *repository.Repositories
-	eventsProcessingClient *events_processing_client.Client
+	eventsProcessingClient *grpc_client.Clients
 }
 
-func NewInvoiceService(cfg *config.Config, log logger.Logger, repositories *repository.Repositories, client *events_processing_client.Client) InvoiceService {
+func NewInvoiceService(cfg *config.Config, log logger.Logger, repositories *repository.Repositories, client *grpc_client.Clients) InvoiceService {
 	return &invoiceService{
 		cfg:                    cfg,
 		log:                    log,
@@ -145,7 +145,7 @@ func (s *invoiceService) GenerateCycleInvoices() {
 				case neo4jenum.BillingCycleAnnuallyBilling:
 					newInvoiceRequest.BillingCycle = commonpb.BillingCycle_ANNUALLY_BILLING
 				}
-				_, err = CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
+				_, err = utils.CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
 					return s.eventsProcessingClient.InvoiceClient.NewInvoiceForContract(ctx, &newInvoiceRequest)
 				})
 				if err != nil {
@@ -155,7 +155,7 @@ func (s *invoiceService) GenerateCycleInvoices() {
 
 				if !dryRun && err == nil {
 					nextInvoiceDate := utils.ToPtr(invoicePeriodEnd.AddDate(0, 0, 1))
-					_, err = CallEventsPlatformGRPCWithRetry[*contractpb.ContractIdGrpcResponse](func() (*contractpb.ContractIdGrpcResponse, error) {
+					_, err = utils.CallEventsPlatformGRPCWithRetry[*contractpb.ContractIdGrpcResponse](func() (*contractpb.ContractIdGrpcResponse, error) {
 						return s.eventsProcessingClient.ContractClient.UpdateContract(ctx, &contractpb.UpdateContractGrpcRequest{
 							Tenant: tenant,
 							Id:     contract.Id,

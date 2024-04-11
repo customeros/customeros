@@ -3,14 +3,14 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
@@ -53,7 +53,7 @@ func NewTenantService(log logger.Logger, repository *repository.Repositories, gr
 func (s *tenantService) Merge(ctx context.Context, tenantEntity neo4jentity.TenantEntity) (*neo4jentity.TenantEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantService.Merge")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 	for {
 		existNode, err := s.repositories.Neo4jRepositories.TenantReadRepository.GetTenantByName(ctx, tenantEntity.Name)
 		if err != nil {
@@ -77,7 +77,7 @@ func (s *tenantService) Merge(ctx context.Context, tenantEntity neo4jentity.Tena
 func (s *tenantService) GetTenantForWorkspace(ctx context.Context, workspaceEntity entity.WorkspaceEntity) (*neo4jentity.TenantEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantService.GetTenantForWorkspace")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("workspace", workspaceEntity))
 
 	tenant, err := s.repositories.Neo4jRepositories.TenantReadRepository.GetTenantForWorkspaceProvider(ctx, workspaceEntity.Name, workspaceEntity.Provider)
@@ -92,7 +92,7 @@ func (s *tenantService) GetTenantForWorkspace(ctx context.Context, workspaceEnti
 func (s *tenantService) GetTenantForUserEmail(ctx context.Context, email string) (*neo4jentity.TenantEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantService.GetTenantForUserEmail")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("email", email))
 
 	tenant, err := s.repositories.Neo4jRepositories.TenantReadRepository.GetTenantForUserEmail(ctx, email)
@@ -107,7 +107,7 @@ func (s *tenantService) GetTenantForUserEmail(ctx context.Context, email string)
 func (s *tenantService) GetTenantBillingProfiles(ctx context.Context) (*neo4jentity.TenantBillingProfileEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantService.GetTenantBillingProfiles")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	dbNodes, err := s.repositories.Neo4jRepositories.TenantReadRepository.GetTenantBillingProfiles(ctx, common.GetTenantFromContext(ctx))
 	if err != nil {
@@ -126,7 +126,7 @@ func (s *tenantService) GetTenantBillingProfiles(ctx context.Context) (*neo4jent
 func (s *tenantService) GetTenantBillingProfile(ctx context.Context, id string) (*neo4jentity.TenantBillingProfileEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantService.GetTenantBillingProfile")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("id", id))
 
 	dbNode, err := s.repositories.Neo4jRepositories.TenantReadRepository.GetTenantBillingProfileById(ctx, common.GetTenantFromContext(ctx), id)
@@ -169,7 +169,7 @@ func (s *tenantService) CreateTenantBillingProfile(ctx context.Context, input mo
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := CallEventsPlatformGRPCWithRetry[*commonpb.IdResponse](func() (*commonpb.IdResponse, error) {
+	response, err := utils.CallEventsPlatformGRPCWithRetry[*commonpb.IdResponse](func() (*commonpb.IdResponse, error) {
 		return s.grpcClients.TenantClient.AddBillingProfile(ctx, &grpcRequest)
 	})
 	if err != nil {
@@ -281,7 +281,7 @@ func (s *tenantService) UpdateTenantBillingProfile(ctx context.Context, input mo
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := CallEventsPlatformGRPCWithRetry[*commonpb.IdResponse](func() (*commonpb.IdResponse, error) {
+	_, err := utils.CallEventsPlatformGRPCWithRetry[*commonpb.IdResponse](func() (*commonpb.IdResponse, error) {
 		return s.grpcClients.TenantClient.UpdateBillingProfile(ctx, &updateRequest)
 	})
 	if err != nil {
@@ -296,7 +296,7 @@ func (s *tenantService) UpdateTenantBillingProfile(ctx context.Context, input mo
 func (s *tenantService) GetTenantSettings(ctx context.Context) (*neo4jentity.TenantSettingsEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantService.GetTenantSettings")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	dbNode, err := s.repositories.Neo4jRepositories.TenantReadRepository.GetTenantSettings(ctx, common.GetTenantFromContext(ctx))
 	if err != nil {
@@ -342,7 +342,7 @@ func (s *tenantService) UpdateTenantSettings(ctx context.Context, input *model.T
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := CallEventsPlatformGRPCWithRetry[*emptypb.Empty](func() (*emptypb.Empty, error) {
+	_, err := utils.CallEventsPlatformGRPCWithRetry[*emptypb.Empty](func() (*emptypb.Empty, error) {
 		return s.grpcClients.TenantClient.UpdateTenantSettings(ctx, &updateRequest)
 	})
 	if err != nil {
@@ -357,7 +357,7 @@ func (s *tenantService) UpdateTenantSettings(ctx context.Context, input *model.T
 func (s *tenantService) GetDefaultTenantBillingProfile(ctx context.Context) (*neo4jentity.TenantBillingProfileEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantService.GetDefaultTenantBillingProfile")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	tenantBillingProfiles, err := s.GetTenantBillingProfiles(ctx)
 	if err != nil {

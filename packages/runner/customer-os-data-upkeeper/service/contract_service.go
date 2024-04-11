@@ -4,10 +4,10 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/constants"
-	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/events_processing_client"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/repository"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
@@ -27,10 +27,10 @@ type contractService struct {
 	cfg                    *config.Config
 	log                    logger.Logger
 	repositories           *repository.Repositories
-	eventsProcessingClient *events_processing_client.Client
+	eventsProcessingClient *grpc_client.Clients
 }
 
-func NewContractService(cfg *config.Config, log logger.Logger, repositories *repository.Repositories, client *events_processing_client.Client) ContractService {
+func NewContractService(cfg *config.Config, log logger.Logger, repositories *repository.Repositories, client *grpc_client.Clients) ContractService {
 	return &contractService{
 		cfg:                    cfg,
 		log:                    log,
@@ -83,7 +83,7 @@ func (s *contractService) updateContractStatuses(ctx context.Context, referenceT
 
 		//process contracts
 		for _, record := range records {
-			_, err = CallEventsPlatformGRPCWithRetry[*contractpb.ContractIdGrpcResponse](func() (*contractpb.ContractIdGrpcResponse, error) {
+			_, err = utils.CallEventsPlatformGRPCWithRetry[*contractpb.ContractIdGrpcResponse](func() (*contractpb.ContractIdGrpcResponse, error) {
 				return s.eventsProcessingClient.ContractClient.RefreshContractStatus(ctx, &contractpb.RefreshContractStatusGrpcRequest{
 					Tenant:    record.Tenant,
 					Id:        record.ContractId,
@@ -138,7 +138,7 @@ func (s *contractService) rolloutContractRenewals(ctx context.Context, reference
 
 		//process contracts
 		for _, record := range records {
-			_, err = CallEventsPlatformGRPCWithRetry[*contractpb.ContractIdGrpcResponse](func() (*contractpb.ContractIdGrpcResponse, error) {
+			_, err = utils.CallEventsPlatformGRPCWithRetry[*contractpb.ContractIdGrpcResponse](func() (*contractpb.ContractIdGrpcResponse, error) {
 				return s.eventsProcessingClient.ContractClient.RolloutRenewalOpportunityOnExpiration(ctx, &contractpb.RolloutRenewalOpportunityOnExpirationGrpcRequest{
 					Tenant:    record.Tenant,
 					Id:        record.ContractId,
@@ -193,7 +193,7 @@ func (s *contractService) closeActiveRenewalOpportunitiesForEndedContracts(ctx c
 
 		//process renewal opportunities
 		for _, record := range records {
-			_, err = CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
+			_, err = utils.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
 				return s.eventsProcessingClient.OpportunityClient.CloseLooseOpportunity(ctx, &opportunitypb.CloseLooseOpportunityGrpcRequest{
 					Tenant:    record.Tenant,
 					Id:        record.OpportunityId,
@@ -258,7 +258,7 @@ func (s *contractService) ResyncContract(ctx context.Context, tenant, contractId
 		request.BillingCycle = commonpb.BillingCycle_NONE_BILLING
 	}
 
-	_, err = CallEventsPlatformGRPCWithRetry[*contractpb.ContractIdGrpcResponse](func() (*contractpb.ContractIdGrpcResponse, error) {
+	_, err = utils.CallEventsPlatformGRPCWithRetry[*contractpb.ContractIdGrpcResponse](func() (*contractpb.ContractIdGrpcResponse, error) {
 		return s.eventsProcessingClient.ContractClient.UpdateContract(ctx, &request)
 	})
 	if err != nil {

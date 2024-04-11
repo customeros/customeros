@@ -22,14 +22,11 @@ type Config struct {
 	Admin struct {
 		Key string `env:"ADMIN_KEY,required"`
 	}
-	Service struct {
-		EventsProcessingPlatformUrl    string `env:"EVENTS_PROCESSING_PLATFORM_URL" validate:"required"`
-		EventsProcessingPlatformApiKey string `env:"EVENTS_PROCESSING_PLATFORM_API_KEY" validate:"required"`
-	}
-	Postgres config.PostgresConfig
-	Neo4j    config.Neo4jConfig
-	Jaeger   tracing.JaegerConfig
-	Metrics  metrics.Config
+	GrpcClientConfig config.GrpcClientConfig
+	Postgres         config.PostgresConfig
+	Neo4j            config.Neo4jConfig
+	Jaeger           tracing.JaegerConfig
+	Metrics          metrics.Config
 }
 
 func InitConfig() (*Config, error) {

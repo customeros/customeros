@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	validator "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/eventbuffer"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstoredb"
@@ -16,7 +17,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
@@ -112,20 +112,20 @@ func (server *Server) Start(parentCtx context.Context) error {
 
 	server.AggregateStore = store.NewAggregateStore(server.Log, esdb)
 
-	server.Services = service.InitServices(server.Config, server.Repositories, server.Log)
-
-	eventBufferWatcher := eventbuffer.NewEventBufferWatcher(server.Repositories.PostgresRepositories.EventBufferRepository, server.Log, server.AggregateStore)
-	eventBufferWatcher.Start(ctx)
-	defer eventBufferWatcher.Stop()
-
 	// Setting up gRPC client
-	df := grpc_client.NewDialFactory(server.Config)
+	df := grpc_client.NewDialFactory(&server.Config.GrpcClientConfig)
 	gRPCconn, err := df.GetEventsProcessingPlatformConn()
 	if err != nil {
 		server.Log.Fatalf("Failed to connect: %v", err)
 	}
 	defer df.Close(gRPCconn)
-	grpcClients := grpc_client.InitGrpcClients(gRPCconn)
+	grpcClients := grpc_client.InitClients(gRPCconn)
+
+	server.Services = service.InitServices(server.Config, server.Repositories, server.Log, grpcClients)
+
+	eventBufferWatcher := eventbuffer.NewEventBufferWatcher(server.Repositories.PostgresRepositories.EventBufferRepository, server.Log, server.AggregateStore)
+	eventBufferWatcher.Start(ctx)
+	defer eventBufferWatcher.Stop()
 
 	InitSubscribers(server, ctx, grpcClients, esdb, cancel, server.Services)
 

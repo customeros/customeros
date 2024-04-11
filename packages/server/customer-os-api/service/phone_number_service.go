@@ -4,13 +4,13 @@ import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
@@ -67,7 +67,7 @@ func (s *phoneNumberService) CreatePhoneNumberByEvents(ctx context.Context, phon
 	if phoneNumberEntity == nil {
 		// phone number not exist, create new one
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		response, err := CallEventsPlatformGRPCWithRetry[*phonenumpb.PhoneNumberIdGrpcResponse](func() (*phonenumpb.PhoneNumberIdGrpcResponse, error) {
+		response, err := utils.CallEventsPlatformGRPCWithRetry[*phonenumpb.PhoneNumberIdGrpcResponse](func() (*phonenumpb.PhoneNumberIdGrpcResponse, error) {
 			return s.grpcClients.PhoneNumberClient.UpsertPhoneNumber(ctx, &phonenumpb.UpsertPhoneNumberGrpcRequest{
 				Tenant:      common.GetTenantFromContext(ctx),
 				PhoneNumber: phoneNumber,

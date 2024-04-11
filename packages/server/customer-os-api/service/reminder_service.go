@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
@@ -66,7 +66,7 @@ func (s *reminderService) CreateReminder(ctx context.Context, userId, orgId, con
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := CallEventsPlatformGRPCWithRetry[*reminderpb.ReminderGrpcResponse](func() (*reminderpb.ReminderGrpcResponse, error) {
+	response, err := utils.CallEventsPlatformGRPCWithRetry[*reminderpb.ReminderGrpcResponse](func() (*reminderpb.ReminderGrpcResponse, error) {
 		return s.grpcClients.ReminderClient.CreateReminder(ctx, grpcRequest)
 	})
 	if err != nil {
@@ -117,7 +117,7 @@ func (s *reminderService) UpdateReminder(ctx context.Context, id string, content
 	grpcRequest.FieldsMask = fieldsMask
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := CallEventsPlatformGRPCWithRetry[*reminderpb.ReminderGrpcResponse](func() (*reminderpb.ReminderGrpcResponse, error) {
+	_, err := utils.CallEventsPlatformGRPCWithRetry[*reminderpb.ReminderGrpcResponse](func() (*reminderpb.ReminderGrpcResponse, error) {
 		return s.grpcClients.ReminderClient.UpdateReminder(ctx, grpcRequest)
 	})
 	if err != nil {

@@ -3,9 +3,9 @@ package handler
 import (
 	"context"
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 )
 
 func GetRoleChecker() func(ctx context.Context, obj interface{}, next graphql.Resolver, roles []model.Role) (res interface{}, err error) {
@@ -14,7 +14,7 @@ func GetRoleChecker() func(ctx context.Context, obj interface{}, next graphql.Re
 		// Check if the current role is in the list of allowed roles
 		for _, allowedRole := range roles {
 			for _, currentRole := range currentRoles {
-				if currentRole == allowedRole {
+				if currentRole == allowedRole.String() {
 					// If the role is in the list of allowed roles, call the next resolver
 					return next(ctx)
 				}

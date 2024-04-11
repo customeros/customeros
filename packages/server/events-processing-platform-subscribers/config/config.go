@@ -15,20 +15,14 @@ type Config struct {
 	ServiceName        string `env:"SERVICE_NAME" envDefault:"events-processing-platform"`
 	Logger             logger.Config
 	EventStoreConfig   eventstoredb.EventStoreConfig
+	GrpcClientConfig   config.GrpcClientConfig
 	Neo4j              config.Neo4jConfig
 	Postgres           config.PostgresConfig
 	Jaeger             tracing.JaegerConfig
-	GRPC               GRPC
 	Subscriptions      Subscriptions
 	Services           Services
 	EventNotifications EventNotifications
 	Temporal           config.TemporalConfig
-}
-
-type GRPC struct {
-	Port        string `env:"GRPC_PORT" envDefault:":5001" validate:"required"`
-	Development bool   `env:"GRPC_DEVELOPMENT" envDefault:"false"`
-	ApiKey      string `env:"GRPC_API_KEY" validate:"required"`
 }
 
 type Subscriptions struct {

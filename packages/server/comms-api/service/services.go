@@ -30,7 +30,7 @@ func InitServices(graphqlClient *graphql.Client, redisClient *redis.Client, cfg 
 		CustomerOsService:    cosService,
 		RedisService:         NewRedisService(redisClient, cfg),
 		FileStoreApiService:  fsc.NewFileStoreApiService(&cfg.FileStoreApiConfig),
-		CommonServices:       commonService.InitServices(db.GormDB, nil, ""),
+		CommonServices:       commonService.InitServices(db.GormDB, nil, "", nil),
 	}
 
 	services.MailService = NewMailService(cfg, &services)

@@ -3,13 +3,12 @@ package tracing
 import (
 	"context"
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/log"
-	"google.golang.org/grpc/metadata"
 	"net/http"
 )
 
@@ -90,37 +89,6 @@ func SetDefaultResolverSpanTags(ctx context.Context, span opentracing.Span) {
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentResolver)
 }
 
-func SetDefaultServiceSpanTags(ctx context.Context, span opentracing.Span) {
-	setDefaultSpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
-}
-
-func SetDefaultNeo4jRepositorySpanTags(ctx context.Context, span opentracing.Span) {
-	setDefaultSpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
-}
-
 func LogObjectAsJson(span opentracing.Span, name string, object any) {
 	tracing.LogObjectAsJson(span, name, object)
-}
-
-func InjectSpanContextIntoGrpcMetadata(ctx context.Context, span opentracing.Span) context.Context {
-	if span != nil {
-		// Inject the span context into the gRPC request metadata.
-		textMapCarrier := make(opentracing.TextMapCarrier)
-		err := span.Tracer().Inject(span.Context(), opentracing.TextMap, textMapCarrier)
-		if err == nil {
-			// Add the injected metadata to the gRPC context.
-			md, ok := metadata.FromOutgoingContext(ctx)
-			if !ok {
-				md = metadata.New(nil)
-			}
-			for key, val := range textMapCarrier {
-				md.Set(key, val)
-			}
-			ctx = metadata.NewOutgoingContext(ctx, md)
-			return ctx
-		}
-	}
-	return ctx
 }

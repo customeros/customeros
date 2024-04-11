@@ -2,6 +2,7 @@ package dataloader
 
 import (
 	"context"
+	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"net/http"
 	"time"
 
@@ -202,7 +203,7 @@ type masterPlanBatcher struct {
 	masterPlanService service.MasterPlanService
 }
 type invoiceBatcher struct {
-	invoiceService service.InvoiceService
+	invoiceService commonservice.InvoiceService
 }
 
 type organizationPlanBatcher struct {
@@ -312,7 +313,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		masterPlanService: services.MasterPlanService,
 	}
 	invoiceBatcher := &invoiceBatcher{
-		invoiceService: services.InvoiceService,
+		invoiceService: services.CommonServices.InvoiceService,
 	}
 	organizationPlanBatcher := &organizationPlanBatcher{
 		organizationPlanService: services.OrganizationPlanService,

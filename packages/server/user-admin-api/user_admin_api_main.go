@@ -4,8 +4,8 @@ import (
 	"context"
 	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/routes"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/service"
@@ -41,7 +41,7 @@ func main() {
 	defer neo4jDriver.Close(ctx)
 
 	// Setting up gRPC client
-	df := grpc_client.NewDialFactory(cfg)
+	df := grpc_client.NewDialFactory(&cfg.GrpcClientConfig)
 	gRPCconn, err := df.GetEventsProcessingPlatformConn()
 	if err != nil {
 		panic(err)
