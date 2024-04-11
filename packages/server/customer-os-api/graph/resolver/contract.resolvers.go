@@ -18,8 +18,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"sort"
 )
 
 // ContractLineItems is the resolver for the contractLineItems field.
@@ -116,23 +118,26 @@ func (r *contractResolver) Invoices(ctx context.Context, obj *model.Contract) ([
 	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	invoiceEntities, err := dataloader.For(ctx).GetInvoicesForContract(ctx, obj.Metadata.ID)
-
-	nonDryRunInvoiceEntities := make(neo4jentity.InvoiceEntities, 0)
-	if invoiceEntities != nil {
-		for _, invoice := range *invoiceEntities {
-			if !invoice.DryRun {
-				nonDryRunInvoiceEntities = append(nonDryRunInvoiceEntities, invoice)
-			}
-		}
-	}
-
 	if err != nil {
 		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("failed to get invoices for contract %s: %s", obj.Metadata.ID, err.Error())
 		graphql.AddErrorf(ctx, "failed to get invoices for contract %s", obj.Metadata.ID)
 		return nil, nil
 	}
-	return mapper.MapEntitiesToInvoices(&nonDryRunInvoiceEntities), nil
+
+	filteredInvoiceEntities := neo4jentity.InvoiceEntities{}
+	if invoiceEntities != nil {
+		for _, invoice := range *invoiceEntities {
+			if !invoice.DryRun && invoice.Status != neo4jenum.InvoiceStatusInitialized {
+				filteredInvoiceEntities = append(filteredInvoiceEntities, invoice)
+			}
+		}
+	}
+	sort.Slice(filteredInvoiceEntities, func(i, j int) bool {
+		return filteredInvoiceEntities[i].IssuedDate.After(filteredInvoiceEntities[j].IssuedDate)
+	})
+
+	return mapper.MapEntitiesToInvoices(&filteredInvoiceEntities), nil
 }
 
 // UpcomingInvoices is the resolver for the upcomingInvoices field.
@@ -140,22 +145,25 @@ func (r *contractResolver) UpcomingInvoices(ctx context.Context, obj *model.Cont
 	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	invoiceEntities, err := dataloader.For(ctx).GetInvoicesForContract(ctx, obj.Metadata.ID)
-
-	upcomingInvoiceEntities := make(neo4jentity.InvoiceEntities, 0)
-	if invoiceEntities != nil {
-		for _, invoice := range *invoiceEntities {
-			if invoice.DryRun && invoice.Preview && !invoice.IssuedDate.Before(utils.Today()) {
-				upcomingInvoiceEntities = append(upcomingInvoiceEntities, invoice)
-			}
-		}
-	}
-
 	if err != nil {
 		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("failed to get upcoming invoices for contract %s: %s", obj.Metadata.ID, err.Error())
 		graphql.AddErrorf(ctx, "failed to get upcoming invoices for contract %s", obj.Metadata.ID)
 		return nil, nil
 	}
+
+	upcomingInvoiceEntities := neo4jentity.InvoiceEntities{}
+	if invoiceEntities != nil {
+		for _, invoice := range *invoiceEntities {
+			if invoice.DryRun && invoice.Preview && !invoice.IssuedDate.Before(utils.Today()) && invoice.Status != neo4jenum.InvoiceStatusInitialized {
+				upcomingInvoiceEntities = append(upcomingInvoiceEntities, invoice)
+			}
+		}
+	}
+	sort.Slice(upcomingInvoiceEntities, func(i, j int) bool {
+		return upcomingInvoiceEntities[i].IssuedDate.Before(upcomingInvoiceEntities[j].IssuedDate)
+	})
+
 	return mapper.MapEntitiesToInvoices(&upcomingInvoiceEntities), nil
 }
 

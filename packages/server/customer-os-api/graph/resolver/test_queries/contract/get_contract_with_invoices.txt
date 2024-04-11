@@ -1,0 +1,17 @@
+query GetContract($contractId: ID!) {
+  contract(id: $contractId) {
+    id
+    invoices {
+      metadata {
+        id
+      }
+      status
+    }
+    upcomingInvoices {
+      metadata {
+        id
+      }
+      status
+    }
+  }
+}
