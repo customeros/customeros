@@ -4,16 +4,13 @@ import { useForm } from 'react-inverted-form';
 
 import { UseMutationResult } from '@tanstack/react-query';
 
-import { Box } from '@ui/layout/Box';
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
-import { ModalBody } from '@ui/overlay/Modal';
+import { cn } from '@ui/utils/cn';
 import { FeaturedIcon } from '@ui/media/Icon';
 import { Button } from '@ui/form/Button/Button';
-import { Heading } from '@ui/typography/Heading';
 import { XSquare } from '@ui/media/icons/XSquare';
 import { DateTimeUtils } from '@spaces/utils/date';
-import { Radio, RadioGroup } from '@ui/form/Radio';
+import { ModalBody } from '@ui/overlay/Modal/Modal';
+import { Radio, RadioGroup } from '@ui/form/Radio/Radio2';
 import { Exact, ContractUpdateInput } from '@graphql/types';
 import { DatePickerUnderline } from '@ui/form/DatePicker/DatePickerUnderline';
 import { GetContractsQuery } from '@organization/src/graphql/getContracts.generated';
@@ -142,53 +139,48 @@ export const ContractEndModal = ({
           <FeaturedIcon size='lg' colorScheme='error'>
             <XSquare color='error.600' />
           </FeaturedIcon>
-          <Heading fontSize='lg' mt='4'>
-            End {organizationName}’s contract?
-          </Heading>
+          <h2 className='text-lg mt-4'>End {organizationName}’s contract?</h2>
         </ModalHeader>
-        <ModalBody as={Flex} flexDir='column' gap={4}>
-          <Text>
+        <ModalBody className='flex flex-col gap-4'>
+          <p className='text-base'>
             Ending this contract{' '}
-            <Text fontWeight='medium' as='span' mr={1}>
-              will close the renewal
-            </Text>
+            <span className='font-medium mr-1'>will close the renewal</span>
             and set the
-            <Text fontWeight='medium' as='span' ml={1}>
-              ARR to zero.
-            </Text>
-          </Text>
-          <Text>Let’s end it:</Text>
+            <span className='font-medium ml-1'>ARR to zero.</span>
+          </p>
+          <p className='text-sm'>Let’s end it:</p>
 
           <RadioGroup
             value={value}
-            onChange={handleChangeEndsOnOption}
-            flexDir='column'
-            display='flex'
+            onValueChange={handleChangeEndsOnOption}
+            className='flex flex-col'
           >
-            <Radio value={EndContract.Now} colorScheme='primary'>
-              Now
-            </Radio>
+            <Radio value={EndContract.Now}>Now</Radio>
 
             <Radio
               value={EndContract.EndOfCurrentBillingPeriod}
-              colorScheme='primary'
-              display={timeToNextInvoice ? 'flex' : 'none'}
+              className={cn({
+                flex: timeToNextInvoice,
+                none: !timeToNextInvoice,
+              })}
             >
               End of current billing period, {timeToNextInvoice}
             </Radio>
 
             <Radio
               value={EndContract.EndOfCurrentRenewalPeriod}
-              colorScheme='primary'
-              display={renewsAt ? 'flex' : 'none'}
+              className={cn({
+                flex: renewsAt,
+                none: !renewsAt,
+              })}
             >
               End of renewal, {timeToRenewal}
             </Radio>
-            <Radio value={EndContract.CustomDate} colorScheme='primary' h={6}>
-              <Flex alignItems='center' maxH={6}>
+            <Radio value={EndContract.CustomDate} className='h-6'>
+              <div className='flex items-center max-h-6'>
                 On{' '}
                 {value === EndContract.CustomDate ? (
-                  <Box ml={1}>
+                  <div className='ml-1'>
                     <DatePickerUnderline
                       placeholder='End date'
                       defaultOpen={true}
@@ -198,11 +190,11 @@ export const ContractEndModal = ({
                       calendarIconHidden
                       value={state.values.endedAt}
                     />
-                  </Box>
+                  </div>
                 ) : (
                   'custom date'
                 )}
-              </Flex>
+              </div>
             </Radio>
           </RadioGroup>
         </ModalBody>
