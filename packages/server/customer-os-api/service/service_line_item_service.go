@@ -378,37 +378,49 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 		}
 	}
 
-	serviceLineItemUpdateRequest := servicelineitempb.UpdateServiceLineItemGrpcRequest{
-		Tenant:                  common.GetTenantFromContext(ctx),
-		Id:                      serviceLineItemDetails.Id,
-		LoggedInUserId:          common.GetUserIdFromContext(ctx),
-		Name:                    serviceLineItemDetails.SliName,
-		Quantity:                serviceLineItemDetails.SliQuantity,
-		Price:                   serviceLineItemDetails.SliPrice,
-		Comments:                serviceLineItemDetails.SliComments,
-		IsRetroactiveCorrection: isRetroactiveCorrection,
-		VatRate:                 serviceLineItemDetails.SliVatRate,
-		SourceFields: &commonpb.SourceFields{
-			Source:    string(serviceLineItemDetails.Source),
-			AppSource: utils.StringFirstNonEmpty(serviceLineItemDetails.AppSource, constants.AppSourceCustomerOsApi),
-		},
-	}
-	switch serviceLineItemDetails.SliBilledType {
-	case neo4jenum.BilledTypeMonthly:
-		serviceLineItemUpdateRequest.Billed = commonpb.BilledType_MONTHLY_BILLED
-	case neo4jenum.BilledTypeQuarterly:
-		serviceLineItemUpdateRequest.Billed = commonpb.BilledType_QUARTERLY_BILLED
-	case neo4jenum.BilledTypeAnnually:
-		serviceLineItemUpdateRequest.Billed = commonpb.BilledType_ANNUALLY_BILLED
-	case neo4jenum.BilledTypeOnce:
-		serviceLineItemUpdateRequest.Billed = commonpb.BilledType_ONCE_BILLED
-	case neo4jenum.BilledTypeUsage:
-		serviceLineItemUpdateRequest.Billed = commonpb.BilledType_USAGE_BILLED
-	default:
-		serviceLineItemUpdateRequest.Billed = commonpb.BilledType_NONE_BILLED
-	}
-	// set contract id if it's not a retroactive correction
-	if !isRetroactiveCorrection {
+	if isRetroactiveCorrection {
+		serviceLineItemUpdateRequest := servicelineitempb.UpdateServiceLineItemGrpcRequest{
+			Tenant:         common.GetTenantFromContext(ctx),
+			Id:             serviceLineItemDetails.Id,
+			LoggedInUserId: common.GetUserIdFromContext(ctx),
+			Name:           serviceLineItemDetails.SliName,
+			Quantity:       serviceLineItemDetails.SliQuantity,
+			Price:          serviceLineItemDetails.SliPrice,
+			Comments:       serviceLineItemDetails.SliComments,
+			VatRate:        serviceLineItemDetails.SliVatRate,
+			SourceFields: &commonpb.SourceFields{
+				Source:    string(serviceLineItemDetails.Source),
+				AppSource: utils.StringFirstNonEmpty(serviceLineItemDetails.AppSource, constants.AppSourceCustomerOsApi),
+			},
+		}
+		switch serviceLineItemDetails.SliBilledType {
+		case neo4jenum.BilledTypeMonthly:
+			serviceLineItemUpdateRequest.Billed = commonpb.BilledType_MONTHLY_BILLED
+		case neo4jenum.BilledTypeQuarterly:
+			serviceLineItemUpdateRequest.Billed = commonpb.BilledType_QUARTERLY_BILLED
+		case neo4jenum.BilledTypeAnnually:
+			serviceLineItemUpdateRequest.Billed = commonpb.BilledType_ANNUALLY_BILLED
+		case neo4jenum.BilledTypeOnce:
+			serviceLineItemUpdateRequest.Billed = commonpb.BilledType_ONCE_BILLED
+		case neo4jenum.BilledTypeUsage:
+			serviceLineItemUpdateRequest.Billed = commonpb.BilledType_USAGE_BILLED
+		default:
+			serviceLineItemUpdateRequest.Billed = commonpb.BilledType_NONE_BILLED
+		}
+		// TODO to be reworked
+		if serviceLineItemEntity.ParentID == serviceLineItemEntity.ID {
+			serviceLineItemUpdateRequest.StartedAt = utils.ConvertTimeToTimestampPtr(serviceLineItemDetails.StartedAt)
+		}
+		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+		_, err = CallEventsPlatformGRPCWithRetry[*servicelineitempb.ServiceLineItemIdGrpcResponse](func() (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
+			return s.grpcClients.ServiceLineItemClient.UpdateServiceLineItem(ctx, &serviceLineItemUpdateRequest)
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error from events processing: %s", err.Error())
+			return err
+		}
+	} else {
 		contractDbNode, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractByServiceLineItemId(ctx, common.GetTenantFromContext(ctx), serviceLineItemDetails.Id)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -421,24 +433,48 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 			s.log.Errorf(err.Error())
 			return err
 		}
-		serviceLineItemUpdateRequest.ContractId = utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*contractDbNode), "id")
-		serviceLineItemUpdateRequest.ParentId = serviceLineItemEntity.ParentID
-		serviceLineItemUpdateRequest.StartedAt = utils.ConvertTimeToTimestampPtr(serviceLineItemDetails.StartedAt)
-	}
+		contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
 
-	// allow setting startedAt if it's a single or first service line item
-	if isRetroactiveCorrection && serviceLineItemEntity.ParentID == serviceLineItemEntity.ID {
-		serviceLineItemUpdateRequest.StartedAt = utils.ConvertTimeToTimestampPtr(serviceLineItemDetails.StartedAt)
-	}
+		createServiceLineItemRequest := servicelineitempb.CreateServiceLineItemGrpcRequest{
+			Tenant:         common.GetTenantFromContext(ctx),
+			LoggedInUserId: common.GetUserIdFromContext(ctx),
+			ContractId:     contractEntity.Id,
+			ParentId:       serviceLineItemEntity.ParentID,
+			Name:           utils.StringFirstNonEmpty(serviceLineItemDetails.SliName, serviceLineItemEntity.Name),
+			Quantity:       serviceLineItemDetails.SliQuantity,
+			Price:          serviceLineItemDetails.SliPrice,
+			VatRate:        serviceLineItemDetails.SliVatRate,
+			Comments:       utils.IfNotNilString(serviceLineItemDetails.SliComments),
+			StartedAt:      utils.ConvertTimeToTimestampPtr(serviceLineItemDetails.StartedAt),
+			SourceFields: &commonpb.SourceFields{
+				Source:    serviceLineItemDetails.Source.String(),
+				AppSource: utils.StringFirstNonEmpty(serviceLineItemDetails.AppSource, constants.AppSourceCustomerOsApi),
+			},
+		}
 
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = CallEventsPlatformGRPCWithRetry[*servicelineitempb.ServiceLineItemIdGrpcResponse](func() (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
-		return s.grpcClients.ServiceLineItemClient.UpdateServiceLineItem(ctx, &serviceLineItemUpdateRequest)
-	})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("Error from events processing: %s", err.Error())
-		return err
+		switch serviceLineItemEntity.Billed {
+		case neo4jenum.BilledTypeMonthly:
+			createServiceLineItemRequest.Billed = commonpb.BilledType_MONTHLY_BILLED
+		case neo4jenum.BilledTypeQuarterly:
+			createServiceLineItemRequest.Billed = commonpb.BilledType_QUARTERLY_BILLED
+		case neo4jenum.BilledTypeAnnually:
+			createServiceLineItemRequest.Billed = commonpb.BilledType_ANNUALLY_BILLED
+		case neo4jenum.BilledTypeOnce:
+			createServiceLineItemRequest.Billed = commonpb.BilledType_ONCE_BILLED
+		case neo4jenum.BilledTypeUsage:
+			createServiceLineItemRequest.Billed = commonpb.BilledType_USAGE_BILLED
+		default:
+			createServiceLineItemRequest.Billed = commonpb.BilledType_NONE_BILLED
+		}
+
+		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+		_, err = CallEventsPlatformGRPCWithRetry[*servicelineitempb.ServiceLineItemIdGrpcResponse](func() (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
+			return s.grpcClients.ServiceLineItemClient.CreateServiceLineItem(ctx, &createServiceLineItemRequest)
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
 	}
 
 	if !bulk {
