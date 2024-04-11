@@ -7,7 +7,6 @@ interface EmailParticipantSelect {
   formId: string;
   entryType: string;
   fieldName: string;
-  isMulti?: boolean;
   autofocus: boolean;
   placeholder?: string;
 }
@@ -18,10 +17,7 @@ export const EmailSelect: FC<EmailParticipantSelect> = ({
   formId,
   autofocus = false,
   placeholder = 'Enter email',
-  isMulti,
 }) => {
-  console.log('🏷️ ----- fieldName: ', fieldName);
-
   return (
     <div>
       <label className='font-semibold text-sm'>{entryType}</label>
