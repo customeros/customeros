@@ -104,6 +104,7 @@ func TestMutationResolver_ServiceLineItemUpdate(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 
 	now := utils.Now()
+	baseSliId := uuid.New().String()
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
@@ -113,10 +114,15 @@ func TestMutationResolver_ServiceLineItemUpdate(t *testing.T) {
 		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
 		InvoicingStartDate: &now,
 	})
-	serviceLineItemIdParentId := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{Name: "service"})
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
+		Name:     "service",
+		ID:       baseSliId,
+		ParentID: baseSliId,
+		Billed:   neo4jenum.BilledTypeMonthly,
+	})
 
 	//Using serviceLineItemIdParentId as the parent id
-	serviceLineItemId := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{Name: "service", ParentID: serviceLineItemIdParentId})
+	serviceLineItemId := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{Name: "service", ParentID: baseSliId})
 
 	//mock grpc
 	calledUpdateServiceLineItem := false
@@ -170,7 +176,7 @@ func TestMutationResolver_ServiceLineItemUpdate(t *testing.T) {
 	require.Nil(t, err)
 	serviceLineItem := serviceLineItemStruct.ContractLineItem_Update
 	require.Equal(t, serviceLineItemId, serviceLineItem.Metadata.ID)
-	require.Equal(t, serviceLineItemIdParentId, serviceLineItem.ParentID)
+	require.Equal(t, baseSliId, serviceLineItem.ParentID)
 	require.True(t, calledUpdateServiceLineItem)
 	require.True(t, calledNextPreviewInvoiceForContractRequest)
 }
