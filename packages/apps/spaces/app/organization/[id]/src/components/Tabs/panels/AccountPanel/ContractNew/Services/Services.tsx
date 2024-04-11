@@ -28,7 +28,7 @@ export const Services: React.FC<Props> = ({ data, currency, onModalOpen }) => {
             onClick={() => {
               onModalOpen();
             }}
-            icon={<Plus boxSize='4' color='gray.400' />}
+            icon={<Plus boxSize='4' className='text-gray-400' />}
           />
         )}
       </p>

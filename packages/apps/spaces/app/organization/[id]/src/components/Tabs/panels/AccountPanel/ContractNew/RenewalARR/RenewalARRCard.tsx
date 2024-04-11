@@ -27,10 +27,7 @@ import { useUpdateOpportunityRenewalMutation } from '@organization/src/graphql/u
 import { useUpdateRenewalDetailsContext } from '@organization/src/components/Tabs/panels/AccountPanel/context/AccountModalsContext';
 import { RenewalDetailsModal } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/RenewalARR/RenewalDetailsModal';
 
-import {
-  getRenewalLikelihoodColor,
-  getRenewalLikelihoodLabel,
-} from '../../utils';
+import { getRenewalLikelihoodLabel } from '../../utils';
 
 interface RenewalARRCardProps {
   hasEnded: boolean;
@@ -216,9 +213,17 @@ export const RenewalARRCard = ({
                     <>
                       Likelihood{' '}
                       <span
-                        className={`capitalize font-medium text-${getRenewalLikelihoodColor(
-                          opportunity.renewalLikelihood as OpportunityRenewalLikelihood,
-                        )}.500`}
+                        className={cn(`capitalize font-medium text-gray-500`, {
+                          'text-success-500':
+                            opportunity?.renewalLikelihood ===
+                            OpportunityRenewalLikelihood.HighRenewal,
+                          'text-error-500':
+                            opportunity?.renewalLikelihood ===
+                            OpportunityRenewalLikelihood.LowRenewal,
+                          'text-warning-500':
+                            opportunity?.renewalLikelihood ===
+                            OpportunityRenewalLikelihood.MediumRenewal,
+                        })}
                       >
                         {getRenewalLikelihoodLabel(
                           opportunity?.renewalLikelihood as OpportunityRenewalLikelihood,

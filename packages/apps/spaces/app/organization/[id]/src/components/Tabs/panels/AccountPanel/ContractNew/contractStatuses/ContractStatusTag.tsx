@@ -35,7 +35,6 @@ export const ContractStatusTag: React.FC<ContractStatusSelectProps> = ({
       <Tag
         className='flex items-center gap-1 whitespace-nowrap mx-0'
         colorScheme={statusColorScheme[status] as 'primary'}
-        color={`${statusColorScheme[status]}.700`}
       >
         <TagLeftIcon>{icon}</TagLeftIcon>
 
