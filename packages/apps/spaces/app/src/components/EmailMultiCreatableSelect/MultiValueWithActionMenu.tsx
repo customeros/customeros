@@ -6,6 +6,7 @@ import { useLocalStorage } from 'usehooks-ts';
 import { MultiValueProps } from 'chakra-react-select';
 import { useQueryClient } from '@tanstack/react-query';
 
+import { cn } from '@ui/utils/cn';
 import { SelectOption } from '@ui/utils';
 import { Input } from '@ui/form/Input/Input2';
 import { Edit03 } from '@ui/media/icons/Edit03';
@@ -143,7 +144,8 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
       <Tooltip label={validationMessage ? validationMessage : ''}>
         <Input
           autoFocus
-          className='w-auto inline text-warning-700 h-8'
+          size='xs'
+          className='w-auto inline text-warning-700 h-8 text-sm'
           variant='unstyled'
           onBlur={(e) => {
             handleChangeValue(e);
@@ -165,6 +167,7 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
       <Tooltip label={validationMessage ? validationMessage : ''}>
         <MenuButton
           onClick={() => {}}
+          className='text-sm'
           sx={{
             '&[aria-expanded="false"] > span > span': {
               bg: isContactWithoutEmail
@@ -190,26 +193,22 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
             },
           }}
         >
-          <chakraComponents.MultiValue {...rest}>
+          <chakraComponents.MultiValue
+            {...rest}
+            className={cn('text-sm', {
+              'text-warning-700': isContactWithoutEmail,
+              'bg-warning-50': isContactWithoutEmail,
+              'border-warning-200': isContactWithoutEmail,
+            })}
+          >
             {rest.children}
           </chakraComponents.MultiValue>
         </MenuButton>
       </Tooltip>
 
-      <ChakraMenuList maxW={300} p={2}>
+      <ChakraMenuList className='max-w=[300px] p-2'>
         <MenuItem
-          display='flex'
-          borderRadius='md'
-          border='1px solid'
-          borderColor='transparent'
-          _hover={{
-            bg: 'gray.50',
-            borderColor: 'gray.100',
-          }}
-          _focus={{
-            borderColor: 'gray.200',
-          }}
-          justifyContent='space-between'
+          className=' flex justify-between items-center rounded-md border border-transparent hover:bg-gray-50 hover:border-gray-100 focus:border-gray-200'
           onClick={(e) => {
             e.stopPropagation();
             setEditInput(true);
@@ -220,18 +219,7 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
         </MenuItem>
         {rest?.data?.value ? (
           <MenuItem
-            display='flex'
-            borderRadius='md'
-            border='1px solid'
-            borderColor='transparent'
-            _hover={{
-              bg: 'gray.50',
-              borderColor: 'gray.100',
-            }}
-            _focus={{
-              borderColor: 'gray.200',
-            }}
-            justifyContent='space-between'
+            className=' flex justify-between items-center rounded-md border border-transparent hover:bg-gray-50 hover:border-gray-100 focus:border-gray-200'
             onClick={(e) => {
               e.stopPropagation();
               copyToClipboard(rest?.data?.value, 'Email copied');
@@ -242,16 +230,7 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
           </MenuItem>
         ) : (
           <MenuItem
-            borderRadius='md'
-            border='1px solid'
-            borderColor='transparent'
-            _hover={{
-              bg: 'gray.50',
-              borderColor: 'gray.100',
-            }}
-            _focus={{
-              borderColor: 'gray.200',
-            }}
+            className='rounded-md border border-transparent hover:bg-gray-50 hover:border-gray-100 focus:border-gray-200'
             onClick={() =>
               isContactInOrg &&
               handleNavigateToContact(isContactInOrg.id, 'email')
@@ -262,16 +241,7 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
         )}
 
         <MenuItem
-          borderRadius='md'
-          border='1px solid'
-          borderColor='transparent'
-          _hover={{
-            bg: 'gray.50',
-            borderColor: 'gray.100',
-          }}
-          _focus={{
-            borderColor: 'gray.200',
-          }}
+          className='rounded-md border border-transparent hover:bg-gray-50 hover:border-gray-100 focus:border-gray-200'
           onClick={() => {
             const newValue = (
               (rest?.selectProps?.value as Array<SelectOption>) ?? []
@@ -284,16 +254,7 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
         {!isContactInOrg && (
           <MenuItem
             onClick={handleAddContact}
-            borderRadius='md'
-            border='1px solid'
-            borderColor='transparent'
-            _hover={{
-              bg: 'gray.50',
-              borderColor: 'gray.100',
-            }}
-            _focus={{
-              borderColor: 'gray.200',
-            }}
+            className='rounded-md border border-transparent hover:bg-gray-50 hover:border-gray-100 focus:border-gray-200'
           >
             Add to people
           </MenuItem>

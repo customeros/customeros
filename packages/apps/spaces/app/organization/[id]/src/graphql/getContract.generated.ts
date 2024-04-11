@@ -36,9 +36,13 @@ export type GetContractQuery = {
     contractUrl?: string | null;
     billingEnabled: boolean;
     organizationLegalName?: string | null;
+    committedPeriodInMonths?: any | null;
     currency?: Types.Currency | null;
     contractName: string;
+    contractEnded?: any | null;
+    serviceStarted?: any | null;
     autoRenew: boolean;
+    metadata: { __typename?: 'Metadata'; id: string };
     attachments?: Array<{
       __typename?: 'Attachment';
       id: string;
@@ -47,6 +51,7 @@ export type GetContractQuery = {
     }> | null;
     billingDetails?: {
       __typename?: 'BillingDetails';
+      billingCycle?: Types.ContractBillingCycle | null;
       addressLine1?: string | null;
       addressLine2?: string | null;
       locality?: string | null;
@@ -64,6 +69,7 @@ export type GetContractQuery = {
       payOnline?: boolean | null;
       dueDays?: any | null;
       billingEmailCC?: Array<string> | null;
+      check?: boolean | null;
       billingEmailBCC?: Array<string> | null;
     } | null;
   };
@@ -72,12 +78,18 @@ export type GetContractQuery = {
 export const GetContractDocument = `
     query getContract($id: ID!) {
   contract(id: $id) {
+    metadata {
+      id
+    }
     id
     contractUrl
     billingEnabled
     organizationLegalName
+    committedPeriodInMonths
     currency
     contractName
+    contractEnded
+    serviceStarted
     autoRenew
     attachments {
       id
@@ -85,6 +97,7 @@ export const GetContractDocument = `
       fileName
     }
     billingDetails {
+      billingCycle
       addressLine1
       addressLine2
       locality
@@ -105,6 +118,7 @@ export const GetContractDocument = `
       dueDays
       billingEmail
       billingEmailCC
+      check
       billingEmailBCC
     }
   }

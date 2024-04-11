@@ -2,15 +2,15 @@ import { Currency } from '@graphql/types';
 
 export const currencyOptions = [
   {
-    label: 'Euro - EUR',
+    label: 'EUR',
     value: Currency.Eur,
   },
   {
-    label: 'Pound sterling - GBP',
+    label: 'GBP',
     value: Currency.Gbp,
   },
   {
-    label: 'United States dollar - USD',
+    label: 'USD',
     value: Currency.Usd,
   },
 ];

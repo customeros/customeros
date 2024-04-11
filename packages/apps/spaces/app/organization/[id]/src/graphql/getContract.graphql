@@ -1,11 +1,17 @@
 query getContract($id: ID!) {
   contract(id: $id) {
+    metadata {
+        id
+    }
     id
     contractUrl
     billingEnabled
     organizationLegalName
+    committedPeriodInMonths
     currency
     contractName
+    contractEnded
+    serviceStarted
     autoRenew
     attachments {
       id
@@ -13,6 +19,7 @@ query getContract($id: ID!) {
       fileName
     }
     billingDetails {
+      billingCycle
       addressLine1
       addressLine2
       locality
@@ -33,6 +40,7 @@ query getContract($id: ID!) {
       dueDays
       billingEmail
       billingEmailCC
+      check
       billingEmailBCC
     }
   }

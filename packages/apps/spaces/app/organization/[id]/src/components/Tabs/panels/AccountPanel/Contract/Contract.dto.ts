@@ -11,7 +11,7 @@ import {
 import {
   paymentDueOptions,
   autorenewalOptions,
-  billingFrequencyOptions,
+  contractRenewalCycle,
   contractBillingCycleOptions,
 } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 
@@ -50,7 +50,7 @@ export class ContractDTO implements TimeToRenewalForm {
 
   constructor(data?: Contract | null) {
     this.contractRenewalCycle =
-      [...billingFrequencyOptions].find(({ value }) =>
+      [...contractRenewalCycle].find(({ value }) =>
         (data?.committedPeriods ?? 0) > 1
           ? value === 'MULTI_YEAR'
           : value === data?.contractRenewalCycle,

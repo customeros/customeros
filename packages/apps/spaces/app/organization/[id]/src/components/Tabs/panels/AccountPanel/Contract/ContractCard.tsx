@@ -45,7 +45,7 @@ import { ContractStatusSelect } from './contractStatuses/ContractStatusSelect';
 import {
   paymentDueOptions,
   autorenewalOptions,
-  billingFrequencyOptions,
+  contractRenewalCycle,
   contractBillingCycleOptions,
 } from '../utils';
 
@@ -475,7 +475,7 @@ export const ContractCard = ({
               isLabelVisible
               name='contractRenewalCycle'
               formId={formId}
-              options={billingFrequencyOptions}
+              options={contractRenewalCycle}
             />
             {state.values.contractRenewalCycle?.value === 'MULTI_YEAR' && (
               <FormPeriodInput

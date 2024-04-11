@@ -3,11 +3,17 @@ import React from 'react';
 import { utcToZonedTime } from 'date-fns-tz';
 
 import { Contract } from '@graphql/types';
-import { Text } from '@ui/typography/Text';
+import { Button } from '@ui/form/Button/Button';
 import { DateTimeUtils } from '@spaces/utils/date';
-import { contractRenewalCycle } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
+import { billingFrequencyOptions } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 
-export const ContractSubtitle = ({ data }: { data: Contract }) => {
+export const ContractSubtitle = ({
+  data,
+  onOpenEditModal,
+}: {
+  data: Contract;
+  onOpenEditModal: () => void;
+}) => {
   const serviceStarted = data?.serviceStarted
     ? utcToZonedTime(data?.serviceStarted, 'UTC').toUTCString()
     : null;
@@ -36,62 +42,84 @@ export const ContractSubtitle = ({ data }: { data: Contract }) => {
     ? DateTimeUtils.format(contractEnded, DateTimeUtils.dateWithAbreviatedMonth)
     : null;
 
-  const renewalPeriod = contractRenewalCycle.find(
-    (e) => e.value === data?.contractRenewalCycle,
+  const renewalPeriod = billingFrequencyOptions.find(
+    (e) => e.value === data?.billingDetails?.billingCycle,
   )?.label;
 
-  if (
-    !renewalPeriod &&
-    !hasStartedService &&
-    !serviceStartDate &&
-    data?.contractRenewalCycle
-  ) {
+  const isJustCreated =
+    DateTimeUtils.differenceInMins(
+      data.metadata.lastUpdated,
+      data.metadata.created,
+    ) === 0;
+  if (isJustCreated && !hasStartedService && !serviceStartDate) {
     return (
       <p className='font-normal shadow-none text-sm  text-gray-500 focus:text-gray-500 hover:text-gray-500 hover:no-underline focus:no-underline'>
         Contract starting...
-        <span className='underline ml-1'> Edit contract</span>
+        <Button
+          className='underline ml-1 p-0 font-normal text-sm text-gray-500 hover:text-gray-500 focus:text-gray-500'
+          variant='link'
+          size='xs'
+          onClick={onOpenEditModal}
+        >
+          Edit contract
+        </Button>
       </p>
     );
   }
-  if (!hasStartedService && !serviceStartDate && data?.contractRenewalCycle) {
+  if (
+    !hasStartedService &&
+    !serviceStartDate &&
+    data?.billingDetails?.billingCycle
+  ) {
     return (
       <p className='font-normal shadow-none text-sm  text-gray-500 focus:text-gray-500 hover:text-gray-500 hover:no-underline focus:no-underline'>
         {renewalPeriod} contract starting ...
-        <span className='underline ml-1'> Edit contract</span>
+        <Button
+          className='underline ml-1 p-0 font-normal text-sm text-gray-500 hover:text-gray-500 focus:text-gray-500'
+          variant='link'
+          size='xs'
+          onClick={onOpenEditModal}
+        >
+          Edit contract
+        </Button>
       </p>
     );
   }
-  if (!hasStartedService && serviceStartDate && data?.contractRenewalCycle) {
+  if (
+    !hasStartedService &&
+    serviceStartDate &&
+    data?.billingDetails?.billingCycle
+  ) {
     return (
-      <Text>
+      <p className='font-normal shadow-none text-sm  text-gray-500 focus:text-gray-500 hover:text-gray-500 hover:no-underline focus:no-underline'>
         {renewalPeriod} contract starting {serviceStartDate}
-      </Text>
+      </p>
     );
   }
   if (hasStartedService && endDate) {
     return (
-      <Text>
+      <p className='font-normal shadow-none text-sm  text-gray-500 focus:text-gray-500 hover:text-gray-500 hover:no-underline focus:no-underline'>
         {renewalPeriod} contract{' '}
         {contractEnded && DateTimeUtils.isFuture(contractEnded)
           ? 'ending'
           : 'ended on'}{' '}
         {endDate}
-      </Text>
+      </p>
     );
   }
   if (hasStartedService && renewalDate && data?.autoRenew) {
     return (
-      <Text>
+      <p className='font-normal shadow-none text-sm  text-gray-500 focus:text-gray-500 hover:text-gray-500 hover:no-underline focus:no-underline'>
         {renewalPeriod} contract auto-renewing {renewalDate}
-      </Text>
+      </p>
     );
   }
 
   if (hasStartedService && !data?.autoRenew) {
     return (
-      <Text>
+      <p className='font-normal shadow-none text-sm  text-gray-500 focus:text-gray-500 hover:text-gray-500 hover:no-underline focus:no-underline'>
         {renewalPeriod} contract until {renewalDate}, not auto-renewing
-      </Text>
+      </p>
     );
   }
 

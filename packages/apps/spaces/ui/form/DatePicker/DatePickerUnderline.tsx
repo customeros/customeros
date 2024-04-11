@@ -25,11 +25,10 @@ export const DatePickerUnderline: React.FC<DatePickerProps> = ({
   name,
   formId,
   placeholder,
-  value,
   defaultOpen,
 }) => {
   const { getInputProps } = useField(name, formId);
-  const { id, onChange } = getInputProps();
+  const { id, onChange, value } = getInputProps();
   const handleDateInputChange = (data?: DateInputValue) => {
     if (!data) return onChange(null);
     const date = new Date(data);
@@ -54,6 +53,10 @@ export const DatePickerUnderline: React.FC<DatePickerProps> = ({
         '& .react-date-picker__wrapper': {
           display: 'inline-flex',
         },
+
+        '& .react-date-picker__calendar': {
+          inset: `20px auto auto auto !important`,
+        },
         '& .react-date-picker': {
           height: 'unset',
           display: 'inline',
@@ -69,7 +72,7 @@ export const DatePickerUnderline: React.FC<DatePickerProps> = ({
 
             height: '1px',
             width: '100%',
-            background: 'gray.700',
+            background: 'gray.400',
             borderBottom: 'none !important',
             display: 'block',
             mt: '-2px',
@@ -87,7 +90,7 @@ export const DatePickerUnderline: React.FC<DatePickerProps> = ({
       <ReactDatePicker
         id={id}
         name={name}
-        isOpen={defaultOpen}
+        isOpen={true}
         clearIcon={() => null}
         onChange={(val) => handleDateInputChange(val as DateInputValue)}
         defaultValue={new Date()}
@@ -102,7 +105,7 @@ export const DatePickerUnderline: React.FC<DatePickerProps> = ({
         }
         calendarIcon={
           <Flex alignItems='center'>
-            <Text color={value ? 'gray.700' : 'gray.400'} role='button'>
+            <Text color={value ? 'gray.700' : 'gray.500'} role='button'>
               {value
                 ? DateTimeUtils.format(
                     (value as Date)?.toISOString(),

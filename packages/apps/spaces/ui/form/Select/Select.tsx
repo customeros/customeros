@@ -118,8 +118,8 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
         ref={ref}
         components={components}
         tabSelectsValue={false}
-        classNames={defaultClassNames}
         {...rest}
+        classNames={defaultClassNames}
       />
     );
   },
@@ -164,6 +164,12 @@ const getDefaultClassNames = ({
 export const getMultiValueClassNames = (className?: string) => {
   const defaultStyle =
     'flex items-center h-6 bg-gray-50 rounded-md pl-2 pr-1 ml-0 mr-1 mb-1 border border-gray-200';
+
+  return twMerge(defaultStyle, className);
+};
+export const getMenuListClassNames = (className?: string) => {
+  const defaultStyle =
+    'p-2 max-h-[300px] border border-gray-200 bg-white outline-offset-[2px] outline-[2px] rounded-lg shadow-lg overflow-y-auto overscroll-auto';
 
   return twMerge(defaultStyle, className);
 };
