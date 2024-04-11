@@ -305,7 +305,7 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 	}
 
 	contractInvoiced, err := s.repositories.Neo4jRepositories.ContractReadRepository.IsContractInvoiced(ctx, common.GetTenantFromContext(ctx), contractEntity.Id)
-	startedAt := utils.IfNotNilTimeWithDefault(serviceLineItemDetails.StartedAt, baseServiceLineItemEntity.StartedAt)
+	startedAt := utils.ToDate(utils.IfNotNilTimeWithDefault(serviceLineItemDetails.StartedAt, baseServiceLineItemEntity.StartedAt))
 
 	// Do not allow updating past SLIs for invoiced contracts
 	if contractInvoiced && startedAt.Before(utils.Today()) {
@@ -342,7 +342,7 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 		baseServiceLineItemEntity.VatRate == serviceLineItemDetails.SliVatRate {
 		isRetroactiveCorrection = true
 	}
-	if startedAt == *serviceLineItemDetails.StartedAt {
+	if serviceLineItemDetails.StartedAt != nil && startedAt == *serviceLineItemDetails.StartedAt {
 		isRetroactiveCorrection = true
 	}
 
