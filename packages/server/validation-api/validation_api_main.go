@@ -7,7 +7,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/config/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/dto"
@@ -55,7 +55,7 @@ func main() {
 	r.Use(cors.New(corsConfig))
 
 	r.POST("/validateAddress",
-		commonService.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, commonService.VALIDATION_API),
+		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.VALIDATION_API),
 		func(c *gin.Context) {
 			var request dto.ValidationAddressRequest
 			if err := c.BindJSON(&request); err != nil {
@@ -125,7 +125,7 @@ func main() {
 		})
 
 	r.POST("/validatePhoneNumber",
-		commonService.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, commonService.VALIDATION_API),
+		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.VALIDATION_API),
 		func(c *gin.Context) {
 			var request dto.ValidationPhoneNumberRequest
 
@@ -152,7 +152,7 @@ func main() {
 		})
 
 	r.POST("/validateEmail",
-		commonService.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, commonService.VALIDATION_API),
+		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.VALIDATION_API),
 		func(c *gin.Context) {
 			var request dto.ValidationEmailRequest
 

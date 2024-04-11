@@ -8,7 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	commoncaches "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
-	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-platform-admin-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-platform-admin-api/handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-platform-admin-api/logger"
@@ -20,8 +20,8 @@ import (
 func AddOrganizationRoutes(ctx context.Context, route *gin.Engine, services *service.Services, log logger.Logger, cache *commoncaches.Cache) {
 	route.POST("/organization/refreshLastTouchpoint",
 		handler.TracingEnhancer(ctx, "/organization/refreshLastTouchpoint"),
-		commonservice.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, commonservice.PLATFORM_ADMIN_API, commonservice.WithCache(cache)),
-		commonservice.TenantUserContextEnhancer(commonservice.USERNAME_OR_TENANT, services.CommonServices.Neo4jRepositories, commonservice.WithCache(cache)),
+		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.PLATFORM_ADMIN_API, security.WithCache(cache)),
+		security.TenantUserContextEnhancer(security.USERNAME_OR_TENANT, services.CommonServices.Neo4jRepositories, security.WithCache(cache)),
 		refreshLastTouchpointHandler(services, log))
 }
 
@@ -31,7 +31,7 @@ func refreshLastTouchpointHandler(services *service.Services, log logger.Logger)
 		defer span.Finish()
 
 		userId := ""
-		if user, ok := c.Get(commonservice.KEY_USER_ID); ok {
+		if user, ok := c.Get(security.KEY_USER_ID); ok {
 			userId = user.(string)
 		}
 

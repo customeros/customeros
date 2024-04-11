@@ -5,7 +5,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/openai-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/openai-api/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/openai-api/service"
@@ -36,7 +36,7 @@ func main() {
 	r.Use(cors.New(corsConfig))
 
 	r.POST("/ask",
-		commonService.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, commonService.OPENAI_API),
+		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.OPENAI_API),
 		func(c *gin.Context) {
 			var request dto.OpenAiApiRequest
 

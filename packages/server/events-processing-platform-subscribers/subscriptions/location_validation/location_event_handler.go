@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	common_module "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
@@ -141,8 +141,8 @@ func (h *LocationEventHandler) OnLocationCreate(ctx context.Context, evt eventst
 		return h.sendLocationFailedValidationEvent(ctx, tenant, locationId, rawAddress, country, err.Error())
 	}
 	// Set the request headers
-	req.Header.Set(common_module.ApiKeyHeader, h.cfg.Services.ValidationApiKey)
-	req.Header.Set(common_module.TenantHeader, tenant)
+	req.Header.Set(security.ApiKeyHeader, h.cfg.Services.ValidationApiKey)
+	req.Header.Set(security.TenantHeader, tenant)
 
 	// Make the HTTP request
 	client := &http.Client{}
