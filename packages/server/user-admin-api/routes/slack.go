@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/repository/postgres/entity"
-	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/service"
 	"github.com/sirupsen/logrus"
@@ -16,13 +16,13 @@ import (
 )
 
 func addSlackRoutes(rg *gin.RouterGroup, config *config.Config, services *service.Services) {
-	rg.GET("/slack/requestAccess", commonService.TenantUserContextEnhancer(commonService.USERNAME_OR_TENANT, services.CommonServices.Neo4jRepositories), func(ctx *gin.Context) {
+	rg.GET("/slack/requestAccess", security.TenantUserContextEnhancer(security.USERNAME_OR_TENANT, services.CommonServices.Neo4jRepositories), func(ctx *gin.Context) {
 		slackRequestAccessUrl := "https://slack.com/oauth/v2/authorize?client_id=" + config.Slack.ClientId + "&scope=channels:history,channels:join,channels:read,files:read,groups:history,groups:read,im:history,links:read,reactions:read,team:read,usergroups:read,users.profile:read,users:read,users:read.email&user_scope="
 
 		ctx.JSON(http.StatusOK, gin.H{"url": slackRequestAccessUrl})
 	})
-	rg.POST("/slack/oauth/callback", commonService.TenantUserContextEnhancer(commonService.USERNAME_OR_TENANT, services.CommonServices.Neo4jRepositories), func(ctx *gin.Context) {
-		tenant, _ := ctx.Get(commonService.KEY_TENANT_NAME)
+	rg.POST("/slack/oauth/callback", security.TenantUserContextEnhancer(security.USERNAME_OR_TENANT, services.CommonServices.Neo4jRepositories), func(ctx *gin.Context) {
+		tenant, _ := ctx.Get(security.KEY_TENANT_NAME)
 
 		slackSettingsEntity, err := services.AuthServices.CommonAuthRepositories.SlackSettingsRepository.Get(tenant.(string))
 		if err != nil {
@@ -98,8 +98,8 @@ func addSlackRoutes(rg *gin.RouterGroup, config *config.Config, services *servic
 
 		ctx.JSON(http.StatusOK, gin.H{})
 	})
-	rg.POST("/slack/revoke", commonService.TenantUserContextEnhancer(commonService.USERNAME_OR_TENANT, services.CommonServices.Neo4jRepositories), func(ctx *gin.Context) {
-		tenant, _ := ctx.Get(commonService.KEY_TENANT_NAME)
+	rg.POST("/slack/revoke", security.TenantUserContextEnhancer(security.USERNAME_OR_TENANT, services.CommonServices.Neo4jRepositories), func(ctx *gin.Context) {
+		tenant, _ := ctx.Get(security.KEY_TENANT_NAME)
 
 		slackSettingsEntity, err := services.AuthServices.CommonAuthRepositories.SlackSettingsRepository.Get(tenant.(string))
 		if err != nil {

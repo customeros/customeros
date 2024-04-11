@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 	neo4jRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"io"
@@ -39,7 +40,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
-	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
@@ -129,15 +130,15 @@ func (server *server) Run(parentCtx context.Context) error {
 
 	r.POST("/query",
 		cosHandler.TracingEnhancer(ctx, "/query"),
-		apiKeyCheckerHTTPMiddleware(commonServices.PostgresRepositories.TenantWebhookApiKeyRepository, commonServices.PostgresRepositories.AppKeyRepository, commonservice.CUSTOMER_OS_API, commonservice.WithCache(commonCache)),
-		tenantUserContextEnhancerMiddleware(commonservice.USERNAME_OR_TENANT, commonServices.Neo4jRepositories, commonservice.WithCache(commonCache)),
+		apiKeyCheckerHTTPMiddleware(commonServices.PostgresRepositories.TenantWebhookApiKeyRepository, commonServices.PostgresRepositories.AppKeyRepository, security.CUSTOMER_OS_API, security.WithCache(commonCache)),
+		tenantUserContextEnhancerMiddleware(security.USERNAME_OR_TENANT, commonServices.Neo4jRepositories, security.WithCache(commonCache)),
 		server.graphqlHandler(grpcContainer, serviceContainer))
 	if server.cfg.GraphQL.PlaygroundEnabled {
 		r.GET("/", playgroundHandler())
 	}
 	r.GET("/whoami",
 		cosHandler.TracingEnhancer(ctx, "/whoami"),
-		commonservice.ApiKeyCheckerHTTP(commonServices.PostgresRepositories.TenantWebhookApiKeyRepository, commonServices.PostgresRepositories.AppKeyRepository, commonservice.CUSTOMER_OS_API, commonservice.WithCache(commonCache)),
+		security.ApiKeyCheckerHTTP(commonServices.PostgresRepositories.TenantWebhookApiKeyRepository, commonServices.PostgresRepositories.AppKeyRepository, security.CUSTOMER_OS_API, security.WithCache(commonCache)),
 		rest.WhoamiHandler(serviceContainer))
 	r.POST("/admin/query",
 		cosHandler.TracingEnhancer(ctx, "/admin/query"),
@@ -173,8 +174,8 @@ func (server *server) Run(parentCtx context.Context) error {
 }
 
 // Define a custom middleware adapter for ApiKeyCheckerHTTP.
-func apiKeyCheckerHTTPMiddleware(tenantApiKeyRepo postgresRepository.TenantWebhookApiKeyRepository, appKeyRepo postgresRepository.AppKeyRepository, app commonservice.App, opts ...commonservice.CommonServiceOption) func(c *gin.Context) {
-	apiKeyChecker := commonservice.ApiKeyCheckerHTTP(tenantApiKeyRepo, appKeyRepo, app, opts...)
+func apiKeyCheckerHTTPMiddleware(tenantApiKeyRepo postgresRepository.TenantWebhookApiKeyRepository, appKeyRepo postgresRepository.AppKeyRepository, app security.App, opts ...security.CommonServiceOption) func(c *gin.Context) {
+	apiKeyChecker := security.ApiKeyCheckerHTTP(tenantApiKeyRepo, appKeyRepo, app, opts...)
 	return func(c *gin.Context) {
 		if isIntrospectionQuery(c.Request) {
 			c.Next() // Skip ApiKeyCheckerHTTP and continue to the next handler.
@@ -185,8 +186,8 @@ func apiKeyCheckerHTTPMiddleware(tenantApiKeyRepo postgresRepository.TenantWebho
 }
 
 // Define a custom middleware adapter for TenantUserContextEnhancer.
-func tenantUserContextEnhancerMiddleware(userContextType commonservice.HeaderAllowance, repos *neo4jRepository.Repositories, opts ...commonservice.CommonServiceOption) func(c *gin.Context) {
-	tenantEnhancer := commonservice.TenantUserContextEnhancer(userContextType, repos, opts...)
+func tenantUserContextEnhancerMiddleware(userContextType security.HeaderAllowance, repos *neo4jRepository.Repositories, opts ...security.CommonServiceOption) func(c *gin.Context) {
+	tenantEnhancer := security.TenantUserContextEnhancer(userContextType, repos, opts...)
 	return func(c *gin.Context) {
 		if isIntrospectionQuery(c.Request) {
 			c.Next() // Skip TenantUserContextEnhancer and continue to the next handler.
@@ -270,20 +271,20 @@ func (server *server) graphqlHandler(grpcContainer *grpc_client.Clients, service
 
 	return func(c *gin.Context) {
 		customCtx := &common.CustomContext{}
-		if c.Keys[commonservice.KEY_TENANT_NAME] != nil {
-			customCtx.Tenant = c.Keys[commonservice.KEY_TENANT_NAME].(string)
+		if c.Keys[security.KEY_TENANT_NAME] != nil {
+			customCtx.Tenant = c.Keys[security.KEY_TENANT_NAME].(string)
 		}
-		if c.Keys[commonservice.KEY_USER_ROLES] != nil {
-			customCtx.Roles = mapper.MapRolesToModel(c.Keys[commonservice.KEY_USER_ROLES].([]string))
+		if c.Keys[security.KEY_USER_ROLES] != nil {
+			customCtx.Roles = mapper.MapRolesToModel(c.Keys[security.KEY_USER_ROLES].([]string))
 		}
-		if c.Keys[commonservice.KEY_USER_ID] != nil {
-			customCtx.UserId = c.Keys[commonservice.KEY_USER_ID].(string)
+		if c.Keys[security.KEY_USER_ID] != nil {
+			customCtx.UserId = c.Keys[security.KEY_USER_ID].(string)
 		}
-		if c.Keys[commonservice.KEY_USER_EMAIL] != nil {
-			customCtx.UserEmail = c.Keys[commonservice.KEY_USER_EMAIL].(string)
+		if c.Keys[security.KEY_USER_EMAIL] != nil {
+			customCtx.UserEmail = c.Keys[security.KEY_USER_EMAIL].(string)
 		}
-		if c.Keys[commonservice.KEY_IDENTITY_ID] != nil {
-			customCtx.IdentityId = c.Keys[commonservice.KEY_IDENTITY_ID].(string)
+		if c.Keys[security.KEY_IDENTITY_ID] != nil {
+			customCtx.IdentityId = c.Keys[security.KEY_IDENTITY_ID].(string)
 		}
 
 		graphqlOperationName := extractGraphQLMethodName(c.Request)

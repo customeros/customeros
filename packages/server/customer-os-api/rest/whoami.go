@@ -6,7 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
-	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 )
 
 type EmailElement struct {
@@ -30,7 +30,7 @@ type WhoAmIResponse struct {
 
 func WhoamiHandler(serviceContainer *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		identityId := c.GetHeader(commonService.IdentityIdHeader)
+		identityId := c.GetHeader(security.IdentityIdHeader)
 		if identityId == "" {
 			c.JSON(400, gin.H{"error": "Missing identityId header"})
 			return

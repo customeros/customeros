@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
@@ -105,8 +105,8 @@ func (h *phoneNumberEventHandler) OnPhoneNumberCreate(ctx context.Context, evt e
 		return h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, err.Error())
 	}
 	// Set the request headers
-	req.Header.Set(commonservice.ApiKeyHeader, h.cfg.Services.ValidationApiKey)
-	req.Header.Set(commonservice.TenantHeader, tenant)
+	req.Header.Set(security.ApiKeyHeader, h.cfg.Services.ValidationApiKey)
+	req.Header.Set(security.TenantHeader, tenant)
 
 	// Make the HTTP request
 	client := &http.Client{}

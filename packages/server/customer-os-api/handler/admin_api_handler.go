@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"log"
 	"net/http"
 )
@@ -25,7 +26,7 @@ func NewAdminApiHandler(config *config.Config, commonServices *commonService.Ser
 
 func (aah *AdminApiHandler) GetAdminApiHandlerEnhancer() func(c *gin.Context) {
 	return func(c *gin.Context) {
-		apiKey := c.GetHeader(commonService.ApiKeyHeader)
+		apiKey := c.GetHeader(security.ApiKeyHeader)
 		if apiKey != aah.cfg.Admin.Key {
 			log.Println("Invalid api key")
 			c.JSON(http.StatusUnauthorized, gin.H{
@@ -37,7 +38,7 @@ func (aah *AdminApiHandler) GetAdminApiHandlerEnhancer() func(c *gin.Context) {
 
 		ctx := context.Background()
 
-		tenant := c.GetHeader(commonService.TenantHeader)
+		tenant := c.GetHeader(security.TenantHeader)
 		if tenant != "" {
 			exists, err := aah.commonServices.Neo4jRepositories.TenantReadRepository.TenantExists(ctx, tenant)
 			if err != nil {
@@ -57,10 +58,10 @@ func (aah *AdminApiHandler) GetAdminApiHandlerEnhancer() func(c *gin.Context) {
 				return
 			}
 		}
-		c.Set(commonService.KEY_TENANT_NAME, tenant)
+		c.Set(security.KEY_TENANT_NAME, tenant)
 
 		//TODO DROP THIS. WE NEED TO USE THE TenantUserContextEnhancer + a check on the ADMIN ROLE
-		usernameHeader := c.GetHeader(commonService.UsernameHeader)
+		usernameHeader := c.GetHeader(security.UsernameHeader)
 		if usernameHeader != "" {
 			userId, tenantName, roles, err := aah.commonServices.Neo4jRepositories.UserReadRepository.FindUserByEmail(ctx, usernameHeader)
 			if err != nil {
@@ -79,10 +80,10 @@ func (aah *AdminApiHandler) GetAdminApiHandlerEnhancer() func(c *gin.Context) {
 				c.Abort()
 				return
 			}
-			c.Set(commonService.KEY_USER_ID, userId)
-			c.Set(commonService.KEY_USER_ROLES, roles)
+			c.Set(security.KEY_USER_ID, userId)
+			c.Set(security.KEY_USER_ROLES, roles)
 		} else {
-			c.Set(commonService.KEY_USER_ROLES, []string{model.RoleAdmin.String()})
+			c.Set(security.KEY_USER_ROLES, []string{model.RoleAdmin.String()})
 		}
 
 		c.Next()

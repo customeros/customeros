@@ -9,7 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/anthorpic-api/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/anthorpic-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
-	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/sirupsen/logrus"
 )
 
@@ -37,7 +37,7 @@ func main() {
 	r.Use(cors.New(corsConfig))
 
 	r.POST("/ask",
-		commonservice.ApiKeyCheckerHTTP(services.PostgresRepositories.TenantWebhookApiKeyRepository, services.PostgresRepositories.AppKeyRepository, commonservice.ANTHROPIC_API, commonservice.WithCache(caches.NewCommonCache())),
+		security.ApiKeyCheckerHTTP(services.PostgresRepositories.TenantWebhookApiKeyRepository, services.PostgresRepositories.AppKeyRepository, security.ANTHROPIC_API, security.WithCache(caches.NewCommonCache())),
 		func(c *gin.Context) {
 			var request dto.AnthropicApiRequest
 
