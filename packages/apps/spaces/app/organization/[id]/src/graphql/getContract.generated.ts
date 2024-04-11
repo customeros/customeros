@@ -42,6 +42,7 @@ export type GetContractQuery = {
     contractEnded?: any | null;
     serviceStarted?: any | null;
     autoRenew: boolean;
+    metadata: { __typename?: 'Metadata'; id: string };
     attachments?: Array<{
       __typename?: 'Attachment';
       id: string;
@@ -77,6 +78,9 @@ export type GetContractQuery = {
 export const GetContractDocument = `
     query getContract($id: ID!) {
   contract(id: $id) {
+    metadata {
+      id
+    }
     id
     contractUrl
     billingEnabled

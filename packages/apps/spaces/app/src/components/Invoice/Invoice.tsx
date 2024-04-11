@@ -53,6 +53,7 @@ type InvoiceProps = {
   isInvoiceProviderFocused?: boolean;
   isInvoiceBankDetailsHovered?: boolean;
   isInvoiceBankDetailsFocused?: boolean;
+  onOpenAddressDetailsModal?: () => void;
   canPayWithBankTransfer?: boolean | null;
   lines: Partial<InvoiceType['invoiceLineItems']>;
   availableBankAccount?: Partial<BankAccount> | null;
@@ -81,6 +82,7 @@ export function Invoice({
   check,
   invoicePeriodStart,
   invoicePeriodEnd,
+  onOpenAddressDetailsModal,
 }: InvoiceProps) {
   const isInvoiceMetaSectionBlurred =
     isBilledToFocused || isInvoiceProviderFocused;
@@ -137,6 +139,7 @@ export function Invoice({
               addressLine2={billedTo?.addressLine2}
               vatNumber={billedTo?.vatNumber}
               region={billedTo?.region}
+              onClick={onOpenAddressDetailsModal}
             />
             <InvoicePartySection
               title='From'

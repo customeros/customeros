@@ -32,15 +32,19 @@ export const PaymentDetailsPopover: FC<PaymentDetailsPopoverProps> = ({
         color='white'
         borderRadius='md'
         boxShadow='none'
+        fontSize='sm'
         border='none'
         display={content ? 'block' : 'none'}
       >
         <PopoverBody display='flex'>
-          <Text mr={2}>{content}</Text>
+          <Text mr={2} fontSize='md'>
+            {content}
+          </Text>
 
           {withNavigation && (
             <Text
               as={Link}
+              fontSize='md'
               href='/settings?tab=billing'
               color='white'
               textDecoration='underline'

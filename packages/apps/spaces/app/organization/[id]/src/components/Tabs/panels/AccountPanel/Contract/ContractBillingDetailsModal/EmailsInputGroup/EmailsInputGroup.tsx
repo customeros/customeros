@@ -4,6 +4,7 @@ import { cn } from '@ui/utils/cn';
 import { InputProps } from '@ui/form/Input';
 import { useOutsideClick } from '@ui/utils';
 import { Button } from '@ui/form/Button/Button';
+import { FormInput } from '@ui/form/Input/FormInput2';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { Divider } from '@ui/presentation/Divider/Divider';
@@ -13,13 +14,8 @@ import { EmailSelect } from '@organization/src/components/Tabs/panels/AccountPan
 interface EmailsInputGroupProps extends InputProps {
   formId: string;
   modal?: boolean;
-  onBlur: () => void;
-
-  onFocus: () => void;
-  onMouseEnter: () => void;
-  onMouseLeave: () => void;
+  to?: string | null;
   cc: Array<{ label: string; value: string }>;
-  to?: { label: string; value: string } | null;
   bcc: Array<{ label: string; value: string }>;
 }
 
@@ -37,7 +33,7 @@ const EmailList = ({
           <React.Fragment key={email.value}>
             <Tooltip label={validationMessage || ''}>
               <span
-                className={cn('mr-1', {
+                className={cn('mr-1 text-base', {
                   'text-warning-700': validateEmail(email.value),
                 })}
               >
@@ -51,16 +47,43 @@ const EmailList = ({
     </p>
   );
 };
+const ToEmailInput = ({
+  formId,
+  email,
+}: {
+  formId: string;
+  email?: string | null;
+}) => {
+  const validationMessage = validateEmail(email ?? '');
+
+  return (
+    <Tooltip label={validationMessage || ''} align='start' side={'bottom'}>
+      <FormInput
+        className={cn(
+          'overflow-ellipsis text-base w-full border-none hover:border-none focus:border-none',
+          {
+            'text-warning-700': validationMessage,
+          },
+        )}
+        formId={formId}
+        autoComplete='off'
+        label='To'
+        labelProps={{
+          className: 'text-sm mb-0  font-semibold inline-block pt-0',
+        }}
+        size='sm'
+        name='billingEmail'
+        placeholder='To email address'
+      />
+    </Tooltip>
+  );
+};
 
 export const EmailsInputGroup = ({
   to,
   cc = [],
   bcc = [],
   formId,
-  onMouseEnter,
-  onMouseLeave,
-  onFocus,
-  onBlur,
 }: EmailsInputGroupProps) => {
   const [showCC, setShowCC] = useState(false);
   const [showBCC, setShowBCC] = useState(false);
@@ -76,14 +99,12 @@ export const EmailsInputGroup = ({
       setFocusedItemIndex(false);
       setShowCC(false);
       setShowBCC(false);
-      onBlur();
     },
   });
 
   const handleFocus = (index: number) => {
     setIsFocused(true);
     setFocusedItemIndex(index);
-    onFocus();
   };
 
   useEffect(() => {
@@ -99,7 +120,7 @@ export const EmailsInputGroup = ({
   }, [showBCC]);
 
   return (
-    <div ref={ref} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
+    <div ref={ref}>
       <div className='flex relative items-center h-8  mt-2'>
         <p className='text-sm text-gray-500 after:border-t-2 w-fit whitespace-nowrap mr-2'>
           Send invoice
@@ -138,18 +159,9 @@ export const EmailsInputGroup = ({
           )}
         </div>
       </div>
+      <ToEmailInput formId={formId} email={to} />
 
       <div className='flex-col flex-1 w-full gap-4'>
-        {(isFocused || !to) && (
-          <EmailSelect
-            formId={formId}
-            fieldName='billingEmail'
-            entryType='To'
-            placeholder='To email address'
-            autofocus={focusedItemIndex === 0}
-          />
-        )}
-
         {isFocused && (
           <>
             {(showCC || !!cc.length) && (
@@ -176,22 +188,6 @@ export const EmailsInputGroup = ({
 
       {!isFocused && (
         <div className='flex-col flex-1 gap-4'>
-          {to && (
-            <div
-              onClick={() => handleFocus(0)}
-              role='button'
-              aria-label='Click to input participant data'
-              className={cn('overflow-hidden', {
-                'flex-1': !bcc.length,
-              })}
-            >
-              <span className='text-sm font-semibold text-gray-700 mr-1'>
-                To
-              </span>
-              <EmailList emailList={[to]} />
-            </div>
-          )}
-
           {!!cc.length && (
             <div
               onClick={() => handleFocus(1)}

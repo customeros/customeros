@@ -9,6 +9,7 @@ export interface FormInputProps extends InputProps {
   name: string;
   formId: string;
   label?: string;
+  isLabelHidden?: boolean;
   labelProps?: React.LabelHTMLAttributes<HTMLLabelElement>;
 }
 
@@ -16,14 +17,23 @@ export interface FormInputProps extends InputProps {
 
 export const FormInput = forwardRef(
   (
-    { name, formId, label, labelProps, ...props }: FormInputProps,
+    {
+      name,
+      formId,
+      label,
+      labelProps,
+      isLabelHidden,
+      ...props
+    }: FormInputProps,
     ref: ForwardedRef<HTMLInputElement>,
   ) => {
     const { getInputProps, renderError, state } = useField(name, formId);
 
     return (
       <div>
-        <label {...labelProps}>{label}</label>
+        <label className={isLabelHidden ? 'sr-only' : ''} {...labelProps}>
+          {label}
+        </label>
 
         <Input
           ref={ref}
