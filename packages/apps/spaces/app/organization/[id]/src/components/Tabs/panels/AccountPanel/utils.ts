@@ -6,6 +6,7 @@ import {
   Maybe,
   BilledType,
   ContractBillingCycle,
+  ContractRenewalCycle,
   OpportunityRenewalLikelihood,
 } from '@graphql/types';
 
@@ -49,6 +50,14 @@ export function getRenewalLikelihoodLabel(
       return '';
   }
 }
+export const contractRenewalCycle: SelectOption<
+  ContractRenewalCycle | 'MULTI_YEAR'
+>[] = [
+  { label: 'Monthly', value: ContractRenewalCycle.MonthlyRenewal },
+  { label: 'Quarterly', value: ContractRenewalCycle.QuarterlyRenewal },
+  { label: 'Annual', value: ContractRenewalCycle.AnnualRenewal },
+  { label: 'Multi-year', value: 'MULTI_YEAR' },
+];
 export const billingFrequencyOptions: SelectOption<ContractBillingCycle>[] = [
   { label: 'Monthly', value: ContractBillingCycle.MonthlyBilling },
   { label: 'Quarterly', value: ContractBillingCycle.QuarterlyBilling },

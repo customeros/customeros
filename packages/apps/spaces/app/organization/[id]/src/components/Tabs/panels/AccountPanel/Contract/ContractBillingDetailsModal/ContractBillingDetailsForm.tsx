@@ -1,0 +1,377 @@
+'use client';
+import React, { FC, useMemo } from 'react';
+
+import { useConnections } from '@integration-app/react';
+import { useTenantSettingsQuery } from '@settings/graphql/getTenantSettings.generated';
+import { useGetExternalSystemInstancesQuery } from '@settings/graphql/getExternalSystemInstances.generated';
+
+import { Box } from '@ui/layout/Box';
+import { Flex } from '@ui/layout/Flex';
+import { Text } from '@ui/typography/Text';
+import { FormInput } from '@ui/form/Input';
+import { ModalBody } from '@ui/overlay/Modal';
+import { Tooltip } from '@ui/overlay/Tooltip';
+import { FormSelect } from '@ui/form/SyncSelect';
+import { InfoCircle } from '@ui/media/icons/InfoCircle';
+import { FormSwitch } from '@ui/form/Switch/FromSwitch';
+import { SelectOption } from '@shared/types/SelectOptions';
+import { countryOptions } from '@shared/util/countryOptions';
+import { FormCheckbox } from '@ui/form/Checkbox/FormCheckbox';
+import { currencyOptions } from '@shared/util/currencyOptions';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import {
+  Currency,
+  BankAccount,
+  ExternalSystemType,
+  TenantBillingProfile,
+} from '@graphql/types';
+import { PaymentDetailsPopover } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/PaymentDetailsPopover';
+import { EmailsInputGroup } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/EmailsInputGroup/EmailsInputGroup';
+
+import { ContractUploader } from './ContractUploader';
+
+interface SubscriptionServiceModalProps {
+  formId: string;
+  currency?: string;
+  contractId: string;
+  isEmailValid: boolean;
+  organizationName: string;
+  to?: SelectOption<string> | null;
+  payAutomatically?: boolean | null;
+  country?: SelectOption<string> | null;
+  cc?: Array<SelectOption<string>> | null;
+  bcc?: Array<SelectOption<string>> | null;
+  tenantBillingProfile?: TenantBillingProfile | null;
+  bankAccounts: Array<BankAccount> | null | undefined;
+  onSetIsBillingDetailsHovered: (newState: boolean) => void;
+  onSetIsBillingDetailsFocused: (newState: boolean) => void;
+}
+
+export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
+  formId,
+  contractId,
+  isEmailValid,
+  onSetIsBillingDetailsFocused,
+  onSetIsBillingDetailsHovered,
+  currency,
+  tenantBillingProfile,
+  organizationName,
+  bankAccounts,
+  country,
+  payAutomatically,
+  to,
+  cc,
+  bcc,
+}) => {
+  const client = getGraphQLClient();
+  const { data: tenantSettingsData } = useTenantSettingsQuery(client);
+  const { data } = useGetExternalSystemInstancesQuery(client);
+  const availablePaymentMethodTypes = data?.externalSystemInstances.find(
+    (e) => e.type === ExternalSystemType.Stripe,
+  )?.stripeDetails?.paymentMethodTypes;
+  const { items: iConnections } = useConnections();
+  const isStripeActive = !!iConnections
+    .map((item) => item.integration?.key)
+    .find((e) => e === 'stripe');
+  const tooltipContent = useMemo(() => {
+    if (availablePaymentMethodTypes?.length && isStripeActive) {
+      return `If auto-payment fails, ${organizationName} can still pay using one of the other enabled payment options.`;
+    }
+
+    return '';
+  }, [isStripeActive, availablePaymentMethodTypes, organizationName]);
+
+  const bankTransferPopoverContent = useMemo(() => {
+    if (!tenantBillingProfile?.canPayWithBankTransfer) {
+      return 'Bank transfer not enabled yet';
+    }
+    if (
+      tenantBillingProfile?.canPayWithBankTransfer &&
+      (!bankAccounts || bankAccounts.length === 0)
+    ) {
+      return 'No bank accounts added yet';
+    }
+    const accountIndexWithCurrency = bankAccounts?.findIndex(
+      (account) => account.currency === currency,
+    );
+
+    if (accountIndexWithCurrency === -1 && currency) {
+      return `None of your bank accounts hold ${currency}`;
+    }
+    if (!currency) {
+      return `Please select contract currency to enable bank transfer`;
+    }
+
+    return '';
+  }, [tenantBillingProfile, bankAccounts, currency]);
+
+  const paymentMethod = useMemo(() => {
+    let method;
+    switch (currency) {
+      case Currency.Gbp:
+        method = 'Bacs';
+        break;
+      case Currency.Usd:
+        method = 'ACH';
+        break;
+      default:
+        method = 'SEPA';
+    }
+
+    return method;
+  }, [currency]);
+
+  return (
+    <ModalBody pb='0' gap={4} display='flex' flexDir='column' flex={1}>
+      <ContractUploader contractId={contractId} />
+
+      <FormInput
+        label='Organization legal name'
+        isLabelVisible
+        labelProps={{
+          fontSize: 'sm',
+          mb: 0,
+          fontWeight: 'semibold',
+        }}
+        onMouseEnter={() => onSetIsBillingDetailsHovered(true)}
+        onMouseLeave={() => onSetIsBillingDetailsHovered(false)}
+        onFocus={() => onSetIsBillingDetailsFocused(true)}
+        onBlur={() => onSetIsBillingDetailsFocused(false)}
+        formId={formId}
+        name='organizationLegalName'
+        textOverflow='ellipsis'
+        placeholder='Organization legal name'
+        autoComplete='off'
+      />
+
+      <Flex
+        flexDir='column'
+        onMouseEnter={() => onSetIsBillingDetailsHovered(true)}
+        onMouseLeave={() => onSetIsBillingDetailsHovered(false)}
+      >
+        <Text fontSize='sm' fontWeight='semibold'>
+          Billing address
+        </Text>
+        <FormSelect
+          label='Country'
+          placeholder='Country'
+          name='country'
+          formId={formId}
+          options={countryOptions}
+          onFocus={() => onSetIsBillingDetailsFocused(true)}
+          onBlur={() => onSetIsBillingDetailsFocused(false)}
+        />
+        <FormInput
+          label='Address line 1'
+          formId={formId}
+          name='addressLine1'
+          textOverflow='ellipsis'
+          placeholder='Address line 1'
+          onFocus={() => onSetIsBillingDetailsFocused(true)}
+          onBlur={() => onSetIsBillingDetailsFocused(false)}
+          autoComplete='off'
+        />
+        <FormInput
+          label='Address line 2'
+          formId={formId}
+          name='addressLine2'
+          textOverflow='ellipsis'
+          placeholder='Address line 2'
+          onFocus={() => onSetIsBillingDetailsFocused(true)}
+          onBlur={() => onSetIsBillingDetailsFocused(false)}
+          autoComplete='off'
+        />
+        {country?.value === 'US' && (
+          <FormInput
+            label='City'
+            formId={formId}
+            name='locality'
+            textOverflow='ellipsis'
+            placeholder='City'
+            onFocus={() => onSetIsBillingDetailsFocused(true)}
+            onBlur={() => onSetIsBillingDetailsFocused(false)}
+            autoComplete='off'
+          />
+        )}
+        <Flex>
+          {country?.value === 'US' ? (
+            <FormInput
+              label='State'
+              name='region'
+              placeholder='State'
+              formId={formId}
+              onFocus={() => onSetIsBillingDetailsFocused(true)}
+              onBlur={() => onSetIsBillingDetailsFocused(false)}
+            />
+          ) : (
+            <FormInput
+              label='City'
+              formId={formId}
+              name='locality'
+              textOverflow='ellipsis'
+              placeholder='City'
+              onFocus={() => onSetIsBillingDetailsFocused(true)}
+              onBlur={() => onSetIsBillingDetailsFocused(false)}
+              autoComplete='off'
+            />
+          )}
+          <FormInput
+            label='ZIP/Postal code'
+            formId={formId}
+            name='zip'
+            textOverflow='ellipsis'
+            placeholder='ZIP/Postal code'
+            onFocus={() => onSetIsBillingDetailsFocused(true)}
+            onBlur={() => onSetIsBillingDetailsFocused(false)}
+            autoComplete='off'
+          />
+        </Flex>
+      </Flex>
+
+      {tenantSettingsData?.tenantSettings?.billingEnabled && (
+        <>
+          <FormSelect
+            label='Billing currency'
+            placeholder='Invoice currency'
+            isLabelVisible
+            name='currency'
+            formId={formId}
+            options={currencyOptions ?? []}
+          />
+
+          <EmailsInputGroup
+            formId={formId}
+            to={to}
+            cc={cc || []}
+            bcc={bcc || []}
+            onMouseEnter={() => onSetIsBillingDetailsHovered(true)}
+            onMouseLeave={() => onSetIsBillingDetailsHovered(false)}
+            onFocus={() => onSetIsBillingDetailsFocused(true)}
+            onBlur={() => onSetIsBillingDetailsFocused(false)}
+          />
+
+          <Flex flexDirection='column' gap={2}>
+            <Text fontSize='sm' fontWeight='semibold' whiteSpace='nowrap'>
+              Payment options
+              {tooltipContent && (
+                <Tooltip label={tooltipContent} hasArrow shouldWrapChildren>
+                  <InfoCircle boxSize={3} color='gray.400' ml={2} />
+                </Tooltip>
+              )}
+            </Text>
+
+            <Flex flexDir='column' gap={2}>
+              <PaymentDetailsPopover
+                content={isStripeActive ? '' : 'No payment provider enabled'}
+                withNavigation
+              >
+                <FormSwitch
+                  name='payAutomatically'
+                  formId={formId}
+                  isInvalid={!isStripeActive}
+                  size='sm'
+                  labelProps={{ margin: 0 }}
+                  label={
+                    <Text fontSize='sm' fontWeight='normal' whiteSpace='nowrap'>
+                      Auto-payment via Stripe
+                    </Text>
+                  }
+                />
+              </PaymentDetailsPopover>
+              {isStripeActive && payAutomatically && (
+                <Flex flexDir='column' gap={2} ml={2}>
+                  <Tooltip
+                    label={
+                      availablePaymentMethodTypes?.includes('card')
+                        ? ''
+                        : 'Credit or Debit card not enabled in Stripe'
+                    }
+                    placement='bottom-start'
+                  >
+                    <Box>
+                      <FormCheckbox
+                        name='canPayWithCard'
+                        formId={formId}
+                        size='md'
+                        isInvalid={
+                          !availablePaymentMethodTypes?.includes('card')
+                        }
+                      >
+                        <Text fontSize='sm' whiteSpace='nowrap'>
+                          Credit or Debit cards
+                        </Text>
+                      </FormCheckbox>
+                    </Box>
+                  </Tooltip>
+                  <Tooltip
+                    label={
+                      availablePaymentMethodTypes?.includes('bacs_debit')
+                        ? ''
+                        : 'Direct debit not enabled in Stripe'
+                    }
+                    placement='bottom-start'
+                  >
+                    <Box>
+                      <FormCheckbox
+                        name='canPayWithDirectDebit'
+                        formId={formId}
+                        size='md'
+                        isInvalid={
+                          !availablePaymentMethodTypes?.includes('ach_debit')
+                        }
+                      >
+                        <Text fontSize='sm' whiteSpace='nowrap'>
+                          Direct Debit via {paymentMethod}
+                        </Text>
+                      </FormCheckbox>
+                    </Box>
+                  </Tooltip>
+                </Flex>
+              )}
+            </Flex>
+
+            <PaymentDetailsPopover
+              content={isStripeActive ? '' : 'No payment provider enabled'}
+              withNavigation
+            >
+              <FormSwitch
+                name='payOnline'
+                formId={formId}
+                isInvalid={!isStripeActive}
+                size='sm'
+                labelProps={{
+                  margin: 0,
+                }}
+                label={
+                  <Text fontSize='sm' fontWeight='normal' whiteSpace='nowrap'>
+                    Pay online via Stripe
+                  </Text>
+                }
+              />
+            </PaymentDetailsPopover>
+
+            <PaymentDetailsPopover
+              withNavigation
+              content={bankTransferPopoverContent}
+            >
+              <FormSwitch
+                name='canPayWithBankTransfer'
+                isInvalid={!!bankTransferPopoverContent.length}
+                formId={formId}
+                size='sm'
+                labelProps={{
+                  margin: 0,
+                }}
+                label={
+                  <Text fontSize='sm' fontWeight='normal' whiteSpace='nowrap'>
+                    Bank transfer
+                  </Text>
+                }
+              />
+            </PaymentDetailsPopover>
+          </Flex>
+        </>
+      )}
+    </ModalBody>
+  );
+};
