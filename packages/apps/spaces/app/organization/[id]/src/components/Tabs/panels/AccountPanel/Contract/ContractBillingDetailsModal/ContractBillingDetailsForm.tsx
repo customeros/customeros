@@ -115,22 +115,24 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
           </div>
         </li>
         <li className='text-sm mt-1.5'>
-          Live until 2 Aug 2024,{' '}
-          <Button
-            variant='ghost'
-            size='sm'
-            className='font-normal text-sm p-0 underline text-gray-500 hover:bg-transparent focus:bg-transparent'
-            onClick={() => onChangeAutoRenew(!autoRenewValue)}
-          >
-            {autoRenewValue ? 'auto-renews' : 'non auto-renewing'}
-          </Button>
+          <div className='flex items-baseline'>
+            Live until 2 Aug 2024,{' '}
+            <Button
+              variant='ghost'
+              size='sm'
+              className='font-normal text-sm p-0 ml-1 relative text-gray-500 hover:bg-transparent focus:bg-transparent after:content-[""] after:h-[1px] after:w-[100%] after:absolute after:bottom-[1px] after:left-0 after:bg-gray-500 hover:after:bg-gray-500 focus:after:bg-gray-700'
+              onClick={() => onChangeAutoRenew(!autoRenewValue)}
+            >
+              {autoRenewValue ? 'auto-renews' : 'non auto-renewing'}
+            </Button>
+          </div>
         </li>
         <li className='text-sm '>
           <div className='flex items-baseline'>
             <span className='whitespace-nowrap'>Contracting in</span>
             <div>
               <FormSelect
-                className='text-sm inline min-h-1 max-h-3 border-none hover:border-none focus:border-none w-fit ml-1 underline mt-0'
+                className='text-sm inline min-h-1 max-h-3 border-none hover:border-none focus:border-none w-fit ml-1 mt-0 after:content-[""] after:h-[0.5px] after:w-[1.7rem] after:absolute after:bottom-[4px] after:left-0 after:bg-gray-500 hover:after:bg-gray-500 focus:after:bg-gray-700'
                 label='Currency'
                 placeholder='Invoice currency'
                 name='currency'
@@ -166,9 +168,9 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
                 </span>
                 <div>
                   <FormSelect
-                    className='text-sm inline min-h-1 max-h-5 border-none hover:border-none focus:border-none w-fit underline mt-0 ml-0 mr-1'
-                    label='Contract term'
-                    placeholder='contract term'
+                    className='text-sm inline min-h-1 max-h-5 border-none hover:border-none focus:border-none w-fit mt-0 ml-0 mr-1 after:content-[""] after:h-[0.5px] after:w-[95%] after:m-r-1 after:absolute after:bottom-[4px] after:left-0 after:bg-gray-500 hover:after:bg-gray-500 focus:after:bg-gray-700'
+                    label='billing period'
+                    placeholder='billing period'
                     name='billingCycle'
                     formId={formId}
                     options={contractBillingCycleOptions}
@@ -185,7 +187,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
                 <span className='whitespace-nowrap mr-1'>Customer has</span>
                 <div>
                   <FormSelect
-                    className='text-sm inline min-h-1 max-h-5 border-none hover:border-none focus:border-none w-fit underline mt-0 ml-0 mr-1'
+                    className='text-sm inline min-h-1 max-h-5 border-none hover:border-none focus:border-none w-fit mt-0 ml-0 mr-1  after:content-[""] after:h-[0.5px] after:w-[95%] after:m-r-1 after:absolute after:bottom-[4px] after:left-0 after:bg-gray-500 hover:after:bg-gray-500 focus:after:bg-gray-700'
                     label='Payment due'
                     placeholder='0 days'
                     name='dueDays'

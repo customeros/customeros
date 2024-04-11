@@ -9,8 +9,9 @@ import {
   isBefore as isBeforeDateFns,
   isFuture as isFutureDateFns,
   addYears as addYearsDateFns,
+  addDays as addMonthsDateFns,
+  addMonths as addDaysDateFns,
   isSameDay as isSameDayDateFns,
-  addMonths as addMonthsDateFns,
   formatDuration as formatDurationDateFns,
   differenceInDays as differenceInDaysDateFns,
   differenceInMonths as differenceInMonthsDateFns,
@@ -116,6 +117,9 @@ export class DateTimeUtils {
 
   public static addMonth(date: string, yearsCount: number): Date {
     return addMonthsDateFns(this.getDate(date), yearsCount);
+  }
+  public static addDays(date: string, daysCount: number): Date {
+    return addDaysDateFns(this.getDate(date), daysCount);
   }
 
   public static isSameDay(dateLeft: string, dateRight: string): boolean {

@@ -5,7 +5,6 @@ import { useTenantSettingsQuery } from '@settings/graphql/getTenantSettings.gene
 
 import { FormSelect } from '@ui/form/SyncSelect';
 import { FormInput } from '@ui/form/Input/FormInput2';
-import { SelectOption } from '@shared/types/SelectOptions';
 import { countryOptions } from '@shared/util/countryOptions';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { EmailsInputGroup } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/EmailsInputGroup/EmailsInputGroup';
@@ -14,11 +13,9 @@ import { BillingAddressDetailsFormDto } from '@organization/src/components/Tabs/
 interface BillingAddressDetailsForm {
   formId: string;
   values: BillingAddressDetailsFormDto;
-  country?: SelectOption<string> | null;
 }
 
 export const BillingDetailsForm: FC<BillingAddressDetailsForm> = ({
-  country,
   formId,
   values,
 }) => {
@@ -66,7 +63,7 @@ export const BillingDetailsForm: FC<BillingAddressDetailsForm> = ({
           autoComplete='off'
           className='overflow-hidden overflow-ellipsis'
         />
-        {country?.value === 'US' && (
+        {values.country?.value === 'US' && (
           <FormInput
             label='City'
             formId={formId}
@@ -78,7 +75,7 @@ export const BillingDetailsForm: FC<BillingAddressDetailsForm> = ({
           />
         )}
         <div className='flex'>
-          {country?.value === 'US' ? (
+          {values?.country?.value === 'US' ? (
             <FormInput
               label='State'
               name='region'

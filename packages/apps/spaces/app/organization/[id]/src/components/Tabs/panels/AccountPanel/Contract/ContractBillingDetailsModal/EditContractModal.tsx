@@ -333,9 +333,7 @@ export const EditContractModal = ({
 
                 <BillingDetailsForm
                   values={addressState.values}
-                  contract={data?.contract}
                   formId={'billing-details-address-form'}
-                  contractId={data?.contract?.metadata?.id ?? ''}
                 />
               </div>
               <ModalFooter className='p-0 flex'>
@@ -404,7 +402,7 @@ export const EditContractModal = ({
             </>
           )}
         </div>
-        <div style={{ width: '570px' }} className='bg-white rounded'>
+        <div style={{ minWidth: '600px' }} className='bg-white rounded'>
           <div className='w-full h-full'>
             <Invoice
               onOpenAddressDetailsModal={() => setBillingDetailsOpen(true)}

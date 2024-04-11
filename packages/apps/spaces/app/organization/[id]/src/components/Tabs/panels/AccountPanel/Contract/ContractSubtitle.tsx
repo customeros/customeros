@@ -43,15 +43,15 @@ export const ContractSubtitle = ({
     : null;
 
   const renewalPeriod = billingFrequencyOptions.find(
-    (e) => e.value === data?.contractRenewalCycle,
+    (e) => e.value === data?.billingDetails?.billingCycle,
   )?.label;
 
-  if (
-    !renewalPeriod &&
-    !hasStartedService &&
-    !serviceStartDate &&
-    data?.contractRenewalCycle
-  ) {
+  const isJustCreated =
+    DateTimeUtils.differenceInMins(
+      data.metadata.lastUpdated,
+      data.metadata.created,
+    ) === 0;
+  if (isJustCreated && !hasStartedService && !serviceStartDate) {
     return (
       <p className='font-normal shadow-none text-sm  text-gray-500 focus:text-gray-500 hover:text-gray-500 hover:no-underline focus:no-underline'>
         Contract starting...
@@ -66,7 +66,11 @@ export const ContractSubtitle = ({
       </p>
     );
   }
-  if (!hasStartedService && !serviceStartDate && data?.contractRenewalCycle) {
+  if (
+    !hasStartedService &&
+    !serviceStartDate &&
+    data?.billingDetails?.billingCycle
+  ) {
     return (
       <p className='font-normal shadow-none text-sm  text-gray-500 focus:text-gray-500 hover:text-gray-500 hover:no-underline focus:no-underline'>
         {renewalPeriod} contract starting ...
@@ -81,7 +85,11 @@ export const ContractSubtitle = ({
       </p>
     );
   }
-  if (!hasStartedService && serviceStartDate && data?.contractRenewalCycle) {
+  if (
+    !hasStartedService &&
+    serviceStartDate &&
+    data?.billingDetails?.billingCycle
+  ) {
     return (
       <p className='font-normal shadow-none text-sm  text-gray-500 focus:text-gray-500 hover:text-gray-500 hover:no-underline focus:no-underline'>
         {renewalPeriod} contract starting {serviceStartDate}

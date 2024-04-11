@@ -1,5 +1,6 @@
 import { utcToZonedTime } from 'date-fns-tz';
 
+import { DateTimeUtils } from '@spaces/utils/date';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { currencyOptions } from '@shared/util/currencyOptions';
 import { GetContractQuery } from '@organization/src/graphql/getContract.generated';
@@ -52,9 +53,11 @@ export class ContractDetailsDto implements ContractDetailsForm {
     this.billingCycle =
       [...contractBillingCycleOptions].find(
         ({ value }) => value === data?.billingDetails?.billingCycle,
-      ) ?? undefined;
+      ) ?? contractBillingCycleOptions[0];
     this.invoicingStarted = data?.billingDetails?.invoicingStarted
       ? utcToZonedTime(data.billingDetails.invoicingStarted, 'UTC')
+      : data?.serviceStarted
+      ? DateTimeUtils.addMonth(data?.serviceStarted, 1)
       : null;
     this.serviceStarted =
       data?.serviceStarted && utcToZonedTime(data?.serviceStarted, 'UTC');

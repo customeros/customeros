@@ -5,7 +5,6 @@ import { useOrganizationAccountDetailsQuery } from '@organization/src/graphql/ge
 import {
   Maybe,
   BilledType,
-  ContractRenewalCycle,
   ContractBillingCycle,
   OpportunityRenewalLikelihood,
 } from '@graphql/types';
@@ -50,19 +49,16 @@ export function getRenewalLikelihoodLabel(
       return '';
   }
 }
-export const billingFrequencyOptions: SelectOption<
-  ContractRenewalCycle | 'MULTI_YEAR'
->[] = [
-  { label: 'Monthly', value: ContractRenewalCycle.MonthlyRenewal },
-  { label: 'Quarterly', value: ContractRenewalCycle.QuarterlyRenewal },
-  { label: 'Annual', value: ContractRenewalCycle.AnnualRenewal },
-  { label: 'Multi-year', value: 'MULTI_YEAR' },
+export const billingFrequencyOptions: SelectOption<ContractBillingCycle>[] = [
+  { label: 'Monthly', value: ContractBillingCycle.MonthlyBilling },
+  { label: 'Quarterly', value: ContractBillingCycle.QuarterlyBilling },
+  { label: 'Annual', value: ContractBillingCycle.AnnualBilling },
 ];
 export const contractBillingCycleOptions: SelectOption<ContractBillingCycle>[] =
   [
-    { label: 'Monthly', value: ContractBillingCycle.MonthlyBilling },
-    { label: 'Quarterly', value: ContractBillingCycle.QuarterlyBilling },
-    { label: 'Annually', value: ContractBillingCycle.AnnualBilling },
+    { label: 'monthly', value: ContractBillingCycle.MonthlyBilling },
+    { label: 'quarterly', value: ContractBillingCycle.QuarterlyBilling },
+    { label: 'annually', value: ContractBillingCycle.AnnualBilling },
   ];
 
 export const billedTypeOptions: SelectOption<BilledType>[] = [
@@ -73,16 +69,8 @@ export const billedTypeOptions: SelectOption<BilledType>[] = [
   { label: 'Annually', value: BilledType.Annually },
 ];
 
-export const currencyOptions: SelectOption<string>[] = [
-  { label: 'United States Dollar', value: 'USD' },
-];
-
-export const autorenewalOptions = [
-  { label: 'Auto-renews', value: true },
-  { label: 'Does not auto-renew', value: false },
-];
 export const paymentDueOptions: SelectOption<number>[] = [
-  { label: 'On receipt', value: 0 },
+  { label: '0 days', value: 0 },
   { label: '15 days', value: 15 },
   { label: '30 days', value: 30 },
   { label: '45 days', value: 45 },

@@ -10,6 +10,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { FeaturedIcon } from '@ui/media/Icon';
 import { Button } from '@ui/form/Button/Button';
 import { File02 } from '@ui/media/icons/File02';
+import { DateTimeUtils } from '@spaces/utils/date';
 import { toastError } from '@ui/presentation/Toast';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useCreateContractMutation } from '@organization/src/graphql/createContract.generated';
@@ -97,7 +98,6 @@ export const EmptyContracts: FC<
           isDisabled={createContract.isPending}
           colorScheme='primary'
           variant='outline'
-          loadingText='Creating contract...'
           onClick={() =>
             createContract.mutate({
               input: {
@@ -105,11 +105,17 @@ export const EmptyContracts: FC<
                 currency: baseCurrency,
                 name: `${name?.length ? `${name}'s` : "Unnamed's"} contract`,
                 contractRenewalCycle: ContractRenewalCycle.MonthlyRenewal,
+                serviceStarted: DateTimeUtils.addDays(
+                  new Date().toISOString(),
+                  1,
+                ),
               },
             })
           }
         >
-          New contract
+          {createContract.isPending
+            ? 'Creating contract'
+            : 'Create a new contract'}
         </Button>
       </article>
       {children}

@@ -1,5 +1,5 @@
 import { useForm } from 'react-inverted-form';
-import React, { useRef, useMemo, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 
 import { produce } from 'immer';
 import { useDebounce } from 'rooks';
@@ -155,27 +155,6 @@ export const ContractCard = ({
     },
   });
 
-  const billedToAddressData = useMemo(() => {
-    return {
-      addressLine1: data.billingDetails?.addressLine1 ?? '',
-      addressLine2: data.billingDetails?.addressLine2 ?? '',
-      locality: data.billingDetails?.locality ?? '',
-      zip: data.billingDetails?.postalCode ?? '',
-      country: data.billingDetails?.country ?? '',
-      email: data.billingDetails?.billingEmail ?? '',
-      name: data.billingDetails?.organizationLegalName ?? '',
-      region: data.billingDetails?.region ?? '',
-    };
-  }, [
-    data.billingDetails?.addressLine1,
-    data.billingDetails?.addressLine2,
-    data.billingDetails?.locality,
-    data.billingDetails?.postalCode,
-    data.billingDetails?.billingEmail,
-    data.billingDetails?.organizationLegalName,
-    data.billingDetails?.region,
-  ]);
-
   return (
     <Card className='px-4 py-3 w-full text-lg bg-gray-50 transition-all-0.2s-ease-out border border-gray-200 '>
       <CardHeader
@@ -238,7 +217,6 @@ export const ContractCard = ({
           onClose={() => setEditModalOpen(false)}
           organizationName={organizationName}
           notes={data?.billingDetails?.invoiceNote}
-          billedTo={billedToAddressData}
         />
 
         <ServiceLineItemsModal

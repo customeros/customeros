@@ -56,7 +56,7 @@ export const CommittedPeriodInput = memo(
               size='xs'
               className='text-sm min-w-2.5 min-h-0 max-h-4'
             />
-            <span>- month</span>
+            <span> -month</span>
           </div>
         )}
 
@@ -64,7 +64,7 @@ export const CommittedPeriodInput = memo(
           <Button
             variant='ghost'
             size='sm'
-            className='font-normal text-sm p-0 underline text-gray-500 hover:bg-transparent focus:bg-transparent mr-1'
+            className='font-normal text-sm p-0 mr-1 relative text-gray-500 hover:bg-transparent focus:bg-transparent after:content-[""] after:h-[0.5px] after:w-[100%] after:absolute after:bottom-[1px] after:left-0 after:bg-gray-500 hover:after:bg-gray-500 focus:after:bg-gray-700'
             onClick={handleFocus}
           >
             {committedPeriodLabel}
