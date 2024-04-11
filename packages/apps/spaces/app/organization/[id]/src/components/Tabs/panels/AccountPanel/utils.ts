@@ -69,6 +69,14 @@ export const billedTypeOptions: SelectOption<BilledType>[] = [
   { label: 'Annually', value: BilledType.Annually },
 ];
 
+export const currencyOptions: SelectOption<string>[] = [
+  { label: 'United States Dollar', value: 'USD' },
+];
+
+export const autorenewalOptions = [
+  { label: 'Auto-renews', value: true },
+  { label: 'Does not auto-renew', value: false },
+];
 export const paymentDueOptions: SelectOption<number>[] = [
   { label: '0 days', value: 0 },
   { label: '15 days', value: 15 },

@@ -24,8 +24,8 @@ import {
   useGetContractsQuery,
 } from '@organization/src/graphql/getContracts.generated';
 import { useUpdateOpportunityRenewalMutation } from '@organization/src/graphql/updateOpportunityRenewal.generated';
-import { RenewalDetailsModal } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/RenewalARR/RenewalDetailsModal';
 import { useUpdateRenewalDetailsContext } from '@organization/src/components/Tabs/panels/AccountPanel/context/AccountModalsContext';
+import { RenewalDetailsModal } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/RenewalARR/RenewalDetailsModal';
 
 import {
   getRenewalLikelihoodColor,

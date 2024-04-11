@@ -7,8 +7,8 @@ import { FormSelect } from '@ui/form/SyncSelect';
 import { FormInput } from '@ui/form/Input/FormInput2';
 import { countryOptions } from '@shared/util/countryOptions';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { EmailsInputGroup } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/EmailsInputGroup/EmailsInputGroup';
-import { BillingAddressDetailsFormDto } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/BillingAddressDetails/BillingAddressDetailsForm.dto';
+import { EmailsInputGroup } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ContractBillingDetailsModal/EmailsInputGroup/EmailsInputGroup';
+import { BillingAddressDetailsFormDto } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/BillingAddressDetails/BillingAddressDetailsForm.dto';
 
 interface BillingAddressDetailsForm {
   formId: string;

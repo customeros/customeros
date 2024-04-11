@@ -17,8 +17,8 @@ import { BilledType, ServiceLineItem } from '@graphql/types';
 import { NumberInput, NumberInputField } from '@ui/form/NumberInput';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 import { billedTypeOptions } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
-import { Currency } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ServiceLineItemsModal/Currency';
-import { BulkUpdateServiceLineItem } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ServiceLineItemsModal/ServiceLineItemsModal.dto';
+import { Currency } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ServiceLineItemsModal/Currency';
+import { BulkUpdateServiceLineItem } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ServiceLineItemsModal/ServiceLineItemsModal.dto';
 
 import { ServiceLineItemInputWrapper } from './ServiceLineItemInputWrapper';
 type DateInputValue = null | string | number | Date;

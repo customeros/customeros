@@ -33,11 +33,11 @@ import {
   ModalContent,
   ModalOverlay,
 } from '@ui/overlay/Modal/Modal';
-import { BillingDetailsForm } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/BillingAddressDetails/BillingAddressDetailsForm';
+import { BillingDetailsForm } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/BillingAddressDetails/BillingAddressDetailsForm';
 import {
   BillingDetailsDto,
   BillingAddressDetailsFormDto,
-} from '@organization/src/components/Tabs/panels/AccountPanel/Contract/BillingAddressDetails/BillingAddressDetailsForm.dto';
+} from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/BillingAddressDetails/BillingAddressDetailsForm.dto';
 
 import { ContractDetailsDto } from './ContractDetails.dto';
 import { ContractBillingDetailsForm } from './ContractBillingDetailsForm';

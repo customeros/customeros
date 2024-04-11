@@ -9,7 +9,7 @@ import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { Divider } from '@ui/presentation/Divider/Divider';
 import { validateEmail } from '@shared/util/emailValidation';
-import { EmailSelect } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/EmailsInputGroup/EmailSelect';
+import { EmailSelect } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ContractBillingDetailsModal/EmailsInputGroup/EmailSelect';
 
 interface EmailsInputGroupProps extends InputProps {
   formId: string;

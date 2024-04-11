@@ -1,10 +1,6 @@
 import React, { useMemo } from 'react';
 
 import { UseMutationResult } from '@tanstack/react-query';
-import {
-  ContractEndModal,
-  ContractStartModal,
-} from 'app/organization/[id]/src/components/Tabs/panels/AccountPanel/Contract/ChangeContractStatusModals';
 
 import { useDisclosure } from '@ui/utils';
 import { Edit03 } from '@ui/media/icons/Edit03';
@@ -16,6 +12,10 @@ import { Exact, ContractStatus, ContractUpdateInput } from '@graphql/types';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 import { GetContractsQuery } from '@organization/src/graphql/getContracts.generated';
 import { UpdateContractMutation } from '@organization/src/graphql/updateContract.generated';
+import {
+  ContractEndModal,
+  ContractStartModal,
+} from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ChangeContractStatusModals';
 
 interface ContractStatusSelectProps {
   renewsAt?: string;

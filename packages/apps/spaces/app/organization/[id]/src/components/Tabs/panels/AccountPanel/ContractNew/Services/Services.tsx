@@ -3,7 +3,7 @@ import React from 'react';
 import { Plus } from '@ui/media/icons/Plus';
 import { ServiceLineItem } from '@graphql/types';
 import { IconButton } from '@ui/form/IconButton/IconButton';
-import { ServicesList } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/Services/ServicesList';
+import { ServicesList } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/Services/ServicesList';
 
 interface Props {
   onModalOpen: () => void;

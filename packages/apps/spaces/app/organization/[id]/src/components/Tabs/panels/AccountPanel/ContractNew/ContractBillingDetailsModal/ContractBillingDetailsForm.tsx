@@ -26,8 +26,8 @@ import {
   paymentDueOptions,
   contractBillingCycleOptions,
 } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
-import { CommittedPeriodInput } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/CommittedPeriodInput';
-import { PaymentDetailsPopover } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/PaymentDetailsPopover';
+import { CommittedPeriodInput } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ContractBillingDetailsModal/CommittedPeriodInput';
+import { PaymentDetailsPopover } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ContractBillingDetailsModal/PaymentDetailsPopover';
 
 import { ContractUploader } from './ContractUploader';
 

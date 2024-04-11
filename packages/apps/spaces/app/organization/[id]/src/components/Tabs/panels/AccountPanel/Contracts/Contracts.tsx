@@ -3,12 +3,15 @@
 import React, { FC } from 'react';
 import { useParams } from 'next/navigation';
 
+import { useFeatureIsOn } from '@growthbook/growthbook-react';
+
 import { Flex } from '@ui/layout/Flex';
 import { Contract, Organization } from '@graphql/types';
+import { ContractCard } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ContractCard';
 import { ARRForecast } from '@organization/src/components/Tabs/panels/AccountPanel/ARRForecast/ARRForecast';
+import { ContractCard as NewContractCard } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ContractCard';
 
 import { Notes } from '../Notes';
-import { ContractCard } from '../Contract/ContractCard';
 
 interface ContractsProps {
   isLoading: boolean;
@@ -16,6 +19,7 @@ interface ContractsProps {
 }
 export const Contracts: FC<ContractsProps> = ({ isLoading, organization }) => {
   const id = useParams()?.id as string;
+  const isNewContractUiEnabled = useFeatureIsOn('contract-new');
 
   return (
     <>
@@ -35,11 +39,19 @@ export const Contracts: FC<ContractsProps> = ({ isLoading, organization }) => {
               w='full'
               mb={4}
             >
-              <ContractCard
-                organizationId={id}
-                organizationName={organization?.name ?? ''}
-                data={(contract as Contract) ?? undefined}
-              />
+              {isNewContractUiEnabled ? (
+                <NewContractCard
+                  organizationId={id}
+                  organizationName={organization?.name ?? ''}
+                  data={(contract as Contract) ?? undefined}
+                />
+              ) : (
+                <ContractCard
+                  organizationId={id}
+                  organizationName={organization?.name ?? ''}
+                  data={(contract as Contract) ?? undefined}
+                />
+              )}
             </Flex>
           ))}
         </>
