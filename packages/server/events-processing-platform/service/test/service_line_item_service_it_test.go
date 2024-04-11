@@ -86,7 +86,7 @@ func TestServiceLineItemService_UpdateServiceLineItem(t *testing.T) {
 
 	// Setup test environment
 	tenant := "ziggy"
-	serviceLineItemId := "SLI123"
+	serviceLineItemId := "SLI-123"
 
 	// Create and save the initial Service Line Item aggregate
 	aggregateStore := eventstoret.NewTestAggregateStore()
@@ -108,6 +108,7 @@ func TestServiceLineItemService_UpdateServiceLineItem(t *testing.T) {
 		Quantity:                10,
 		Price:                   150.0004,
 		Comments:                "Some comments",
+		Billed:                  commonpb.BilledType_MONTHLY_BILLED,
 		IsRetroactiveCorrection: true,
 		UpdatedAt:               timestamppb.New(updatedAt),
 		SourceFields: &commonpb.SourceFields{
@@ -134,7 +135,7 @@ func TestServiceLineItemService_UpdateServiceLineItem(t *testing.T) {
 	var eventData event.ServiceLineItemUpdateEvent
 	err = createEvent.GetJsonData(&eventData)
 	require.Nil(t, err, "Failed to unmarshal event data")
-	require.Equal(t, model.NoneBilled.String(), eventData.Billed)
+	require.Equal(t, model.MonthlyBilled.String(), eventData.Billed)
 	require.Equal(t, int64(10), eventData.Quantity)
 	require.Equal(t, 150.0004, eventData.Price)
 	require.Equal(t, "Some comments", eventData.Comments)

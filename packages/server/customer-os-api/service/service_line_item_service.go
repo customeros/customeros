@@ -322,6 +322,9 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 	}
 
 	// check that billing cycle is not changed
+	if serviceLineItemDetails.SliBilledType.String() == "" {
+		serviceLineItemDetails.SliBilledType = baseServiceLineItemEntity.Billed
+	}
 	if baseServiceLineItemEntity.Billed.String() != serviceLineItemDetails.SliBilledType.String() && baseServiceLineItemEntity.Billed.String() != "" {
 		err = fmt.Errorf("cannot change billing cycle for contract line item with id {%s}", serviceLineItemDetails.Id)
 		tracing.TraceErr(span, err)
