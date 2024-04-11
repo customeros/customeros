@@ -131,7 +131,6 @@ func TestMutationResolver_ServiceLineItemUpdate(t *testing.T) {
 			require.Equal(t, int64(2), serviceLineItem.Quantity)
 			require.Equal(t, float64(30), serviceLineItem.Price)
 			require.Equal(t, "test comments", serviceLineItem.Comments)
-			require.Equal(t, true, serviceLineItem.IsRetroactiveCorrection)
 			require.Equal(t, 10.5, serviceLineItem.VatRate)
 			calledUpdateServiceLineItem = true
 			return &servicelineitempb.ServiceLineItemIdGrpcResponse{
