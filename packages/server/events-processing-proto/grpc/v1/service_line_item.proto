@@ -38,7 +38,7 @@ message UpdateServiceLineItemGrpcRequest {
   google.protobuf.Timestamp updatedAt = 8;
   SourceFields sourceFields = 9;
   string comments = 10;
-  bool isRetroactiveCorrection = 11;
+  bool isRetroactiveCorrection = 11 [deprecated = true];
   string contractId = 12;
   double vatRate = 13;
   string parentId = 14;

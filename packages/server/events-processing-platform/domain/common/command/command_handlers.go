@@ -16,7 +16,6 @@ import (
 	organizationcmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
 	orgplanevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/event_handler"
 	phonenumbercmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/command_handler"
-	servicelineitemcmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/command_handler"
 	usercmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
@@ -35,7 +34,6 @@ type CommandHandlers struct {
 	LogEntry           *logentrycmdhandler.CommandHandlers
 	Issue              *issuecmdhandler.CommandHandlers
 	Opportunity        *opportunitycmdhandler.CommandHandlers
-	ServiceLineItem    *servicelineitemcmdhandler.CommandHandlers
 	MasterPlan         *masterplancmdhandler.CommandHandlers
 	OrganizationPlan   *orgplanevents.EventHandlers
 	InvoicingCycle     *invoicingcycleevents.EventHandlers
@@ -60,7 +58,6 @@ func NewCommandHandlers(log logger.Logger,
 		LogEntry:           logentrycmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
 		Issue:              issuecmdhandler.NewCommandHandlers(log, aggregateStore),
 		Opportunity:        opportunitycmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
-		ServiceLineItem:    servicelineitemcmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
 		MasterPlan:         masterplancmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
 		OrganizationPlan:   orgplanevents.NewEventHandlers(log, cfg, aggregateStore),
 		InvoicingCycle:     invoicingcycleevents.NewEventHandlers(log, aggregateStore),
