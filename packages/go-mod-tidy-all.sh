@@ -1,5 +1,7 @@
 cd server
-cd customer-os-common-module
+cd customer-os-postgres-repository
+go mod tidy
+cd ../customer-os-common-module
 go mod tidy
 cd ../anthropic-api
 go mod tidy
