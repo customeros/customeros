@@ -61,14 +61,20 @@ export default async function InvoicesPage({
     });
   })();
 
-  const res = await client.request<GetInvoicesQuery, GetInvoicesQueryVariables>(
-    GetInvoicesDocument,
-    { pagination: { limit: 40, page: 0 }, where },
-  );
+  let initialData: GetInvoicesQuery | undefined = undefined;
+
+  try {
+    initialData = await client.request<
+      GetInvoicesQuery,
+      GetInvoicesQueryVariables
+    >(GetInvoicesDocument, { pagination: { limit: 40, page: 0 }, where });
+  } catch (e) {
+    console.error('Failed to fetch initial Invoices data', e);
+  }
 
   return (
     <>
-      <InvoicesTable initialData={res} />
+      <InvoicesTable initialData={initialData} />
       <Preview />
     </>
   );

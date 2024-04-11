@@ -39,18 +39,24 @@ export default async function OrganizationsPage({
     });
   })();
 
-  const res = await client.request<
-    GetOrganizationsQuery,
-    GetOrganizationsQueryVariables
-  >(GetOrganizationsDocument, {
-    pagination: { limit: 40, page: 1 },
-    where,
-  });
+  let initialData: GetOrganizationsQuery | undefined = undefined;
+
+  try {
+    initialData = await client.request<
+      GetOrganizationsQuery,
+      GetOrganizationsQueryVariables
+    >(GetOrganizationsDocument, {
+      pagination: { limit: 40, page: 1 },
+      where,
+    });
+  } catch (e) {
+    console.error('Failed to fetch initial Organizations data', e);
+  }
 
   return (
     <>
       <Search />
-      <OrganizationsTable initialData={res} />
+      <OrganizationsTable initialData={initialData} />
       <KMenu />
     </>
   );
