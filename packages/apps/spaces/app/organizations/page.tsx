@@ -1,29 +1,63 @@
-import { HydrationBoundary } from '@tanstack/react-query';
+import { produce } from 'immer';
 
-import { getDehydratedState } from '@shared/util/getDehydratedState';
+import { Filter, ComparisonOperator } from '@graphql/types';
+import { getServerGraphQLClient } from '@shared/util/getServerGraphQLClient';
 import {
-  useGetOrganizationsQuery,
-  useInfiniteGetOrganizationsQuery,
+  GetOrganizationsQuery,
+  GetOrganizationsDocument,
+  GetOrganizationsQueryVariables,
 } from '@organizations/graphql/getOrganizations.generated';
 
 import { KMenu } from './src/components/KMenu';
 import { Search } from './src/components/Search';
 import { OrganizationsTable } from './src/components/OrganizationsTable';
 
-export default async function OrganizationsPage() {
-  const dehydratedClient = await getDehydratedState(
-    useInfiniteGetOrganizationsQuery,
-    {
-      variables: { page: 0, limit: 40 },
-      fetcher: useGetOrganizationsQuery.fetcher,
-    },
-  );
+export default async function OrganizationsPage({
+  searchParams,
+}: {
+  searchParams: { searchTerm?: string };
+}) {
+  const client = getServerGraphQLClient();
+  const { searchTerm } = searchParams;
+
+  const where = (() => {
+    return produce<Filter>({ AND: [] }, (draft) => {
+      if (!draft.AND) {
+        draft.AND = [];
+      }
+
+      if (searchTerm) {
+        draft.AND.push({
+          filter: {
+            property: 'ORGANIZATION',
+            value: searchTerm,
+            operation: ComparisonOperator.Contains,
+            caseSensitive: false,
+          },
+        });
+      }
+    });
+  })();
+
+  let initialData: GetOrganizationsQuery | undefined = undefined;
+
+  try {
+    initialData = await client.request<
+      GetOrganizationsQuery,
+      GetOrganizationsQueryVariables
+    >(GetOrganizationsDocument, {
+      pagination: { limit: 40, page: 1 },
+      where,
+    });
+  } catch (e) {
+    console.error('Failed to fetch initial Organizations data', e);
+  }
 
   return (
-    <HydrationBoundary state={dehydratedClient}>
+    <>
       <Search />
-      <OrganizationsTable />
+      <OrganizationsTable initialData={initialData} />
       <KMenu />
-    </HydrationBoundary>
+    </>
   );
 }

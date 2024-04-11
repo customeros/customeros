@@ -8,6 +8,7 @@ import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { SortingState, TableInstance } from '@ui/presentation/Table';
 import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
+import { GetOrganizationsQuery } from '@organizations/graphql/getOrganizations.generated';
 import {
   Filter,
   SortBy,
@@ -21,10 +22,12 @@ import { useGetOrganizationsInfiniteQuery } from './useGetOrganizationsInfiniteQ
 
 interface UseOrganizationsPageDataProps {
   sorting: SortingState;
+  initialData?: GetOrganizationsQuery;
 }
 
 export const useOrganizationsPageData = ({
   sorting,
+  initialData,
 }: UseOrganizationsPageDataProps) => {
   const client = getGraphQLClient();
   const searchParams = useSearchParams();
@@ -248,6 +251,12 @@ export const useOrganizationsPageData = ({
       {
         enabled:
           preset === 'portfolio' ? !!globalCache?.global_Cache?.user.id : true,
+        placeholderData: initialData
+          ? {
+              pageParams: [0],
+              pages: [initialData],
+            }
+          : undefined,
       },
     );
 

@@ -7,13 +7,18 @@ import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { Organization } from '@graphql/types';
 import { Table, SortingState } from '@ui/presentation/Table';
+import { GetOrganizationsQuery } from '@organizations/graphql/getOrganizations.generated';
 
 import { useOrganizationsPageData } from '../../hooks';
 import { TableActions } from '../../components/Actions';
 import { columns } from '../../components/Columns/Columns';
 import { EmptyState } from '../../components/EmptyState/EmptyState';
 
-export function OrganizationsTable() {
+interface OrganizationsTableProps {
+  initialData?: GetOrganizationsQuery;
+}
+
+export function OrganizationsTable({ initialData }: OrganizationsTableProps) {
   const isRestoring = useIsRestoring();
   const enableFeature = useFeatureIsOn('gp-dedicated-1');
   const [sorting, setSorting] = useState<SortingState>([
@@ -30,7 +35,7 @@ export function OrganizationsTable() {
     fetchNextPage,
     totalAvailable,
     allOrganizationIds,
-  } = useOrganizationsPageData({ sorting });
+  } = useOrganizationsPageData({ sorting, initialData });
 
   const handleFetchMore = useCallback(() => {
     !isFetching && fetchNextPage();

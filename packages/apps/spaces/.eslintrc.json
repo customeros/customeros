@@ -34,27 +34,28 @@
     "@typescript-eslint/no-var-requires": "off",
     "@typescript-eslint/prefer-ts-expect-error": "warn",
     "prettier/prettier": "warn",
-    "no-console": "error",
+    "no-console": ["error", { "allow": ["warn", "error"] }],
     "react/display-name": "off",
     "react-hooks/exhaustive-deps": "off",
     "@stylistic/js/padding-line-between-statements": [
       "error",
       { "blankLine": "always", "prev": "*", "next": "return" }
     ],
-    "@stylistic/js/no-multiple-empty-lines": [
-      "error",
-      { "max": 1 }
-    ],
+    "@stylistic/js/no-multiple-empty-lines": ["error", { "max": 1 }],
     "@typescript-eslint/no-unused-vars": [
       "error",
       { "varsIgnorePattern": "^_", "ignoreRestSiblings": true, "args": "none" }
     ],
     "no-restricted-imports": [
       "error",
-      { "patterns": [{
-        "group": ["@chakra-ui/*"],
-        "message": "Please import from @ui/*" 
-      }] }
+      {
+        "patterns": [
+          {
+            "group": ["@chakra-ui/*"],
+            "message": "Please import from @ui/*"
+          }
+        ]
+      }
     ],
     "perfectionist/sort-imports": [
       "error",
@@ -119,9 +120,7 @@
   "ignorePatterns": ["**/*.generated.ts"],
   "overrides": [
     {
-      "extends": [
-        "plugin:@typescript-eslint/disable-type-checked"
-      ],
+      "extends": ["plugin:@typescript-eslint/disable-type-checked"],
       "files": ["./**/*.js"]
     },
     {
