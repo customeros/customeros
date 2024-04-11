@@ -172,7 +172,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
                 </span>
                 <div>
                   <FormSelect
-                    className='text-sm inline min-h-1 max-h-5 border-none hover:border-none focus:border-none w-fit mt-0 ml-0 mr-1 after:content-[""] after:h-[0.5px] after:w-[95%] after:m-r-1 after:absolute after:bottom-[4px] after:left-0 after:bg-gray-500 hover:after:bg-gray-500 focus:after:bg-gray-700'
+                    className='text-sm inline min-h-1 max-h-5 min-w-[50px] border-none hover:border-none focus:border-none w-fit mt-0 ml-0 mr-1 after:content-[""] after:h-[0.5px] after:w-[95%] after:m-r-1 after:absolute after:bottom-[4px] after:left-0 after:bg-gray-500 hover:after:bg-gray-500 focus:after:bg-gray-700'
                     label='billing period'
                     placeholder='billing period'
                     name='billingCycle'

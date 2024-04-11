@@ -310,7 +310,7 @@ export const EditContractModal = ({
       >
         <div
           className='flex flex-col gap-4 px-6 pb-6 pt-4 bg-white h-auto rounded-lg justify-between relative'
-          style={{ width: '424px' }}
+          style={{ width: '424px', maxWidth: '424px' }}
         >
           {billingDetailsFormOpen && (
             <>
