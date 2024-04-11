@@ -110,7 +110,14 @@ func (s *serviceLineItemService) Create(ctx context.Context, serviceLineItemDeta
 		go func() {
 			time.Sleep(3 * time.Second)
 
-			err := s.generateNextPreviewInvoice(ctx, common.GetTenantFromContext(ctx), serviceLineItemDetails.ContractId, span)
+			contractNode, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractByServiceLineItemId(ctx, common.GetTenantFromContext(ctx), serviceLineItemId)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error on getting contract by service line item id {%s}: %s", serviceLineItemId, err.Error())
+				return
+			}
+			contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractNode)
+			err = s.generateNextPreviewInvoice(ctx, common.GetTenantFromContext(ctx), contractEntity, span)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error on generating next preview invoice: %s", err.Error())
@@ -291,7 +298,7 @@ func (s *serviceLineItemService) NewVersion(ctx context.Context, data ServiceLin
 	go func() {
 		time.Sleep(2 * time.Second)
 
-		err := s.generateNextPreviewInvoice(ctx, common.GetTenantFromContext(ctx), contractEntity.Id, span)
+		err := s.generateNextPreviewInvoice(ctx, common.GetTenantFromContext(ctx), contractEntity, span)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error on generating next preview invoice: %s", err.Error())
@@ -446,7 +453,7 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 			}
 			if contractNode != nil {
 				contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractNode)
-				err := s.generateNextPreviewInvoice(ctx, common.GetTenantFromContext(ctx), contractEntity.Id, span)
+				err := s.generateNextPreviewInvoice(ctx, common.GetTenantFromContext(ctx), contractEntity, span)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					s.log.Errorf("Error on generating next preview invoice: %s", err.Error())
@@ -492,13 +499,13 @@ func (s *serviceLineItemService) Delete(ctx context.Context, serviceLineItemId s
 		return false, err
 	}
 
-	//regenerate invoice preview
 	contractNode, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractByServiceLineItemId(ctx, common.GetTenantFromContext(ctx), serviceLineItemId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error on getting contract by service line item id {%s}: %s", serviceLineItemId, err.Error())
 		return
 	}
+	contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractNode)
 
 	deleteRequest := servicelineitempb.DeleteServiceLineItemGrpcRequest{
 		Tenant:         common.GetTenantFromContext(ctx),
@@ -519,14 +526,11 @@ func (s *serviceLineItemService) Delete(ctx context.Context, serviceLineItemId s
 
 	go func() {
 		time.Sleep(3 * time.Second)
-		if contractNode != nil {
-			contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractNode)
-			err = s.generateNextPreviewInvoice(ctx, common.GetTenantFromContext(ctx), contractEntity.Id, span)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("Error on generating next preview invoice: %s", err.Error())
-				return
-			}
+		err = s.generateNextPreviewInvoice(ctx, common.GetTenantFromContext(ctx), contractEntity, span)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error on generating next preview invoice: %s", err.Error())
+			return
 		}
 	}()
 
@@ -540,18 +544,7 @@ func (s *serviceLineItemService) Close(ctx context.Context, serviceLineItemId st
 	span.LogFields(log.String("serviceLineItemId", serviceLineItemId))
 	span.SetTag(tracing.SpanTagEntityId, serviceLineItemId)
 
-	sliExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), serviceLineItemId, neo4jutil.NodeLabelServiceLineItem)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("error on checking if service line item exists: %s", err.Error())
-		return err
-	}
-	if !sliExists {
-		err = fmt.Errorf("service line item with id {%s} not found", serviceLineItemId)
-		tracing.TraceErr(span, err)
-		s.log.Errorf(err.Error())
-		return err
-	}
+	sli, err := s.GetById(ctx, serviceLineItemId)
 
 	contractNode, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractByServiceLineItemId(ctx, common.GetTenantFromContext(ctx), serviceLineItemId)
 	if err != nil {
@@ -559,36 +552,45 @@ func (s *serviceLineItemService) Close(ctx context.Context, serviceLineItemId st
 		s.log.Errorf("Error on getting contract by service line item id {%s}: %s", serviceLineItemId, err.Error())
 		return err
 	}
+	contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractNode)
 
-	closeRequest := servicelineitempb.CloseServiceLineItemGrpcRequest{
-		Tenant:         common.GetTenantFromContext(ctx),
-		Id:             serviceLineItemId,
-		LoggedInUserId: common.GetUserIdFromContext(ctx),
-		AppSource:      constants.AppSourceCustomerOsApi,
-		EndedAt:        utils.ConvertTimeToTimestampPtr(endedAt),
-	}
+	contractInvoiced, err := s.repositories.Neo4jRepositories.ContractReadRepository.IsContractInvoiced(ctx, common.GetTenantFromContext(ctx), contractEntity.Id)
 
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = CallEventsPlatformGRPCWithRetry[*servicelineitempb.ServiceLineItemIdGrpcResponse](func() (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
-		return s.grpcClients.ServiceLineItemClient.CloseServiceLineItem(ctx, &closeRequest)
-	})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("Error from events processing: %s", err.Error())
-		return err
+	if contractInvoiced || sli.IsActiveAt(utils.Now()) {
+		closeRequest := servicelineitempb.CloseServiceLineItemGrpcRequest{
+			Tenant:         common.GetTenantFromContext(ctx),
+			Id:             serviceLineItemId,
+			LoggedInUserId: common.GetUserIdFromContext(ctx),
+			AppSource:      constants.AppSourceCustomerOsApi,
+			EndedAt:        utils.ConvertTimeToTimestampPtr(endedAt),
+		}
+
+		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+		_, err = CallEventsPlatformGRPCWithRetry[*servicelineitempb.ServiceLineItemIdGrpcResponse](func() (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
+			return s.grpcClients.ServiceLineItemClient.CloseServiceLineItem(ctx, &closeRequest)
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error from events processing: %s", err.Error())
+			return err
+		}
+	} else {
+		_, err = s.Delete(ctx, serviceLineItemId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error on deleting service line item: %s", err.Error())
+			return err
+		}
 	}
 
 	if !bulk {
 		go func() {
 			time.Sleep(3 * time.Second)
-			if contractNode != nil {
-				contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractNode)
-				err = s.generateNextPreviewInvoice(ctx, common.GetTenantFromContext(ctx), contractEntity.Id, span)
-				if err != nil {
-					tracing.TraceErr(span, err)
-					s.log.Errorf("Error on generating next preview invoice: %s", err.Error())
-					return
-				}
+			err = s.generateNextPreviewInvoice(ctx, common.GetTenantFromContext(ctx), contractEntity, span)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error on generating next preview invoice: %s", err.Error())
+				return
 			}
 		}()
 	}
@@ -741,7 +743,15 @@ func (s *serviceLineItemService) CreateOrUpdateOrCloseInBulk(ctx context.Context
 	go func() {
 		time.Sleep(3 * time.Second)
 
-		err := s.generateNextPreviewInvoice(ctx, common.GetTenantFromContext(ctx), contractId, span)
+		contractDbNode, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, common.GetTenantFromContext(ctx), contractId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error on getting contract by id {%s}: %s", contractId, err.Error())
+			return
+		}
+		contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
+
+		err = s.generateNextPreviewInvoice(ctx, common.GetTenantFromContext(ctx), contractEntity, span)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error on generating next preview invoice: %s", err.Error())
@@ -752,22 +762,18 @@ func (s *serviceLineItemService) CreateOrUpdateOrCloseInBulk(ctx context.Context
 	return responseIds, nil
 }
 
-func (s *serviceLineItemService) generateNextPreviewInvoice(ctx context.Context, tenant, contractId string, span opentracing.Span) error {
-	contractDbNode, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, tenant, contractId)
-	if err != nil {
+func (s *serviceLineItemService) generateNextPreviewInvoice(ctx context.Context, tenant string, contractEntity *neo4jentity.ContractEntity, span opentracing.Span) error {
+	if contractEntity == nil || contractEntity.Id == "" {
+		err := errors.New("contract entity is nil or contract id is empty")
+		tracing.TraceErr(span, err)
 		return err
 	}
-	if contractDbNode == nil {
-		return errors.New("contract not found")
-	}
-	contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
-
 	if contractEntity.InvoicingEnabled && contractEntity.BillingCycle != neo4jenum.BillingCycleNone && contractEntity.InvoicingStartDate != nil {
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
+		_, err := CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
 			return s.grpcClients.InvoiceClient.NextPreviewInvoiceForContract(ctx, &invoicepb.NextPreviewInvoiceForContractRequest{
 				Tenant:     tenant,
-				ContractId: contractId,
+				ContractId: contractEntity.Id,
 				AppSource:  constants.AppSourceCustomerOsApi,
 			})
 		})
