@@ -8,6 +8,10 @@ import "common/billing_type.proto";
 
 option go_package = "api/grpc/v1/service_line_item;service_line_item_grpc_service";
 
+enum ServiceLineItemFieldMask {
+  SLI_FIELD_NONE = 0; // No property, ignored by the server
+  SLI_FIELD_NAME = 1;
+}
 
 message CreateServiceLineItemGrpcRequest {
   string tenant = 1;

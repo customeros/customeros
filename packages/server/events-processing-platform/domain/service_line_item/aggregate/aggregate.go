@@ -136,8 +136,14 @@ func (a *ServiceLineItemAggregate) UpdateServiceLineItem(ctx context.Context, r 
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
 	tracing.LogObjectAsJson(span, "request", r)
 
+	// Do not allow updates on deleted or canceled service line items
 	if a.ServiceLineItem.IsDeleted {
 		err := errors.New(constants.Validate + ": cannot update a deleted service line item")
+		tracing.TraceErr(span, err)
+		return err
+	}
+	if a.ServiceLineItem.IsCanceled {
+		err := errors.New(constants.Validate + ": cannot update a canceled service line item")
 		tracing.TraceErr(span, err)
 		return err
 	}
@@ -145,6 +151,14 @@ func (a *ServiceLineItemAggregate) UpdateServiceLineItem(ctx context.Context, r 
 	// fail if quantity or price is negative
 	if r.Quantity < 0 || r.Price < 0 {
 		err := errors.New(constants.FieldValidation + ": quantity and price must not be negative")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	billedType := model.BilledType(r.Billed)
+	// do not allow changing billed type
+	if a.ServiceLineItem.Billed != billedType.String() && a.ServiceLineItem.Billed != model.NoneBilled.String() {
+		err := errors.New(constants.Validate + ": cannot change billed type")
 		tracing.TraceErr(span, err)
 		return err
 	}
@@ -161,17 +175,12 @@ func (a *ServiceLineItemAggregate) UpdateServiceLineItem(ctx context.Context, r 
 	source.FromGrpc(r.SourceFields)
 
 	dataFields := model.ServiceLineItemDataFields{
-		Billed:   model.BilledType(r.Billed),
+		Billed:   billedType,
 		Quantity: r.Quantity,
 		Price:    r.Price,
 		Name:     r.Name,
 		Comments: r.Comments,
 		VatRate:  r.VatRate,
-	}
-
-	if (a.ServiceLineItem.Billed == model.OnceBilled.String() && dataFields.Billed != model.OnceBilled) ||
-		(a.ServiceLineItem.Billed != model.OnceBilled.String() && dataFields.Billed == model.OnceBilled) {
-		return errors.New(constants.FieldValidation + ": cannot change billed type from 'once' to a frequency-based option or vice versa")
 	}
 
 	// Prepare the data for the update event

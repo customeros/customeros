@@ -93,12 +93,18 @@ input ServiceLineItemCloseInput {
 
 
 enum BilledType {
-    NONE
+    """
+    Deprecated
+    """
+    NONE @deprecated(reason: "MONTHLY will be used instead.")
     MONTHLY
     QUARTERLY
     ANNUALLY
     ONCE
-    USAGE
+    """
+    Deprecated
+    """
+    USAGE @deprecated(reason: "Not supported yet.")
 }
 
 input TaxInput {

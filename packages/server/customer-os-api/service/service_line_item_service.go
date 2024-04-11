@@ -99,42 +99,6 @@ func (s *serviceLineItemService) Create(ctx context.Context, serviceLineItemDeta
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "serviceLineItemDetails", serviceLineItemDetails)
 
-	serviceLineItemId, err := s.createServiceLineItemWithEvents(ctx, &serviceLineItemDetails)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("Error from events processing: %s", err.Error())
-		return "", err
-	}
-
-	if !bulk {
-		go func() {
-			time.Sleep(3 * time.Second)
-
-			contractNode, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractByServiceLineItemId(ctx, common.GetTenantFromContext(ctx), serviceLineItemId)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("Error on getting contract by service line item id {%s}: %s", serviceLineItemId, err.Error())
-				return
-			}
-			contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractNode)
-			err = s.generateNextPreviewInvoice(ctx, common.GetTenantFromContext(ctx), contractEntity, span)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("Error on generating next preview invoice: %s", err.Error())
-				return
-			}
-		}()
-	}
-
-	span.LogFields(log.String("output - createdServiceLineItemId", serviceLineItemId))
-	return serviceLineItemId, nil
-}
-
-func (s *serviceLineItemService) createServiceLineItemWithEvents(ctx context.Context, serviceLineItemDetails *ServiceLineItemCreateData) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemService.createServiceLineItemWithEvents")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-
 	// check that quantity and price are not negative
 	if serviceLineItemDetails.SliQuantity < 0 || serviceLineItemDetails.SliPrice < 0 {
 		err := errors.New("quantity and price must not be negative")
@@ -158,20 +122,12 @@ func (s *serviceLineItemService) createServiceLineItemWithEvents(ctx context.Con
 		},
 	}
 
-	switch serviceLineItemDetails.SliBilledType {
-	case neo4jenum.BilledTypeMonthly:
-		createServiceLineItemRequest.Billed = commonpb.BilledType_MONTHLY_BILLED
-	case neo4jenum.BilledTypeQuarterly:
-		createServiceLineItemRequest.Billed = commonpb.BilledType_QUARTERLY_BILLED
-	case neo4jenum.BilledTypeAnnually:
-		createServiceLineItemRequest.Billed = commonpb.BilledType_ANNUALLY_BILLED
-	case neo4jenum.BilledTypeOnce:
-		createServiceLineItemRequest.Billed = commonpb.BilledType_ONCE_BILLED
-	case neo4jenum.BilledTypeUsage:
-		createServiceLineItemRequest.Billed = commonpb.BilledType_USAGE_BILLED
-	default:
-		createServiceLineItemRequest.Billed = commonpb.BilledType_NONE_BILLED
+	billedType, err := convertBilledTypeToProto(serviceLineItemDetails.SliBilledType, span)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
 	}
+	createServiceLineItemRequest.Billed = billedType
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	response, err := CallEventsPlatformGRPCWithRetry[*servicelineitempb.ServiceLineItemIdGrpcResponse](func() (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
@@ -183,7 +139,29 @@ func (s *serviceLineItemService) createServiceLineItemWithEvents(ctx context.Con
 	}
 
 	WaitForNodeCreatedInNeo4j(ctx, s.repositories, response.Id, neo4jutil.NodeLabelServiceLineItem, span)
-	return response.Id, err
+
+	if !bulk {
+		go func() {
+			time.Sleep(3 * time.Second)
+
+			contractNode, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractByServiceLineItemId(ctx, common.GetTenantFromContext(ctx), response.Id)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error on getting contract by service line item id {%s}: %s", response.Id, err.Error())
+				return
+			}
+			contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractNode)
+			err = s.generateNextPreviewInvoice(ctx, common.GetTenantFromContext(ctx), contractEntity, span)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error on generating next preview invoice: %s", err.Error())
+				return
+			}
+		}()
+	}
+
+	span.LogFields(log.String("output - createdServiceLineItemId", response.Id))
+	return response.Id, nil
 }
 
 func (s *serviceLineItemService) NewVersion(ctx context.Context, data ServiceLineItemNewVersionData) (string, error) {
@@ -205,19 +183,12 @@ func (s *serviceLineItemService) NewVersion(ctx context.Context, data ServiceLin
 		s.log.Errorf("Error on getting contract line item by id {%s}: %s", data.Id, err.Error())
 		return "", err
 	}
-	contractDbNode, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractByServiceLineItemId(ctx, common.GetTenantFromContext(ctx), data.Id)
+	contractEntity, err := s.services.ContractService.GetContractByServiceLineItem(ctx, data.Id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error on getting contract by service line item id {%s}: %s", data.Id, err.Error())
 		return "", err
 	}
-	if contractDbNode == nil {
-		err = fmt.Errorf("contract not found for service line item id {%s}", data.Id)
-		tracing.TraceErr(span, err)
-		s.log.Errorf(err.Error())
-		return "", err
-	}
-	contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
 
 	startedAt := utils.ToDate(utils.IfNotNilTimeWithDefault(data.StartedAt, utils.Now()))
 
@@ -271,20 +242,12 @@ func (s *serviceLineItemService) NewVersion(ctx context.Context, data ServiceLin
 		},
 	}
 
-	switch baseServiceLineItemEntity.Billed {
-	case neo4jenum.BilledTypeMonthly:
-		createServiceLineItemRequest.Billed = commonpb.BilledType_MONTHLY_BILLED
-	case neo4jenum.BilledTypeQuarterly:
-		createServiceLineItemRequest.Billed = commonpb.BilledType_QUARTERLY_BILLED
-	case neo4jenum.BilledTypeAnnually:
-		createServiceLineItemRequest.Billed = commonpb.BilledType_ANNUALLY_BILLED
-	case neo4jenum.BilledTypeOnce:
-		createServiceLineItemRequest.Billed = commonpb.BilledType_ONCE_BILLED
-	case neo4jenum.BilledTypeUsage:
-		createServiceLineItemRequest.Billed = commonpb.BilledType_USAGE_BILLED
-	default:
-		createServiceLineItemRequest.Billed = commonpb.BilledType_NONE_BILLED
+	billedType, err := convertBilledTypeToProto(baseServiceLineItemEntity.Billed, span)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
 	}
+	createServiceLineItemRequest.Billed = billedType
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	response, err := CallEventsPlatformGRPCWithRetry[*servicelineitempb.ServiceLineItemIdGrpcResponse](func() (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
@@ -297,8 +260,7 @@ func (s *serviceLineItemService) NewVersion(ctx context.Context, data ServiceLin
 
 	go func() {
 		time.Sleep(2 * time.Second)
-
-		err := s.generateNextPreviewInvoice(ctx, common.GetTenantFromContext(ctx), contractEntity, span)
+		err = s.generateNextPreviewInvoice(ctx, common.GetTenantFromContext(ctx), contractEntity, span)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error on generating next preview invoice: %s", err.Error())
@@ -322,10 +284,33 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 		return err
 	}
 
-	serviceLineItemEntity, err := s.GetById(ctx, serviceLineItemDetails.Id)
+	baseServiceLineItemEntity, err := s.GetById(ctx, serviceLineItemDetails.Id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error on getting contract line item by id {%s}: %s", serviceLineItemDetails.Id, err.Error())
+		return err
+	}
+
+	if baseServiceLineItemEntity.Canceled {
+		err = fmt.Errorf("service line item with id {%s} is already ended", serviceLineItemDetails.Id)
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	contractEntity, err := s.services.ContractService.GetContractByServiceLineItem(ctx, serviceLineItemDetails.Id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error on getting contract by service line item id {%s}: %s", serviceLineItemDetails.Id, err.Error())
+		return err
+	}
+
+	contractInvoiced, err := s.repositories.Neo4jRepositories.ContractReadRepository.IsContractInvoiced(ctx, common.GetTenantFromContext(ctx), contractEntity.Id)
+	startedAt := utils.IfNotNilTimeWithDefault(serviceLineItemDetails.StartedAt, baseServiceLineItemEntity.StartedAt)
+
+	// Do not allow updating past SLIs for invoiced contracts
+	if contractInvoiced && startedAt.Before(utils.Today()) {
+		err = fmt.Errorf("cannot update contract line item with id {%s} in the past", serviceLineItemDetails.Id)
+		tracing.TraceErr(span, err)
 		return err
 	}
 
@@ -336,46 +321,40 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 		return err
 	}
 
-	if (serviceLineItemEntity.IsOneTime() && serviceLineItemDetails.SliBilledType != neo4jenum.BilledTypeOnce) ||
-		(serviceLineItemDetails.SliBilledType == neo4jenum.BilledTypeOnce && !serviceLineItemEntity.IsOneTime()) {
+	// check that billing cycle is not changed
+	if baseServiceLineItemEntity.Billed.String() != serviceLineItemDetails.SliBilledType.String() && baseServiceLineItemEntity.Billed.String() != "" {
 		err = fmt.Errorf("cannot change billing cycle for contract line item with id {%s}", serviceLineItemDetails.Id)
 		tracing.TraceErr(span, err)
 		return err
 	}
+
 	isRetroactiveCorrection := serviceLineItemDetails.IsRetroactiveCorrection
-	if serviceLineItemEntity.IsOneTime() {
-		isRetroactiveCorrection = true
-	}
-	// If no price impacted fields changed, set retroactive correction to true
-	if serviceLineItemEntity.Price == serviceLineItemDetails.SliPrice &&
-		serviceLineItemEntity.Quantity == serviceLineItemDetails.SliQuantity &&
-		serviceLineItemEntity.Billed == serviceLineItemDetails.SliBilledType &&
-		serviceLineItemEntity.VatRate == serviceLineItemDetails.SliVatRate {
-		isRetroactiveCorrection = true
-	}
-	if !isRetroactiveCorrection && serviceLineItemDetails.StartedAt != nil && serviceLineItemEntity.StartedAt == *serviceLineItemDetails.StartedAt {
+	if baseServiceLineItemEntity.IsOneTime() {
 		isRetroactiveCorrection = true
 	}
 
-	if !isRetroactiveCorrection && serviceLineItemEntity.EndedAt != nil {
-		err = fmt.Errorf("service line item with id {%s} is already ended", serviceLineItemDetails.Id)
+	// If no price impacted fields changed, set retroactive correction to true
+	if baseServiceLineItemEntity.Price == serviceLineItemDetails.SliPrice &&
+		baseServiceLineItemEntity.Quantity == serviceLineItemDetails.SliQuantity &&
+		baseServiceLineItemEntity.VatRate == serviceLineItemDetails.SliVatRate {
+		isRetroactiveCorrection = true
+	}
+	if startedAt == *serviceLineItemDetails.StartedAt {
+		isRetroactiveCorrection = true
+	}
+
+	// Check SLI is not invoiced
+	sliInvoiced, err := s.repositories.Neo4jRepositories.ServiceLineItemReadRepository.WasServiceLineItemInvoiced(ctx, common.GetTenantFromContext(ctx), baseServiceLineItemEntity.ID)
+	if err != nil {
 		tracing.TraceErr(span, err)
+		s.log.Errorf("Error on checking if service line item was invoiced: %s", err.Error())
 		return err
 	}
 
-	if !isRetroactiveCorrection && serviceLineItemDetails.StartedAt != nil {
-		lastSliVersionDbNode, err := s.repositories.Neo4jRepositories.ServiceLineItemReadRepository.GetLatestServiceLineItemByParentId(ctx, common.GetTenantFromContext(ctx), serviceLineItemEntity.ParentID, nil)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			s.log.Errorf("Error on getting latest service line item by parent id {%s}: %s", serviceLineItemEntity.ParentID, err.Error())
-			return err
-		}
-		lastSliVersionEntity := neo4jmapper.MapDbNodeToServiceLineItemEntity(lastSliVersionDbNode)
-		if lastSliVersionEntity.StartedAt.After(*serviceLineItemDetails.StartedAt) {
-			err = fmt.Errorf("service line item with id {%s} is already started at a later date", serviceLineItemDetails.Id)
-			tracing.TraceErr(span, err)
-			return err
-		}
+	if sliInvoiced && !isRetroactiveCorrection {
+		err = fmt.Errorf("service line item with id {%s} is included in invoice and cannot be updated", serviceLineItemDetails.Id)
+		tracing.TraceErr(span, err)
+		return err
 	}
 
 	if isRetroactiveCorrection {
@@ -393,22 +372,15 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 				AppSource: utils.StringFirstNonEmpty(serviceLineItemDetails.AppSource, constants.AppSourceCustomerOsApi),
 			},
 		}
-		switch serviceLineItemDetails.SliBilledType {
-		case neo4jenum.BilledTypeMonthly:
-			serviceLineItemUpdateRequest.Billed = commonpb.BilledType_MONTHLY_BILLED
-		case neo4jenum.BilledTypeQuarterly:
-			serviceLineItemUpdateRequest.Billed = commonpb.BilledType_QUARTERLY_BILLED
-		case neo4jenum.BilledTypeAnnually:
-			serviceLineItemUpdateRequest.Billed = commonpb.BilledType_ANNUALLY_BILLED
-		case neo4jenum.BilledTypeOnce:
-			serviceLineItemUpdateRequest.Billed = commonpb.BilledType_ONCE_BILLED
-		case neo4jenum.BilledTypeUsage:
-			serviceLineItemUpdateRequest.Billed = commonpb.BilledType_USAGE_BILLED
-		default:
-			serviceLineItemUpdateRequest.Billed = commonpb.BilledType_NONE_BILLED
+
+		billedType, err := convertBilledTypeToProto(serviceLineItemDetails.SliBilledType, span)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
 		}
-		// TODO to be reworked
-		if serviceLineItemEntity.ParentID == serviceLineItemEntity.ID {
+		serviceLineItemUpdateRequest.Billed = billedType
+
+		if baseServiceLineItemEntity.ParentID == baseServiceLineItemEntity.ID {
 			serviceLineItemUpdateRequest.StartedAt = utils.ConvertTimeToTimestampPtr(serviceLineItemDetails.StartedAt)
 		}
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
@@ -421,26 +393,12 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 			return err
 		}
 	} else {
-		contractDbNode, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractByServiceLineItemId(ctx, common.GetTenantFromContext(ctx), serviceLineItemDetails.Id)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			s.log.Errorf("Error on getting contract by service line item id {%s}: %s", serviceLineItemDetails.Id, err.Error())
-			return err
-		}
-		if contractDbNode == nil {
-			err := fmt.Errorf("contract not found for service line item id {%s}", serviceLineItemDetails.Id)
-			tracing.TraceErr(span, err)
-			s.log.Errorf(err.Error())
-			return err
-		}
-		contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
-
 		createServiceLineItemRequest := servicelineitempb.CreateServiceLineItemGrpcRequest{
 			Tenant:         common.GetTenantFromContext(ctx),
 			LoggedInUserId: common.GetUserIdFromContext(ctx),
 			ContractId:     contractEntity.Id,
-			ParentId:       serviceLineItemEntity.ParentID,
-			Name:           utils.StringFirstNonEmpty(serviceLineItemDetails.SliName, serviceLineItemEntity.Name),
+			ParentId:       baseServiceLineItemEntity.ParentID,
+			Name:           utils.StringFirstNonEmpty(serviceLineItemDetails.SliName, baseServiceLineItemEntity.Name),
 			Quantity:       serviceLineItemDetails.SliQuantity,
 			Price:          serviceLineItemDetails.SliPrice,
 			VatRate:        serviceLineItemDetails.SliVatRate,
@@ -452,20 +410,12 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 			},
 		}
 
-		switch serviceLineItemEntity.Billed {
-		case neo4jenum.BilledTypeMonthly:
-			createServiceLineItemRequest.Billed = commonpb.BilledType_MONTHLY_BILLED
-		case neo4jenum.BilledTypeQuarterly:
-			createServiceLineItemRequest.Billed = commonpb.BilledType_QUARTERLY_BILLED
-		case neo4jenum.BilledTypeAnnually:
-			createServiceLineItemRequest.Billed = commonpb.BilledType_ANNUALLY_BILLED
-		case neo4jenum.BilledTypeOnce:
-			createServiceLineItemRequest.Billed = commonpb.BilledType_ONCE_BILLED
-		case neo4jenum.BilledTypeUsage:
-			createServiceLineItemRequest.Billed = commonpb.BilledType_USAGE_BILLED
-		default:
-			createServiceLineItemRequest.Billed = commonpb.BilledType_NONE_BILLED
+		billedType, err := convertBilledTypeToProto(baseServiceLineItemEntity.Billed, span)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
 		}
+		createServiceLineItemRequest.Billed = billedType
 
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err = CallEventsPlatformGRPCWithRetry[*servicelineitempb.ServiceLineItemIdGrpcResponse](func() (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
@@ -481,20 +431,11 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 		go func() {
 			time.Sleep(3 * time.Second)
 
-			contractNode, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractByServiceLineItemId(ctx, common.GetTenantFromContext(ctx), serviceLineItemDetails.Id)
+			err = s.generateNextPreviewInvoice(ctx, common.GetTenantFromContext(ctx), contractEntity, span)
 			if err != nil {
 				tracing.TraceErr(span, err)
-				s.log.Errorf("Error on getting contract by service line item id {%s}: %s", serviceLineItemDetails.Id, err.Error())
+				s.log.Errorf("Error on generating next preview invoice: %s", err.Error())
 				return
-			}
-			if contractNode != nil {
-				contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractNode)
-				err := s.generateNextPreviewInvoice(ctx, common.GetTenantFromContext(ctx), contractEntity, span)
-				if err != nil {
-					tracing.TraceErr(span, err)
-					s.log.Errorf("Error on generating next preview invoice: %s", err.Error())
-					return
-				}
 			}
 		}()
 	}
@@ -535,13 +476,12 @@ func (s *serviceLineItemService) Delete(ctx context.Context, serviceLineItemId s
 		return false, err
 	}
 
-	contractNode, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractByServiceLineItemId(ctx, common.GetTenantFromContext(ctx), serviceLineItemId)
+	contractEntity, err := s.services.ContractService.GetContractByServiceLineItem(ctx, serviceLineItemId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error on getting contract by service line item id {%s}: %s", serviceLineItemId, err.Error())
-		return
+		return false, err
 	}
-	contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractNode)
 
 	deleteRequest := servicelineitempb.DeleteServiceLineItemGrpcRequest{
 		Tenant:         common.GetTenantFromContext(ctx),
@@ -582,13 +522,12 @@ func (s *serviceLineItemService) Close(ctx context.Context, serviceLineItemId st
 
 	sli, err := s.GetById(ctx, serviceLineItemId)
 
-	contractNode, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractByServiceLineItemId(ctx, common.GetTenantFromContext(ctx), serviceLineItemId)
+	contractEntity, err := s.services.ContractService.GetContractByServiceLineItem(ctx, serviceLineItemId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error on getting contract by service line item id {%s}: %s", serviceLineItemId, err.Error())
 		return err
 	}
-	contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractNode)
 
 	contractInvoiced, err := s.repositories.Neo4jRepositories.ContractReadRepository.IsContractInvoiced(ctx, common.GetTenantFromContext(ctx), contractEntity.Id)
 
@@ -850,5 +789,28 @@ func MapServiceLineItemBulkItemToData(input *model.ServiceLineItemBulkUpdateItem
 		IsRetroactiveCorrection: utils.IfNotNilBool(input.IsRetroactiveCorrection),
 		VatRate:                 utils.IfNotNilFloat64(input.VatRate),
 		StartedAt:               input.ServiceStarted,
+	}
+}
+
+func convertBilledTypeToProto(billedType neo4jenum.BilledType, span opentracing.Span) (commonpb.BilledType, error) {
+	switch billedType {
+	case neo4jenum.BilledTypeMonthly:
+		return commonpb.BilledType_MONTHLY_BILLED, nil
+	case neo4jenum.BilledTypeQuarterly:
+		return commonpb.BilledType_QUARTERLY_BILLED, nil
+	case neo4jenum.BilledTypeAnnually:
+		return commonpb.BilledType_ANNUALLY_BILLED, nil
+	case neo4jenum.BilledTypeOnce:
+		return commonpb.BilledType_ONCE_BILLED, nil
+	case neo4jenum.BilledTypeUsage:
+		return commonpb.BilledType_USAGE_BILLED, nil
+	case neo4jenum.BilledTypeNone:
+		err := fmt.Errorf("billed type is not set")
+		tracing.TraceErr(span, err)
+		return commonpb.BilledType_NONE_BILLED, err
+	default:
+		err := fmt.Errorf("unknown billed type: %s", billedType)
+		tracing.TraceErr(span, err)
+		return commonpb.BilledType_NONE_BILLED, err
 	}
 }
