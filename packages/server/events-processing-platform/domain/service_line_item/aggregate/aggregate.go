@@ -157,7 +157,7 @@ func (a *ServiceLineItemAggregate) UpdateServiceLineItem(ctx context.Context, r 
 
 	billedType := model.BilledType(r.Billed)
 	// do not allow changing billed type
-	if a.ServiceLineItem.Billed != billedType.String() && a.ServiceLineItem.Billed != model.NoneBilled.String() {
+	if a.ServiceLineItem.Billed != billedType.String() && a.ServiceLineItem.Billed != "" {
 		err := errors.New(constants.Validate + ": cannot change billed type")
 		tracing.TraceErr(span, err)
 		return err
