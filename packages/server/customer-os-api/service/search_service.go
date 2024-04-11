@@ -7,8 +7,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
-	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/neo4j/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 )
 
 type SearchService interface {
@@ -73,7 +74,7 @@ func (s *searchService) prepareEntityLabels(tenant string) map[entity.SearchResu
 		entity.SearchResultEntityTypeContact:      entity.ContactEntity{}.Labels(tenant),
 		entity.SearchResultEntityTypeOrganization: entity.OrganizationEntity{}.Labels(tenant),
 		entity.SearchResultEntityTypeEmail:        entity.EmailEntity{}.Labels(tenant),
-		entity.SearchResultEntityTypeState:        commonEntity.StateEntity{}.Labels(),
+		entity.SearchResultEntityTypeState:        neo4jEntity.StateEntity{}.Labels(),
 	}
 	return entityLabels
 }
@@ -101,5 +102,5 @@ func (s *searchService) extractFieldsFromEmailNode(node dbtype.Node) any {
 }
 
 func (s *searchService) extractFieldsFromStateNode(node dbtype.Node) any {
-	return s.services.CommonServices.StateService.MapDbNodeToStateEntity(node)
+	return mapper.MapDbNodeToStateEntity(node)
 }

@@ -56,6 +56,7 @@ type Repositories struct {
 	ReminderWriteRepository           ReminderWriteRepository
 	ServiceLineItemReadRepository     ServiceLineItemReadRepository
 	ServiceLineItemWriteRepository    ServiceLineItemWriteRepository
+	StateReadRepository               StateReadRepository
 	SocialWriteRepository             SocialWriteRepository
 	TagReadRepository                 TagReadRepository
 	TagWriteRepository                TagWriteRepository
@@ -121,6 +122,7 @@ func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string
 		ReminderWriteRepository:           NewReminderWriteRepository(driver, neo4jDatabase),
 		ServiceLineItemReadRepository:     NewServiceLineItemReadRepository(driver, neo4jDatabase),
 		ServiceLineItemWriteRepository:    NewServiceLineItemWriteRepository(driver, neo4jDatabase),
+		StateReadRepository:               NewStateReadRepository(driver, neo4jDatabase),
 		SocialWriteRepository:             NewSocialWriteRepository(driver, neo4jDatabase),
 		TagReadRepository:                 NewTagReadRepository(driver, neo4jDatabase),
 		TagWriteRepository:                NewTagWriteRepository(driver, neo4jDatabase),

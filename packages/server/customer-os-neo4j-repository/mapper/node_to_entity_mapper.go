@@ -737,3 +737,15 @@ func MapDbNodeToOfferingEntity(node *dbtype.Node) *entity.OfferingEntity {
 	}
 	return &offering
 }
+
+func MapDbNodeToStateEntity(node dbtype.Node) *entity.StateEntity {
+	props := utils.GetPropsFromNode(node)
+	result := entity.StateEntity{
+		Id:        utils.GetStringPropOrEmpty(props, "id"),
+		Name:      utils.GetStringPropOrEmpty(props, "name"),
+		Code:      utils.GetStringPropOrEmpty(props, "code"),
+		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),
+	}
+	return &result
+}

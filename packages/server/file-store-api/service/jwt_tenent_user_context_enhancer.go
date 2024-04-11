@@ -6,7 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
-	commonRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/model"
 	"log"
@@ -15,16 +14,14 @@ import (
 )
 
 type JWTTenantUserService struct {
-	commonRepositoryContainer *commonRepository.Repositories
-	cfg                       *config.Config
+	cfg *config.Config
 }
 
 const JWTHeader = "X-Openline-JWT"
 
-func NewJWTTenantUserService(commonRepositoryContainer *commonRepository.Repositories, cfg *config.Config) *JWTTenantUserService {
+func NewJWTTenantUserService(cfg *config.Config) *JWTTenantUserService {
 	return &JWTTenantUserService{
-		commonRepositoryContainer: commonRepositoryContainer,
-		cfg:                       cfg,
+		cfg: cfg,
 	}
 }
 

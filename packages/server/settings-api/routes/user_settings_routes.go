@@ -11,7 +11,7 @@ import (
 
 func InitUserSettingsRoutes(r *gin.Engine, ctx context.Context, services *service.Services) {
 	r.GET("/user/settings/google/:playerIdentityId",
-		commonService.TenantUserContextEnhancer(commonService.USERNAME, services.Repositories.CommonRepositories),
+		commonService.TenantUserContextEnhancer(commonService.USERNAME, services.Repositories.Neo4jRepositories),
 		commonService.ApiKeyCheckerHTTP(services.Repositories.PostgresRepositories.TenantWebhookApiKeyRepository, services.Repositories.PostgresRepositories.AppKeyRepository, commonService.SETTINGS_API),
 
 		func(c *gin.Context) {
@@ -28,7 +28,7 @@ func InitUserSettingsRoutes(r *gin.Engine, ctx context.Context, services *servic
 		})
 
 	r.GET("/user/settings/slack",
-		commonService.TenantUserContextEnhancer(commonService.USERNAME, services.Repositories.CommonRepositories),
+		commonService.TenantUserContextEnhancer(commonService.USERNAME, services.Repositories.Neo4jRepositories),
 		commonService.ApiKeyCheckerHTTP(services.Repositories.PostgresRepositories.TenantWebhookApiKeyRepository, services.Repositories.PostgresRepositories.AppKeyRepository, commonService.SETTINGS_API),
 
 		func(c *gin.Context) {

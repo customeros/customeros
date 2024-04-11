@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
+	neo4jRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"io"
 	"net/http"
 	"os"
@@ -95,7 +95,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	}
 
 	// Setting up Postgres repositories
-	commonServices := commonservice.InitServices(db.GormDB, &neo4jDriver)
+	commonServices := commonservice.InitServices(db.GormDB, &neo4jDriver, server.cfg.Neo4j.Database)
 	commonAuthServices := commonAuthService.InitServices(nil, commonServices, db.GormDB)
 
 	// Setting up gRPC client
@@ -185,7 +185,7 @@ func apiKeyCheckerHTTPMiddleware(tenantApiKeyRepo postgresRepository.TenantWebho
 }
 
 // Define a custom middleware adapter for TenantUserContextEnhancer.
-func tenantUserContextEnhancerMiddleware(userContextType commonservice.HeaderAllowance, repos *repository.Repositories, opts ...commonservice.CommonServiceOption) func(c *gin.Context) {
+func tenantUserContextEnhancerMiddleware(userContextType commonservice.HeaderAllowance, repos *neo4jRepository.Repositories, opts ...commonservice.CommonServiceOption) func(c *gin.Context) {
 	tenantEnhancer := commonservice.TenantUserContextEnhancer(userContextType, repos, opts...)
 	return func(c *gin.Context) {
 		if isIntrospectionQuery(c.Request) {

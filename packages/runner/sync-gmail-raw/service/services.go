@@ -34,7 +34,7 @@ func InitServices(driver *neo4j.DriverWithContext, gormDb *gorm.DB, cfg *config.
 	services.EmailService = NewEmailService(cfg, services.Repositories, services)
 	services.MeetingService = NewMeetingService(cfg, services.Repositories, services)
 
-	services.CommonServices = commonService.InitServices(gormDb, driver)
+	services.CommonServices = commonService.InitServices(gormDb, driver, cfg.Neo4jDb.Database)
 	services.AuthServices = authService.InitServices(&cfg.AuthConfig, services.CommonServices, gormDb)
 
 	return services

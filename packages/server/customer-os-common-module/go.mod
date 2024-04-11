@@ -2,7 +2,9 @@ module github.com/openline-ai/openline-customer-os/packages/server/customer-os-c
 
 go 1.21
 
-replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository => ../customer-os-postgres-repository
+replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository => ./../customer-os-postgres-repository
+
+replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository => ./../customer-os-neo4j-repository
 
 require (
 	github.com/cenkalti/backoff/v4 v4.3.0
@@ -11,7 +13,8 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/h2non/filetype v1.1.3
 	github.com/neo4j/neo4j-go-driver/v5 v5.19.0
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository v0.0.0-20240410144729-44cbe53c019c
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-00010101000000-000000000000
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository v0.0.0-00010101000000-000000000000
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.3

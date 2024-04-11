@@ -23,20 +23,18 @@ type Services struct {
 }
 
 func InitServices(graphqlClient *graphql.Client, redisClient *redis.Client, cfg *c.Config, db *c.StorageDB) *Services {
-	postgresRepositories := postgresRepository.InitRepositories(db.GormDB)
-
 	cosService := NewCustomerOSService(graphqlClient, cfg)
 
 	services := Services{
-		PostgresRepositories: postgresRepositories,
+		PostgresRepositories: postgresRepository.InitRepositories(db.GormDB),
 		CustomerOsService:    cosService,
 		RedisService:         NewRedisService(redisClient, cfg),
 		FileStoreApiService:  fsc.NewFileStoreApiService(&cfg.FileStoreApiConfig),
-		CommonServices:       commonService.InitServices(db.GormDB, nil),
+		CommonServices:       commonService.InitServices(db.GormDB, nil, ""),
 	}
 
 	services.MailService = NewMailService(cfg, &services)
-	services.AuthServices = authService.InitServices(&cfg.AuthConfig, db.GormDB)
+	services.AuthServices = authService.InitServices(&cfg.AuthConfig, services.CommonServices, db.GormDB)
 
 	return &services
 }

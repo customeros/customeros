@@ -68,7 +68,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	defer neo4jDriver.Close(ctx)
 
 	// Setting up Postgres repositories
-	commonServices := commonservice.InitServices(postgresDb.GormDB, &neo4jDriver)
+	commonServices := commonservice.InitServices(postgresDb.GormDB, &neo4jDriver, server.cfg.Neo4j.Database)
 	commonAuthServices := commonAuthService.InitServices(nil, commonServices, postgresDb.GormDB)
 
 	// Setting up gRPC client

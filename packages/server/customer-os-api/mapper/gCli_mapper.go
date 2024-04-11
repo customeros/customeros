@@ -3,11 +3,11 @@ package mapper
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/neo4j/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 )
 
-func MapStateToGCliItem(stateEntity commonEntity.StateEntity) model.GCliItem {
+func MapStateToGCliItem(stateEntity neo4jEntity.StateEntity) model.GCliItem {
 	resultItem := model.GCliItem{}
 
 	resultItem.ID = stateEntity.Id

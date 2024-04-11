@@ -4,30 +4,30 @@ import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
 
-type StateRepository interface {
+type StateReadRepository interface {
 	GetStatesByCountryId(ctx context.Context, countryId string) ([]*dbtype.Node, error)
 }
 
-type stateRepository struct {
-	driver *neo4j.DriverWithContext
+type stateReadRepository struct {
+	driver   *neo4j.DriverWithContext
+	database string
 }
 
-func NewStateRepository(driver *neo4j.DriverWithContext) StateRepository {
-	return &stateRepository{
-		driver: driver,
+func NewStateReadRepository(driver *neo4j.DriverWithContext, database string) StateReadRepository {
+	return &stateReadRepository{
+		driver:   driver,
+		database: database,
 	}
 }
 
-func (r *stateRepository) GetStatesByCountryId(ctx context.Context, countryId string) ([]*dbtype.Node, error) {
+func (r *stateReadRepository) GetStatesByCountryId(ctx context.Context, countryId string) ([]*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UserRepository.FindUserByEmail")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, "neo4jRepository")
 	span.LogFields(log.String("countryId", countryId))
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
