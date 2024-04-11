@@ -146,7 +146,7 @@ const getDefaultClassNames = ({
         : 'mt-2 animate-slideDownAndFade',
     ),
   menuList: () =>
-    'p-2 max-h-[300px] border border-gray-200 bg-white outline-offset-[2px] outline-[2px] rounded-lg shadow-lg overflow-y-auto overscroll-auto min-w-[120px]',
+    'p-2 max-h-[300px] border border-gray-200 bg-white outline-offset-[2px] outline-[2px] rounded-lg shadow-lg overflow-y-auto overscroll-auto',
   option: ({ isFocused, isSelected }) =>
     cn(
       'my-[2px] px-3 py-1.5 rounded-md text-gray-700 line-clamp-1 transition ease-in-out delay-50 hover:bg-gray-50',
@@ -164,6 +164,12 @@ const getDefaultClassNames = ({
 export const getMultiValueClassNames = (className?: string) => {
   const defaultStyle =
     'flex items-center h-6 bg-gray-50 rounded-md pl-2 pr-1 ml-0 mr-1 mb-1 border border-gray-200';
+
+  return twMerge(defaultStyle, className);
+};
+export const getMenuListClassNames = (className?: string) => {
+  const defaultStyle =
+    'p-2 max-h-[300px] border border-gray-200 bg-white outline-offset-[2px] outline-[2px] rounded-lg shadow-lg overflow-y-auto overscroll-auto';
 
   return twMerge(defaultStyle, className);
 };

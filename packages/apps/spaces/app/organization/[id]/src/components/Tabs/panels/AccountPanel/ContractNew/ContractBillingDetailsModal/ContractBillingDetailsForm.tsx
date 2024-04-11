@@ -11,6 +11,7 @@ import { ModalBody } from '@ui/overlay/Modal/Modal';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { FormSelect } from '@ui/form/Select/FormSelect';
 import { FormSwitch } from '@ui/form/Switch/FromSwitch';
+import { getMenuListClassNames } from '@ui/form/Select';
 import { Divider } from '@ui/presentation/Divider/Divider';
 import { FormCheckbox } from '@ui/form/Checkbox/FormCheckbox';
 import { currencyOptions } from '@shared/util/currencyOptions';
@@ -134,6 +135,9 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
               <FormSelect
                 className='text-sm inline min-h-1 max-h-3 border-none hover:border-none focus:border-none w-fit ml-1 mt-0 after:content-[""] after:h-[0.5px] after:w-[1.7rem] after:absolute after:bottom-[4px] after:left-0 after:bg-gray-500 hover:after:bg-gray-500 focus:after:bg-gray-700'
                 label='Currency'
+                classNames={{
+                  menuList: () => getMenuListClassNames('min-w-[120px]'),
+                }}
                 placeholder='Invoice currency'
                 name='currency'
                 formId={formId}
@@ -175,6 +179,9 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
                     formId={formId}
                     options={contractBillingCycleOptions}
                     size='xs'
+                    classNames={{
+                      menuList: () => getMenuListClassNames('min-w-[120px]'),
+                    }}
                   />
                 </div>
                 <span className='whitespace-nowrap mr-1'>
@@ -199,6 +206,9 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
                       }
 
                       return option.label;
+                    }}
+                    classNames={{
+                      menuList: () => getMenuListClassNames('min-w-[120px]'),
                     }}
                     size='xs'
                   />
