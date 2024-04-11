@@ -36,6 +36,11 @@ func NewServiceLineItemAggregateWithTenantAndID(tenant, id string) *ServiceLineI
 	return &serviceLineItemAggregate
 }
 
+// GetServiceLineItemObjectID generates the object ID for a service line item.
+func GetServiceLineItemObjectID(aggregateID string, tenant string) string {
+	return aggregate.GetAggregateObjectID(aggregateID, tenant, ServiceLineItemAggregateType)
+}
+
 func (a *ServiceLineItemAggregate) HandleGRPCRequest(ctx context.Context, request any, params map[string]any) (any, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemAggregate.HandleGRPCRequest")
 	defer span.Finish()
@@ -47,6 +52,8 @@ func (a *ServiceLineItemAggregate) HandleGRPCRequest(ctx context.Context, reques
 		return nil, a.DeleteServiceLineItem(ctx, r)
 	case *servicelineitempb.CreateServiceLineItemGrpcRequest:
 		return nil, a.CreateServiceLineItem(ctx, r)
+	case *servicelineitempb.UpdateServiceLineItemGrpcRequest:
+		return nil, a.UpdateServiceLineItem(ctx, r)
 	default:
 		return nil, nil
 	}
@@ -119,6 +126,73 @@ func (a *ServiceLineItemAggregate) CreateServiceLineItem(ctx context.Context, r 
 	})
 
 	return a.Apply(createEvent)
+}
+
+func (a *ServiceLineItemAggregate) UpdateServiceLineItem(ctx context.Context, r *servicelineitempb.UpdateServiceLineItemGrpcRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "ServiceLineItemAggregate.UpdateServiceLineItem")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "request", r)
+
+	if a.ServiceLineItem.IsDeleted {
+		err := errors.New(constants.Validate + ": cannot update a deleted service line item")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	// fail if quantity or price is negative
+	if r.Quantity < 0 || r.Price < 0 {
+		err := errors.New(constants.FieldValidation + ": quantity and price must not be negative")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	// Adjust vat rate
+	if r.VatRate < 0 {
+		r.VatRate = 0
+	}
+	r.VatRate = utils.TruncateFloat64(r.VatRate, 2)
+
+	updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(r.UpdatedAt), utils.Now())
+
+	source := commonmodel.Source{}
+	source.FromGrpc(r.SourceFields)
+
+	dataFields := model.ServiceLineItemDataFields{
+		Billed:   model.BilledType(r.Billed),
+		Quantity: r.Quantity,
+		Price:    r.Price,
+		Name:     r.Name,
+		Comments: r.Comments,
+		VatRate:  r.VatRate,
+	}
+
+	if (a.ServiceLineItem.Billed == model.OnceBilled.String() && dataFields.Billed != model.OnceBilled) ||
+		(a.ServiceLineItem.Billed != model.OnceBilled.String() && dataFields.Billed == model.OnceBilled) {
+		return errors.New(constants.FieldValidation + ": cannot change billed type from 'once' to a frequency-based option or vice versa")
+	}
+
+	// Prepare the data for the update event
+	updateEvent, err := event.NewServiceLineItemUpdateEvent(
+		a,
+		dataFields,
+		source,
+		updatedAtNotNil,
+		utils.TimestampProtoToTimePtr(r.StartedAt),
+	)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewServiceLineItemUpdateEvent")
+	}
+	aggregate.EnrichEventWithMetadataExtended(&updateEvent, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: r.LoggedInUserId,
+		App:    source.AppSource,
+	})
+
+	return a.Apply(updateEvent)
 }
 
 func (a *ServiceLineItemAggregate) CloseServiceLineItem(ctx context.Context, r *servicelineitempb.CloseServiceLineItemGrpcRequest, params map[string]any) error {
