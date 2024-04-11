@@ -1,8 +1,7 @@
 'use client';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import React, { FC, ReactNode } from 'react';
 
-import { Text } from '@ui/typography/Text';
 import {
   Popover,
   PopoverBody,
@@ -21,6 +20,8 @@ export const PaymentDetailsPopover: FC<PaymentDetailsPopoverProps> = ({
   content,
   children,
 }) => {
+  const { push } = useRouter();
+
   return (
     <Popover placement='bottom' trigger='hover'>
       <PopoverTrigger>
@@ -37,20 +38,17 @@ export const PaymentDetailsPopover: FC<PaymentDetailsPopoverProps> = ({
         display={content ? 'block' : 'none'}
       >
         <PopoverBody display='flex'>
-          <Text mr={2} fontSize='md'>
-            {content}
-          </Text>
+          <p className='text-base mr-2'>{content}</p>
 
           {withNavigation && (
-            <Text
-              as={Link}
-              fontSize='md'
-              href='/settings?tab=billing'
-              color='white'
-              textDecoration='underline'
+            <span
+              className={'text-base underline text-white'}
+              role='button'
+              tabIndex={0}
+              onClick={() => push('/settings?tab=billing')}
             >
               Go to Settings
-            </Text>
+            </span>
           )}
         </PopoverBody>
       </PopoverContent>

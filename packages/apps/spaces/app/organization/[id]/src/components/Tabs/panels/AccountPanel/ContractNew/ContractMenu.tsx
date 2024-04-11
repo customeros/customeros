@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 
 import { UseMutationResult } from '@tanstack/react-query';
 
+import { cn } from '@ui/utils/cn';
 import { useDisclosure } from '@ui/utils';
 import { Edit03 } from '@ui/media/icons/Edit03';
 import { DotLive } from '@ui/media/icons/DotLive';
@@ -33,13 +34,6 @@ interface ContractStatusSelectProps {
     { previousEntries: GetContractsQuery | undefined }
   >;
 }
-
-const statusColorScheme: Record<string, string> = {
-  [ContractStatus.Live]: 'primary',
-  [ContractStatus.Draft]: 'gray',
-  [ContractStatus.Ended]: 'gray',
-  [ContractStatus.OutOfContract]: 'warning',
-};
 
 export const ContractMenu: React.FC<ContractStatusSelectProps> = ({
   status,
@@ -99,7 +93,23 @@ export const ContractMenu: React.FC<ContractStatusSelectProps> = ({
     <>
       <Menu>
         <MenuButton
-          className={`flex items-center max-h-5 text-${statusColorScheme[status]}.800} border-${statusColorScheme[status]}.800} bg-${statusColorScheme[status]}.50}`}
+          className={cn(`flex items-center max-h-5 `, {
+            'text-gray-800':
+              status === ContractStatus.Draft ||
+              status === ContractStatus.Ended,
+            'text-primary-800': status === ContractStatus.Live,
+            'text-warning-800': status === ContractStatus.OutOfContract,
+            'border-gray-800':
+              status === ContractStatus.Draft ||
+              status === ContractStatus.Ended,
+            'border-primary-800': status === ContractStatus.Live,
+            'border-warning-800': status === ContractStatus.OutOfContract,
+            'bg-gray-50':
+              status === ContractStatus.Draft ||
+              status === ContractStatus.Ended,
+            'bg-primary-50': status === ContractStatus.Live,
+            'bg-warning-50': status === ContractStatus.OutOfContract,
+          })}
         >
           <DotsVertical color='gray.400' />
         </MenuButton>
