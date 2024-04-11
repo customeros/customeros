@@ -88,7 +88,7 @@ func prepareClient() {
 	})
 	appLogger.InitLogger()
 
-	commonServices := commonService.InitServices(postgresGormDB, driver)
+	commonServices := commonService.InitServices(postgresGormDB, driver, "neo4j")
 	commonAuthServices := commonAuthService.InitServices(nil, commonServices, postgresGormDB)
 	testDialFactory := events_platform.NewTestDialFactory()
 	gRPCconn, _ := testDialFactory.GetEventsProcessingPlatformConn()

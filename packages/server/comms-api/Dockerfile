@@ -7,6 +7,7 @@ COPY customer-os-neo4j-repository/. ./customer-os-neo4j-repository/
 COPY customer-os-postgres-repository/. ./customer-os-postgres-repository/
 COPY customer-os-api-sdk/. ./customer-os-api-sdk/
 COPY customer-os-api/. ./customer-os-api/
+COPY events-processing-proto/. ./events-processing-proto/
 COPY comms-api/. ./comms-api
 
 WORKDIR /app/comms-api

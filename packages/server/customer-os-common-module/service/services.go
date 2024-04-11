@@ -2,26 +2,24 @@ package service
 
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
+	neo4jRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	"gorm.io/gorm"
 )
 
 type Services struct {
 	PostgresRepositories *postgresRepository.Repositories
-	Neo4jRepositories    *repository.Repositories
+	Neo4jRepositories    *neo4jRepository.Repositories
 
-	StateService        StateService
 	SlackChannelService SlackChannelService
 }
 
-func InitServices(db *gorm.DB, driver *neo4j.DriverWithContext) *Services {
+func InitServices(db *gorm.DB, driver *neo4j.DriverWithContext, neo4jDatabase string) *Services {
 	services := &Services{
 		PostgresRepositories: postgresRepository.InitRepositories(db),
-		Neo4jRepositories:    repository.InitRepositories(driver),
+		Neo4jRepositories:    neo4jRepository.InitNeo4jRepositories(driver, neo4jDatabase),
 	}
 
-	services.StateService = NewStateService(services.Neo4jRepositories)
 	services.SlackChannelService = NewSlackChannelService(services.PostgresRepositories)
 
 	return services

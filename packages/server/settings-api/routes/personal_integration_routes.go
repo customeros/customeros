@@ -12,7 +12,7 @@ import (
 
 func InitPersonalIntegrationRoutes(r *gin.Engine, ctx context.Context, services *service.Services) {
 	r.GET("/personal_integrations/:integrationName",
-		commonService.TenantUserContextEnhancer(commonService.USERNAME, services.Repositories.CommonRepositories),
+		commonService.TenantUserContextEnhancer(commonService.USERNAME, services.Repositories.Neo4jRepositories),
 		commonService.ApiKeyCheckerHTTP(services.Repositories.PostgresRepositories.TenantWebhookApiKeyRepository, services.Repositories.PostgresRepositories.AppKeyRepository, commonService.SETTINGS_API),
 		func(c *gin.Context) {
 			tenantName := c.Keys["TenantName"].(string)
@@ -33,7 +33,7 @@ func InitPersonalIntegrationRoutes(r *gin.Engine, ctx context.Context, services 
 		})
 
 	r.GET("/personal_integrations/",
-		commonService.TenantUserContextEnhancer(commonService.USERNAME, services.Repositories.CommonRepositories),
+		commonService.TenantUserContextEnhancer(commonService.USERNAME, services.Repositories.Neo4jRepositories),
 		commonService.ApiKeyCheckerHTTP(services.Repositories.PostgresRepositories.TenantWebhookApiKeyRepository, services.Repositories.PostgresRepositories.AppKeyRepository, commonService.SETTINGS_API),
 		func(c *gin.Context) {
 			tenantName := c.Keys["TenantName"].(string)
@@ -57,7 +57,7 @@ func InitPersonalIntegrationRoutes(r *gin.Engine, ctx context.Context, services 
 		})
 
 	r.POST("/personal_integrations",
-		commonService.TenantUserContextEnhancer(commonService.USERNAME, services.Repositories.CommonRepositories),
+		commonService.TenantUserContextEnhancer(commonService.USERNAME, services.Repositories.Neo4jRepositories),
 		commonService.ApiKeyCheckerHTTP(services.Repositories.PostgresRepositories.TenantWebhookApiKeyRepository, services.Repositories.PostgresRepositories.AppKeyRepository, commonService.SETTINGS_API),
 		func(c *gin.Context) {
 			var request map[string]interface{}

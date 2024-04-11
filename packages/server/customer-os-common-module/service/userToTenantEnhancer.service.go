@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
+	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"net/http"
@@ -31,7 +31,7 @@ const UsernameHeader = "X-Openline-USERNAME"
 const TenantHeader = "X-Openline-TENANT"
 const IdentityIdHeader = "X-Openline-IDENTITY-ID"
 
-func TenantUserContextEnhancer(headerAllowance HeaderAllowance, cr *repository.Repositories, opts ...CommonServiceOption) func(c *gin.Context) {
+func TenantUserContextEnhancer(headerAllowance HeaderAllowance, cr *neo4jrepository.Repositories, opts ...CommonServiceOption) func(c *gin.Context) {
 	// Apply the options to configure the middleware
 	config := &Options{}
 	for _, opt := range opts {
@@ -137,7 +137,7 @@ func TenantUserContextEnhancer(headerAllowance HeaderAllowance, cr *repository.R
 	}
 }
 
-func checkTenantHeader(c *gin.Context, tenantHeader string, cr *repository.Repositories, ctx context.Context, cache *caches.Cache) (bool, error) {
+func checkTenantHeader(c *gin.Context, tenantHeader string, cr *neo4jrepository.Repositories, ctx context.Context, cache *caches.Cache) (bool, error) {
 	if tenantHeader == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"errors": []gin.H{{"message": "missing tenant header"}},
@@ -149,7 +149,7 @@ func checkTenantHeader(c *gin.Context, tenantHeader string, cr *repository.Repos
 	if cache != nil && cache.CheckTenant(tenantHeader) {
 		return true, nil
 	}
-	exists, err := cr.TenantRepository.TenantExists(ctx, tenantHeader)
+	exists, err := cr.TenantReadRepository.TenantExists(ctx, tenantHeader)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"errors": []gin.H{{"message": fmt.Sprintf("failed to check tenant existence: %v", err)}},
@@ -171,7 +171,7 @@ func checkTenantHeader(c *gin.Context, tenantHeader string, cr *repository.Repos
 	return true, nil
 }
 
-func checkUsernameHeader(c *gin.Context, usernameHeader string, cr *repository.Repositories, ctx context.Context, cache *caches.Cache) (string, string, []string, error) {
+func checkUsernameHeader(c *gin.Context, usernameHeader string, cr *neo4jrepository.Repositories, ctx context.Context, cache *caches.Cache) (string, string, []string, error) {
 	if usernameHeader == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"errors": []gin.H{{"message": "missing username header"}},
@@ -186,7 +186,7 @@ func checkUsernameHeader(c *gin.Context, usernameHeader string, cr *repository.R
 			return userId, tenantName, roles, nil
 		}
 	}
-	userId, tenantName, roles, err := cr.UserRepository.FindUserByEmail(ctx, usernameHeader)
+	userId, tenantName, roles, err := cr.UserReadRepository.FindUserByEmail(ctx, usernameHeader)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"errors": []gin.H{{"message": fmt.Sprintf("failed to find user: %v", err)}},

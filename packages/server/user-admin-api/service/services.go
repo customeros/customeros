@@ -24,7 +24,7 @@ func InitServices(cfg *config.Config, db *gorm.DB, driver *neo4j.DriverWithConte
 		CustomerOsClient: NewCustomerOsClient(cfg, driver),
 	}
 
-	services.CommonServices = commonService.InitServices(db, driver)
+	services.CommonServices = commonService.InitServices(db, driver, cfg.Neo4j.Database)
 	services.AuthServices = authServices.InitServices(nil, services.CommonServices, db)
 
 	return &services

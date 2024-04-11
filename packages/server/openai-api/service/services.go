@@ -13,7 +13,7 @@ type Services struct {
 
 func InitServices(cfg *config.Config, db *config.StorageDB) *Services {
 	services := &Services{
-		CommonServices: commonService.InitServices(db.GormDB, nil),
+		CommonServices: commonService.InitServices(db.GormDB, nil, ""),
 	}
 
 	services.OpenAiService = NewOpenAiService(cfg)

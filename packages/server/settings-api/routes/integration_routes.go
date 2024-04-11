@@ -11,7 +11,7 @@ import (
 
 func InitIntegrationRoutes(r *gin.Engine, ctx context.Context, services *service.Services) {
 	r.GET("/integrations",
-		commonService.TenantUserContextEnhancer(commonService.USERNAME, services.Repositories.CommonRepositories),
+		commonService.TenantUserContextEnhancer(commonService.USERNAME, services.Repositories.Neo4jRepositories),
 		commonService.ApiKeyCheckerHTTP(services.Repositories.PostgresRepositories.TenantWebhookApiKeyRepository, services.Repositories.PostgresRepositories.AppKeyRepository, commonService.SETTINGS_API),
 		func(c *gin.Context) {
 			tenantName := c.Keys["TenantName"].(string)
@@ -27,7 +27,7 @@ func InitIntegrationRoutes(r *gin.Engine, ctx context.Context, services *service
 		})
 
 	r.POST("/integration",
-		commonService.TenantUserContextEnhancer(commonService.USERNAME, services.Repositories.CommonRepositories),
+		commonService.TenantUserContextEnhancer(commonService.USERNAME, services.Repositories.Neo4jRepositories),
 		commonService.ApiKeyCheckerHTTP(services.Repositories.PostgresRepositories.TenantWebhookApiKeyRepository, services.Repositories.PostgresRepositories.AppKeyRepository, commonService.SETTINGS_API),
 		func(c *gin.Context) {
 			var request map[string]interface{}
@@ -50,7 +50,7 @@ func InitIntegrationRoutes(r *gin.Engine, ctx context.Context, services *service
 		})
 
 	r.DELETE("/integration/:identifier",
-		commonService.TenantUserContextEnhancer(commonService.USERNAME, services.Repositories.CommonRepositories),
+		commonService.TenantUserContextEnhancer(commonService.USERNAME, services.Repositories.Neo4jRepositories),
 		commonService.ApiKeyCheckerHTTP(services.Repositories.PostgresRepositories.TenantWebhookApiKeyRepository, services.Repositories.PostgresRepositories.AppKeyRepository, commonService.SETTINGS_API),
 		func(c *gin.Context) {
 			identifier := c.Param("identifier")

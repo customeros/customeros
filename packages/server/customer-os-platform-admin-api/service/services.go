@@ -34,7 +34,7 @@ func InitServices(
 		Repositories: repository.InitRepos(driver, gormDB, cfg.Neo4j.Database),
 	}
 
-	services.CommonServices = commonservice.InitServices(gormDB, driver)
+	services.CommonServices = commonservice.InitServices(gormDB, driver, cfg.Neo4j.Database)
 	services.CommonAuthServices = commonAuthService.InitServices(nil, services.CommonServices, gormDB)
 
 	return &services

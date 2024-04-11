@@ -11,6 +11,7 @@ import (
 )
 
 type TenantReadRepository interface {
+	TenantExists(ctx context.Context, name string) (bool, error)
 	GetTenantByName(ctx context.Context, tenant string) (*dbtype.Node, error)
 	GetTenantForWorkspaceProvider(ctx context.Context, workspaceName, workspaceProvider string) (*dbtype.Node, error)
 	GetTenantForUserEmail(ctx context.Context, email string) (*dbtype.Node, error)
@@ -33,6 +34,41 @@ func NewTenantReadRepository(driver *neo4j.DriverWithContext, database string) T
 
 func (r *tenantReadRepository) prepareReadSession(ctx context.Context) neo4j.SessionWithContext {
 	return utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
+}
+
+func (r *tenantReadRepository) TenantExists(ctx context.Context, tenantName string) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantRepository.TenantExists")
+	defer span.Finish()
+	span.LogFields(log.String("tenantName", tenantName))
+
+	session := (*r.driver).NewSession(
+		ctx,
+		neo4j.SessionConfig{
+			AccessMode: neo4j.AccessModeRead,
+			BoltLogger: neo4j.ConsoleBoltLogger(),
+		},
+	)
+	defer session.Close(ctx)
+
+	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, `
+			MATCH (t:Tenant {name:$name}) RETURN t.name`,
+			map[string]interface{}{
+				"name": tenantName,
+			})
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+	})
+	if err != nil {
+		return false, err
+	}
+	if len(records.([]*neo4j.Record)) > 0 {
+		return true, nil
+	} else {
+		return false, nil
+	}
 }
 
 func (r *tenantReadRepository) GetTenantByName(ctx context.Context, tenant string) (*dbtype.Node, error) {
