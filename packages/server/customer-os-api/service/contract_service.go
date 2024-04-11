@@ -32,6 +32,7 @@ type ContractService interface {
 	GetById(ctx context.Context, id string) (*neo4jentity.ContractEntity, error)
 	GetContractsForOrganizations(ctx context.Context, organizationIds []string) (*neo4jentity.ContractEntities, error)
 	GetContractsForInvoices(ctx context.Context, invoiceIds []string) (*neo4jentity.ContractEntities, error)
+	GetContractByServiceLineItem(ctx context.Context, serviceLineItemId string) (*neo4jentity.ContractEntity, error)
 	ContractsExistForTenant(ctx context.Context) (bool, error)
 	CountContracts(ctx context.Context, tenant string) (int64, error)
 	RenewContract(ctx context.Context, contractId string) error
@@ -738,4 +739,24 @@ func (s *contractService) validateContractExists(ctx context.Context, contractId
 		return err
 	}
 	return nil
+}
+
+func (s *contractService) GetContractByServiceLineItem(ctx context.Context, serviceLineItemId string) (*neo4jentity.ContractEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.GetContractByServiceLineItem")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("serviceLineItemId", serviceLineItemId))
+
+	contract, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractByServiceLineItemId(ctx, common.GetTenantFromContext(ctx), serviceLineItemId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error on getting contract by service line item: %s", err.Error())
+		return nil, err
+	}
+	if contract == nil {
+		err = fmt.Errorf("Contract not found for service line item: %s", serviceLineItemId)
+		tracing.TraceErr(span, err)
+		return &neo4jentity.ContractEntity{}, err
+	}
+	return neo4jmapper.MapDbNodeToContractEntity(contract), nil
 }
