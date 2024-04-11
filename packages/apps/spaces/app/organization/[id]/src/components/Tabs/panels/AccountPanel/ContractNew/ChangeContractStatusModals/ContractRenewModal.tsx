@@ -6,9 +6,9 @@ import { UseMutationResult } from '@tanstack/react-query';
 
 import { FeaturedIcon } from '@ui/media/Icon';
 import { Button } from '@ui/form/Button/Button';
-import { XSquare } from '@ui/media/icons/XSquare';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { ModalBody } from '@ui/overlay/Modal/Modal';
+import { RefreshCw05 } from '@ui/media/icons/RefreshCw05';
 import { Radio, RadioGroup } from '@ui/form/Radio/Radio2';
 import { Exact, ContractUpdateInput } from '@graphql/types';
 import { DatePickerUnderline } from '@ui/form/DatePicker/DatePickerUnderline';
@@ -31,6 +31,7 @@ interface ContractEndModalProps {
   serviceStarted?: string;
   nextInvoiceDate?: string;
   organizationName: string;
+  committedPeriods?: number;
   onUpdateContract: UseMutationResult<
     UpdateContractMutation,
     unknown,
@@ -41,28 +42,23 @@ interface ContractEndModalProps {
 
 const today = new Date().toUTCString();
 
-export enum EndContract {
+export enum StartContract {
   Now = 'Now',
-  EndOfCurrentBillingPeriod = 'EndOfCurrentBillingPeriod',
-  EndOfCurrentRenewalPeriod = 'EndOfCurrentRenewalPeriod',
+  NextContractTerm = 'NextContractTerm',
   CustomDate = 'CustomDate',
 }
-export const ContractEndModal = ({
+export const ContractRenewsModal = ({
   isOpen,
   onClose,
   contractId,
-  organizationName,
-  renewsAt,
   nextInvoiceDate,
   onUpdateContract,
+  committedPeriods,
   contractEnded,
 }: ContractEndModalProps) => {
   const initialRef = useRef(null);
-  const [value, setValue] = React.useState(EndContract.Now);
-  const formId = `contract-ends-on-form-${contractId}`;
-  const timeToRenewal = renewsAt
-    ? DateTimeUtils.format(renewsAt, DateTimeUtils.dateWithAbreviatedMonth)
-    : null;
+  const [value, setValue] = React.useState(StartContract.Now);
+  const formId = `contract-renew-on-form-${contractId}`;
 
   const timeToNextInvoice = nextInvoiceDate
     ? DateTimeUtils.format(
@@ -99,27 +95,31 @@ export const ContractEndModal = ({
   };
 
   const handleChangeEndsOnOption = (nextValue: string | null) => {
-    if (nextValue === EndContract.Now) {
-      setDefaultValues({ endedAt: today });
-      setValue(EndContract.Now);
+    if (nextValue === StartContract.Now) {
+      setDefaultValues({ startedAt: today, endedAt: today });
+      setValue(StartContract.Now);
 
       return;
     }
-    if (nextValue === EndContract.EndOfCurrentBillingPeriod) {
-      setDefaultValues({ endedAt: nextInvoiceDate });
-      setValue(EndContract.EndOfCurrentBillingPeriod);
+    if (
+      nextValue === StartContract.NextContractTerm &&
+      nextInvoiceDate &&
+      committedPeriods
+    ) {
+      setDefaultValues({
+        endedAt: nextInvoiceDate,
+        startedAt: DateTimeUtils.addMonth(
+          nextInvoiceDate,
+          committedPeriods + 1,
+        ),
+      });
+      setValue(StartContract.NextContractTerm);
 
       return;
     }
-    if (nextValue === EndContract.CustomDate) {
+    if (nextValue === StartContract.CustomDate) {
       setDefaultValues({ endedAt: new Date(today) });
-      setValue(EndContract.CustomDate);
-
-      return;
-    }
-    if (nextValue === EndContract.EndOfCurrentRenewalPeriod) {
-      setDefaultValues({ endedAt: renewsAt });
-      setValue(EndContract.EndOfCurrentRenewalPeriod);
+      setValue(StartContract.CustomDate);
 
       return;
     }
@@ -136,45 +136,31 @@ export const ContractEndModal = ({
       <ModalContent borderRadius='2xl'>
         <ModalHeader>
           <FeaturedIcon size='lg' colorScheme='error'>
-            <XSquare color='error.600' />
+            <RefreshCw05 className='text-error-600' />
           </FeaturedIcon>
-          <h2 className='text-lg mt-4'>End {organizationName}’s contract?</h2>
+          <h2 className='text-lg mt-4'>Renew contract:</h2>
         </ModalHeader>
         <ModalBody className='flex flex-col gap-3'>
-          <p className='text-base'>
-            Ending this contract{' '}
-            <span className='font-medium mr-1'>will close the renewal</span>
-            and set the
-            <span className='font-medium ml-1'>ARR to zero.</span>
-          </p>
-          <p className='text-base'>Let’s end it:</p>
-
           <RadioGroup
             value={value}
             onValueChange={handleChangeEndsOnOption}
             className='flex flex-col gap-1'
           >
-            <Radio value={EndContract.Now}>
+            <Radio value={StartContract.Now}>
               <span className='mr-1'>Now</span>
             </Radio>
             {timeToNextInvoice && (
-              <Radio value={EndContract.EndOfCurrentBillingPeriod}>
+              <Radio value={StartContract.NextContractTerm}>
                 <span className='ml-1'>
                   End of current billing period, {timeToNextInvoice}
                 </span>
               </Radio>
             )}
 
-            {timeToRenewal && (
-              <Radio value={EndContract.EndOfCurrentRenewalPeriod}>
-                <span className='ml-1'>End of renewal, {timeToRenewal}</span>
-              </Radio>
-            )}
-
-            <Radio value={EndContract.CustomDate}>
+            <Radio value={StartContract.CustomDate}>
               <div className='flex items-center max-h-6'>
                 On{' '}
-                {value === EndContract.CustomDate ? (
+                {value === StartContract.CustomDate ? (
                   <div className='ml-1'>
                     <DatePickerUnderline
                       placeholder='End date'
@@ -208,8 +194,8 @@ export const ContractEndModal = ({
             colorScheme='error'
             onClick={handleApplyChanges}
           >
-            End {value === EndContract.Now && 'now'}
-            {value !== EndContract.Now &&
+            Renew {value === StartContract.Now && 'now'}
+            {value !== StartContract.Now &&
               DateTimeUtils.format(
                 state?.values?.endedAt as string,
                 DateTimeUtils.dateWithAbreviatedMonth,

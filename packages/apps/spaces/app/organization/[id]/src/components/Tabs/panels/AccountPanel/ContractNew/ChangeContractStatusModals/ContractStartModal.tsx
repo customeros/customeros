@@ -89,7 +89,7 @@ export const ContractStartModal = ({
   return (
     <Modal open={isOpen} onOpenChange={onClose}>
       <ModalOverlay />
-      <ModalContent className='rounded-2xl'>
+      <ModalContent className='rounded-2xl max-w-[500px]'>
         <ModalHeader>
           <FeaturedIcon size='lg' colorScheme='primary'>
             {status === ContractStatus.OutOfContract ? (
@@ -98,7 +98,7 @@ export const ContractStartModal = ({
               <DotLive className='text-primary-600' />
             )}
           </FeaturedIcon>
-          <h1 className='text-lg mt-4'>
+          <h1 className='text-lg font-semibold mt-4'>
             {status === ContractStatus.OutOfContract
               ? 'Renew contract'
               : 'Make this contract live?'}
@@ -123,7 +123,7 @@ export const ContractStartModal = ({
             </p>
           )}
         </ModalBody>
-        <ModalFooter className='p-6'>
+        <ModalFooter className='p-6 flex'>
           <Button variant='outline' className='w-full' onClick={onClose}>
             Cancel
           </Button>
@@ -133,7 +133,7 @@ export const ContractStartModal = ({
             colorScheme='primary'
             onClick={handleApplyChanges}
           >
-            {status === ContractStatus.OutOfContract ? 'Renew' : 'Start'}
+            Start{' '}
             {DateTimeUtils.format(
               state.values.serviceStarted as string,
               DateTimeUtils.defaultFormatShortString,
