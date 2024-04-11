@@ -5,6 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/repository"
 	authService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/service"
+	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"gorm.io/gorm"
 )
 
