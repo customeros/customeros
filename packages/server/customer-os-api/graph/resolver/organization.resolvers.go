@@ -10,15 +10,15 @@ import (
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	commonTracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
@@ -120,8 +120,8 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 	}
 
 	var err error
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := service.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	response, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
 		return r.Clients.OrganizationClient.UpsertOrganization(ctx, &upsertOrganizationRequest)
 	})
 	if err != nil {
@@ -148,7 +148,7 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 	if len(input.Domains) > 0 {
 		for _, domain := range input.Domains {
 			if domain != "" {
-				_, err = service.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+				_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
 					return r.Clients.OrganizationClient.LinkDomainToOrganization(ctx, &organizationpb.LinkDomainToOrganizationGrpcRequest{
 						Tenant:         common.GetTenantFromContext(ctx),
 						LoggedInUserId: common.GetUserIdFromContext(ctx),
@@ -191,7 +191,7 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 					customFieldDataType = organizationpb.CustomFieldDataType_DECIMAL
 				}
 			}
-			_, err = service.CallEventsPlatformGRPCWithRetry[*organizationpb.CustomFieldIdGrpcResponse](func() (*organizationpb.CustomFieldIdGrpcResponse, error) {
+			_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.CustomFieldIdGrpcResponse](func() (*organizationpb.CustomFieldIdGrpcResponse, error) {
 				return r.Clients.OrganizationClient.UpsertCustomFieldToOrganization(ctx, &organizationpb.CustomFieldForOrganizationGrpcRequest{
 					Tenant:                common.GetTenantFromContext(ctx),
 					OrganizationId:        response.Id,
@@ -365,8 +365,8 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 		upsertOrganizationRequest.IsPublic = *input.Public
 	}
 
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := service.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	response, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
 		return r.Clients.OrganizationClient.UpsertOrganization(ctx, &upsertOrganizationRequest)
 	})
 	if err != nil {
@@ -449,8 +449,8 @@ func (r *mutationResolver) OrganizationHide(ctx context.Context, id string) (str
 		return "", nil
 	}
 
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := service.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	response, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
 		return r.Clients.OrganizationClient.HideOrganization(ctx, &organizationpb.OrganizationIdGrpcRequest{
 			Tenant:         common.GetTenantFromContext(ctx),
 			OrganizationId: id,
@@ -473,9 +473,9 @@ func (r *mutationResolver) OrganizationHideAll(ctx context.Context, ids []string
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.Object("organizationIds", ids))
 
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	for _, orgId := range ids {
-		_, err := service.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+		_, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
 			return r.Clients.OrganizationClient.HideOrganization(ctx, &organizationpb.OrganizationIdGrpcRequest{
 				Tenant:         common.GetTenantFromContext(ctx),
 				OrganizationId: orgId,
@@ -500,8 +500,8 @@ func (r *mutationResolver) OrganizationShow(ctx context.Context, id string) (str
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.Object("organizationId", id))
 
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := service.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	response, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
 		return r.Clients.OrganizationClient.ShowOrganization(ctx, &organizationpb.OrganizationIdGrpcRequest{
 			Tenant:         common.GetTenantFromContext(ctx),
 			OrganizationId: id,
@@ -513,7 +513,7 @@ func (r *mutationResolver) OrganizationShow(ctx context.Context, id string) (str
 		graphql.AddErrorf(ctx, "Failed to hide organization %s", id)
 		return response.Id, nil
 	}
-	_, err = service.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+	_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
 		return r.Clients.OrganizationClient.RefreshLastTouchpoint(ctx, &organizationpb.OrganizationIdGrpcRequest{
 			Tenant:         common.GetTenantFromContext(ctx),
 			OrganizationId: id,
@@ -536,9 +536,9 @@ func (r *mutationResolver) OrganizationShowAll(ctx context.Context, ids []string
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.Object("organizationIds", ids))
 
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	for _, orgId := range ids {
-		_, err := service.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+		_, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
 			return r.Clients.OrganizationClient.ShowOrganization(ctx, &organizationpb.OrganizationIdGrpcRequest{
 				Tenant:         common.GetTenantFromContext(ctx),
 				OrganizationId: orgId,
@@ -727,8 +727,8 @@ func (r *mutationResolver) OrganizationUpdateOnboardingStatus(ctx context.Contex
 		grpcRequest.OnboardingStatus = organizationpb.OnboardingStatus_ONBOARDING_STATUS_NOT_APPLICABLE
 	}
 
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := service.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
 		return r.Clients.OrganizationClient.UpdateOnboardingStatus(ctx, &grpcRequest)
 	})
 	if err != nil {

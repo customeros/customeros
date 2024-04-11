@@ -3,12 +3,12 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
@@ -65,7 +65,7 @@ func (s *masterPlanService) CreateMasterPlan(ctx context.Context, name string) (
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := CallEventsPlatformGRPCWithRetry[*masterplanpb.MasterPlanIdGrpcResponse](func() (*masterplanpb.MasterPlanIdGrpcResponse, error) {
+	response, err := utils.CallEventsPlatformGRPCWithRetry[*masterplanpb.MasterPlanIdGrpcResponse](func() (*masterplanpb.MasterPlanIdGrpcResponse, error) {
 		return s.grpcClients.MasterPlanClient.CreateMasterPlan(ctx, &grpcRequest)
 	})
 	if err != nil {
@@ -124,7 +124,7 @@ func (s *masterPlanService) UpdateMasterPlan(ctx context.Context, masterPlanId s
 	grpcRequest.FieldsMask = fieldsMask
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = CallEventsPlatformGRPCWithRetry[*masterplanpb.MasterPlanIdGrpcResponse](func() (*masterplanpb.MasterPlanIdGrpcResponse, error) {
+	_, err = utils.CallEventsPlatformGRPCWithRetry[*masterplanpb.MasterPlanIdGrpcResponse](func() (*masterplanpb.MasterPlanIdGrpcResponse, error) {
 		return s.grpcClients.MasterPlanClient.UpdateMasterPlan(ctx, &grpcRequest)
 	})
 	if err != nil {
@@ -183,7 +183,7 @@ func (s *masterPlanService) CreateMasterPlanMilestone(ctx context.Context, maste
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := CallEventsPlatformGRPCWithRetry[*masterplanpb.MasterPlanMilestoneIdGrpcResponse](func() (*masterplanpb.MasterPlanMilestoneIdGrpcResponse, error) {
+	response, err := utils.CallEventsPlatformGRPCWithRetry[*masterplanpb.MasterPlanMilestoneIdGrpcResponse](func() (*masterplanpb.MasterPlanMilestoneIdGrpcResponse, error) {
 		return s.grpcClients.MasterPlanClient.CreateMasterPlanMilestone(ctx, &grpcRequest)
 	})
 	if err != nil {
@@ -313,7 +313,7 @@ func (s *masterPlanService) UpdateMasterPlanMilestone(ctx context.Context, maste
 	grpcRequest.FieldsMask = fieldsMask
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = CallEventsPlatformGRPCWithRetry[*masterplanpb.MasterPlanMilestoneIdGrpcResponse](func() (*masterplanpb.MasterPlanMilestoneIdGrpcResponse, error) {
+	_, err = utils.CallEventsPlatformGRPCWithRetry[*masterplanpb.MasterPlanMilestoneIdGrpcResponse](func() (*masterplanpb.MasterPlanMilestoneIdGrpcResponse, error) {
 		return s.grpcClients.MasterPlanClient.UpdateMasterPlanMilestone(ctx, &grpcRequest)
 	})
 	if err != nil {
@@ -349,7 +349,7 @@ func (s *masterPlanService) ReorderMasterPlanMilestones(ctx context.Context, mas
 		MasterPlanMilestoneIds: masterPlanMilestoneIds,
 	}
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = CallEventsPlatformGRPCWithRetry[*masterplanpb.MasterPlanIdGrpcResponse](func() (*masterplanpb.MasterPlanIdGrpcResponse, error) {
+	_, err = utils.CallEventsPlatformGRPCWithRetry[*masterplanpb.MasterPlanIdGrpcResponse](func() (*masterplanpb.MasterPlanIdGrpcResponse, error) {
 		return s.grpcClients.MasterPlanClient.ReorderMasterPlanMilestones(ctx, &grpcRequest)
 	})
 	if err != nil {
@@ -399,7 +399,7 @@ func (s *masterPlanService) DuplicateMasterPlanMilestone(ctx context.Context, ma
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := CallEventsPlatformGRPCWithRetry[*masterplanpb.MasterPlanMilestoneIdGrpcResponse](func() (*masterplanpb.MasterPlanMilestoneIdGrpcResponse, error) {
+	response, err := utils.CallEventsPlatformGRPCWithRetry[*masterplanpb.MasterPlanMilestoneIdGrpcResponse](func() (*masterplanpb.MasterPlanMilestoneIdGrpcResponse, error) {
 		return s.grpcClients.MasterPlanClient.CreateMasterPlanMilestone(ctx, &grpcRequest)
 	})
 	if err != nil {
@@ -445,7 +445,7 @@ func (s *masterPlanService) DuplicateMasterPlan(ctx context.Context, sourceMaste
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := CallEventsPlatformGRPCWithRetry[*masterplanpb.MasterPlanIdGrpcResponse](func() (*masterplanpb.MasterPlanIdGrpcResponse, error) {
+	response, err := utils.CallEventsPlatformGRPCWithRetry[*masterplanpb.MasterPlanIdGrpcResponse](func() (*masterplanpb.MasterPlanIdGrpcResponse, error) {
 		return s.grpcClients.MasterPlanClient.CreateMasterPlan(ctx, &grpcRequest)
 	})
 	if err != nil {
@@ -472,7 +472,7 @@ func (s *masterPlanService) DuplicateMasterPlan(ctx context.Context, sourceMaste
 					AppSource: constants.AppSourceCustomerOsApi,
 				},
 			}
-			_, err = CallEventsPlatformGRPCWithRetry[*masterplanpb.MasterPlanMilestoneIdGrpcResponse](func() (*masterplanpb.MasterPlanMilestoneIdGrpcResponse, error) {
+			_, err = utils.CallEventsPlatformGRPCWithRetry[*masterplanpb.MasterPlanMilestoneIdGrpcResponse](func() (*masterplanpb.MasterPlanMilestoneIdGrpcResponse, error) {
 				return s.grpcClients.MasterPlanClient.CreateMasterPlanMilestone(ctx, &grpcRequestCreateMilestone)
 			})
 			if err != nil {
@@ -501,7 +501,7 @@ func (s *masterPlanService) CreateDefaultMasterPlan(ctx context.Context) (string
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := CallEventsPlatformGRPCWithRetry[*masterplanpb.MasterPlanIdGrpcResponse](func() (*masterplanpb.MasterPlanIdGrpcResponse, error) {
+	response, err := utils.CallEventsPlatformGRPCWithRetry[*masterplanpb.MasterPlanIdGrpcResponse](func() (*masterplanpb.MasterPlanIdGrpcResponse, error) {
 		return s.grpcClients.MasterPlanClient.CreateMasterPlan(ctx, &grpcRequest)
 	})
 	if err != nil {
@@ -533,7 +533,7 @@ func (s *masterPlanService) CreateDefaultMasterPlan(ctx context.Context) (string
 		durationHours := milestone["durationHours"].(int64)
 		items := milestone["items"].([]string)
 		grpcRequestCreateMilestone := newDefaultMasterPlanMilestone(mid, text, common.GetUserIdFromContext(ctx), common.GetTenantFromContext(ctx), order, items, durationHours)
-		_, err = CallEventsPlatformGRPCWithRetry[*masterplanpb.MasterPlanMilestoneIdGrpcResponse](func() (*masterplanpb.MasterPlanMilestoneIdGrpcResponse, error) {
+		_, err = utils.CallEventsPlatformGRPCWithRetry[*masterplanpb.MasterPlanMilestoneIdGrpcResponse](func() (*masterplanpb.MasterPlanMilestoneIdGrpcResponse, error) {
 			return s.grpcClients.MasterPlanClient.CreateMasterPlanMilestone(ctx, &grpcRequestCreateMilestone)
 		})
 		if err != nil {

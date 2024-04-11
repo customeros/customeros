@@ -5,10 +5,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/constants"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/service"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
@@ -85,8 +85,8 @@ func main() {
 	// gRPC
 	var gRPCconn *grpc.ClientConn
 	var err error
-	if cfg.Service.EventsProcessingPlatformEnabled {
-		df := grpc_client.NewDialFactory(cfg, appLogger)
+	if cfg.GrpcClientConfig.EventsProcessingPlatformEnabled {
+		df := grpc_client.NewDialFactory(&cfg.GrpcClientConfig)
 		gRPCconn, err = df.GetEventsProcessingPlatformConn()
 		if err != nil {
 			appLogger.Fatalf("Failed to connect: %v", err)

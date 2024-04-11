@@ -1,7 +1,7 @@
 package grpc_client
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client/interceptor"
 	"google.golang.org/grpc"
 	"log"
@@ -13,7 +13,7 @@ type DialFactory interface {
 }
 
 type DialFactoryImpl struct {
-	conf                         *config.Config
+	conf                         *config.GrpcClientConfig
 	eventsProcessingPlatformConn *grpc.ClientConn
 }
 
@@ -28,16 +28,16 @@ func (dfi DialFactoryImpl) GetEventsProcessingPlatformConn() (*grpc.ClientConn, 
 	if dfi.eventsProcessingPlatformConn != nil {
 		return dfi.eventsProcessingPlatformConn, nil
 	}
-	conn, err := grpc.Dial(dfi.conf.Service.EventsProcessingPlatformUrl, grpc.WithInsecure(),
+	conn, err := grpc.Dial(dfi.conf.EventsProcessingPlatformUrl, grpc.WithInsecure(),
 		grpc.WithUnaryInterceptor(
-			interceptor.ApiKeyEnricher(dfi.conf.Service.EventsProcessingPlatformApiKey),
+			interceptor.ApiKeyEnricher(dfi.conf.EventsProcessingPlatformApiKey),
 		))
 
 	dfi.eventsProcessingPlatformConn = conn
 	return conn, err
 }
 
-func NewDialFactory(conf *config.Config) DialFactory {
+func NewDialFactory(conf *config.GrpcClientConfig) DialFactory {
 	dfi := new(DialFactoryImpl)
 	dfi.conf = conf
 	return *dfi

@@ -2,8 +2,27 @@ package utils
 
 import (
 	"github.com/cenkalti/backoff/v4"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"time"
 )
+
+func CallEventsPlatformGRPCWithRetry[T any](operation func() (T, error)) (T, error) {
+	operationWithData := func() (T, error) {
+		result, opErr := operation()
+		if opErr != nil {
+			grpcError, ok := status.FromError(opErr)
+			if ok && (grpcError.Code() == codes.Unavailable || grpcError.Code() == codes.DeadlineExceeded) {
+				return result, opErr
+			}
+			return result, backoff.Permanent(opErr)
+		}
+		return result, nil
+	}
+
+	response, err := backoff.RetryWithData(operationWithData, BackOffForInvokingEventsPlatformGrpcClient())
+	return response, err
+}
 
 func BackOffConfig(initialInterval time.Duration, multiplier float64, maxInterval time.Duration, maxElapsedTime time.Duration, maxRetries uint64) backoff.BackOff {
 	// Customize the backoff configuration

@@ -7,15 +7,15 @@ import (
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
@@ -98,7 +98,7 @@ func (s *userService) Update(ctx context.Context, userId, firstName, lastName st
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := CallEventsPlatformGRPCWithRetry[*userpb.UserIdGrpcResponse](func() (*userpb.UserIdGrpcResponse, error) {
+	_, err := utils.CallEventsPlatformGRPCWithRetry[*userpb.UserIdGrpcResponse](func() (*userpb.UserIdGrpcResponse, error) {
 		return s.grpcClients.UserClient.UpsertUser(ctx, &userpb.UpsertUserGrpcRequest{
 			Tenant:         common.GetTenantFromContext(ctx),
 			LoggedInUserId: common.GetUserIdFromContext(ctx),
@@ -129,7 +129,7 @@ func (s *userService) ContainsRole(parentCtx context.Context, allowedRoles []mod
 	myRoles := common.GetRolesFromContext(ctx)
 	for _, allowedRole := range allowedRoles {
 		for _, myRole := range myRoles {
-			if myRole == allowedRole {
+			if myRole == allowedRole.String() {
 				return true
 			}
 		}
@@ -168,7 +168,7 @@ func (s *userService) AddRole(parentCtx context.Context, userId string, role mod
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := CallEventsPlatformGRPCWithRetry[*userpb.UserIdGrpcResponse](func() (*userpb.UserIdGrpcResponse, error) {
+	_, err := utils.CallEventsPlatformGRPCWithRetry[*userpb.UserIdGrpcResponse](func() (*userpb.UserIdGrpcResponse, error) {
 		return s.grpcClients.UserClient.AddRole(ctx, &userpb.AddRoleGrpcRequest{
 			Tenant:         common.GetTenantFromContext(ctx),
 			LoggedInUserId: common.GetUserIdFromContext(ctx),
@@ -203,7 +203,7 @@ func (s *userService) CustomerAddJobRole(ctx context.Context, entity *CustomerAd
 	contextWithTimeout, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
-	jobRole, err := CallEventsPlatformGRPCWithRetry[*jobrolepb.JobRoleIdGrpcResponse](func() (*jobrolepb.JobRoleIdGrpcResponse, error) {
+	jobRole, err := utils.CallEventsPlatformGRPCWithRetry[*jobrolepb.JobRoleIdGrpcResponse](func() (*jobrolepb.JobRoleIdGrpcResponse, error) {
 		return s.grpcClients.JobRoleClient.CreateJobRole(contextWithTimeout, jobRoleCreate)
 	})
 	if err != nil {
@@ -214,7 +214,7 @@ func (s *userService) CustomerAddJobRole(ctx context.Context, entity *CustomerAd
 	result.JobRole = &model.CustomerJobRole{
 		ID: jobRole.Id,
 	}
-	user, err := CallEventsPlatformGRPCWithRetry[*userpb.UserIdGrpcResponse](func() (*userpb.UserIdGrpcResponse, error) {
+	user, err := utils.CallEventsPlatformGRPCWithRetry[*userpb.UserIdGrpcResponse](func() (*userpb.UserIdGrpcResponse, error) {
 		return s.grpcClients.UserClient.LinkJobRoleToUser(contextWithTimeout, &userpb.LinkJobRoleToUserGrpcRequest{
 			UserId:    entity.UserId,
 			JobRoleId: jobRole.Id,
@@ -241,7 +241,7 @@ func (s *userService) AddRoleInTenant(parentCtx context.Context, userId, tenant 
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := CallEventsPlatformGRPCWithRetry[*userpb.UserIdGrpcResponse](func() (*userpb.UserIdGrpcResponse, error) {
+	_, err := utils.CallEventsPlatformGRPCWithRetry[*userpb.UserIdGrpcResponse](func() (*userpb.UserIdGrpcResponse, error) {
 		return s.grpcClients.UserClient.AddRole(ctx, &userpb.AddRoleGrpcRequest{
 			Tenant:         tenant,
 			LoggedInUserId: common.GetUserIdFromContext(ctx),
@@ -268,7 +268,7 @@ func (s *userService) RemoveRole(parentCtx context.Context, userId string, role 
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := CallEventsPlatformGRPCWithRetry[*userpb.UserIdGrpcResponse](func() (*userpb.UserIdGrpcResponse, error) {
+	_, err := utils.CallEventsPlatformGRPCWithRetry[*userpb.UserIdGrpcResponse](func() (*userpb.UserIdGrpcResponse, error) {
 		return s.grpcClients.UserClient.RemoveRole(ctx, &userpb.RemoveRoleGrpcRequest{
 			Tenant:         common.GetTenantFromContext(ctx),
 			LoggedInUserId: common.GetUserIdFromContext(ctx),
@@ -295,7 +295,7 @@ func (s *userService) RemoveRoleInTenant(parentCtx context.Context, userId strin
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := CallEventsPlatformGRPCWithRetry[*userpb.UserIdGrpcResponse](func() (*userpb.UserIdGrpcResponse, error) {
+	_, err := utils.CallEventsPlatformGRPCWithRetry[*userpb.UserIdGrpcResponse](func() (*userpb.UserIdGrpcResponse, error) {
 		return s.grpcClients.UserClient.RemoveRole(ctx, &userpb.RemoveRoleGrpcRequest{
 			Tenant:         tenant,
 			LoggedInUserId: common.GetUserIdFromContext(ctx),
@@ -665,7 +665,7 @@ func (s *userService) Create(ctx context.Context, userEntity entity.UserEntity) 
 	span.LogFields(log.Object("userEntity", userEntity))
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := CallEventsPlatformGRPCWithRetry[*userpb.UserIdGrpcResponse](func() (*userpb.UserIdGrpcResponse, error) {
+	response, err := utils.CallEventsPlatformGRPCWithRetry[*userpb.UserIdGrpcResponse](func() (*userpb.UserIdGrpcResponse, error) {
 		return s.grpcClients.UserClient.UpsertUser(ctx, &userpb.UpsertUserGrpcRequest{
 			Tenant: common.GetTenantFromContext(ctx),
 			SourceFields: &commonpb.SourceFields{

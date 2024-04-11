@@ -2,7 +2,6 @@ package common
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"net/http"
 )
 
@@ -11,7 +10,7 @@ type CustomContext struct {
 	UserId                   string
 	UserEmail                string
 	IdentityId               string
-	Roles                    []model.Role
+	Roles                    []string
 	GraphqlRootOperationName string
 }
 
@@ -40,7 +39,7 @@ func GetTenantFromContext(ctx context.Context) string {
 	return GetContext(ctx).Tenant
 }
 
-func GetRolesFromContext(ctx context.Context) []model.Role {
+func GetRolesFromContext(ctx context.Context) []string {
 	return GetContext(ctx).Roles
 }
 

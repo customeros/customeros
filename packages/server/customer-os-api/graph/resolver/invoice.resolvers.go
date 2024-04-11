@@ -7,15 +7,16 @@ package resolver
 import (
 	"context"
 	"errors"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
@@ -72,7 +73,7 @@ func (r *mutationResolver) InvoiceNextDryRunForContract(ctx context.Context, con
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.Object("contractID", contractID))
 
-	invoiceId, err := r.Services.InvoiceService.NextInvoiceDryRun(ctx, contractID)
+	invoiceId, err := r.Services.CommonServices.InvoiceService.NextInvoiceDryRun(ctx, contractID, constants.AppSourceCustomerOsApi)
 
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -97,7 +98,7 @@ func (r *mutationResolver) InvoiceUpdate(ctx context.Context, input model.Invoic
 			ID: input.ID,
 		}}, nil
 	}
-	invoiceEntity, err := r.Services.InvoiceService.GetById(ctx, input.ID)
+	invoiceEntity, err := r.Services.CommonServices.InvoiceService.GetById(ctx, input.ID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed fetching invoice details. Invoice id: %s", input.ID)
@@ -116,7 +117,7 @@ func (r *mutationResolver) InvoicePay(ctx context.Context, id string) (*model.In
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("id", id))
 
-	invoice, err := r.Services.InvoiceService.GetById(ctx, id)
+	invoice, err := r.Services.CommonServices.InvoiceService.GetById(ctx, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to fetch invoice %s", id)
@@ -141,7 +142,7 @@ func (r *mutationResolver) InvoicePay(ctx context.Context, id string) (*model.In
 		}}, nil
 	}
 
-	err = r.Services.InvoiceService.PayInvoice(ctx, id)
+	err = r.Services.CommonServices.InvoiceService.PayInvoice(ctx, id, constants.AppSourceCustomerOsApi)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to pay invoice %s", id)
@@ -149,7 +150,7 @@ func (r *mutationResolver) InvoicePay(ctx context.Context, id string) (*model.In
 			ID: id,
 		}}, nil
 	}
-	invoiceEntity, err := r.Services.InvoiceService.GetById(ctx, id)
+	invoiceEntity, err := r.Services.CommonServices.InvoiceService.GetById(ctx, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed fetching invoice details. Invoice id: %s", id)
@@ -168,7 +169,7 @@ func (r *mutationResolver) InvoiceVoid(ctx context.Context, id string) (*model.I
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("id", id))
 
-	invoice, err := r.Services.InvoiceService.GetById(ctx, id)
+	invoice, err := r.Services.CommonServices.InvoiceService.GetById(ctx, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to fetch invoice %s", id)
@@ -193,7 +194,7 @@ func (r *mutationResolver) InvoiceVoid(ctx context.Context, id string) (*model.I
 		}}, nil
 	}
 
-	err = r.Services.InvoiceService.VoidInvoice(ctx, id)
+	err = r.Services.CommonServices.InvoiceService.VoidInvoice(ctx, id, constants.AppSourceCustomerOsApi)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to void invoice %s", id)
@@ -201,7 +202,7 @@ func (r *mutationResolver) InvoiceVoid(ctx context.Context, id string) (*model.I
 			ID: id,
 		}}, nil
 	}
-	invoiceEntity, err := r.Services.InvoiceService.GetById(ctx, id)
+	invoiceEntity, err := r.Services.CommonServices.InvoiceService.GetById(ctx, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed fetching invoice details. Invoice id: %s", id)
@@ -220,11 +221,11 @@ func (r *mutationResolver) InvoiceSimulate(ctx context.Context, input model.Invo
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.Object("request.input", input))
 
-	simulateInvoiceData := service.SimulateInvoiceData{
+	simulateInvoiceData := commonService.SimulateInvoiceData{
 		ContractId: input.ContractID,
 	}
 	for _, serviceLine := range input.ServiceLines {
-		simulateInvoiceData.InvoiceLines = append(simulateInvoiceData.InvoiceLines, service.SimulateInvoiceLineData{
+		simulateInvoiceData.InvoiceLines = append(simulateInvoiceData.InvoiceLines, commonService.SimulateInvoiceLineData{
 			ServiceLineItemID: serviceLine.ServiceLineItemID,
 			ParentID:          serviceLine.ParentID,
 			Description:       serviceLine.Description,
@@ -237,7 +238,7 @@ func (r *mutationResolver) InvoiceSimulate(ctx context.Context, input model.Invo
 		})
 	}
 
-	invoiceEntities, err := r.Services.InvoiceService.SimulateInvoice(ctx, &simulateInvoiceData)
+	invoiceEntities, err := r.Services.CommonServices.InvoiceService.SimulateInvoice(ctx, &simulateInvoiceData)
 
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -260,7 +261,7 @@ func (r *queryResolver) Invoice(ctx context.Context, id string) (*model.Invoice,
 		return nil, nil
 	}
 
-	invoiceEntityPtr, err := r.Services.InvoiceService.GetById(ctx, id)
+	invoiceEntityPtr, err := r.Services.CommonServices.InvoiceService.GetById(ctx, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get contract by id %s", id)

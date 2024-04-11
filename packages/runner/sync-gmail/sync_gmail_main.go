@@ -6,9 +6,9 @@ import (
 	"github.com/joho/godotenv"
 	syncGmailConfig "github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/config"
 	localCron "github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/cron"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/robfig/cron"
@@ -48,7 +48,7 @@ func main() {
 	defer (*neo4jDriver).Close(ctx)
 
 	// Setting up gRPC client
-	df := grpc_client.NewDialFactory(config)
+	df := grpc_client.NewDialFactory(&config.GrpcClientConfig)
 	gRPCconn, err := df.GetEventsProcessingPlatformConn()
 	if err != nil {
 		logrus.Fatalf("failed opening connection to gRPC: %v", err.Error())

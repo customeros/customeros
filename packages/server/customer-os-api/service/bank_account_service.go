@@ -3,13 +3,13 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
@@ -46,7 +46,7 @@ func NewBankAccountService(log logger.Logger, repository *repository.Repositorie
 func (s *bankAccountService) GetTenantBankAccounts(ctx context.Context) (*neo4jentity.BankAccountEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "BankAccountService.GetTenantBankAccounts")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	dbNodes, err := s.repositories.Neo4jRepositories.BankAccountReadRepository.GetBankAccounts(ctx, common.GetTenantFromContext(ctx))
 	if err != nil {
@@ -65,7 +65,7 @@ func (s *bankAccountService) GetTenantBankAccounts(ctx context.Context) (*neo4je
 func (s *bankAccountService) GetTenantBankAccount(ctx context.Context, id string) (*neo4jentity.BankAccountEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "BankAccountService.GetTenantBankAccount")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("bankAccountId", id))
 
 	dbNode, err := s.repositories.Neo4jRepositories.BankAccountReadRepository.GetBankAccountById(ctx, common.GetTenantFromContext(ctx), id)
@@ -80,7 +80,7 @@ func (s *bankAccountService) GetTenantBankAccount(ctx context.Context, id string
 func (s *bankAccountService) CreateTenantBankAccount(ctx context.Context, input *model.BankAccountCreateInput) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "BankAccountService.CreateTenantBankAccount")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", input)
 
 	grpcRequest := tenantpb.AddBankAccountGrpcRequest{
@@ -103,7 +103,7 @@ func (s *bankAccountService) CreateTenantBankAccount(ctx context.Context, input 
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := CallEventsPlatformGRPCWithRetry[*commonpb.IdResponse](func() (*commonpb.IdResponse, error) {
+	response, err := utils.CallEventsPlatformGRPCWithRetry[*commonpb.IdResponse](func() (*commonpb.IdResponse, error) {
 		return s.grpcClients.TenantClient.AddBankAccount(ctx, &grpcRequest)
 	})
 	if err != nil {
@@ -225,7 +225,7 @@ func (s *bankAccountService) UpdateTenantBankAccount(ctx context.Context, input 
 	updateRequest.FieldsMask = fieldsMask
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = CallEventsPlatformGRPCWithRetry[*commonpb.IdResponse](func() (*commonpb.IdResponse, error) {
+	_, err = utils.CallEventsPlatformGRPCWithRetry[*commonpb.IdResponse](func() (*commonpb.IdResponse, error) {
 		return s.grpcClients.TenantClient.UpdateBankAccount(ctx, &updateRequest)
 	})
 	if err != nil {
@@ -264,7 +264,7 @@ func (s *bankAccountService) DeleteTenantBankAccount(ctx context.Context, bankAc
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = CallEventsPlatformGRPCWithRetry[*emptypb.Empty](func() (*emptypb.Empty, error) {
+	_, err = utils.CallEventsPlatformGRPCWithRetry[*emptypb.Empty](func() (*emptypb.Empty, error) {
 		return s.grpcClients.TenantClient.DeleteBankAccount(ctx, &deleteRequest)
 	})
 	if err != nil {

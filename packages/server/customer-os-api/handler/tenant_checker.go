@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 )
 
 func GetTenantChecker() func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error) {

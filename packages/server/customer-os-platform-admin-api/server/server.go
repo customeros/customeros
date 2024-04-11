@@ -8,12 +8,12 @@ import (
 	"github.com/gin-gonic/gin"
 	commoncaches "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	commonconf "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-platform-admin-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-platform-admin-api/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-platform-admin-api/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-platform-admin-api/route"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-platform-admin-api/service"
 	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
@@ -69,7 +69,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	defer neo4jDriver.Close(ctx)
 
 	// Setting up gRPC client
-	df := grpc_client.NewDialFactory(server.cfg)
+	df := grpc_client.NewDialFactory(&server.cfg.GrpcClientConfig)
 	gRPCconn, err := df.GetEventsProcessingPlatformConn()
 	if err != nil {
 		server.log.Fatalf("Failed to connect: %v", err)

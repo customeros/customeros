@@ -3,12 +3,13 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
@@ -55,7 +56,7 @@ func (s *invoicingCycleService) CreateInvoicingCycle(ctx context.Context, invoic
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := CallEventsPlatformGRPCWithRetry[*invoicingcyclepb.InvoicingCycleTypeResponse](func() (*invoicingcyclepb.InvoicingCycleTypeResponse, error) {
+	response, err := utils.CallEventsPlatformGRPCWithRetry[*invoicingcyclepb.InvoicingCycleTypeResponse](func() (*invoicingcyclepb.InvoicingCycleTypeResponse, error) {
 		return s.grpcClients.InvoicingCycleClient.CreateInvoicingCycleType(ctx, &grpcRequest)
 	})
 	if err != nil {
@@ -98,7 +99,7 @@ func (s *invoicingCycleService) UpdateInvoicingCycle(ctx context.Context, id str
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = CallEventsPlatformGRPCWithRetry[*invoicingcyclepb.InvoicingCycleTypeResponse](func() (*invoicingcyclepb.InvoicingCycleTypeResponse, error) {
+	_, err = utils.CallEventsPlatformGRPCWithRetry[*invoicingcyclepb.InvoicingCycleTypeResponse](func() (*invoicingcyclepb.InvoicingCycleTypeResponse, error) {
 		return s.grpcClients.InvoicingCycleClient.UpdateInvoicingCycleType(ctx, &grpcRequest)
 	})
 	if err != nil {

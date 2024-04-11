@@ -9,7 +9,6 @@ import (
 	"fmt"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -18,6 +17,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	commonTracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	commongrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
@@ -39,9 +40,9 @@ func (r *mutationResolver) UserCreate(ctx context.Context, input model.UserInput
 		return nil, nil
 	}
 
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	if input.Player != nil {
-		_, err = service.CallEventsPlatformGRPCWithRetry[*userpb.UserIdGrpcResponse](func() (*userpb.UserIdGrpcResponse, error) {
+		_, err = utils.CallEventsPlatformGRPCWithRetry[*userpb.UserIdGrpcResponse](func() (*userpb.UserIdGrpcResponse, error) {
 			return r.Clients.UserClient.AddPlayerInfo(ctx, &userpb.AddPlayerInfoGrpcRequest{
 				UserId:         userId,
 				Tenant:         common.GetTenantFromContext(ctx),
@@ -68,7 +69,7 @@ func (r *mutationResolver) UserCreate(ctx context.Context, input model.UserInput
 			r.log.Errorf("Failed to create email address for user %s: %s", userId, err.Error())
 		}
 		if emailId != "" {
-			_, err = service.CallEventsPlatformGRPCWithRetry[*userpb.UserIdGrpcResponse](func() (*userpb.UserIdGrpcResponse, error) {
+			_, err = utils.CallEventsPlatformGRPCWithRetry[*userpb.UserIdGrpcResponse](func() (*userpb.UserIdGrpcResponse, error) {
 				return r.Clients.UserClient.LinkEmailToUser(ctx, &userpb.LinkEmailToUserGrpcRequest{
 					Tenant:         common.GetTenantFromContext(ctx),
 					LoggedInUserId: common.GetUserIdFromContext(ctx),

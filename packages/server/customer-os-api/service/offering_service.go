@@ -3,13 +3,13 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
@@ -43,7 +43,7 @@ func NewOfferingService(log logger.Logger, repository *repository.Repositories, 
 func (s *offeringService) GetOfferings(ctx context.Context) (*neo4jentity.OfferingEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OfferingService.GetTenantOfferings")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	dbNodes, err := s.repositories.Neo4jRepositories.OfferingReadRepository.GetOfferings(ctx, common.GetTenantFromContext(ctx))
 	if err != nil {
@@ -62,7 +62,7 @@ func (s *offeringService) GetOfferings(ctx context.Context) (*neo4jentity.Offeri
 func (s *offeringService) GetOffering(ctx context.Context, id string) (*neo4jentity.OfferingEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OfferingService.GetOffering")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("offeringId", id))
 
 	dbNode, err := s.repositories.Neo4jRepositories.OfferingReadRepository.GetOfferingById(ctx, common.GetTenantFromContext(ctx), id)
@@ -77,7 +77,7 @@ func (s *offeringService) GetOffering(ctx context.Context, id string) (*neo4jent
 func (s *offeringService) CreateOffering(ctx context.Context, input *model.OfferingCreateInput) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OfferingService.CreateOffering")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", input)
 
 	grpcRequest := offeringpb.CreateOfferingGrpcRequest{
@@ -114,7 +114,7 @@ func (s *offeringService) CreateOffering(ctx context.Context, input *model.Offer
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := CallEventsPlatformGRPCWithRetry[*commonpb.IdResponse](func() (*commonpb.IdResponse, error) {
+	response, err := utils.CallEventsPlatformGRPCWithRetry[*commonpb.IdResponse](func() (*commonpb.IdResponse, error) {
 		return s.grpcClients.OfferingClient.CreateOffering(ctx, &grpcRequest)
 	})
 	if err != nil {
@@ -211,7 +211,7 @@ func (s *offeringService) UpdateOffering(ctx context.Context, input *model.Offer
 	updateRequest.FieldsMask = fieldsMask
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := CallEventsPlatformGRPCWithRetry[*commonpb.IdResponse](func() (*commonpb.IdResponse, error) {
+	_, err := utils.CallEventsPlatformGRPCWithRetry[*commonpb.IdResponse](func() (*commonpb.IdResponse, error) {
 		return s.grpcClients.OfferingClient.UpdateOffering(ctx, &updateRequest)
 	})
 	if err != nil {

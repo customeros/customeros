@@ -24,21 +24,20 @@ import (
 	"github.com/gin-contrib/cors"
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/resolver"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	cosHandler "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handler"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/metrics"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	commonAuthService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -95,18 +94,18 @@ func (server *server) Run(parentCtx context.Context) error {
 		server.log.Fatalf("Could not verify connectivity with neo4j at: %v, error: %v", server.cfg.Neo4j.Target, err.Error())
 	}
 
-	// Setting up Postgres repositories
-	commonServices := commonservice.InitServices(db.GormDB, &neo4jDriver, server.cfg.Neo4j.Database)
-	commonAuthServices := commonAuthService.InitServices(nil, commonServices, db.GormDB)
-
 	// Setting up gRPC client
-	df := grpc_client.NewDialFactory(server.cfg)
+	df := grpc_client.NewDialFactory(&server.cfg.GrpcClientConfig)
 	gRPCconn, err := df.GetEventsProcessingPlatformConn()
 	if err != nil {
 		server.log.Fatalf("Failed to connect: %v", err)
 	}
 	defer df.Close(gRPCconn)
 	grpcContainer := grpc_client.InitClients(gRPCconn)
+
+	// Setting up Postgres repositories
+	commonServices := commonservice.InitServices(db.GormDB, &neo4jDriver, server.cfg.Neo4j.Database, grpcContainer)
+	commonAuthServices := commonAuthService.InitServices(nil, commonServices, db.GormDB)
 
 	// Setting up Gin
 	r := gin.Default()
@@ -275,7 +274,7 @@ func (server *server) graphqlHandler(grpcContainer *grpc_client.Clients, service
 			customCtx.Tenant = c.Keys[security.KEY_TENANT_NAME].(string)
 		}
 		if c.Keys[security.KEY_USER_ROLES] != nil {
-			customCtx.Roles = mapper.MapRolesToModel(c.Keys[security.KEY_USER_ROLES].([]string))
+			customCtx.Roles = c.Keys[security.KEY_USER_ROLES].([]string)
 		}
 		if c.Keys[security.KEY_USER_ID] != nil {
 			customCtx.UserId = c.Keys[security.KEY_USER_ID].(string)

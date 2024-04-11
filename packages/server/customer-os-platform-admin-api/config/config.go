@@ -12,17 +12,14 @@ import (
 )
 
 type Config struct {
-	ApiPort     string `env:"PORT" envDefault:"10005" validate:"required"`
-	MetricsPort string `env:"PORT_METRICS" envDefault:"10005" validate:"required"`
-	Service     struct {
-		EventsProcessingPlatformUrl    string `env:"EVENTS_PROCESSING_PLATFORM_URL" validate:"required"`
-		EventsProcessingPlatformApiKey string `env:"EVENTS_PROCESSING_PLATFORM_API_KEY" validate:"required"`
-	}
-	Logger   logger.Config
-	Postgres config.PostgresConfig
-	Neo4j    config.Neo4jConfig
-	Jaeger   tracing.JaegerConfig
-	Metrics  metrics.Config
+	ApiPort          string `env:"PORT" envDefault:"10005" validate:"required"`
+	MetricsPort      string `env:"PORT_METRICS" envDefault:"10005" validate:"required"`
+	GrpcClientConfig config.GrpcClientConfig
+	Logger           logger.Config
+	Postgres         config.PostgresConfig
+	Neo4j            config.Neo4jConfig
+	Jaeger           tracing.JaegerConfig
+	Metrics          metrics.Config
 }
 
 func InitConfig() (*Config, error) {

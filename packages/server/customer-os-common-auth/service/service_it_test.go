@@ -8,6 +8,7 @@ import (
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/test/neo4j"
 	postgres "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/test/postgres"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/testcontainers/testcontainers-go"
 	"gorm.io/gorm"
 	"log"
@@ -52,7 +53,7 @@ func prepareClient() {
 	})
 	appLogger.InitLogger()
 
-	commonServices := commonService.InitServices(postgresGormDB, driver)
+	commonServices := commonService.InitServices(postgresGormDB, driver, "neo4j", nil)
 	serviceContainer = InitServices(&config.Config{}, commonServices, postgresGormDB)
 	log.Printf("%v", serviceContainer)
 }

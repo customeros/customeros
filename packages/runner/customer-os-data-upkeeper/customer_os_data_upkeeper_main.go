@@ -6,10 +6,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/constants"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/container"
 	localcron "github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/cron"
-	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/events_processing_client"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/repository"
 	commconf "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/robfig/cron"
@@ -46,15 +46,15 @@ func main() {
 	defer (neo4jDriver).Close(ctx)
 
 	// Events processing
-	var epClient *events_processing_client.Client
-	if cfg.EventsProcessing.EventsProcessingPlatformEnabled {
-		df := events_processing_client.NewDialFactory(cfg, appLogger)
+	var epClient *grpc_client.Clients
+	if cfg.GrpcClientConfig.EventsProcessingPlatformEnabled {
+		df := grpc_client.NewDialFactory(&cfg.GrpcClientConfig)
 		gRPCconn, err := df.GetEventsProcessingPlatformConn()
 		defer df.Close(gRPCconn)
 		if err != nil {
 			appLogger.Fatalf("Failed to connect: %v", err)
 		}
-		epClient = events_processing_client.InitClients(gRPCconn)
+		epClient = grpc_client.InitClients(gRPCconn)
 	}
 
 	cntnr := &container.Container{

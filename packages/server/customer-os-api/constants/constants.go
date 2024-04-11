@@ -1,11 +1,8 @@
 package constants
 
 const (
-	ServiceName              = "CUSTOMER-OS-API"
-	AppSourceCustomerOsApi   = "customer-os-api"
-	ComponentResolver        = "resolver"
-	ComponentService         = "service"
-	ComponentNeo4jRepository = "neo4jRepository"
+	ServiceName            = "CUSTOMER-OS-API"
+	AppSourceCustomerOsApi = "customer-os-api"
 
 	UrlCustomerOsApi                    = "https://customeros.ai"
 	UrlInvoices                         = UrlCustomerOsApi + "/invoices"

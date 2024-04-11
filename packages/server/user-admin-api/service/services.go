@@ -3,9 +3,9 @@ package service
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	authServices "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/grpc_client"
 	"gorm.io/gorm"
 )
 
@@ -24,7 +24,7 @@ func InitServices(cfg *config.Config, db *gorm.DB, driver *neo4j.DriverWithConte
 		CustomerOsClient: NewCustomerOsClient(cfg, driver),
 	}
 
-	services.CommonServices = commonService.InitServices(db, driver, cfg.Neo4j.Database)
+	services.CommonServices = commonService.InitServices(db, driver, cfg.Neo4j.Database, grpcClients)
 	services.AuthServices = authServices.InitServices(nil, services.CommonServices, db)
 
 	return &services

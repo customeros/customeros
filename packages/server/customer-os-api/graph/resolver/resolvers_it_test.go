@@ -13,18 +13,18 @@ import (
 	"github.com/99designs/gqlgen/client"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	cosHandler "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/postgres"
 	commonAuthService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
@@ -46,7 +46,7 @@ var (
 	cAdminWithTenant         *client.Client
 
 	//services
-	services *service.Services
+	customerOsApiServices *service.Services
 )
 
 const tenantName = "openline"
@@ -88,19 +88,21 @@ func prepareClient() {
 	})
 	appLogger.InitLogger()
 
-	commonServices := commonService.InitServices(postgresGormDB, driver, "neo4j")
-	commonAuthServices := commonAuthService.InitServices(nil, commonServices, postgresGormDB)
 	testDialFactory := events_platform.NewTestDialFactory()
 	gRPCconn, _ := testDialFactory.GetEventsProcessingPlatformConn()
-	services = service.InitServices(appLogger, driver, &config.Config{}, commonServices, commonAuthServices, grpc_client.InitClients(gRPCconn))
-	graphResolver := NewResolver(appLogger, services, grpc_client.InitClients(gRPCconn))
-	loader := dataloader.NewDataLoader(services)
+
+	grpcClient := grpc_client.InitClients(gRPCconn)
+	commonServices := commonService.InitServices(postgresGormDB, driver, "neo4j", grpcClient)
+	commonAuthServices := commonAuthService.InitServices(nil, commonServices, postgresGormDB)
+	customerOsApiServices = service.InitServices(appLogger, driver, &config.Config{}, commonServices, commonAuthServices, grpcClient)
+	graphResolver := NewResolver(appLogger, customerOsApiServices, customerOsApiServices.CommonServices.GrpcClients)
+	loader := dataloader.NewDataLoader(customerOsApiServices)
 	customCtx := &common.CustomContext{
 		Tenant:     tenantName,
 		UserId:     testUserId,
 		UserEmail:  testUserEmail,
 		IdentityId: testPlayerId,
-		Roles:      []model.Role{model.RoleUser},
+		Roles:      []string{model.RoleUser.String()},
 	}
 
 	customOwnerCtx := &common.CustomContext{
@@ -108,21 +110,21 @@ func prepareClient() {
 		UserId:     testUserId,
 		UserEmail:  testUserEmail,
 		IdentityId: testPlayerId,
-		Roles:      []model.Role{model.RoleUser, model.RoleOwner},
+		Roles:      []string{model.RoleUser.String(), model.RoleOwner.String()},
 	}
 	customCustomerOsPlatformOwnerCtx := &common.CustomContext{
 		Tenant:    tenantName,
 		UserId:    testUserId,
 		UserEmail: testUserEmail,
-		Roles:     []model.Role{model.RoleUser, model.RoleCustomerOsPlatformOwner},
+		Roles:     []string{model.RoleUser.String(), model.RoleCustomerOsPlatformOwner.String()},
 	}
 	customAdminCtx := &common.CustomContext{
-		Roles: []model.Role{model.RoleAdmin},
+		Roles: []string{model.RoleAdmin.String()},
 	}
 
 	customAdminWTenantCtx := &common.CustomContext{
 		Tenant: tenantName,
-		Roles:  []model.Role{model.RoleAdmin},
+		Roles:  []string{model.RoleAdmin.String()},
 	}
 	schemaConfig := generated.Config{Resolvers: graphResolver}
 	schemaConfig.Directives.HasRole = cosHandler.GetRoleChecker()

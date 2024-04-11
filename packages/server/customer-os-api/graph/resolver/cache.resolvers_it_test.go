@@ -106,7 +106,7 @@ func TestQueryGlobalCache_GCliCache(t *testing.T) {
 	neo4jt.CreateState(ctx, driver, "USA", "Alabama", "AL")
 	neo4jt.CreateState(ctx, driver, "USA", "Louisiana", "LA")
 
-	services.Cache.InitCache()
+	customerOsApiServices.Cache.InitCache()
 
 	//neo4jt.CreateContactWith(ctx, driver, tenantName, "a", "1")
 	//neo4jt.CreateContactWith(ctx, driver, tenantName, "ab", "2")
