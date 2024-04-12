@@ -9,6 +9,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 // import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 // import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister';
 
+import { StoreProvider } from './StoreProvider';
 import { Env, EnvProvider } from './EnvProvider';
 import { NextAuthProvider } from './SessionProvider';
 import { AnalyticsProvider } from './AnalyticsProvider';
@@ -44,22 +45,24 @@ export const Providers = ({ env, children, isProduction }: ProvidersProps) => {
   return (
     <EnvProvider env={env}>
       <QueryClientProvider client={queryClient}>
-        <ReactQueryDevtools initialIsOpen={false} position='bottom' />
-        <PhoenixSocketProvider>
-          <RecoilRoot>
-            <NextAuthProvider>
-              <IntegrationsProvider>
-                <GrowthbookProvider>
-                  <NotificationsProvider isProduction={isProduction}>
-                    <AnalyticsProvider isProduction={isProduction}>
-                      {children}
-                    </AnalyticsProvider>
-                  </NotificationsProvider>
-                </GrowthbookProvider>
-              </IntegrationsProvider>
-            </NextAuthProvider>
-          </RecoilRoot>
-        </PhoenixSocketProvider>
+        <StoreProvider>
+          <ReactQueryDevtools initialIsOpen={false} position='bottom' />
+          <PhoenixSocketProvider>
+            <RecoilRoot>
+              <NextAuthProvider>
+                <IntegrationsProvider>
+                  <GrowthbookProvider>
+                    <NotificationsProvider isProduction={isProduction}>
+                      <AnalyticsProvider isProduction={isProduction}>
+                        {children}
+                      </AnalyticsProvider>
+                    </NotificationsProvider>
+                  </GrowthbookProvider>
+                </IntegrationsProvider>
+              </NextAuthProvider>
+            </RecoilRoot>
+          </PhoenixSocketProvider>
+        </StoreProvider>
       </QueryClientProvider>
     </EnvProvider>
   );
