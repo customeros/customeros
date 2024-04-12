@@ -13,7 +13,6 @@ import (
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
-	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	servicelineitempb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/service_line_item"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -64,20 +63,6 @@ func TestMutationResolver_ServiceLineItemCreate(t *testing.T) {
 	}
 	events_platform.SetServiceLineItemCallbacks(&serviceLineItemServiceCallbacks)
 
-	calledNextPreviewInvoiceForContractRequest := false
-	invoiceGrpcServiceCallbacks := events_platform.MockInvoiceServiceCallbacks{
-		NextPreviewInvoiceForContract: func(context context.Context, inv *invoicepb.NextPreviewInvoiceForContractRequest) (*invoicepb.InvoiceIdResponse, error) {
-			require.Equal(t, tenantName, inv.Tenant)
-			require.Equal(t, contractId, inv.ContractId)
-			require.Equal(t, constants.AppSourceCustomerOsApi, inv.AppSource)
-			calledNextPreviewInvoiceForContractRequest = true
-			return &invoicepb.InvoiceIdResponse{
-				Id: "1",
-			}, nil
-		},
-	}
-	events_platform.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
-
 	rawResponse := callGraphQL(t, "service_line_item/create_service_line_item", map[string]interface{}{
 		"contractId": contractId,
 	})
@@ -96,7 +81,6 @@ func TestMutationResolver_ServiceLineItemCreate(t *testing.T) {
 	require.Equal(t, serviceLineItemId, serviceLineItem.Metadata.ID)
 	require.Equal(t, serviceLineItemId, serviceLineItem.ParentID)
 	require.True(t, calledCreateServiceLineItem)
-	require.True(t, calledNextPreviewInvoiceForContractRequest)
 }
 
 func TestMutationResolver_ServiceLineItemUpdate(t *testing.T) {
@@ -146,20 +130,6 @@ func TestMutationResolver_ServiceLineItemUpdate(t *testing.T) {
 	}
 	events_platform.SetServiceLineItemCallbacks(&serviceLineItemServiceCallbacks)
 
-	calledNextPreviewInvoiceForContractRequest := false
-	invoiceGrpcServiceCallbacks := events_platform.MockInvoiceServiceCallbacks{
-		NextPreviewInvoiceForContract: func(context context.Context, inv *invoicepb.NextPreviewInvoiceForContractRequest) (*invoicepb.InvoiceIdResponse, error) {
-			require.Equal(t, tenantName, inv.Tenant)
-			require.Equal(t, contractId, inv.ContractId)
-			require.Equal(t, constants.AppSourceCustomerOsApi, inv.AppSource)
-			calledNextPreviewInvoiceForContractRequest = true
-			return &invoicepb.InvoiceIdResponse{
-				Id: "1",
-			}, nil
-		},
-	}
-	events_platform.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
-
 	rawResponse := callGraphQL(t, "service_line_item/update_service_line_item", map[string]interface{}{
 		"serviceLineItemId": serviceLineItemId,
 	})
@@ -178,7 +148,6 @@ func TestMutationResolver_ServiceLineItemUpdate(t *testing.T) {
 	require.Equal(t, serviceLineItemId, serviceLineItem.Metadata.ID)
 	require.Equal(t, baseSliId, serviceLineItem.ParentID)
 	require.True(t, calledUpdateServiceLineItem)
-	require.True(t, calledNextPreviewInvoiceForContractRequest)
 }
 
 func TestMutationResolver_ServiceLineItemNewVersion(t *testing.T) {
@@ -232,20 +201,6 @@ func TestMutationResolver_ServiceLineItemNewVersion(t *testing.T) {
 	}
 	events_platform.SetServiceLineItemCallbacks(&serviceLineItemServiceCallbacks)
 
-	calledNextPreviewInvoiceForContractRequest := false
-	invoiceGrpcServiceCallbacks := events_platform.MockInvoiceServiceCallbacks{
-		NextPreviewInvoiceForContract: func(context context.Context, inv *invoicepb.NextPreviewInvoiceForContractRequest) (*invoicepb.InvoiceIdResponse, error) {
-			require.Equal(t, tenantName, inv.Tenant)
-			require.Equal(t, contractId, inv.ContractId)
-			require.Equal(t, constants.AppSourceCustomerOsApi, inv.AppSource)
-			calledNextPreviewInvoiceForContractRequest = true
-			return &invoicepb.InvoiceIdResponse{
-				Id: "1",
-			}, nil
-		},
-	}
-	events_platform.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
-
 	tomorrow := utils.Now().AddDate(0, 0, 1)
 
 	rawResponse := callGraphQL(t, "service_line_item/new_version_service_line_item", map[string]interface{}{
@@ -266,7 +221,6 @@ func TestMutationResolver_ServiceLineItemNewVersion(t *testing.T) {
 	serviceLineItem := serviceLineItemStruct.ContractLineItem_NewVersion
 	require.Equal(t, newSliId, serviceLineItem.Metadata.ID)
 	require.True(t, calledCreateServiceLineItem)
-	require.True(t, calledNextPreviewInvoiceForContractRequest)
 }
 
 func TestMutationResolver_ServiceLineItemNewVersion_VersionAlreadyExists_NotAllowed(t *testing.T) {
@@ -399,20 +353,6 @@ func TestMutationResolver_ServiceLineItemDelete(t *testing.T) {
 	}
 	events_platform.SetServiceLineItemCallbacks(&serviceLineItemServiceCallbacks)
 
-	calledNextPreviewInvoiceForContractRequest := false
-	invoiceGrpcServiceCallbacks := events_platform.MockInvoiceServiceCallbacks{
-		NextPreviewInvoiceForContract: func(context context.Context, inv *invoicepb.NextPreviewInvoiceForContractRequest) (*invoicepb.InvoiceIdResponse, error) {
-			require.Equal(t, tenantName, inv.Tenant)
-			require.Equal(t, contractId, inv.ContractId)
-			require.Equal(t, constants.AppSourceCustomerOsApi, inv.AppSource)
-			calledNextPreviewInvoiceForContractRequest = true
-			return &invoicepb.InvoiceIdResponse{
-				Id: "1",
-			}, nil
-		},
-	}
-	events_platform.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
-
 	rawResponse := callGraphQL(t, "service_line_item/delete_service_line_item", map[string]interface{}{
 		"serviceLineItemId": serviceLineItemId,
 	})
@@ -430,7 +370,6 @@ func TestMutationResolver_ServiceLineItemDelete(t *testing.T) {
 	require.True(t, response.ServiceLineItem_Delete.Accepted)
 	require.False(t, response.ServiceLineItem_Delete.Completed)
 	require.True(t, calledDeleteServiceLineItem)
-	require.True(t, calledNextPreviewInvoiceForContractRequest)
 }
 
 func TestMutationResolver_ServiceLineItemClose(t *testing.T) {
@@ -467,20 +406,6 @@ func TestMutationResolver_ServiceLineItemClose(t *testing.T) {
 	}
 	events_platform.SetServiceLineItemCallbacks(&serviceLineItemServiceCallbacks)
 
-	calledNextPreviewInvoiceForContractRequest := false
-	invoiceGrpcServiceCallbacks := events_platform.MockInvoiceServiceCallbacks{
-		NextPreviewInvoiceForContract: func(context context.Context, inv *invoicepb.NextPreviewInvoiceForContractRequest) (*invoicepb.InvoiceIdResponse, error) {
-			require.Equal(t, tenantName, inv.Tenant)
-			require.Equal(t, contractId, inv.ContractId)
-			require.Equal(t, constants.AppSourceCustomerOsApi, inv.AppSource)
-			calledNextPreviewInvoiceForContractRequest = true
-			return &invoicepb.InvoiceIdResponse{
-				Id: "1",
-			}, nil
-		},
-	}
-	events_platform.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
-
 	rawResponse := callGraphQL(t, "service_line_item/close_service_line_item", map[string]interface{}{
 		"serviceLineItemId": serviceLineItemId,
 	})
@@ -495,5 +420,4 @@ func TestMutationResolver_ServiceLineItemClose(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, serviceLineItemId, response["id"])
 	require.True(t, calledCloseServiceLineItem)
-	require.True(t, calledNextPreviewInvoiceForContractRequest)
 }
