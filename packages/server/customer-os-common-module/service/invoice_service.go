@@ -19,7 +19,7 @@ import (
 )
 
 type InvoiceService interface {
-	GetById(ctx context.Context, invoiceId string) (*neo4jentity.InvoiceEntity, error)
+	GetById(ctx context.Context, tenant, invoiceId string) (*neo4jentity.InvoiceEntity, error)
 	GetInvoiceLinesForInvoices(ctx context.Context, invoiceIds []string) (*neo4jentity.InvoiceLineEntities, error)
 	GetInvoicesForContracts(ctx context.Context, contractIds []string) (*neo4jentity.InvoiceEntities, error)
 	SimulateInvoice(ctx context.Context, invoiceData *SimulateInvoiceData) (*neo4jentity.InvoiceEntities, error)
@@ -55,13 +55,13 @@ type SimulateInvoiceLineData struct {
 	TaxRate           *float64
 }
 
-func (s *invoiceService) GetById(ctx context.Context, invoiceId string) (*neo4jentity.InvoiceEntity, error) {
+func (s *invoiceService) GetById(ctx context.Context, tenant, invoiceId string) (*neo4jentity.InvoiceEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.GetById")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("invoiceId", invoiceId))
 
-	if invoiceDbNode, err := s.services.Neo4jRepositories.InvoiceReadRepository.GetInvoiceById(ctx, common.GetContext(ctx).Tenant, invoiceId); err != nil {
+	if invoiceDbNode, err := s.services.Neo4jRepositories.InvoiceReadRepository.GetInvoiceById(ctx, tenant, invoiceId); err != nil {
 		tracing.TraceErr(span, err)
 		wrappedErr := errors.Wrap(err, fmt.Sprintf("Invoice with id {%s} not found", invoiceId))
 		return nil, wrappedErr
