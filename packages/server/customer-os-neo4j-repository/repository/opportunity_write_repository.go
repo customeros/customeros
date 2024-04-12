@@ -72,7 +72,7 @@ type OpportunityWriteRepository interface {
 	CreateForOrganization(ctx context.Context, tenant, opportunityId string, data OpportunityCreateFields) error
 	Update(ctx context.Context, tenant, opportunityId string, data OpportunityUpdateFields) error
 	ReplaceOwner(ctx context.Context, tenant, opportunityId, userId string) error
-	CreateRenewal(ctx context.Context, tenant, opportunityId string, data RenewalOpportunityCreateFields) error
+	CreateRenewal(ctx context.Context, tenant, opportunityId string, data RenewalOpportunityCreateFields) (bool, error)
 	UpdateRenewal(ctx context.Context, tenant, opportunityId string, data RenewalOpportunityUpdateFields) error
 	UpdateNextRenewalDate(ctx context.Context, tenant, opportunityId string, updatedAt time.Time, renewedAt *time.Time) error
 	CloseWin(ctx context.Context, tenant, opportunityId string, updatedAt, closedAt time.Time) error
@@ -224,7 +224,7 @@ func (r *opportunityWriteRepository) ReplaceOwner(ctx context.Context, tenant, o
 	return err
 }
 
-func (r *opportunityWriteRepository) CreateRenewal(ctx context.Context, tenant, opportunityId string, data RenewalOpportunityCreateFields) error {
+func (r *opportunityWriteRepository) CreateRenewal(ctx context.Context, tenant, opportunityId string, data RenewalOpportunityCreateFields) (bool, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityWriteRepository.CreateRenewal")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
@@ -232,21 +232,25 @@ func (r *opportunityWriteRepository) CreateRenewal(ctx context.Context, tenant, 
 	tracing.LogObjectAsJson(span, "data", data)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})
-							MERGE (c)-[:HAS_OPPORTUNITY]->(op:Opportunity {id:$opportunityId})
+							OPTIONAL MATCH (c)-[r:ACTIVE_RENEWAL]->(op:RenewalOpportunity)
+							WITH c, op, COUNT(op) AS existingOpportunities
+								WHERE existingOpportunities = 0
+							MERGE (c)-[:ACTIVE_RENEWAL]->(newOp:Opportunity {id:$opportunityId})
 							ON CREATE SET 
-								op:Opportunity_%s,
-								op:RenewalOpportunity,
-								op.createdAt=$createdAt,
-								op.updatedAt=$updatedAt,
-								op.source=$source,
-								op.sourceOfTruth=$sourceOfTruth,
-								op.appSource=$appSource,
-								op.internalType=$internalType,
-								op.internalStage=$internalStage,
-								op.renewalLikelihood=$renewalLikelihood,
-								op.renewalApproved=$renewalApproved
-							WITH op, c
-							MERGE (c)-[:ACTIVE_RENEWAL]->(op)
+								newOp:Opportunity_%s,
+								newOp:Opportunity,
+								newOp.createdAt=$createdAt,
+								newOp.updatedAt=$updatedAt,
+								newOp.source=$source,
+								newOp.sourceOfTruth=$sourceOfTruth,
+								newOp.appSource=$appSource,
+								newOp.internalType=$internalType,
+								newOp.internalStage=$internalStage,
+								newOp.renewalLikelihood=$renewalLikelihood,
+								newOp.renewalApproved=$renewalApproved
+							WITH c, newOp, existingOpportunities
+								MERGE (c)-[:HAS_OPPORTUNITY]->(newOp)
+							RETURN existingOpportunities = 0 AS wasCreated
 							`, tenant)
 	params := map[string]any{
 		"tenant":            tenant,
@@ -265,11 +269,23 @@ func (r *opportunityWriteRepository) CreateRenewal(ctx context.Context, tenant, 
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractSingleRecordFirstValueAsType[bool](ctx, queryResult, err)
+		}
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
+		span.LogFields(log.Bool("result.created", false))
+		return false, err
 	}
-	return err
+	span.LogFields(log.Bool("result.created", result.(bool)))
+	return result.(bool), nil
 }
 
 func (r *opportunityWriteRepository) UpdateRenewal(ctx context.Context, tenant, opportunityId string, data RenewalOpportunityUpdateFields) error {

@@ -21,12 +21,14 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
+	eventstorepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_store"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type OpportunityEventHandler struct {
@@ -158,22 +160,38 @@ func (h *OpportunityEventHandler) OnCreateRenewal(ctx context.Context, evt event
 		RenewalLikelihood: eventData.RenewalLikelihood,
 		RenewalApproved:   eventData.RenewalApproved,
 	}
-	err = h.repositories.Neo4jRepositories.OpportunityWriteRepository.CreateRenewal(ctx, eventData.Tenant, opportunityId, data)
+	newOpportunityCreated, err := h.repositories.Neo4jRepositories.OpportunityWriteRepository.CreateRenewal(ctx, eventData.Tenant, opportunityId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while saving renewal opportunity %s: %s", opportunityId, err.Error())
 		return err
 	}
 
-	contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.grpcClients)
-	err = contractHandler.UpdateActiveRenewalOpportunityRenewDateAndArr(ctx, eventData.Tenant, eventData.ContractId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("error while updating renewal opportunity %s: %s", opportunityId, err.Error())
-		return nil
-	}
+	if newOpportunityCreated {
+		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.grpcClients)
+		err = contractHandler.UpdateActiveRenewalOpportunityRenewDateAndArr(ctx, eventData.Tenant, eventData.ContractId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("error while updating renewal opportunity %s: %s", opportunityId, err.Error())
+			return nil
+		}
 
-	h.sendEventToUpdateOrganizationRenewalSummary(ctx, eventData.Tenant, opportunityId, span)
+		h.sendEventToUpdateOrganizationRenewalSummary(ctx, eventData.Tenant, opportunityId, span)
+	} else {
+		// Mark event store stream for deletion
+		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+		_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*emptypb.Empty](func() (*emptypb.Empty, error) {
+			return h.grpcClients.EventStoreClient.DeleteEventStoreStream(ctx, &eventstorepb.DeleteEventStoreStreamRequest{
+				Tenant: eventData.Tenant,
+				Type:   constants.AggregateTypeOpportunity,
+				Id:     opportunityId,
+			})
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("DeleteEventStoreStream failed: %v", err.Error())
+		}
+	}
 
 	return nil
 }
