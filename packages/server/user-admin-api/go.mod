@@ -24,12 +24,11 @@ require (
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20240219173641-99951e96f1dc
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240219173641-99951e96f1dc
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository v0.0.0-20240410144729-44cbe53c019c
-	github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20240219173641-99951e96f1dc
+	github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20240411174832-0af0ece0a23e
 	github.com/sirupsen/logrus v1.9.3
 	golang.org/x/oauth2 v0.19.0
 	golang.org/x/text v0.14.0
 	google.golang.org/api v0.172.0
-	google.golang.org/grpc v1.63.2
 	google.golang.org/protobuf v1.33.0
 	gorm.io/driver/postgres v1.5.7
 	gorm.io/gorm v1.25.9
@@ -95,5 +94,6 @@ require (
 	golang.org/x/sync v0.6.0 // indirect
 	golang.org/x/sys v0.19.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240318140521-94a12d6c2237 // indirect
+	google.golang.org/grpc v1.63.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
