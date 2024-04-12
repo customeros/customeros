@@ -40,6 +40,7 @@ type Services struct {
 	CountryService            *countryService
 	ReminderService           *reminderService
 	OrderService              *orderService
+	EventStoreService         *eventStoreService
 }
 
 func InitServices(cfg *config.Config, repositories *repository.Repositories, aggregateStore eventstore.AggregateStore, commandHandlers *command.CommandHandlers, log logger.Logger, ebs *eventstore.EventBufferService) *Services {
@@ -74,6 +75,7 @@ func InitServices(cfg *config.Config, repositories *repository.Repositories, agg
 	services.CountryService = NewCountryService(&services, log, aggregateStore, cfg)
 	services.ReminderService = NewReminderService(log, aggregateStore, cfg, ebs)
 	services.OrderService = NewOrderService(log, aggregateStore, cfg)
+	services.EventStoreService = NewEventStoreService(&services, log, aggregateStore)
 
 	return &services
 }

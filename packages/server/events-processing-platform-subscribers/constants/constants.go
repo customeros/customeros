@@ -6,6 +6,8 @@ const (
 	ComponentSubscriptionGraph   = "subscriptionGraph"
 	ComponentSubscriptionInvoice = "subscriptionInvoice"
 
+	AggregateTypeOpportunity = "opportunity"
+
 	SourceOpenline  = "openline"
 	SourceWebscrape = "webscrape"
 
@@ -55,9 +57,6 @@ const (
 	UserMetadata = "UserMetadata"
 
 	EsInternalStreamPrefix = "$"
-
-	StreamMetadataMaxCount      = 1000
-	StreamMetadataMaxAgeSeconds = 7 * 24 * 60 * 60 // 7 days
 
 	UrlFileStoreApi                     = "https://fs.customeros.ai/"
 	UrlFileStoreFileDownloadUrlTemplate = UrlFileStoreApi + "file/%s/download"

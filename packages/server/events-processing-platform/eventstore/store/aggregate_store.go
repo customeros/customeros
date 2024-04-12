@@ -199,8 +199,8 @@ func (as *aggregateStore) Save(ctx context.Context, aggregate es.Aggregate) erro
 			as.log.Errorf("(Save) esdbClient.SetStreamMetadata: {%+v}", err)
 			return errors.Wrap(err, "esdbClient.SetStreamMetadata")
 		}
-
 	}
+
 	aggregate.ClearUncommittedEvents()
 	return nil
 }
@@ -236,5 +236,20 @@ func (as *aggregateStore) Exists(ctx context.Context, aggregateID string) error 
 	}
 
 	span.LogFields(log.String("exists", "true"))
+	return nil
+}
+
+func (as *aggregateStore) UpdateStreamMetadata(ctx context.Context, streamID string, streamMetadata esdb.StreamMetadata) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AggregateStore.UpdateStreamMetadata")
+	defer span.Finish()
+	span.SetTag("streamID", streamID)
+
+	_, err := as.esdbClient.SetStreamMetadata(ctx, streamID, esdb.AppendToStreamOptions{}, streamMetadata)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		as.log.Errorf("(UpdateStreamMetadata) esdbClient.SetStreamMetadata: {%s}", err.Error())
+		return errors.Wrap(err, "esdbClient.SetStreamMetadata")
+	}
+
 	return nil
 }
