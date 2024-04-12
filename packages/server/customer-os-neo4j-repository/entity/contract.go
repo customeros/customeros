@@ -7,8 +7,9 @@ import (
 )
 
 type ContractInternalFields struct {
-	StatusRenewalRequestedAt  *time.Time
-	RolloutRenewalRequestedAt *time.Time
+	StatusRenewalRequestedAt      *time.Time
+	RolloutRenewalRequestedAt     *time.Time
+	NextPreviewInvoiceRequestedAt *time.Time
 }
 
 type ContractEntity struct {

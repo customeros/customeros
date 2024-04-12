@@ -178,12 +178,15 @@ func (r *serviceLineItemWriteRepository) Delete(ctx context.Context, tenant, ser
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, serviceLineItemId)
 
-	cypher := fmt.Sprintf(`MATCH (sli:ServiceLineItem {id:$serviceLineItemId})
-							WHERE sli:ServiceLineItem_%s
+	cypher := `MATCH (sli:ServiceLineItem {id:$serviceLineItemId})<-[:HAS_SERVICE]-(c:Contract)-[:CONTRACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
+							WHERE sli:ServiceLineItem
 							AND NOT (sli)--(:InvoiceLine)--(:Invoice {dryRun:false})
-							DETACH DELETE sli`, tenant)
+							SET c.updatedAt = $now
+							DETACH DELETE sli`
 	params := map[string]any{
+		"tenant":            tenant,
 		"serviceLineItemId": serviceLineItemId,
+		"now":               utils.Now(),
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

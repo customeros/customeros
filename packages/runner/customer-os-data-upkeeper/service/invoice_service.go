@@ -38,6 +38,7 @@ type InvoiceService interface {
 	SendPayNotifications()
 	GenerateInvoicePaymentLinks()
 	CleanupInvoices()
+	GenerateNextPreviewInvoices()
 }
 
 type invoiceService struct {
@@ -546,5 +547,68 @@ func (s *invoiceService) CleanupInvoices() {
 				s.log.Errorf("Error deleting dry run invoice %s: %v", invoice.Id, err)
 			}
 		}
+	}
+}
+
+func (s *invoiceService) GenerateNextPreviewInvoices() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // Cancel context on exit
+
+	span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.GenerateNextPreviewInvoices")
+	defer span.Finish()
+
+	if s.eventsProcessingClient == nil {
+		err := errors.New("eventsProcessingClient is nil")
+		tracing.TraceErr(span, err)
+		s.log.Error(err.Error())
+		return
+	}
+
+	referenceTime := utils.Now()
+
+	for {
+		select {
+		case <-ctx.Done():
+			s.log.Infof("Context cancelled, stopping")
+			return
+		default:
+			// continue as normal
+		}
+
+		records, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractsToGenerateNextPreviewInvoices(ctx, referenceTime, 10)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error getting contracts for invoicing: %v", err)
+			return
+		}
+
+		// no contracts found
+		if len(records) == 0 {
+			return
+		}
+
+		//process records
+		for _, record := range records {
+			contract := neo4jmapper.MapDbNodeToContractEntity(record.Node)
+			tenant := record.Tenant
+
+			_, err := utils.CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
+				return s.eventsProcessingClient.InvoiceClient.NextPreviewInvoiceForContract(ctx, &invoicepb.NextPreviewInvoiceForContractRequest{
+					Tenant:     tenant,
+					ContractId: contract.Id,
+					AppSource:  constants.AppSourceDataUpkeeper,
+				})
+			})
+
+			// mark next preview invoice requested
+			err = s.repositories.Neo4jRepositories.ContractWriteRepository.MarkNextPreviewInvoicingRequested(ctx, tenant, contract.Id, utils.Now())
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error marking invoicing started for contract %s: %s", contract.Id, err.Error())
+				return
+			}
+		}
+		//sleep for async processing, then check again
+		time.Sleep(10 * time.Second)
 	}
 }

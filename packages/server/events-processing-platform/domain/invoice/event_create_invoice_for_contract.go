@@ -10,7 +10,7 @@ import (
 
 type InvoiceForContractCreateEvent struct {
 	Tenant          string             `json:"tenant" validate:"required"`
-	ContractId      string             `json:"organizationId" validate:"required"`
+	ContractId      string             `json:"contractId" validate:"required"`
 	CreatedAt       time.Time          `json:"createdAt"`
 	SourceFields    commonmodel.Source `json:"sourceFields"`
 	DryRun          bool               `json:"dryRun"`
