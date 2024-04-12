@@ -5,6 +5,7 @@ import (
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
+	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 
@@ -30,14 +31,14 @@ type InvoiceSubscriber struct {
 	invoiceEventHandler *InvoiceEventHandler
 }
 
-func NewInvoiceSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, repositories *repository.Repositories, grpcClients *grpc_client.Clients, fsc fsc.FileStoreApiService, postmarkProvider *notifications.PostmarkProvider) *InvoiceSubscriber {
+func NewInvoiceSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, commonServices *commonService.Services, repositories *repository.Repositories, grpcClients *grpc_client.Clients, fsc fsc.FileStoreApiService, postmarkProvider *notifications.PostmarkProvider) *InvoiceSubscriber {
 	return &InvoiceSubscriber{
 		log:                 log,
 		db:                  db,
 		cfg:                 cfg,
 		grpcClients:         grpcClients,
 		repositories:        repositories,
-		invoiceEventHandler: NewInvoiceEventHandler(log, repositories, *cfg, grpcClients, fsc, postmarkProvider),
+		invoiceEventHandler: NewInvoiceEventHandler(log, commonServices, repositories, *cfg, grpcClients, fsc, postmarkProvider),
 	}
 }
 
