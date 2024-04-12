@@ -16,9 +16,10 @@ import (
 
 func prepareInvoiceEventHandler() *InvoiceEventHandler {
 	return &InvoiceEventHandler{
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
-		log:          testLogger,
+		repositories:   testDatabase.Repositories,
+		commonServices: testDatabase.CommonServices,
+		grpcClients:    testMockedGrpcClient,
+		log:            testLogger,
 	}
 }
 
