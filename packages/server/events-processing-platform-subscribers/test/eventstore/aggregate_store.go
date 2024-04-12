@@ -2,6 +2,7 @@ package eventstore
 
 import (
 	"context"
+	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 )
 
@@ -61,4 +62,8 @@ func (as *TestAggregateStore) Exists(ctx context.Context, aggregateID string) er
 
 func (as *TestAggregateStore) GetEventMap() map[string][]eventstore.Event {
 	return as.aggregateMap
+}
+
+func (as *TestAggregateStore) UpdateStreamMetadata(ctx context.Context, streamID string, streamMetadata esdb.StreamMetadata) error {
+	return nil
 }
