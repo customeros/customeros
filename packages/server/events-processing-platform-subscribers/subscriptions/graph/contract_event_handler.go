@@ -21,7 +21,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
-	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/opentracing/opentracing-go"
@@ -141,14 +140,6 @@ func (h *ContractEventHandler) OnCreate(ctx context.Context, evt eventstore.Even
 	}
 
 	h.startOnboardingIfEligible(ctx, eventData.Tenant, contractId, span)
-
-	contractDbNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, eventData.Tenant, contractId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-	}
-	contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
-
-	h.generateNextPreviewInvoice(ctx, eventData.Tenant, contractEntity, span)
 
 	return nil
 }
@@ -342,15 +333,6 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 
 	h.startOnboardingIfEligible(ctx, eventData.Tenant, contractId, span)
 
-	// regenerate next preview invoice if any of below fields are updated
-	if beforeUpdateContractEntity.BillingCycle != afterUpdateContractEntity.BillingCycle ||
-		!utils.IsEqualTimePtr(beforeUpdateContractEntity.InvoicingStartDate, afterUpdateContractEntity.InvoicingStartDate) ||
-		beforeUpdateContractEntity.InvoiceNote != afterUpdateContractEntity.InvoiceNote ||
-		beforeUpdateContractEntity.OrganizationLegalName != afterUpdateContractEntity.OrganizationLegalName ||
-		beforeUpdateContractEntity.InvoiceEmail != afterUpdateContractEntity.InvoiceEmail {
-		h.generateNextPreviewInvoice(ctx, eventData.Tenant, afterUpdateContractEntity, span)
-	}
-
 	return nil
 }
 
@@ -500,26 +482,6 @@ func (h *ContractEventHandler) startOnboardingIfEligible(ctx context.Context, te
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("UpdateOnboardingStatus gRPC request failed: %v", err.Error())
-		}
-	}
-}
-
-func (h *ContractEventHandler) generateNextPreviewInvoice(ctx context.Context, tenant string, contractEntity *neo4jentity.ContractEntity, span opentracing.Span) {
-	if contractEntity == nil || contractEntity.Id == "" {
-		return
-	}
-	if contractEntity.InvoicingEnabled && contractEntity.BillingCycle != neo4jenum.BillingCycleNone && contractEntity.InvoicingStartDate != nil {
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
-			return h.grpcClients.InvoiceClient.NextPreviewInvoiceForContract(ctx, &invoicepb.NextPreviewInvoiceForContractRequest{
-				Tenant:     tenant,
-				ContractId: contractEntity.Id,
-				AppSource:  constants.AppSourceEventProcessingPlatformSubscribers,
-			})
-		})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("error sending the next preview invoice request for contract {%s}: {%s}", contractEntity.Id, err.Error())
 		}
 	}
 }
