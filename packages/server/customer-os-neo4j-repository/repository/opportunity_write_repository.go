@@ -238,7 +238,7 @@ func (r *opportunityWriteRepository) CreateRenewal(ctx context.Context, tenant, 
 							MERGE (c)-[:ACTIVE_RENEWAL]->(newOp:Opportunity {id:$opportunityId})
 							ON CREATE SET 
 								newOp:Opportunity_%s,
-								newOp:Opportunity,
+								newOp:RenewalOpportunity,
 								newOp.createdAt=$createdAt,
 								newOp.updatedAt=$updatedAt,
 								newOp.source=$source,
