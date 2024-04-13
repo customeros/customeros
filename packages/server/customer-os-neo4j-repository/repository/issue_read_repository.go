@@ -40,7 +40,8 @@ func (r *issueReadRepository) GetById(ctx context.Context, tenant, issueId strin
 		"tenant":  tenant,
 		"issueId": issueId,
 	}
-	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
