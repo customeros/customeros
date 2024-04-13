@@ -70,7 +70,11 @@ func (s *tagService) UnlinkAndDelete(ctx context.Context, id string) (bool, erro
 }
 
 func (s *tagService) GetAll(ctx context.Context) (*neo4jentity.TagEntities, error) {
-	tagDbNodes, err := s.repositories.TagRepository.GetAll(ctx, common.GetTenantFromContext(ctx))
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TagService.GetAll")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	tagDbNodes, err := s.repositories.Neo4jRepositories.TagReadRepository.GetAll(ctx, common.GetTenantFromContext(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +86,7 @@ func (s *tagService) GetAll(ctx context.Context) (*neo4jentity.TagEntities, erro
 }
 
 func (s *tagService) GetTagsForContact(ctx context.Context, contactId string) (*neo4jentity.TagEntities, error) {
-	tagDbNodes, err := s.repositories.TagRepository.GetForContact(ctx, common.GetTenantFromContext(ctx), contactId)
+	tagDbNodes, err := s.repositories.Neo4jRepositories.TagReadRepository.GetForContact(ctx, common.GetTenantFromContext(ctx), contactId)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +98,12 @@ func (s *tagService) GetTagsForContact(ctx context.Context, contactId string) (*
 }
 
 func (s *tagService) GetTagsForContacts(ctx context.Context, contactIds []string) (*neo4jentity.TagEntities, error) {
-	tags, err := s.repositories.TagRepository.GetForContacts(ctx, common.GetTenantFromContext(ctx), contactIds)
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TagService.GetTagsForContacts")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("contactIds", contactIds))
+
+	tags, err := s.repositories.Neo4jRepositories.TagReadRepository.GetForContacts(ctx, common.GetTenantFromContext(ctx), contactIds)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +118,12 @@ func (s *tagService) GetTagsForContacts(ctx context.Context, contactIds []string
 }
 
 func (s *tagService) GetTagsForIssues(ctx context.Context, issueIds []string) (*neo4jentity.TagEntities, error) {
-	tags, err := s.repositories.TagRepository.GetForIssues(ctx, common.GetTenantFromContext(ctx), issueIds)
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TagService.GetTagsForIssues")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("issueIds", issueIds))
+
+	tags, err := s.repositories.Neo4jRepositories.TagReadRepository.GetForIssues(ctx, common.GetTenantFromContext(ctx), issueIds)
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +142,7 @@ func (s *tagService) GetTagsForOrganizations(ctx context.Context, organizationID
 	defer span.Finish()
 	span.LogFields(log.Object("organizationIDs", organizationIDs))
 
-	tags, err := s.repositories.TagRepository.GetForOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIDs)
+	tags, err := s.repositories.Neo4jRepositories.TagReadRepository.GetForOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIDs)
 	if err != nil {
 		return nil, err
 	}
@@ -145,9 +159,10 @@ func (s *tagService) GetTagsForOrganizations(ctx context.Context, organizationID
 func (s *tagService) GetTagsForLogEntries(ctx context.Context, logEntryIds []string) (*neo4jentity.TagEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TagService.GetTagsForLogEntries")
 	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("logEntryIds", logEntryIds))
 
-	tags, err := s.repositories.TagRepository.GetForLogEntries(ctx, common.GetTenantFromContext(ctx), logEntryIds)
+	tags, err := s.repositories.Neo4jRepositories.TagReadRepository.GetForLogEntries(ctx, common.GetTenantFromContext(ctx), logEntryIds)
 	if err != nil {
 		return nil, err
 	}
@@ -167,7 +182,7 @@ func (s *tagService) GetById(ctx context.Context, tagId string) (*neo4jentity.Ta
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("tagId", tagId))
 
-	tagDbNode, err := s.repositories.TagRepository.GetById(ctx, tagId)
+	tagDbNode, err := s.repositories.Neo4jRepositories.TagReadRepository.GetById(ctx, common.GetTenantFromContext(ctx), tagId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
