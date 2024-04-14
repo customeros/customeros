@@ -26,6 +26,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
+	"time"
 )
 
 type ActionStatusMetadata struct {
@@ -356,29 +357,36 @@ func (h *ContractEventHandler) OnRolloutRenewalOpportunity(ctx context.Context, 
 	}
 	contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
 
-	if contractEntity.LengthInMonths > 0 {
-		currentRenewalOpportunityDbNode, err := h.repositories.Neo4jRepositories.OpportunityReadRepository.GetActiveRenewalOpportunityForContract(ctx, eventData.Tenant, contractId)
+	if contractEntity.LengthInMonths <= 0 {
+		return nil
+	}
+
+	currentRenewalOpportunityDbNode, err := h.repositories.Neo4jRepositories.OpportunityReadRepository.GetActiveRenewalOpportunityForContract(ctx, eventData.Tenant, contractId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while getting renewal opportunity for contract %s: %s", contractId, err.Error())
+	}
+
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	if currentRenewalOpportunityDbNode != nil {
+		currentOpportunity := neo4jmapper.MapDbNodeToOpportunityEntity(currentRenewalOpportunityDbNode)
+		_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
+			return h.grpcClients.OpportunityClient.CloseWinOpportunity(ctx, &opportunitypb.CloseWinOpportunityGrpcRequest{
+				Tenant:    eventData.Tenant,
+				Id:        currentOpportunity.Id,
+				AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
+			})
+		})
 		if err != nil {
 			tracing.TraceErr(span, err)
-			h.log.Errorf("Error while getting renewal opportunity for contract %s: %s", contractId, err.Error())
+			h.log.Errorf("CloseWinOpportunity failed: %s", err.Error())
+			return err
 		}
+	}
 
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		if currentRenewalOpportunityDbNode != nil {
-			currentOpportunity := neo4jmapper.MapDbNodeToOpportunityEntity(currentRenewalOpportunityDbNode)
-			_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
-				return h.grpcClients.OpportunityClient.CloseWinOpportunity(ctx, &opportunitypb.CloseWinOpportunityGrpcRequest{
-					Tenant:    eventData.Tenant,
-					Id:        currentOpportunity.Id,
-					AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
-				})
-			})
-			if err != nil {
-				tracing.TraceErr(span, err)
-				h.log.Errorf("CloseWinOpportunity failed: %s", err.Error())
-			}
-		}
-
+	errChan := make(chan error, 1) // Buffered channel
+	go func() {
+		time.Sleep(2 * time.Second)
 		_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
 			return h.grpcClients.OpportunityClient.CreateRenewalOpportunity(ctx, &opportunitypb.CreateRenewalOpportunityGrpcRequest{
 				Tenant:     eventData.Tenant,
@@ -389,11 +397,15 @@ func (h *ContractEventHandler) OnRolloutRenewalOpportunity(ctx context.Context, 
 				},
 			})
 		})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("CreateRenewalOpportunity failed: %v", err.Error())
-		}
+		errChan <- err // Send error to the channel
+	}()
+	// Wait for an error from the goroutine
+	if err := <-errChan; err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("CreateRenewalOpportunity failed: %v", err.Error())
+		return err
 	}
+
 	status := "Renewed"
 	metadata, err := utils.ToJson(ActionStatusMetadata{
 		Status: status,

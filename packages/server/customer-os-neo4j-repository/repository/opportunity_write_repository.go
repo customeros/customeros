@@ -234,7 +234,8 @@ func (r *opportunityWriteRepository) CreateRenewal(ctx context.Context, tenant, 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})
 							OPTIONAL MATCH (c)-[r:ACTIVE_RENEWAL]->(op:RenewalOpportunity)
 							WITH c, op, COUNT(op) AS existingOpportunities
-								WHERE existingOpportunities = 0
+							WITH c, existingOpportunities, (existingOpportunities = 0) AS canCreateNewOp
+							FOREACH (ignore IN CASE WHEN canCreateNewOp THEN [1] ELSE [] END |
 							MERGE (c)-[:ACTIVE_RENEWAL]->(newOp:Opportunity {id:$opportunityId})
 							ON CREATE SET 
 								newOp:Opportunity_%s,
@@ -248,9 +249,9 @@ func (r *opportunityWriteRepository) CreateRenewal(ctx context.Context, tenant, 
 								newOp.internalStage=$internalStage,
 								newOp.renewalLikelihood=$renewalLikelihood,
 								newOp.renewalApproved=$renewalApproved
-							WITH c, newOp, existingOpportunities
 								MERGE (c)-[:HAS_OPPORTUNITY]->(newOp)
-							RETURN existingOpportunities = 0 AS wasCreated
+							)
+							RETURN canCreateNewOp AS wasCreated
 							`, tenant)
 	params := map[string]any{
 		"tenant":            tenant,
