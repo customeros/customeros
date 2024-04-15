@@ -88,7 +88,7 @@ func MapEntityToInvoiceLine(entity *neo4jentity.InvoiceLineEntity) *model.Invoic
 		},
 		Description: entity.Name,
 		Price:       entity.Price,
-		Quantity:    int(entity.Quantity),
+		Quantity:    entity.Quantity,
 		Total:       entity.TotalAmount,
 		Subtotal:    entity.Amount,
 		TaxDue:      entity.Vat,

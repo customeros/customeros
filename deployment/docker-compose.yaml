@@ -141,7 +141,7 @@ services:
       - "8080:8080"
 
   gotenberg:
-    image: thecodingmachine/gotenberg:8
+    image: thecodingmachine/gotenberg:8@sha256:c23c892f5fee99be6ed0fecc295c584f294335f9333373def88899c2a9d38c32
     container_name: gotenberg
     depends_on:
       - postgres-sidecar
