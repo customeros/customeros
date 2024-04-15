@@ -335,6 +335,7 @@ func TestMutationResolver_ServiceLineItemDelete(t *testing.T) {
 		InvoicingEnabled:   true,
 		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
 		InvoicingStartDate: &now,
+		ContractStatus:     neo4jenum.ContractStatusDraft,
 	})
 	serviceLineItemId := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{})
 
