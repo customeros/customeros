@@ -64,6 +64,7 @@ func TestContractEventHandler_OnCreate(t *testing.T) {
 			Check:              true,
 			DueDays:            30,
 			Country:            "US",
+			Approved:           true,
 		},
 		commonmodel.Source{
 			Source:    constants.SourceOpenline,
@@ -155,6 +156,7 @@ func TestContractEventHandler_OnCreate(t *testing.T) {
 	require.True(t, contract.Check)
 	require.Equal(t, int64(30), contract.DueDays)
 	require.Equal(t, "US", contract.Country)
+	require.True(t, contract.Approved)
 
 	// Verify events platform was called
 	require.True(t, calledEventsPlatformForOnboardingStatusChange)

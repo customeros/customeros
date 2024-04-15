@@ -49,6 +49,7 @@ type Contract struct {
 	Check                  bool                         `json:"check"`
 	DueDays                int64                        `json:"dueDays"`
 	LengthInMonths         int64                        `json:"lengthInMonths"`
+	Approved               bool                         `json:"approved"`
 }
 
 type ContractDataFields struct {
@@ -84,6 +85,7 @@ type ContractDataFields struct {
 	Check                  bool     `json:"check"`
 	DueDays                int64    `json:"dueDays"`
 	LengthInMonths         int64    `json:"lengthInMonths"`
+	Approved               bool     `json:"approved"`
 }
 
 // BillingCycle represents the billing cycle of a contract.

@@ -21,6 +21,7 @@ contract_Update(
         billingCycle: ANNUAL_BILLING
         currency: USD
         autoRenew: true
+        approved: true
         billingDetails: {
             payOnline: true
             payAutomatically: true

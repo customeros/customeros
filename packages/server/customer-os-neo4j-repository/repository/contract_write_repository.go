@@ -40,6 +40,7 @@ type ContractCreateFields struct {
 	Check                  bool                   `json:"check"`
 	DueDays                int64                  `json:"dueDays"`
 	Country                string                 `json:"country"`
+	Approved               bool                   `json:"approved"`
 }
 
 type ContractUpdateFields struct {
@@ -76,6 +77,7 @@ type ContractUpdateFields struct {
 	AutoRenew                    bool                   `json:"autoRenew"`
 	DueDays                      int64                  `json:"dueDays"`
 	Check                        bool                   `json:"check"`
+	Approved                     bool                   `json:"approved"`
 	UpdateName                   bool                   `json:"updateName"`
 	UpdateContractUrl            bool                   `json:"updateContractUrl"`
 	UpdateStatus                 bool                   `json:"updateStatus"`
@@ -107,6 +109,7 @@ type ContractUpdateFields struct {
 	UpdateCheck                  bool                   `json:"updateCheck"`
 	UpdateDueDays                bool                   `json:"updateDueDays"`
 	UpdateLengthInMonths         bool                   `json:"updateLengthInMonths"`
+	UpdateApproved               bool                   `json:"updateApproved"`
 }
 
 type ContractWriteRepository interface {
@@ -170,7 +173,8 @@ func (r *contractWriteRepository) CreateForOrganization(ctx context.Context, ten
 								ct.check=$check,
 								ct.country=$country,
 								ct.dueDays=$dueDays,
-								ct.lengthInMonths=$lengthInMonths
+								ct.lengthInMonths=$lengthInMonths,
+								ct.approved=$approved
 							WITH ct, t
 							OPTIONAL MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$createdByUserId}) 
 							WHERE $createdByUserId <> ""
@@ -206,6 +210,7 @@ func (r *contractWriteRepository) CreateForOrganization(ctx context.Context, ten
 		"dueDays":                data.DueDays,
 		"country":                data.Country,
 		"lengthInMonths":         data.LengthInMonths,
+		"approved":               data.Approved,
 	}
 
 	span.LogFields(log.String("cypher", cypher))
@@ -361,6 +366,10 @@ func (r *contractWriteRepository) UpdateContract(ctx context.Context, tenant, co
 	if data.UpdateLengthInMonths {
 		cypher += `, ct.lengthInMonths=$lengthInMonths `
 		params["lengthInMonths"] = data.LengthInMonths
+	}
+	if data.UpdateApproved {
+		cypher += `, ct.approved=$approved `
+		params["approved"] = data.Approved
 	}
 
 	span.LogFields(log.String("cypher", cypher))

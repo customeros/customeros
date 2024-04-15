@@ -536,6 +536,7 @@ type Contract struct {
 	ServiceStarted          *time.Time         `json:"serviceStarted,omitempty"`
 	ContractStatus          ContractStatus     `json:"contractStatus"`
 	AutoRenew               bool               `json:"autoRenew"`
+	Approved                bool               `json:"approved"`
 	Attachments             []*Attachment      `json:"attachments,omitempty"`
 	Invoices                []*Invoice         `json:"invoices"`
 	UpcomingInvoices        []*Invoice         `json:"upcomingInvoices"`
@@ -608,6 +609,7 @@ type ContractInput struct {
 	BillingEnabled          *bool      `json:"billingEnabled,omitempty"`
 	AutoRenew               *bool      `json:"autoRenew,omitempty"`
 	DueDays                 *int64     `json:"dueDays,omitempty"`
+	Approved                *bool      `json:"approved,omitempty"`
 	// Deprecated, use committedPeriodInMonths instead.
 	ContractRenewalCycle *ContractRenewalCycle `json:"contractRenewalCycle,omitempty"`
 	// Deprecated, use committedPeriodInMonths instead.
@@ -644,6 +646,7 @@ type ContractUpdateInput struct {
 	AppSource               *string              `json:"appSource,omitempty"`
 	BillingEnabled          *bool                `json:"billingEnabled,omitempty"`
 	AutoRenew               *bool                `json:"autoRenew,omitempty"`
+	Approved                *bool                `json:"approved,omitempty"`
 	// Deprecated, use committedPeriodInMonths instead.
 	ContractRenewalCycle *ContractRenewalCycle `json:"contractRenewalCycle,omitempty"`
 	// Deprecated, use committedPeriodInMonths instead.
@@ -3061,12 +3064,14 @@ func (e ActionType) MarshalGQL(w io.Writer) {
 type BilledType string
 
 const (
+	// Deprecated
 	BilledTypeNone      BilledType = "NONE"
 	BilledTypeMonthly   BilledType = "MONTHLY"
 	BilledTypeQuarterly BilledType = "QUARTERLY"
 	BilledTypeAnnually  BilledType = "ANNUALLY"
 	BilledTypeOnce      BilledType = "ONCE"
-	BilledTypeUsage     BilledType = "USAGE"
+	// Deprecated
+	BilledTypeUsage BilledType = "USAGE"
 )
 
 var AllBilledType = []BilledType{

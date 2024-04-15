@@ -37,6 +37,7 @@ type ContractCreateEvent struct {
 	DueDays                int64                      `json:"dueDays,omitempty"`
 	Country                string                     `json:"country"`
 	LengthInMonths         int64                      `json:"lengthInMonths"`
+	Approved               bool                       `json:"approved"`
 }
 
 func NewContractCreateEvent(aggregate eventstore.Aggregate, dataFields model.ContractDataFields, source commonmodel.Source, externalSystem commonmodel.ExternalSystem, createdAt, updatedAt time.Time) (eventstore.Event, error) {
@@ -65,6 +66,7 @@ func NewContractCreateEvent(aggregate eventstore.Aggregate, dataFields model.Con
 		Source:                 source,
 		Country:                dataFields.Country,
 		LengthInMonths:         dataFields.LengthInMonths,
+		Approved:               dataFields.Approved,
 	}
 	if eventData.LengthInMonths < 0 {
 		eventData.LengthInMonths = 0

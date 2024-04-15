@@ -182,6 +182,11 @@ func (a *ContractAggregate) updateContract(ctx context.Context, request *contrac
 		DueDays:                request.DueDays,
 		LengthInMonths:         request.LengthInMonths,
 	}
+
+	// Set the approved field to true if the contract is already approved
+	if a.Contract.Approved {
+		dataFields.Approved = true
+	}
 	fieldsMask := extractFieldsMask(request.FieldsMask)
 
 	// Validate the dates
@@ -310,6 +315,8 @@ func extractFieldsMask(requestFieldsMask []contractpb.ContractFieldMask) []strin
 			fieldsMask = append(fieldsMask, event.FieldMaskDueDays)
 		case contractpb.ContractFieldMask_CONTRACT_FIELD_LENGTH_IN_MONTHS:
 			fieldsMask = append(fieldsMask, event.FieldMaskLengthInMonths)
+		case contractpb.ContractFieldMask_CONTRACT_FIELD_APPROVED:
+			fieldsMask = append(fieldsMask, event.FieldMaskApproved)
 		}
 	}
 	fieldsMask = utils.RemoveDuplicates(fieldsMask)

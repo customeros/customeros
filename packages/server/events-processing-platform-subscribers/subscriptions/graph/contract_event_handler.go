@@ -85,6 +85,7 @@ func (h *ContractEventHandler) OnCreate(ctx context.Context, evt eventstore.Even
 		Check:                  eventData.Check,
 		DueDays:                eventData.DueDays,
 		Country:                eventData.Country,
+		Approved:               eventData.Approved,
 		SourceFields: neo4jmodel.Source{
 			Source:        helper.GetSource(eventData.Source.Source),
 			AppSource:     helper.GetAppSource(eventData.Source.AppSource),
@@ -197,6 +198,7 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 		AutoRenew:                    eventData.AutoRenew,
 		Check:                        eventData.Check,
 		DueDays:                      eventData.DueDays,
+		Approved:                     eventData.Approved,
 		UpdateName:                   eventData.UpdateName(),
 		UpdateContractUrl:            eventData.UpdateContractUrl(),
 		UpdateServiceStartedAt:       eventData.UpdateServiceStartedAt(),
@@ -227,6 +229,7 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 		UpdateAutoRenew:              eventData.UpdateAutoRenew(),
 		UpdateCheck:                  eventData.UpdateCheck(),
 		UpdateDueDays:                eventData.UpdateDueDays(),
+		UpdateApproved:               eventData.UpdateApproved(),
 	}
 	err = h.repositories.Neo4jRepositories.ContractWriteRepository.UpdateContract(ctx, eventData.Tenant, contractId, data)
 	if err != nil {

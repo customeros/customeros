@@ -40,6 +40,7 @@ enum ContractFieldMask {
   CONTRACT_FIELD_INVOICE_EMAIL_BCC = 31;
   CONTRACT_FIELD_INVOICE_EMAIL_TO = 32;
   CONTRACT_FIELD_LENGTH_IN_MONTHS = 33;
+  CONTRACT_FIELD_APPROVED = 34;
 }
 
 // CreateContract request message
@@ -70,6 +71,7 @@ message CreateContractGrpcRequest {
   int64 dueDays = 27;
   string country = 28;
   int64 lengthInMonths = 29;
+  bool approved = 30;
 }
 
 message UpdateContractGrpcRequest {
@@ -110,6 +112,7 @@ message UpdateContractGrpcRequest {
   repeated string invoiceEmailCc = 38;
   repeated string invoiceEmailBcc = 39;
   int64 lengthInMonths = 40;
+  bool approved = 41;
 }
 
 message RolloutRenewalOpportunityOnExpirationGrpcRequest {
