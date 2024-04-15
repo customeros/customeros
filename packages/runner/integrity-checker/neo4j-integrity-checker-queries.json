@@ -110,8 +110,8 @@
     },
     {
       "name": "Check for contracts with wrong status",
-      "query": "CALL {\n    MATCH (c:Contract) WHERE c.status <> 'ENDED' AND date(c.endedAt) < date() RETURN count(c) AS cnt \n    UNION ALL \n    MATCH (c:Contract) WHERE (c.endedAt is null OR date(c.endedAt) > date()) AND NOT c.status IN ['LIVE','OUT_OF_CONTRACT'] AND date(c.serviceStartedAt) < date() RETURN count(c) AS cnt\n    } return sum(cnt)",
-      "description": "Checks: 1 - Contract with wrong status and endedAt date. 2 - Contract with wrong status and serviceStartedAt date."
+      "query": "CALL {\n    MATCH (c:Contract) WHERE c.status <> 'ENDED' AND date(c.endedAt) < date() RETURN count(c) AS cnt \n    UNION ALL \n    MATCH (c:Contract) WHERE (c.endedAt is null OR date(c.endedAt) > date()) AND NOT c.status IN ['LIVE','OUT_OF_CONTRACT','DRAFT'] AND date(c.serviceStartedAt) < date() RETURN count(c) AS cnt\n    UNION ALL\n    MATCH (c:Contract) WHERE c.status IN ['DRAFT'] AND c.approved = true RETURN count(c) AS cnt\n    UNION ALL\n    MATCH (c:Contract) WHERE (c.endedAt is null OR date(c.endedAt) > date()) AND c.status IN ['SCHEDULED'] AND date(c.serviceStartedAt) < date() RETURN count(c) AS cnt\n    } return sum(cnt)",
+      "description": "Checks: 1 - Contract with wrong status and endedAt date. 2 - Contract with wrong status and serviceStartedAt date. 3 - Contract is draft while approved. 4 - Contract is scheduled while should be live"
     },
     {
       "name": "Check ServiceLineItem data consistency",

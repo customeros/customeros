@@ -12759,6 +12759,7 @@ enum ContractBillingCycle {
 enum ContractStatus {
     UNDEFINED
     DRAFT
+    SCHEDULED
     LIVE
     ENDED
     OUT_OF_CONTRACT

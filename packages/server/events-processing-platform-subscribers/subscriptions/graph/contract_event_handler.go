@@ -576,7 +576,8 @@ func (h *ContractEventHandler) updateStatus(ctx context.Context, tenant, contrac
 		return "", false, err
 	}
 	contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
-	status, err := h.DeriveContractStatus(ctx, tenant, *contractEntity)
+
+	status, err := h.deriveContractStatus(ctx, tenant, *contractEntity)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while deriving contract %s status: %s", contractId, err.Error())
@@ -644,8 +645,8 @@ func (h *ContractEventHandler) OnRefreshStatus(ctx context.Context, evt eventsto
 	return nil
 }
 
-func (h *ContractEventHandler) DeriveContractStatus(ctx context.Context, tenant string, contractEntity neo4jentity.ContractEntity) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractEventHandler.DeriveContractStatus")
+func (h *ContractEventHandler) deriveContractStatus(ctx context.Context, tenant string, contractEntity neo4jentity.ContractEntity) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractEventHandler.deriveContractStatus")
 	defer span.Finish()
 
 	now := utils.Now()
@@ -656,10 +657,15 @@ func (h *ContractEventHandler) DeriveContractStatus(ctx context.Context, tenant 
 		return neo4jenum.ContractStatusEnded.String(), nil
 	}
 
-	// If serviceStartedAt is nil or in the future, the contract is considered Draft.
+	// Check contract is draft or scheduled
 	if contractEntity.ServiceStartedAt == nil || contractEntity.ServiceStartedAt.After(now) {
-		span.LogFields(log.String("result.status", neo4jenum.ContractStatusDraft.String()))
-		return neo4jenum.ContractStatusDraft.String(), nil
+		if !contractEntity.Approved {
+			span.LogFields(log.String("result.status", neo4jenum.ContractStatusDraft.String()))
+			return neo4jenum.ContractStatusDraft.String(), nil
+		} else {
+			span.LogFields(log.String("result.status", neo4jenum.ContractStatusScheduled.String()))
+			return neo4jenum.ContractStatusScheduled.String(), nil
+		}
 	}
 
 	// Check if contract is out of contract
