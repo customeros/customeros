@@ -156,8 +156,8 @@ github.com/opencontainers/go-digest v1.0.0 h1:apOUWs51W5PlhuyGyz9FCeeBIOUDA/6nW8
 github.com/opencontainers/go-digest v1.0.0/go.mod h1:0JzlMkj0TRzQZfJkVvzbP0HBR3IKzErnv2BNG4W4MAM=
 github.com/opencontainers/image-spec v1.1.0 h1:8SG7/vwALn54lVB/0yZ/MMwhFrPYtpEHQb2IpWsCzug=
 github.com/opencontainers/image-spec v1.1.0/go.mod h1:W4s4sFTMaBeK1BQLXbG4AdM2szdn85PY75RI83NrTrM=
-github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20240411174832-0af0ece0a23e h1:ujK0s1H5CdRjGWMjC7WefrPxa07Q0XJs2oC31qz50Yo=
-github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20240411174832-0af0ece0a23e/go.mod h1:lMoWBpqDi36fDnU/zRBsF3WK3Tk3yetoPggWfdGRWyo=
+github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20240413132139-bfffc416fdeb h1:1GSwnjR0f9hYKZbgfx6VtXBsKgS6hT0bkOrBJc8frQQ=
+github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20240413132139-bfffc416fdeb/go.mod h1:lMoWBpqDi36fDnU/zRBsF3WK3Tk3yetoPggWfdGRWyo=
 github.com/opentracing/opentracing-go v1.2.0 h1:uEJPy/1a5RIPAJ0Ov+OIO8OxWu77jEv+1B0VhjKrZUs=
 github.com/opentracing/opentracing-go v1.2.0/go.mod h1:GxEUsuufX4nBwe+T+Wl9TAgYrxe9dPLANfrWvHYVTgc=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
