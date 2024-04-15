@@ -19,6 +19,7 @@ import { DateTimeUtils } from '@spaces/utils/date';
 import { Collapse } from '@ui/transitions/Collapse';
 import { toastError } from '@ui/presentation/Toast';
 import { DatePicker } from '@ui/form/DatePicker/DatePicker';
+import { currencyOptions } from '@shared/util/currencyOptions';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { Card, CardBody, CardFooter, CardHeader } from '@ui/presentation/Card';
 import { useUpdateContractMutation } from '@organization/src/graphql/updateContract.generated';
@@ -232,6 +233,7 @@ export const ContractCard = ({
             };
           case 'autoRenew':
           case 'billingCycle':
+          case 'currency':
           case 'billingEnabled':
             updateContract.mutate(
               ContractDTO.toPayload({
@@ -527,6 +529,14 @@ export const ContractCard = ({
               options={paymentDueOptions}
             />
           </Flex>
+          <FormSelect
+            placeholder='Billing currency'
+            label='Billing currency'
+            isLabelVisible
+            name='currency'
+            formId={formId}
+            options={currencyOptions ?? []}
+          />
         </CardBody>
       )}
       <CardFooter p='0' mt={1} w='full' flexDir='column'>

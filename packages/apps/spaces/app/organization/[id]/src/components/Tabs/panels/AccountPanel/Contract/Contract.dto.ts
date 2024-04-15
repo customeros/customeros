@@ -1,9 +1,11 @@
 import { utcToZonedTime } from 'date-fns-tz';
 
 import { SelectOption } from '@shared/types/SelectOptions';
+import { currencyOptions } from '@shared/util/currencyOptions';
 import { UpdateContractMutationVariables } from '@organization/src/graphql/updateContract.generated';
 import {
   Contract,
+  Currency,
   ContractUpdateInput,
   ContractRenewalCycle,
   ContractBillingCycle,
@@ -26,6 +28,7 @@ export interface TimeToRenewalForm {
   country?: SelectOption<string> | null;
   organizationLegalName?: string | null;
   autoRenew?: SelectOption<boolean> | null;
+  currency?: SelectOption<Currency> | null;
   billingEnabled?: SelectOption<boolean> | null;
   billingCycle?: SelectOption<ContractBillingCycle> | null;
   contractRenewalCycle?: SelectOption<
@@ -47,6 +50,7 @@ export class ContractDTO implements TimeToRenewalForm {
   billingEnabled?: SelectOption<boolean> | null;
   autoRenew?: SelectOption<boolean> | null;
   dueDays?: SelectOption<number> | null;
+  currency?: SelectOption<Currency> | null;
 
   constructor(data?: Contract | null) {
     this.contractRenewalCycle =
@@ -62,6 +66,9 @@ export class ContractDTO implements TimeToRenewalForm {
       [...contractBillingCycleOptions].find(
         ({ value }) => value === data?.billingDetails?.billingCycle,
       ) ?? undefined;
+    this.currency =
+      [...currencyOptions].find(({ value }) => value === data?.currency) ??
+      undefined;
     this.endedAt =
       data?.contractEnded && utcToZonedTime(data?.contractEnded, 'UTC');
     this.invoicingStartDate =
