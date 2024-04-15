@@ -20,7 +20,7 @@ export const FormAutoresizeTextarea = forwardRef<
   const { getInputProps } = useField(props.name, formId);
 
   return (
-    <>
+    <div className='w-full'>
       <label
         {...labelProps}
         className='mb-1 text-gray-700 font-semibold text-sm'
@@ -30,6 +30,6 @@ export const FormAutoresizeTextarea = forwardRef<
       </label>
 
       <AutoresizeTextarea ref={ref} {...getInputProps()} {...props} />
-    </>
+    </div>
   );
 });

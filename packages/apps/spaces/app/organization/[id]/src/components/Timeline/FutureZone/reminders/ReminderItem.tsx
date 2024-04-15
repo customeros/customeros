@@ -122,7 +122,7 @@ export const ReminderItem = ({
       }}
     >
       <FormAutoresizeTextarea
-        className='px-4 pb-0 text-sm font-light font-sticky hover:border-transparent focus-within:border-transparent focus-within:hover:border-transparent'
+        className='px-2 pb-0 text-sm font-light font-sticky hover:border-transparent focus-within:border-transparent focus-within:hover:border-transparent'
         ref={ref}
         border
         readOnly={isMutating}

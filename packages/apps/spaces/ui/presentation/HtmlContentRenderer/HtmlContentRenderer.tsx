@@ -1,8 +1,7 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 
 import linkifyHtml from 'linkify-html';
 import sanitizeHtml from 'sanitize-html';
-import { FlexProps } from '@chakra-ui/react';
 import { InteractivityProps } from '@chakra-ui/styled-system';
 import parse, {
   Element,
@@ -10,12 +9,15 @@ import parse, {
   HTMLReactParserOptions,
 } from 'html-react-parser';
 
-import { Flex } from '@ui/layout/Flex';
-import { getTextRendererStyles } from '@ui/theme/textRendererStyles';
+import { cn } from '@ui/utils/cn';
 
 import { ImageAttachment } from './ImageAttachment';
 
-interface HtmlContentRendererProps extends InteractivityProps, FlexProps {
+interface HtmlContentRendererProps
+  extends InteractivityProps,
+    React.HTMLAttributes<HTMLDivElement> {
+  noOfLines?: number;
+  className?: string;
   htmlContent: string;
   showAsInlineText?: boolean;
 }
@@ -23,6 +25,7 @@ interface HtmlContentRendererProps extends InteractivityProps, FlexProps {
 export const HtmlContentRenderer: React.FC<HtmlContentRendererProps> = ({
   htmlContent,
   noOfLines,
+  className,
   pointerEvents,
   showAsInlineText,
   ...rest
@@ -99,21 +102,24 @@ export const HtmlContentRenderer: React.FC<HtmlContentRendererProps> = ({
       }
     },
   };
-  const textRendererStyles = useMemo(
-    () => getTextRendererStyles(showAsInlineText),
-    [showAsInlineText],
-  );
+
   const parsedContent = parse(linkifiedContent, parseOptions);
 
+  const textRendererClass = showAsInlineText
+    ? 'inline-text-renderer'
+    : 'block-text-renderer';
+
   return (
-    <Flex
-      flexDir='column'
-      pointerEvents={pointerEvents}
-      noOfLines={noOfLines}
+    <div
+      className={cn(textRendererClass, className, 'flex flex-col')}
+      style={{
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        pointerEvents: pointerEvents as any,
+        WebkitLineClamp: `${noOfLines}`,
+      }}
       {...rest}
-      sx={textRendererStyles}
     >
       {parsedContent}
-    </Flex>
+    </div>
   );
 };

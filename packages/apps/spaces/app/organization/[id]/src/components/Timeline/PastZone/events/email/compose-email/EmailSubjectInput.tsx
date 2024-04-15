@@ -1,9 +1,7 @@
 'use client';
 import React, { FC } from 'react';
 
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
-import { FormInput } from '@ui/form/Input';
+import { FormInput } from '@ui/form/Input/FormInput2';
 
 interface EmailSubjectInput {
   mt?: number;
@@ -17,23 +15,15 @@ export const EmailSubjectInput: FC<EmailSubjectInput> = ({
   mt = 0,
 }) => {
   return (
-    <Flex alignItems='center' flex={1} mt={mt}>
-      <Text as={'span'} color='gray.700' fontWeight={600} mr={1}>
-        Subject:
-      </Text>
+    <div className='flex items-center flex-1' style={{ marginTop: mt }}>
+      <span className='text-gray-700 font-semibold mr-1'>Subject:</span>
       <FormInput
         name={fieldName}
         formId={formId}
-        color='gray.500'
-        height={5}
-        fontSize='inherit'
-        border='none'
-        _hover={{ border: 'none !important' }}
-        _active={{ border: 'none !important' }}
-        _visited={{ border: 'none !important' }}
-        _focusVisible={{ border: 'none !important' }}
-        _focus={{ border: 'none !important' }}
+        className='text-gray-500 height-[5px] text-md'
+        variant='unstyled'
+        size='xs'
       />
-    </Flex>
+    </div>
   );
 };

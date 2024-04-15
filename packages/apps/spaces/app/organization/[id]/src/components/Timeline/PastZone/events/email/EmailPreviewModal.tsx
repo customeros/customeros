@@ -10,17 +10,16 @@ import { useSession } from 'next-auth/react';
 import { useRemirror } from '@remirror/react';
 import { htmlToProsemirrorNode } from 'remirror';
 
-import { Box } from '@ui/layout/Box';
 import { useDisclosure } from '@ui/utils';
 import { Send03 } from '@ui/media/icons/Send03';
 import { CardBody } from '@ui/presentation/Card';
 import { InteractionEvent } from '@graphql/types';
 import { basicEditorExtensions } from '@ui/form/RichTextEditor/extensions';
 import { useTimelineMeta } from '@organization/src/components/Timeline/state';
-import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
 import { getEmailParticipantsNameAndEmail } from '@spaces/utils/getParticipantsName';
 import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
 import { HtmlContentRenderer } from '@ui/presentation/HtmlContentRenderer/HtmlContentRenderer';
+import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog2';
 import { getEmailParticipantsByType } from '@organization/src/components/Timeline/PastZone/events/email/utils';
 import { handleSendEmail } from '@organization/src/components/Timeline/PastZone/events/email/compose-email/utils';
 import { useUpdateCacheWithNewEvent } from '@organization/src/components/Timeline/PastZone/hooks/updateCacheWithNewEvent';
@@ -305,13 +304,11 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
           onConfirm={handleSubmit}
           isLoading={false}
           icon={
-            <Box>
-              <Send03
-                color='primary.700'
-                boxSize='inherit'
-                verticalAlign='initial'
-              />
-            </Box>
+            <Send03
+              color='primary.700'
+              boxSize='inherit'
+              verticalAlign='initial'
+            />
           }
         />
       </div>

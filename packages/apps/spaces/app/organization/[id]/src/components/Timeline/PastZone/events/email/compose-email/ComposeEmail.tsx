@@ -1,6 +1,7 @@
 'use client';
 import React, { FC, useRef, PropsWithChildren } from 'react';
 
+import { cn } from '@ui/utils/cn';
 import { Box } from '@ui/layout/Box';
 import { RichTextEditor } from '@ui/form/RichTextEditor/RichTextEditor';
 import { BasicEditorToolbar } from '@ui/form/RichTextEditor/menu/BasicEditorToolbar';
@@ -41,16 +42,13 @@ export const ComposeEmail: FC<ComposeEmailProps> = ({
     modal && (myRef?.current?.getBoundingClientRect()?.height || 0) + 96;
 
   return (
-    <Box
-      borderTop={modal ? '1px dashed var(--gray-200, #EAECF0)' : 'none'}
-      background={modal ? '#F8F9FC' : 'white'}
-      borderRadius={modal ? 0 : 'lg'}
-      borderBottomRadius='2xl'
-      as='form'
-      p={4}
-      overflow='visible'
-      maxHeight={modal ? '50vh' : 'auto'}
-      pt={1}
+    <form
+      className={cn(
+        modal
+          ? 'border-dashed border-t-[1px] border-gray-200 bg-grayBlue-50 rounded-none max-h-[50vh]'
+          : 'bg-white rounded-lg max-h-[100%]',
+        'rounded-b-2xl p-4 overflow-visible pt-1',
+      )}
       onSubmit={(e) => {
         e.preventDefault();
       }}
@@ -69,7 +67,6 @@ export const ComposeEmail: FC<ComposeEmailProps> = ({
           formId={formId}
         />
       </Box>
-
       <Box
         maxHeight={modal ? `calc(50vh - ${height}px) !important` : 'auto'}
         w='full'
@@ -85,7 +82,6 @@ export const ComposeEmail: FC<ComposeEmailProps> = ({
           <BasicEditorToolbar isSending={isSending} onSubmit={onSubmit} />
         </RichTextEditor>
       </Box>
-
       {/*{isUploadAreaOpen && (*/}
       {/*  <FileUpload*/}
       {/*    files={files}*/}
@@ -127,6 +123,6 @@ export const ComposeEmail: FC<ComposeEmailProps> = ({
       {/*    }}*/}
       {/*  />*/}
       {/*)}*/}
-    </Box>
+    </form>
   );
 };

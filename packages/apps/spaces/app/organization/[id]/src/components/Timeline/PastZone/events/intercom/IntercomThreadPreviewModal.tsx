@@ -3,19 +3,17 @@ import React from 'react';
 import copy from 'copy-to-clipboard';
 import { convert } from 'html-to-text';
 
-import { Flex } from '@ui/layout/Flex';
+import { cn } from '@ui/utils/cn';
 import { VStack } from '@ui/layout/Stack';
-import { Text } from '@ui/typography/Text';
 import { Link03 } from '@ui/media/icons/Link03';
 import { XClose } from '@ui/media/icons/XClose';
-import { Heading } from '@ui/typography/Heading';
-import { IconButton } from '@ui/form/IconButton';
-import { Tooltip } from '@ui/presentation/Tooltip';
 import { DateTimeUtils } from '@spaces/utils/date';
-import { Divider } from '@ui/presentation/Divider';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
+import { Divider } from '@ui/presentation/Divider/Divider';
+import { IconButton } from '@ui/form/IconButton/IconButton';
 import { getName } from '@spaces/utils/getParticipantsName';
-import { CardBody, CardHeader } from '@ui/presentation/Card';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { CardHeader, CardContent } from '@ui/presentation/Card/Card';
 import { useGetTimelineEventsQuery } from '@organization/src/graphql/getTimelineEvents.generated';
 import {
   UserParticipant,
@@ -78,58 +76,59 @@ export const IntercomThreadPreviewModal: React.FC = () => {
 
   return (
     <>
-      <CardHeader
-        py='4'
-        px='6'
-        pb='1'
-        position='sticky'
-        top={0}
-        borderRadius='xl'
-      >
-        <Flex
-          direction='row'
-          justifyContent='space-between'
-          alignItems='center'
-          maxH='calc(100vh - 5rem)'
-        >
-          <Flex mb={2} alignItems='center'>
-            <Heading
-              size='sm'
-              fontSize='lg'
-              noOfLines={1}
-              maxW={event?.interactionSession?.name ? 'unset' : '248px'}
+      <CardHeader className='py-4 px-6 pb-1 sticky top-0 rounded-xl'>
+        <div className='flex justify-between items-center max-w-[calc(100vh-5rem)] flex-row'>
+          <div className='flex mb-2 items-center'>
+            <h2
+              className={cn(
+                'text-lg line-clamp-2',
+                event?.interactionSession?.name ? '' : 'max-w-[248px]',
+              )}
             >
               {title}
-            </Heading>
-          </Flex>
-          <Flex direction='row' justifyContent='flex-end' alignItems='center'>
-            <Tooltip label='Copy link to this thread' placement='bottom'>
-              <IconButton
-                variant='ghost'
-                aria-label='Copy link to this thread'
-                color='gray.500'
-                size='sm'
-                mr={1}
-                icon={<Link03 color='gray.500' boxSize='4' />}
-                onClick={() => copy(window.location.href)}
-              />
+            </h2>
+          </div>
+          <div className='flex justify-end items-center flex-row'>
+            <Tooltip
+              label='Copy link to this thread'
+              side='bottom'
+              asChild={false}
+            >
+              <div>
+                <IconButton
+                  className='mr-1'
+                  variant='ghost'
+                  aria-label='Copy link to this thread'
+                  color='gray.500'
+                  size='sm'
+                  icon={<Link03 color='gray.500' boxSize='4' />}
+                  onClick={() => copy(window.location.href)}
+                />
+              </div>
             </Tooltip>
-            <Tooltip label='Close' aria-label='close' placement='bottom'>
-              <IconButton
-                variant='ghost'
-                aria-label='Close preview'
-                color='gray.500'
-                size='sm'
-                icon={<XClose color='gray.500' boxSize='5' />}
-                onClick={closeModal}
-              />
+            <Tooltip
+              label='Close'
+              aria-label='close'
+              side='bottom'
+              asChild={false}
+            >
+              <div>
+                <IconButton
+                  variant='ghost'
+                  aria-label='Close preview'
+                  color='gray.500'
+                  size='sm'
+                  icon={<XClose color='gray.500' boxSize='5' />}
+                  onClick={closeModal}
+                />
+              </div>
             </Tooltip>
-          </Flex>
-        </Flex>
+          </div>
+        </div>
       </CardHeader>
-      <CardBody mt={0} maxHeight='calc(100vh - 9rem)' overflow='auto' pb={6}>
+      <CardContent className='mt-0 max-h-[calc(100vh-9rem)] overflow-auto pb-6'>
         <IntercomMessageCard
-          w='full'
+          className='w-full'
           name={getName(intercomSender)}
           profilePhotoUrl={intercomSender?.profilePhotoUrl}
           sourceUrl={event?.externalLinks?.[0]?.externalUrl}
@@ -140,14 +139,14 @@ export const IntercomThreadPreviewModal: React.FC = () => {
 
         {isLoading && (
           <>
-            <Flex marginY={2} alignItems='center'>
-              <Text color='gray.400' fontSize='sm' whiteSpace='nowrap' mr={2}>
+            <div className='flex my-2 items-center'>
+              <p className='text-gray-400 text-sm whitespace-nowrap mr-2'>
                 {/* subtracting 2 for intercom because system messages are hidden */}
                 {timelineEventsIds.length - 2}{' '}
                 {timelineEventsIds.length - 2 === 1 ? 'reply' : 'replies'}
-              </Text>
+              </p>
               <Divider />
-            </Flex>
+            </div>
             <VStack w='full'>
               {Array.from({ length: timelineEventsIds.length - 2 }).map(
                 (_, idx) => (
@@ -159,15 +158,15 @@ export const IntercomThreadPreviewModal: React.FC = () => {
         )}
         {!!intercomEventReplies.length && (
           <>
-            <Flex marginY={2} alignItems='center'>
-              <Text color='gray.400' fontSize='sm' whiteSpace='nowrap' mr={2}>
+            <div className='flex my-2 items-center'>
+              <p className='text-gray-400 text-sm whitespace-nowrap mr-2'>
                 {intercomEventReplies.length}{' '}
                 {intercomEventReplies.length === 1 ? 'reply' : 'replies'}
-              </Text>
+              </p>
               <Divider />
-            </Flex>
+            </div>
 
-            <Flex direction='column' gap={2}>
+            <div className='flex flex-col gap-2'>
               {intercomEventReplies.map((reply) => {
                 const sentBy = event?.interactionSession?.events?.find(
                   (e) => e.id === reply.id,
@@ -178,7 +177,7 @@ export const IntercomThreadPreviewModal: React.FC = () => {
                 return (
                   <IntercomMessageCard
                     key={`intercom-event-thread-reply-preview-modal-${reply.id}`}
-                    w='full'
+                    className='w-full'
                     name={getName(replyParticipant)}
                     profilePhotoUrl={replyParticipant?.profilePhotoUrl}
                     content={reply?.content || ''}
@@ -189,10 +188,10 @@ export const IntercomThreadPreviewModal: React.FC = () => {
                   />
                 );
               })}
-            </Flex>
+            </div>
           </>
         )}
-      </CardBody>
+      </CardContent>
     </>
   );
 };

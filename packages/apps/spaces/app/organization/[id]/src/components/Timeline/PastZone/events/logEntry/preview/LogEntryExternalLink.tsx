@@ -1,7 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
 
-import { Box } from '@ui/layout/Box';
 import { ExternalSystem } from '@graphql/types';
 import { Hubspot } from '@ui/media/logos/Hubspot';
 import { Salesforce } from '@ui/media/logos/Salesforce';
@@ -25,9 +24,11 @@ export const LogEntryExternalLink: React.FC<{
   const link = getExternalUrl(`${externalLink?.externalUrl}`);
 
   return (
-    <Box as={Link} href={link} mt={4}>
-      {icon}
-      View in {externalLink.type.toLowerCase()}
-    </Box>
+    <div className='mt-4'>
+      <Link href={link}>
+        {icon}
+        View in {externalLink.type.toLowerCase()}
+      </Link>
+    </div>
   );
 };

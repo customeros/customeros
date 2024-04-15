@@ -82,14 +82,14 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
         return (
           <div
             className={cn(
-              'flex rounded-md items-center justify-center  hover:bg-gray-100',
+              'flex rounded-md items-center justify-center bg-transparent group-hover:bg-gray-100',
               wrapperSize,
             )}
             {...restInnerProps}
           >
             <Delete
               className={cn(
-                ' text-transparent group-hover:text-gray-500',
+                'text-transparent group-hover:text-gray-700',
                 iconSize,
               )}
             />

@@ -9,9 +9,9 @@ import getMinutes from 'date-fns/getMinutes';
 import { Portal } from '@ui/utils/';
 import { Button } from '@ui/form/Button/Button';
 import { DateTimeUtils } from '@spaces/utils/date';
-import { InlineDatePicker } from '@ui/form/DatePicker';
 import { Input, InputProps } from '@ui/form/Input/Input2';
 import { Divider } from '@ui/presentation/Divider/Divider';
+import { DatePicker } from '@ui/form/DatePicker/DatePicker2';
 import {
   Popover,
   PopoverContent,
@@ -26,8 +26,8 @@ interface DueDatePickerProps {
 export const ReminderDueDatePicker = ({ name, formId }: DueDatePickerProps) => {
   const { getInputProps } = useField(name, formId);
   const { onChange, ...inputProps } = getInputProps();
-  const containerRef = useRef<HTMLDivElement>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const time = (() => {
     const dateStr = inputProps.value;
@@ -80,11 +80,15 @@ export const ReminderDueDatePicker = ({ name, formId }: DueDatePickerProps) => {
             side='top'
             className='items-end'
             sticky='always'
+            onOpenAutoFocus={(el) => el.preventDefault()}
+            onClick={(e) => e.stopPropagation()}
           >
-            <InlineDatePicker
+            <DatePicker
               {...inputProps}
+              formId={formId}
+              defaultValue={new Date(inputProps.value)}
               onChange={(date) => {
-                handleChange(date);
+                handleChange(date as Date);
                 setIsOpen(false);
               }}
               minDate={new Date()}

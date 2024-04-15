@@ -7,8 +7,6 @@ import {
   MentionAtomNodeAttributes,
 } from '@remirror/react';
 
-import { Box } from '@ui/layout/Box';
-
 export const FloatingReferenceSuggestions: FC<{
   tags?: Array<{ id: string; label: string }>;
   mentionOptions?: Array<{ id: string; label: string }>;
@@ -66,7 +64,7 @@ export const FloatingReferenceSuggestions: FC<{
             }
 
             return (
-              <Box
+              <div
                 key={`remirror-mention-reference-suggestion-${reference.label}-${reference.id}`}
                 className={cx(
                   'floating-menu-option',
@@ -79,7 +77,7 @@ export const FloatingReferenceSuggestions: FC<{
                 })}
               >
                 {reference.label}
-              </Box>
+              </div>
             );
           })}
       </div>

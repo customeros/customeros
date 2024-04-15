@@ -51,25 +51,29 @@ export const TimelineEventPreviewHeader: React.FC<
         <div className='flex justify-end items-center'>
           {children}
           <Tooltip label={copyLabel} side='bottom' asChild={false}>
-            <IconButton
-              className='mr-1'
-              variant='ghost'
-              aria-label={copyLabel}
-              colorScheme='gray'
-              size='md'
-              icon={<Link03 color='gray.500' height='18px' />}
-              onClick={() => copy(window.location.href)}
-            />
+            <div>
+              <IconButton
+                className='mr-1'
+                variant='ghost'
+                aria-label={copyLabel}
+                colorScheme='gray'
+                size='md'
+                icon={<Link03 color='gray.500' height='18px' />}
+                onClick={() => copy(window.location.href)}
+              />
+            </div>
           </Tooltip>
           <Tooltip label='Close' aria-label='close' side='bottom'>
-            <IconButton
-              variant='ghost'
-              aria-label='Close preview'
-              colorScheme='gray'
-              size='md'
-              icon={<XClose color='gray.500' height='24px' />}
-              onClick={onClose}
-            />
+            <div>
+              <IconButton
+                variant='ghost'
+                aria-label='Close preview'
+                colorScheme='gray'
+                size='md'
+                icon={<XClose color='gray.500' height='24px' />}
+                onClick={onClose}
+              />
+            </div>
           </Tooltip>
         </div>
       </div>

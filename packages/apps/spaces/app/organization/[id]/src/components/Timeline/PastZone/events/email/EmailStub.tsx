@@ -4,10 +4,9 @@ import React, { FC, useMemo } from 'react';
 
 import { convert } from 'html-to-text';
 
-import { VStack } from '@ui/layout/Stack';
-import { Text } from '@ui/typography/Text';
+import { cn } from '@ui/utils/cn';
 import { EmailParticipant } from '@graphql/types';
-import { Card, CardBody, CardFooter } from '@ui/presentation/Card';
+import { Card, CardFooter, CardContent } from '@ui/presentation/Card/Card';
 import { getEmailParticipantsByType } from '@organization/src/components/Timeline/PastZone/events/email/utils';
 import {
   getEmailParticipantsName,
@@ -56,65 +55,46 @@ export const EmailStub: FC<{ email: InteractionEventWithDate }> = ({
   return (
     <>
       <Card
-        variant='outline'
-        size='md'
-        boxShadow='xs'
-        fontSize='14px'
-        border='1px solid'
-        borderColor='gray.200'
-        background='white'
-        flexDirection='row'
-        maxWidth={549}
-        position='unset'
-        cursor='pointer'
-        borderRadius='lg'
+        className={cn(
+          isSendByTenant ? 'ml-6' : 'ml-0',
+          'shadow-sm text-sm border border-gray-200 bg-white flex max-w-[549px] rounded-lg hover:shaodw-md transition-all duration-200 ease-out',
+        )}
         onClick={() => openModal(email.id)}
-        _hover={{ boxShadow: 'md' }}
-        transition='all 0.2s ease-out'
-        ml={isSendByTenant ? 6 : 0}
       >
-        <CardBody px='3' py='2' pr='0' overflow={'hidden'} flexDirection='row'>
-          <VStack align='flex-start' spacing={0}>
-            <Text as='p' noOfLines={1}>
-              <Text as={'span'} fontWeight={500}>
+        <CardContent className='px-3 py-2 pr-0 overflow-hidden flex flex-row flex-1 '>
+          <div className='flex flex-col items-start gap-0'>
+            <p className='line-clamp-1 leading-[21px]'>
+              <span className='font-medium leading-[21px]'>
                 {getEmailParticipantsName(
                   ([email?.sentBy?.[0]] as unknown as EmailParticipant[]) || [],
                 )}
-              </Text>{' '}
-              <Text as={'span'} color='#6C757D'>
-                emailed
-              </Text>{' '}
-              <Text as={'span'} fontWeight={500} marginRight={2}>
+              </span>{' '}
+              <span className='text-[#6C757D]'>emailed</span>{' '}
+              <span className='font-medium mr-2'>
                 {getEmailParticipantsName(to)}
-              </Text>{' '}
+              </span>{' '}
               {!!cleanBCC.length && (
                 <>
-                  <Text as={'span'} color='#6C757D'>
-                    BCC:
-                  </Text>{' '}
-                  <Text as={'span'}>{cleanBCC}</Text>
+                  <span className='text-[#6C757D]'>BCC:</span>{' '}
+                  <span>{cleanBCC}</span>
                 </>
               )}
               {!!cleanCC.length && (
                 <>
-                  <Text as={'span'} color='#6C757D'>
-                    CC:
-                  </Text>{' '}
-                  <Text as={'span'}>{cleanCC}</Text>
+                  <span className='text-[#6C757D]'>CC:</span>{' '}
+                  <span>{cleanCC}</span>
                 </>
               )}
-            </Text>
+            </p>
 
-            <Text fontWeight='semibold' noOfLines={1}>
+            <p className='font-semibold line-clamp-1 leading-[21px]'>
               {email.interactionSession?.name}
-            </Text>
+            </p>
 
-            <Text noOfLines={2} wordBreak='break-word'>
-              {text}
-            </Text>
-          </VStack>
-        </CardBody>
-        <CardFooter py='2' pr='3' pl='3' ml='1' display='block'>
+            <p className='line-clamp-2 break-words'>{text}</p>
+          </div>
+        </CardContent>
+        <CardFooter className='py-2 px-3 ml-1'>
           <Image
             src={'/backgrounds/organization/post-stamp.webp'}
             alt='Email'

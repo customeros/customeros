@@ -2,11 +2,9 @@ import { FC } from 'react';
 
 import { signIn } from 'next-auth/react';
 
-import { Box } from '@ui/layout/Box';
-import { Flex } from '@ui/layout/Flex';
-import { Button } from '@ui/form/Button';
-import { Text } from '@ui/typography/Text';
+import { cn } from '@ui/utils/cn';
 import { FeaturedIcon } from '@ui/media/Icon';
+import { Button } from '@ui/form/Button/Button';
 import { Mail01 } from '@ui/media/icons/Mail01';
 import { Google } from '@ui/media/logos/Google';
 import { toastError } from '@ui/presentation/Toast';
@@ -39,40 +37,36 @@ export const MissingPermissionsPrompt: FC<{
   };
 
   return (
-    <Box
-      alignItems='center'
-      mt='4'
-      borderTop={modal ? '1px dashed var(--gray-200, #EAECF0)' : 'none'}
-      background={modal ? '#F8F9FC' : 'white'}
-      borderRadius={modal ? 0 : 'lg'}
-      borderBottomRadius='2xl'
-      as='form'
-      p={6}
-      overflow='visible'
-      maxHeight={modal ? '50vh' : 'auto'}
+    <form
+      className={cn(
+        modal
+          ? 'bg-[#F8F9FC] border-t border-dashed border-gray-200 max-h-[50vh]'
+          : 'bg-white rounded-lg max-h-[auto] ',
+        'flex items-center mt-4 p-6 overflow-visible rounded-b-full',
+      )}
     >
-      <Flex
-        direction='column'
-        alignItems='center'
-        bg={modal ? '#F8F9FC' : 'white'}
-        p={6}
+      <div
+        className={cn(
+          modal ? 'bg-[#F8F9FC]' : 'bg-white',
+          'flex flex-col items-center p-6',
+        )}
       >
         <FeaturedIcon size='md' minW='10' colorScheme='gray' mb={4}>
           <Mail01 color='gray.700' boxSize='6' />
         </FeaturedIcon>
-        <Text color='gray.700' fontWeight={600} mb={1}>
+        <p className='text-gray-700 font-semibold mb-1'>
           Allow CustomerOS to send emails
-        </Text>
+        </p>
 
-        <Text color='gray.500' mb={6} textAlign='center'>
+        <p className='text-gray-500 mb-6 text-center'>
           To send emails, you need to allow CustomerOS to connect to your gmail
           account
-        </Text>
+        </p>
         <Button variant='outline' colorScheme='gray' onClick={signInWithScopes}>
           <Google mr={2} />
           Allow with google
         </Button>
-      </Flex>
-    </Box>
+      </div>
+    </form>
   );
 };

@@ -1,12 +1,10 @@
 import Image from 'next/image';
 import React, { useState, useEffect } from 'react';
 
-import { Box } from '@ui/layout/Box';
-import { Flex } from '@ui/layout/Flex';
-import { Button } from '@ui/form/Button';
-import { Text } from '@ui/typography/Text';
+import { cn } from '@ui/utils/cn';
 import { InputProps } from '@ui/form/Input';
 import { useOutsideClick } from '@ui/utils';
+import { Button } from '@ui/form/Button/Button';
 import { EmailSubjectInput } from '@organization/src/components/Timeline/PastZone/events/email/compose-email/EmailSubjectInput';
 import { EmailParticipantSelect } from '@organization/src/components/Timeline/PastZone/events/email/compose-email/EmailParticipantSelect';
 
@@ -61,8 +59,8 @@ export const ParticipantsSelectGroup = ({
   }, [showBCC]);
 
   return (
-    <Flex justifyContent='space-between' mt={3} ref={ref}>
-      <Box width='100%'>
+    <div className='flex justify-between mt-3' ref={ref}>
+      <div className='w-[100%]'>
         {isFocused && (
           <>
             <EmailParticipantSelect
@@ -91,17 +89,20 @@ export const ParticipantsSelectGroup = ({
         )}
 
         {!isFocused && (
-          <Flex mt='1' flexDir='column' flex={isFocused ? 1 : 'unset'}>
-            <Flex
+          <div
+            className={cn(isFocused ? 'flex-1' : 'unset', 'flex mt-1 flex-col')}
+          >
+            <div
+              className={cn(
+                !cc.length && !bcc.length ? 'flex-1' : 'unset',
+                'flex',
+              )}
               onClick={() => handleFocus(0)}
               role='button'
               aria-label='Click to input participant data'
-              flex={!cc.length && !bcc.length ? 1 : 'unset'}
             >
-              <Text as={'span'} color='gray.700' fontWeight={600} mr={1}>
-                To:
-              </Text>
-              <Text color='gray.500' noOfLines={1}>
+              <span className='text-gray-700 font-semibold mr-1'>To:</span>
+              <span className='text-gray-500 line-clamp-1'>
                 {!!to?.length && (
                   <>
                     {to
@@ -113,50 +114,45 @@ export const ParticipantsSelectGroup = ({
                       .join(', ')}
                   </>
                 )}
-              </Text>
-            </Flex>
+              </span>
+            </div>
 
             {!!cc.length && (
-              <Flex
+              <div
+                className={cn(!bcc.length ? 'flex-1' : 'unset', 'flex')}
                 onClick={() => handleFocus(1)}
                 role='button'
                 aria-label='Click to input participant data'
-                flex={!bcc.length ? 1 : 'unset'}
               >
-                <Text as={'span'} color='gray.700' fontWeight={600} mr={1}>
-                  CC:
-                </Text>
-                <Text color='gray.500' noOfLines={1}>
+                <span className='text-gray-700 font-semibold mr-1'>CC:</span>
+                <p className='text-gray-500 line-clamp-1'>
                   {[...cc].map((email) => email.value).join(', ')}
-                </Text>
-              </Flex>
+                </p>
+              </div>
             )}
             {!!bcc.length && (
-              <Flex
+              <div
+                className='flex'
                 onClick={() => handleFocus(2)}
                 role='button'
                 aria-label='Click to input participant data'
               >
-                <Text as={'span'} color='gray.700' fontWeight={600} mr={1}>
-                  BCC:
-                </Text>
-                <Text color='gray.500' noOfLines={1}>
+                <span className='text-gray-700 font-semibold mr-1'>BCC:</span>
+                <p className='text-gray-500 line-clamp-1'>
                   {[...bcc].map((email) => email.value).join(', ')}
-                </Text>
-              </Flex>
+                </p>
+              </div>
             )}
-          </Flex>
+          </div>
         )}
         <EmailSubjectInput formId={formId} fieldName='subject' />
-      </Box>
-      <Flex maxW='64px' mr='4'>
+      </div>
+      <div className='flex max-w-[64px] mr-4 items-start'>
         {!showCC && (
           <Button
+            className='text-gray-400 font-semibold px-1'
             variant='ghost'
-            fontWeight={600}
-            color='gray.400'
             size='sm'
-            px={1}
             onClick={() => {
               setShowCC(true);
               setFocusedItemIndex(1);
@@ -168,10 +164,9 @@ export const ParticipantsSelectGroup = ({
 
         {!showBCC && (
           <Button
+            className='text-gray-400 font-semibold px-1'
             variant='ghost'
-            fontWeight={600}
             size='sm'
-            px={1}
             color='gray.400'
             onClick={() => {
               setShowBCC(true);
@@ -181,18 +176,18 @@ export const ParticipantsSelectGroup = ({
             BCC
           </Button>
         )}
-      </Flex>
+      </div>
 
       {!modal && (
-        <Box position='relative'>
+        <div>
           <Image
             src={'/backgrounds/organization/post-stamp.webp'}
             alt='Email'
             width={54}
             height={70}
           />
-        </Box>
+        </div>
       )}
-    </Flex>
+    </div>
   );
 };

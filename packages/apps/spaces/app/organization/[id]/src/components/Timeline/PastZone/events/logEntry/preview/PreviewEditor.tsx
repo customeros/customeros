@@ -5,7 +5,6 @@ import { useRemirror } from '@remirror/react';
 import { htmlToProsemirrorNode } from 'remirror';
 
 import { Contact } from '@graphql/types';
-import { Text } from '@ui/typography/Text';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { getMentionOptionLabel } from '@organization/src/hooks/utils';
 import { RichTextEditor } from '@ui/form/RichTextEditor/RichTextEditor';
@@ -43,12 +42,7 @@ export const PreviewEditor: React.FC<{
 
   return (
     <>
-      <Text
-        position='relative'
-        sx={{
-          '& .remirror-theme': { fontSize: 'sm' },
-        }}
-      >
+      <p className='text-sm relative [remirror-theme]:text-sm'>
         <RichTextEditor
           {...remirrorProps}
           placeholder='Log a conversation you had with a customer'
@@ -69,7 +63,7 @@ export const PreviewEditor: React.FC<{
             <RichEditorBlurHandler formId={formId} name='content' />
           </>
         </RichTextEditor>
-      </Text>
+      </p>
     </>
   );
 };

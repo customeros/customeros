@@ -1,10 +1,10 @@
 'use client';
 import React, { FC } from 'react';
 
-import { Flex } from '@ui/layout/Flex';
-import { Button } from '@ui/form/Button';
-import { Avatar } from '@ui/media/Avatar';
+import { cn } from '@ui/utils/cn';
+import { Button } from '@ui/form/Button/Button';
 import { User02 } from '@ui/media/icons/User02';
+import { Avatar } from '@ui/media/Avatar/Avatar';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { getName } from '@spaces/utils/getParticipantsName';
 import { InteractionEventWithDate } from '@organization/src/components/Timeline/types';
@@ -56,11 +56,11 @@ export const IntercomStub: FC<{ intercomEvent: InteractionEventWithDate }> = ({
       onClick={() => openModal(intercomEvent.id)}
       date={DateTimeUtils.formatTime(intercomEvent?.date)}
       showDateOnHover
-      ml={isSentByTenantUser ? 6 : 0}
+      className={cn(isSentByTenantUser ? 'ml-6' : 'ml-0')}
     >
       {!!intercomEventReplies?.length && (
-        <Flex mt={1}>
-          <Flex columnGap={1} mr={1}>
+        <div className='flex mt-1'>
+          <div className='flex gap-1 mr=1'>
             {uniqThreadParticipants?.map(
               ({ id, name, firstName, lastName, profilePhotoUrl }) => {
                 const displayName =
@@ -78,12 +78,12 @@ export const IntercomStub: FC<{ intercomEvent: InteractionEventWithDate }> = ({
                 );
               },
             )}
-          </Flex>
-          <Button variant='link' fontSize='sm' size='sm'>
+          </div>
+          <Button variant='link' className='text-sm' size='sm'>
             {intercomEventReplies.length}{' '}
             {intercomEventReplies.length === 1 ? 'reply' : 'replies'}
           </Button>
-        </Flex>
+        </div>
       )}
     </IntercomMessageCard>
   );

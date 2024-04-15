@@ -1,9 +1,7 @@
 'use client';
 import React, { FC } from 'react';
 
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
-import { Tooltip } from '@ui/presentation/Tooltip';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { InteractionEventParticipant } from '@graphql/types';
 import { getEmailParticipantsNameAndEmail } from '@spaces/utils/getParticipantsName';
 
@@ -28,17 +26,10 @@ export const EmailMetaDataEntry: FC<EmailMetaDataEntry> = ({
   if (typeof data !== 'boolean' && !data?.length) return null;
 
   return (
-    <Flex overflow='hidden' maxWidth={'100%'}>
-      <Text as={'span'} color='gray.700' fontWeight={600} mr={1}>
-        {entryType}:
-      </Text>
+    <div className='flex overflow-hidden max-w-[100%]'>
+      <span className='text-gray-700 font-semibold mr-1'>{entryType}:</span>
 
-      <Text
-        color='gray.500'
-        whiteSpace='nowrap'
-        textOverflow='ellipsis'
-        overflow='hidden'
-      >
+      <p className='text-gray-500 whitespace-nowrap text-ellipsis overflow-hidden'>
         <>
           {typeof content === 'string' && content}
           {typeof content !== 'string' &&
@@ -57,12 +48,7 @@ export const EmailMetaDataEntry: FC<EmailMetaDataEntry> = ({
                 <React.Fragment
                   key={`email-participant-tag-${e.label}-${e.email}`}
                 >
-                  <Tooltip
-                    label={e.email}
-                    aria-label={`${e.email}`}
-                    placement='top'
-                    zIndex={100}
-                  >
+                  <Tooltip label={e.email} aria-label={`${e.email}`} side='top'>
                     {e.label}
                   </Tooltip>
                   {i !== data.length - 1 ? ',  ' : ''}
@@ -70,7 +56,7 @@ export const EmailMetaDataEntry: FC<EmailMetaDataEntry> = ({
               );
             })}
         </>
-      </Text>
-    </Flex>
+      </p>
+    </div>
   );
 };

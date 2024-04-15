@@ -1,11 +1,10 @@
 import React, { useMemo } from 'react';
 
-import { Flex } from '@ui/layout/Flex';
+import { cn } from '@ui/utils/cn';
 import { Action } from '@graphql/types';
-import { Text } from '@ui/typography/Text';
 import { FeaturedIcon } from '@ui/media/Icon';
 import { File02 } from '@ui/media/icons/File02';
-import { Card, CardBody, CardFooter } from '@ui/presentation/Card';
+import { Card, CardFooter, CardContent } from '@ui/presentation/Card/Card';
 import { getMetadata } from '@organization/src/components/Timeline/PastZone/events/action/utils';
 import { iconsByStatus } from '@organization/src/components/Timeline/PastZone/events/action/contract/utils';
 import { TimelineEventPreviewHeader } from '@organization/src/components/Timeline/shared/TimelineEventPreview/header/TimelineEventPreviewHeader';
@@ -49,8 +48,8 @@ export const ContractStatusUpdatedActionPreview = () => {
         onClose={closeModal}
         copyLabel='Copy link to this event'
       />
-      <Card m={6} mt={3} p='4' boxShadow='xs' variant='outline'>
-        <CardBody as={Flex} p='0' align='center'>
+      <Card className='m-6 mt-3 p-4 shadow-xs'>
+        <CardContent className='flex p-0 items-center'>
           <FeaturedIcon
             size='md'
             minW='10'
@@ -58,44 +57,24 @@ export const ContractStatusUpdatedActionPreview = () => {
           >
             {iconsByStatus[status].icon}
           </FeaturedIcon>
-          <Text
-            my={1}
-            maxW='500px'
-            noOfLines={2}
-            ml={2}
-            fontSize='sm'
-            color='gray.700'
-          >
+          <p className='my-1 max-w[500px] line-clamp-2 ml-2 text-sm text-gray-700'>
             {content}
-            <Text
-              as='span'
-              fontWeight={status === 'renewed' ? 'normal' : 'semibold'}
-              ml={1}
+            <span
+              className={cn(
+                status === 'renewed' ? 'font-normal' : 'font-semibold',
+                'ml-1',
+              )}
             >
               {status}
-            </Text>
-          </Text>
-        </CardBody>
+            </span>
+          </p>
+        </CardContent>
         {metadata?.comment && (
-          <CardFooter
-            as={Flex}
-            p='0'
-            pt='3'
-            mt='4'
-            align='center'
-            borderTop='1px solid'
-            borderTopColor='gray.200'
-          >
+          <CardFooter className='flex p-0 pt-3 mt-4 items-center border-t border-gray-200'>
             <File02 color='gray.400' />
-            <Text
-              maxW='500px'
-              noOfLines={2}
-              ml={2}
-              fontSize='sm'
-              color='gray.500'
-            >
+            <p className='max-w-[500px] line-clamp-2 ml-2 text-sm text-gray-500'>
               {metadata.content}
-            </Text>
+            </p>
           </CardFooter>
         )}
       </Card>

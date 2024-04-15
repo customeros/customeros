@@ -125,13 +125,8 @@ export const LogEntryStub = ({ data }: LogEntryStubProps) => {
               wrote
             </Text>
             <HtmlContentRenderer
-              as='span'
-              position='relative'
-              zIndex={1}
-              pointerEvents='none'
+              className='relative z-10 pointer-events-none text-sm line-clamp-4'
               showAsInlineText
-              fontSize='sm'
-              noOfLines={4}
               htmlContent={`${data?.content}`}
             />
           </Text>

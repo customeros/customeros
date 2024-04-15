@@ -2,18 +2,14 @@ import React from 'react';
 
 import copy from 'copy-to-clipboard';
 
-import { Flex } from '@ui/layout/Flex';
-import { VStack } from '@ui/layout/Stack';
-import { Text } from '@ui/typography/Text';
 import { Link03 } from '@ui/media/icons/Link03';
 import { XClose } from '@ui/media/icons/XClose';
-import { Heading } from '@ui/typography/Heading';
 import { IconButton } from '@ui/form/IconButton';
-import { Tooltip } from '@ui/presentation/Tooltip';
 import { DateTimeUtils } from '@spaces/utils/date';
-import { Divider } from '@ui/presentation/Divider';
-import { CardBody, CardHeader } from '@ui/presentation/Card';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
+import { Divider } from '@ui/presentation/Divider/Divider';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { CardHeader, CardContent } from '@ui/presentation/Card/Card';
 import { InteractionEvent, InteractionEventParticipant } from '@graphql/types';
 import { useGetTimelineEventsQuery } from '@organization/src/graphql/getTimelineEvents.generated';
 import { SlackMessageCard } from '@organization/src/components/Timeline/PastZone/events/slack/SlackMessageCard';
@@ -49,64 +45,51 @@ export const SlackThreadPreviewModal: React.FC = () => {
 
   return (
     <>
-      <CardHeader
-        py='4'
-        px='6'
-        pb='1'
-        position='sticky'
-        top={0}
-        borderRadius='xl'
-      >
-        <Flex
-          direction='row'
-          justifyContent='space-between'
-          alignItems='center'
-        >
-          <Flex mb={2} alignItems='center'>
-            <Heading size='sm' fontSize='lg'>
+      <CardHeader className='py-4 px-6 pb-1 sticky top-0 rounded-xl'>
+        <div className='flex justify-between items-center'>
+          <div className='flex mb-2 items-center'>
+            <h2 className='text-xl font-bold'>
               {event?.interactionSession?.name || 'Thread'}
-            </Heading>
+            </h2>
             {/* todo uncomment when channel data is available  */}
             {/*{channel && (*/}
             {/*  <Text color='gray.500' ml={2} fontSize='sm'>*/}
             {/*    {channel}*/}
             {/*  </Text>*/}
             {/*)}*/}
-          </Flex>
-          <Flex direction='row' justifyContent='flex-end' alignItems='center'>
-            <Tooltip label='Copy link to this thread' placement='bottom'>
-              <IconButton
-                variant='ghost'
-                aria-label='Copy link to this thread'
-                color='gray.500'
-                size='sm'
-                mr={1}
-                icon={<Link03 color='gray.500' boxSize='4' />}
-                onClick={() => copy(window.location.href)}
-              />
+          </div>
+          <div className='flex justify-end items-center'>
+            <Tooltip label='Copy link to this thread' side='bottom'>
+              <div>
+                <IconButton
+                  variant='ghost'
+                  aria-label='Copy link to this thread'
+                  color='gray.500'
+                  size='sm'
+                  mr={1}
+                  icon={<Link03 color='gray.500' boxSize='4' />}
+                  onClick={() => copy(window.location.href)}
+                />
+              </div>
             </Tooltip>
-            <Tooltip label='Close' aria-label='close' placement='bottom'>
-              <IconButton
-                variant='ghost'
-                aria-label='Close preview'
-                color='gray.500'
-                size='sm'
-                icon={<XClose color='gray.500' boxSize='5' />}
-                onClick={closeModal}
-              />
+            <Tooltip label='Close' aria-label='close' side='bottom'>
+              <div>
+                <IconButton
+                  variant='ghost'
+                  aria-label='Close preview'
+                  color='gray.500'
+                  size='sm'
+                  icon={<XClose color='gray.500' boxSize='5' />}
+                  onClick={closeModal}
+                />
+              </div>
             </Tooltip>
-          </Flex>
-        </Flex>
+          </div>
+        </div>
       </CardHeader>
-      <CardBody
-        mt={0}
-        maxHeight='calc(100vh - 60px - 56px)'
-        overflow='auto'
-        pb={6}
-        pt={0}
-      >
+      <CardContent className='mt-0 max-h-[calc(100vh-60px -56px)] overflow-auto pb-6 pt-0'>
         <SlackMessageCard
-          w='full'
+          className='w-full'
           name={slackSender.displayName}
           profilePhotoUrl={slackSender?.photoUrl}
           sourceUrl={event?.externalLinks?.[0]?.externalUrl}
@@ -117,33 +100,33 @@ export const SlackThreadPreviewModal: React.FC = () => {
 
         {isLoading && (
           <>
-            <Flex marginY={2} alignItems='center'>
-              <Text color='gray.400' fontSize='sm' whiteSpace='nowrap' mr={2}>
+            <div className='flex my-2 items-center'>
+              <p className='text-gray-400 text-sm whitespace-nowrap mr-2'>
                 {timelineEventsIds.length - 1}{' '}
                 {timelineEventsIds.length - 1 === 1 ? 'reply' : 'replies'}
-              </Text>
+              </p>
               <Divider />
-            </Flex>
-            <VStack w='full'>
+            </div>
+            <div className='flex flex-col w-full space-y-2'>
               {Array.from({ length: timelineEventsIds.length - 1 }).map(
                 (_, idx) => (
                   <MessageCardSkeleton key={idx} />
                 ),
               )}
-            </VStack>
+            </div>
           </>
         )}
         {!!slackEventReplies.length && (
           <>
-            <Flex marginY={2} alignItems='center'>
-              <Text color='gray.400' fontSize='sm' whiteSpace='nowrap' mr={2}>
+            <div className='flex my-2 items-center'>
+              <p className='text-gray-400 text-sm whitespace-nowrap mr-2'>
                 {slackEventReplies.length}{' '}
                 {slackEventReplies.length === 1 ? 'reply' : 'replies'}
-              </Text>
+              </p>
               <Divider />
-            </Flex>
+            </div>
 
-            <Flex direction='column' gap={2}>
+            <div className='flex flex-col gap-2'>
               {slackEventReplies.map((reply) => {
                 const sentBy = event?.interactionSession?.events?.find(
                   (e) => e.id === reply.id,
@@ -154,7 +137,7 @@ export const SlackThreadPreviewModal: React.FC = () => {
                 return (
                   <SlackMessageCard
                     key={`slack-event-thread-reply-preview-modal-${reply.id}`}
-                    w='full'
+                    className='w-full'
                     name={replyParticipant?.displayName}
                     profilePhotoUrl={replyParticipant?.photoUrl}
                     content={reply?.content || ''}
@@ -165,10 +148,10 @@ export const SlackThreadPreviewModal: React.FC = () => {
                   />
                 );
               })}
-            </Flex>
+            </div>
           </>
         )}
-      </CardBody>
+      </CardContent>
     </>
   );
 };

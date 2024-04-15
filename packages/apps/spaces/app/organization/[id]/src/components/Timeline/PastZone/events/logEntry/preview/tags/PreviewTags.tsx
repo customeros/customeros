@@ -4,7 +4,6 @@ import React, { useRef, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { Tag } from '@graphql/types';
-import { Text } from '@ui/typography/Text';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useResetLogEntryTagsMutation } from '@organization/src/graphql/resetLogEntryTags.generated';
 import { TagsSelect } from '@organization/src/components/Timeline/FutureZone/TimelineActions/logger/components/TagSelect';
@@ -64,22 +63,15 @@ export const PreviewTags: React.FC<{
   return (
     <>
       {!isAuthor && (
-        <Text fontSize='sm' fontWeight='medium'>
+        <p className='text-sm font-medium'>
           {tags.map(({ name }) => `#${name}`).join(' ')}
-        </Text>
+        </p>
       )}
 
       {isAuthor && (
-        <Text
-          fontSize='sm'
-          fontWeight='medium'
-          lineHeight='1'
-          sx={{
-            '--tag-select-font-size': `14px`,
-          }}
-        >
+        <p className='text-sm font-medium leading-1'>
           <TagsSelect formId={formId} name='tags' tags={tagOptions} />
-        </Text>
+        </p>
       )}
     </>
   );

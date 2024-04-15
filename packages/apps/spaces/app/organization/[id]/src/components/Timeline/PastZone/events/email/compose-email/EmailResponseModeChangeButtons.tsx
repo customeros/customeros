@@ -1,9 +1,8 @@
 'use client';
 import { FC, ReactElement, MouseEventHandler } from 'react';
 
-import { Flex } from '@ui/layout/Flex';
-import { IconButton } from '@ui/form/IconButton';
-import { Tooltip } from '@ui/presentation/Tooltip';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
+import { IconButton } from '@ui/form/IconButton/IconButton';
 import { CornerUpLeft } from '@ui/media/icons/CornerUpLeft';
 import { CornerUpLeft2 } from '@ui/media/icons/CornerUpLeft2';
 import { CornerUpRight } from '@ui/media/icons/CornerUpRight';
@@ -14,20 +13,17 @@ const FORWARD_MODE = 'forward';
 
 const TooltipButton: FC<{
   label: string;
+  className?: string;
   children: ReactElement;
   onClick: MouseEventHandler<HTMLButtonElement>;
-}> = ({ label, children, onClick }) => (
-  <Tooltip label={label}>
+}> = ({ label, children, onClick, className }) => (
+  <Tooltip label={label} asChild={false}>
     <IconButton
       variant='ghost'
+      className='rounded-none text-sm mt-[7px]'
       aria-label={label}
-      fontSize='14px'
       color='gray.400'
-      borderRadius={0}
-      marginInlineStart={0}
-      size='xxs'
-      pl={2}
-      pr={2}
+      size='xs'
       onClick={onClick}
       icon={children}
     />
@@ -39,31 +35,21 @@ interface ButtonsProps {
 }
 
 export const ModeChangeButtons: FC<ButtonsProps> = ({ handleModeChange }) => (
-  <Flex
-    overflow='hidden'
-    position='absolute'
-    border='1px solid var(--gray-200, #EAECF0)'
-    borderRadius={16}
-    height='24px'
-    gap={0}
-    color='gray.25'
-    background='gray.25'
-    transform='translateY(-16px)'
-  >
+  <div className='flex justify-center items-center gap-3 overflow-hidden absolute border-[1px] h-6 border-gray-200 rounded-[16px] min-w-[96px] text-gray-25 bg-gray-25 translate -translate-y-[18px]'>
     <TooltipButton label='Reply' onClick={() => handleModeChange(REPLY_MODE)}>
-      <CornerUpLeft height='16px' color='gray.400' />
+      <CornerUpLeft color='gray.400' />
     </TooltipButton>
     <TooltipButton
       label='Reply all'
       onClick={() => handleModeChange(REPLY_ALL_MODE)}
     >
-      <CornerUpLeft2 height='14px' color='gray.400' />
+      <CornerUpLeft2 color='gray.400' />
     </TooltipButton>
     <TooltipButton
       label='Forward'
       onClick={() => handleModeChange(FORWARD_MODE)}
     >
-      <CornerUpRight height='14px' color='gray.400' />
+      <CornerUpRight color='gray.400' />
     </TooltipButton>
-  </Flex>
+  </div>
 );

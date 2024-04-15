@@ -1,23 +1,24 @@
 'use client';
 
+import Link from 'next/link';
 import { useForm } from 'react-inverted-form';
 
 import { convert } from 'html-to-text';
 
+import { cn } from '@ui/utils/cn';
 import { Icons } from '@ui/media/Icon';
-import { Flex } from '@ui/layout/Flex';
-import { VStack } from '@ui/layout/Stack';
-import { Center } from '@ui/layout/Center';
-import { Text } from '@ui/typography/Text';
-import { Link } from '@ui/navigation/Link';
-import { Tooltip } from '@ui/overlay/Tooltip';
-import { IconButton } from '@ui/form/IconButton';
 import { DateTimeUtils } from '@spaces/utils/date';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
+import { IconButton } from '@ui/form/IconButton/IconButton';
 import { Meeting, ExternalSystemType } from '@graphql/types';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
-import { CardBody, CardHeader, CardFooter } from '@ui/presentation/Card';
-import { FormAutoresizeTextarea } from '@ui/form/Textarea/FormAutoresizeTextarea';
+import { FormAutoresizeTextarea } from '@ui/form/Textarea/FormAutoresizeTextarea2';
+import {
+  CardHeader,
+  CardFooter,
+  CardContent,
+} from '@ui/presentation/Card/Card';
 import { useUpdateMeetingMutation } from '@organization/src/graphql/updateMeeting.generated';
 import { useAddMeetingNoteMutation } from '@organization/src/graphql/addMeetingNote.generated';
 import {
@@ -137,27 +138,11 @@ export const MeetingPreviewModal = ({
 
   return (
     <>
-      <CardHeader
-        position='sticky'
-        top={0}
-        pt={4}
-        p='4'
-        pb='1'
-        borderRadius='xl'
-        as={Flex}
-        justify='space-between'
-        gap='4'
-        align='center'
-      >
-        <Text
-          fontSize='lg'
-          color='gray.700'
-          fontWeight='semibold'
-          noOfLines={1}
-        >
+      <CardHeader className='sticky top-0 pt-4 p-4 pb-1 rounded-xl flex justify-between gap-4 items-center'>
+        <p className='text-gray-700 font-semibold text-lg line-clamp-1'>
           {event.name}
-        </Text>
-        <Flex gap='1'>
+        </p>
+        <div className='flex gap-1'>
           <Tooltip label='Copy link'>
             <IconButton
               size='sm'
@@ -176,114 +161,90 @@ export const MeetingPreviewModal = ({
               icon={<Icons.XClose color='gray.500' />}
             />
           </Tooltip>
-        </Flex>
+        </div>
       </CardHeader>
-      <CardBody
-        as={Flex}
-        justify='space-between'
-        px='6'
-        py='0'
-        overflowY='auto'
-        maxH='calc(100vh - 4rem - 56px - 51px - 16px - 16px);'
-      >
-        <VStack w='full' align='flex-start' spacing='4'>
-          <Flex flexDir='row' alignItems={'center'} w={'100%'}>
-            <Flex flexGrow={1} flexDir='column'>
-              <Text fontSize='sm' fontWeight='semibold' color='gray.700'>
-                When
-              </Text>
+      <CardContent className='flex justify-between px-6 py-0 overflow-auto max-h-[calc(100vh-4rem-56px-51px-16px-16px)]'>
+        <div className='flex flex-col w-full items-start space-y-4'>
+          <div className='flex flex-row items-center w-full'>
+            <div className='flex flex-grow flex-col'>
+              <p className='text-sm font-semibold text-gray-700'>When</p>
               <Tooltip
                 label={`Organizer's time: ${
                   creatorTimeZone ? zoned : 'unknown'
                 }`}
-                fontSize='xs'
-                placement='bottom'
+                side='bottom'
+                className='text-xs'
               >
-                <Text fontSize='sm' color='gray.700' w='full'>
-                  {when}
-                </Text>
+                <p className='text-sm text-gray-700 w-full'>{when}</p>
               </Tooltip>
-            </Flex>
+            </div>
 
-            <Center minW='12' h='10' position='relative'>
+            <div className='flex items-center justify-center min-w-12 h-10 relative'>
               <MeetingIcon />
-              <Text
-                position='absolute'
-                fontSize='xl'
-                fontWeight='semibold'
-                mt='4px'
-                color='gray.700'
-              >
+              <p className='absolute mt-1 text-xl font-semibold text-gray-700'>
                 {new Date(event?.startedAt).getDate()}
-              </Text>
-            </Center>
-          </Flex>
+              </p>
+            </div>
+          </div>
 
-          <Flex flexDir='column'>
-            <Text fontSize='sm' fontWeight='semibold' color='gray.700'>
-              With
-            </Text>
-            <VStack spacing='0' align='flex-start'>
+          <div className='flex flex-col'>
+            <p className='text-sm font-semibold text-gray-700'>With</p>
+            <div className='flex flex-col space-y-0 items-start'>
               {owner && (
-                <Text fontSize='sm' color='gray.700'>
+                <p className='text-sm text-gray-700'>
                   {owner}
-                  <Text as='span' color='gray.500'>
-                    {` • Organizer`}
-                  </Text>
-                </Text>
+                  <span className='text-gray-500'>{` • Organizer`}</span>
+                </p>
               )}
               {participants?.map((participant, i) => (
-                <Text
-                  fontSize='sm'
-                  color='gray.700'
+                <p
+                  className='text-sm text-gray-700'
                   key={`${i}-${participant}`}
                 >
                   {participant}
-                </Text>
+                </p>
               ))}
-            </VStack>
-          </Flex>
+            </div>
+          </div>
 
           {event?.agenda && (
-            <Flex flexDir='column' w={'inherit'}>
-              <Text fontSize='sm' fontWeight='semibold' color='gray.700'>
-                Description
-              </Text>
-              <Text
-                fontSize='sm'
-                color={event?.agenda ? 'gray.700' : 'gray.500'}
+            <div className='flex flex-col'>
+              <p className='text-sm font-semibold text-gray-700'>Description</p>
+              <p
+                className={cn(
+                  event?.agenda ? 'text-gray-700' : 'text-gray-500',
+                  'text-sm',
+                )}
               >
                 {event?.agenda
                   ? convert(event?.agenda ?? '', { preserveNewlines: true })
                   : 'No description was added'}
-              </Text>
-            </Flex>
+              </p>
+            </div>
           )}
 
           <FormAutoresizeTextarea
             size='sm'
             name='note'
             label='Notes'
-            isLabelVisible
+            // isLabelVisible
             formId='meeting-notes'
             placeholder='Write some notes from this meeting'
           />
-        </VStack>
-      </CardBody>
-      <CardFooter p='6' pt='0'>
+        </div>
+      </CardContent>
+      <CardFooter className='p-6 pt-0'>
         {externalSystem && externalUrl && (
-          <Flex pt='4'>
+          <div className='flex pt-4'>
             {ExternalSystemIcon}
             <Link
+              className='text-sm text-primary-700 ml-2'
               href={externalUrl}
-              fontSize='sm'
-              color='primary.700'
-              ml='2'
               target='_blank'
             >
               {`View in ${externalSystemLabel}`}
             </Link>
-          </Flex>
+          </div>
         )}
       </CardFooter>
     </>

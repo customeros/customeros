@@ -1,5 +1,4 @@
-import React from 'react';
-import { cloneElement } from 'react';
+import { useState, cloneElement } from 'react';
 
 import { twMerge } from 'tailwind-merge';
 import * as RadixAvatar from '@radix-ui/react-avatar';
@@ -69,7 +68,6 @@ const avatarBadgeSize = cva([], {
 
 const avatarStyle = cva(
   [
-    'bg-blackA1',
     'inline-flex',
     'select-none',
     'items-center',
@@ -167,6 +165,7 @@ export const Avatar: React.FC<AvatarProps> = ({
   badge,
   ...props
 }: AvatarProps) => {
+  const [imageLoaded, setImageLoaded] = useState(false);
   const emptyFallbackWords = name?.split(' ');
 
   let emptyFallbackLetters = '';
@@ -179,8 +178,13 @@ export const Avatar: React.FC<AvatarProps> = ({
     emptyFallbackLetters = emptyFallbackWords[0]?.[0]?.toLocaleUpperCase();
   }
 
+  const handleImageLoad = () => {
+    setImageLoaded(true);
+  };
+
   return (
     <RadixAvatar.Root
+      id='img-container'
       className={twMerge(avatarStyle({ size, variant, className }))}
     >
       {src && (
@@ -188,6 +192,7 @@ export const Avatar: React.FC<AvatarProps> = ({
           {...props}
           className={'h-full w-full relative rounded-[inherit] object-cover'}
           src={src}
+          onLoadedData={handleImageLoad}
         />
       )}
       {icon && !name && !src && (
@@ -200,7 +205,7 @@ export const Avatar: React.FC<AvatarProps> = ({
           {icon}
         </RadixAvatar.Fallback>
       )}
-      {(!icon || name) && !src && (
+      {(!icon || name) && !imageLoaded && (
         <RadixAvatar.Fallback
           className={twMerge(
             'leading-1 flex h-full w-full items-center justify-center font-bold',
