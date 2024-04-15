@@ -30,7 +30,7 @@ type ContractReadRepository interface {
 	CountContracts(ctx context.Context, tenant string) (int64, error)
 	GetContractsToGenerateCycleInvoices(ctx context.Context, referenceTime time.Time, delayMinutes int) ([]*utils.DbNodeAndTenant, error)
 	GetContractsToGenerateOffCycleInvoices(ctx context.Context, referenceTime time.Time, delayMinutes int) ([]*utils.DbNodeAndTenant, error)
-	GetContractsToGenerateNextPreviewInvoices(ctx context.Context, referenceTime time.Time, delayMinutes int) ([]*utils.DbNodeAndTenant, error)
+	GetContractsToGenerateNextScheduledInvoices(ctx context.Context, referenceTime time.Time, delayMinutes int) ([]*utils.DbNodeAndTenant, error)
 	GetContractsForStatusRenewal(ctx context.Context, referenceTime time.Time) ([]TenantAndContractId, error)
 	GetContractsForRenewalRollout(ctx context.Context, referenceTime time.Time) ([]TenantAndContractId, error)
 	IsContractInvoiced(ctx context.Context, tenant, contractId string) (bool, error)
@@ -424,8 +424,8 @@ func (r *contractReadRepository) GetContractsToGenerateOffCycleInvoices(ctx cont
 	return result.([]*utils.DbNodeAndTenant), err
 }
 
-func (r *contractReadRepository) GetContractsToGenerateNextPreviewInvoices(ctx context.Context, referenceTime time.Time, delayMinutes int) ([]*utils.DbNodeAndTenant, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractReadRepository.GetContractsToGenerateNextPreviewInvoices")
+func (r *contractReadRepository) GetContractsToGenerateNextScheduledInvoices(ctx context.Context, referenceTime time.Time, delayMinutes int) ([]*utils.DbNodeAndTenant, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractReadRepository.GetContractsToGenerateNextScheduledInvoices")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, "")
 	span.LogFields(log.Object("referenceTime", referenceTime), log.Int("delayMinutes", delayMinutes))
@@ -454,8 +454,11 @@ func (r *contractReadRepository) GetContractsToGenerateNextPreviewInvoices(ctx c
 		"validBillingCycles": []string{
 			neo4jenum.BillingCycleMonthlyBilling.String(), neo4jenum.BillingCycleQuarterlyBilling.String(), neo4jenum.BillingCycleAnnuallyBilling.String(),
 		},
-		"validContractStatuses": []string{neo4jenum.ContractStatusLive.String(), neo4jenum.ContractStatusOutOfContract.String()},
-		"delayMinutes":          delayMinutes,
+		"validContractStatuses": []string{neo4jenum.ContractStatusLive.String(),
+			neo4jenum.ContractStatusOutOfContract.String(),
+			neo4jenum.ContractStatusScheduled.String(),
+			neo4jenum.ContractStatusDraft.String()},
+		"delayMinutes": delayMinutes,
 	}
 	span.LogFields(log.String("query", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -492,16 +495,18 @@ func (r *contractReadRepository) GetContractsForStatusRenewal(ctx context.Contex
 				WHERE (c.status <> $endedStatus AND c.endedAt < $referenceTime) OR
 						((c.endedAt IS NULL OR c.endedAt > $referenceTime) AND 
 						(
-							(c.status in [$draftStatus, $endedStatus] AND c.serviceStartedAt < $referenceTime) OR 
+							(c.status in [$scheduledStatus, $endedStatus] AND c.serviceStartedAt < $referenceTime) OR 
 							(c.status = $outOfContractStatus AND (c.autoRenew = true OR renewedAt > $referenceTime)) OR
 							(c.status = $outOfContractStatus AND renewedAt > $referenceTime) OR
-							(c.status = $liveStatus AND c.autoRenew = false AND renewedAt < $referenceTime)
+							(c.status = $liveStatus AND c.autoRenew = false AND renewedAt < $referenceTime) OR 
+							(c.status = $draftStatus AND c.approved = true)
 						))
 				RETURN t.name, c.id LIMIT 100`
 	params := map[string]any{
 		"referenceTime":       referenceTime,
 		"endedStatus":         neo4jenum.ContractStatusEnded,
 		"liveStatus":          neo4jenum.ContractStatusLive,
+		"scheduledStatus":     neo4jenum.ContractStatusScheduled,
 		"outOfContractStatus": neo4jenum.ContractStatusOutOfContract,
 		"draftStatus":         neo4jenum.ContractStatusDraft,
 	}
@@ -545,13 +550,14 @@ func (r *contractReadRepository) GetContractsForRenewalRollout(ctx context.Conte
 				WHERE
 					(c.techRolloutRenewalRequestedAt IS NULL OR c.techRolloutRenewalRequestedAt + duration({hours: 2}) < $referenceTime) AND
 					op.renewedAt < $referenceTime AND
-					(c.autoRenew = true OR c.renewalApproved = true) AND
-					c.status IN [$liveStatus, $outOfContractStatus]
+					(c.autoRenew = true OR op.renewalApproved = true) AND
+					c.status IN [$liveStatus, $outOfContractStatus, $scheduledStatus]
 				RETURN t.name, c.id LIMIT 100`
 	params := map[string]any{
 		"referenceTime":       referenceTime,
 		"liveStatus":          neo4jenum.ContractStatusLive.String(),
 		"outOfContractStatus": neo4jenum.ContractStatusOutOfContract.String(),
+		"scheduledStatus":     neo4jenum.ContractStatusScheduled.String(),
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

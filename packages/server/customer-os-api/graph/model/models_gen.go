@@ -3385,6 +3385,7 @@ type ContractStatus string
 const (
 	ContractStatusUndefined     ContractStatus = "UNDEFINED"
 	ContractStatusDraft         ContractStatus = "DRAFT"
+	ContractStatusScheduled     ContractStatus = "SCHEDULED"
 	ContractStatusLive          ContractStatus = "LIVE"
 	ContractStatusEnded         ContractStatus = "ENDED"
 	ContractStatusOutOfContract ContractStatus = "OUT_OF_CONTRACT"
@@ -3393,6 +3394,7 @@ const (
 var AllContractStatus = []ContractStatus{
 	ContractStatusUndefined,
 	ContractStatusDraft,
+	ContractStatusScheduled,
 	ContractStatusLive,
 	ContractStatusEnded,
 	ContractStatusOutOfContract,
@@ -3400,7 +3402,7 @@ var AllContractStatus = []ContractStatus{
 
 func (e ContractStatus) IsValid() bool {
 	switch e {
-	case ContractStatusUndefined, ContractStatusDraft, ContractStatusLive, ContractStatusEnded, ContractStatusOutOfContract:
+	case ContractStatusUndefined, ContractStatusDraft, ContractStatusScheduled, ContractStatusLive, ContractStatusEnded, ContractStatusOutOfContract:
 		return true
 	}
 	return false

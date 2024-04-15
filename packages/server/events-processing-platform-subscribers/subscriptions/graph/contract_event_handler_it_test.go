@@ -1076,7 +1076,7 @@ func TestContractEventHandler_DeriveContractStatus_Ended(t *testing.T) {
 		repositories: testDatabase.Repositories,
 	}
 	// EXECUTE
-	status, err := contractEventHandler.DeriveContractStatus(ctx, tenantName, contractEntity)
+	status, err := contractEventHandler.deriveContractStatus(ctx, tenantName, contractEntity)
 	require.Nil(t, err)
 	require.Equal(t, neo4jenum.ContractStatusEnded.String(), status)
 }
@@ -1102,7 +1102,7 @@ func TestContractEventHandler_DeriveContractStatus_Draft_NoServiceStartedAt(t *t
 	}
 
 	// EXECUTE
-	status, err := contractEventHandler.DeriveContractStatus(ctx, tenantName, contractEntity)
+	status, err := contractEventHandler.deriveContractStatus(ctx, tenantName, contractEntity)
 	require.Nil(t, err)
 	require.Equal(t, neo4jenum.ContractStatusDraft.String(), status)
 }
@@ -1129,7 +1129,7 @@ func TestContractEventHandler_DeriveContractStatus_Draft_FutureServiceStartedAt(
 	}
 
 	// EXECUTE
-	status, err := contractEventHandler.DeriveContractStatus(ctx, tenantName, contractEntity)
+	status, err := contractEventHandler.deriveContractStatus(ctx, tenantName, contractEntity)
 	require.Nil(t, err)
 	require.Equal(t, neo4jenum.ContractStatusDraft.String(), status)
 }
@@ -1168,7 +1168,7 @@ func TestContractEventHandler_DeriveContractStatus_Live_AutoRenew_ActiveRenewalO
 	}
 
 	// EXECUTE
-	status, err := contractEventHandler.DeriveContractStatus(ctx, tenantName, contractEntity)
+	status, err := contractEventHandler.deriveContractStatus(ctx, tenantName, contractEntity)
 	require.Nil(t, err)
 	require.Equal(t, neo4jenum.ContractStatusLive.String(), status)
 }
@@ -1196,7 +1196,7 @@ func TestContractEventHandler_DeriveContractStatus_Live_NoAutoRenew_NoActiveRene
 	}
 
 	// EXECUTE
-	status, err := contractEventHandler.DeriveContractStatus(ctx, tenantName, contractEntity)
+	status, err := contractEventHandler.deriveContractStatus(ctx, tenantName, contractEntity)
 	require.Nil(t, err)
 	require.Equal(t, neo4jenum.ContractStatusLive.String(), status)
 }
@@ -1234,7 +1234,7 @@ func TestContractEventHandler_DeriveContractStatus_OutOfContract_NoAutoRenew_Act
 	}
 
 	// EXECUTE
-	status, err := contractEventHandler.DeriveContractStatus(ctx, tenantName, contractEntity)
+	status, err := contractEventHandler.deriveContractStatus(ctx, tenantName, contractEntity)
 	require.Nil(t, err)
 	require.Equal(t, neo4jenum.ContractStatusOutOfContract.String(), status)
 }

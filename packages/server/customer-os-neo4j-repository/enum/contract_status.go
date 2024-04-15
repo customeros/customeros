@@ -5,6 +5,7 @@ type ContractStatus string
 const (
 	ContractStatusUndefined     ContractStatus = ""
 	ContractStatusDraft         ContractStatus = "DRAFT"
+	ContractStatusScheduled     ContractStatus = "SCHEDULED"
 	ContractStatusLive          ContractStatus = "LIVE"
 	ContractStatusEnded         ContractStatus = "ENDED"
 	ContractStatusOutOfContract ContractStatus = "OUT_OF_CONTRACT"
@@ -12,6 +13,7 @@ const (
 
 var AllContractStatuses = []ContractStatus{
 	ContractStatusDraft,
+	ContractStatusScheduled,
 	ContractStatusLive,
 	ContractStatusEnded,
 	ContractStatusOutOfContract,
@@ -25,8 +27,8 @@ func DecodeContractStatus(s string) ContractStatus {
 }
 
 func IsValidContractStatus(s string) bool {
-	for _, ms := range AllContractStatuses {
-		if ms == ContractStatus(s) {
+	for _, cs := range AllContractStatuses {
+		if cs == ContractStatus(s) {
 			return true
 		}
 	}

@@ -575,7 +575,7 @@ func (s *invoiceService) GenerateNextPreviewInvoices() {
 			// continue as normal
 		}
 
-		records, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractsToGenerateNextPreviewInvoices(ctx, referenceTime, 10)
+		records, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractsToGenerateNextScheduledInvoices(ctx, referenceTime, 10)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting contracts for invoicing: %v", err)

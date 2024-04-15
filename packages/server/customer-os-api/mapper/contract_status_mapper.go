@@ -12,6 +12,7 @@ var contractStatusByModel = map[model.ContractStatus]neo4jenum.ContractStatus{
 	model.ContractStatusLive:          neo4jenum.ContractStatusLive,
 	model.ContractStatusEnded:         neo4jenum.ContractStatusEnded,
 	model.ContractStatusOutOfContract: neo4jenum.ContractStatusOutOfContract,
+	model.ContractStatusScheduled:     neo4jenum.ContractStatusScheduled,
 }
 
 var contractStatusByValue = utils.ReverseMap(contractStatusByModel)
