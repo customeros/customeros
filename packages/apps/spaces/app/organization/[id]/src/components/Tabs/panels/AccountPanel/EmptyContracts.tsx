@@ -98,6 +98,7 @@ export const EmptyContracts: FC<
           isDisabled={createContract.isPending}
           colorScheme='primary'
           variant='outline'
+          loadingText='Creating contract...'
           onClick={() =>
             createContract.mutate({
               input: {
@@ -113,9 +114,7 @@ export const EmptyContracts: FC<
             })
           }
         >
-          {createContract.isPending
-            ? 'Creating contract'
-            : 'Create a new contract'}
+          New contract
         </Button>
       </article>
       {children}

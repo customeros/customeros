@@ -5,10 +5,12 @@ import React, { useRef, useMemo, useState, useEffect } from 'react';
 
 import { produce } from 'immer';
 import { useDeepCompareEffect } from 'rooks';
+import { motion, Variants } from 'framer-motion';
 import { useQueryClient } from '@tanstack/react-query';
 import { useBankAccountsQuery } from '@settings/graphql/getBankAccounts.generated';
 import { useTenantBillingProfilesQuery } from '@settings/graphql/getTenantBillingProfiles.generated';
 
+import { cn } from '@ui/utils/cn';
 import { Button } from '@ui/form/Button/Button';
 import { Invoice } from '@shared/components/Invoice/Invoice';
 import { countryOptions } from '@shared/util/countryOptions';
@@ -49,6 +51,44 @@ interface SubscriptionServiceModalProps {
   notes?: string | null;
   organizationName: string;
 }
+
+const mainVariants = {
+  open: {
+    w: '424px',
+    minW: '424px',
+    x: 0,
+    position: 'relative',
+    scale: 1,
+    transition: { duration: 0.15, ease: 'linear' },
+  },
+  closed: {
+    w: '100px',
+    minW: '100px',
+    position: 'absolute',
+    x: '-32px',
+    scale: 0.95,
+    transition: { duration: 0.2, ease: 'linear' },
+  },
+};
+
+const variants = {
+  open: {
+    opacity: 1,
+    w: '424px',
+    minW: '424px',
+    x: 0,
+    display: 'block',
+    transition: { duration: 0.2, ease: 'linear' },
+  },
+  closed: {
+    opacity: 0,
+    w: '0px',
+    minW: '0px',
+    x: '100%',
+    display: 'none',
+    transition: { duration: 0.2, ease: 'linear' },
+  },
+};
 
 export const EditContractModal = ({
   isOpen,
@@ -306,102 +346,110 @@ export const EditContractModal = ({
       <ModalOverlay />
       <ModalContent
         className='border-r-2 flex gap-6 bg-transparent shadow-none border-none'
-        style={{ minWidth: '971px', minHeight: '80%', boxShadow: 'none' }}
+        style={{ minWidth: '971px', minHeight: '80vh', boxShadow: 'none' }}
       >
-        <div
-          className='flex flex-col gap-4 px-6 pb-6 pt-4 bg-white h-auto rounded-lg justify-between relative'
-          style={{ width: '424px', maxWidth: '424px' }}
-        >
-          {billingDetailsFormOpen && (
-            <>
-              <div
-                className='h-[95%] rounded-l-lg left-[-12px] bg-white absolute w-[12px] shadow-inner'
-                style={{ boxShadow: 'inset -3px 1px 6px 0px #10182814' }}
-              />
-
-              <div className='flex flex-col relative'>
-                <ModalHeader className='p-0 text-lg font-semibold'>
-                  <div>
-                    {data?.contract?.organizationLegalName ||
-                      organizationName ||
-                      "Unnamed's "}{' '}
-                  </div>
-                  <span className='text-sm font-normal'>
-                    These details are required to issue invoices
-                  </span>
-                </ModalHeader>
-
-                <BillingDetailsForm
-                  values={addressState.values}
-                  formId={'billing-details-address-form'}
-                />
-              </div>
-              <ModalFooter className='p-0 flex'>
-                <Button
-                  variant='outline'
-                  colorScheme='gray'
-                  onClick={() => setBillingDetailsOpen(false)}
-                  className='w-full'
-                  size='md'
-                >
-                  Cancel
-                </Button>
-                <Button
-                  className='ml-3 w-full'
-                  size='md'
-                  variant='outline'
-                  colorScheme='primary'
-                  onClick={handleSaveAddressChanges}
-                >
-                  Confirm
-                </Button>
-              </ModalFooter>
-            </>
+        <motion.div
+          layout
+          data-isOpen={!billingDetailsFormOpen}
+          variants={mainVariants as Variants}
+          animate={!billingDetailsFormOpen ? 'open' : 'closed'}
+          className={cn(
+            'flex flex-col gap-4 px-6 pb-6 pt-4 bg-white  rounded-lg justify-between relative h-[80vh] ',
           )}
+        >
+          <ModalHeader className='p-0 text-lg font-semibold'>
+            {data?.contract?.organizationLegalName ||
+              organizationName ||
+              "Unnamed's "}{' '}
+            contract details
+          </ModalHeader>
 
-          {!billingDetailsFormOpen && (
-            <>
+          <ContractBillingDetailsForm
+            formId={formId}
+            contractId={contractId}
+            tenantBillingProfile={
+              tenantBillingProfile
+                ?.tenantBillingProfiles?.[0] as TenantBillingProfile
+            }
+            currency={state?.values?.currency?.value}
+            bankAccounts={bankAccountsData?.bankAccounts as BankAccount[]}
+            payAutomatically={state?.values?.payAutomatically}
+          />
+          <ModalFooter className='p-0 flex'>
+            <Button
+              variant='outline'
+              colorScheme='gray'
+              onClick={handleCloseModal}
+              className='w-full'
+              size='md'
+            >
+              Cancel
+            </Button>
+            <Button
+              className='ml-3 w-full'
+              size='md'
+              variant='outline'
+              colorScheme='primary'
+              onClick={handleApplyChanges}
+            >
+              Confirm
+            </Button>
+          </ModalFooter>
+        </motion.div>
+        <motion.div
+          layout
+          data-isOpen={billingDetailsFormOpen}
+          variants={variants}
+          animate={billingDetailsFormOpen ? 'open' : 'closed'}
+          className='flex flex-col gap-4 px-6 pb-6 pt-4 bg-white h-auto rounded-lg justify-between relative shadow-2xl'
+        >
+          <motion.div
+            className='h-full flex flex-col justify-between'
+            animate={{
+              opacity: billingDetailsFormOpen ? 1 : 0,
+              transition: { delay: 0.2 },
+            }}
+          >
+            <div className='flex flex-col relative justify-between'>
               <ModalHeader className='p-0 text-lg font-semibold'>
-                {data?.contract?.organizationLegalName ||
-                  organizationName ||
-                  "Unnamed's "}{' '}
-                contract details
+                <div>
+                  {data?.contract?.organizationLegalName ||
+                    organizationName ||
+                    "Unnamed's "}{' '}
+                </div>
+                <span className='text-base font-normal'>
+                  These details are required to issue invoices
+                </span>
               </ModalHeader>
 
-              <ContractBillingDetailsForm
-                formId={formId}
-                contractId={contractId}
-                tenantBillingProfile={
-                  tenantBillingProfile
-                    ?.tenantBillingProfiles?.[0] as TenantBillingProfile
-                }
-                currency={state?.values?.currency?.value}
-                bankAccounts={bankAccountsData?.bankAccounts as BankAccount[]}
-                payAutomatically={state?.values?.payAutomatically}
+              <BillingDetailsForm
+                values={addressState.values}
+                formId={'billing-details-address-form'}
               />
-              <ModalFooter className='p-0 flex'>
-                <Button
-                  variant='outline'
-                  colorScheme='gray'
-                  onClick={handleCloseModal}
-                  className='w-full'
-                  size='md'
-                >
-                  Cancel
-                </Button>
-                <Button
-                  className='ml-3 w-full'
-                  size='md'
-                  variant='outline'
-                  colorScheme='primary'
-                  onClick={handleApplyChanges}
-                >
-                  Confirm
-                </Button>
-              </ModalFooter>
-            </>
-          )}
-        </div>
+            </div>
+            <ModalFooter className='p-0 flex'>
+              <Button
+                variant='outline'
+                colorScheme='gray'
+                onClick={() => setBillingDetailsOpen(false)}
+                className='w-full'
+                size='md'
+              >
+                Cancel
+              </Button>
+              <Button
+                className='ml-3 w-full'
+                size='md'
+                variant='outline'
+                colorScheme='primary'
+                onClick={handleSaveAddressChanges}
+              >
+                Confirm
+              </Button>
+            </ModalFooter>
+          </motion.div>
+        </motion.div>
+
         <div style={{ minWidth: '600px' }} className='bg-white rounded'>
           <div className='w-full h-full'>
             <Invoice

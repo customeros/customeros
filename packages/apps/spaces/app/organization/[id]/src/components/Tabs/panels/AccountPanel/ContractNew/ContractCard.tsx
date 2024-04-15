@@ -163,13 +163,11 @@ export const ContractCard = ({
         onClick={() => (!isExpanded ? setIsExpanded(true) : null)}
       >
         <article className='flex justify-between flex-1 w-full'>
-          <h1 className='text-sm inline whitespace-nowrap font-semibold text-gray-700 line-height-1'>
-            <FormInput
-              className='font-semibold no-border-bottom hover:border-none focus:border-none max-h-5 min-h-0'
-              name='contractName'
-              formId={formId}
-            />
-          </h1>
+          <FormInput
+            className='font-semibold no-border-bottom hover:border-none focus:border-none max-h-6 min-h-0'
+            name='contractName'
+            formId={formId}
+          />
 
           <div className='flex items-center gap-2 ml-2'>
             <ContractStatusTag status={data.contractStatus} />
@@ -190,10 +188,14 @@ export const ContractCard = ({
           </div>
         </article>
 
-        <ContractSubtitle
-          data={data}
-          onOpenEditModal={() => setEditModalOpen(true)}
-        />
+        <div
+          role='button'
+          tabIndex={1}
+          onClick={() => setEditModalOpen(true)}
+          className='w-full'
+        >
+          <ContractSubtitle data={data} />
+        </div>
       </CardHeader>
 
       <CardFooter className='p-0 mt-0 w-full flex flex-col'>

@@ -17,12 +17,13 @@ import { cn } from '@ui/utils/cn';
 import { Delete } from '@ui/media/icons/Delete';
 import { inputVariants } from '@ui/form/Input/Input2';
 
+type Size = 'xs' | 'sm' | 'md' | 'lg';
 // Exhaustively typing this Props interface does not offer any benefit at this moment
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface SelectProps extends Props<any, any, any> {
+  size?: Size;
   isReadOnly?: boolean;
   leftElement?: React.ReactNode;
-  size?: 'xs' | 'sm' | 'md' | 'lg';
 }
 
 export const Select = forwardRef<SelectInstance, SelectProps>(
@@ -176,6 +177,25 @@ export const getMenuListClassNames = (className?: string) => {
 
 export const getMultiValueLabelClassNames = (className?: string) => {
   const defaultStyle = 'text-gray-500 text-sm mr-1';
+
+  return twMerge(defaultStyle, className);
+};
+
+export const getContainerClassNames = (
+  className?: string,
+  size?: Size,
+  isReadOnly?: boolean,
+  isFocused?: boolean,
+) => {
+  const defaultStyle = inputVariants({
+    variant: 'flushed',
+    size,
+    className: cn(
+      'flex mt-1 items-center cursor-pointer overflow-visible',
+      isReadOnly && 'pointer-events-none',
+      isFocused && 'border-primary-500',
+    ),
+  });
 
   return twMerge(defaultStyle, className);
 };

@@ -33,10 +33,10 @@ export const ContractStatusTag: React.FC<ContractStatusSelectProps> = ({
   return (
     <>
       <Tag
-        className='flex items-center gap-1 whitespace-nowrap mx-0'
+        className='flex items-center gap-1 whitespace-nowrap mx-0 px-1'
         colorScheme={statusColorScheme[status] as 'primary'}
       >
-        <TagLeftIcon>{icon}</TagLeftIcon>
+        <TagLeftIcon className='m-0'>{icon}</TagLeftIcon>
 
         <TagLabel>{selected?.label}</TagLabel>
       </Tag>
