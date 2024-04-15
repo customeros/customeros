@@ -9,9 +9,7 @@ import { useGetExternalSystemInstancesQuery } from '@settings/graphql/getExterna
 import { Button } from '@ui/form/Button/Button';
 import { ModalBody } from '@ui/overlay/Modal/Modal';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
-import { FormSelect } from '@ui/form/Select/FormSelect';
 import { FormSwitch } from '@ui/form/Switch/FromSwitch';
-import { getMenuListClassNames } from '@ui/form/Select';
 import { Divider } from '@ui/presentation/Divider/Divider';
 import { FormCheckbox } from '@ui/form/Checkbox/FormCheckbox';
 import { currencyOptions } from '@shared/util/currencyOptions';
@@ -27,6 +25,7 @@ import {
   paymentDueOptions,
   contractBillingCycleOptions,
 } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
+import { InlineSelect } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ContractBillingDetailsModal/InlineSelect';
 import { CommittedPeriodInput } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ContractBillingDetailsModal/CommittedPeriodInput';
 import { PaymentDetailsPopover } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ContractBillingDetailsModal/PaymentDetailsPopover';
 
@@ -106,7 +105,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
   return (
     <ModalBody className='flex flex-col flex-1 p-0'>
       <ul className='mb-2 list-disc ml-5'>
-        <li className='text-sm '>
+        <li className='text-base '>
           <div className='flex items-baseline'>
             <CommittedPeriodInput formId={formId} />
 
@@ -115,29 +114,25 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
             <DatePickerUnderline formId={formId} name='serviceStarted' />
           </div>
         </li>
-        <li className='text-sm mt-1.5'>
+        <li className='text-base mt-1.5'>
           <div className='flex items-baseline'>
             Live until 2 Aug 2024,{' '}
             <Button
               variant='ghost'
               size='sm'
-              className='font-normal text-sm p-0 ml-1 relative text-gray-500 hover:bg-transparent focus:bg-transparent after:content-[""] after:h-[1px] after:w-[100%] after:absolute after:bottom-[1px] after:left-0 after:bg-gray-500 hover:after:bg-gray-500 focus:after:bg-gray-700'
+              className='font-normal text-base p-0 ml-1 relative text-gray-500 hover:bg-transparent focus:bg-transparent underline'
               onClick={() => onChangeAutoRenew(!autoRenewValue)}
             >
               {autoRenewValue ? 'auto-renews' : 'non auto-renewing'}
             </Button>
           </div>
         </li>
-        <li className='text-sm '>
+        <li className='text-base '>
           <div className='flex items-baseline'>
             <span className='whitespace-nowrap'>Contracting in</span>
             <div>
-              <FormSelect
-                className='text-sm inline min-h-1 max-h-3 border-none hover:border-none focus:border-none w-fit ml-1 mt-0 after:content-[""] after:h-[0.5px] after:w-[1.7rem] after:absolute after:bottom-[4px] after:left-0 after:bg-gray-500 hover:after:bg-gray-500 focus:after:bg-gray-700'
+              <InlineSelect
                 label='Currency'
-                classNames={{
-                  menuList: () => getMenuListClassNames('min-w-[120px]'),
-                }}
                 placeholder='Invoice currency'
                 name='currency'
                 formId={formId}
@@ -158,62 +153,45 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
             <Divider />
           </div>
           <ul className='mb-2 list-disc ml-5'>
-            <li className='text-sm '>
+            <li className='text-base '>
               <div className='flex items-baseline'>
                 <span className='whitespace-nowrap mr-1'>Billing starts </span>
 
                 <DatePickerUnderline formId={formId} name='invoicingStarted' />
               </div>
             </li>
-            <li className='text-sm '>
+            <li className='text-base '>
               <div className='flex items-baseline'>
-                <span className='whitespace-nowrap mr-1'>
-                  Invoices are sent
-                </span>
+                <span className='whitespace-nowrap'>Invoices are sent</span>
                 <div>
-                  <FormSelect
-                    className='text-sm inline min-h-1 max-h-5 min-w-[50px] border-none hover:border-none focus:border-none w-fit mt-0 ml-0 mr-1 after:content-[""] after:h-[0.5px] after:w-[95%] after:m-r-1 after:absolute after:bottom-[4px] after:left-0 after:bg-gray-500 hover:after:bg-gray-500 focus:after:bg-gray-700'
+                  <InlineSelect
                     label='billing period'
                     placeholder='billing period'
                     name='billingCycle'
                     formId={formId}
                     options={contractBillingCycleOptions}
                     size='xs'
-                    classNames={{
-                      menuList: () => getMenuListClassNames('min-w-[120px]'),
-                    }}
                   />
                 </div>
-                <span className='whitespace-nowrap mr-1'>
+                <span className='whitespace-nowrap ml-0.5'>
                   on the billing start day
                 </span>
               </div>
             </li>
-            <li className='text-sm '>
+            <li className='text-base '>
               <div className='flex items-baseline'>
-                <span className='whitespace-nowrap mr-1'>Customer has</span>
+                <span className='whitespace-nowrap '>Customer has</span>
                 <div>
-                  <FormSelect
-                    className='text-sm inline min-h-1 max-h-5 border-none hover:border-none focus:border-none w-fit mt-0 ml-0 mr-1  after:content-[""] after:h-[0.5px] after:w-[95%] after:m-r-1 after:absolute after:bottom-[4px] after:left-0 after:bg-gray-500 hover:after:bg-gray-500 focus:after:bg-gray-700'
+                  <InlineSelect
                     label='Payment due'
                     placeholder='0 days'
                     name='dueDays'
                     formId={formId}
                     options={paymentDueOptions}
-                    formatOptionLabel={(option, formatOptionLabelMeta) => {
-                      if (formatOptionLabelMeta.context === 'value') {
-                        return `${option.value} days`;
-                      }
-
-                      return option.label;
-                    }}
-                    classNames={{
-                      menuList: () => getMenuListClassNames('min-w-[120px]'),
-                    }}
                     size='xs'
                   />
                 </div>
-                <span className='whitespace-nowrap mr-1'>to pay</span>
+                <span className='whitespace-nowrap ml-0.5'>to pay</span>
               </div>
             </li>
           </ul>
@@ -237,7 +215,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
                   size='sm'
                   labelProps={{ margin: 0 }}
                   label={
-                    <div className='text-sm font-normal whitespace-nowrap'>
+                    <div className='text-base font-normal whitespace-nowrap'>
                       Auto-payment via Stripe
                     </div>
                   }
@@ -263,7 +241,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
                           !availablePaymentMethodTypes?.includes('card')
                         }
                       >
-                        <div className='text-sm whitespace-nowrap'>
+                        <div className='text-base whitespace-nowrap'>
                           Credit or Debit cards
                         </div>
                       </FormCheckbox>
@@ -287,7 +265,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
                           !availablePaymentMethodTypes?.includes('ach_debit')
                         }
                       >
-                        <div className='text-sm whitespace-nowrap'>
+                        <div className='text-base whitespace-nowrap'>
                           Direct Debit via {paymentMethod}
                         </div>
                       </FormCheckbox>
@@ -310,7 +288,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
                   margin: 0,
                 }}
                 label={
-                  <div className='text-sm font-normal whitespace-nowrap'>
+                  <div className='text-base font-normal whitespace-nowrap'>
                     Pay online via Stripe
                   </div>
                 }
@@ -330,7 +308,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
                   margin: 0,
                 }}
                 label={
-                  <div className='text-sm font-normal whitespace-nowrap'>
+                  <div className='text-base font-normal whitespace-nowrap'>
                     Bank transfer
                   </div>
                 }
@@ -351,7 +329,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
                   margin: 0,
                 }}
                 label={
-                  <div className='text-sm font-normal whitespace-nowrap'>
+                  <div className='text-base font-normal whitespace-nowrap'>
                     Check
                   </div>
                 }

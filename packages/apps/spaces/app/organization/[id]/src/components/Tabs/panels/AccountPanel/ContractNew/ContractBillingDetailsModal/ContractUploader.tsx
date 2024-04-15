@@ -200,7 +200,7 @@ export const ContractUploader = ({ contractId }: ContractUploaderProps) => {
             {!attachments?.length && !files.length && (
               <label
                 htmlFor='contractUpload'
-                className='text-sm text-gray-500 underline cursor-pointer'
+                className='text-base text-gray-500 underline cursor-pointer'
               >
                 Upload a document
               </label>
@@ -253,7 +253,7 @@ const AttachmentItem = ({
         href={href}
         target='_blank'
         rel='noopener noreferrer'
-        className='text-sm text-gray-500 underline group-hover:text-gray-700'
+        className='text-base text-gray-500 underline group-hover:text-gray-700'
       >
         {fileName}
       </a>

@@ -7,13 +7,7 @@ import { Button } from '@ui/form/Button/Button';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { billingFrequencyOptions } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 
-export const ContractSubtitle = ({
-  data,
-  onOpenEditModal,
-}: {
-  data: Contract;
-  onOpenEditModal: () => void;
-}) => {
+export const ContractSubtitle = ({ data }: { data: Contract }) => {
   const serviceStarted = data?.serviceStarted
     ? utcToZonedTime(data?.serviceStarted, 'UTC').toUTCString()
     : null;
@@ -51,7 +45,8 @@ export const ContractSubtitle = ({
       data.metadata.lastUpdated,
       data.metadata.created,
     ) === 0;
-  if (isJustCreated && !hasStartedService && !serviceStartDate) {
+
+  if (isJustCreated) {
     return (
       <p className='font-normal shadow-none text-sm  text-gray-500 focus:text-gray-500 hover:text-gray-500 hover:no-underline focus:no-underline'>
         Contract starting...
@@ -59,7 +54,6 @@ export const ContractSubtitle = ({
           className='underline ml-1 p-0 font-normal text-sm text-gray-500 hover:text-gray-500 focus:text-gray-500'
           variant='link'
           size='xs'
-          onClick={onOpenEditModal}
         >
           Edit contract
         </Button>
@@ -73,12 +67,11 @@ export const ContractSubtitle = ({
   ) {
     return (
       <p className='font-normal shadow-none text-sm  text-gray-500 focus:text-gray-500 hover:text-gray-500 hover:no-underline focus:no-underline'>
-        {renewalPeriod} contract starting ...
+        {renewalPeriod ? `${renewalPeriod} contract` : 'Contract'} starting ...
         <Button
           className='underline ml-1 p-0 font-normal text-sm text-gray-500 hover:text-gray-500 focus:text-gray-500'
           variant='link'
           size='xs'
-          onClick={onOpenEditModal}
         >
           Edit contract
         </Button>
@@ -92,14 +85,15 @@ export const ContractSubtitle = ({
   ) {
     return (
       <p className='font-normal shadow-none text-sm  text-gray-500 focus:text-gray-500 hover:text-gray-500 hover:no-underline focus:no-underline'>
-        {renewalPeriod} contract starting {serviceStartDate}
+        {renewalPeriod ? `${renewalPeriod} contract` : 'Contract'} starting{' '}
+        {serviceStartDate}
       </p>
     );
   }
   if (hasStartedService && endDate) {
     return (
       <p className='font-normal shadow-none text-sm  text-gray-500 focus:text-gray-500 hover:text-gray-500 hover:no-underline focus:no-underline'>
-        {renewalPeriod} contract{' '}
+        {renewalPeriod ? `${renewalPeriod} contract` : 'Contract'}{' '}
         {contractEnded && DateTimeUtils.isFuture(contractEnded)
           ? 'ending'
           : 'ended on'}{' '}
@@ -110,7 +104,8 @@ export const ContractSubtitle = ({
   if (hasStartedService && renewalDate && data?.autoRenew) {
     return (
       <p className='font-normal shadow-none text-sm  text-gray-500 focus:text-gray-500 hover:text-gray-500 hover:no-underline focus:no-underline'>
-        {renewalPeriod} contract auto-renewing {renewalDate}
+        {renewalPeriod ? `${renewalPeriod} contract` : 'Contract'} auto-renewing{' '}
+        {renewalDate}
       </p>
     );
   }
@@ -118,7 +113,8 @@ export const ContractSubtitle = ({
   if (hasStartedService && !data?.autoRenew) {
     return (
       <p className='font-normal shadow-none text-sm  text-gray-500 focus:text-gray-500 hover:text-gray-500 hover:no-underline focus:no-underline'>
-        {renewalPeriod} contract until {renewalDate}, not auto-renewing
+        {renewalPeriod ? `${renewalPeriod} contract` : 'Contract'} until{' '}
+        {renewalDate}, not auto-renewing
       </p>
     );
   }

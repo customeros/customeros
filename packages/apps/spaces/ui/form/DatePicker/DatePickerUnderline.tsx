@@ -7,8 +7,7 @@ import {
 
 import { Box } from '@chakra-ui/layout';
 
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
+import { cn } from '@ui/utils/cn';
 import { DateTimeUtils } from '@spaces/utils/date';
 type DateInputValue = null | string | number | Date;
 
@@ -67,16 +66,6 @@ export const DatePickerUnderline: React.FC<DatePickerProps> = ({
         '& .react-date-picker__calendar-button': {
           width: 'fit-content',
           borderBottom: 'none !important',
-          '&:after': {
-            content: "''",
-
-            height: '1px',
-            width: '100%',
-            background: 'gray.400',
-            borderBottom: 'none !important',
-            display: 'block',
-            mt: '-2px',
-          },
         },
         '& .react-date-picker--open .react-date-picker__calendar-button, .react-date-picker:focus-within .react-date-picker__calendar-button, .react-date-picker:focus .react-date-picker__calendar-button, .react-date-picker:focus-visible .react-date-picker__calendar-button':
           {
@@ -104,16 +93,19 @@ export const DatePickerUnderline: React.FC<DatePickerProps> = ({
           )
         }
         calendarIcon={
-          <Flex alignItems='center'>
-            <Text color={value ? 'gray.700' : 'gray.500'} role='button'>
-              {value
-                ? DateTimeUtils.format(
-                    (value as Date)?.toISOString(),
-                    DateTimeUtils.dateWithAbreviatedMonth,
-                  )
-                : `${placeholder ? placeholder : 'Start date'}`}
-            </Text>
-          </Flex>
+          <p
+            className={cn(
+              'underline text-gray-500 hover:text-gray-700 focus:text-gray-700',
+            )}
+            role='button'
+          >
+            {value
+              ? DateTimeUtils.format(
+                  (value as Date)?.toISOString(),
+                  DateTimeUtils.dateWithAbreviatedMonth,
+                )
+              : `${placeholder ? placeholder : 'Start date'}`}
+          </p>
         }
       />
     </Box>

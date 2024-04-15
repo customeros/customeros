@@ -85,9 +85,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         )}
         disabled={isLoading || isDisabled}
       >
-        {isLoading && spinner && (
+        {isLoading && (
           <span className='flex gap-1 relative '>
-            {spinner}
+            {spinner && spinner}
             {loadingText}
           </span>
         )}

@@ -93,23 +93,9 @@ export const ContractMenu: React.FC<ContractStatusSelectProps> = ({
     <>
       <Menu>
         <MenuButton
-          className={cn(`flex items-center max-h-5 `, {
-            'text-gray-800':
-              status === ContractStatus.Draft ||
-              status === ContractStatus.Ended,
-            'text-primary-800': status === ContractStatus.Live,
-            'text-warning-800': status === ContractStatus.OutOfContract,
-            'border-gray-800':
-              status === ContractStatus.Draft ||
-              status === ContractStatus.Ended,
-            'border-primary-800': status === ContractStatus.Live,
-            'border-warning-800': status === ContractStatus.OutOfContract,
-            'bg-gray-50':
-              status === ContractStatus.Draft ||
-              status === ContractStatus.Ended,
-            'bg-primary-50': status === ContractStatus.Live,
-            'bg-warning-50': status === ContractStatus.OutOfContract,
-          })}
+          className={cn(
+            `flex items-center max-h-5 p-1 hover:bg-gray-100 rounded`,
+          )}
         >
           <DotsVertical color='gray.400' />
         </MenuButton>
