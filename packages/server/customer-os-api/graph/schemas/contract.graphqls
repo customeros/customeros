@@ -28,6 +28,7 @@ type Contract implements MetadataInterface {
     serviceStarted:     Time
     contractStatus:     ContractStatus!
     autoRenew:          Boolean!
+    approved:           Boolean!
     attachments:        [Attachment!] @goField(forceResolver: true)
     invoices:           [Invoice!]! @goField(forceResolver: true)
     upcomingInvoices:   [Invoice!]! @goField(forceResolver: true)
@@ -175,6 +176,7 @@ input ContractInput {
     billingEnabled:             Boolean
     autoRenew:                  Boolean
     dueDays:                    Int64
+    approved:                   Boolean
 
     """
     Deprecated, use committedPeriodInMonths instead.
@@ -232,6 +234,7 @@ input ContractUpdateInput {
     appSource:              String
     billingEnabled:         Boolean
     autoRenew:              Boolean
+    approved:               Boolean
 
     """
     Deprecated, use committedPeriodInMonths instead.

@@ -53,6 +53,7 @@ type ContractEntity struct {
 	DueDays                         int64
 	ContractInternalFields          ContractInternalFields
 	LengthInMonths                  int64
+	Approved                        bool
 }
 
 type ContractEntities []ContractEntity

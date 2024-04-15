@@ -46,6 +46,7 @@ type ContractUpdateEvent struct {
 	Check                  bool                       `json:"check,omitempty"`
 	DueDays                int64                      `json:"dueDays,omitempty"`
 	LengthInMonths         int64                      `json:"lengthInMonths,omitempty"`
+	Approved               bool                       `json:"approved,omitempty"`
 }
 
 func NewContractUpdateEvent(a eventstore.Aggregate, dataFields model.ContractDataFields, externalSystem commonmodel.ExternalSystem, source string, updatedAt time.Time, fieldsMask []string) (eventstore.Event, error) {
@@ -78,6 +79,7 @@ func NewContractUpdateEvent(a eventstore.Aggregate, dataFields model.ContractDat
 		Source:                 source,
 		FieldsMask:             fieldsMask,
 		LengthInMonths:         dataFields.LengthInMonths,
+		Approved:               dataFields.Approved,
 	}
 
 	if eventData.LengthInMonths < 0 {
@@ -247,4 +249,8 @@ func (e ContractUpdateEvent) UpdateDueDays() bool {
 
 func (e ContractUpdateEvent) UpdateLengthInMonths() bool {
 	return utils.Contains(e.FieldsMask, FieldMaskLengthInMonths)
+}
+
+func (e ContractUpdateEvent) UpdateApproved() bool {
+	return utils.Contains(e.FieldsMask, FieldMaskApproved)
 }

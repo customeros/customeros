@@ -277,6 +277,7 @@ type ComplexityRoot struct {
 		AddressLine1            func(childComplexity int) int
 		AddressLine2            func(childComplexity int) int
 		AppSource               func(childComplexity int) int
+		Approved                func(childComplexity int) int
 		Attachments             func(childComplexity int) int
 		AutoRenew               func(childComplexity int) int
 		BillingCycle            func(childComplexity int) int
@@ -3165,6 +3166,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Contract.AppSource(childComplexity), true
+
+	case "Contract.approved":
+		if e.complexity.Contract.Approved == nil {
+			break
+		}
+
+		return e.complexity.Contract.Approved(childComplexity), true
 
 	case "Contract.attachments":
 		if e.complexity.Contract.Attachments == nil {
@@ -12411,6 +12419,7 @@ type Contract implements MetadataInterface {
     serviceStarted:     Time
     contractStatus:     ContractStatus!
     autoRenew:          Boolean!
+    approved:           Boolean!
     attachments:        [Attachment!] @goField(forceResolver: true)
     invoices:           [Invoice!]! @goField(forceResolver: true)
     upcomingInvoices:   [Invoice!]! @goField(forceResolver: true)
@@ -12558,6 +12567,7 @@ input ContractInput {
     billingEnabled:             Boolean
     autoRenew:                  Boolean
     dueDays:                    Int64
+    approved:                   Boolean
 
     """
     Deprecated, use committedPeriodInMonths instead.
@@ -12615,6 +12625,7 @@ input ContractUpdateInput {
     appSource:              String
     billingEnabled:         Boolean
     autoRenew:              Boolean
+    approved:               Boolean
 
     """
     Deprecated, use committedPeriodInMonths instead.
@@ -15305,12 +15316,18 @@ input ServiceLineItemCloseInput {
 
 
 enum BilledType {
-    NONE
+    """
+    Deprecated
+    """
+    NONE @deprecated(reason: "MONTHLY will be used instead.")
     MONTHLY
     QUARTERLY
     ANNUALLY
     ONCE
-    USAGE
+    """
+    Deprecated
+    """
+    USAGE @deprecated(reason: "Not supported yet.")
 }
 
 input TaxInput {
@@ -28379,6 +28396,50 @@ func (ec *executionContext) fieldContext_Contract_autoRenew(ctx context.Context,
 	return fc, nil
 }
 
+func (ec *executionContext) _Contract_approved(ctx context.Context, field graphql.CollectedField, obj *model.Contract) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contract_approved(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Approved, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contract_approved(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contract",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Contract_attachments(ctx context.Context, field graphql.CollectedField, obj *model.Contract) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Contract_attachments(ctx, field)
 	if err != nil {
@@ -39629,6 +39690,8 @@ func (ec *executionContext) fieldContext_Invoice_contract(ctx context.Context, f
 				return ec.fieldContext_Contract_contractStatus(ctx, field)
 			case "autoRenew":
 				return ec.fieldContext_Contract_autoRenew(ctx, field)
+			case "approved":
+				return ec.fieldContext_Contract_approved(ctx, field)
 			case "attachments":
 				return ec.fieldContext_Contract_attachments(ctx, field)
 			case "invoices":
@@ -51318,6 +51381,8 @@ func (ec *executionContext) fieldContext_Mutation_contract_Create(ctx context.Co
 				return ec.fieldContext_Contract_contractStatus(ctx, field)
 			case "autoRenew":
 				return ec.fieldContext_Contract_autoRenew(ctx, field)
+			case "approved":
+				return ec.fieldContext_Contract_approved(ctx, field)
 			case "attachments":
 				return ec.fieldContext_Contract_attachments(ctx, field)
 			case "invoices":
@@ -51497,6 +51562,8 @@ func (ec *executionContext) fieldContext_Mutation_contract_Update(ctx context.Co
 				return ec.fieldContext_Contract_contractStatus(ctx, field)
 			case "autoRenew":
 				return ec.fieldContext_Contract_autoRenew(ctx, field)
+			case "approved":
+				return ec.fieldContext_Contract_approved(ctx, field)
 			case "attachments":
 				return ec.fieldContext_Contract_attachments(ctx, field)
 			case "invoices":
@@ -51767,6 +51834,8 @@ func (ec *executionContext) fieldContext_Mutation_contract_Renew(ctx context.Con
 				return ec.fieldContext_Contract_contractStatus(ctx, field)
 			case "autoRenew":
 				return ec.fieldContext_Contract_autoRenew(ctx, field)
+			case "approved":
+				return ec.fieldContext_Contract_approved(ctx, field)
 			case "attachments":
 				return ec.fieldContext_Contract_attachments(ctx, field)
 			case "invoices":
@@ -51946,6 +52015,8 @@ func (ec *executionContext) fieldContext_Mutation_contract_AddAttachment(ctx con
 				return ec.fieldContext_Contract_contractStatus(ctx, field)
 			case "autoRenew":
 				return ec.fieldContext_Contract_autoRenew(ctx, field)
+			case "approved":
+				return ec.fieldContext_Contract_approved(ctx, field)
 			case "attachments":
 				return ec.fieldContext_Contract_attachments(ctx, field)
 			case "invoices":
@@ -52125,6 +52196,8 @@ func (ec *executionContext) fieldContext_Mutation_contract_RemoveAttachment(ctx 
 				return ec.fieldContext_Contract_contractStatus(ctx, field)
 			case "autoRenew":
 				return ec.fieldContext_Contract_autoRenew(ctx, field)
+			case "approved":
+				return ec.fieldContext_Contract_approved(ctx, field)
 			case "attachments":
 				return ec.fieldContext_Contract_attachments(ctx, field)
 			case "invoices":
@@ -70415,6 +70488,8 @@ func (ec *executionContext) fieldContext_Organization_contracts(ctx context.Cont
 				return ec.fieldContext_Contract_contractStatus(ctx, field)
 			case "autoRenew":
 				return ec.fieldContext_Contract_autoRenew(ctx, field)
+			case "approved":
+				return ec.fieldContext_Contract_approved(ctx, field)
 			case "attachments":
 				return ec.fieldContext_Contract_attachments(ctx, field)
 			case "invoices":
@@ -78696,6 +78771,8 @@ func (ec *executionContext) fieldContext_Query_contract(ctx context.Context, fie
 				return ec.fieldContext_Contract_contractStatus(ctx, field)
 			case "autoRenew":
 				return ec.fieldContext_Contract_autoRenew(ctx, field)
+			case "approved":
+				return ec.fieldContext_Contract_approved(ctx, field)
 			case "attachments":
 				return ec.fieldContext_Contract_attachments(ctx, field)
 			case "invoices":
@@ -84703,6 +84780,8 @@ func (ec *executionContext) fieldContext_RenewalRecord_contract(ctx context.Cont
 				return ec.fieldContext_Contract_contractStatus(ctx, field)
 			case "autoRenew":
 				return ec.fieldContext_Contract_autoRenew(ctx, field)
+			case "approved":
+				return ec.fieldContext_Contract_approved(ctx, field)
 			case "attachments":
 				return ec.fieldContext_Contract_attachments(ctx, field)
 			case "invoices":
@@ -94569,7 +94648,7 @@ func (ec *executionContext) unmarshalInputContractInput(ctx context.Context, obj
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"organizationId", "contractName", "committedPeriodInMonths", "appSource", "contractUrl", "serviceStarted", "contractSigned", "currency", "billingEnabled", "autoRenew", "dueDays", "contractRenewalCycle", "committedPeriods", "invoicingStartDate", "externalReference", "billingCycle", "renewalPeriods", "renewalCycle", "signedAt", "serviceStartedAt", "name"}
+	fieldsInOrder := [...]string{"organizationId", "contractName", "committedPeriodInMonths", "appSource", "contractUrl", "serviceStarted", "contractSigned", "currency", "billingEnabled", "autoRenew", "dueDays", "approved", "contractRenewalCycle", "committedPeriods", "invoicingStartDate", "externalReference", "billingCycle", "renewalPeriods", "renewalCycle", "signedAt", "serviceStartedAt", "name"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -94653,6 +94732,13 @@ func (ec *executionContext) unmarshalInputContractInput(ctx context.Context, obj
 				return it, err
 			}
 			it.DueDays = data
+		case "approved":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("approved"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Approved = data
 		case "contractRenewalCycle":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contractRenewalCycle"))
 			data, err := ec.unmarshalOContractRenewalCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContractRenewalCycle(ctx, v)
@@ -94736,7 +94822,7 @@ func (ec *executionContext) unmarshalInputContractUpdateInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"contractId", "patch", "contractName", "contractUrl", "committedPeriodInMonths", "serviceStarted", "contractSigned", "contractEnded", "currency", "billingDetails", "appSource", "billingEnabled", "autoRenew", "contractRenewalCycle", "committedPeriods", "canPayWithCard", "canPayWithDirectDebit", "canPayWithBankTransfer", "invoicingStartDate", "addressLine1", "addressLine2", "locality", "country", "zip", "billingCycle", "invoiceNote", "endedAt", "renewalPeriods", "invoiceEmail", "organizationLegalName", "renewalCycle", "signedAt", "serviceStartedAt", "name"}
+	fieldsInOrder := [...]string{"contractId", "patch", "contractName", "contractUrl", "committedPeriodInMonths", "serviceStarted", "contractSigned", "contractEnded", "currency", "billingDetails", "appSource", "billingEnabled", "autoRenew", "approved", "contractRenewalCycle", "committedPeriods", "canPayWithCard", "canPayWithDirectDebit", "canPayWithBankTransfer", "invoicingStartDate", "addressLine1", "addressLine2", "locality", "country", "zip", "billingCycle", "invoiceNote", "endedAt", "renewalPeriods", "invoiceEmail", "organizationLegalName", "renewalCycle", "signedAt", "serviceStartedAt", "name"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -94834,6 +94920,13 @@ func (ec *executionContext) unmarshalInputContractUpdateInput(ctx context.Contex
 				return it, err
 			}
 			it.AutoRenew = data
+		case "approved":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("approved"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Approved = data
 		case "contractRenewalCycle":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contractRenewalCycle"))
 			data, err := ec.unmarshalOContractRenewalCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContractRenewalCycle(ctx, v)
@@ -102921,6 +103014,11 @@ func (ec *executionContext) _Contract(ctx context.Context, sel ast.SelectionSet,
 			}
 		case "autoRenew":
 			out.Values[i] = ec._Contract_autoRenew(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "approved":
+			out.Values[i] = ec._Contract_approved(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}

@@ -46,6 +46,7 @@ func TestMutationResolver_ContractCreate(t *testing.T) {
 			require.Equal(t, "https://contract.com", contract.ContractUrl)
 			require.Equal(t, "USD", contract.Currency)
 			require.Equal(t, int64(7), contract.LengthInMonths)
+			require.True(t, contract.Approved)
 			expectedServiceStartedAt, err := time.Parse(time.RFC3339, "2019-01-01T00:00:00Z")
 			if err != nil {
 				t.Fatalf("Failed to parse expected timestamp: %v", err)
@@ -117,6 +118,7 @@ func TestMutationResolver_ContractCreate_DefaultValues(t *testing.T) {
 			require.Nil(t, contract.InvoicingStartDate)
 			require.Equal(t, int64(0), contract.DueDays)
 			require.Equal(t, int64(0), contract.LengthInMonths)
+			require.False(t, contract.Approved)
 			calledCreateContract = true
 			neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 				Id: contractId,
@@ -198,9 +200,10 @@ func TestMutationResolver_ContractUpdate(t *testing.T) {
 			require.Equal(t, true, contract.PayAutomatically)
 			require.Equal(t, true, contract.AutoRenew)
 			require.Equal(t, true, contract.Check)
+			require.Equal(t, true, contract.Approved)
 			require.Equal(t, int64(7), contract.DueDays)
 			require.Equal(t, []string{"cc1", "cc2"}, contract.InvoiceEmailCc)
-			require.Equal(t, 26, len(contract.FieldsMask))
+			require.Equal(t, 27, len(contract.FieldsMask))
 			calledUpdateContract = true
 			return &contractpb.ContractIdGrpcResponse{
 				Id: contractId,
@@ -310,6 +313,7 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 		PayAutomatically:       true,
 		AutoRenew:              true,
 		Check:                  true,
+		Approved:               true,
 		DueDays:                int64(7),
 	})
 
@@ -358,6 +362,7 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 	require.Equal(t, contractId, contract.Metadata.ID)
 	require.True(t, contract.BillingEnabled)
 	require.True(t, contract.AutoRenew)
+	require.True(t, contract.Approved)
 
 	billingDetails := contract.BillingDetails
 	require.Equal(t, "address line 1", *billingDetails.AddressLine1)

@@ -8,6 +8,7 @@ contract_Create(
         serviceStarted: "2019-01-01T00:00:00Z"
         contractSigned: "2019-02-01T00:00:00Z"
         currency: USD
+        approved: true
     }
   ) {
     id

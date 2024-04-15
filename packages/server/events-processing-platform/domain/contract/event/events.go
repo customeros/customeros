@@ -41,4 +41,5 @@ const (
 	FieldMaskCheck                  = "check"
 	FieldMaskDueDays                = "dueDays"
 	FieldMaskLengthInMonths         = "lengthInMonths"
+	FieldMaskApproved               = "approved"
 )

@@ -101,6 +101,7 @@ func (s *contractService) createContractWithEvents(ctx context.Context, contract
 		Check:                  true,
 		AutoRenew:              utils.IfNotNilBool(contractDetails.Input.AutoRenew),
 		DueDays:                utils.IfNotNilInt64(contractDetails.Input.DueDays),
+		Approved:               utils.IfNotNilBool(contractDetails.Input.Approved),
 	}
 
 	if contractDetails.Input.ContractSigned != nil {
@@ -278,6 +279,11 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 		}
 		contractUpdateRequest.PayOnline = utils.IfNotNilBool(input.BillingDetails.PayOnline)
 		contractUpdateRequest.PayAutomatically = utils.IfNotNilBool(input.BillingDetails.PayAutomatically)
+	}
+
+	if input.Approved != nil {
+		contractUpdateRequest.Approved = *input.Approved
+		fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_APPROVED)
 	}
 
 	if input.ContractName != nil {
