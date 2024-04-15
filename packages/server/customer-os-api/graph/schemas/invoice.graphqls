@@ -9,7 +9,7 @@ extend type Mutation {
     invoice_Pay(id: ID!): Invoice!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     invoice_Void(id: ID!): Invoice!  @hasRole(roles: [ADMIN, USER]) @hasTenant
 
-    invoice_Simulate(input: InvoiceSimulateInput!): [Invoice!]!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+    invoice_Simulate(input: InvoiceSimulateInput!): [InvoiceSimulate!]!  @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type InvoicesPage implements Pages {
@@ -84,7 +84,7 @@ type InvoiceLine implements MetadataInterface {
     metadata:           Metadata!
     description:        String!
     price:              Float!
-    quantity:           Int!
+    quantity:           Int64!
     subtotal:           Float!
     taxDue:             Float!
     total:              Float!
@@ -116,8 +116,6 @@ enum InvoiceStatus {
 
 input InvoiceSimulateInput {
     contractId:         ID!
-    periodStartDate:    Time
-    periodEndDate:      Time
     serviceLines:       [InvoiceSimulateServiceLineInput!]!
 }
 
@@ -125,10 +123,27 @@ input InvoiceSimulateServiceLineInput {
     serviceLineItemId:  ID
     parentId:           ID
     description:        String!
-    comments:           String!
     billingCycle:       BilledType!
     price:              Float!
-    quantity:           Int!
+    quantity:           Int64!
     serviceStarted:     Time!
     taxRate:            Float
+}
+
+type InvoiceSimulate{
+    postpaid:           Boolean!
+    offCycle:           Boolean!
+    invoiceNumber:      String!
+    invoicePeriodStart: Time!
+    invoicePeriodEnd:   Time!
+    due:                Time!
+    issued:             Time!
+    currency:           String!
+    invoiceLineItems:   [InvoiceLine!]!
+    note:               String!
+    customer:           InvoiceCustomer!
+    provider:           InvoiceProvider!
+    amount:             Float!
+    subtotal:           Float!
+    total:              Float!
 }

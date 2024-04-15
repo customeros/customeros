@@ -215,21 +215,20 @@ func (r *mutationResolver) InvoiceVoid(ctx context.Context, id string) (*model.I
 }
 
 // InvoiceSimulate is the resolver for the invoice_Simulate field.
-func (r *mutationResolver) InvoiceSimulate(ctx context.Context, input model.InvoiceSimulateInput) ([]*model.Invoice, error) {
+func (r *mutationResolver) InvoiceSimulate(ctx context.Context, input model.InvoiceSimulateInput) ([]*model.InvoiceSimulate, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InvoiceResolver.InvoiceSimulate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.Object("request.input", input))
 
-	simulateInvoiceData := commonService.SimulateInvoiceData{
+	simulateInvoiceData := commonService.SimulateInvoiceRequestData{
 		ContractId: input.ContractID,
 	}
 	for _, serviceLine := range input.ServiceLines {
-		simulateInvoiceData.InvoiceLines = append(simulateInvoiceData.InvoiceLines, commonService.SimulateInvoiceLineData{
+		simulateInvoiceData.ServiceLines = append(simulateInvoiceData.ServiceLines, commonService.SimulateInvoiceRequestServiceLineData{
 			ServiceLineItemID: serviceLine.ServiceLineItemID,
 			ParentID:          serviceLine.ParentID,
 			Description:       serviceLine.Description,
-			Comments:          serviceLine.Comments,
 			BillingCycle:      mapper.MapBilledTypeFromModel(serviceLine.BillingCycle),
 			Price:             serviceLine.Price,
 			Quantity:          serviceLine.Quantity,
@@ -238,14 +237,50 @@ func (r *mutationResolver) InvoiceSimulate(ctx context.Context, input model.Invo
 		})
 	}
 
-	invoiceEntities, err := r.Services.CommonServices.InvoiceService.SimulateInvoice(ctx, &simulateInvoiceData)
+	nextInvoices, err := r.Services.CommonServices.InvoiceService.SimulateInvoice(ctx, &simulateInvoiceData)
 
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to simulate invoice")
 		return nil, err
 	}
-	return mapper.MapEntitiesToInvoices(invoiceEntities), nil
+
+	response := make([]*model.InvoiceSimulate, 0)
+	for _, nextInvoice := range nextInvoices {
+		invoice := model.InvoiceSimulate{
+			Postpaid:           nextInvoice.Invoice.Postpaid,
+			OffCycle:           nextInvoice.Invoice.OffCycle,
+			InvoicePeriodStart: nextInvoice.Invoice.PeriodStartDate,
+			InvoicePeriodEnd:   nextInvoice.Invoice.PeriodEndDate,
+			Due:                nextInvoice.Invoice.DueDate,
+			Issued:             nextInvoice.Invoice.IssuedDate,
+			Currency:           nextInvoice.Invoice.Currency.String(),
+			Note:               nextInvoice.Invoice.Note,
+			Amount:             nextInvoice.Invoice.Amount,
+			Subtotal:           nextInvoice.Invoice.Amount,
+			Total:              nextInvoice.Invoice.TotalAmount,
+			InvoiceLineItems:   []*model.InvoiceLine{},
+		}
+
+		for _, line := range nextInvoice.Lines {
+			invoiceLine := model.InvoiceLine{
+				Metadata: &model.Metadata{
+					ID: line.Id,
+				},
+				Description: line.Name,
+				Price:       line.Price,
+				Quantity:    line.Quantity,
+				Total:       line.TotalAmount,
+				TaxDue:      line.Vat,
+				Subtotal:    line.Amount,
+			}
+			invoice.InvoiceLineItems = append(invoice.InvoiceLineItems, &invoiceLine)
+		}
+
+		response = append(response, &invoice)
+	}
+
+	return response, nil
 }
 
 // Invoice is the resolver for the invoice field.

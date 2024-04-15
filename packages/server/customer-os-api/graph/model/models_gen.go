@@ -1298,7 +1298,7 @@ type InvoiceLine struct {
 	Metadata    *Metadata `json:"metadata"`
 	Description string    `json:"description"`
 	Price       float64   `json:"price"`
-	Quantity    int       `json:"quantity"`
+	Quantity    int64     `json:"quantity"`
 	Subtotal    float64   `json:"subtotal"`
 	TaxDue      float64   `json:"taxDue"`
 	Total       float64   `json:"total"`
@@ -1319,21 +1319,36 @@ type InvoiceProvider struct {
 	AddressRegion        *string `json:"addressRegion,omitempty"`
 }
 
+type InvoiceSimulate struct {
+	Postpaid           bool             `json:"postpaid"`
+	OffCycle           bool             `json:"offCycle"`
+	InvoiceNumber      string           `json:"invoiceNumber"`
+	InvoicePeriodStart time.Time        `json:"invoicePeriodStart"`
+	InvoicePeriodEnd   time.Time        `json:"invoicePeriodEnd"`
+	Due                time.Time        `json:"due"`
+	Issued             time.Time        `json:"issued"`
+	Currency           string           `json:"currency"`
+	InvoiceLineItems   []*InvoiceLine   `json:"invoiceLineItems"`
+	Note               string           `json:"note"`
+	Customer           *InvoiceCustomer `json:"customer"`
+	Provider           *InvoiceProvider `json:"provider"`
+	Amount             float64          `json:"amount"`
+	Subtotal           float64          `json:"subtotal"`
+	Total              float64          `json:"total"`
+}
+
 type InvoiceSimulateInput struct {
-	ContractID      string                             `json:"contractId"`
-	PeriodStartDate *time.Time                         `json:"periodStartDate,omitempty"`
-	PeriodEndDate   *time.Time                         `json:"periodEndDate,omitempty"`
-	ServiceLines    []*InvoiceSimulateServiceLineInput `json:"serviceLines"`
+	ContractID   string                             `json:"contractId"`
+	ServiceLines []*InvoiceSimulateServiceLineInput `json:"serviceLines"`
 }
 
 type InvoiceSimulateServiceLineInput struct {
 	ServiceLineItemID *string    `json:"serviceLineItemId,omitempty"`
 	ParentID          *string    `json:"parentId,omitempty"`
 	Description       string     `json:"description"`
-	Comments          string     `json:"comments"`
 	BillingCycle      BilledType `json:"billingCycle"`
 	Price             float64    `json:"price"`
-	Quantity          int        `json:"quantity"`
+	Quantity          int64      `json:"quantity"`
 	ServiceStarted    time.Time  `json:"serviceStarted"`
 	TaxRate           *float64   `json:"taxRate,omitempty"`
 }

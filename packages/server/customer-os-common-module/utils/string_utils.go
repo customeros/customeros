@@ -26,6 +26,21 @@ func StringFirstNonEmpty(strs ...string) string {
 	return ""
 }
 
+func StringPtrFirstNonEmpty(strs ...*string) string {
+	for _, s := range strs {
+		if s == nil {
+			continue
+		}
+		if *s != "" {
+			return *s
+		}
+		if len(*s) > 0 {
+			return *s
+		}
+	}
+	return ""
+}
+
 func NewUUIDIfEmpty(str string) string {
 	if strings.TrimSpace(str) == "" {
 		return uuid.New().String()
