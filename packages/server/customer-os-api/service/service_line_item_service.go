@@ -171,13 +171,7 @@ func (s *serviceLineItemService) NewVersion(ctx context.Context, data ServiceLin
 
 	startedAt := utils.ToDate(utils.IfNotNilTimeWithDefault(data.StartedAt, utils.Now()))
 
-	// Validate new version creation
-	if baseServiceLineItemEntity.Billed == neo4jenum.BilledTypeOnce {
-		err = fmt.Errorf("cannot create new version for one time contract line item with id {%s}", data.Id)
-		tracing.TraceErr(span, err)
-		return "", err
-	}
-	// Do not allow creating new version if there is an existing version with the same start date
+	// Check no SLI of the contract are cancelled
 	serviceLineItems, err := s.GetServiceLineItemsForContracts(ctx, []string{contractEntity.Id})
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -185,12 +179,28 @@ func (s *serviceLineItemService) NewVersion(ctx context.Context, data ServiceLin
 		return "", err
 	}
 	for _, sli := range *serviceLineItems {
+		if sli.Canceled {
+			err = fmt.Errorf("contract line item with id {%s} is already ended", sli.ID)
+			tracing.TraceErr(span, err)
+			return "", err
+		}
+	}
+	// Do not allow creating new version if there is an existing version with the same start date
+	for _, sli := range *serviceLineItems {
 		if utils.ToDate(sli.StartedAt).Equal(startedAt) {
 			err = fmt.Errorf("contract line item with id {%s} already exists with the same start date {%s}", sli.ID, startedAt.Format(time.DateOnly))
 			tracing.TraceErr(span, err)
 			return "", err
 		}
 	}
+
+	// Validate new version creation
+	if baseServiceLineItemEntity.Billed == neo4jenum.BilledTypeOnce {
+		err = fmt.Errorf("cannot create new version for one time contract line item with id {%s}", data.Id)
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+
 	// If contract was invoiced - do not allow creating new version in the past
 	contractInvoiced, err := s.repositories.Neo4jRepositories.ContractReadRepository.IsContractInvoiced(ctx, common.GetTenantFromContext(ctx), contractEntity.Id)
 	if err != nil {
@@ -271,6 +281,21 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error on getting contract by service line item id {%s}: %s", serviceLineItemDetails.Id, err.Error())
 		return err
+	}
+
+	// Check no SLI of the contract are cancelled
+	serviceLineItems, err := s.GetServiceLineItemsForContracts(ctx, []string{contractEntity.Id})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error on getting service line items for contract {%s}: %s", contractEntity.Id, err.Error())
+		return err
+	}
+	for _, sli := range *serviceLineItems {
+		if sli.Canceled {
+			err = fmt.Errorf("contract line item with id {%s} is already ended", sli.ID)
+			tracing.TraceErr(span, err)
+			return err
+		}
 	}
 
 	contractInvoiced, err := s.repositories.Neo4jRepositories.ContractReadRepository.IsContractInvoiced(ctx, common.GetTenantFromContext(ctx), contractEntity.Id)
@@ -408,16 +433,10 @@ func (s *serviceLineItemService) Delete(ctx context.Context, serviceLineItemId s
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("serviceLineItemId", serviceLineItemId))
 
-	sliExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), serviceLineItemId, neo4jutil.NodeLabelServiceLineItem)
+	sliEntity, err := s.GetById(ctx, serviceLineItemId)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("error on checking if service line item exists: %s", err.Error())
-		return false, err
-	}
-	if !sliExists {
-		err := fmt.Errorf("service line item with id {%s} not found", serviceLineItemId)
-		tracing.TraceErr(span, err)
-		s.log.Errorf(err.Error())
+		s.log.Errorf("Error on getting service line item by id {%s}: %s", serviceLineItemId, err.Error())
 		return false, err
 	}
 
@@ -435,13 +454,25 @@ func (s *serviceLineItemService) Delete(ctx context.Context, serviceLineItemId s
 		return false, err
 	}
 
+	// if contract is not draft prevent removing current or past SLIs
+	contractEntity, err := s.services.ContractService.GetContractByServiceLineItem(ctx, serviceLineItemId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error on getting contract by service line item id {%s}: %s", serviceLineItemId, err.Error())
+		return false, err
+	}
+	if contractEntity.ContractStatus != neo4jenum.ContractStatusDraft && !sliEntity.StartedAt.After(utils.Today()) {
+		err = fmt.Errorf("cannot delete contract line item with id {%s} in the past", serviceLineItemId)
+		tracing.TraceErr(span, err)
+		return false, err
+	}
+
 	deleteRequest := servicelineitempb.DeleteServiceLineItemGrpcRequest{
 		Tenant:         common.GetTenantFromContext(ctx),
 		Id:             serviceLineItemId,
 		LoggedInUserId: common.GetUserIdFromContext(ctx),
 		AppSource:      constants.AppSourceCustomerOsApi,
 	}
-
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err = utils.CallEventsPlatformGRPCWithRetry[*servicelineitempb.ServiceLineItemIdGrpcResponse](func() (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
 		return s.grpcClients.ServiceLineItemClient.DeleteServiceLineItem(ctx, &deleteRequest)
@@ -462,42 +493,70 @@ func (s *serviceLineItemService) Close(ctx context.Context, serviceLineItemId st
 	span.LogFields(log.String("serviceLineItemId", serviceLineItemId))
 	span.SetTag(tracing.SpanTagEntityId, serviceLineItemId)
 
-	sli, err := s.GetById(ctx, serviceLineItemId)
-
 	contractEntity, err := s.services.ContractService.GetContractByServiceLineItem(ctx, serviceLineItemId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error on getting contract by service line item id {%s}: %s", serviceLineItemId, err.Error())
 		return err
 	}
-
-	contractInvoiced, err := s.repositories.Neo4jRepositories.ContractReadRepository.IsContractInvoiced(ctx, common.GetTenantFromContext(ctx), contractEntity.Id)
-
-	if contractInvoiced || sli.IsActiveAt(utils.Now()) {
-		closeRequest := servicelineitempb.CloseServiceLineItemGrpcRequest{
-			Tenant:         common.GetTenantFromContext(ctx),
-			Id:             serviceLineItemId,
-			LoggedInUserId: common.GetUserIdFromContext(ctx),
-			AppSource:      constants.AppSourceCustomerOsApi,
-			EndedAt:        utils.ConvertTimeToTimestampPtr(endedAt),
-		}
-
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = utils.CallEventsPlatformGRPCWithRetry[*servicelineitempb.ServiceLineItemIdGrpcResponse](func() (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
-			return s.grpcClients.ServiceLineItemClient.CloseServiceLineItem(ctx, &closeRequest)
-		})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			s.log.Errorf("Error from events processing: %s", err.Error())
-			return err
-		}
-	} else {
+	// if contract is draft - delete SLI
+	if contractEntity.ContractStatus == neo4jenum.ContractStatusDraft {
 		_, err = s.Delete(ctx, serviceLineItemId)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			s.log.Errorf("Error on deleting service line item: %s", err.Error())
-			return err
+		return err
+	}
+
+	sliEntity, err := s.GetById(ctx, serviceLineItemId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error on getting service line item by id {%s}: %s", serviceLineItemId, err.Error())
+		return err
+	}
+
+	// Future SLI to be deleted
+	if sliEntity.StartedAt.After(utils.Today()) {
+		_, err = s.Delete(ctx, serviceLineItemId)
+		return err
+	}
+
+	// closing past SLIs not allowed
+	if sliEntity.EndedAt != nil && sliEntity.EndedAt.Before(utils.Today()) {
+		err = fmt.Errorf("cannot close contract line item with id {%s} in the past", serviceLineItemId)
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	// First remove any future SLI
+	sliEntities, err := s.GetServiceLineItemsForContracts(ctx, []string{contractEntity.Id})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error on getting service line items for contract {%s}: %s", contractEntity.Id, err.Error())
+		return err
+	}
+	for _, sli := range *sliEntities {
+		if sli.StartedAt.After(utils.Today()) {
+			_, err = s.Delete(ctx, sli.ID)
+			if err != nil {
+				return err
+			}
 		}
+	}
+
+	closeRequest := servicelineitempb.CloseServiceLineItemGrpcRequest{
+		Tenant:         common.GetTenantFromContext(ctx),
+		Id:             serviceLineItemId,
+		LoggedInUserId: common.GetUserIdFromContext(ctx),
+		AppSource:      constants.AppSourceCustomerOsApi,
+		EndedAt:        utils.ConvertTimeToTimestampPtr(endedAt),
+	}
+
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err = utils.CallEventsPlatformGRPCWithRetry[*servicelineitempb.ServiceLineItemIdGrpcResponse](func() (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
+		return s.grpcClients.ServiceLineItemClient.CloseServiceLineItem(ctx, &closeRequest)
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error from events processing: %s", err.Error())
+		return err
 	}
 
 	return nil
