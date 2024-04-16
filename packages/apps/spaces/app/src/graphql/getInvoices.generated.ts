@@ -40,12 +40,12 @@ export type GetInvoicesQuery = {
     totalElements: any;
     content: Array<{
       __typename?: 'Invoice';
+      issued: any;
       invoiceUrl: string;
       invoiceNumber: string;
       invoicePeriodStart: any;
       invoicePeriodEnd: any;
       due: any;
-      issued: any;
       amountDue: number;
       currency: string;
       dryRun: boolean;
@@ -73,7 +73,7 @@ export type GetInvoicesQuery = {
       };
       invoiceLineItems: Array<{
         __typename?: 'InvoiceLine';
-        quantity: number;
+        quantity: any;
         subtotal: number;
         taxDue: number;
         total: number;
@@ -102,6 +102,7 @@ export const GetInvoicesDocument = `
     sort: $sort
   ) {
     content {
+      issued
       metadata {
         id
         created

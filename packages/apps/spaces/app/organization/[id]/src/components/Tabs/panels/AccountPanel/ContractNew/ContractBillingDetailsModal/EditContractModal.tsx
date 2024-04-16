@@ -354,7 +354,7 @@ export const EditContractModal = ({
           variants={mainVariants as Variants}
           animate={!billingDetailsFormOpen ? 'open' : 'closed'}
           className={cn(
-            'flex flex-col gap-4 px-6 pb-6 pt-4 bg-white  rounded-lg justify-between relative h-[80vh] ',
+            'flex flex-col gap-4 px-6 pb-6 pt-4 bg-white  rounded-lg justify-between relative h-[80vh] min-w-[424px] ',
           )}
         >
           <ModalHeader className='p-0 text-lg font-semibold'>
@@ -401,7 +401,7 @@ export const EditContractModal = ({
           data-isOpen={billingDetailsFormOpen}
           variants={variants}
           animate={billingDetailsFormOpen ? 'open' : 'closed'}
-          className='flex flex-col gap-4 px-6 pb-6 pt-4 bg-white h-auto rounded-lg justify-between relative shadow-2xl'
+          className='flex flex-col gap-4 px-6 pb-6 pt-4 bg-white h-auto rounded-lg justify-between relative shadow-2xl min-w-[424px]'
         >
           <motion.div
             className='h-full flex flex-col justify-between'

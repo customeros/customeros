@@ -19,12 +19,11 @@ import {
 } from '@organization/src/graphql/getContracts.generated';
 import { useUpdatePanelModalStateContext } from '@organization/src/components/Tabs/panels/AccountPanel/context/AccountModalsContext';
 
-import { ContractMenu } from './ContractMenu';
 import { Services } from './Services/Services';
 import { ContractSubtitle } from './ContractSubtitle';
+import { ContractCardActions } from './ContractCardActions';
 import { RenewalARRCard } from './RenewalARR/RenewalARRCard';
 import { ServiceLineItemsModal } from './ServiceLineItemsModal';
-import { ContractStatusTag } from './contractStatuses/ContractStatusTag';
 import { EditContractModal } from './ContractBillingDetailsModal/EditContractModal';
 
 interface ContractCardProps {
@@ -169,23 +168,21 @@ export const ContractCard = ({
             formId={formId}
           />
 
-          <div className='flex items-center gap-2 ml-2'>
-            <ContractStatusTag status={data.contractStatus} />
-            <ContractMenu
-              onOpenEditModal={() => setEditModalOpen(true)}
-              status={data.contractStatus}
-              contractId={data.metadata.id}
-              renewsAt={data?.opportunities?.[0]?.renewedAt}
-              onUpdateContract={updateContract}
-              serviceStarted={data.serviceStarted}
-              organizationName={
-                data?.billingDetails?.organizationLegalName ||
-                organizationName ||
-                'Unnamed'
-              }
-              nextInvoiceDate={data?.billingDetails?.nextInvoicing}
-            />
-          </div>
+          <ContractCardActions
+            onOpenEditModal={() => setEditModalOpen(true)}
+            status={data.contractStatus}
+            contractId={data.metadata.id}
+            renewsAt={data?.opportunities?.[0]?.renewedAt}
+            onUpdateContract={updateContract}
+            serviceStarted={data.serviceStarted}
+            organizationName={
+              data?.billingDetails?.organizationLegalName ||
+              organizationName ||
+              'Unnamed'
+            }
+            nextInvoiceDate={data?.billingDetails?.nextInvoicing}
+            contractStarted={data.serviceStarted}
+          />
         </article>
 
         <div

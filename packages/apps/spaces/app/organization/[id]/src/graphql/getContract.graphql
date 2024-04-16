@@ -13,6 +13,7 @@ query getContract($id: ID!) {
     contractEnded
     serviceStarted
     autoRenew
+    approved
     attachments {
       id
       basePath

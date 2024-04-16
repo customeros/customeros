@@ -1,36 +1,32 @@
 import React, { useMemo } from 'react';
 
 import { UseMutationResult } from '@tanstack/react-query';
-import {
-  ContractEndModal,
-  ContractStartModal,
-} from 'app/organization/[id]/src/components/Tabs/panels/AccountPanel/Contract/ChangeContractStatusModals';
 
-import { Flex } from '@ui/layout/Flex';
 import { useDisclosure } from '@ui/utils';
-import { Tag } from '@ui/presentation/Tag';
 import { DotLive } from '@ui/media/icons/DotLive';
 import { XSquare } from '@ui/media/icons/XSquare';
-import { DateTimeUtils } from '@spaces/utils/date';
-import { RefreshCw02 } from '@ui/media/icons/RefreshCw02';
-import { SelectOption } from '@shared/types/SelectOptions';
+import { RefreshCw05 } from '@ui/media/icons/RefreshCw05';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu';
 import { Exact, ContractStatus, ContractUpdateInput } from '@graphql/types';
 import { GetContractsQuery } from '@organization/src/graphql/getContracts.generated';
 import { UpdateContractMutation } from '@organization/src/graphql/updateContract.generated';
 import { useRenewContractMutation } from '@organization/src/graphql/renewContract.generated';
-
-import { contractOptionIcon } from './utils';
+import { ContractMenu } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ContractCardActions/ContractMenu';
+import { ContractStatusTag } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ContractCardActions/ContractStatusTag';
+import {
+  ContractEndModal,
+  ContractStartModal,
+} from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ChangeContractStatusModals';
 
 interface ContractStatusSelectProps {
   renewsAt?: string;
   contractId: string;
   status: ContractStatus;
   serviceStarted?: string;
-  contractStarted?: string;
   organizationName: string;
   nextInvoiceDate?: string;
+  contractStarted?: string;
+  onOpenEditModal: () => void;
 
   onUpdateContract: UseMutationResult<
     UpdateContractMutation,
@@ -40,14 +36,7 @@ interface ContractStatusSelectProps {
   >;
 }
 
-const statusColorScheme: Record<string, string> = {
-  [ContractStatus.Live]: 'primary',
-  [ContractStatus.Draft]: 'gray',
-  [ContractStatus.Ended]: 'gray',
-  [ContractStatus.OutOfContract]: 'warning',
-};
-
-export const ContractStatusSelect: React.FC<ContractStatusSelectProps> = ({
+export const ContractCardActions: React.FC<ContractStatusSelectProps> = ({
   status,
   renewsAt,
   contractId,
@@ -55,15 +44,12 @@ export const ContractStatusSelect: React.FC<ContractStatusSelectProps> = ({
   serviceStarted,
   onUpdateContract,
   nextInvoiceDate,
+  onOpenEditModal,
   contractStarted,
 }) => {
-  const client = getGraphQLClient();
-
-  const { mutate } = useRenewContractMutation(client);
-
   const {
     onOpen: onOpenEndModal,
-    onClose,
+    onClose: onCloseEndModal,
     isOpen,
   } = useDisclosure({
     id: 'end-contract-modal',
@@ -75,24 +61,9 @@ export const ContractStatusSelect: React.FC<ContractStatusSelectProps> = ({
   } = useDisclosure({
     id: 'start-contract-modal',
   });
-  const contractStatusOptions: SelectOption<ContractStatus>[] = [
-    { label: 'Draft', value: ContractStatus.Draft },
-    { label: 'Ended', value: ContractStatus.Ended },
-    { label: 'Live', value: ContractStatus.Live },
-    { label: 'Out of contract', value: ContractStatus.OutOfContract },
-    {
-      label: contractStarted
-        ? `Live ${DateTimeUtils.format(
-            contractStarted,
-            DateTimeUtils.defaultFormatShortString,
-          )}`
-        : 'Scheduled',
-      value: ContractStatus.Scheduled,
-    },
-  ];
+  const client = getGraphQLClient();
 
-  const selected = contractStatusOptions.find((e) => e.value === status);
-  const icon = contractOptionIcon?.[status];
+  const { mutate } = useRenewContractMutation(client);
 
   const getStatusDisplay = useMemo(() => {
     let icon, text;
@@ -107,8 +78,12 @@ export const ContractStatusSelect: React.FC<ContractStatusSelectProps> = ({
         text = 'Make live';
         break;
       case ContractStatus.OutOfContract:
-        icon = <RefreshCw02 color='gray.500' mr={2} />;
+        icon = <RefreshCw05 color='gray.500' mr={2} />;
         text = 'Renew contract';
+        break;
+      case ContractStatus.Scheduled:
+        icon = null;
+        text = null;
         break;
       default:
         icon = null;
@@ -142,40 +117,33 @@ export const ContractStatusSelect: React.FC<ContractStatusSelectProps> = ({
   };
 
   return (
-    <>
-      <Menu>
-        <MenuButton
-          maxW={'auto'}
-          color={`${statusColorScheme[status]}.800`}
-          borderColor={`${statusColorScheme[status]}.800`}
-          bg={`${statusColorScheme[status]}.50`}
-        >
-          <Tag
-            as={Flex}
-            alignItems='center'
-            gap={1}
-            variant='outline'
-            whiteSpace='nowrap'
-            colorScheme={statusColorScheme[status]}
-            color={`${statusColorScheme[status]}.700`}
-          >
-            {icon && (
-              <Flex alignItems='center' boxSize={3}>
-                {icon}
-              </Flex>
-            )}
-
-            {selected?.label}
-          </Tag>
-        </MenuButton>
-        <MenuList minW={'150px'}>
-          <MenuItem onClick={handleChangeStatus}>{getStatusDisplay}</MenuItem>
-        </MenuList>
-      </Menu>
-
+    <div className='flex items-center gap-2 ml-2'>
+      <ContractStatusTag
+        status={status}
+        contractStarted={serviceStarted}
+        statusContent={getStatusDisplay}
+        isEndModalOpen={isOpen}
+        onHandleStatusChange={handleChangeStatus}
+      />
+      <ContractMenu
+        onOpenEditModal={onOpenEditModal}
+        statusContent={getStatusDisplay}
+        onHandleStatusChange={handleChangeStatus}
+        status={status}
+        contractId={contractId}
+        renewsAt={renewsAt}
+        onUpdateContract={onUpdateContract}
+        serviceStarted={serviceStarted}
+        organizationName={organizationName}
+        nextInvoiceDate={nextInvoiceDate}
+        isStartModalOpen={isStartModalOpen}
+        isEndModalOpen={isOpen}
+        onCloseEndModal={onCloseEndModal}
+        onCloseStartModal={onCloseStartModal}
+      />
       <ContractEndModal
         isOpen={isOpen}
-        onClose={onClose}
+        onClose={onCloseEndModal}
         contractId={contractId}
         organizationName={organizationName}
         renewsAt={renewsAt}
@@ -191,6 +159,6 @@ export const ContractStatusSelect: React.FC<ContractStatusSelectProps> = ({
         serviceStarted={serviceStarted}
         onUpdateContract={onUpdateContract}
       />
-    </>
+    </div>
   );
 };

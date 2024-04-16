@@ -89,6 +89,7 @@ const AccountPanelComponent = () => {
         contractStatus: ContractStatus.Draft,
         contractLineItems: [],
         billingEnabled: false,
+        approved: false,
       };
       queryClient.cancelQueries({ queryKey });
       queryClient.setQueryData<GetContractsQuery>(queryKey, (currentCache) => {

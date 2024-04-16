@@ -58,7 +58,7 @@ const columns: Record<string, Column> = {
     cell: (props) => <IssueDateCell value={props.getValue()} />,
     skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
   }),
-  ISSUE_DATE_PAST: columnHelper.accessor('metadata.created', {
+  ISSUE_DATE_PAST: columnHelper.accessor('issued', {
     id: 'INVOICE_CREATED_AT',
     minSize: 50,
     maxSize: 50,
