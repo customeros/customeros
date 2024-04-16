@@ -2,7 +2,12 @@ import { useState, useEffect, PropsWithChildren } from 'react';
 
 import { cn } from '@ui/utils/cn';
 import { Card } from '@ui/presentation/Card';
-import { Modal, ModalContent } from '@ui/overlay/Modal/Modal';
+import {
+  Modal,
+  ModalPortal,
+  ModalContent,
+  ModalOverlay,
+} from '@ui/overlay/Modal/Modal';
 import {
   useTimelineEventPreviewStateContext,
   useTimelineEventPreviewMethodsContext,
@@ -46,33 +51,38 @@ export const TimelinePreviewBackdrop = ({
           backdropFilter: isMounted ? 'blur(3px)' : 'blur(0)',
         }}
       >
-        <ModalContent
-          className={cn(
-            modalContent?.__typename === 'Invoice' ? 'w-[650px]' : 'w-[544px]',
-            modalContent?.__typename === 'Invoice' ? 'h-[90vh]' : 'h-auto',
-            'absolute top-4 min-w-[544px] bg-transparent',
-          )}
-          onPointerDownOutside={avoidDefaultDomBehavior}
-          onInteractOutside={avoidDefaultDomBehavior}
-          onOpenAutoFocus={(e) => e.preventDefault()}
-        >
-          <Card
+        <ModalPortal container={document.getElementById('main-section')}>
+          <ModalOverlay />
+          <ModalContent
             className={cn(
               modalContent?.__typename === 'Invoice'
                 ? 'w-[650px]'
                 : 'w-[544px]',
               modalContent?.__typename === 'Invoice' ? 'h-[90vh]' : 'h-auto',
-              'absolute mx-auto top-4 min-w-[544px] cursor-default',
+              'absolute top-4 min-w-[544px] bg-transparent',
             )}
-            id='timeline-preview-card'
-            onMouseDown={(e) => {
-              e.stopPropagation();
-            }}
-            onClick={(e) => e.stopPropagation()}
+            onPointerDownOutside={avoidDefaultDomBehavior}
+            onInteractOutside={avoidDefaultDomBehavior}
+            onOpenAutoFocus={(e) => e.preventDefault()}
           >
-            {children}
-          </Card>
-        </ModalContent>
+            <Card
+              className={cn(
+                modalContent?.__typename === 'Invoice'
+                  ? 'w-[650px]'
+                  : 'w-[544px]',
+                modalContent?.__typename === 'Invoice' ? 'h-[90vh]' : 'h-auto',
+                'absolute mx-auto top-4 min-w-[544px] cursor-default',
+              )}
+              id='timeline-preview-card'
+              onMouseDown={(e) => {
+                e.stopPropagation();
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {children}
+            </Card>
+          </ModalContent>
+        </ModalPortal>
       </div>
     </Modal>
   );

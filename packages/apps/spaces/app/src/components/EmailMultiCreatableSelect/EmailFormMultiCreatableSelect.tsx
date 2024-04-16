@@ -1,5 +1,4 @@
 import { useParams } from 'next/navigation';
-import { OptionsOrGroups } from 'react-select';
 import { useField } from 'react-inverted-form';
 import React, {
   useMemo,
@@ -8,26 +7,28 @@ import React, {
   forwardRef,
   useCallback,
 } from 'react';
-
-import { GroupBase, OptionProps, MultiValueProps } from 'chakra-react-select';
+import {
+  GroupBase,
+  OptionProps,
+  SelectInstance,
+  OptionsOrGroups,
+  MultiValueProps,
+  components as reactSelectComponents,
+} from 'react-select';
 
 import { SelectOption } from '@ui/utils';
-import { Text } from '@ui/typography/Text';
 import { Copy01 } from '@ui/media/icons/Copy01';
-import { IconButton } from '@ui/form/IconButton';
-import { chakraComponents } from '@ui/form/SyncSelect';
+import { IconButton } from '@ui/form/IconButton/IconButton';
 import { getName } from '@spaces/utils/getParticipantsName';
-import { SelectInstance } from '@ui/form/SyncSelect/Select';
 import { Contact, ComparisonOperator } from '@graphql/types';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
-import { multiCreatableSelectStyles } from '@ui/form/MultiCreatableSelect/styles';
+import { emailRegex } from '@organization/src/components/Timeline/PastZone/events/email/utils';
+import { MultiValueWithActionMenu } from '@shared/components/EmailMultiCreatableSelect/MultiValueWithActionMenu';
 import {
   FormSelectProps,
   MultiCreatableSelect,
-} from '@ui/form/MultiCreatableSelect';
-import { emailRegex } from '@organization/src/components/Timeline/PastZone/events/email/utils';
-import { MultiValueWithActionMenu } from '@shared/components/EmailMultiCreatableSelect/MultiValueWithActionMenu';
+} from '@ui/form/MultiCreatableSelect/MultiCreatableSelect2';
 import {
   GetContactsEmailListDocument,
   useGetContactsEmailListQuery,
@@ -168,23 +169,20 @@ export const EmailFormMultiCreatableSelect = forwardRef<
       !rest?.data?.label && rest?.data?.value && `${rest.data.value}`;
 
     const noEmail = rest?.data?.label && !rest?.data?.value && (
-      <Text>
+      <p>
         {rest.data.label} -
-        <Text as='span' color='gray.500' ml={1}>
-          [No email for this contact]
-        </Text>
-      </Text>
+        <span className='text-gray-500 ml-1'>[No email for this contact]</span>
+      </p>
     );
 
     return (
-      <chakraComponents.Option {...rest}>
+      <reactSelectComponents.Option {...rest}>
         {fullLabel || emailOnly || noEmail}
         {rest?.isFocused && (
           <IconButton
+            className='h-5 p-0 self-end float-end'
             aria-label='Copy'
             size='xs'
-            p={0}
-            height={5}
             variant='ghost'
             icon={<Copy01 boxSize={3} color='gray.500' />}
             onClick={(e) => {
@@ -193,15 +191,13 @@ export const EmailFormMultiCreatableSelect = forwardRef<
             }}
           />
         )}
-      </chakraComponents.Option>
+      </reactSelectComponents.Option>
     );
   }, []);
 
-  const components = useMemo(
-    () => ({
-      MultiValueRemove: () => null,
-      LoadingIndicator: () => null,
-      MultiValue: (multiValueProps: MultiValueProps<SelectOption>) => (
+  const MultiValue = useCallback(
+    (multiValueProps: MultiValueProps<SelectOption>) => {
+      return (
         <MultiValueWithActionMenu
           {...multiValueProps}
           name={name}
@@ -209,9 +205,18 @@ export const EmailFormMultiCreatableSelect = forwardRef<
           navigateAfterAddingToPeople={navigateAfterAddingToPeople}
           existingContacts={existingContacts}
         />
-      ),
+      );
+    },
+    [name, formId, navigateAfterAddingToPeople],
+  );
+
+  const components = useMemo(
+    () => ({
+      MultiValueRemove: () => null,
+      LoadingIndicator: () => null,
+      MultiValue,
     }),
-    [existingContacts, name, formId],
+    [MultiValue],
   );
 
   return (
@@ -221,10 +226,13 @@ export const EmailFormMultiCreatableSelect = forwardRef<
       formId={formId}
       name={name}
       value={value}
+      classNames={{
+        multiValueLabel: () =>
+          'multiValueClass px-2 bg-transparent text-sm shadow-md border font-semibold rounded-lg border-gray-200 max-h-[12rem] cursor-pointer z-50',
+      }}
       onBlur={(e) => handleBlur(e.target.value)}
       onChange={onChange}
       Option={Option}
-      customStyles={multiCreatableSelectStyles}
       components={components}
       loadOptions={(inputValue: string, callback) => {
         getFilteredSuggestions(inputValue, callback);

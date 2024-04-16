@@ -1,9 +1,10 @@
+import { components } from 'react-select';
 import { useField } from 'react-inverted-form';
+import { MultiValueProps } from 'react-select';
 import React, { FC, useState, ReactEventHandler } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 
 import { useLocalStorage } from 'usehooks-ts';
-import { MultiValueProps } from 'chakra-react-select';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { cn } from '@ui/utils/cn';
@@ -11,21 +12,14 @@ import { SelectOption } from '@ui/utils';
 import { Input } from '@ui/form/Input/Input2';
 import { Edit03 } from '@ui/media/icons/Edit03';
 import { Copy01 } from '@ui/media/icons/Copy01';
-import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { toastSuccess } from '@ui/presentation/Toast';
-import { chakraComponents } from '@ui/form/SyncSelect';
 import { validateEmail } from '@shared/util/emailValidation';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
+import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 import { useContactCardMeta } from '@organization/src/state/ContactCardMeta.atom';
 import { invalidateQuery } from '@organization/src/components/Tabs/panels/PeoplePanel/util';
 import { useCreateContactMutation } from '@organization/src/graphql/createContact.generated';
-import {
-  Menu,
-  MenuItem,
-  MenuButton,
-  MenuList as ChakraMenuList,
-} from '@ui/overlay/Menu';
 import { useAddOrganizationToContactMutation } from '@organization/src/graphql/addContactToOrganization.generated';
 
 interface MultiValueWithActionMenuProps extends MultiValueProps<SelectOption> {
@@ -42,7 +36,7 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
   navigateAfterAddingToPeople,
   ...rest
 }) => {
-  const [showEditInput, setEditInput] = useState(false);
+  const [editInput, setEditInput] = useState(false);
 
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
@@ -68,6 +62,7 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
         : rest.data.label?.trim() === (data as SelectOption)?.label?.trim();
     },
   );
+
   const validationMessage = validateEmail(rest?.data?.value);
 
   const isContactWithoutEmail =
@@ -126,7 +121,7 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
     );
   };
 
-  if (showEditInput) {
+  if (editInput) {
     const handleChangeValue: ReactEventHandler<HTMLElement> = (event) => {
       const newValue = value.map((e: SelectOption<string>) =>
         e.value === rest?.data?.value
@@ -141,125 +136,93 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
     };
 
     return (
-      <Tooltip label={validationMessage ? validationMessage : ''}>
-        <Input
-          autoFocus
-          size='xs'
-          className='w-auto inline text-warning-700 h-8 text-sm'
-          variant='unstyled'
-          onBlur={(e) => {
+      <Input
+        className='w-auto inline text-warning-700 h-8'
+        variant='unstyled'
+        onBlur={(e) => {
+          handleChangeValue(e);
+        }}
+        onKeyDown={(e) => {
+          e.stopPropagation();
+          if (e.key === 'Enter') {
             handleChangeValue(e);
-          }}
-          onKeyDown={(e) => {
-            e.stopPropagation();
-            if (e.key === 'Enter') {
-              handleChangeValue(e);
-            }
-          }}
-          defaultValue={rest?.data?.value}
-        />
-      </Tooltip>
+          }
+        }}
+        defaultValue={rest?.data?.value}
+      />
     );
   }
+  const handleEditInput = () => {
+    setEditInput(true);
+  };
 
   return (
     <Menu>
-      <Tooltip label={validationMessage ? validationMessage : ''}>
-        <MenuButton
-          onClick={() => {}}
-          className='text-sm'
-          sx={{
-            '&[aria-expanded="false"] > span > span': {
-              bg: isContactWithoutEmail
-                ? 'warning.50 !important'
-                : 'gray.50 !important',
-              color: isContactWithoutEmail
-                ? 'warning.700 !important'
-                : 'gray.700 !important',
-              borderColor: isContactWithoutEmail
-                ? 'warning.200 !important'
-                : 'gray.200 !important',
-            },
-            '&[aria-expanded="true"] > span > span': {
-              bg: isContactWithoutEmail
-                ? 'warning.50 !important'
-                : 'primary.50 !important',
-              color: isContactWithoutEmail
-                ? 'warning.700 !important'
-                : 'primary.700 !important',
-              borderColor: isContactWithoutEmail
-                ? 'warning.200 !important'
-                : 'primary.200 !important',
-            },
-          }}
-        >
-          <chakraComponents.MultiValue
-            {...rest}
-            className={cn('text-sm', {
-              'text-warning-700': isContactWithoutEmail,
-              'bg-warning-50': isContactWithoutEmail,
-              'border-warning-200': isContactWithoutEmail,
-            })}
-          >
-            {rest.children}
-          </chakraComponents.MultiValue>
-        </MenuButton>
-      </Tooltip>
-
-      <ChakraMenuList className='max-w=[300px] p-2'>
-        <MenuItem
-          className=' flex justify-between items-center rounded-md border border-transparent hover:bg-gray-50 hover:border-gray-100 focus:border-gray-200'
-          onClick={(e) => {
-            e.stopPropagation();
-            setEditInput(true);
-          }}
-        >
-          Edit address
-          <Edit03 boxSize={3} color='gray.500' ml={2} />
-        </MenuItem>
-        {rest?.data?.value ? (
+      <MenuButton
+        className={cn(
+          isContactWithoutEmail
+            ? '[&_.multiValueClass]:data-[state=closed]:bg-warning-50 [&_.multiValueClass]:data-[state=closed]:text-warning-700 [&_.multiValueClass]:data-[state=closed]:border-warning-200 [&_.multiValueClass]:data-[state=open]:bg-warning-50 [&_.multiValueClass]:data-[state=open]:text-warning-700 [&_.multiValueClass]:data-[state=open]:border-warning-200'
+            : '[&_.multiValueClass]:data-[state=closed]:bg-gray-50 [&_.multiValueClass]:data-[state=closed]:text-gray-700 [&_.multiValueClass]:data-[state=closed]:border-gray-200 [&_.multiValueClass]:data-[state=open]:bg-primary-50 [&_.multiValueClass]:data-[state=open]:text-primary-700 [&_.multiValueClass]:data-[state=open]:last:border-primary-200',
+        )}
+      >
+        <components.MultiValue {...rest}>{rest.children}</components.MultiValue>
+      </MenuButton>
+      <div onPointerDown={(e) => e.stopPropagation()}>
+        <MenuList className='max-w-[300px] p-2' side='bottom' align='start'>
           <MenuItem
-            className=' flex justify-between items-center rounded-md border border-transparent hover:bg-gray-50 hover:border-gray-100 focus:border-gray-200'
-            onClick={(e) => {
-              e.stopPropagation();
-              copyToClipboard(rest?.data?.value, 'Email copied');
+            className='flex justify-between items-center rounded-md border border-transparent hover:bg-gray-50 hover:border-gray-100 focus:border-gray-200'
+            onPointerDown={(e) => {
+              handleEditInput();
             }}
           >
-            {rest?.data?.value}
-            <Copy01 boxSize={3} color='gray.500' ml={2} />
+            Edit address
+            <Edit03 boxSize={3} color='gray.500' ml={2} />
           </MenuItem>
-        ) : (
-          <MenuItem
-            className='rounded-md border border-transparent hover:bg-gray-50 hover:border-gray-100 focus:border-gray-200'
-            onClick={() =>
-              isContactInOrg &&
-              handleNavigateToContact(isContactInOrg.id, 'email')
-            }
-          >
-            Add email in People list
-          </MenuItem>
-        )}
+          {rest?.data?.value ? (
+            <MenuItem
+              className='flex justify-between items-center rounded-md border border-transparent hover:bg-gray-50 hover:border-gray-100 focus:border-gray-200'
+              onPointerDown={(e) => {
+                copyToClipboard(rest?.data?.value, 'Email copied');
+              }}
+            >
+              {rest?.data?.value}
+              <Copy01 boxSize={3} color='gray.500' ml={2} />
+            </MenuItem>
+          ) : (
+            <MenuItem
+              className='rounded-md border border-transparent hover:bg-gray-50 hover:border-gray-100 focus:border-gray-200'
+              onPointerDown={(e) => {
+                isContactInOrg &&
+                  handleNavigateToContact(isContactInOrg.id, 'email');
+              }}
+            >
+              Add email in People list
+            </MenuItem>
+          )}
 
-        <MenuItem
-          className='rounded-md border border-transparent hover:bg-gray-50 hover:border-gray-100 focus:border-gray-200'
-          onClick={() => {
-            const newValue = (
-              (rest?.selectProps?.value as Array<SelectOption>) ?? []
-            )?.filter((e: SelectOption) => e.value !== rest?.data?.value);
-            onChange(newValue);
-          }}
-        >
-          Remove address
-        </MenuItem>
-        {!isContactInOrg && (
           <MenuItem
-            onClick={handleAddContact}
             className='rounded-md border border-transparent hover:bg-gray-50 hover:border-gray-100 focus:border-gray-200'
+            onPointerDown={(e) => {
+              const newValue = (
+                (rest?.selectProps?.value as Array<SelectOption>) ?? []
+              )?.filter((e: SelectOption) => e.value !== rest?.data?.value);
+              onChange(newValue);
+            }}
           >
-            Add to people
+            Remove address
           </MenuItem>
-        )}
-      </ChakraMenuList>
+          {!isContactInOrg && (
+            <MenuItem
+              className='rounded-md border border-transparent hover:bg-gray-50 hover:border-gray-100 focus:border-gray-200'
+              onPointerDown={(e) => {
+                handleAddContact();
+              }}
+            >
+              Add to people
+            </MenuItem>
+          )}
+        </MenuList>
+      </div>
     </Menu>
   );
 };

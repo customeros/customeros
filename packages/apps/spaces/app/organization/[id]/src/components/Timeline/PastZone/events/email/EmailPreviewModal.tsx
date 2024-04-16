@@ -283,7 +283,8 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
           onClose={handleClosePreview}
         />
 
-        <ConfirmDeleteDialog
+        {/* this modal is under the second one and has no effect  */}
+        {/* <ConfirmDeleteDialog
           label='Discard this email?'
           description='Saving draft emails is not possible at the moment. Would you like to continue to discard this email?'
           confirmButtonLabel='Discard email'
@@ -291,7 +292,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
           onClose={onClose}
           onConfirm={handleExitEditorAndCleanData}
           isLoading={false}
-        />
+        /> */}
 
         <ConfirmDeleteDialog
           colorScheme='primary'

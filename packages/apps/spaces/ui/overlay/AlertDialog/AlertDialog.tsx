@@ -30,10 +30,14 @@ export const AlertDialog = forwardRef<
   );
 });
 
-export const AlertDialogPortal = ({ children }: AlertDialogGenericProps) => {
+export const AlertDialogPortal = ({
+  children,
+  ...props
+}: AlertDialogGenericProps) => {
   return (
     <RadixAlertDialog.Portal
       container={typeof window !== 'undefined' ? document?.body : null}
+      {...props}
     >
       {children}
     </RadixAlertDialog.Portal>

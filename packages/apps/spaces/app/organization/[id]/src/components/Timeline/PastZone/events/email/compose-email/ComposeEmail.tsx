@@ -2,7 +2,6 @@
 import React, { FC, useRef, PropsWithChildren } from 'react';
 
 import { cn } from '@ui/utils/cn';
-import { Box } from '@ui/layout/Box';
 import { RichTextEditor } from '@ui/form/RichTextEditor/RichTextEditor';
 import { BasicEditorToolbar } from '@ui/form/RichTextEditor/menu/BasicEditorToolbar';
 import {
@@ -58,7 +57,7 @@ export const ComposeEmail: FC<ComposeEmailProps> = ({
           <ModeChangeButtons handleModeChange={onModeChange} />
         </div>
       )}
-      <Box ref={myRef}>
+      <div ref={myRef}>
         <ParticipantsSelectGroup
           to={to}
           cc={cc}
@@ -66,10 +65,12 @@ export const ComposeEmail: FC<ComposeEmailProps> = ({
           modal={modal}
           formId={formId}
         />
-      </Box>
-      <Box
-        maxHeight={modal ? `calc(50vh - ${height}px) !important` : 'auto'}
-        w='full'
+      </div>
+      <div
+        className='w-full'
+        style={{
+          maxHeight: modal ? `calc(50vh - ${height}px) !important` : 'auto',
+        }}
       >
         <RichTextEditor
           {...remirrorProps}
@@ -81,7 +82,7 @@ export const ComposeEmail: FC<ComposeEmailProps> = ({
           <KeymapperCreate onCreate={onSubmit} />
           <BasicEditorToolbar isSending={isSending} onSubmit={onSubmit} />
         </RichTextEditor>
-      </Box>
+      </div>
       {/*{isUploadAreaOpen && (*/}
       {/*  <FileUpload*/}
       {/*    files={files}*/}

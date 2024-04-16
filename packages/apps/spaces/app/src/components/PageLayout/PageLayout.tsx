@@ -1,20 +1,14 @@
-import { Grid } from '@ui/layout/Grid';
-
 interface PageLayoutProps {
   children: React.ReactNode;
 }
 
 export const PageLayout = ({ children }: PageLayoutProps) => {
   return (
-    <Grid
-      h='100vh'
-      bg='gray.25'
-      templateColumns='200px 1fr'
-      templateRows='1fr'
-      transition='all ease 0.25s'
-      templateAreas={`"sidebar content"`}
+    <div
+      className='h-screen grid bg-gray-25 grid-cols-[200px_minmax(100px,_1fr)] grid-rows-1fr gap-4 transition-all ease-in-out duration-250'
+      style={{ gridTemplateAreas: `"sidebar content"` }}
     >
       {children}
-    </Grid>
+    </div>
   );
 };

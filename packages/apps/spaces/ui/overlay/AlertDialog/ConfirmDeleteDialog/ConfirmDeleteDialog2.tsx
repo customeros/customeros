@@ -9,6 +9,7 @@ import {
   AlertDialogBody,
   AlertDialogFooter,
   AlertDialogHeader,
+  AlertDialogPortal,
   AlertDialogContent,
   AlertDialogOverlay,
   AlertDialogCloseButton,
@@ -51,58 +52,60 @@ export const ConfirmDeleteDialog = ({
 
   return (
     <AlertDialog isOpen={isOpen} onClose={onClose} className='z-[99999]'>
-      <AlertDialogOverlay>
-        <AlertDialogContent className='rounded-xl bg-no-repeat bg-[url(/backgrounds/organization/circular-bg-pattern.png)]'>
-          {!hideCloseButton && <AlertDialogCloseIconButton />}
-          <FeaturedIcon size='lg' colorScheme={colorScheme as string}>
-            {icon ? icon : <Icons.Trash1 />}
-          </FeaturedIcon>
-          <AlertDialogHeader className='text-lg font-bold mt-4'>
-            <p className='pb-0'>{label}</p>
-            {description && (
-              <p className='mt-1 text-base text-gray-700 font-normal'>
-                {description}
-              </p>
-            )}
-          </AlertDialogHeader>
-          {body && <AlertDialogBody>{body}</AlertDialogBody>}
+      <AlertDialogPortal>
+        <AlertDialogOverlay>
+          <AlertDialogContent className='rounded-xl bg-no-repeat bg-[url(/backgrounds/organization/circular-bg-pattern.png)]'>
+            {!hideCloseButton && <AlertDialogCloseIconButton />}
+            <FeaturedIcon size='lg' colorScheme={colorScheme as string}>
+              {icon ? icon : <Icons.Trash1 />}
+            </FeaturedIcon>
+            <AlertDialogHeader className='text-lg font-bold mt-4'>
+              <p className='pb-0'>{label}</p>
+              {description && (
+                <p className='mt-1 text-base text-gray-700 font-normal'>
+                  {description}
+                </p>
+              )}
+            </AlertDialogHeader>
+            {body && <AlertDialogBody>{body}</AlertDialogBody>}
 
-          <AlertDialogFooter>
-            <AlertDialogCloseButton>
-              <Button
-                ref={cancelRef}
-                isDisabled={isLoading}
-                variant='outline'
-                colorScheme={'gray'}
-                size='md'
-                className='bg-white w-full'
-              >
-                {cancelButtonLabel}
-              </Button>
-            </AlertDialogCloseButton>
-            <AlertDialogConfirmButton>
-              <Button
-                className='w-full'
-                variant='outline'
-                size='md'
-                colorScheme={colorScheme || 'error'}
-                onClick={onConfirm}
-                isLoading={isLoading}
-                loadingText={loadingButtonLabel}
-                spinner={
-                  <Spinner
-                    size={'sm'}
-                    label='deleting'
-                    className='text-error-300 fill-error-700'
-                  />
-                }
-              >
-                {confirmButtonLabel}
-              </Button>
-            </AlertDialogConfirmButton>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialogOverlay>
+            <AlertDialogFooter>
+              <AlertDialogCloseButton>
+                <Button
+                  ref={cancelRef}
+                  isDisabled={isLoading}
+                  variant='outline'
+                  colorScheme={'gray'}
+                  size='md'
+                  className='bg-white w-full'
+                >
+                  {cancelButtonLabel}
+                </Button>
+              </AlertDialogCloseButton>
+              <AlertDialogConfirmButton>
+                <Button
+                  className='w-full'
+                  variant='outline'
+                  size='md'
+                  colorScheme={colorScheme || 'error'}
+                  onClick={onConfirm}
+                  isLoading={isLoading}
+                  loadingText={loadingButtonLabel}
+                  spinner={
+                    <Spinner
+                      size={'sm'}
+                      label='deleting'
+                      className='text-error-300 fill-error-700'
+                    />
+                  }
+                >
+                  {confirmButtonLabel}
+                </Button>
+              </AlertDialogConfirmButton>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialogPortal>
     </AlertDialog>
   );
 };

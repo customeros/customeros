@@ -219,3 +219,10 @@ export const getMenuListClassNames = (className?: string) => {
 
   return twMerge(defaultStyle, className);
 };
+
+export const getValueContainerClassNames = (className?: string) => {
+  const defaultStyle =
+    'overflow-visible max-h-[86px] flex items-center justify-center';
+
+  return twMerge(defaultStyle, className);
+};
