@@ -169,9 +169,12 @@ func (h *InvoiceEventHandler) fillOffCyclePrepaidInvoice(ctx context.Context, te
 		if sliEntity.StartedAt.After(referenceDate) || sliEntity.StartedAt.Equal(referenceDate) {
 			continue
 		}
-		// One time invoiced SLIs are not applicable
+		// One time invoiced and cancelled SLIs are not applicable
 		if sliEntity.Billed == neo4jenum.BilledTypeOnce {
 			if sliEntity.Quantity <= 0 || sliEntity.Price <= 0 {
+				continue
+			}
+			if sliEntity.Canceled {
 				continue
 			}
 			ilDbNodeAndInvoiceId, err := h.repositories.Neo4jRepositories.InvoiceLineReadRepository.GetLatestInvoiceLineWithInvoiceIdByServiceLineItemParentId(ctx, tenant, sliEntity.ParentID)
