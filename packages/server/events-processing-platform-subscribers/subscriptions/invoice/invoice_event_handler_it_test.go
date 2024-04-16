@@ -1461,7 +1461,7 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_OffCycleInvoice_Downgrade(
 
 	// EXECUTE
 	err := invoiceEventHandler.onInvoiceFillRequestedV1(context.Background(), invoiceFillRequestedEvent)
-	require.Nil(t, err, "invoicing failed")
+	require.Nil(t, err)
 
 	// VERIFY
 	require.True(t, calledGrpc)
