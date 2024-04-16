@@ -315,34 +315,6 @@ type Calendar struct {
 	AppSource     string       `json:"appSource"`
 }
 
-type ColumnDef struct {
-	ID            string      `json:"id"`
-	Type          *ViewType   `json:"type,omitempty"`
-	ColumnType    *ColumnType `json:"columnType,omitempty"`
-	IsFilterable  *bool       `json:"isFilterable,omitempty"`
-	IsSortable    *bool       `json:"isSortable,omitempty"`
-	IsDefaultSort *bool       `json:"isDefaultSort,omitempty"`
-	IsVisible     *bool       `json:"isVisible,omitempty"`
-	CreatedAt     time.Time   `json:"createdAt"`
-	UpdatedAt     time.Time   `json:"updatedAt"`
-	CreatedBy     *User       `json:"createdBy,omitempty"`
-}
-
-func (ColumnDef) IsNode()            {}
-func (this ColumnDef) GetID() string { return this.ID }
-
-type ColumnType struct {
-	ID         string    `json:"id"`
-	Name       *string   `json:"name,omitempty"`
-	ViewTypeID *string   `json:"viewTypeId,omitempty"`
-	CreatedAt  time.Time `json:"createdAt"`
-	UpdatedAt  time.Time `json:"updatedAt"`
-	CreatedBy  *User     `json:"createdBy,omitempty"`
-}
-
-func (ColumnType) IsNode()            {}
-func (this ColumnType) GetID() string { return this.ID }
-
 type Comment struct {
 	ID            string            `json:"id"`
 	Content       *string           `json:"content,omitempty"`
@@ -2670,38 +2642,30 @@ type SuggestedMergeOrganization struct {
 }
 
 type TableViewDef struct {
-	ID        string       `json:"id"`
-	Name      string       `json:"name"`
-	Order     *int         `json:"order,omitempty"`
-	Type      *ViewType    `json:"type,omitempty"`
-	Icon      *string      `json:"icon,omitempty"`
-	Columns   []*ColumnDef `json:"columns,omitempty"`
-	Filters   *string      `json:"filters,omitempty"`
-	Sorting   *string      `json:"sorting,omitempty"`
-	CreatedAt time.Time    `json:"createdAt"`
-	UpdatedAt time.Time    `json:"updatedAt"`
-	CreatedBy *User        `json:"createdBy,omitempty"`
+	ID        string         `json:"id"`
+	Name      string         `json:"name"`
+	TableType *TableViewType `json:"tableType,omitempty"`
+	Order     *int           `json:"order,omitempty"`
+	Icon      *string        `json:"icon,omitempty"`
+	Columns   []ColumnType   `json:"columns"`
+	Filters   *string        `json:"filters,omitempty"`
+	Sorting   *string        `json:"sorting,omitempty"`
+	CreatedAt time.Time      `json:"createdAt"`
+	UpdatedAt time.Time      `json:"updatedAt"`
 }
 
 func (TableViewDef) IsNode()            {}
 func (this TableViewDef) GetID() string { return this.ID }
 
-type TableViewDefPage struct {
-	Content        []*TableViewDef `json:"content"`
-	TotalPages     int             `json:"totalPages"`
-	TotalElements  int64           `json:"totalElements"`
-	TotalAvailable int64           `json:"totalAvailable"`
+type TableViewDefInput struct {
+	ID      string       `json:"id"`
+	Name    string       `json:"name"`
+	Order   int          `json:"order"`
+	Icon    *string      `json:"icon,omitempty"`
+	Columns []ColumnType `json:"columns"`
+	Filters string       `json:"filters"`
+	Sorting string       `json:"sorting"`
 }
-
-func (TableViewDefPage) IsPages() {}
-
-// The total number of pages included in the query response.
-// **Required.**
-func (this TableViewDefPage) GetTotalPages() int { return this.TotalPages }
-
-// The total number of elements included in the query response.
-// **Required.**
-func (this TableViewDefPage) GetTotalElements() int64 { return this.TotalElements }
 
 type Tag struct {
 	ID        string     `json:"id"`
@@ -2996,17 +2960,6 @@ type UserUpdateInput struct {
 	ProfilePhotoURL *string `json:"profilePhotoUrl,omitempty"`
 }
 
-type ViewType struct {
-	ID        string    `json:"id"`
-	Name      *string   `json:"name,omitempty"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
-	CreatedBy *User     `json:"createdBy,omitempty"`
-}
-
-func (ViewType) IsNode()            {}
-func (this ViewType) GetID() string { return this.ID }
-
 type Workspace struct {
 	ID            string     `json:"id"`
 	Name          string     `json:"name"`
@@ -3258,6 +3211,97 @@ func (e *ChargePeriod) UnmarshalGQL(v interface{}) error {
 }
 
 func (e ChargePeriod) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type ColumnType string
+
+const (
+	ColumnTypeInvoicesIssueDate              ColumnType = "INVOICES_ISSUE_DATE"
+	ColumnTypeInvoicesIssueDatePast          ColumnType = "INVOICES_ISSUE_DATE_PAST"
+	ColumnTypeInvoicesDueDate                ColumnType = "INVOICES_DUE_DATE"
+	ColumnTypeInvoicesContract               ColumnType = "INVOICES_CONTRACT"
+	ColumnTypeInvoicesBillingCycle           ColumnType = "INVOICES_BILLING_CYCLE"
+	ColumnTypeInvoicesPaymentStatus          ColumnType = "INVOICES_PAYMENT_STATUS"
+	ColumnTypeInvoicesInvoiceNumber          ColumnType = "INVOICES_INVOICE_NUMBER"
+	ColumnTypeInvoicesAmount                 ColumnType = "INVOICES_AMOUNT"
+	ColumnTypeInvoicesInvoiceStatus          ColumnType = "INVOICES_INVOICE_STATUS"
+	ColumnTypeInvoicesInvoicePreview         ColumnType = "INVOICES_INVOICE_PREVIEW"
+	ColumnTypeOrganizationsAvatar            ColumnType = "ORGANIZATIONS_AVATAR"
+	ColumnTypeOrganizationsName              ColumnType = "ORGANIZATIONS_NAME"
+	ColumnTypeOrganizationsWebsite           ColumnType = "ORGANIZATIONS_WEBSITE"
+	ColumnTypeOrganizationsRelationship      ColumnType = "ORGANIZATIONS_RELATIONSHIP"
+	ColumnTypeOrganizationsOnboardingStatus  ColumnType = "ORGANIZATIONS_ONBOARDING_STATUS"
+	ColumnTypeOrganizationsRenewalLikelihood ColumnType = "ORGANIZATIONS_RENEWAL_LIKELIHOOD"
+	ColumnTypeOrganizationsRenewlDate        ColumnType = "ORGANIZATIONS_RENEWL_DATE"
+	ColumnTypeOrganizationsForecastArr       ColumnType = "ORGANIZATIONS_FORECAST_ARR"
+	ColumnTypeOrganizationsOwner             ColumnType = "ORGANIZATIONS_OWNER"
+	ColumnTypeOrganizationsLastTouchpoint    ColumnType = "ORGANIZATIONS_LAST_TOUCHPOINT"
+	ColumnTypeRenewalsAvatar                 ColumnType = "RENEWALS_AVATAR"
+	ColumnTypeRenewalsName                   ColumnType = "RENEWALS_NAME"
+	ColumnTypeRenewalsRenewalLikelihood      ColumnType = "RENEWALS_RENEWAL_LIKELIHOOD"
+	ColumnTypeRenewalsRenewlDate             ColumnType = "RENEWALS_RENEWL_DATE"
+	ColumnTypeRenewalsForecastArr            ColumnType = "RENEWALS_FORECAST_ARR"
+	ColumnTypeRenewalsOwner                  ColumnType = "RENEWALS_OWNER"
+	ColumnTypeRenewalsLastTouchpoint         ColumnType = "RENEWALS_LAST_TOUCHPOINT"
+)
+
+var AllColumnType = []ColumnType{
+	ColumnTypeInvoicesIssueDate,
+	ColumnTypeInvoicesIssueDatePast,
+	ColumnTypeInvoicesDueDate,
+	ColumnTypeInvoicesContract,
+	ColumnTypeInvoicesBillingCycle,
+	ColumnTypeInvoicesPaymentStatus,
+	ColumnTypeInvoicesInvoiceNumber,
+	ColumnTypeInvoicesAmount,
+	ColumnTypeInvoicesInvoiceStatus,
+	ColumnTypeInvoicesInvoicePreview,
+	ColumnTypeOrganizationsAvatar,
+	ColumnTypeOrganizationsName,
+	ColumnTypeOrganizationsWebsite,
+	ColumnTypeOrganizationsRelationship,
+	ColumnTypeOrganizationsOnboardingStatus,
+	ColumnTypeOrganizationsRenewalLikelihood,
+	ColumnTypeOrganizationsRenewlDate,
+	ColumnTypeOrganizationsForecastArr,
+	ColumnTypeOrganizationsOwner,
+	ColumnTypeOrganizationsLastTouchpoint,
+	ColumnTypeRenewalsAvatar,
+	ColumnTypeRenewalsName,
+	ColumnTypeRenewalsRenewalLikelihood,
+	ColumnTypeRenewalsRenewlDate,
+	ColumnTypeRenewalsForecastArr,
+	ColumnTypeRenewalsOwner,
+	ColumnTypeRenewalsLastTouchpoint,
+}
+
+func (e ColumnType) IsValid() bool {
+	switch e {
+	case ColumnTypeInvoicesIssueDate, ColumnTypeInvoicesIssueDatePast, ColumnTypeInvoicesDueDate, ColumnTypeInvoicesContract, ColumnTypeInvoicesBillingCycle, ColumnTypeInvoicesPaymentStatus, ColumnTypeInvoicesInvoiceNumber, ColumnTypeInvoicesAmount, ColumnTypeInvoicesInvoiceStatus, ColumnTypeInvoicesInvoicePreview, ColumnTypeOrganizationsAvatar, ColumnTypeOrganizationsName, ColumnTypeOrganizationsWebsite, ColumnTypeOrganizationsRelationship, ColumnTypeOrganizationsOnboardingStatus, ColumnTypeOrganizationsRenewalLikelihood, ColumnTypeOrganizationsRenewlDate, ColumnTypeOrganizationsForecastArr, ColumnTypeOrganizationsOwner, ColumnTypeOrganizationsLastTouchpoint, ColumnTypeRenewalsAvatar, ColumnTypeRenewalsName, ColumnTypeRenewalsRenewalLikelihood, ColumnTypeRenewalsRenewlDate, ColumnTypeRenewalsForecastArr, ColumnTypeRenewalsOwner, ColumnTypeRenewalsLastTouchpoint:
+		return true
+	}
+	return false
+}
+
+func (e ColumnType) String() string {
+	return string(e)
+}
+
+func (e *ColumnType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ColumnType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ColumnType", str)
+	}
+	return nil
+}
+
+func (e ColumnType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
@@ -4916,6 +4960,49 @@ func (e *SortingDirection) UnmarshalGQL(v interface{}) error {
 }
 
 func (e SortingDirection) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type TableViewType string
+
+const (
+	TableViewTypeOrganizations TableViewType = "ORGANIZATIONS"
+	TableViewTypeInvoices      TableViewType = "INVOICES"
+	TableViewTypeRenewals      TableViewType = "RENEWALS"
+)
+
+var AllTableViewType = []TableViewType{
+	TableViewTypeOrganizations,
+	TableViewTypeInvoices,
+	TableViewTypeRenewals,
+}
+
+func (e TableViewType) IsValid() bool {
+	switch e {
+	case TableViewTypeOrganizations, TableViewTypeInvoices, TableViewTypeRenewals:
+		return true
+	}
+	return false
+}
+
+func (e TableViewType) String() string {
+	return string(e)
+}
+
+func (e *TableViewType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = TableViewType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid TableViewType", str)
+	}
+	return nil
+}
+
+func (e TableViewType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

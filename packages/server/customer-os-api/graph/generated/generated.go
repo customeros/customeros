@@ -40,8 +40,6 @@ type Config struct {
 
 type ResolverRoot interface {
 	Analysis() AnalysisResolver
-	ColumnDef() ColumnDefResolver
-	ColumnType() ColumnTypeResolver
 	Comment() CommentResolver
 	Contact() ContactResolver
 	Contract() ContractResolver
@@ -72,9 +70,7 @@ type ResolverRoot interface {
 	Reminder() ReminderResolver
 	ServiceLineItem() ServiceLineItemResolver
 	SlackChannel() SlackChannelResolver
-	TableViewDef() TableViewDefResolver
 	User() UserResolver
-	ViewType() ViewTypeResolver
 }
 
 type DirectiveRoot struct {
@@ -187,28 +183,6 @@ type ComplexityRoot struct {
 		Source        func(childComplexity int) int
 		SourceOfTruth func(childComplexity int) int
 		UpdatedAt     func(childComplexity int) int
-	}
-
-	ColumnDef struct {
-		ColumnType    func(childComplexity int) int
-		CreatedAt     func(childComplexity int) int
-		CreatedBy     func(childComplexity int) int
-		ID            func(childComplexity int) int
-		IsDefaultSort func(childComplexity int) int
-		IsFilterable  func(childComplexity int) int
-		IsSortable    func(childComplexity int) int
-		IsVisible     func(childComplexity int) int
-		Type          func(childComplexity int) int
-		UpdatedAt     func(childComplexity int) int
-	}
-
-	ColumnType struct {
-		CreatedAt  func(childComplexity int) int
-		CreatedBy  func(childComplexity int) int
-		ID         func(childComplexity int) int
-		Name       func(childComplexity int) int
-		UpdatedAt  func(childComplexity int) int
-		ViewTypeID func(childComplexity int) int
 	}
 
 	Comment struct {
@@ -1074,6 +1048,7 @@ type ComplexityRoot struct {
 		ServiceLineItemDelete                   func(childComplexity int, id string) int
 		SocialRemove                            func(childComplexity int, socialID string) int
 		SocialUpdate                            func(childComplexity int, input model.SocialUpdateInput) int
+		TableViewDefUpdate                      func(childComplexity int, input model.TableViewDefInput) int
 		TagCreate                               func(childComplexity int, input model.TagInput) int
 		TagDelete                               func(childComplexity int, id string) int
 		TagUpdate                               func(childComplexity int, input model.TagUpdateInput) int
@@ -1425,7 +1400,7 @@ type ComplexityRoot struct {
 		RemindersForOrganization              func(childComplexity int, organizationID string, dismissed *bool) int
 		ServiceLineItem                       func(childComplexity int, id string) int
 		SlackChannels                         func(childComplexity int, pagination *model.Pagination) int
-		TableViewDefs                         func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort *model.SortBy) int
+		TableViewDefs                         func(childComplexity int) int
 		Tags                                  func(childComplexity int) int
 		Tenant                                func(childComplexity int) int
 		TenantBillingProfile                  func(childComplexity int, id string) int
@@ -1528,22 +1503,14 @@ type ComplexityRoot struct {
 	TableViewDef struct {
 		Columns   func(childComplexity int) int
 		CreatedAt func(childComplexity int) int
-		CreatedBy func(childComplexity int) int
 		Filters   func(childComplexity int) int
 		ID        func(childComplexity int) int
 		Icon      func(childComplexity int) int
 		Name      func(childComplexity int) int
 		Order     func(childComplexity int) int
 		Sorting   func(childComplexity int) int
-		Type      func(childComplexity int) int
+		TableType func(childComplexity int) int
 		UpdatedAt func(childComplexity int) int
-	}
-
-	TableViewDefPage struct {
-		Content        func(childComplexity int) int
-		TotalAvailable func(childComplexity int) int
-		TotalElements  func(childComplexity int) int
-		TotalPages     func(childComplexity int) int
 	}
 
 	Tag struct {
@@ -1639,14 +1606,6 @@ type ComplexityRoot struct {
 		UserParticipant func(childComplexity int) int
 	}
 
-	ViewType struct {
-		CreatedAt func(childComplexity int) int
-		CreatedBy func(childComplexity int) int
-		ID        func(childComplexity int) int
-		Name      func(childComplexity int) int
-		UpdatedAt func(childComplexity int) int
-	}
-
 	Workspace struct {
 		AppSource     func(childComplexity int) int
 		CreatedAt     func(childComplexity int) int
@@ -1661,12 +1620,6 @@ type ComplexityRoot struct {
 
 type AnalysisResolver interface {
 	Describes(ctx context.Context, obj *model.Analysis) ([]model.DescriptionNode, error)
-}
-type ColumnDefResolver interface {
-	CreatedBy(ctx context.Context, obj *model.ColumnDef) (*model.User, error)
-}
-type ColumnTypeResolver interface {
-	CreatedBy(ctx context.Context, obj *model.ColumnType) (*model.User, error)
 }
 type CommentResolver interface {
 	CreatedBy(ctx context.Context, obj *model.Comment) (*model.User, error)
@@ -1962,6 +1915,7 @@ type MutationResolver interface {
 	UserDelete(ctx context.Context, id string) (*model.Result, error)
 	UserDeleteInTenant(ctx context.Context, id string, tenant string) (*model.Result, error)
 	CustomerUserAddJobRole(ctx context.Context, id string, jobRoleInput model.JobRoleInput) (*model.CustomerUser, error)
+	TableViewDefUpdate(ctx context.Context, input model.TableViewDefInput) (*model.TableViewDef, error)
 	WorkspaceMergeToTenant(ctx context.Context, workspace model.WorkspaceInput, tenant string) (*model.Result, error)
 	WorkspaceMerge(ctx context.Context, workspace model.WorkspaceInput) (*model.Result, error)
 }
@@ -2094,7 +2048,7 @@ type QueryResolver interface {
 	Users(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.UserPage, error)
 	User(ctx context.Context, id string) (*model.User, error)
 	UserByEmail(ctx context.Context, email string) (*model.User, error)
-	TableViewDefs(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort *model.SortBy) (*model.TableViewDefPage, error)
+	TableViewDefs(ctx context.Context) ([]*model.TableViewDef, error)
 }
 type ReminderResolver interface {
 	Owner(ctx context.Context, obj *model.Reminder) (*model.User, error)
@@ -2106,9 +2060,6 @@ type ServiceLineItemResolver interface {
 type SlackChannelResolver interface {
 	Organization(ctx context.Context, obj *model.SlackChannel) (*model.Organization, error)
 }
-type TableViewDefResolver interface {
-	CreatedBy(ctx context.Context, obj *model.TableViewDef) (*model.User, error)
-}
 type UserResolver interface {
 	Player(ctx context.Context, obj *model.User) (*model.Player, error)
 	Roles(ctx context.Context, obj *model.User) ([]model.Role, error)
@@ -2117,9 +2068,6 @@ type UserResolver interface {
 
 	JobRoles(ctx context.Context, obj *model.User) ([]*model.JobRole, error)
 	Calendars(ctx context.Context, obj *model.User) ([]*model.Calendar, error)
-}
-type ViewTypeResolver interface {
-	CreatedBy(ctx context.Context, obj *model.ViewType) (*model.User, error)
 }
 
 type executableSchema struct {
@@ -2707,118 +2655,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Calendar.UpdatedAt(childComplexity), true
-
-	case "ColumnDef.columnType":
-		if e.complexity.ColumnDef.ColumnType == nil {
-			break
-		}
-
-		return e.complexity.ColumnDef.ColumnType(childComplexity), true
-
-	case "ColumnDef.createdAt":
-		if e.complexity.ColumnDef.CreatedAt == nil {
-			break
-		}
-
-		return e.complexity.ColumnDef.CreatedAt(childComplexity), true
-
-	case "ColumnDef.createdBy":
-		if e.complexity.ColumnDef.CreatedBy == nil {
-			break
-		}
-
-		return e.complexity.ColumnDef.CreatedBy(childComplexity), true
-
-	case "ColumnDef.id":
-		if e.complexity.ColumnDef.ID == nil {
-			break
-		}
-
-		return e.complexity.ColumnDef.ID(childComplexity), true
-
-	case "ColumnDef.isDefaultSort":
-		if e.complexity.ColumnDef.IsDefaultSort == nil {
-			break
-		}
-
-		return e.complexity.ColumnDef.IsDefaultSort(childComplexity), true
-
-	case "ColumnDef.isFilterable":
-		if e.complexity.ColumnDef.IsFilterable == nil {
-			break
-		}
-
-		return e.complexity.ColumnDef.IsFilterable(childComplexity), true
-
-	case "ColumnDef.isSortable":
-		if e.complexity.ColumnDef.IsSortable == nil {
-			break
-		}
-
-		return e.complexity.ColumnDef.IsSortable(childComplexity), true
-
-	case "ColumnDef.isVisible":
-		if e.complexity.ColumnDef.IsVisible == nil {
-			break
-		}
-
-		return e.complexity.ColumnDef.IsVisible(childComplexity), true
-
-	case "ColumnDef.type":
-		if e.complexity.ColumnDef.Type == nil {
-			break
-		}
-
-		return e.complexity.ColumnDef.Type(childComplexity), true
-
-	case "ColumnDef.updatedAt":
-		if e.complexity.ColumnDef.UpdatedAt == nil {
-			break
-		}
-
-		return e.complexity.ColumnDef.UpdatedAt(childComplexity), true
-
-	case "ColumnType.createdAt":
-		if e.complexity.ColumnType.CreatedAt == nil {
-			break
-		}
-
-		return e.complexity.ColumnType.CreatedAt(childComplexity), true
-
-	case "ColumnType.createdBy":
-		if e.complexity.ColumnType.CreatedBy == nil {
-			break
-		}
-
-		return e.complexity.ColumnType.CreatedBy(childComplexity), true
-
-	case "ColumnType.id":
-		if e.complexity.ColumnType.ID == nil {
-			break
-		}
-
-		return e.complexity.ColumnType.ID(childComplexity), true
-
-	case "ColumnType.name":
-		if e.complexity.ColumnType.Name == nil {
-			break
-		}
-
-		return e.complexity.ColumnType.Name(childComplexity), true
-
-	case "ColumnType.updatedAt":
-		if e.complexity.ColumnType.UpdatedAt == nil {
-			break
-		}
-
-		return e.complexity.ColumnType.UpdatedAt(childComplexity), true
-
-	case "ColumnType.viewTypeId":
-		if e.complexity.ColumnType.ViewTypeID == nil {
-			break
-		}
-
-		return e.complexity.ColumnType.ViewTypeID(childComplexity), true
 
 	case "Comment.appSource":
 		if e.complexity.Comment.AppSource == nil {
@@ -8294,6 +8130,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.SocialUpdate(childComplexity, args["input"].(model.SocialUpdateInput)), true
 
+	case "Mutation.tableViewDef_Update":
+		if e.complexity.Mutation.TableViewDefUpdate == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_tableViewDef_Update_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.TableViewDefUpdate(childComplexity, args["input"].(model.TableViewDefInput)), true
+
 	case "Mutation.tag_Create":
 		if e.complexity.Mutation.TagCreate == nil {
 			break
@@ -10624,12 +10472,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_tableViewDefs_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.TableViewDefs(childComplexity, args["pagination"].(*model.Pagination), args["where"].(*model.Filter), args["sort"].(*model.SortBy)), true
+		return e.complexity.Query.TableViewDefs(childComplexity), true
 
 	case "Query.tags":
 		if e.complexity.Query.Tags == nil {
@@ -11128,13 +10971,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.TableViewDef.CreatedAt(childComplexity), true
 
-	case "TableViewDef.createdBy":
-		if e.complexity.TableViewDef.CreatedBy == nil {
-			break
-		}
-
-		return e.complexity.TableViewDef.CreatedBy(childComplexity), true
-
 	case "TableViewDef.filters":
 		if e.complexity.TableViewDef.Filters == nil {
 			break
@@ -11177,12 +11013,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.TableViewDef.Sorting(childComplexity), true
 
-	case "TableViewDef.type":
-		if e.complexity.TableViewDef.Type == nil {
+	case "TableViewDef.tableType":
+		if e.complexity.TableViewDef.TableType == nil {
 			break
 		}
 
-		return e.complexity.TableViewDef.Type(childComplexity), true
+		return e.complexity.TableViewDef.TableType(childComplexity), true
 
 	case "TableViewDef.updatedAt":
 		if e.complexity.TableViewDef.UpdatedAt == nil {
@@ -11190,34 +11026,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.TableViewDef.UpdatedAt(childComplexity), true
-
-	case "TableViewDefPage.content":
-		if e.complexity.TableViewDefPage.Content == nil {
-			break
-		}
-
-		return e.complexity.TableViewDefPage.Content(childComplexity), true
-
-	case "TableViewDefPage.totalAvailable":
-		if e.complexity.TableViewDefPage.TotalAvailable == nil {
-			break
-		}
-
-		return e.complexity.TableViewDefPage.TotalAvailable(childComplexity), true
-
-	case "TableViewDefPage.totalElements":
-		if e.complexity.TableViewDefPage.TotalElements == nil {
-			break
-		}
-
-		return e.complexity.TableViewDefPage.TotalElements(childComplexity), true
-
-	case "TableViewDefPage.totalPages":
-		if e.complexity.TableViewDefPage.TotalPages == nil {
-			break
-		}
-
-		return e.complexity.TableViewDefPage.TotalPages(childComplexity), true
 
 	case "Tag.appSource":
 		if e.complexity.Tag.AppSource == nil {
@@ -11702,41 +11510,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.UserParticipant.UserParticipant(childComplexity), true
 
-	case "ViewType.createdAt":
-		if e.complexity.ViewType.CreatedAt == nil {
-			break
-		}
-
-		return e.complexity.ViewType.CreatedAt(childComplexity), true
-
-	case "ViewType.createdBy":
-		if e.complexity.ViewType.CreatedBy == nil {
-			break
-		}
-
-		return e.complexity.ViewType.CreatedBy(childComplexity), true
-
-	case "ViewType.id":
-		if e.complexity.ViewType.ID == nil {
-			break
-		}
-
-		return e.complexity.ViewType.ID(childComplexity), true
-
-	case "ViewType.name":
-		if e.complexity.ViewType.Name == nil {
-			break
-		}
-
-		return e.complexity.ViewType.Name(childComplexity), true
-
-	case "ViewType.updatedAt":
-		if e.complexity.ViewType.UpdatedAt == nil {
-			break
-		}
-
-		return e.complexity.ViewType.UpdatedAt(childComplexity), true
-
 	case "Workspace.appSource":
 		if e.complexity.Workspace.AppSource == nil {
 			break
@@ -11888,6 +11661,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputSocialInput,
 		ec.unmarshalInputSocialUpdateInput,
 		ec.unmarshalInputSortBy,
+		ec.unmarshalInputTableViewDefInput,
 		ec.unmarshalInputTagIdOrNameInput,
 		ec.unmarshalInputTagInput,
 		ec.unmarshalInputTagUpdateInput,
@@ -16031,58 +15805,72 @@ type CustomerUser {
 }
 `, BuiltIn: false},
 	{Name: "../schemas/view.graphqls", Input: `extend type Query {
-    tableViewDefs(pagination: Pagination, where: Filter, sort: SortBy): TableViewDefPage! @hasTenant
+    tableViewDefs: [TableViewDef!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+extend type Mutation {
+    tableViewDef_Update(input: TableViewDefInput!): TableViewDef! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type TableViewDef implements Node {
     id:                 ID!
     name:               String!
+    tableType:          TableViewType
     order:              Int
-    type:               ViewType
     icon:               String
-    columns:            [ColumnDef]
+    columns:            [ColumnType!]!
     filters:            String
     sorting:            String
     createdAt:          Time!
     updatedAt:          Time!
-    createdBy:          User @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
-type TableViewDefPage implements Pages {
-    content: [TableViewDef!]!
-    totalPages: Int!
-    totalElements: Int64!
-    totalAvailable: Int64!
+enum TableViewType {
+    ORGANIZATIONS
+    INVOICES
+    RENEWALS
 }
 
-type ViewType implements Node {
+enum ColumnType {
+    INVOICES_ISSUE_DATE
+    INVOICES_ISSUE_DATE_PAST
+    INVOICES_DUE_DATE
+    INVOICES_CONTRACT
+    INVOICES_BILLING_CYCLE
+    INVOICES_PAYMENT_STATUS
+    INVOICES_INVOICE_NUMBER
+    INVOICES_AMOUNT
+    INVOICES_INVOICE_STATUS
+    INVOICES_INVOICE_PREVIEW
+
+    ORGANIZATIONS_AVATAR
+    ORGANIZATIONS_NAME
+    ORGANIZATIONS_WEBSITE
+    ORGANIZATIONS_RELATIONSHIP
+    ORGANIZATIONS_ONBOARDING_STATUS
+    ORGANIZATIONS_RENEWAL_LIKELIHOOD
+    ORGANIZATIONS_RENEWL_DATE
+    ORGANIZATIONS_FORECAST_ARR
+    ORGANIZATIONS_OWNER
+    ORGANIZATIONS_LAST_TOUCHPOINT
+
+    RENEWALS_AVATAR
+    RENEWALS_NAME
+    RENEWALS_RENEWAL_LIKELIHOOD
+    RENEWALS_RENEWL_DATE
+    RENEWALS_FORECAST_ARR
+    RENEWALS_OWNER
+    RENEWALS_LAST_TOUCHPOINT
+}
+
+input TableViewDefInput {
     id:                 ID!
-    name:               String
-    createdAt:          Time!
-    updatedAt:          Time!
-    createdBy:          User @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant
-}
-
-type ColumnDef implements Node {
-    id:                 ID!
-    type:               ViewType
-    columnType:         ColumnType
-    isFilterable:       Boolean
-    isSortable:         Boolean
-    isDefaultSort:      Boolean
-    isVisible:          Boolean
-    createdAt:          Time!
-    updatedAt:          Time!
-    createdBy:          User @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant
-}
-
-type ColumnType implements Node {
-    id:                 ID!
-    name:               String
-    viewTypeId:         String
-    createdAt:          Time!
-    updatedAt:          Time!
-    createdBy:          User @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant
+    name:               String!
+    order:              Int!
+    icon:               String
+    columns:            [ColumnType!]!
+    filters:            String!
+    sorting:            String!
 }`, BuiltIn: false},
 	{Name: "../schemas/workspace.graphqls", Input: `input WorkspaceInput {
     name: String!
@@ -19290,6 +19078,21 @@ func (ec *executionContext) field_Mutation_social_Update_args(ctx context.Contex
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_tableViewDef_Update_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.TableViewDefInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNTableViewDefInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTableViewDefInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_tag_Create_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -20562,39 +20365,6 @@ func (ec *executionContext) field_Query_slack_Channels_args(ctx context.Context,
 		}
 	}
 	args["pagination"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Query_tableViewDefs_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 *model.Pagination
-	if tmp, ok := rawArgs["pagination"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pagination"))
-		arg0, err = ec.unmarshalOPagination2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPagination(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["pagination"] = arg0
-	var arg1 *model.Filter
-	if tmp, ok := rawArgs["where"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("where"))
-		arg1, err = ec.unmarshalOFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFilter(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["where"] = arg1
-	var arg2 *model.SortBy
-	if tmp, ok := rawArgs["sort"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
-		arg2, err = ec.unmarshalOSortBy2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortBy(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["sort"] = arg2
 	return args, nil
 }
 
@@ -24264,846 +24034,6 @@ func (ec *executionContext) fieldContext_Calendar_appSource(ctx context.Context,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ColumnDef_id(ctx context.Context, field graphql.CollectedField, obj *model.ColumnDef) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ColumnDef_id(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ColumnDef_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ColumnDef",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ColumnDef_type(ctx context.Context, field graphql.CollectedField, obj *model.ColumnDef) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ColumnDef_type(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Type, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.ViewType)
-	fc.Result = res
-	return ec.marshalOViewType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐViewType(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ColumnDef_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ColumnDef",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_ViewType_id(ctx, field)
-			case "name":
-				return ec.fieldContext_ViewType_name(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_ViewType_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_ViewType_updatedAt(ctx, field)
-			case "createdBy":
-				return ec.fieldContext_ViewType_createdBy(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ViewType", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ColumnDef_columnType(ctx context.Context, field graphql.CollectedField, obj *model.ColumnDef) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ColumnDef_columnType(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ColumnType, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.ColumnType)
-	fc.Result = res
-	return ec.marshalOColumnType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐColumnType(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ColumnDef_columnType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ColumnDef",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_ColumnType_id(ctx, field)
-			case "name":
-				return ec.fieldContext_ColumnType_name(ctx, field)
-			case "viewTypeId":
-				return ec.fieldContext_ColumnType_viewTypeId(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_ColumnType_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_ColumnType_updatedAt(ctx, field)
-			case "createdBy":
-				return ec.fieldContext_ColumnType_createdBy(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ColumnType", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ColumnDef_isFilterable(ctx context.Context, field graphql.CollectedField, obj *model.ColumnDef) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ColumnDef_isFilterable(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.IsFilterable, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*bool)
-	fc.Result = res
-	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ColumnDef_isFilterable(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ColumnDef",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ColumnDef_isSortable(ctx context.Context, field graphql.CollectedField, obj *model.ColumnDef) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ColumnDef_isSortable(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.IsSortable, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*bool)
-	fc.Result = res
-	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ColumnDef_isSortable(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ColumnDef",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ColumnDef_isDefaultSort(ctx context.Context, field graphql.CollectedField, obj *model.ColumnDef) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ColumnDef_isDefaultSort(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.IsDefaultSort, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*bool)
-	fc.Result = res
-	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ColumnDef_isDefaultSort(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ColumnDef",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ColumnDef_isVisible(ctx context.Context, field graphql.CollectedField, obj *model.ColumnDef) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ColumnDef_isVisible(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.IsVisible, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*bool)
-	fc.Result = res
-	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ColumnDef_isVisible(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ColumnDef",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ColumnDef_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.ColumnDef) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ColumnDef_createdAt(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.CreatedAt, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(time.Time)
-	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ColumnDef_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ColumnDef",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ColumnDef_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.ColumnDef) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ColumnDef_updatedAt(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.UpdatedAt, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(time.Time)
-	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ColumnDef_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ColumnDef",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ColumnDef_createdBy(ctx context.Context, field graphql.CollectedField, obj *model.ColumnDef) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ColumnDef_createdBy(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.ColumnDef().CreatedBy(rctx, obj)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRole == nil {
-				return nil, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, obj, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				return nil, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, obj, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.User); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.User`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.User)
-	fc.Result = res
-	return ec.marshalOUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ColumnDef_createdBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ColumnDef",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_User_id(ctx, field)
-			case "firstName":
-				return ec.fieldContext_User_firstName(ctx, field)
-			case "lastName":
-				return ec.fieldContext_User_lastName(ctx, field)
-			case "name":
-				return ec.fieldContext_User_name(ctx, field)
-			case "internal":
-				return ec.fieldContext_User_internal(ctx, field)
-			case "bot":
-				return ec.fieldContext_User_bot(ctx, field)
-			case "timezone":
-				return ec.fieldContext_User_timezone(ctx, field)
-			case "profilePhotoUrl":
-				return ec.fieldContext_User_profilePhotoUrl(ctx, field)
-			case "player":
-				return ec.fieldContext_User_player(ctx, field)
-			case "roles":
-				return ec.fieldContext_User_roles(ctx, field)
-			case "emails":
-				return ec.fieldContext_User_emails(ctx, field)
-			case "phoneNumbers":
-				return ec.fieldContext_User_phoneNumbers(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_User_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_User_updatedAt(ctx, field)
-			case "jobRoles":
-				return ec.fieldContext_User_jobRoles(ctx, field)
-			case "calendars":
-				return ec.fieldContext_User_calendars(ctx, field)
-			case "source":
-				return ec.fieldContext_User_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_User_sourceOfTruth(ctx, field)
-			case "appSource":
-				return ec.fieldContext_User_appSource(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ColumnType_id(ctx context.Context, field graphql.CollectedField, obj *model.ColumnType) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ColumnType_id(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ColumnType_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ColumnType",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ColumnType_name(ctx context.Context, field graphql.CollectedField, obj *model.ColumnType) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ColumnType_name(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Name, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ColumnType_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ColumnType",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ColumnType_viewTypeId(ctx context.Context, field graphql.CollectedField, obj *model.ColumnType) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ColumnType_viewTypeId(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ViewTypeID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ColumnType_viewTypeId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ColumnType",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ColumnType_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.ColumnType) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ColumnType_createdAt(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.CreatedAt, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(time.Time)
-	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ColumnType_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ColumnType",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ColumnType_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.ColumnType) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ColumnType_updatedAt(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.UpdatedAt, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(time.Time)
-	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ColumnType_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ColumnType",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ColumnType_createdBy(ctx context.Context, field graphql.CollectedField, obj *model.ColumnType) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ColumnType_createdBy(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.ColumnType().CreatedBy(rctx, obj)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRole == nil {
-				return nil, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, obj, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				return nil, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, obj, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.User); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.User`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.User)
-	fc.Result = res
-	return ec.marshalOUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ColumnType_createdBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ColumnType",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_User_id(ctx, field)
-			case "firstName":
-				return ec.fieldContext_User_firstName(ctx, field)
-			case "lastName":
-				return ec.fieldContext_User_lastName(ctx, field)
-			case "name":
-				return ec.fieldContext_User_name(ctx, field)
-			case "internal":
-				return ec.fieldContext_User_internal(ctx, field)
-			case "bot":
-				return ec.fieldContext_User_bot(ctx, field)
-			case "timezone":
-				return ec.fieldContext_User_timezone(ctx, field)
-			case "profilePhotoUrl":
-				return ec.fieldContext_User_profilePhotoUrl(ctx, field)
-			case "player":
-				return ec.fieldContext_User_player(ctx, field)
-			case "roles":
-				return ec.fieldContext_User_roles(ctx, field)
-			case "emails":
-				return ec.fieldContext_User_emails(ctx, field)
-			case "phoneNumbers":
-				return ec.fieldContext_User_phoneNumbers(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_User_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_User_updatedAt(ctx, field)
-			case "jobRoles":
-				return ec.fieldContext_User_jobRoles(ctx, field)
-			case "calendars":
-				return ec.fieldContext_User_calendars(ctx, field)
-			case "source":
-				return ec.fieldContext_User_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_User_sourceOfTruth(ctx, field)
-			case "appSource":
-				return ec.fieldContext_User_appSource(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
 	}
 	return fc, nil
@@ -68167,6 +67097,113 @@ func (ec *executionContext) fieldContext_Mutation_customer_user_AddJobRole(ctx c
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_tableViewDef_Update(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_tableViewDef_Update(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().TableViewDefUpdate(rctx, fc.Args["input"].(model.TableViewDefInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.TableViewDef); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.TableViewDef`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.TableViewDef)
+	fc.Result = res
+	return ec.marshalNTableViewDef2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTableViewDef(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_tableViewDef_Update(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_TableViewDef_id(ctx, field)
+			case "name":
+				return ec.fieldContext_TableViewDef_name(ctx, field)
+			case "tableType":
+				return ec.fieldContext_TableViewDef_tableType(ctx, field)
+			case "order":
+				return ec.fieldContext_TableViewDef_order(ctx, field)
+			case "icon":
+				return ec.fieldContext_TableViewDef_icon(ctx, field)
+			case "columns":
+				return ec.fieldContext_TableViewDef_columns(ctx, field)
+			case "filters":
+				return ec.fieldContext_TableViewDef_filters(ctx, field)
+			case "sorting":
+				return ec.fieldContext_TableViewDef_sorting(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_TableViewDef_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_TableViewDef_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type TableViewDef", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_tableViewDef_Update_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_workspace_MergeToTenant(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_workspace_MergeToTenant(ctx, field)
 	if err != nil {
@@ -85277,26 +84314,36 @@ func (ec *executionContext) _Query_tableViewDefs(ctx context.Context, field grap
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().TableViewDefs(rctx, fc.Args["pagination"].(*model.Pagination), fc.Args["where"].(*model.Filter), fc.Args["sort"].(*model.SortBy))
+			return ec.resolvers.Query().TableViewDefs(rctx)
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.HasTenant == nil {
 				return nil, errors.New("directive hasTenant is not implemented")
 			}
-			return ec.directives.HasTenant(ctx, nil, directive0)
+			return ec.directives.HasTenant(ctx, nil, directive1)
 		}
 
-		tmp, err := directive1(rctx)
+		tmp, err := directive2(rctx)
 		if err != nil {
 			return nil, graphql.ErrorOnPath(ctx, err)
 		}
 		if tmp == nil {
 			return nil, nil
 		}
-		if data, ok := tmp.(*model.TableViewDefPage); ok {
+		if data, ok := tmp.([]*model.TableViewDef); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.TableViewDefPage`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.TableViewDef`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -85308,9 +84355,9 @@ func (ec *executionContext) _Query_tableViewDefs(ctx context.Context, field grap
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.TableViewDefPage)
+	res := resTmp.([]*model.TableViewDef)
 	fc.Result = res
-	return ec.marshalNTableViewDefPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTableViewDefPage(ctx, field.Selections, res)
+	return ec.marshalNTableViewDef2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTableViewDefᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_tableViewDefs(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -85321,28 +84368,29 @@ func (ec *executionContext) fieldContext_Query_tableViewDefs(ctx context.Context
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "content":
-				return ec.fieldContext_TableViewDefPage_content(ctx, field)
-			case "totalPages":
-				return ec.fieldContext_TableViewDefPage_totalPages(ctx, field)
-			case "totalElements":
-				return ec.fieldContext_TableViewDefPage_totalElements(ctx, field)
-			case "totalAvailable":
-				return ec.fieldContext_TableViewDefPage_totalAvailable(ctx, field)
+			case "id":
+				return ec.fieldContext_TableViewDef_id(ctx, field)
+			case "name":
+				return ec.fieldContext_TableViewDef_name(ctx, field)
+			case "tableType":
+				return ec.fieldContext_TableViewDef_tableType(ctx, field)
+			case "order":
+				return ec.fieldContext_TableViewDef_order(ctx, field)
+			case "icon":
+				return ec.fieldContext_TableViewDef_icon(ctx, field)
+			case "columns":
+				return ec.fieldContext_TableViewDef_columns(ctx, field)
+			case "filters":
+				return ec.fieldContext_TableViewDef_filters(ctx, field)
+			case "sorting":
+				return ec.fieldContext_TableViewDef_sorting(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_TableViewDef_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_TableViewDef_updatedAt(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type TableViewDefPage", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type TableViewDef", field.Name)
 		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_tableViewDefs_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
 	}
 	return fc, nil
 }
@@ -88553,6 +87601,47 @@ func (ec *executionContext) fieldContext_TableViewDef_name(ctx context.Context, 
 	return fc, nil
 }
 
+func (ec *executionContext) _TableViewDef_tableType(ctx context.Context, field graphql.CollectedField, obj *model.TableViewDef) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TableViewDef_tableType(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TableType, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.TableViewType)
+	fc.Result = res
+	return ec.marshalOTableViewType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTableViewType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TableViewDef_tableType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TableViewDef",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type TableViewType does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _TableViewDef_order(ctx context.Context, field graphql.CollectedField, obj *model.TableViewDef) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_TableViewDef_order(ctx, field)
 	if err != nil {
@@ -88589,59 +87678,6 @@ func (ec *executionContext) fieldContext_TableViewDef_order(ctx context.Context,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _TableViewDef_type(ctx context.Context, field graphql.CollectedField, obj *model.TableViewDef) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_TableViewDef_type(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Type, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.ViewType)
-	fc.Result = res
-	return ec.marshalOViewType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐViewType(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_TableViewDef_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "TableViewDef",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_ViewType_id(ctx, field)
-			case "name":
-				return ec.fieldContext_ViewType_name(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_ViewType_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_ViewType_updatedAt(ctx, field)
-			case "createdBy":
-				return ec.fieldContext_ViewType_createdBy(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ViewType", field.Name)
 		},
 	}
 	return fc, nil
@@ -88709,11 +87745,14 @@ func (ec *executionContext) _TableViewDef_columns(ctx context.Context, field gra
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.ColumnDef)
+	res := resTmp.([]model.ColumnType)
 	fc.Result = res
-	return ec.marshalOColumnDef2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐColumnDef(ctx, field.Selections, res)
+	return ec.marshalNColumnType2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐColumnTypeᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_TableViewDef_columns(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -88723,29 +87762,7 @@ func (ec *executionContext) fieldContext_TableViewDef_columns(ctx context.Contex
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_ColumnDef_id(ctx, field)
-			case "type":
-				return ec.fieldContext_ColumnDef_type(ctx, field)
-			case "columnType":
-				return ec.fieldContext_ColumnDef_columnType(ctx, field)
-			case "isFilterable":
-				return ec.fieldContext_ColumnDef_isFilterable(ctx, field)
-			case "isSortable":
-				return ec.fieldContext_ColumnDef_isSortable(ctx, field)
-			case "isDefaultSort":
-				return ec.fieldContext_ColumnDef_isDefaultSort(ctx, field)
-			case "isVisible":
-				return ec.fieldContext_ColumnDef_isVisible(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_ColumnDef_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_ColumnDef_updatedAt(ctx, field)
-			case "createdBy":
-				return ec.fieldContext_ColumnDef_createdBy(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ColumnDef", field.Name)
+			return nil, errors.New("field of type ColumnType does not have child fields")
 		},
 	}
 	return fc, nil
@@ -88916,317 +87933,6 @@ func (ec *executionContext) fieldContext_TableViewDef_updatedAt(ctx context.Cont
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _TableViewDef_createdBy(ctx context.Context, field graphql.CollectedField, obj *model.TableViewDef) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_TableViewDef_createdBy(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.TableViewDef().CreatedBy(rctx, obj)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRole == nil {
-				return nil, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, obj, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				return nil, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, obj, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.User); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.User`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.User)
-	fc.Result = res
-	return ec.marshalOUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_TableViewDef_createdBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "TableViewDef",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_User_id(ctx, field)
-			case "firstName":
-				return ec.fieldContext_User_firstName(ctx, field)
-			case "lastName":
-				return ec.fieldContext_User_lastName(ctx, field)
-			case "name":
-				return ec.fieldContext_User_name(ctx, field)
-			case "internal":
-				return ec.fieldContext_User_internal(ctx, field)
-			case "bot":
-				return ec.fieldContext_User_bot(ctx, field)
-			case "timezone":
-				return ec.fieldContext_User_timezone(ctx, field)
-			case "profilePhotoUrl":
-				return ec.fieldContext_User_profilePhotoUrl(ctx, field)
-			case "player":
-				return ec.fieldContext_User_player(ctx, field)
-			case "roles":
-				return ec.fieldContext_User_roles(ctx, field)
-			case "emails":
-				return ec.fieldContext_User_emails(ctx, field)
-			case "phoneNumbers":
-				return ec.fieldContext_User_phoneNumbers(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_User_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_User_updatedAt(ctx, field)
-			case "jobRoles":
-				return ec.fieldContext_User_jobRoles(ctx, field)
-			case "calendars":
-				return ec.fieldContext_User_calendars(ctx, field)
-			case "source":
-				return ec.fieldContext_User_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_User_sourceOfTruth(ctx, field)
-			case "appSource":
-				return ec.fieldContext_User_appSource(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _TableViewDefPage_content(ctx context.Context, field graphql.CollectedField, obj *model.TableViewDefPage) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_TableViewDefPage_content(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Content, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*model.TableViewDef)
-	fc.Result = res
-	return ec.marshalNTableViewDef2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTableViewDefᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_TableViewDefPage_content(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "TableViewDefPage",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_TableViewDef_id(ctx, field)
-			case "name":
-				return ec.fieldContext_TableViewDef_name(ctx, field)
-			case "order":
-				return ec.fieldContext_TableViewDef_order(ctx, field)
-			case "type":
-				return ec.fieldContext_TableViewDef_type(ctx, field)
-			case "icon":
-				return ec.fieldContext_TableViewDef_icon(ctx, field)
-			case "columns":
-				return ec.fieldContext_TableViewDef_columns(ctx, field)
-			case "filters":
-				return ec.fieldContext_TableViewDef_filters(ctx, field)
-			case "sorting":
-				return ec.fieldContext_TableViewDef_sorting(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_TableViewDef_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_TableViewDef_updatedAt(ctx, field)
-			case "createdBy":
-				return ec.fieldContext_TableViewDef_createdBy(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type TableViewDef", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _TableViewDefPage_totalPages(ctx context.Context, field graphql.CollectedField, obj *model.TableViewDefPage) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_TableViewDefPage_totalPages(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.TotalPages, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_TableViewDefPage_totalPages(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "TableViewDefPage",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _TableViewDefPage_totalElements(ctx context.Context, field graphql.CollectedField, obj *model.TableViewDefPage) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_TableViewDefPage_totalElements(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.TotalElements, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int64)
-	fc.Result = res
-	return ec.marshalNInt642int64(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_TableViewDefPage_totalElements(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "TableViewDefPage",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int64 does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _TableViewDefPage_totalAvailable(ctx context.Context, field graphql.CollectedField, obj *model.TableViewDefPage) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_TableViewDefPage_totalAvailable(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.TotalAvailable, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int64)
-	fc.Result = res
-	return ec.marshalNInt642int64(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_TableViewDefPage_totalAvailable(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "TableViewDefPage",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int64 does not have child fields")
 		},
 	}
 	return fc, nil
@@ -92436,290 +91142,6 @@ func (ec *executionContext) fieldContext_UserParticipant_type(ctx context.Contex
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ViewType_id(ctx context.Context, field graphql.CollectedField, obj *model.ViewType) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ViewType_id(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ViewType_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ViewType",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ViewType_name(ctx context.Context, field graphql.CollectedField, obj *model.ViewType) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ViewType_name(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Name, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ViewType_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ViewType",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ViewType_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.ViewType) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ViewType_createdAt(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.CreatedAt, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(time.Time)
-	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ViewType_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ViewType",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ViewType_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.ViewType) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ViewType_updatedAt(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.UpdatedAt, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(time.Time)
-	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ViewType_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ViewType",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ViewType_createdBy(ctx context.Context, field graphql.CollectedField, obj *model.ViewType) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ViewType_createdBy(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.ViewType().CreatedBy(rctx, obj)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRole == nil {
-				return nil, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, obj, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				return nil, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, obj, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.User); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.User`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.User)
-	fc.Result = res
-	return ec.marshalOUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ViewType_createdBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ViewType",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_User_id(ctx, field)
-			case "firstName":
-				return ec.fieldContext_User_firstName(ctx, field)
-			case "lastName":
-				return ec.fieldContext_User_lastName(ctx, field)
-			case "name":
-				return ec.fieldContext_User_name(ctx, field)
-			case "internal":
-				return ec.fieldContext_User_internal(ctx, field)
-			case "bot":
-				return ec.fieldContext_User_bot(ctx, field)
-			case "timezone":
-				return ec.fieldContext_User_timezone(ctx, field)
-			case "profilePhotoUrl":
-				return ec.fieldContext_User_profilePhotoUrl(ctx, field)
-			case "player":
-				return ec.fieldContext_User_player(ctx, field)
-			case "roles":
-				return ec.fieldContext_User_roles(ctx, field)
-			case "emails":
-				return ec.fieldContext_User_emails(ctx, field)
-			case "phoneNumbers":
-				return ec.fieldContext_User_phoneNumbers(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_User_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_User_updatedAt(ctx, field)
-			case "jobRoles":
-				return ec.fieldContext_User_jobRoles(ctx, field)
-			case "calendars":
-				return ec.fieldContext_User_calendars(ctx, field)
-			case "source":
-				return ec.fieldContext_User_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_User_sourceOfTruth(ctx, field)
-			case "appSource":
-				return ec.fieldContext_User_appSource(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
 	}
 	return fc, nil
@@ -100772,6 +99194,75 @@ func (ec *executionContext) unmarshalInputSortBy(ctx context.Context, obj interf
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputTableViewDefInput(ctx context.Context, obj interface{}) (model.TableViewDefInput, error) {
+	var it model.TableViewDefInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"id", "name", "order", "icon", "columns", "filters", "sorting"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "id":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ID = data
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "order":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("order"))
+			data, err := ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Order = data
+		case "icon":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("icon"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Icon = data
+		case "columns":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("columns"))
+			data, err := ec.unmarshalNColumnType2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐColumnTypeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Columns = data
+		case "filters":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filters"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Filters = data
+		case "sorting":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sorting"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Sorting = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputTagIdOrNameInput(ctx context.Context, obj interface{}) (model.TagIDOrNameInput, error) {
 	var it model.TagIDOrNameInput
 	asMap := map[string]interface{}{}
@@ -101846,13 +100337,20 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 	switch obj := (obj).(type) {
 	case nil:
 		return graphql.Null
-	case model.OrganizationPlanMilestone:
-		return ec._OrganizationPlanMilestone(ctx, sel, &obj)
-	case *model.OrganizationPlanMilestone:
+	case model.Metadata:
+		return ec._Metadata(ctx, sel, &obj)
+	case *model.Metadata:
 		if obj == nil {
 			return graphql.Null
 		}
-		return ec._OrganizationPlanMilestone(ctx, sel, obj)
+		return ec._Metadata(ctx, sel, obj)
+	case model.BillingProfile:
+		return ec._BillingProfile(ctx, sel, &obj)
+	case *model.BillingProfile:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._BillingProfile(ctx, sel, obj)
 	case model.Issue:
 		return ec._Issue(ctx, sel, &obj)
 	case *model.Issue:
@@ -101867,20 +100365,13 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._Location(ctx, sel, obj)
-	case model.Contact:
-		return ec._Contact(ctx, sel, &obj)
-	case *model.Contact:
+	case model.InvoicingCycle:
+		return ec._InvoicingCycle(ctx, sel, &obj)
+	case *model.InvoicingCycle:
 		if obj == nil {
 			return graphql.Null
 		}
-		return ec._Contact(ctx, sel, obj)
-	case model.MasterPlan:
-		return ec._MasterPlan(ctx, sel, &obj)
-	case *model.MasterPlan:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._MasterPlan(ctx, sel, obj)
+		return ec._InvoicingCycle(ctx, sel, obj)
 	case model.TenantBillingProfile:
 		return ec._TenantBillingProfile(ctx, sel, &obj)
 	case *model.TenantBillingProfile:
@@ -101902,6 +100393,13 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._PageView(ctx, sel, obj)
+	case model.OrganizationPlanMilestone:
+		return ec._OrganizationPlanMilestone(ctx, sel, &obj)
+	case *model.OrganizationPlanMilestone:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._OrganizationPlanMilestone(ctx, sel, obj)
 	case model.OrganizationPlan:
 		return ec._OrganizationPlan(ctx, sel, &obj)
 	case *model.OrganizationPlan:
@@ -101909,20 +100407,6 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._OrganizationPlan(ctx, sel, obj)
-	case model.Metadata:
-		return ec._Metadata(ctx, sel, &obj)
-	case *model.Metadata:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._Metadata(ctx, sel, obj)
-	case model.BillingProfile:
-		return ec._BillingProfile(ctx, sel, &obj)
-	case *model.BillingProfile:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._BillingProfile(ctx, sel, obj)
 	case model.MasterPlanMilestone:
 		return ec._MasterPlanMilestone(ctx, sel, &obj)
 	case *model.MasterPlanMilestone:
@@ -101930,13 +100414,72 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._MasterPlanMilestone(ctx, sel, obj)
-	case model.InvoicingCycle:
-		return ec._InvoicingCycle(ctx, sel, &obj)
-	case *model.InvoicingCycle:
+	case model.MasterPlan:
+		return ec._MasterPlan(ctx, sel, &obj)
+	case *model.MasterPlan:
 		if obj == nil {
 			return graphql.Null
 		}
-		return ec._InvoicingCycle(ctx, sel, obj)
+		return ec._MasterPlan(ctx, sel, obj)
+	case model.Contact:
+		return ec._Contact(ctx, sel, &obj)
+	case *model.Contact:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Contact(ctx, sel, obj)
+	case model.FieldSetTemplate:
+		return ec._FieldSetTemplate(ctx, sel, &obj)
+	case *model.FieldSetTemplate:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._FieldSetTemplate(ctx, sel, obj)
+	case model.TableViewDef:
+		return ec._TableViewDef(ctx, sel, &obj)
+	case *model.TableViewDef:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._TableViewDef(ctx, sel, obj)
+	case model.ExtensibleEntity:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._ExtensibleEntity(ctx, sel, obj)
+	case model.SourceFields:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._SourceFields(ctx, sel, obj)
+	case model.Meeting:
+		return ec._Meeting(ctx, sel, &obj)
+	case *model.Meeting:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Meeting(ctx, sel, obj)
+	case model.Analysis:
+		return ec._Analysis(ctx, sel, &obj)
+	case *model.Analysis:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Analysis(ctx, sel, obj)
+	case model.Opportunity:
+		return ec._Opportunity(ctx, sel, &obj)
+	case *model.Opportunity:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Opportunity(ctx, sel, obj)
+	case model.InteractionEvent:
+		return ec._InteractionEvent(ctx, sel, &obj)
+	case *model.InteractionEvent:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._InteractionEvent(ctx, sel, obj)
 	case model.InteractionSession:
 		return ec._InteractionSession(ctx, sel, &obj)
 	case *model.InteractionSession:
@@ -101951,58 +100494,6 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._Attachment(ctx, sel, obj)
-	case model.CustomField:
-		return ec._CustomField(ctx, sel, &obj)
-	case *model.CustomField:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._CustomField(ctx, sel, obj)
-	case model.ExtensibleEntity:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._ExtensibleEntity(ctx, sel, obj)
-	case model.Meeting:
-		return ec._Meeting(ctx, sel, &obj)
-	case *model.Meeting:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._Meeting(ctx, sel, obj)
-	case model.InteractionEvent:
-		return ec._InteractionEvent(ctx, sel, &obj)
-	case *model.InteractionEvent:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._InteractionEvent(ctx, sel, obj)
-	case model.Opportunity:
-		return ec._Opportunity(ctx, sel, &obj)
-	case *model.Opportunity:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._Opportunity(ctx, sel, obj)
-	case model.SourceFields:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._SourceFields(ctx, sel, obj)
-	case model.Analysis:
-		return ec._Analysis(ctx, sel, &obj)
-	case *model.Analysis:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._Analysis(ctx, sel, obj)
-	case model.FieldSetTemplate:
-		return ec._FieldSetTemplate(ctx, sel, &obj)
-	case *model.FieldSetTemplate:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._FieldSetTemplate(ctx, sel, obj)
 	case model.EntityTemplate:
 		return ec._EntityTemplate(ctx, sel, &obj)
 	case *model.EntityTemplate:
@@ -102017,34 +100508,13 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._CustomFieldTemplate(ctx, sel, obj)
-	case model.TableViewDef:
-		return ec._TableViewDef(ctx, sel, &obj)
-	case *model.TableViewDef:
+	case model.CustomField:
+		return ec._CustomField(ctx, sel, &obj)
+	case *model.CustomField:
 		if obj == nil {
 			return graphql.Null
 		}
-		return ec._TableViewDef(ctx, sel, obj)
-	case model.ViewType:
-		return ec._ViewType(ctx, sel, &obj)
-	case *model.ViewType:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._ViewType(ctx, sel, obj)
-	case model.ColumnDef:
-		return ec._ColumnDef(ctx, sel, &obj)
-	case *model.ColumnDef:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._ColumnDef(ctx, sel, obj)
-	case model.ColumnType:
-		return ec._ColumnType(ctx, sel, &obj)
-	case *model.ColumnType:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._ColumnType(ctx, sel, obj)
+		return ec._CustomField(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -102133,13 +100603,6 @@ func (ec *executionContext) _Pages(ctx context.Context, sel ast.SelectionSet, ob
 			return graphql.Null
 		}
 		return ec._UserPage(ctx, sel, obj)
-	case model.TableViewDefPage:
-		return ec._TableViewDefPage(ctx, sel, &obj)
-	case *model.TableViewDefPage:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._TableViewDefPage(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -102907,186 +101370,6 @@ func (ec *executionContext) _Calendar(ctx context.Context, sel ast.SelectionSet,
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
-var columnDefImplementors = []string{"ColumnDef", "Node"}
-
-func (ec *executionContext) _ColumnDef(ctx context.Context, sel ast.SelectionSet, obj *model.ColumnDef) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, columnDefImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("ColumnDef")
-		case "id":
-			out.Values[i] = ec._ColumnDef_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "type":
-			out.Values[i] = ec._ColumnDef_type(ctx, field, obj)
-		case "columnType":
-			out.Values[i] = ec._ColumnDef_columnType(ctx, field, obj)
-		case "isFilterable":
-			out.Values[i] = ec._ColumnDef_isFilterable(ctx, field, obj)
-		case "isSortable":
-			out.Values[i] = ec._ColumnDef_isSortable(ctx, field, obj)
-		case "isDefaultSort":
-			out.Values[i] = ec._ColumnDef_isDefaultSort(ctx, field, obj)
-		case "isVisible":
-			out.Values[i] = ec._ColumnDef_isVisible(ctx, field, obj)
-		case "createdAt":
-			out.Values[i] = ec._ColumnDef_createdAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "updatedAt":
-			out.Values[i] = ec._ColumnDef_updatedAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "createdBy":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._ColumnDef_createdBy(ctx, field, obj)
-				return res
-			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
-var columnTypeImplementors = []string{"ColumnType", "Node"}
-
-func (ec *executionContext) _ColumnType(ctx context.Context, sel ast.SelectionSet, obj *model.ColumnType) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, columnTypeImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("ColumnType")
-		case "id":
-			out.Values[i] = ec._ColumnType_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "name":
-			out.Values[i] = ec._ColumnType_name(ctx, field, obj)
-		case "viewTypeId":
-			out.Values[i] = ec._ColumnType_viewTypeId(ctx, field, obj)
-		case "createdAt":
-			out.Values[i] = ec._ColumnType_createdAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "updatedAt":
-			out.Values[i] = ec._ColumnType_updatedAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "createdBy":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._ColumnType_createdBy(ctx, field, obj)
-				return res
-			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -110950,6 +109233,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "tableViewDef_Update":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_tableViewDef_Update(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "workspace_MergeToTenant":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_workspace_MergeToTenant(ctx, field)
@@ -115946,21 +114236,24 @@ func (ec *executionContext) _TableViewDef(ctx context.Context, sel ast.Selection
 		case "id":
 			out.Values[i] = ec._TableViewDef_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
+				out.Invalids++
 			}
 		case "name":
 			out.Values[i] = ec._TableViewDef_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
+				out.Invalids++
 			}
+		case "tableType":
+			out.Values[i] = ec._TableViewDef_tableType(ctx, field, obj)
 		case "order":
 			out.Values[i] = ec._TableViewDef_order(ctx, field, obj)
-		case "type":
-			out.Values[i] = ec._TableViewDef_type(ctx, field, obj)
 		case "icon":
 			out.Values[i] = ec._TableViewDef_icon(ctx, field, obj)
 		case "columns":
 			out.Values[i] = ec._TableViewDef_columns(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "filters":
 			out.Values[i] = ec._TableViewDef_filters(ctx, field, obj)
 		case "sorting":
@@ -115968,97 +114261,10 @@ func (ec *executionContext) _TableViewDef(ctx context.Context, sel ast.Selection
 		case "createdAt":
 			out.Values[i] = ec._TableViewDef_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
+				out.Invalids++
 			}
 		case "updatedAt":
 			out.Values[i] = ec._TableViewDef_updatedAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "createdBy":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._TableViewDef_createdBy(ctx, field, obj)
-				return res
-			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
-var tableViewDefPageImplementors = []string{"TableViewDefPage", "Pages"}
-
-func (ec *executionContext) _TableViewDefPage(ctx context.Context, sel ast.SelectionSet, obj *model.TableViewDefPage) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, tableViewDefPageImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("TableViewDefPage")
-		case "content":
-			out.Values[i] = ec._TableViewDefPage_content(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "totalPages":
-			out.Values[i] = ec._TableViewDefPage_totalPages(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "totalElements":
-			out.Values[i] = ec._TableViewDefPage_totalElements(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "totalAvailable":
-			out.Values[i] = ec._TableViewDefPage_totalAvailable(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -116849,90 +115055,6 @@ func (ec *executionContext) _UserParticipant(ctx context.Context, sel ast.Select
 	return out
 }
 
-var viewTypeImplementors = []string{"ViewType", "Node"}
-
-func (ec *executionContext) _ViewType(ctx context.Context, sel ast.SelectionSet, obj *model.ViewType) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, viewTypeImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("ViewType")
-		case "id":
-			out.Values[i] = ec._ViewType_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "name":
-			out.Values[i] = ec._ViewType_name(ctx, field, obj)
-		case "createdAt":
-			out.Values[i] = ec._ViewType_createdAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "updatedAt":
-			out.Values[i] = ec._ViewType_updatedAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "createdBy":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._ViewType_createdBy(ctx, field, obj)
-				return res
-			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
 var workspaceImplementors = []string{"Workspace"}
 
 func (ec *executionContext) _Workspace(ctx context.Context, sel ast.SelectionSet, obj *model.Workspace) graphql.Marshaler {
@@ -117681,6 +115803,77 @@ func (ec *executionContext) unmarshalNCalendarType2githubᚗcomᚋopenlineᚑai�
 
 func (ec *executionContext) marshalNCalendarType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCalendarType(ctx context.Context, sel ast.SelectionSet, v model.CalendarType) graphql.Marshaler {
 	return v
+}
+
+func (ec *executionContext) unmarshalNColumnType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐColumnType(ctx context.Context, v interface{}) (model.ColumnType, error) {
+	var res model.ColumnType
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNColumnType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐColumnType(ctx context.Context, sel ast.SelectionSet, v model.ColumnType) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNColumnType2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐColumnTypeᚄ(ctx context.Context, v interface{}) ([]model.ColumnType, error) {
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]model.ColumnType, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNColumnType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐColumnType(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNColumnType2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐColumnTypeᚄ(ctx context.Context, sel ast.SelectionSet, v []model.ColumnType) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNColumnType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐColumnType(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalNComment2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCommentᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Comment) graphql.Marshaler {
@@ -121645,6 +119838,10 @@ func (ec *executionContext) marshalNSuggestedMergeOrganization2ᚖgithubᚗcom�
 	return ec._SuggestedMergeOrganization(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNTableViewDef2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTableViewDef(ctx context.Context, sel ast.SelectionSet, v model.TableViewDef) graphql.Marshaler {
+	return ec._TableViewDef(ctx, sel, &v)
+}
+
 func (ec *executionContext) marshalNTableViewDef2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTableViewDefᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.TableViewDef) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -121699,18 +119896,9 @@ func (ec *executionContext) marshalNTableViewDef2ᚖgithubᚗcomᚋopenlineᚑai
 	return ec._TableViewDef(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNTableViewDefPage2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTableViewDefPage(ctx context.Context, sel ast.SelectionSet, v model.TableViewDefPage) graphql.Marshaler {
-	return ec._TableViewDefPage(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNTableViewDefPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTableViewDefPage(ctx context.Context, sel ast.SelectionSet, v *model.TableViewDefPage) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._TableViewDefPage(ctx, sel, v)
+func (ec *executionContext) unmarshalNTableViewDefInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTableViewDefInput(ctx context.Context, v interface{}) (model.TableViewDefInput, error) {
+	res, err := ec.unmarshalInputTableViewDefInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNTag2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTag(ctx context.Context, sel ast.SelectionSet, v model.Tag) graphql.Marshaler {
@@ -122532,61 +120720,6 @@ func (ec *executionContext) marshalOChargePeriod2ᚖgithubᚗcomᚋopenlineᚑai
 		return graphql.Null
 	}
 	return v
-}
-
-func (ec *executionContext) marshalOColumnDef2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐColumnDef(ctx context.Context, sel ast.SelectionSet, v []*model.ColumnDef) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalOColumnDef2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐColumnDef(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	return ret
-}
-
-func (ec *executionContext) marshalOColumnDef2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐColumnDef(ctx context.Context, sel ast.SelectionSet, v *model.ColumnDef) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._ColumnDef(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalOColumnType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐColumnType(ctx context.Context, sel ast.SelectionSet, v *model.ColumnType) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._ColumnType(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOContact2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContact(ctx context.Context, sel ast.SelectionSet, v *model.Contact) graphql.Marshaler {
@@ -123795,6 +121928,22 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 	return res
 }
 
+func (ec *executionContext) unmarshalOTableViewType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTableViewType(ctx context.Context, v interface{}) (*model.TableViewType, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.TableViewType)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOTableViewType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTableViewType(ctx context.Context, sel ast.SelectionSet, v *model.TableViewType) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
 func (ec *executionContext) marshalOTag2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTag(ctx context.Context, sel ast.SelectionSet, v []*model.Tag) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -124029,13 +122178,6 @@ func (ec *executionContext) marshalOUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenl
 		return graphql.Null
 	}
 	return ec._User(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalOViewType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐViewType(ctx context.Context, sel ast.SelectionSet, v *model.ViewType) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._ViewType(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {
