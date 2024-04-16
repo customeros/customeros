@@ -38,6 +38,7 @@ export type GetInvoiceQuery = {
     invoicePeriodEnd: any;
     invoiceUrl: string;
     due: any;
+    issued: any;
     subtotal: number;
     taxDue: number;
     amountDue: number;
@@ -74,7 +75,7 @@ export type GetInvoiceQuery = {
     };
     invoiceLineItems: Array<{
       __typename?: 'InvoiceLine';
-      quantity: number;
+      quantity: any;
       subtotal: number;
       taxDue: number;
       total: number;
@@ -111,6 +112,7 @@ export const GetInvoiceDocument = `
     invoicePeriodEnd
     invoiceUrl
     due
+    issued
     subtotal
     taxDue
     amountDue

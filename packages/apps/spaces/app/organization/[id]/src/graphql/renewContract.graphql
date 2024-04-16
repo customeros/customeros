@@ -1,0 +1,5 @@
+mutation renewContract($contractId: ID!) {
+  contract_Renew(contractId: $contractId) {
+    id
+  }
+}

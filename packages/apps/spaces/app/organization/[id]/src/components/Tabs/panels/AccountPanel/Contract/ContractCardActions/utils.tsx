@@ -1,5 +1,6 @@
 import React from 'react';
 
+import { Clock } from '@ui/media/icons/Clock';
 import { ContractStatus } from '@graphql/types';
 import { Edit03 } from '@ui/media/icons/Edit03';
 import { XSquare } from '@ui/media/icons/XSquare';
@@ -13,5 +14,6 @@ export const contractOptionIcon: Record<ContractStatus, JSX.Element | null> = {
   [ContractStatus.OutOfContract]: (
     <PauseCircle color='warning.500' boxSize='inherit' />
   ),
+  [ContractStatus.Scheduled]: <Clock color='primary.600' boxSize='3' />,
   [ContractStatus.Undefined]: null,
 };

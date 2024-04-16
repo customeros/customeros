@@ -24,6 +24,7 @@ query getContracts($id: ID!) {
             contractStatus
             contractRenewalCycle
             committedPeriodInMonths
+            approved
 
             contractUrl
             billingCycle

@@ -164,9 +164,17 @@ export type BankAccountUpdateInput = {
 export enum BilledType {
   Annually = 'ANNUALLY',
   Monthly = 'MONTHLY',
+  /**
+   * Deprecated
+   * @deprecated MONTHLY will be used instead.
+   */
   None = 'NONE',
   Once = 'ONCE',
   Quarterly = 'QUARTERLY',
+  /**
+   * Deprecated
+   * @deprecated Not supported yet.
+   */
   Usage = 'USAGE',
 }
 
@@ -577,6 +585,7 @@ export type Contract = MetadataInterface & {
    * @deprecated Use metadata instead.
    */
   appSource: Scalars['String']['output'];
+  approved: Scalars['Boolean']['output'];
   attachments?: Maybe<Array<Attachment>>;
   autoRenew: Scalars['Boolean']['output'];
   /**
@@ -636,6 +645,7 @@ export type Contract = MetadataInterface & {
    * @deprecated Use billingDetails instead.
    */
   invoiceNote?: Maybe<Scalars['String']['output']>;
+  invoices: Array<Invoice>;
   /**
    * Deprecated, use billingDetails instead.
    * @deprecated Use billingDetails instead.
@@ -700,6 +710,7 @@ export type Contract = MetadataInterface & {
    * @deprecated Use contractStatus instead.
    */
   status: ContractStatus;
+  upcomingInvoices: Array<Invoice>;
   /**
    * Deprecated, use metadata instead.
    * @deprecated Use metadata instead.
@@ -722,6 +733,7 @@ export enum ContractBillingCycle {
 
 export type ContractInput = {
   appSource?: InputMaybe<Scalars['String']['input']>;
+  approved?: InputMaybe<Scalars['Boolean']['input']>;
   autoRenew?: InputMaybe<Scalars['Boolean']['input']>;
   /** Deprecated */
   billingCycle?: InputMaybe<ContractBillingCycle>;
@@ -767,6 +779,7 @@ export enum ContractStatus {
   Ended = 'ENDED',
   Live = 'LIVE',
   OutOfContract = 'OUT_OF_CONTRACT',
+  Scheduled = 'SCHEDULED',
   Undefined = 'UNDEFINED',
 }
 
@@ -776,6 +789,7 @@ export type ContractUpdateInput = {
   /** Deprecated */
   addressLine2?: InputMaybe<Scalars['String']['input']>;
   appSource?: InputMaybe<Scalars['String']['input']>;
+  approved?: InputMaybe<Scalars['Boolean']['input']>;
   autoRenew?: InputMaybe<Scalars['Boolean']['input']>;
   /** Deprecated */
   billingCycle?: InputMaybe<ContractBillingCycle>;
@@ -1663,7 +1677,7 @@ export type InvoiceLine = MetadataInterface & {
   description: Scalars['String']['output'];
   metadata: Metadata;
   price: Scalars['Float']['output'];
-  quantity: Scalars['Int']['output'];
+  quantity: Scalars['Int64']['output'];
   subtotal: Scalars['Float']['output'];
   taxDue: Scalars['Float']['output'];
   total: Scalars['Float']['output'];
@@ -1682,20 +1696,36 @@ export type InvoiceProvider = {
   name?: Maybe<Scalars['String']['output']>;
 };
 
+export type InvoiceSimulate = {
+  __typename?: 'InvoiceSimulate';
+  amount: Scalars['Float']['output'];
+  currency: Scalars['String']['output'];
+  customer: InvoiceCustomer;
+  due: Scalars['Time']['output'];
+  invoiceLineItems: Array<InvoiceLine>;
+  invoiceNumber: Scalars['String']['output'];
+  invoicePeriodEnd: Scalars['Time']['output'];
+  invoicePeriodStart: Scalars['Time']['output'];
+  issued: Scalars['Time']['output'];
+  note: Scalars['String']['output'];
+  offCycle: Scalars['Boolean']['output'];
+  postpaid: Scalars['Boolean']['output'];
+  provider: InvoiceProvider;
+  subtotal: Scalars['Float']['output'];
+  total: Scalars['Float']['output'];
+};
+
 export type InvoiceSimulateInput = {
   contractId: Scalars['ID']['input'];
-  periodEndDate?: InputMaybe<Scalars['Time']['input']>;
-  periodStartDate?: InputMaybe<Scalars['Time']['input']>;
   serviceLines: Array<InvoiceSimulateServiceLineInput>;
 };
 
 export type InvoiceSimulateServiceLineInput = {
   billingCycle: BilledType;
-  comments: Scalars['String']['input'];
   description: Scalars['String']['input'];
   parentId?: InputMaybe<Scalars['ID']['input']>;
   price: Scalars['Float']['input'];
-  quantity: Scalars['Int']['input'];
+  quantity: Scalars['Int64']['input'];
   serviceLineItemId?: InputMaybe<Scalars['ID']['input']>;
   serviceStarted: Scalars['Time']['input'];
   taxRate?: InputMaybe<Scalars['Float']['input']>;
@@ -2186,6 +2216,7 @@ export type Mutation = {
   contact_Update: Contact;
   contractLineItem_Close: Scalars['ID']['output'];
   contractLineItem_Create: ServiceLineItem;
+  contractLineItem_NewVersion: ServiceLineItem;
   contractLineItem_Update: ServiceLineItem;
   contract_AddAttachment: Contract;
   contract_Create: Contract;
@@ -2227,7 +2258,7 @@ export type Mutation = {
   interactionSession_LinkAttachment: InteractionSession;
   invoice_NextDryRunForContract: Scalars['ID']['output'];
   invoice_Pay: Invoice;
-  invoice_Simulate: Array<Invoice>;
+  invoice_Simulate: Array<InvoiceSimulate>;
   invoice_Update: Invoice;
   invoice_Void: Invoice;
   invoicingCycle_Create: InvoicingCycle;
@@ -2439,6 +2470,10 @@ export type MutationContractLineItem_CloseArgs = {
 
 export type MutationContractLineItem_CreateArgs = {
   input: ServiceLineItemInput;
+};
+
+export type MutationContractLineItem_NewVersionArgs = {
+  input: ServiceLineItemNewVersionInput;
 };
 
 export type MutationContractLineItem_UpdateArgs = {
@@ -4337,8 +4372,20 @@ export type ServiceLineItemInput = {
   tax?: InputMaybe<TaxInput>;
 };
 
+export type ServiceLineItemNewVersionInput = {
+  appSource?: InputMaybe<Scalars['String']['input']>;
+  comments?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  id?: InputMaybe<Scalars['ID']['input']>;
+  price?: InputMaybe<Scalars['Float']['input']>;
+  quantity?: InputMaybe<Scalars['Int64']['input']>;
+  serviceStarted?: InputMaybe<Scalars['Time']['input']>;
+  tax?: InputMaybe<TaxInput>;
+};
+
 export type ServiceLineItemUpdateInput = {
   appSource?: InputMaybe<Scalars['String']['input']>;
+  /** Deprecated: billing cycle is not updatable. */
   billingCycle?: InputMaybe<BilledType>;
   comments?: InputMaybe<Scalars['String']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;

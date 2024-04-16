@@ -76,6 +76,7 @@ export const ContractStartModal = ({
           contractId,
           patch: true,
           serviceStarted: state.values.serviceStarted,
+          approved: true,
           endedAt: '0001-01-01T00:00:00.000000Z',
         },
       },

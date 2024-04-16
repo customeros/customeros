@@ -15,6 +15,7 @@ query GetInvoice($id: ID!) {
     invoicePeriodEnd
     invoiceUrl
     due
+    issued
     subtotal
     taxDue
     amountDue

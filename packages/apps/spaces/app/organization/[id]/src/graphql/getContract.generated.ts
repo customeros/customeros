@@ -42,6 +42,7 @@ export type GetContractQuery = {
     contractEnded?: any | null;
     serviceStarted?: any | null;
     autoRenew: boolean;
+    approved: boolean;
     metadata: { __typename?: 'Metadata'; id: string };
     attachments?: Array<{
       __typename?: 'Attachment';
@@ -91,6 +92,7 @@ export const GetContractDocument = `
     contractEnded
     serviceStarted
     autoRenew
+    approved
     attachments {
       id
       basePath

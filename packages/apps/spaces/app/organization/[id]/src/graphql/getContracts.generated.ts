@@ -53,6 +53,7 @@ export type GetContractsQuery = {
       contractStatus: Types.ContractStatus;
       contractRenewalCycle: Types.ContractRenewalCycle;
       committedPeriodInMonths?: any | null;
+      approved: boolean;
       contractUrl?: string | null;
       billingCycle?: Types.ContractBillingCycle | null;
       billingEnabled: boolean;
@@ -162,6 +163,7 @@ export const GetContractsDocument = `
       contractStatus
       contractRenewalCycle
       committedPeriodInMonths
+      approved
       contractUrl
       billingCycle
       billingEnabled
