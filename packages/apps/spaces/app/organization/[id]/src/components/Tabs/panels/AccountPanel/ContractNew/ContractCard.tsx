@@ -12,8 +12,6 @@ import { FormInput } from '@ui/form/Input/FormInput2';
 import { Contract, ContractStatus } from '@graphql/types';
 import { Divider } from '@ui/presentation/Divider/Divider';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { ArrowNarrowRight } from '@ui/media/icons/ArrowNarrowRight';
-import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 import { Card, CardFooter, CardHeader } from '@ui/presentation/Card/Card';
 import { useUpdateContractMutation } from '@organization/src/graphql/updateContract.generated';
 import {
@@ -21,6 +19,7 @@ import {
   useGetContractsQuery,
 } from '@organization/src/graphql/getContracts.generated';
 import { useUpdatePanelModalStateContext } from '@organization/src/components/Tabs/panels/AccountPanel/context/AccountModalsContext';
+import { UpcomingInvoices } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/UpcomingInvoices/UpcomingInvoices';
 
 import { Services } from './Services/Services';
 import { ContractSubtitle } from './ContractSubtitle';
@@ -214,29 +213,7 @@ export const ContractCard = ({
         />
         <Divider className='my-3' />
 
-        <article className='w-full'>
-          <p className='text-sm font-semibold mb-1'>
-            Next invoice
-            <ArrowNarrowRight className='mx-1' />
-            <span className='font-normal capitalize'>
-              {data?.upcomingInvoices[0].status?.toLowerCase()}
-            </span>
-          </p>
-          <div>
-            {data?.upcomingInvoices.map((invoice) => (
-              <div
-                key={invoice.metadata.id}
-                className='flex justify-between text-sm'
-              >
-                <span>N° {invoice.invoiceNumber}</span>
-                <span>
-                  {formatCurrency(invoice.amountDue, 2, invoice.currency)}
-                </span>
-              </div>
-            ))}
-          </div>
-        </article>
-
+        <UpcomingInvoices data={data} />
         <EditContractModal
           isOpen={isEditModalOpen}
           contractId={data.metadata.id}

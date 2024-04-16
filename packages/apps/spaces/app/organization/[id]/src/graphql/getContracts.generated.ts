@@ -87,11 +87,11 @@ export type GetContractsQuery = {
       } | null;
       upcomingInvoices: Array<{
         __typename?: 'Invoice';
-        invoiceNumber: string;
         invoicePeriodEnd: any;
         invoicePeriodStart: any;
         status?: Types.InvoiceStatus | null;
         amountDue: number;
+        due: any;
         currency: string;
         metadata: { __typename?: 'Metadata'; id: string };
         invoiceLineItems: Array<{
@@ -207,11 +207,11 @@ export const GetContractsDocument = `
         metadata {
           id
         }
-        invoiceNumber
         invoicePeriodEnd
         invoicePeriodStart
         status
         amountDue
+        due
         currency
         invoiceLineItems {
           price

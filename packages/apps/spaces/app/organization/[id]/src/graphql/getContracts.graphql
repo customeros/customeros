@@ -53,11 +53,11 @@ query getContracts($id: ID!) {
                 metadata {
                     id
                 }
-                invoiceNumber
                 invoicePeriodEnd
                 invoicePeriodStart
                 status
                 amountDue
+                due
                 currency
                 invoiceLineItems {
                     price
