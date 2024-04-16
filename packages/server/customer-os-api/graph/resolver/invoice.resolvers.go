@@ -226,6 +226,7 @@ func (r *mutationResolver) InvoiceSimulate(ctx context.Context, input model.Invo
 	}
 	for _, serviceLine := range input.ServiceLines {
 		simulateInvoiceData.ServiceLines = append(simulateInvoiceData.ServiceLines, commonService.SimulateInvoiceRequestServiceLineData{
+			Key:               serviceLine.Key,
 			ServiceLineItemID: serviceLine.ServiceLineItemID,
 			ParentID:          serviceLine.ParentID,
 			Description:       serviceLine.Description,
@@ -259,14 +260,12 @@ func (r *mutationResolver) InvoiceSimulate(ctx context.Context, input model.Invo
 			Amount:             nextInvoice.Invoice.Amount,
 			Subtotal:           nextInvoice.Invoice.Amount,
 			Total:              nextInvoice.Invoice.TotalAmount,
-			InvoiceLineItems:   []*model.InvoiceLine{},
+			InvoiceLineItems:   []*model.InvoiceLineSimulate{},
 		}
 
 		for _, line := range nextInvoice.Lines {
-			invoiceLine := model.InvoiceLine{
-				Metadata: &model.Metadata{
-					ID: line.Id,
-				},
+			invoiceLine := model.InvoiceLineSimulate{
+				Key:         line.Id,
 				Description: line.Name,
 				Price:       line.Price,
 				Quantity:    line.Quantity,

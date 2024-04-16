@@ -120,6 +120,7 @@ input InvoiceSimulateInput {
 }
 
 input InvoiceSimulateServiceLineInput {
+    key:                String!
     serviceLineItemId:  ID
     parentId:           ID
     description:        String!
@@ -139,11 +140,21 @@ type InvoiceSimulate{
     due:                Time!
     issued:             Time!
     currency:           String!
-    invoiceLineItems:   [InvoiceLine!]!
+    invoiceLineItems:   [InvoiceLineSimulate!]!
     note:               String!
     customer:           InvoiceCustomer!
     provider:           InvoiceProvider!
     amount:             Float!
     subtotal:           Float!
+    total:              Float!
+}
+
+type InvoiceLineSimulate {
+    key:                String!
+    description:        String!
+    price:              Float!
+    quantity:           Int64!
+    subtotal:           Float!
+    taxDue:             Float!
     total:              Float!
 }

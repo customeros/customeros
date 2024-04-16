@@ -7,7 +7,6 @@ import (
 )
 
 type ServiceLineItemEntity struct {
-	DataLoaderKey
 	ID               string
 	Name             string
 	CreatedAt        time.Time
@@ -27,6 +26,8 @@ type ServiceLineItemEntity struct {
 	AppSource        string
 	ParentID         string
 	VatRate          float64
+
+	DataLoaderKey
 }
 
 type ServiceLineItemEntities []ServiceLineItemEntity

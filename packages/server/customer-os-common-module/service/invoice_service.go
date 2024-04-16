@@ -47,6 +47,7 @@ type SimulateInvoiceRequestData struct {
 	ServiceLines []SimulateInvoiceRequestServiceLineData
 }
 type SimulateInvoiceRequestServiceLineData struct {
+	Key               string
 	ServiceLineItemID *string
 	ParentID          *string
 	Description       string
@@ -188,8 +189,7 @@ func (s *invoiceService) SimulateInvoice(ctx context.Context, invoiceData *Simul
 	sliEntities := neo4jentity.ServiceLineItemEntities{}
 	for _, sliData := range invoiceData.ServiceLines {
 		sliEntity := neo4jentity.ServiceLineItemEntity{
-			ID:        utils.StringPtrFirstNonEmpty(sliData.ServiceLineItemID),
-			ParentID:  utils.StringPtrFirstNonEmpty(sliData.ParentID),
+			ID:        sliData.Key,
 			Name:      sliData.Description,
 			Comments:  sliData.Comments,
 			Billed:    sliData.BillingCycle,
