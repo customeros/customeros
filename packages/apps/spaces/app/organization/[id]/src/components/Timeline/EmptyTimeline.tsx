@@ -21,7 +21,7 @@ export const EmptyTimeline: React.FC<EmptyTimelineProps> = ({
   const { data } = useOrganization({ id });
 
   return (
-    <div className='flex flex-col h-[calc(100vh-5rem)] overflow-auto'>
+    <div className='flex flex-col h-[calc(100vh-5rem)] overflow-auto w-full'>
       <div className='flex flex-col items-center flex-1 max-h-[50%] bg-[url(/backgrounds/organization/dotted-bg-pattern.svg)] bg-no-repeat bg-contain bg-center'>
         <div className='flex flex-col items-center justify-center h-full max-w-[390px]'>
           <EmptyTimelineIllustration />
