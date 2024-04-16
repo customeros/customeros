@@ -14,6 +14,7 @@ import (
 
 type ServiceLineItemReadRepository interface {
 	GetServiceLineItemById(ctx context.Context, tenant, serviceLineItemId string) (*dbtype.Node, error)
+	GetServiceLineItemsByParentId(ctx context.Context, tenant, sliParentId string) ([]*dbtype.Node, error)
 	GetAllForContract(ctx context.Context, tenant, contractId string) ([]*neo4j.Node, error)
 	GetLatestServiceLineItemByParentId(ctx context.Context, tenant, serviceLineItemParentId string, beforeDate *time.Time) (*dbtype.Node, error)
 	WasServiceLineItemInvoiced(ctx context.Context, tenant, serviceLineItemId string) (bool, error)
@@ -47,6 +48,40 @@ func (r *serviceLineItemReadRepository) GetAllForContract(ctx context.Context, t
 	params := map[string]any{
 		"tenant":     tenant,
 		"contractId": contractId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	span.LogFields(log.Int("result.count", len(result.([]*neo4j.Node))))
+	return result.([]*neo4j.Node), nil
+}
+
+func (r *serviceLineItemReadRepository) GetServiceLineItemsByParentId(ctx context.Context, tenant, sliParentId string) ([]*neo4j.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemReadRepository.GetServiceLineItemsByParentId")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.LogFields(log.String("sliParentId", sliParentId))
+
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract)-[:HAS_SERVICE]->(sli:ServiceLineItem {parentId:$parentId})
+							WHERE sli:ServiceLineItem_%s
+							RETURN sli ORDER BY sli.startedAt`, tenant)
+	params := map[string]any{
+		"tenant":   tenant,
+		"parentId": sliParentId,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
