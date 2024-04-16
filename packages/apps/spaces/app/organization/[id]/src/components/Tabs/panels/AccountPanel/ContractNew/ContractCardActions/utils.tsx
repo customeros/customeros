@@ -12,7 +12,7 @@ export const contractOptionIcon: Record<ContractStatus, JSX.Element | null> = {
   [ContractStatus.Ended]: <XSquare color='gray.500' boxSize='3' />,
   [ContractStatus.Live]: <DotLive color='inherit' boxSize='3' />,
   [ContractStatus.OutOfContract]: (
-    <PauseCircle color='warning.500' boxSize='inherit' />
+    <PauseCircle color='warning.500' boxSize='3' />
   ),
   [ContractStatus.Scheduled]: <Clock color='primary.600' boxSize='3' />,
   [ContractStatus.Undefined]: null,

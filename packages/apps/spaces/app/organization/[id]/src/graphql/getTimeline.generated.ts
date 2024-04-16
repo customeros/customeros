@@ -780,7 +780,14 @@ export type GetTimelineQuery = {
           }>;
         }
       | { __typename: 'Note' }
-      | { __typename: 'Order' }
+      | {
+          __typename: 'Order';
+          id: string;
+          confirmedAt?: any | null;
+          fulfilledAt?: any | null;
+          createdAt: any;
+          cancelledAt?: any | null;
+        }
       | { __typename: 'PageView' }
     >;
   } | null;
@@ -790,12 +797,12 @@ export const GetTimelineDocument = `
     query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
   organization(id: $organizationId) {
     timelineEventsTotalCount(
-      timelineEventTypes: [INTERACTION_EVENT, MEETING, ACTION, LOG_ENTRY, ISSUE]
+      timelineEventTypes: [INTERACTION_EVENT, MEETING, ACTION, LOG_ENTRY, ISSUE, ORDER]
     )
     timelineEvents(
       from: $from
       size: $size
-      timelineEventTypes: [INTERACTION_EVENT, MEETING, ACTION, LOG_ENTRY, ISSUE]
+      timelineEventTypes: [INTERACTION_EVENT, MEETING, ACTION, LOG_ENTRY, ISSUE, ORDER]
     ) {
       __typename
       ... on Action {
@@ -816,6 +823,13 @@ export const GetTimelineDocument = `
           }
         }
         content
+      }
+      ... on Order {
+        id
+        confirmedAt
+        fulfilledAt
+        createdAt
+        cancelledAt
       }
       ... on InteractionEvent {
         id

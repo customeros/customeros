@@ -10,7 +10,10 @@ import { DateTimeUtils } from '@spaces/utils/date';
 import { toastError } from '@ui/presentation/Toast';
 import { FormInput } from '@ui/form/Input/FormInput2';
 import { Contract, ContractStatus } from '@graphql/types';
+import { Divider } from '@ui/presentation/Divider/Divider';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { ArrowNarrowRight } from '@ui/media/icons/ArrowNarrowRight';
+import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 import { Card, CardFooter, CardHeader } from '@ui/presentation/Card/Card';
 import { useUpdateContractMutation } from '@organization/src/graphql/updateContract.generated';
 import {
@@ -209,6 +212,30 @@ export const ContractCard = ({
           currency={data?.currency}
           onModalOpen={onServiceLineItemsOpen}
         />
+        <Divider className='my-3' />
+
+        <article className='w-full'>
+          <p className='text-sm font-semibold mb-1'>
+            Next invoice
+            <ArrowNarrowRight className='mx-1' />
+            <span className='font-normal capitalize'>
+              {data?.upcomingInvoices[0].status?.toLowerCase()}
+            </span>
+          </p>
+          <div>
+            {data?.upcomingInvoices.map((invoice) => (
+              <div
+                key={invoice.metadata.id}
+                className='flex justify-between text-sm'
+              >
+                <span>N° {invoice.invoiceNumber}</span>
+                <span>
+                  {formatCurrency(invoice.amountDue, 2, invoice.currency)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </article>
 
         <EditContractModal
           isOpen={isEditModalOpen}

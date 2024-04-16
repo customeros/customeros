@@ -50,6 +50,7 @@ query GetInvoice($id: ID!) {
         sourceOfTruth
         appSource
       }
+
       quantity
       subtotal
       taxDue

@@ -49,6 +49,22 @@ query getContracts($id: ID!) {
                 billingEmailCC
                 billingEmailBCC
             }
+            upcomingInvoices {
+                metadata {
+                    id
+                }
+                invoiceNumber
+                invoicePeriodEnd
+                invoicePeriodStart
+                status
+                amountDue
+                currency
+                invoiceLineItems {
+                    price
+                    quantity
+                    total
+                }
+            }
             opportunities {
                 id
                 comments
