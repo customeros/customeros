@@ -71,6 +71,7 @@ type ServiceLineItemService interface {
 	Delete(ctx context.Context, serviceLineItemId string) (bool, error)
 	GetById(ctx context.Context, id string) (*neo4jentity.ServiceLineItemEntity, error)
 	GetServiceLineItemsForContracts(ctx context.Context, contractIds []string) (*neo4jentity.ServiceLineItemEntities, error)
+	GetServiceLineItemsByParentId(ctx context.Context, sliParentId string) (*neo4jentity.ServiceLineItemEntities, error)
 	Close(ctx context.Context, serviceLineItemId string, endedAt *time.Time) error
 	CreateOrUpdateOrCloseInBulk(ctx context.Context, contractId string, sliBulkData []*ServiceLineItemDetails) ([]string, error)
 	NewVersion(ctx context.Context, data ServiceLineItemNewVersionData) (string, error)
@@ -172,7 +173,7 @@ func (s *serviceLineItemService) NewVersion(ctx context.Context, data ServiceLin
 	startedAt := utils.ToDate(utils.IfNotNilTimeWithDefault(data.StartedAt, utils.Now()))
 
 	// Check no SLI of the contract are cancelled
-	serviceLineItems, err := s.GetServiceLineItemsForContracts(ctx, []string{contractEntity.Id})
+	serviceLineItems, err := s.GetServiceLineItemsByParentId(ctx, baseServiceLineItemEntity.ParentID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error on getting service line items for contract {%s}: %s", contractEntity.Id, err.Error())
@@ -271,7 +272,7 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 	}
 
 	if baseServiceLineItemEntity.Canceled {
-		err = fmt.Errorf("service line item with id {%s} is already ended", serviceLineItemDetails.Id)
+		err = fmt.Errorf("contract line item with id {%s} is already ended", serviceLineItemDetails.Id)
 		tracing.TraceErr(span, err)
 		return err
 	}
@@ -284,13 +285,13 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 	}
 
 	// Check no SLI of the contract are cancelled
-	serviceLineItems, err := s.GetServiceLineItemsForContracts(ctx, []string{contractEntity.Id})
+	serviceLineItemsOfSameParent, err := s.GetServiceLineItemsByParentId(ctx, baseServiceLineItemEntity.ParentID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error on getting service line items for contract {%s}: %s", contractEntity.Id, err.Error())
 		return err
 	}
-	for _, sli := range *serviceLineItems {
+	for _, sli := range *serviceLineItemsOfSameParent {
 		if sli.Canceled {
 			err = fmt.Errorf("contract line item with id {%s} is already ended", sli.ID)
 			tracing.TraceErr(span, err)
@@ -590,6 +591,24 @@ func (s *serviceLineItemService) GetServiceLineItemsForContracts(ctx context.Con
 	for _, v := range serviceLineItems {
 		serviceLineItemEntity := neo4jmapper.MapDbNodeToServiceLineItemEntity(v.Node)
 		serviceLineItemEntity.DataloaderKey = v.LinkedNodeId
+		serviceLineItemEntities = append(serviceLineItemEntities, *serviceLineItemEntity)
+	}
+	return &serviceLineItemEntities, nil
+}
+
+func (s *serviceLineItemService) GetServiceLineItemsByParentId(ctx context.Context, sliParentId string) (*neo4jentity.ServiceLineItemEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemService.GetServiceLineItemsByParentId")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("sliParentId", sliParentId))
+
+	serviceLineItems, err := s.repositories.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemsByParentId(ctx, common.GetTenantFromContext(ctx), sliParentId)
+	if err != nil {
+		return nil, err
+	}
+	serviceLineItemEntities := make(neo4jentity.ServiceLineItemEntities, 0, len(serviceLineItems))
+	for _, v := range serviceLineItems {
+		serviceLineItemEntity := neo4jmapper.MapDbNodeToServiceLineItemEntity(v)
 		serviceLineItemEntities = append(serviceLineItemEntities, *serviceLineItemEntity)
 	}
 	return &serviceLineItemEntities, nil
