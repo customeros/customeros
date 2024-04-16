@@ -94,7 +94,7 @@ func prepareClient() {
 	grpcClient := grpc_client.InitClients(gRPCconn)
 	commonServices := commonService.InitServices(postgresGormDB, driver, "neo4j", grpcClient)
 	commonAuthServices := commonAuthService.InitServices(nil, commonServices, postgresGormDB)
-	customerOsApiServices = service.InitServices(appLogger, driver, &config.Config{}, commonServices, commonAuthServices, grpcClient)
+	customerOsApiServices = service.InitServices(appLogger, driver, &config.Config{}, commonServices, commonAuthServices, grpcClient, postgresGormDB)
 	graphResolver := NewResolver(appLogger, customerOsApiServices, customerOsApiServices.CommonServices.GrpcClients)
 	loader := dataloader.NewDataLoader(customerOsApiServices)
 	customCtx := &common.CustomContext{

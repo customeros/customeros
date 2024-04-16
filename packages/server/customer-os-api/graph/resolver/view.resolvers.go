@@ -11,11 +11,21 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 )
 
+// TableViewDefCreate is the resolver for the tableViewDef_Create field.
+func (r *mutationResolver) TableViewDefCreate(ctx context.Context, input model.TableViewDefCreateInput) (*model.TableViewDef, error) {
+	panic(fmt.Errorf("not implemented: TableViewDefCreate - tableViewDef_Create"))
+}
+
 // TableViewDefUpdate is the resolver for the tableViewDef_Update field.
-func (r *mutationResolver) TableViewDefUpdate(ctx context.Context, input model.TableViewDefInput) (*model.TableViewDef, error) {
-	panic(fmt.Errorf("not implemented: TableViewDefUpdate - tableViewDef_Update"))
+func (r *mutationResolver) TableViewDefUpdate(ctx context.Context, input model.TableViewDefUpdateInput) (*model.TableViewDef, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.TableViewDefUpdate", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	return nil, nil
 }
 
 // TableViewDefs is the resolver for the tableViewDefs field.
@@ -23,6 +33,11 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.TableViewDefs", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	tenant := common.GetTenantFromContext(ctx)
+	userId := common.GetUserIdFromContext(ctx)
+
+	r.Services.Repositories.PostgresRepositories.TableViewDefRepository.FindAll(ctx, tenant, userId)
 
 	return nil, nil
 }

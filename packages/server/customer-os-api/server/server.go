@@ -114,7 +114,11 @@ func (server *server) Run(parentCtx context.Context) error {
 	corsConfig.AllowOrigins = []string{"*"}
 	adminApiHandler := cosHandler.NewAdminApiHandler(server.cfg, commonServices)
 
-	serviceContainer := service.InitServices(server.log, &neo4jDriver, server.cfg, commonServices, commonAuthServices, grpcContainer)
+	// Initialize postgres db
+	postgresDb, _ := InitDB(server.cfg, server.log)
+	defer postgresDb.SqlDB.Close()
+
+	serviceContainer := service.InitServices(server.log, &neo4jDriver, server.cfg, commonServices, commonAuthServices, grpcContainer, postgresDb.GormDB)
 	r.Use(cors.New(corsConfig))
 	r.Use(ginzap.GinzapWithConfig(server.log.Logger(), &ginzap.Config{
 		TimeFormat: time.RFC3339,
