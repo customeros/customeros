@@ -1,3 +1,24 @@
-mutation SimulateInvoice($invoice: InvoiceSimulateInput!) {
-    invoice_Simulate(input: $invoice)
+mutation SimulateOnCycleInvoice($contractId: ID!, $serviceLines: [InvoiceSimulateServiceLineInput!]!) {
+  invoice_Simulate(input: {
+    contractId: $contractId
+    serviceLines: $serviceLines
+  }) {
+    invoiceNumber
+    postpaid
+    offCycle
+    invoicePeriodStart
+    invoicePeriodEnd
+    amount
+    subtotal
+    total
+    invoiceLineItems {
+      key
+      description
+      price
+      quantity
+      subtotal
+      taxDue
+      total
+    }
+  }
 }

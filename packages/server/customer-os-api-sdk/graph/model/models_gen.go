@@ -1309,6 +1309,16 @@ type InvoiceLine struct {
 func (InvoiceLine) IsMetadataInterface()        {}
 func (this InvoiceLine) GetMetadata() *Metadata { return this.Metadata }
 
+type InvoiceLineSimulate struct {
+	Key         string  `json:"key"`
+	Description string  `json:"description"`
+	Price       float64 `json:"price"`
+	Quantity    int64   `json:"quantity"`
+	Subtotal    float64 `json:"subtotal"`
+	TaxDue      float64 `json:"taxDue"`
+	Total       float64 `json:"total"`
+}
+
 type InvoiceProvider struct {
 	LogoURL              *string `json:"logoUrl,omitempty"`
 	LogoRepositoryFileID *string `json:"logoRepositoryFileId,omitempty"`
@@ -1322,21 +1332,21 @@ type InvoiceProvider struct {
 }
 
 type InvoiceSimulate struct {
-	Postpaid           bool             `json:"postpaid"`
-	OffCycle           bool             `json:"offCycle"`
-	InvoiceNumber      string           `json:"invoiceNumber"`
-	InvoicePeriodStart time.Time        `json:"invoicePeriodStart"`
-	InvoicePeriodEnd   time.Time        `json:"invoicePeriodEnd"`
-	Due                time.Time        `json:"due"`
-	Issued             time.Time        `json:"issued"`
-	Currency           string           `json:"currency"`
-	InvoiceLineItems   []*InvoiceLine   `json:"invoiceLineItems"`
-	Note               string           `json:"note"`
-	Customer           *InvoiceCustomer `json:"customer"`
-	Provider           *InvoiceProvider `json:"provider"`
-	Amount             float64          `json:"amount"`
-	Subtotal           float64          `json:"subtotal"`
-	Total              float64          `json:"total"`
+	Postpaid           bool                   `json:"postpaid"`
+	OffCycle           bool                   `json:"offCycle"`
+	InvoiceNumber      string                 `json:"invoiceNumber"`
+	InvoicePeriodStart time.Time              `json:"invoicePeriodStart"`
+	InvoicePeriodEnd   time.Time              `json:"invoicePeriodEnd"`
+	Due                time.Time              `json:"due"`
+	Issued             time.Time              `json:"issued"`
+	Currency           string                 `json:"currency"`
+	InvoiceLineItems   []*InvoiceLineSimulate `json:"invoiceLineItems"`
+	Note               string                 `json:"note"`
+	Customer           *InvoiceCustomer       `json:"customer"`
+	Provider           *InvoiceProvider       `json:"provider"`
+	Amount             float64                `json:"amount"`
+	Subtotal           float64                `json:"subtotal"`
+	Total              float64                `json:"total"`
 }
 
 type InvoiceSimulateInput struct {
@@ -1345,6 +1355,7 @@ type InvoiceSimulateInput struct {
 }
 
 type InvoiceSimulateServiceLineInput struct {
+	Key               string     `json:"key"`
 	ServiceLineItemID *string    `json:"serviceLineItemId,omitempty"`
 	ParentID          *string    `json:"parentId,omitempty"`
 	Description       string     `json:"description"`
