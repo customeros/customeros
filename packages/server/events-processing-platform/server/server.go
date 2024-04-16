@@ -11,7 +11,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/service"
 	"google.golang.org/grpc"
 
-	"github.com/labstack/echo/v4"
 	commonconf "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
@@ -39,7 +38,6 @@ type Server struct {
 	AggregateStore  eventstore.AggregateStore
 	GrpcServer      *grpc.Server
 
-	echo   *echo.Echo
 	doneCh chan struct{}
 	//	metrics            *metrics.ESMicroserviceMetrics
 }
@@ -47,7 +45,6 @@ type Server struct {
 func NewServer(cfg *config.Config, log logger.Logger) *Server {
 	return &Server{Config: cfg,
 		Log:    log,
-		echo:   echo.New(),
 		doneCh: make(chan struct{}),
 	}
 }
@@ -114,10 +111,6 @@ func (server *Server) Start(parentCtx context.Context) error {
 	server.waitShootDown(waitShotDownDuration)
 
 	grpcServer.GracefulStop()
-
-	if err := server.echo.Shutdown(ctx); err != nil {
-		server.Log.Warnf("(Shutdown) err: {%validate}", err)
-	}
 
 	<-server.doneCh
 
