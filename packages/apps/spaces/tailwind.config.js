@@ -10,6 +10,11 @@ module.exports = {
     './styles/**/*.{css,scss}',
   ],
   theme: {
+    fontFamily: {
+      heading: ['var(--font-barlow)'],
+      body: ['var(--font-barlow)'],
+      sticky: ['var(--font-merriweather)'],
+    },
     boxShadow: shadows,
     colors: {
       ...colors,
@@ -80,6 +85,26 @@ module.exports = {
             opacity: 0,
           },
         },
+        slideDown: {
+          from: {
+            opacity: 0,
+            transform: 'translateY(-10px)',
+          },
+          to: {
+            opacity: 1,
+            transform: 'translateY(0)',
+          },
+        },
+        slideUp: {
+          from: {
+            opacity: 0,
+            transform: 'translateY(10px)',
+          },
+          to: {
+            opacity: 1,
+            transform: 'translateY(0)',
+          },
+        },
       },
 
       animation: {
@@ -97,6 +122,8 @@ module.exports = {
         collapseDown: 'collapseDown 400ms cubic-bezier(0.16, 1, 0.3, 1)',
         collapseUp: 'collapseUp 400ms cubic-bezier(0.16, 1, 0.3, 1)',
         pulseOpacity: 'pulseOpacity 0.7s infinite alternate ease-in-out',
+        slideUp: 'slideUp 400ms cubic-bezier(0.16, 1, 0.3, 1)',
+        slideDown: 'slideDown 400ms cubic-bezier(0.16, 1, 0.3, 1)',
       },
     },
   },

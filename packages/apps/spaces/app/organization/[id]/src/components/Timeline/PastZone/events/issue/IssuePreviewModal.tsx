@@ -1,19 +1,16 @@
+import Link from 'next/link';
 import { FC, Fragment } from 'react';
 
 import { match } from 'ts-pattern';
 
-import { Flex } from '@ui/layout/Flex';
-import { Link } from '@ui/navigation/Link';
-import { Text } from '@ui/typography/Text';
 import { Zendesk } from '@ui/media/logos/Zendesk';
-import { VStack, HStack } from '@ui/layout/Stack';
-import { Divider } from '@ui/presentation/Divider';
 import { DateTimeUtils } from '@spaces/utils/date';
-import { Tag, TagLabel } from '@ui/presentation/Tag';
+import { Tag, TagLabel } from '@ui/presentation/Tag/Tag';
+import { Divider } from '@ui/presentation/Divider/Divider';
 import { Comment, InteractionEvent } from '@graphql/types';
 import { getName } from '@spaces/utils/getParticipantsName';
-import { CardBody, CardFooter } from '@ui/presentation/Card';
 import { getExternalUrl } from '@spaces/utils/getExternalLink';
+import { CardFooter, CardContent } from '@ui/presentation/Card/Card';
 import { IssueWithAliases } from '@organization/src/components/Timeline/types';
 import { MarkdownContentRenderer } from '@ui/presentation/MarkdownContentRenderer/MarkdownContentRenderer';
 import { IssueCommentCard } from '@organization/src/components/Timeline/PastZone/events/issue/IssueCommentCard';
@@ -101,119 +98,71 @@ export const IssuePreviewModal: FC = () => {
         parse='slack'
       />
 
-      <CardBody
-        mt={0}
-        maxH='calc(100vh - 4rem - 56px - 51px - 16px - 8px);'
-        p={6}
-        pt={0}
-        overflow='auto'
-      >
-        <HStack
-          gap={2}
-          mb={2}
-          position='sticky'
-          top='0'
-          bg='white'
-          pb='2'
-          zIndex='10'
-        >
+      <CardContent className='mt-0 p-6 pt-0 max-h-[calc(100vh-195px)] overflow-auto'>
+        <div className='flex gap-2 mb-2 sticky top-0 bg-white pb-2 z-10'>
           {issue?.priority && (
             <PriorityBadge
               priority={issue.priority.toLowerCase() as Priority}
             />
           )}
           <Tag
-            size='sm'
+            size='md'
             variant='outline'
-            colorScheme='blue'
-            border='1px solid'
-            background='white'
-            borderColor={`${[statusColorScheme]}.200`}
-            backgroundColor={`${[statusColorScheme]}.50`}
-            color={`${[statusColorScheme]}.700`}
-            boxShadow='none'
-            fontWeight='normal'
-            minHeight={6}
+            className='min-h-6 font-normal'
+            colorScheme={statusColorScheme}
           >
-            <TagLabel textTransform='capitalize'>
+            <TagLabel className='capitalize'>
               {issue.issueStatus.replaceAll('_', ' ').replaceAll('-', ' ')}
             </TagLabel>
           </Tag>
           <Tag
-            size='sm'
+            size='md'
+            className='bg-white border-gray-200 text-gray-500 font-normal min-h-6'
             variant='outline'
-            colorScheme='blue'
-            border='1px solid'
-            background='white'
-            borderColor={`gray.200`}
-            backgroundColor={`white`}
-            color={`gray.500`}
-            boxShadow='none'
-            fontWeight='normal'
-            minHeight={6}
+            colorScheme='gray'
           >
             <TagLabel>#{issue?.externalLinks?.[0]?.externalId}</TagLabel>
           </Tag>
-        </HStack>
+        </div>
         <MarkdownContentRenderer
           className='text-sm mb-2'
           markdownContent={issue?.description ?? ''}
         />
 
         {issue?.tags?.length && (
-          <Text color='gray.500' fontSize='sm' mb={6}>
+          <span className='text-gray-500 text-sm mb-6'>
             {issue.tags.map((t) => t?.name).join(' • ')}
-          </Text>
+          </span>
         )}
 
-        <Flex align='center' mb='2'>
-          <Flex alignItems='baseline'>
-            <Text fontSize='sm' whiteSpace='nowrap'>
+        <div className='flex items-center mb-2'>
+          <div className='flex items-baseline'>
+            <span className='text-sm whitespace-nowrap'>
               {`Issue ${submittedBy ? 'submitted' : 'reported'} by`}
-            </Text>
-            <Text mx={1} fontSize='sm' whiteSpace='nowrap' fontWeight='medium'>
+            </span>
+            <span className='mx-1 text-sm whitespace-nowrap font-medium'>
               {submittedBy || reportedBy}
-            </Text>
-            <Text
-              color='gray.400'
-              fontSize='sm'
-              whiteSpace='nowrap'
-              ml={1}
-              mr={2}
-            >
+            </span>
+            <span className='text-gray-400 text-sm whitespace-nowrap ml-1 mr-2'>
               {DateTimeUtils.format(
                 issue?.createdAt,
                 DateTimeUtils.dateWithHour,
               )}
-            </Text>
-          </Flex>
-          <Divider
-            orientation='horizontal'
-            borderBottomColor='gray.200'
-            h='full'
-          />
-        </Flex>
+            </span>
+          </div>
+          <Divider />
+        </div>
 
-        <VStack
-          gap={2}
-          w='full'
-          justifyContent='flex-start'
-          alignItems='flex-start'
-        >
+        <div className='flex flex-col justify-start items-start w-full gap-2'>
           {Object.entries(commentsByDay)?.map(([date, comments]) => (
             <Fragment key={date}>
               {!DateTimeUtils.isSameDay(issue?.createdAt, date) && (
-                <Flex alignItems='center' w='full'>
-                  <Text
-                    color='gray.400'
-                    fontSize='sm'
-                    whiteSpace='nowrap'
-                    mr={2}
-                  >
+                <div className='flex items-center w-full'>
+                  <span className='text-sm whitespace-nowrap text-gray-400 mr-2'>
                     {DateTimeUtils.format(date, DateTimeUtils.date)}
-                  </Text>
-                  <Divider orientation='horizontal' />
-                </Flex>
+                  </span>
+                  <Divider />
+                </div>
               )}
 
               {comments?.map((c) => {
@@ -249,7 +198,7 @@ export const IssuePreviewModal: FC = () => {
                     key={c.id}
                     name={name}
                     date={c.createdAt}
-                    iscustomer={isCustomer}
+                    isCustomer={isCustomer}
                     content={c.content ?? ''}
                     type={issue?.externalLinks?.[0]?.type}
                     isPrivate={c.__typename === 'Comment'}
@@ -258,52 +207,37 @@ export const IssuePreviewModal: FC = () => {
               })}
             </Fragment>
           ))}
-        </VStack>
+        </div>
 
         {['solved', 'closed'].includes(issue.issueStatus?.toLowerCase()) && (
-          <Flex align='center' mt='2'>
-            <Flex alignItems='baseline'>
-              <Text fontSize='sm' whiteSpace='nowrap'>
-                Issue closed
-              </Text>
+          <div className='flex items-center mt-2'>
+            <div className='flex items-baseline'>
+              <span className='text-sm whitespace-nowrap'>Issue closed</span>
 
-              <Text
-                color='gray.400'
-                fontSize='sm'
-                whiteSpace='nowrap'
-                ml={2}
-                mr={2}
-              >
+              <span className='text-gray-400 text-sm whitespace-nowrap ml-2 mr-2'>
                 {DateTimeUtils.format(
                   issue?.updatedAt,
                   DateTimeUtils.dateWithHour,
                 )}
-              </Text>
-            </Flex>
-            <Divider
-              orientation='horizontal'
-              borderBottomColor='gray.200'
-              h='full'
-            />
-          </Flex>
+              </span>
+            </div>
+            <Divider />
+          </div>
         )}
-      </CardBody>
+      </CardContent>
 
       {externalUrl && (
-        <CardFooter p='6' pt='0' pb='5'>
-          <Flex pt='4' align='center'>
+        <CardFooter className='p-6 pt-0 pb-5'>
+          <div className='flex pt-4 align-middle'>
             <Link
-              display='inline-flex'
+              className='text-primary-700 inline-flex text-sm items-center'
               href={getExternalUrl(externalUrl)}
-              fontSize='sm'
-              color='primary.700'
               target='_blank'
-              alignItems='center'
             >
               <Zendesk boxSize='4' mr='2' />
               View in Zendesk
             </Link>
-          </Flex>
+          </div>
         </CardFooter>
       )}
     </>

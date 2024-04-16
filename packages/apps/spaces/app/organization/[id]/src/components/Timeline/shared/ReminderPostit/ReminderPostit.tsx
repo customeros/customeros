@@ -1,14 +1,14 @@
-import { useRef, useMemo, useState, forwardRef } from 'react';
+import React, { useRef, useMemo, useState, forwardRef } from 'react';
 
 import { useMergeRefs } from 'rooks';
 
-import { Text } from '@ui/typography/Text';
+import { cn } from '@ui/utils/cn';
 import { useOutsideClick } from '@ui/utils';
-import { Flex, FlexProps } from '@ui/layout/Flex';
 import { pulseOpacity } from '@ui/utils/keyframes';
 
-interface ReminderPostitProps extends FlexProps {
+interface ReminderPostitProps extends React.HTMLAttributes<HTMLDivElement> {
   owner?: string;
+  className?: string;
   isFocused?: boolean;
   isMutating?: boolean;
   onClickOutside?: (e: Event) => void;
@@ -16,9 +16,9 @@ interface ReminderPostitProps extends FlexProps {
 
 const rotations = ['rotate(2deg)', 'rotate(-2deg)', 'rotate(0deg)'];
 const rgadients = [
-  'linear(to-tl, rgba(196, 196, 196, 0.00) 20%, rgba(0, 0, 0, 0.06) 100%)',
-  'linear(to-tr, rgba(196, 196, 196, 0.00) 20%, rgba(0, 0, 0, 0.06) 100%)',
-  'linear(to-bl, rgba(196, 196, 196, 0.00) 20%, rgba(0, 0, 0, 0.03) 100%)',
+  'linear-gradient(to top left, rgba(196, 196, 196, 0.00) 20%, rgba(0, 0, 0, 0.06) 100%)',
+  'linear-gradient(to top right, rgba(196, 196, 196, 0.00) 20%, rgba(0, 0, 0, 0.06) 100%)',
+  'linear-gradient(to bottom left, rgba(196, 196, 196, 0.00) 20%, rgba(0, 0, 0, 0.03) 100%)',
 ];
 
 const getRandomStyles = () => {
@@ -33,6 +33,7 @@ export const ReminderPostit = forwardRef<HTMLDivElement, ReminderPostitProps>(
       owner,
       children,
       isFocused,
+      className,
       isMutating,
       onClickOutside = () => undefined,
       ...rest
@@ -48,52 +49,48 @@ export const ReminderPostit = forwardRef<HTMLDivElement, ReminderPostitProps>(
     useOutsideClick({ ref: _ref, handler: onClickOutside });
 
     return (
-      <Flex
+      <div
+        className={cn(
+          className,
+          isMutating ? 'pointer-events-none' : 'pointer-events-auto',
+          'flex relative w-[321px] m-6 mt-2',
+        )}
+        style={{
+          animation: isMutating
+            ? `${pulseOpacity} 0.7s alternate ease-in-out`
+            : undefined,
+        }}
         ref={mergedRef}
-        position='relative'
-        w='321px'
-        m='6'
-        mt='2'
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        pointerEvents={isMutating ? 'none' : 'auto'}
-        animation={
-          isMutating ? `${pulseOpacity} 0.7s alternate ease-in-out` : undefined
-        }
         {...rest}
       >
-        <Flex
-          h='calc(100% - 28px)'
-          w='calc(100% - 10px)'
-          bottom='-4px'
-          left='5px'
-          position='absolute'
-          filter={isFocused || isHovered ? 'blur(7px)' : 'blur(3px)'}
-          bg={
+        <div
+          className={cn(
+            isFocused || isHovered ? 'blur-[7px]' : 'blur-[3px]',
             isFocused || isHovered
-              ? 'rgba(0, 0, 0, 0.2)'
-              : 'rgba(0, 0, 0, 0.07)'
-          }
-          transition='all 0.1s ease-in-out'
-          transform={isFocused || isHovered ? 'unset' : rotation}
+              ? 'bg-[rgba(0,0,0,0.2)]'
+              : 'bg-[rgba(0,0,0,0.07)]',
+            'flex w-[calc(100%-10px)] h-[calc(100%-28px)] bottom-[-4px] left-[5px] absolute transition-all duration-100 ease-in-out',
+          )}
+          style={{ transform: isFocused || isHovered ? 'unset' : rotation }}
         />
-        <Flex w='full' zIndex={1} bg='yellow.100' flexDir='column'>
-          <Flex h='24px' w='full' align='center' bgGradient={gradient}>
+        <div className='flex w-full z-[1] bg-[#FEFCBF] flex-col'>
+          <div
+            className='h-6 w-full items-center'
+            style={{
+              backgroundImage: `${gradient}`,
+            }}
+          >
             {owner && (
-              <Text
-                pt='3'
-                fontSize='xs'
-                color='gray.500'
-                pl='4'
-                fontWeight='400'
-              >
+              <span className='text-xs text-gray-500 pl-4 font-normal pt-3'>
                 {owner} added
-              </Text>
+              </span>
             )}
-          </Flex>
+          </div>
           {children}
-        </Flex>
-      </Flex>
+        </div>
+      </div>
     );
   },
 );

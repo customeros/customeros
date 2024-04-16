@@ -201,7 +201,7 @@ export const AboutPanel = () => {
         />
 
         <FormAutoresizeTextarea
-          mb='6'
+          className='mb-6'
           spellCheck={false}
           name='valueProposition'
           formId='organization-about'
@@ -249,8 +249,7 @@ export const AboutPanel = () => {
           />
 
           <FormAutoresizeTextarea
-            pl='30px'
-            variant='flushed'
+            className='items-center'
             name='targetAudience'
             formId='organization-about'
             placeholder='Target Audience'

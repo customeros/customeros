@@ -1,8 +1,13 @@
 import { useState, useEffect, PropsWithChildren } from 'react';
 
-import { Flex } from '@ui/layout/Flex';
+import { cn } from '@ui/utils/cn';
 import { Card } from '@ui/presentation/Card';
-import { ScaleFade } from '@ui/transitions/ScaleFade';
+import {
+  Modal,
+  ModalPortal,
+  ModalContent,
+  ModalOverlay,
+} from '@ui/overlay/Modal/Modal';
 import {
   useTimelineEventPreviewStateContext,
   useTimelineEventPreviewMethodsContext,
@@ -16,7 +21,7 @@ export const TimelinePreviewBackdrop = ({
   children,
   onCloseModal,
 }: TimelinePreviewBackdropProps) => {
-  const [isMounted, setIsMounted] = useState(false); // needed for delaying the backdrop filter
+  const [isMounted, setIsMounted] = useState(false);
   const { isModalOpen, modalContent } = useTimelineEventPreviewStateContext();
   const { closeModal } = useTimelineEventPreviewMethodsContext();
 
@@ -28,62 +33,57 @@ export const TimelinePreviewBackdrop = ({
     return null;
   }
 
+  const avoidDefaultDomBehavior = (e: Event) => {
+    e.preventDefault();
+  };
+
   return (
-    <Flex
-      position='absolute'
-      top='0'
-      bottom='0'
-      left='0'
-      right='0'
-      zIndex={10}
-      cursor='pointer'
-      backdropFilter='blur(3px)'
-      justify='center'
-      id='timeline-preview-backdrop'
-      background={isMounted ? 'rgba(16, 24, 40, 0.25)' : 'rgba(16, 24, 40, 0)'}
-      align='center'
-      transition='all 0.1s linear'
-      onMouseDown={(e) => {
-        e.stopPropagation();
-      }}
-      onMouseUp={(e) => {
-        const target = e.target as HTMLDivElement;
-        if (!target) return;
-        if (target.id === 'timeline-preview-backdrop') {
-          closeModal();
-          onCloseModal?.();
-        }
-      }}
-    >
-      <ScaleFade
-        in={isModalOpen}
+    <Modal open={isModalOpen} modal={false} onOpenChange={closeModal}>
+      <div
+        className={cn(
+          'absolute top-0 bottom-0 left-0 right-0 z-10 cursor-pointer flex justify-center align-middle transition-all duration-100 linear',
+        )}
+        id='timeline-preview-backdrop'
         style={{
-          position: 'absolute',
-          marginInline: 'auto',
-          top: '1rem',
-          width: modalContent?.__typename === 'Invoice' ? '650px' : '544px',
-          height: modalContent?.__typename === 'Invoice' ? '90vh' : 'auto',
-          minWidth: '544px',
+          backgroundColor: isMounted
+            ? 'rgba(16, 24, 40, 0.25)'
+            : 'rgba(16, 24, 40, 0)',
+          backdropFilter: isMounted ? 'blur(3px)' : 'blur(0)',
         }}
       >
-        <Card
-          size='lg'
-          position='absolute'
-          mx='auto'
-          top='4'
-          w={modalContent?.__typename === 'Invoice' ? '650px' : '544px'}
-          h={modalContent?.__typename === 'Invoice' ? '90vh' : 'auto'}
-          minW='544px'
-          cursor='default'
-          id='timeline-preview-card'
-          onMouseDown={(e) => {
-            e.stopPropagation();
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {children}
-        </Card>
-      </ScaleFade>
-    </Flex>
+        <ModalPortal container={document.getElementById('main-section')}>
+          <ModalOverlay />
+          <ModalContent
+            className={cn(
+              modalContent?.__typename === 'Invoice'
+                ? 'w-[650px]'
+                : 'w-[544px]',
+              modalContent?.__typename === 'Invoice' ? 'h-[90vh]' : 'h-auto',
+              'absolute top-4 min-w-[544px] bg-transparent',
+            )}
+            onPointerDownOutside={avoidDefaultDomBehavior}
+            onInteractOutside={avoidDefaultDomBehavior}
+            onOpenAutoFocus={(e) => e.preventDefault()}
+          >
+            <Card
+              className={cn(
+                modalContent?.__typename === 'Invoice'
+                  ? 'w-[650px]'
+                  : 'w-[544px]',
+                modalContent?.__typename === 'Invoice' ? 'h-[90vh]' : 'h-auto',
+                'absolute mx-auto top-4 min-w-[544px] cursor-default',
+              )}
+              id='timeline-preview-card'
+              onMouseDown={(e) => {
+                e.stopPropagation();
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {children}
+            </Card>
+          </ModalContent>
+        </ModalPortal>
+      </div>
+    </Modal>
   );
 };

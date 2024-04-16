@@ -1,13 +1,17 @@
-import { chakraComponents, SingleValueProps } from 'chakra-react-select';
+import {
+  SingleValueProps,
+  SelectComponentsConfig,
+  components as selectComponents,
+} from 'react-select';
 
 import { Icons } from '@ui/media/Icon';
-import { Text } from '@ui/typography/Text';
+import { SelectProps } from '@ui/form/Select';
 import { DateTimeUtils } from '@spaces/utils/date';
-import { FormSelect, SelectProps } from '@ui/form/SyncSelect';
+import { FormSelect } from '@ui/form/Select/FormSelect';
 
 const SingleValue = (props: SingleValueProps) => {
   const rawTimezone = props.children as string;
-  const timezone = rawTimezone.includes('UTC')
+  const timezone = rawTimezone?.includes('UTC')
     ? rawTimezone.split(' ')[0]
     : rawTimezone;
 
@@ -19,15 +23,13 @@ const SingleValue = (props: SingleValueProps) => {
   const value = `${time} local time`;
 
   return (
-    <chakraComponents.SingleValue {...props}>
-      <Text color='gray.700' isTruncated>
+    <selectComponents.SingleValue {...props}>
+      <span className='text-gray-700 line-clamp-1'>
         {value}
         {` `}
-        <Text as='span' color='gray.500'>
-          • {timezone}
-        </Text>
-      </Text>
-    </chakraComponents.SingleValue>
+        <span className='text-gray-500'>• {timezone}</span>
+      </span>
+    </selectComponents.SingleValue>
   );
 };
 
@@ -43,7 +45,8 @@ interface FormTimezoneSelectProps extends SelectProps {
 export const FormTimezoneSelect = ({ ...props }: FormTimezoneSelectProps) => {
   return (
     <FormSelect
-      components={components}
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      components={components as SelectComponentsConfig<any, any, any>}
       leftElement={<Icons.Clock color='gray.500' mr='3' />}
       {...props}
     />

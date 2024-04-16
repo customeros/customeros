@@ -1,14 +1,13 @@
 import React from 'react';
 
-import { Flex } from '@ui/layout/Flex';
 import { Link03 } from '@ui/media/icons/Link03';
 import { XClose } from '@ui/media/icons/XClose';
-import { IconButton } from '@ui/form/IconButton';
-import { Tooltip } from '@ui/presentation/Tooltip';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
+import { IconButton } from '@ui/form/IconButton/IconButton';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { Card, CardBody, CardHeader } from '@ui/presentation/Card';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import { useGetInvoiceQuery } from '@shared/graphql/getInvoice.generated';
+import { Card, CardHeader, CardContent } from '@ui/presentation/Card/Card';
 import { InvoiceWithId } from '@organization/src/components/Timeline/types';
 import { InvoiceActionHeader } from '@shared/components/Invoice/InvoiceActionHeader';
 import { InvoicePreviewModalContent } from '@shared/components/Invoice/InvoicePreviewModal';
@@ -30,68 +29,55 @@ export const InvoicePreviewModal = () => {
   return (
     <>
       <CardHeader
-        py='4'
-        px='6'
-        pb='1'
-        background='white'
-        top={0}
-        borderRadius='xl'
+        className='py-4 px-6 pb-1 bg-white top-0 rounded-xl'
         onClick={(e) => e.stopPropagation()}
       >
-        <Flex
-          direction='row'
-          justifyContent='space-between'
-          alignItems='center'
-        >
+        <div className='flex justify-between items-center'>
           <InvoiceActionHeader
             status={data?.invoice?.status}
             id={data?.invoice?.metadata?.id}
             number={data?.invoice?.invoiceNumber}
           />
 
-          <Flex direction='row' justifyContent='flex-end' alignItems='center'>
-            <Tooltip label='Copy invoice link' placement='bottom'>
+          <div className='flex justify-end items-center'>
+            <Tooltip label='Copy invoice link' side='bottom' asChild={false}>
               <IconButton
+                className='mr-1'
                 variant='ghost'
                 aria-label='Copy invoice link'
-                color='gray.500'
-                size='sm'
-                mr={1}
+                colorScheme='gray'
+                size='md'
                 icon={<Link03 color='gray.500' height='18px' />}
                 onClick={() => copy(window.location.href)}
               />
             </Tooltip>
-            <Tooltip label='Close' aria-label='close' placement='bottom'>
+            <Tooltip
+              label='Close'
+              aria-label='close'
+              side='bottom'
+              asChild={false}
+            >
               <IconButton
                 variant='ghost'
                 aria-label='Close preview'
-                color='gray.500'
-                size='sm'
+                colorScheme='gray'
+                size='md'
                 icon={<XClose color='gray.500' height='24px' />}
                 onClick={closeModal}
               />
             </Tooltip>
-          </Flex>
-        </Flex>
+          </div>
+        </div>
       </CardHeader>
 
-      <Card
-        m={6}
-        mt={3}
-        p='4'
-        boxShadow='xs'
-        variant='outline'
-        w={600}
-        h='full'
-        overflowY='auto'
-      >
-        <CardBody as={Flex} p='0' align='center'>
+      <Card className='flex flex-col m-6 mt-3 p-4 shadow-xs w-[600px] h-[100%] overflow-y-auto'>
+        <CardContent className='flex flex-1 p-0 items-center'>
           <InvoicePreviewModalContent
             data={data}
             isFetching={isFetching}
             isError={isError}
           />
-        </CardBody>
+        </CardContent>
       </Card>
     </>
   );

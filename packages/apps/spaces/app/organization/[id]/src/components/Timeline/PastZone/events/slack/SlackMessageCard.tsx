@@ -2,21 +2,20 @@ import { PropsWithChildren } from 'react';
 
 import { escapeForSlackWithMarkdown } from 'slack-to-html';
 
-import { Flex } from '@ui/layout/Flex';
-import { Avatar } from '@ui/media/Avatar';
+import { cn } from '@ui/utils/cn';
 import { Text } from '@ui/typography/Text';
 import { Slack } from '@ui/media/logos/Slack';
 import { User01 } from '@ui/media/icons/User01';
+import { Avatar } from '@ui/media/Avatar/Avatar';
 import { ViewInExternalAppButton } from '@ui/form/Button';
-import { Card, CardBody, CardProps } from '@ui/presentation/Card';
+import { Card, CardContent } from '@ui/presentation/Card/Card';
 
 interface SlackMessageCardProps extends PropsWithChildren {
   name: string;
   date: string;
   content: string;
-  w?: CardProps['w'];
+  className?: string;
   onClick?: () => void;
-  ml?: CardProps['ml'];
   sourceUrl?: string | null;
   showDateOnHover?: boolean;
   profilePhotoUrl?: null | string;
@@ -28,10 +27,9 @@ export const SlackMessageCard: React.FC<SlackMessageCardProps> = ({
   profilePhotoUrl,
   content,
   onClick,
+  className,
   children,
   date,
-  w,
-  ml,
   showDateOnHover,
 }) => {
   const displayContent: string = (() => {
@@ -49,58 +47,41 @@ export const SlackMessageCard: React.FC<SlackMessageCardProps> = ({
   return (
     <>
       <Card
-        ml={ml}
-        variant='outline'
-        size='md'
-        fontSize='14px'
-        background='white'
-        flexDirection='row'
-        maxWidth={w || 549}
-        position='unset'
-        cursor={onClick ? 'pointer' : 'unset'}
-        boxShadow='xs'
-        borderColor='gray.200'
+        className={cn(
+          className,
+          onClick ? 'cursor-pointer' : '',
+          'max-w-[549px] text-sm bg-white flex shadow-xs border border-gray-200 [slack-stub-date]:hover:text-gray-500',
+        )}
         onClick={() => onClick?.()}
-        _hover={{
-          '&:hover .slack-stub-date': {
-            color: 'gray.500',
-          },
-        }}
       >
-        <CardBody p={3} overflow={'hidden'}>
-          <Flex gap={3} flex={1}>
+        <CardContent className='p-3 overflow-hidden w-full'>
+          <div className='flex flex-1 gap-3'>
             <Avatar
               name={name}
               variant='roundedSquare'
               size='md'
               icon={<User01 color='gray.500' height='1.8rem' />}
-              border={
-                profilePhotoUrl
-                  ? 'none'
-                  : '1px solid var(--chakra-colors-primary-200)'
-              }
+              className={cn(profilePhotoUrl ? '' : 'border border-gray-200')}
               src={profilePhotoUrl || undefined}
             />
-            <Flex direction='column' flex={1} position='relative'>
-              <Flex justifyContent='space-between' flex={1}>
-                <Flex>
-                  <Text color='gray.700' fontWeight={600}>
-                    {name}
-                  </Text>
-                  <Text
-                    color={showDateOnHover ? 'transparent' : 'gray.500'}
-                    ml={2}
-                    fontSize='xs'
-                    className='slack-stub-date'
+            <div className='flex flex-col flex-1 relative'>
+              <div className='flex justify-between flex-1'>
+                <div className='flex'>
+                  <p className='text-gray-700 font-semibold'>{name}</p>
+                  <p
+                    className={cn(
+                      showDateOnHover ? 'transparent' : 'text-gray-500',
+                      'ml-2 text-xs slack-stub-date',
+                    )}
                   >
                     {date}
-                  </Text>
-                </Flex>
+                  </p>
+                </div>
                 <ViewInExternalAppButton
                   icon={<Slack height={16} />}
                   url={sourceUrl}
                 />
-              </Flex>
+              </div>
               <Text
                 className='slack-container'
                 pointerEvents={showDateOnHover ? 'none' : 'initial'}
@@ -108,9 +89,9 @@ export const SlackMessageCard: React.FC<SlackMessageCardProps> = ({
                 dangerouslySetInnerHTML={{ __html: displayContent }}
               />
               {children}
-            </Flex>
-          </Flex>
-        </CardBody>
+            </div>
+          </div>
+        </CardContent>
       </Card>
     </>
   );

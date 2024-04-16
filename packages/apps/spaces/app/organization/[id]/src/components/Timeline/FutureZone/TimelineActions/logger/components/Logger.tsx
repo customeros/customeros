@@ -6,10 +6,8 @@ import { useField } from 'react-inverted-form';
 
 import noteIcon from 'public/images/event-ill-log.png';
 
-import { Box } from '@ui/layout/Box';
-import { Flex } from '@ui/layout/Flex';
-import { Button } from '@ui/form/Button';
 import { Contact } from '@graphql/types';
+import { Button } from '@ui/form/Button/Button';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { getMentionOptionLabel } from '@organization/src/hooks/utils';
 import { RichTextEditor } from '@ui/form/RichTextEditor/RichTextEditor';
@@ -54,15 +52,10 @@ export const Logger = () => {
     .filter((e) => Boolean(e.label)) as { id: string; label: string }[];
 
   return (
-    <Flex
-      flexDirection='column'
-      position='relative'
-      className='customeros-logger'
-      minH={135}
-    >
-      <Box position='absolute' top={-4} right={-6}>
+    <div className='customeros-logger flex flex-col min-h-[135px] relative'>
+      <div className='absolute top-[-4] right-[-6]'>
         <Image src={noteIcon} alt='' height={123} width={174} />
-      </Box>
+      </div>
 
       <RichTextEditor
         {...remirrorProps}
@@ -81,31 +74,25 @@ export const Logger = () => {
         <KeymapperCreate onCreate={onCreateLogEntry} />
         <KeymapperClose onClose={handleClose} />
       </RichTextEditor>
-      <Flex justifyContent='space-between' zIndex={8} fontSize='md'>
+      <div className='flex justify-between z-10 text-base'>
         <TagsSelect
           formId='organization-create-log-entry'
           name='tags'
           tags={data?.tags}
         />
         <Button
+          className='font-semibold rounded-lg py-1 px-3 text-sm'
           variant='outline'
           colorScheme='gray'
-          fontWeight={600}
-          borderRadius='lg'
-          pt={1}
-          pb={1}
-          pl={3}
-          pr={3}
           size='sm'
-          fontSize='sm'
           isDisabled={isSaving || isLogEmpty}
           isLoading={isSaving}
           loadingText='Sending'
           onClick={() => onCreateLogEntry()}
         >
-          Log
+          Log asdas
         </Button>
-      </Flex>
-    </Flex>
+      </div>
+    </div>
   );
 };

@@ -13,13 +13,12 @@ import {
   useCurrentSelection,
 } from '@remirror/react';
 
-import { Input } from '@ui/form/Input';
-import { Flex } from '@ui/layout/Flex';
+import { Input } from '@ui/form/Input/Input2';
 import { Check } from '@ui/media/icons/Check';
 import { Link01 } from '@ui/media/icons/Link01';
-import { IconButton } from '@ui/form/IconButton';
 import { Trash01 } from '@ui/media/icons/Trash01';
-import { Divider } from '@ui/presentation/Divider';
+import { Divider } from '@ui/presentation/Divider/Divider';
+import { IconButton } from '@ui/form/IconButton/IconButton';
 import { getExternalUrl } from '@spaces/utils/getExternalLink';
 
 function getTransformValues(transformStyle: string) {
@@ -33,6 +32,7 @@ interface LinkComponentProps {
   isEditing: boolean;
 }
 
+//TODO:before merge check if the design is correct
 export const LinkComponent: React.FC<LinkComponentProps> = ({ isEditing }) => {
   const [linkShortcut] = useState<ShortcutHandlerProps | undefined>();
 
@@ -91,48 +91,26 @@ export const LinkComponent: React.FC<LinkComponentProps> = ({ isEditing }) => {
   }, [isEditing, ref, from, to]);
 
   return (
-    <Flex
+    <div
       ref={ref}
-      className='test'
-      alignItems='center'
-      sx={{
-        '&': {
-          position: 'relative',
-          paddingY: 0,
-          paddingX: 3,
-          borderRadius: '8px',
-          bg: 'gray.700',
-        },
-      }}
+      className='items center relative py-0 px-3 rounded-lg bg-gray-700'
     >
       <IconButton
+        className='mr-2 rounded-sm hover:bg-gray-600 hover:texxt-gray-25'
         size='xs'
         variant='ghost'
         aria-label='Go to url'
-        disabled={!href}
+        isDisabled={!href}
         onClick={() => {
           window.open(getExternalUrl(href), '_blank', 'noopener noreferrer');
         }}
         icon={<Link01 color='gray.25' />}
-        mr={2}
-        borderRadius='sm'
-        _hover={{ background: 'gray.600', color: 'gray.25' }}
       />
-
       <Input
         style={{
           background: 'gray.700',
         }}
-        sx={{
-          textOverflow: 'ellipsis',
-          overflow: 'hidden',
-          whiteSpace: 'nowrap',
-          background: 'gray.700',
-          fontSize: 'sm',
-          color: 'gray.25',
-          '&:focus-visible': { outline: 'none' },
-          '&::placeholder': { color: 'gray.400' },
-        }}
+        className='text-ellipsis overflow-hidden whitespace-nowrap bg-gray-700 text-gray-25 focus-visible:outline-none placeholder:text-gray-400'
         tabIndex={1}
         placeholder='Paste or enter a link'
         onChange={(event: ChangeEvent<HTMLInputElement>) =>
@@ -151,32 +129,21 @@ export const LinkComponent: React.FC<LinkComponentProps> = ({ isEditing }) => {
           }
         }}
       />
-
       {href && (
-        <Flex alignItems='center'>
+        <div className='flex items-center'>
           <IconButton
+            className='mr-2 ml-2 rounded-sm text-gray-400 hover:bg-gray-600 hover:text-gray-25'
             size='xs'
             variant='ghost'
             aria-label='Save'
             onClick={submitHref}
-            color='gray.400'
             icon={<Check color='inherit' />}
-            mr={2}
-            ml={2}
-            borderRadius='sm'
-            _hover={{ background: 'gray.600', color: 'gray.25' }}
           />
 
-          <Divider
-            orientation='vertical'
-            borderLeft='1px solid'
-            borderLeftColor='gray.400 !important'
-            height='14px'
-          />
+          <Divider className='transform rotate-90 border-l-[1px] border-gray-400 h-[14px]' />
 
           <IconButton
-            ml={2}
-            borderRadius='sm'
+            className='ml-2 rounded-sm text-gray-400 hover:bg-gray-600 hover:text-gray-25'
             size='xs'
             variant='ghost'
             aria-label='Remove link'
@@ -184,12 +151,10 @@ export const LinkComponent: React.FC<LinkComponentProps> = ({ isEditing }) => {
               onRemove();
               cancelHref();
             }}
-            color='gray.400'
             icon={<Trash01 color='inherit' />}
-            _hover={{ background: 'gray.600', color: 'gray.25' }}
           />
-        </Flex>
+        </div>
       )}
-    </Flex>
+    </div>
   );
 };

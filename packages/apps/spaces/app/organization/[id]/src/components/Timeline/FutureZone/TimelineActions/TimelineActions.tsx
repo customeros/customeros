@@ -2,7 +2,6 @@ import React from 'react';
 import dynamic from 'next/dynamic';
 import { useParams } from 'next/navigation';
 
-import { Box } from '@ui/layout/Box';
 import { TimelineActionLogEntryContextContextProvider } from '@organization/src/components/Timeline/FutureZone/TimelineActions/context/TimelineActionLogEntryContext';
 
 import { TimelineActionsArea } from './TimelineActionsArea';
@@ -36,10 +35,10 @@ export const TimelineActions: React.FC<TimelineActionsProps> = ({
         id={id}
         invalidateQuery={invalidateQuery}
       >
-        <Box bg='gray.25'>
+        <div className='bg-gray-25'>
           <TimelineActionButtons invalidateQuery={invalidateQuery} />
           <TimelineActionsArea />
-        </Box>
+        </div>
       </TimelineActionLogEntryContextContextProvider>
     </TimelineActionEmailContextContextProvider>
   );

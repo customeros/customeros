@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 
-import { Box } from '@ui/layout/Box';
 import { KeymapperClose } from '@ui/form/RichTextEditor/components/keyboardShortcuts/KeymapperClose';
 import { useTimelineRefContext } from '@organization/src/components/Timeline/context/TimelineRefContext';
 import { ComposeEmailContainer } from '@organization/src/components/Timeline/PastZone/events/email/compose-email/ComposeEmailContainer';
@@ -32,15 +31,7 @@ export const EmailTimelineAction: React.FC = () => {
   };
 
   return (
-    <Box
-      borderRadius={'md'}
-      boxShadow={'lg'}
-      m={6}
-      mt={2}
-      bg={'white'}
-      border='1px solid'
-      borderColor='gray.100'
-    >
+    <div className='rounded-md shadow-lg m-6 mt-2 bg-white border border-gray-100'>
       <ComposeEmailContainer
         formId={formId}
         modal={false}
@@ -54,6 +45,6 @@ export const EmailTimelineAction: React.FC = () => {
       >
         <KeymapperClose onClose={handleClose} />
       </ComposeEmailContainer>
-    </Box>
+    </div>
   );
 };

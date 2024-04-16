@@ -8,9 +8,9 @@ import { Fade } from '@ui/transitions/Fade';
 import { Input } from '@ui/form/Input/Input2';
 import { Button } from '@ui/form/Button/Button';
 import { Collapse } from '@ui/transitions/Collapse';
-import { Textarea } from '@ui/form/Textarea/Textarea';
 import { SlideFade } from '@ui/transitions/SlideFade';
 import { toastError, toastSuccess } from '@ui/presentation/Toast';
+import { AutoresizeTextarea } from '@ui/form/Textarea/AutoresizeTextarea2';
 
 interface FieldDefinition {
   name: string;
@@ -239,7 +239,7 @@ export const SettingsIntegrationItem = ({
                       render={({ field }) => {
                         if (fieldDefinition.textarea) {
                           return (
-                            <Textarea
+                            <AutoresizeTextarea
                               id={fieldDefinition.name}
                               value={
                                 state === 'ACTIVE'

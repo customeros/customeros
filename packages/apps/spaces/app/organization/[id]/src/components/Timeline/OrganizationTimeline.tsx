@@ -6,8 +6,7 @@ import React, { FC, useMemo, useEffect, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { setHours, setSeconds, setMinutes, setMilliseconds } from 'date-fns';
 
-import { Flex } from '@ui/layout/Flex';
-import { Button } from '@ui/form/Button';
+import { Button } from '@ui/form/Button/Button';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { Meeting, ExternalSystemType } from '@graphql/types';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
@@ -38,11 +37,11 @@ import {
 const Header: FC<{ context?: any }> = ({ context: { loadMore, loading } }) => {
   return (
     <Button
+      className='mt-4'
       variant='outline'
       colorScheme='primary'
       loadingText='Loading'
       isLoading={loading}
-      mt={4}
       size='sm'
       onClick={loadMore}
       isDisabled={loading}
@@ -206,20 +205,20 @@ export const OrganizationTimeline: FC = () => {
 
   if (isPending && !isFetchingNextPage) {
     return (
-      <Flex direction='column' mt={4} pl={6}>
+      <div className='flex flex-col mt-4 pl-6'>
         <TimelineItemSkeleton />
         <TimelineItemSkeleton />
-      </Flex>
+      </div>
     );
   }
 
   return (
     <>
       {isFetchingNextPage && (
-        <Flex direction='column' mt={4} pl={6}>
+        <div className='flex flex-col mt-4 pl-6 w-full'>
           <TimelineItemSkeleton />
           <TimelineItemSkeleton />
-        </Flex>
+        </div>
       )}
 
       <Virtuoso<TimelineEvent>
@@ -315,14 +314,14 @@ export const OrganizationTimeline: FC = () => {
         }}
         components={{
           Header: (rest) => (
-            <Flex bg='gray.25' p={5}>
+            <div className='flex bg-gray-25 p-5'>
               {loadedDataCount &&
               !isFetchingNextPage &&
               data?.pages?.[0]?.organization?.timelineEventsTotalCount >
                 loadedDataCount ? (
                 <Header {...rest} />
               ) : null}
-            </Flex>
+            </div>
           ),
           Footer: Footer,
         }}

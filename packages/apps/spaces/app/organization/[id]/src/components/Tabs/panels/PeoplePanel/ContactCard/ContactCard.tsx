@@ -423,10 +423,10 @@ export const ContactCard = ({
               name='timezone'
               placeholder='Timezone'
               options={timezoneOptions}
-              leftElement={<Icons.Clock color='gray.500' />}
+              leftElement={<Icons.Clock color='gray.500' mr='12px' />}
             />
             <FormAutoresizeTextarea
-              pl='30px'
+              className='items-start'
               formId={formId}
               name='note'
               placeholder='Notes'

@@ -1,7 +1,7 @@
 'use client';
 import React, { FC, useRef, PropsWithChildren } from 'react';
 
-import { Box } from '@ui/layout/Box';
+import { cn } from '@ui/utils/cn';
 import { RichTextEditor } from '@ui/form/RichTextEditor/RichTextEditor';
 import { BasicEditorToolbar } from '@ui/form/RichTextEditor/menu/BasicEditorToolbar';
 import {
@@ -41,16 +41,13 @@ export const ComposeEmail: FC<ComposeEmailProps> = ({
     modal && (myRef?.current?.getBoundingClientRect()?.height || 0) + 96;
 
   return (
-    <Box
-      borderTop={modal ? '1px dashed var(--gray-200, #EAECF0)' : 'none'}
-      background={modal ? '#F8F9FC' : 'white'}
-      borderRadius={modal ? 0 : 'lg'}
-      borderBottomRadius='2xl'
-      as='form'
-      p={4}
-      overflow='visible'
-      maxHeight={modal ? '50vh' : 'auto'}
-      pt={1}
+    <form
+      className={cn(
+        modal
+          ? 'border-dashed border-t-[1px] border-gray-200 bg-grayBlue-50 rounded-none max-h-[50vh]'
+          : 'bg-white rounded-lg max-h-[100%]',
+        'rounded-b-2xl p-4 overflow-visible pt-1',
+      )}
       onSubmit={(e) => {
         e.preventDefault();
       }}
@@ -60,7 +57,7 @@ export const ComposeEmail: FC<ComposeEmailProps> = ({
           <ModeChangeButtons handleModeChange={onModeChange} />
         </div>
       )}
-      <Box ref={myRef}>
+      <div ref={myRef}>
         <ParticipantsSelectGroup
           to={to}
           cc={cc}
@@ -68,11 +65,12 @@ export const ComposeEmail: FC<ComposeEmailProps> = ({
           modal={modal}
           formId={formId}
         />
-      </Box>
-
-      <Box
-        maxHeight={modal ? `calc(50vh - ${height}px) !important` : 'auto'}
-        w='full'
+      </div>
+      <div
+        className='w-full'
+        style={{
+          maxHeight: modal ? `calc(50vh - ${height}px) !important` : 'auto',
+        }}
       >
         <RichTextEditor
           {...remirrorProps}
@@ -84,8 +82,7 @@ export const ComposeEmail: FC<ComposeEmailProps> = ({
           <KeymapperCreate onCreate={onSubmit} />
           <BasicEditorToolbar isSending={isSending} onSubmit={onSubmit} />
         </RichTextEditor>
-      </Box>
-
+      </div>
       {/*{isUploadAreaOpen && (*/}
       {/*  <FileUpload*/}
       {/*    files={files}*/}
@@ -127,6 +124,6 @@ export const ComposeEmail: FC<ComposeEmailProps> = ({
       {/*    }}*/}
       {/*  />*/}
       {/*)}*/}
-    </Box>
+    </form>
   );
 };

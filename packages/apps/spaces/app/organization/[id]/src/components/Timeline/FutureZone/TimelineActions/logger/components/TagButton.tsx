@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Button } from '@ui/form/Button';
+import { Button } from '@ui/form/Button/Button';
 
 interface TagButtonProps {
   tag: string;
@@ -9,13 +9,9 @@ interface TagButtonProps {
 
 export const TagButton: React.FC<TagButtonProps> = ({ onTagSet, tag }) => (
   <Button
+    className='text-gray-400 mr-2 leading-4'
     size='xs'
-    fontSize='inherit'
-    lineHeight='md'
-    fontWeight='normal'
     color='gray.400'
-    variant='unstyled'
-    mr={2}
     onClick={onTagSet}
   >
     {`#${tag}`}

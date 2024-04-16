@@ -1,8 +1,6 @@
 'use client';
 import React, { FC } from 'react';
 
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
 import { emailRegex } from '@organization/src/components/Timeline/PastZone/events/email/utils';
 
 import { EmailFormMultiCreatableSelect } from '../../../../../../../../../src/components/EmailMultiCreatableSelect';
@@ -20,16 +18,8 @@ export const EmailParticipantSelect: FC<EmailParticipantSelect> = ({
   autofocus = false,
 }) => {
   return (
-    <Flex
-      alignItems='baseline'
-      marginBottom={-1}
-      marginTop={0}
-      flex={1}
-      overflow='visible'
-    >
-      <Text as={'span'} color='gray.700' fontWeight={600} mr={1}>
-        {entryType}:
-      </Text>
+    <div className='flex items-baseline mb-[-1px] mt-0 flex-1 overflow-visible'>
+      <span className='text-gray-700 font-semibold mr-1'>{entryType}:</span>
       <EmailFormMultiCreatableSelect
         autoFocus={autofocus}
         name={fieldName}
@@ -50,6 +40,6 @@ export const EmailParticipantSelect: FC<EmailParticipantSelect> = ({
           return `${d.label} - ${d.value}`;
         }}
       />
-    </Flex>
+    </div>
   );
 };

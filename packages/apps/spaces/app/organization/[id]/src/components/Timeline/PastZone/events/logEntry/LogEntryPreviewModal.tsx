@@ -1,22 +1,17 @@
 import React from 'react';
+import Image from 'next/image';
 
 import copy from 'copy-to-clipboard';
 import { useSession } from 'next-auth/react';
 import noteImg from 'public/images/note-img-preview.png';
 
-import { Box } from '@ui/layout/Box';
 import { User } from '@graphql/types';
-import { Flex } from '@ui/layout/Flex';
-import { Image } from '@ui/media/Image';
-import { VStack } from '@ui/layout/Stack';
-import { Text } from '@ui/typography/Text';
 import { Link03 } from '@ui/media/icons/Link03';
 import { XClose } from '@ui/media/icons/XClose';
-import { Heading } from '@ui/typography/Heading';
-import { IconButton } from '@ui/form/IconButton';
-import { Tooltip } from '@ui/presentation/Tooltip';
-import { CardBody, CardHeader } from '@ui/presentation/Card';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
+import { IconButton } from '@ui/form/IconButton/IconButton';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { CardHeader, CardContent } from '@ui/presentation/Card/Card';
 import { useGetTagsQuery } from '@organization/src/graphql/getTags.generated';
 import { LogEntryWithAliases } from '@organization/src/components/Timeline/types';
 import { HtmlContentRenderer } from '@ui/presentation/HtmlContentRenderer/HtmlContentRenderer';
@@ -28,7 +23,7 @@ import {
 
 import { PreviewEditor } from './preview/PreviewEditor';
 import { PreviewTags } from './preview/tags/PreviewTags';
-import { LogEntryDatePicker } from './preview/LogEntryDatePicker';
+import { LogEntryDatePicker } from './preview/LogEntryDatePicker2';
 import { LogEntryExternalLink } from './preview/LogEntryExternalLink';
 
 const getAuthor = (user: User) => {
@@ -57,91 +52,70 @@ export const LogEntryPreviewModal: React.FC = () => {
 
   return (
     <>
-      <CardHeader
-        py='4'
-        px='6'
-        pb='1'
-        position='sticky'
-        top={0}
-        borderRadius='xl'
-      >
-        <Flex
-          direction='row'
-          justifyContent='space-between'
-          alignItems='center'
-        >
-          <Flex alignItems='center'>
-            <Heading size='sm' fontSize='lg'>
-              Log entry
-            </Heading>
-          </Flex>
-          <Flex direction='row' justifyContent='flex-end' alignItems='center'>
-            <Tooltip label='Copy link' placement='bottom'>
-              <IconButton
-                variant='ghost'
-                aria-label='Copy link to this entry'
-                color='gray.500'
-                fontSize='sm'
-                size='sm'
-                mr={1}
-                icon={<Link03 color='gray.500' boxSize='4' />}
-                onClick={() => copy(window.location.href)}
-              />
+      <CardHeader className='py-4 px-6 pb-1 sticky top-0 rounded-xl'>
+        <div className='flex justify-between items-center'>
+          <div className='flex items-center'>
+            <h2 className='text-sm font-medium'>Log entry</h2>
+          </div>
+          <div className='flex justify-end items-center'>
+            <Tooltip label='Copy link' side='bottom' asChild={false}>
+              <div>
+                <IconButton
+                  className='text-sm text-gray-500 mr-1'
+                  variant='ghost'
+                  aria-label='Copy link to this entry'
+                  size='sm'
+                  icon={<Link03 color='gray.500' boxSize='4' />}
+                  onClick={() => copy(window.location.href)}
+                />
+              </div>
             </Tooltip>
-            <Tooltip label='Close' aria-label='close' placement='bottom'>
-              <IconButton
-                variant='ghost'
-                aria-label='Close preview'
-                color='gray.500'
-                fontSize='sm'
-                size='sm'
-                icon={<XClose color='gray.500' boxSize='5' />}
-                onClick={closeModal}
-              />
+            <Tooltip
+              label='Close'
+              aria-label='close'
+              side='bottom'
+              asChild={false}
+            >
+              <div>
+                <IconButton
+                  className='text-sm text-gray-500'
+                  variant='ghost'
+                  aria-label='Close preview'
+                  color='gray.500'
+                  size='sm'
+                  icon={<XClose color='gray.500' boxSize='5' />}
+                  onClick={closeModal}
+                />
+              </div>
             </Tooltip>
-          </Flex>
-        </Flex>
+          </div>
+        </div>
       </CardHeader>
-      <CardBody
-        mt={0}
-        maxHeight='calc(100vh - 9rem)'
-        p={6}
-        pt={0}
-        overflow='auto'
-      >
-        <Box position='relative'>
+      <CardContent className='mt-0 p-6 pt-0 overflow-auto max-h-[calc(100vh-9rem)]'>
+        <div className='relative'>
           <Image
+            className='absolute top-[-2px] right-[-3px] w-[174px] h-[123px]'
             src={noteImg}
             alt=''
-            height={123}
-            width={174}
-            position='absolute'
-            top={-2}
-            right={-3}
           />
-        </Box>
-        <VStack gap={2} alignItems='flex-start'>
-          <Flex direction='column'>
+        </div>
+        <div className='flex flex-col items-start gap-2'>
+          <div className='flex flex-col'>
             <LogEntryDatePicker event={event} formId={formId} />
-          </Flex>
-          <Flex direction='column'>
-            <Text fontSize='sm' fontWeight='semibold'>
-              Author
-            </Text>
-            <Tooltip label={authorEmail} hasArrow>
-              <Text fontSize='sm'>{author}</Text>
+          </div>
+          <div className='flex flex-col'>
+            <p className='text-sm font-semibold'>Author</p>
+            <Tooltip label={authorEmail as string} hasArrow>
+              <p className='text-sm'>{author}</p>
             </Tooltip>
-          </Flex>
+          </div>
 
-          <Flex direction='column' w='full'>
-            <Text fontSize='sm' fontWeight='semibold'>
-              Entry
-            </Text>
+          <div className='flex flex-col w-full'>
+            <p className='text-sm font-semibold'>Entry</p>
 
             {!isAuthor && (
               <HtmlContentRenderer
-                fontSize='sm'
-                noOfLines={undefined}
+                className='text-sm'
                 htmlContent={`${event?.content}`}
               />
             )}
@@ -153,7 +127,7 @@ export const LogEntryPreviewModal: React.FC = () => {
                 onClose={closeModal}
               />
             )}
-          </Flex>
+          </div>
 
           <PreviewTags
             isAuthor={isAuthor}
@@ -165,8 +139,8 @@ export const LogEntryPreviewModal: React.FC = () => {
           {event?.externalLinks?.[0]?.externalUrl && (
             <LogEntryExternalLink externalLink={event?.externalLinks?.[0]} />
           )}
-        </VStack>
-      </CardBody>
+        </div>
+      </CardContent>
     </>
   );
 };

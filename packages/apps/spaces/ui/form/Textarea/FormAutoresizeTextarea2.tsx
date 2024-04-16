@@ -4,20 +4,19 @@ import { useField } from 'react-inverted-form';
 import {
   AutoresizeTextarea,
   AutoresizeTextareaProps,
-} from './AutoresizeTextarea';
+} from './AutoresizeTextarea2';
 
 interface FormAutoresizeTextareaProps extends AutoresizeTextareaProps {
   name: string;
   formId: string;
   label?: string;
-  isLabelVisible?: boolean;
   labelProps?: React.LabelHTMLAttributes<HTMLLabelElement>;
 }
 
 export const FormAutoresizeTextarea = forwardRef<
   HTMLTextAreaElement,
   FormAutoresizeTextareaProps
->(({ isLabelVisible, label, formId, labelProps, ...props }, ref) => {
+>(({ label, formId, labelProps, ...props }, ref) => {
   const { getInputProps } = useField(props.name, formId);
 
   return (

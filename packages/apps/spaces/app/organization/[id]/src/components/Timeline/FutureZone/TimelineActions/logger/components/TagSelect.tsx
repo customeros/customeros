@@ -1,18 +1,23 @@
-'use client';
-import { OptionsOrGroups } from 'react-select';
 import { useField } from 'react-inverted-form';
 import React, { FC, useRef, useState, useEffect, KeyboardEvent } from 'react';
+import {
+  GroupBase,
+  components,
+  OptionProps,
+  MenuListProps,
+  OptionsOrGroups,
+} from 'react-select';
 
 import { AnimatePresence } from 'framer-motion';
-import { GroupBase, OptionProps } from 'chakra-react-select';
 
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
-import { chakraComponents } from '@ui/form/SyncSelect';
-import { MultiCreatableSelect } from '@ui/form/MultiCreatableSelect';
+import { cn } from '@ui/utils/cn';
+import { SelectOption } from '@ui/utils';
+import {
+  MultiCreatableSelect,
+  getMenuListClassNames,
+} from '@ui/form/MultiCreatableSelect/MultiCreatableSelect2';
 
 import { TagButton } from './TagButton';
-import { tagsSelectStyles } from './tagSelectStyles';
 import { useTagButtonSlideAnimation } from './useTagButtonSlideAnimation';
 
 interface EmailParticipantSelect {
@@ -96,7 +101,7 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
   };
 
   // FIXME - move this to outer scope
-  const Option = (props: OptionProps<{ label: string; value: string }>) => {
+  const Option = (props: OptionProps<SelectOption>) => {
     const Or = useRef(null);
 
     useEffect(() => {
@@ -107,9 +112,9 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
 
     return (
       <div ref={Or}>
-        <chakraComponents.Option {...props} key={props.data.label}>
+        <components.Option {...props} key={props.data.label}>
           {props.data.label || props.data.value}
-        </chakraComponents.Option>
+        </components.Option>
       </div>
     );
   };
@@ -117,12 +122,12 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
   return (
     <>
       <AnimatePresence initial={false}>
-        <Flex alignItems='baseline' ref={scope}>
+        <div className='flex items-baseline' ref={scope}>
           {!selectedTags?.length && (
             <>
-              <Text color='gray.500' mr={2} whiteSpace='nowrap'>
+              <p className='text-gray-500 mr-2 whitespace-nowrap'>
                 Suggested tags:
-              </Text>
+              </p>
 
               {suggestedTags?.map((tag) => (
                 <TagButton
@@ -144,9 +149,25 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
           )}
           {!!selectedTags?.length && (
             <MultiCreatableSelect
-              Option={Option}
-              name={name}
               formId={formId}
+              name={name}
+              Option={Option}
+              classNames={{
+                multiValueLabel: () =>
+                  'p-0 gap-0 text-gray-700 m-0 mr-1 cursor-text font-base leading-4 before:content-["#"]',
+
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                menuList: (props: MenuListProps<any, any, any>) =>
+                  getMenuListClassNames(
+                    cn({
+                      'absolute top-[-300px]':
+                        props?.options?.length === 1 &&
+                        props?.options?.[0]?.label ===
+                          props.options?.[0]?.value &&
+                        !suggestedTags.includes(props.options?.[0]?.label),
+                    }),
+                  ),
+              }}
               placeholder=''
               backspaceRemovesValue
               onKeyDown={handleKeyDown}
@@ -168,6 +189,7 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
               inputValue={inputVal}
               onInputChange={handleInputChange}
               menuIsOpen={isMenuOpen}
+              // menuIsOpen={true}
               menuPlacement='top'
               defaultOptions={tags}
               hideSelectedOptions
@@ -206,11 +228,9 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
                   label: input,
                 };
               }}
-              // @ts-expect-error remove this in favour of chakraStyles
-              customStyles={tagsSelectStyles}
             />
           )}
-        </Flex>
+        </div>
       </AnimatePresence>
     </>
   );

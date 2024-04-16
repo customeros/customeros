@@ -10,18 +10,16 @@ import { useSession } from 'next-auth/react';
 import { useRemirror } from '@remirror/react';
 import { htmlToProsemirrorNode } from 'remirror';
 
-import { Box } from '@ui/layout/Box';
-import { Flex } from '@ui/layout/Flex';
 import { useDisclosure } from '@ui/utils';
 import { Send03 } from '@ui/media/icons/Send03';
 import { CardBody } from '@ui/presentation/Card';
 import { InteractionEvent } from '@graphql/types';
 import { basicEditorExtensions } from '@ui/form/RichTextEditor/extensions';
 import { useTimelineMeta } from '@organization/src/components/Timeline/state';
-import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
 import { getEmailParticipantsNameAndEmail } from '@spaces/utils/getParticipantsName';
 import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
 import { HtmlContentRenderer } from '@ui/presentation/HtmlContentRenderer/HtmlContentRenderer';
+import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog2';
 import { getEmailParticipantsByType } from '@organization/src/components/Timeline/PastZone/events/email/utils';
 import { handleSendEmail } from '@organization/src/components/Timeline/PastZone/events/email/compose-email/utils';
 import { useUpdateCacheWithNewEvent } from '@organization/src/components/Timeline/PastZone/hooks/updateCacheWithNewEvent';
@@ -237,7 +235,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
 
   return (
     <TimelinePreviewBackdrop onCloseModal={handleClosePreview}>
-      <Flex flexDir='column' maxH='calc(100vh - 5rem)' fontSize='sm'>
+      <div className='flex flex-col max-h-[calc(100vh-5rem)] text-sm'>
         <TimelineEventPreviewHeader
           //@ts-expect-error alias
           date={event.date}
@@ -247,15 +245,8 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
         />
 
         <CardBody mt={0} p='6' pt='4' overflow='auto'>
-          <Flex direction='row' justify='space-between' mb={3}>
-            <Flex
-              direction='column'
-              align='flex-start'
-              maxWidth='calc(100% - 70px)'
-              overflow='hidden'
-              textOverflow='ellipsis'
-              fontSize='sm'
-            >
+          <div className='flex flex-row justify-between mb-3'>
+            <div className='flex flex-col items-start max-w-[calc(100%-70px)] overflow-hidden text-sm line-clamp-1'>
               <EmailMetaDataEntry entryType='From' content={event?.sentBy} />
               <EmailMetaDataEntry entryType='To' content={to} />
               {!!cc.length && (
@@ -265,7 +256,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
                 <EmailMetaDataEntry entryType='BCC' content={bcc} />
               )}
               <EmailMetaDataEntry entryType='Subject' content={subject} />
-            </Flex>
+            </div>
             <div>
               <Image
                 src={'/backgrounds/organization/post-stamp.webp'}
@@ -274,7 +265,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
                 height={70}
               />
             </div>
-          </Flex>
+          </div>
 
           {event?.content && (
             <HtmlContentRenderer htmlContent={event.content} />
@@ -292,7 +283,8 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
           onClose={handleClosePreview}
         />
 
-        <ConfirmDeleteDialog
+        {/* this modal is under the second one and has no effect  */}
+        {/* <ConfirmDeleteDialog
           label='Discard this email?'
           description='Saving draft emails is not possible at the moment. Would you like to continue to discard this email?'
           confirmButtonLabel='Discard email'
@@ -300,7 +292,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
           onClose={onClose}
           onConfirm={handleExitEditorAndCleanData}
           isLoading={false}
-        />
+        /> */}
 
         <ConfirmDeleteDialog
           colorScheme='primary'
@@ -313,16 +305,14 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
           onConfirm={handleSubmit}
           isLoading={false}
           icon={
-            <Box>
-              <Send03
-                color='primary.700'
-                boxSize='inherit'
-                verticalAlign='initial'
-              />
-            </Box>
+            <Send03
+              color='primary.700'
+              boxSize='inherit'
+              verticalAlign='initial'
+            />
           }
         />
-      </Flex>
+      </div>
     </TimelinePreviewBackdrop>
   );
 };
