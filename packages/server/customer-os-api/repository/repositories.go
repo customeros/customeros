@@ -3,58 +3,97 @@ package repository
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
+	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
+	"gorm.io/gorm"
 )
 
 type Repositories struct {
-	Drivers                       Drivers
-	Neo4jRepositories             *neo4jrepository.Repositories
-	OrganizationRepository        OrganizationRepository
-	ContactRepository             ContactRepository
+	Drivers              Drivers
+	Neo4jRepositories    *neo4jrepository.Repositories
+	PostgresRepositories *postgresRepository.Repositories
+
+	//Deprecated
+	OrganizationRepository OrganizationRepository
+	//Deprecated
+	ContactRepository ContactRepository
+	//Deprecated
 	CustomFieldTemplateRepository CustomFieldTemplateRepository
-	CustomFieldRepository         CustomFieldRepository
-	EntityTemplateRepository      EntityTemplateRepository
-	FieldSetTemplateRepository    FieldSetTemplateRepository
-	FieldSetRepository            FieldSetRepository
-	UserRepository                UserRepository
-	ExternalSystemRepository      ExternalSystemRepository
-	NoteRepository                NoteRepository
-	JobRoleRepository             JobRoleRepository
-	CalendarRepository            CalendarRepository
-	LocationRepository            LocationRepository
-	EmailRepository               EmailRepository
-	PhoneNumberRepository         PhoneNumberRepository
-	TagRepository                 TagRepository
-	SearchRepository              SearchRepository
-	DashboardRepository           DashboardRepository
-	DomainRepository              DomainRepository
-	IssueRepository               IssueRepository
-	InteractionEventRepository    InteractionEventRepository
-	InteractionSessionRepository  InteractionSessionRepository
-	AnalysisRepository            AnalysisRepository
-	AttachmentRepository          AttachmentRepository
-	MeetingRepository             MeetingRepository
-	TenantRepository              TenantRepository
-	WorkspaceRepository           WorkspaceRepository
-	SocialRepository              SocialRepository
-	PlayerRepository              PlayerRepository
-	ActionRepository              ActionRepository
-	ActionItemRepository          ActionItemRepository
-	CommentRepository             CommentRepository
-	ServiceLineItemRepository     ServiceLineItemRepository
-	OpportunityRepository         OpportunityRepository
+	//Deprecated
+	CustomFieldRepository CustomFieldRepository
+	//Deprecated
+	EntityTemplateRepository EntityTemplateRepository
+	//Deprecated
+	FieldSetTemplateRepository FieldSetTemplateRepository
+	//Deprecated
+	FieldSetRepository FieldSetRepository
+	//Deprecated
+	UserRepository UserRepository
+	//Deprecated
+	ExternalSystemRepository ExternalSystemRepository
+	//Deprecated
+	NoteRepository NoteRepository
+	//Deprecated
+	JobRoleRepository JobRoleRepository
+	//Deprecated
+	CalendarRepository CalendarRepository
+	LocationRepository LocationRepository
+	//Deprecated
+	EmailRepository EmailRepository
+	//Deprecated
+	PhoneNumberRepository PhoneNumberRepository
+	//Deprecated
+	TagRepository TagRepository
+	//Deprecated
+	SearchRepository SearchRepository
+	//Deprecated
+	DashboardRepository DashboardRepository
+	//Deprecated
+	DomainRepository DomainRepository
+	//Deprecated
+	IssueRepository IssueRepository
+	//Deprecated
+	InteractionEventRepository InteractionEventRepository
+	//Deprecated
+	InteractionSessionRepository InteractionSessionRepository
+	//Deprecated
+	AnalysisRepository AnalysisRepository
+	//Deprecated
+	AttachmentRepository AttachmentRepository
+	//Deprecated
+	MeetingRepository MeetingRepository
+	//Deprecated
+	TenantRepository TenantRepository
+	//Deprecated
+	WorkspaceRepository WorkspaceRepository
+	//Deprecated
+	SocialRepository SocialRepository
+	//Deprecated
+	PlayerRepository PlayerRepository
+	//Deprecated
+	ActionRepository ActionRepository
+	//Deprecated
+	ActionItemRepository ActionItemRepository
+	//Deprecated
+	CommentRepository CommentRepository
+	//Deprecated
+	ServiceLineItemRepository ServiceLineItemRepository
+	//Deprecated
+	OpportunityRepository OpportunityRepository
 }
 
 type Drivers struct {
 	Neo4jDriver *neo4j.DriverWithContext
 }
 
-func InitRepos(driver *neo4j.DriverWithContext, database string) *Repositories {
+func InitRepos(driver *neo4j.DriverWithContext, database string, gormDb *gorm.DB) *Repositories {
 	repositories := Repositories{
 		Drivers: Drivers{
 			Neo4jDriver: driver,
 		},
 	}
 	repositories.Neo4jRepositories = neo4jrepository.InitNeo4jRepositories(driver, database)
+	repositories.PostgresRepositories = postgresRepository.InitRepositories(gormDb)
+
 	repositories.OrganizationRepository = NewOrganizationRepository(driver, database)
 	repositories.ContactRepository = NewContactRepository(driver, database)
 	repositories.CustomFieldTemplateRepository = NewCustomFieldTemplateRepository(driver, database)

@@ -18,6 +18,7 @@ type Repositories struct {
 	GoogleServiceAccountKeyRepository GoogleServiceAccountKeyRepository
 	CurrencyRateRepository            CurrencyRateRepository
 	EventBufferRepository             EventBufferRepository
+	TableViewDefinitionRepository     TableViewDefinitionRepository
 }
 
 func InitRepositories(db *gorm.DB) *Repositories {
@@ -99,6 +100,11 @@ func (r *Repositories) Migration(db *gorm.DB) {
 	}
 
 	err = db.AutoMigrate(&entity.EventBuffer{})
+	if err != nil {
+		panic(err)
+	}
+
+	err = db.AutoMigrate(&entity.TableViewDefinition{})
 	if err != nil {
 		panic(err)
 	}
