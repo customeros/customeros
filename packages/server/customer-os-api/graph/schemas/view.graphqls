@@ -1,54 +1,68 @@
 extend type Query {
-    tableViewDefs(pagination: Pagination, where: Filter, sort: SortBy): TableViewDefPage! @hasTenant
+    tableViewDefs: [TableViewDef!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+extend type Mutation {
+    tableViewDef_Update(input: TableViewDefInput!): TableViewDef! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type TableViewDef implements Node {
     id:                 ID!
     name:               String!
+    tableType:          TableViewType
     order:              Int
-    type:               ViewType
     icon:               String
-    columns:            [ColumnDef]
+    columns:            [ColumnType!]!
     filters:            String
     sorting:            String
     createdAt:          Time!
     updatedAt:          Time!
-    createdBy:          User @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
-type TableViewDefPage implements Pages {
-    content: [TableViewDef!]!
-    totalPages: Int!
-    totalElements: Int64!
-    totalAvailable: Int64!
+enum TableViewType {
+    ORGANIZATIONS
+    INVOICES
+    RENEWALS
 }
 
-type ViewType implements Node {
+enum ColumnType {
+    INVOICES_ISSUE_DATE
+    INVOICES_ISSUE_DATE_PAST
+    INVOICES_DUE_DATE
+    INVOICES_CONTRACT
+    INVOICES_BILLING_CYCLE
+    INVOICES_PAYMENT_STATUS
+    INVOICES_INVOICE_NUMBER
+    INVOICES_AMOUNT
+    INVOICES_INVOICE_STATUS
+    INVOICES_INVOICE_PREVIEW
+
+    ORGANIZATIONS_AVATAR
+    ORGANIZATIONS_NAME
+    ORGANIZATIONS_WEBSITE
+    ORGANIZATIONS_RELATIONSHIP
+    ORGANIZATIONS_ONBOARDING_STATUS
+    ORGANIZATIONS_RENEWAL_LIKELIHOOD
+    ORGANIZATIONS_RENEWL_DATE
+    ORGANIZATIONS_FORECAST_ARR
+    ORGANIZATIONS_OWNER
+    ORGANIZATIONS_LAST_TOUCHPOINT
+
+    RENEWALS_AVATAR
+    RENEWALS_NAME
+    RENEWALS_RENEWAL_LIKELIHOOD
+    RENEWALS_RENEWL_DATE
+    RENEWALS_FORECAST_ARR
+    RENEWALS_OWNER
+    RENEWALS_LAST_TOUCHPOINT
+}
+
+input TableViewDefInput {
     id:                 ID!
-    name:               String
-    createdAt:          Time!
-    updatedAt:          Time!
-    createdBy:          User @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant
-}
-
-type ColumnDef implements Node {
-    id:                 ID!
-    type:               ViewType
-    columnType:         ColumnType
-    isFilterable:       Boolean
-    isSortable:         Boolean
-    isDefaultSort:      Boolean
-    isVisible:          Boolean
-    createdAt:          Time!
-    updatedAt:          Time!
-    createdBy:          User @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant
-}
-
-type ColumnType implements Node {
-    id:                 ID!
-    name:               String
-    viewTypeId:         String
-    createdAt:          Time!
-    updatedAt:          Time!
-    createdBy:          User @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant
+    name:               String!
+    order:              Int!
+    icon:               String
+    columns:            [ColumnType!]!
+    filters:            String!
+    sorting:            String!
 }
