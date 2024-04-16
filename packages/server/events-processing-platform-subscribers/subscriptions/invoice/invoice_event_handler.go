@@ -362,12 +362,12 @@ func calculatePriceForBilledType(price float64, billed neo4jenum.BilledType, cyc
 }
 
 func calculateSLIAmountForCycleInvoicing(quantity int64, price float64, billed neo4jenum.BilledType, cycle neo4jenum.BillingCycle) float64 {
-	sliAmount := float64(quantity) * price
-	if sliAmount == 0 {
-		return sliAmount
+	if quantity == 0 || price == 0 {
+		return 0
 	}
-
-	return calculatePriceForBilledType(sliAmount, billed, cycle)
+	unitAmount := calculatePriceForBilledType(price, billed, cycle)
+	unitAmount = utils.TruncateFloat64(unitAmount, 2)
+	return float64(quantity) * unitAmount
 }
 
 func prorateAnnualSLIAmount(startDate, endDate time.Time, amount float64) float64 {
