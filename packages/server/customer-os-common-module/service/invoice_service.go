@@ -402,6 +402,10 @@ func (h *invoiceService) FillCycleInvoice(ctx context.Context, tenant, contractI
 		if sliEntity.IsOneTime() && sliEntity.StartedAt.After(periodEndTime) {
 			continue
 		}
+		// cancelled ONE TIME SLI should not be invoiced
+		if sliEntity.IsOneTime() && sliEntity.Canceled {
+			continue
+		}
 
 		// skip SLI if quantity or price is negative
 		if sliEntity.Quantity < 0 || sliEntity.Price < 0 {
