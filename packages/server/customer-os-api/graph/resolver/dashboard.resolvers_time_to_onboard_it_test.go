@@ -6,6 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -58,8 +59,8 @@ func TestQueryResolver_Dashboard_TimeToOnboard_AllActionsWithinSameMonth(t *test
 	now := inCurrentMonthExceptFirstAndLastDays()
 	hoursAgo2 := now.Add(-2 * time.Hour)
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
-	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, now, map[string]string{"status": "DONE"})
-	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, hoursAgo2, map[string]string{"status": "LATE"})
+	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, neo4jenum.ActionOnboardingStatusChanged, now, map[string]string{"status": "DONE"})
+	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, neo4jenum.ActionOnboardingStatusChanged, hoursAgo2, map[string]string{"status": "LATE"})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1, "Organization": 1, "Action": 2})
 
@@ -91,8 +92,8 @@ func TestQueryResolver_Dashboard_TimeToOnboard_PreviousMonthNoData(t *testing.T)
 	hoursAgo4 := now.Add(-4 * time.Hour)
 	monthAgo := now.Add(-30 * 24 * time.Hour)
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
-	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, now, map[string]string{"status": "SUCCESSFUL"})
-	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, hoursAgo4, map[string]string{"status": "LATE"})
+	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, neo4jenum.ActionOnboardingStatusChanged, now, map[string]string{"status": "SUCCESSFUL"})
+	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, neo4jenum.ActionOnboardingStatusChanged, hoursAgo4, map[string]string{"status": "LATE"})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1, "Organization": 1, "Action": 2})
 
@@ -125,8 +126,8 @@ func TestQueryResolver_Dashboard_TimeToOnboard_PreviousMonthHasDataCurrentMonthN
 	hoursAgo12 := now.Add(-12 * time.Hour)
 	inAMonth := now.Add(30 * 24 * time.Hour)
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
-	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, now, map[string]string{"status": "DONE"})
-	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, hoursAgo12, map[string]string{"status": "LATE"})
+	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, neo4jenum.ActionOnboardingStatusChanged, now, map[string]string{"status": "DONE"})
+	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, neo4jenum.ActionOnboardingStatusChanged, hoursAgo12, map[string]string{"status": "LATE"})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1, "Organization": 1, "Action": 2})
 
@@ -160,10 +161,10 @@ func TestQueryResolver_Dashboard_TimeToOnboard_PercentageIncrease(t *testing.T) 
 	monthAgo := now.Add(-30 * 24 * time.Hour)
 	monthAgoMinus2Hours := now.Add(-30 * 24 * time.Hour).Add(-2 * time.Hour)
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
-	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, now, map[string]string{"status": "DONE"})
-	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, hoursAgo4, map[string]string{"status": "LATE"})
-	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, monthAgo, map[string]string{"status": "SUCCESSFUL"})
-	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, monthAgoMinus2Hours, map[string]string{"status": "LATE"})
+	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, neo4jenum.ActionOnboardingStatusChanged, now, map[string]string{"status": "DONE"})
+	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, neo4jenum.ActionOnboardingStatusChanged, hoursAgo4, map[string]string{"status": "LATE"})
+	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, neo4jenum.ActionOnboardingStatusChanged, monthAgo, map[string]string{"status": "SUCCESSFUL"})
+	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, neo4jenum.ActionOnboardingStatusChanged, monthAgoMinus2Hours, map[string]string{"status": "LATE"})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1, "Organization": 1, "Action": 4})
 
@@ -197,10 +198,10 @@ func TestQueryResolver_Dashboard_TimeToOnboard_PercentageDecrease(t *testing.T) 
 	monthAgo := now.Add(-30 * 24 * time.Hour)
 	monthAgoMinus4Hours := now.Add(-30 * 24 * time.Hour).Add(-4 * time.Hour)
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
-	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, now, map[string]string{"status": "SUCCESSFUL"})
-	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, hoursAgo2, map[string]string{"status": "LATE"})
-	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, monthAgo, map[string]string{"status": "DONE"})
-	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, monthAgoMinus4Hours, map[string]string{"status": "LATE"})
+	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, neo4jenum.ActionOnboardingStatusChanged, now, map[string]string{"status": "SUCCESSFUL"})
+	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, neo4jenum.ActionOnboardingStatusChanged, hoursAgo2, map[string]string{"status": "LATE"})
+	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, neo4jenum.ActionOnboardingStatusChanged, monthAgo, map[string]string{"status": "DONE"})
+	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, neo4jenum.ActionOnboardingStatusChanged, monthAgoMinus4Hours, map[string]string{"status": "LATE"})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1, "Organization": 1, "Action": 4})
 
@@ -232,8 +233,8 @@ func TestQueryResolver_Dashboard_TimeToOnboard_DoneIsFirstStatus(t *testing.T) {
 	now := inCurrentMonthExceptFirstAndLastDays()
 	monthAgo := now.Add(-30 * 24 * time.Hour)
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
-	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, now, map[string]string{"status": "SUCCESSFUL"})
-	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, monthAgo, map[string]string{"status": "DONE"})
+	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, neo4jenum.ActionOnboardingStatusChanged, now, map[string]string{"status": "SUCCESSFUL"})
+	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, neo4jenum.ActionOnboardingStatusChanged, monthAgo, map[string]string{"status": "DONE"})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1, "Organization": 1, "Action": 2})
 
@@ -267,10 +268,10 @@ func TestQueryResolver_Dashboard_TimeToOnboard_MultipleOrgs(t *testing.T) {
 	hoursAgo8 := now.Add(-8 * time.Hour)
 	orgId1 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
 	orgId2 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
-	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId1, entity.ActionOnboardingStatusChanged, hoursAgo4, map[string]string{"status": "STUCK"})
-	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId1, entity.ActionOnboardingStatusChanged, now, map[string]string{"status": "SUCCESSFUL"})
-	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId2, entity.ActionOnboardingStatusChanged, hoursAgo8, map[string]string{"status": "ON_TRACK"})
-	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId2, entity.ActionOnboardingStatusChanged, now, map[string]string{"status": "DONE"})
+	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId1, neo4jenum.ActionOnboardingStatusChanged, hoursAgo4, map[string]string{"status": "STUCK"})
+	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId1, neo4jenum.ActionOnboardingStatusChanged, now, map[string]string{"status": "SUCCESSFUL"})
+	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId2, neo4jenum.ActionOnboardingStatusChanged, hoursAgo8, map[string]string{"status": "ON_TRACK"})
+	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId2, neo4jenum.ActionOnboardingStatusChanged, now, map[string]string{"status": "DONE"})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1, "Organization": 2, "Action": 4})
 
@@ -300,9 +301,9 @@ func TestQueryResolver_Dashboard_TimeToOnboard_NoDoneOnboardings(t *testing.T) {
 	hoursAgo1 := now.Add(-1 * time.Hour)
 	hoursAgo2 := now.Add(-2 * time.Hour)
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
-	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, now, map[string]string{"status": "NOT_STARTED"})
-	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, hoursAgo1, map[string]string{"status": "LATE"})
-	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, hoursAgo2, map[string]string{"status": "STUCK"})
+	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, neo4jenum.ActionOnboardingStatusChanged, now, map[string]string{"status": "NOT_STARTED"})
+	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, neo4jenum.ActionOnboardingStatusChanged, hoursAgo1, map[string]string{"status": "LATE"})
+	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, neo4jenum.ActionOnboardingStatusChanged, hoursAgo2, map[string]string{"status": "STUCK"})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1, "Organization": 1, "Action": 3})
 
@@ -336,11 +337,11 @@ func TestQueryResolver_Dashboard_TimeToOnboard_StartedLongAgoWithMultipleActions
 	daysAgo80 := now.Add(-80 * 24 * time.Hour)
 	daysAgo70 := now.Add(-70 * 24 * time.Hour)
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
-	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, now, map[string]string{"status": "DONE"})
-	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, daysAgo100, map[string]string{"status": "NOT_STARTED"})
-	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, daysAgo90, map[string]string{"status": "LATE"})
-	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, daysAgo80, map[string]string{"status": "STUCK"})
-	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, daysAgo70, map[string]string{"status": "ON_TRACK"})
+	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, neo4jenum.ActionOnboardingStatusChanged, now, map[string]string{"status": "DONE"})
+	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, neo4jenum.ActionOnboardingStatusChanged, daysAgo100, map[string]string{"status": "NOT_STARTED"})
+	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, neo4jenum.ActionOnboardingStatusChanged, daysAgo90, map[string]string{"status": "LATE"})
+	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, neo4jenum.ActionOnboardingStatusChanged, daysAgo80, map[string]string{"status": "STUCK"})
+	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, neo4jenum.ActionOnboardingStatusChanged, daysAgo70, map[string]string{"status": "ON_TRACK"})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1, "Organization": 1, "Action": 5})
 
@@ -373,10 +374,10 @@ func TestQueryResolver_Dashboard_TimeToOnboard_MultipleDonesInAMonth(t *testing.
 	hoursAgo2 := now.Add(-2 * time.Hour)
 	hoursAgo3 := now.Add(-3 * time.Hour)
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
-	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, now, map[string]string{"status": "SUCCESSFUL"})
-	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, hoursAgo1, map[string]string{"status": "LATE"})
-	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, hoursAgo2, map[string]string{"status": "DONE"})
-	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, hoursAgo3, map[string]string{"status": "STUCK"})
+	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, neo4jenum.ActionOnboardingStatusChanged, now, map[string]string{"status": "SUCCESSFUL"})
+	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, neo4jenum.ActionOnboardingStatusChanged, hoursAgo1, map[string]string{"status": "LATE"})
+	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, neo4jenum.ActionOnboardingStatusChanged, hoursAgo2, map[string]string{"status": "DONE"})
+	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, neo4jenum.ActionOnboardingStatusChanged, hoursAgo3, map[string]string{"status": "STUCK"})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1, "Organization": 1, "Action": 4})
 

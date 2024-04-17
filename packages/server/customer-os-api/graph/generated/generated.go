@@ -11811,6 +11811,10 @@ enum ActionType {
     CONTRACT_RENEWED
     SERVICE_LINE_ITEM_REMOVED
     ONBOARDING_STATUS_CHANGED
+    INVOICE_ISSUED
+    INVOICE_PAID
+    INVOICE_VOIDED
+    INVOICE_SENT
 }`, BuiltIn: false},
 	{Name: "../schemas/action_item.graphqls", Input: `type ActionItem {
     id: ID!

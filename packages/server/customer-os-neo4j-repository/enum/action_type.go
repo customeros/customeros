@@ -16,6 +16,7 @@ const (
 	ActionServiceLineItemRemoved                    ActionType = "SERVICE_LINE_ITEM_REMOVED"
 	ActionOnboardingStatusChanged                   ActionType = "ONBOARDING_STATUS_CHANGED"
 	ActionRenewalLikelihoodUpdated                  ActionType = "RENEWAL_LIKELIHOOD_UPDATED"
+	ActionRenewalForecastUpdated                    ActionType = "RENEWAL_FORECAST_UPDATED"
 	ActionInvoiceIssued                             ActionType = "INVOICE_ISSUED"
 	ActionInvoicePaid                               ActionType = "INVOICE_PAID"
 	ActionInvoiceVoided                             ActionType = "INVOICE_VOIDED"

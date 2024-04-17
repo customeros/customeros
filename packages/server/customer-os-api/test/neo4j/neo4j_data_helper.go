@@ -1432,7 +1432,7 @@ func CreateOrganizationRelationship(ctx context.Context, driver *neo4j.DriverWit
 	})
 }
 
-func CreateActionForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId string, actionType entity.ActionType, createdAt time.Time) string {
+func CreateActionForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId string, actionType neo4jenum.ActionType, createdAt time.Time) string {
 	var actionId, _ = uuid.NewRandom()
 
 	query := "MATCH (o:Organization {id:$organizationId}) " +
@@ -1456,7 +1456,7 @@ func CreateActionForOrganization(ctx context.Context, driver *neo4j.DriverWithCo
 	return actionId.String()
 }
 
-func CreateActionForOrganizationWithProperties(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId string, actionType entity.ActionType, createdAt time.Time, extraProperties map[string]string) string {
+func CreateActionForOrganizationWithProperties(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId string, actionType neo4jenum.ActionType, createdAt time.Time, extraProperties map[string]string) string {
 	var actionId, _ = uuid.NewRandom()
 
 	query := `MATCH (o:Organization {id:$organizationId}) 

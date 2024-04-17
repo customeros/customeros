@@ -476,7 +476,7 @@ func TestQueryResolver_Organization_WithTimelineEvents_DirectAndFromMultipleCont
 	secAgo120 := now.Add(time.Duration(-120) * time.Second)
 	secAgo1000 := now.Add(time.Duration(-1000) * time.Second)
 
-	actionId1 := neo4jt.CreateActionForOrganization(ctx, driver, tenantName, organizationId, entity.ActionCreated, secAgo5)
+	actionId1 := neo4jt.CreateActionForOrganization(ctx, driver, tenantName, organizationId, neo4jenum.ActionCreated, secAgo5)
 
 	voiceSession := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "mySessionIdentifier", "session1", "CALL", "ACTIVE", "VOICE", now, false)
 
@@ -640,7 +640,7 @@ func TestQueryResolver_Organization_WithTimelineEventsTotalCount(t *testing.T) {
 
 	now := time.Now().UTC()
 
-	neo4jt.CreateActionForOrganization(ctx, driver, tenantName, organizationId, entity.ActionCreated, now)
+	neo4jt.CreateActionForOrganization(ctx, driver, tenantName, organizationId, neo4jenum.ActionCreated, now)
 
 	neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId1, "contact note 1", "text/plain", now)
 	neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId2, "contact note 2", "text/plain", now)

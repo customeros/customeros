@@ -3001,6 +3001,10 @@ const (
 	ActionTypeContractRenewed                           ActionType = "CONTRACT_RENEWED"
 	ActionTypeServiceLineItemRemoved                    ActionType = "SERVICE_LINE_ITEM_REMOVED"
 	ActionTypeOnboardingStatusChanged                   ActionType = "ONBOARDING_STATUS_CHANGED"
+	ActionTypeInvoiceIssued                             ActionType = "INVOICE_ISSUED"
+	ActionTypeInvoicePaid                               ActionType = "INVOICE_PAID"
+	ActionTypeInvoiceVoided                             ActionType = "INVOICE_VOIDED"
+	ActionTypeInvoiceSent                               ActionType = "INVOICE_SENT"
 )
 
 var AllActionType = []ActionType{
@@ -3017,11 +3021,15 @@ var AllActionType = []ActionType{
 	ActionTypeContractRenewed,
 	ActionTypeServiceLineItemRemoved,
 	ActionTypeOnboardingStatusChanged,
+	ActionTypeInvoiceIssued,
+	ActionTypeInvoicePaid,
+	ActionTypeInvoiceVoided,
+	ActionTypeInvoiceSent,
 }
 
 func (e ActionType) IsValid() bool {
 	switch e {
-	case ActionTypeCreated, ActionTypeRenewalLikelihoodUpdated, ActionTypeRenewalForecastUpdated, ActionTypeContractStatusUpdated, ActionTypeServiceLineItemPriceUpdated, ActionTypeServiceLineItemQuantityUpdated, ActionTypeServiceLineItemBilledTypeUpdated, ActionTypeServiceLineItemBilledTypeRecurringCreated, ActionTypeServiceLineItemBilledTypeOnceCreated, ActionTypeServiceLineItemBilledTypeUsageCreated, ActionTypeContractRenewed, ActionTypeServiceLineItemRemoved, ActionTypeOnboardingStatusChanged:
+	case ActionTypeCreated, ActionTypeRenewalLikelihoodUpdated, ActionTypeRenewalForecastUpdated, ActionTypeContractStatusUpdated, ActionTypeServiceLineItemPriceUpdated, ActionTypeServiceLineItemQuantityUpdated, ActionTypeServiceLineItemBilledTypeUpdated, ActionTypeServiceLineItemBilledTypeRecurringCreated, ActionTypeServiceLineItemBilledTypeOnceCreated, ActionTypeServiceLineItemBilledTypeUsageCreated, ActionTypeContractRenewed, ActionTypeServiceLineItemRemoved, ActionTypeOnboardingStatusChanged, ActionTypeInvoiceIssued, ActionTypeInvoicePaid, ActionTypeInvoiceVoided, ActionTypeInvoiceSent:
 		return true
 	}
 	return false
