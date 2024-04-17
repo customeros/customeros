@@ -20,6 +20,10 @@ import {
 } from '@organization/src/graphql/getContracts.generated';
 import { useUpdatePanelModalStateContext } from '@organization/src/components/Tabs/panels/AccountPanel/context/AccountModalsContext';
 import { UpcomingInvoices } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/UpcomingInvoices/UpcomingInvoices';
+import {
+  EditModalMode,
+  useContractModalStateContext,
+} from '@organization/src/components/Tabs/panels/AccountPanel/context/ContractModalsContext';
 
 import { Services } from './Services/Services';
 import { ContractSubtitle } from './ContractSubtitle';
@@ -45,7 +49,12 @@ export const ContractCard = ({
   const [isExpanded, setIsExpanded] = useState(!data?.contractSigned);
   const formId = `contract-form-${data.metadata.id}`;
   const { setIsPanelModalOpen } = useUpdatePanelModalStateContext();
-  const [isEditModalOpen, setEditModalOpen] = useState(false);
+  const {
+    isEditModalOpen,
+    onEditModalOpen,
+    onChangeModalMode,
+    onEditModalClose,
+  } = useContractModalStateContext();
   const {
     onOpen: onServiceLineItemsOpen,
     onClose: onServiceLineItemClose,
@@ -156,6 +165,15 @@ export const ContractCard = ({
     },
   });
 
+  const handleOpenBillingDetails = () => {
+    onChangeModalMode(EditModalMode.BillingDetails);
+    onEditModalOpen();
+  };
+  const handleOpenContractDetails = () => {
+    onChangeModalMode(EditModalMode.ContractDetails);
+    onEditModalOpen();
+  };
+
   return (
     <Card className='px-4 py-3 w-full text-lg bg-gray-50 transition-all-0.2s-ease-out border border-gray-200 '>
       <CardHeader
@@ -171,7 +189,7 @@ export const ContractCard = ({
           />
 
           <ContractCardActions
-            onOpenEditModal={() => setEditModalOpen(true)}
+            onOpenEditModal={handleOpenContractDetails}
             status={data.contractStatus}
             contractId={data.metadata.id}
             renewsAt={data?.opportunities?.[0]?.renewedAt}
@@ -190,7 +208,7 @@ export const ContractCard = ({
         <div
           role='button'
           tabIndex={1}
-          onClick={() => setEditModalOpen(true)}
+          onClick={handleOpenContractDetails}
           className='w-full'
         >
           <ContractSubtitle data={data} />
@@ -211,13 +229,21 @@ export const ContractCard = ({
           currency={data?.currency}
           onModalOpen={onServiceLineItemsOpen}
         />
-        <Divider className='my-3' />
+        {!!data?.upcomingInvoices?.length && (
+          <>
+            <Divider className='my-3' />
+            <UpcomingInvoices
+              data={data}
+              onOpenBillingDetailsModal={handleOpenBillingDetails}
+              onOpenServiceLineItemsModal={onServiceLineItemsOpen}
+            />
+          </>
+        )}
 
-        <UpcomingInvoices data={data} />
         <EditContractModal
           isOpen={isEditModalOpen}
           contractId={data.metadata.id}
-          onClose={() => setEditModalOpen(false)}
+          onClose={onEditModalClose}
           organizationName={organizationName}
           notes={data?.billingDetails?.invoiceNote}
         />

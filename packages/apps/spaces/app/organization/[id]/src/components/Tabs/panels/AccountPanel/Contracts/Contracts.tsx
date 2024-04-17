@@ -10,6 +10,7 @@ import { Contract, Organization } from '@graphql/types';
 import { ContractCard } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ContractCard';
 import { ARRForecast } from '@organization/src/components/Tabs/panels/AccountPanel/ARRForecast/ARRForecast';
 import { ContractCard as NewContractCard } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ContractCard';
+import { ContractModalsContextProvider } from '@organization/src/components/Tabs/panels/AccountPanel/context/ContractModalsContext';
 
 import { Notes } from '../Notes';
 
@@ -40,11 +41,13 @@ export const Contracts: FC<ContractsProps> = ({ isLoading, organization }) => {
               mb={4}
             >
               {isNewContractUiEnabled ? (
-                <NewContractCard
-                  organizationId={id}
-                  organizationName={organization?.name ?? ''}
-                  data={(contract as Contract) ?? undefined}
-                />
+                <ContractModalsContextProvider id={id}>
+                  <NewContractCard
+                    organizationId={id}
+                    organizationName={organization?.name ?? ''}
+                    data={(contract as Contract) ?? undefined}
+                  />
+                </ContractModalsContextProvider>
               ) : (
                 <ContractCard
                   organizationId={id}

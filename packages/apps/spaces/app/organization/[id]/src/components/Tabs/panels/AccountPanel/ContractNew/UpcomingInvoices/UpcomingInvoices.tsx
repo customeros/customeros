@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 import { useDeepCompareEffect } from 'rooks';
 
-// import { Play } from '@ui/media/icons/Play';
+import { Play } from '@ui/media/icons/Play';
 import { Plus } from '@ui/media/icons/Plus';
 import { Edit03 } from '@ui/media/icons/Edit03';
 import { Button } from '@ui/form/Button/Button';
@@ -106,19 +106,19 @@ export const UpcomingInvoices = ({
         </Button>
       );
     }
-    // if (data.contractStatus === ContractStatus.Draft) {
-    //   return (
-    //     <Button
-    //       className='ml-2 font-normal rounded'
-    //       size='xs'
-    //       colorScheme='primary'
-    //       onClick={() => {}}
-    //       leftIcon={<Play />}
-    //     >
-    //       Make contract live
-    //     </Button>
-    //   );
-    // }
+    if (data.contractStatus === ContractStatus.Draft) {
+      return (
+        <Button
+          className='ml-2 font-normal rounded'
+          size='xs'
+          colorScheme='primary'
+          onClick={() => {}}
+          leftIcon={<Play />}
+        >
+          Make contract live
+        </Button>
+      );
+    }
   };
 
   return (
