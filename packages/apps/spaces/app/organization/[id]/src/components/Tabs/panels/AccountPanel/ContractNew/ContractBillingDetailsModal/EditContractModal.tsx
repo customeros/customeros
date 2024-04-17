@@ -59,7 +59,7 @@ const mainVariants = {
     x: 0,
     position: 'relative',
     scale: 1,
-    transition: { duration: 0.15, ease: 'linear' },
+    transition: { duration: 0.2, ease: 'easeOut' },
   },
   closed: {
     w: '100px',
@@ -67,7 +67,7 @@ const mainVariants = {
     position: 'absolute',
     x: '-32px',
     scale: 0.95,
-    transition: { duration: 0.2, ease: 'linear' },
+    transition: { duration: 0.2, ease: 'easeOut' },
   },
 };
 
@@ -78,7 +78,7 @@ const variants = {
     minW: '424px',
     x: 0,
     display: 'block',
-    transition: { duration: 0.2, ease: 'linear' },
+    transition: { duration: 0.2, ease: 'easeOut' },
   },
   closed: {
     opacity: 0,
@@ -86,7 +86,7 @@ const variants = {
     minW: '0px',
     x: '100%',
     display: 'none',
-    transition: { duration: 0.2, ease: 'linear' },
+    transition: { duration: 0.2, ease: 'easeOut' },
   },
 };
 
@@ -348,90 +348,39 @@ export const EditContractModal = ({
         className='border-r-2 flex gap-6 bg-transparent shadow-none border-none'
         style={{ minWidth: '971px', minHeight: '80vh', boxShadow: 'none' }}
       >
-        <motion.div
-          layout
-          data-isOpen={!billingDetailsFormOpen}
-          variants={mainVariants as Variants}
-          animate={!billingDetailsFormOpen ? 'open' : 'closed'}
-          className={cn(
-            'flex flex-col gap-4 px-6 pb-6 pt-4 bg-white  rounded-lg justify-between relative h-[80vh] min-w-[424px] ',
-          )}
-        >
-          <ModalHeader className='p-0 text-lg font-semibold'>
-            {data?.contract?.organizationLegalName ||
-              organizationName ||
-              "Unnamed's "}{' '}
-            contract details
-          </ModalHeader>
-
-          <ContractBillingDetailsForm
-            formId={formId}
-            contractId={contractId}
-            tenantBillingProfile={
-              tenantBillingProfile
-                ?.tenantBillingProfiles?.[0] as TenantBillingProfile
-            }
-            currency={state?.values?.currency?.value}
-            bankAccounts={bankAccountsData?.bankAccounts as BankAccount[]}
-            payAutomatically={state?.values?.payAutomatically}
-          />
-          <ModalFooter className='p-0 flex'>
-            <Button
-              variant='outline'
-              colorScheme='gray'
-              onClick={handleCloseModal}
-              className='w-full'
-              size='md'
-            >
-              Cancel
-            </Button>
-            <Button
-              className='ml-3 w-full'
-              size='md'
-              variant='outline'
-              colorScheme='primary'
-              onClick={handleApplyChanges}
-            >
-              Confirm
-            </Button>
-          </ModalFooter>
-        </motion.div>
-        <motion.div
-          layout
-          data-isOpen={billingDetailsFormOpen}
-          variants={variants}
-          animate={billingDetailsFormOpen ? 'open' : 'closed'}
-          className='flex flex-col gap-4 px-6 pb-6 pt-4 bg-white h-auto rounded-lg justify-between relative shadow-2xl min-w-[424px]'
-        >
+        <div className='relative'>
           <motion.div
-            className='h-full flex flex-col justify-between'
-            animate={{
-              opacity: billingDetailsFormOpen ? 1 : 0,
-              transition: { delay: 0.2 },
-            }}
+            layout
+            data-isOpen={!billingDetailsFormOpen}
+            variants={mainVariants as Variants}
+            animate={!billingDetailsFormOpen ? 'open' : 'closed'}
+            className={cn(
+              'flex flex-col gap-4 px-6 pb-6 pt-4 bg-white  rounded-lg justify-between relative h-[80vh] min-w-[424px]',
+            )}
           >
-            <div className='flex flex-col relative justify-between'>
-              <ModalHeader className='p-0 text-lg font-semibold'>
-                <div>
-                  {data?.contract?.organizationLegalName ||
-                    organizationName ||
-                    "Unnamed's "}{' '}
-                </div>
-                <span className='text-base font-normal'>
-                  These details are required to issue invoices
-                </span>
-              </ModalHeader>
+            <ModalHeader className='p-0 text-lg font-semibold'>
+              {data?.contract?.organizationLegalName ||
+                organizationName ||
+                "Unnamed's "}{' '}
+              contract details
+            </ModalHeader>
 
-              <BillingDetailsForm
-                values={addressState.values}
-                formId={'billing-details-address-form'}
-              />
-            </div>
+            <ContractBillingDetailsForm
+              formId={formId}
+              contractId={contractId}
+              tenantBillingProfile={
+                tenantBillingProfile
+                  ?.tenantBillingProfiles?.[0] as TenantBillingProfile
+              }
+              currency={state?.values?.currency?.value}
+              bankAccounts={bankAccountsData?.bankAccounts as BankAccount[]}
+              payAutomatically={state?.values?.payAutomatically}
+            />
             <ModalFooter className='p-0 flex'>
               <Button
                 variant='outline'
                 colorScheme='gray'
-                onClick={() => setBillingDetailsOpen(false)}
+                onClick={handleCloseModal}
                 className='w-full'
                 size='md'
               >
@@ -442,13 +391,66 @@ export const EditContractModal = ({
                 size='md'
                 variant='outline'
                 colorScheme='primary'
-                onClick={handleSaveAddressChanges}
+                onClick={handleApplyChanges}
               >
                 Confirm
               </Button>
             </ModalFooter>
           </motion.div>
-        </motion.div>
+          <motion.div
+            layout
+            data-isOpen={billingDetailsFormOpen}
+            variants={variants}
+            animate={billingDetailsFormOpen ? 'open' : 'closed'}
+            className='flex flex-col gap-4 px-6 pb-6 pt-4 bg-white rounded-lg justify-between relative shadow-2xl h-full min-w-[424px]'
+          >
+            <motion.div
+              className='h-full flex flex-col justify-between'
+              animate={{
+                opacity: billingDetailsFormOpen ? 1 : 0,
+                transition: { duration: 0.2 },
+              }}
+            >
+              <div className='flex flex-col relative justify-between'>
+                <ModalHeader className='p-0 text-lg font-semibold'>
+                  <div>
+                    {data?.contract?.organizationLegalName ||
+                      organizationName ||
+                      "Unnamed's "}{' '}
+                  </div>
+                  <span className='text-base font-normal'>
+                    These details are required to issue invoices
+                  </span>
+                </ModalHeader>
+
+                <BillingDetailsForm
+                  values={addressState.values}
+                  formId={'billing-details-address-form'}
+                />
+              </div>
+              <ModalFooter className='p-0 flex'>
+                <Button
+                  variant='outline'
+                  colorScheme='gray'
+                  onClick={() => setBillingDetailsOpen(false)}
+                  className='w-full'
+                  size='md'
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className='ml-3 w-full'
+                  size='md'
+                  variant='outline'
+                  colorScheme='primary'
+                  onClick={handleSaveAddressChanges}
+                >
+                  Confirm
+                </Button>
+              </ModalFooter>
+            </motion.div>
+          </motion.div>
+        </div>
 
         <div style={{ minWidth: '600px' }} className='bg-white rounded'>
           <div className='w-full h-full'>

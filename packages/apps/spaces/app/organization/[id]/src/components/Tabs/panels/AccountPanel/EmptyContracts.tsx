@@ -58,6 +58,7 @@ export const EmptyContracts: FC<
         billingEnabled: false,
         autoRenew: false,
         approved: false,
+        upcomingInvoices: [],
       };
       queryClient.cancelQueries({ queryKey });
       queryClient.setQueryData<GetContractsQuery>(queryKey, (currentCache) => {

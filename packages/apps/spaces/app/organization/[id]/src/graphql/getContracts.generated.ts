@@ -85,6 +85,22 @@ export type GetContractsQuery = {
         billingEmailCC?: Array<string> | null;
         billingEmailBCC?: Array<string> | null;
       } | null;
+      upcomingInvoices: Array<{
+        __typename?: 'Invoice';
+        invoicePeriodEnd: any;
+        invoicePeriodStart: any;
+        status?: Types.InvoiceStatus | null;
+        amountDue: number;
+        due: any;
+        currency: string;
+        metadata: { __typename?: 'Metadata'; id: string };
+        invoiceLineItems: Array<{
+          __typename?: 'InvoiceLine';
+          price: number;
+          quantity: any;
+          total: number;
+        }>;
+      }>;
       opportunities?: Array<{
         __typename?: 'Opportunity';
         id: string;
@@ -186,6 +202,22 @@ export const GetContractsDocument = `
         billingEmail
         billingEmailCC
         billingEmailBCC
+      }
+      upcomingInvoices {
+        metadata {
+          id
+        }
+        invoicePeriodEnd
+        invoicePeriodStart
+        status
+        amountDue
+        due
+        currency
+        invoiceLineItems {
+          price
+          quantity
+          total
+        }
       }
       opportunities {
         id

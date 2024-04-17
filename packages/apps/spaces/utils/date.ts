@@ -25,6 +25,7 @@ export class DateTimeUtils {
   public static date = 'd MMM yyyy'; // Output: "19 Jun 2023"
   public static dateWithAbreviatedMonth = 'd MMM yyyy'; // Output: "1 Aug 2024"
   public static dateWithShortYear = 'd MMM yy'; // Output: "1 Aug '24"
+  public static dateDayAndMonth = 'd MMM'; // Output: "1 Aug"
   public static abreviatedMonth = 'MMM'; // Output: "Aug"
   public static shortWeekday = 'iiiiii'; // Output: "We"
   public static longWeekday = 'iiii'; // Output: "Wednesday"
