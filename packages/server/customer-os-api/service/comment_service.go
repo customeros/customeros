@@ -36,7 +36,7 @@ func (s *commentService) GetCommentsForIssues(ctx context.Context, issueIds []st
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("issueIds", issueIds))
 
-	comments, err := s.repositories.CommentRepository.GetAllForIssues(ctx, common.GetTenantFromContext(ctx), issueIds)
+	comments, err := s.repositories.Neo4jRepositories.CommentReadRepository.GetAllForIssues(ctx, common.GetTenantFromContext(ctx), issueIds)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err

@@ -73,10 +73,6 @@ type Repositories struct {
 	ActionRepository ActionRepository
 	//Deprecated
 	ActionItemRepository ActionItemRepository
-	//Deprecated
-	CommentRepository CommentRepository
-	//Deprecated
-	OpportunityRepository OpportunityRepository
 }
 
 type Drivers struct {
@@ -123,7 +119,5 @@ func InitRepos(driver *neo4j.DriverWithContext, database string, gormDb *gorm.DB
 	repositories.PlayerRepository = NewPlayerRepository(driver)
 	repositories.ActionRepository = NewActionRepository(driver)
 	repositories.ActionItemRepository = NewActionItemRepository(driver)
-	repositories.CommentRepository = NewCommentRepository(driver, database)
-	repositories.OpportunityRepository = NewOpportunityRepository(driver, database)
 	return &repositories
 }

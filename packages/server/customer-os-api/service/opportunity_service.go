@@ -50,7 +50,7 @@ func (s *opportunityService) GetById(ctx context.Context, opportunityId string) 
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("opportunityId", opportunityId))
 
-	if opportunityDbNode, err := s.repositories.OpportunityRepository.GetById(ctx, common.GetContext(ctx).Tenant, opportunityId); err != nil {
+	if opportunityDbNode, err := s.repositories.Neo4jRepositories.OpportunityReadRepository.GetOpportunityById(ctx, common.GetContext(ctx).Tenant, opportunityId); err != nil {
 		tracing.TraceErr(span, err)
 		wrappedErr := errors.Wrap(err, fmt.Sprintf("opportunity with id {%s} not found", opportunityId))
 		return nil, wrappedErr
@@ -64,7 +64,7 @@ func (s *opportunityService) GetOpportunitiesForContracts(ctx context.Context, c
 	defer span.Finish()
 	span.LogFields(log.Object("contractIDs", contractIDs))
 
-	opportunities, err := s.repositories.OpportunityRepository.GetForContracts(ctx, common.GetTenantFromContext(ctx), contractIDs)
+	opportunities, err := s.repositories.Neo4jRepositories.OpportunityReadRepository.GetForContracts(ctx, common.GetTenantFromContext(ctx), contractIDs)
 	if err != nil {
 		return nil, err
 	}
