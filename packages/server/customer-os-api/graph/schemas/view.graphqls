@@ -13,12 +13,18 @@ type TableViewDef implements Node {
     tableType:          TableViewType!
     order:              Int!
     icon:               String!
-    columns:            [ColumnViewType!]!
+    columns:            [ColumnView!]!
     filters:            String!
     sorting:            String!
     createdAt:          Time!
     updatedAt:          Time!
 }
+
+type ColumnView {
+    columnType: ColumnViewType!
+    width: Int!
+}
+
 
 enum TableViewType {
     ORGANIZATIONS
@@ -63,7 +69,7 @@ input TableViewDefUpdateInput {
     name:               String!
     order:              Int!
     icon:               String!
-    columns:            [ColumnViewType!]!
+    columns:            [ColumnViewInput!]!
     filters:            String!
     sorting:            String!
 }
@@ -73,7 +79,12 @@ input TableViewDefCreateInput {
     name:               String!
     order:              Int!
     icon:               String!
-    columns:            [ColumnViewType!]!
+    columns:            [ColumnViewInput!]!
     filters:            String!
     sorting:            String!
+}
+
+input ColumnViewInput {
+    columnType: ColumnViewType!
+    width: Int!
 }

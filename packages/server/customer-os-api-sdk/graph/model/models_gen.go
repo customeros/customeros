@@ -315,6 +315,16 @@ type Calendar struct {
 	AppSource     string       `json:"appSource"`
 }
 
+type ColumnView struct {
+	ColumnType ColumnViewType `json:"columnType"`
+	Width      int            `json:"width"`
+}
+
+type ColumnViewInput struct {
+	ColumnType ColumnViewType `json:"columnType"`
+	Width      int            `json:"width"`
+}
+
 type Comment struct {
 	ID            string            `json:"id"`
 	Content       *string           `json:"content,omitempty"`
@@ -2642,39 +2652,39 @@ type SuggestedMergeOrganization struct {
 }
 
 type TableViewDef struct {
-	ID        string           `json:"id"`
-	Name      string           `json:"name"`
-	TableType TableViewType    `json:"tableType"`
-	Order     int              `json:"order"`
-	Icon      string           `json:"icon"`
-	Columns   []ColumnViewType `json:"columns"`
-	Filters   string           `json:"filters"`
-	Sorting   string           `json:"sorting"`
-	CreatedAt time.Time        `json:"createdAt"`
-	UpdatedAt time.Time        `json:"updatedAt"`
+	ID        string        `json:"id"`
+	Name      string        `json:"name"`
+	TableType TableViewType `json:"tableType"`
+	Order     int           `json:"order"`
+	Icon      string        `json:"icon"`
+	Columns   []*ColumnView `json:"columns"`
+	Filters   string        `json:"filters"`
+	Sorting   string        `json:"sorting"`
+	CreatedAt time.Time     `json:"createdAt"`
+	UpdatedAt time.Time     `json:"updatedAt"`
 }
 
 func (TableViewDef) IsNode()            {}
 func (this TableViewDef) GetID() string { return this.ID }
 
 type TableViewDefCreateInput struct {
-	TableType TableViewType    `json:"tableType"`
-	Name      string           `json:"name"`
-	Order     int              `json:"order"`
-	Icon      string           `json:"icon"`
-	Columns   []ColumnViewType `json:"columns"`
-	Filters   string           `json:"filters"`
-	Sorting   string           `json:"sorting"`
+	TableType TableViewType      `json:"tableType"`
+	Name      string             `json:"name"`
+	Order     int                `json:"order"`
+	Icon      string             `json:"icon"`
+	Columns   []*ColumnViewInput `json:"columns"`
+	Filters   string             `json:"filters"`
+	Sorting   string             `json:"sorting"`
 }
 
 type TableViewDefUpdateInput struct {
-	ID      string           `json:"id"`
-	Name    string           `json:"name"`
-	Order   int              `json:"order"`
-	Icon    string           `json:"icon"`
-	Columns []ColumnViewType `json:"columns"`
-	Filters string           `json:"filters"`
-	Sorting string           `json:"sorting"`
+	ID      string             `json:"id"`
+	Name    string             `json:"name"`
+	Order   int                `json:"order"`
+	Icon    string             `json:"icon"`
+	Columns []*ColumnViewInput `json:"columns"`
+	Filters string             `json:"filters"`
+	Sorting string             `json:"sorting"`
 }
 
 type Tag struct {

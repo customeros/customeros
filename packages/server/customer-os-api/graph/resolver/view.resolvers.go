@@ -6,8 +6,8 @@ package resolver
 
 import (
 	"context"
+	"encoding/json"
 	"strconv"
-	"strings"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -26,20 +26,33 @@ func (r *mutationResolver) TableViewDefCreate(ctx context.Context, input model.T
 	tenant := common.GetTenantFromContext(ctx)
 	userId := common.GetUserIdFromContext(ctx)
 
-	var columns []string
+	var columns []postgresEntity.ColumnView
 	for _, column := range input.Columns {
-		columns = append(columns, column.String())
+		columns = append(columns, postgresEntity.ColumnView{
+			ColumnType: column.ColumnType.String(),
+			Width:      column.Width,
+		})
 	}
+	columnsStruct := postgresEntity.Columns{
+		Columns: columns,
+	}
+	columnsJsonData, err := json.Marshal(columnsStruct)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to create table view definition")
+		return nil, nil
+	}
+
 	viewDefinition := postgresEntity.TableViewDefinition{
-		TableType: input.TableType.String(),
-		Name:      input.Name,
-		Columns:   strings.Join(columns, ","),
-		Order:     input.Order,
-		Icon:      input.Icon,
-		Filters:   input.Filters,
-		Sorting:   input.Sorting,
-		Tenant:    tenant,
-		UserId:    userId,
+		TableType:   input.TableType.String(),
+		Name:        input.Name,
+		ColumnsJson: string(columnsJsonData),
+		Order:       input.Order,
+		Icon:        input.Icon,
+		Filters:     input.Filters,
+		Sorting:     input.Sorting,
+		Tenant:      tenant,
+		UserId:      userId,
 	}
 
 	result := r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, viewDefinition)
@@ -65,26 +78,40 @@ func (r *mutationResolver) TableViewDefUpdate(ctx context.Context, input model.T
 	tenant := common.GetTenantFromContext(ctx)
 	userId := common.GetUserIdFromContext(ctx)
 
-	var columns []string
-	for _, column := range input.Columns {
-		columns = append(columns, column.String())
-	}
 	id, err := strconv.ParseUint(input.ID, 10, 64)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to update table view definition")
 		return nil, nil
 	}
+
+	var columns []postgresEntity.ColumnView
+	for _, column := range input.Columns {
+		columns = append(columns, postgresEntity.ColumnView{
+			ColumnType: column.ColumnType.String(),
+			Width:      column.Width,
+		})
+	}
+	columnsStruct := postgresEntity.Columns{
+		Columns: columns,
+	}
+	columnsJsonData, err := json.Marshal(columnsStruct)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to create table view definition")
+		return nil, nil
+	}
+
 	viewDefinition := postgresEntity.TableViewDefinition{
-		ID:      id,
-		Name:    input.Name,
-		Columns: strings.Join(columns, ","),
-		Order:   input.Order,
-		Icon:    input.Icon,
-		Filters: input.Filters,
-		Sorting: input.Sorting,
-		Tenant:  tenant,
-		UserId:  userId,
+		ID:          id,
+		Name:        input.Name,
+		ColumnsJson: string(columnsJsonData),
+		Order:       input.Order,
+		Icon:        input.Icon,
+		Filters:     input.Filters,
+		Sorting:     input.Sorting,
+		Tenant:      tenant,
+		UserId:      userId,
 	}
 
 	result := r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.UpdateTableViewDefinition(ctx, viewDefinition)

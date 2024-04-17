@@ -1,17 +1,27 @@
 package mapper
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"strconv"
-	"strings"
 )
 
 func MapTableViewDefinitionToModel(entity postgresEntity.TableViewDefinition) *model.TableViewDef {
-	columnNames := strings.Split(entity.Columns, ",")
-	columns := make([]model.ColumnViewType, 0, len(columnNames))
-	for _, column := range columnNames {
-		columns = append(columns, model.ColumnViewType(column))
+	var columnsStruct postgresEntity.Columns
+	err := json.Unmarshal([]byte(entity.ColumnsJson), &columnsStruct)
+	if err != nil {
+		fmt.Println(err)
+		return &model.TableViewDef{}
+	}
+
+	columns := make([]*model.ColumnView, 0, len(columnsStruct.Columns))
+	for _, column := range columnsStruct.Columns {
+		columns = append(columns, &model.ColumnView{
+			ColumnType: model.ColumnViewType(column.ColumnType),
+			Width:      column.Width,
+		})
 	}
 	return &model.TableViewDef{
 		ID:        strconv.Itoa(int(entity.ID)),

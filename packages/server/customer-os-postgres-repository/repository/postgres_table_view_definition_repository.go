@@ -88,7 +88,7 @@ func (t tableViewDefinitionRepository) UpdateTableViewDefinition(ctx context.Con
 		"icon":       viewDefinition.Icon,
 		"filters":    viewDefinition.Filters,
 		"sorting":    viewDefinition.Sorting,
-		"columns":    viewDefinition.Columns,
+		"columns":    viewDefinition.ColumnsJson,
 		"updated_at": utils.Now(),
 	}
 

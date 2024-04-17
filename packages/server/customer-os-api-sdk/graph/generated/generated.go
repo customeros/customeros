@@ -186,6 +186,11 @@ type ComplexityRoot struct {
 		UpdatedAt     func(childComplexity int) int
 	}
 
+	ColumnView struct {
+		ColumnType func(childComplexity int) int
+		Width      func(childComplexity int) int
+	}
+
 	Comment struct {
 		AppSource     func(childComplexity int) int
 		Content       func(childComplexity int) int
@@ -2658,6 +2663,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Calendar.UpdatedAt(childComplexity), true
+
+	case "ColumnView.columnType":
+		if e.complexity.ColumnView.ColumnType == nil {
+			break
+		}
+
+		return e.complexity.ColumnView.ColumnType(childComplexity), true
+
+	case "ColumnView.width":
+		if e.complexity.ColumnView.Width == nil {
+			break
+		}
+
+		return e.complexity.ColumnView.Width(childComplexity), true
 
 	case "Comment.appSource":
 		if e.complexity.Comment.AppSource == nil {
@@ -11599,6 +11618,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputBillingProfileLinkEmailInput,
 		ec.unmarshalInputBillingProfileLinkLocationInput,
 		ec.unmarshalInputBillingProfileUpdateInput,
+		ec.unmarshalInputColumnViewInput,
 		ec.unmarshalInputContactInput,
 		ec.unmarshalInputContactOrganizationInput,
 		ec.unmarshalInputContactTagInput,
@@ -15839,12 +15859,18 @@ type TableViewDef implements Node {
     tableType:          TableViewType!
     order:              Int!
     icon:               String!
-    columns:            [ColumnViewType!]!
+    columns:            [ColumnView!]!
     filters:            String!
     sorting:            String!
     createdAt:          Time!
     updatedAt:          Time!
 }
+
+type ColumnView {
+    columnType: ColumnViewType!
+    width: Int!
+}
+
 
 enum TableViewType {
     ORGANIZATIONS
@@ -15889,7 +15915,7 @@ input TableViewDefUpdateInput {
     name:               String!
     order:              Int!
     icon:               String!
-    columns:            [ColumnViewType!]!
+    columns:            [ColumnViewInput!]!
     filters:            String!
     sorting:            String!
 }
@@ -15899,9 +15925,14 @@ input TableViewDefCreateInput {
     name:               String!
     order:              Int!
     icon:               String!
-    columns:            [ColumnViewType!]!
+    columns:            [ColumnViewInput!]!
     filters:            String!
     sorting:            String!
+}
+
+input ColumnViewInput {
+    columnType: ColumnViewType!
+    width: Int!
 }`, BuiltIn: false},
 	{Name: "../../../customer-os-api/graph/schemas/workspace.graphqls", Input: `input WorkspaceInput {
     name: String!
@@ -24080,6 +24111,94 @@ func (ec *executionContext) fieldContext_Calendar_appSource(ctx context.Context,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ColumnView_columnType(ctx context.Context, field graphql.CollectedField, obj *model.ColumnView) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ColumnView_columnType(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ColumnType, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.ColumnViewType)
+	fc.Result = res
+	return ec.marshalNColumnViewType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐColumnViewType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ColumnView_columnType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ColumnView",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ColumnViewType does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ColumnView_width(ctx context.Context, field graphql.CollectedField, obj *model.ColumnView) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ColumnView_width(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Width, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ColumnView_width(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ColumnView",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -87912,9 +88031,9 @@ func (ec *executionContext) _TableViewDef_columns(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]model.ColumnViewType)
+	res := resTmp.([]*model.ColumnView)
 	fc.Result = res
-	return ec.marshalNColumnViewType2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐColumnViewTypeᚄ(ctx, field.Selections, res)
+	return ec.marshalNColumnView2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐColumnViewᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_TableViewDef_columns(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -87924,7 +88043,13 @@ func (ec *executionContext) fieldContext_TableViewDef_columns(ctx context.Contex
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ColumnViewType does not have child fields")
+			switch field.Name {
+			case "columnType":
+				return ec.fieldContext_ColumnView_columnType(ctx, field)
+			case "width":
+				return ec.fieldContext_ColumnView_width(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ColumnView", field.Name)
 		},
 	}
 	return fc, nil
@@ -94151,6 +94276,40 @@ func (ec *executionContext) unmarshalInputBillingProfileUpdateInput(ctx context.
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputColumnViewInput(ctx context.Context, obj interface{}) (model.ColumnViewInput, error) {
+	var it model.ColumnViewInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"columnType", "width"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "columnType":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("columnType"))
+			data, err := ec.unmarshalNColumnViewType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐColumnViewType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ColumnType = data
+		case "width":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("width"))
+			data, err := ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Width = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputContactInput(ctx context.Context, obj interface{}) (model.ContactInput, error) {
 	var it model.ContactInput
 	asMap := map[string]interface{}{}
@@ -99406,7 +99565,7 @@ func (ec *executionContext) unmarshalInputTableViewDefCreateInput(ctx context.Co
 			it.Icon = data
 		case "columns":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("columns"))
-			data, err := ec.unmarshalNColumnViewType2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐColumnViewTypeᚄ(ctx, v)
+			data, err := ec.unmarshalNColumnViewInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐColumnViewInputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -99475,7 +99634,7 @@ func (ec *executionContext) unmarshalInputTableViewDefUpdateInput(ctx context.Co
 			it.Icon = data
 		case "columns":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("columns"))
-			data, err := ec.unmarshalNColumnViewType2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐColumnViewTypeᚄ(ctx, v)
+			data, err := ec.unmarshalNColumnViewInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐColumnViewInputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -101604,6 +101763,50 @@ func (ec *executionContext) _Calendar(ctx context.Context, sel ast.SelectionSet,
 			}
 		case "appSource":
 			out.Values[i] = ec._Calendar_appSource(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var columnViewImplementors = []string{"ColumnView"}
+
+func (ec *executionContext) _ColumnView(ctx context.Context, sel ast.SelectionSet, obj *model.ColumnView) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, columnViewImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ColumnView")
+		case "columnType":
+			out.Values[i] = ec._ColumnView_columnType(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "width":
+			out.Values[i] = ec._ColumnView_width(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -116064,34 +116267,7 @@ func (ec *executionContext) marshalNCalendarType2githubᚗcomᚋopenlineᚑaiᚋ
 	return v
 }
 
-func (ec *executionContext) unmarshalNColumnViewType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐColumnViewType(ctx context.Context, v interface{}) (model.ColumnViewType, error) {
-	var res model.ColumnViewType
-	err := res.UnmarshalGQL(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNColumnViewType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐColumnViewType(ctx context.Context, sel ast.SelectionSet, v model.ColumnViewType) graphql.Marshaler {
-	return v
-}
-
-func (ec *executionContext) unmarshalNColumnViewType2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐColumnViewTypeᚄ(ctx context.Context, v interface{}) ([]model.ColumnViewType, error) {
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
-	var err error
-	res := make([]model.ColumnViewType, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNColumnViewType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐColumnViewType(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) marshalNColumnViewType2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐColumnViewTypeᚄ(ctx context.Context, sel ast.SelectionSet, v []model.ColumnViewType) graphql.Marshaler {
+func (ec *executionContext) marshalNColumnView2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐColumnViewᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ColumnView) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -116115,7 +116291,7 @@ func (ec *executionContext) marshalNColumnViewType2ᚕgithubᚗcomᚋopenlineᚑ
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNColumnViewType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐColumnViewType(ctx, sel, v[i])
+			ret[i] = ec.marshalNColumnView2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐColumnView(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -116133,6 +116309,48 @@ func (ec *executionContext) marshalNColumnViewType2ᚕgithubᚗcomᚋopenlineᚑ
 	}
 
 	return ret
+}
+
+func (ec *executionContext) marshalNColumnView2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐColumnView(ctx context.Context, sel ast.SelectionSet, v *model.ColumnView) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ColumnView(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNColumnViewInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐColumnViewInputᚄ(ctx context.Context, v interface{}) ([]*model.ColumnViewInput, error) {
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.ColumnViewInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNColumnViewInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐColumnViewInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalNColumnViewInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐColumnViewInput(ctx context.Context, v interface{}) (*model.ColumnViewInput, error) {
+	res, err := ec.unmarshalInputColumnViewInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNColumnViewType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐColumnViewType(ctx context.Context, v interface{}) (model.ColumnViewType, error) {
+	var res model.ColumnViewType
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNColumnViewType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐColumnViewType(ctx context.Context, sel ast.SelectionSet, v model.ColumnViewType) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) marshalNComment2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐCommentᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Comment) graphql.Marshaler {
