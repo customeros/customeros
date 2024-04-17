@@ -1,9 +1,13 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
+
+import { observer } from 'mobx-react-lite';
 
 import { Invoice } from '@graphql/types';
+import { Button } from '@ui/form/Button/Button';
+import { useStore } from '@shared/hooks/useStore';
 import { Table, SortingState } from '@ui/presentation/Table';
 import { mockedTableDefs } from '@shared/util/tableDefs.mock';
 import { SlashCircle01 } from '@ui/media/icons/SlashCircle01';
@@ -20,15 +24,14 @@ interface InvoicesTableProps {
   initialData?: GetInvoicesQuery;
 }
 
-export const InvoicesTable = ({ initialData }: InvoicesTableProps) => {
+export const InvoicesTable = observer(({ initialData }: InvoicesTableProps) => {
   const searchParams = useSearchParams();
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'INVOICE_DUE_DATE', desc: true },
   ]);
+  const { tableViewDefsStore } = useStore();
 
   const preset = searchParams?.get('preset');
-
-  const tableViewDefsData = mockedTableDefs;
 
   const {
     data,
@@ -46,10 +49,11 @@ export const InvoicesTable = ({ initialData }: InvoicesTableProps) => {
     !isFetching && fetchNextPage();
   }, [fetchNextPage, isFetching]);
 
-  const tableViewDef = tableViewDefsData?.find((t) => t.id === preset);
+  const tableViewDef = tableViewDefsStore.getById(preset ?? '5');
+
   const columns = useMemo(
-    () => getColumnsConfig(tableViewDef),
-    [tableViewDef?.id],
+    () => getColumnsConfig(tableViewDef?.value),
+    [tableViewDef?.value],
   );
 
   const { reset, targetId, isConfirming, onConfirm, isPending } =
@@ -58,6 +62,20 @@ export const InvoicesTable = ({ initialData }: InvoicesTableProps) => {
   const targetInvoice = data?.find((i) => i.metadata.id === targetId);
   const targetInvoiceNumber = targetInvoice?.invoiceNumber || '';
   const targetInvoiceEmail = targetInvoice?.customer?.email || '';
+
+  const test = () => {
+    if (!preset) return;
+
+    tableViewDef?.update((value) => {
+      value.columns?.pop();
+
+      return value;
+    });
+  };
+
+  useEffect(() => {
+    tableViewDefsStore.load(mockedTableDefs);
+  }, []);
 
   if (!columns.length || totalAvailable === 0) {
     return (
@@ -70,6 +88,7 @@ export const InvoicesTable = ({ initialData }: InvoicesTableProps) => {
   return (
     <>
       <Search />
+      <Button onClick={test}>TEST</Button>
       <Table<Invoice>
         data={data}
         columns={columns}
@@ -94,4 +113,4 @@ export const InvoicesTable = ({ initialData }: InvoicesTableProps) => {
       />
     </>
   );
-};
+});

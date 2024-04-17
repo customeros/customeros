@@ -1,0 +1,153 @@
+import type { Channel } from 'phoenix';
+import type { RootStore } from '@store/root';
+import type { TransportLayer } from '@store/transport';
+import type { Operation, SyncPacket } from '@store/types';
+
+import { toJS, makeAutoObservable } from 'mobx';
+import { getDiff, applyDiff } from 'recursive-diff';
+
+import { TableViewDef } from '@graphql/types';
+
+export class TableViewDefStore {
+  value: TableViewDef = {
+    columns: null,
+    createdAt: '',
+    createdBy: null,
+    filters: null,
+    icon: null,
+    id: '',
+    name: '',
+    order: null,
+    sorting: null,
+    type: null,
+    updatedAt: '',
+  };
+  version: number = 0;
+  history: Operation[] = [];
+  channel?: Channel;
+
+  constructor(
+    private rootStore: RootStore,
+    private transportLayer: TransportLayer,
+  ) {
+    makeAutoObservable(this);
+  }
+
+  async load(tableViewDef: TableViewDef) {
+    this.value = tableViewDef;
+
+    try {
+      const connection = await this.transportLayer.join(
+        'TableViewDef',
+        tableViewDef.id,
+        this.version,
+      );
+
+      if (!connection) return;
+
+      this.channel = connection.channel;
+
+      if (connection?.latest) {
+        const mergedDiff = transformChangesets(
+          toJS(this.history),
+          toJS(connection?.latest?.operations),
+        );
+
+        const prev = toJS(this.value);
+        const next = applyDiff(prev, mergedDiff);
+
+        this.version = connection.latest.version;
+        this.value = next;
+        this.history.concat(mergedDiff);
+      }
+
+      this.subscribe();
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  subscribe() {
+    if (!this.channel) return;
+
+    this.channel.on('sync_packet', (packet: SyncPacket) => {
+      const prev = toJS(this.value);
+      const diff = packet.operation;
+      const next = applyDiff(prev, [diff]);
+
+      this.value = next;
+      this.version = packet.version;
+      this.history.push(diff);
+    });
+  }
+
+  update(updater: (prev: TableViewDef) => TableViewDef) {
+    const lhs = toJS(this.value);
+    const next = updater(this.value);
+    const rhs = toJS(next);
+    const diff = getDiff(lhs, rhs)[0];
+
+    const diffWithId = {
+      ...diff,
+      id: this.version,
+    };
+
+    this.history.push(diffWithId);
+    this.value = next;
+
+    if (!this.channel) return;
+
+    this.channel
+      .push('sync_packet', { payload: { operation: diffWithId } })
+      .receive('ok', ({ version }: { version: number }) => {
+        this.version = version;
+      });
+  }
+}
+
+function transformChangesets(
+  changeset1: Operation[],
+  changeset2: Operation[],
+): Operation[] {
+  // Merge the changesets
+  const mergedChangeset = [...changeset1, ...changeset2];
+
+  // Sort the merged changeset by the order of occurrence
+  mergedChangeset.sort((a, b) => a.id - b.id);
+
+  // Apply the LWW strategy
+  const transformedChangeset = mergedChangeset.reduce((result, operation) => {
+    // Check if the operation conflicts with any previous operation
+    const conflictIndex = result.findIndex((prevOperation) =>
+      conflicts(prevOperation, operation),
+    );
+    if (conflictIndex !== -1) {
+      // Resolve conflict using Last Write Wins strategy
+      const prevOperation = result[conflictIndex];
+      if (prevOperation.op === 'delete') {
+        // If previous operation was delete, discard current operation
+        return result;
+      } else {
+        // If previous operation was add or update, replace it with current operation
+        result.splice(conflictIndex, 1, operation);
+
+        return result;
+      }
+    } else {
+      // No conflict, add current operation to the result
+      result.push(operation);
+
+      return result;
+    }
+  }, [] as Operation[]);
+
+  return transformedChangeset;
+}
+
+function conflicts(operation1: Operation, operation2: Operation): boolean {
+  // Check if operation1 and operation2 modify the same field
+  return (
+    JSON.stringify(operation1.path) === JSON.stringify(operation2.path) &&
+    operation1.id === operation2.id
+  );
+}

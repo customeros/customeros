@@ -1,6 +1,8 @@
 import { makeAutoObservable } from 'mobx';
 import { Socket, Channel } from 'phoenix';
 
+import { LatestDiff } from './types';
+
 type TransportLayerMetadata = {
   user_id: string;
   username: string;
@@ -13,7 +15,7 @@ interface TransportLayerOptions {
 
 export class TransportLayer {
   socket: Socket | null = null;
-  channel: Channel | null = null;
+  channels: Map<string, Channel> = new Map();
   metadata: TransportLayerMetadata = {
     user_id: '',
     username: '',
@@ -32,6 +34,8 @@ export class TransportLayer {
     this.socket = new Socket(socketPath, {
       params: { token },
     });
+
+    if (this.socket.isConnected()) return;
     this.connect();
   }
 
@@ -39,29 +43,65 @@ export class TransportLayer {
     this?.socket?.connect();
   }
 
-  join(channelName: string) {
-    if (checkRuntime() === 'node') {
-      console.info('Node runtime detected: skipping channel join.');
+  join(
+    channelName: string,
+    id: string,
+    version: number,
+  ): Promise<void | { channel: Channel; latest: LatestDiff | null }> {
+    return new Promise((resolve, reject) => {
+      if (checkRuntime() === 'node') {
+        console.info('Node runtime detected: skipping channel join.');
+        resolve();
 
+        return;
+      }
+
+      const existingChannel = this.channels.get(id);
+      if (existingChannel) {
+        resolve({ channel: existingChannel, latest: null });
+
+        return;
+      }
+
+      const channel = this?.socket?.channel(`${channelName}:${id}`, {
+        ...this.metadata,
+        version,
+      });
+
+      if (!channel) {
+        reject(new Error('Channel not found'));
+
+        return;
+      }
+
+      channel
+        .join()
+        .receive('ok', (res: LatestDiff) => {
+          this.channels.set(id, channel);
+          resolve({ latest: res, channel });
+        })
+        .receive('error', () => {
+          reject(new Error('Error joining channel'));
+        });
+    });
+  }
+
+  leaveChannel(id: string) {
+    const channel = this.channels.get(id);
+
+    if (!channel) {
       return;
     }
 
-    const channel = this?.socket?.channel(channelName, {
-      ...this.metadata,
+    channel.leave();
+    this.channels.delete(id);
+  }
+
+  disconnect() {
+    this.channels.forEach((channel) => {
+      channel.leave();
     });
-
-    if (!channel) {
-      throw new Error('Channel not found');
-    }
-
-    channel
-      .join()
-      .receive('ok', () => {
-        this.channel = channel;
-      })
-      .receive('error', () => {
-        throw new Error('Error joining channel');
-      });
+    this?.socket?.disconnect();
   }
 
   setMetadata(metadata: TransportLayerMetadata) {
