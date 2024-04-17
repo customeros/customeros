@@ -8,33 +8,20 @@ import { useIsRestoring } from '@tanstack/react-query';
 import { RenewalRecord } from '@graphql/types';
 import { Table, SortingState } from '@ui/presentation/Table';
 import { mockedTableDefs } from '@shared/util/tableDefs.mock';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useTableViewDefsQuery } from '@shared/graphql/tableViewDefs.generated';
 
 import { useRenewalsPageData } from '../../hooks';
 import { getColumnsConfig } from '../../components/Columns/Columns';
 import { EmptyState } from '../../components/EmptyState/EmptyState';
 
 export function RenewalsTable() {
-  const client = getGraphQLClient();
   const isRestoring = useIsRestoring();
   const searchParams = useSearchParams();
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'LAST_TOUCHPOINT', desc: true },
   ]);
+  const tableViewDefsData = mockedTableDefs;
 
   const preset = searchParams?.get('preset');
-
-  const { data: tableViewDefsData } = useTableViewDefsQuery(
-    client,
-    {
-      pagination: { limit: 100, page: 1 },
-    },
-    {
-      enabled: false,
-      placeholderData: { tableViewDefs: { content: mockedTableDefs } },
-    },
-  );
 
   const {
     data,
@@ -51,9 +38,7 @@ export function RenewalsTable() {
     !isFetching && fetchNextPage();
   }, [fetchNextPage, isFetching]);
 
-  const tableViewDef = tableViewDefsData?.tableViewDefs?.content?.find(
-    (t) => t.id === preset,
-  );
+  const tableViewDef = tableViewDefsData?.find((t) => t.id === preset);
   const columns = useMemo(
     () => getColumnsConfig(tableViewDef),
     [tableViewDef?.id],

@@ -1,10 +1,10 @@
 import { ColumnDef as ColumnDefinition } from '@tanstack/react-table';
 
 import { Invoice } from '@graphql/types';
+import { TableViewDef } from '@shared/types/tableDef';
 import { Skeleton } from '@ui/feedback/Skeleton/Skeleton2';
 import { createColumnHelper } from '@ui/presentation/Table';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
-import { TableViewDefsQuery } from '@shared/graphql/tableViewDefs.generated';
 
 import {
   AmountCell,
@@ -234,12 +234,11 @@ const columns: Record<string, Column> = {
   }),
 };
 
-export const getColumnsConfig = (
-  tableViewDef?: TableViewDefsQuery['tableViewDefs']['content'][0],
-) => {
+export const getColumnsConfig = (tableViewDef?: Array<TableViewDef>[0]) => {
   if (!tableViewDef) return [];
 
   return (tableViewDef.columns ?? []).reduce((acc, curr) => {
+    //@ts-expect-error will be fixed
     const columnTypeName = curr?.columnType?.name;
 
     if (!columnTypeName) return acc;

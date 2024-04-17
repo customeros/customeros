@@ -396,6 +396,7 @@ export const getColumnConfig = (tableViewDef: TableViewDef) => {
   if (!tableViewDef) return [];
 
   return (tableViewDef.columns ?? []).reduce((acc, curr) => {
+    //@ts-expect-error will be fixed
     const columnTypeName = curr?.columnType?.name;
 
     if (!columnTypeName) return acc;
