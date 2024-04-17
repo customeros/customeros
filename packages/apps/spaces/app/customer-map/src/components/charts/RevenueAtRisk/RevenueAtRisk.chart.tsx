@@ -3,8 +3,6 @@
 import { Pie } from '@visx/shape';
 import { Group } from '@visx/group';
 
-import { useToken } from '@ui/utils';
-
 import { AnimatedPie } from './AnimatedPie';
 
 export type RevenueAtRiskDatum = {
@@ -46,15 +44,16 @@ const RevenueAtRisk = ({
   hasContracts,
 }: RevenueAtRiskProps) => {
   const data = hasContracts ? _data : mockData;
-  const [warning300, greenLight500] = useToken('colors', [
-    hasContracts ? 'warning.300' : 'gray.100',
-    hasContracts ? 'greenLight.500' : 'gray.300',
-  ]);
+
+  const colors = {
+    warning300: hasContracts ? '#FEC84B' : '#F2F4F7',
+    greenLight500: hasContracts ? '#66C61C' : '#D0D5DD',
+  };
   const mappedData = mapData(data);
 
   const colorScale = {
-    Confidence: greenLight500,
-    Risk: warning300,
+    Confidence: colors.greenLight500,
+    Risk: colors.warning300,
   };
 
   const innerWidth = width - margin.left - margin.right;

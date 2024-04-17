@@ -4,10 +4,6 @@ import { PatternLines } from '@visx/pattern';
 import { LinearGradient } from '@visx/gradient';
 import { XYChart, Tooltip, BarSeries, AnimatedAxis } from '@visx/xychart';
 
-import { useToken } from '@ui/utils';
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
-
 import { mockData } from './mock';
 import { getMonthLabel } from '../util';
 
@@ -31,14 +27,15 @@ const NewCustomersChart = ({
   hasContracts,
 }: NewCustomersProps) => {
   const data = hasContracts ? _data : mockData;
-  const [primary600, gray700] = useToken('colors', [
-    hasContracts ? 'primary.600' : 'gray.200',
-    'gray.700',
-  ]);
+
+  const colors = {
+    primary600: hasContracts ? '#7F56D9' : '#EAECF0',
+    gray700: '#344054',
+  };
 
   return (
     <>
-      <Flex h='24px' />
+      <div className='flex h-6' />
       <XYChart
         height={200}
         width={width || 500}
@@ -54,14 +51,14 @@ const NewCustomersChart = ({
           fromOpacity={0}
           toOpacity={0.3}
           to={'white'}
-          from={primary600}
+          from={colors.primary600}
           id='visx-area-gradient'
         />
         <PatternLines
           id='stripes'
           height={8}
           width={8}
-          stroke={primary600}
+          stroke={colors.primary600}
           strokeWidth={2}
           orientation={['diagonal']}
         />
@@ -73,7 +70,7 @@ const NewCustomersChart = ({
           xAccessor={(d) => getX(d)}
           yAccessor={(d) => d.value}
           colorAccessor={(_, i) =>
-            i === data.length - 1 ? 'url(#stripes)' : primary600
+            i === data.length - 1 ? 'url(#stripes)' : colors.primary600
           }
         />
 
@@ -94,7 +91,7 @@ const NewCustomersChart = ({
           style={{
             position: 'absolute',
             padding: '8px',
-            background: gray700,
+            background: colors.gray700,
             borderRadius: '8px',
           }}
           offsetTop={-50}
@@ -108,13 +105,13 @@ const NewCustomersChart = ({
             ).value;
 
             return (
-              <Flex flexDir='column'>
-                <Text fontSize='sm' color='white' fontWeight='normal'>
+              <div className='flex flex-col'>
+                <p className='text-sm text-white font-normal'>
                   {xLabel}
                   {': '}
                   {hasContracts ? value : 'No data yet'}
-                </Text>
-              </Flex>
+                </p>
+              </div>
             );
           }}
         />

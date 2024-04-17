@@ -4,13 +4,11 @@ import dynamic from 'next/dynamic';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 import ParentSize from '@visx/responsive/lib/components/ParentSize';
 
-import { Box } from '@ui/layout/Box';
-import { Flex } from '@ui/layout/Flex';
+import { cn } from '@ui/utils/cn';
 import { useDisclosure } from '@ui/utils';
-import { Text } from '@ui/typography/Text';
-import { Skeleton } from '@ui/presentation/Skeleton';
-import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog';
+import { Skeleton } from '@ui/feedback/Skeleton';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog/InfoDialog2';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 import { useCustomerMapQuery } from '@customerMap/graphql/customerMap.generated';
 
@@ -42,51 +40,33 @@ export const CustomerMap = () => {
   const hasContracts = globalCacheData?.global_Cache?.contractsExist;
 
   return (
-    <Box
-      w='full'
-      _hover={{
-        '& #help-button': {
-          visibility: 'visible',
-        },
-      }}
-    >
+    <div className='w-full group'>
       <ParentSize>
         {({ width }) => (
           <>
-            <Flex direction='column' position='relative'>
-              <Flex gap='2' align='center'>
-                <Text fontWeight='semibold' fontSize='xl'>
-                  Customer map
-                </Text>
+            <div className='flex flex-col relative'>
+              <div className='flex gap-2 items-center'>
+                <p className='font-semibold text-xl'>Customer map</p>
                 <HelpButton isOpen={isOpen} onOpen={onOpen} />
-              </Flex>
+              </div>
               {!hasContracts && (
-                <Text
-                  bottom='0'
-                  color='gray.400'
-                  fontSize='lg'
-                  fontWeight='semibold'
-                  position='absolute'
-                  transform='translateY(100%)'
-                >
+                <p className='bottom-0 text-gray-400 font-semibold text-lg absolute transform translate-y-full'>
                   No data yet
-                </Text>
+                </p>
               )}
-            </Flex>
-            <Skeleton
-              w='full'
-              h={isTaller ? '700px' : '350px'}
-              endColor='gray.300'
-              startColor='gray.300'
-              isLoaded={!isLoading}
-            >
-              <CustomerMapChart
-                width={width}
-                height={isTaller ? 700 : 350}
-                data={chartData}
-                hasContracts={hasContracts}
+            </div>
+            {isLoading && (
+              <Skeleton
+                className={cn(isTaller ? 'h-[700px]' : 'h-[350px]', 'w-full')}
               />
-            </Skeleton>
+            )}
+
+            <CustomerMapChart
+              width={width}
+              height={isTaller ? 700 : 350}
+              data={chartData}
+              hasContracts={hasContracts}
+            />
             <InfoDialog
               label='Customer map'
               isOpen={isOpen}
@@ -99,6 +79,6 @@ export const CustomerMap = () => {
           </>
         )}
       </ParentSize>
-    </Box>
+    </div>
   );
 };

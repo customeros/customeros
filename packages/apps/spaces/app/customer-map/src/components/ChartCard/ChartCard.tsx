@@ -42,6 +42,7 @@ export const ChartCard = ({
             <h2
               className={cn(
                 hasData ? 'text-gray-700' : 'text-lg text-gray-400',
+                'text-3xl font-semibold',
               )}
             >
               {hasData ? stat : 'No data yet'}

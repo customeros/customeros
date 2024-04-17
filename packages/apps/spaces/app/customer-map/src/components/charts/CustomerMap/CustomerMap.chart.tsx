@@ -6,9 +6,6 @@ import { Group } from '@visx/group';
 import { Circle } from '@visx/shape';
 import { useTooltip, TooltipWithBounds } from '@visx/tooltip';
 
-import { useToken } from '@ui/utils';
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { DashboardCustomerMapState } from '@graphql/types';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
@@ -52,27 +49,39 @@ const CustomerMapChart = ({
   const router = useRouter();
   const [crosshairX, setCrosshairX] = useState(0);
   const [hoveredId, setHoveredId] = useState('');
-  const [
-    greenLight500,
-    greenLight400,
-    warning300,
-    warning200,
-    warm200,
-    warm300,
-    gray700,
-    gray300,
-    gray500,
-  ] = useToken('colors', [
-    hasContracts ? 'greenLight.500' : 'gray.400',
-    hasContracts ? 'greenLight.400' : 'gray.300',
-    hasContracts ? 'warning.300' : 'gray.300',
-    hasContracts ? 'warning.200' : 'gray.200',
-    hasContracts ? 'warm.200' : 'gray.200',
-    hasContracts ? 'warm.300' : 'gray.300',
-    'gray.700',
-    'gray.300',
-    'gray.500',
-  ]);
+  // const [
+  //   greenLight500,
+  //   greenLight400,
+  //   warning300,
+  //   warning200,
+  //   warm200,
+  //   warm300,
+  //   gray700,
+  //   gray300,
+  //   gray500,
+  // ] = useToken('colors', [
+  //   hasContracts ? 'greenLight.500' : 'gray.400',
+  //   hasContracts ? 'greenLight.400' : 'gray.300',
+  //   hasContracts ? 'warning.300' : 'gray.300',
+  //   hasContracts ? 'warning.200' : 'gray.200',
+  //   hasContracts ? 'warm.200' : 'gray.200',
+  //   hasContracts ? 'warm.300' : 'gray.300',
+  //   'gray.700',
+  //   'gray.300',
+  //   'gray.500',
+  // ]);
+
+  const colors = {
+    greenLight500: hasContracts ? '#66C61C' : '#98A2B3',
+    greenLight400: hasContracts ? '##85E13A' : '#D0D5DD',
+    warning300: hasContracts ? '#FEC84B' : '#D0D5DD',
+    warning200: hasContracts ? '#FEDF89' : '#EAECF0',
+    warm200: hasContracts ? '#E7E5E4' : '#EAECF0',
+    warm300: hasContracts ? '#D7D3D0' : '#D0D5DD',
+    gray700: '#344054',
+    gray300: '#D0D5DD',
+    gray500: '#667085',
+  };
 
   const width = outerWidth - margin.left - margin.right;
   const height = outerHeight - margin.top - margin.bottom;
@@ -118,9 +127,9 @@ const CustomerMapChart = ({
   );
 
   const legendData = [
-    { color: greenLight500, label: 'All good' },
-    { color: warning300, label: 'At risk' },
-    { color: warm200, label: 'Churned', borderColor: warm300 },
+    { color: colors.greenLight500, label: 'All good' },
+    { color: colors.warning300, label: 'At risk' },
+    { color: colors.warm200, label: 'Churned', borderColor: colors.warm300 },
   ];
 
   const getCircleColor = (
@@ -130,13 +139,13 @@ const CustomerMapChart = ({
     const { isOutline } = options;
     switch (status) {
       case DashboardCustomerMapState.Ok:
-        return isOutline ? greenLight400 : greenLight500;
+        return isOutline ? colors.greenLight400 : colors.greenLight500;
       case DashboardCustomerMapState.AtRisk:
-        return isOutline ? warning200 : warning300;
+        return isOutline ? colors.warning200 : colors.warning300;
       case DashboardCustomerMapState.Churned:
-        return isOutline ? warm300 : warm200;
+        return isOutline ? colors.warm300 : colors.warm200;
       default:
-        return isOutline ? warm300 : warm200;
+        return isOutline ? colors.warm300 : colors.warm200;
     }
   };
 
@@ -150,7 +159,7 @@ const CustomerMapChart = ({
           <text
             x={margin.left}
             y={outerHeight - margin.bottom}
-            fill={gray500}
+            fill={colors.gray500}
             fontSize={14}
           >
             {DateTimeUtils.format(minMaxX[0]?.toISOString(), 'd MMM')}
@@ -158,7 +167,7 @@ const CustomerMapChart = ({
           <text
             x={outerWidth / 2 - 28}
             y={outerHeight - margin.bottom}
-            fill={gray500}
+            fill={colors.gray500}
             fontSize={14}
             fontWeight={600}
           >
@@ -168,7 +177,7 @@ const CustomerMapChart = ({
             x={outerWidth - margin.right - 38}
             y={outerHeight - margin.bottom}
             fontSize={14}
-            fill={gray500}
+            fill={colors.gray500}
           >
             {DateTimeUtils.format(minMaxX[1]?.toISOString(), 'd MMM')}
           </text>
@@ -178,7 +187,7 @@ const CustomerMapChart = ({
             <line
               x1={crosshairX}
               x2={crosshairX}
-              stroke={gray300}
+              stroke={colors.gray300}
               strokeWidth={1.5}
               strokeDasharray={'4 4'}
               y2={outerHeight - margin.bottom - 23}
@@ -191,7 +200,7 @@ const CustomerMapChart = ({
                 width={104}
                 y={outerHeight - margin.bottom - 23}
                 height={35}
-                fill={gray700}
+                fill={colors.gray700}
                 rx={8}
               />
               <text x={crosshairX - 39} y={outerHeight - 20} fill='white'>
@@ -258,18 +267,18 @@ const CustomerMapChart = ({
           style={{
             position: 'absolute',
             padding: '8px',
-            background: gray700,
+            background: colors.gray700,
             borderRadius: '8px',
           }}
         >
-          <Flex flexDir='column'>
-            <Text color='white'>
+          <div className='flex flex-col'>
+            <p className='text-white'>
               {hasContracts ? tooltipData?.values?.name : 'No data available'}
-            </Text>
-            <Text color='white'>
+            </p>
+            <p className='text-white'>
               {formatCurrency(hasContracts ? tooltipData?.r ?? 0 : 0)}
-            </Text>
-          </Flex>
+            </p>
+          </div>
         </TooltipWithBounds>
       )}
     </>

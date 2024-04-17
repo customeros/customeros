@@ -3,9 +3,6 @@
 import { scaleOrdinal } from '@visx/scale';
 import { LegendItem, LegendLabel, LegendOrdinal } from '@visx/legend';
 
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
-
 interface LegendProps {
   data: {
     label: string;
@@ -24,7 +21,7 @@ export const Legend = ({ data }: LegendProps) => {
   return (
     <LegendOrdinal scale={scale}>
       {(labels) => (
-        <Flex justify='flex-end'>
+        <div className='flex justify-end'>
           {labels.map((label, i) => (
             <LegendItem key={`legend-quantile-${i}`} margin='0 0.5rem'>
               <svg
@@ -42,14 +39,14 @@ export const Legend = ({ data }: LegendProps) => {
                 />
               </svg>
               <LegendLabel align='left' margin='0 0 0 4px'>
-                <Text fontSize='sm'>
+                <p className='text-sm'>
                   {label.text}
-                  {data[i].isMissingData && <Text as='span'>*</Text>}
-                </Text>
+                  {data[i].isMissingData && <span>*</span>}
+                </p>
               </LegendLabel>
             </LegendItem>
           ))}
-        </Flex>
+        </div>
       )}
     </LegendOrdinal>
   );

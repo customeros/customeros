@@ -32,7 +32,8 @@ export const RevenueAtRisk = () => {
 
   return (
     <ChartCard
-      flex='1'
+      // flex='1'
+      className='flex-1'
       stat={!hasContracts ? 'N/A' : undefined}
       hasData={hasContracts}
       title='Revenue at risk'

@@ -14,8 +14,6 @@ import { max, extent, bisector } from '@visx/vendor/d3-array';
 import { Bar, Line, LinePath, AreaClosed } from '@visx/shape';
 import { useTooltip, TooltipWithBounds } from '@visx/tooltip';
 
-import { useToken } from '@ui/utils';
-import { Flex } from '@ui/layout/Flex';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 
 import { mockData } from './mock';
@@ -56,11 +54,12 @@ const TimeToOnboardChart = ({
   data: _data = [],
 }: MrrPerCustomerProps) => {
   const data = hasContracts ? _data : mockData;
-  const [primary600, gray300, gray700] = useToken('colors', [
-    hasContracts ? 'primary.600' : 'gray.300',
-    'gray.300',
-    'gray.700',
-  ]);
+
+  const colors = {
+    primary600: hasContracts ? '#7F56D9' : '#D0D5DD',
+    gray300: '#D0D5DD',
+    gray700: '#344054',
+  };
   const {
     tooltipTop,
     tooltipLeft,
@@ -128,12 +127,12 @@ const TimeToOnboardChart = ({
           fromOpacity={0}
           toOpacity={hasContracts ? 0.3 : 0.8}
           to={'white'}
-          from={primary600}
+          from={colors.primary600}
           id='mrr-per-customer-gradient'
         />
         <MarkerCircle
           id='mrr-per-customer-marker-circle'
-          fill={primary600}
+          fill={colors.primary600}
           size={2}
           refX={2}
           strokeWidth={1}
@@ -141,7 +140,7 @@ const TimeToOnboardChart = ({
         />
         <MarkerCircle
           id='mrr-per-customer-marker-circle-end'
-          stroke={primary600}
+          stroke={colors.primary600}
           size={2}
           refX={2}
           strokeWidth={1}
@@ -153,7 +152,7 @@ const TimeToOnboardChart = ({
           y={(d) => scaleY(d.value) ?? 0}
           yScale={scaleY}
           strokeWidth={0}
-          stroke={primary600}
+          stroke={colors.primary600}
           fill='url(#mrr-per-customer-gradient)'
           pointerEvents='none'
         />
@@ -164,7 +163,7 @@ const TimeToOnboardChart = ({
           x={(d) => scaleX(getDate(d))}
           y={(d) => scaleY(getY(d)) ?? 0}
           strokeWidth={2}
-          stroke={primary600}
+          stroke={colors.primary600}
           shapeRendering='geometricPrecision'
           markerMid='url(#mrr-per-customer-marker-circle)'
           markerStart='url(#mrr-per-customer-marker-circle)'
@@ -192,7 +191,7 @@ const TimeToOnboardChart = ({
           tickFormat={(d) => timeFormat('%b')(d as Date)}
           tickLabelProps={{
             fontSize: 12,
-            fill: gray700,
+            fill: colors.gray700,
             fontWeight: 'medium',
             fontFamily: `var(--font-barlow)`,
           }}
@@ -202,7 +201,7 @@ const TimeToOnboardChart = ({
             <Line
               from={{ x: tooltipLeft, y: 0 }}
               to={{ x: tooltipLeft, y: innerHeight }}
-              stroke={gray300}
+              stroke={colors.gray300}
               strokeWidth={1.5}
               pointerEvents='none'
               strokeDasharray='4'
@@ -211,7 +210,7 @@ const TimeToOnboardChart = ({
               cx={tooltipLeft}
               cy={tooltipTop}
               r={6}
-              fill={primary600}
+              fill={colors.primary600}
               stroke='white'
               strokeWidth={2}
               pointerEvents='none'
@@ -219,7 +218,7 @@ const TimeToOnboardChart = ({
           </g>
         )}
       </svg>
-      <Flex w='full' position='relative'>
+      <div className='flex w-full relative'>
         {tooltipData && tooltipOpen && (
           <TooltipWithBounds
             key={Math.random()}
@@ -232,7 +231,7 @@ const TimeToOnboardChart = ({
               textAlign: 'center',
               borderRadius: '8px',
               padding: '8px',
-              background: gray700,
+              background: colors.gray700,
               color: 'white',
               whiteSpace: 'nowrap',
               transform:
@@ -248,7 +247,7 @@ const TimeToOnboardChart = ({
             }`}
           </TooltipWithBounds>
         )}
-      </Flex>
+      </div>
     </div>
   );
 };
