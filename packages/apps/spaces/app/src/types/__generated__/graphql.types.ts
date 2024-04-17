@@ -55,6 +55,10 @@ export enum ActionType {
   ContractRenewed = 'CONTRACT_RENEWED',
   ContractStatusUpdated = 'CONTRACT_STATUS_UPDATED',
   Created = 'CREATED',
+  InvoiceIssued = 'INVOICE_ISSUED',
+  InvoicePaid = 'INVOICE_PAID',
+  InvoiceSent = 'INVOICE_SENT',
+  InvoiceVoided = 'INVOICE_VOIDED',
   OnboardingStatusChanged = 'ONBOARDING_STATUS_CHANGED',
   RenewalForecastUpdated = 'RENEWAL_FORECAST_UPDATED',
   RenewalLikelihoodUpdated = 'RENEWAL_LIKELIHOOD_UPDATED',
@@ -299,29 +303,46 @@ export enum ChargePeriod {
   Quarterly = 'QUARTERLY',
 }
 
-export type ColumnDef = Node & {
-  __typename?: 'ColumnDef';
-  columnType?: Maybe<ColumnType>;
-  createdAt: Scalars['Time']['output'];
-  createdBy?: Maybe<User>;
-  id: Scalars['ID']['output'];
-  isDefaultSort?: Maybe<Scalars['Boolean']['output']>;
-  isFilterable?: Maybe<Scalars['Boolean']['output']>;
-  isSortable?: Maybe<Scalars['Boolean']['output']>;
-  isVisible?: Maybe<Scalars['Boolean']['output']>;
-  type?: Maybe<ViewType>;
-  updatedAt: Scalars['Time']['output'];
+export type ColumnView = {
+  __typename?: 'ColumnView';
+  columnType: ColumnViewType;
+  width: Scalars['Int']['output'];
 };
 
-export type ColumnType = Node & {
-  __typename?: 'ColumnType';
-  createdAt: Scalars['Time']['output'];
-  createdBy?: Maybe<User>;
-  id: Scalars['ID']['output'];
-  name?: Maybe<Scalars['String']['output']>;
-  updatedAt: Scalars['Time']['output'];
-  viewTypeId?: Maybe<Scalars['String']['output']>;
+export type ColumnViewInput = {
+  columnType: ColumnViewType;
+  width: Scalars['Int']['input'];
 };
+
+export enum ColumnViewType {
+  InvoicesAmount = 'INVOICES_AMOUNT',
+  InvoicesBillingCycle = 'INVOICES_BILLING_CYCLE',
+  InvoicesContract = 'INVOICES_CONTRACT',
+  InvoicesDueDate = 'INVOICES_DUE_DATE',
+  InvoicesInvoiceNumber = 'INVOICES_INVOICE_NUMBER',
+  InvoicesInvoicePreview = 'INVOICES_INVOICE_PREVIEW',
+  InvoicesInvoiceStatus = 'INVOICES_INVOICE_STATUS',
+  InvoicesIssueDate = 'INVOICES_ISSUE_DATE',
+  InvoicesIssueDatePast = 'INVOICES_ISSUE_DATE_PAST',
+  InvoicesPaymentStatus = 'INVOICES_PAYMENT_STATUS',
+  OrganizationsAvatar = 'ORGANIZATIONS_AVATAR',
+  OrganizationsForecastArr = 'ORGANIZATIONS_FORECAST_ARR',
+  OrganizationsLastTouchpoint = 'ORGANIZATIONS_LAST_TOUCHPOINT',
+  OrganizationsName = 'ORGANIZATIONS_NAME',
+  OrganizationsOnboardingStatus = 'ORGANIZATIONS_ONBOARDING_STATUS',
+  OrganizationsOwner = 'ORGANIZATIONS_OWNER',
+  OrganizationsRelationship = 'ORGANIZATIONS_RELATIONSHIP',
+  OrganizationsRenewalLikelihood = 'ORGANIZATIONS_RENEWAL_LIKELIHOOD',
+  OrganizationsRenewlDate = 'ORGANIZATIONS_RENEWL_DATE',
+  OrganizationsWebsite = 'ORGANIZATIONS_WEBSITE',
+  RenewalsAvatar = 'RENEWALS_AVATAR',
+  RenewalsForecastArr = 'RENEWALS_FORECAST_ARR',
+  RenewalsLastTouchpoint = 'RENEWALS_LAST_TOUCHPOINT',
+  RenewalsName = 'RENEWALS_NAME',
+  RenewalsOwner = 'RENEWALS_OWNER',
+  RenewalsRenewalDate = 'RENEWALS_RENEWAL_DATE',
+  RenewalsRenewalLikelihood = 'RENEWALS_RENEWAL_LIKELIHOOD',
+}
 
 export type Comment = {
   __typename?: 'Comment';
@@ -1683,6 +1704,17 @@ export type InvoiceLine = MetadataInterface & {
   total: Scalars['Float']['output'];
 };
 
+export type InvoiceLineSimulate = {
+  __typename?: 'InvoiceLineSimulate';
+  description: Scalars['String']['output'];
+  key: Scalars['String']['output'];
+  price: Scalars['Float']['output'];
+  quantity: Scalars['Int64']['output'];
+  subtotal: Scalars['Float']['output'];
+  taxDue: Scalars['Float']['output'];
+  total: Scalars['Float']['output'];
+};
+
 export type InvoiceProvider = {
   __typename?: 'InvoiceProvider';
   addressCountry?: Maybe<Scalars['String']['output']>;
@@ -1702,7 +1734,7 @@ export type InvoiceSimulate = {
   currency: Scalars['String']['output'];
   customer: InvoiceCustomer;
   due: Scalars['Time']['output'];
-  invoiceLineItems: Array<InvoiceLine>;
+  invoiceLineItems: Array<InvoiceLineSimulate>;
   invoiceNumber: Scalars['String']['output'];
   invoicePeriodEnd: Scalars['Time']['output'];
   invoicePeriodStart: Scalars['Time']['output'];
@@ -1723,6 +1755,7 @@ export type InvoiceSimulateInput = {
 export type InvoiceSimulateServiceLineInput = {
   billingCycle: BilledType;
   description: Scalars['String']['input'];
+  key: Scalars['String']['input'];
   parentId?: InputMaybe<Scalars['ID']['input']>;
   price: Scalars['Float']['input'];
   quantity: Scalars['Int64']['input'];
@@ -2346,6 +2379,8 @@ export type Mutation = {
   serviceLineItem_Delete: DeleteResponse;
   social_Remove: Result;
   social_Update: Social;
+  tableViewDef_Create: TableViewDef;
+  tableViewDef_Update: TableViewDef;
   tag_Create: Tag;
   tag_Delete?: Maybe<Result>;
   tag_Update?: Maybe<Tag>;
@@ -3066,6 +3101,14 @@ export type MutationSocial_RemoveArgs = {
 
 export type MutationSocial_UpdateArgs = {
   input: SocialUpdateInput;
+};
+
+export type MutationTableViewDef_CreateArgs = {
+  input: TableViewDefCreateInput;
+};
+
+export type MutationTableViewDef_UpdateArgs = {
+  input: TableViewDefUpdateInput;
 };
 
 export type MutationTag_CreateArgs = {
@@ -4001,7 +4044,7 @@ export type Query = {
   remindersForOrganization: Array<Reminder>;
   serviceLineItem: ServiceLineItem;
   slack_Channels: SlackChannelPage;
-  tableViewDefs: TableViewDefPage;
+  tableViewDefs: Array<TableViewDef>;
   tags: Array<Tag>;
   tenant: Scalars['String']['output'];
   tenantBillingProfile: TenantBillingProfile;
@@ -4215,12 +4258,6 @@ export type QueryServiceLineItemArgs = {
 
 export type QuerySlack_ChannelsArgs = {
   pagination?: InputMaybe<Pagination>;
-};
-
-export type QueryTableViewDefsArgs = {
-  pagination?: InputMaybe<Pagination>;
-  sort?: InputMaybe<SortBy>;
-  where?: InputMaybe<Filter>;
 };
 
 export type QueryTenantBillingProfileArgs = {
@@ -4478,26 +4515,43 @@ export type SuggestedMergeOrganization = {
 
 export type TableViewDef = Node & {
   __typename?: 'TableViewDef';
-  columns?: Maybe<Array<Maybe<ColumnDef>>>;
+  columns: Array<ColumnView>;
   createdAt: Scalars['Time']['output'];
-  createdBy?: Maybe<User>;
-  filters?: Maybe<Scalars['String']['output']>;
-  icon?: Maybe<Scalars['String']['output']>;
+  filters: Scalars['String']['output'];
+  icon: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
-  order?: Maybe<Scalars['Int']['output']>;
-  sorting?: Maybe<Scalars['String']['output']>;
-  type?: Maybe<ViewType>;
+  order: Scalars['Int']['output'];
+  sorting: Scalars['String']['output'];
+  tableType: TableViewType;
   updatedAt: Scalars['Time']['output'];
 };
 
-export type TableViewDefPage = Pages & {
-  __typename?: 'TableViewDefPage';
-  content: Array<TableViewDef>;
-  totalAvailable: Scalars['Int64']['output'];
-  totalElements: Scalars['Int64']['output'];
-  totalPages: Scalars['Int']['output'];
+export type TableViewDefCreateInput = {
+  columns: Array<ColumnViewInput>;
+  filters: Scalars['String']['input'];
+  icon: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+  order: Scalars['Int']['input'];
+  sorting: Scalars['String']['input'];
+  tableType: TableViewType;
 };
+
+export type TableViewDefUpdateInput = {
+  columns: Array<ColumnViewInput>;
+  filters: Scalars['String']['input'];
+  icon: Scalars['String']['input'];
+  id: Scalars['ID']['input'];
+  name: Scalars['String']['input'];
+  order: Scalars['Int']['input'];
+  sorting: Scalars['String']['input'];
+};
+
+export enum TableViewType {
+  Invoices = 'INVOICES',
+  Organizations = 'ORGANIZATIONS',
+  Renewals = 'RENEWALS',
+}
 
 export type Tag = {
   __typename?: 'Tag';
@@ -4864,15 +4918,6 @@ export type UserUpdateInput = {
   name?: InputMaybe<Scalars['String']['input']>;
   profilePhotoUrl?: InputMaybe<Scalars['String']['input']>;
   timezone?: InputMaybe<Scalars['String']['input']>;
-};
-
-export type ViewType = Node & {
-  __typename?: 'ViewType';
-  createdAt: Scalars['Time']['output'];
-  createdBy?: Maybe<User>;
-  id: Scalars['ID']['output'];
-  name?: Maybe<Scalars['String']['output']>;
-  updatedAt: Scalars['Time']['output'];
 };
 
 export type Workspace = {

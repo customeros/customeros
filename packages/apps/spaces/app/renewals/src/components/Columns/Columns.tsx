@@ -2,9 +2,9 @@ import { ColumnDef as ColumnDefinition } from '@tanstack/react-table';
 
 import { RenewalRecord } from '@graphql/types';
 import { Skeleton } from '@ui/feedback/Skeleton';
+import { TableViewDef } from '@shared/types/tableDef';
 import { createColumnHelper } from '@ui/presentation/Table';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
-import { TableViewDefsQuery } from '@shared/graphql/tableViewDefs.generated';
 
 import {
   OwnerCell,
@@ -244,12 +244,12 @@ const columns: Record<string, Column> = {
   }),
 };
 
-export const getColumnsConfig = (
-  tableViewDef?: TableViewDefsQuery['tableViewDefs']['content'][0],
-) => {
+export const getColumnsConfig = (tableViewDef?: Array<TableViewDef>[0]) => {
   if (!tableViewDef) return [];
 
   return (tableViewDef.columns ?? []).reduce((acc, curr) => {
+    //@ts-expect-error will be fixed
+
     const columnTypeName = curr?.columnType?.name;
 
     if (!columnTypeName) return acc;

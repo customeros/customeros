@@ -1,3 +1,6 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck remove this when typscript-react-query plugin is fixed
+
 import { TableViewDef } from '@graphql/types';
 
 export const mockedTableDefs: TableViewDef[] = [

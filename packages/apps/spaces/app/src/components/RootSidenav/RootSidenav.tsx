@@ -22,7 +22,6 @@ import { InvoiceUpcoming } from '@ui/media/icons/InvoiceUpcoming';
 import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
 import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
-import { useTableViewDefsQuery } from '@shared/graphql/tableViewDefs.generated';
 import { NotificationCenter } from '@shared/components/Notifications/NotificationCenter';
 import { useGetAllInvoicesCountQuery } from '@shared/graphql/getAllInvoicesCount.generated';
 
@@ -52,23 +51,12 @@ export const RootSidenav = () => {
 
   const { data: tenantSettingsData } = useTenantSettingsQuery(client);
   const { data: totalInvoices } = useGetAllInvoicesCountQuery(client);
+  const tableViewDefsData = mockedTableDefs;
 
-  const { data: tableViewDefsData } = useTableViewDefsQuery(
-    client,
-    {
-      pagination: { limit: 100, page: 1 },
-    },
-    {
-      enabled: false,
-      placeholderData: { tableViewDefs: { content: mockedTableDefs } },
-    },
-  );
   const { data, isLoading } = useGlobalCacheQuery(client);
   const globalCache = data?.global_Cache;
   const myViews =
-    tableViewDefsData?.tableViewDefs?.content.filter((c) =>
-      ['1', '2', '3'].includes(c.id),
-    ) ?? [];
+    tableViewDefsData.filter((c) => ['1', '2', '3'].includes(c.id)) ?? [];
 
   const handleItemClick = (path: string) => {
     setLastActivePosition({ ...lastActivePosition, root: path });

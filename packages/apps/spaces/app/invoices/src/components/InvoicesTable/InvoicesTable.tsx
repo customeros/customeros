@@ -7,9 +7,7 @@ import { Invoice } from '@graphql/types';
 import { Table, SortingState } from '@ui/presentation/Table';
 import { mockedTableDefs } from '@shared/util/tableDefs.mock';
 import { SlashCircle01 } from '@ui/media/icons/SlashCircle01';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { GetInvoicesQuery } from '@shared/graphql/getInvoices.generated';
-import { useTableViewDefsQuery } from '@shared/graphql/tableViewDefs.generated';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog2';
 
 import { Empty } from '../Empty';
@@ -23,7 +21,6 @@ interface InvoicesTableProps {
 }
 
 export const InvoicesTable = ({ initialData }: InvoicesTableProps) => {
-  const client = getGraphQLClient();
   const searchParams = useSearchParams();
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'INVOICE_DUE_DATE', desc: true },
@@ -31,16 +28,7 @@ export const InvoicesTable = ({ initialData }: InvoicesTableProps) => {
 
   const preset = searchParams?.get('preset');
 
-  const { data: tableViewDefsData } = useTableViewDefsQuery(
-    client,
-    {
-      pagination: { limit: 100, page: 1 },
-    },
-    {
-      enabled: false,
-      placeholderData: { tableViewDefs: { content: mockedTableDefs } },
-    },
-  );
+  const tableViewDefsData = mockedTableDefs;
 
   const {
     data,
@@ -58,9 +46,7 @@ export const InvoicesTable = ({ initialData }: InvoicesTableProps) => {
     !isFetching && fetchNextPage();
   }, [fetchNextPage, isFetching]);
 
-  const tableViewDef = tableViewDefsData?.tableViewDefs?.content?.find(
-    (t) => t.id === preset,
-  );
+  const tableViewDef = tableViewDefsData?.find((t) => t.id === preset);
   const columns = useMemo(
     () => getColumnsConfig(tableViewDef),
     [tableViewDef?.id],
