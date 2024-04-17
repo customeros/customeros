@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
-	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"time"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
@@ -69,7 +68,6 @@ type ServiceLineItemService interface {
 	Create(ctx context.Context, serviceLineItemDetails ServiceLineItemCreateData) (string, error)
 	Update(ctx context.Context, serviceLineItemDetails ServiceLineItemUpdateData) error
 	Delete(ctx context.Context, serviceLineItemId string) (bool, error)
-	GetServiceLineItemsForContracts(ctx context.Context, contractIds []string) (*neo4jentity.ServiceLineItemEntities, error)
 	Close(ctx context.Context, serviceLineItemId string, endedAt *time.Time) error
 	CreateOrUpdateOrCloseInBulk(ctx context.Context, contractId string, sliBulkData []*ServiceLineItemDetails) ([]string, error)
 	NewVersion(ctx context.Context, data ServiceLineItemNewVersionData) (string, error)
@@ -525,7 +523,7 @@ func (s *serviceLineItemService) Close(ctx context.Context, serviceLineItemId st
 	}
 
 	// First remove any future SLI
-	sliEntities, err := s.GetServiceLineItemsForContracts(ctx, []string{contractEntity.Id})
+	sliEntities, err := s.services.CommonServices.ServiceLineItemService.GetServiceLineItemsForContract(ctx, contractEntity.Id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error on getting service line items for contract {%s}: %s", contractEntity.Id, err.Error())
@@ -561,24 +559,6 @@ func (s *serviceLineItemService) Close(ctx context.Context, serviceLineItemId st
 	return nil
 }
 
-func (s *serviceLineItemService) GetServiceLineItemsForContracts(ctx context.Context, contractIDs []string) (*neo4jentity.ServiceLineItemEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemService.GetServiceLineItemsForContracts")
-	defer span.Finish()
-	span.LogFields(log.Object("contractIDs", contractIDs))
-
-	serviceLineItems, err := s.repositories.ServiceLineItemRepository.GetForContracts(ctx, common.GetTenantFromContext(ctx), contractIDs)
-	if err != nil {
-		return nil, err
-	}
-	serviceLineItemEntities := make(neo4jentity.ServiceLineItemEntities, 0, len(serviceLineItems))
-	for _, v := range serviceLineItems {
-		serviceLineItemEntity := neo4jmapper.MapDbNodeToServiceLineItemEntity(v.Node)
-		serviceLineItemEntity.DataloaderKey = v.LinkedNodeId
-		serviceLineItemEntities = append(serviceLineItemEntities, *serviceLineItemEntity)
-	}
-	return &serviceLineItemEntities, nil
-}
-
 type ServiceLineItemDetails struct {
 	Id                      string
 	Name                    string
@@ -599,7 +579,7 @@ func (s *serviceLineItemService) CreateOrUpdateOrCloseInBulk(ctx context.Context
 
 	var responseIds []string
 
-	allSliDbNodes, err := s.repositories.ServiceLineItemRepository.GetForContracts(ctx, common.GetTenantFromContext(ctx), []string{contractId})
+	allSliDbNodes, err := s.services.CommonServices.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemsForContracts(ctx, common.GetTenantFromContext(ctx), []string{contractId})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Failed to get service line items for contract: %s", err.Error())

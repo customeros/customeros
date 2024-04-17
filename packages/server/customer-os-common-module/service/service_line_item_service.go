@@ -16,6 +16,8 @@ import (
 type ServiceLineItemService interface {
 	GetById(ctx context.Context, id string) (*neo4jentity.ServiceLineItemEntity, error)
 	GetServiceLineItemsByParentId(ctx context.Context, sliParentId string) (*neo4jentity.ServiceLineItemEntities, error)
+	GetServiceLineItemsForContract(ctx context.Context, contractId string) (*neo4jentity.ServiceLineItemEntities, error)
+	GetServiceLineItemsForContracts(ctx context.Context, contractIds []string) (*neo4jentity.ServiceLineItemEntities, error)
 }
 
 type serviceLineItemService struct {
@@ -58,6 +60,28 @@ func (s *serviceLineItemService) GetServiceLineItemsByParentId(ctx context.Conte
 	serviceLineItemEntities := make(neo4jentity.ServiceLineItemEntities, 0, len(serviceLineItems))
 	for _, v := range serviceLineItems {
 		serviceLineItemEntity := neo4jmapper.MapDbNodeToServiceLineItemEntity(v)
+		serviceLineItemEntities = append(serviceLineItemEntities, *serviceLineItemEntity)
+	}
+	return &serviceLineItemEntities, nil
+}
+
+func (s *serviceLineItemService) GetServiceLineItemsForContract(ctx context.Context, contractId string) (*neo4jentity.ServiceLineItemEntities, error) {
+	return s.GetServiceLineItemsForContracts(ctx, []string{contractId})
+}
+
+func (s *serviceLineItemService) GetServiceLineItemsForContracts(ctx context.Context, contractIDs []string) (*neo4jentity.ServiceLineItemEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemService.GetServiceLineItemsForContracts")
+	defer span.Finish()
+	span.LogFields(log.Object("contractIDs", contractIDs))
+
+	serviceLineItems, err := s.services.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemsForContracts(ctx, common.GetTenantFromContext(ctx), contractIDs)
+	if err != nil {
+		return nil, err
+	}
+	serviceLineItemEntities := make(neo4jentity.ServiceLineItemEntities, 0, len(serviceLineItems))
+	for _, v := range serviceLineItems {
+		serviceLineItemEntity := neo4jmapper.MapDbNodeToServiceLineItemEntity(v.Node)
+		serviceLineItemEntity.DataloaderKey = v.LinkedNodeId
 		serviceLineItemEntities = append(serviceLineItemEntities, *serviceLineItemEntity)
 	}
 	return &serviceLineItemEntities, nil

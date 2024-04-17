@@ -194,7 +194,7 @@ type contractBatcher struct {
 	contractService service.ContractService
 }
 type serviceLineItemBatcher struct {
-	serviceLineItemService service.ServiceLineItemService
+	serviceLineItemService commonservice.ServiceLineItemService
 }
 type opportunityBatcher struct {
 	opportunityService service.OpportunityService
@@ -304,7 +304,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		contractService: services.ContractService,
 	}
 	serviceLineItemBatcher := &serviceLineItemBatcher{
-		serviceLineItemService: services.ServiceLineItemService,
+		serviceLineItemService: services.CommonServices.ServiceLineItemService,
 	}
 	opportunityBatcher := &opportunityBatcher{
 		opportunityService: services.OpportunityService,
