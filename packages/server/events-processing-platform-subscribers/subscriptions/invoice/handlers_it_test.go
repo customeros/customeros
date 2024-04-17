@@ -2,6 +2,7 @@ package invoice
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test"
 	"os"
@@ -13,6 +14,8 @@ const tenantName = "ziggy"
 var testDatabase *test.TestDatabase
 var testLogger = test.SetupTestLogger()
 var testMockedGrpcClient = test.SetupMockedTestGrpcClient()
+
+var ctx = common.WithCustomContext(context.Background(), &common.CustomContext{Tenant: tenantName})
 
 func TestMain(m *testing.M) {
 	myDatabase, shutdown := test.SetupTestDatabase()

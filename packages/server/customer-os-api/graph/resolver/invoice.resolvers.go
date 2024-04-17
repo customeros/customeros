@@ -98,7 +98,7 @@ func (r *mutationResolver) InvoiceUpdate(ctx context.Context, input model.Invoic
 			ID: input.ID,
 		}}, nil
 	}
-	invoiceEntity, err := r.Services.CommonServices.InvoiceService.GetById(ctx, common.GetTenantFromContext(ctx), input.ID)
+	invoiceEntity, err := r.Services.CommonServices.InvoiceService.GetById(ctx, input.ID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed fetching invoice details. Invoice id: %s", input.ID)
@@ -117,7 +117,7 @@ func (r *mutationResolver) InvoicePay(ctx context.Context, id string) (*model.In
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("id", id))
 
-	invoice, err := r.Services.CommonServices.InvoiceService.GetById(ctx, common.GetTenantFromContext(ctx), id)
+	invoice, err := r.Services.CommonServices.InvoiceService.GetById(ctx, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to fetch invoice %s", id)
@@ -150,7 +150,7 @@ func (r *mutationResolver) InvoicePay(ctx context.Context, id string) (*model.In
 			ID: id,
 		}}, nil
 	}
-	invoiceEntity, err := r.Services.CommonServices.InvoiceService.GetById(ctx, common.GetTenantFromContext(ctx), id)
+	invoiceEntity, err := r.Services.CommonServices.InvoiceService.GetById(ctx, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed fetching invoice details. Invoice id: %s", id)
@@ -169,7 +169,7 @@ func (r *mutationResolver) InvoiceVoid(ctx context.Context, id string) (*model.I
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("id", id))
 
-	invoice, err := r.Services.CommonServices.InvoiceService.GetById(ctx, common.GetTenantFromContext(ctx), id)
+	invoice, err := r.Services.CommonServices.InvoiceService.GetById(ctx, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to fetch invoice %s", id)
@@ -202,7 +202,7 @@ func (r *mutationResolver) InvoiceVoid(ctx context.Context, id string) (*model.I
 			ID: id,
 		}}, nil
 	}
-	invoiceEntity, err := r.Services.CommonServices.InvoiceService.GetById(ctx, common.GetTenantFromContext(ctx), id)
+	invoiceEntity, err := r.Services.CommonServices.InvoiceService.GetById(ctx, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed fetching invoice details. Invoice id: %s", id)
@@ -295,7 +295,7 @@ func (r *queryResolver) Invoice(ctx context.Context, id string) (*model.Invoice,
 		return nil, nil
 	}
 
-	invoiceEntityPtr, err := r.Services.CommonServices.InvoiceService.GetById(ctx, common.GetTenantFromContext(ctx), id)
+	invoiceEntityPtr, err := r.Services.CommonServices.InvoiceService.GetById(ctx, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get contract by id %s", id)

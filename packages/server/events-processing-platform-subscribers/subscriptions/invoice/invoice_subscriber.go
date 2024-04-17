@@ -3,11 +3,13 @@ package invoice
 import (
 	"context"
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/notifications"
@@ -122,6 +124,10 @@ func (s *InvoiceSubscriber) When(ctx context.Context, evt eventstore.Event) erro
 	if s.cfg.Subscriptions.InvoiceSubscription.IgnoreEvents {
 		return nil
 	}
+
+	ctx = common.WithCustomContext(ctx, &common.CustomContext{
+		Tenant: aggregate.GetTenantFromAggregate(evt.GetAggregateID(), invoice.InvoiceAggregateType),
+	})
 
 	switch evt.GetEventType() {
 	case invoice.InvoiceFillRequestedV1:

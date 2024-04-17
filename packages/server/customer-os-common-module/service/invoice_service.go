@@ -21,7 +21,7 @@ import (
 )
 
 type InvoiceService interface {
-	GetById(ctx context.Context, tenant, invoiceId string) (*neo4jentity.InvoiceEntity, error)
+	GetById(ctx context.Context, invoiceId string) (*neo4jentity.InvoiceEntity, error)
 	GetInvoiceLinesForInvoices(ctx context.Context, invoiceIds []string) (*neo4jentity.InvoiceLineEntities, error)
 	GetInvoicesForContracts(ctx context.Context, contractIds []string) (*neo4jentity.InvoiceEntities, error)
 	SimulateInvoice(ctx context.Context, invoiceData *SimulateInvoiceRequestData) ([]*SimulateInvoiceResponseData, error)
@@ -29,8 +29,8 @@ type InvoiceService interface {
 	PayInvoice(ctx context.Context, invoiceId, appSource string) error
 	VoidInvoice(ctx context.Context, invoiceId, appSource string) error
 
-	FillCycleInvoice(ctx context.Context, tenant, contractId string, invoiceEntity *neo4jentity.InvoiceEntity, sliEntities neo4jentity.ServiceLineItemEntities) (*neo4jentity.InvoiceEntity, []*invoicepb.InvoiceLine, error)
-	FillOffCyclePrepaidInvoice(ctx context.Context, tenant, contractId string, invoiceEntity *neo4jentity.InvoiceEntity, sliEntities neo4jentity.ServiceLineItemEntities) (*neo4jentity.InvoiceEntity, []*invoicepb.InvoiceLine, error)
+	FillCycleInvoice(ctx context.Context, contractId string, invoiceEntity *neo4jentity.InvoiceEntity, sliEntities neo4jentity.ServiceLineItemEntities) (*neo4jentity.InvoiceEntity, []*invoicepb.InvoiceLine, error)
+	FillOffCyclePrepaidInvoice(ctx context.Context, contractId string, invoiceEntity *neo4jentity.InvoiceEntity, sliEntities neo4jentity.ServiceLineItemEntities) (*neo4jentity.InvoiceEntity, []*invoicepb.InvoiceLine, error)
 }
 type invoiceService struct {
 	log      logger.Logger
@@ -66,13 +66,13 @@ type SimulateInvoiceResponseData struct {
 	Lines   []*neo4jentity.InvoiceLineEntity
 }
 
-func (s *invoiceService) GetById(ctx context.Context, tenant, invoiceId string) (*neo4jentity.InvoiceEntity, error) {
+func (s *invoiceService) GetById(ctx context.Context, invoiceId string) (*neo4jentity.InvoiceEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.GetById")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("invoiceId", invoiceId))
 
-	if invoiceDbNode, err := s.services.Neo4jRepositories.InvoiceReadRepository.GetInvoiceById(ctx, tenant, invoiceId); err != nil {
+	if invoiceDbNode, err := s.services.Neo4jRepositories.InvoiceReadRepository.GetInvoiceById(ctx, common.GetTenantFromContext(ctx), invoiceId); err != nil {
 		tracing.TraceErr(span, err)
 		wrappedErr := errors.Wrap(err, fmt.Sprintf("Invoice with id {%s} not found", invoiceId))
 		return nil, wrappedErr
@@ -146,6 +146,37 @@ func (s *invoiceService) SimulateInvoice(ctx context.Context, invoiceData *Simul
 		return nil, err
 	}
 
+	for _, sliData := range invoiceData.ServiceLines {
+
+		prorationNeeded := false
+
+		if (sliData.ServiceLineItemID == nil || *sliData.ServiceLineItemID == "") && (sliData.ParentID == nil || *sliData.ParentID == "") {
+			//new sli item - proration needed
+			prorationNeeded = true
+		} else if (sliData.ParentID != nil && *sliData.ParentID != "") && (sliData.ServiceLineItemID != nil && *sliData.ServiceLineItemID != "") {
+			//existing sli item - to check if there is any change in the sli item to decide if proration is needed
+			existingSli, err := s.services.ServiceLineItemService.GetById(ctx, *sliData.ServiceLineItemID)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return nil, err
+			}
+
+			if existingSli.Billed != sliData.BillingCycle || existingSli.Price != sliData.Price || existingSli.Quantity != sliData.Quantity || existingSli.StartedAt != sliData.ServiceStarted || existingSli.VatRate != utils.IfNotNilFloat64(sliData.TaxRate) {
+				//existing sli item - new version - proration needed
+				prorationNeeded = true
+			}
+
+		} else if (sliData.ParentID == nil || *sliData.ParentID == "") && (sliData.ServiceLineItemID == nil || *sliData.ServiceLineItemID == "") {
+			//existing sli item - new version - proration needed
+			prorationNeeded = true
+		}
+
+		if prorationNeeded {
+			//trigger proration invoice
+		}
+
+	}
+
 	var nextPreviewInvoiceEntity *neo4jentity.InvoiceEntity
 	nextPreviewInvoiceNode, err := s.services.Neo4jRepositories.InvoiceReadRepository.GetFirstPreviewFilledInvoice(ctx, common.GetTenantFromContext(ctx), invoiceData.ContractId)
 	if err != nil {
@@ -204,7 +235,7 @@ func (s *invoiceService) SimulateInvoice(ctx context.Context, invoiceData *Simul
 		sliEntities = append(sliEntities, sliEntity)
 	}
 
-	invoiceEntity, invoiceLines, err = s.FillCycleInvoice(ctx, common.GetTenantFromContext(ctx), invoiceData.ContractId, invoiceEntity, sliEntities)
+	invoiceEntity, invoiceLines, err = s.FillCycleInvoice(ctx, invoiceData.ContractId, invoiceEntity, sliEntities)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -238,7 +269,6 @@ func (s *invoiceService) NextInvoiceDryRun(ctx context.Context, contractId, appS
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("contractId", contractId))
 
-	tenant := common.GetTenantFromContext(ctx)
 	now := time.Now()
 
 	contract, err := s.services.ContractService.GetById(ctx, contractId)
@@ -271,7 +301,7 @@ func (s *invoiceService) NextInvoiceDryRun(ctx context.Context, contractId, appS
 	}
 
 	dryRunInvoiceRequest := invoicepb.NewInvoiceForContractRequest{
-		Tenant:             tenant,
+		Tenant:             common.GetTenantFromContext(ctx),
 		LoggedInUserId:     common.GetUserIdFromContext(ctx),
 		ContractId:         contractId,
 		DryRun:             true,
@@ -316,12 +346,10 @@ func (s *invoiceService) PayInvoice(ctx context.Context, invoiceId, appSource st
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("invoiceId", invoiceId))
 
-	tenant := common.GetTenantFromContext(ctx)
-
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	response, err := utils.CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
 		return s.services.GrpcClients.InvoiceClient.UpdateInvoice(ctx, &invoicepb.UpdateInvoiceRequest{
-			Tenant:         tenant,
+			Tenant:         common.GetTenantFromContext(ctx),
 			InvoiceId:      invoiceId,
 			LoggedInUserId: common.GetUserIdFromContext(ctx),
 			AppSource:      appSource,
@@ -346,12 +374,10 @@ func (s *invoiceService) VoidInvoice(ctx context.Context, invoiceId, appSource s
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("invoiceId", invoiceId))
 
-	tenant := common.GetTenantFromContext(ctx)
-
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	response, err := utils.CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
 		return s.services.GrpcClients.InvoiceClient.VoidInvoice(ctx, &invoicepb.VoidInvoiceRequest{
-			Tenant:         tenant,
+			Tenant:         common.GetTenantFromContext(ctx),
 			InvoiceId:      invoiceId,
 			LoggedInUserId: common.GetUserIdFromContext(ctx),
 			AppSource:      appSource,
@@ -368,10 +394,9 @@ func (s *invoiceService) VoidInvoice(ctx context.Context, invoiceId, appSource s
 	return nil
 }
 
-func (h *invoiceService) FillCycleInvoice(ctx context.Context, tenant, contractId string, invoiceEntity *neo4jentity.InvoiceEntity, sliEntities neo4jentity.ServiceLineItemEntities) (*neo4jentity.InvoiceEntity, []*invoicepb.InvoiceLine, error) {
+func (h *invoiceService) FillCycleInvoice(ctx context.Context, contractId string, invoiceEntity *neo4jentity.InvoiceEntity, sliEntities neo4jentity.ServiceLineItemEntities) (*neo4jentity.InvoiceEntity, []*invoicepb.InvoiceLine, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.fillCycleInvoice")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.SetTag(tracing.SpanTagEntityId, invoiceEntity.Id)
 	span.LogFields(log.String("contractId", contractId))
 
@@ -419,7 +444,7 @@ func (h *invoiceService) FillCycleInvoice(ctx context.Context, tenant, contractI
 		// process one time SLIs
 		if sliEntity.Billed == neo4jenum.BilledTypeOnce {
 			// Check any version of SLI not invoiced
-			result, err := h.services.Neo4jRepositories.InvoiceLineReadRepository.GetLatestInvoiceLineWithInvoiceIdByServiceLineItemParentId(ctx, tenant, sliEntity.ParentID)
+			result, err := h.services.Neo4jRepositories.InvoiceLineReadRepository.GetLatestInvoiceLineWithInvoiceIdByServiceLineItemParentId(ctx, common.GetTenantFromContext(ctx), sliEntity.ParentID)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				h.log.Errorf("Error getting latest invoice line for sli parent id {%s}: {%s}", sliEntity.ParentID, err.Error())
@@ -483,10 +508,10 @@ func (h *invoiceService) FillCycleInvoice(ctx context.Context, tenant, contractI
 	return invoiceEntity, invoiceLines, nil
 }
 
-func (h *invoiceService) FillOffCyclePrepaidInvoice(ctx context.Context, tenant, contractId string, invoiceEntity *neo4jentity.InvoiceEntity, sliEntities neo4jentity.ServiceLineItemEntities) (*neo4jentity.InvoiceEntity, []*invoicepb.InvoiceLine, error) {
+func (h *invoiceService) FillOffCyclePrepaidInvoice(ctx context.Context, contractId string, invoiceEntity *neo4jentity.InvoiceEntity, sliEntities neo4jentity.ServiceLineItemEntities) (*neo4jentity.InvoiceEntity, []*invoicepb.InvoiceLine, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.FillOffCyclePrepaidInvoice")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
 	span.SetTag(tracing.SpanTagEntityId, invoiceEntity.Id)
 	span.LogFields(log.String("contractId", contractId))
 
@@ -513,7 +538,7 @@ func (h *invoiceService) FillOffCyclePrepaidInvoice(ctx context.Context, tenant,
 			if sliEntity.Canceled {
 				continue
 			}
-			ilDbNodeAndInvoiceId, err := h.services.Neo4jRepositories.InvoiceLineReadRepository.GetLatestInvoiceLineWithInvoiceIdByServiceLineItemParentId(ctx, tenant, sliEntity.ParentID)
+			ilDbNodeAndInvoiceId, err := h.services.Neo4jRepositories.InvoiceLineReadRepository.GetLatestInvoiceLineWithInvoiceIdByServiceLineItemParentId(ctx, common.GetTenantFromContext(ctx), sliEntity.ParentID)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				h.log.Errorf("Error getting latest invoice line for sli parent id {%s}: {%s}", sliEntity.ParentID, err.Error())
@@ -556,7 +581,7 @@ func (h *invoiceService) FillOffCyclePrepaidInvoice(ctx context.Context, tenant,
 			continue
 		}
 		// get invoice line for latest invoiced SLI per parent
-		ilDbNodeAndInvoiceId, err := h.services.Neo4jRepositories.InvoiceLineReadRepository.GetLatestInvoiceLineWithInvoiceIdByServiceLineItemParentId(ctx, tenant, parentId)
+		ilDbNodeAndInvoiceId, err := h.services.Neo4jRepositories.InvoiceLineReadRepository.GetLatestInvoiceLineWithInvoiceIdByServiceLineItemParentId(ctx, common.GetTenantFromContext(ctx), parentId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error getting latest invoice line for sli parent id {%s}: {%s}", parentId, err.Error())
@@ -576,7 +601,7 @@ func (h *invoiceService) FillOffCyclePrepaidInvoice(ctx context.Context, tenant,
 		} else {
 			proratedInvoicedSLIAmount := float64(0)
 			if ilDbNodeAndInvoiceId != nil {
-				previousInvoiceDbNode, err := h.services.Neo4jRepositories.InvoiceReadRepository.GetInvoiceById(ctx, tenant, ilDbNodeAndInvoiceId.LinkedNodeId)
+				previousInvoiceDbNode, err := h.services.Neo4jRepositories.InvoiceReadRepository.GetInvoiceById(ctx, common.GetTenantFromContext(ctx), ilDbNodeAndInvoiceId.LinkedNodeId)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					h.log.Errorf("Error getting invoice {%s}: {%s}", ilDbNodeAndInvoiceId.LinkedNodeId, err.Error())
