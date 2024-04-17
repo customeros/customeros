@@ -166,11 +166,7 @@ export function Invoice({
         <div
           className={cn(
             'flex flex-col mt-4 transition duration-250 ease-in-out filter',
-            {
-              'filter-none':
-                shouldBlurDummy && !isInvoiceBankDetailsSectionFocused,
-              'blur-[2px]': true,
-            },
+            isInvoiceTopSectionFilterProperty,
           )}
         >
           <ServicesTable
