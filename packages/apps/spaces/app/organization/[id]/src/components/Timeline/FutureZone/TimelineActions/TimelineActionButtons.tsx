@@ -1,7 +1,5 @@
 import React, { FC, useRef, useState, useEffect } from 'react';
 
-import { useFeatureIsOn } from '@growthbook/growthbook-react';
-
 import { Button } from '@ui/form/Button/Button';
 import { Send03 } from '@ui/media/icons/Send03';
 import { Mail01 } from '@ui/media/icons/Mail01';
@@ -21,7 +19,6 @@ export const TimelineActionButtons: FC<{ invalidateQuery: () => void }> = ({
   invalidateQuery,
 }) => {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const isRemindersEnabled = useFeatureIsOn('reminders');
 
   const {
     checkCanExitSafely,
@@ -132,18 +129,16 @@ export const TimelineActionButtons: FC<{ invalidateQuery: () => void }> = ({
         >
           Log
         </Button>
-        {isRemindersEnabled && (
-          <Button
-            className='rounded-3xl'
-            variant='outline'
-            onClick={() => handleCreateReminder()}
-            size='xs'
-            colorScheme={openedEditor === 'reminder' ? 'primary' : 'gray'}
-            leftIcon={<AlarmClockPlus color='inherit' />}
-          >
-            Reminder
-          </Button>
-        )}
+        <Button
+          className='rounded-3xl'
+          variant='outline'
+          onClick={() => handleCreateReminder()}
+          size='xs'
+          colorScheme={openedEditor === 'reminder' ? 'primary' : 'gray'}
+          leftIcon={<AlarmClockPlus color='inherit' />}
+        >
+          Reminder
+        </Button>
       </div>
 
       <ConfirmDeleteDialog

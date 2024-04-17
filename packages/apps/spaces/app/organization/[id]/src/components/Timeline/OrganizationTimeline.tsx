@@ -205,7 +205,7 @@ export const OrganizationTimeline: FC = () => {
 
   if (isPending && !isFetchingNextPage) {
     return (
-      <div className='flex flex-col mt-4 pl-6'>
+      <div className='flex flex-col mt-4 pl-6 w-full'>
         <TimelineItemSkeleton />
         <TimelineItemSkeleton />
       </div>
