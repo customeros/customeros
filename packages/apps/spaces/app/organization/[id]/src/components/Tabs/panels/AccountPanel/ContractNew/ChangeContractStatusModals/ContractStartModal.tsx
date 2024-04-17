@@ -1,19 +1,16 @@
 'use client';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-inverted-form';
-import React, { useRef, useEffect } from 'react';
 
 import { UseMutationResult } from '@tanstack/react-query';
 
-import { Box } from '@ui/layout/Box';
-import { Flex } from '@ui/layout/Flex';
-import { Button } from '@ui/form/Button';
-import { Text } from '@ui/typography/Text';
-import { ModalBody } from '@ui/overlay/Modal';
 import { FeaturedIcon } from '@ui/media/Icon';
-import { Heading } from '@ui/typography/Heading';
+import { Button } from '@ui/form/Button/Button';
 import { DotLive } from '@ui/media/icons/DotLive';
 import { DateTimeUtils } from '@spaces/utils/date';
-import { Exact, ContractUpdateInput } from '@graphql/types';
+import { ModalBody } from '@ui/overlay/Modal/Modal';
+import { RefreshCw05 } from '@ui/media/icons/RefreshCw05';
+import { Exact, ContractStatus, ContractUpdateInput } from '@graphql/types';
 import { DatePickerUnderline } from '@ui/form/DatePicker/DatePickerUnderline';
 import { GetContractsQuery } from '@organization/src/graphql/getContracts.generated';
 import { UpdateContractMutation } from '@organization/src/graphql/updateContract.generated';
@@ -23,7 +20,7 @@ import {
   ModalHeader,
   ModalContent,
   ModalOverlay,
-} from '@ui/overlay/Modal';
+} from '@ui/overlay/Modal/Modal';
 
 interface ContractStartModalProps {
   isOpen: boolean;
@@ -31,6 +28,7 @@ interface ContractStartModalProps {
   onClose: () => void;
   serviceStarted?: string;
   organizationName: string;
+  status?: ContractStatus | null;
   onUpdateContract: UseMutationResult<
     UpdateContractMutation,
     unknown,
@@ -46,8 +44,8 @@ export const ContractStartModal = ({
   organizationName,
   serviceStarted,
   onUpdateContract,
+  status,
 }: ContractStartModalProps) => {
-  const initialRef = useRef(null);
   const formId = `contract-starts-on-form-${contractId}`;
   const { state, setDefaultValues } = useForm<{
     serviceStarted?: string | Date | null;
@@ -89,47 +87,50 @@ export const ContractStartModal = ({
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      initialFocusRef={initialRef}
-      size='lg'
-    >
+    <Modal open={isOpen} onOpenChange={onClose}>
       <ModalOverlay />
-      <ModalContent borderRadius='2xl'>
+      <ModalContent className='rounded-2xl max-w-[500px]'>
         <ModalHeader>
           <FeaturedIcon size='lg' colorScheme='primary'>
-            <DotLive color='primary.600' />
+            {status === ContractStatus.OutOfContract ? (
+              <RefreshCw05 className='text-primary-600' />
+            ) : (
+              <DotLive className='text-primary-600' />
+            )}
           </FeaturedIcon>
-          <Heading fontSize='lg' mt='4'>
-            Make this contract live?
-          </Heading>
+          <h1 className='text-lg font-semibold mt-4'>
+            {status === ContractStatus.OutOfContract
+              ? 'Renew contract'
+              : 'Make this contract live?'}
+          </h1>
         </ModalHeader>
-        <ModalBody as={Flex} flexDir='column' gap={4}>
-          <Text>
-            Congrats! Let’s make {organizationName}
-            ’s contract live starting on
-            <Box ml={1} display='inline'>
-              <DatePickerUnderline
-                placeholder='Start date'
-                formId={formId}
-                name='serviceStarted'
-                calendarIconHidden
-                value={state.values.serviceStarted}
-              />
-            </Box>
-          </Text>
+        <ModalBody className='flex flex-col gap-4'>
+          {status === ContractStatus.OutOfContract ? (
+            <div>a</div>
+          ) : (
+            <p className='text-base'>
+              Congrats! Let’s make {organizationName}
+              ’s contract live starting on
+              <div className='ml-1 inline'>
+                <DatePickerUnderline
+                  placeholder='Start date'
+                  formId={formId}
+                  name='serviceStarted'
+                  calendarIconHidden
+                  value={state.values.serviceStarted}
+                />
+              </div>
+            </p>
+          )}
         </ModalBody>
-        <ModalFooter p='6'>
-          <Button variant='outline' w='full' onClick={onClose}>
+        <ModalFooter className='p-6 flex'>
+          <Button variant='outline' className='w-full' onClick={onClose}>
             Cancel
           </Button>
           <Button
-            ml='3'
-            w='full'
+            className='ml-3 w-full'
             variant='outline'
             colorScheme='primary'
-            loadingText='Applying changes...'
             onClick={handleApplyChanges}
           >
             Start{' '}

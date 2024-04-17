@@ -97,7 +97,7 @@ export const ServicesList = ({
   );
 
   return (
-    <div className='w-full flex flex-col gap-1'>
+    <div className='w-full flex flex-col gap-1 mt-2'>
       {subscription?.length > 0 && (
         <article className='mb-1'>
           <h1 className='font-semibold text-sm mb-1'>Subscriptions</h1>

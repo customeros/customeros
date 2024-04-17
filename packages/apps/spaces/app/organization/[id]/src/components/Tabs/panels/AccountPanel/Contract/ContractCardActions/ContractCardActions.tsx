@@ -130,16 +130,6 @@ export const ContractCardActions: React.FC<ContractStatusSelectProps> = ({
         statusContent={getStatusDisplay}
         onHandleStatusChange={handleChangeStatus}
         status={status}
-        contractId={contractId}
-        renewsAt={renewsAt}
-        onUpdateContract={onUpdateContract}
-        serviceStarted={serviceStarted}
-        organizationName={organizationName}
-        nextInvoiceDate={nextInvoiceDate}
-        isStartModalOpen={isStartModalOpen}
-        isEndModalOpen={isOpen}
-        onCloseEndModal={onCloseEndModal}
-        onCloseStartModal={onCloseStartModal}
       />
       <ContractEndModal
         isOpen={isOpen}
