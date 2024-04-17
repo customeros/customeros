@@ -18,7 +18,8 @@ defmodule CustomerOsRealtime.Application do
       CustomerOsRealtimeWeb.Presence,
       CustomerOsRealtimeWeb.Endpoint,
       CustomerOsRealtime.ColorManager,
-      CustomerOsRealtime.DeltaManager
+      CustomerOsRealtime.DeltaManager,
+      CustomerOsRealtime.StoreManager
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

@@ -1,5 +1,6 @@
 defmodule CustomerOsRealtime.DeltaManager do
   require Logger
+  require Delta
   use GenServer
 
   @moduledoc """
@@ -52,6 +53,7 @@ defmodule CustomerOsRealtime.DeltaManager do
     {:ok, @initial_state}
   end
 
+  @impl true
   def handle_call({:prepare, entity_id}, _from, _state) do
     state = init_state(entity_id)
     {:reply, state, state}
