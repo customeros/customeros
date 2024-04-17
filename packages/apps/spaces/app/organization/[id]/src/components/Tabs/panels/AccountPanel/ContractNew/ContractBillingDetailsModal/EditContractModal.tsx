@@ -453,6 +453,7 @@ export const EditContractModal = ({
           <div style={{ minWidth: '600px' }} className='bg-white rounded'>
             <div className='w-full h-full'>
               <Invoice
+                shouldBlurDummy
                 onOpenAddressDetailsModal={() => setBillingDetailsOpen(true)}
                 isBilledToFocused={false}
                 note={notes}
