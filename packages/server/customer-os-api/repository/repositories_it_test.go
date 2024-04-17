@@ -4,7 +4,9 @@ import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/postgres"
 	"github.com/testcontainers/testcontainers-go"
+	"log"
 	"os"
 	"testing"
 )
@@ -25,7 +27,15 @@ func TestMain(m *testing.M) {
 		neo4jt.Terminate(dbContainer, ctx)
 	}(neo4jContainer, *driver, context.Background())
 
-	repositories = InitRepos(driver, "neo4j")
+	postgresContainer, postgresGormDB, _ := postgres.InitTestDB()
+	defer func(postgresContainer testcontainers.Container, ctx context.Context) {
+		err := postgresContainer.Terminate(ctx)
+		if err != nil {
+			log.Fatal("Error during container termination")
+		}
+	}(postgresContainer, context.Background())
+
+	repositories = InitRepos(driver, "neo4j", postgresGormDB)
 
 	os.Exit(m.Run())
 }
