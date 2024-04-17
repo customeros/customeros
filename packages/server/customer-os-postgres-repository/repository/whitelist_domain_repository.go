@@ -57,7 +57,6 @@ func (repo *whitelistDomainRepositoryImpl) SaveWildcardAllWhitelistDomain(tenant
 		CreatedAt: time.Now(),
 	})
 	if result.Error != nil {
-		logrus.Errorf("error while saving import allowed organization: %v", err)
 		return result.Error
 	}
 	return nil

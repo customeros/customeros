@@ -71,61 +71,62 @@ type Services struct {
 }
 
 func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *config.Config, commonServices *commonService.Services, commonAuthServices *commonAuthService.Services, grpcClients *grpc_client.Clients, gormDb *gorm.DB) *Services {
-	Repositories := repository.InitRepos(driver, cfg.Neo4j.Database, gormDb)
+	repositories := repository.InitRepos(driver, cfg.Neo4j.Database, gormDb)
 
 	services := Services{
 		CommonServices:             commonServices,
 		CommonAuthServices:         commonAuthServices,
-		BankAccountService:         NewBankAccountService(log, Repositories, grpcClients),
-		OrganizationService:        NewOrganizationService(log, Repositories, grpcClients),
-		CustomFieldService:         NewCustomFieldService(log, Repositories),
-		UserService:                NewUserService(log, Repositories, grpcClients),
-		FieldSetService:            NewFieldSetService(log, Repositories),
-		EntityTemplateService:      NewEntityTemplateService(log, Repositories),
-		FieldSetTemplateService:    NewFieldSetTemplateService(log, Repositories),
-		CustomFieldTemplateService: NewCustomFieldTemplateService(log, Repositories),
-		LocationService:            NewLocationService(log, Repositories),
-		TagService:                 NewTagService(log, Repositories),
-		DomainService:              NewDomainService(log, Repositories),
-		PageViewService:            NewPageViewService(log, Repositories),
-		AttachmentService:          NewAttachmentService(log, Repositories),
-		TenantService:              NewTenantService(log, Repositories, grpcClients),
-		WorkspaceService:           NewWorkspaceService(log, Repositories),
-		SocialService:              NewSocialService(log, Repositories),
-		ExternalSystemService:      NewExternalSystemService(log, Repositories),
-		ActionService:              NewActionService(log, Repositories),
-		CountryService:             NewCountryService(log, Repositories),
-		ActionItemService:          NewActionItemService(log, Repositories),
-		BillableService:            NewBillableService(log, Repositories),
-		LogEntryService:            NewLogEntryService(log, Repositories),
-		CommentService:             NewCommentService(log, Repositories),
-		MasterPlanService:          NewMasterPlanService(log, Repositories, grpcClients),
-		OrganizationPlanService:    NewOrganizationPlanService(log, Repositories, grpcClients),
-		ReminderService:            NewReminderService(log, Repositories, grpcClients),
-		OrderService:               NewOrderService(log, Repositories),
-		OfferingService:            NewOfferingService(log, Repositories, grpcClients),
+		BankAccountService:         NewBankAccountService(log, repositories, grpcClients),
+		OrganizationService:        NewOrganizationService(log, repositories, grpcClients),
+		CustomFieldService:         NewCustomFieldService(log, repositories),
+		UserService:                NewUserService(log, repositories, grpcClients),
+		FieldSetService:            NewFieldSetService(log, repositories),
+		EntityTemplateService:      NewEntityTemplateService(log, repositories),
+		FieldSetTemplateService:    NewFieldSetTemplateService(log, repositories),
+		CustomFieldTemplateService: NewCustomFieldTemplateService(log, repositories),
+		LocationService:            NewLocationService(log, repositories),
+		TagService:                 NewTagService(log, repositories),
+		DomainService:              NewDomainService(log, repositories),
+		PageViewService:            NewPageViewService(log, repositories),
+		AttachmentService:          NewAttachmentService(log, repositories),
+		TenantService:              NewTenantService(log, repositories, grpcClients),
+		WorkspaceService:           NewWorkspaceService(log, repositories),
+		SocialService:              NewSocialService(log, repositories),
+		ExternalSystemService:      NewExternalSystemService(log, repositories),
+		ActionService:              NewActionService(log, repositories),
+		CountryService:             NewCountryService(log, repositories),
+		ActionItemService:          NewActionItemService(log, repositories),
+		BillableService:            NewBillableService(log, repositories),
+		LogEntryService:            NewLogEntryService(log, repositories),
+		CommentService:             NewCommentService(log, repositories),
+		MasterPlanService:          NewMasterPlanService(log, repositories, grpcClients),
+		OrganizationPlanService:    NewOrganizationPlanService(log, repositories, grpcClients),
+		ReminderService:            NewReminderService(log, repositories, grpcClients),
+		OrderService:               NewOrderService(log, repositories),
+		OfferingService:            NewOfferingService(log, repositories, grpcClients),
 	}
-	services.IssueService = NewIssueService(log, Repositories, &services)
-	services.PhoneNumberService = NewPhoneNumberService(log, Repositories, grpcClients, &services)
-	services.JobRoleService = NewJobRoleService(log, Repositories, &services)
-	services.CalendarService = NewCalendarService(log, Repositories, &services)
-	services.EmailService = NewEmailService(log, Repositories, &services, grpcClients)
-	services.ContactService = NewContactService(log, Repositories, grpcClients, &services)
-	services.NoteService = NewNoteService(log, Repositories, &services)
-	services.TimelineEventService = NewTimelineEventService(log, Repositories, &services)
-	services.SearchService = NewSearchService(log, Repositories, &services)
-	services.QueryService = NewDashboardService(log, Repositories, &services)
-	services.InteractionEventService = NewInteractionEventService(log, Repositories, &services)
-	services.InteractionSessionService = NewInteractionSessionService(log, Repositories, &services)
-	services.AnalysisService = NewAnalysisService(log, Repositories, &services)
-	services.MeetingService = NewMeetingService(log, Repositories, &services)
-	services.PlayerService = NewPlayerService(Repositories, &services)
-	services.ContractService = NewContractService(log, Repositories, grpcClients, &services)
-	services.ServiceLineItemService = NewServiceLineItemService(log, Repositories, grpcClients, &services)
-	services.OpportunityService = NewOpportunityService(log, Repositories, grpcClients, &services)
-	services.BillingProfileService = NewBillingProfileService(log, Repositories, grpcClients)
-	services.InvoiceService = NewInvoiceService(log, Repositories, grpcClients, &services)
-	services.SlackService = NewSlackService(log, Repositories, grpcClients, &services)
+	services.Repositories = repositories
+	services.IssueService = NewIssueService(log, repositories, &services)
+	services.PhoneNumberService = NewPhoneNumberService(log, repositories, grpcClients, &services)
+	services.JobRoleService = NewJobRoleService(log, repositories, &services)
+	services.CalendarService = NewCalendarService(log, repositories, &services)
+	services.EmailService = NewEmailService(log, repositories, &services, grpcClients)
+	services.ContactService = NewContactService(log, repositories, grpcClients, &services)
+	services.NoteService = NewNoteService(log, repositories, &services)
+	services.TimelineEventService = NewTimelineEventService(log, repositories, &services)
+	services.SearchService = NewSearchService(log, repositories, &services)
+	services.QueryService = NewDashboardService(log, repositories, &services)
+	services.InteractionEventService = NewInteractionEventService(log, repositories, &services)
+	services.InteractionSessionService = NewInteractionSessionService(log, repositories, &services)
+	services.AnalysisService = NewAnalysisService(log, repositories, &services)
+	services.MeetingService = NewMeetingService(log, repositories, &services)
+	services.PlayerService = NewPlayerService(repositories, &services)
+	services.ContractService = NewContractService(log, repositories, grpcClients, &services)
+	services.ServiceLineItemService = NewServiceLineItemService(log, repositories, grpcClients, &services)
+	services.OpportunityService = NewOpportunityService(log, repositories, grpcClients, &services)
+	services.BillingProfileService = NewBillingProfileService(log, repositories, grpcClients)
+	services.InvoiceService = NewInvoiceService(log, repositories, grpcClients, &services)
+	services.SlackService = NewSlackService(log, repositories, grpcClients, &services)
 
 	log.Info("Init cache service")
 	services.Cache = NewCacheService(&services)

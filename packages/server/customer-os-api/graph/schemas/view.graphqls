@@ -10,12 +10,12 @@ extend type Mutation {
 type TableViewDef implements Node {
     id:                 ID!
     name:               String!
-    tableType:          TableViewType
-    order:              Int
-    icon:               String
+    tableType:          TableViewType!
+    order:              Int!
+    icon:               String!
     columns:            [ColumnViewType!]!
-    filters:            String
-    sorting:            String
+    filters:            String!
+    sorting:            String!
     createdAt:          Time!
     updatedAt:          Time!
 }
@@ -62,18 +62,17 @@ input TableViewDefUpdateInput {
     id:                 ID!
     name:               String!
     order:              Int!
-    icon:               String
+    icon:               String!
     columns:            [ColumnViewType!]!
     filters:            String!
     sorting:            String!
 }
 
 input TableViewDefCreateInput {
-    id:                 ID!
     tableType:          TableViewType!
     name:               String!
     order:              Int!
-    icon:               String
+    icon:               String!
     columns:            [ColumnViewType!]!
     filters:            String!
     sorting:            String!
