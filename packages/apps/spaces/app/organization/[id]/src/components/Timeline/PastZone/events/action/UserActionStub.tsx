@@ -3,6 +3,7 @@ import { FC } from 'react';
 import { Action, ActionType } from '@graphql/types';
 
 import { ServiceUpdatedAction } from './service/ServiceUpdatedAction';
+import InvoiceStatusChangeAction from './invoice/InvoiceStatusChangeAction';
 import { ContractStatusUpdatedAction } from './contract/ContractStatusUpdatedAction';
 import { OnboardingStatusChangedAction } from './onboarding/OnboardingStatusChangedAction';
 
@@ -32,6 +33,11 @@ export const UserActionStub: FC<ActionStubProps> = ({ data }) => {
       return <ServiceUpdatedAction data={data} mode='removed' />;
     case ActionType.OnboardingStatusChanged:
       return <OnboardingStatusChangedAction data={data} />;
+    case ActionType.InvoiceIssued:
+    case ActionType.InvoicePaid:
+    case ActionType.InvoiceSent:
+    case ActionType.InvoiceVoided:
+      return <InvoiceStatusChangeAction data={data} mode={data.actionType} />;
   }
 
   return null;
