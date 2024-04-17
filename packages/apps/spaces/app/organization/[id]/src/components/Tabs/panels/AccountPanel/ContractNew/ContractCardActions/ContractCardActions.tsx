@@ -6,13 +6,12 @@ import { useDisclosure } from '@ui/utils';
 import { DotLive } from '@ui/media/icons/DotLive';
 import { XSquare } from '@ui/media/icons/XSquare';
 import { RefreshCw05 } from '@ui/media/icons/RefreshCw05';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { Exact, ContractStatus, ContractUpdateInput } from '@graphql/types';
 import { GetContractsQuery } from '@organization/src/graphql/getContracts.generated';
 import { UpdateContractMutation } from '@organization/src/graphql/updateContract.generated';
-import { useRenewContractMutation } from '@organization/src/graphql/renewContract.generated';
 import { ContractMenu } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ContractCardActions/ContractMenu';
 import { ContractStatusTag } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ContractCardActions/ContractStatusTag';
+import { ContractRenewsModal } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ChangeContractStatusModals/ContractRenewModal';
 import {
   ContractEndModal,
   ContractStartModal,
@@ -25,7 +24,6 @@ interface ContractStatusSelectProps {
   serviceStarted?: string;
   organizationName: string;
   nextInvoiceDate?: string;
-  contractStarted?: string;
   onOpenEditModal: () => void;
 
   onUpdateContract: UseMutationResult<
@@ -45,7 +43,6 @@ export const ContractCardActions: React.FC<ContractStatusSelectProps> = ({
   onUpdateContract,
   nextInvoiceDate,
   onOpenEditModal,
-  contractStarted,
 }) => {
   const {
     onOpen: onOpenEndModal,
@@ -61,9 +58,13 @@ export const ContractCardActions: React.FC<ContractStatusSelectProps> = ({
   } = useDisclosure({
     id: 'start-contract-modal',
   });
-  const client = getGraphQLClient();
-
-  const { mutate } = useRenewContractMutation(client);
+  const {
+    onOpen: onOpenRenewModal,
+    onClose: onCloseRenewModal,
+    isOpen: isRenewModalOpen,
+  } = useDisclosure({
+    id: 'renew-contract-modal',
+  });
 
   const getStatusDisplay = useMemo(() => {
     let icon, text;
@@ -108,7 +109,7 @@ export const ContractCardActions: React.FC<ContractStatusSelectProps> = ({
         onOpenStartModal();
         break;
       case ContractStatus.OutOfContract:
-        mutate({ contractId });
+        onOpenRenewModal();
         break;
       case ContractStatus.Scheduled:
         break;
@@ -130,16 +131,6 @@ export const ContractCardActions: React.FC<ContractStatusSelectProps> = ({
         statusContent={getStatusDisplay}
         onHandleStatusChange={handleChangeStatus}
         status={status}
-        contractId={contractId}
-        renewsAt={renewsAt}
-        onUpdateContract={onUpdateContract}
-        serviceStarted={serviceStarted}
-        organizationName={organizationName}
-        nextInvoiceDate={nextInvoiceDate}
-        isStartModalOpen={isStartModalOpen}
-        isEndModalOpen={isOpen}
-        onCloseEndModal={onCloseEndModal}
-        onCloseStartModal={onCloseStartModal}
       />
       <ContractEndModal
         isOpen={isOpen}
@@ -158,6 +149,12 @@ export const ContractCardActions: React.FC<ContractStatusSelectProps> = ({
         organizationName={organizationName}
         serviceStarted={serviceStarted}
         onUpdateContract={onUpdateContract}
+      />
+      <ContractRenewsModal
+        isOpen={isRenewModalOpen}
+        onClose={onCloseRenewModal}
+        contractId={contractId}
+        organizationName={organizationName}
       />
     </div>
   );

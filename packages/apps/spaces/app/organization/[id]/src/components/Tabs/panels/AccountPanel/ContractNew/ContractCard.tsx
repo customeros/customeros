@@ -201,7 +201,6 @@ export const ContractCard = ({
               'Unnamed'
             }
             nextInvoiceDate={data?.billingDetails?.nextInvoicing}
-            contractStarted={data.serviceStarted}
           />
         </article>
 
