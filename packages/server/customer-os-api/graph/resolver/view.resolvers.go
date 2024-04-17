@@ -120,7 +120,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 	}
 	tableViewDefinitions, ok := result.Result.([]postgresEntity.TableViewDefinition)
 	if ok && len(tableViewDefinitions) == 0 {
-		for _, def := range defaultTableViewDefinitions() {
+		for _, def := range DefaultTableViewDefinitions() {
 			def.Tenant = tenant
 			def.UserId = userId
 			r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, def)
@@ -135,73 +135,4 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 	}
 
 	return mapper.MapTableViewDefinitionsToModel(tableViewDefinitions), nil
-}
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//     it when you're done.
-//   - You have helper methods in this file. Move them out to keep these resolver files clean.
-func defaultTableViewDefinitions() []postgresEntity.TableViewDefinition {
-	return []postgresEntity.TableViewDefinition{
-		{
-			TableType: model.TableViewTypeOrganizations.String(),
-			Name:      "Organizations",
-			Columns: strings.Join([]string{
-				model.ColumnViewTypeOrganizationsAvatar.String(),
-				model.ColumnViewTypeOrganizationsName.String(),
-				model.ColumnViewTypeOrganizationsWebsite.String(),
-				model.ColumnViewTypeOrganizationsRelationship.String(),
-				model.ColumnViewTypeOrganizationsOnboardingStatus.String(),
-				model.ColumnViewTypeOrganizationsRenewalLikelihood.String(),
-				model.ColumnViewTypeOrganizationsRenewlDate.String(),
-				model.ColumnViewTypeOrganizationsForecastArr.String(),
-				model.ColumnViewTypeOrganizationsOwner.String(),
-				model.ColumnViewTypeOrganizationsLastTouchpoint.String(),
-			}, ","),
-			Order:   1,
-			Icon:    "",
-			Filters: "",
-			Sorting: "",
-		},
-		{
-			TableType: model.TableViewTypeInvoices.String(),
-			Name:      "Invoices",
-			Columns: strings.Join([]string{
-				model.ColumnViewTypeInvoicesIssueDate.String(),
-				model.ColumnViewTypeInvoicesIssueDatePast.String(),
-				model.ColumnViewTypeInvoicesDueDate.String(),
-				model.ColumnViewTypeInvoicesContract.String(),
-				model.ColumnViewTypeInvoicesBillingCycle.String(),
-				model.ColumnViewTypeInvoicesPaymentStatus.String(),
-				model.ColumnViewTypeInvoicesInvoiceNumber.String(),
-				model.ColumnViewTypeInvoicesAmount.String(),
-				model.ColumnViewTypeInvoicesInvoiceStatus.String(),
-				model.ColumnViewTypeInvoicesInvoicePreview.String(),
-			}, ","),
-			Order:   2,
-			Icon:    "",
-			Filters: "",
-			Sorting: "",
-		},
-		{
-			TableType: model.TableViewTypeRenewals.String(),
-			Name:      "Renewals",
-			Columns: strings.Join([]string{
-				model.ColumnViewTypeRenewalsAvatar.String(),
-				model.ColumnViewTypeRenewalsName.String(),
-				model.ColumnViewTypeRenewalsRenewalLikelihood.String(),
-				model.ColumnViewTypeRenewalsRenewalDate.String(),
-				model.ColumnViewTypeRenewalsForecastArr.String(),
-				model.ColumnViewTypeRenewalsOwner.String(),
-				model.ColumnViewTypeRenewalsLastTouchpoint.String(),
-			}, ","),
-			Order:   3,
-			Icon:    "",
-			Filters: "",
-			Sorting: "",
-		},
-	}
-
 }
