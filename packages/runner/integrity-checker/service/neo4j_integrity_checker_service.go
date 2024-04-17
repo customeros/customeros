@@ -157,12 +157,17 @@ func (s *neo4jIntegrityCheckerService) sendMetrics(ctx context.Context, results 
 		Value: aws.String(s.cfg.AWS.MetricsDimensionNeo4jIntegrityChecks),
 	}}
 
+	executionTime := utils.Now()
+
 	for _, result := range results {
+		if result.Success && result.CountOfDataWithIssue == 0 && result.TechError == "" {
+			continue
+		}
 		metrics = append(metrics, &cloudwatch.MetricDatum{
 			MetricName: aws.String(strings.ReplaceAll(strings.ToLower(result.Name), " ", "_")),
 			Value:      aws.Float64(float64(result.CountOfDataWithIssue)),
 			Unit:       aws.String("Count"),
-			Timestamp:  utils.TimePtr(utils.Now()),
+			Timestamp:  utils.TimePtr(executionTime),
 			Dimensions: dimensions,
 		})
 		if result.TechError != "" {

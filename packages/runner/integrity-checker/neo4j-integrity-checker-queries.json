@@ -1,21 +1,29 @@
 {
   "queries": [
     {
-      "name": "Check for domain nodes with missing domain property",
-      "query": "MATCH (d:Domain) WHERE d.domain IS NULL or d.domain = '' RETURN count(d)"
+      "name": "Domain nodes with missing domain property",
+      "query": "MATCH (d:Domain) WHERE d.domain IS NULL or d.domain = '' RETURN count(d)",
+      "description": "Domain property is mandatory."
     },
     {
-      "name": "Check for incorrect domain capitalization",
-      "query": "MATCH (d:Domain) WHERE d.domain <> toLower(d.domain) RETURN count(d)"
+      "name": "Incorrect domain capitalization",
+      "query": "MATCH (d:Domain) WHERE d.domain <> toLower(d.domain) RETURN count(d)",
+      "description": "Domain property should be lowercase."
     },
     {
-      "name": "Check for nodes missing link with tenant",
-      "query": "WITH [\"Tenant\",\"InteractionSession\",\"JobRole\",\"Domain\",\"Social\",\"TimelineEvent\",\"CustomField\",\"AlternateOrganization\",\"Calendar\",\"ServiceLineItem\",\"Opportunity\",\"OrganizationPlanMilestone\",\"MasterPlanMilestone\",\"InvoiceLine\",\"Attachment\",\"Player\",\"AlternateContact\",\"TechnicalNode\",\"AlternateCustomField\",\"Comment\",\"AlternateUser\",\"Country\",\"State\",\"Meeting\"] as labels MATCH (n) WHERE NOT ANY(label in labels(n) WHERE label IN labels) AND NOT (n)--(:Tenant)  RETURN count(n)"
+      "name": "Missing link with tenant",
+      "query": "WITH [\"Tenant\",\"InteractionSession\",\"JobRole\",\"Domain\",\"Social\",\"TimelineEvent\",\"CustomField\",\"AlternateOrganization\",\"Calendar\",\"ServiceLineItem\",\"Opportunity\",\"OrganizationPlanMilestone\",\"MasterPlanMilestone\",\"InvoiceLine\",\"Attachment\",\"Player\",\"AlternateContact\",\"TechnicalNode\",\"AlternateCustomField\",\"Comment\",\"AlternateUser\",\"Country\",\"State\",\"Meeting\"] as labels MATCH (n) WHERE NOT ANY(label in labels(n) WHERE label IN labels) AND NOT (n)--(:Tenant)  RETURN count(n)",
+      "description": "All nodes should be linked to a tenant except for the listed labels."
+    },
+    {
+      "name": "Invoice lines without invoice or service line item",
+      "query": "MATCH (n:InvoiceLine) WHERE NOT (n)<-[:HAS_INVOICE_LINE]-(:Invoice) OR NOT (n)-[:INVOICED]->(:ServiceLineItem) RETURN count(n)",
+      "description": "Invoice line should be linked to an invoice and a service line item."
     },
     {
       "name": "Check for nodes missing mandatory links",
-      "query": "CALL {\n     MATCH (n:InvoiceLine) WHERE NOT (n)<-[:HAS_INVOICE_LINE]-(:Invoice) RETURN count(n) as cnt\n     UNION ALL\n     MATCH (n:Invoice) WHERE NOT (n)<-[:HAS_INVOICE]-(:Contract|DeletedContract) RETURN count(n) as cnt\n     UNION ALL\n     MATCH (n:ServiceLineItem) WHERE NOT (n)<-[:HAS_SERVICE]-(:Contract|DeletedContract) RETURN count(n) as cnt\n     UNION ALL\n     MATCH (n:Contract) WHERE NOT (n)<-[:HAS_CONTRACT]-(:Organization) RETURN count(n) as cnt\n} RETURN sum(cnt)",
-      "description": "Checks: 1 - Invoice line without invoice. 2 - Invoice without contract/deleted contract. 3 - Service line item without contract/deleted contract. 4 - Contract without organization."
+      "query": "CALL {\n     MATCH (n:Invoice) WHERE NOT (n)<-[:HAS_INVOICE]-(:Contract|DeletedContract) RETURN count(n) as cnt\n     UNION ALL\n     MATCH (n:ServiceLineItem) WHERE NOT (n)<-[:HAS_SERVICE]-(:Contract|DeletedContract) RETURN count(n) as cnt\n     UNION ALL\n     MATCH (n:Contract) WHERE NOT (n)<-[:HAS_CONTRACT]-(:Organization) RETURN count(n) as cnt\n} RETURN sum(cnt)",
+      "description": "2 - Invoice without contract/deleted contract. 3 - Service line item without contract/deleted contract. 4 - Contract without organization."
     },
     {
       "name": "Check organization nodes labels",
