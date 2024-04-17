@@ -119,6 +119,26 @@ func (s *invoiceService) GetInvoicesForContracts(ctx context.Context, contractId
 	return &invoiceEntities, nil
 }
 
+type SimulateInvoices struct {
+	ContractId         string
+	IssueDate          time.Time
+	DueDate            time.Time
+	InvoicePeriodStart time.Time
+	InvoicePeriodEnd   time.Time
+	InvoiceNumber      string
+	InvoiceLines       []*SimulateInvoiceLine
+}
+type SimulateInvoiceLine struct {
+	Key               string
+	ServiceLineItemID string
+	ParentID          string
+	Name              string
+	Price             float64
+	Quantity          int64
+	Amount            float64
+	TotalAmount       float64
+}
+
 func (s *invoiceService) SimulateInvoice(ctx context.Context, invoiceData *SimulateInvoiceRequestData) ([]*SimulateInvoiceResponseData, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.SimulateInvoice")
 	defer span.Finish()
@@ -131,20 +151,22 @@ func (s *invoiceService) SimulateInvoice(ctx context.Context, invoiceData *Simul
 		return nil, err
 	}
 
-	invoiceEntity := &neo4jentity.InvoiceEntity{}
-	invoiceLines := []*invoicepb.InvoiceLine{}
+	//simulateInvoices := []*SimulateInvoices{}
 
-	tenantSettings, err := s.services.TenantService.GetTenantSettings(ctx)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
+	//fetch existing contract with SLI to compare with
+	//contractEntity, err := s.services.ContractService.GetById(ctx, invoiceData.ContractId)
+	//if err != nil {
+	//	tracing.TraceErr(span, err)
+	//	return nil, err
+	//}
 
-	contractEntity, err := s.services.ContractService.GetById(ctx, invoiceData.ContractId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
+	//fetch existing SLI for the contract
+	//sliEntities, err := s.services.ServiceLineItemService.GetServiceLineItemsForContract(ctx, invoiceData.ContractId)
+
+	//create a dummy contract with dummy SLI to keep them updated with the corresponding SLI after each invoice
+
+	//go through each SLI item from the request and determine if we need to prorate or not
+	//if prorate is needed, then trigger proration invoice and on cycle invoice
 
 	for _, sliData := range invoiceData.ServiceLines {
 
@@ -175,6 +197,35 @@ func (s *invoiceService) SimulateInvoice(ctx context.Context, invoiceData *Simul
 			//trigger proration invoice
 		}
 
+	}
+
+	response := []*SimulateInvoiceResponseData{}
+
+	onCycleInvoice, err := s.SimulateOnCycleInvoice(ctx, invoiceData, span)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	response = append(response, onCycleInvoice)
+
+	return response, nil
+}
+
+func (s *invoiceService) SimulateOnCycleInvoice(ctx context.Context, invoiceData *SimulateInvoiceRequestData, span opentracing.Span) (*SimulateInvoiceResponseData, error) {
+	invoiceEntity := &neo4jentity.InvoiceEntity{}
+	invoiceLines := []*invoicepb.InvoiceLine{}
+
+	tenantSettings, err := s.services.TenantService.GetTenantSettings(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	contractEntity, err := s.services.ContractService.GetById(ctx, invoiceData.ContractId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
 	}
 
 	var nextPreviewInvoiceEntity *neo4jentity.InvoiceEntity
@@ -241,11 +292,10 @@ func (s *invoiceService) SimulateInvoice(ctx context.Context, invoiceData *Simul
 		return nil, err
 	}
 
-	response := []*SimulateInvoiceResponseData{}
-	response = append(response, &SimulateInvoiceResponseData{
+	onCycleInvoice := &SimulateInvoiceResponseData{
 		Invoice: invoiceEntity,
 		Lines:   []*neo4jentity.InvoiceLineEntity{},
-	})
+	}
 	for _, line := range invoiceLines {
 		invoiceLineEntity := &neo4jentity.InvoiceLineEntity{
 			Id:                      line.ServiceLineItemId,
@@ -257,10 +307,10 @@ func (s *invoiceService) SimulateInvoice(ctx context.Context, invoiceData *Simul
 			TotalAmount:             line.Total,
 			Vat:                     line.Vat,
 		}
-		response[0].Lines = append(response[0].Lines, invoiceLineEntity)
+		onCycleInvoice.Lines = append(onCycleInvoice.Lines, invoiceLineEntity)
 	}
 
-	return response, nil
+	return onCycleInvoice, nil
 }
 
 func (s *invoiceService) NextInvoiceDryRun(ctx context.Context, contractId, appSource string) (string, error) {

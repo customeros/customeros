@@ -9,23 +9,23 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 )
 
-type CommentRepository interface {
+type CommentReadRepository interface {
 	GetAllForIssues(ctx context.Context, tenant string, issueIds []string) ([]*utils.DbNodeAndId, error)
 }
 
-type commentRepository struct {
+type commentReadRepository struct {
 	driver   *neo4j.DriverWithContext
 	database string
 }
 
-func NewCommentRepository(driver *neo4j.DriverWithContext, database string) CommentRepository {
-	return &commentRepository{
+func NewCommentReadRepository(driver *neo4j.DriverWithContext, database string) CommentReadRepository {
+	return &commentReadRepository{
 		driver:   driver,
 		database: database,
 	}
 }
 
-func (r *commentRepository) GetAllForIssues(ctx context.Context, tenant string, issueIds []string) ([]*utils.DbNodeAndId, error) {
+func (r *commentReadRepository) GetAllForIssues(ctx context.Context, tenant string, issueIds []string) ([]*utils.DbNodeAndId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CommentRepository.GetAllForIssues")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)

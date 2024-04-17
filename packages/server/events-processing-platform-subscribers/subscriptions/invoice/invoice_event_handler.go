@@ -103,7 +103,7 @@ func (h *InvoiceEventHandler) onInvoiceFillRequestedV1(ctx context.Context, evt 
 
 	if invoiceEntity.OffCycle {
 
-		sliDbNodes, err := h.repositories.Neo4jRepositories.ServiceLineItemReadRepository.GetAllForContract(ctx, eventData.Tenant, eventData.ContractId)
+		sliDbNodes, err := h.repositories.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemsForContract(ctx, eventData.Tenant, eventData.ContractId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error getting service line items for contract %s: %s", eventData.ContractId, err.Error())
@@ -143,7 +143,7 @@ func (h *InvoiceEventHandler) onInvoiceFillRequestedV1(ctx context.Context, evt 
 		}
 	} else {
 
-		sliDbNodes, err := h.repositories.Neo4jRepositories.ServiceLineItemReadRepository.GetAllForContract(ctx, eventData.Tenant, eventData.ContractId)
+		sliDbNodes, err := h.repositories.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemsForContract(ctx, eventData.Tenant, eventData.ContractId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error getting service line items for contract %s: %s", eventData.ContractId, err.Error())
