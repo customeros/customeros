@@ -2642,29 +2642,39 @@ type SuggestedMergeOrganization struct {
 }
 
 type TableViewDef struct {
-	ID        string         `json:"id"`
-	Name      string         `json:"name"`
-	TableType *TableViewType `json:"tableType,omitempty"`
-	Order     *int           `json:"order,omitempty"`
-	Icon      *string        `json:"icon,omitempty"`
-	Columns   []ColumnType   `json:"columns"`
-	Filters   *string        `json:"filters,omitempty"`
-	Sorting   *string        `json:"sorting,omitempty"`
-	CreatedAt time.Time      `json:"createdAt"`
-	UpdatedAt time.Time      `json:"updatedAt"`
+	ID        string           `json:"id"`
+	Name      string           `json:"name"`
+	TableType TableViewType    `json:"tableType"`
+	Order     int              `json:"order"`
+	Icon      string           `json:"icon"`
+	Columns   []ColumnViewType `json:"columns"`
+	Filters   string           `json:"filters"`
+	Sorting   string           `json:"sorting"`
+	CreatedAt time.Time        `json:"createdAt"`
+	UpdatedAt time.Time        `json:"updatedAt"`
 }
 
 func (TableViewDef) IsNode()            {}
 func (this TableViewDef) GetID() string { return this.ID }
 
-type TableViewDefInput struct {
-	ID      string       `json:"id"`
-	Name    string       `json:"name"`
-	Order   int          `json:"order"`
-	Icon    *string      `json:"icon,omitempty"`
-	Columns []ColumnType `json:"columns"`
-	Filters string       `json:"filters"`
-	Sorting string       `json:"sorting"`
+type TableViewDefCreateInput struct {
+	TableType TableViewType    `json:"tableType"`
+	Name      string           `json:"name"`
+	Order     int              `json:"order"`
+	Icon      string           `json:"icon"`
+	Columns   []ColumnViewType `json:"columns"`
+	Filters   string           `json:"filters"`
+	Sorting   string           `json:"sorting"`
+}
+
+type TableViewDefUpdateInput struct {
+	ID      string           `json:"id"`
+	Name    string           `json:"name"`
+	Order   int              `json:"order"`
+	Icon    string           `json:"icon"`
+	Columns []ColumnViewType `json:"columns"`
+	Filters string           `json:"filters"`
+	Sorting string           `json:"sorting"`
 }
 
 type Tag struct {
@@ -3214,94 +3224,94 @@ func (e ChargePeriod) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
-type ColumnType string
+type ColumnViewType string
 
 const (
-	ColumnTypeInvoicesIssueDate              ColumnType = "INVOICES_ISSUE_DATE"
-	ColumnTypeInvoicesIssueDatePast          ColumnType = "INVOICES_ISSUE_DATE_PAST"
-	ColumnTypeInvoicesDueDate                ColumnType = "INVOICES_DUE_DATE"
-	ColumnTypeInvoicesContract               ColumnType = "INVOICES_CONTRACT"
-	ColumnTypeInvoicesBillingCycle           ColumnType = "INVOICES_BILLING_CYCLE"
-	ColumnTypeInvoicesPaymentStatus          ColumnType = "INVOICES_PAYMENT_STATUS"
-	ColumnTypeInvoicesInvoiceNumber          ColumnType = "INVOICES_INVOICE_NUMBER"
-	ColumnTypeInvoicesAmount                 ColumnType = "INVOICES_AMOUNT"
-	ColumnTypeInvoicesInvoiceStatus          ColumnType = "INVOICES_INVOICE_STATUS"
-	ColumnTypeInvoicesInvoicePreview         ColumnType = "INVOICES_INVOICE_PREVIEW"
-	ColumnTypeOrganizationsAvatar            ColumnType = "ORGANIZATIONS_AVATAR"
-	ColumnTypeOrganizationsName              ColumnType = "ORGANIZATIONS_NAME"
-	ColumnTypeOrganizationsWebsite           ColumnType = "ORGANIZATIONS_WEBSITE"
-	ColumnTypeOrganizationsRelationship      ColumnType = "ORGANIZATIONS_RELATIONSHIP"
-	ColumnTypeOrganizationsOnboardingStatus  ColumnType = "ORGANIZATIONS_ONBOARDING_STATUS"
-	ColumnTypeOrganizationsRenewalLikelihood ColumnType = "ORGANIZATIONS_RENEWAL_LIKELIHOOD"
-	ColumnTypeOrganizationsRenewlDate        ColumnType = "ORGANIZATIONS_RENEWL_DATE"
-	ColumnTypeOrganizationsForecastArr       ColumnType = "ORGANIZATIONS_FORECAST_ARR"
-	ColumnTypeOrganizationsOwner             ColumnType = "ORGANIZATIONS_OWNER"
-	ColumnTypeOrganizationsLastTouchpoint    ColumnType = "ORGANIZATIONS_LAST_TOUCHPOINT"
-	ColumnTypeRenewalsAvatar                 ColumnType = "RENEWALS_AVATAR"
-	ColumnTypeRenewalsName                   ColumnType = "RENEWALS_NAME"
-	ColumnTypeRenewalsRenewalLikelihood      ColumnType = "RENEWALS_RENEWAL_LIKELIHOOD"
-	ColumnTypeRenewalsRenewlDate             ColumnType = "RENEWALS_RENEWL_DATE"
-	ColumnTypeRenewalsForecastArr            ColumnType = "RENEWALS_FORECAST_ARR"
-	ColumnTypeRenewalsOwner                  ColumnType = "RENEWALS_OWNER"
-	ColumnTypeRenewalsLastTouchpoint         ColumnType = "RENEWALS_LAST_TOUCHPOINT"
+	ColumnViewTypeInvoicesIssueDate              ColumnViewType = "INVOICES_ISSUE_DATE"
+	ColumnViewTypeInvoicesIssueDatePast          ColumnViewType = "INVOICES_ISSUE_DATE_PAST"
+	ColumnViewTypeInvoicesDueDate                ColumnViewType = "INVOICES_DUE_DATE"
+	ColumnViewTypeInvoicesContract               ColumnViewType = "INVOICES_CONTRACT"
+	ColumnViewTypeInvoicesBillingCycle           ColumnViewType = "INVOICES_BILLING_CYCLE"
+	ColumnViewTypeInvoicesPaymentStatus          ColumnViewType = "INVOICES_PAYMENT_STATUS"
+	ColumnViewTypeInvoicesInvoiceNumber          ColumnViewType = "INVOICES_INVOICE_NUMBER"
+	ColumnViewTypeInvoicesAmount                 ColumnViewType = "INVOICES_AMOUNT"
+	ColumnViewTypeInvoicesInvoiceStatus          ColumnViewType = "INVOICES_INVOICE_STATUS"
+	ColumnViewTypeInvoicesInvoicePreview         ColumnViewType = "INVOICES_INVOICE_PREVIEW"
+	ColumnViewTypeOrganizationsAvatar            ColumnViewType = "ORGANIZATIONS_AVATAR"
+	ColumnViewTypeOrganizationsName              ColumnViewType = "ORGANIZATIONS_NAME"
+	ColumnViewTypeOrganizationsWebsite           ColumnViewType = "ORGANIZATIONS_WEBSITE"
+	ColumnViewTypeOrganizationsRelationship      ColumnViewType = "ORGANIZATIONS_RELATIONSHIP"
+	ColumnViewTypeOrganizationsOnboardingStatus  ColumnViewType = "ORGANIZATIONS_ONBOARDING_STATUS"
+	ColumnViewTypeOrganizationsRenewalLikelihood ColumnViewType = "ORGANIZATIONS_RENEWAL_LIKELIHOOD"
+	ColumnViewTypeOrganizationsRenewlDate        ColumnViewType = "ORGANIZATIONS_RENEWL_DATE"
+	ColumnViewTypeOrganizationsForecastArr       ColumnViewType = "ORGANIZATIONS_FORECAST_ARR"
+	ColumnViewTypeOrganizationsOwner             ColumnViewType = "ORGANIZATIONS_OWNER"
+	ColumnViewTypeOrganizationsLastTouchpoint    ColumnViewType = "ORGANIZATIONS_LAST_TOUCHPOINT"
+	ColumnViewTypeRenewalsAvatar                 ColumnViewType = "RENEWALS_AVATAR"
+	ColumnViewTypeRenewalsName                   ColumnViewType = "RENEWALS_NAME"
+	ColumnViewTypeRenewalsRenewalLikelihood      ColumnViewType = "RENEWALS_RENEWAL_LIKELIHOOD"
+	ColumnViewTypeRenewalsRenewalDate            ColumnViewType = "RENEWALS_RENEWAL_DATE"
+	ColumnViewTypeRenewalsForecastArr            ColumnViewType = "RENEWALS_FORECAST_ARR"
+	ColumnViewTypeRenewalsOwner                  ColumnViewType = "RENEWALS_OWNER"
+	ColumnViewTypeRenewalsLastTouchpoint         ColumnViewType = "RENEWALS_LAST_TOUCHPOINT"
 )
 
-var AllColumnType = []ColumnType{
-	ColumnTypeInvoicesIssueDate,
-	ColumnTypeInvoicesIssueDatePast,
-	ColumnTypeInvoicesDueDate,
-	ColumnTypeInvoicesContract,
-	ColumnTypeInvoicesBillingCycle,
-	ColumnTypeInvoicesPaymentStatus,
-	ColumnTypeInvoicesInvoiceNumber,
-	ColumnTypeInvoicesAmount,
-	ColumnTypeInvoicesInvoiceStatus,
-	ColumnTypeInvoicesInvoicePreview,
-	ColumnTypeOrganizationsAvatar,
-	ColumnTypeOrganizationsName,
-	ColumnTypeOrganizationsWebsite,
-	ColumnTypeOrganizationsRelationship,
-	ColumnTypeOrganizationsOnboardingStatus,
-	ColumnTypeOrganizationsRenewalLikelihood,
-	ColumnTypeOrganizationsRenewlDate,
-	ColumnTypeOrganizationsForecastArr,
-	ColumnTypeOrganizationsOwner,
-	ColumnTypeOrganizationsLastTouchpoint,
-	ColumnTypeRenewalsAvatar,
-	ColumnTypeRenewalsName,
-	ColumnTypeRenewalsRenewalLikelihood,
-	ColumnTypeRenewalsRenewlDate,
-	ColumnTypeRenewalsForecastArr,
-	ColumnTypeRenewalsOwner,
-	ColumnTypeRenewalsLastTouchpoint,
+var AllColumnViewType = []ColumnViewType{
+	ColumnViewTypeInvoicesIssueDate,
+	ColumnViewTypeInvoicesIssueDatePast,
+	ColumnViewTypeInvoicesDueDate,
+	ColumnViewTypeInvoicesContract,
+	ColumnViewTypeInvoicesBillingCycle,
+	ColumnViewTypeInvoicesPaymentStatus,
+	ColumnViewTypeInvoicesInvoiceNumber,
+	ColumnViewTypeInvoicesAmount,
+	ColumnViewTypeInvoicesInvoiceStatus,
+	ColumnViewTypeInvoicesInvoicePreview,
+	ColumnViewTypeOrganizationsAvatar,
+	ColumnViewTypeOrganizationsName,
+	ColumnViewTypeOrganizationsWebsite,
+	ColumnViewTypeOrganizationsRelationship,
+	ColumnViewTypeOrganizationsOnboardingStatus,
+	ColumnViewTypeOrganizationsRenewalLikelihood,
+	ColumnViewTypeOrganizationsRenewlDate,
+	ColumnViewTypeOrganizationsForecastArr,
+	ColumnViewTypeOrganizationsOwner,
+	ColumnViewTypeOrganizationsLastTouchpoint,
+	ColumnViewTypeRenewalsAvatar,
+	ColumnViewTypeRenewalsName,
+	ColumnViewTypeRenewalsRenewalLikelihood,
+	ColumnViewTypeRenewalsRenewalDate,
+	ColumnViewTypeRenewalsForecastArr,
+	ColumnViewTypeRenewalsOwner,
+	ColumnViewTypeRenewalsLastTouchpoint,
 }
 
-func (e ColumnType) IsValid() bool {
+func (e ColumnViewType) IsValid() bool {
 	switch e {
-	case ColumnTypeInvoicesIssueDate, ColumnTypeInvoicesIssueDatePast, ColumnTypeInvoicesDueDate, ColumnTypeInvoicesContract, ColumnTypeInvoicesBillingCycle, ColumnTypeInvoicesPaymentStatus, ColumnTypeInvoicesInvoiceNumber, ColumnTypeInvoicesAmount, ColumnTypeInvoicesInvoiceStatus, ColumnTypeInvoicesInvoicePreview, ColumnTypeOrganizationsAvatar, ColumnTypeOrganizationsName, ColumnTypeOrganizationsWebsite, ColumnTypeOrganizationsRelationship, ColumnTypeOrganizationsOnboardingStatus, ColumnTypeOrganizationsRenewalLikelihood, ColumnTypeOrganizationsRenewlDate, ColumnTypeOrganizationsForecastArr, ColumnTypeOrganizationsOwner, ColumnTypeOrganizationsLastTouchpoint, ColumnTypeRenewalsAvatar, ColumnTypeRenewalsName, ColumnTypeRenewalsRenewalLikelihood, ColumnTypeRenewalsRenewlDate, ColumnTypeRenewalsForecastArr, ColumnTypeRenewalsOwner, ColumnTypeRenewalsLastTouchpoint:
+	case ColumnViewTypeInvoicesIssueDate, ColumnViewTypeInvoicesIssueDatePast, ColumnViewTypeInvoicesDueDate, ColumnViewTypeInvoicesContract, ColumnViewTypeInvoicesBillingCycle, ColumnViewTypeInvoicesPaymentStatus, ColumnViewTypeInvoicesInvoiceNumber, ColumnViewTypeInvoicesAmount, ColumnViewTypeInvoicesInvoiceStatus, ColumnViewTypeInvoicesInvoicePreview, ColumnViewTypeOrganizationsAvatar, ColumnViewTypeOrganizationsName, ColumnViewTypeOrganizationsWebsite, ColumnViewTypeOrganizationsRelationship, ColumnViewTypeOrganizationsOnboardingStatus, ColumnViewTypeOrganizationsRenewalLikelihood, ColumnViewTypeOrganizationsRenewlDate, ColumnViewTypeOrganizationsForecastArr, ColumnViewTypeOrganizationsOwner, ColumnViewTypeOrganizationsLastTouchpoint, ColumnViewTypeRenewalsAvatar, ColumnViewTypeRenewalsName, ColumnViewTypeRenewalsRenewalLikelihood, ColumnViewTypeRenewalsRenewalDate, ColumnViewTypeRenewalsForecastArr, ColumnViewTypeRenewalsOwner, ColumnViewTypeRenewalsLastTouchpoint:
 		return true
 	}
 	return false
 }
 
-func (e ColumnType) String() string {
+func (e ColumnViewType) String() string {
 	return string(e)
 }
 
-func (e *ColumnType) UnmarshalGQL(v interface{}) error {
+func (e *ColumnViewType) UnmarshalGQL(v interface{}) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
 	}
 
-	*e = ColumnType(str)
+	*e = ColumnViewType(str)
 	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid ColumnType", str)
+		return fmt.Errorf("%s is not a valid ColumnViewType", str)
 	}
 	return nil
 }
 
-func (e ColumnType) MarshalGQL(w io.Writer) {
+func (e ColumnViewType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

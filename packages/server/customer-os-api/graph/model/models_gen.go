@@ -2642,12 +2642,12 @@ type SuggestedMergeOrganization struct {
 type TableViewDef struct {
 	ID        string           `json:"id"`
 	Name      string           `json:"name"`
-	TableType *TableViewType   `json:"tableType,omitempty"`
-	Order     *int             `json:"order,omitempty"`
-	Icon      *string          `json:"icon,omitempty"`
+	TableType TableViewType    `json:"tableType"`
+	Order     int              `json:"order"`
+	Icon      string           `json:"icon"`
 	Columns   []ColumnViewType `json:"columns"`
-	Filters   *string          `json:"filters,omitempty"`
-	Sorting   *string          `json:"sorting,omitempty"`
+	Filters   string           `json:"filters"`
+	Sorting   string           `json:"sorting"`
 	CreatedAt time.Time        `json:"createdAt"`
 	UpdatedAt time.Time        `json:"updatedAt"`
 }
@@ -2656,11 +2656,10 @@ func (TableViewDef) IsNode()            {}
 func (this TableViewDef) GetID() string { return this.ID }
 
 type TableViewDefCreateInput struct {
-	ID        string           `json:"id"`
 	TableType TableViewType    `json:"tableType"`
 	Name      string           `json:"name"`
 	Order     int              `json:"order"`
-	Icon      *string          `json:"icon,omitempty"`
+	Icon      string           `json:"icon"`
 	Columns   []ColumnViewType `json:"columns"`
 	Filters   string           `json:"filters"`
 	Sorting   string           `json:"sorting"`
@@ -2670,7 +2669,7 @@ type TableViewDefUpdateInput struct {
 	ID      string           `json:"id"`
 	Name    string           `json:"name"`
 	Order   int              `json:"order"`
-	Icon    *string          `json:"icon,omitempty"`
+	Icon    string           `json:"icon"`
 	Columns []ColumnViewType `json:"columns"`
 	Filters string           `json:"filters"`
 	Sorting string           `json:"sorting"`

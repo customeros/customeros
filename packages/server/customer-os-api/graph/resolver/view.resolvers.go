@@ -6,26 +6,101 @@ package resolver
 
 import (
 	"context"
-	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 )
 
 // TableViewDefCreate is the resolver for the tableViewDef_Create field.
 func (r *mutationResolver) TableViewDefCreate(ctx context.Context, input model.TableViewDefCreateInput) (*model.TableViewDef, error) {
-	panic(fmt.Errorf("not implemented: TableViewDefCreate - tableViewDef_Create"))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.TableViewDefCreate", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	tenant := common.GetTenantFromContext(ctx)
+	userId := common.GetUserIdFromContext(ctx)
+
+	var columns []string
+	for _, column := range input.Columns {
+		columns = append(columns, column.String())
+	}
+	viewDefinition := postgresEntity.TableViewDefinition{
+		TableType: input.TableType.String(),
+		Name:      input.Name,
+		Columns:   strings.Join(columns, ","),
+		Order:     input.Order,
+		Icon:      input.Icon,
+		Filters:   input.Filters,
+		Sorting:   input.Sorting,
+		Tenant:    tenant,
+		UserId:    userId,
+	}
+
+	result := r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, viewDefinition)
+	if result.Error != nil {
+		tracing.TraceErr(span, result.Error)
+		graphql.AddErrorf(ctx, "Failed to create table view definition")
+		return nil, nil
+	}
+	viewDefinition, ok := result.Result.(postgresEntity.TableViewDefinition)
+	if !ok {
+		graphql.AddErrorf(ctx, "Failed to create table view definition")
+		return nil, nil
+	}
+	return mapper.MapTableViewDefinitionToModel(viewDefinition), nil
 }
 
 // TableViewDefUpdate is the resolver for the tableViewDef_Update field.
 func (r *mutationResolver) TableViewDefUpdate(ctx context.Context, input model.TableViewDefUpdateInput) (*model.TableViewDef, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.TableViewDefUpdate", graphql.GetOperationContext(ctx))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.TableViewDefUpdate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
-	return nil, nil
+	tenant := common.GetTenantFromContext(ctx)
+	userId := common.GetUserIdFromContext(ctx)
+
+	var columns []string
+	for _, column := range input.Columns {
+		columns = append(columns, column.String())
+	}
+	id, err := strconv.ParseUint(input.ID, 10, 64)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to update table view definition")
+		return nil, nil
+	}
+	viewDefinition := postgresEntity.TableViewDefinition{
+		ID:      id,
+		Name:    input.Name,
+		Columns: strings.Join(columns, ","),
+		Order:   input.Order,
+		Icon:    input.Icon,
+		Filters: input.Filters,
+		Sorting: input.Sorting,
+		Tenant:  tenant,
+		UserId:  userId,
+	}
+
+	result := r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.UpdateTableViewDefinition(ctx, viewDefinition)
+	if result.Error != nil {
+		tracing.TraceErr(span, result.Error)
+		graphql.AddErrorf(ctx, "Failed to update table view definition")
+		return nil, nil
+	}
+
+	viewDefinition, ok := result.Result.(postgresEntity.TableViewDefinition)
+	if !ok {
+		graphql.AddErrorf(ctx, "Failed to update table view definition")
+		return nil, nil
+	}
+
+	return mapper.MapTableViewDefinitionToModel(viewDefinition), nil
 }
 
 // TableViewDefs is the resolver for the tableViewDefs field.
@@ -37,7 +112,96 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 	tenant := common.GetTenantFromContext(ctx)
 	userId := common.GetUserIdFromContext(ctx)
 
-	r.Services.Repositories.PostgresRepositories.TableViewDefRepository.FindAll(ctx, tenant, userId)
+	result := r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.GetTableViewDefinitions(ctx, tenant, userId)
+	if result.Error != nil {
+		tracing.TraceErr(span, result.Error)
+		graphql.AddErrorf(ctx, "Failed to get table view definitions")
+		return nil, nil
+	}
+	tableViewDefinitions, ok := result.Result.([]postgresEntity.TableViewDefinition)
+	if ok && len(tableViewDefinitions) == 0 {
+		for _, def := range defaultTableViewDefinitions() {
+			def.Tenant = tenant
+			def.UserId = userId
+			r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, def)
+		}
+		result := r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.GetTableViewDefinitions(ctx, tenant, userId)
+		if result.Error != nil {
+			tracing.TraceErr(span, result.Error)
+			graphql.AddErrorf(ctx, "Failed to get table view definitions")
+			return nil, nil
+		}
+		tableViewDefinitions, ok = result.Result.([]postgresEntity.TableViewDefinition)
+	}
 
-	return nil, nil
+	return mapper.MapTableViewDefinitionsToModel(tableViewDefinitions), nil
+}
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func defaultTableViewDefinitions() []postgresEntity.TableViewDefinition {
+	return []postgresEntity.TableViewDefinition{
+		{
+			TableType: model.TableViewTypeOrganizations.String(),
+			Name:      "Organizations",
+			Columns: strings.Join([]string{
+				model.ColumnViewTypeOrganizationsAvatar.String(),
+				model.ColumnViewTypeOrganizationsName.String(),
+				model.ColumnViewTypeOrganizationsWebsite.String(),
+				model.ColumnViewTypeOrganizationsRelationship.String(),
+				model.ColumnViewTypeOrganizationsOnboardingStatus.String(),
+				model.ColumnViewTypeOrganizationsRenewalLikelihood.String(),
+				model.ColumnViewTypeOrganizationsRenewlDate.String(),
+				model.ColumnViewTypeOrganizationsForecastArr.String(),
+				model.ColumnViewTypeOrganizationsOwner.String(),
+				model.ColumnViewTypeOrganizationsLastTouchpoint.String(),
+			}, ","),
+			Order:   1,
+			Icon:    "",
+			Filters: "",
+			Sorting: "",
+		},
+		{
+			TableType: model.TableViewTypeInvoices.String(),
+			Name:      "Invoices",
+			Columns: strings.Join([]string{
+				model.ColumnViewTypeInvoicesIssueDate.String(),
+				model.ColumnViewTypeInvoicesIssueDatePast.String(),
+				model.ColumnViewTypeInvoicesDueDate.String(),
+				model.ColumnViewTypeInvoicesContract.String(),
+				model.ColumnViewTypeInvoicesBillingCycle.String(),
+				model.ColumnViewTypeInvoicesPaymentStatus.String(),
+				model.ColumnViewTypeInvoicesInvoiceNumber.String(),
+				model.ColumnViewTypeInvoicesAmount.String(),
+				model.ColumnViewTypeInvoicesInvoiceStatus.String(),
+				model.ColumnViewTypeInvoicesInvoicePreview.String(),
+			}, ","),
+			Order:   2,
+			Icon:    "",
+			Filters: "",
+			Sorting: "",
+		},
+		{
+			TableType: model.TableViewTypeRenewals.String(),
+			Name:      "Renewals",
+			Columns: strings.Join([]string{
+				model.ColumnViewTypeRenewalsAvatar.String(),
+				model.ColumnViewTypeRenewalsName.String(),
+				model.ColumnViewTypeRenewalsRenewalLikelihood.String(),
+				model.ColumnViewTypeRenewalsRenewalDate.String(),
+				model.ColumnViewTypeRenewalsForecastArr.String(),
+				model.ColumnViewTypeRenewalsOwner.String(),
+				model.ColumnViewTypeRenewalsLastTouchpoint.String(),
+			}, ","),
+			Order:   3,
+			Icon:    "",
+			Filters: "",
+			Sorting: "",
+		},
+	}
+
 }

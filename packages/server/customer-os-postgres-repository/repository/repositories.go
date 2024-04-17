@@ -35,6 +35,7 @@ func InitRepositories(db *gorm.DB) *Repositories {
 		GoogleServiceAccountKeyRepository: NewGoogleServiceAccountKeyRepository(db),
 		CurrencyRateRepository:            NewCurrencyRateRepository(db),
 		EventBufferRepository:             NewEventBufferRepository(db),
+		TableViewDefinitionRepository:     NewTableViewDefinitionRepository(db),
 	}
 
 	return repositories

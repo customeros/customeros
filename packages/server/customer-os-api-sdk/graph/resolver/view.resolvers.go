@@ -11,8 +11,13 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model"
 )
 
+// TableViewDefCreate is the resolver for the tableViewDef_Create field.
+func (r *mutationResolver) TableViewDefCreate(ctx context.Context, input model.TableViewDefCreateInput) (*model.TableViewDef, error) {
+	panic(fmt.Errorf("not implemented: TableViewDefCreate - tableViewDef_Create"))
+}
+
 // TableViewDefUpdate is the resolver for the tableViewDef_Update field.
-func (r *mutationResolver) TableViewDefUpdate(ctx context.Context, input model.TableViewDefInput) (*model.TableViewDef, error) {
+func (r *mutationResolver) TableViewDefUpdate(ctx context.Context, input model.TableViewDefUpdateInput) (*model.TableViewDef, error) {
 	panic(fmt.Errorf("not implemented: TableViewDefUpdate - tableViewDef_Update"))
 }
 

@@ -15831,12 +15831,12 @@ extend type Mutation {
 type TableViewDef implements Node {
     id:                 ID!
     name:               String!
-    tableType:          TableViewType
-    order:              Int
-    icon:               String
+    tableType:          TableViewType!
+    order:              Int!
+    icon:               String!
     columns:            [ColumnViewType!]!
-    filters:            String
-    sorting:            String
+    filters:            String!
+    sorting:            String!
     createdAt:          Time!
     updatedAt:          Time!
 }
@@ -15883,18 +15883,17 @@ input TableViewDefUpdateInput {
     id:                 ID!
     name:               String!
     order:              Int!
-    icon:               String
+    icon:               String!
     columns:            [ColumnViewType!]!
     filters:            String!
     sorting:            String!
 }
 
 input TableViewDefCreateInput {
-    id:                 ID!
     tableType:          TableViewType!
     name:               String!
     order:              Int!
-    icon:               String
+    icon:               String!
     columns:            [ColumnViewType!]!
     filters:            String!
     sorting:            String!
@@ -87771,11 +87770,14 @@ func (ec *executionContext) _TableViewDef_tableType(ctx context.Context, field g
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.TableViewType)
+	res := resTmp.(model.TableViewType)
 	fc.Result = res
-	return ec.marshalOTableViewType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTableViewType(ctx, field.Selections, res)
+	return ec.marshalNTableViewType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTableViewType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_TableViewDef_tableType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -87812,11 +87814,14 @@ func (ec *executionContext) _TableViewDef_order(ctx context.Context, field graph
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*int)
+	res := resTmp.(int)
 	fc.Result = res
-	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_TableViewDef_order(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -87853,11 +87858,14 @@ func (ec *executionContext) _TableViewDef_icon(ctx context.Context, field graphq
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_TableViewDef_icon(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -87938,11 +87946,14 @@ func (ec *executionContext) _TableViewDef_filters(ctx context.Context, field gra
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_TableViewDef_filters(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -87979,11 +87990,14 @@ func (ec *executionContext) _TableViewDef_sorting(ctx context.Context, field gra
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_TableViewDef_sorting(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -99350,20 +99364,13 @@ func (ec *executionContext) unmarshalInputTableViewDefCreateInput(ctx context.Co
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "tableType", "name", "order", "icon", "columns", "filters", "sorting"}
+	fieldsInOrder := [...]string{"tableType", "name", "order", "icon", "columns", "filters", "sorting"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "id":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-			data, err := ec.unmarshalNID2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.ID = data
 		case "tableType":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tableType"))
 			data, err := ec.unmarshalNTableViewType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTableViewType(ctx, v)
@@ -99387,7 +99394,7 @@ func (ec *executionContext) unmarshalInputTableViewDefCreateInput(ctx context.Co
 			it.Order = data
 		case "icon":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("icon"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -99456,7 +99463,7 @@ func (ec *executionContext) unmarshalInputTableViewDefUpdateInput(ctx context.Co
 			it.Order = data
 		case "icon":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("icon"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -114477,10 +114484,19 @@ func (ec *executionContext) _TableViewDef(ctx context.Context, sel ast.Selection
 			}
 		case "tableType":
 			out.Values[i] = ec._TableViewDef_tableType(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "order":
 			out.Values[i] = ec._TableViewDef_order(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "icon":
 			out.Values[i] = ec._TableViewDef_icon(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "columns":
 			out.Values[i] = ec._TableViewDef_columns(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -114488,8 +114504,14 @@ func (ec *executionContext) _TableViewDef(ctx context.Context, sel ast.Selection
 			}
 		case "filters":
 			out.Values[i] = ec._TableViewDef_filters(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "sorting":
 			out.Values[i] = ec._TableViewDef_sorting(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "createdAt":
 			out.Values[i] = ec._TableViewDef_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -122173,22 +122195,6 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 	}
 	res := graphql.MarshalString(*v)
 	return res
-}
-
-func (ec *executionContext) unmarshalOTableViewType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTableViewType(ctx context.Context, v interface{}) (*model.TableViewType, error) {
-	if v == nil {
-		return nil, nil
-	}
-	var res = new(model.TableViewType)
-	err := res.UnmarshalGQL(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalOTableViewType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTableViewType(ctx context.Context, sel ast.SelectionSet, v *model.TableViewType) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return v
 }
 
 func (ec *executionContext) marshalOTag2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTag(ctx context.Context, sel ast.SelectionSet, v []*model.Tag) graphql.Marshaler {
