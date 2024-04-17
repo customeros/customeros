@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 )
 
 type ActionService interface {
@@ -29,7 +30,7 @@ func (s *actionService) mapDbNodeToActionEntity(dbNode dbtype.Node) *entity.Acti
 	props := utils.GetPropsFromNode(dbNode)
 	action := entity.ActionEntity{
 		Id:        utils.GetStringPropOrEmpty(props, "id"),
-		Type:      entity.GetActionType(utils.GetStringPropOrEmpty(props, "type")),
+		Type:      neo4jenum.GetActionType(utils.GetStringPropOrEmpty(props, "type")),
 		Content:   utils.GetStringPropOrEmpty(props, "content"),
 		Metadata:  utils.GetStringPropOrEmpty(props, "metadata"),
 		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),

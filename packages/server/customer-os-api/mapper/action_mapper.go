@@ -4,6 +4,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 )
 
 func MapEntityToAction(entity *entity.ActionEntity) *model.Action {
@@ -21,22 +22,26 @@ func MapEntityToAction(entity *entity.ActionEntity) *model.Action {
 	}
 }
 
-var actionTypeByValue = map[entity.ActionType]model.ActionType{
-	entity.ActionCreated:                                   model.ActionTypeCreated,
-	entity.ActionRenewalForecastUpdated:                    model.ActionTypeRenewalForecastUpdated,
-	entity.ActionRenewalLikelihoodUpdated:                  model.ActionTypeRenewalLikelihoodUpdated,
-	entity.ActionContractStatusUpdated:                     model.ActionTypeContractStatusUpdated,
-	entity.ActionServiceLineItemPriceUpdated:               model.ActionTypeServiceLineItemPriceUpdated,
-	entity.ActionServiceLineItemQuantityUpdated:            model.ActionTypeServiceLineItemQuantityUpdated,
-	entity.ActionServiceLineItemBilledTypeUpdated:          model.ActionTypeServiceLineItemBilledTypeUpdated,
-	entity.ActionServiceLineItemBilledTypeRecurringCreated: model.ActionTypeServiceLineItemBilledTypeRecurringCreated,
-	entity.ActionServiceLineItemBilledTypeOnceCreated:      model.ActionTypeServiceLineItemBilledTypeOnceCreated,
-	entity.ActionServiceLineItemBilledTypeUsageCreated:     model.ActionTypeServiceLineItemBilledTypeUsageCreated,
-	entity.ActionContractRenewed:                           model.ActionTypeContractRenewed,
-	entity.ActionServiceLineItemRemoved:                    model.ActionTypeServiceLineItemRemoved,
-	entity.ActionOnboardingStatusChanged:                   model.ActionTypeOnboardingStatusChanged,
+var actionTypeByValue = map[neo4jenum.ActionType]model.ActionType{
+	neo4jenum.ActionCreated:                                   model.ActionTypeCreated,
+	neo4jenum.ActionRenewalForecastUpdated:                    model.ActionTypeRenewalForecastUpdated,
+	neo4jenum.ActionRenewalLikelihoodUpdated:                  model.ActionTypeRenewalLikelihoodUpdated,
+	neo4jenum.ActionContractStatusUpdated:                     model.ActionTypeContractStatusUpdated,
+	neo4jenum.ActionServiceLineItemPriceUpdated:               model.ActionTypeServiceLineItemPriceUpdated,
+	neo4jenum.ActionServiceLineItemQuantityUpdated:            model.ActionTypeServiceLineItemQuantityUpdated,
+	neo4jenum.ActionServiceLineItemBilledTypeUpdated:          model.ActionTypeServiceLineItemBilledTypeUpdated,
+	neo4jenum.ActionServiceLineItemBilledTypeRecurringCreated: model.ActionTypeServiceLineItemBilledTypeRecurringCreated,
+	neo4jenum.ActionServiceLineItemBilledTypeOnceCreated:      model.ActionTypeServiceLineItemBilledTypeOnceCreated,
+	neo4jenum.ActionServiceLineItemBilledTypeUsageCreated:     model.ActionTypeServiceLineItemBilledTypeUsageCreated,
+	neo4jenum.ActionContractRenewed:                           model.ActionTypeContractRenewed,
+	neo4jenum.ActionServiceLineItemRemoved:                    model.ActionTypeServiceLineItemRemoved,
+	neo4jenum.ActionOnboardingStatusChanged:                   model.ActionTypeOnboardingStatusChanged,
+	neo4jenum.ActionInvoiceIssued:                             model.ActionTypeInvoiceIssued,
+	neo4jenum.ActionInvoicePaid:                               model.ActionTypeInvoicePaid,
+	neo4jenum.ActionInvoiceVoided:                             model.ActionTypeInvoiceVoided,
+	neo4jenum.ActionInvoiceSent:                               model.ActionTypeInvoiceSent,
 }
 
-func MapActionTypeToModel(input entity.ActionType) model.ActionType {
+func MapActionTypeToModel(input neo4jenum.ActionType) model.ActionType {
 	return actionTypeByValue[input]
 }
