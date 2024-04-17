@@ -31,6 +31,10 @@ import {
   ModalContent,
   ModalOverlay,
 } from '@ui/overlay/Modal/Modal';
+import {
+  EditModalMode,
+  useContractModalStateContext,
+} from '@organization/src/components/Tabs/panels/AccountPanel/context/ContractModalsContext';
 import { BillingDetailsForm } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/BillingAddressDetails/BillingAddressDetailsForm';
 import {
   BillingDetailsDto,
@@ -87,8 +91,6 @@ const variants = {
 };
 
 export const EditContractModal = ({
-  isOpen,
-  onClose,
   contractId,
   organizationName,
   notes,
@@ -96,15 +98,21 @@ export const EditContractModal = ({
   const formId = `billing-details-form-${contractId}`;
   const organizationId = useParams()?.id as string;
   const client = getGraphQLClient();
-  const [billingDetailsFormOpen, setBillingDetailsOpen] =
-    useState<boolean>(false);
+  const [initialOpen, setInitialOpen] = useState(EditModalMode.ContractDetails);
+  useState<boolean>(false);
+  const {
+    isEditModalOpen,
+    onChangeModalMode,
+    onEditModalClose,
+    editModalMode,
+  } = useContractModalStateContext();
   const { data } = useGetContractQuery(
     client,
     {
       id: contractId,
     },
     {
-      enabled: isOpen && !!contractId,
+      enabled: isEditModalOpen && !!contractId,
       refetchOnMount: true,
     },
   );
@@ -189,6 +197,14 @@ export const EditContractModal = ({
     },
   });
 
+  useEffect(() => {
+    if (isEditModalOpen) {
+      setInitialOpen(editModalMode);
+    } else {
+      setInitialOpen(EditModalMode.ContractDetails);
+    }
+  }, [isEditModalOpen]);
+
   const addressDetailsDefailtValues = new BillingDetailsDto(data?.contract);
 
   const { state: addressState, setDefaultValues: setDefaultAddressValues } =
@@ -209,8 +225,8 @@ export const EditContractModal = ({
   const handleCloseModal = () => {
     setDefaultValues(defaultValues);
     setDefaultAddressValues(addressDetailsDefailtValues);
-    setBillingDetailsOpen(false);
-    onClose();
+    onEditModalClose();
+    onChangeModalMode(EditModalMode.ContractDetails);
   };
 
   const handleApplyChanges = () => {
@@ -245,7 +261,7 @@ export const EditContractModal = ({
       },
       {
         onSuccess: () => {
-          setBillingDetailsOpen(false);
+          onChangeModalMode(EditModalMode.ContractDetails);
         },
       },
     );
@@ -339,7 +355,7 @@ export const EditContractModal = ({
   }, [canAllowPayWithBankTransfer]);
 
   return (
-    <Modal open={isOpen} onOpenChange={handleCloseModal}>
+    <Modal open={isEditModalOpen} onOpenChange={handleCloseModal}>
       <ModalOverlay />
       <ModalContent
         className='border-r-2 flex gap-6 bg-transparent shadow-none border-none'
@@ -348,11 +364,24 @@ export const EditContractModal = ({
         <div className='relative'>
           <motion.div
             layout
-            data-isOpen={!billingDetailsFormOpen}
+            data-isOpen={editModalMode === EditModalMode.ContractDetails}
             variants={mainVariants as Variants}
-            animate={!billingDetailsFormOpen ? 'open' : 'closed'}
+            animate={
+              editModalMode === EditModalMode.ContractDetails
+                ? 'open'
+                : 'closed'
+            }
+            onClick={() =>
+              editModalMode === EditModalMode.BillingDetails
+                ? onChangeModalMode(EditModalMode.ContractDetails)
+                : null
+            }
             className={cn(
               'flex flex-col gap-4 px-6 pb-6 pt-4 bg-white  rounded-lg justify-between relative h-[80vh] min-w-[424px]',
+              {
+                'cursor-pointer':
+                  editModalMode === EditModalMode.BillingDetails,
+              },
             )}
           >
             <ModalHeader className='p-0 text-lg font-semibold'>
@@ -399,15 +428,17 @@ export const EditContractModal = ({
           </motion.div>
           <motion.div
             layout
-            data-isOpen={billingDetailsFormOpen}
+            data-isOpen={editModalMode === EditModalMode.BillingDetails}
             variants={variants}
-            animate={billingDetailsFormOpen ? 'open' : 'closed'}
+            animate={
+              editModalMode === EditModalMode.BillingDetails ? 'open' : 'closed'
+            }
             className='flex flex-col gap-4 px-6 pb-6 pt-4 bg-white rounded-lg justify-between relative shadow-2xl h-full min-w-[424px]'
           >
             <motion.div
               className='h-full flex flex-col justify-between'
               animate={{
-                opacity: billingDetailsFormOpen ? 1 : 0,
+                opacity: editModalMode === EditModalMode.BillingDetails ? 1 : 0,
                 transition: { duration: 0.2 },
               }}
             >
@@ -432,7 +463,11 @@ export const EditContractModal = ({
                 <Button
                   variant='outline'
                   colorScheme='gray'
-                  onClick={() => setBillingDetailsOpen(false)}
+                  onClick={() =>
+                    initialOpen === EditModalMode.BillingDetails
+                      ? handleCloseModal()
+                      : onChangeModalMode(EditModalMode.ContractDetails)
+                  }
                   className='w-full'
                   size='md'
                 >
@@ -457,7 +492,9 @@ export const EditContractModal = ({
             <div className='w-full h-full'>
               <Invoice
                 shouldBlurDummy
-                onOpenAddressDetailsModal={() => setBillingDetailsOpen(true)}
+                onOpenAddressDetailsModal={() =>
+                  onChangeModalMode(EditModalMode.BillingDetails)
+                }
                 isBilledToFocused={false}
                 note={notes}
                 currency={state?.values?.currency?.value}

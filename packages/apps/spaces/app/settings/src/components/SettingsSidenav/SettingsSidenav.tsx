@@ -81,7 +81,7 @@ export const SettingsSidenav = () => {
           }
         />
         <SidenavItem
-          label='Billing'
+          label='Customer billing'
           isActive={checkIsActive('billing')}
           onClick={handleItemClick('billing')}
           icon={
