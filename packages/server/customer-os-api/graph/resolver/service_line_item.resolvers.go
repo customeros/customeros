@@ -7,7 +7,6 @@ package resolver
 import (
 	"context"
 	"errors"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
@@ -59,7 +58,7 @@ func (r *mutationResolver) ContractLineItemCreate(ctx context.Context, input mod
 		graphql.AddErrorf(ctx, "Failed to create service line item")
 		return &model.ServiceLineItem{Metadata: &model.Metadata{ID: serviceLineItemId}}, err
 	}
-	createdServiceLineItemEntity, err := r.Services.ServiceLineItemService.GetById(ctx, serviceLineItemId)
+	createdServiceLineItemEntity, err := r.Services.CommonServices.ServiceLineItemService.GetById(ctx, serviceLineItemId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Service line item details not yet available. Service line item id: %s", serviceLineItemId)
@@ -98,7 +97,7 @@ func (r *mutationResolver) ContractLineItemNewVersion(ctx context.Context, input
 		return &model.ServiceLineItem{Metadata: &model.Metadata{ID: utils.IfNotNilString(serviceLineItemId)}}, nil
 	}
 
-	serviceLineItemEntity, err := r.Services.ServiceLineItemService.GetById(ctx, utils.IfNotNilString(serviceLineItemId))
+	serviceLineItemEntity, err := r.Services.CommonServices.ServiceLineItemService.GetById(ctx, utils.IfNotNilString(serviceLineItemId))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed fetching contract line item details. Contract line item id: {%s}", serviceLineItemId)
@@ -142,7 +141,7 @@ func (r *mutationResolver) ContractLineItemUpdate(ctx context.Context, input mod
 		return &model.ServiceLineItem{Metadata: &model.Metadata{ID: utils.IfNotNilString(input.ID)}}, err
 	}
 
-	serviceLineItemEntity, err := r.Services.ServiceLineItemService.GetById(ctx, utils.IfNotNilString(input.ID))
+	serviceLineItemEntity, err := r.Services.CommonServices.ServiceLineItemService.GetById(ctx, utils.IfNotNilString(input.ID))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed fetching contract line item details. Contract line item id: {%s}", utils.IfNotNilString(input.ID))
@@ -233,7 +232,7 @@ func (r *queryResolver) ServiceLineItem(ctx context.Context, id string) (*model.
 		return nil, nil
 	}
 
-	serviceLineItemEntityPtr, err := r.Services.ServiceLineItemService.GetById(ctx, id)
+	serviceLineItemEntityPtr, err := r.Services.CommonServices.ServiceLineItemService.GetById(ctx, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get service line item by id %s", id)

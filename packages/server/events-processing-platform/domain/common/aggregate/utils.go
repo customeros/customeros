@@ -79,6 +79,16 @@ func GetAggregateObjectID(aggregateID, tenant string, aggregateType eventstore.A
 	return strings.ReplaceAll(aggregateID, string(aggregateType)+"-"+tenant+"-", "")
 }
 
+func GetTenantFromAggregate(aggregateID string, aggregateType eventstore.AggregateType) string {
+	if strings.HasPrefix(aggregateID, string(aggregateType)+"-"+constants.StreamTempPrefix+"-") {
+		return strings.ReplaceAll(aggregateID, string(aggregateType)+"-"+constants.StreamTempPrefix+"-", "")
+	}
+
+	var1 := strings.ReplaceAll(aggregateID, string(aggregateType)+"-", "")
+	var2 := strings.Split(var1, "-")
+	return var2[0]
+}
+
 // use this method when tenant is not known
 func getAggregateObjectUUID(aggregateID string) string {
 	parts := strings.Split(aggregateID, "-")

@@ -96,7 +96,7 @@ func (h *InvoiceEventHandler) onInvoiceFillRequestedV1(ctx context.Context, evt 
 	invoiceId := invoice.GetInvoiceObjectID(evt.GetAggregateID(), eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, invoiceId)
 
-	invoiceEntity, err := h.commonServices.InvoiceService.GetById(ctx, eventData.Tenant, invoiceId)
+	invoiceEntity, err := h.commonServices.InvoiceService.GetById(ctx, invoiceId)
 	if err != nil {
 		return err
 	}
@@ -118,7 +118,7 @@ func (h *InvoiceEventHandler) onInvoiceFillRequestedV1(ctx context.Context, evt 
 			}
 		}
 
-		invoiceEntity, invoiceLines, err := h.commonServices.InvoiceService.FillOffCyclePrepaidInvoice(ctx, eventData.Tenant, eventData.ContractId, invoiceEntity, sliEntities)
+		invoiceEntity, invoiceLines, err := h.commonServices.InvoiceService.FillOffCyclePrepaidInvoice(ctx, eventData.ContractId, invoiceEntity, sliEntities)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error filling invoice %s: %s", invoiceId, err.Error())
@@ -158,7 +158,7 @@ func (h *InvoiceEventHandler) onInvoiceFillRequestedV1(ctx context.Context, evt 
 			}
 		}
 
-		invoiceEntity, invoiceLines, err := h.commonServices.InvoiceService.FillCycleInvoice(ctx, eventData.Tenant, eventData.ContractId, invoiceEntity, sliEntities)
+		invoiceEntity, invoiceLines, err := h.commonServices.InvoiceService.FillCycleInvoice(ctx, eventData.ContractId, invoiceEntity, sliEntities)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error filling invoice %s: %s", invoiceId, err.Error())
@@ -329,7 +329,7 @@ func (h *InvoiceEventHandler) onInvoicePdfGeneratedV1(ctx context.Context, evt e
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, invoiceId)
 
-	invoiceEntity, err := h.commonServices.InvoiceService.GetById(ctx, eventData.Tenant, invoiceId)
+	invoiceEntity, err := h.commonServices.InvoiceService.GetById(ctx, invoiceId)
 	if err != nil {
 		return err
 	}
@@ -554,7 +554,7 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 	var invoiceLineEntities = []*neo4jentity.InvoiceLineEntity{}
 
 	//load invoice
-	invoiceEntity, err := h.commonServices.InvoiceService.GetById(ctx, eventData.Tenant, invoiceId)
+	invoiceEntity, err := h.commonServices.InvoiceService.GetById(ctx, invoiceId)
 	if err != nil {
 		return err
 	}
@@ -780,7 +780,7 @@ func (h *InvoiceEventHandler) onInvoiceVoidV1(ctx context.Context, evt eventstor
 	span.SetTag(tracing.SpanTagEntityId, invoiceId)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
-	invoiceEntity, err := h.commonServices.InvoiceService.GetById(ctx, eventData.Tenant, invoiceId)
+	invoiceEntity, err := h.commonServices.InvoiceService.GetById(ctx, invoiceId)
 	if err != nil {
 		return err
 	}
@@ -881,7 +881,7 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 	var contractEntity neo4jentity.ContractEntity
 
 	//load invoice
-	invoiceEntity, err := h.commonServices.InvoiceService.GetById(ctx, eventData.Tenant, invoiceId)
+	invoiceEntity, err := h.commonServices.InvoiceService.GetById(ctx, invoiceId)
 	if err != nil {
 		return err
 	}

@@ -24,7 +24,6 @@ func prepareInvoiceEventHandler() *InvoiceEventHandler {
 }
 
 func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_AnnualPrice_MonthlyInvoicing(t *testing.T) {
-	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// test data
@@ -73,7 +72,7 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_AnnualPrice_M
 	mocked_grpc.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
 
 	// EXECUTE
-	err := invoiceEventHandler.onInvoiceFillRequestedV1(context.Background(), invoiceFillRequestedEvent)
+	err := invoiceEventHandler.onInvoiceFillRequestedV1(ctx, invoiceFillRequestedEvent)
 	require.Nil(t, err, "invoicing failed")
 
 	// VERIFY
@@ -81,7 +80,6 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_AnnualPrice_M
 }
 
 func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_AnnualPrice_QuarterlyInvoicing(t *testing.T) {
-	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// test data
@@ -130,7 +128,7 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_AnnualPrice_Q
 	mocked_grpc.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
 
 	// EXECUTE
-	err := invoiceEventHandler.onInvoiceFillRequestedV1(context.Background(), invoiceFillRequestedEvent)
+	err := invoiceEventHandler.onInvoiceFillRequestedV1(ctx, invoiceFillRequestedEvent)
 	require.Nil(t, err, "invoicing failed")
 
 	// VERIFY
@@ -138,7 +136,6 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_AnnualPrice_Q
 }
 
 func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_AnnualPrice_AnnualInvoicing(t *testing.T) {
-	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// test data
@@ -189,7 +186,7 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_AnnualPrice_A
 	mocked_grpc.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
 
 	// EXECUTE
-	err := invoiceEventHandler.onInvoiceFillRequestedV1(context.Background(), invoiceFillRequestedEvent)
+	err := invoiceEventHandler.onInvoiceFillRequestedV1(ctx, invoiceFillRequestedEvent)
 	require.Nil(t, err, "invoicing failed")
 
 	// VERIFY
@@ -197,7 +194,6 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_AnnualPrice_A
 }
 
 func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_QuarterlyPrice_MonthlyInvoicing(t *testing.T) {
-	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// test data
@@ -248,7 +244,7 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_QuarterlyPric
 	mocked_grpc.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
 
 	// EXECUTE
-	err := invoiceEventHandler.onInvoiceFillRequestedV1(context.Background(), invoiceFillRequestedEvent)
+	err := invoiceEventHandler.onInvoiceFillRequestedV1(ctx, invoiceFillRequestedEvent)
 	require.Nil(t, err, "invoicing failed")
 
 	// VERIFY
@@ -256,7 +252,6 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_QuarterlyPric
 }
 
 func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_QuarterlyPrice_QuarterlyInvoicing(t *testing.T) {
-	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// test data
@@ -307,7 +302,7 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_QuarterlyPric
 	mocked_grpc.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
 
 	// EXECUTE
-	err := invoiceEventHandler.onInvoiceFillRequestedV1(context.Background(), invoiceFillRequestedEvent)
+	err := invoiceEventHandler.onInvoiceFillRequestedV1(ctx, invoiceFillRequestedEvent)
 	require.Nil(t, err, "invoicing failed")
 
 	// VERIFY
@@ -315,7 +310,6 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_QuarterlyPric
 }
 
 func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_QuarterlyPrice_AnnualInvoicing(t *testing.T) {
-	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// test data
@@ -366,7 +360,7 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_QuarterlyPric
 	mocked_grpc.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
 
 	// EXECUTE
-	err := invoiceEventHandler.onInvoiceFillRequestedV1(context.Background(), invoiceFillRequestedEvent)
+	err := invoiceEventHandler.onInvoiceFillRequestedV1(ctx, invoiceFillRequestedEvent)
 	require.Nil(t, err, "invoicing failed")
 
 	// VERIFY
@@ -374,7 +368,6 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_QuarterlyPric
 }
 
 func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_MonthlyPrice_MonthlyInvoicing(t *testing.T) {
-	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// test data
@@ -425,7 +418,7 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_MonthlyPrice_
 	mocked_grpc.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
 
 	// EXECUTE
-	err := invoiceEventHandler.onInvoiceFillRequestedV1(context.Background(), invoiceFillRequestedEvent)
+	err := invoiceEventHandler.onInvoiceFillRequestedV1(ctx, invoiceFillRequestedEvent)
 	require.Nil(t, err, "invoicing failed")
 
 	// VERIFY
@@ -433,7 +426,6 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_MonthlyPrice_
 }
 
 func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_MonthlyPrice_QuarterlyInvoicing(t *testing.T) {
-	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// test data
@@ -484,7 +476,7 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_MonthlyPrice_
 	mocked_grpc.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
 
 	// EXECUTE
-	err := invoiceEventHandler.onInvoiceFillRequestedV1(context.Background(), invoiceFillRequestedEvent)
+	err := invoiceEventHandler.onInvoiceFillRequestedV1(ctx, invoiceFillRequestedEvent)
 	require.Nil(t, err, "invoicing failed")
 
 	// VERIFY
@@ -492,7 +484,6 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_MonthlyPrice_
 }
 
 func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_MonthlyPrice_AnnualInvoicing(t *testing.T) {
-	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// test data
@@ -543,7 +534,7 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_MonthlyPrice_
 	mocked_grpc.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
 
 	// EXECUTE
-	err := invoiceEventHandler.onInvoiceFillRequestedV1(context.Background(), invoiceFillRequestedEvent)
+	err := invoiceEventHandler.onInvoiceFillRequestedV1(ctx, invoiceFillRequestedEvent)
 	require.Nil(t, err, "invoicing failed")
 
 	// VERIFY
@@ -551,7 +542,6 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_MonthlyPrice_
 }
 
 func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_MultipleServiceLineItems(t *testing.T) {
-	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// test data
@@ -614,7 +604,7 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_MultipleServi
 	mocked_grpc.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
 
 	// EXECUTE
-	err := invoiceEventHandler.onInvoiceFillRequestedV1(context.Background(), invoiceFillRequestedEvent)
+	err := invoiceEventHandler.onInvoiceFillRequestedV1(ctx, invoiceFillRequestedEvent)
 	require.Nil(t, err, "invoicing failed")
 
 	// VERIFY
@@ -622,7 +612,6 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_MultipleServi
 }
 
 func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_IncludeZeroQuantityInvoiceLines(t *testing.T) {
-	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// test data
@@ -689,7 +678,7 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_IncludeZeroQu
 	mocked_grpc.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
 
 	// EXECUTE
-	err := invoiceEventHandler.onInvoiceFillRequestedV1(context.Background(), invoiceFillRequestedEvent)
+	err := invoiceEventHandler.onInvoiceFillRequestedV1(ctx, invoiceFillRequestedEvent)
 	require.Nil(t, err, "invoicing failed")
 
 	// VERIFY
@@ -697,7 +686,6 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_IncludeZeroQu
 }
 
 func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_IncludeZeroPriceInvoiceLines(t *testing.T) {
-	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// test data
@@ -764,7 +752,7 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_IncludeZeroPr
 	mocked_grpc.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
 
 	// EXECUTE
-	err := invoiceEventHandler.onInvoiceFillRequestedV1(context.Background(), invoiceFillRequestedEvent)
+	err := invoiceEventHandler.onInvoiceFillRequestedV1(ctx, invoiceFillRequestedEvent)
 	require.Nil(t, err, "invoicing failed")
 
 	// VERIFY
@@ -772,7 +760,6 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_IncludeZeroPr
 }
 
 func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_Postpaid_MultipleServiceLineItems(t *testing.T) {
-	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// test data
@@ -836,7 +823,7 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_Postpaid_Mult
 	mocked_grpc.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
 
 	// EXECUTE
-	err := invoiceEventHandler.onInvoiceFillRequestedV1(context.Background(), invoiceFillRequestedEvent)
+	err := invoiceEventHandler.onInvoiceFillRequestedV1(ctx, invoiceFillRequestedEvent)
 	require.Nil(t, err, "invoicing failed")
 
 	// VERIFY
@@ -844,7 +831,6 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_Postpaid_Mult
 }
 
 func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_Postpaid_SkipUsageSLIs(t *testing.T) {
-	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// test data
@@ -907,7 +893,7 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_Postpaid_Skip
 	mocked_grpc.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
 
 	// EXECUTE
-	err := invoiceEventHandler.onInvoiceFillRequestedV1(context.Background(), invoiceFillRequestedEvent)
+	err := invoiceEventHandler.onInvoiceFillRequestedV1(ctx, invoiceFillRequestedEvent)
 	require.Nil(t, err, "invoicing failed")
 
 	// VERIFY
@@ -915,7 +901,6 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_Postpaid_Skip
 }
 
 func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_Postpaid_SliEndedBeforeEndOfInvoicingCycle(t *testing.T) {
-	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// test data
@@ -973,7 +958,7 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_Postpaid_SliE
 	mocked_grpc.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
 
 	// EXECUTE
-	err := invoiceEventHandler.onInvoiceFillRequestedV1(context.Background(), invoiceFillRequestedEvent)
+	err := invoiceEventHandler.onInvoiceFillRequestedV1(ctx, invoiceFillRequestedEvent)
 	require.Nil(t, err, "invoicing failed")
 
 	// VERIFY
@@ -981,7 +966,6 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_Postpaid_SliE
 }
 
 func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_Prepaid_SliEndedBeforeStartOfInvoicingCycle(t *testing.T) {
-	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// test data
@@ -1039,7 +1023,7 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_Prepaid_SliEn
 	mocked_grpc.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
 
 	// EXECUTE
-	err := invoiceEventHandler.onInvoiceFillRequestedV1(context.Background(), invoiceFillRequestedEvent)
+	err := invoiceEventHandler.onInvoiceFillRequestedV1(ctx, invoiceFillRequestedEvent)
 	require.Nil(t, err, "invoicing failed")
 
 	// VERIFY
@@ -1047,7 +1031,6 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_Prepaid_SliEn
 }
 
 func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_Prepaid_SliNotActiveOnStartOfInvoicingCycle(t *testing.T) {
-	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// test data
@@ -1105,7 +1088,7 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_Prepaid_SliNo
 	mocked_grpc.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
 
 	// EXECUTE
-	err := invoiceEventHandler.onInvoiceFillRequestedV1(context.Background(), invoiceFillRequestedEvent)
+	err := invoiceEventHandler.onInvoiceFillRequestedV1(ctx, invoiceFillRequestedEvent)
 	require.Nil(t, err, "invoicing failed")
 
 	// VERIFY
@@ -1113,7 +1096,6 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_Prepaid_SliNo
 }
 
 func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_TaxRate_Provided(t *testing.T) {
-	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// test data
@@ -1174,7 +1156,7 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_TaxRate_Provi
 	mocked_grpc.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
 
 	// EXECUTE
-	err := invoiceEventHandler.onInvoiceFillRequestedV1(context.Background(), invoiceFillRequestedEvent)
+	err := invoiceEventHandler.onInvoiceFillRequestedV1(ctx, invoiceFillRequestedEvent)
 	require.Nil(t, err, "invoicing failed")
 
 	// VERIFY
@@ -1182,7 +1164,6 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_TaxRate_Provi
 }
 
 func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_Check2DecimalsRounding(t *testing.T) {
-	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// test data
@@ -1236,7 +1217,7 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_Check2Decimal
 	mocked_grpc.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
 
 	// EXECUTE
-	err := invoiceEventHandler.onInvoiceFillRequestedV1(context.Background(), invoiceFillRequestedEvent)
+	err := invoiceEventHandler.onInvoiceFillRequestedV1(ctx, invoiceFillRequestedEvent)
 	require.Nil(t, err, "invoicing failed")
 
 	// VERIFY
@@ -1244,7 +1225,6 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_Check2Decimal
 }
 
 func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_OffCycleInvoice_NewSLI(t *testing.T) {
-	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// test data
@@ -1297,7 +1277,7 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_OffCycleInvoice_NewSLI(t *
 	mocked_grpc.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
 
 	// EXECUTE
-	err := invoiceEventHandler.onInvoiceFillRequestedV1(context.Background(), invoiceFillRequestedEvent)
+	err := invoiceEventHandler.onInvoiceFillRequestedV1(ctx, invoiceFillRequestedEvent)
 	require.Nil(t, err, "invoicing failed")
 
 	// VERIFY
@@ -1305,7 +1285,6 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_OffCycleInvoice_NewSLI(t *
 }
 
 func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_OffCycleInvoice_Upsell(t *testing.T) {
-	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// test data
@@ -1381,7 +1360,7 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_OffCycleInvoice_Upsell(t *
 	mocked_grpc.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
 
 	// EXECUTE
-	err := invoiceEventHandler.onInvoiceFillRequestedV1(context.Background(), invoiceFillRequestedEvent)
+	err := invoiceEventHandler.onInvoiceFillRequestedV1(ctx, invoiceFillRequestedEvent)
 	require.Nil(t, err, "invoicing failed")
 
 	// VERIFY
@@ -1389,7 +1368,6 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_OffCycleInvoice_Upsell(t *
 }
 
 func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_OffCycleInvoice_Downgrade(t *testing.T) {
-	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// test data
@@ -1460,7 +1438,7 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_OffCycleInvoice_Downgrade(
 	mocked_grpc.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
 
 	// EXECUTE
-	err := invoiceEventHandler.onInvoiceFillRequestedV1(context.Background(), invoiceFillRequestedEvent)
+	err := invoiceEventHandler.onInvoiceFillRequestedV1(ctx, invoiceFillRequestedEvent)
 	require.Nil(t, err)
 
 	// VERIFY
@@ -1468,7 +1446,6 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_OffCycleInvoice_Downgrade(
 }
 
 func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_OffCycleInvoice_OneTime_FullCharged(t *testing.T) {
-	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// test data
@@ -1521,7 +1498,7 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_OffCycleInvoice_OneTime_Fu
 	mocked_grpc.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
 
 	// EXECUTE
-	err := invoiceEventHandler.onInvoiceFillRequestedV1(context.Background(), invoiceFillRequestedEvent)
+	err := invoiceEventHandler.onInvoiceFillRequestedV1(ctx, invoiceFillRequestedEvent)
 	require.Nil(t, err, "invoicing failed")
 
 	// VERIFY
@@ -1529,7 +1506,6 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_OffCycleInvoice_OneTime_Fu
 }
 
 func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_OffCycleInvoice_OneTime_AlreadyCharged(t *testing.T) {
-	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// test data
@@ -1601,7 +1577,7 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_OffCycleInvoice_OneTime_Al
 	mocked_grpc.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
 
 	// EXECUTE
-	err := invoiceEventHandler.onInvoiceFillRequestedV1(context.Background(), invoiceFillRequestedEvent)
+	err := invoiceEventHandler.onInvoiceFillRequestedV1(ctx, invoiceFillRequestedEvent)
 	require.Nil(t, err, "invoicing failed")
 
 	// VERIFY
@@ -1609,7 +1585,6 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_OffCycleInvoice_OneTime_Al
 }
 
 func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_OffCycleInvoice_MultipleUpsellsAndDowngradesWithVat(t *testing.T) {
-	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// test data
@@ -1722,7 +1697,7 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_OffCycleInvoice_MultipleUp
 	mocked_grpc.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
 
 	// EXECUTE
-	err := invoiceEventHandler.onInvoiceFillRequestedV1(context.Background(), invoiceFillRequestedEvent)
+	err := invoiceEventHandler.onInvoiceFillRequestedV1(ctx, invoiceFillRequestedEvent)
 	require.Nil(t, err, "invoicing failed")
 
 	// VERIFY
