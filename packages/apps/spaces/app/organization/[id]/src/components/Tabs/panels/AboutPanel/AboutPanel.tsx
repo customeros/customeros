@@ -249,6 +249,7 @@ export const AboutPanel = () => {
           />
 
           <FormAutoresizeTextarea
+            size='xs'
             className='items-center'
             name='targetAudience'
             formId='organization-about'

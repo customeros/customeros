@@ -16,7 +16,7 @@ export const MainSection = ({ children }: { children?: React.ReactNode }) => {
         <h1 className='font-semibold text-lg text-gray-700'>Timeline</h1>
         <UserPresence channelName={`organization:${organizationId}`} />
       </CardHeader>
-      <CardContent className='p-0 flex flex-1'>{children}</CardContent>
+      <CardContent className='p-0 flex flex-col flex-1'>{children}</CardContent>
     </Card>
   );
 };
