@@ -20,7 +20,6 @@
     "postinstall": "node scripts/setup-precommit-hook"
   },
   "dependencies": {
-    "@ark-ui/react": "^2.2.3",
     "@chakra-ui/next-js": "^2.1.4",
     "@chakra-ui/react": "^2.7.1",
     "@date-fns/utc": "^1.2.0",
