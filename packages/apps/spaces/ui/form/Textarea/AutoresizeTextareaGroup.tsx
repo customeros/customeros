@@ -10,13 +10,13 @@ import { useSlots } from '@ui/utils/hooks';
 const iconSize = cva([], {
   variants: {
     size: {
-      sm: ['size-4'],
-      md: ['size-5'],
-      lg: ['size-6'],
+      xs: ['size-4'],
+      sm: ['size-5'],
+      md: ['size-6'],
     },
   },
   defaultVariants: {
-    size: 'md',
+    size: 'sm',
   },
 });
 
@@ -93,7 +93,7 @@ export const TextareaGroup = ({
         {...props}
         className={cn(
           border ? ' border-gray-200' : 'border-transparent',
-          'flex items-center w-full border-b gap-3 hover:broder-b hover:border-gray-300 focus-within:hover:border-primary-500 focus-within:border-primary-500 focus-within:border-b hover:transition ease-in-out delay-200',
+          'flex items-center w-full border-b gap-2 py-[2px] mt-1 hover:broder-b hover:border-gray-300 focus-within:hover:border-primary-500 focus-within:border-primary-500 focus-within:border-b hover:transition ease-in-out delay-75',
           className,
         )}
       >

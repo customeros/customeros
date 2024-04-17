@@ -50,6 +50,7 @@ export const TimelinePreviewBackdrop = ({
             : 'rgba(16, 24, 40, 0)',
           backdropFilter: isMounted ? 'blur(3px)' : 'blur(0)',
         }}
+        onClick={closeModal}
       >
         <ModalPortal container={document.getElementById('main-section')}>
           <ModalOverlay />
@@ -71,7 +72,7 @@ export const TimelinePreviewBackdrop = ({
                   ? 'w-[650px]'
                   : 'w-[544px]',
                 modalContent?.__typename === 'Invoice' ? 'h-[90vh]' : 'h-auto',
-                'absolute mx-auto top-4 min-w-[544px] cursor-default',
+                'absolute mx-auto top-4 min-w-[544px] cursor-default rounded-2xl',
               )}
               id='timeline-preview-card'
               onMouseDown={(e) => {

@@ -14,15 +14,15 @@ import {
 
 const sizeTextArea = cva(
   [
-    'w-full border-b border-transparent resize-none overflow-hidden gap-3 bg-transparent focus-within:outline-none',
+    'w-full border-b border-transparent placeholder-gray-400 leading-6 resize-none overflow-hidden gap-2 bg-transparent focus-within:outline-none',
   ],
   {
     variants: {
       size: {
-        xs: ['min-h-[19px] text-xs'],
-        sm: ['min-h-[19px] text-sm '],
-        md: ['min-h-[24px] text-base'],
-        lg: ['min-h-[28px] text-lg'],
+        xs: ['min-h-6 h-6'],
+        sm: ['min-h-8 h-8'],
+        md: ['min-h-10 h-10'],
+        lg: ['min-h-12 h-12'],
       },
     },
   },
@@ -37,6 +37,7 @@ export interface AutoresizeTextareaProps
     VariantProps<typeof sizeTextArea> {
   border?: boolean;
   className?: string;
+  size?: 'xs' | 'sm' | 'md';
   leftElement?: React.ReactNode;
   rightElement?: React.ReactNode;
 }
@@ -47,13 +48,17 @@ export const AutoresizeTextarea = forwardRef<
 >(({ className, border, leftElement, size, rightElement, ...rest }, ref) => {
   return (
     <TextareaGroup className={cn(className)}>
-      {leftElement && <LeftElement>{leftElement}</LeftElement>}
+      {leftElement && (
+        <LeftElement className='mr-[2px]' size={size}>
+          {leftElement}
+        </LeftElement>
+      )}
       <ResizeTextarea
         ref={ref}
         {...rest}
         className={twMerge(sizeTextArea({ size }), className)}
       />
-      {rightElement && <RightElement>{rightElement}</RightElement>}
+      {rightElement && <RightElement size={size}>{rightElement}</RightElement>}
     </TextareaGroup>
   );
 });
