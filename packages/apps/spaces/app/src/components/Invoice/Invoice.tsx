@@ -12,7 +12,7 @@ import {
 } from '@graphql/types';
 
 import { ServicesTable } from './ServicesTable';
-import logoCustomerOs from './assets/customeros-logo-tiny.png';
+import logoCustomerOs from './assets/customer-os.png';
 import {
   InvoiceHeader,
   InvoiceSummary,
@@ -47,6 +47,7 @@ type InvoiceProps = {
   invoiceNumber: string;
   check?: boolean | null;
   invoicePeriodEnd?: string;
+  shouldBlurDummy?: boolean;
   isBilledToFocused?: boolean;
   invoicePeriodStart?: string;
   status?: InvoiceStatus | null;
@@ -83,6 +84,7 @@ export function Invoice({
   invoicePeriodStart,
   invoicePeriodEnd,
   onOpenAddressDetailsModal,
+  shouldBlurDummy,
 }: InvoiceProps) {
   const isInvoiceMetaSectionBlurred =
     isBilledToFocused || isInvoiceProviderFocused;
@@ -97,6 +99,7 @@ export function Invoice({
   const isInvoiceTopSectionFilterProperty = isInvoiceBankDetailsSectionFocused
     ? 'blur-[2px]'
     : 'filter-none';
+  const blurDummyClass = shouldBlurDummy ? 'blur-[2px]' : 'filter-none';
 
   return (
     <div className='px-4 flex flex-col w-full overflow-y-auto h-full justify-between pb-4 '>
@@ -112,14 +115,16 @@ export function Invoice({
               )}
             >
               <span className='font-semibold mb-1 text-sm'>Issued</span>
-              <span className='text-sm mb-4 text-gray-500'>
+              <span
+                className={cn('text-sm mb-4 text-gray-500', blurDummyClass)}
+              >
                 {DateTimeUtils.format(
                   issueDate,
                   DateTimeUtils.dateWithAbreviatedMonth,
                 )}
               </span>
               <span className='font-semibold mb-1 text-sm'>Due</span>
-              <span className='text-sm text-gray-500'>
+              <span className={cn('text-sm text-gray-500', blurDummyClass)}>
                 {DateTimeUtils.format(
                   dueDate,
                   DateTimeUtils.dateWithAbreviatedMonth,
@@ -161,7 +166,7 @@ export function Invoice({
         <div
           className={cn(
             'flex flex-col mt-4 transition duration-250 ease-in-out filter',
-            invoiceMetaSectionFilterProperty,
+            isInvoiceTopSectionFilterProperty,
           )}
         >
           <ServicesTable
@@ -169,6 +174,7 @@ export function Invoice({
             currency={currency}
             invoicePeriodEnd={invoicePeriodEnd}
             invoicePeriodStart={invoicePeriodStart}
+            shouldBlurDummy={shouldBlurDummy}
           />
           <InvoiceSummary
             tax={tax}
@@ -176,6 +182,7 @@ export function Invoice({
             subtotal={subtotal}
             currency={currency}
             amountDue={amountDue}
+            shouldBlurDummy={shouldBlurDummy}
             note={note}
           />
         </div>

@@ -3,7 +3,6 @@ import React, { FC, useMemo } from 'react';
 import { useField } from 'react-inverted-form';
 
 import { useConnections } from '@integration-app/react';
-import { useTenantSettingsQuery } from '@settings/graphql/getTenantSettings.generated';
 import { useGetExternalSystemInstancesQuery } from '@settings/graphql/getExternalSystemInstances.generated';
 
 import { Button } from '@ui/form/Button/Button';
@@ -35,6 +34,7 @@ interface SubscriptionServiceModalProps {
   formId: string;
   currency?: string;
   contractId: string;
+  billingEnabled?: boolean;
   payAutomatically?: boolean | null;
   tenantBillingProfile?: TenantBillingProfile | null;
   bankAccounts: Array<BankAccount> | null | undefined;
@@ -47,9 +47,9 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
   tenantBillingProfile,
   bankAccounts,
   payAutomatically,
+  billingEnabled,
 }) => {
   const client = getGraphQLClient();
-  const { data: tenantSettingsData } = useTenantSettingsQuery(client);
   const { data } = useGetExternalSystemInstancesQuery(client);
   const availablePaymentMethodTypes = data?.externalSystemInstances.find(
     (e) => e.type === ExternalSystemType.Stripe,
@@ -144,7 +144,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
         </li>
       </ul>
 
-      {tenantSettingsData?.tenantSettings?.billingEnabled && (
+      {billingEnabled && (
         <>
           <div className='flex relative items-center h-8 mb-1'>
             <p className='text-sm text-gray-500 after:border-t-2 w-fit whitespace-nowrap mr-2'>

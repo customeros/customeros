@@ -22,8 +22,7 @@ export const InvoiceHeader: FC<InvoiceHeaderProps> = ({
   const client = getGraphQLClient();
 
   const { data: globalCacheData } = useGlobalCacheQuery(client);
-
-  const isPreview = status === InvoiceStatus.Scheduled;
+  const isPreview = status === InvoiceStatus.Scheduled || !status;
 
   return (
     <div>

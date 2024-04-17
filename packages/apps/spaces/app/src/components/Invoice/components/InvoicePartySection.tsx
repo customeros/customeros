@@ -3,6 +3,7 @@
 import React, { FC } from 'react';
 
 import { cn } from '@ui/utils/cn';
+import { Button } from '@ui/form/Button/Button';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 
 type InvoiceHeaderProps = {
@@ -42,8 +43,17 @@ export const InvoicePartySection: FC<InvoiceHeaderProps> = ({
     ? 'data-[focus=true]:opacity-100'
     : 'data-[focus=true]:opacity-0';
 
+  const showOnlyButton =
+    !zip &&
+    !email &&
+    !locality &&
+    !addressLine1 &&
+    !addressLine2 &&
+    onClick &&
+    country;
+
   return (
-    <Tooltip label={onClick ? 'Open form' : ''}>
+    <Tooltip label={onClick ? 'Edit billing details' : ''}>
       <div
         role={onClick ? 'button' : 'none'}
         tabIndex={onClick ? 0 : -1}
@@ -62,34 +72,52 @@ export const InvoicePartySection: FC<InvoiceHeaderProps> = ({
         data-focus={isFocused}
       >
         <span className='font-semibold mb-1 text-sm'>{title}</span>
-        <span className='text-sm leading-5 mb-1 font-medium'>{name}</span>
-        {/* this is a left over from the original code */}
-        {/*{vatNumber && (*/}
-        {/*  <Text fontSize='xs' mb={1} lineHeight={1.2}>*/}
-        {/*    VAT number: {vatNumber}*/}
-        {/*  </Text>*/}
-        {/*)}*/}
-
-        <span className='text-sm text-gray-500 leading-5'>
-          {addressLine1}
-          <span className='block leading-4'>{addressLine2}</span>
-        </span>
-
-        {isUSA && (
-          <span className='leading-4 text-gray-500 text-sm'>
-            {locality && `${locality}, `} {region} {zip}
-          </span>
-        )}
-        {!isUSA && (
-          <span className='text-sm leading-4 text-gray-500'>
-            {locality}
-            {locality && zip && ', '} {zip}
-          </span>
+        {showOnlyButton && (
+          <div>
+            <Button
+              onClick={onClick}
+              variant='link'
+              size='xs'
+              colorScheme='primary'
+              className='p-0 font-medium text-primary-600 shadow-none'
+            >
+              Add billing details
+            </Button>
+          </div>
         )}
 
-        <span className='text-sm leading-4 text-gray-500'>{country}</span>
-        {email && (
-          <span className='text-sm leading-4 text-gray-500'>{email}</span>
+        {!showOnlyButton && (
+          <>
+            <span className='text-sm leading-5 mb-1 font-medium'>{name}</span>
+            {/* this is a left over from the original code */}
+            {/*{vatNumber && (*/}
+            {/*  <Text fontSize='xs' mb={1} lineHeight={1.2}>*/}
+            {/*    VAT number: {vatNumber}*/}
+            {/*  </Text>*/}
+            {/*)}*/}
+
+            <span className='text-sm text-gray-500 leading-5'>
+              {addressLine1}
+              <span className='block leading-4'>{addressLine2}</span>
+            </span>
+
+            {isUSA && (
+              <span className='leading-4 text-gray-500 text-sm'>
+                {locality && `${locality}, `} {region} {zip}
+              </span>
+            )}
+            {!isUSA && (
+              <span className='text-sm leading-4 text-gray-500'>
+                {locality}
+                {locality && zip && ', '} {zip}
+              </span>
+            )}
+
+            <span className='text-sm leading-4 text-gray-500'>{country}</span>
+            {email && (
+              <span className='text-sm leading-4 text-gray-500'>{email}</span>
+            )}
+          </>
         )}
       </div>
     </Tooltip>

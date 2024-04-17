@@ -258,7 +258,7 @@ export const RenewalARRCard = ({
           confirmButtonLabel='Got it'
           label='This contract ends soon'
         >
-          <p className='text-sm font-semibold mt-1'>
+          <p className='text-sm font-normal mt-1'>
             The renewal likelihood has been downgraded to Zero because the
             contract is set to end within the current renewal cycle.
           </p>
