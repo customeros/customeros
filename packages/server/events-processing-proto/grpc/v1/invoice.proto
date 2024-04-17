@@ -14,6 +14,7 @@ enum InvoiceStatus {
   INVOICE_STATUS_PAID = 3;
   INVOICE_STATUS_VOID = 4;
   INVOICE_STATUS_SCHEDULED = 5;
+  INVOICE_STATUS_OVERDUE = 6;
 }
 
 enum InvoiceFieldMask {

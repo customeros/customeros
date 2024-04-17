@@ -4240,6 +4240,7 @@ const (
 	// Deprecated, replaced by INITIALIZED
 	InvoiceStatusDraft     InvoiceStatus = "DRAFT"
 	InvoiceStatusDue       InvoiceStatus = "DUE"
+	InvoiceStatusOverdue   InvoiceStatus = "OVERDUE"
 	InvoiceStatusPaid      InvoiceStatus = "PAID"
 	InvoiceStatusVoid      InvoiceStatus = "VOID"
 	InvoiceStatusScheduled InvoiceStatus = "SCHEDULED"
@@ -4249,6 +4250,7 @@ var AllInvoiceStatus = []InvoiceStatus{
 	InvoiceStatusInitialized,
 	InvoiceStatusDraft,
 	InvoiceStatusDue,
+	InvoiceStatusOverdue,
 	InvoiceStatusPaid,
 	InvoiceStatusVoid,
 	InvoiceStatusScheduled,
@@ -4256,7 +4258,7 @@ var AllInvoiceStatus = []InvoiceStatus{
 
 func (e InvoiceStatus) IsValid() bool {
 	switch e {
-	case InvoiceStatusInitialized, InvoiceStatusDraft, InvoiceStatusDue, InvoiceStatusPaid, InvoiceStatusVoid, InvoiceStatusScheduled:
+	case InvoiceStatusInitialized, InvoiceStatusDraft, InvoiceStatusDue, InvoiceStatusOverdue, InvoiceStatusPaid, InvoiceStatusVoid, InvoiceStatusScheduled:
 		return true
 	}
 	return false

@@ -24,6 +24,8 @@ type Config struct {
 	CronScheduleGenerateInvoicePaymentLink string `env:"CRON_SCHEDULE_GENERATE_INVOICE_PAYMENT_LINK" envDefault:"30 */10 * * * *"`
 	// Defaults to each 8 hours
 	CronScheduleCleanupInvoices string `env:"CRON_SCHEDULE_CLEANUP_INVOICES" envDefault:"0 40 */8 * * *"`
+	// Defaults to each 2 hours
+	CronScheduleOverdueInvoices string `env:"CRON_SCHEDULE_OVERDUE_INVOICES" envDefault:"0 30 */2 * * *"`
 
 	// Issues
 	// Defaults to each 2 minutes

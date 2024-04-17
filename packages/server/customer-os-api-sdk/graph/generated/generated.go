@@ -13757,6 +13757,7 @@ enum InvoiceStatus {
     """
     DRAFT @deprecated(reason: "use INITIALIZED instead")
     DUE
+    OVERDUE
     PAID
     VOID
     SCHEDULED

@@ -39,6 +39,7 @@ type InvoiceService interface {
 	GenerateInvoicePaymentLinks()
 	CleanupInvoices()
 	GenerateNextPreviewInvoices()
+	OverdueInvoices()
 }
 
 type invoiceService struct {
@@ -527,7 +528,7 @@ func (s *invoiceService) CleanupInvoices() {
 		records, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetExpiredDryRunInvoices(ctx)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			s.log.Errorf("Error getting invoices for payment links generation: %v", err)
+			s.log.Errorf("Error getting invoices for cleanup: %v", err)
 			return
 		}
 
@@ -610,5 +611,65 @@ func (s *invoiceService) GenerateNextPreviewInvoices() {
 		}
 		//sleep for async processing, then check again
 		time.Sleep(10 * time.Second)
+	}
+}
+
+func (s *invoiceService) OverdueInvoices() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // Cancel context on exit
+
+	span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.OverdueInvoices")
+	defer span.Finish()
+
+	if s.eventsProcessingClient == nil {
+		err := errors.New("eventsProcessingClient is nil")
+		tracing.TraceErr(span, err)
+		s.log.Error(err.Error())
+		return
+	}
+
+	for {
+		select {
+		case <-ctx.Done():
+			s.log.Infof("Context cancelled, stopping")
+			return
+		default:
+			// continue as normal
+		}
+
+		records, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoicesForOverdue(ctx)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error getting invoices for overdue: %v", err)
+			return
+		}
+
+		// no invoices found
+		if len(records) == 0 {
+			return
+		}
+
+		//process records
+		for _, record := range records {
+			invoice := neo4jmapper.MapDbNodeToInvoiceEntity(record.Node)
+			tenant := record.Tenant
+
+			_, err = utils.CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
+				return s.eventsProcessingClient.InvoiceClient.UpdateInvoice(ctx, &invoicepb.UpdateInvoiceRequest{
+					Tenant:     tenant,
+					InvoiceId:  invoice.Id,
+					AppSource:  constants.AppSourceDataUpkeeper,
+					Status:     invoicepb.InvoiceStatus_INVOICE_STATUS_OVERDUE,
+					FieldsMask: []invoicepb.InvoiceFieldMask{invoicepb.InvoiceFieldMask_INVOICE_FIELD_STATUS},
+				})
+			})
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error updating invoice %s to overdue: %s", invoice.Id, err.Error())
+				return // stop processing
+			}
+			//sleep for async processing, then check again
+			time.Sleep(10 * time.Second)
+		}
 	}
 }
