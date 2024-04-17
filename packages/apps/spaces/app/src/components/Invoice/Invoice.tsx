@@ -12,7 +12,7 @@ import {
 } from '@graphql/types';
 
 import { ServicesTable } from './ServicesTable';
-import logoCustomerOs from './assets/customeros-logo-tiny.png';
+import logoCustomerOs from './assets/customer-os.png';
 import {
   InvoiceHeader,
   InvoiceSummary,

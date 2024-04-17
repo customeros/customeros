@@ -8,6 +8,7 @@ import { useDeepCompareEffect } from 'rooks';
 import { motion, Variants } from 'framer-motion';
 import { useQueryClient } from '@tanstack/react-query';
 import { useBankAccountsQuery } from '@settings/graphql/getBankAccounts.generated';
+import { useTenantSettingsQuery } from '@settings/graphql/getTenantSettings.generated';
 import { useTenantBillingProfilesQuery } from '@settings/graphql/getTenantBillingProfiles.generated';
 
 import { cn } from '@ui/utils/cn';
@@ -16,14 +17,9 @@ import { Invoice } from '@shared/components/Invoice/Invoice';
 import { countryOptions } from '@shared/util/countryOptions';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { toastError, toastSuccess } from '@ui/presentation/Toast';
+import { DataSource, BankAccount, TenantBillingProfile } from '@graphql/types';
 import { useGetContractQuery } from '@organization/src/graphql/getContract.generated';
 import { useUpdateContractMutation } from '@organization/src/graphql/updateContract.generated';
-import {
-  DataSource,
-  BankAccount,
-  InvoiceLine,
-  TenantBillingProfile,
-} from '@graphql/types';
 import {
   GetContractsQuery,
   useGetContractsQuery,
@@ -113,6 +109,7 @@ export const EditContractModal = ({
     },
   );
   const { data: bankAccountsData } = useBankAccountsQuery(client);
+  const { data: tenantSettingsData } = useTenantSettingsQuery(client);
 
   const queryKey = useGetContractsQuery.getKey({ id: organizationId });
 
@@ -274,7 +271,7 @@ export const EditContractModal = ({
           quantity: 2,
           total: 100,
           taxDue: 0,
-        } as InvoiceLine,
+        },
       ],
       tax: 0,
       total: 100,
@@ -452,38 +449,40 @@ export const EditContractModal = ({
           </motion.div>
         </div>
 
-        <div style={{ minWidth: '600px' }} className='bg-white rounded'>
-          <div className='w-full h-full'>
-            <Invoice
-              onOpenAddressDetailsModal={() => setBillingDetailsOpen(true)}
-              isBilledToFocused={false}
-              note={notes}
-              currency={state?.values?.currency?.value}
-              billedTo={{
-                addressLine1: addressState.values.addressLine1 ?? '',
-                addressLine2: addressState.values.addressLine2 ?? '',
-                locality: addressState.values.locality ?? '',
-                zip: addressState.values.postalCode ?? '',
-                country: addressState?.values?.country?.label ?? '',
-                email: addressState.values.billingEmail ?? '',
-                name: addressState.values?.organizationLegalName ?? '',
-                region: addressState.values?.region ?? '',
-              }}
-              {...invoicePreviewStaticData}
-              canPayWithBankTransfer={
-                tenantBillingProfile?.tenantBillingProfiles?.[0]
-                  ?.canPayWithBankTransfer &&
-                state.values.canPayWithBankTransfer
-              }
-              check={tenantBillingProfile?.tenantBillingProfiles?.[0]?.check}
-              availableBankAccount={
-                bankAccountsData?.bankAccounts?.find(
-                  (e) => e.currency === state?.values?.currency?.value,
-                ) as BankAccount
-              }
-            />
+        {tenantSettingsData?.tenantSettings?.billingEnabled && (
+          <div style={{ minWidth: '600px' }} className='bg-white rounded'>
+            <div className='w-full h-full'>
+              <Invoice
+                onOpenAddressDetailsModal={() => setBillingDetailsOpen(true)}
+                isBilledToFocused={false}
+                note={notes}
+                currency={state?.values?.currency?.value}
+                billedTo={{
+                  addressLine1: addressState.values.addressLine1 ?? '',
+                  addressLine2: addressState.values.addressLine2 ?? '',
+                  locality: addressState.values.locality ?? '',
+                  zip: addressState.values.postalCode ?? '',
+                  country: addressState?.values?.country?.label ?? '',
+                  email: addressState.values.billingEmail ?? '',
+                  name: addressState.values?.organizationLegalName ?? '',
+                  region: addressState.values?.region ?? '',
+                }}
+                {...invoicePreviewStaticData}
+                canPayWithBankTransfer={
+                  tenantBillingProfile?.tenantBillingProfiles?.[0]
+                    ?.canPayWithBankTransfer &&
+                  state.values.canPayWithBankTransfer
+                }
+                check={tenantBillingProfile?.tenantBillingProfiles?.[0]?.check}
+                availableBankAccount={
+                  bankAccountsData?.bankAccounts?.find(
+                    (e) => e.currency === state?.values?.currency?.value,
+                  ) as BankAccount
+                }
+              />
+            </div>
           </div>
-        </div>
+        )}
       </ModalContent>
     </Modal>
   );

@@ -79,10 +79,8 @@ export const DatePickerUnderline: React.FC<DatePickerProps> = ({
       <ReactDatePicker
         id={id}
         name={name}
-        isOpen={true}
         clearIcon={() => null}
         onChange={(val) => handleDateInputChange(val as DateInputValue)}
-        defaultValue={new Date()}
         formatShortWeekday={(_, date) =>
           DateTimeUtils.format(date.toISOString(), DateTimeUtils.shortWeekday)
         }
@@ -92,6 +90,7 @@ export const DatePickerUnderline: React.FC<DatePickerProps> = ({
             DateTimeUtils.abreviatedMonth,
           )
         }
+        value={value as Date}
         calendarIcon={
           <p
             className={cn(
