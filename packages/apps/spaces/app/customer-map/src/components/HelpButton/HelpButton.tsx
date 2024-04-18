@@ -15,8 +15,7 @@ export const HelpButton = ({ isOpen, onOpen }: HelpButtonProps) => {
       onClick={onOpen}
       aria-label='Help'
       className={cn(
-        isOpen ? 'opacity-100' : 'opacity-0',
-        'opacity-0 group-hover:opacity-100',
+        isOpen ? 'opacity-100' : 'opacity-0  group-hover:opacity-100',
       )}
       icon={<HelpCircle color='gray.400' />}
     />
