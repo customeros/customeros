@@ -1341,3 +1341,13 @@ func CreateOrder(ctx context.Context, driver *neo4j.DriverWithContext, tenant, o
 	ExecuteWriteQuery(ctx, driver, query, params)
 	return orderId
 }
+
+func UserOwnsOrganization(ctx context.Context, driver *neo4j.DriverWithContext, userId, organizationId string) {
+	query := `MATCH (o:Organization {id:$organizationId}),
+			        (u:User {id:$userId})
+			MERGE (u)-[:OWNS]->(o)`
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"organizationId": organizationId,
+		"userId":         userId,
+	})
+}

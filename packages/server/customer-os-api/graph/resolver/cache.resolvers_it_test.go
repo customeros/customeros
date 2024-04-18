@@ -59,7 +59,7 @@ func TestQueryGlobalCache_GCliCache_IsOwnerTrue(t *testing.T) {
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "org1"})
 
-	neo4jt.UserOwnsOrganization(ctx, driver, testUserId, organizationId)
+	neo4jtest.UserOwnsOrganization(ctx, driver, testUserId, organizationId)
 
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Tenant"))
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
