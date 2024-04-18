@@ -1,64 +1,42 @@
 import { useRouter } from 'next/navigation';
 
-import { Flex } from '@ui/layout/Flex';
-import { Center } from '@ui/layout/Center';
-import { Text } from '@ui/typography/Text';
 import { FeaturedIcon } from '@ui/media/Icon';
 import { Button } from '@ui/form/Button/Button';
 import { File04 } from '@ui/media/icons/File04';
 
 import HalfCirclePattern from '../../../assets/HalfCirclePattern';
 
-export const EmptyState = ({
-  maxW = 500,
-  isDashboard,
-}: {
-  isDashboard?: boolean;
-  maxW?: string | number;
-}) => {
+export const EmptyState = () => {
   const router = useRouter();
 
   return (
-    <Center h='100%' width={maxW}>
-      <Flex direction='column' h='100%' width={maxW} borderColor='gray.200'>
-        <Flex position='relative'>
-          <FeaturedIcon
-            colorScheme='primary'
-            size='lg'
-            width='152px'
-            height='120'
-            position='absolute'
-            top={isDashboard ? '22%' : '20%'}
-            right={isDashboard ? '35%' : '33%'}
-          >
-            <File04 boxSize='5' />
-          </FeaturedIcon>
-          <HalfCirclePattern height={maxW} width={maxW} />
-        </Flex>
-        <Flex
-          flexDir='column'
-          textAlign='center'
-          align='center'
-          transform={isDashboard ? 'translateY(-280px)' : 'translateY(-250px)'}
+    <div className='flex flex-col h-full w-full max-w-[448px]'>
+      <div className='flex relative'>
+        <FeaturedIcon
+          size='lg'
+          colorScheme='primary'
+          className='absolute top-[23%] right-[45%]'
         >
-          <Text color='gray.900' fontSize='md' fontWeight='semibold'>
-            Awaiting your invoices
-          </Text>
-          <Text maxW='350px' fontSize='sm' color='gray.600' my={1}>
-            Create your first contract with services. Once issued, invoices will
-            appear here.
-          </Text>
-
-          <Button
-            variant='outline'
-            size='sm'
-            className={'mt-4 text-sm'}
-            onClick={() => router.push(`?tab=account`)}
-          >
-            Go back
-          </Button>
-        </Flex>
-      </Flex>
-    </Center>
+          <File04 boxSize='5' />
+        </FeaturedIcon>
+        <HalfCirclePattern />
+      </div>
+      <div className='flex flex-col text-center items-center translate-y-[-200px]'>
+        <p className='text-gray-700 text-md font-semibold'>
+          No upcoming invoices
+        </p>
+        <p className='text-sm text-gray-500 my-1'>
+          Schedule invoices by creating a contract with services
+        </p>
+        <Button
+          variant='outline'
+          size='sm'
+          className={'mt-4 text-sm'}
+          onClick={() => router.push(`?tab=account`)}
+        >
+          Go back
+        </Button>
+      </div>
+    </div>
   );
 };
