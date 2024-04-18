@@ -21,9 +21,9 @@
       "description": "Invoice line should be linked to an invoice and a service line item."
     },
     {
-      "name": "Check for nodes missing mandatory links",
-      "query": "CALL {\n     MATCH (n:Invoice) WHERE NOT (n)<-[:HAS_INVOICE]-(:Contract|DeletedContract) RETURN count(n) as cnt\n     UNION ALL\n     MATCH (n:ServiceLineItem) WHERE NOT (n)<-[:HAS_SERVICE]-(:Contract|DeletedContract) RETURN count(n) as cnt\n     UNION ALL\n     MATCH (n:Contract) WHERE NOT (n)<-[:HAS_CONTRACT]-(:Organization) RETURN count(n) as cnt\n} RETURN sum(cnt)",
-      "description": "2 - Invoice without contract/deleted contract. 3 - Service line item without contract/deleted contract. 4 - Contract without organization."
+      "name": "Invoice lines with missing properties",
+      "query": "MATCH (n:InvoiceLine) WHERE (n.billedType IS NULL OR n.billedType = \"\" OR n.amount IS NULL OR n.totalAmount IS NULL) RETURN count(n) as cnt",
+      "description": "Invoice line should have a billedType, amount and totalAmount."
     },
     {
       "name": "Check organization nodes labels",
@@ -50,21 +50,44 @@
       "query": "MATCH (t:Tenant)<-[:USER_BELONGS_TO_TENANT]-(n:User) WHERE size(labels(n)) <> 2 OR NOT 'User_'+t.name in labels(n) return count(n)"
     },
     {
-      "name": "Check used email from same tenant",
+      "name": "Check contract nodes labels",
+      "query": "MATCH (t:Tenant)<-[:CONTRACT_BELONGS_TO_TENANT]-(n:Contract) WHERE size(labels(n)) <> 2 OR NOT 'Contract_'+t.name in labels(n) return count(n)"
+    },
+    {
+      "name": "Check service line items nodes labels",
+      "query": "MATCH (t:Tenant)<-[:CONTRACT_BELONGS_TO_TENANT]-(:Contract)-[:HAS_SERVICE]->(n:ServiceLineItem) WHERE size(labels(n)) <> 2 OR NOT 'ServiceLineItem_'+t.name in labels(n) return count(n)"
+    },
+    {
+      "name": "Check invoice nodes labels",
+      "query": "MATCH (t:Tenant)<-[:INVOICE_BELONGS_TO_TENANT]-(n:Invoice) WHERE size(labels(n)) <> 2 OR NOT 'Invoice_'+t.name in labels(n) return count(n)"
+    },
+    {
+      "name": "Check invoice line nodes labels",
+      "query": "MATCH (t:Tenant)<-[:INVOICE_BELONGS_TO_TENANT]-(:Invoice)-[:HAS_SERVICE]->(n:InvoiceLine) WHERE size(labels(n)) <> 2 OR NOT 'InvoiceLine_'+t.name in labels(n) return count(n)"
+    },
+    {
+      "name": "Check tenant billing profile labels",
+      "query": "MATCH (t:Tenant)-[:HAS_BILLING_PROFILE]->(n:TenantBillingProfile) WHERE size(labels(n)) <> 2 OR NOT 'TenantBillingProfile_'+t.name in labels(n) return count(n)"
+    },
+    {
+      "name": "Cross tenants email link",
       "query": "MATCH (t1:Tenant)--(n:User|Contact|Organization)--(:Email)--(t2:Tenant) where t1.name <> t2.name return count(n)"
     },
     {
-      "name": "Check used phone number from same tenant",
+      "name": "Cross tenants phone number link",
       "query": "MATCH (t1:Tenant)--(n:User|Contact|Organization)--(:PhoneNumber)--(t2:Tenant) where t1.name <> t2.name return count(n)"
     },
     {
-      "name": "Check single TenantMetadata per tenant",
-      "query": "match (t:Tenant)-->(tm:TenantMetadata) with t, count(tm) as countMetadata where countMetadata > 1 return count(t)"
+      "name": "Single TenantMetadata per tenant",
+      "query": "match (t:Tenant)-->(tm:TenantMetadata) with t, count(tm) as cnt where cnt > 1 return count(t)"
     },
     {
-      "name": "Check single TenantSettings per Tenant",
+      "name": "Single TenantSettings per Tenant",
       "query": "MATCH (t:Tenant)-->(ts:TenantSettings) with t, count(ts) as cnt where cnt > 1 return count(t)"
     },
+
+
+
     {
       "name": "Check orphan nodes",
       "query": "MATCH (n) WHERE NOT (n)--() AND NOT n:Country AND NOT n:Domain AND NOT n:TechnicalNode AND NOT n:Attachment return count(n)"
@@ -157,9 +180,9 @@
       "description": "Checks: 1 - Duplicated scheduled invoices for same contract and period"
     },
     {
-      "name": "Check invoice lines",
-      "query": "CALL {\n    MATCH (n:InvoiceLine) WHERE (n.billedType IS NULL OR n.billedType = \"\") RETURN count(n) as cnt\n    UNION ALL\n    MATCH (n:InvoiceLine) WHERE NOT (n)--(:ServiceLineItem) return count(n) as cnt \n} RETURN sum(cnt)",
-      "description": "Checks: 1 - Invoice lines missing mandatory properties. 2 - Invoice line without linked service line item."
+      "name": "Check for nodes missing mandatory links",
+      "query": "CALL {\n     MATCH (n:Invoice) WHERE NOT (n)<-[:HAS_INVOICE]-(:Contract|DeletedContract) RETURN count(n) as cnt\n     UNION ALL\n     MATCH (n:ServiceLineItem) WHERE NOT (n)<-[:HAS_SERVICE]-(:Contract|DeletedContract) RETURN count(n) as cnt\n     UNION ALL\n     MATCH (n:Contract) WHERE NOT (n)<-[:HAS_CONTRACT]-(:Organization) RETURN count(n) as cnt\n} RETURN sum(cnt)",
+      "description": "2 - Invoice without contract/deleted contract. 3 - Service line item without contract/deleted contract. 4 - Contract without organization."
     }
   ]
 }
