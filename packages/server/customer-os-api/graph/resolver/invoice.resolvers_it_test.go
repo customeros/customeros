@@ -30,6 +30,10 @@ func TestInvoiceResolver_Invoice(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organizationId, neo4jentity.ContractEntity{})
+	sliId := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
+		Price:    10.5,
+		Quantity: 2,
+	})
 	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
 		CreatedAt:        timeNow,
 		UpdatedAt:        timeNow,
@@ -52,8 +56,7 @@ func TestInvoiceResolver_Invoice(t *testing.T) {
 			PaymentLink: "Link",
 		},
 	})
-
-	neo4jtest.CreateInvoiceLine(ctx, driver, tenantName, invoiceId, neo4jentity.InvoiceLineEntity{
+	invoiceLineId := neo4jtest.CreateInvoiceLine(ctx, driver, tenantName, invoiceId, neo4jentity.InvoiceLineEntity{
 		CreatedAt:   timeNow,
 		Name:        "SLI 1",
 		Price:       100,
@@ -62,6 +65,7 @@ func TestInvoiceResolver_Invoice(t *testing.T) {
 		Vat:         19,
 		TotalAmount: 119,
 	})
+	neo4jtest.LinkNodes(ctx, driver, invoiceLineId, sliId, "INVOICED")
 
 	rawResponse := callGraphQL(t, "invoice/get_invoice", map[string]interface{}{"id": invoiceId})
 	require.Nil(t, rawResponse.Errors)
@@ -105,6 +109,9 @@ func TestInvoiceResolver_Invoice(t *testing.T) {
 	require.Equal(t, 100.0, invoice.InvoiceLineItems[0].Subtotal)
 	require.Equal(t, 19.0, invoice.InvoiceLineItems[0].TaxDue)
 	require.Equal(t, 119.0, invoice.InvoiceLineItems[0].Total)
+	require.Equal(t, sliId, invoice.InvoiceLineItems[0].ContractLineItem.Metadata.ID)
+	require.Equal(t, 10.5, invoice.InvoiceLineItems[0].ContractLineItem.Price)
+	require.Equal(t, int64(2), invoice.InvoiceLineItems[0].ContractLineItem.Quantity)
 
 	require.Equal(t, organizationId, invoice.Organization.ID)
 	require.Equal(t, contractId, invoice.Contract.ID)

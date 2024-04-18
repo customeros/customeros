@@ -17,6 +17,7 @@ type ServiceLineItemReadRepository interface {
 	GetServiceLineItemsByParentId(ctx context.Context, tenant, sliParentId string) ([]*dbtype.Node, error)
 	GetServiceLineItemsForContract(ctx context.Context, tenant, contractId string) ([]*neo4j.Node, error)
 	GetServiceLineItemsForContracts(ctx context.Context, tenant string, contractIds []string) ([]*utils.DbNodeAndId, error)
+	GetServiceLineItemsForInvoiceLines(ctx context.Context, tenant string, invoiceLineIds []string) ([]*utils.DbNodeAndId, error)
 	GetLatestServiceLineItemByParentId(ctx context.Context, tenant, serviceLineItemParentId string, beforeDate *time.Time) (*dbtype.Node, error)
 	WasServiceLineItemInvoiced(ctx context.Context, tenant, serviceLineItemId string) (bool, error)
 }
@@ -72,7 +73,7 @@ func (r *serviceLineItemReadRepository) GetServiceLineItemsForContract(ctx conte
 }
 
 func (r *serviceLineItemReadRepository) GetServiceLineItemsForContracts(ctx context.Context, tenant string, contractIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemRepository.GetForContracts")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemRepository.GetServiceLineItemsForContracts")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.LogFields(log.Object("contractIds", contractIds))
@@ -83,6 +84,37 @@ func (r *serviceLineItemReadRepository) GetServiceLineItemsForContracts(ctx cont
 	params := map[string]any{
 		"tenant":      tenant,
 		"contractIds": contractIds,
+	}
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.([]*utils.DbNodeAndId), err
+}
+
+func (r *serviceLineItemReadRepository) GetServiceLineItemsForInvoiceLines(ctx context.Context, tenant string, invoiceLineIds []string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemRepository.GetServiceLineItemsForInvoiceLines")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.LogFields(log.Object("invoiceLineIds", invoiceLineIds))
+
+	cypher := fmt.Sprintf(`MATCH (il:InvoiceLine)-[:INVOICED]->(sli:ServiceLineItem)
+			WHERE il.id IN $invoiceLineIds and sli:ServiceLineItem_%s
+			RETURN sli, il.id ORDER BY sli.createdAt ASC`, tenant)
+	params := map[string]any{
+		"tenant":         tenant,
+		"invoiceLineIds": invoiceLineIds,
 	}
 	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
 

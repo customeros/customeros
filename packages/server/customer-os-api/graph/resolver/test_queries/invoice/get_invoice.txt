@@ -55,6 +55,13 @@ invoice(id: $id) {
         subtotal
         taxDue
         total
+        contractLineItem {
+            metadata {
+                id
+            }
+            quantity
+            price
+        }
     }
 
     organization {

@@ -27,6 +27,11 @@ func (r *invoiceResolver) InvoiceLineItems(ctx context.Context, obj *model.Invoi
 	panic(fmt.Errorf("not implemented: InvoiceLineItems - invoiceLineItems"))
 }
 
+// ContractLineItem is the resolver for the contractLineItem field.
+func (r *invoiceLineResolver) ContractLineItem(ctx context.Context, obj *model.InvoiceLine) (*model.ServiceLineItem, error) {
+	panic(fmt.Errorf("not implemented: ContractLineItem - contractLineItem"))
+}
+
 // InvoiceNextDryRunForContract is the resolver for the invoice_NextDryRunForContract field.
 func (r *mutationResolver) InvoiceNextDryRunForContract(ctx context.Context, contractID string) (string, error) {
 	panic(fmt.Errorf("not implemented: InvoiceNextDryRunForContract - invoice_NextDryRunForContract"))
@@ -65,4 +70,8 @@ func (r *queryResolver) Invoices(ctx context.Context, pagination *model.Paginati
 // Invoice returns generated.InvoiceResolver implementation.
 func (r *Resolver) Invoice() generated.InvoiceResolver { return &invoiceResolver{r} }
 
+// InvoiceLine returns generated.InvoiceLineResolver implementation.
+func (r *Resolver) InvoiceLine() generated.InvoiceLineResolver { return &invoiceLineResolver{r} }
+
 type invoiceResolver struct{ *Resolver }
+type invoiceLineResolver struct{ *Resolver }

@@ -18,6 +18,7 @@ type ServiceLineItemService interface {
 	GetServiceLineItemsByParentId(ctx context.Context, sliParentId string) (*neo4jentity.ServiceLineItemEntities, error)
 	GetServiceLineItemsForContract(ctx context.Context, contractId string) (*neo4jentity.ServiceLineItemEntities, error)
 	GetServiceLineItemsForContracts(ctx context.Context, contractIds []string) (*neo4jentity.ServiceLineItemEntities, error)
+	GetServiceLineItemsForInvoiceLines(ctx context.Context, invoiceLineIds []string) (*neo4jentity.ServiceLineItemEntities, error)
 }
 
 type serviceLineItemService struct {
@@ -75,6 +76,24 @@ func (s *serviceLineItemService) GetServiceLineItemsForContracts(ctx context.Con
 	span.LogFields(log.Object("contractIDs", contractIDs))
 
 	serviceLineItems, err := s.services.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemsForContracts(ctx, common.GetTenantFromContext(ctx), contractIDs)
+	if err != nil {
+		return nil, err
+	}
+	serviceLineItemEntities := make(neo4jentity.ServiceLineItemEntities, 0, len(serviceLineItems))
+	for _, v := range serviceLineItems {
+		serviceLineItemEntity := neo4jmapper.MapDbNodeToServiceLineItemEntity(v.Node)
+		serviceLineItemEntity.DataloaderKey = v.LinkedNodeId
+		serviceLineItemEntities = append(serviceLineItemEntities, *serviceLineItemEntity)
+	}
+	return &serviceLineItemEntities, nil
+}
+
+func (s *serviceLineItemService) GetServiceLineItemsForInvoiceLines(ctx context.Context, invoiceLineIds []string) (*neo4jentity.ServiceLineItemEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemService.GetServiceLineItemsForInvoiceLines")
+	defer span.Finish()
+	span.LogFields(log.Object("invoiceLineIds", invoiceLineIds))
+
+	serviceLineItems, err := s.services.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemsForInvoiceLines(ctx, common.GetTenantFromContext(ctx), invoiceLineIds)
 	if err != nil {
 		return nil, err
 	}

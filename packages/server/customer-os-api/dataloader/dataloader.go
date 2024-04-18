@@ -98,6 +98,7 @@ type Loaders struct {
 	ContractsForOrganization                      *dataloader.Loader
 	ContractForInvoice                            *dataloader.Loader
 	ServiceLineItemsForContract                   *dataloader.Loader
+	ServiceLineItemForInvoiceLine                 *dataloader.Loader
 	OpportunitiesForContract                      *dataloader.Loader
 	MasterPlanMilestonesForMasterPlan             *dataloader.Loader
 	InvoiceLinesForInvoice                        *dataloader.Loader
@@ -403,6 +404,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		ContractsForOrganization:                      dataloader.NewBatchedLoader(contractBatcher.getContractsForOrganizations, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		ContractForInvoice:                            dataloader.NewBatchedLoader(contractBatcher.getContractsForInvoices, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		ServiceLineItemsForContract:                   dataloader.NewBatchedLoader(serviceLineItemBatcher.getServiceLineItemsForContracts, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		ServiceLineItemForInvoiceLine:                 dataloader.NewBatchedLoader(serviceLineItemBatcher.getServiceLineItemForInvoiceLine, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		OpportunitiesForContract:                      dataloader.NewBatchedLoader(opportunityBatcher.getOpportunitiesForContracts, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		MasterPlanMilestonesForMasterPlan:             dataloader.NewBatchedLoader(masterPlanBatcher.getMasterPlanMilestonesForMasterPlans, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		InvoiceLinesForInvoice:                        dataloader.NewBatchedLoader(invoiceBatcher.getInvoiceLinesForInvoice, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),

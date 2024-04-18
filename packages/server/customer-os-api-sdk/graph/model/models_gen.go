@@ -1279,13 +1279,14 @@ type InvoiceCustomer struct {
 }
 
 type InvoiceLine struct {
-	Metadata    *Metadata `json:"metadata"`
-	Description string    `json:"description"`
-	Price       float64   `json:"price"`
-	Quantity    int64     `json:"quantity"`
-	Subtotal    float64   `json:"subtotal"`
-	TaxDue      float64   `json:"taxDue"`
-	Total       float64   `json:"total"`
+	Metadata         *Metadata        `json:"metadata"`
+	Description      string           `json:"description"`
+	Price            float64          `json:"price"`
+	Quantity         int64            `json:"quantity"`
+	Subtotal         float64          `json:"subtotal"`
+	TaxDue           float64          `json:"taxDue"`
+	Total            float64          `json:"total"`
+	ContractLineItem *ServiceLineItem `json:"contractLineItem"`
 }
 
 func (InvoiceLine) IsMetadataInterface()        {}

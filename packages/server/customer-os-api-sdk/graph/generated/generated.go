@@ -53,6 +53,7 @@ type ResolverRoot interface {
 	InteractionEvent() InteractionEventResolver
 	InteractionSession() InteractionSessionResolver
 	Invoice() InvoiceResolver
+	InvoiceLine() InvoiceLineResolver
 	Issue() IssueResolver
 	JobRole() JobRoleResolver
 	LastTouchpoint() LastTouchpointResolver
@@ -659,13 +660,14 @@ type ComplexityRoot struct {
 	}
 
 	InvoiceLine struct {
-		Description func(childComplexity int) int
-		Metadata    func(childComplexity int) int
-		Price       func(childComplexity int) int
-		Quantity    func(childComplexity int) int
-		Subtotal    func(childComplexity int) int
-		TaxDue      func(childComplexity int) int
-		Total       func(childComplexity int) int
+		ContractLineItem func(childComplexity int) int
+		Description      func(childComplexity int) int
+		Metadata         func(childComplexity int) int
+		Price            func(childComplexity int) int
+		Quantity         func(childComplexity int) int
+		Subtotal         func(childComplexity int) int
+		TaxDue           func(childComplexity int) int
+		Total            func(childComplexity int) int
 	}
 
 	InvoiceLineSimulate struct {
@@ -1712,6 +1714,9 @@ type InvoiceResolver interface {
 	Contract(ctx context.Context, obj *model.Invoice) (*model.Contract, error)
 
 	InvoiceLineItems(ctx context.Context, obj *model.Invoice) ([]*model.InvoiceLine, error)
+}
+type InvoiceLineResolver interface {
+	ContractLineItem(ctx context.Context, obj *model.InvoiceLine) (*model.ServiceLineItem, error)
 }
 type IssueResolver interface {
 	Tags(ctx context.Context, obj *model.Issue) ([]*model.Tag, error)
@@ -5006,6 +5011,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.InvoiceCustomer.Name(childComplexity), true
+
+	case "InvoiceLine.contractLineItem":
+		if e.complexity.InvoiceLine.ContractLineItem == nil {
+			break
+		}
+
+		return e.complexity.InvoiceLine.ContractLineItem(childComplexity), true
 
 	case "InvoiceLine.description":
 		if e.complexity.InvoiceLine.Description == nil {
@@ -13744,6 +13756,7 @@ type InvoiceLine implements MetadataInterface {
     subtotal:           Float!
     taxDue:             Float!
     total:              Float!
+    contractLineItem:   ServiceLineItem! @goField(forceResolver: true)
 }
 
 type Tax {
@@ -39786,6 +39799,8 @@ func (ec *executionContext) fieldContext_Invoice_invoiceLineItems(ctx context.Co
 				return ec.fieldContext_InvoiceLine_taxDue(ctx, field)
 			case "total":
 				return ec.fieldContext_InvoiceLine_total(ctx, field)
+			case "contractLineItem":
+				return ec.fieldContext_InvoiceLine_contractLineItem(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type InvoiceLine", field.Name)
 		},
@@ -40901,6 +40916,78 @@ func (ec *executionContext) fieldContext_InvoiceLine_total(ctx context.Context, 
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _InvoiceLine_contractLineItem(ctx context.Context, field graphql.CollectedField, obj *model.InvoiceLine) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InvoiceLine_contractLineItem(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.InvoiceLine().ContractLineItem(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.ServiceLineItem)
+	fc.Result = res
+	return ec.marshalNServiceLineItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐServiceLineItem(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InvoiceLine_contractLineItem(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InvoiceLine",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "metadata":
+				return ec.fieldContext_ServiceLineItem_metadata(ctx, field)
+			case "billingCycle":
+				return ec.fieldContext_ServiceLineItem_billingCycle(ctx, field)
+			case "comments":
+				return ec.fieldContext_ServiceLineItem_comments(ctx, field)
+			case "description":
+				return ec.fieldContext_ServiceLineItem_description(ctx, field)
+			case "parentId":
+				return ec.fieldContext_ServiceLineItem_parentId(ctx, field)
+			case "price":
+				return ec.fieldContext_ServiceLineItem_price(ctx, field)
+			case "quantity":
+				return ec.fieldContext_ServiceLineItem_quantity(ctx, field)
+			case "serviceEnded":
+				return ec.fieldContext_ServiceLineItem_serviceEnded(ctx, field)
+			case "serviceStarted":
+				return ec.fieldContext_ServiceLineItem_serviceStarted(ctx, field)
+			case "tax":
+				return ec.fieldContext_ServiceLineItem_tax(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_ServiceLineItem_createdBy(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_ServiceLineItem_externalLinks(ctx, field)
+			case "closed":
+				return ec.fieldContext_ServiceLineItem_closed(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ServiceLineItem", field.Name)
 		},
 	}
 	return fc, nil
@@ -106448,38 +106535,74 @@ func (ec *executionContext) _InvoiceLine(ctx context.Context, sel ast.SelectionS
 		case "metadata":
 			out.Values[i] = ec._InvoiceLine_metadata(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "description":
 			out.Values[i] = ec._InvoiceLine_description(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "price":
 			out.Values[i] = ec._InvoiceLine_price(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "quantity":
 			out.Values[i] = ec._InvoiceLine_quantity(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "subtotal":
 			out.Values[i] = ec._InvoiceLine_subtotal(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "taxDue":
 			out.Values[i] = ec._InvoiceLine_taxDue(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "total":
 			out.Values[i] = ec._InvoiceLine_total(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "contractLineItem":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._InvoiceLine_contractLineItem(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
