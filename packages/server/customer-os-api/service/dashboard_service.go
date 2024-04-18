@@ -134,7 +134,7 @@ func (s *dashboardService) GetDashboardViewRenewalsData(ctx context.Context, req
 			renewalRecordEntity.Contract = *mapper.MapDbNodeToContractEntity(utils.NodePtr(v.Values[1].(dbtype.Node)))
 		}
 		if v.Values[2] != nil {
-			renewalRecordEntity.Opportunity = *s.services.OpportunityService.mapDbNodeToOpportunityEntity(v.Values[2].(dbtype.Node))
+			renewalRecordEntity.Opportunity = *mapper.MapDbNodeToOpportunityEntity(utils.NodePtr(v.Values[2].(dbtype.Node)))
 		}
 		renewalRecordEntities = append(renewalRecordEntities, renewalRecordEntity)
 	}

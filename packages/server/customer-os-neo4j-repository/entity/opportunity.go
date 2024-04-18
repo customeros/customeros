@@ -10,6 +10,7 @@ type OpportunityInternalFields struct {
 }
 
 type OpportunityEntity struct {
+	DataLoaderKey
 	Id                string
 	Name              string
 	CreatedAt         time.Time
@@ -40,3 +41,5 @@ type RenewalDetails struct {
 	RenewalUpdatedByUserAt *time.Time
 	RenewalApproved        bool
 }
+
+type OpportunityEntities []OpportunityEntity

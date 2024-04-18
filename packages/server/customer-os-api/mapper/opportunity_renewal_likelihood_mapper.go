@@ -1,28 +1,28 @@
 package mapper
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 )
 
-var opportunityRenewalLikelihoodByModel = map[model.OpportunityRenewalLikelihood]entity.OpportunityRenewalLikelihood{
-	model.OpportunityRenewalLikelihoodHighRenewal:   entity.OpportunityRenewalLikelihoodHigh,
-	model.OpportunityRenewalLikelihoodMediumRenewal: entity.OpportunityRenewalLikelihoodMedium,
-	model.OpportunityRenewalLikelihoodLowRenewal:    entity.OpportunityRenewalLikelihoodLow,
-	model.OpportunityRenewalLikelihoodZeroRenewal:   entity.OpportunityRenewalLikelihoodZero,
+var opportunityRenewalLikelihoodByModel = map[model.OpportunityRenewalLikelihood]neo4jenum.RenewalLikelihood{
+	model.OpportunityRenewalLikelihoodHighRenewal:   neo4jenum.RenewalLikelihoodHigh,
+	model.OpportunityRenewalLikelihoodMediumRenewal: neo4jenum.RenewalLikelihoodMedium,
+	model.OpportunityRenewalLikelihoodLowRenewal:    neo4jenum.RenewalLikelihoodLow,
+	model.OpportunityRenewalLikelihoodZeroRenewal:   neo4jenum.RenewalLikelihoodZero,
 }
 
 var opportunityRenewalLikelihoodByValue = utils.ReverseMap(opportunityRenewalLikelihoodByModel)
 
-func MapOpportunityRenewalLikelihoodFromModel(input *model.OpportunityRenewalLikelihood) entity.OpportunityRenewalLikelihood {
+func MapOpportunityRenewalLikelihoodFromModel(input *model.OpportunityRenewalLikelihood) neo4jenum.RenewalLikelihood {
 	if input == nil {
 		return ""
 	}
 	return opportunityRenewalLikelihoodByModel[*input]
 }
 
-func MapOpportunityRenewalLikelihoodToModel(input entity.OpportunityRenewalLikelihood) model.OpportunityRenewalLikelihood {
+func MapOpportunityRenewalLikelihoodToModel(input neo4jenum.RenewalLikelihood) model.OpportunityRenewalLikelihood {
 	return opportunityRenewalLikelihoodByValue[input]
 }
 
@@ -39,13 +39,13 @@ func MapOpportunityRenewalLikelihoodFromString(input *string) string {
 
 func MapOpportunityRenewalLikelihoodToModelPtr(input string) *model.OpportunityRenewalLikelihood {
 	switch input {
-	case string(entity.OpportunityRenewalLikelihoodHigh):
+	case string(neo4jenum.RenewalLikelihoodHigh):
 		return utils.Ptr(model.OpportunityRenewalLikelihoodHighRenewal)
-	case string(entity.OpportunityRenewalLikelihoodMedium):
+	case string(neo4jenum.RenewalLikelihoodMedium):
 		return utils.Ptr(model.OpportunityRenewalLikelihoodMediumRenewal)
-	case string(entity.OpportunityRenewalLikelihoodLow):
+	case string(neo4jenum.RenewalLikelihoodLow):
 		return utils.Ptr(model.OpportunityRenewalLikelihoodLowRenewal)
-	case string(entity.OpportunityRenewalLikelihoodZero):
+	case string(neo4jenum.RenewalLikelihoodZero):
 		return utils.Ptr(model.OpportunityRenewalLikelihoodZeroRenewal)
 	default:
 		return nil

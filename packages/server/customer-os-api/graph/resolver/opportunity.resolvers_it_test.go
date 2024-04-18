@@ -27,12 +27,15 @@ func TestQueryResolver_Opportunity(t *testing.T) {
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
 	now := utils.Now()
-	opportunityId := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, entity.OpportunityEntity{
+	opportunityId := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, neo4jentity.OpportunityEntity{
 		Name:      "test opportunity",
 		Amount:    float64(100),
 		MaxAmount: float64(200),
 		CreatedAt: now,
 		UpdatedAt: now,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalApproved: true,
+		},
 	})
 	neo4jt.OpportunityCreatedBy(ctx, driver, opportunityId, creatorUserId)
 	neo4jt.OpportunityOwnedBy(ctx, driver, opportunityId, ownerUserId)
@@ -59,6 +62,7 @@ func TestQueryResolver_Opportunity(t *testing.T) {
 	require.Equal(t, ownerUserId, opportunity.Owner.ID)
 	require.Equal(t, now, opportunity.CreatedAt)
 	require.Equal(t, now, opportunity.UpdatedAt)
+	require.True(t, opportunity.RenewalApproved)
 }
 
 func TestMutationResolver_OpportunityUpdate(t *testing.T) {
@@ -69,7 +73,7 @@ func TestMutationResolver_OpportunityUpdate(t *testing.T) {
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
-	opportunityId := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, entity.OpportunityEntity{})
+	opportunityId := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, neo4jentity.OpportunityEntity{})
 	calledUpdateOpportunity := false
 
 	opportunityServiceCallbacks := events_platform.MockOpportunityServiceCallbacks{
@@ -124,7 +128,7 @@ func TestMutationResolver_OpportunityRenewalUpdate(t *testing.T) {
 	ownerUserId := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{})
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
-	opportunityId := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, entity.OpportunityEntity{})
+	opportunityId := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, neo4jentity.OpportunityEntity{})
 	calledUpdateRenewalOpportunity := false
 
 	opportunityServiceCallbacks := events_platform.MockOpportunityServiceCallbacks{

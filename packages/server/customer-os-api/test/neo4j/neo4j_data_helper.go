@@ -1472,7 +1472,7 @@ func CreateActionForOrganizationWithProperties(ctx context.Context, driver *neo4
 }
 
 // Deprecated
-func CreateOpportunityForContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId string, opportunity entity.OpportunityEntity) string {
+func CreateOpportunityForContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId string, opportunity neo4jentity.OpportunityEntity) string {
 	opportunityId := utils.NewUUIDIfEmpty(opportunity.Id)
 	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}), (c:Contract {id:$contractId})
 				MERGE (t)<-[:OPPORTUNITY_BELONGS_TO_TENANT]-(op:Opportunity {id:$id})<-[:HAS_OPPORTUNITY]-(c)
@@ -1495,6 +1495,7 @@ func CreateOpportunityForContract(ctx context.Context, driver *neo4j.DriverWithC
                     op.renewalLikelihood=$renewalLikelihood,
                     op.renewalUpdatedByUserId=$renewalUpdatedByUserId,
                     op.renewalUpdatedByUserAt=$renewalUpdatedByUserAt,
+					op.renewalApproved=$renewalApproved,
 					op.nextSteps=$nextSteps,
 					op.createdAt=$createdAt,
 					op.updatedAt=$updatedAt
@@ -1518,10 +1519,11 @@ func CreateOpportunityForContract(ctx context.Context, driver *neo4j.DriverWithC
 		"generalNotes":           opportunity.GeneralNotes,
 		"nextSteps":              opportunity.NextSteps,
 		"comments":               opportunity.Comments,
-		"renewedAt":              opportunity.RenewedAt,
-		"renewalLikelihood":      opportunity.RenewalLikelihood,
-		"renewalUpdatedByUserId": opportunity.RenewalUpdatedByUserId,
-		"renewalUpdatedByUserAt": opportunity.RenewalUpdatedByUserAt,
+		"renewedAt":              opportunity.RenewalDetails.RenewedAt,
+		"renewalLikelihood":      opportunity.RenewalDetails.RenewalLikelihood,
+		"renewalUpdatedByUserId": opportunity.RenewalDetails.RenewalUpdatedByUserId,
+		"renewalUpdatedByUserAt": opportunity.RenewalDetails.RenewalUpdatedByUserAt,
+		"renewalApproved":        opportunity.RenewalDetails.RenewalApproved,
 		"createdAt":              opportunity.CreatedAt,
 		"updatedAt":              opportunity.UpdatedAt,
 	})
