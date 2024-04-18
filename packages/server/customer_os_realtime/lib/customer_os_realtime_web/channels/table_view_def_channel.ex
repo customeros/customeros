@@ -46,7 +46,7 @@ defmodule CustomerOsRealtimeWeb.TableViewDefChannel do
     %{"payload" => %{"operation" => operation}} = payload
     entity_id = socket.assigns.entity_id
 
-    @store.update(entity_id, operation)
+    # @store.update(entity_id, operation)
     snapshot = @store.get_snapshot(entity_id)
 
     sync_packet = %{
@@ -57,18 +57,6 @@ defmodule CustomerOsRealtimeWeb.TableViewDefChannel do
 
     broadcast!(socket, "sync_packet", sync_packet)
     {:reply, {:ok, %{version: snapshot.version}}, socket}
-  end
-
-  @impl true
-  def handle_in("sync_history", payload, socket) do
-    %{"payload" => %{"history" => history, "version" => version}} = payload
-    entity_id = socket.assigns.entity_id
-
-    @store.set(entity_id, history, version)
-    sync_packet = @store.get_snapshot(entity_id)
-
-    broadcast!(socket, "sync_history", sync_packet)
-    {:noreply, socket}
   end
 
   @impl true
