@@ -84,11 +84,11 @@ func StartCron(cont *container.Container) *cron.Cron {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "cleanupInvoices", err.Error())
 	}
 
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleOverdueInvoices, func() {
-		lockAndRunJob(cont, invoiceGroup, overdueInvoices)
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleAdjustInvoiceStatus, func() {
+		lockAndRunJob(cont, invoiceGroup, adjustInvoiceStatus)
 	})
 	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "overdueInvoices", err.Error())
+		cont.Log.Fatalf("Could not add cron job %s: %v", "adjustInvoiceStatus", err.Error())
 	}
 
 	err = c.AddFunc(cont.Cfg.Cron.CronScheduleSendPayInvoiceNotification, func() {
@@ -166,8 +166,8 @@ func cleanupInvoices(cont *container.Container) {
 	service.NewInvoiceService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).CleanupInvoices()
 }
 
-func overdueInvoices(cont *container.Container) {
-	service.NewInvoiceService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).OverdueInvoices()
+func adjustInvoiceStatus(cont *container.Container) {
+	service.NewInvoiceService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).AdjustInvoiceStatus()
 }
 
 func sendPayInvoiceNotifications(cont *container.Container) {

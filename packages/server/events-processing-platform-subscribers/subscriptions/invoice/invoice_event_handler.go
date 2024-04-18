@@ -237,6 +237,7 @@ func (h *InvoiceEventHandler) prepareAndCallFillInvoice(ctx context.Context, ten
 		invoiceNumber,
 		invoiceEntity.DryRun,
 		invoiceEntity.Preview,
+		contractEntity.ContractStatus,
 		contractEntity.OrganizationLegalName,
 		contractEntity.InvoiceEmail,
 		contractEntity.AddressLine1, contractEntity.AddressLine2, contractEntity.Zip, contractEntity.Locality, contractCountry, contractEntity.Region,
@@ -257,7 +258,7 @@ func (h *InvoiceEventHandler) prepareAndCallFillInvoice(ctx context.Context, ten
 	return nil
 }
 
-func (h *InvoiceEventHandler) callFillInvoice(ctx context.Context, tenant, invoiceId, invoiceNumber string, dryRun, preview bool,
+func (h *InvoiceEventHandler) callFillInvoice(ctx context.Context, tenant, invoiceId, invoiceNumber string, dryRun, preview bool, contractStatus neo4jenum.ContractStatus,
 	customerName, customerEmail, customerAddressLine1, customerAddressLine2, customerAddressZip, customerAddressLocality, customerAddressCountry, customerAddressRegion,
 	providerLogoRepositoryFileId, providerName, providerEmail, providerAddressLine1, providerAddressLine2, providerAddressZip, providerAddressLocality, providerAddressCountry, providerAddressRegion,
 	note string, amount, vat, total float64, invoiceLines []*invoicepb.InvoiceLine, span opentracing.Span) error {
@@ -266,7 +267,11 @@ func (h *InvoiceEventHandler) callFillInvoice(ctx context.Context, tenant, invoi
 
 	invoiceStatus := invoicepb.InvoiceStatus_INVOICE_STATUS_DUE
 	if dryRun && preview {
-		invoiceStatus = invoicepb.InvoiceStatus_INVOICE_STATUS_SCHEDULED
+		if contractStatus == neo4jenum.ContractStatusOutOfContract {
+			invoiceStatus = invoicepb.InvoiceStatus_INVOICE_STATUS_ON_HOLD
+		} else {
+			invoiceStatus = invoicepb.InvoiceStatus_INVOICE_STATUS_SCHEDULED
+		}
 	} else if total == 0 {
 		invoiceStatus = invoicepb.InvoiceStatus_INVOICE_STATUS_PAID
 	}
