@@ -37,7 +37,7 @@ const mapData = (data: RevenueAtRiskDatum) => {
   ];
 };
 
-const RevenueAtRisk = ({
+const RevenueAtRiskChart = ({
   width,
   height,
   data: _data,
@@ -96,4 +96,4 @@ const RevenueAtRisk = ({
   );
 };
 
-export default RevenueAtRisk;
+export default RevenueAtRiskChart;

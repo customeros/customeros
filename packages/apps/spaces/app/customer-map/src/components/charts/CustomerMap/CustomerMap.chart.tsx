@@ -49,27 +49,6 @@ const CustomerMapChart = ({
   const router = useRouter();
   const [crosshairX, setCrosshairX] = useState(0);
   const [hoveredId, setHoveredId] = useState('');
-  // const [
-  //   greenLight500,
-  //   greenLight400,
-  //   warning300,
-  //   warning200,
-  //   warm200,
-  //   warm300,
-  //   gray700,
-  //   gray300,
-  //   gray500,
-  // ] = useToken('colors', [
-  //   hasContracts ? 'greenLight.500' : 'gray.400',
-  //   hasContracts ? 'greenLight.400' : 'gray.300',
-  //   hasContracts ? 'warning.300' : 'gray.300',
-  //   hasContracts ? 'warning.200' : 'gray.200',
-  //   hasContracts ? 'warm.200' : 'gray.200',
-  //   hasContracts ? 'warm.300' : 'gray.300',
-  //   'gray.700',
-  //   'gray.300',
-  //   'gray.500',
-  // ]);
 
   const colors = {
     greenLight500: hasContracts ? '#66C61C' : '#98A2B3',
@@ -217,7 +196,7 @@ const CustomerMapChart = ({
 
         <Group width={width} height={height}>
           {transformedData.map((d, i) => (
-            <>
+            <React.Fragment key={i}>
               {hoveredId === d.data.values.id && (
                 <Circle
                   key={`circle-hovered-${i}`}
@@ -255,7 +234,7 @@ const CustomerMapChart = ({
                 onPointerMove={handlePointerMove(d)}
                 cursor='pointer'
               />
-            </>
+            </React.Fragment>
           ))}
         </Group>
       </svg>
