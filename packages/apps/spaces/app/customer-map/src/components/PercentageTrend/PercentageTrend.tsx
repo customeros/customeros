@@ -1,7 +1,7 @@
 'use client';
 import sample from 'lodash/sample';
 
-import { Flex } from '@ui/layout/Flex';
+import { cn } from '@ui/utils/cn';
 import { Text } from '@ui/typography/Text';
 import { Minus } from '@ui/media/icons/Minus';
 import { TrendUp01 } from '@ui/media/icons/TrendUp01';
@@ -35,20 +35,18 @@ export const PercentageTrend = ({ percentage }: { percentage: string }) => {
 
   const color =
     percentage.indexOf('0') == 0
-      ? 'gray.700'
+      ? 'text-gray-700'
       : percentage.indexOf('-') == 0
-      ? 'yellow.600'
-      : 'green.600';
+      ? 'text-yellow-600'
+      : 'text-green-600';
 
   const quote = percentage.indexOf('0') == 0 ? sample(quotes) : 'vs last mth';
 
   return (
-    <Flex align='center' gap='1'>
+    <div className='flex items-center gap-1'>
       {icon}
-      <Text fontSize='sm' color={color}>
-        {percentage}
-      </Text>
+      <p className={cn(color, 'text-sm')}>{percentage}</p>
       <Text fontSize='sm'>{quote}</Text>
-    </Flex>
+    </div>
   );
 };

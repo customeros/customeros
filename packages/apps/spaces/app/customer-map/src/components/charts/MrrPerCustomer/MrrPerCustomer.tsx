@@ -3,7 +3,7 @@ import dynamic from 'next/dynamic';
 
 import ParentSize from '@visx/responsive/lib/components/ParentSize';
 
-import { Skeleton } from '@ui/presentation/Skeleton';
+import { Skeleton } from '@ui/feedback/Skeleton';
 import { ChartCard } from '@customerMap/components/ChartCard';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
@@ -42,7 +42,7 @@ export const MrrPerCustomer = () => {
 
   return (
     <ChartCard
-      flex='1'
+      className='flex-1'
       stat={stat}
       hasData={hasContracts}
       title='MRR per customer'
@@ -50,21 +50,19 @@ export const MrrPerCustomer = () => {
       renderSubStat={() => <PercentageTrend percentage={percentage} />}
     >
       <ParentSize>
-        {({ width }) => (
-          <Skeleton
-            w='full'
-            h='200px'
-            endColor='gray.300'
-            startColor='gray.300'
-            isLoaded={!isLoading}
-          >
-            <MrrPerCustomerChart
-              width={width}
-              data={chartData}
-              hasContracts={hasContracts}
-            />
-          </Skeleton>
-        )}
+        {({ width }) => {
+          return (
+            <>
+              {isLoading && <Skeleton className='h-[200px] w-full' />}
+
+              <MrrPerCustomerChart
+                width={width}
+                data={chartData}
+                hasContracts={hasContracts}
+              />
+            </>
+          );
+        }}
       </ParentSize>
     </ChartCard>
   );

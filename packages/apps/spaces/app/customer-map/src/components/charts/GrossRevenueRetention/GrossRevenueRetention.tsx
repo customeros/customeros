@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic';
 import ParentSize from '@visx/responsive/lib/components/ParentSize';
 
 import { Text } from '@ui/typography/Text';
-import { Skeleton } from '@ui/presentation/Skeleton';
+import { Skeleton } from '@ui/feedback/Skeleton';
 import { ChartCard } from '@customerMap/components/ChartCard';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
@@ -51,7 +51,7 @@ export const GrossRevenueRetention = () => {
 
   return (
     <ChartCard
-      flex='2'
+      className='flex-2'
       stat={hasMissingData ? undefined : stat}
       hasData={hasContracts}
       title='Gross Revenue Retention'
@@ -67,21 +67,19 @@ export const GrossRevenueRetention = () => {
       }
     >
       <ParentSize>
-        {({ width }) => (
-          <Skeleton
-            w='full'
-            h='200px'
-            endColor='gray.300'
-            startColor='gray.300'
-            isLoaded={!isLoading}
-          >
-            <RevenueRetentionRateChart
-              width={width}
-              data={chartData}
-              hasContracts={hasMissingData ? false : hasContracts}
-            />
-          </Skeleton>
-        )}
+        {({ width }) => {
+          return (
+            <>
+              {isLoading && <Skeleton className='w-full h-[200px]' />}
+
+              <RevenueRetentionRateChart
+                width={width}
+                data={chartData}
+                hasContracts={hasMissingData ? false : hasContracts}
+              />
+            </>
+          );
+        }}
       </ParentSize>
     </ChartCard>
   );

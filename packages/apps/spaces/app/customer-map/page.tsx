@@ -1,7 +1,5 @@
 'use client';
 
-import { Flex } from '@ui/layout/Flex';
-
 import { CustomerMap } from './src/components/charts/CustomerMap';
 import { ARRBreakdown } from './src/components/charts/ARRBreakdown';
 import { NewCustomers } from './src/components/charts/NewCustomers';
@@ -14,30 +12,30 @@ import { GrossRevenueRetention } from './src/components/charts/GrossRevenueReten
 
 export default function DashboardPage() {
   return (
-    <Flex flexDir='column' pl='3' pt='4'>
-      <Flex mb='6'>
+    <div className='flex flex-col pl-3 pt-4'>
+      <div className='flex mb-6'>
         <CustomerMap />
-      </Flex>
+      </div>
 
-      <Flex gap='3' mb='3'>
+      <div className='flex gap-3 mb-3'>
         <MrrPerCustomer />
         <GrossRevenueRetention />
-      </Flex>
+      </div>
 
-      <Flex gap='3' mb='3'>
+      <div className='flex gap-3 mb-3'>
         <ARRBreakdown />
         <RevenueAtRisk />
-      </Flex>
+      </div>
 
-      <Flex gap='3' mb='3'>
+      <div className='flex gap-3 mb-3'>
         <NewCustomers />
         <RetentionRate />
-      </Flex>
+      </div>
 
-      <Flex gap='3'>
+      <div className='flex gap-3'>
         <TimeToOnboard />
         <OnboardingCompletion />
-      </Flex>
-    </Flex>
+      </div>
+    </div>
   );
 }

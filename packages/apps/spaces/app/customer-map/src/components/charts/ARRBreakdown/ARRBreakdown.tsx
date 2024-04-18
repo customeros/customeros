@@ -3,7 +3,8 @@ import dynamic from 'next/dynamic';
 
 import ParentSize from '@visx/responsive/lib/components/ParentSize';
 
-import { Skeleton } from '@ui/presentation/Skeleton';
+import { cn } from '@ui/utils/cn';
+import { Skeleton } from '@ui/feedback/Skeleton';
 import { ChartCard } from '@customerMap/components/ChartCard';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
@@ -42,7 +43,7 @@ export const ARRBreakdown = () => {
 
   return (
     <ChartCard
-      flex='3'
+      className='flex-3'
       stat={stat}
       title='ARR breakdown'
       hasData={hasContracts}
@@ -50,21 +51,22 @@ export const ARRBreakdown = () => {
       renderSubStat={() => <PercentageTrend percentage={percentage} />}
     >
       <ParentSize>
-        {({ width }) => (
-          <Skeleton
-            w='full'
-            h={isLoading ? '200px' : 'full'}
-            endColor='gray.300'
-            startColor='gray.300'
-            isLoaded={!isLoading}
-          >
-            <RevenueRetentionRateChart
-              width={width}
-              data={chartData}
-              hasContracts={hasContracts}
-            />
-          </Skeleton>
-        )}
+        {({ width }) => {
+          return (
+            <>
+              {isLoading && (
+                <Skeleton
+                  className={cn(isLoading ? 'h-[200px]' : 'h-full', 'w-full')}
+                />
+              )}
+              <RevenueRetentionRateChart
+                width={width}
+                data={chartData}
+                hasContracts={hasContracts}
+              />
+            </>
+          );
+        }}
       </ParentSize>
     </ChartCard>
   );

@@ -9,9 +9,7 @@ import {
   AnimatedBarSeries,
 } from '@visx/xychart';
 
-import { useToken } from '@ui/utils';
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
+import { cn } from '@ui/utils/cn';
 
 import { mockData } from './mock';
 import { Legend } from '../../Legend';
@@ -39,15 +37,16 @@ const RetentionRate = ({
   hasContracts,
 }: RetentionRateProps) => {
   const data = hasContracts ? _data : mockData;
-  const [gray700, warning950, greenLight500] = useToken('colors', [
-    'gray.700',
-    hasContracts ? 'warning.950' : 'gray.300',
-    hasContracts ? 'greenLight.500' : 'gray.200',
-  ]);
+
+  const colors = {
+    gray700: '#344054',
+    warning950: hasContracts ? '#4E1D09' : '#D0D5DD',
+    greenLight500: hasContracts ? '#66C61C' : '#EAECF0',
+  };
 
   const colorScale = {
-    Renewed: greenLight500,
-    Churned: warning950,
+    Renewed: colors.greenLight500,
+    Churned: colors.warning950,
   };
 
   const isMissingData = (dataPoint: 'renewed' | 'churned') =>
@@ -146,7 +145,7 @@ const RetentionRate = ({
           style={{
             position: 'absolute',
             padding: '8px 12px',
-            background: gray700,
+            background: colors.gray700,
             borderRadius: '8px',
           }}
           renderTooltip={({ tooltipData }) => {
@@ -158,14 +157,12 @@ const RetentionRate = ({
             ).values;
 
             return (
-              <Flex flexDir='column'>
+              <div className='flex flex-col'>
                 {hasContracts ? (
                   <>
-                    <Text color='white' fontWeight='semibold' fontSize='sm'>
-                      {xLabel}
-                    </Text>
+                    <p className='text-white font-semibold text-sm'>{xLabel}</p>
 
-                    <Flex direction='column'>
+                    <div className='flex flex-col'>
                       <TooltipEntry
                         label='Renewed'
                         value={values.renewed}
@@ -178,21 +175,21 @@ const RetentionRate = ({
                         color={colorScale.Churned}
                         isMissingData={isMissingData('churned')}
                       />
-                    </Flex>
+                    </div>
                   </>
                 ) : (
-                  <Text color='white' fontWeight='semibold' fontSize='sm'>
+                  <p className='text-white font-semibold text-sm'>
                     No data yet
-                  </Text>
+                  </p>
                 )}
-              </Flex>
+              </div>
             );
           }}
         />
       </XYChart>
-      <Text color='gray.500' fontSize='xs' mt='2'>
+      <p className='text-gray-500 text-xs mt-2'>
         <i>*Key data missing.</i>
-      </Text>
+      </p>
     </>
   );
 };
@@ -209,25 +206,25 @@ const TooltipEntry = ({
   isMissingData?: boolean;
 }) => {
   return (
-    <Flex align='center' gap='4'>
-      <Flex align='center' flex='1' gap='2'>
-        <Flex
-          w='2'
-          h='2'
-          bg={color}
-          borderRadius='full'
-          border='1px solid white'
+    <div className='flex items-center gap-4'>
+      <div className='flex items-center flex-1 gap-2'>
+        <div
+          className='flex w-2 h-2  rounded-full border border-white'
+          style={{ backgroundColor: color }}
         />
-        <Text color='white' fontSize='sm'>
-          {label}
-        </Text>
-      </Flex>
-      <Flex justify='flex-start'>
-        <Text color={isMissingData ? 'gray.400' : 'white'} fontSize='sm'>
+        <p className='text-white text-sm'>{label}</p>
+      </div>
+      <div className='flex justify-start'>
+        <p
+          className={cn(
+            isMissingData ? 'text-gray-400' : 'text-white',
+            'text-sm',
+          )}
+        >
           {isMissingData ? '*' : value}
-        </Text>
-      </Flex>
-    </Flex>
+        </p>
+      </div>
+    </div>
   );
 };
 

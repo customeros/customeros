@@ -1,19 +1,20 @@
 'use client';
 import { ReactNode, PropsWithChildren } from 'react';
 
-import { Flex } from '@ui/layout/Flex';
+import { twMerge } from 'tailwind-merge';
+
+import { cn } from '@ui/utils/cn';
 import { useDisclosure } from '@ui/utils';
-import { Text } from '@ui/typography/Text';
-import { Heading } from '@ui/typography/Heading';
-import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog';
-import { Card, CardBody, CardProps, CardHeader } from '@ui/presentation/Card';
+import { Card, CardHeader, CardContent } from '@ui/presentation/Card/Card';
+import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog/InfoDialog2';
 
 import { HelpButton } from '../HelpButton';
 
-interface ChartCardProps extends CardProps {
+interface ChartCardProps extends React.HtmlHTMLAttributes<HTMLDivElement> {
   stat?: string;
   title: string;
   hasData?: boolean;
+  className?: string;
   renderSubStat?: () => ReactNode;
   renderHelpContent?: () => ReactNode;
 }
@@ -23,6 +24,7 @@ export const ChartCard = ({
   title,
   hasData,
   children,
+  className,
   renderSubStat,
   renderHelpContent,
   ...props
@@ -32,39 +34,32 @@ export const ChartCard = ({
   return (
     <>
       <Card
-        borderRadius='lg'
-        boxShadow='none'
-        border='1px solid'
-        borderColor='gray.200'
-        _hover={{
-          '& #help-button': {
-            visibility: 'visible',
-          },
-        }}
+        className={twMerge(
+          'w-full rounded-lg shadow-none border border-gray-200 group',
+          className,
+        )}
         {...props}
       >
-        <CardHeader pb='0' pt='4' px='6'>
-          <Flex gap='2' align='center'>
-            <Text fontSize='lg' fontWeight='normal'>
-              {title}
-            </Text>
-            {renderHelpContent && (
+        <CardHeader className='pb-0 pt-4 px-6'>
+          <div className='flex gap-2 items-center'>
+            <p className='text-lg font-normal'>{title}</p>
+            {!!renderHelpContent && (
               <HelpButton isOpen={isOpen} onOpen={onOpen} />
             )}
-          </Flex>
+          </div>
           {stat && (
-            <Heading
-              fontSize={hasData ? undefined : '18px'}
-              color={hasData ? 'gray.700' : 'gray.400'}
+            <h2
+              className={cn(
+                hasData ? 'text-gray-700' : 'text-lg text-gray-400',
+                'text-3xl font-semibold',
+              )}
             >
               {hasData ? stat : 'No data yet'}
-            </Heading>
+            </h2>
           )}
           {hasData && renderSubStat && renderSubStat?.()}
         </CardHeader>
-        <CardBody px='6' pb='6'>
-          {children}
-        </CardBody>
+        <CardContent className='flex pt-5 px-6 pb-6'>{children}</CardContent>
       </Card>
 
       <InfoDialog

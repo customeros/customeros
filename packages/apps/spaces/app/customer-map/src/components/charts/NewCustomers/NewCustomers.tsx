@@ -3,7 +3,8 @@ import dynamic from 'next/dynamic';
 
 import ParentSize from '@visx/responsive/lib/components/ParentSize';
 
-import { Skeleton } from '@ui/presentation/Skeleton';
+import { cn } from '@ui/utils/cn';
+import { Skeleton } from '@ui/feedback/Skeleton';
 import { ChartCard } from '@customerMap/components/ChartCard';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
@@ -35,7 +36,7 @@ export const NewCustomers = () => {
 
   return (
     <ChartCard
-      flex='1'
+      className='flex-1'
       stat={stat}
       title='New customers'
       hasData={hasContracts}
@@ -43,21 +44,22 @@ export const NewCustomers = () => {
       renderSubStat={() => <PercentageTrend percentage={percentage} />}
     >
       <ParentSize>
-        {({ width }) => (
-          <Skeleton
-            w='full'
-            h={isLoading ? '200px' : 'full'}
-            endColor='gray.300'
-            startColor='gray.300'
-            isLoaded={!isLoading}
-          >
-            <NewCustomersChart
-              width={width}
-              data={chartData}
-              hasContracts={hasContracts}
-            />
-          </Skeleton>
-        )}
+        {({ width }) => {
+          return (
+            <>
+              {isLoading && (
+                <Skeleton
+                  className={cn(isLoading ? 'h-[200px]' : 'h-full', 'w-full')}
+                />
+              )}
+              <NewCustomersChart
+                width={width}
+                data={chartData}
+                hasContracts={hasContracts}
+              />
+            </>
+          );
+        }}
       </ParentSize>
     </ChartCard>
   );

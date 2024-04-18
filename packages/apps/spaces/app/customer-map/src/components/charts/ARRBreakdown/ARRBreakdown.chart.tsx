@@ -10,9 +10,7 @@ import {
   AnimatedAxis,
 } from '@visx/xychart';
 
-import { useToken } from '@ui/utils';
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
+import { cn } from '@ui/utils/cn';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 
 import { mockData } from './mock';
@@ -44,33 +42,25 @@ const ARRBreakdown = ({
   hasContracts,
 }: ARRBreakdownProps) => {
   const data = hasContracts ? _data : mockData;
-  const [
-    gray700,
-    greenLight200,
-    greenLight400,
-    warning300,
-    warning600,
-    warning950,
-    greenLight700,
-    greenLight500,
-  ] = useToken('colors', [
-    'gray.700',
-    hasContracts ? 'greenLight.200' : 'gray.50',
-    hasContracts ? 'greenLight.400' : 'gray.300',
-    hasContracts ? 'warning.300' : 'gray.100',
-    hasContracts ? 'warning.600' : 'gray.200',
-    hasContracts ? 'warning.950' : 'gray.300',
-    hasContracts ? 'greenLight.700' : 'gray.300',
-    hasContracts ? 'greenLight.500' : 'gray.200',
-  ]);
+
+  const colors = {
+    gray700: '#344054',
+    greenLight200: hasContracts ? '#D0F8AB' : '#F9FAFB',
+    greenLight400: hasContracts ? '#85E13A' : '#D0D5DD',
+    warning300: hasContracts ? '#FEC84B' : '#F2F4F7',
+    warning600: hasContracts ? '#DC6803' : '#EAECF0',
+    warning950: hasContracts ? '#4E1D09' : '#D0D5DD',
+    greenLight700: hasContracts ? '#3B7C0F' : '#D0D5DD',
+    greenLight500: hasContracts ? '#66C61C' : '#EAECF0',
+  };
 
   const colorScale = {
-    NewlyContracted: greenLight700,
-    Renewals: greenLight500,
-    Upsells: greenLight200,
-    Downgrades: warning300,
-    Cancellations: warning600,
-    Churned: warning950,
+    NewlyContracted: colors.greenLight700,
+    Renewals: colors.greenLight500,
+    Upsells: colors.greenLight200,
+    Downgrades: colors.warning300,
+    Cancellations: colors.warning600,
+    Churned: colors.warning950,
   };
 
   const isMissingData = (dataPoint: keyof ARRBreakdownDatum) =>
@@ -90,13 +80,13 @@ const ARRBreakdown = ({
     {
       label: 'Upsells',
       color: colorScale.Upsells,
-      borderColor: greenLight400,
+      borderColor: colors.greenLight400,
       isMissingData: isMissingData('upsells'),
     },
     {
       label: 'Downgrades',
       color: colorScale.Downgrades,
-      borderColor: !hasContracts ? greenLight400 : undefined,
+      borderColor: !hasContracts ? colors.greenLight400 : undefined,
       isMissingData: isMissingData('downgrades'),
     },
     {
@@ -211,7 +201,7 @@ const ARRBreakdown = ({
           style={{
             position: 'absolute',
             padding: '8px 12px',
-            background: gray700,
+            background: colors.gray700,
             borderRadius: '8px',
           }}
           renderTooltip={({ tooltipData }) => {
@@ -229,18 +219,18 @@ const ARRBreakdown = ({
             const totalSum = sumPositives - sumNegatives;
 
             return (
-              <Flex flexDir='column'>
+              <div className='flex flex-col'>
                 {hasContracts ? (
                   <>
-                    <Flex justify='space-between' align='center'>
-                      <Text color='white' fontWeight='semibold' fontSize='sm'>
+                    <div className='flex justify-between items-center'>
+                      <p className='text-white font-semibold text-sm'>
                         {xLabel}
-                      </Text>
-                      <Text color='white' fontWeight='semibold' fontSize='sm'>
+                      </p>
+                      <p className='text-white font-semibold text-sm'>
                         {formatCurrency(totalSum)}
-                      </Text>
-                    </Flex>
-                    <Flex direction='column'>
+                      </p>
+                    </div>
+                    <div className='flex flex-col'>
                       <TooltipEntry
                         label='Upsells'
                         value={values.upsells}
@@ -277,21 +267,21 @@ const ARRBreakdown = ({
                         color={colorScale.Downgrades}
                         isMissingData={isMissingData('downgrades')}
                       />
-                    </Flex>
+                    </div>
                   </>
                 ) : (
-                  <Text color='white' fontWeight='semibold' fontSize='sm'>
+                  <p className='text-white font-semibold text-sm'>
                     No data yet
-                  </Text>
+                  </p>
                 )}
-              </Flex>
+              </div>
             );
           }}
         />
       </XYChart>
-      <Text color='gray.500' fontSize='xs' mt='2'>
+      <p className='text-gray-500 text-xs mt-2'>
         <i>*Key data missing.</i>
-      </Text>
+      </p>
     </>
   );
 };
@@ -308,25 +298,25 @@ const TooltipEntry = ({
   isMissingData?: boolean;
 }) => {
   return (
-    <Flex align='center' gap='4'>
-      <Flex align='center' flex='1' gap='2'>
-        <Flex
-          w='2'
-          h='2'
-          bg={color}
-          borderRadius='full'
-          border='1px solid white'
+    <div className='flex items-center gap-4'>
+      <div className='flex items-center flex-1 gap-2'>
+        <div
+          className='flex w-2 h-2 rounded-full border border-white'
+          style={{ backgroundColor: color }}
         />
-        <Text color='white' fontSize='sm'>
-          {label}
-        </Text>
-      </Flex>
-      <Flex>
-        <Text color={isMissingData ? 'gray.400' : 'white'} fontSize='sm'>
+        <p className='text-white text-sm'>{label}</p>
+      </div>
+      <div className='flex'>
+        <p
+          className={cn(
+            isMissingData ? 'text-gray-400' : 'text-white',
+            'text-sm',
+          )}
+        >
           {isMissingData ? '*' : formatCurrency(value)}
-        </Text>
-      </Flex>
-    </Flex>
+        </p>
+      </div>
+    </div>
   );
 };
 
