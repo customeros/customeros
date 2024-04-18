@@ -2,13 +2,13 @@ package mapper
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"time"
 )
 
-func MapEntityToOpportunity(entity *entity.OpportunityEntity) *model.Opportunity {
+func MapEntityToOpportunity(entity *neo4jentity.OpportunityEntity) *model.Opportunity {
 	if entity == nil {
 		return nil
 	}
@@ -26,10 +26,11 @@ func MapEntityToOpportunity(entity *entity.OpportunityEntity) *model.Opportunity
 		EstimatedClosedAt:      entity.EstimatedClosedAt,
 		GeneralNotes:           entity.GeneralNotes,
 		NextSteps:              entity.NextSteps,
-		RenewedAt:              entity.RenewedAt,
-		RenewalLikelihood:      MapOpportunityRenewalLikelihoodToModel(entity.RenewalLikelihood),
-		RenewalUpdatedByUserAt: entity.RenewalUpdatedByUserAt,
-		RenewalUpdatedByUserID: entity.RenewalUpdatedByUserId,
+		RenewedAt:              utils.IfNotNilTimeWithDefault(entity.RenewalDetails.RenewedAt, time.Time{}),
+		RenewalLikelihood:      MapOpportunityRenewalLikelihoodToModel(entity.RenewalDetails.RenewalLikelihood),
+		RenewalUpdatedByUserAt: utils.IfNotNilTimeWithDefault(entity.RenewalDetails.RenewalUpdatedByUserAt, time.Time{}),
+		RenewalUpdatedByUserID: entity.RenewalDetails.RenewalUpdatedByUserId,
+		RenewalApproved:        entity.RenewalDetails.RenewalApproved,
 		Comments:               entity.Comments,
 		Source:                 MapDataSourceToModel(entity.Source),
 		SourceOfTruth:          MapDataSourceToModel(entity.SourceOfTruth),
@@ -37,8 +38,8 @@ func MapEntityToOpportunity(entity *entity.OpportunityEntity) *model.Opportunity
 	}
 }
 
-func MapOpportunityUpdateInputToEntity(input model.OpportunityUpdateInput) *entity.OpportunityEntity {
-	opportunityEntity := entity.OpportunityEntity{
+func MapOpportunityUpdateInputToEntity(input model.OpportunityUpdateInput) *neo4jentity.OpportunityEntity {
+	opportunityEntity := neo4jentity.OpportunityEntity{
 		Id:                input.OpportunityID,
 		Name:              utils.IfNotNilString(input.Name),
 		Amount:            utils.IfNotNilFloat64(input.Amount),
@@ -54,7 +55,7 @@ func MapOpportunityUpdateInputToEntity(input model.OpportunityUpdateInput) *enti
 	return &opportunityEntity
 }
 
-func MapEntitiesToOpportunities(entities *entity.OpportunityEntities) []*model.Opportunity {
+func MapEntitiesToOpportunities(entities *neo4jentity.OpportunityEntities) []*model.Opportunity {
 	var Opportunities []*model.Opportunity
 	for _, OpportunityEntity := range *entities {
 		Opportunities = append(Opportunities, MapEntityToOpportunity(&OpportunityEntity))

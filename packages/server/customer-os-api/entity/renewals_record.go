@@ -5,7 +5,7 @@ import neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/
 type RenewalsRecordEntity struct {
 	Organization OrganizationEntity
 	Contract     neo4jentity.ContractEntity
-	Opportunity  OpportunityEntity
+	Opportunity  neo4jentity.OpportunityEntity
 }
 
 type RenewalsRecordEntities []RenewalsRecordEntity

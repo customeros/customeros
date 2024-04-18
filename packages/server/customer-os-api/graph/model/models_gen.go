@@ -1915,6 +1915,7 @@ type Opportunity struct {
 	GeneralNotes           string                       `json:"generalNotes"`
 	NextSteps              string                       `json:"nextSteps"`
 	RenewedAt              time.Time                    `json:"renewedAt"`
+	RenewalApproved        bool                         `json:"renewalApproved"`
 	RenewalLikelihood      OpportunityRenewalLikelihood `json:"renewalLikelihood"`
 	RenewalUpdatedByUserID string                       `json:"renewalUpdatedByUserId"`
 	RenewalUpdatedByUserAt time.Time                    `json:"renewalUpdatedByUserAt"`

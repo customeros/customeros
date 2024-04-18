@@ -3,9 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
@@ -13,6 +11,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
@@ -22,11 +22,10 @@ import (
 )
 
 type OpportunityService interface {
-	Update(ctx context.Context, opportunity *entity.OpportunityEntity) error
-	UpdateRenewal(ctx context.Context, opportunityId string, renewalLikelihood entity.OpportunityRenewalLikelihood, amount *float64, comments *string, ownerUserId *string, appSource string) error
-	GetById(ctx context.Context, id string) (*entity.OpportunityEntity, error)
-	GetOpportunitiesForContracts(ctx context.Context, contractIds []string) (*entity.OpportunityEntities, error)
-	mapDbNodeToOpportunityEntity(node dbtype.Node) *entity.OpportunityEntity
+	Update(ctx context.Context, opportunity *neo4jentity.OpportunityEntity) error
+	UpdateRenewal(ctx context.Context, opportunityId string, renewalLikelihood neo4jenum.RenewalLikelihood, amount *float64, comments *string, ownerUserId *string, appSource string) error
+	GetById(ctx context.Context, id string) (*neo4jentity.OpportunityEntity, error)
+	GetOpportunitiesForContracts(ctx context.Context, contractIds []string) (*neo4jentity.OpportunityEntities, error)
 }
 type opportunityService struct {
 	log          logger.Logger
@@ -44,7 +43,7 @@ func NewOpportunityService(log logger.Logger, repositories *repository.Repositor
 	}
 }
 
-func (s *opportunityService) GetById(ctx context.Context, opportunityId string) (*entity.OpportunityEntity, error) {
+func (s *opportunityService) GetById(ctx context.Context, opportunityId string) (*neo4jentity.OpportunityEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.GetById")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -55,11 +54,11 @@ func (s *opportunityService) GetById(ctx context.Context, opportunityId string) 
 		wrappedErr := errors.Wrap(err, fmt.Sprintf("opportunity with id {%s} not found", opportunityId))
 		return nil, wrappedErr
 	} else {
-		return s.mapDbNodeToOpportunityEntity(*opportunityDbNode), nil
+		return neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode), nil
 	}
 }
 
-func (s *opportunityService) GetOpportunitiesForContracts(ctx context.Context, contractIDs []string) (*entity.OpportunityEntities, error) {
+func (s *opportunityService) GetOpportunitiesForContracts(ctx context.Context, contractIDs []string) (*neo4jentity.OpportunityEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.GetOpportunitiesForContracts")
 	defer span.Finish()
 	span.LogFields(log.Object("contractIDs", contractIDs))
@@ -68,44 +67,16 @@ func (s *opportunityService) GetOpportunitiesForContracts(ctx context.Context, c
 	if err != nil {
 		return nil, err
 	}
-	opportunityEntities := make(entity.OpportunityEntities, 0, len(opportunities))
+	opportunityEntities := make(neo4jentity.OpportunityEntities, 0, len(opportunities))
 	for _, v := range opportunities {
-		opportunityEntity := s.mapDbNodeToOpportunityEntity(*v.Node)
+		opportunityEntity := neo4jmapper.MapDbNodeToOpportunityEntity(v.Node)
 		opportunityEntity.DataloaderKey = v.LinkedNodeId
 		opportunityEntities = append(opportunityEntities, *opportunityEntity)
 	}
 	return &opportunityEntities, nil
 }
 
-func (s *opportunityService) mapDbNodeToOpportunityEntity(dbNode dbtype.Node) *entity.OpportunityEntity {
-	props := utils.GetPropsFromNode(dbNode)
-	opportunity := entity.OpportunityEntity{
-		Id:                     utils.GetStringPropOrEmpty(props, "id"),
-		Name:                   utils.GetStringPropOrEmpty(props, "name"),
-		CreatedAt:              utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:              utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		InternalStage:          entity.GetInternalStage(utils.GetStringPropOrEmpty(props, "internalStage")),
-		ExternalStage:          utils.GetStringPropOrEmpty(props, "externalStage"),
-		InternalType:           entity.GetInternalType(utils.GetStringPropOrEmpty(props, "internalType")),
-		ExternalType:           utils.GetStringPropOrEmpty(props, "externalType"),
-		Amount:                 utils.GetFloatPropOrZero(props, "amount"),
-		MaxAmount:              utils.GetFloatPropOrZero(props, "maxAmount"),
-		EstimatedClosedAt:      utils.GetTimePropOrNil(props, "estimatedClosedAt"),
-		NextSteps:              utils.GetStringPropOrEmpty(props, "nextSteps"),
-		GeneralNotes:           utils.GetStringPropOrEmpty(props, "generalNotes"),
-		RenewedAt:              utils.GetTimePropOrEpochStart(props, "renewedAt"),
-		RenewalLikelihood:      entity.GetOpportunityRenewalLikelihood(utils.GetStringPropOrEmpty(props, "renewalLikelihood")),
-		RenewalUpdatedByUserAt: utils.GetTimePropOrEpochStart(props, "renewalUpdatedByUserAt"),
-		RenewalUpdatedByUserId: utils.GetStringPropOrEmpty(props, "renewalUpdatedByUserId"),
-		Comments:               utils.GetStringPropOrEmpty(props, "comments"),
-		Source:                 neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:          neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		AppSource:              utils.GetStringPropOrEmpty(props, "appSource"),
-	}
-	return &opportunity
-}
-
-func (s *opportunityService) Update(ctx context.Context, opportunity *entity.OpportunityEntity) error {
+func (s *opportunityService) Update(ctx context.Context, opportunity *neo4jentity.OpportunityEntity) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.Update")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -161,7 +132,7 @@ func (s *opportunityService) Update(ctx context.Context, opportunity *entity.Opp
 	return nil
 }
 
-func (s *opportunityService) UpdateRenewal(ctx context.Context, opportunityId string, renewalLikelihood entity.OpportunityRenewalLikelihood, amount *float64, comments *string, ownerUserId *string, appSource string) error {
+func (s *opportunityService) UpdateRenewal(ctx context.Context, opportunityId string, renewalLikelihood neo4jenum.RenewalLikelihood, amount *float64, comments *string, ownerUserId *string, appSource string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.UpdateRenewal")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -205,13 +176,13 @@ func (s *opportunityService) UpdateRenewal(ctx context.Context, opportunityId st
 	opportunityRenewalUpdateRequest.FieldsMask = fieldsMask
 
 	switch renewalLikelihood {
-	case entity.OpportunityRenewalLikelihoodHigh:
+	case neo4jenum.RenewalLikelihoodHigh:
 		opportunityRenewalUpdateRequest.RenewalLikelihood = opportunitypb.RenewalLikelihood_HIGH_RENEWAL
-	case entity.OpportunityRenewalLikelihoodMedium:
+	case neo4jenum.RenewalLikelihoodMedium:
 		opportunityRenewalUpdateRequest.RenewalLikelihood = opportunitypb.RenewalLikelihood_MEDIUM_RENEWAL
-	case entity.OpportunityRenewalLikelihoodLow:
+	case neo4jenum.RenewalLikelihoodLow:
 		opportunityRenewalUpdateRequest.RenewalLikelihood = opportunitypb.RenewalLikelihood_LOW_RENEWAL
-	case entity.OpportunityRenewalLikelihoodZero:
+	case neo4jenum.RenewalLikelihoodZero:
 		opportunityRenewalUpdateRequest.RenewalLikelihood = opportunitypb.RenewalLikelihood_ZERO_RENEWAL
 	default:
 		opportunityRenewalUpdateRequest.RenewalLikelihood = opportunitypb.RenewalLikelihood_ZERO_RENEWAL
