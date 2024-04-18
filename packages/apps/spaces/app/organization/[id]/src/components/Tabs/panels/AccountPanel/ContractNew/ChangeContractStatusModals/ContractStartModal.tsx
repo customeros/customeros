@@ -1,7 +1,9 @@
 'use client';
-import React, { useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import { useForm } from 'react-inverted-form';
+import React, { useRef, useEffect } from 'react';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { UseMutationResult } from '@tanstack/react-query';
 
 import { FeaturedIcon } from '@ui/media/Icon';
@@ -12,8 +14,11 @@ import { ModalBody } from '@ui/overlay/Modal/Modal';
 import { RefreshCw05 } from '@ui/media/icons/RefreshCw05';
 import { Exact, ContractStatus, ContractUpdateInput } from '@graphql/types';
 import { DatePickerUnderline } from '@ui/form/DatePicker/DatePickerUnderline';
-import { GetContractsQuery } from '@organization/src/graphql/getContracts.generated';
 import { UpdateContractMutation } from '@organization/src/graphql/updateContract.generated';
+import {
+  GetContractsQuery,
+  useGetContractsQuery,
+} from '@organization/src/graphql/getContracts.generated';
 import {
   Modal,
   ModalFooter,
@@ -46,6 +51,11 @@ export const ContractStartModal = ({
   onUpdateContract,
   status,
 }: ContractStartModalProps) => {
+  const queryClient = useQueryClient();
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const id = useParams()?.id as string;
+  const queryKey = useGetContractsQuery.getKey({ id });
+
   const formId = `contract-starts-on-form-${contractId}`;
   const { state, setDefaultValues } = useForm<{
     serviceStarted?: string | Date | null;
@@ -81,6 +91,18 @@ export const ContractStartModal = ({
       {
         onSuccess: () => {
           onClose();
+        },
+        onSettled: () => {
+          if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+          }
+
+          timeoutRef.current = setTimeout(() => {
+            queryClient.invalidateQueries({ queryKey });
+            queryClient.invalidateQueries({
+              queryKey: ['GetTimeline.infinite'],
+            });
+          }, 1000);
         },
       },
     );

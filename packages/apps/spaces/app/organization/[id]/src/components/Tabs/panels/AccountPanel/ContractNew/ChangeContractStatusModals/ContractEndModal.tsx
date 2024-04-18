@@ -1,7 +1,9 @@
 'use client';
 import React, { useRef } from 'react';
+import { useParams } from 'next/navigation';
 import { useForm } from 'react-inverted-form';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { UseMutationResult } from '@tanstack/react-query';
 
 import { FeaturedIcon } from '@ui/media/Icon';
@@ -12,7 +14,6 @@ import { ModalBody } from '@ui/overlay/Modal/Modal';
 import { Radio, RadioGroup } from '@ui/form/Radio/Radio2';
 import { Exact, ContractUpdateInput } from '@graphql/types';
 import { DatePickerUnderline } from '@ui/form/DatePicker/DatePickerUnderline';
-import { GetContractsQuery } from '@organization/src/graphql/getContracts.generated';
 import { UpdateContractMutation } from '@organization/src/graphql/updateContract.generated';
 import {
   Modal,
@@ -21,6 +22,10 @@ import {
   ModalContent,
   ModalOverlay,
 } from '@ui/overlay/Modal';
+import {
+  GetContractsQuery,
+  useGetContractsQuery,
+} from '@organization/src/graphql/getContracts.generated';
 
 interface ContractEndModalProps {
   isOpen: boolean;
@@ -57,6 +62,11 @@ export const ContractEndModal = ({
   onUpdateContract,
   contractEnded,
 }: ContractEndModalProps) => {
+  const queryClient = useQueryClient();
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const id = useParams()?.id as string;
+  const queryKey = useGetContractsQuery.getKey({ id });
+
   const initialRef = useRef(null);
   const [value, setValue] = React.useState(EndContract.Now);
   const formId = `contract-ends-on-form-${contractId}`;
@@ -93,6 +103,18 @@ export const ContractEndModal = ({
       {
         onSuccess: () => {
           onClose();
+        },
+        onSettled: () => {
+          if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+          }
+
+          timeoutRef.current = setTimeout(() => {
+            queryClient.invalidateQueries({ queryKey });
+            queryClient.invalidateQueries({
+              queryKey: ['GetTimeline.infinite'],
+            });
+          }, 1000);
         },
       },
     );
