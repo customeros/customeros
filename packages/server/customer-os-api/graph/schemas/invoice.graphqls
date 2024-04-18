@@ -88,6 +88,7 @@ type InvoiceLine implements MetadataInterface {
     subtotal:           Float!
     taxDue:             Float!
     total:              Float!
+    contractLineItem:   ServiceLineItem! @goField(forceResolver: true)
 }
 
 type Tax {

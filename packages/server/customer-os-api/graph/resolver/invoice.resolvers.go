@@ -7,7 +7,6 @@ package resolver
 import (
 	"context"
 	"errors"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
@@ -64,6 +63,20 @@ func (r *invoiceResolver) InvoiceLineItems(ctx context.Context, obj *model.Invoi
 		return nil, nil
 	}
 	return mapper.MapEntitiesToInvoiceLines(entities), nil
+}
+
+// ContractLineItem is the resolver for the contractLineItem field.
+func (r *invoiceLineResolver) ContractLineItem(ctx context.Context, obj *model.InvoiceLine) (*model.ServiceLineItem, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	serviceLineItemEntity, err := dataloader.For(ctx).GetServiceLineItemForInvoiceLine(ctx, obj.Metadata.ID)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("Failed to get contract line item for invoice line %s: %s", obj.Metadata.ID, err.Error())
+		graphql.AddErrorf(ctx, "Failed to get contract line items for invoice line %s", obj.Metadata.ID)
+		return nil, nil
+	}
+	return mapper.MapEntityToServiceLineItem(serviceLineItemEntity), nil
 }
 
 // InvoiceNextDryRunForContract is the resolver for the invoice_NextDryRunForContract field.
@@ -346,4 +359,8 @@ func (r *queryResolver) Invoices(ctx context.Context, pagination *model.Paginati
 // Invoice returns generated.InvoiceResolver implementation.
 func (r *Resolver) Invoice() generated.InvoiceResolver { return &invoiceResolver{r} }
 
+// InvoiceLine returns generated.InvoiceLineResolver implementation.
+func (r *Resolver) InvoiceLine() generated.InvoiceLineResolver { return &invoiceLineResolver{r} }
+
 type invoiceResolver struct{ *Resolver }
+type invoiceLineResolver struct{ *Resolver }
