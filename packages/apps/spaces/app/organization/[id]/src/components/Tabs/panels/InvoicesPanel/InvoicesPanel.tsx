@@ -43,7 +43,7 @@ export const InvoicesPanel = () => {
   if (totalInvoicesCount === 0) {
     return (
       <Flex justifyContent='center'>
-        <EmptyState maxW={448} />
+        <EmptyState />
       </Flex>
     );
   }

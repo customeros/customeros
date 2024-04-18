@@ -17,12 +17,11 @@ export const Empty = () => {
           <HalfCirclePattern />
         </div>
         <div className='flex flex-col text-center items-center translate-y-[-120px]'>
-          <p className='text-gray-900 text-md font-semibold'>
-            Awaiting your invoices
+          <p className='text-gray-700 text-md font-semibold'>
+            No upcoming invoices
           </p>
-          <p className='text-sm text-gray-600 my-1'>
-            Create your first contract with services. Once issued, <br />
-            invoices will appear here.
+          <p className='text-sm text-gray-500 my-1'>
+            Schedule invoices by creating a contract with services
           </p>
         </div>
       </div>

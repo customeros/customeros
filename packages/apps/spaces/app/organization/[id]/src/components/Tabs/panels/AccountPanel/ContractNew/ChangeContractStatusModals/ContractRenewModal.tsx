@@ -1,11 +1,15 @@
 'use client';
 import React, { useRef } from 'react';
+import { useParams } from 'next/navigation';
+
+import { useQueryClient } from '@tanstack/react-query';
 
 import { FeaturedIcon } from '@ui/media/Icon';
 import { Button } from '@ui/form/Button/Button';
 import { ModalBody } from '@ui/overlay/Modal/Modal';
 import { RefreshCw05 } from '@ui/media/icons/RefreshCw05';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { useGetContractsQuery } from '@organization/src/graphql/getContracts.generated';
 import { useRenewContractMutation } from '@organization/src/graphql/renewContract.generated';
 import {
   Modal,
@@ -30,10 +34,27 @@ export const ContractRenewsModal = ({
 }: ContractEndModalProps) => {
   const initialRef = useRef(null);
   const client = getGraphQLClient();
+  const id = useParams()?.id as string;
+
+  const queryKey = useGetContractsQuery.getKey({ id });
+  const queryClient = useQueryClient();
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const { mutate } = useRenewContractMutation(client, {
     onSuccess: () => {
       onClose();
+    },
+    onSettled: () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+
+      timeoutRef.current = setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey });
+        queryClient.invalidateQueries({
+          queryKey: ['GetTimeline.infinite'],
+        });
+      }, 1000);
     },
   });
 

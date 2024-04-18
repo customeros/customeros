@@ -30,7 +30,7 @@ export const FormInput = forwardRef(
     const { getInputProps, renderError, state } = useField(name, formId);
 
     return (
-      <div>
+      <div className='w-full'>
         <label className={isLabelHidden ? 'sr-only' : ''} {...labelProps}>
           {label}
         </label>
