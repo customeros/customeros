@@ -201,6 +201,7 @@ export const ContractCard = ({
               'Unnamed'
             }
             nextInvoiceDate={data?.billingDetails?.nextInvoicing}
+            upcomingInvoices={data?.upcomingInvoices}
           />
         </article>
 

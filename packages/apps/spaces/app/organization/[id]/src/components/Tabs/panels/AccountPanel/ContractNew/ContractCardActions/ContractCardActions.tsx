@@ -2,26 +2,27 @@ import React, { useMemo } from 'react';
 
 import { UseMutationResult } from '@tanstack/react-query';
 
-import { useDisclosure } from '@ui/utils';
 import { DotLive } from '@ui/media/icons/DotLive';
 import { XSquare } from '@ui/media/icons/XSquare';
 import { RefreshCw05 } from '@ui/media/icons/RefreshCw05';
 import { Exact, ContractStatus, ContractUpdateInput } from '@graphql/types';
 import { GetContractsQuery } from '@organization/src/graphql/getContracts.generated';
 import { UpdateContractMutation } from '@organization/src/graphql/updateContract.generated';
+import { ContractEndModal } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ChangeContractStatusModals';
 import { ContractMenu } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ContractCardActions/ContractMenu';
 import { ContractStatusTag } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ContractCardActions/ContractStatusTag';
-import { ContractRenewsModal } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ChangeContractStatusModals/ContractRenewModal';
+import { ContractStatusModal } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ChangeContractStatusModals/ContractStatusModal';
 import {
-  ContractEndModal,
-  ContractStartModal,
-} from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ChangeContractStatusModals';
+  ContractStatusModalMode,
+  useContractModalStatusContext,
+} from '@organization/src/components/Tabs/panels/AccountPanel/context/ContractStatusModalsContext';
 
 interface ContractStatusSelectProps {
   renewsAt?: string;
   contractId: string;
   status: ContractStatus;
   serviceStarted?: string;
+  upcomingInvoices: any[];
   organizationName: string;
   nextInvoiceDate?: string;
   onOpenEditModal: () => void;
@@ -43,28 +44,9 @@ export const ContractCardActions: React.FC<ContractStatusSelectProps> = ({
   onUpdateContract,
   nextInvoiceDate,
   onOpenEditModal,
+  upcomingInvoices,
 }) => {
-  const {
-    onOpen: onOpenEndModal,
-    onClose: onCloseEndModal,
-    isOpen,
-  } = useDisclosure({
-    id: 'end-contract-modal',
-  });
-  const {
-    onOpen: onOpenStartModal,
-    onClose: onCloseStartModal,
-    isOpen: isStartModalOpen,
-  } = useDisclosure({
-    id: 'start-contract-modal',
-  });
-  const {
-    onOpen: onOpenRenewModal,
-    onClose: onCloseRenewModal,
-    isOpen: isRenewModalOpen,
-  } = useDisclosure({
-    id: 'renew-contract-modal',
-  });
+  const { onStatusModalOpen } = useContractModalStatusContext();
 
   const getStatusDisplay = useMemo(() => {
     let icon, text;
@@ -98,18 +80,20 @@ export const ContractCardActions: React.FC<ContractStatusSelectProps> = ({
       </>
     );
   }, [status]);
-
+  console.log('🏷️ ----- upcomingInvoices: ', upcomingInvoices);
   const handleChangeStatus = () => {
     switch (status) {
       case ContractStatus.Live:
-        onOpenEndModal();
+        onStatusModalOpen(ContractStatusModalMode.End);
         break;
       case ContractStatus.Draft:
       case ContractStatus.Ended:
-        onOpenStartModal();
+        onStatusModalOpen(ContractStatusModalMode.Start);
+
         break;
       case ContractStatus.OutOfContract:
-        onOpenRenewModal();
+        onStatusModalOpen(ContractStatusModalMode.Renew);
+
         break;
       case ContractStatus.Scheduled:
         break;
@@ -123,7 +107,6 @@ export const ContractCardActions: React.FC<ContractStatusSelectProps> = ({
         status={status}
         contractStarted={serviceStarted}
         statusContent={getStatusDisplay}
-        isEndModalOpen={isOpen}
         onHandleStatusChange={handleChangeStatus}
       />
       <ContractMenu
@@ -133,28 +116,21 @@ export const ContractCardActions: React.FC<ContractStatusSelectProps> = ({
         status={status}
       />
       <ContractEndModal
-        isOpen={isOpen}
-        onClose={onCloseEndModal}
+        contractId={contractId}
+        organizationName={organizationName}
+        renewsAt={renewsAt}
+        serviceStarted={serviceStarted}
+        nextInvoiceDate={nextInvoiceDate}
+        onUpdateContract={onUpdateContract}
+      />
+      <ContractStatusModal
         contractId={contractId}
         organizationName={organizationName}
         renewsAt={renewsAt}
         serviceStarted={serviceStarted}
         onUpdateContract={onUpdateContract}
         nextInvoiceDate={nextInvoiceDate}
-      />
-      <ContractStartModal
-        isOpen={isStartModalOpen}
-        onClose={onCloseStartModal}
-        contractId={contractId}
-        organizationName={organizationName}
-        serviceStarted={serviceStarted}
-        onUpdateContract={onUpdateContract}
-      />
-      <ContractRenewsModal
-        isOpen={isRenewModalOpen}
-        onClose={onCloseRenewModal}
-        contractId={contractId}
-        organizationName={organizationName}
+        upcomingInvoices={upcomingInvoices}
       />
     </div>
   );

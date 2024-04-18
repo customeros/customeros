@@ -37,7 +37,7 @@ export function ServicesTable({
             Amount
           </div>
         </div>
-        {services.map((service, index) => (
+        {services?.map((service, index) => (
           <div
             className='flex flex-row w-full justify-between border-b border-gray-300 py-2'
             key={index}

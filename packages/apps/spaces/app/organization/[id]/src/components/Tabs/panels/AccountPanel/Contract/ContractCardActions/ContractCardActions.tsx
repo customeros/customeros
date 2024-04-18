@@ -13,6 +13,7 @@ import { UpdateContractMutation } from '@organization/src/graphql/updateContract
 import { useRenewContractMutation } from '@organization/src/graphql/renewContract.generated';
 import { ContractMenu } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ContractCardActions/ContractMenu';
 import { ContractStatusTag } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ContractCardActions/ContractStatusTag';
+import { ContractStatusModal } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ChangeContractStatusModals/ContractStatusModal';
 import {
   ContractEndModal,
   ContractStartModal,
@@ -131,7 +132,7 @@ export const ContractCardActions: React.FC<ContractStatusSelectProps> = ({
         onHandleStatusChange={handleChangeStatus}
         status={status}
       />
-      <ContractEndModal
+      <ContractStatusModal
         isOpen={isOpen}
         onClose={onCloseEndModal}
         contractId={contractId}
@@ -140,14 +141,6 @@ export const ContractCardActions: React.FC<ContractStatusSelectProps> = ({
         serviceStarted={serviceStarted}
         onUpdateContract={onUpdateContract}
         nextInvoiceDate={nextInvoiceDate}
-      />
-      <ContractStartModal
-        isOpen={isStartModalOpen}
-        onClose={onCloseStartModal}
-        contractId={contractId}
-        organizationName={organizationName}
-        serviceStarted={serviceStarted}
-        onUpdateContract={onUpdateContract}
       />
     </div>
   );

@@ -16,22 +16,24 @@ import { Exact, ContractUpdateInput } from '@graphql/types';
 import { DatePickerUnderline } from '@ui/form/DatePicker/DatePickerUnderline';
 import { UpdateContractMutation } from '@organization/src/graphql/updateContract.generated';
 import {
+  GetContractsQuery,
+  useGetContractsQuery,
+} from '@organization/src/graphql/getContracts.generated';
+import {
   Modal,
   ModalFooter,
   ModalHeader,
   ModalContent,
   ModalOverlay,
-} from '@ui/overlay/Modal';
+} from '@ui/overlay/Modal/Modal';
 import {
-  GetContractsQuery,
-  useGetContractsQuery,
-} from '@organization/src/graphql/getContracts.generated';
+  ContractStatusModalMode,
+  useContractModalStatusContext,
+} from '@organization/src/components/Tabs/panels/AccountPanel/context/ContractStatusModalsContext';
 
 interface ContractEndModalProps {
-  isOpen: boolean;
   renewsAt?: string;
   contractId: string;
-  onClose: () => void;
   contractEnded?: string;
   serviceStarted?: string;
   nextInvoiceDate?: string;
@@ -53,8 +55,6 @@ export enum EndContract {
   CustomDate = 'CustomDate',
 }
 export const ContractEndModal = ({
-  isOpen,
-  onClose,
   contractId,
   organizationName,
   renewsAt,
@@ -67,7 +67,8 @@ export const ContractEndModal = ({
   const id = useParams()?.id as string;
   const queryKey = useGetContractsQuery.getKey({ id });
 
-  const initialRef = useRef(null);
+  const { isModalOpen, onStatusModalClose, mode } =
+    useContractModalStatusContext();
   const [value, setValue] = React.useState(EndContract.Now);
   const formId = `contract-ends-on-form-${contractId}`;
   const timeToRenewal = renewsAt
@@ -102,7 +103,7 @@ export const ContractEndModal = ({
       },
       {
         onSuccess: () => {
-          onClose();
+          onStatusModalClose();
         },
         onSettled: () => {
           if (timeoutRef.current) {
@@ -149,13 +150,11 @@ export const ContractEndModal = ({
 
   return (
     <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      initialFocusRef={initialRef}
-      size='md'
+      open={isModalOpen && mode === ContractStatusModalMode.End}
+      onOpenChange={onStatusModalClose}
     >
       <ModalOverlay />
-      <ModalContent borderRadius='2xl'>
+      <ModalContent>
         <ModalHeader>
           <FeaturedIcon size='lg' colorScheme='error'>
             <XSquare color='error.600' />
@@ -212,7 +211,7 @@ export const ContractEndModal = ({
             variant='outline'
             colorScheme='gray'
             className='w-full'
-            onClick={onClose}
+            onClick={onStatusModalClose}
           >
             Cancel
           </Button>
