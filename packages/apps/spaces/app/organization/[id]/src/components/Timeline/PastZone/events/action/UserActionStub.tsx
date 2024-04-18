@@ -40,5 +40,5 @@ export const UserActionStub: FC<ActionStubProps> = ({ data }) => {
       return <InvoiceStatusChangeAction data={data} mode={data.actionType} />;
   }
 
-  return <InvoiceStatusChangeAction data={data} />;
+  return null;
 };
