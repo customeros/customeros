@@ -339,11 +339,13 @@ export const BillingPanel = () => {
               </span>
 
               <ul className='pl-6 text-sm'>
-                <li>
+                <li className='list-disc'>
                   Automatically send customer invoices based on their contract
                   service line items
                 </li>
-                <li>Let customers pay using a connected payment provider</li>
+                <li className='list-disc'>
+                  Let customers pay using a connected payment provider
+                </li>
               </ul>
               <div className='items-center'>
                 <Button
@@ -352,7 +354,7 @@ export const BillingPanel = () => {
                   size='sm'
                   onClick={handleToggleInvoices}
                 >
-                  Enable invoicing
+                  Enable Customer billing
                 </Button>
               </div>
             </div>

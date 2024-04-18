@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { ActionType } from '@graphql/types';
+import { InvoicePreviewModal } from '@organization/src/components/Timeline/PastZone/events/invoice/InvoicePreviewModal';
 
 import { ServiceUpdatedActionPreview } from './service/ServiceUpdatedActionPreview';
 import { ContractStatusUpdatedActionPreview } from './contract/ContractStatusUpdatedActionPreview';
@@ -28,6 +29,6 @@ export const ActionPreviewModal: React.FC<ActionPreviewModalProps> = ({
     case ActionType.OnboardingStatusChanged:
       return <OnboardingStatusChangedActionPreview />;
     default:
-      return null;
+      return <InvoicePreviewModal />;
   }
 };

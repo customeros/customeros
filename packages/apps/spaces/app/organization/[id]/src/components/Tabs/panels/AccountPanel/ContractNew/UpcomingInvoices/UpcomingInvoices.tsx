@@ -14,6 +14,7 @@ import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { ArrowNarrowRight } from '@ui/media/icons/ArrowNarrowRight';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 import { useRenewContractMutation } from '@organization/src/graphql/renewContract.generated';
+import { useTimelineEventPreviewMethodsContext } from '@organization/src/components/Timeline/shared/TimelineEventPreview/context/TimelineEventPreviewContext';
 
 interface ContractCardProps {
   data: Contract;
@@ -29,6 +30,7 @@ export const UpcomingInvoices = ({
   const [isPaused, setIsPaused] = useState(false);
   const [isMissingFields, setFieldsMissing] = useState(false);
   const client = getGraphQLClient();
+  const { handleOpenInvoice } = useTimelineEventPreviewMethodsContext();
 
   const { mutate: renewContract } = useRenewContractMutation(client, {
     onSuccess: () => {
@@ -138,7 +140,13 @@ export const UpcomingInvoices = ({
       </p>
       <div>
         {data?.upcomingInvoices.map((invoice) => (
-          <div key={invoice.metadata.id} className='flex  text-sm'>
+          <div
+            key={invoice.metadata.id}
+            className='flex  text-sm'
+            role='button'
+            tabIndex={0}
+            onClick={() => handleOpenInvoice(invoice.metadata.id)}
+          >
             <div className='whitespace-nowrap mr-1'>Monthly recurring:</div>
             <div className='whitespace-nowrap text-gray-500 underline'>
               {formatCurrency(invoice.amountDue, 2, invoice.currency)} on{' '}
