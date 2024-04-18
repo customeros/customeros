@@ -46,6 +46,7 @@ import { ContractBillingDetailsForm } from './ContractBillingDetailsForm';
 
 interface SubscriptionServiceModalProps {
   isOpen: boolean;
+  renewsAt?: string;
   contractId: string;
   onClose: () => void;
   notes?: string | null;
@@ -94,6 +95,7 @@ export const EditContractModal = ({
   contractId,
   organizationName,
   notes,
+  renewsAt,
 }: SubscriptionServiceModalProps) => {
   const formId = `billing-details-form-${contractId}`;
   const organizationId = useParams()?.id as string;
@@ -398,6 +400,7 @@ export const EditContractModal = ({
                 tenantBillingProfile
                   ?.tenantBillingProfiles?.[0] as TenantBillingProfile
               }
+              renewedAt={renewsAt}
               currency={state?.values?.currency?.value}
               bankAccounts={bankAccountsData?.bankAccounts as BankAccount[]}
               payAutomatically={state?.values?.payAutomatically}

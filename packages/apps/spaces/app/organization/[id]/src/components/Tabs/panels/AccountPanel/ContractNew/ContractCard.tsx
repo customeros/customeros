@@ -183,7 +183,7 @@ export const ContractCard = ({
       >
         <article className='flex justify-between flex-1 w-full'>
           <FormInput
-            className='font-semibold no-border-bottom hover:border-none focus:border-none max-h-6 min-h-0'
+            className='font-semibold no-border-bottom hover:border-none focus:border-none max-h-6 min-h-0 w-full overflow-hidden overflow-ellipsis'
             name='contractName'
             formId={formId}
           />
@@ -245,6 +245,7 @@ export const ContractCard = ({
           onClose={onEditModalClose}
           organizationName={organizationName}
           notes={data?.billingDetails?.invoiceNote}
+          renewsAt={data?.opportunities?.[0]?.renewedAt}
         />
 
         <ServiceLineItemsModal

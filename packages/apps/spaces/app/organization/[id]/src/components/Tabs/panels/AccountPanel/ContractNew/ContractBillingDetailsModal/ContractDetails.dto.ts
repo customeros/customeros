@@ -92,6 +92,7 @@ export class ContractDetailsDto implements ContractDetailsForm {
       canPayWithBankTransfer: data?.canPayWithBankTransfer,
       autoRenew: data?.autoRenew,
       serviceStarted: data?.serviceStarted,
+      committedPeriodInMonths: data?.committedPeriodInMonths,
       billingDetails: {
         payOnline: data?.payOnline,
         payAutomatically: data?.payAutomatically,

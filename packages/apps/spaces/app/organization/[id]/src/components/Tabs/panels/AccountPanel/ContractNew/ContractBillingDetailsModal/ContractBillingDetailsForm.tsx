@@ -2,10 +2,12 @@
 import React, { FC, useMemo } from 'react';
 import { useField } from 'react-inverted-form';
 
+import { utcToZonedTime } from 'date-fns-tz';
 import { useConnections } from '@integration-app/react';
 import { useGetExternalSystemInstancesQuery } from '@settings/graphql/getExternalSystemInstances.generated';
 
 import { Button } from '@ui/form/Button/Button';
+import { DateTimeUtils } from '@spaces/utils/date';
 import { ModalBody } from '@ui/overlay/Modal/Modal';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { FormSwitch } from '@ui/form/Switch/FromSwitch';
@@ -33,6 +35,7 @@ import { ContractUploader } from './ContractUploader';
 interface SubscriptionServiceModalProps {
   formId: string;
   currency?: string;
+  renewedAt?: string;
   contractId: string;
   billingEnabled?: boolean;
   payAutomatically?: boolean | null;
@@ -48,6 +51,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
   bankAccounts,
   payAutomatically,
   billingEnabled,
+  renewedAt,
 }) => {
   const client = getGraphQLClient();
   const { data } = useGetExternalSystemInstancesQuery(client);
@@ -101,6 +105,12 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
 
     return method;
   }, [currency]);
+  const renewalDate = renewedAt
+    ? DateTimeUtils.format(
+        utcToZonedTime(renewedAt, 'UTC').toUTCString(),
+        DateTimeUtils.dateWithAbreviatedMonth,
+      )
+    : null;
 
   return (
     <ModalBody className='flex flex-col flex-1 p-0'>
@@ -116,7 +126,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
         </li>
         <li className='text-base mt-1.5'>
           <div className='flex items-baseline'>
-            Live until 2 Aug 2024,{' '}
+            Live until {renewalDate},{' '}
             <Button
               variant='ghost'
               size='sm'
