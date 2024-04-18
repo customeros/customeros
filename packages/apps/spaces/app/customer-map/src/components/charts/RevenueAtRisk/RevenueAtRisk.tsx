@@ -2,7 +2,6 @@
 
 import ParentSize from '@visx/responsive/lib/components/ParentSize';
 
-import { cn } from '@ui/utils/cn';
 import { Skeleton } from '@ui/feedback/Skeleton';
 import { ChartCard } from '@customerMap/components/ChartCard';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
@@ -56,17 +55,16 @@ export const RevenueAtRisk = () => {
         {({ width, height }) => {
           return (
             <>
-              <Skeleton
-                className={cn(isLoading ? 'h-[200px]' : 'h-full', 'w-full')}
-                isLoaded={!isLoading}
-              >
+              {isLoading ? (
+                <Skeleton className='h-[200px]' />
+              ) : (
                 <RevenueAtRiskChart
                   width={width}
                   height={height}
                   data={chartData}
                   hasContracts={hasContracts}
                 />
-              </Skeleton>
+              )}
             </>
           );
         }}
