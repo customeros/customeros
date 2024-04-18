@@ -250,11 +250,11 @@ export const AboutPanel = () => {
 
           <FormAutoresizeTextarea
             size='xs'
-            className='items-center'
+            className='items-start'
             name='targetAudience'
             formId='organization-about'
             placeholder='Target Audience'
-            leftElement={<Icons.Target5 color='gray.500' />}
+            leftElement={<Icons.Target5 color='gray.500' mt='1' />}
           />
 
           <FormSelect
