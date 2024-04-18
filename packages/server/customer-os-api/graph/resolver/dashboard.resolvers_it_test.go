@@ -322,9 +322,9 @@ func TestQueryResolver_Search_Organizations_By_Owner_In_IncludeEmptyFalse(t *tes
 	organizationId3 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org 1 for owner 2")
 	neo4jt.CreateOrganization(ctx, driver, tenantName, "org without owner")
 
-	neo4jt.UserOwnsOrganization(ctx, driver, userId1, organizationId1)
-	neo4jt.UserOwnsOrganization(ctx, driver, userId1, organizationId2)
-	neo4jt.UserOwnsOrganization(ctx, driver, userId2, organizationId3)
+	neo4jtest.UserOwnsOrganization(ctx, driver, userId1, organizationId1)
+	neo4jtest.UserOwnsOrganization(ctx, driver, userId1, organizationId2)
+	neo4jtest.UserOwnsOrganization(ctx, driver, userId2, organizationId3)
 
 	require.Equal(t, 4, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
@@ -359,9 +359,9 @@ func TestQueryResolver_Search_Organizations_By_Owner_In_IncludeEmptyTrue(t *test
 	organizationId3 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org 1 for owner 2")
 	organizationId4 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org without owner")
 
-	neo4jt.UserOwnsOrganization(ctx, driver, userId1, organizationId1)
-	neo4jt.UserOwnsOrganization(ctx, driver, userId1, organizationId2)
-	neo4jt.UserOwnsOrganization(ctx, driver, userId2, organizationId3)
+	neo4jtest.UserOwnsOrganization(ctx, driver, userId1, organizationId1)
+	neo4jtest.UserOwnsOrganization(ctx, driver, userId1, organizationId2)
+	neo4jtest.UserOwnsOrganization(ctx, driver, userId2, organizationId3)
 
 	require.Equal(t, 4, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
@@ -381,6 +381,42 @@ func TestQueryResolver_Search_Organizations_By_Owner_In_IncludeEmptyTrue(t *test
 	require.Equal(t, 3, len(organizationsPageStruct.DashboardView_Organizations.Content))
 	require.ElementsMatch(t, []string{organizationId1, organizationId2, organizationId4},
 		[]string{organizationsPageStruct.DashboardView_Organizations.Content[0].ID, organizationsPageStruct.DashboardView_Organizations.Content[1].ID, organizationsPageStruct.DashboardView_Organizations.Content[2].ID})
+}
+
+func TestQueryResolver_Search_Organizations_By_Owner_OnlyEmpties(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	userId1 := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
+	userId2 := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
+
+	organizationId1 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "org 1 for owner 1"})
+	organizationId2 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "org 2 for owner 1"})
+	organizationId3 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "org 1 for owner 2"})
+	organizationId4 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "org without owner"})
+
+	neo4jtest.UserOwnsOrganization(ctx, driver, userId1, organizationId1)
+	neo4jtest.UserOwnsOrganization(ctx, driver, userId1, organizationId2)
+	neo4jtest.UserOwnsOrganization(ctx, driver, userId2, organizationId3)
+
+	require.Equal(t, 4, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 3, neo4jtest.GetCountOfRelationships(ctx, driver, "OWNS"))
+
+	rawResponse := callGraphQL(t, "dashboard_view/organization/dashboard_view_organization_filter_by_owner", map[string]interface{}{"ownerIdList": []string{}, "ownerIdEmpty": true, "page": 1, "limit": 10})
+
+	var organizationsPageStruct struct {
+		DashboardView_Organizations model.OrganizationPage
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationsPageStruct)
+	require.Nil(t, err)
+
+	require.Equal(t, int64(4), organizationsPageStruct.DashboardView_Organizations.TotalAvailable)
+	require.Equal(t, int64(1), organizationsPageStruct.DashboardView_Organizations.TotalElements)
+	require.Equal(t, 1, len(organizationsPageStruct.DashboardView_Organizations.Content))
+	require.ElementsMatch(t, []string{organizationId4}, []string{organizationsPageStruct.DashboardView_Organizations.Content[0].ID})
 }
 
 func TestQueryResolver_Search_Organizations_By_External_Id(t *testing.T) {

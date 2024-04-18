@@ -100,7 +100,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 	locationFilterCypher, locationFilterParams := "", make(map[string]interface{})
 
 	ownerId := []string{}
-	ownerIncludeEmpty := true
+	ownerIncludeEmpty := false
 	externalId := ""
 
 	//ORGANIZATION, EMAIL, COUNTRY, REGION, LOCALITY
@@ -147,7 +147,9 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 			} else if filter.Filter.Property == SearchSortParamLocality {
 				locationFilter.Filters = append(locationFilter.Filters, utils.CreateStringCypherFilter("locality", *filter.Filter.Value.Str, utils.EQUALS))
 			} else if filter.Filter.Property == SearchSortParamOwnerId {
-				ownerId = *filter.Filter.Value.ArrayStr
+				if filter.Filter.Value.ArrayStr != nil {
+					ownerId = *filter.Filter.Value.ArrayStr
+				}
 				ownerIncludeEmpty = *filter.Filter.IncludeEmpty
 			} else if filter.Filter.Property == SearchParamExternalId {
 				externalId = *filter.Filter.Value.Str
@@ -194,242 +196,248 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		params := map[string]any{
-			"tenant":     tenant,
-			"ownerId":    ownerId,
-			"externalId": externalId,
-			"skip":       skip,
-			"limit":      limit,
-		}
+	params := map[string]any{
+		"tenant":     tenant,
+		"ownerId":    ownerId,
+		"externalId": externalId,
+		"skip":       skip,
+		"limit":      limit,
+	}
 
-		utils.MergeMapToMap(organizationFilterParams, params)
-		utils.MergeMapToMap(emailFilterParams, params)
-		utils.MergeMapToMap(locationFilterParams, params)
+	utils.MergeMapToMap(organizationFilterParams, params)
+	utils.MergeMapToMap(emailFilterParams, params)
+	utils.MergeMapToMap(locationFilterParams, params)
 
-		//region count query
-		countQuery := `MATCH (o:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
-		if len(ownerId) > 0 {
-			countQuery += ` OPTIONAL MATCH (o)<-[:OWNS]-(owner:User) WITH *`
-		}
-		if emailFilterCypher != "" {
-			countQuery += ` MATCH (o)-[:HAS]->(e:Email) WITH *`
-		}
-		if locationFilterCypher != "" {
-			countQuery += ` MATCH (o)-[:ASSOCIATED_WITH]->(l:Location) WITH *`
-		}
-		if externalId != "" {
-			countQuery += ` MATCH (o)-[:IS_LINKED_WITH {externalId:$externalId}]->(ext:ExternalSystem) WITH *`
-		}
-		countQuery += ` WHERE o.hide = false `
+	//region count query
+	countQuery := `MATCH (o:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+	if len(ownerId) > 0 || ownerIncludeEmpty {
+		countQuery += ` OPTIONAL MATCH (o)<-[:OWNS]-(owner:User) WITH *`
+	}
+	if emailFilterCypher != "" {
+		countQuery += ` MATCH (o)-[:HAS]->(e:Email) WITH *`
+	}
+	if locationFilterCypher != "" {
+		countQuery += ` MATCH (o)-[:ASSOCIATED_WITH]->(l:Location) WITH *`
+	}
+	if externalId != "" {
+		countQuery += ` MATCH (o)-[:IS_LINKED_WITH {externalId:$externalId}]->(ext:ExternalSystem) WITH *`
+	}
+	countQuery += ` WHERE o.hide = false `
 
-		if organizationFilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" || len(ownerId) > 0 {
-			countQuery += " AND "
-		}
+	if organizationFilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" || len(ownerId) > 0 || ownerIncludeEmpty {
+		countQuery += " AND "
+	}
 
-		countQueryParts := []string{}
-		if organizationFilterCypher != "" {
-			countQueryParts = append(countQueryParts, organizationFilterCypher)
+	countQueryParts := []string{}
+	if organizationFilterCypher != "" {
+		countQueryParts = append(countQueryParts, organizationFilterCypher)
+	}
+	if len(ownerId) > 0 || ownerIncludeEmpty {
+		if len(ownerId) == 0 {
+			countQueryParts = append(countQueryParts, fmt.Sprintf(` owner.id IS NULL `))
+		} else if ownerIncludeEmpty {
+			countQueryParts = append(countQueryParts, fmt.Sprintf(` (owner.id IN $ownerId OR owner.id IS NULL) `))
+		} else {
+			countQueryParts = append(countQueryParts, fmt.Sprintf(` owner.id IN $ownerId `))
 		}
-		if len(ownerId) > 0 {
-			if ownerIncludeEmpty {
-				countQueryParts = append(countQueryParts, fmt.Sprintf(` (owner.id IN $ownerId OR owner.id IS NULL) `))
-			} else {
-				countQueryParts = append(countQueryParts, fmt.Sprintf(` owner.id IN $ownerId `))
-			}
-		}
-		if emailFilterCypher != "" {
-			countQueryParts = append(countQueryParts, emailFilterCypher)
-		}
-		if locationFilterCypher != "" {
-			countQueryParts = append(countQueryParts, locationFilterCypher)
-		}
+	}
+	if emailFilterCypher != "" {
+		countQueryParts = append(countQueryParts, emailFilterCypher)
+	}
+	if locationFilterCypher != "" {
+		countQueryParts = append(countQueryParts, locationFilterCypher)
+	}
 
-		countQuery = countQuery + strings.Join(countQueryParts, " AND ") + fmt.Sprintf(` RETURN count(distinct(o))`)
+	countQuery = countQuery + strings.Join(countQueryParts, " AND ") + fmt.Sprintf(` RETURN count(distinct(o))`)
 
-		span.LogFields(log.String("countQuery", countQuery))
+	span.LogFields(log.String("countQuery", countQuery))
 
+	countRecord, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		countQueryResult, err := tx.Run(ctx, countQuery, params)
 		if err != nil {
 			return nil, err
-		}
-
-		countRecord, err := countQueryResult.Single(ctx)
-		if err != nil {
-			return nil, err
-		}
-		dbNodesWithTotalCount.Count = countRecord.Values[0].(int64)
-		//endregion
-
-		//region query to fetch data
-		query := `MATCH (o:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
-		if len(ownerId) > 0 {
-			query += fmt.Sprintf(` OPTIONAL MATCH (o)<-[:OWNS]-(owner:User) WITH *`)
-		}
-		if externalId != "" {
-			query += ` MATCH (o)-[:IS_LINKED_WITH {externalId:$externalId}]->(ext:ExternalSystem) WITH *`
-		}
-		query += fmt.Sprintf(` OPTIONAL MATCH (o)-[:HAS_DOMAIN]->(d:Domain) WITH *`)
-		query += fmt.Sprintf(` OPTIONAL MATCH (o)-[:HAS]->(e:Email_%s) WITH *`, tenant)
-		query += fmt.Sprintf(` OPTIONAL MATCH (o)-[:ASSOCIATED_WITH]->(l:Location_%s) WITH *`, tenant)
-		if sort != nil && sort.By == SearchSortParamOwner {
-			query += fmt.Sprintf(` OPTIONAL MATCH (o)<-[:OWNS]-(owner:User_%s) WITH *`, tenant)
-		}
-		query += ` WHERE (o.hide = false) `
-
-		if organizationFilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" || len(ownerId) > 0 {
-			query += " AND "
-		}
-
-		queryParts := []string{}
-		if organizationFilterCypher != "" {
-			queryParts = append(queryParts, organizationFilterCypher)
-		}
-		if len(ownerId) > 0 {
-			if ownerIncludeEmpty {
-				queryParts = append(queryParts, fmt.Sprintf(` (owner.id IN $ownerId OR owner.id IS NULL) `))
-			} else {
-				queryParts = append(queryParts, fmt.Sprintf(` owner.id IN $ownerId `))
-			}
-		}
-		if emailFilterCypher != "" {
-			queryParts = append(queryParts, emailFilterCypher)
-		}
-		if locationFilterCypher != "" {
-			queryParts = append(queryParts, locationFilterCypher)
-		}
-
-		//endregion
-		query = query + strings.Join(queryParts, " AND ")
-
-		// sort region
-		aliases := " o, d, l"
-		query += " WITH o, d, l "
-		if sort != nil && sort.By == SearchSortParamOwner {
-			if sort.Direction == model.SortingDirectionAsc {
-				query += ", CASE WHEN owner.firstName <> \"\" and not owner.firstName is null THEN owner.firstName ELSE 'ZZZZZZZZZZZZZZZZZZZ' END as OWNER_FIRST_NAME_FOR_SORTING "
-				query += ", CASE WHEN owner.lastName <> \"\" and not owner.lastName is null THEN owner.lastName ELSE 'ZZZZZZZZZZZZZZZZZZZ' END as OWNER_LAST_NAME_FOR_SORTING "
-			} else {
-				query += ", CASE WHEN owner.firstName <> \"\" and not owner.firstName is null THEN owner.firstName ELSE 'AAAAAAAAAAAAAAAAAAA' END as OWNER_FIRST_NAME_FOR_SORTING "
-				query += ", CASE WHEN owner.lastName <> \"\" and not owner.lastName is null THEN owner.lastName ELSE 'AAAAAAAAAAAAAAAAAAA' END as OWNER_LAST_NAME_FOR_SORTING "
-			}
-			aliases += ", OWNER_FIRST_NAME_FOR_SORTING, OWNER_LAST_NAME_FOR_SORTING "
-		}
-		if sort != nil && sort.By == SearchSortParamName {
-			if sort.Direction == model.SortingDirectionAsc {
-				query += ", CASE WHEN o.name <> \"\" and not o.name is null THEN o.name ELSE 'ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ' END as NAME_FOR_SORTING "
-			} else {
-				query += ", o.name as NAME_FOR_SORTING "
-			}
-			aliases += ", NAME_FOR_SORTING "
-		}
-		if sort != nil && sort.By == SearchSortParamRenewalLikelihood {
-			if sort.Direction == model.SortingDirectionAsc {
-				query += ", CASE WHEN o.derivedRenewalLikelihoodOrder IS NOT NULL THEN o.derivedRenewalLikelihoodOrder ELSE 9999 END as RENEWAL_LIKELIHOOD_FOR_SORTING "
-			} else {
-				query += ", CASE WHEN o.derivedRenewalLikelihoodOrder IS NOT NULL THEN o.derivedRenewalLikelihoodOrder ELSE -1 END as RENEWAL_LIKELIHOOD_FOR_SORTING "
-			}
-			aliases += ", RENEWAL_LIKELIHOOD_FOR_SORTING "
-		}
-		if sort != nil && sort.By == SearchSortParamRenewalCycleNext {
-			if sort.Direction == model.SortingDirectionAsc {
-				query += ", CASE WHEN o.billingDetailsRenewalCycleNext IS NOT NULL THEN date(o.billingDetailsRenewalCycleNext) ELSE date('2100-01-01') END as RENEWAL_CYCLE_NEXT_FOR_SORTING "
-			} else {
-				query += ", CASE WHEN o.billingDetailsRenewalCycleNext IS NOT NULL THEN date(o.billingDetailsRenewalCycleNext) ELSE date('1900-01-01') END as RENEWAL_CYCLE_NEXT_FOR_SORTING "
-			}
-			aliases += ", RENEWAL_CYCLE_NEXT_FOR_SORTING "
-		}
-		if sort != nil && sort.By == SearchSortParamRenewalDate {
-			if sort.Direction == model.SortingDirectionAsc {
-				query += ", CASE WHEN o.derivedNextRenewalAt IS NOT NULL THEN date(o.derivedNextRenewalAt) ELSE date('2100-01-01') END as RENEWAL_DATE_FOR_SORTING "
-			} else {
-				query += ", CASE WHEN o.derivedNextRenewalAt IS NOT NULL THEN date(o.derivedNextRenewalAt) ELSE date('1900-01-01') END as RENEWAL_DATE_FOR_SORTING "
-			}
-			aliases += ", RENEWAL_DATE_FOR_SORTING "
-		}
-		if sort != nil && sort.By == SearchSortParamOnboardingStatus {
-			if sort.Direction == model.SortingDirectionAsc {
-				query += ", CASE WHEN o.onboardingStatusOrder IS NOT NULL THEN o.onboardingStatusOrder ELSE 9999 END as ONBOARDING_STATUS_FOR_SORTING "
-				query += ", o.onboardingUpdatedAt AS ONBOARDING_UPDATED_AT_FOR_SORTING "
-			} else {
-				query += ", CASE WHEN o.onboardingStatusOrder IS NOT NULL THEN o.onboardingStatusOrder ELSE -1 END as ONBOARDING_STATUS_FOR_SORTING "
-				query += ", o.onboardingUpdatedAt AS ONBOARDING_UPDATED_AT_FOR_SORTING "
-			}
-			aliases += ", ONBOARDING_STATUS_FOR_SORTING, ONBOARDING_UPDATED_AT_FOR_SORTING "
-		}
-		if sort != nil && sort.By == SearchSortParamForecastArr {
-			if sort.Direction == model.SortingDirectionAsc {
-				query += ", CASE WHEN o.renewalForecastArr <> \"\" and o.renewalForecastArr IS NOT NULL THEN o.renewalForecastArr ELSE 9999999999999999 END as FORECAST_ARR_FOR_SORTING "
-			} else {
-				query += ", CASE WHEN o.renewalForecastArr <> \"\" and o.renewalForecastArr IS NOT NULL THEN o.renewalForecastArr ELSE 0 END as FORECAST_ARR_FOR_SORTING "
-			}
-			aliases += ", FORECAST_ARR_FOR_SORTING "
-		}
-		if sort != nil && sort.By == SearchSortParamOrganization {
-			query += " OPTIONAL MATCH (o)-[:SUBSIDIARY_OF]->(parent:Organization) WITH "
-			query += aliases + ", parent "
-		}
-
-		cypherSort := utils.CypherSort{}
-		if sort != nil {
-			if sort.By == SearchSortParamName {
-				if sort.CaseSensitive != nil && *sort.CaseSensitive {
-					query += " ORDER BY NAME_FOR_SORTING " + string(sort.Direction)
-				} else {
-					query += " ORDER BY toLower(NAME_FOR_SORTING) " + string(sort.Direction)
-				}
-			} else if sort.By == SearchSortParamOrganization {
-				cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.OrganizationEntity{})).WithCoalesce().WithAlias("parent")
-				cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.OrganizationEntity{})).WithCoalesce()
-				cypherSort.NewSortRule("NAME", sort.Direction.String(), true, reflect.TypeOf(entity.OrganizationEntity{})).WithAlias("parent").WithDescending()
-				cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.OrganizationEntity{}))
-				query += string(cypherSort.SortingCypherFragment("o"))
-			} else if sort.By == SearchSortParamForecastArr {
-				query += " ORDER BY FORECAST_ARR_FOR_SORTING " + string(sort.Direction)
-			} else if sort.By == SearchSortParamRenewalLikelihood {
-				query += " ORDER BY RENEWAL_LIKELIHOOD_FOR_SORTING " + string(sort.Direction)
-			} else if sort.By == SearchSortParamOnboardingStatus {
-				query += " ORDER BY ONBOARDING_STATUS_FOR_SORTING " + string(sort.Direction) +
-					", ONBOARDING_UPDATED_AT_FOR_SORTING " + string(sort.Direction)
-			} else if sort.By == SearchSortParamRenewalCycleNext {
-				query += " ORDER BY RENEWAL_CYCLE_NEXT_FOR_SORTING " + string(sort.Direction)
-			} else if sort.By == SearchSortParamRenewalDate {
-				query += " ORDER BY RENEWAL_DATE_FOR_SORTING " + string(sort.Direction)
-			} else if sort.By == SearchSortParamLastTouchpoint {
-				cypherSort.NewSortRule("LAST_TOUCHPOINT_AT", sort.Direction.String(), false, reflect.TypeOf(entity.OrganizationEntity{}))
-				query += string(cypherSort.SortingCypherFragment("o"))
-			} else if sort.By == "DOMAIN" {
-				cypherSort.NewSortRule("DOMAIN", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.DomainEntity{}))
-				query += string(cypherSort.SortingCypherFragment("d"))
-			} else if sort.By == SearchSortParamLocation {
-				cypherSort.NewSortRule("COUNTRY", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.LocationEntity{}))
-				cypherSort.NewSortRule("REGION", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.LocationEntity{}))
-				cypherSort.NewSortRule("LOCALITY", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.LocationEntity{}))
-				query += string(cypherSort.SortingCypherFragment("l"))
-			} else if sort.By == "OWNER" {
-				if sort.CaseSensitive != nil && *sort.CaseSensitive {
-					query += " ORDER BY OWNER_FIRST_NAME_FOR_SORTING " + string(sort.Direction) + ", OWNER_LAST_NAME_FOR_SORTING " + string(sort.Direction)
-				} else {
-					query += " ORDER BY toLower(OWNER_FIRST_NAME_FOR_SORTING) " + string(sort.Direction) + ", toLower(OWNER_LAST_NAME_FOR_SORTING) " + string(sort.Direction)
-				}
-			} else if sort.By == SearchSortParamLastTouchpointAt {
-				cypherSort.NewSortRule("LAST_TOUCHPOINT_AT", sort.Direction.String(), false, reflect.TypeOf(entity.OrganizationEntity{}))
-				query += string(cypherSort.SortingCypherFragment("o"))
-			} else if sort.By == SearchSortParamLastTouchpointType {
-				cypherSort.NewSortRule("LAST_TOUCHPOINT_TYPE", sort.Direction.String(), false, reflect.TypeOf(entity.OrganizationEntity{}))
-				query += string(cypherSort.SortingCypherFragment("o"))
-			}
 		} else {
-			cypherSort.NewSortRule("UPDATED_AT", string(model.SortingDirectionDesc), false, reflect.TypeOf(entity.OrganizationEntity{}))
+			return utils.ExtractSingleRecordFirstValueAsType[int64](ctx, countQueryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	dbNodesWithTotalCount.Count = countRecord.(int64)
+	//end count region
+
+	//region query to fetch data
+	query := `MATCH (o:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+	if len(ownerId) > 0 || ownerIncludeEmpty {
+		query += fmt.Sprintf(` OPTIONAL MATCH (o)<-[:OWNS]-(owner:User) WITH *`)
+	}
+	if externalId != "" {
+		query += ` MATCH (o)-[:IS_LINKED_WITH {externalId:$externalId}]->(ext:ExternalSystem) WITH *`
+	}
+	query += fmt.Sprintf(` OPTIONAL MATCH (o)-[:HAS_DOMAIN]->(d:Domain) WITH *`)
+	query += fmt.Sprintf(` OPTIONAL MATCH (o)-[:HAS]->(e:Email_%s) WITH *`, tenant)
+	query += fmt.Sprintf(` OPTIONAL MATCH (o)-[:ASSOCIATED_WITH]->(l:Location_%s) WITH *`, tenant)
+	if sort != nil && sort.By == SearchSortParamOwner {
+		query += fmt.Sprintf(` OPTIONAL MATCH (o)<-[:OWNS]-(owner:User_%s) WITH *`, tenant)
+	}
+	query += ` WHERE (o.hide = false) `
+
+	if organizationFilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" || len(ownerId) > 0 || ownerIncludeEmpty {
+		query += " AND "
+	}
+
+	queryParts := []string{}
+	if organizationFilterCypher != "" {
+		queryParts = append(queryParts, organizationFilterCypher)
+	}
+	if len(ownerId) > 0 || ownerIncludeEmpty {
+		if len(ownerId) == 0 {
+			queryParts = append(queryParts, fmt.Sprintf(` owner.id IS NULL `))
+		} else if ownerIncludeEmpty {
+			queryParts = append(queryParts, fmt.Sprintf(` (owner.id IN $ownerId OR owner.id IS NULL) `))
+		} else {
+			queryParts = append(queryParts, fmt.Sprintf(` owner.id IN $ownerId `))
+		}
+	}
+	if emailFilterCypher != "" {
+		queryParts = append(queryParts, emailFilterCypher)
+	}
+	if locationFilterCypher != "" {
+		queryParts = append(queryParts, locationFilterCypher)
+	}
+
+	//endregion
+	query = query + strings.Join(queryParts, " AND ")
+
+	// sort region
+	aliases := " o, d, l"
+	query += " WITH o, d, l "
+	if sort != nil && sort.By == SearchSortParamOwner {
+		if sort.Direction == model.SortingDirectionAsc {
+			query += ", CASE WHEN owner.firstName <> \"\" and not owner.firstName is null THEN owner.firstName ELSE 'ZZZZZZZZZZZZZZZZZZZ' END as OWNER_FIRST_NAME_FOR_SORTING "
+			query += ", CASE WHEN owner.lastName <> \"\" and not owner.lastName is null THEN owner.lastName ELSE 'ZZZZZZZZZZZZZZZZZZZ' END as OWNER_LAST_NAME_FOR_SORTING "
+		} else {
+			query += ", CASE WHEN owner.firstName <> \"\" and not owner.firstName is null THEN owner.firstName ELSE 'AAAAAAAAAAAAAAAAAAA' END as OWNER_FIRST_NAME_FOR_SORTING "
+			query += ", CASE WHEN owner.lastName <> \"\" and not owner.lastName is null THEN owner.lastName ELSE 'AAAAAAAAAAAAAAAAAAA' END as OWNER_LAST_NAME_FOR_SORTING "
+		}
+		aliases += ", OWNER_FIRST_NAME_FOR_SORTING, OWNER_LAST_NAME_FOR_SORTING "
+	}
+	if sort != nil && sort.By == SearchSortParamName {
+		if sort.Direction == model.SortingDirectionAsc {
+			query += ", CASE WHEN o.name <> \"\" and not o.name is null THEN o.name ELSE 'ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ' END as NAME_FOR_SORTING "
+		} else {
+			query += ", o.name as NAME_FOR_SORTING "
+		}
+		aliases += ", NAME_FOR_SORTING "
+	}
+	if sort != nil && sort.By == SearchSortParamRenewalLikelihood {
+		if sort.Direction == model.SortingDirectionAsc {
+			query += ", CASE WHEN o.derivedRenewalLikelihoodOrder IS NOT NULL THEN o.derivedRenewalLikelihoodOrder ELSE 9999 END as RENEWAL_LIKELIHOOD_FOR_SORTING "
+		} else {
+			query += ", CASE WHEN o.derivedRenewalLikelihoodOrder IS NOT NULL THEN o.derivedRenewalLikelihoodOrder ELSE -1 END as RENEWAL_LIKELIHOOD_FOR_SORTING "
+		}
+		aliases += ", RENEWAL_LIKELIHOOD_FOR_SORTING "
+	}
+	if sort != nil && sort.By == SearchSortParamRenewalCycleNext {
+		if sort.Direction == model.SortingDirectionAsc {
+			query += ", CASE WHEN o.billingDetailsRenewalCycleNext IS NOT NULL THEN date(o.billingDetailsRenewalCycleNext) ELSE date('2100-01-01') END as RENEWAL_CYCLE_NEXT_FOR_SORTING "
+		} else {
+			query += ", CASE WHEN o.billingDetailsRenewalCycleNext IS NOT NULL THEN date(o.billingDetailsRenewalCycleNext) ELSE date('1900-01-01') END as RENEWAL_CYCLE_NEXT_FOR_SORTING "
+		}
+		aliases += ", RENEWAL_CYCLE_NEXT_FOR_SORTING "
+	}
+	if sort != nil && sort.By == SearchSortParamRenewalDate {
+		if sort.Direction == model.SortingDirectionAsc {
+			query += ", CASE WHEN o.derivedNextRenewalAt IS NOT NULL THEN date(o.derivedNextRenewalAt) ELSE date('2100-01-01') END as RENEWAL_DATE_FOR_SORTING "
+		} else {
+			query += ", CASE WHEN o.derivedNextRenewalAt IS NOT NULL THEN date(o.derivedNextRenewalAt) ELSE date('1900-01-01') END as RENEWAL_DATE_FOR_SORTING "
+		}
+		aliases += ", RENEWAL_DATE_FOR_SORTING "
+	}
+	if sort != nil && sort.By == SearchSortParamOnboardingStatus {
+		if sort.Direction == model.SortingDirectionAsc {
+			query += ", CASE WHEN o.onboardingStatusOrder IS NOT NULL THEN o.onboardingStatusOrder ELSE 9999 END as ONBOARDING_STATUS_FOR_SORTING "
+			query += ", o.onboardingUpdatedAt AS ONBOARDING_UPDATED_AT_FOR_SORTING "
+		} else {
+			query += ", CASE WHEN o.onboardingStatusOrder IS NOT NULL THEN o.onboardingStatusOrder ELSE -1 END as ONBOARDING_STATUS_FOR_SORTING "
+			query += ", o.onboardingUpdatedAt AS ONBOARDING_UPDATED_AT_FOR_SORTING "
+		}
+		aliases += ", ONBOARDING_STATUS_FOR_SORTING, ONBOARDING_UPDATED_AT_FOR_SORTING "
+	}
+	if sort != nil && sort.By == SearchSortParamForecastArr {
+		if sort.Direction == model.SortingDirectionAsc {
+			query += ", CASE WHEN o.renewalForecastArr <> \"\" and o.renewalForecastArr IS NOT NULL THEN o.renewalForecastArr ELSE 9999999999999999 END as FORECAST_ARR_FOR_SORTING "
+		} else {
+			query += ", CASE WHEN o.renewalForecastArr <> \"\" and o.renewalForecastArr IS NOT NULL THEN o.renewalForecastArr ELSE 0 END as FORECAST_ARR_FOR_SORTING "
+		}
+		aliases += ", FORECAST_ARR_FOR_SORTING "
+	}
+	if sort != nil && sort.By == SearchSortParamOrganization {
+		query += " OPTIONAL MATCH (o)-[:SUBSIDIARY_OF]->(parent:Organization) WITH "
+		query += aliases + ", parent "
+	}
+
+	cypherSort := utils.CypherSort{}
+	if sort != nil {
+		if sort.By == SearchSortParamName {
+			if sort.CaseSensitive != nil && *sort.CaseSensitive {
+				query += " ORDER BY NAME_FOR_SORTING " + string(sort.Direction)
+			} else {
+				query += " ORDER BY toLower(NAME_FOR_SORTING) " + string(sort.Direction)
+			}
+		} else if sort.By == SearchSortParamOrganization {
+			cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.OrganizationEntity{})).WithCoalesce().WithAlias("parent")
+			cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.OrganizationEntity{})).WithCoalesce()
+			cypherSort.NewSortRule("NAME", sort.Direction.String(), true, reflect.TypeOf(entity.OrganizationEntity{})).WithAlias("parent").WithDescending()
+			cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.OrganizationEntity{}))
+			query += string(cypherSort.SortingCypherFragment("o"))
+		} else if sort.By == SearchSortParamForecastArr {
+			query += " ORDER BY FORECAST_ARR_FOR_SORTING " + string(sort.Direction)
+		} else if sort.By == SearchSortParamRenewalLikelihood {
+			query += " ORDER BY RENEWAL_LIKELIHOOD_FOR_SORTING " + string(sort.Direction)
+		} else if sort.By == SearchSortParamOnboardingStatus {
+			query += " ORDER BY ONBOARDING_STATUS_FOR_SORTING " + string(sort.Direction) +
+				", ONBOARDING_UPDATED_AT_FOR_SORTING " + string(sort.Direction)
+		} else if sort.By == SearchSortParamRenewalCycleNext {
+			query += " ORDER BY RENEWAL_CYCLE_NEXT_FOR_SORTING " + string(sort.Direction)
+		} else if sort.By == SearchSortParamRenewalDate {
+			query += " ORDER BY RENEWAL_DATE_FOR_SORTING " + string(sort.Direction)
+		} else if sort.By == SearchSortParamLastTouchpoint {
+			cypherSort.NewSortRule("LAST_TOUCHPOINT_AT", sort.Direction.String(), false, reflect.TypeOf(entity.OrganizationEntity{}))
+			query += string(cypherSort.SortingCypherFragment("o"))
+		} else if sort.By == "DOMAIN" {
+			cypherSort.NewSortRule("DOMAIN", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.DomainEntity{}))
+			query += string(cypherSort.SortingCypherFragment("d"))
+		} else if sort.By == SearchSortParamLocation {
+			cypherSort.NewSortRule("COUNTRY", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.LocationEntity{}))
+			cypherSort.NewSortRule("REGION", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.LocationEntity{}))
+			cypherSort.NewSortRule("LOCALITY", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.LocationEntity{}))
+			query += string(cypherSort.SortingCypherFragment("l"))
+		} else if sort.By == "OWNER" {
+			if sort.CaseSensitive != nil && *sort.CaseSensitive {
+				query += " ORDER BY OWNER_FIRST_NAME_FOR_SORTING " + string(sort.Direction) + ", OWNER_LAST_NAME_FOR_SORTING " + string(sort.Direction)
+			} else {
+				query += " ORDER BY toLower(OWNER_FIRST_NAME_FOR_SORTING) " + string(sort.Direction) + ", toLower(OWNER_LAST_NAME_FOR_SORTING) " + string(sort.Direction)
+			}
+		} else if sort.By == SearchSortParamLastTouchpointAt {
+			cypherSort.NewSortRule("LAST_TOUCHPOINT_AT", sort.Direction.String(), false, reflect.TypeOf(entity.OrganizationEntity{}))
+			query += string(cypherSort.SortingCypherFragment("o"))
+		} else if sort.By == SearchSortParamLastTouchpointType {
+			cypherSort.NewSortRule("LAST_TOUCHPOINT_TYPE", sort.Direction.String(), false, reflect.TypeOf(entity.OrganizationEntity{}))
 			query += string(cypherSort.SortingCypherFragment("o"))
 		}
-		// end sort region
-		query += fmt.Sprintf(` RETURN distinct(o) `)
-		query += fmt.Sprintf(` SKIP $skip LIMIT $limit`)
+	} else {
+		cypherSort.NewSortRule("UPDATED_AT", string(model.SortingDirectionDesc), false, reflect.TypeOf(entity.OrganizationEntity{}))
+		query += string(cypherSort.SortingCypherFragment("o"))
+	}
+	// end sort region
+	query += fmt.Sprintf(` RETURN distinct(o) `)
+	query += fmt.Sprintf(` SKIP $skip LIMIT $limit`)
 
-		span.LogFields(log.Object("query", query))
-		tracing.LogObjectAsJson(span, "params", params)
+	span.LogFields(log.String("query", query))
+	tracing.LogObjectAsJson(span, "params", params)
 
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, query, params)
 		if err != nil {
 			return nil, err
@@ -464,7 +472,7 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 	locationFilterCypher, locationFilterParams := "", make(map[string]interface{})
 
 	ownerId := []string{}
-	ownerIncludeEmpty := true
+	ownerIncludeEmpty := false
 
 	//ORGANIZATION, EMAIL, COUNTRY, REGION, LOCALITY
 	//region organization & contract filters
@@ -520,7 +528,9 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 			} else if filter.Filter.Property == SearchSortParamLocality {
 				locationFilter.Filters = append(locationFilter.Filters, utils.CreateStringCypherFilter("locality", *filter.Filter.Value.Str, utils.EQUALS))
 			} else if filter.Filter.Property == SearchSortParamOwnerId {
-				ownerId = *filter.Filter.Value.ArrayStr
+				if filter.Filter.Value.ArrayStr != nil {
+					ownerId = *filter.Filter.Value.ArrayStr
+				}
 				ownerIncludeEmpty = *filter.Filter.IncludeEmpty
 			} else if filter.Filter.Property == SearchSortParamIsCustomer && filter.Filter.Value.ArrayBool != nil && len(*filter.Filter.Value.ArrayBool) >= 1 {
 				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterIn("isCustomer", *filter.Filter.Value.ArrayBool))
@@ -604,7 +614,7 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 		countQuery := `MATCH (t:Tenant {name: $tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)
 					 MATCH (o)-[:HAS_CONTRACT]->(contract:Contract)-[:CONTRACT_BELONGS_TO_TENANT]->(t)
 					 MATCH (contract)-[:ACTIVE_RENEWAL]->(op:Opportunity) `
-		if len(ownerId) > 0 {
+		if len(ownerId) > 0 || ownerIncludeEmpty {
 			countQuery += ` OPTIONAL MATCH (op)<-[:OWNS]-(owner:User) WITH *`
 		}
 		if emailFilterCypher != "" {
@@ -621,7 +631,7 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 		}
 		countQuery += ` WHERE o.hide = false `
 
-		if organizationFilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" || contractFilterCypher != "" || opportunityFilterCypher != "" || len(ownerId) > 0 {
+		if organizationFilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" || contractFilterCypher != "" || opportunityFilterCypher != "" || len(ownerId) > 0 || ownerIncludeEmpty {
 			countQuery += " AND "
 		}
 
@@ -629,8 +639,10 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 		if organizationFilterCypher != "" {
 			countQueryParts = append(countQueryParts, organizationFilterCypher)
 		}
-		if len(ownerId) > 0 {
-			if ownerIncludeEmpty {
+		if len(ownerId) > 0 || ownerIncludeEmpty {
+			if len(ownerId) == 0 {
+				countQueryParts = append(countQueryParts, fmt.Sprintf(` owner.id IS NULL `))
+			} else if ownerIncludeEmpty {
 				countQueryParts = append(countQueryParts, fmt.Sprintf(` (owner.id IN $ownerId OR owner.id IS NULL) `))
 			} else {
 				countQueryParts = append(countQueryParts, fmt.Sprintf(` owner.id IN $ownerId `))
@@ -675,7 +687,7 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 
 		query += ` WHERE (o.hide = false) `
 
-		if organizationFilterCypher != "" || contractFilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" || len(ownerId) > 0 {
+		if organizationFilterCypher != "" || contractFilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" || len(ownerId) > 0 || ownerIncludeEmpty {
 			query += " AND "
 		}
 
@@ -683,8 +695,10 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 		if organizationFilterCypher != "" {
 			queryParts = append(queryParts, organizationFilterCypher)
 		}
-		if len(ownerId) > 0 {
-			if ownerIncludeEmpty {
+		if len(ownerId) > 0 || ownerIncludeEmpty {
+			if len(ownerId) == 0 {
+				countQueryParts = append(countQueryParts, fmt.Sprintf(` owner.id IS NULL `))
+			} else if ownerIncludeEmpty {
 				queryParts = append(queryParts, fmt.Sprintf(` (owner.id IN $ownerId OR owner.id IS NULL) `))
 			} else {
 				queryParts = append(queryParts, fmt.Sprintf(` owner.id IN $ownerId `))
@@ -1550,7 +1564,7 @@ func (r *dashboardRepository) GetDashboardARRBreakdownValueData(ctx context.Cont
 					WITH beginOfMonth, endOfMonth, c.id AS cid, sli ORDER BY sli.startedAt ASC
 
 					WHERE 
-					o.hide = false and o.isCustomer = true
+					o.hide = false AND o.isCustomer = true
 					AND c.serviceStartedAt IS NOT NULL 
 					AND sli.startedAt < startOfNextMonth 
 					AND (c.endedAt IS NULL OR c.endedAt >= startOfNextMonth) 

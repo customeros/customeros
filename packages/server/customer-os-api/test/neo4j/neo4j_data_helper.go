@@ -819,16 +819,6 @@ func UserOwnsContact(ctx context.Context, driver *neo4j.DriverWithContext, userI
 	})
 }
 
-func UserOwnsOrganization(ctx context.Context, driver *neo4j.DriverWithContext, userId, organizationId string) {
-	query := `MATCH (o:Organization {id:$organizationId}),
-			        (u:User {id:$userId})
-			MERGE (u)-[:OWNS]->(o)`
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"organizationId": organizationId,
-		"userId":         userId,
-	})
-}
-
 func DeleteUserOwnsOrganization(ctx context.Context, driver *neo4j.DriverWithContext, userId, organizationId string) {
 	query := `MATCH (u:User {id:$userId})-[r:OWNS]->(o:Organization {id:$organizationId})     
 			DELETE r`

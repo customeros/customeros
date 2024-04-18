@@ -1038,7 +1038,7 @@ func TestQueryResolver_Organization_WithOwner(t *testing.T) {
 
 	userId := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
-	neo4jt.UserOwnsOrganization(ctx, driver, userId, organizationId)
+	neo4jtest.UserOwnsOrganization(ctx, driver, userId, organizationId)
 
 	rawResponse := callGraphQL(t, "organization/get_organization_with_owner",
 		map[string]interface{}{"organizationId": organizationId})
@@ -1113,9 +1113,9 @@ func TestQueryResolver_OrganizationDistinctOwners(t *testing.T) {
 	organizationId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name 1")
 	organizationId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name 2")
 	organizationId3 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name 3")
-	neo4jt.UserOwnsOrganization(ctx, driver, userId1, organizationId1)
-	neo4jt.UserOwnsOrganization(ctx, driver, userId2, organizationId2)
-	neo4jt.UserOwnsOrganization(ctx, driver, userId2, organizationId3)
+	neo4jtest.UserOwnsOrganization(ctx, driver, userId1, organizationId1)
+	neo4jtest.UserOwnsOrganization(ctx, driver, userId2, organizationId2)
+	neo4jtest.UserOwnsOrganization(ctx, driver, userId2, organizationId3)
 
 	rawResponse := callGraphQL(t, "organization/get_organization_owners", map[string]interface{}{})
 
@@ -1696,7 +1696,7 @@ func TestMutationResolver_OrganizationSetOwner_NewOwner(t *testing.T) {
 			require.Equal(t, tenantName, org.Tenant)
 			require.Equal(t, constants.AppSourceCustomerOsApi, org.AppSource)
 			require.Equal(t, userId, org.OwnerUserId)
-			neo4jt.UserOwnsOrganization(ctx, driver, userId, organizationId)
+			neo4jtest.UserOwnsOrganization(ctx, driver, userId, organizationId)
 			return &organizationpb.OrganizationIdGrpcResponse{
 				Id: organizationId,
 			}, nil
@@ -1734,7 +1734,7 @@ func TestMutationResolver_OrganizationSetOwner_ReplaceOwner(t *testing.T) {
 	previousOwnerId := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
 	newOwnerId := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
-	neo4jt.UserOwnsOrganization(ctx, driver, previousOwnerId, organizationId)
+	neo4jtest.UserOwnsOrganization(ctx, driver, previousOwnerId, organizationId)
 
 	organizationServiceCallbacks := events_platform.MockOrganizationServiceCallbacks{
 		UpdateOrganizationOwner: func(context context.Context, org *organizationpb.UpdateOrganizationOwnerGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
@@ -1742,7 +1742,7 @@ func TestMutationResolver_OrganizationSetOwner_ReplaceOwner(t *testing.T) {
 			require.Equal(t, tenantName, org.Tenant)
 			require.Equal(t, constants.AppSourceCustomerOsApi, org.AppSource)
 			require.Equal(t, newOwnerId, org.OwnerUserId)
-			neo4jt.UserOwnsOrganization(ctx, driver, newOwnerId, organizationId)
+			neo4jtest.UserOwnsOrganization(ctx, driver, newOwnerId, organizationId)
 			neo4jt.DeleteUserOwnsOrganization(ctx, driver, previousOwnerId, organizationId)
 			return &organizationpb.OrganizationIdGrpcResponse{
 				Id: organizationId,
@@ -1780,7 +1780,7 @@ func TestMutationResolver_OrganizationUnsetOwner(t *testing.T) {
 
 	ownerId := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
-	neo4jt.UserOwnsOrganization(ctx, driver, ownerId, organizationId)
+	neo4jtest.UserOwnsOrganization(ctx, driver, ownerId, organizationId)
 
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
