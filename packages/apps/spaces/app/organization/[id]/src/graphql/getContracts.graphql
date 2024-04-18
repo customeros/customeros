@@ -103,7 +103,6 @@ query getContracts($id: ID!) {
                 }
                 provider {
                     name
-                    logoUrl
                     addressLine1
                     addressLine2
                     addressZip

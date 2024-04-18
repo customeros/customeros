@@ -1,5 +1,6 @@
 import { useState, useContext, createContext, PropsWithChildren } from 'react';
 
+import { Invoice } from '@graphql/types';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 
 export enum ContractStatusModalMode {
@@ -8,8 +9,8 @@ export enum ContractStatusModalMode {
   Renew = 'Renew',
 }
 interface ContractModalStatusContextState {
-  nextInvoice?: any;
   isModalOpen: boolean;
+  nextInvoice?: Invoice | null;
   onStatusModalClose: () => void;
   mode: ContractStatusModalMode | null;
   onStatusModalOpen: (mode: ContractStatusModalMode | null) => void;
@@ -35,7 +36,7 @@ export const ContractModalStatusContextProvider = ({
 }: PropsWithChildren & {
   id: string;
   nextInvoice?: string;
-  upcomingInvoices: Array<any>;
+  upcomingInvoices?: Array<Invoice> | null;
 }) => {
   const [mode, setMode] = useState<ContractStatusModalMode | null>(null);
   const { onOpen, onClose, open } = useDisclosure({

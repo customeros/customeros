@@ -12,7 +12,7 @@ import { UpdateContractMutation } from '@organization/src/graphql/updateContract
 import {
   ContractEndModal,
   ContractStartModal,
-} from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ChangeContractStatusModals';
+} from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ChangeContractStatusModals';
 
 interface ContractStatusSelectProps {
   renewsAt?: string;

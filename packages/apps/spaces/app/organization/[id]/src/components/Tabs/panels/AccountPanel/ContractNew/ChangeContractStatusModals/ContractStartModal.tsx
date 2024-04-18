@@ -6,6 +6,7 @@ import React, { useRef, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { UseMutationResult } from '@tanstack/react-query';
 
+import { cn } from '@ui/utils/cn';
 import { FeaturedIcon } from '@ui/media/Icon';
 import { Button } from '@ui/form/Button/Button';
 import { DotLive } from '@ui/media/icons/DotLive';
@@ -112,15 +113,15 @@ export const ContractStartModal = ({
           <div>
             {!nextInvoice && (
               <FeaturedIcon size='lg' colorScheme='primary'>
-                {status === ContractStatus.OutOfContract ? (
-                  <RefreshCw05 className='text-primary-600' />
-                ) : (
-                  <DotLive className='text-primary-600' />
-                )}
+                <DotLive className='text-primary-600' />
               </FeaturedIcon>
             )}
 
-            <h1 className='text-lg font-semibold mt-4 mb-1'>
+            <h1
+              className={cn('text-lg font-semibold  mb-1', {
+                'mt-4': !nextInvoice,
+              })}
+            >
               {status === ContractStatus.OutOfContract
                 ? 'Renew contract'
                 : 'Make this contract live?'}
@@ -138,32 +139,38 @@ export const ContractStartModal = ({
             <p className='text-sm mt-3'>
               Once the contract goes live, we’ll start sending invoices.
             </p>
-            <p className='text-sm'>
-              The first one will be for
-              <span className='text-sm ml-1 font-medium'>
-                {formatCurrency(nextInvoice.amountDue, 2, nextInvoice.currency)}{' '}
-                on{' '}
-                {DateTimeUtils.format(
-                  nextInvoice.due,
-                  DateTimeUtils.defaultFormatShortString,
-                )}{' '}
-                (
-                {DateTimeUtils.format(
-                  nextInvoice.invoicePeriodStart,
-                  DateTimeUtils.dateDayAndMonth,
-                )}{' '}
-                -{' '}
-                {DateTimeUtils.format(
-                  nextInvoice.invoicePeriodEnd,
-                  DateTimeUtils.dateDayAndMonth,
-                )}
-                )
-              </span>
-            </p>
+            {nextInvoice && (
+              <p className='text-sm'>
+                The first one will be for
+                <span className='text-sm ml-1 font-medium'>
+                  {formatCurrency(
+                    nextInvoice.amountDue,
+                    2,
+                    nextInvoice.currency,
+                  )}{' '}
+                  on{' '}
+                  {DateTimeUtils.format(
+                    nextInvoice.issued,
+                    DateTimeUtils.defaultFormatShortString,
+                  )}{' '}
+                  (
+                  {DateTimeUtils.format(
+                    nextInvoice.invoicePeriodStart,
+                    DateTimeUtils.dateDayAndMonth,
+                  )}{' '}
+                  -{' '}
+                  {DateTimeUtils.format(
+                    nextInvoice.invoicePeriodEnd,
+                    DateTimeUtils.dateDayAndMonth,
+                  )}
+                  )
+                </span>
+              </p>
+            )}
           </div>
         </div>
 
-        <div className='pb-4 flex'>
+        <div className='mt-6 flex'>
           <Button
             variant='outline'
             size='lg'

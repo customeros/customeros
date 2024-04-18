@@ -1,4 +1,5 @@
 'use client';
+import React from 'react';
 import React, { useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { useForm } from 'react-inverted-form';
@@ -36,7 +37,6 @@ interface ContractEndModalProps {
   contractId: string;
   contractEnded?: string;
   serviceStarted?: string;
-  nextInvoiceDate?: string;
   organizationName: string;
   onUpdateContract: UseMutationResult<
     UpdateContractMutation,
@@ -58,26 +58,25 @@ export const ContractEndModal = ({
   contractId,
   organizationName,
   renewsAt,
-  nextInvoiceDate,
   onUpdateContract,
   contractEnded,
 }: ContractEndModalProps) => {
+  const { isModalOpen, onStatusModalClose, mode, nextInvoice } =
   const queryClient = useQueryClient();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const id = useParams()?.id as string;
   const queryKey = useGetContractsQuery.getKey({ id });
 
-  const { isModalOpen, onStatusModalClose, mode } =
-    useContractModalStatusContext();
+
   const [value, setValue] = React.useState(EndContract.Now);
   const formId = `contract-ends-on-form-${contractId}`;
   const timeToRenewal = renewsAt
     ? DateTimeUtils.format(renewsAt, DateTimeUtils.dateWithAbreviatedMonth)
     : null;
 
-  const timeToNextInvoice = nextInvoiceDate
+  const timeToNextInvoice = nextInvoice?.issued
     ? DateTimeUtils.format(
-        nextInvoiceDate,
+        nextInvoice.issued,
         DateTimeUtils.dateWithAbreviatedMonth,
       )
     : null;
@@ -129,7 +128,7 @@ export const ContractEndModal = ({
       return;
     }
     if (nextValue === EndContract.EndOfCurrentBillingPeriod) {
-      setDefaultValues({ endedAt: nextInvoiceDate });
+      setDefaultValues({ endedAt: nextInvoice?.issued });
       setValue(EndContract.EndOfCurrentBillingPeriod);
 
       return;
@@ -154,12 +153,15 @@ export const ContractEndModal = ({
       onOpenChange={onStatusModalClose}
     >
       <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>
+      <ModalContent className='rounded-2xl'>
+        <ModalHeader className='pb-3'>
           <FeaturedIcon size='lg' colorScheme='error'>
             <XSquare color='error.600' />
           </FeaturedIcon>
-          <h2 className='text-lg mt-4'>End {organizationName}’s contract?</h2>
+          <h2 className='text-lg mt-2 font-semibold'>
+            End
+            {organizationName}’s contract?
+          </h2>
         </ModalHeader>
         <ModalBody className='flex flex-col gap-3'>
           <p className='text-base'>
@@ -173,7 +175,7 @@ export const ContractEndModal = ({
           <RadioGroup
             value={value}
             onValueChange={handleChangeEndsOnOption}
-            className='flex flex-col gap-1'
+            className='flex flex-col gap-1 text-base'
           >
             <Radio value={EndContract.Now}>
               <span className='mr-1'>Now</span>
@@ -206,7 +208,7 @@ export const ContractEndModal = ({
             </Radio>
           </RadioGroup>
         </ModalBody>
-        <ModalFooter p='6'>
+        <ModalFooter className='p-6 flex'>
           <Button
             variant='outline'
             colorScheme='gray'

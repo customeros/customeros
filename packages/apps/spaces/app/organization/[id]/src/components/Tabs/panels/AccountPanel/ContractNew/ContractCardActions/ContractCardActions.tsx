@@ -22,9 +22,7 @@ interface ContractStatusSelectProps {
   contractId: string;
   status: ContractStatus;
   serviceStarted?: string;
-  upcomingInvoices: any[];
   organizationName: string;
-  nextInvoiceDate?: string;
   onOpenEditModal: () => void;
 
   onUpdateContract: UseMutationResult<
@@ -42,9 +40,7 @@ export const ContractCardActions: React.FC<ContractStatusSelectProps> = ({
   organizationName,
   serviceStarted,
   onUpdateContract,
-  nextInvoiceDate,
   onOpenEditModal,
-  upcomingInvoices,
 }) => {
   const { onStatusModalOpen } = useContractModalStatusContext();
 
@@ -80,7 +76,6 @@ export const ContractCardActions: React.FC<ContractStatusSelectProps> = ({
       </>
     );
   }, [status]);
-  console.log('🏷️ ----- upcomingInvoices: ', upcomingInvoices);
   const handleChangeStatus = () => {
     switch (status) {
       case ContractStatus.Live:
@@ -120,7 +115,6 @@ export const ContractCardActions: React.FC<ContractStatusSelectProps> = ({
         organizationName={organizationName}
         renewsAt={renewsAt}
         serviceStarted={serviceStarted}
-        nextInvoiceDate={nextInvoiceDate}
         onUpdateContract={onUpdateContract}
       />
       <ContractStatusModal
@@ -129,8 +123,6 @@ export const ContractCardActions: React.FC<ContractStatusSelectProps> = ({
         renewsAt={renewsAt}
         serviceStarted={serviceStarted}
         onUpdateContract={onUpdateContract}
-        nextInvoiceDate={nextInvoiceDate}
-        upcomingInvoices={upcomingInvoices}
       />
     </div>
   );
