@@ -3,27 +3,24 @@ import React, { cloneElement } from 'react';
 import { twMerge } from 'tailwind-merge';
 import { cva, type VariantProps } from 'class-variance-authority';
 
+import { iconVariant } from './IconButton.variants';
 import {
-  linkButton,
   ghostButton,
   solidButton,
-  iconVariant,
   outlineButton,
 } from '../Button/Button.variants';
 
 const buttonSize = cva([], {
   variants: {
     size: {
-      xs: ['rounded-lg'],
-      sm: ['p-1', 'rounded-lg'],
-      md: ['p-2.5', 'rounded-lg'],
-      lg: ['p-2.5', 'rounded-lg', 'text-base'],
-      xl: ['p-3', 'rounded-lg', 'text-base'],
-      '2xl': ['p-4', 'gap-3', 'rounded-lg', 'text-lg'],
+      xs: ['p-1.5', 'rounded-md'],
+      sm: ['p-2', 'rounded-lg', 'text-lg'],
+      md: ['p-[10px]', 'rounded-lg'],
+      lg: ['p-[10px]', 'rounded-lg'],
     },
   },
   defaultVariants: {
-    size: 'md',
+    size: 'sm',
   },
 });
 
@@ -37,26 +34,24 @@ export interface IconButtonProps
   'aria-label': string;
   icon: React.ReactElement;
   spinner?: React.ReactElement;
-  variant?: 'link' | 'ghost' | 'solid' | 'outline';
+  variant?: 'ghost' | 'solid' | 'outline';
 }
 
 export const IconButton = ({
   children,
   className,
-  colorScheme,
+  colorScheme = 'gray',
   spinner,
-  variant,
+  variant = 'outline',
   isLoading = false,
   isDisabled = false,
   icon,
-  size,
+  size = 'sm',
   'aria-label': ariaLabel,
   ...props
 }: IconButtonProps) => {
   const buttonVariant = (() => {
     switch (variant) {
-      case 'link':
-        return linkButton;
       case 'ghost':
         return ghostButton;
       case 'solid':
@@ -64,7 +59,7 @@ export const IconButton = ({
       case 'outline':
         return outlineButton;
       default:
-        return solidButton;
+        return outlineButton;
     }
   })();
 

@@ -7,7 +7,7 @@ const prettierConfig = JSON.parse(
 );
 
 const buttonTypes = ['Link', 'Solid', 'Ghost', 'Outline'];
-const sizes = ['xs', 'sm', 'md', 'lg', 'xl', '2xl'];
+const sizes = ['xs', 'sm', 'md', 'lg'];
 const colors = Object.keys(file.colors).filter((color) => color !== 'white');
 const variants = ['solid', 'outline', 'link', 'ghost'];
 
@@ -114,13 +114,15 @@ const genCompoundVariant = (
   let iconSize = '';
   switch (size) {
     case 'xs':
-    case 'sm':
-    case 'md':
-    case 'lg':
-    case 'xl':
       iconSize = 'w-4 h-4';
       break;
-    case '2xl':
+    case 'sm':
+      iconSize = 'w-5 h-5';
+      break;
+    case 'md':
+      iconSize = 'w-5 h-5';
+      break;
+    case 'lg':
       iconSize = 'w-6 h-6';
       break;
     default:

@@ -6,7 +6,6 @@ import { useMemo, useState, useEffect, useCallback } from 'react';
 import { observer } from 'mobx-react-lite';
 
 import { Invoice } from '@graphql/types';
-import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
 import { Table, SortingState } from '@ui/presentation/Table';
 import { mockedTableDefs } from '@shared/util/tableDefs.mock';
@@ -16,6 +15,7 @@ import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog
 
 import { Empty } from '../Empty';
 import { Search } from '../Search';
+import { ViewSettings } from '../ViewSettings';
 import { useTableActions } from '../../hooks/useTableActions';
 import { getColumnsConfig } from '../../components/Columns/Columns';
 import { useInvoicesPageData } from '../../hooks/useInvoicesPageData';
@@ -63,16 +63,6 @@ export const InvoicesTable = observer(({ initialData }: InvoicesTableProps) => {
   const targetInvoiceNumber = targetInvoice?.invoiceNumber || '';
   const targetInvoiceEmail = targetInvoice?.customer?.email || '';
 
-  const test = () => {
-    if (!preset) return;
-
-    tableViewDef?.update((value) => {
-      value.columns?.pop();
-
-      return value;
-    });
-  };
-
   useEffect(() => {
     tableViewDefsStore.load(mockedTableDefs);
   }, []);
@@ -87,8 +77,10 @@ export const InvoicesTable = observer(({ initialData }: InvoicesTableProps) => {
 
   return (
     <>
-      <Search />
-      <Button onClick={test}>TEST</Button>
+      <div className='flex items-center'>
+        <Search />
+        <ViewSettings />
+      </div>
       <Table<Invoice>
         data={data}
         columns={columns}

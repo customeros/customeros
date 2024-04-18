@@ -14,12 +14,10 @@ import {
 export const buttonSize = cva([], {
   variants: {
     size: {
-      xs: ['px-2', 'h-6', 'rounded-lg', 'text-xs'],
-      sm: ['px-3', 'py-1', 'rounded-lg'],
-      md: ['px-4', 'py-[7px]', 'rounded-lg'],
+      xs: ['px-2', 'py-1', 'rounded-md', 'text-sm'],
+      sm: ['px-3', 'py-2', 'rounded-lg', 'text-sm'],
+      md: ['px-4', 'py-[10px]', 'rounded-lg', 'text-sm'],
       lg: ['px-[1.125rem]', 'py-2.5', 'rounded-lg', 'text-base'],
-      xl: ['px-5', 'py-3', 'rounded-lg', 'text-base'],
-      '2xl': ['px-7', 'py-4', 'gap-3', 'rounded-lg', 'text-lg'],
     },
   },
   defaultVariants: {
@@ -53,7 +51,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       variant = 'outline',
       isLoading = false,
       isDisabled = false,
-      size,
+      size = 'sm',
       loadingText,
       ...props
     },

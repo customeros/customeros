@@ -1,6 +1,6 @@
 import { rdiffResult } from 'recursive-diff';
 
-export type Operation = rdiffResult & { id: number };
+export type Operation = { id: number; diff: rdiffResult[] };
 
 export type SyncPacket = {
   version: number;
