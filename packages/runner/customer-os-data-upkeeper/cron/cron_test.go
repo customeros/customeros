@@ -34,7 +34,7 @@ func TestStartCron(t *testing.T) {
 			CronScheduleLinkUnthreadIssues:         "0 0 */1 * * *",
 			CronScheduleGenerateInvoicePaymentLink: "0 0 */1 * * *",
 			CronScheduleCleanupInvoices:            "0 0 */1 * * *",
-			CronScheduleOverdueInvoices:            "0 0 */1 * * *",
+			CronScheduleAdjustInvoiceStatus:        "0 0 */1 * * *",
 		},
 	}
 

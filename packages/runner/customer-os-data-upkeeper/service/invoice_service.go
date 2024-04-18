@@ -39,7 +39,7 @@ type InvoiceService interface {
 	GenerateInvoicePaymentLinks()
 	CleanupInvoices()
 	GenerateNextPreviewInvoices()
-	OverdueInvoices()
+	AdjustInvoiceStatus()
 }
 
 type invoiceService struct {
@@ -614,11 +614,11 @@ func (s *invoiceService) GenerateNextPreviewInvoices() {
 	}
 }
 
-func (s *invoiceService) OverdueInvoices() {
+func (s *invoiceService) AdjustInvoiceStatus() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.OverdueInvoices")
+	span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.AdjustInvoiceStatus")
 	defer span.Finish()
 
 	if s.eventsProcessingClient == nil {
@@ -637,20 +637,14 @@ func (s *invoiceService) OverdueInvoices() {
 			// continue as normal
 		}
 
-		records, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoicesForOverdue(ctx)
+		recordsForOverdueInvoices, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoicesForOverdue(ctx)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting invoices for overdue: %v", err)
 			return
 		}
 
-		// no invoices found
-		if len(records) == 0 {
-			return
-		}
-
-		//process records
-		for _, record := range records {
+		for _, record := range recordsForOverdueInvoices {
 			invoice := neo4jmapper.MapDbNodeToInvoiceEntity(record.Node)
 			tenant := record.Tenant
 
@@ -666,6 +660,64 @@ func (s *invoiceService) OverdueInvoices() {
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error updating invoice %s to overdue: %s", invoice.Id, err.Error())
+				return // stop processing
+			}
+			//sleep for async processing, then check again
+			time.Sleep(10 * time.Second)
+		}
+
+		recordsForOnHoldInvoices, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoicesForOnHold(ctx)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error getting invoices for on hold: %v", err)
+			return
+		}
+
+		for _, record := range recordsForOnHoldInvoices {
+			invoice := neo4jmapper.MapDbNodeToInvoiceEntity(record.Node)
+			tenant := record.Tenant
+
+			_, err = utils.CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
+				return s.eventsProcessingClient.InvoiceClient.UpdateInvoice(ctx, &invoicepb.UpdateInvoiceRequest{
+					Tenant:     tenant,
+					InvoiceId:  invoice.Id,
+					AppSource:  constants.AppSourceDataUpkeeper,
+					Status:     invoicepb.InvoiceStatus_INVOICE_STATUS_ON_HOLD,
+					FieldsMask: []invoicepb.InvoiceFieldMask{invoicepb.InvoiceFieldMask_INVOICE_FIELD_STATUS},
+				})
+			})
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error updating invoice %s to on hold: %s", invoice.Id, err.Error())
+				return // stop processing
+			}
+			//sleep for async processing, then check again
+			time.Sleep(10 * time.Second)
+		}
+
+		recordsForOnScheduledInvoices, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoicesForScheduled(ctx)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error getting invoices for scheduled: %v", err)
+			return
+		}
+
+		for _, record := range recordsForOnScheduledInvoices {
+			invoice := neo4jmapper.MapDbNodeToInvoiceEntity(record.Node)
+			tenant := record.Tenant
+
+			_, err = utils.CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
+				return s.eventsProcessingClient.InvoiceClient.UpdateInvoice(ctx, &invoicepb.UpdateInvoiceRequest{
+					Tenant:     tenant,
+					InvoiceId:  invoice.Id,
+					AppSource:  constants.AppSourceDataUpkeeper,
+					Status:     invoicepb.InvoiceStatus_INVOICE_STATUS_SCHEDULED,
+					FieldsMask: []invoicepb.InvoiceFieldMask{invoicepb.InvoiceFieldMask_INVOICE_FIELD_STATUS},
+				})
+			})
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error updating invoice %s to scheduled: %s", invoice.Id, err.Error())
 				return // stop processing
 			}
 			//sleep for async processing, then check again

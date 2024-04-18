@@ -13782,6 +13782,7 @@ enum InvoiceStatus {
     PAID
     VOID
     SCHEDULED
+    ON_HOLD
 }
 
 input InvoiceSimulateInput {
