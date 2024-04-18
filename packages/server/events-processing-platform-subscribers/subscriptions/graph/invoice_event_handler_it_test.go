@@ -1,6 +1,7 @@
 package graph
 
 import (
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -340,7 +341,7 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, action.AppSource)
 	require.Equal(t, neo4jenum.ActionInvoiceIssued, action.Type)
 	require.Equal(t, "Invoice N° INV-001 issued with an amount of €120", action.Content)
-	require.Equal(t, `{"status":"DUE","currency":"EUR","amount":120,"number":"INV-001"}`, action.Metadata)
+	require.Equal(t, fmt.Sprintf(`{"status":"DUE","currency":"EUR","amount":120,"number":"INV-001","id":"%s"}`, invoiceId), action.Metadata)
 
 	// verify grpc calls
 	require.True(t, calledNextPreviewInvoiceForContractRequest)
@@ -541,7 +542,7 @@ func TestInvoiceEventHandler_OnInvoiceUpdateV1(t *testing.T) {
 	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, action.AppSource)
 	require.Equal(t, neo4jenum.ActionInvoicePaid, action.Type)
 	require.Equal(t, "Invoice N° INV-001 paid in full: $120.2", action.Content)
-	require.Equal(t, `{"status":"PAID","currency":"USD","amount":120.2,"number":"INV-001"}`, action.Metadata)
+	require.Equal(t, fmt.Sprintf(`{"status":"PAID","currency":"USD","amount":120.2,"number":"INV-001","id":"%s"}`, invoiceId), action.Metadata)
 }
 
 func TestInvoiceEventHandler_OnInvoiceVoidV1(t *testing.T) {
@@ -609,7 +610,7 @@ func TestInvoiceEventHandler_OnInvoiceVoidV1(t *testing.T) {
 	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, action.AppSource)
 	require.Equal(t, neo4jenum.ActionInvoiceVoided, action.Type)
 	require.Equal(t, "Invoice N° INV-001 voided", action.Content)
-	require.Equal(t, `{"status":"VOID","currency":"USD","amount":55,"number":"INV-001"}`, action.Metadata)
+	require.Equal(t, fmt.Sprintf(`{"status":"VOID","currency":"USD","amount":55,"number":"INV-001","id":"%s"}`, invoiceId), action.Metadata)
 }
 
 func TestInvoiceEventHandler_OnInvoiceDeleteV1(t *testing.T) {
