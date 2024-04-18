@@ -490,7 +490,7 @@ func (r *invoiceReadRepository) GetInvoicesForOverdue(ctx context.Context) ([]*u
 			WHERE 
 				i.dryRun = false AND
 				i.status = $dueStatus AND
-				date(i.dueDate) < date($now) AND
+				date(i.dueDate) < date($now)
 			RETURN distinct(i), t.name limit 100`
 	params := map[string]any{
 		"now":       utils.Now(),
