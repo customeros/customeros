@@ -58,6 +58,7 @@ type InvoiceActionMetadata struct {
 	Currency      string  `json:"currency"`
 	Amount        float64 `json:"amount"`
 	InvoiceNumber string  `json:"number"`
+	InvoiceId     string  `json:"id"`
 }
 
 type InvoiceEventHandler struct {
@@ -1119,6 +1120,7 @@ func (h *InvoiceEventHandler) createInvoiceAction(ctx context.Context, tenant st
 		Currency:      invoiceEntity.Currency.String(),
 		Amount:        invoiceEntity.TotalAmount,
 		InvoiceNumber: invoiceEntity.Number,
+		InvoiceId:     invoiceEntity.Id,
 	})
 
 	actionType := neo4jenum.ActionInvoiceSent
