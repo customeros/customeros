@@ -16,7 +16,7 @@ require (
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/coocood/freecache v1.2.4
-	github.com/docker/docker v26.0.1+incompatible
+	github.com/docker/docker v26.0.2+incompatible
 	github.com/gin-contrib/cors v1.7.1
 	github.com/gin-contrib/zap v1.1.1
 	github.com/gin-gonic/gin v1.9.1
