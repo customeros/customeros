@@ -1,7 +1,18 @@
-import { Icon, IconProps } from '@ui/media/Icon';
+import React from 'react';
 
-export const Divider = (props: IconProps) => (
-  <Icon viewBox='0 0 24 24' fill='none' boxSize='4' {...props}>
+import { twMerge } from 'tailwind-merge';
+
+interface IconProps extends React.SVGAttributes<SVGElement> {
+  className?: string;
+}
+
+export const Divider = ({ className, ...props }: IconProps) => (
+  <svg
+    viewBox='0 0 24 24'
+    fill='none'
+    {...props}
+    className={twMerge('inline-block size-4', className)}
+  >
     <g id='divider'>
       <path
         id='Icon'
@@ -12,5 +23,5 @@ export const Divider = (props: IconProps) => (
         strokeLinejoin='round'
       />
     </g>
-  </Icon>
+  </svg>
 );

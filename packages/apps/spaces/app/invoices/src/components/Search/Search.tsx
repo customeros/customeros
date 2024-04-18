@@ -34,7 +34,7 @@ export const Search = () => {
       onChange={debounce(handleChange, 300)}
     >
       <InputLeftElement w='9'>
-        <SearchSm boxSize='5' />
+        <SearchSm className='size-5' />
       </InputLeftElement>
       <Input
         pl='9'

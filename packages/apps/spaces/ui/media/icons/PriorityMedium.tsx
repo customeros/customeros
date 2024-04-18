@@ -1,7 +1,18 @@
-import { Icon, IconProps } from '@ui/media/Icon';
+import React from 'react';
 
-export const PriorityMedium = (props: IconProps) => (
-  <Icon viewBox='0 0 24 25' fill='none' boxSize='4' {...props}>
+import { twMerge } from 'tailwind-merge';
+
+interface IconProps extends React.SVGAttributes<SVGElement> {
+  className?: string;
+}
+
+export const PriorityMedium = ({ className, ...props }: IconProps) => (
+  <svg
+    viewBox='0 0 24 25'
+    fill='none'
+    {...props}
+    className={twMerge('inline-block size-4', className)}
+  >
     <path
       d='M3 13.2029C3 12.6506 3.44772 12.2029 4 12.2029H6.63636C7.18865 12.2029 7.63636 12.6506 7.63636 13.2029V20.4756C7.63636 21.0279 7.18865 21.4756 6.63636 21.4756H4C3.44771 21.4756 3 21.0279 3 20.4756V13.2029Z'
       fill='#667085'
@@ -14,5 +25,5 @@ export const PriorityMedium = (props: IconProps) => (
       d='M15.3638 3.93017C15.3638 3.37789 15.8115 2.93018 16.3638 2.93018H19.0001C19.5524 2.93018 20.0001 3.37789 20.0001 3.93018V20.4756C20.0001 21.0279 19.5524 21.4756 19.0001 21.4756H16.3638C15.8115 21.4756 15.3638 21.0279 15.3638 20.4756V3.93017Z'
       fill='#D0D5DD'
     />
-  </Icon>
+  </svg>
 );

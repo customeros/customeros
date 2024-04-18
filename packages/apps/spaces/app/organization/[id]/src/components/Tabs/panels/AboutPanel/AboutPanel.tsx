@@ -15,6 +15,7 @@ import { FormNumberInputGroup } from '@ui/form/InputGroup';
 import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
+import { ArrowCircleBrokenUpLeft } from '@ui/media/icons/ArrowCircleBrokenUpLeft';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea/FormAutoresizeTextarea2';
 import { useOrganizationQuery } from '@organization/src/graphql/organization.generated';
 import { Branches } from '@organization/src/components/Tabs/panels/AboutPanel/branches/Branches';
@@ -254,7 +255,7 @@ export const AboutPanel = () => {
             name='targetAudience'
             formId='organization-about'
             placeholder='Target Audience'
-            leftElement={<Icons.Target5 color='gray.500' mt='1' />}
+            leftElement={<Icons.Target5 color='error.500' />}
           />
 
           <FormSelect
@@ -263,7 +264,9 @@ export const AboutPanel = () => {
             formId='organization-about'
             placeholder='Business Type'
             options={businessTypeOptions}
-            leftElement={<Icons.DataFlow3 color='gray.500' mr='3' />}
+            leftElement={
+              <ArrowCircleBrokenUpLeft className='text-gray-500 mr-3' />
+            }
           />
 
           <div className='flex items-center justify-center w-full'>
@@ -285,7 +288,7 @@ export const AboutPanel = () => {
               formId='organization-about'
               placeholder='Last funding amount'
               min={0}
-              leftElement={<CurrencyDollar boxSize={4} color={'gray.500'} />}
+              leftElement={<CurrencyDollar className='text-gray-500 size-4' />}
             />
           </div>
 

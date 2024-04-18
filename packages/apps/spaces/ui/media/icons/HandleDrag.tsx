@@ -1,7 +1,18 @@
-import { Icon, IconProps } from '@ui/media/Icon';
+import React from 'react';
 
-export const HandleDrag = (props: IconProps) => (
-  <Icon viewBox='0 0 24 24' fill='none' boxSize='4' {...props}>
+import { twMerge } from 'tailwind-merge';
+
+interface IconProps extends React.SVGAttributes<SVGElement> {
+  className?: string;
+}
+
+export const HandleDrag = ({ className, ...props }: IconProps) => (
+  <svg
+    viewBox='0 0 24 24'
+    fill='none'
+    {...props}
+    className={twMerge('inline-block size-4', className)}
+  >
     <g id='handle-drag'>
       <g id='Icon'>
         <path
@@ -66,5 +77,5 @@ export const HandleDrag = (props: IconProps) => (
         />
       </g>
     </g>
-  </Icon>
+  </svg>
 );

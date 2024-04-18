@@ -1,7 +1,18 @@
-import { Icon, IconProps } from '@ui/media/Icon';
+import React from 'react';
 
-export const RefreshCcw01 = (props: IconProps) => (
-  <Icon viewBox='0 0 24 24' fill='none' boxSize='4' {...props}>
+import { twMerge } from 'tailwind-merge';
+
+interface IconProps extends React.SVGAttributes<SVGElement> {
+  className?: string;
+}
+
+export const RefreshCcw01 = ({ className, ...props }: IconProps) => (
+  <svg
+    viewBox='0 0 24 24'
+    fill='none'
+    {...props}
+    className={twMerge('inline-block size-4', className)}
+  >
     <g id='refresh-ccw-01'>
       <path
         id='Icon'
@@ -12,5 +23,5 @@ export const RefreshCcw01 = (props: IconProps) => (
         strokeLinejoin='round'
       />
     </g>
-  </Icon>
+  </svg>
 );

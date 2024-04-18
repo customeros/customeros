@@ -10,6 +10,7 @@ import { Trophy01 } from '@ui/media/icons/Trophy01';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { ArrowNarrowRight } from '@ui/media/icons/ArrowNarrowRight';
 import { SidenavItem } from '@shared/components/RootSidenav/components/SidenavItem';
 import { useOrganizationQuery } from '@organization/src/graphql/organization.generated';
 import { NotificationCenter } from '@shared/components/Notifications/NotificationCenter';
@@ -53,7 +54,9 @@ export const OrganizationSidenav = () => {
           onClick={() => {
             router.push(`/${lastActivePosition?.root || 'organization'}`);
           }}
-          icon={<Icons.ArrowNarrowLeft color='gray.700' boxSize='6' />}
+          icon={
+            <ArrowNarrowRight className='rotate-180 text-gray-700 size-6' />
+          }
         />
 
         <div className='flex flex-col line-clamp-1'>

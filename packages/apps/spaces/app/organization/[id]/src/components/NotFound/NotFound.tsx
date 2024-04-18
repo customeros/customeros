@@ -15,7 +15,7 @@ export default function NotFound() {
       </div>
       <div className='flex relative flex-col items-center justify-center h-[50vh]'>
         <FeaturedIcon colorScheme='primary' size='lg'>
-          <SearchSm boxSize='5' />
+          <SearchSm className='size-5' />
         </FeaturedIcon>
         <h2 className='text-5xl text-gray-900 py-6 font-semibold'>
           This organization cannot be found
