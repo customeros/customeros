@@ -41,7 +41,7 @@ export const TimelinePreviewBackdrop = ({
     <Modal open={isModalOpen} modal={false} onOpenChange={closeModal}>
       <div
         className={cn(
-          'absolute top-0 bottom-0 left-0 right-0 z-10 cursor-pointer flex justify-center align-middle transition-all duration-100 linear',
+          'absolute top-0 bottom-0 left-0 right-0 z-9 cursor-pointer flex justify-center align-middle transition-all duration-100 linear',
         )}
         id='timeline-preview-backdrop'
         style={{
@@ -60,7 +60,7 @@ export const TimelinePreviewBackdrop = ({
                 ? 'w-[650px]'
                 : 'w-[544px]',
               modalContent?.__typename === 'Invoice' ? 'h-[90vh]' : 'h-auto',
-              'absolute top-4 min-w-[544px] bg-transparent',
+              'absolute top-4 min-w-[544px] bg-transparent z-9',
             )}
             onPointerDownOutside={avoidDefaultDomBehavior}
             onInteractOutside={avoidDefaultDomBehavior}
