@@ -149,7 +149,6 @@ export const OrganizationTimeline: FC = () => {
   const flattenData = data?.pages.flatMap(
     (page) => page?.organization?.timelineEvents,
   ) as unknown as TimelineEvent[];
-
   const loadedDataCount = data?.pages.flatMap(
     (page) => page?.organization?.timelineEvents,
   )?.length;
