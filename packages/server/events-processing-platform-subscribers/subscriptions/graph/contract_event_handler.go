@@ -315,12 +315,12 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 				tracing.TraceErr(span, err)
 				h.log.Errorf("Error while activating renewal opportunity for contract %s: %s", contractId, err.Error())
 			}
-			contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.grpcClients)
-			err = contractHandler.UpdateActiveRenewalOpportunityRenewDateAndArr(ctx, eventData.Tenant, contractId)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				h.log.Errorf("error while updating renewal opportunity for contract %s: %s", contractId, err.Error())
-			}
+		}
+		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.grpcClients)
+		err = contractHandler.UpdateActiveRenewalOpportunityRenewDateAndArr(ctx, eventData.Tenant, contractId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("error while updating renewal opportunity for contract %s: %s", contractId, err.Error())
 		}
 	}
 
