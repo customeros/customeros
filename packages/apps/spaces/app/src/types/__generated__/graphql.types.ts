@@ -1695,6 +1695,7 @@ export type InvoiceCustomer = {
 
 export type InvoiceLine = MetadataInterface & {
   __typename?: 'InvoiceLine';
+  contractLineItem: ServiceLineItem;
   description: Scalars['String']['output'];
   metadata: Metadata;
   price: Scalars['Float']['output'];
@@ -1772,6 +1773,8 @@ export enum InvoiceStatus {
   Draft = 'DRAFT',
   Due = 'DUE',
   Initialized = 'INITIALIZED',
+  OnHold = 'ON_HOLD',
+  Overdue = 'OVERDUE',
   Paid = 'PAID',
   Scheduled = 'SCHEDULED',
   Void = 'VOID',
@@ -3358,6 +3361,7 @@ export type Opportunity = Node & {
   name: Scalars['String']['output'];
   nextSteps: Scalars['String']['output'];
   owner?: Maybe<User>;
+  renewalApproved: Scalars['Boolean']['output'];
   renewalLikelihood: OpportunityRenewalLikelihood;
   renewalUpdatedByUserAt: Scalars['Time']['output'];
   renewalUpdatedByUserId: Scalars['String']['output'];

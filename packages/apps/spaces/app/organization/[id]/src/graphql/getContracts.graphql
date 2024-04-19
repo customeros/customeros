@@ -75,7 +75,6 @@ query getContracts($id: ID!) {
                 name
                 renewalLikelihood
                 renewalUpdatedByUserId
-                renewalUpdatedByUserAt
                 renewedAt
 
                 owner {

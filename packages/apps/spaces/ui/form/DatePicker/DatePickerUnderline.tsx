@@ -1,34 +1,29 @@
-import React from 'react';
 import { useField } from 'react-inverted-form';
-import {
-  DatePicker as ReactDatePicker,
-  DatePickerProps as ReactDatePickerProps,
-} from 'react-date-picker';
+import React, { useRef, useState } from 'react';
 
-import { Box } from '@chakra-ui/layout';
-
-import { cn } from '@ui/utils/cn';
+import { Portal } from '@ui/utils';
 import { DateTimeUtils } from '@spaces/utils/date';
-type DateInputValue = null | string | number | Date;
+import { DatePicker } from '@ui/form/DatePicker/DatePicker2';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@ui/overlay/Popover/Popover';
 
-interface DatePickerProps extends ReactDatePickerProps {
+interface DatePickerProps {
   name: string;
-  inset?: string;
   formId: string;
-  placeholder?: string;
-  defaultOpen?: boolean;
-  calendarIconHidden?: boolean;
 }
-
 export const DatePickerUnderline: React.FC<DatePickerProps> = ({
   name,
   formId,
-  placeholder,
-  defaultOpen,
 }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isOpen, setIsOpen] = useState(false);
+
   const { getInputProps } = useField(name, formId);
-  const { id, onChange, value } = getInputProps();
-  const handleDateInputChange = (data?: DateInputValue) => {
+  const { onChange, value } = getInputProps();
+  const handleDateInputChange = (data?: Date) => {
     if (!data) return onChange(null);
     const date = new Date(data);
 
@@ -43,70 +38,38 @@ export const DatePickerUnderline: React.FC<DatePickerProps> = ({
       ),
     );
     onChange(normalizedDate);
+    setIsOpen(false);
   };
 
   return (
-    <Box
-      display='inline'
-      sx={{
-        '& .react-date-picker__wrapper': {
-          display: 'inline-flex',
-        },
-
-        '& .react-date-picker__calendar': {
-          inset: `20px auto auto auto !important`,
-        },
-        '& .react-date-picker': {
-          height: 'unset',
-          display: 'inline',
-        },
-        '& .react-date-picker__button': {
-          padding: 0,
-        },
-        '& .react-date-picker__calendar-button': {
-          width: 'fit-content',
-          borderBottom: 'none !important',
-        },
-        '& .react-date-picker--open .react-date-picker__calendar-button, .react-date-picker:focus-within .react-date-picker__calendar-button, .react-date-picker:focus .react-date-picker__calendar-button, .react-date-picker:focus-visible .react-date-picker__calendar-button':
-          {
-            borderBottom: 'none !important',
-          },
-        '& .react-date-picker:hover .react-date-picker__calendar-button': {
-          borderBottom: 'none !important',
-        },
-      }}
-    >
-      <ReactDatePicker
-        id={id}
-        name={name}
-        clearIcon={() => null}
-        onChange={(val) => handleDateInputChange(val as DateInputValue)}
-        formatShortWeekday={(_, date) =>
-          DateTimeUtils.format(date.toISOString(), DateTimeUtils.shortWeekday)
-        }
-        formatMonth={(_, date) =>
-          DateTimeUtils.format(
-            date.toISOString(),
-            DateTimeUtils.abreviatedMonth,
-          )
-        }
-        value={value as Date}
-        calendarIcon={
-          <p
-            className={cn(
-              'underline text-gray-500 hover:text-gray-700 focus:text-gray-700',
-            )}
-            role='button'
+    <div className='flex flex-start items-center' ref={containerRef}>
+      <Popover open={isOpen} onOpenChange={(value) => setIsOpen(value)}>
+        <PopoverTrigger className='data-[state=open]:text-gray-700 data-[state=closed]:text-gray-500'>
+          <span className='underline cursor-pointer whitespace-pre pb-[1px] text-base border-t-[1px] border-transparent hover:text-gray-700'>{`${DateTimeUtils.format(
+            value,
+            DateTimeUtils.date,
+          )}`}</span>
+        </PopoverTrigger>
+        <Portal>
+          <PopoverContent
+            align='start'
+            side='top'
+            className='items-end'
+            sticky='always'
+            onOpenAutoFocus={(el) => el.preventDefault()}
+            onClick={(e) => e.stopPropagation()}
           >
-            {value
-              ? DateTimeUtils.format(
-                  (value as Date)?.toISOString(),
-                  DateTimeUtils.dateWithAbreviatedMonth,
-                )
-              : `${placeholder ? placeholder : 'Start date'}`}
-          </p>
-        }
-      />
-    </Box>
+            <DatePicker
+              name={name}
+              formId={formId}
+              defaultValue={new Date(value)}
+              onChange={(date) => {
+                handleDateInputChange(date as Date);
+              }}
+            />
+          </PopoverContent>
+        </Portal>
+      </Popover>
+    </div>
   );
 };
