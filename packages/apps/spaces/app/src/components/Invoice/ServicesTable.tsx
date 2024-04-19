@@ -1,8 +1,8 @@
 import React from 'react';
 
 import { cn } from '@ui/utils/cn';
-import { Invoice } from '@graphql/types';
 import { DateTimeUtils } from '@spaces/utils/date';
+import { Invoice, BilledType } from '@graphql/types';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 
 type ServicesTableProps = {
@@ -53,17 +53,31 @@ export function ServicesTable({
                   {service?.description ?? 'Unnamed'}
                 </div>
                 <div className='text-gray-500'>
-                  {invoicePeriodStart &&
-                    DateTimeUtils.format(
-                      invoicePeriodStart,
-                      DateTimeUtils.defaultFormatShortString,
-                    )}{' '}
-                  {invoicePeriodEnd && invoicePeriodStart && '-'}{' '}
-                  {invoicePeriodEnd &&
-                    DateTimeUtils.format(
-                      invoicePeriodEnd,
-                      DateTimeUtils.defaultFormatShortString,
-                    )}
+                  {service?.contractLineItem?.billingCycle ===
+                  BilledType.Once ? (
+                    <>
+                      {service?.contractLineItem?.serviceStarted &&
+                        DateTimeUtils.format(
+                          service.contractLineItem.serviceStarted,
+                          DateTimeUtils.defaultFormatShortString,
+                        )}
+                    </>
+                  ) : (
+                    <>
+                      {invoicePeriodStart &&
+                        DateTimeUtils.format(
+                          invoicePeriodStart,
+                          DateTimeUtils.defaultFormatShortString,
+                        )}{' '}
+                      {invoicePeriodEnd && invoicePeriodStart && '-'}
+                      {''}
+                      {invoicePeriodEnd &&
+                        DateTimeUtils.format(
+                          invoicePeriodEnd,
+                          DateTimeUtils.defaultFormatShortString,
+                        )}
+                    </>
+                  )}
                 </div>
               </div>
               <div className='w-1/6 text-center text-sm text-gray-500 leading-5'>

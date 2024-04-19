@@ -88,6 +88,11 @@ export type GetInvoicesQuery = {
           sourceOfTruth: Types.DataSource;
           appSource: string;
         };
+        contractLineItem: {
+          __typename?: 'ServiceLineItem';
+          serviceStarted: any;
+          billingCycle: Types.BilledType;
+        };
       }>;
     }>;
   };
@@ -145,6 +150,10 @@ export const GetInvoicesDocument = `
           source
           sourceOfTruth
           appSource
+        }
+        contractLineItem {
+          serviceStarted
+          billingCycle
         }
         quantity
         subtotal
