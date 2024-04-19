@@ -50,6 +50,11 @@ query GetInvoice($id: ID!) {
         sourceOfTruth
         appSource
       }
+      contractLineItem {
+        serviceStarted
+        billingCycle
+      }
+
 
       quantity
       subtotal

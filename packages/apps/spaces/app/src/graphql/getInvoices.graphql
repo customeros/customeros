@@ -55,6 +55,10 @@ query getInvoices(
           sourceOfTruth
           appSource
         }
+        contractLineItem {
+          serviceStarted
+          billingCycle
+        }
         quantity
         subtotal
         taxDue
