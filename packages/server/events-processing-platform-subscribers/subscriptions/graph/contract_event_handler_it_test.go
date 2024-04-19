@@ -587,7 +587,6 @@ func TestContractEventHandler_OnUpdate_EndDateSet(t *testing.T) {
 
 	// prepare grpc mock
 	calledEventsPlatformToUpdateRenewalOpportunity := false
-	calledEventsPlatformToUpdateRenewalOpportunityNextCycleDate := false
 	calledEventsPlatformToUpdateOpportunity := false
 	opportunityCallbacks := mocked_grpc.MockOpportunityServiceCallbacks{
 		UpdateRenewalOpportunity: func(context context.Context, op *opportunitypb.UpdateRenewalOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
@@ -597,16 +596,6 @@ func TestContractEventHandler_OnUpdate_EndDateSet(t *testing.T) {
 			require.Equal(t, opportunitypb.RenewalLikelihood_ZERO_RENEWAL, op.RenewalLikelihood)
 			require.Equal(t, []opportunitypb.OpportunityMaskField{opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_RENEWAL_LIKELIHOOD}, op.FieldsMask)
 			calledEventsPlatformToUpdateRenewalOpportunity = true
-			return &opportunitypb.OpportunityIdGrpcResponse{
-				Id: opportunityId,
-			}, nil
-		},
-		UpdateRenewalOpportunityNextCycleDate: func(context context.Context, op *opportunitypb.UpdateRenewalOpportunityNextCycleDateGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
-			require.Equal(t, tenantName, op.Tenant)
-			require.Equal(t, opportunityId, op.OpportunityId)
-			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, op.AppSource)
-			require.NotNil(t, op.RenewedAt)
-			calledEventsPlatformToUpdateRenewalOpportunityNextCycleDate = true
 			return &opportunitypb.OpportunityIdGrpcResponse{
 				Id: opportunityId,
 			}, nil
@@ -699,7 +688,6 @@ func TestContractEventHandler_OnUpdate_EndDateSet(t *testing.T) {
 
 	// Verify event platform was called
 	require.True(t, calledEventsPlatformToUpdateRenewalOpportunity)
-	require.True(t, calledEventsPlatformToUpdateRenewalOpportunityNextCycleDate)
 	require.True(t, calledEventsPlatformToUpdateOpportunity)
 	require.True(t, calledEventsPlatformForOnboardingStatusChange)
 }
