@@ -1,515 +1,264 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck remove this when typscript-react-query plugin is fixed
-
-import { TableViewDef } from '@graphql/types';
+import { TableViewDef, TableViewType, ColumnViewType } from '@graphql/types';
 
 export const mockedTableDefs: TableViewDef[] = [
   {
     id: '1',
     order: 0,
     name: 'Monthly renewals',
-    type: {
-      id: '1',
-      name: 'RENEWALS',
-      createdAt: '2021-08-10T14:00:00.000Z',
-      updatedAt: '2021-08-10T14:00:00.000Z',
-    },
-    filters: '',
-    columns: [
-      {
-        id: '1',
-        createdAt: '2021-08-10T14:00:00.000Z',
-        updatedAt: '2021-08-10T14:00:00.000Z',
-        isVisible: true,
-        isDefaultSort: false,
-
-        columnType: {
-          id: '1',
-          name: 'AVATAR',
-          createdAt: '2021-08-10T14:00:00.000Z',
-          updatedAt: '2021-08-10T14:00:00.000Z',
-        },
-      },
-      {
-        id: '2',
-        createdAt: '2021-08-10T14:00:00.000Z',
-        updatedAt: '2021-08-10T14:00:00.000Z',
-        columnType: {
-          id: '2',
-          name: 'NAME',
-          createdAt: '2021-08-10T14:00:00.000Z',
-          updatedAt: '2021-08-10T14:00:00.000Z',
-        },
-      },
-      {
-        id: '7',
-        createdAt: '2021-08-10T14:00:00.000Z',
-        updatedAt: '2021-08-10T14:00:00.000Z',
-        columnType: {
-          id: '7',
-          name: 'RENEWAL_DATE',
-          createdAt: '2021-08-10T14:00:00.000Z',
-          updatedAt: '2021-08-10T14:00:00.000Z',
-        },
-      },
-      {
-        id: '8',
-        createdAt: '2021-08-10T14:00:00.000Z',
-        updatedAt: '2021-08-10T14:00:00.000Z',
-        columnType: {
-          id: '8',
-          name: 'FORECAST_ARR',
-          createdAt: '2021-08-10T14:00:00.000Z',
-          updatedAt: '2021-08-10T14:00:00.000Z',
-        },
-      },
-      {
-        id: '6',
-        createdAt: '2021-08-10T14:00:00.000Z',
-        updatedAt: '2021-08-10T14:00:00.000Z',
-        columnType: {
-          id: '6',
-          name: 'RENEWAL_LIKELIHOOD',
-          createdAt: '2021-08-10T14:00:00.000Z',
-          updatedAt: '2021-08-10T14:00:00.000Z',
-        },
-      },
-      {
-        id: '9',
-        createdAt: '2021-08-10T14:00:00.000Z',
-        updatedAt: '2021-08-10T14:00:00.000Z',
-        columnType: {
-          id: '9',
-          name: 'OWNER',
-          createdAt: '2021-08-10T14:00:00.000Z',
-          updatedAt: '2021-08-10T14:00:00.000Z',
-        },
-      },
-      {
-        id: '10',
-        createdAt: '2021-08-10T14:00:00.000Z',
-        updatedAt: '2021-08-10T14:00:00.000Z',
-        columnType: {
-          id: '10',
-          name: 'LAST_TOUCHPOINT',
-          createdAt: '2021-08-10T14:00:00.000Z',
-          updatedAt: '2021-08-10T14:00:00.000Z',
-        },
-      },
-    ],
+    icon: '',
     createdAt: '2021-08-10T14:00:00.000Z',
     updatedAt: '2021-08-10T14:00:00.000Z',
+    tableType: TableViewType.Renewals,
+    filters: '',
+    sorting: '',
+    columns: [
+      {
+        columnType: ColumnViewType.RenewalsAvatar,
+        width: 32,
+        visible: true,
+      },
+      {
+        columnType: ColumnViewType.RenewalsName,
+        width: 100,
+        visible: true,
+      },
+      {
+        columnType: ColumnViewType.RenewalsRenewalDate,
+        width: 100,
+        visible: true,
+      },
+      {
+        columnType: ColumnViewType.RenewalsForecastArr,
+        width: 100,
+        visible: true,
+      },
+      {
+        columnType: ColumnViewType.RenewalsRenewalLikelihood,
+        width: 100,
+        visible: true,
+      },
+      {
+        columnType: ColumnViewType.RenewalsOwner,
+        width: 100,
+        visible: true,
+      },
+      {
+        columnType: ColumnViewType.RenewalsLastTouchpoint,
+        width: 100,
+        visible: true,
+      },
+    ],
   },
   {
     id: '2',
     order: 1,
     name: 'Quarterly renewals',
-    type: {
-      id: '1',
-      name: 'RENEWALS',
-      createdAt: '2021-08-10T14:00:00.000Z',
-      updatedAt: '2021-08-10T14:00:00.000Z',
-    },
-    filters: '',
-    columns: [
-      {
-        id: '1',
-        createdAt: '2021-08-10T14:00:00.000Z',
-        updatedAt: '2021-08-10T14:00:00.000Z',
-        isVisible: true,
-        isDefaultSort: false,
-
-        columnType: {
-          id: '1',
-          name: 'AVATAR',
-          createdAt: '2021-08-10T14:00:00.000Z',
-          updatedAt: '2021-08-10T14:00:00.000Z',
-        },
-      },
-      {
-        id: '2',
-        createdAt: '2021-08-10T14:00:00.000Z',
-        updatedAt: '2021-08-10T14:00:00.000Z',
-        columnType: {
-          id: '2',
-          name: 'NAME',
-          createdAt: '2021-08-10T14:00:00.000Z',
-          updatedAt: '2021-08-10T14:00:00.000Z',
-        },
-      },
-      {
-        id: '7',
-        createdAt: '2021-08-10T14:00:00.000Z',
-        updatedAt: '2021-08-10T14:00:00.000Z',
-        columnType: {
-          id: '7',
-          name: 'RENEWAL_DATE',
-          createdAt: '2021-08-10T14:00:00.000Z',
-          updatedAt: '2021-08-10T14:00:00.000Z',
-        },
-      },
-      {
-        id: '8',
-        createdAt: '2021-08-10T14:00:00.000Z',
-        updatedAt: '2021-08-10T14:00:00.000Z',
-        columnType: {
-          id: '8',
-          name: 'FORECAST_ARR',
-          createdAt: '2021-08-10T14:00:00.000Z',
-          updatedAt: '2021-08-10T14:00:00.000Z',
-        },
-      },
-      {
-        id: '6',
-        createdAt: '2021-08-10T14:00:00.000Z',
-        updatedAt: '2021-08-10T14:00:00.000Z',
-        columnType: {
-          id: '6',
-          name: 'RENEWAL_LIKELIHOOD',
-          createdAt: '2021-08-10T14:00:00.000Z',
-          updatedAt: '2021-08-10T14:00:00.000Z',
-        },
-      },
-      {
-        id: '9',
-        createdAt: '2021-08-10T14:00:00.000Z',
-        updatedAt: '2021-08-10T14:00:00.000Z',
-        columnType: {
-          id: '9',
-          name: 'OWNER',
-          createdAt: '2021-08-10T14:00:00.000Z',
-          updatedAt: '2021-08-10T14:00:00.000Z',
-        },
-      },
-      {
-        id: '10',
-        createdAt: '2021-08-10T14:00:00.000Z',
-        updatedAt: '2021-08-10T14:00:00.000Z',
-        columnType: {
-          id: '10',
-          name: 'LAST_TOUCHPOINT',
-          createdAt: '2021-08-10T14:00:00.000Z',
-          updatedAt: '2021-08-10T14:00:00.000Z',
-        },
-      },
-    ],
+    icon: '',
     createdAt: '2021-08-10T14:00:00.000Z',
     updatedAt: '2021-08-10T14:00:00.000Z',
+    tableType: TableViewType.Renewals,
+    filters: '',
+    sorting: '',
+    columns: [
+      {
+        columnType: ColumnViewType.RenewalsAvatar,
+        width: 32,
+        visible: true,
+      },
+      {
+        columnType: ColumnViewType.RenewalsName,
+        width: 100,
+        visible: true,
+      },
+      {
+        columnType: ColumnViewType.RenewalsRenewalDate,
+        width: 100,
+        visible: true,
+      },
+      {
+        columnType: ColumnViewType.RenewalsForecastArr,
+        width: 100,
+        visible: true,
+      },
+      {
+        columnType: ColumnViewType.RenewalsRenewalLikelihood,
+        width: 100,
+        visible: true,
+      },
+      {
+        columnType: ColumnViewType.RenewalsOwner,
+        width: 100,
+        visible: true,
+      },
+      {
+        columnType: ColumnViewType.RenewalsLastTouchpoint,
+        width: 100,
+        visible: true,
+      },
+    ],
   },
   {
     id: '3',
     order: 2,
     name: 'Annual renewals',
-    type: {
-      id: '1',
-      name: 'RENEWALS',
-      createdAt: '2021-08-10T14:00:00.000Z',
-      updatedAt: '2021-08-10T14:00:00.000Z',
-    },
-    filters: '',
-    columns: [
-      {
-        id: '1',
-        createdAt: '2021-08-10T14:00:00.000Z',
-        updatedAt: '2021-08-10T14:00:00.000Z',
-        isVisible: true,
-        isDefaultSort: false,
-
-        columnType: {
-          id: '1',
-          name: 'AVATAR',
-          createdAt: '2021-08-10T14:00:00.000Z',
-          updatedAt: '2021-08-10T14:00:00.000Z',
-        },
-      },
-      {
-        id: '2',
-        createdAt: '2021-08-10T14:00:00.000Z',
-        updatedAt: '2021-08-10T14:00:00.000Z',
-        columnType: {
-          id: '2',
-          name: 'NAME',
-          createdAt: '2021-08-10T14:00:00.000Z',
-          updatedAt: '2021-08-10T14:00:00.000Z',
-        },
-      },
-      {
-        id: '7',
-        createdAt: '2021-08-10T14:00:00.000Z',
-        updatedAt: '2021-08-10T14:00:00.000Z',
-        columnType: {
-          id: '7',
-          name: 'RENEWAL_DATE',
-          createdAt: '2021-08-10T14:00:00.000Z',
-          updatedAt: '2021-08-10T14:00:00.000Z',
-        },
-      },
-      {
-        id: '8',
-        createdAt: '2021-08-10T14:00:00.000Z',
-        updatedAt: '2021-08-10T14:00:00.000Z',
-        columnType: {
-          id: '8',
-          name: 'FORECAST_ARR',
-          createdAt: '2021-08-10T14:00:00.000Z',
-          updatedAt: '2021-08-10T14:00:00.000Z',
-        },
-      },
-      {
-        id: '6',
-        createdAt: '2021-08-10T14:00:00.000Z',
-        updatedAt: '2021-08-10T14:00:00.000Z',
-        columnType: {
-          id: '6',
-          name: 'RENEWAL_LIKELIHOOD',
-          createdAt: '2021-08-10T14:00:00.000Z',
-          updatedAt: '2021-08-10T14:00:00.000Z',
-        },
-      },
-      {
-        id: '9',
-        createdAt: '2021-08-10T14:00:00.000Z',
-        updatedAt: '2021-08-10T14:00:00.000Z',
-        columnType: {
-          id: '9',
-          name: 'OWNER',
-          createdAt: '2021-08-10T14:00:00.000Z',
-          updatedAt: '2021-08-10T14:00:00.000Z',
-        },
-      },
-      {
-        id: '10',
-        createdAt: '2021-08-10T14:00:00.000Z',
-        updatedAt: '2021-08-10T14:00:00.000Z',
-        columnType: {
-          id: '10',
-          name: 'LAST_TOUCHPOINT',
-          createdAt: '2021-08-10T14:00:00.000Z',
-          updatedAt: '2021-08-10T14:00:00.000Z',
-        },
-      },
-    ],
+    icon: '',
     createdAt: '2021-08-10T14:00:00.000Z',
     updatedAt: '2021-08-10T14:00:00.000Z',
+    tableType: TableViewType.Renewals,
+    filters: '',
+    sorting: '',
+    columns: [
+      {
+        columnType: ColumnViewType.RenewalsAvatar,
+        width: 32,
+        visible: true,
+      },
+      {
+        columnType: ColumnViewType.RenewalsName,
+        width: 100,
+        visible: true,
+      },
+      {
+        columnType: ColumnViewType.RenewalsRenewalDate,
+        width: 100,
+        visible: true,
+      },
+      {
+        columnType: ColumnViewType.RenewalsForecastArr,
+        width: 100,
+        visible: true,
+      },
+      {
+        columnType: ColumnViewType.RenewalsRenewalLikelihood,
+        width: 100,
+        visible: true,
+      },
+      {
+        columnType: ColumnViewType.RenewalsOwner,
+        width: 100,
+        visible: true,
+      },
+      {
+        columnType: ColumnViewType.RenewalsLastTouchpoint,
+        width: 100,
+        visible: true,
+      },
+    ],
   },
   {
     id: '4',
-    order: 4,
+    order: 3,
     name: 'Upcoming invoices',
-    type: {
-      id: '2',
-      name: 'INVOICES',
-      createdAt: '2021-08-10T14:00:00.000Z',
-      updatedAt: '2021-08-10T14:00:00.000Z',
-    },
-    filters: '',
-    columns: [
-      {
-        id: '0',
-        createdAt: '2021-08-10T14:00:00.000Z',
-        updatedAt: '2021-08-10T14:00:00.000Z',
-        isVisible: true,
-        isDefaultSort: false,
-
-        columnType: {
-          id: '1',
-          name: 'PLACEHOLDER',
-          createdAt: '2021-08-10T14:00:00.000Z',
-          updatedAt: '2021-08-10T14:00:00.000Z',
-        },
-      },
-      {
-        id: '1',
-        createdAt: '2021-08-10T14:00:00.000Z',
-        updatedAt: '2021-08-10T14:00:00.000Z',
-        isVisible: true,
-        isDefaultSort: false,
-
-        columnType: {
-          id: '1',
-          name: 'INVOICE_PREVIEW',
-          createdAt: '2021-08-10T14:00:00.000Z',
-          updatedAt: '2021-08-10T14:00:00.000Z',
-        },
-      },
-      {
-        id: '2',
-        createdAt: '2021-08-10T14:00:00.000Z',
-        updatedAt: '2021-08-10T14:00:00.000Z',
-        columnType: {
-          id: '2',
-          name: 'CONTRACT',
-          createdAt: '2021-08-10T14:00:00.000Z',
-          updatedAt: '2021-08-10T14:00:00.000Z',
-        },
-      },
-      {
-        id: '7',
-        createdAt: '2021-08-10T14:00:00.000Z',
-        updatedAt: '2021-08-10T14:00:00.000Z',
-        columnType: {
-          id: '7',
-          name: 'BILLING_CYCLE',
-          createdAt: '2021-08-10T14:00:00.000Z',
-          updatedAt: '2021-08-10T14:00:00.000Z',
-        },
-      },
-      {
-        id: '8',
-        createdAt: '2021-08-10T14:00:00.000Z',
-        updatedAt: '2021-08-10T14:00:00.000Z',
-        columnType: {
-          id: '8',
-          name: 'ISSUE_DATE',
-          createdAt: '2021-08-10T14:00:00.000Z',
-          updatedAt: '2021-08-10T14:00:00.000Z',
-        },
-      },
-      {
-        id: '6',
-        createdAt: '2021-08-10T14:00:00.000Z',
-        updatedAt: '2021-08-10T14:00:00.000Z',
-        columnType: {
-          id: '6',
-          name: 'DUE_DATE',
-          createdAt: '2021-08-10T14:00:00.000Z',
-          updatedAt: '2021-08-10T14:00:00.000Z',
-        },
-      },
-      {
-        id: '9',
-        createdAt: '2021-08-10T14:00:00.000Z',
-        updatedAt: '2021-08-10T14:00:00.000Z',
-        columnType: {
-          id: '9',
-          name: 'AMOUNT',
-          createdAt: '2021-08-10T14:00:00.000Z',
-          updatedAt: '2021-08-10T14:00:00.000Z',
-        },
-      },
-      {
-        id: '10',
-        createdAt: '2021-08-10T14:00:00.000Z',
-        updatedAt: '2021-08-10T14:00:00.000Z',
-        columnType: {
-          id: '11',
-          name: 'INVOICE_STATUS',
-          createdAt: '2021-08-10T14:00:00.000Z',
-          updatedAt: '2021-08-10T14:00:00.000Z',
-        },
-      },
-    ],
+    icon: '',
     createdAt: '2021-08-10T14:00:00.000Z',
     updatedAt: '2021-08-10T14:00:00.000Z',
+    tableType: TableViewType.Invoices,
+    filters: '',
+    sorting: '',
+    columns: [
+      {
+        columnType: ColumnViewType.InvoicesInvoicePreview,
+        width: 32,
+        visible: true,
+      },
+      {
+        columnType: ColumnViewType.InvoicesContract,
+        width: 100,
+        visible: true,
+      },
+      {
+        columnType: ColumnViewType.InvoicesBillingCycle,
+        width: 100,
+        visible: true,
+      },
+      {
+        columnType: ColumnViewType.InvoicesIssueDate,
+        width: 100,
+        visible: true,
+      },
+      {
+        columnType: ColumnViewType.InvoicesDueDate,
+        width: 100,
+        visible: true,
+      },
+      {
+        columnType: ColumnViewType.InvoicesAmount,
+        width: 100,
+        visible: true,
+      },
+      {
+        columnType: ColumnViewType.InvoicesInvoiceStatus,
+        width: 100,
+        visible: true,
+      },
+      {
+        columnType: ColumnViewType.InvoicesIssueDatePast,
+        width: 100,
+        visible: false,
+      },
+      {
+        columnType: ColumnViewType.InvoicesPaymentStatus,
+        width: 100,
+        visible: false,
+      },
+    ],
   },
   {
     id: '5',
-    order: 5,
+    order: 4,
     name: 'Issued invoices',
-    type: {
-      id: '2',
-      name: 'INVOICES',
-      createdAt: '2021-08-10T14:00:00.000Z',
-      updatedAt: '2021-08-10T14:00:00.000Z',
-    },
-    filters: '',
-    columns: [
-      {
-        id: '0',
-        createdAt: '2021-08-10T14:00:00.000Z',
-        updatedAt: '2021-08-10T14:00:00.000Z',
-        isVisible: true,
-        isDefaultSort: false,
-
-        columnType: {
-          id: '1',
-          name: 'PLACEHOLDER',
-          createdAt: '2021-08-10T14:00:00.000Z',
-          updatedAt: '2021-08-10T14:00:00.000Z',
-        },
-      },
-      {
-        id: '1',
-        createdAt: '2021-08-10T14:00:00.000Z',
-        updatedAt: '2021-08-10T14:00:00.000Z',
-        isVisible: true,
-        isDefaultSort: false,
-
-        columnType: {
-          id: '1',
-          name: 'INVOICE_NUMBER',
-          createdAt: '2021-08-10T14:00:00.000Z',
-          updatedAt: '2021-08-10T14:00:00.000Z',
-        },
-      },
-      {
-        id: '2',
-        createdAt: '2021-08-10T14:00:00.000Z',
-        updatedAt: '2021-08-10T14:00:00.000Z',
-        columnType: {
-          id: '2',
-          name: 'CONTRACT',
-          createdAt: '2021-08-10T14:00:00.000Z',
-          updatedAt: '2021-08-10T14:00:00.000Z',
-        },
-      },
-      {
-        id: '7',
-        createdAt: '2021-08-10T14:00:00.000Z',
-        updatedAt: '2021-08-10T14:00:00.000Z',
-        columnType: {
-          id: '7',
-          name: 'BILLING_CYCLE',
-          createdAt: '2021-08-10T14:00:00.000Z',
-          updatedAt: '2021-08-10T14:00:00.000Z',
-        },
-      },
-      {
-        id: '8',
-        createdAt: '2021-08-10T14:00:00.000Z',
-        updatedAt: '2021-08-10T14:00:00.000Z',
-        columnType: {
-          id: '8',
-          name: 'ISSUE_DATE_PAST',
-          createdAt: '2021-08-10T14:00:00.000Z',
-          updatedAt: '2021-08-10T14:00:00.000Z',
-        },
-      },
-      {
-        id: '6',
-        createdAt: '2021-08-10T14:00:00.000Z',
-        updatedAt: '2021-08-10T14:00:00.000Z',
-        columnType: {
-          id: '6',
-          name: 'DUE_DATE',
-          createdAt: '2021-08-10T14:00:00.000Z',
-          updatedAt: '2021-08-10T14:00:00.000Z',
-        },
-      },
-      {
-        id: '9',
-        createdAt: '2021-08-10T14:00:00.000Z',
-        updatedAt: '2021-08-10T14:00:00.000Z',
-        columnType: {
-          id: '9',
-          name: 'AMOUNT',
-          createdAt: '2021-08-10T14:00:00.000Z',
-          updatedAt: '2021-08-10T14:00:00.000Z',
-        },
-      },
-      {
-        id: '12',
-        createdAt: '2021-08-10T14:00:00.000Z',
-        updatedAt: '2021-08-10T14:00:00.000Z',
-        columnType: {
-          id: '12',
-          name: 'PAYMENT_STATUS',
-          createdAt: '2021-08-10T14:00:00.000Z',
-          updatedAt: '2021-08-10T14:00:00.000Z',
-        },
-      },
-    ],
+    icon: '',
     createdAt: '2021-08-10T14:00:00.000Z',
     updatedAt: '2021-08-10T14:00:00.000Z',
+    tableType: TableViewType.Invoices,
+    filters: '',
+    sorting: '',
+    columns: [
+      {
+        columnType: ColumnViewType.InvoicesInvoicePreview,
+        width: 32,
+        visible: true,
+      },
+      {
+        columnType: ColumnViewType.InvoicesContract,
+        width: 100,
+        visible: true,
+      },
+      {
+        columnType: ColumnViewType.InvoicesBillingCycle,
+        width: 100,
+        visible: true,
+      },
+      {
+        columnType: ColumnViewType.InvoicesIssueDatePast,
+        width: 100,
+        visible: true,
+      },
+      {
+        columnType: ColumnViewType.InvoicesDueDate,
+        width: 100,
+        visible: true,
+      },
+      {
+        columnType: ColumnViewType.InvoicesAmount,
+        width: 100,
+        visible: true,
+      },
+      {
+        columnType: ColumnViewType.InvoicesPaymentStatus,
+        width: 100,
+        visible: true,
+      },
+      {
+        columnType: ColumnViewType.InvoicesIssueDate,
+        width: 100,
+        visible: false,
+      },
+      {
+        columnType: ColumnViewType.InvoicesInvoiceStatus,
+        width: 100,
+        visible: false,
+      },
+    ],
   },
 ];

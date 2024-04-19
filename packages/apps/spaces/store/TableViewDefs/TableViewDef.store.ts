@@ -6,21 +6,20 @@ import type { Operation, SyncPacket } from '@store/types';
 import { toJS, makeAutoObservable } from 'mobx';
 import { getDiff, applyDiff } from 'recursive-diff';
 
-import { TableViewDef } from '@graphql/types';
+import { TableViewDef, TableViewType } from '@graphql/types';
 
 export class TableViewDefStore {
   value: TableViewDef = {
-    columns: null,
+    columns: [],
     createdAt: '',
-    createdBy: null,
-    filters: null,
-    icon: null,
+    filters: '',
+    icon: '',
     id: '',
     name: '',
-    order: null,
-    sorting: null,
-    type: null,
+    order: 0,
+    sorting: '',
     updatedAt: '',
+    tableType: TableViewType.Organizations,
   };
   version: number = 0;
   history: Operation[] = [];
@@ -90,17 +89,26 @@ export class TableViewDefStore {
   }
 
   reorderColumn(fromIndex: number, toIndex: number) {
-    this.update((prev) => {
-      const columns = prev.columns ?? [];
-      const column = columns[fromIndex];
+    this.update((value) => {
+      const column = value.columns[fromIndex];
 
-      columns.splice(fromIndex, 1);
-      columns.splice(toIndex, 0, column);
+      value.columns.splice(fromIndex, 1);
+      value.columns.splice(toIndex, 0, column);
 
-      return {
-        ...prev,
-        columns,
-      };
+      return value;
+    });
+  }
+
+  orderColumnsByVisibility() {
+    this.update((value) => {
+      value.columns.sort((a, b) => {
+        if (a.visible === b.visible) return 0;
+        if (a.visible) return -1;
+
+        return 1;
+      });
+
+      return value;
     });
   }
 }

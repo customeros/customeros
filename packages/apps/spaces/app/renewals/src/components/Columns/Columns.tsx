@@ -39,7 +39,7 @@ type Column = ColumnDefinition<ColumnDatum, any>;
 const columnHelper = createColumnHelper<ColumnDatum>();
 
 const columns: Record<string, Column> = {
-  AVATAR: columnHelper.accessor((row) => row, {
+  RENEWALS_AVATAR: columnHelper.accessor((row) => row, {
     id: 'AVATAR',
     minSize: 42,
     maxSize: 70,
@@ -57,7 +57,7 @@ const columns: Record<string, Column> = {
     header: () => <div className='w-[42px] h-8' />,
     skeleton: () => <Skeleton className='w-[42px] h-[42px] bg-gray-300' />,
   }),
-  NAME: columnHelper.accessor((row) => row, {
+  RENEWALS_NAME: columnHelper.accessor((row) => row, {
     id: 'NAME',
     minSize: 200,
     filterFn: filterOrganizationFn,
@@ -99,30 +99,33 @@ const columns: Record<string, Column> = {
       </div>
     ),
   }),
-  RENEWAL_LIKELIHOOD: columnHelper.accessor('organization.accountDetails', {
-    id: 'RENEWAL_LIKELIHOOD',
-    minSize: 100,
-    filterFn: filterRenewalLikelihoodFn,
-    cell: (props) => {
-      const value = props.getValue()?.renewalSummary?.renewalLikelihood;
+  RENEWALS_RENEWAL_LIKELIHOOD: columnHelper.accessor(
+    'organization.accountDetails',
+    {
+      id: 'RENEWAL_LIKELIHOOD',
+      minSize: 100,
+      filterFn: filterRenewalLikelihoodFn,
+      cell: (props) => {
+        const value = props.getValue()?.renewalSummary?.renewalLikelihood;
 
-      return <RenewalLikelihoodCell value={value} />;
+        return <RenewalLikelihoodCell value={value} />;
+      },
+      header: (props) => (
+        <THead
+          id='renewalLikelihood'
+          title='Health'
+          renderFilter={() => <RenewalLikelihoodFilter column={props.column} />}
+          {...getTHeadProps<RenewalRecord>(props)}
+        />
+      ),
+      skeleton: () => (
+        <div className='flex flex-col gap-1'>
+          <Skeleton className='w-[50%] h-[18px] bg-gray-300' />
+        </div>
+      ),
     },
-    header: (props) => (
-      <THead
-        id='renewalLikelihood'
-        title='Health'
-        renderFilter={() => <RenewalLikelihoodFilter column={props.column} />}
-        {...getTHeadProps<RenewalRecord>(props)}
-      />
-    ),
-    skeleton: () => (
-      <div className='flex flex-col gap-1'>
-        <Skeleton className='w-[50%] h-[18px] bg-gray-300' />
-      </div>
-    ),
-  }),
-  RENEWAL_DATE: columnHelper.accessor('organization.accountDetails', {
+  ),
+  RENEWALS_RENEWAL_DATE: columnHelper.accessor('organization.accountDetails', {
     id: 'RENEWAL_DATE',
     minSize: 100,
     filterFn: filterTimeToRenewalFn,
@@ -147,7 +150,7 @@ const columns: Record<string, Column> = {
     ),
     skeleton: () => <Skeleton className='w-[50%] h-[18px] bg-gray-300' />,
   }),
-  FORECAST_ARR: columnHelper.accessor('organization.accountDetails', {
+  RENEWALS_FORECAST_ARR: columnHelper.accessor('organization.accountDetails', {
     id: 'FORECAST_ARR',
     minSize: 100,
     filterFn: filterForecastFn,
@@ -185,7 +188,7 @@ const columns: Record<string, Column> = {
       </div>
     ),
   }),
-  OWNER: columnHelper.accessor('organization.owner', {
+  RENEWALS_OWNER: columnHelper.accessor('organization.owner', {
     id: 'OWNER',
     minSize: 100,
     filterFn: filterOwnerFn,
@@ -208,7 +211,7 @@ const columns: Record<string, Column> = {
     ),
     skeleton: () => <Skeleton className='w-[75%] h-[18px] bg-gray-300' />,
   }),
-  LAST_TOUCHPOINT: columnHelper.accessor((row) => row, {
+  RENEWALS_LAST_TOUCHPOINT: columnHelper.accessor((row) => row, {
     id: 'LAST_TOUCHPOINT',
     minSize: 300,
     filterFn: filterLastTouchpointFn,
@@ -248,9 +251,7 @@ export const getColumnsConfig = (tableViewDef?: Array<TableViewDef>[0]) => {
   if (!tableViewDef) return [];
 
   return (tableViewDef.columns ?? []).reduce((acc, curr) => {
-    //@ts-expect-error will be fixed
-
-    const columnTypeName = curr?.columnType?.name;
+    const columnTypeName = curr?.columnType;
 
     if (!columnTypeName) return acc;
 

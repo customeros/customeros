@@ -1,7 +1,6 @@
 import { ColumnDef as ColumnDefinition } from '@tanstack/react-table';
 
-import { Invoice } from '@graphql/types';
-import { TableViewDef } from '@shared/types/tableDef';
+import { Invoice, TableViewDef } from '@graphql/types';
 import { Skeleton } from '@ui/feedback/Skeleton/Skeleton2';
 import { createColumnHelper } from '@ui/presentation/Table';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
@@ -38,7 +37,7 @@ type Column = ColumnDefinition<ColumnDatum, any>;
 const columnHelper = createColumnHelper<ColumnDatum>();
 
 const columns: Record<string, Column> = {
-  ISSUE_DATE: columnHelper.accessor('issued', {
+  INVOICES_ISSUE_DATE: columnHelper.accessor('issued', {
     id: 'INVOICE_ISSUED_DATE',
     minSize: 50,
     maxSize: 50,
@@ -58,7 +57,8 @@ const columns: Record<string, Column> = {
     cell: (props) => <IssueDateCell value={props.getValue()} />,
     skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
   }),
-  ISSUE_DATE_PAST: columnHelper.accessor('issued', {
+  // this needs to be removed - INVOICES_ISSUE_DATE is the good one.
+  INVOICES_ISSUE_DATE_PAST: columnHelper.accessor('issued', {
     id: 'INVOICE_CREATED_AT',
     minSize: 50,
     maxSize: 50,
@@ -81,7 +81,7 @@ const columns: Record<string, Column> = {
     cell: (props) => <IssueDateCell value={props.getValue()} />,
     skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
   }),
-  DUE_DATE: columnHelper.accessor('due', {
+  INVOICES_DUE_DATE: columnHelper.accessor('due', {
     id: 'INVOICE_DUE_DATE',
     minSize: 50,
     maxSize: 50,
@@ -93,7 +93,7 @@ const columns: Record<string, Column> = {
     cell: (props) => <DueDateCell value={props.getValue()} />,
     skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
   }),
-  CONTRACT: columnHelper.accessor((row) => row, {
+  INVOICES_CONTRACT: columnHelper.accessor((row) => row, {
     id: 'CONTRACT',
     minSize: 200,
     enableColumnFilter: false,
@@ -110,7 +110,7 @@ const columns: Record<string, Column> = {
     ),
     skeleton: () => <Skeleton className='w-[100px] h-[18px]' />,
   }),
-  BILLING_CYCLE: columnHelper.accessor('contract.billingDetails', {
+  INVOICES_BILLING_CYCLE: columnHelper.accessor('contract.billingDetails', {
     id: 'CONTRACT_BILLING_CYCLE',
     minSize: 100,
     enableColumnFilter: true,
@@ -127,7 +127,7 @@ const columns: Record<string, Column> = {
     cell: (props) => <BillingCycleCell value={props.getValue().billingCycle} />,
     skeleton: () => <Skeleton className='w-[100px] h-[18px]' />,
   }),
-  PAYMENT_STATUS: columnHelper.accessor((row) => row, {
+  INVOICES_PAYMENT_STATUS: columnHelper.accessor((row) => row, {
     id: 'INVOICE_STATUS',
     minSize: 70,
     maxSize: 70,
@@ -150,7 +150,7 @@ const columns: Record<string, Column> = {
     ),
     skeleton: () => <Skeleton className='w-[100px] h-[18px]' />,
   }),
-  AMOUNT: columnHelper.accessor('amountDue', {
+  INVOICES_AMOUNT: columnHelper.accessor('amountDue', {
     id: 'AMOUNT',
     minSize: 100,
     maxSize: 100,
@@ -167,7 +167,7 @@ const columns: Record<string, Column> = {
     ),
     skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
   }),
-  INVOICE_NUMBER: columnHelper.accessor((row) => row, {
+  INVOICES_INVOICE_NUMBER: columnHelper.accessor((row) => row, {
     id: 'INVOICE_NUMBER',
     minSize: 100,
     maxSize: 100,
@@ -184,7 +184,7 @@ const columns: Record<string, Column> = {
     ),
     skeleton: () => <Skeleton className='w-[100px] h-[18px]' />,
   }),
-  INVOICE_STATUS: columnHelper.accessor('contract.contractEnded', {
+  INVOICES_INVOICE_STATUS: columnHelper.accessor('contract.contractEnded', {
     id: 'CONTRACT_ENDED_AT',
     minSize: 100,
     maxSize: 100,
@@ -202,7 +202,7 @@ const columns: Record<string, Column> = {
     cell: (props) => <InvoiceStatusCell isOutOfContract={props.getValue()} />,
     skeleton: () => <Skeleton className='w-[100px] h-[18px]' />,
   }),
-  INVOICE_PREVIEW: columnHelper.accessor((row) => row, {
+  INVOICES_INVOICE_PREVIEW: columnHelper.accessor((row) => row, {
     id: 'INVOICE_PREVIEW',
     minSize: 100,
     maxSize: 100,
@@ -223,7 +223,7 @@ const columns: Record<string, Column> = {
     ),
     skeleton: () => <Skeleton className='w-[100px] h-[18px]' />,
   }),
-  PLACEHOLDER: columnHelper.accessor((row) => row, {
+  INVOICES_PLACEHOLDER: columnHelper.accessor((row) => row, {
     id: 'PLACEHOLDER',
     minSize: 32,
     maxSize: 32,
@@ -234,16 +234,15 @@ const columns: Record<string, Column> = {
   }),
 };
 
-export const getColumnsConfig = (tableViewDef?: Array<TableViewDef>[0]) => {
+export const getColumnsConfig = (tableViewDef?: TableViewDef) => {
   if (!tableViewDef) return [];
 
   return (tableViewDef.columns ?? []).reduce((acc, curr) => {
-    //@ts-expect-error will be fixed
-    const columnTypeName = curr?.columnType?.name;
+    const columnTypeName = curr?.columnType;
 
     if (!columnTypeName) return acc;
 
-    const column = columns[columnTypeName];
+    const column = { ...columns[columnTypeName], enableHiding: !curr.visible };
 
     if (!column) return acc;
 

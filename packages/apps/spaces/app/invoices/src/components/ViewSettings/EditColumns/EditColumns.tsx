@@ -1,92 +1,123 @@
 'use client';
-import { Portal } from '@radix-ui/react-dropdown-menu';
-import { observer, useLocalObservable } from 'mobx-react-lite';
-import { Droppable, Draggable, DragDropContext } from '@hello-pangea/dnd';
+import { observer } from 'mobx-react-lite';
+import { Droppable, DragDropContext } from '@hello-pangea/dnd';
 
-import { ColumnDef } from '@graphql/types';
 import { Button } from '@ui/form/Button/Button';
+import { ColumnViewType } from '@graphql/types';
 import { useStore } from '@shared/hooks/useStore';
 import { Columns02 } from '@ui/media/icons/Columns02';
-import { Checkbox } from '@ui/form/Checkbox/Checkbox2';
-import { HandleDrag } from '@ui/media/icons/HandleDrag';
-import { mockedTableDefs } from '@shared/util/tableDefs.mock';
-import {
-  Menu,
-  MenuList,
-  MenuItem,
-  MenuGroup,
-  MenuLabel,
-  MenuButton,
-} from '@ui/overlay/Menu/Menu';
+import { Menu, MenuList, MenuGroup, MenuButton } from '@ui/overlay/Menu/Menu';
 
-import { ColumnOption } from './ColumnOption';
+import { ColumnOption, ColumnOptionContent } from './ColumnOption';
 
-const allColumns = mockedTableDefs[4].columns;
+type InvoicesColumnType =
+  | ColumnViewType.InvoicesAmount
+  | ColumnViewType.InvoicesBillingCycle
+  | ColumnViewType.InvoicesContract
+  | ColumnViewType.InvoicesDueDate
+  | ColumnViewType.InvoicesIssueDatePast
+  | ColumnViewType.InvoicesInvoicePreview
+  | ColumnViewType.InvoicesIssueDate
+  | ColumnViewType.InvoicesInvoiceStatus
+  | ColumnViewType.InvoicesPaymentStatus;
+
+const invoicesOptionsMap: Record<InvoicesColumnType, string> = {
+  [ColumnViewType.InvoicesAmount]: 'Amount',
+  [ColumnViewType.InvoicesBillingCycle]: 'Billing cycle',
+  [ColumnViewType.InvoicesContract]: 'Contract',
+  [ColumnViewType.InvoicesDueDate]: 'Due date',
+  [ColumnViewType.InvoicesInvoicePreview]: 'Invoice preview',
+  [ColumnViewType.InvoicesIssueDate]: 'Issue date',
+  [ColumnViewType.InvoicesIssueDatePast]: 'Issue date',
+  [ColumnViewType.InvoicesInvoiceStatus]: 'Invoice status',
+  [ColumnViewType.InvoicesPaymentStatus]: 'Payment status',
+};
 
 export const EditColumns = observer(() => {
   const { tableViewDefsStore } = useStore();
 
   const tableViewDef = tableViewDefsStore.getById('5');
-  const activeColumns = tableViewDef?.value?.columns ?? [];
 
-  const state = useLocalObservable(() => ({
-    unusedColumns: [] as ColumnDef[],
-    // setAllColumns(columns: ColumnDef[]) {
-    //   this.allColumns = columns;
-    // },
-  }));
+  const columns =
+    tableViewDef?.value?.columns.map((c) => ({
+      ...c,
+      label: invoicesOptionsMap[c.columnType as InvoicesColumnType],
+    })) ?? [];
 
   return (
     <>
-      <Menu defaultOpen>
+      <Menu
+        defaultOpen
+        onOpenChange={(open) => {
+          if (!open) {
+            tableViewDef?.orderColumnsByVisibility();
+          }
+        }}
+      >
         <MenuButton asChild>
           <Button size='xs' leftIcon={<Columns02 />}>
             Edit columns
           </Button>
         </MenuButton>
-        <MenuList>
-          <DragDropContext
-            onDragEnd={(res) => {
-              const sourceId = res.source.droppableId;
-              const destId = res.destination?.droppableId;
-              const sourceIndex = res.source.index;
-              const destIndex = res?.destination?.index as number;
+        <DragDropContext
+          onDragEnd={(res) => {
+            const sourceIndex = res.source.index;
+            const destIndex = res?.destination?.index as number;
 
-              if (sourceId === destId) {
-                if (sourceIndex === destIndex) return;
-                if (!destId) return;
+            if (sourceIndex === destIndex) return;
 
-                tableViewDef?.reorderColumn(sourceIndex, destIndex);
-              }
+            tableViewDef?.reorderColumn(sourceIndex, destIndex);
+          }}
+        >
+          <MenuList className='w-[300px]'>
+            <Droppable
+              key='active-columns'
+              droppableId='active-columns'
+              renderClone={(provided, snapshot, rubric) => {
+                return (
+                  <ColumnOptionContent
+                    provided={provided}
+                    snapshot={snapshot}
+                    columnType={columns[rubric.source.index].columnType}
+                    visible={columns[rubric.source.index].visible}
+                    onCheck={() => {
+                      tableViewDef?.update((value) => {
+                        value.columns[rubric.source.index].visible =
+                          !value.columns[rubric.source.index].visible;
 
-              // console.log(res);
-            }}
-          >
-            <Droppable droppableId='active-columns'>
+                        return value;
+                      });
+                    }}
+                    label={columns[rubric.source.index].label}
+                  />
+                );
+              }}
+            >
               {(provided, snapshot) => (
-                <div ref={provided.innerRef} {...provided.droppableProps}>
-                  {activeColumns.map((col, index) => (
-                    <Draggable
-                      key={col?.id}
+                <MenuGroup ref={provided.innerRef} {...provided.droppableProps}>
+                  {columns.map((col, index) => (
+                    <ColumnOption
                       index={index}
-                      draggableId={col?.id as string}
-                    >
-                      {(provided) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                        >
-                          {col?.columnType?.name}
-                        </div>
-                      )}
-                    </Draggable>
+                      label={col.label}
+                      visible={col?.visible}
+                      key={col?.columnType}
+                      onCheck={() => {
+                        tableViewDef?.update((value) => {
+                          value.columns[index].visible =
+                            !value.columns[index].visible;
+
+                          return value;
+                        });
+                      }}
+                      columnType={col.columnType}
+                    />
                   ))}
-                </div>
+                  {provided.placeholder}
+                </MenuGroup>
               )}
             </Droppable>
-          </DragDropContext>
-        </MenuList>
+          </MenuList>
+        </DragDropContext>
       </Menu>
     </>
   );
