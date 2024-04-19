@@ -189,6 +189,7 @@ type ComplexityRoot struct {
 
 	ColumnView struct {
 		ColumnType func(childComplexity int) int
+		Visible    func(childComplexity int) int
 		Width      func(childComplexity int) int
 	}
 
@@ -2676,6 +2677,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ColumnView.ColumnType(childComplexity), true
+
+	case "ColumnView.visible":
+		if e.complexity.ColumnView.Visible == nil {
+			break
+		}
+
+		return e.complexity.ColumnView.Visible(childComplexity), true
 
 	case "ColumnView.width":
 		if e.complexity.ColumnView.Width == nil {
@@ -15892,7 +15900,8 @@ type TableViewDef implements Node {
 
 type ColumnView {
     columnType: ColumnViewType!
-    width: Int!
+    width:      Int!
+    visible:    Boolean!
 }
 
 
@@ -15956,7 +15965,8 @@ input TableViewDefCreateInput {
 
 input ColumnViewInput {
     columnType: ColumnViewType!
-    width: Int!
+    width:      Int!
+    visible:    Boolean!
 }`, BuiltIn: false},
 	{Name: "../../../customer-os-api/graph/schemas/workspace.graphqls", Input: `input WorkspaceInput {
     name: String!
@@ -24223,6 +24233,50 @@ func (ec *executionContext) fieldContext_ColumnView_width(ctx context.Context, f
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ColumnView_visible(ctx context.Context, field graphql.CollectedField, obj *model.ColumnView) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ColumnView_visible(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Visible, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ColumnView_visible(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ColumnView",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -88200,6 +88254,8 @@ func (ec *executionContext) fieldContext_TableViewDef_columns(ctx context.Contex
 				return ec.fieldContext_ColumnView_columnType(ctx, field)
 			case "width":
 				return ec.fieldContext_ColumnView_width(ctx, field)
+			case "visible":
+				return ec.fieldContext_ColumnView_visible(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ColumnView", field.Name)
 		},
@@ -94435,7 +94491,7 @@ func (ec *executionContext) unmarshalInputColumnViewInput(ctx context.Context, o
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"columnType", "width"}
+	fieldsInOrder := [...]string{"columnType", "width", "visible"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -94456,6 +94512,13 @@ func (ec *executionContext) unmarshalInputColumnViewInput(ctx context.Context, o
 				return it, err
 			}
 			it.Width = data
+		case "visible":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("visible"))
+			data, err := ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Visible = data
 		}
 	}
 
@@ -101959,6 +102022,11 @@ func (ec *executionContext) _ColumnView(ctx context.Context, sel ast.SelectionSe
 			}
 		case "width":
 			out.Values[i] = ec._ColumnView_width(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "visible":
+			out.Values[i] = ec._ColumnView_visible(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
