@@ -13,32 +13,15 @@ export const Bubbles = ({ className, ...props }: IconProps) => (
     {...props}
     className={twMerge('inline-block size-4', className)}
   >
-    <g id='bubbles'>
-      <circle
-        id='Ellipse 23'
-        cx='6.5'
-        cy='7.5'
-        r='2.5'
-        stroke='currentColor'
-        strokeWidth='2'
-      />
-      <circle
-        id='Ellipse 25'
-        cx='16.5'
-        cy='5.5'
-        r='1.5'
-        fill='currentColor'
-        stroke='currentColor'
-        strokeWidth='2'
-      />
-      <circle
-        id='Ellipse 24'
-        cx='14.5'
-        cy='15.5'
-        r='4.5'
-        stroke='currentColor'
-        strokeWidth='2'
-      />
-    </g>
+    <circle cx='6.5' cy='7.5' r='2.5' stroke='currentColor' strokeWidth='2' />
+    <circle
+      cx='16.5'
+      cy='5.5'
+      r='1.5'
+      fill='currentColor'
+      stroke='currentColor'
+      strokeWidth='2'
+    />
+    <circle cx='14.5' cy='15.5' r='4.5' stroke='currentColor' strokeWidth='2' />
   </svg>
 );

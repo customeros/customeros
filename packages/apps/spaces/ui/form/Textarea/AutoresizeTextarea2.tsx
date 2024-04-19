@@ -48,17 +48,13 @@ export const AutoresizeTextarea = forwardRef<
 >(({ className, border, leftElement, size, rightElement, ...rest }, ref) => {
   return (
     <TextareaGroup className={cn(className)}>
-      {leftElement && (
-        <LeftElement className='mr-[2px]' size={size}>
-          {leftElement}
-        </LeftElement>
-      )}
+      {leftElement && <LeftElement>{leftElement}</LeftElement>}
       <ResizeTextarea
         ref={ref}
         {...rest}
         className={twMerge(sizeTextArea({ size }), className)}
       />
-      {rightElement && <RightElement size={size}>{rightElement}</RightElement>}
+      {rightElement && <RightElement>{rightElement}</RightElement>}
     </TextareaGroup>
   );
 });

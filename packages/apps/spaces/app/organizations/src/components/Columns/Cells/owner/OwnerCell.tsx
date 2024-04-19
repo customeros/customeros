@@ -3,15 +3,14 @@ import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { produce } from 'immer';
 import { InfiniteData, useQueryClient } from '@tanstack/react-query';
 
+import { cn } from '@ui/utils/cn';
 import { User } from '@graphql/types';
-import { Flex } from '@ui/layout/Flex';
-import { Icons } from '@ui/media/Icon';
-import { Text } from '@ui/typography/Text';
-import { IconButton } from '@ui/form/IconButton';
-import { Select } from '@ui/form/SyncSelect/Select';
+import { Edit03 } from '@ui/media/icons/Edit03';
 import { SelectOption } from '@shared/types/SelectOptions';
+import { IconButton } from '@ui/form/IconButton/IconButton';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useGetUsersQuery } from '@shared/graphql/getUsers.generated';
+import { Select, getContainerClassNames } from '@ui/form/Select/Select';
 import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
 import { useSetOrganizationOwnerMutation } from '@organizations/graphql/setOrganizationOwner.generated';
 import { useRemoveOrganizationOwnerMutation } from '@organizations/graphql/removeOrganizationOwner.generated';
@@ -208,50 +207,37 @@ export const OwnerCell = ({ id, owner }: OwnerProps) => {
 
   if (!isEditing) {
     return (
-      <Flex
-        w='full'
-        gap='1'
-        align='center'
-        _hover={{
-          '& #edit-button': {
-            opacity: 1,
-          },
-        }}
-      >
-        <Text
-          cursor='default'
-          color={value ? 'gray.700' : 'gray.400'}
+      <div className='flex w-full gap-1 items-center group'>
+        <p
+          className={cn(
+            value ? 'text-gray-700' : 'text-gray-400',
+            'cursor-default',
+          )}
           onDoubleClick={() => setIsEditing(true)}
         >
           {value?.label ?? 'Owner'}
-        </Text>
+        </p>
         <IconButton
+          className='rounded-md opacity-0 group-hover:opacity-100'
           aria-label='erc'
-          size='xs'
-          borderRadius='md'
-          minW='4'
-          w='4'
-          minH='4'
-          h='4'
-          opacity='0'
+          size='sm'
           variant='ghost'
           id='edit-button'
           onClick={() => setIsEditing(true)}
-          icon={<Icons.Edit3 color='gray.500' boxSize='3' />}
+          icon={<Edit03 className='text-gray-500 size-3' />}
         />
-      </Flex>
+      </div>
     );
   }
 
   return (
     <Select
-      size='sm'
+      size='md'
       isClearable
       value={value}
       isLoading={
         setOrganizationOwner.isPending || removeOrganizationOwner.isPending
       }
-      variant='unstyled'
       placeholder='Owner'
       autoFocus
       onKeyDown={(e) => {
@@ -265,34 +251,8 @@ export const OwnerCell = ({ id, owner }: OwnerProps) => {
       openMenuOnClick={false}
       onChange={handleSelect}
       options={options}
-      chakraStyles={{
-        valueContainer: (props) => ({
-          ...props,
-          p: 0,
-        }),
-        singleValue: (props) => ({
-          ...props,
-          paddingBottom: 0,
-          ml: 0,
-        }),
-        control: (props) => ({
-          ...props,
-          minH: '0',
-        }),
-        clearIndicator: (props) => ({
-          ...props,
-          boxSize: '3',
-        }),
-        placeholder: (props) => ({
-          ...props,
-          ml: 0,
-          color: 'gray.400',
-        }),
-        inputContainer: (props) => ({
-          ...props,
-          py: 0,
-          ml: 0,
-        }),
+      classNames={{
+        container: () => getContainerClassNames('hover:border-transparent'),
       }}
     />
   );

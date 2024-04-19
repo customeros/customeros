@@ -89,7 +89,7 @@ export const EmptyContracts: FC<
     <OrganizationPanel title='Account' actionItem={<RelationshipButton />}>
       <article className='my-4 w-full flex flex-col items-center'>
         <FeaturedIcon colorScheme='primary' mb={2} size='lg'>
-          <File02 boxSize={4} />
+          <File02 className='size-4' />
         </FeaturedIcon>
         <h1 className='text-md font-semibold'>Draft a new contract</h1>
 

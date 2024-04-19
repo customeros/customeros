@@ -19,12 +19,7 @@ const colorMap: Record<Priority, ReactNode> = {
   medium: <PriorityMedium />,
   high: <PriorityHigh />,
   urgent: (
-    <AlertSquare
-      display='block'
-      color='red.600'
-      role='presentation'
-      boxSize='5'
-    />
+    <AlertSquare className='block text-red-600 size-5' role='presentation' />
   ),
 };
 

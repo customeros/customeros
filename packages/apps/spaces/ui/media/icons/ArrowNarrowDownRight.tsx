@@ -13,15 +13,12 @@ export const ArrowNarrowDownRight = ({ className, ...props }: IconProps) => (
     {...props}
     className={twMerge('inline-block size-4', className)}
   >
-    <g id='arrow-narrow-down-right'>
-      <path
-        id='Icon'
-        d='M6 6L18 18M18 18V10M18 18H10'
-        stroke='currentColor'
-        strokeWidth='2'
-        strokeLinecap='round'
-        strokeLinejoin='round'
-      />
-    </g>
+    <path
+      d='M6 6L18 18M18 18V10M18 18H10'
+      stroke='currentColor'
+      strokeWidth='2'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+    />
   </svg>
 );

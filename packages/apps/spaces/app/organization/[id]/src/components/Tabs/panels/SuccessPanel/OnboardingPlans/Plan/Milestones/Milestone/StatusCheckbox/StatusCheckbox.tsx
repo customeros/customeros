@@ -1,3 +1,4 @@
+import { cn } from '@ui/utils/cn';
 import { Checkbox, CheckboxProps } from '@ui/form/Checkbox';
 import { ArrowNarrowDownRight } from '@ui/media/icons/ArrowNarrowDownRight';
 
@@ -13,13 +14,13 @@ export const StatusCheckbox = ({
   const customeIconColor = (() => {
     switch (props.colorScheme) {
       case 'gray':
-        return 'gray.400';
+        return 'text-gray-400';
       case 'warning':
-        return 'warning.600';
+        return 'text-warning-600';
       case 'success':
-        return 'success.500';
+        return 'text-success-500';
       default:
-        return 'gray.400';
+        return 'text-gray-400';
     }
   })();
 
@@ -29,7 +30,9 @@ export const StatusCheckbox = ({
       size='md'
       icon={
         showCustomIcon ? (
-          <ArrowNarrowDownRight boxSize='3.5' color={customeIconColor} />
+          <ArrowNarrowDownRight
+            className={cn(customeIconColor, 'size-[14px]')}
+          />
         ) : undefined
       }
       {...props}

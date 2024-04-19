@@ -13,15 +13,12 @@ export const ChevronRight = ({ className, ...props }: IconProps) => (
     {...props}
     className={twMerge('inline-block size-4', className)}
   >
-    <g id='chevron-right'>
-      <path
-        id='Icon'
-        d='M9 18L15 12L9 6'
-        stroke='currentColor'
-        strokeWidth='2'
-        strokeLinecap='round'
-        strokeLinejoin='round'
-      />
-    </g>
+    <path
+      d='M9 18L15 12L9 6'
+      stroke='currentColor'
+      strokeWidth='2'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+    />
   </svg>
 );

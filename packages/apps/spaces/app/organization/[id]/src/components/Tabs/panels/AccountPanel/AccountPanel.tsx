@@ -150,7 +150,7 @@ const AccountPanelComponent = () => {
             p={7}
             justifyContent='space-between'
             alignItems='center'
-            rightIcon={<ChevronRight boxSize={4} color='gray.400' />}
+            rightIcon={<ChevronRight className='size-4 text-gray-400' />}
             variant='ghost'
             _hover={{
               bg: 'gray.25',

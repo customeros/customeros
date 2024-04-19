@@ -13,15 +13,12 @@ export const Minus = ({ className, ...props }: IconProps) => (
     {...props}
     className={twMerge('inline-block size-4', className)}
   >
-    <g id='minus'>
-      <path
-        id='Icon'
-        d='M5 12H19'
-        stroke='currentColor'
-        strokeWidth='2'
-        strokeLinecap='round'
-        strokeLinejoin='round'
-      />
-    </g>
+    <path
+      d='M5 12H19'
+      stroke='currentColor'
+      strokeWidth='2'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+    />
   </svg>
 );

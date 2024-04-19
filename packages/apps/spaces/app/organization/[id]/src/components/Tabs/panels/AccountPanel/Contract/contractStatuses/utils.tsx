@@ -1,6 +1,5 @@
 import React from 'react';
 
-import { Text } from '@ui/typography/Text';
 import { Clock } from '@ui/media/icons/Clock';
 import { ContractStatus } from '@graphql/types';
 import { Edit03 } from '@ui/media/icons/Edit03';
@@ -24,9 +23,7 @@ export const confirmationModalDataByStatus = {
     description: (orgName: string, serviceStartDate: string) => (
       <>
         To make
-        <Text as='span' fontWeight='medium' mx={1}>
-          {orgName}
-        </Text>
+        <span className='font-medium mx-1'>{orgName}</span>
         contract a draft, we will clear the service start date (currently{' '}
         {serviceStartDate}).
       </>
@@ -39,9 +36,7 @@ export const confirmationModalDataByStatus = {
     description: (orgName: string, serviceStartDate: string) => (
       <>
         Congrats! Let’s make
-        <Text as='span' fontWeight='medium' mx={1}>
-          {orgName}
-        </Text>
+        <span className='font-medium mx-1'>{orgName}</span>
         contract live on: contract a draft, we will clear the service start date
         (currently{' '}
         {DateTimeUtils.format(
@@ -59,9 +54,7 @@ export const confirmationModalDataByStatus = {
     description: (orgName: string) => (
       <>
         Ending
-        <Text as='span' fontWeight='medium' mx={1}>
-          {orgName}
-        </Text>
+        <span className='font-medium mx-1'>{orgName}</span>
         contract will close the renewal and set the ARR to zero.
         <br />
         Let’s end it on:

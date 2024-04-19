@@ -18,11 +18,14 @@ import {
   OAuthUserSettingsInterface,
 } from 'services/settings/settingsService';
 
-import { Icons } from '@ui/media/Icon';
+import { Gmail } from '@ui/media/icons/Gmail';
+import { Slack } from '@ui/media/icons/Slack';
 import { Spinner } from '@ui/feedback/Spinner';
+import { Google } from '@ui/media/logos/Google';
 import { Switch } from '@ui/form/Switch/Switch2';
 import { FormLabel } from '@ui/form/FormElement';
 import { Outlook } from '@ui/media/logos/Outlook';
+import { GCalendar } from '@ui/media/icons/GCalendar';
 import { toastError, toastSuccess } from '@ui/presentation/Toast';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 
@@ -224,7 +227,7 @@ export const AuthPanel = () => {
       <div className='bg-gray-25 rounded-2xl flex-col flex relative max-w-[50%] '>
         <div className='px-6 pb-2'>
           <div className='flex gap-1 items-center mb-2 pt-5 '>
-            <Icons.GOOGLE boxSize='6' />
+            <Google className='size-6' />
             <h1 className='text-gray-700 text-lg '>Google OAuth</h1>
           </div>
           <div className='w-full border-b border-gray-100' />
@@ -240,12 +243,12 @@ export const AuthPanel = () => {
             <div className='flex gap-2 items-center'>
               <div className='flex flex-col items-start gap-4'>
                 <div className='flex gap-1 items-center'>
-                  <Icons.GMAIL boxSize='6' />
+                  <Gmail className='size-6' />
                   <FormLabel mb='0'>Sync Google Mail</FormLabel>
                 </div>
 
                 <div className='flex gap-1 items-center'>
-                  <Icons.GOOGLE_CALENDAR boxSize='6' />
+                  <GCalendar className='size-6' />
                   <FormLabel mb='0'>Sync Google Calendar</FormLabel>
                 </div>
               </div>
@@ -266,7 +269,7 @@ export const AuthPanel = () => {
       <div className='bg-gray-25 rounded-2xl flex-col flex relative max-w-[50%] '>
         <div className='px-6 pb-2'>
           <div className='flex gap-1 items-center mb-2 pt-5 '>
-            <Outlook boxSize='6' />
+            <Outlook className='size-6' />
             <h1 className='text-gray-700 text-lg'>Microsoft Outlook</h1>
           </div>
           <div className='w-full border-b border-gray-100' />
@@ -280,7 +283,7 @@ export const AuthPanel = () => {
 
           <div className='flex space-x-4 items-center'>
             <div className='flex alig-middle space-x-1'>
-              <Outlook boxSize='6' />
+              <Outlook className='size-6' />
               <FormLabel mb='0'>Sync Microsoft Outlook</FormLabel>
             </div>
             {loading ? (
@@ -299,7 +302,7 @@ export const AuthPanel = () => {
       <div className='bg-gray-25 rounded-2xl flex-col mt-4 flex relative max-w-[50%] '>
         <div className='px-6 pb-2'>
           <div className='flex items-center gap-1 mb-2'>
-            <Icons.Slack boxSize='6' />
+            <Slack className='size-6' />
             <h1 className='text-gray-700 text-lg'>Slack</h1>
           </div>
           <div className='w-full border-b border-gray-100' />
@@ -312,7 +315,7 @@ export const AuthPanel = () => {
 
           <div className='flex space-x-4 items-center'>
             <div className='flex alig-middle space-x-1'>
-              <Icons.Slack boxSize='6' />
+              <Slack className='size-6' />
               <FormLabel mb='0'>Sync Slack</FormLabel>
             </div>
             {slackSettingsLoading && <Spinner size='sm' color='green.500' />}

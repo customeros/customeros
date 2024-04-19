@@ -196,7 +196,7 @@ export const Branches: React.FC<BranchesProps> = ({
             variant='ghost'
             aria-label='Add'
             onClick={handleCreateOrganization}
-            icon={<Plus boxSize='4' />}
+            icon={<Plus className='size-4' />}
           />
         )}
       </CardHeader>

@@ -1,9 +1,9 @@
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
-import { Flex } from '@ui/layout/Flex';
+import { cn } from '@ui/utils/cn';
 import { Plus } from '@ui/media/icons/Plus';
-import { Tooltip } from '@ui/overlay/Tooltip';
-import { IconButton } from '@ui/form/IconButton';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
+import { IconButton } from '@ui/form/IconButton/IconButton';
 import { useOrganizationsPageMethods } from '@organizations/hooks/useOrganizationsPageMethods';
 
 export const AvatarHeader = () => {
@@ -15,21 +15,24 @@ export const AvatarHeader = () => {
   };
 
   return (
-    <Flex w='42px' align='center' justify='center'>
+    <div className='flex w-[42px] items-center justify-center'>
       <Tooltip
         label='Create an organization'
-        visibility={enableFeature ? 'visible' : 'hidden'}
+        side='bottom'
+        align='center'
+        className={cn(enableFeature ? 'visible' : 'hidden')}
+        asChild={false}
       >
         <IconButton
+          className={cn(enableFeature ? 'visible' : 'hidden')}
           size='sm'
           variant='ghost'
           aria-label='create organization'
           onClick={handleCreateOrganization}
           isLoading={createOrganization.isPending}
-          icon={<Plus color='gray.400' boxSize='5' />}
-          visibility={enableFeature ? 'visible' : 'hidden'}
+          icon={<Plus className='text-gray-400 size-5' />}
         />
       </Tooltip>
-    </Flex>
+    </div>
   );
 };

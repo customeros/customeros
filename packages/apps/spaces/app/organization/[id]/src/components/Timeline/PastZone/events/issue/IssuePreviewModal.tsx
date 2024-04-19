@@ -234,7 +234,7 @@ export const IssuePreviewModal: FC = () => {
               href={getExternalUrl(externalUrl)}
               target='_blank'
             >
-              <Zendesk boxSize='4' mr='2' />
+              <Zendesk className='mr-2' />
               View in Zendesk
             </Link>
           </div>

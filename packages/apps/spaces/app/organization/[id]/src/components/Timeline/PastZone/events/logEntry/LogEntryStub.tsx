@@ -1,16 +1,14 @@
+import Image from 'next/image';
 import React, { useMemo, useCallback } from 'react';
 
 import noteIcon from 'public/images/event-ill-log-stub.png';
 
-import { Box } from '@ui/layout/Box';
-import { Flex } from '@ui/layout/Flex';
-import { Image } from '@ui/media/Image';
-import { Text } from '@ui/typography/Text';
+import { cn } from '@ui/utils/cn';
 import { Phone } from '@ui/media/icons/Phone';
 import { User, Contact } from '@graphql/types';
 import { Mail01 } from '@ui/media/icons/Mail01';
 import { Calendar } from '@ui/media/icons/Calendar';
-import { Card, CardBody } from '@ui/presentation/Card';
+import { Card, CardContent } from '@ui/presentation/Card/Card';
 import { MessageTextSquare01 } from '@ui/media/icons/MessageTextSquare01';
 import { LogEntryWithAliases } from '@organization/src/components/Timeline/types';
 import { HtmlContentRenderer } from '@ui/presentation/HtmlContentRenderer/HtmlContentRenderer';
@@ -42,14 +40,14 @@ export const LogEntryStub = ({ data }: LogEntryStubProps) => {
   const getLogEntryIcon = useCallback((type: string | null) => {
     switch (type) {
       case 'email':
-        return <Mail01 color='gray.500' boxSize={3} />;
+        return <Mail01 className='text-gray-500 size-3' />;
       case 'meeting':
-        return <Calendar color='gray.500' boxSize={3} />;
+        return <Calendar className='text-gray-500 size-3' />;
       case 'voicemail':
       case 'call':
-        return <Phone color='gray.500' boxSize={3} />;
+        return <Phone className='text-gray-500 size-3' />;
       case 'text-message':
-        return <MessageTextSquare01 color='gray.500' boxSize={3} />;
+        return <MessageTextSquare01 className='text-gray-500 size-3' />;
 
       default:
         return null;
@@ -75,71 +73,42 @@ export const LogEntryStub = ({ data }: LogEntryStubProps) => {
     if (!icon) return null;
 
     return (
-      <Flex
-        zIndex={1}
-        position='relative'
-        bg='white'
-        border='1px solid'
-        borderColor='gray.200'
-        borderRadius='md'
-        p={2}
-        right='-3px'
-        top='3px'
-      >
+      <div className='flex z-10 mr-[10px] relative bg-white border border-gray-200 rounded-md p-2 right-[-12px] top-[4px]'>
         {icon}
-      </Flex>
+      </div>
     );
   }, [getInlineTags]);
 
   return (
     <Card
-      variant='outline'
-      size='md'
-      maxWidth={549}
-      ml={6}
-      boxShadow='xs'
-      borderColor='gray.200'
-      borderRadius='lg'
-      opacity={isTemporary ? 0.5 : 1}
+      className={cn(
+        isTemporary
+          ? 'opacity-50 cursor-progress'
+          : 'opacity-100 cursor-pointer',
+        'hover:shadow-md max-w-[549px] flex flex-col bg-white ml-6 shadow-xs border border-gray-200 rounded-lg transition-all duration-200 ease-in-out',
+      )}
       onClick={() => !isTemporary && openModal(data.id)}
-      cursor={isTemporary ? 'progress' : 'pointer'}
-      _hover={{ boxShadow: 'md' }}
-      transition='all 0.2s ease-out'
     >
-      <CardBody px='3' py='2'>
-        <Flex
-          w='full'
-          justify='space-between'
-          position='relative'
-          h='fit-content'
-        >
-          <Text
-            w={460}
-            noOfLines={4}
-            color='gray.700'
-            fontSize='sm'
-            height='fit-content'
-          >
-            <Text as='span'>{fullName}</Text>
-            <Text as='span' color='gray.500' mx={1}>
-              wrote
-            </Text>
+      <CardContent className='px-3 py-2 flex-1 flex'>
+        <div className='flex w-full justify-between relative h-fit'>
+          <p className='w-[460px] line-clamp-4 text-sm text-gray-700 h-fit'>
+            <span>{fullName}</span>
+            <span className='text-gray-500 mx-1'>wrote</span>
             <HtmlContentRenderer
               className='relative z-10 pointer-events-none text-sm line-clamp-4'
               showAsInlineText
               htmlContent={`${data?.content}`}
             />
-          </Text>
+          </p>
 
-          <Box h={86}>
-            <Box position='absolute' top={-2} right={-3}>
+          <div className='h-[86px]'>
+            <div className='absolute top-[-2px] right-[-12px]'>
               <Image src={noteIcon} alt='' height={94} width={124} />
-            </Box>
-
+            </div>
             {logEntryIcon && logEntryIcon}
-          </Box>
-        </Flex>
-      </CardBody>
+          </div>
+        </div>
+      </CardContent>
     </Card>
   );
 };

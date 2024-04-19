@@ -13,15 +13,12 @@ export const ChevronCollapse = ({ className, ...props }: IconProps) => (
     {...props}
     className={twMerge('inline-block size-4', className)}
   >
-    <g id='chevron-collapse'>
-      <path
-        id='Icon'
-        d='M7 19L12 14L17 19M7 5L12 10L17 5'
-        stroke='currentColor'
-        strokeWidth='2'
-        strokeLinecap='round'
-        strokeLinejoin='round'
-      />
-    </g>
+    <path
+      d='M7 19L12 14L17 19M7 5L12 10L17 5'
+      stroke='currentColor'
+      strokeWidth='2'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+    />
   </svg>
 );

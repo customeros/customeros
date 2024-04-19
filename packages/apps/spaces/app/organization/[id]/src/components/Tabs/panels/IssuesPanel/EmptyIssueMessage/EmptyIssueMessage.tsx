@@ -10,7 +10,7 @@ export const EmptyIssueMessage: FC<{
 }> = ({ children, title, description }) => (
   <div className='flex flex-col items-center mt-4'>
     <FeaturedIcon className='mb-[15px]' size='md' colorScheme='gray'>
-      <Receipt color='gray.700' boxSize='6' />
+      <Receipt className='text-gray-700 size-6' />
     </FeaturedIcon>
     {title && <span className='text-gray-700 font-semibold mb-1'>{title}</span>}
 

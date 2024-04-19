@@ -13,15 +13,12 @@ export const FilterLines = ({ className, ...props }: IconProps) => (
     {...props}
     className={twMerge('inline-block size-4', className)}
   >
-    <g id='filter-lines'>
-      <path
-        id='Icon'
-        d='M6 12H18M3 6H21M9 18H15'
-        stroke='currentColor'
-        strokeWidth='2'
-        strokeLinecap='round'
-        strokeLinejoin='round'
-      />
-    </g>
+    <path
+      d='M6 12H18M3 6H21M9 18H15'
+      stroke='currentColor'
+      strokeWidth='2'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+    />
   </svg>
 );
