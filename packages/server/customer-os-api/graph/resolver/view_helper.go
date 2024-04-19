@@ -11,16 +11,16 @@ import (
 func DefaultTableViewDefinitions() []postgresEntity.TableViewDefinition {
 	organizationColumns := postgresEntity.Columns{
 		Columns: []postgresEntity.ColumnView{
-			{ColumnType: model.ColumnViewTypeOrganizationsAvatar.String(), Width: 200},
-			{ColumnType: model.ColumnViewTypeOrganizationsName.String(), Width: 200},
-			{ColumnType: model.ColumnViewTypeOrganizationsWebsite.String(), Width: 200},
-			{ColumnType: model.ColumnViewTypeOrganizationsRelationship.String(), Width: 200},
-			{ColumnType: model.ColumnViewTypeOrganizationsOnboardingStatus.String(), Width: 200},
-			{ColumnType: model.ColumnViewTypeOrganizationsRenewalLikelihood.String(), Width: 200},
-			{ColumnType: model.ColumnViewTypeOrganizationsRenewlDate.String(), Width: 200},
-			{ColumnType: model.ColumnViewTypeOrganizationsForecastArr.String(), Width: 200},
-			{ColumnType: model.ColumnViewTypeOrganizationsOwner.String(), Width: 200},
-			{ColumnType: model.ColumnViewTypeOrganizationsLastTouchpoint.String(), Width: 200},
+			{ColumnType: model.ColumnViewTypeOrganizationsAvatar.String(), Width: 200, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsName.String(), Width: 200, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsWebsite.String(), Width: 200, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsRelationship.String(), Width: 200, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsOnboardingStatus.String(), Width: 200, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsRenewalLikelihood.String(), Width: 200, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsRenewlDate.String(), Width: 200, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsForecastArr.String(), Width: 200, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsOwner.String(), Width: 200, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsLastTouchpoint.String(), Width: 200, Visible: true},
 		},
 	}
 	organizationColumnsJsonData, err := json.Marshal(organizationColumns)
@@ -31,16 +31,16 @@ func DefaultTableViewDefinitions() []postgresEntity.TableViewDefinition {
 
 	invoiceColumns := postgresEntity.Columns{
 		Columns: []postgresEntity.ColumnView{
-			{ColumnType: model.ColumnViewTypeInvoicesIssueDate.String(), Width: 200},
-			{ColumnType: model.ColumnViewTypeInvoicesIssueDatePast.String(), Width: 200},
-			{ColumnType: model.ColumnViewTypeInvoicesDueDate.String(), Width: 200},
-			{ColumnType: model.ColumnViewTypeInvoicesContract.String(), Width: 200},
-			{ColumnType: model.ColumnViewTypeInvoicesBillingCycle.String(), Width: 200},
-			{ColumnType: model.ColumnViewTypeInvoicesPaymentStatus.String(), Width: 200},
-			{ColumnType: model.ColumnViewTypeInvoicesInvoiceNumber.String(), Width: 200},
-			{ColumnType: model.ColumnViewTypeInvoicesAmount.String(), Width: 200},
-			{ColumnType: model.ColumnViewTypeInvoicesInvoiceStatus.String(), Width: 200},
-			{ColumnType: model.ColumnViewTypeInvoicesInvoicePreview.String(), Width: 200},
+			{ColumnType: model.ColumnViewTypeInvoicesIssueDate.String(), Width: 200, Visible: true},
+			{ColumnType: model.ColumnViewTypeInvoicesIssueDatePast.String(), Width: 200, Visible: true},
+			{ColumnType: model.ColumnViewTypeInvoicesDueDate.String(), Width: 200, Visible: true},
+			{ColumnType: model.ColumnViewTypeInvoicesContract.String(), Width: 200, Visible: true},
+			{ColumnType: model.ColumnViewTypeInvoicesBillingCycle.String(), Width: 200, Visible: true},
+			{ColumnType: model.ColumnViewTypeInvoicesPaymentStatus.String(), Width: 200, Visible: true},
+			{ColumnType: model.ColumnViewTypeInvoicesInvoiceNumber.String(), Width: 200, Visible: true},
+			{ColumnType: model.ColumnViewTypeInvoicesAmount.String(), Width: 200, Visible: true},
+			{ColumnType: model.ColumnViewTypeInvoicesInvoiceStatus.String(), Width: 200, Visible: true},
+			{ColumnType: model.ColumnViewTypeInvoicesInvoicePreview.String(), Width: 200, Visible: true},
 		},
 	}
 	invoiceColumnsJsonData, err := json.Marshal(invoiceColumns)
@@ -51,13 +51,13 @@ func DefaultTableViewDefinitions() []postgresEntity.TableViewDefinition {
 
 	renewalColumns := postgresEntity.Columns{
 		Columns: []postgresEntity.ColumnView{
-			{ColumnType: model.ColumnViewTypeRenewalsAvatar.String(), Width: 200},
-			{ColumnType: model.ColumnViewTypeRenewalsName.String(), Width: 200},
-			{ColumnType: model.ColumnViewTypeRenewalsRenewalLikelihood.String(), Width: 200},
-			{ColumnType: model.ColumnViewTypeRenewalsRenewalDate.String(), Width: 200},
-			{ColumnType: model.ColumnViewTypeRenewalsForecastArr.String(), Width: 200},
-			{ColumnType: model.ColumnViewTypeRenewalsOwner.String(), Width: 200},
-			{ColumnType: model.ColumnViewTypeRenewalsLastTouchpoint.String(), Width: 200},
+			{ColumnType: model.ColumnViewTypeRenewalsAvatar.String(), Width: 200, Visible: true},
+			{ColumnType: model.ColumnViewTypeRenewalsName.String(), Width: 200, Visible: true},
+			{ColumnType: model.ColumnViewTypeRenewalsRenewalLikelihood.String(), Width: 200, Visible: true},
+			{ColumnType: model.ColumnViewTypeRenewalsRenewalDate.String(), Width: 200, Visible: true},
+			{ColumnType: model.ColumnViewTypeRenewalsForecastArr.String(), Width: 200, Visible: true},
+			{ColumnType: model.ColumnViewTypeRenewalsOwner.String(), Width: 200, Visible: true},
+			{ColumnType: model.ColumnViewTypeRenewalsLastTouchpoint.String(), Width: 200, Visible: true},
 		},
 	}
 	renewalColumnsJsonData, err := json.Marshal(renewalColumns)

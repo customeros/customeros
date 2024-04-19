@@ -316,11 +316,13 @@ type Calendar struct {
 type ColumnView struct {
 	ColumnType ColumnViewType `json:"columnType"`
 	Width      int            `json:"width"`
+	Visible    bool           `json:"visible"`
 }
 
 type ColumnViewInput struct {
 	ColumnType ColumnViewType `json:"columnType"`
 	Width      int            `json:"width"`
+	Visible    bool           `json:"visible"`
 }
 
 type Comment struct {

@@ -21,6 +21,7 @@ func MapTableViewDefinitionToModel(entity postgresEntity.TableViewDefinition) *m
 		columns = append(columns, &model.ColumnView{
 			ColumnType: model.ColumnViewType(column.ColumnType),
 			Width:      column.Width,
+			Visible:    column.Visible,
 		})
 	}
 	return &model.TableViewDef{

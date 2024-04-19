@@ -31,6 +31,7 @@ func (r *mutationResolver) TableViewDefCreate(ctx context.Context, input model.T
 		columns = append(columns, postgresEntity.ColumnView{
 			ColumnType: column.ColumnType.String(),
 			Width:      column.Width,
+			Visible:    column.Visible,
 		})
 	}
 	columnsStruct := postgresEntity.Columns{
@@ -90,6 +91,7 @@ func (r *mutationResolver) TableViewDefUpdate(ctx context.Context, input model.T
 		columns = append(columns, postgresEntity.ColumnView{
 			ColumnType: column.ColumnType.String(),
 			Width:      column.Width,
+			Visible:    column.Visible,
 		})
 	}
 	columnsStruct := postgresEntity.Columns{

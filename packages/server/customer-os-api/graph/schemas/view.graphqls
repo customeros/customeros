@@ -22,7 +22,8 @@ type TableViewDef implements Node {
 
 type ColumnView {
     columnType: ColumnViewType!
-    width: Int!
+    width:      Int!
+    visible:    Boolean!
 }
 
 
@@ -86,5 +87,6 @@ input TableViewDefCreateInput {
 
 input ColumnViewInput {
     columnType: ColumnViewType!
-    width: Int!
+    width:      Int!
+    visible:    Boolean!
 }

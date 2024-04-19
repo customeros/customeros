@@ -5,6 +5,7 @@ import "time"
 type ColumnView struct {
 	ColumnType string `json:"columnType"`
 	Width      int    `json:"width"`
+	Visible    bool   `json:"visible"`
 }
 
 type Columns struct {
