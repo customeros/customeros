@@ -189,15 +189,7 @@ export const ContractEndModal = ({
                 On{' '}
                 {value === EndContract.CustomDate ? (
                   <Box ml={1}>
-                    <DatePickerUnderline
-                      placeholder='End date'
-                      defaultOpen={true}
-                      // minDate={state.values.serviceStarted}
-                      formId={formId}
-                      name='endedAt'
-                      calendarIconHidden
-                      value={state.values.endedAt}
-                    />
+                    <DatePickerUnderline formId={formId} name='endedAt' />
                   </Box>
                 ) : (
                   'custom date'

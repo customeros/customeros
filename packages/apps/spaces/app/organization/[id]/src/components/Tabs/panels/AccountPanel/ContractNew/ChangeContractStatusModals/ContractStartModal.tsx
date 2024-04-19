@@ -134,13 +134,7 @@ export const ContractStartModal = ({
               Congrats! Let’s make {organizationName}
               ’s contract live starting on
               <div className='ml-1 inline'>
-                <DatePickerUnderline
-                  placeholder='Start date'
-                  formId={formId}
-                  name='serviceStarted'
-                  calendarIconHidden
-                  value={state.values.serviceStarted}
-                />
+                <DatePickerUnderline formId={formId} name='serviceStarted' />
               </div>
             </p>
           )}

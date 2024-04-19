@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { cn } from '@ui/utils/cn';
 import { FeaturedIcon } from '@ui/media/Icon';
@@ -7,6 +7,8 @@ import { Action, ActionType } from '@graphql/types';
 import { FileCheck02 } from '@ui/media/icons/FileCheck02';
 import { SlashCircle01 } from '@ui/media/icons/SlashCircle01';
 import { FileAttachment02 } from '@ui/media/icons/FileAttachment02';
+import { getMetadata } from '@organization/src/components/Timeline/PastZone/events/action/utils';
+import { useTimelineEventPreviewMethodsContext } from '@organization/src/components/Timeline/shared/TimelineEventPreview/context/TimelineEventPreviewContext';
 
 interface InvoiceStatusChangeActionProps {
   data: Action;
@@ -36,15 +38,24 @@ const InvoiceStatusChangeAction: React.FC<InvoiceStatusChangeActionProps> = ({
   mode,
 }) => {
   const isTemporary = data.appSource === 'customeros-optimistic-update';
+  const { handleOpenInvoice } = useTimelineEventPreviewMethodsContext();
 
+  const metadata = useMemo(() => {
+    return getMetadata(data?.metadata);
+  }, [data?.metadata]);
   if (!data.content) return <div>No data available</div>;
 
   const formattedContent = formatInvoiceText(data.content);
 
   return (
     <div
-      className={cn('flex items-center pointer ', {
-        'not-allowed': isTemporary,
+      role='button'
+      tabIndex={0}
+      onClick={() =>
+        !isTemporary && metadata?.id && handleOpenInvoice(metadata.id)
+      }
+      className={cn('flex items-center pointer focus:outline-none ', {
+        'not-allowed': isTemporary || !metadata?.id,
         'opacity-50': isTemporary,
       })}
     >

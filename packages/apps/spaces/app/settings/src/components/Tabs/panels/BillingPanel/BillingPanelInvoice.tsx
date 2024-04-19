@@ -41,7 +41,7 @@ export const BillingPanelInvoice = ({
           quantity: 2,
           total: 100,
           taxDue: 0,
-        } as InvoiceLine,
+        } as unknown as InvoiceLine,
       ],
       tax: 0,
       note: '',
