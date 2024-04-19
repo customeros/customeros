@@ -13,6 +13,7 @@ interface ContractModalStatusContextState {
   nextInvoice?: Invoice | null;
   onStatusModalClose: () => void;
   mode: ContractStatusModalMode | null;
+  committedPeriodInMonths: number | string;
   onStatusModalOpen: (mode: ContractStatusModalMode | null) => void;
 }
 
@@ -22,6 +23,7 @@ const ContractPanelStateContext =
     onStatusModalOpen: () => null,
     onStatusModalClose: () => null,
     mode: null,
+    committedPeriodInMonths: 0,
   });
 
 export const useContractModalStatusContext = () => {
@@ -33,10 +35,12 @@ export const ContractModalStatusContextProvider = ({
   id,
   nextInvoice,
   upcomingInvoices,
+  committedPeriodInMonths,
 }: PropsWithChildren & {
   id: string;
   nextInvoice?: string;
   upcomingInvoices?: Array<Invoice> | null;
+  committedPeriodInMonths?: number | string | null;
 }) => {
   const [mode, setMode] = useState<ContractStatusModalMode | null>(null);
   const { onOpen, onClose, open } = useDisclosure({
@@ -64,6 +68,7 @@ export const ContractModalStatusContextProvider = ({
         onStatusModalOpen,
         onStatusModalClose,
         nextInvoice: upcomingInvoice,
+        committedPeriodInMonths: committedPeriodInMonths || 0,
       }}
     >
       {children}

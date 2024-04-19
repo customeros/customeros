@@ -1,6 +1,7 @@
 'use client';
 import React, { useRef } from 'react';
 import { useParams } from 'next/navigation';
+import { useForm } from 'react-inverted-form';
 
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -22,14 +23,28 @@ interface ContractEndModalProps {
   contractId: string;
   onClose: () => void;
   organizationName: string;
-
   status?: ContractStatus | null;
 }
-export enum EndContract {
+export enum RenewContract {
   Now = 'Now',
   EndOfCurrentBillingPeriod = 'EndOfCurrentBillingPeriod',
   EndOfCurrentRenewalPeriod = 'EndOfCurrentRenewalPeriod',
   CustomDate = 'CustomDate',
+}
+
+export function getCommittedPeriodLabel(months: string | number) {
+  if (`${months}` === '1') {
+    return 'month';
+  }
+  if (`${months}` === '3') {
+    return 'quarter';
+  }
+
+  if (`${months}` === '12') {
+    return 'year';
+  }
+
+  return `${months} months`;
 }
 export const ContractRenewsModal = ({
   onClose,
@@ -44,12 +59,16 @@ export const ContractRenewsModal = ({
   const queryKey = useGetContractsQuery.getKey({ id });
   const queryClient = useQueryClient();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const { nextInvoice } = useContractModalStatusContext();
-  const [value, setValue] = React.useState(EndContract.Now);
+  const { nextInvoice, committedPeriodInMonths } =
+    useContractModalStatusContext();
+  const [value, setValue] = React.useState(RenewContract.Now);
   const formId = `contract-ends-on-form-${contractId}`;
   const timeToRenewal = renewsAt
     ? DateTimeUtils.format(renewsAt, DateTimeUtils.dateWithAbreviatedMonth)
     : null;
+  const renewsToday = renewsAt && DateTimeUtils.isToday(renewsAt);
+  const renewsTomorrow = renewsAt && DateTimeUtils.isTomorrow(renewsAt);
+
   const { mutate } = useRenewContractMutation(client, {
     onSuccess: () => {
       onClose();
@@ -68,15 +87,6 @@ export const ContractRenewsModal = ({
     },
   });
 
-  const getText = () => {
-    if (
-      status === ContractStatus.OutOfContract &&
-      renewsAt &&
-      DateTimeUtils.isSameDay(renewsAt, new Date().toISOString())
-    ) {
-      return 'Renewing this contract will extend it with another year until 2 Aug 2025';
-    }
-  };
   const { state, setDefaultValues } = useForm<{
     renewsAt?: string | Date | null;
   }>({
@@ -87,30 +97,30 @@ export const ContractRenewsModal = ({
     },
   });
 
-  const handleApplyChanges = () => {};
+  // const handleApplyChanges = () => {};
 
   const handleChangeEndsOnOption = (nextValue: string | null) => {
-    if (nextValue === EndContract.Now) {
-      setDefaultValues({ renewsAt: today });
-      setValue(EndContract.Now);
+    if (nextValue === RenewContract.Now) {
+      setDefaultValues({ renewsAt: new Date() });
+      setValue(RenewContract.Now);
 
       return;
     }
-    if (nextValue === EndContract.EndOfCurrentBillingPeriod) {
+    if (nextValue === RenewContract.EndOfCurrentBillingPeriod) {
       setDefaultValues({ renewsAt: nextInvoice?.issued });
-      setValue(EndContract.EndOfCurrentBillingPeriod);
+      setValue(RenewContract.EndOfCurrentBillingPeriod);
 
       return;
     }
-    if (nextValue === EndContract.CustomDate) {
-      setDefaultValues({ renewsAt: new Date(today) });
-      setValue(EndContract.CustomDate);
+    if (nextValue === RenewContract.CustomDate) {
+      setDefaultValues({ renewsAt: new Date() });
+      setValue(RenewContract.CustomDate);
 
       return;
     }
-    if (nextValue === EndContract.EndOfCurrentRenewalPeriod) {
+    if (nextValue === RenewContract.EndOfCurrentRenewalPeriod) {
       setDefaultValues({ renewsAt: renewsAt });
-      setValue(EndContract.EndOfCurrentRenewalPeriod);
+      setValue(RenewContract.EndOfCurrentRenewalPeriod);
 
       return;
     }
@@ -119,65 +129,68 @@ export const ContractRenewsModal = ({
   return (
     <>
       <div>
-        {!nextInvoice && (
-          <FeaturedIcon size='lg' colorScheme='primary'>
-            <RefreshCw05 className='text-primary-600' />
-          </FeaturedIcon>
-        )}
+        <div>
+          {!nextInvoice && (
+            <FeaturedIcon size='lg' colorScheme='primary'>
+              <RefreshCw05 className='text-primary-600' />
+            </FeaturedIcon>
+          )}
 
-        <h1
-          className={cn('text-lg font-semibold  mb-1', {
-            'mt-4': !nextInvoice,
-          })}
-        >
-          {status === ContractStatus.OutOfContract
-            ? 'Renew this contract?'
-            : 'When should this contract renew?'}
-        </h1>
+          <h1
+            className={cn('text-lg font-semibold  mb-1', {
+              'mt-4': !nextInvoice,
+            })}
+          >
+            {status === ContractStatus.OutOfContract
+              ? 'Renew this contract?'
+              : 'When should this contract renew?'}
+          </h1>
+        </div>
+
+        <p className='flex flex-col mb-3 text-base'>
+          Renewing this contract will extend it with another{' '}
+          {getCommittedPeriodLabel(committedPeriodInMonths)}{' '}
+        </p>
+
+        {!renewsToday && (
+          <RadioGroup
+            value={value}
+            onValueChange={handleChangeEndsOnOption}
+            className='flex flex-col gap-1 text-base'
+          >
+            <Radio value={RenewContract.Now}>
+              <span className='mr-1'>Now</span>
+            </Radio>
+
+            {timeToRenewal && (
+              <Radio value={RenewContract.EndOfCurrentRenewalPeriod}>
+                <span className='ml-1'>
+                  End of current renewal period, {timeToRenewal}
+                </span>
+              </Radio>
+            )}
+
+            {!renewsTomorrow && (
+              <Radio value={RenewContract.CustomDate}>
+                <div className='flex items-center max-h-6'>
+                  On{' '}
+                  {value === RenewContract.CustomDate ? (
+                    <div className='ml-1'>
+                      <DatePickerUnderline formId={formId} name='renewsAt' />
+                    </div>
+                  ) : (
+                    'custom date'
+                  )}
+                </div>
+              </Radio>
+            )}
+          </RadioGroup>
+        )}
       </div>
 
-      <p className='flex flex-col gap-3'>{getText()}</p>
-
-      <RadioGroup
-        value={value}
-        onValueChange={handleChangeEndsOnOption}
-        className='flex flex-col gap-1 text-base'
-      >
-        <Radio value={EndContract.Now}>
-          <span className='mr-1'>Now</span>
-        </Radio>
-
-        {timeToRenewal && (
-          <Radio value={EndContract.EndOfCurrentRenewalPeriod}>
-            <span className='ml-1'>
-              End of current renewal period, {timeToRenewal}
-            </span>
-          </Radio>
-        )}
-
-        <Radio value={EndContract.CustomDate}>
-          <div className='flex items-center max-h-6'>
-            On{' '}
-            {value === EndContract.CustomDate ? (
-              <div className='ml-1'>
-                <DatePickerUnderline
-                  placeholder='Renewal date'
-                  defaultOpen={true}
-                  // minDate={state.values.serviceStarted}
-                  formId={formId}
-                  name='renewsAt'
-                  calendarIconHidden
-                  value={state.values.renewsAt}
-                />
-              </div>
-            ) : (
-              'custom date'
-            )}
-          </div>
-        </Radio>
-      </RadioGroup>
       <div className='flex'>
         <Button
+          size='lg'
           variant='outline'
           colorScheme='gray'
           className='w-full'
@@ -186,12 +199,19 @@ export const ContractRenewsModal = ({
           Cancel
         </Button>
         <Button
+          size='lg'
           className='ml-3 w-full'
           variant='outline'
           colorScheme='primary'
           onClick={() => mutate({ contractId })}
         >
-          Renew now
+          Renew{' '}
+          {RenewContract.Now === value || renewsToday
+            ? 'now'
+            : DateTimeUtils.format(
+                state.values.renewsAt as string,
+                DateTimeUtils.defaultFormatShortString,
+              )}
         </Button>
       </div>
     </>

@@ -1,5 +1,4 @@
 'use client';
-import React from 'react';
 import React, { useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { useForm } from 'react-inverted-form';
@@ -61,18 +60,18 @@ export const ContractEndModal = ({
   onUpdateContract,
   contractEnded,
 }: ContractEndModalProps) => {
-  const { isModalOpen, onStatusModalClose, mode, nextInvoice } =
   const queryClient = useQueryClient();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const id = useParams()?.id as string;
   const queryKey = useGetContractsQuery.getKey({ id });
-
 
   const [value, setValue] = React.useState(EndContract.Now);
   const formId = `contract-ends-on-form-${contractId}`;
   const timeToRenewal = renewsAt
     ? DateTimeUtils.format(renewsAt, DateTimeUtils.dateWithAbreviatedMonth)
     : null;
+  const { isModalOpen, onStatusModalClose, mode, nextInvoice } =
+    useContractModalStatusContext();
 
   const timeToNextInvoice = nextInvoice?.issued
     ? DateTimeUtils.format(

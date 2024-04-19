@@ -22,7 +22,6 @@ interface ContractsProps {
 export const Contracts: FC<ContractsProps> = ({ isLoading, organization }) => {
   const id = useParams()?.id as string;
   const isNewContractUiEnabled = useFeatureIsOn('contract-new');
-  console.log('🏷️ ----- organization?.contracts: ', organization?.contracts);
 
   return (
     <>
@@ -47,6 +46,7 @@ export const Contracts: FC<ContractsProps> = ({ isLoading, organization }) => {
                   id={id}
                   upcomingInvoices={contract?.upcomingInvoices}
                   nextInvoice={contract?.billingDetails?.nextInvoicing}
+                  committedPeriodInMonths={contract?.committedPeriodInMonths}
                 >
                   <ContractModalsContextProvider id={id}>
                     <NewContractCard

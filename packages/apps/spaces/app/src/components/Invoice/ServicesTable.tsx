@@ -52,7 +52,7 @@ export function ServicesTable({
                 <div className='text-left text-sm capitalize font-medium leading-5'>
                   {service?.description ?? 'Unnamed'}
                 </div>
-                <div className='text-gray-500'>
+                <div className='text-gray-500 text-sm'>
                   {service?.contractLineItem?.billingCycle ===
                   BilledType.Once ? (
                     <>
