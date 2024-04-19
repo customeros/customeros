@@ -17,9 +17,14 @@ import { Invoice } from '@shared/components/Invoice/Invoice';
 import { countryOptions } from '@shared/util/countryOptions';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { toastError, toastSuccess } from '@ui/presentation/Toast';
-import { DataSource, BankAccount, TenantBillingProfile } from '@graphql/types';
 import { useGetContractQuery } from '@organization/src/graphql/getContract.generated';
 import { useUpdateContractMutation } from '@organization/src/graphql/updateContract.generated';
+import {
+  DataSource,
+  BankAccount,
+  InvoiceLine,
+  TenantBillingProfile,
+} from '@graphql/types';
 import {
   GetContractsQuery,
   useGetContractsQuery,
@@ -290,7 +295,7 @@ export const EditContractModal = ({
           total: 100,
           taxDue: 0,
         },
-      ],
+      ] as unknown as InvoiceLine[],
       tax: 0,
       total: 100,
       dueDate: new Date().toISOString(),
