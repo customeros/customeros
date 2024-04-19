@@ -11,7 +11,6 @@ import { FeaturedIcon } from '@ui/media/Icon';
 import { Button } from '@ui/form/Button/Button';
 import { DotLive } from '@ui/media/icons/DotLive';
 import { DateTimeUtils } from '@spaces/utils/date';
-import { RefreshCw05 } from '@ui/media/icons/RefreshCw05';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 import { Exact, ContractStatus, ContractUpdateInput } from '@graphql/types';
 import { DatePickerUnderline } from '@ui/form/DatePicker/DatePickerUnderline';

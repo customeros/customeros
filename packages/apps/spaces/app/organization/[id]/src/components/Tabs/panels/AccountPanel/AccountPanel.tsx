@@ -125,7 +125,6 @@ const AccountPanelComponent = () => {
     return <AccountPanelSkeleton />;
   }
 
-  console.log('🏷️ ----- : ', data?.organization?.contracts);
   if (!data?.organization?.contracts?.length) {
     return (
       <EmptyContracts
