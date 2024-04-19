@@ -73,7 +73,7 @@ func (r *mutationResolver) ContractDelete(ctx context.Context, id string) (*mode
 }
 
 // ContractRenew is the resolver for the contract_Renew field.
-func (r *mutationResolver) ContractRenew(ctx context.Context, contractID string) (*model.Contract, error) {
+func (r *mutationResolver) ContractRenew(ctx context.Context, input model.ContractRenewalInput) (*model.Contract, error) {
 	panic(fmt.Errorf("not implemented: ContractRenew - contract_Renew"))
 }
 

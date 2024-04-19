@@ -178,6 +178,7 @@ func (s *opportunityService) CreateRenewalOpportunity(ctx context.Context, reque
 	// Convert any protobuf timestamp to time.Time, if necessary
 	createdAt := utils.TimestampProtoToTimePtr(request.CreatedAt)
 	updatedAt := utils.TimestampProtoToTimePtr(request.UpdatedAt)
+	renewedAt := utils.TimestampProtoToTimePtr(request.RenewedAt)
 
 	source := commonmodel.Source{}
 	source.FromGrpc(request.SourceFields)
@@ -192,6 +193,7 @@ func (s *opportunityService) CreateRenewalOpportunity(ctx context.Context, reque
 		source,
 		createdAt,
 		updatedAt,
+		renewedAt,
 	)
 
 	if err := s.opportunityCommandHandlers.CreateRenewalOpportunity.Handle(ctx, cmd); err != nil {
@@ -217,8 +219,6 @@ func (s *opportunityService) UpdateRenewalOpportunity(ctx context.Context, reque
 	}
 
 	// Convert any protobuf timestamp to time.Time, if necessary
-	updatedAt := utils.TimestampProtoToTimePtr(request.UpdatedAt)
-
 	source := commonmodel.Source{}
 	source.FromGrpc(request.SourceFields)
 
@@ -231,7 +231,8 @@ func (s *opportunityService) UpdateRenewalOpportunity(ctx context.Context, reque
 		request.Amount,
 		request.RenewalApproved,
 		source,
-		updatedAt,
+		utils.TimestampProtoToTimePtr(request.UpdatedAt),
+		utils.TimestampProtoToTimePtr(request.RenewedAt),
 		extractOpportunityMaskFields(request.FieldsMask),
 		request.OwnerUserId,
 	)
@@ -389,6 +390,8 @@ func extractOpportunityMaskFields(requestMaskFields []opportunitypb.OpportunityM
 			maskFields = append(maskFields, model.FieldMaskRenewalLikelihood)
 		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_MAX_AMOUNT:
 			maskFields = append(maskFields, model.FieldMaskMaxAmount)
+		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_RENEWED_AT:
+			maskFields = append(maskFields, model.FieldMaskRenewedAt)
 		}
 	}
 	return utils.RemoveDuplicates(maskFields)

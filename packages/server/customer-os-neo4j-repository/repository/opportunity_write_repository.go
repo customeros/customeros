@@ -51,21 +51,24 @@ type RenewalOpportunityCreateFields struct {
 	InternalStage     string       `json:"internalStage"`
 	RenewalLikelihood string       `json:"renewalLikelihood"`
 	RenewalApproved   bool         `json:"renewalApproved"`
+	RenewedAt         *time.Time   `json:"renewedAt"`
 }
 
 type RenewalOpportunityUpdateFields struct {
-	UpdatedAt               time.Time `json:"updatedAt"`
-	Source                  string    `json:"source"`
-	UpdatedByUserId         string    `json:"updatedByUserId"`
-	SetUpdatedByUserId      bool      `json:"setUpdatedByUserId"`
-	Comments                string    `json:"comments"`
-	Amount                  float64   `json:"amount"`
-	RenewalLikelihood       string    `json:"renewalLikelihood"`
-	RenewalApproved         bool      `json:"renewalApproved"`
-	UpdateComments          bool      `json:"updateComments"`
-	UpdateAmount            bool      `json:"updateAmount"`
-	UpdateRenewalLikelihood bool      `json:"updateRenewalLikelihood"`
-	UpdateRenewalApproved   bool      `json:"updateRenewalApproved"`
+	UpdatedAt               time.Time  `json:"updatedAt"`
+	Source                  string     `json:"source"`
+	UpdatedByUserId         string     `json:"updatedByUserId"`
+	SetUpdatedByUserId      bool       `json:"setUpdatedByUserId"`
+	Comments                string     `json:"comments"`
+	Amount                  float64    `json:"amount"`
+	RenewalLikelihood       string     `json:"renewalLikelihood"`
+	RenewalApproved         bool       `json:"renewalApproved"`
+	RenewedAt               *time.Time `json:"renewedAt"`
+	UpdateComments          bool       `json:"updateComments"`
+	UpdateAmount            bool       `json:"updateAmount"`
+	UpdateRenewalLikelihood bool       `json:"updateRenewalLikelihood"`
+	UpdateRenewalApproved   bool       `json:"updateRenewalApproved"`
+	UpdateRenewedAt         bool       `json:"updateRenewedAt"`
 }
 
 type OpportunityWriteRepository interface {
@@ -248,7 +251,8 @@ func (r *opportunityWriteRepository) CreateRenewal(ctx context.Context, tenant, 
 								newOp.internalType=$internalType,
 								newOp.internalStage=$internalStage,
 								newOp.renewalLikelihood=$renewalLikelihood,
-								newOp.renewalApproved=$renewalApproved
+								newOp.renewalApproved=$renewalApproved,
+								newOp.renewedAt=$renewedAt
 								MERGE (c)-[:HAS_OPPORTUNITY]->(newOp)
 							)
 							RETURN canCreateNewOp AS wasCreated
@@ -266,6 +270,7 @@ func (r *opportunityWriteRepository) CreateRenewal(ctx context.Context, tenant, 
 		"internalStage":     data.InternalStage,
 		"renewalLikelihood": data.RenewalLikelihood,
 		"renewalApproved":   data.RenewalApproved,
+		"renewedAt":         utils.ToDateAsAny(data.RenewedAt),
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -326,6 +331,10 @@ func (r *opportunityWriteRepository) UpdateRenewal(ctx context.Context, tenant, 
 	if data.UpdateRenewalApproved {
 		cypher += `, op.renewalApproved = $renewalApproved `
 		params["renewalApproved"] = data.RenewalApproved
+	}
+	if data.UpdateRenewedAt {
+		cypher += `, op.renewedAt = $renewedAt `
+		params["renewedAt"] = utils.ToDateAsAny(data.RenewedAt)
 	}
 
 	span.LogFields(log.String("cypher", cypher))

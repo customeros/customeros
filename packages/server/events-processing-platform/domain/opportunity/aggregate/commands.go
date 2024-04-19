@@ -84,7 +84,7 @@ func (a *OpportunityAggregate) createRenewalOpportunity(ctx context.Context, cmd
 		renewalLikelihood = neo4jenum.RenewalLikelihoodHigh
 	}
 
-	createRenewalEvent, err := event.NewOpportunityCreateRenewalEvent(a, cmd.ContractId, string(renewalLikelihood), cmd.RenewalApproved, cmd.Source, createdAtNotNil, updatedAtNotNil)
+	createRenewalEvent, err := event.NewOpportunityCreateRenewalEvent(a, cmd.ContractId, string(renewalLikelihood), cmd.RenewalApproved, cmd.Source, createdAtNotNil, updatedAtNotNil, cmd.RenewedAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOpportunityCreateRenewalEvent")
@@ -186,7 +186,7 @@ func (a *OpportunityAggregate) updateRenewalOpportunity(ctx context.Context, cmd
 		renewalLikelihood = neo4jenum.RenewalLikelihoodHigh
 	}
 
-	updateRenewalEvent, err := event.NewOpportunityUpdateRenewalEvent(a, string(renewalLikelihood), cmd.Comments, cmd.LoggedInUserId, cmd.Source.Source, cmd.Amount, cmd.RenewalApproved, updatedAtNotNil, cmd.MaskFields, cmd.OwnerUserId)
+	updateRenewalEvent, err := event.NewOpportunityUpdateRenewalEvent(a, string(renewalLikelihood), cmd.Comments, cmd.LoggedInUserId, cmd.Source.Source, cmd.Amount, cmd.RenewalApproved, updatedAtNotNil, cmd.MaskFields, cmd.OwnerUserId, cmd.RenewedAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOpportunityUpdateRenewalEvent")
