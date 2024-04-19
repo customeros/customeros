@@ -10,6 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"reflect"
@@ -949,15 +950,19 @@ func (r *dashboardRepository) GetDashboardCustomerMapData(ctx context.Context, t
 		queryResult, err := tx.Run(ctx, fmt.Sprintf(
 			`
 					MATCH (t:Tenant{name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(c:Contract_%s)-[r]->(op:Opportunity_%s)
-					WHERE o.hide = false AND o.isCustomer = true AND c.serviceStartedAt IS NOT NULL 
-						AND op.internalType = 'RENEWAL' AND op.internalStage in ['OPEN', 'EVALUATING']
+					WHERE 	o.hide = false AND 
+							o.isCustomer = true AND 
+							c.serviceStartedAt IS NOT NULL AND 
+							NOT c.status IN [$contractStatusDraft] AND 
+							op.internalType = $opportunityInternalTypeRenewal AND 
+							op.internalStage in [$opportunityInternalStageOpen, $opportunityInternalStageEvaluating]
 
 					WITH o, c, op, COLLECT(type(r)) AS relTypes
 
 					WITH o.id AS oid,
 						COLLECT(DISTINCT CASE
-							WHEN c.status = 'ENDED' THEN 'CHURNED'
-							WHEN c.status IN ['LIVE','DRAFT'] AND 'ACTIVE_RENEWAL' in relTypes AND op.renewalLikelihood = 'HIGH' THEN 'OK'
+							WHEN c.status = $contractStatusEnded THEN 'CHURNED'
+							WHEN c.status IN [$contractStatusLive,$contractStatusScheduled] AND 'ACTIVE_RENEWAL' in relTypes AND op.renewalLikelihood = 'HIGH' THEN 'OK'
 							ELSE 'AT_RISK'
 						END) AS statuses,
 						COLLECT(DISTINCT { serviceStartedAt: c.serviceStartedAt }) AS contractsStartedAt
@@ -1001,7 +1006,15 @@ func (r *dashboardRepository) GetDashboardCustomerMapData(ctx context.Context, t
 					ORDER BY oldestServiceStartedAt ASC
 				`, tenant, tenant, tenant, tenant, tenant, tenant),
 			map[string]any{
-				"tenant": tenant,
+				"tenant":                             tenant,
+				"contractStatusLive":                 neo4jenum.ContractStatusLive.String(),
+				"contractStatusDraft":                neo4jenum.ContractStatusDraft.String(),
+				"contractStatusEnded":                neo4jenum.ContractStatusEnded.String(),
+				"contractStatusScheduled":            neo4jenum.ContractStatusScheduled.String(),
+				"contractStatusOutOfContract":        neo4jenum.ContractStatusOutOfContract.String(),
+				"opportunityInternalTypeRenewal":     neo4jenum.OpportunityInternalTypeRenewal.String(),
+				"opportunityInternalStageOpen":       neo4jenum.OpportunityInternalStageOpen.String(),
+				"opportunityInternalStageEvaluating": neo4jenum.OpportunityInternalStageEvaluating.String(),
 			})
 		if err != nil {
 			return nil, err
