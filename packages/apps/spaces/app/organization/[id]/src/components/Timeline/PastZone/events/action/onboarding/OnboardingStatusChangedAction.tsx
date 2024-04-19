@@ -1,10 +1,8 @@
 import React, { useMemo } from 'react';
 
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
-import { FeaturedIcon } from '@ui/media/Icon';
 import { Flag04 } from '@ui/media/icons/Flag04';
 import { Action, OnboardingStatus } from '@graphql/types';
+import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
 import { getMetadata } from '@organization/src/components/Timeline/PastZone/events/action/utils';
 import { useTimelineEventPreviewMethodsContext } from '@organization/src/components/Timeline/shared/TimelineEventPreview/context/TimelineEventPreviewContext';
 
@@ -40,28 +38,24 @@ export const OnboardingStatusChangedAction: React.FC<
   const colorScheme = getColorScheme(status);
 
   return (
-    <Flex
-      alignItems='center'
+    <div
+      className='flex items-center cursor-pointer min-h-[40px]'
       onClick={() => openModal(data.id)}
-      cursor='pointer'
     >
-      <FeaturedIcon size='md' minW='10' colorScheme={colorScheme}>
-        <Flag04 />
-      </FeaturedIcon>
+      <div className='inline w-[30px]'>
+        <FeaturedIcon
+          size='md'
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          colorScheme={colorScheme as any}
+        >
+          <Flag04 />
+        </FeaturedIcon>
+      </div>
 
-      <Text
-        my={1}
-        maxW='500px'
-        noOfLines={2}
-        ml={2}
-        fontSize='sm'
-        color='gray.700'
-      >
+      <p className='my-1 max-w-[500px] ml-2 text-sm text-gray-700 line-clamp-2'>
         {content}
-        <Text as='span' fontWeight='semibold' ml={1}>
-          {statusLabel}
-        </Text>
-      </Text>
-    </Flex>
+        <span className='font-semibold ml-1'>{statusLabel}</span>
+      </p>
+    </div>
   );
 };

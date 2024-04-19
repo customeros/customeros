@@ -2,8 +2,8 @@ import React, { useMemo } from 'react';
 
 import { cn } from '@ui/utils/cn';
 import { Action } from '@graphql/types';
-import { FeaturedIcon } from '@ui/media/Icon';
 import { File02 } from '@ui/media/icons/File02';
+import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
 import { Card, CardFooter, CardContent } from '@ui/presentation/Card/Card';
 import { getMetadata } from '@organization/src/components/Timeline/PastZone/events/action/utils';
 import { iconsByStatus } from '@organization/src/components/Timeline/PastZone/events/action/contract/utils';
@@ -50,13 +50,15 @@ export const ContractStatusUpdatedActionPreview = () => {
       />
       <Card className='m-6 mt-3 p-4 shadow-xs'>
         <CardContent className='flex p-0 items-center'>
-          <FeaturedIcon
-            size='md'
-            minW='10'
-            colorScheme={iconsByStatus[status].colorScheme as string}
-          >
-            {iconsByStatus[status].icon}
-          </FeaturedIcon>
+          <div className='inline-block w-[30px]'>
+            <FeaturedIcon
+              size='md'
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              colorScheme={iconsByStatus[status].colorScheme as any}
+            >
+              {iconsByStatus[status].icon}
+            </FeaturedIcon>
+          </div>
           <p className='my-1 max-w[500px] line-clamp-2 ml-2 text-sm text-gray-700'>
             {content}
             <span
@@ -71,7 +73,7 @@ export const ContractStatusUpdatedActionPreview = () => {
         </CardContent>
         {metadata?.comment && (
           <CardFooter className='flex p-0 pt-3 mt-4 items-center border-t border-gray-200'>
-            <File02 color='gray.400' />
+            <File02 className='text-gray-400' />
             <p className='max-w-[500px] line-clamp-2 ml-2 text-sm text-gray-500'>
               {metadata.content}
             </p>

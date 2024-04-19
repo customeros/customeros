@@ -46,7 +46,7 @@ export const CountButton: React.FC<CountBalloonProps> = ({ unseenCount }) => {
       borderRadius='md'
       color={'gray.500'}
       onClick={() => triggerConfetti()}
-      leftIcon={<ArrowsRight color='inherit' boxSize='5' />}
+      leftIcon={<ArrowsRight className='size-5' />}
       _focus={{
         boxShadow: 'sidenavItemFocus',
       }}
@@ -78,12 +78,7 @@ export const CountButton: React.FC<CountBalloonProps> = ({ unseenCount }) => {
                 </>
               ) : (
                 <>
-                  <RedBalloon
-                    boxSize='53px'
-                    position='absolute'
-                    left={0}
-                    zIndex={1}
-                  />
+                  <RedBalloon className='size-[53px] absolute left-0 z-10' />
                   <Text
                     color='white'
                     position='absolute'

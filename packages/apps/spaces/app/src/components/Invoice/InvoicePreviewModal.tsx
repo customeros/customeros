@@ -51,7 +51,7 @@ export const InvoicePreviewModalContent: React.FC<InvoicePreviewModalProps> = ({
     return (
       <div className='flex flex-col items-center px-4 py-4 mt-5 overflow-hidden'>
         <FeaturedIcon colorScheme='warning'>
-          <FileX02 boxSize='7' />
+          <FileX02 className='size-7' />
         </FeaturedIcon>
         <h2 className='text-md mt-4 mb-1'>Preview not available</h2>
         <span className='text-center text-sm text-gray-500'>

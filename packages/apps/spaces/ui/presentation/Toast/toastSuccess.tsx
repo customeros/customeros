@@ -15,7 +15,7 @@ export const toastSuccess = (text: string, id: string) => {
         aria-label='Close'
         colorScheme='success'
         onClick={closeToast}
-        icon={<XClose boxSize='5' />}
+        icon={<XClose className='size-5' />}
       />
     ),
   });

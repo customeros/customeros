@@ -26,14 +26,14 @@ export const BankTransferMenu = ({ id }: { id: string }) => {
   return (
     <Menu>
       <MenuButton className='mb-1 ml-1'>
-        <DotsVertical color='gray.400' boxSize={4} />
+        <DotsVertical className='text-gray-400 size-4' />
       </MenuButton>
       <MenuList side='bottom' align='end' className='min-w-[150px]'>
         <MenuItem
           className='w-auto flex items-center'
           onClick={() => mutate({ id })}
         >
-          <Archive mr={2} color='gray.500' />
+          <Archive className='mr-2 text-gray-500' />
           Archive account
         </MenuItem>
       </MenuList>

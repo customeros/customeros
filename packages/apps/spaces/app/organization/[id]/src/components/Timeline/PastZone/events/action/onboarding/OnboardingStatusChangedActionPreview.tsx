@@ -34,14 +34,15 @@ export const OnboardingStatusChangedActionPreview = () => {
       />
       <Card className='m-6 mt-3 p-4 shadow-xs'>
         <CardContent className='flex p-0 items-center'>
-          <FeaturedIcon
-            className='min-w-10'
-            size='md'
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            colorScheme={colorScheme as any}
-          >
-            <Flag04 />
-          </FeaturedIcon>
+          <div className='inline-block w-[30px]'>
+            <FeaturedIcon
+              size='md'
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              colorScheme={colorScheme as any}
+            >
+              <Flag04 />
+            </FeaturedIcon>
+          </div>
           <p className='max-w-[500px] line-clamp-2 ml-2 text-sm text-gray-700'>
             {event?.content}
           </p>

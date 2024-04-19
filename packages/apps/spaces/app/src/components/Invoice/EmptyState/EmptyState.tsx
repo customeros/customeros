@@ -17,7 +17,7 @@ export const EmptyState = () => {
           colorScheme='primary'
           className='absolute top-[23%] right-[45%]'
         >
-          <File04 boxSize='5' />
+          <File04 className='size-5' />
         </FeaturedIcon>
         <HalfCirclePattern />
       </div>
