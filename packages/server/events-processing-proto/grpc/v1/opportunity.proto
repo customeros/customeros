@@ -15,6 +15,7 @@ enum OpportunityMaskField {
   OPPORTUNITY_PROPERTY_RENEWAL_LIKELIHOOD = 5;
   OPPORTUNITY_PROPERTY_MAX_AMOUNT = 6;
   OPPORTUNITY_PROPERTY_RENEW_APPROVED = 7;
+  OPPORTUNITY_PROPERTY_RENEWED_AT = 8;
 }
 
 // Define an enum for internalType
@@ -69,6 +70,7 @@ message CreateRenewalOpportunityGrpcRequest {
   google.protobuf.Timestamp createdAt = 6;
   google.protobuf.Timestamp updatedAt = 7;
   bool RenewalApproved = 8;
+  google.protobuf.Timestamp renewedAt = 9;
 }
 
 message UpdateRenewalOpportunityGrpcRequest {
@@ -83,6 +85,7 @@ message UpdateRenewalOpportunityGrpcRequest {
   repeated OpportunityMaskField fieldsMask = 9;
   string ownerUserId = 10;
   bool renewalApproved = 11;
+  google.protobuf.Timestamp renewedAt = 12;
 }
 
 message UpdateOpportunityGrpcRequest {

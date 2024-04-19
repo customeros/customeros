@@ -14,6 +14,7 @@ const (
 	FieldMaskComments          = "comments"
 	FieldMaskRenewalLikelihood = "renewalLikelihood"
 	FieldMaskRenewalApproved   = "renewalApproved"
+	FieldMaskRenewedAt         = "renewedAt"
 )
 
 type RenewalDetails struct {
@@ -66,6 +67,7 @@ type OpportunityDataFields struct {
 	GeneralNotes      string
 	NextSteps         string
 	OrganizationId    string
+	RenewedAt         *time.Time
 }
 
 // OpportunityInternalType represents the type of opportunity within the system.

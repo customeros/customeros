@@ -141,8 +141,14 @@ func (h *contractHandler) updateRenewalOpportunityRenewedAt(ctx context.Context,
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
 
+	if renewalOpportunityEntity == nil {
+		err := fmt.Errorf("renewalOpportunityEntity is nil")
+		tracing.TraceErr(span, err)
+		return nil
+	}
+
 	// IF contract already ended, close the renewal opportunity
-	if contractEntity.IsEnded() && renewalOpportunityEntity != nil {
+	if contractEntity.IsEnded() {
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
 			return h.grpcClients.OpportunityClient.CloseLooseOpportunity(ctx, &opportunitypb.CloseLooseOpportunityGrpcRequest{
@@ -160,6 +166,9 @@ func (h *contractHandler) updateRenewalOpportunityRenewedAt(ctx context.Context,
 	}
 
 	// Choose starting date for renewal calculation
+	if renewalOpportunityEntity.RenewalDetails.RenewedAt != nil {
+		return nil
+	}
 	startRenewalDateCalculation := contractEntity.ServiceStartedAt
 	previousClosedWonRenewalDbNode, err := h.repositories.Neo4jRepositories.OpportunityReadRepository.GetPreviousClosedWonRenewalOpportunityForContract(ctx, tenant, contractEntity.Id)
 	if err != nil {

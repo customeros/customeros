@@ -5,7 +5,7 @@ extend type Mutation {
     contract_Create(input: ContractInput!): Contract!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     contract_Update(input: ContractUpdateInput!): Contract!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     contract_Delete(id: ID!): DeleteResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    contract_Renew(contractId: ID!): Contract! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    contract_Renew(input: ContractRenewalInput!): Contract! @hasRole(roles: [ADMIN, USER]) @hasTenant
     contract_AddAttachment(contractId: ID!, attachmentId: ID!): Contract!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     contract_RemoveAttachment(contractId: ID!, attachmentId: ID!): Contract!  @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
@@ -320,6 +320,11 @@ input ContractUpdateInput {
     Deprecated
     """
     name:               String @deprecated(reason: "Use contractName instead.")
+}
+
+input ContractRenewalInput {
+    contractId:     ID!
+    renewalDate:    Time
 }
 
 input BillingDetailsInput {

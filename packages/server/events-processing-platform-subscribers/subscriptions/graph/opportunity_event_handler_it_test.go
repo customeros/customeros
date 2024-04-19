@@ -165,6 +165,7 @@ func TestOpportunityEventHandler_OnCreateRenewal(t *testing.T) {
 		},
 		timeNow,
 		timeNow,
+		nil,
 	)
 	require.Nil(t, err, "failed to create opportunity create renewal event")
 
@@ -409,7 +410,8 @@ func TestOpportunityEventHandler_OnUpdateRenewal_AmountAndRenewalChangedByUser(t
 		false,
 		now,
 		[]string{},
-		"user-123")
+		"user-123",
+		nil)
 	require.Nil(t, err, "failed to create event")
 
 	// EXECUTE
@@ -475,7 +477,8 @@ func TestOpportunityEventHandler_OnUpdateRenewal_OnlyCommentsChangedByUser_DoNot
 		false,
 		now,
 		[]string{},
-		"user-123")
+		"user-123",
+		nil)
 	require.Nil(t, err, "failed to create event")
 
 	// EXECUTE
@@ -579,7 +582,8 @@ func TestOpportunityEventHandler_OnUpdateRenewal_LikelihoodChangedByUser_Generat
 		false,
 		now,
 		[]string{},
-		"user-123")
+		"user-123",
+		nil)
 	require.Nil(t, err, "failed to create event")
 
 	// EXECUTE
@@ -814,7 +818,8 @@ func TestOpportunityEventHandler_OnUpdateRenewal_ChangeOwner(t *testing.T) {
 		false,
 		now,
 		[]string{},
-		userIdOwnerNew) //Changing the owner here
+		userIdOwnerNew,
+		nil) //Changing the owner here
 	require.Nil(t, err, "failed to create event")
 
 	// EXECUTE

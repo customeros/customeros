@@ -616,6 +616,11 @@ type ContractInput struct {
 	Name *string `json:"name,omitempty"`
 }
 
+type ContractRenewalInput struct {
+	ContractID  string     `json:"contractId"`
+	RenewalDate *time.Time `json:"renewalDate,omitempty"`
+}
+
 type ContractUpdateInput struct {
 	ContractID              string               `json:"contractId"`
 	Patch                   *bool                `json:"patch,omitempty"`

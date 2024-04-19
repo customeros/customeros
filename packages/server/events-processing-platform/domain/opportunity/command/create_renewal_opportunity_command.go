@@ -15,9 +15,10 @@ type CreateRenewalOpportunityCommand struct {
 	RenewalApproved   bool
 	CreatedAt         *time.Time
 	UpdatedAt         *time.Time
+	RenewedAt         *time.Time
 }
 
-func NewCreateRenewalOpportunityCommand(opportunityId, tenant, loggedInUserId, contractId string, renewalLikelihood neo4jenum.RenewalLikelihood, renewalApproved bool, source commonmodel.Source, createdAt, updatedAt *time.Time) *CreateRenewalOpportunityCommand {
+func NewCreateRenewalOpportunityCommand(opportunityId, tenant, loggedInUserId, contractId string, renewalLikelihood neo4jenum.RenewalLikelihood, renewalApproved bool, source commonmodel.Source, createdAt, updatedAt, renewedAt *time.Time) *CreateRenewalOpportunityCommand {
 	return &CreateRenewalOpportunityCommand{
 		BaseCommand:       eventstore.NewBaseCommand(opportunityId, tenant, loggedInUserId),
 		Source:            source,
@@ -26,5 +27,6 @@ func NewCreateRenewalOpportunityCommand(opportunityId, tenant, loggedInUserId, c
 		RenewalApproved:   renewalApproved,
 		CreatedAt:         createdAt,
 		UpdatedAt:         updatedAt,
+		RenewedAt:         renewedAt,
 	}
 }

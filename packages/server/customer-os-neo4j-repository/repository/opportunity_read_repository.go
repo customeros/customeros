@@ -118,7 +118,7 @@ func (r *opportunityReadRepository) GetActiveRenewalOpportunityForContract(ctx c
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})-[:ACTIVE_RENEWAL]->(op:RenewalOpportunity)
 				WHERE op.internalStage=$internalStage
-				RETURN op`
+				RETURN op ORDER BY op.renewedAt DESC`
 	params := map[string]any{
 		"tenant":        tenant,
 		"contractId":    contractId,

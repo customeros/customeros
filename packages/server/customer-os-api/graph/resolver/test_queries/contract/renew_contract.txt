@@ -1,5 +1,5 @@
 mutation RenewContract($contractId: ID!) {
-  contract_Renew(contractId: $contractId) {
+  contract_Renew(input: {contractId: $contractId}) {
     metadata {
         id
     }

@@ -10,19 +10,20 @@ import (
 )
 
 type OpportunityUpdateRenewalEvent struct {
-	Tenant            string    `json:"tenant" validate:"required"`
-	UpdatedAt         time.Time `json:"updatedAt"`
-	UpdatedByUserId   string    `json:"updatedByUserId"`
-	RenewalLikelihood string    `json:"renewalLikelihood" validate:"required" enums:"HIGH,MEDIUM,LOW,ZERO"`
-	RenewalApproved   bool      `json:"renewalApproved,omitempty"`
-	Comments          string    `json:"comments"`
-	Amount            float64   `json:"amount"`
-	Source            string    `json:"source"`
-	FieldsMask        []string  `json:"fieldsMask"`
-	OwnerUserId       string    `json:"ownerUserId"`
+	Tenant            string     `json:"tenant" validate:"required"`
+	UpdatedAt         time.Time  `json:"updatedAt"`
+	UpdatedByUserId   string     `json:"updatedByUserId"`
+	RenewalLikelihood string     `json:"renewalLikelihood" validate:"required" enums:"HIGH,MEDIUM,LOW,ZERO"`
+	RenewalApproved   bool       `json:"renewalApproved,omitempty"`
+	Comments          string     `json:"comments"`
+	Amount            float64    `json:"amount"`
+	Source            string     `json:"source"`
+	FieldsMask        []string   `json:"fieldsMask"`
+	OwnerUserId       string     `json:"ownerUserId"`
+	RenewedAt         *time.Time `json:"renewedAt,omitempty"`
 }
 
-func NewOpportunityUpdateRenewalEvent(aggregate eventstore.Aggregate, renewalLikelihood, comments, updatedByUserId, source string, amount float64, renewalApproved bool, updatedAt time.Time, fieldsMask []string, ownerUserId string) (eventstore.Event, error) {
+func NewOpportunityUpdateRenewalEvent(aggregate eventstore.Aggregate, renewalLikelihood, comments, updatedByUserId, source string, amount float64, renewalApproved bool, updatedAt time.Time, fieldsMask []string, ownerUserId string, renewedAt *time.Time) (eventstore.Event, error) {
 	eventData := OpportunityUpdateRenewalEvent{
 		Tenant:            aggregate.GetTenant(),
 		UpdatedAt:         updatedAt,
@@ -34,6 +35,7 @@ func NewOpportunityUpdateRenewalEvent(aggregate eventstore.Aggregate, renewalLik
 		Amount:            amount,
 		FieldsMask:        fieldsMask,
 		OwnerUserId:       ownerUserId,
+		RenewedAt:         renewedAt,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
@@ -61,4 +63,8 @@ func (e OpportunityUpdateRenewalEvent) UpdateRenewalLikelihood() bool {
 
 func (e OpportunityUpdateRenewalEvent) UpdateRenewalApproved() bool {
 	return utils.Contains(e.FieldsMask, model.FieldMaskRenewalApproved)
+}
+
+func (e OpportunityUpdateRenewalEvent) UpdateRenewedAt() bool {
+	return utils.Contains(e.FieldsMask, model.FieldMaskRenewedAt)
 }

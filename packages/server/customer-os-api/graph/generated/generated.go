@@ -932,7 +932,7 @@ type ComplexityRoot struct {
 		ContractLineItemNewVersion              func(childComplexity int, input model.ServiceLineItemNewVersionInput) int
 		ContractLineItemUpdate                  func(childComplexity int, input model.ServiceLineItemUpdateInput) int
 		ContractRemoveAttachment                func(childComplexity int, contractID string, attachmentID string) int
-		ContractRenew                           func(childComplexity int, contractID string) int
+		ContractRenew                           func(childComplexity int, input model.ContractRenewalInput) int
 		ContractUpdate                          func(childComplexity int, input model.ContractUpdateInput) int
 		CustomFieldDeleteFromContactByID        func(childComplexity int, contactID string, id string) int
 		CustomFieldDeleteFromContactByName      func(childComplexity int, contactID string, fieldName string) int
@@ -1785,7 +1785,7 @@ type MutationResolver interface {
 	ContractCreate(ctx context.Context, input model.ContractInput) (*model.Contract, error)
 	ContractUpdate(ctx context.Context, input model.ContractUpdateInput) (*model.Contract, error)
 	ContractDelete(ctx context.Context, id string) (*model.DeleteResponse, error)
-	ContractRenew(ctx context.Context, contractID string) (*model.Contract, error)
+	ContractRenew(ctx context.Context, input model.ContractRenewalInput) (*model.Contract, error)
 	ContractAddAttachment(ctx context.Context, contractID string, attachmentID string) (*model.Contract, error)
 	ContractRemoveAttachment(ctx context.Context, contractID string, attachmentID string) (*model.Contract, error)
 	CustomFieldsMergeAndUpdateInContact(ctx context.Context, contactID string, customFields []*model.CustomFieldInput, fieldSets []*model.FieldSetInput) (*model.Contact, error)
@@ -6694,7 +6694,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.ContractRenew(childComplexity, args["contractId"].(string)), true
+		return e.complexity.Mutation.ContractRenew(childComplexity, args["input"].(model.ContractRenewalInput)), true
 
 	case "Mutation.contract_Update":
 		if e.complexity.Mutation.ContractUpdate == nil {
@@ -11651,6 +11651,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputContactTagInput,
 		ec.unmarshalInputContactUpdateInput,
 		ec.unmarshalInputContractInput,
+		ec.unmarshalInputContractRenewalInput,
 		ec.unmarshalInputContractUpdateInput,
 		ec.unmarshalInputCustomFieldEntityType,
 		ec.unmarshalInputCustomFieldInput,
@@ -12419,7 +12420,7 @@ extend type Mutation {
     contract_Create(input: ContractInput!): Contract!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     contract_Update(input: ContractUpdateInput!): Contract!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     contract_Delete(id: ID!): DeleteResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    contract_Renew(contractId: ID!): Contract! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    contract_Renew(input: ContractRenewalInput!): Contract! @hasRole(roles: [ADMIN, USER]) @hasTenant
     contract_AddAttachment(contractId: ID!, attachmentId: ID!): Contract!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     contract_RemoveAttachment(contractId: ID!, attachmentId: ID!): Contract!  @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
@@ -12734,6 +12735,11 @@ input ContractUpdateInput {
     Deprecated
     """
     name:               String @deprecated(reason: "Use contractName instead.")
+}
+
+input ContractRenewalInput {
+    contractId:     ID!
+    renewalDate:    Time
 }
 
 input BillingDetailsInput {
@@ -16650,15 +16656,15 @@ func (ec *executionContext) field_Mutation_contract_RemoveAttachment_args(ctx co
 func (ec *executionContext) field_Mutation_contract_Renew_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["contractId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contractId"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+	var arg0 model.ContractRenewalInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNContractRenewalInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContractRenewalInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["contractId"] = arg0
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -52225,7 +52231,7 @@ func (ec *executionContext) _Mutation_contract_Renew(ctx context.Context, field 
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().ContractRenew(rctx, fc.Args["contractId"].(string))
+			return ec.resolvers.Mutation().ContractRenew(rctx, fc.Args["input"].(model.ContractRenewalInput))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
@@ -94981,6 +94987,40 @@ func (ec *executionContext) unmarshalInputContractInput(ctx context.Context, obj
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputContractRenewalInput(ctx context.Context, obj interface{}) (model.ContractRenewalInput, error) {
+	var it model.ContractRenewalInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"contractId", "renewalDate"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "contractId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contractId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ContractID = data
+		case "renewalDate":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("renewalDate"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RenewalDate = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputContractUpdateInput(ctx context.Context, obj interface{}) (model.ContractUpdateInput, error) {
 	var it model.ContractUpdateInput
 	asMap := map[string]interface{}{}
@@ -116806,6 +116846,11 @@ func (ec *executionContext) unmarshalNContractRenewalCycle2githubᚗcomᚋopenli
 
 func (ec *executionContext) marshalNContractRenewalCycle2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContractRenewalCycle(ctx context.Context, sel ast.SelectionSet, v model.ContractRenewalCycle) graphql.Marshaler {
 	return v
+}
+
+func (ec *executionContext) unmarshalNContractRenewalInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContractRenewalInput(ctx context.Context, v interface{}) (model.ContractRenewalInput, error) {
+	res, err := ec.unmarshalInputContractRenewalInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNContractStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContractStatus(ctx context.Context, v interface{}) (model.ContractStatus, error) {

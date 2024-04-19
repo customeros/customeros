@@ -250,23 +250,23 @@ func (r *mutationResolver) ContractDelete(ctx context.Context, id string) (*mode
 }
 
 // ContractRenew is the resolver for the contract_Renew field.
-func (r *mutationResolver) ContractRenew(ctx context.Context, contractID string) (*model.Contract, error) {
+func (r *mutationResolver) ContractRenew(ctx context.Context, input model.ContractRenewalInput) (*model.Contract, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContractRenew", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contractId", contractID))
+	tracing.LogObjectAsJson(span, "request.contractRenewalInput", input)
 
-	err := r.Services.ContractService.RenewContract(ctx, contractID)
+	err := r.Services.ContractService.RenewContract(ctx, input.ContractID, input.RenewalDate)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to renew contract %s", contractID)
-		return &model.Contract{Metadata: &model.Metadata{ID: contractID}}, nil
+		graphql.AddErrorf(ctx, "Failed to renew contract %s", input.ContractID)
+		return &model.Contract{Metadata: &model.Metadata{ID: input.ContractID}}, nil
 	}
-	contractEntity, err := r.Services.ContractService.GetById(ctx, contractID)
+	contractEntity, err := r.Services.ContractService.GetById(ctx, input.ContractID)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed fetching contract details. Contract id: %s", contractID)
-		return &model.Contract{Metadata: &model.Metadata{ID: contractID}}, nil
+		graphql.AddErrorf(ctx, "Failed fetching contract details. Contract id: %s", input.ContractID)
+		return &model.Contract{Metadata: &model.Metadata{ID: input.ContractID}}, nil
 	}
 
 	return mapper.MapEntityToContract(contractEntity), nil

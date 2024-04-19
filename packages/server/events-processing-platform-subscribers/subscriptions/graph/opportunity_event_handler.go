@@ -159,6 +159,7 @@ func (h *OpportunityEventHandler) OnCreateRenewal(ctx context.Context, evt event
 		InternalStage:     eventData.InternalStage,
 		RenewalLikelihood: eventData.RenewalLikelihood,
 		RenewalApproved:   eventData.RenewalApproved,
+		RenewedAt:         eventData.RenewedAt,
 	}
 	newOpportunityCreated, err := h.repositories.Neo4jRepositories.OpportunityWriteRepository.CreateRenewal(ctx, eventData.Tenant, opportunityId, data)
 	if err != nil {
@@ -400,10 +401,12 @@ func (h *OpportunityEventHandler) OnUpdateRenewal(ctx context.Context, evt event
 		Amount:                  eventData.Amount,
 		RenewalLikelihood:       eventData.RenewalLikelihood,
 		RenewalApproved:         eventData.RenewalApproved,
+		RenewedAt:               eventData.RenewedAt,
 		UpdateComments:          eventData.UpdateComments(),
 		UpdateAmount:            eventData.UpdateAmount(),
 		UpdateRenewalLikelihood: eventData.UpdateRenewalLikelihood(),
 		UpdateRenewalApproved:   eventData.UpdateRenewalApproved(),
+		UpdateRenewedAt:         eventData.UpdateRenewedAt(),
 	}
 	err = h.repositories.Neo4jRepositories.OpportunityWriteRepository.UpdateRenewal(ctx, eventData.Tenant, opportunityId, data)
 	if err != nil {
