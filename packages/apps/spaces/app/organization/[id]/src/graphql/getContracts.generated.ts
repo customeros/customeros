@@ -131,7 +131,6 @@ export type GetContractsQuery = {
         provider: {
           __typename?: 'InvoiceProvider';
           name?: string | null;
-          logoUrl?: string | null;
           addressLine1?: string | null;
           addressLine2?: string | null;
           addressZip?: string | null;
@@ -291,7 +290,6 @@ export const GetContractsDocument = `
         }
         provider {
           name
-          logoUrl
           addressLine1
           addressLine2
           addressZip

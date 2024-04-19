@@ -9,8 +9,10 @@ import { FeaturedIcon } from '@ui/media/Icon';
 import { ContractStatus } from '@graphql/types';
 import { Button } from '@ui/form/Button/Button';
 import { DateTimeUtils } from '@spaces/utils/date';
+import { Radio, RadioGroup } from '@ui/form/Radio/Radio2';
 import { RefreshCw05 } from '@ui/media/icons/RefreshCw05';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { DatePickerUnderline } from '@ui/form/DatePicker/DatePickerUnderline';
 import { useGetContractsQuery } from '@organization/src/graphql/getContracts.generated';
 import { useRenewContractMutation } from '@organization/src/graphql/renewContract.generated';
 import { useContractModalStatusContext } from '@organization/src/components/Tabs/panels/AccountPanel/context/ContractStatusModalsContext';
@@ -23,7 +25,12 @@ interface ContractEndModalProps {
 
   status?: ContractStatus | null;
 }
-
+export enum EndContract {
+  Now = 'Now',
+  EndOfCurrentBillingPeriod = 'EndOfCurrentBillingPeriod',
+  EndOfCurrentRenewalPeriod = 'EndOfCurrentRenewalPeriod',
+  CustomDate = 'CustomDate',
+}
 export const ContractRenewsModal = ({
   onClose,
   contractId,
@@ -38,7 +45,11 @@ export const ContractRenewsModal = ({
   const queryClient = useQueryClient();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { nextInvoice } = useContractModalStatusContext();
-
+  const [value, setValue] = React.useState(EndContract.Now);
+  const formId = `contract-ends-on-form-${contractId}`;
+  const timeToRenewal = renewsAt
+    ? DateTimeUtils.format(renewsAt, DateTimeUtils.dateWithAbreviatedMonth)
+    : null;
   const { mutate } = useRenewContractMutation(client, {
     onSuccess: () => {
       onClose();
@@ -66,6 +77,44 @@ export const ContractRenewsModal = ({
       return 'Renewing this contract will extend it with another year until 2 Aug 2025';
     }
   };
+  const { state, setDefaultValues } = useForm<{
+    renewsAt?: string | Date | null;
+  }>({
+    formId,
+    defaultValues: { renewsAt: null || new Date() },
+    stateReducer: (_, action, next) => {
+      return next;
+    },
+  });
+
+  const handleApplyChanges = () => {};
+
+  const handleChangeEndsOnOption = (nextValue: string | null) => {
+    if (nextValue === EndContract.Now) {
+      setDefaultValues({ renewsAt: today });
+      setValue(EndContract.Now);
+
+      return;
+    }
+    if (nextValue === EndContract.EndOfCurrentBillingPeriod) {
+      setDefaultValues({ renewsAt: nextInvoice?.issued });
+      setValue(EndContract.EndOfCurrentBillingPeriod);
+
+      return;
+    }
+    if (nextValue === EndContract.CustomDate) {
+      setDefaultValues({ renewsAt: new Date(today) });
+      setValue(EndContract.CustomDate);
+
+      return;
+    }
+    if (nextValue === EndContract.EndOfCurrentRenewalPeriod) {
+      setDefaultValues({ renewsAt: renewsAt });
+      setValue(EndContract.EndOfCurrentRenewalPeriod);
+
+      return;
+    }
+  };
 
   return (
     <>
@@ -88,6 +137,45 @@ export const ContractRenewsModal = ({
       </div>
 
       <p className='flex flex-col gap-3'>{getText()}</p>
+
+      <RadioGroup
+        value={value}
+        onValueChange={handleChangeEndsOnOption}
+        className='flex flex-col gap-1 text-base'
+      >
+        <Radio value={EndContract.Now}>
+          <span className='mr-1'>Now</span>
+        </Radio>
+
+        {timeToRenewal && (
+          <Radio value={EndContract.EndOfCurrentRenewalPeriod}>
+            <span className='ml-1'>
+              End of current renewal period, {timeToRenewal}
+            </span>
+          </Radio>
+        )}
+
+        <Radio value={EndContract.CustomDate}>
+          <div className='flex items-center max-h-6'>
+            On{' '}
+            {value === EndContract.CustomDate ? (
+              <div className='ml-1'>
+                <DatePickerUnderline
+                  placeholder='Renewal date'
+                  defaultOpen={true}
+                  // minDate={state.values.serviceStarted}
+                  formId={formId}
+                  name='renewsAt'
+                  calendarIconHidden
+                  value={state.values.renewsAt}
+                />
+              </div>
+            ) : (
+              'custom date'
+            )}
+          </div>
+        </Radio>
+      </RadioGroup>
       <div className='flex'>
         <Button
           variant='outline'
