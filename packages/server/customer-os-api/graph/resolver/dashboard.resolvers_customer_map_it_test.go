@@ -100,9 +100,95 @@ func TestQueryResolver_Dashboard_Customer_Map_Draft_Contract(t *testing.T) {
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
+	require.Equal(t, 0, len(dashboardReport.Dashboard_CustomerMap))
+}
+
+func TestQueryResolver_Dashboard_Customer_Map_Scheduled_Contract(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
+
+	contract1ServiceStartedAt := utils.FirstTimeOfMonth(2023, 7)
+	contractId := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusScheduled,
+		ServiceStartedAt: &contract1ServiceStartedAt,
+	}, neo4jentity.OpportunityEntity{
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		},
+	})
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
+
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
+		map[string]interface{}{})
+
+	var dashboardReport struct {
+		Dashboard_CustomerMap []model.DashboardCustomerMap
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	org1 := dashboardReport.Dashboard_CustomerMap[0]
 	require.Equal(t, 1, len(dashboardReport.Dashboard_CustomerMap))
-	require.Equal(t, orgId, dashboardReport.Dashboard_CustomerMap[0].Organization.ID)
-	require.Equal(t, float64(12), dashboardReport.Dashboard_CustomerMap[0].Arr)
+	require.Equal(t, orgId, org1.Organization.ID)
+	require.Equal(t, model.DashboardCustomerMapStateOk, org1.State)
+}
+
+func TestQueryResolver_Dashboard_Customer_Map_OutOfContract_Contract(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
+
+	contract1ServiceStartedAt := utils.FirstTimeOfMonth(2023, 7)
+	contractId := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusOutOfContract,
+		ServiceStartedAt: &contract1ServiceStartedAt,
+	}, neo4jentity.OpportunityEntity{
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		},
+	})
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
+
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
+		map[string]interface{}{})
+
+	var dashboardReport struct {
+		Dashboard_CustomerMap []model.DashboardCustomerMap
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	org1 := dashboardReport.Dashboard_CustomerMap[0]
+	require.Equal(t, 1, len(dashboardReport.Dashboard_CustomerMap))
+	require.Equal(t, orgId, org1.Organization.ID)
+	require.Equal(t, model.DashboardCustomerMapStateAtRisk, org1.State)
 }
 
 func TestQueryResolver_Dashboard_Customer_Map_Hidden_Organization_With_Contract(t *testing.T) {
