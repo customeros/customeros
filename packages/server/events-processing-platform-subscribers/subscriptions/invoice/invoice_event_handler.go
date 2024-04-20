@@ -551,9 +551,9 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
-	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
-
 	invoiceId := invoice.GetInvoiceObjectID(evt.GetAggregateID(), eventData.Tenant)
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, invoiceId)
 
 	var contractEntity *neo4jentity.ContractEntity
 	var invoiceEntity *neo4jentity.InvoiceEntity
@@ -662,23 +662,38 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 		dataForPdf["InvoiceVat"] = fmt.Sprintf("%.2f", invoiceEntity.Vat)
 	}
 
-	for _, line := range invoiceLineEntities {
+	for _, invoiceLine := range invoiceLineEntities {
 		invoiceLineItem := map[string]string{
-			"Name":      line.Name,
-			"Quantity":  fmt.Sprintf("%d", line.Quantity),
-			"UnitPrice": invoiceEntity.Currency.Symbol() + utils.FormatAmount(line.Price, 2),
-			"Amount":    invoiceEntity.Currency.Symbol() + utils.FormatAmount(line.Amount, 2),
-			"Vat":       invoiceEntity.Currency.Symbol() + utils.FormatAmount(line.Vat, 2),
+			"Name":      invoiceLine.Name,
+			"Quantity":  fmt.Sprintf("%d", invoiceLine.Quantity),
+			"UnitPrice": invoiceEntity.Currency.Symbol() + utils.FormatAmount(invoiceLine.Price, 2),
+			"Amount":    invoiceEntity.Currency.Symbol() + utils.FormatAmount(invoiceLine.Amount, 2),
+			"Vat":       invoiceEntity.Currency.Symbol() + utils.FormatAmount(invoiceLine.Vat, 2),
 		}
-		if line.BilledType == neo4jenum.BilledTypeOnce {
-			sliDbNode, err := h.repositories.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemById(ctx, eventData.Tenant, line.ServiceLineItemId)
-			if err == nil && sliDbNode != nil {
-				sliEntity := neo4jmapper.MapDbNodeToServiceLineItemEntity(sliDbNode)
-				invoiceLineItem["InvoiceLineSubtitle"] = sliEntity.StartedAt.Format("02 Jan 2006")
-			}
+		sliDbNode, _ := h.repositories.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemById(ctx, eventData.Tenant, invoiceLine.ServiceLineItemId)
+		sliEntity := neo4jmapper.MapDbNodeToServiceLineItemEntity(sliDbNode)
+
+		if invoiceLine.BilledType == neo4jenum.BilledTypeOnce {
+			invoiceLineItem["InvoiceLineSubtitle"] = sliEntity.StartedAt.Format("02 Jan 2006")
 		}
+		// if the invoice line item does not have a subtitle, we will use the period start and end date
 		if _, ok := invoiceLineItem["InvoiceLineSubtitle"]; !ok {
-			invoiceLineItem["InvoiceLineSubtitle"] = fmt.Sprintf("%s - %s", invoiceEntity.PeriodStartDate.Format("02 Jan 2006"), invoiceEntity.PeriodEndDate.Format("02 Jan 2006"))
+			invoiceLineSubtitle := fmt.Sprintf("%s - %s", invoiceEntity.PeriodStartDate.Format("02 Jan 2006"), invoiceEntity.PeriodEndDate.Format("02 Jan 2006"))
+			if sliEntity.Billed.IsRecurrent() && sliEntity.Billed.String() != invoiceEntity.BillingCycle.String() {
+				invoiceLineSubtitle += ". "
+				invoiceLineSubtitle += invoiceEntity.Currency.Symbol()
+				invoiceLineSubtitle += utils.FormatAmount(sliEntity.Price, 2)
+				invoiceLineSubtitle += "/"
+				switch sliEntity.Billed {
+				case neo4jenum.BilledTypeMonthly:
+					invoiceLineSubtitle += "month"
+				case neo4jenum.BilledTypeQuarterly:
+					invoiceLineSubtitle += "quarter"
+				case neo4jenum.BilledTypeAnnually:
+					invoiceLineSubtitle += "year"
+				}
+			}
+			invoiceLineItem["InvoiceLineSubtitle"] = invoiceLineSubtitle
 		}
 
 		if invoiceHasVat {
