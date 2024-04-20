@@ -553,7 +553,7 @@ func (h *ContractEventHandler) OnDeleteV1(ctx context.Context, evt eventstore.Ev
 		})
 	})
 
-	err = h.repositories.Neo4jRepositories.InvoiceWriteRepository.DeleteAllPreviewCycleInvoices(ctx, eventData.Tenant, contractId, "")
+	err = h.repositories.Neo4jRepositories.InvoiceWriteRepository.DeletePreviewCycleInvoices(ctx, eventData.Tenant, contractId, "")
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while deleting preview invoice for contract %s: %s", contractId, err.Error())
@@ -622,7 +622,7 @@ func (h *ContractEventHandler) OnRefreshStatus(ctx context.Context, evt eventsto
 			h.log.Errorf("error while updating contract's {%s} renewal date: %s", contractId, err.Error())
 		}
 
-		err := h.repositories.Neo4jRepositories.InvoiceWriteRepository.DeleteAllPreviewCycleInvoices(ctx, eventData.Tenant, contractId, "")
+		err := h.repositories.Neo4jRepositories.InvoiceWriteRepository.DeletePreviewCycleInvoices(ctx, eventData.Tenant, contractId, "")
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while deleting preview invoice for contract %s: %s", contractId, err.Error())
