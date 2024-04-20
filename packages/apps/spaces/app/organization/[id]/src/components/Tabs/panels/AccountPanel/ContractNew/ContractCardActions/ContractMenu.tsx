@@ -35,11 +35,11 @@ export const ContractMenu: React.FC<ContractStatusSelectProps> = ({
             `flex items-center max-h-5 p-1 hover:bg-gray-100 rounded`,
           )}
         >
-          <DotsVertical color='gray.400' />
+          <DotsVertical className='text-gray-400' />
         </MenuButton>
         <MenuList align='end' side='bottom' className='p-0'>
           <MenuItem onClick={onOpenEditModal} className='flex items-center'>
-            <Edit03 mr={2} color='gray.500' />
+            <Edit03 className='mr-2 text-gray-500' />
             Edit contract
           </MenuItem>
 

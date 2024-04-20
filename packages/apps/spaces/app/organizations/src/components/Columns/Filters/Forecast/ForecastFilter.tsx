@@ -206,8 +206,8 @@ export const DebouncedNumberInput = memo(
 
       return (
         <InputGroup>
-          <LeftElement className='mb-1' size={'sm'}>
-            <CurrencyDollar color='gray.500' />
+          <LeftElement className='mb-1'>
+            <CurrencyDollar className='text-gray-500' />
           </LeftElement>
           <Input
             className='border-transparent focus:border-0 hover:border-transparent'

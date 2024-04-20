@@ -1,41 +1,39 @@
 'use client';
 import React, { useRef } from 'react';
-import { useParams } from 'next/navigation';
 import { useForm } from 'react-inverted-form';
 
-import { useQueryClient } from '@tanstack/react-query';
 import { UseMutationResult } from '@tanstack/react-query';
 
+import { Box } from '@ui/layout/Box';
+import { Flex } from '@ui/layout/Flex';
+import { Text } from '@ui/typography/Text';
+import { ModalBody } from '@ui/overlay/Modal';
 import { FeaturedIcon } from '@ui/media/Icon';
 import { Button } from '@ui/form/Button/Button';
+import { Heading } from '@ui/typography/Heading';
 import { XSquare } from '@ui/media/icons/XSquare';
 import { DateTimeUtils } from '@spaces/utils/date';
-import { ModalBody } from '@ui/overlay/Modal/Modal';
-import { Radio, RadioGroup } from '@ui/form/Radio/Radio2';
+import { Radio, RadioGroup } from '@ui/form/Radio';
 import { Exact, ContractUpdateInput } from '@graphql/types';
 import { DatePickerUnderline } from '@ui/form/DatePicker/DatePickerUnderline';
+import { GetContractsQuery } from '@organization/src/graphql/getContracts.generated';
 import { UpdateContractMutation } from '@organization/src/graphql/updateContract.generated';
-import {
-  GetContractsQuery,
-  useGetContractsQuery,
-} from '@organization/src/graphql/getContracts.generated';
 import {
   Modal,
   ModalFooter,
   ModalHeader,
   ModalContent,
   ModalOverlay,
-} from '@ui/overlay/Modal/Modal';
-import {
-  ContractStatusModalMode,
-  useContractModalStatusContext,
-} from '@organization/src/components/Tabs/panels/AccountPanel/context/ContractStatusModalsContext';
+} from '@ui/overlay/Modal';
 
 interface ContractEndModalProps {
+  isOpen: boolean;
   renewsAt?: string;
   contractId: string;
+  onClose: () => void;
   contractEnded?: string;
   serviceStarted?: string;
+  nextInvoiceDate?: string;
   organizationName: string;
   onUpdateContract: UseMutationResult<
     UpdateContractMutation,
@@ -54,28 +52,25 @@ export enum EndContract {
   CustomDate = 'CustomDate',
 }
 export const ContractEndModal = ({
+  isOpen,
+  onClose,
   contractId,
   organizationName,
   renewsAt,
+  nextInvoiceDate,
   onUpdateContract,
   contractEnded,
 }: ContractEndModalProps) => {
-  const queryClient = useQueryClient();
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const id = useParams()?.id as string;
-  const queryKey = useGetContractsQuery.getKey({ id });
-
+  const initialRef = useRef(null);
   const [value, setValue] = React.useState(EndContract.Now);
   const formId = `contract-ends-on-form-${contractId}`;
   const timeToRenewal = renewsAt
     ? DateTimeUtils.format(renewsAt, DateTimeUtils.dateWithAbreviatedMonth)
     : null;
-  const { isModalOpen, onStatusModalClose, mode, nextInvoice } =
-    useContractModalStatusContext();
 
-  const timeToNextInvoice = nextInvoice?.issued
+  const timeToNextInvoice = nextInvoiceDate
     ? DateTimeUtils.format(
-        nextInvoice.issued,
+        nextInvoiceDate,
         DateTimeUtils.dateWithAbreviatedMonth,
       )
     : null;
@@ -101,19 +96,7 @@ export const ContractEndModal = ({
       },
       {
         onSuccess: () => {
-          onStatusModalClose();
-        },
-        onSettled: () => {
-          if (timeoutRef.current) {
-            clearTimeout(timeoutRef.current);
-          }
-
-          timeoutRef.current = setTimeout(() => {
-            queryClient.invalidateQueries({ queryKey });
-            queryClient.invalidateQueries({
-              queryKey: ['GetTimeline.infinite'],
-            });
-          }, 1000);
+          onClose();
         },
       },
     );
@@ -127,7 +110,7 @@ export const ContractEndModal = ({
       return;
     }
     if (nextValue === EndContract.EndOfCurrentBillingPeriod) {
-      setDefaultValues({ endedAt: nextInvoice?.issued });
+      setDefaultValues({ endedAt: nextInvoiceDate });
       setValue(EndContract.EndOfCurrentBillingPeriod);
 
       return;
@@ -148,71 +131,79 @@ export const ContractEndModal = ({
 
   return (
     <Modal
-      open={isModalOpen && mode === ContractStatusModalMode.End}
-      onOpenChange={onStatusModalClose}
+      isOpen={isOpen}
+      onClose={onClose}
+      initialFocusRef={initialRef}
+      size='md'
     >
       <ModalOverlay />
-      <ModalContent className='rounded-2xl'>
-        <ModalHeader className='pb-3'>
+      <ModalContent borderRadius='2xl'>
+        <ModalHeader>
           <FeaturedIcon size='lg' colorScheme='error'>
             <XSquare className='text-error-600' />
           </FeaturedIcon>
-          <h2 className='text-lg mt-2 font-semibold'>
-            End
-            {organizationName}’s contract?
-          </h2>
+          <Heading fontSize='lg' mt='4'>
+            End {organizationName}’s contract?
+          </Heading>
         </ModalHeader>
-        <ModalBody className='flex flex-col gap-3'>
-          <p className='text-base'>
+        <ModalBody as={Flex} flexDir='column' gap={4}>
+          <Text>
             Ending this contract{' '}
-            <span className='font-medium mr-1'>will close the renewal</span>
+            <Text fontWeight='medium' as='span' mr={1}>
+              will close the renewal
+            </Text>
             and set the
-            <span className='font-medium ml-1'>ARR to zero.</span>
-          </p>
-          <p className='text-base'>Let’s end it:</p>
+            <Text fontWeight='medium' as='span' ml={1}>
+              ARR to zero.
+            </Text>
+          </Text>
+          <Text>Let’s end it:</Text>
 
           <RadioGroup
             value={value}
-            onValueChange={handleChangeEndsOnOption}
-            className='flex flex-col gap-1 text-base'
+            onChange={handleChangeEndsOnOption}
+            flexDir='column'
+            display='flex'
           >
-            <Radio value={EndContract.Now}>
-              <span className='mr-1'>Now</span>
+            <Radio value={EndContract.Now} colorScheme='primary'>
+              Now
             </Radio>
-            {timeToNextInvoice && (
-              <Radio value={EndContract.EndOfCurrentBillingPeriod}>
-                <span className='ml-1'>
-                  End of current billing period, {timeToNextInvoice}
-                </span>
-              </Radio>
-            )}
 
-            {timeToRenewal && (
-              <Radio value={EndContract.EndOfCurrentRenewalPeriod}>
-                <span className='ml-1'>End of renewal, {timeToRenewal}</span>
-              </Radio>
-            )}
+            <Radio
+              value={EndContract.EndOfCurrentBillingPeriod}
+              colorScheme='primary'
+              display={timeToNextInvoice ? 'flex' : 'none'}
+            >
+              End of current billing period, {timeToNextInvoice}
+            </Radio>
 
-            <Radio value={EndContract.CustomDate}>
-              <div className='flex items-center max-h-6'>
+            <Radio
+              value={EndContract.EndOfCurrentRenewalPeriod}
+              colorScheme='primary'
+              display={renewsAt ? 'flex' : 'none'}
+            >
+              End of renewal, {timeToRenewal}
+            </Radio>
+            <Radio value={EndContract.CustomDate} colorScheme='primary' h={6}>
+              <Flex alignItems='center' maxH={6}>
                 On{' '}
                 {value === EndContract.CustomDate ? (
-                  <div className='ml-1'>
+                  <Box ml={1}>
                     <DatePickerUnderline formId={formId} name='endedAt' />
-                  </div>
+                  </Box>
                 ) : (
                   'custom date'
                 )}
-              </div>
+              </Flex>
             </Radio>
           </RadioGroup>
         </ModalBody>
-        <ModalFooter className='p-6 flex'>
+        <ModalFooter p='6'>
           <Button
             variant='outline'
             colorScheme='gray'
             className='w-full'
-            onClick={onStatusModalClose}
+            onClick={onClose}
           >
             Cancel
           </Button>

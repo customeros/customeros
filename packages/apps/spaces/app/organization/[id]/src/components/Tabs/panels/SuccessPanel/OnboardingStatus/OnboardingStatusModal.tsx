@@ -73,8 +73,10 @@ const getIcon = (status: OnboardingStatus) => {
   const color = `${getIconcolorScheme(status)}.500`;
 
   return match(status)
-    .with(OnboardingStatus.Successful, () => <Trophy01 color={color} mr='3' />)
-    .otherwise(() => <Flag04 color={color} mr='3' />);
+    .with(OnboardingStatus.Successful, () => (
+      <Trophy01 className='mr-3' color={color} />
+    ))
+    .otherwise(() => <Flag04 color={color} className='mr-3' />);
 };
 
 export const OnboardingStatusModal = ({
