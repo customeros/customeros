@@ -1,11 +1,10 @@
 import React from 'react';
 
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
-import { FeaturedIcon } from '@ui/media/Icon';
+import { cn } from '@ui/utils/cn';
 import { XCircle } from '@ui/media/icons/XCircle';
 import { Action, BilledType } from '@graphql/types';
 import { DotSingle } from '@ui/media/icons/DotSingle';
+import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 import { getMetadata } from '@organization/src/components/Timeline/PastZone/events/action/utils';
 import { useTimelineEventPreviewMethodsContext } from '@organization/src/components/Timeline/shared/TimelineEventPreview/context/TimelineEventPreviewContext';
@@ -26,31 +25,28 @@ export const ServiceUpdatedAction: React.FC<ServiceUpdatedActionProps> = ({
   const formattedContent = formatString(data.content, metadata?.billedType);
 
   return (
-    <Flex
-      alignItems='center'
-      opacity={isTemporary ? 0.5 : 1}
+    <div
+      className={cn(
+        isTemporary
+          ? 'opacity-50 cursor-progress'
+          : 'opacity-100 cursor-pointer',
+        'flex items-center min-h-[40px]',
+      )}
       onClick={() => !isTemporary && openModal(data.id)}
-      cursor={isTemporary ? 'progress' : 'pointer'}
     >
-      <FeaturedIcon
-        size='md'
-        minW='10'
-        colorScheme={mode === 'created' ? 'primary' : 'gray'}
-      >
-        {mode === 'removed' ? <XCircle /> : <DotSingle />}
-      </FeaturedIcon>
+      <div className='inline w-[30px]'>
+        <FeaturedIcon
+          size='md'
+          colorScheme={mode === 'created' ? 'primary' : 'gray'}
+        >
+          {mode === 'removed' ? <XCircle /> : <DotSingle />}
+        </FeaturedIcon>
+      </div>
 
-      <Text
-        my={1}
-        maxW='500px'
-        noOfLines={2}
-        ml={2}
-        fontSize='sm'
-        color='gray.700'
-      >
+      <p className='max-w-[500px] line-clamp-2 ml-2 text-sm text-gray-700 my-1'>
         {formattedContent}
-      </Text>
-    </Flex>
+      </p>
+    </div>
   );
 };
 

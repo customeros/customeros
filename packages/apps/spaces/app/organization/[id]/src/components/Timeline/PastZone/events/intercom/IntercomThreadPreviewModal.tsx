@@ -4,7 +4,6 @@ import copy from 'copy-to-clipboard';
 import { convert } from 'html-to-text';
 
 import { cn } from '@ui/utils/cn';
-import { VStack } from '@ui/layout/Stack';
 import { Link03 } from '@ui/media/icons/Link03';
 import { XClose } from '@ui/media/icons/XClose';
 import { DateTimeUtils } from '@spaces/utils/date';
@@ -147,13 +146,13 @@ export const IntercomThreadPreviewModal: React.FC = () => {
               </p>
               <Divider />
             </div>
-            <VStack w='full'>
+            <div className='flex flex-col w-full'>
               {Array.from({ length: timelineEventsIds.length - 2 }).map(
                 (_, idx) => (
                   <MessageCardSkeleton key={idx} />
                 ),
               )}
-            </VStack>
+            </div>
           </>
         )}
         {!!intercomEventReplies.length && (

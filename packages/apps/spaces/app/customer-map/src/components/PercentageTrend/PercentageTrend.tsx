@@ -28,7 +28,7 @@ export const PercentageTrend = ({ percentage }: { percentage: string }) => {
     percentage.indexOf('0') == 0 ? (
       <Minus className='size-5 text-gray-700' />
     ) : percentage.indexOf('-') == 0 ? (
-      <TrendDown01 className='size-5 text-yellow-500' />
+      <TrendDown01 className='size-5 text-warning-500' />
     ) : (
       <TrendUp01 className='size-5 text-success-500' />
     );

@@ -10,10 +10,13 @@ import { useFeatureIsOn } from '@growthbook/growthbook-react';
 import { useTenantSettingsQuery } from '@settings/graphql/getTenantSettings.generated';
 
 import { cn } from '@ui/utils/cn';
-import { Icons } from '@ui/media/Icon';
 import { Skeleton } from '@ui/feedback/Skeleton';
 import { Bubbles } from '@ui/media/icons/Bubbles';
 import { LogOut01 } from '@ui/media/icons/LogOut01';
+import { Building07 } from '@ui/media/icons/Building07';
+import { CheckHeart } from '@ui/media/icons/CheckHeart';
+import { Settings01 } from '@ui/media/icons/Settings01';
+import { Briefcase01 } from '@ui/media/icons/Briefcase01';
 import { InvoiceCheck } from '@ui/media/icons/InvoiceCheck';
 import { ArrowDropdown } from '@ui/media/icons/ArrowDropdown';
 import { mockedTableDefs } from '@shared/util/tableDefs.mock';
@@ -146,7 +149,7 @@ export const RootSidenav = () => {
           isActive={checkIsActive('organizations')}
           onClick={() => handleItemClick('organizations')}
           icon={(isActive) => (
-            <Icons.Building7
+            <Building07
               className={cn(
                 'w-5 h-5 text-gray-500',
                 isActive && 'text-gray-700',
@@ -159,7 +162,7 @@ export const RootSidenav = () => {
           isActive={checkIsActive('organizations', { preset: 'customer' })}
           onClick={() => handleItemClick('organizations?preset=customer')}
           icon={(isActive) => (
-            <Icons.CheckHeart
+            <CheckHeart
               className={cn(
                 'w-5 h-5 text-gray-500',
                 isActive && 'text-gray-700',
@@ -245,7 +248,7 @@ export const RootSidenav = () => {
                   handleItemClick('organizations?preset=portfolio')
                 }
                 icon={(isActive) => (
-                  <Icons.Briefcase1
+                  <Briefcase01
                     className={cn(
                       'w-5 h-5 text-gray-500',
                       isActive && 'text-gray-700',
@@ -284,7 +287,7 @@ export const RootSidenav = () => {
           isActive={checkIsActive('settings')}
           onClick={() => router.push('/settings')}
           icon={(isActive) => (
-            <Icons.Settings
+            <Settings01
               className={cn(
                 'w-5 h-5 text-gray-500',
                 isActive && 'text-gray-700',

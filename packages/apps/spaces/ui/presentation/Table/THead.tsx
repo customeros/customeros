@@ -104,7 +104,7 @@ const THead = <InitialRefType extends { focus(): void } = HTMLButtonElement>({
           </p>
           {canFilter && (
             <>
-              <PopoverTrigger>
+              <PopoverTrigger asChild>
                 <IconButton
                   size='sm'
                   variant='ghost'

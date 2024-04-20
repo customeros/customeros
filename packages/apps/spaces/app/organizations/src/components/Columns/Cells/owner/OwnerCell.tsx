@@ -207,7 +207,7 @@ export const OwnerCell = ({ id, owner }: OwnerProps) => {
 
   if (!isEditing) {
     return (
-      <div className='flex w-full gap-1 items-center group'>
+      <div className='flex w-full gap-1 items-center [&_.edit-button]:hover:opacity-100'>
         <p
           className={cn(
             value ? 'text-gray-700' : 'text-gray-400',
@@ -218,7 +218,7 @@ export const OwnerCell = ({ id, owner }: OwnerProps) => {
           {value?.label ?? 'Owner'}
         </p>
         <IconButton
-          className='rounded-md opacity-0 group-hover:opacity-100'
+          className='edit-button rounded-md opacity-0 '
           aria-label='erc'
           size='sm'
           variant='ghost'

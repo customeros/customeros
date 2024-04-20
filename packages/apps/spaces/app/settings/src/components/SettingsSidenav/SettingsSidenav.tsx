@@ -6,12 +6,12 @@ import { useLocalStorage } from 'usehooks-ts';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { cn } from '@ui/utils/cn';
-import { Icons } from '@ui/media/Icon';
 import { Map01 } from '@ui/media/icons/Map01';
 import { Receipt } from '@ui/media/icons/Receipt';
 import { Dataflow03 } from '@ui/media/icons/Dataflow03';
 import { AlertSquare } from '@ui/media/icons/AlertSquare';
 import { IconButton } from '@ui/form/IconButton/IconButton';
+import { ArrowNarrowLeft } from '@ui/media/icons/ArrowNarrowLeft';
 import { SidenavItem } from '@shared/components/RootSidenav/components/SidenavItem';
 import { NotificationCenter } from '@shared/components/Notifications/NotificationCenter';
 
@@ -41,7 +41,7 @@ export const SettingsSidenav = () => {
           variant='ghost'
           aria-label='Go back'
           onClick={() => router.push(`/${lastActivePosition.root}`)}
-          icon={<Icons.ArrowNarrowLeft className='text-gray-700 size-5' />}
+          icon={<ArrowNarrowLeft className='text-gray-700 size-5' />}
         />
 
         <p className='text-lg font-semibold text-gray-700 break-keep line-clamp-1'>

@@ -114,15 +114,15 @@ export const OrganizationRelationship = ({
 
   if (!isEditing) {
     return (
-      <div className='flex w-full gap-1 items-center group'>
+      <div className='flex w-full gap-1 items-center [&_.edit-button]:hover:opacity-100'>
         <p
-          className='cursor-default text-gray-700'
+          className='cursor-default text-gray-700 group'
           onDoubleClick={() => setIsEditing(true)}
         >
           {value?.value ? 'Customer' : 'Prospect'}
         </p>
         <IconButton
-          className='rounded-md opacity-0 group-hover:opacity-100'
+          className='edit-button rounded-md opacity-0'
           aria-label='erc'
           size='sm'
           variant='ghost'

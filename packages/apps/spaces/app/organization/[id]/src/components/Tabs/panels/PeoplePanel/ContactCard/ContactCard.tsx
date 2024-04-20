@@ -10,13 +10,19 @@ import differenceInCalendarMonths from 'date-fns/differenceInCalendarMonths';
 
 import { cn } from '@ui/utils/cn';
 import { Flex } from '@ui/layout/Flex';
-import { Icons } from '@ui/media/Icon';
 import { Contact } from '@graphql/types';
 import { Avatar } from '@ui/media/Avatar';
 import { useDisclosure } from '@ui/utils';
 import { Text } from '@ui/typography/Text';
 import { useOutsideClick } from '@ui/utils';
+import { Clock } from '@ui/media/icons/Clock';
+import { Check } from '@ui/media/icons/Check';
 import { User01 } from '@ui/media/icons/User01';
+import { File02 } from '@ui/media/icons/File02';
+import { Mail01 } from '@ui/media/icons/Mail01';
+import { Share07 } from '@ui/media/icons/Share07';
+import { Trash01 } from '@ui/media/icons/Trash01';
+import { Calendar } from '@ui/media/icons/Calendar';
 import { FormInput } from '@ui/form/Input/FormInput2';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { IconButton } from '@ui/form/IconButton/IconButton';
@@ -314,7 +320,7 @@ export const ContactCard = ({
           <Avatar
             name={state?.values?.name ?? data?.name}
             src={contact?.profilePhotoUrl ? contact.profilePhotoUrl : undefined}
-            icon={<User01 color='gray.700' height='1.8rem' />}
+            icon={<User01 className='text-gray-700 h-[1.8rem]' />}
             variant='shadowed'
           />
 
@@ -354,7 +360,7 @@ export const ContactCard = ({
               id='collapse-button'
               aria-label='Close'
               onClick={onClose}
-              icon={<Icons.Check className='text-gray-500' />}
+              icon={<Check className='text-gray-500' />}
             />
           )}
 
@@ -368,7 +374,7 @@ export const ContactCard = ({
               aria-label='Delete contact'
               isLoading={deleteContact.isPending}
               onClick={toggleConfirmDelete}
-              icon={<Icons.Trash1 className='text-gray-400' />}
+              icon={<Trash01 className='text-gray-400' />}
             />
           )}
         </CardHeader>
@@ -381,7 +387,7 @@ export const ContactCard = ({
               name='email'
               ref={emailInputRef}
               placeholder='Email'
-              leftElement={<Icons.Mail1 color='gray.500' />}
+              leftElement={<Mail01 className='text-gray-500' />}
               rightElement={
                 <EmailValidationMessage
                   email={data.email}
@@ -395,12 +401,12 @@ export const ContactCard = ({
               formId={formId}
               name='phone'
               placeholder='Phone number'
-              leftElement={<PhoneOutgoing02 color='gray.500' />}
+              leftElement={<PhoneOutgoing02 className='text-gray-500' />}
             />
             {/* TODO: replace with FormInput. currently displayed as a text just for demoing purposes */}
             {timeAt && (
               <Flex align='center' h='39px'>
-                <Icons.Calendar color='gray.500' />
+                <Calendar className='text-gray-500' />
                 <Text ml='14px' cursor='text' textTransform='capitalize'>
                   {timeAt}
                 </Text>
@@ -415,7 +421,7 @@ export const ContactCard = ({
               placeholder='Social link'
               defaultValues={data?.socials}
               organizationId={organizationId}
-              leftElement={<Icons.Share7 color='gray.500' />}
+              leftElement={<Share07 className='text-gray-500' />}
             />
             <FormTimezoneSelect
               formId={formId}
@@ -423,14 +429,14 @@ export const ContactCard = ({
               name='timezone'
               placeholder='Timezone'
               options={timezoneOptions}
-              leftElement={<Icons.Clock color='gray.500' mr='12px' />}
+              leftElement={<Clock className='text-gray-500 mr-3' />}
             />
             <FormAutoresizeTextarea
               className='items-start'
               formId={formId}
               name='note'
               placeholder='Notes'
-              leftElement={<Icons.File2 color='gray.500' />}
+              leftElement={<File02 className='text-gray-500 mt-1' />}
             />
           </CardContent>
         )}

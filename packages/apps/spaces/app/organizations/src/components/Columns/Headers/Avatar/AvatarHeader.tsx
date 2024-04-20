@@ -21,7 +21,7 @@ export const AvatarHeader = () => {
         side='bottom'
         align='center'
         className={cn(enableFeature ? 'visible' : 'hidden')}
-        asChild={false}
+        asChild
       >
         <IconButton
           className={cn(enableFeature ? 'visible' : 'hidden')}

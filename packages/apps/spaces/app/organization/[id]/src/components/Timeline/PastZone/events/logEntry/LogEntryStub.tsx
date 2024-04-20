@@ -91,7 +91,7 @@ export const LogEntryStub = ({ data }: LogEntryStubProps) => {
     >
       <CardContent className='px-3 py-2 flex-1 flex'>
         <div className='flex w-full justify-between relative h-fit'>
-          <p className='w-[460px] line-clamp-4 text-sm text-gray-700 h-fit'>
+          <div className='w-[460px] line-clamp-4 text-sm text-gray-700 h-fit'>
             <span>{fullName}</span>
             <span className='text-gray-500 mx-1'>wrote</span>
             <HtmlContentRenderer
@@ -99,7 +99,7 @@ export const LogEntryStub = ({ data }: LogEntryStubProps) => {
               showAsInlineText
               htmlContent={`${data?.content}`}
             />
-          </p>
+          </div>
 
           <div className='h-[86px]'>
             <div className='absolute top-[-2px] right-[-12px]'>
