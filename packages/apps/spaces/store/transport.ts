@@ -1,5 +1,9 @@
+import type { GraphQLClient } from 'graphql-request';
+
 import { makeAutoObservable } from 'mobx';
 import { Socket, Channel } from 'phoenix';
+
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 
 import { LatestDiff } from './types';
 
@@ -16,6 +20,7 @@ interface TransportLayerOptions {
 export class TransportLayer {
   socket: Socket | null = null;
   channels: Map<string, Channel> = new Map();
+  client: GraphQLClient = getGraphQLClient();
   metadata: TransportLayerMetadata = {
     user_id: '',
     username: '',

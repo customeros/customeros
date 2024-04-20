@@ -3,10 +3,15 @@ import type { RootStore } from '@store/root';
 import type { TransportLayer } from '@store/transport';
 import type { Operation, SyncPacket } from '@store/types';
 
+import { gql } from 'graphql-request';
 import { toJS, makeAutoObservable } from 'mobx';
 import { getDiff, applyDiff } from 'recursive-diff';
 
-import { TableViewDef, TableViewType } from '@graphql/types';
+import {
+  TableViewDef,
+  TableViewType,
+  TableViewDefUpdateInput,
+} from '@graphql/types';
 
 export class TableViewDefStore {
   value: TableViewDef = {
@@ -24,6 +29,8 @@ export class TableViewDefStore {
   version: number = 0;
   history: Operation[] = [];
   channel?: Channel;
+  isLoading = false;
+  error?: string | null = null;
 
   constructor(
     private rootStore: RootStore,
@@ -85,6 +92,7 @@ export class TableViewDefStore {
       .push('sync_packet', { payload: { operation } })
       .receive('ok', ({ version }: { version: number }) => {
         this.version = version;
+        this.save();
       });
   }
 
@@ -111,7 +119,29 @@ export class TableViewDefStore {
       return value;
     });
   }
+
+  async save() {
+    try {
+      this.isLoading = true;
+      await this.transportLayer.client.request<
+        { id: string },
+        TableViewDefUpdateInput
+      >(UPDATE_TABLE_VIEW_DEF, this.value);
+    } catch (e) {
+      this.error = (e as Error)?.message;
+    } finally {
+      this.isLoading = false;
+    }
+  }
 }
+
+const UPDATE_TABLE_VIEW_DEF = gql`
+  mutation updateTableViewDef($input: TableViewDefUpdateInput!) {
+    tableViewDef_Update(input: $input) {
+      id
+    }
+  }
+`;
 
 // function _transformChangesets(
 //   changeset1: Operation[],

@@ -1,6 +1,10 @@
 'use client';
 import { observer } from 'mobx-react-lite';
-import { Droppable, DragDropContext } from '@hello-pangea/dnd';
+import {
+  Droppable,
+  DragDropContext,
+  OnDragEndResponder,
+} from '@hello-pangea/dnd';
 
 import { Button } from '@ui/form/Button/Button';
 import { ColumnViewType } from '@graphql/types';
@@ -8,7 +12,7 @@ import { useStore } from '@shared/hooks/useStore';
 import { Columns02 } from '@ui/media/icons/Columns02';
 import { Menu, MenuList, MenuGroup, MenuButton } from '@ui/overlay/Menu/Menu';
 
-import { ColumnOption, ColumnOptionContent } from './ColumnOption';
+import { ColumnItem, DraggableColumnItem } from './ColumnItem';
 
 type InvoicesColumnType =
   | ColumnViewType.InvoicesAmount
@@ -33,6 +37,18 @@ const invoicesOptionsMap: Record<InvoicesColumnType, string> = {
   [ColumnViewType.InvoicesPaymentStatus]: 'Payment status',
 };
 
+const invoicesHelperTextMap: Record<InvoicesColumnType, string> = {
+  [ColumnViewType.InvoicesAmount]: 'E.g. $6,450',
+  [ColumnViewType.InvoicesBillingCycle]: 'E.g. Monthly',
+  [ColumnViewType.InvoicesContract]: 'E.g. Pile Contract',
+  [ColumnViewType.InvoicesDueDate]: 'E.g. 15 Aug 2019',
+  [ColumnViewType.InvoicesInvoicePreview]: 'E.g. RKD-04025',
+  [ColumnViewType.InvoicesIssueDate]: 'E.g. 15 Aug 2019',
+  [ColumnViewType.InvoicesIssueDatePast]: 'E.g. 15 Jun 2019',
+  [ColumnViewType.InvoicesInvoiceStatus]: 'E.g. Scheduled',
+  [ColumnViewType.InvoicesPaymentStatus]: 'E.g. Paid',
+};
+
 export const EditColumns = observer(() => {
   const { tableViewDefsStore } = useStore();
 
@@ -42,12 +58,23 @@ export const EditColumns = observer(() => {
     tableViewDef?.value?.columns.map((c) => ({
       ...c,
       label: invoicesOptionsMap[c.columnType as InvoicesColumnType],
+      helperText: invoicesHelperTextMap[c.columnType as InvoicesColumnType],
     })) ?? [];
+
+  const handleDragEnd: OnDragEndResponder = (res) => {
+    const sourceIndex = res.source.index;
+    const destIndex = res?.destination?.index as number;
+    const destination = res.destination;
+
+    if (!destination) return;
+    if (sourceIndex === destIndex) return;
+
+    tableViewDef?.reorderColumn(sourceIndex, destIndex);
+  };
 
   return (
     <>
       <Menu
-        defaultOpen
         onOpenChange={(open) => {
           if (!open) {
             tableViewDef?.orderColumnsByVisibility();
@@ -59,25 +86,24 @@ export const EditColumns = observer(() => {
             Edit columns
           </Button>
         </MenuButton>
-        <DragDropContext
-          onDragEnd={(res) => {
-            const sourceIndex = res.source.index;
-            const destIndex = res?.destination?.index as number;
-
-            if (sourceIndex === destIndex) return;
-
-            tableViewDef?.reorderColumn(sourceIndex, destIndex);
-          }}
-        >
+        <DragDropContext onDragEnd={handleDragEnd}>
           <MenuList className='w-[300px]'>
+            <ColumnItem
+              isPinned
+              noPointerEvents
+              label={columns[0].label}
+              visible={columns[0].visible}
+              columnType={columns[0].columnType}
+            />
             <Droppable
               key='active-columns'
               droppableId='active-columns'
               renderClone={(provided, snapshot, rubric) => {
                 return (
-                  <ColumnOptionContent
+                  <ColumnItem
                     provided={provided}
                     snapshot={snapshot}
+                    helperText={columns[rubric.source.index].helperText}
                     columnType={columns[rubric.source.index].columnType}
                     visible={columns[rubric.source.index].visible}
                     onCheck={() => {
@@ -93,27 +119,37 @@ export const EditColumns = observer(() => {
                 );
               }}
             >
-              {(provided, snapshot) => (
-                <MenuGroup ref={provided.innerRef} {...provided.droppableProps}>
-                  {columns.map((col, index) => (
-                    <ColumnOption
-                      index={index}
-                      label={col.label}
-                      visible={col?.visible}
-                      key={col?.columnType}
-                      onCheck={() => {
-                        tableViewDef?.update((value) => {
-                          value.columns[index].visible =
-                            !value.columns[index].visible;
+              {(provided, { isDraggingOver }) => (
+                <>
+                  <MenuGroup
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                  >
+                    {columns.map(
+                      (col, index) =>
+                        index > 0 && (
+                          <DraggableColumnItem
+                            index={index}
+                            label={col.label}
+                            visible={col?.visible}
+                            helperText={col.helperText}
+                            noPointerEvents={isDraggingOver}
+                            key={col?.columnType}
+                            onCheck={() => {
+                              tableViewDef?.update((value) => {
+                                value.columns[index].visible =
+                                  !value.columns[index].visible;
 
-                          return value;
-                        });
-                      }}
-                      columnType={col.columnType}
-                    />
-                  ))}
-                  {provided.placeholder}
-                </MenuGroup>
+                                return value;
+                              });
+                            }}
+                            columnType={col.columnType}
+                          />
+                        ),
+                    )}
+                    {provided.placeholder}
+                  </MenuGroup>
+                </>
               )}
             </Droppable>
           </MenuList>
@@ -122,15 +158,3 @@ export const EditColumns = observer(() => {
     </>
   );
 });
-
-// const EmptyContent = ({ dropId }: { dropId: string }) => {
-//   const { setNodeRef } = useDroppable({
-//     id: dropId,
-//   });
-
-//   return (
-//     <div ref={setNodeRef} className='w-full h-10'>
-//       Add colums here
-//     </div>
-//   );
-// };
