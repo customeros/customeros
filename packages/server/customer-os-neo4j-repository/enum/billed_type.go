@@ -39,3 +39,7 @@ func IsValidBilledType(s string) bool {
 func (bt BilledType) String() string {
 	return string(bt)
 }
+
+func (bt BilledType) IsRecurrent() bool {
+	return bt == BilledTypeMonthly || bt == BilledTypeAnnually || bt == BilledTypeQuarterly
+}
