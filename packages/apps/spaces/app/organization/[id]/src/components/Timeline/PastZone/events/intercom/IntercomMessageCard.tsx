@@ -35,7 +35,7 @@ export const IntercomMessageCard: React.FC<IntercomMessageCardProps> = ({
       <Card
         className={cn(
           className,
-          onClick?.() ? 'cursor-pointer' : '',
+          onClick ? 'cursor-pointer' : '',
           'text-sm flex shadow-xs border border-gray-200 bg-white [intercom-stub-date]:hover:text-gray-500 max-w-[549px]',
         )}
         onClick={() => onClick?.()}
