@@ -306,11 +306,13 @@ export enum ChargePeriod {
 export type ColumnView = {
   __typename?: 'ColumnView';
   columnType: ColumnViewType;
+  visible: Scalars['Boolean']['output'];
   width: Scalars['Int']['output'];
 };
 
 export type ColumnViewInput = {
   columnType: ColumnViewType;
+  visible: Scalars['Boolean']['input'];
   width: Scalars['Int']['input'];
 };
 
@@ -794,6 +796,11 @@ export enum ContractRenewalCycle {
   None = 'NONE',
   QuarterlyRenewal = 'QUARTERLY_RENEWAL',
 }
+
+export type ContractRenewalInput = {
+  contractId: Scalars['ID']['input'];
+  renewalDate?: InputMaybe<Scalars['Time']['input']>;
+};
 
 export enum ContractStatus {
   Draft = 'DRAFT',
@@ -2537,7 +2544,7 @@ export type MutationContract_RemoveAttachmentArgs = {
 };
 
 export type MutationContract_RenewArgs = {
-  contractId: Scalars['ID']['input'];
+  input: ContractRenewalInput;
 };
 
 export type MutationContract_UpdateArgs = {

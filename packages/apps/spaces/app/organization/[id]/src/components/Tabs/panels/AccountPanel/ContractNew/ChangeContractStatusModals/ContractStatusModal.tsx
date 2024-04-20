@@ -78,7 +78,6 @@ export const ContractStatusModal = ({
               onClose={onStatusModalClose}
               contractId={contractId}
               renewsAt={renewsAt}
-              organizationName={organizationName}
             />
           )}
         </div>

@@ -133,7 +133,8 @@ export const ContractStatusSelect: React.FC<ContractStatusSelectProps> = ({
         onOpenStartModal();
         break;
       case ContractStatus.OutOfContract:
-        mutate({ contractId });
+        mutate({ input: { contractId } });
+
         break;
       case ContractStatus.Scheduled:
         break;

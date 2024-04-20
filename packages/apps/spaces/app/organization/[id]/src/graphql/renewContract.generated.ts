@@ -19,7 +19,7 @@ function fetcher<TData, TVariables extends { [key: string]: any }>(
     });
 }
 export type RenewContractMutationVariables = Types.Exact<{
-  contractId: Types.Scalars['ID']['input'];
+  input: Types.ContractRenewalInput;
 }>;
 
 export type RenewContractMutation = {
@@ -28,8 +28,8 @@ export type RenewContractMutation = {
 };
 
 export const RenewContractDocument = `
-    mutation renewContract($contractId: ID!) {
-  contract_Renew(contractId: $contractId) {
+    mutation renewContract($input: ContractRenewalInput!) {
+  contract_Renew(input: $input) {
     id
   }
 }

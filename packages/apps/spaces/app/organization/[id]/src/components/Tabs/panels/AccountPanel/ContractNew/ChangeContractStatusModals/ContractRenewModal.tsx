@@ -22,7 +22,6 @@ interface ContractEndModalProps {
   renewsAt?: string;
   contractId: string;
   onClose: () => void;
-  organizationName: string;
   status?: ContractStatus | null;
 }
 export enum RenewContract {
@@ -49,7 +48,6 @@ export function getCommittedPeriodLabel(months: string | number) {
 export const ContractRenewsModal = ({
   onClose,
   contractId,
-  organizationName,
   status,
   renewsAt,
 }: ContractEndModalProps) => {
@@ -91,13 +89,39 @@ export const ContractRenewsModal = ({
     renewsAt?: string | Date | null;
   }>({
     formId,
-    defaultValues: { renewsAt: null || new Date() },
+    defaultValues: { renewsAt: renewsAt },
     stateReducer: (_, action, next) => {
       return next;
     },
   });
 
-  // const handleApplyChanges = () => {};
+  const handleApplyChanges = () => {
+    mutate(
+      {
+        input: {
+          contractId,
+          renewalDate: state.values.renewsAt,
+        },
+      },
+      {
+        onSuccess: () => {
+          onClose();
+        },
+        onSettled: () => {
+          if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+          }
+
+          timeoutRef.current = setTimeout(() => {
+            queryClient.invalidateQueries({ queryKey });
+            queryClient.invalidateQueries({
+              queryKey: ['GetTimeline.infinite'],
+            });
+          }, 1000);
+        },
+      },
+    );
+  };
 
   const handleChangeEndsOnOption = (nextValue: string | null) => {
     if (nextValue === RenewContract.Now) {
@@ -203,7 +227,7 @@ export const ContractRenewsModal = ({
           className='ml-3 w-full'
           variant='outline'
           colorScheme='primary'
-          onClick={() => mutate({ contractId })}
+          onClick={handleApplyChanges}
         >
           Renew{' '}
           {RenewContract.Now === value || renewsToday
