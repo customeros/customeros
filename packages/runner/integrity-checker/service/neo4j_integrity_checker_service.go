@@ -109,7 +109,17 @@ func (s *neo4jIntegrityCheckerService) executeQueries(ctx context.Context, queri
 
 	var output []integrityCheckerResult
 
+	var queriesToExecute []model.Query
 	for _, query := range queries.Queries {
+		queriesToExecute = append(queriesToExecute, query)
+	}
+	for _, group := range queries.Groups {
+		for _, query := range group.Queries {
+			queriesToExecute = append(queriesToExecute, query)
+		}
+	}
+
+	for _, query := range queriesToExecute {
 		// Check if context is cancelled
 		select {
 		case <-ctx.Done():
@@ -129,6 +139,7 @@ func (s *neo4jIntegrityCheckerService) executeQueries(ctx context.Context, queri
 		}
 		output = append(output, checkerResult)
 	}
+
 	return output
 }
 

@@ -84,7 +84,7 @@ func (t tableViewDefinitionRepository) UpdateTableViewDefinition(ctx context.Con
 	// Map the fields you want to allow updating, excluding UserId and TenantName
 	updateData := map[string]interface{}{
 		"table_name": viewDefinition.Name,
-		"order":      viewDefinition.Order,
+		"position":   viewDefinition.Order,
 		"icon":       viewDefinition.Icon,
 		"filters":    viewDefinition.Filters,
 		"sorting":    viewDefinition.Sorting,
