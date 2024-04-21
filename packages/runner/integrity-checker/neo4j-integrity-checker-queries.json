@@ -1,118 +1,238 @@
 {
+  "groups": [
+    {
+      "name": "Invoice",
+      "queries": [
+        {
+          "name": "Invoice lines without invoice or service line item",
+          "query": "MATCH (n:InvoiceLine) WHERE NOT (n)<-[:HAS_INVOICE_LINE]-(:Invoice) OR NOT (n)-[:INVOICED]->(:ServiceLineItem) RETURN count(n)",
+          "description": "Invoice line should be linked to an invoice and a service line item."
+        },
+        {
+          "name": "Invoice lines with missing properties",
+          "query": "MATCH (n:InvoiceLine) WHERE (n.billedType IS NULL OR n.billedType = \"\" OR n.amount IS NULL OR n.totalAmount IS NULL) RETURN count(n) as cnt",
+          "description": "Invoice line should have a billedType, amount and totalAmount."
+        },
+        {
+          "name": "Invoice nodes wrong labels",
+          "query": "MATCH (t:Tenant)<-[:INVOICE_BELONGS_TO_TENANT]-(n:Invoice) WHERE size(labels(n)) <> 2 OR NOT 'Invoice_'+t.name in labels(n) return count(n)"
+        },
+        {
+          "name": "Invoice line nodes wrong labels",
+          "query": "MATCH (t:Tenant)<-[:INVOICE_BELONGS_TO_TENANT]-(:Invoice)-[:HAS_SERVICE]->(n:InvoiceLine) WHERE size(labels(n)) <> 2 OR NOT 'InvoiceLine_'+t.name in labels(n) return count(n)"
+        },
+        {
+          "name": "Duplicated scheduled invoices",
+          "query": "MATCH (i:Invoice)--(c:Contract) WHERE i.dryRun = true and i.preview = true WITH c.id as cid, i.periodStartDate as ipsd, count(i) as countInvoices WHERE countInvoices > 1 RETURN count(cid) AS cnt",
+          "description": "Check duplicated scheduled (dry run and preview = true) invoices for same contract and period start date"
+        },
+        {
+          "name": "Invoice without contract",
+          "query": "MATCH (n:Invoice) WHERE NOT (n)<-[:HAS_INVOICE]-(:Contract|DeletedContract) RETURN count(n) as cnt"
+        }
+      ]
+    },
+    {
+      "name": "Contract",
+      "queries": [
+        {
+          "name": "Contract nodes with wrong labels",
+          "query": "MATCH (t:Tenant)<-[:CONTRACT_BELONGS_TO_TENANT]-(n:Contract) WHERE size(labels(n)) <> 2 OR NOT 'Contract_'+t.name in labels(n) return count(n)"
+        },
+        {
+          "name": "Contracts without organization",
+          "query": "MATCH (c:Contract) WHERE NOT (c)<-[:HAS_CONTRACT]-(:Organization) return count(c)"
+        },
+        {
+          "name": "Multiple organizations share same contract",
+          "query": "MATCH (org:Organization)-[:HAS_CONTRACT]->(c:Contract) with c, count(org) as size_orgs where size_orgs > 1 return count(c)"
+        }
+      ]
+    },
+    {
+      "name": "Organization",
+      "queries": [
+        {
+          "name": "Organizations with wrong nodes labels",
+          "query": "MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization) WHERE size(labels(o)) <> 2 OR NOT 'Organization_'+t.name in labels(o) return count(o)"
+        },
+        {
+          "name": "Multiple organizations share same domain",
+          "query": "MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_DOMAIN]->(d:Domain) with t, d, count(org) as size_orgs where size_orgs > 1 return count(d)"
+        },
+        {
+          "name": "Organization with missing properties",
+          "query": "MATCH (n:Organization) WHERE (n.hide IS NULL OR n.isCustomer IS NULL) RETURN count(n) as cnt",
+          "description": "Organization with missing boolean properties."
+        }
+      ]
+    },
+    {
+      "name": "User",
+      "queries": [
+        {
+          "name": "Check user nodes labels",
+          "query": "MATCH (t:Tenant)<-[:USER_BELONGS_TO_TENANT]-(n:User) WHERE size(labels(n)) <> 2 OR NOT 'User_'+t.name in labels(n) return count(n)"
+        },
+        {
+          "name": "Emails shared between users",
+          "query": "MATCH (u:User)-[r1:HAS]->(e:Email)<-[r2:HAS]-(n:User) WHERE u <> n return count(e)"
+        }
+      ]
+    },
+    {
+      "name": "Domain",
+      "queries": [
+        {
+          "name": "Domain nodes with missing domain property",
+          "query": "MATCH (d:Domain) WHERE d.domain IS NULL or d.domain = '' RETURN count(d)",
+          "description": "Domain property is mandatory."
+        },
+        {
+          "name": "Incorrect domain capitalization",
+          "query": "MATCH (d:Domain) WHERE d.domain <> toLower(d.domain) RETURN count(d)",
+          "description": "Domain property should be lowercase."
+        }
+      ]
+    },
+    {
+      "name": "Tenant",
+      "queries": [
+        {
+          "name": "Tenant nodes with missing mandatory properties",
+          "query": "MATCH (t:Tenant) WHERE t.name IS NULL or t.name = '' RETURN count(t)",
+          "description": "Tenant property is mandatory."
+        },
+        {
+          "name": "Missing link with tenant",
+          "query": "WITH [\"Tenant\",\"InteractionSession\",\"JobRole\",\"Domain\",\"Social\",\"TimelineEvent\",\"CustomField\",\"AlternateOrganization\",\"Calendar\",\"ServiceLineItem\",\"Opportunity\",\"OrganizationPlanMilestone\",\"MasterPlanMilestone\",\"InvoiceLine\",\"Attachment\",\"Player\",\"AlternateContact\",\"TechnicalNode\",\"AlternateCustomField\",\"Comment\",\"AlternateUser\",\"Country\",\"State\",\"Meeting\"] as labels MATCH (n) WHERE NOT ANY(label in labels(n) WHERE label IN labels) AND NOT (n)--(:Tenant)  RETURN count(n)",
+          "description": "All nodes should be linked to a tenant except for the listed labels."
+        },
+        {
+          "name": "Single TenantSettings per tenant",
+          "query": "MATCH (t:Tenant)-->(ts:TenantSettings) with t, count(ts) as cnt where cnt > 1 return count(t)"
+        },
+        {
+          "name": "Single TenantMetadata per tenant",
+          "query": "match (t:Tenant)-->(tm:TenantMetadata) with t, count(tm) as cnt where cnt > 1 return count(t)"
+        }
+      ]
+    },
+    {
+      "name": "Email",
+      "queries": [
+        {
+          "name": "Check email nodes labels",
+          "query": "MATCH (t:Tenant)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(n:Email) WHERE size(labels(n)) <> 2 OR NOT 'Email_'+t.name in labels(n) return count(n)"
+        },
+        {
+          "name": "Cross tenants email link",
+          "query": "MATCH (t1:Tenant)--(n:User|Contact|Organization)--(:Email)--(t2:Tenant) where t1.name <> t2.name return count(n)"
+        }
+      ]
+    },
+    {
+      "name": "PhoneNumber",
+      "queries": [
+        {
+          "name": "Check phone number nodes labels",
+          "query": "MATCH (t:Tenant)<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(n:PhoneNumber) WHERE size(labels(n)) <> 2 OR NOT 'PhoneNumber_'+t.name in labels(n) return count(n)"
+        },
+        {
+          "name": "Cross tenants phone number link",
+          "query": "MATCH (t1:Tenant)--(n:User|Contact|Organization)--(:PhoneNumber)--(t2:Tenant) where t1.name <> t2.name return count(n)"
+        }
+      ]
+    },
+    {
+      "name": "Contact",
+      "queries": [
+        {
+          "name": "Check contact nodes labels",
+          "query": "MATCH (t:Tenant)<-[:CONTACT_BELONGS_TO_TENANT]-(n:Contact) WHERE size(labels(n)) <> 2 OR NOT 'Contact_'+t.name in labels(n) return count(n)"
+        }
+      ]
+    },
+    {
+      "name": "Location",
+      "queries": [
+        {
+          "name": "Check location nodes labels",
+          "query": "MATCH (t:Tenant)<-[:LOCATION_BELONGS_TO_TENANT]-(n:Location) WHERE size(labels(n)) <> 2 OR NOT 'Location_'+t.name in labels(n) return count(n)"
+        }
+      ]
+    },
+    {
+      "name": "Tag",
+      "queries": [
+        {
+          "name": "Tag nodes with wrong labels",
+          "query": "MATCH (t:Tenant)<-[:TAG_BELONGS_TO_TENANT]-(n:Tag) WHERE size(labels(n)) <> 2 OR NOT 'Tag_'+t.name in labels(n) return count(n)"
+        },
+        {
+          "name": "Duplicate tags",
+          "query": "MATCH (t:Tenant)<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag) with t.name as tenant, tag.name as tag_name, count(tag) as size_tags where size_tags > 1 return count(tag_name) as cnt"
+        }
+      ]
+    },
+    {
+      "name": "ServiceLineItem",
+      "queries": [
+        {
+          "name": "Check service line items nodes labels",
+          "query": "MATCH (t:Tenant)<-[:CONTRACT_BELONGS_TO_TENANT]-(:Contract)-[:HAS_SERVICE]->(n:ServiceLineItem) WHERE size(labels(n)) <> 2 OR NOT 'ServiceLineItem_'+t.name in labels(n) return count(n)"
+        },
+        {
+          "name": "Service line items without contract",
+          "query": "MATCH (n:ServiceLineItem) WHERE NOT (n)<-[:HAS_SERVICE]-(:Contract|DeletedContract) RETURN count(n) as cnt"
+        }
+      ]
+    },
+    {
+      "name": "TenantBillingProfile",
+      "queries": [
+        {
+          "name": "Check tenant billing profile labels",
+          "query": "MATCH (t:Tenant)-[:HAS_BILLING_PROFILE]->(n:TenantBillingProfile) WHERE size(labels(n)) <> 2 OR NOT 'TenantBillingProfile_'+t.name in labels(n) return count(n)"
+        }
+      ]
+    },
+    {
+      "name": "JobRole",
+      "queries": [
+        {
+          "name": "JobRoles without linked contact or user",
+          "query": "MATCH (j:JobRole) WHERE NOT (j)--(:Contact|User) RETURN count(j)"
+        }
+      ]
+    },
+    {
+      "name": "Comment",
+      "queries": [
+        {
+          "name": "Comments without parent",
+          "query": "MATCH (c:Comment) WHERE NOT (c)-[:COMMENTED]->() return count(c)"
+        }
+      ]
+    },
+    {
+      "name": "Opportunity",
+      "queries": [
+        {
+          "name": "Multiple active renewal opportunities for same contract",
+          "query": "MATCH (c:Contract)-[:ACTIVE_RENEWAL]->(op:Opportunity) WITH c, count(op) AS sizeOps WHERE sizeOps > 1 RETURN count(c)"
+        },
+        {
+          "name": "Multiple open renewal opportunities for same contract",
+          "query": "MATCH (c:Contract)-[:HAS_OPPORTUNITY]->(op:RenewalOpportunity) WHERE op.internalStage='OPEN' WITH c, count(op) AS sizeOps WHERE sizeOps > 1 RETURN count(c)"
+        }
+      ]
+    }
+  ],
   "queries": [
     {
-      "name": "Domain nodes with missing domain property",
-      "query": "MATCH (d:Domain) WHERE d.domain IS NULL or d.domain = '' RETURN count(d)",
-      "description": "Domain property is mandatory."
-    },
-    {
-      "name": "Incorrect domain capitalization",
-      "query": "MATCH (d:Domain) WHERE d.domain <> toLower(d.domain) RETURN count(d)",
-      "description": "Domain property should be lowercase."
-    },
-    {
-      "name": "Missing link with tenant",
-      "query": "WITH [\"Tenant\",\"InteractionSession\",\"JobRole\",\"Domain\",\"Social\",\"TimelineEvent\",\"CustomField\",\"AlternateOrganization\",\"Calendar\",\"ServiceLineItem\",\"Opportunity\",\"OrganizationPlanMilestone\",\"MasterPlanMilestone\",\"InvoiceLine\",\"Attachment\",\"Player\",\"AlternateContact\",\"TechnicalNode\",\"AlternateCustomField\",\"Comment\",\"AlternateUser\",\"Country\",\"State\",\"Meeting\"] as labels MATCH (n) WHERE NOT ANY(label in labels(n) WHERE label IN labels) AND NOT (n)--(:Tenant)  RETURN count(n)",
-      "description": "All nodes should be linked to a tenant except for the listed labels."
-    },
-    {
-      "name": "Invoice lines without invoice or service line item",
-      "query": "MATCH (n:InvoiceLine) WHERE NOT (n)<-[:HAS_INVOICE_LINE]-(:Invoice) OR NOT (n)-[:INVOICED]->(:ServiceLineItem) RETURN count(n)",
-      "description": "Invoice line should be linked to an invoice and a service line item."
-    },
-    {
-      "name": "Invoice lines with missing properties",
-      "query": "MATCH (n:InvoiceLine) WHERE (n.billedType IS NULL OR n.billedType = \"\" OR n.amount IS NULL OR n.totalAmount IS NULL) RETURN count(n) as cnt",
-      "description": "Invoice line should have a billedType, amount and totalAmount."
-    },
-    {
-      "name": "Check organization nodes labels",
-      "query": "MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization) WHERE size(labels(o)) <> 2 OR NOT 'Organization_'+t.name in labels(o) return count(o)"
-    },
-    {
-      "name": "Check contact nodes labels",
-      "query": "MATCH (t:Tenant)<-[:CONTACT_BELONGS_TO_TENANT]-(n:Contact) WHERE size(labels(n)) <> 2 OR NOT 'Contact_'+t.name in labels(n) return count(n)"
-    },
-    {
-      "name": "Check email nodes labels",
-      "query": "MATCH (t:Tenant)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(n:Email) WHERE size(labels(n)) <> 2 OR NOT 'Email_'+t.name in labels(n) return count(n)"
-    },
-    {
-      "name": "Check phone number nodes labels",
-      "query": "MATCH (t:Tenant)<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(n:PhoneNumber) WHERE size(labels(n)) <> 2 OR NOT 'PhoneNumber_'+t.name in labels(n) return count(n)"
-    },
-    {
-      "name": "Check location nodes labels",
-      "query": "MATCH (t:Tenant)<-[:LOCATION_BELONGS_TO_TENANT]-(n:Location) WHERE size(labels(n)) <> 2 OR NOT 'Location_'+t.name in labels(n) return count(n)"
-    },
-    {
-      "name": "Check user nodes labels",
-      "query": "MATCH (t:Tenant)<-[:USER_BELONGS_TO_TENANT]-(n:User) WHERE size(labels(n)) <> 2 OR NOT 'User_'+t.name in labels(n) return count(n)"
-    },
-    {
-      "name": "Check contract nodes labels",
-      "query": "MATCH (t:Tenant)<-[:CONTRACT_BELONGS_TO_TENANT]-(n:Contract) WHERE size(labels(n)) <> 2 OR NOT 'Contract_'+t.name in labels(n) return count(n)"
-    },
-    {
-      "name": "Check service line items nodes labels",
-      "query": "MATCH (t:Tenant)<-[:CONTRACT_BELONGS_TO_TENANT]-(:Contract)-[:HAS_SERVICE]->(n:ServiceLineItem) WHERE size(labels(n)) <> 2 OR NOT 'ServiceLineItem_'+t.name in labels(n) return count(n)"
-    },
-    {
-      "name": "Check invoice nodes labels",
-      "query": "MATCH (t:Tenant)<-[:INVOICE_BELONGS_TO_TENANT]-(n:Invoice) WHERE size(labels(n)) <> 2 OR NOT 'Invoice_'+t.name in labels(n) return count(n)"
-    },
-    {
-      "name": "Check invoice line nodes labels",
-      "query": "MATCH (t:Tenant)<-[:INVOICE_BELONGS_TO_TENANT]-(:Invoice)-[:HAS_SERVICE]->(n:InvoiceLine) WHERE size(labels(n)) <> 2 OR NOT 'InvoiceLine_'+t.name in labels(n) return count(n)"
-    },
-    {
-      "name": "Check tenant billing profile labels",
-      "query": "MATCH (t:Tenant)-[:HAS_BILLING_PROFILE]->(n:TenantBillingProfile) WHERE size(labels(n)) <> 2 OR NOT 'TenantBillingProfile_'+t.name in labels(n) return count(n)"
-    },
-    {
-      "name": "Cross tenants email link",
-      "query": "MATCH (t1:Tenant)--(n:User|Contact|Organization)--(:Email)--(t2:Tenant) where t1.name <> t2.name return count(n)"
-    },
-    {
-      "name": "Cross tenants phone number link",
-      "query": "MATCH (t1:Tenant)--(n:User|Contact|Organization)--(:PhoneNumber)--(t2:Tenant) where t1.name <> t2.name return count(n)"
-    },
-    {
-      "name": "Single TenantMetadata per tenant",
-      "query": "match (t:Tenant)-->(tm:TenantMetadata) with t, count(tm) as cnt where cnt > 1 return count(t)"
-    },
-    {
-      "name": "Single TenantSettings per Tenant",
-      "query": "MATCH (t:Tenant)-->(ts:TenantSettings) with t, count(ts) as cnt where cnt > 1 return count(t)"
-    },
-
-
-
-    {
-      "name": "Check orphan nodes",
+      "name": "Orphan nodes",
       "query": "MATCH (n) WHERE NOT (n)--() AND NOT n:Country AND NOT n:Domain AND NOT n:TechnicalNode AND NOT n:Attachment return count(n)"
-    },
-    {
-      "name": "Check emails not shared between users",
-      "query": "MATCH (u:User)-[r1:HAS]->(e:Email)<-[r2:HAS]-(n:User) WHERE u <> n return count(e)"
-    },
-    {
-      "name": "Check JobRole nodes without linked contact or user",
-      "query": "MATCH (j:JobRole) WHERE NOT (j)--(:Contact|User) RETURN count(j)"
-    },
-    {
-      "name": "Check multiple organizations share same domain",
-      "query": "MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_DOMAIN]->(d:Domain) with t, d, count(org) as size_orgs where size_orgs > 1 return count(d)"
-    },
-    {
-      "name": "Check organization missing properties",
-      "query": "CALL {MATCH (n:Organization) WHERE (n.hide IS NULL OR n.isCustomer IS NULL) RETURN count(n) as cnt } return sum(cnt)",
-      "description": "Checks: 1 - Organization with missing boolean properties."
-    },
-    {
-      "name": "Check duplicate values",
-      "query": "CALL {MATCH (t:Tenant)<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag) with t.name as tenant, tag.name as tag_name, count(tag) as size_tags where size_tags > 1 return count(tag_name) as cnt} return sum(cnt)",
-      "description": "Checks: 1 - Duplicate tags."
     },
     {
       "name": "Check synced with event store",
@@ -121,23 +241,6 @@
     {
       "name": "Check source fields",
       "query": "WITH [\"Tenant\",\"ExternalSystem\",\"Domain\",\"InteractionSession\",\"AlternateOrganization\",\"Action\",\"TenantSettings\",\"MergedOrganization\",\"AlternateContact\",\"TechnicalNode\",\"CustomField\",\"AlternateCustomField\",\"TenantMetadata\",\"AlternateUser\",\"Tag\",\"CustomFieldTemplate\",\"State\",\"Player\"] as labels\nMATCH (n) WHERE NOT ANY(label in labels(n) WHERE label IN labels) \nWITH n \nWHERE n.source IS NULL OR n.sourceOfTruth IS NULL OR n.appSource IS NULL OR n.source = '' OR n.sourceOfTruth = '' or n.appSource = ''\nRETURN count(n)"
-    },
-    {
-      "name": "Check for comments without parent",
-      "query": "MATCH (c:Comment) WHERE NOT (c)-[:COMMENTED]->() return count(c)"
-    },
-    {
-      "name": "Check for contracts without organization",
-      "query": "MATCH (c:Contract) WHERE NOT (c)<-[:HAS_CONTRACT]-(:Organization) return count(c)"
-    },
-    {
-      "name": "Check for multiple organizations share same contract",
-      "query": "MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_CONTRACT]->(c:Contract) with t, c, count(org) as size_orgs where size_orgs > 1 return count(c)"
-    },
-    {
-      "name": "Check for multiple renewal opportunities for same contract",
-      "query": "CALL {\n    MATCH (c:Contract)-[:ACTIVE_RENEWAL]->(op:Opportunity) WITH c, count(op) AS sizeOps WHERE sizeOps > 1 RETURN count(c) AS cnt \n    UNION ALL \n    MATCH (c:Contract)-[:HAS_OPPORTUNITY]->(op:RenewalOpportunity) WHERE op.internalStage='OPEN' WITH c, count(op) AS sizeOps WHERE sizeOps > 1 RETURN count(c) AS cnt\n    } return sum(cnt)",
-      "description": "Checks: 1 - Contract with multiple active renewal opportunities. 2 - Contract with multiple open renewal opportunities."
     },
     {
       "name": "Check for contracts with wrong status",
@@ -173,16 +276,6 @@
       "name": "Check invoices",
       "query": "CALL {\n    MATCH (i:Invoice) WHERE i.dryRun IS NULL OR i.periodEndDate IS NULL OR i.periodStartDate IS NULL OR i.currency IS NULL OR i.issuedDate IS NULL OR i.dueDate IS NULL OR i.preview IS NULL OR i.status IS NULL RETURN count(i) AS cnt\n    UNION ALL\n    MATCH (i:Invoice) WHERE i.dryRun = false AND i.status = 'INITIALIZED' AND duration.between(i.createdAt, datetime()).minutes > 5 RETURN count(i) AS cnt\n    UNION ALL\n    MATCH (i:Invoice) WHERE i.dryRun = false AND i.status = 'DUE' AND date(i.dueDate) < date(datetime() - duration({days:1})) RETURN count(i) AS cnt\n} RETURN sum(cnt)",
       "description": "Checks: 1 - Mandatory invoice properties. 2 - Invoices stuck in initialized status > 5 minutes. 3 - Invoices with due date in the past."
-    },
-    {
-      "name": "Check scheduled invoices",
-      "query": "CALL {\n    MATCH (i:Invoice)--(c:Contract) WHERE i.dryRun = true and i.preview = true WITH c.id as cid, i.periodStartDate as ipsd, count(i) as countInvoices WHERE countInvoices > 1 RETURN count(cid) AS cnt\n} RETURN sum(cnt)",
-      "description": "Checks: 1 - Duplicated scheduled invoices for same contract and period"
-    },
-    {
-      "name": "Check for nodes missing mandatory links",
-      "query": "CALL {\n     MATCH (n:Invoice) WHERE NOT (n)<-[:HAS_INVOICE]-(:Contract|DeletedContract) RETURN count(n) as cnt\n     UNION ALL\n     MATCH (n:ServiceLineItem) WHERE NOT (n)<-[:HAS_SERVICE]-(:Contract|DeletedContract) RETURN count(n) as cnt\n     UNION ALL\n     MATCH (n:Contract) WHERE NOT (n)<-[:HAS_CONTRACT]-(:Organization) RETURN count(n) as cnt\n} RETURN sum(cnt)",
-      "description": "2 - Invoice without contract/deleted contract. 3 - Service line item without contract/deleted contract. 4 - Contract without organization."
     }
   ]
 }
