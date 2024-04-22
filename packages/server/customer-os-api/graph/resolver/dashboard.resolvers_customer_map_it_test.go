@@ -188,7 +188,7 @@ func TestQueryResolver_Dashboard_Customer_Map_OutOfContract_Contract(t *testing.
 	org1 := dashboardReport.Dashboard_CustomerMap[0]
 	require.Equal(t, 1, len(dashboardReport.Dashboard_CustomerMap))
 	require.Equal(t, orgId, org1.Organization.ID)
-	require.Equal(t, model.DashboardCustomerMapStateAtRisk, org1.State)
+	require.Equal(t, model.DashboardCustomerMapStateMediumRisk, org1.State)
 }
 
 func TestQueryResolver_Dashboard_Customer_Map_Hidden_Organization_With_Contract(t *testing.T) {
@@ -327,7 +327,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_
 	require.Equal(t, float64(12), org1.Arr)
 }
 
-func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_Medium_Should_Be_AT_RISK_State(t *testing.T) {
+func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_Medium_Should_Be_MEDIUM_RISK_State(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
@@ -372,11 +372,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_
 	org1 := dashboardReport.Dashboard_CustomerMap[0]
 	require.Equal(t, orgId, org1.Organization.ID)
 	require.Equal(t, contract1ServiceStartedAt, org1.ContractSignedDate)
-	require.Equal(t, model.DashboardCustomerMapStateAtRisk, org1.State)
+	require.Equal(t, model.DashboardCustomerMapStateMediumRisk, org1.State)
 	require.Equal(t, float64(12), org1.Arr)
 }
 
-func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_Low_Should_Be_AT_RISK_State(t *testing.T) {
+func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_Low_Should_Be_HIGH_RISK_State(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
@@ -421,11 +421,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_
 	org1 := dashboardReport.Dashboard_CustomerMap[0]
 	require.Equal(t, orgId, org1.Organization.ID)
 	require.Equal(t, contract1ServiceStartedAt, org1.ContractSignedDate)
-	require.Equal(t, model.DashboardCustomerMapStateAtRisk, org1.State)
+	require.Equal(t, model.DashboardCustomerMapStateHighRisk, org1.State)
 	require.Equal(t, float64(12), org1.Arr)
 }
 
-func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_Zero_Should_Be_AT_RISK_State(t *testing.T) {
+func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_Zero_Should_Be_HIGH_RISK_State(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
@@ -470,7 +470,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_
 	org1 := dashboardReport.Dashboard_CustomerMap[0]
 	require.Equal(t, orgId, org1.Organization.ID)
 	require.Equal(t, contract1ServiceStartedAt, org1.ContractSignedDate)
-	require.Equal(t, model.DashboardCustomerMapStateAtRisk, org1.State)
+	require.Equal(t, model.DashboardCustomerMapStateHighRisk, org1.State)
 	require.Equal(t, float64(12), org1.Arr)
 }
 
@@ -737,7 +737,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_1_Contract_3_Opportun
 	require.Equal(t, float64(12), org1.Arr)
 }
 
-func TestQueryResolver_Dashboard_Customer_Map_Organization_1_Contract_2_Opportunities_Should_Be_At_Risk(t *testing.T) {
+func TestQueryResolver_Dashboard_Customer_Map_Organization_1_Contract_2_Opportunities_Should_Be_Medium_Risk(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
@@ -792,7 +792,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_1_Contract_2_Opportun
 	org1 := dashboardReport.Dashboard_CustomerMap[0]
 	require.Equal(t, orgId, org1.Organization.ID)
 	require.Equal(t, contract1ServiceStartedAt, org1.ContractSignedDate)
-	require.Equal(t, model.DashboardCustomerMapStateAtRisk, org1.State)
+	require.Equal(t, model.DashboardCustomerMapStateMediumRisk, org1.State)
 	require.Equal(t, float64(12), org1.Arr)
 }
 
@@ -920,7 +920,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts
 	require.Equal(t, float64(24), org1.Arr)
 }
 
-func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts_One_HIGH_One_MEDIUM_Should_Be_AT_RISK_State(t *testing.T) {
+func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts_One_HIGH_One_MEDIUM_Should_Be_MEDIUM_RISK_State(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
@@ -979,11 +979,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts
 	org1 := dashboardReport.Dashboard_CustomerMap[0]
 	require.Equal(t, orgId, org1.Organization.ID)
 	require.Equal(t, contract1ServiceStartedAt, org1.ContractSignedDate)
-	require.Equal(t, model.DashboardCustomerMapStateAtRisk, org1.State)
+	require.Equal(t, model.DashboardCustomerMapStateMediumRisk, org1.State)
 	require.Equal(t, float64(24), org1.Arr)
 }
 
-func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts_One_HIGH_One_LOW_Should_Be_AT_RISK_State(t *testing.T) {
+func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts_One_HIGH_One_LOW_Should_Be_HIGH_RISK_State(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
@@ -1040,11 +1040,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts
 	org1 := dashboardReport.Dashboard_CustomerMap[0]
 	require.Equal(t, orgId, org1.Organization.ID)
 	require.Equal(t, contract1ServiceStartedAt, org1.ContractSignedDate)
-	require.Equal(t, model.DashboardCustomerMapStateAtRisk, org1.State)
+	require.Equal(t, model.DashboardCustomerMapStateHighRisk, org1.State)
 	require.Equal(t, float64(24), org1.Arr)
 }
 
-func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts_One_HIGH_One_ZERO_Should_Be_AT_RISK_State(t *testing.T) {
+func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts_One_HIGH_One_ZERO_Should_Be_HIGH_RISK_State(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
@@ -1101,11 +1101,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts
 	org1 := dashboardReport.Dashboard_CustomerMap[0]
 	require.Equal(t, orgId, org1.Organization.ID)
 	require.Equal(t, contract1ServiceStartedAt, org1.ContractSignedDate)
-	require.Equal(t, model.DashboardCustomerMapStateAtRisk, org1.State)
+	require.Equal(t, model.DashboardCustomerMapStateHighRisk, org1.State)
 	require.Equal(t, float64(24), org1.Arr)
 }
 
-func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts_One_MEDIUM_One_LOW_Should_Be_AT_RISK_State(t *testing.T) {
+func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts_One_MEDIUM_One_LOW_Should_Be_HIGH_RISK_State(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
@@ -1134,6 +1134,8 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2ServiceStartedAt,
 	}, neo4jentity.OpportunityEntity{
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
 		RenewalDetails: neo4jentity.RenewalDetails{
 			RenewalLikelihood: neo4jenum.RenewalLikelihoodLow,
 		},
@@ -1160,7 +1162,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts
 	org1 := dashboardReport.Dashboard_CustomerMap[0]
 	require.Equal(t, orgId, org1.Organization.ID)
 	require.Equal(t, contract1ServiceStartedAt, org1.ContractSignedDate)
-	require.Equal(t, model.DashboardCustomerMapStateAtRisk, org1.State)
+	require.Equal(t, model.DashboardCustomerMapStateHighRisk, org1.State)
 	require.Equal(t, float64(24), org1.Arr)
 }
 
@@ -1289,7 +1291,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_First_Closed_Sec
 	require.Equal(t, float64(100), org1.Arr)
 }
 
-func TestQueryResolver_Dashboard_Customer_Map_Organization_With_First_Live_Second_Closed_Contract_Live_MEDIUM_Should_Be_AT_RISK_State(t *testing.T) {
+func TestQueryResolver_Dashboard_Customer_Map_Organization_With_First_Live_Second_Closed_Contract_Live_MEDIUM_Should_Be_MEDIUM_RISK_State(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
@@ -1348,7 +1350,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_First_Live_Secon
 	org1 := dashboardReport.Dashboard_CustomerMap[0]
 	require.Equal(t, orgId, org1.Organization.ID)
 	require.Equal(t, contract1ServiceStartedAt, org1.ContractSignedDate)
-	require.Equal(t, model.DashboardCustomerMapStateAtRisk, org1.State)
+	require.Equal(t, model.DashboardCustomerMapStateMediumRisk, org1.State)
 	require.Equal(t, float64(100), org1.Arr)
 }
 
@@ -1649,7 +1651,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Two_Organizations_With_2_Contracts
 
 	require.Equal(t, org2Id, org2.Organization.ID)
 	require.Equal(t, contract2ServiceStartedAt, org2.ContractSignedDate)
-	require.Equal(t, model.DashboardCustomerMapStateAtRisk, org2.State)
+	require.Equal(t, model.DashboardCustomerMapStateMediumRisk, org2.State)
 	require.Equal(t, float64(15), org2.Arr)
 
 	require.Equal(t, org1Id, org1.Organization.ID)
@@ -1703,7 +1705,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Annually_SLI(t *testing.T) {
 	org1 := dashboardReport.Dashboard_CustomerMap[0]
 	require.Equal(t, orgId, org1.Organization.ID)
 	require.Equal(t, contract1ServiceStartedAt, org1.ContractSignedDate)
-	require.Equal(t, model.DashboardCustomerMapStateAtRisk, org1.State)
+	require.Equal(t, model.DashboardCustomerMapStateHighRisk, org1.State)
 	require.Equal(t, float64(12), org1.Arr)
 }
 
@@ -1752,7 +1754,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Quarterly_SLI(t *testing.T) {
 	org1 := dashboardReport.Dashboard_CustomerMap[0]
 	require.Equal(t, orgId, org1.Organization.ID)
 	require.Equal(t, contract1ServiceStartedAt, org1.ContractSignedDate)
-	require.Equal(t, model.DashboardCustomerMapStateAtRisk, org1.State)
+	require.Equal(t, model.DashboardCustomerMapStateHighRisk, org1.State)
 	require.Equal(t, float64(48), org1.Arr)
 }
 
@@ -1801,6 +1803,6 @@ func TestQueryResolver_Dashboard_Customer_Map_Monthly_SLI(t *testing.T) {
 	org1 := dashboardReport.Dashboard_CustomerMap[0]
 	require.Equal(t, orgId, org1.Organization.ID)
 	require.Equal(t, contract1ServiceStartedAt, org1.ContractSignedDate)
-	require.Equal(t, model.DashboardCustomerMapStateAtRisk, org1.State)
+	require.Equal(t, model.DashboardCustomerMapStateHighRisk, org1.State)
 	require.Equal(t, float64(144), org1.Arr)
 }

@@ -74,15 +74,20 @@ type DashboardDashboardMRRPerCustomerPerMonthData struct {
 type DashboardCustomerMapState string
 
 const (
-	DashboardCustomerMapStateOk      DashboardCustomerMapState = "OK"
-	DashboardCustomerMapStateAtRisk  DashboardCustomerMapState = "AT_RISK"
-	DashboardCustomerMapStateChurned DashboardCustomerMapState = "CHURNED"
+	DashboardCustomerMapStateOk DashboardCustomerMapState = "OK"
+	//Deprecated
+	DashboardCustomerMapStateAtRisk     DashboardCustomerMapState = "AT_RISK"
+	DashboardCustomerMapStateChurned    DashboardCustomerMapState = "CHURNED"
+	DashboardCustomerMapStateHighRisk   DashboardCustomerMapState = "HIGH_RISK"
+	DashboardCustomerMapStateMediumRisk DashboardCustomerMapState = "MEDIUM_RISK"
 )
 
 var DashboardCustomerMapStates = []DashboardCustomerMapState{
 	DashboardCustomerMapStateOk,
 	DashboardCustomerMapStateAtRisk,
 	DashboardCustomerMapStateChurned,
+	DashboardCustomerMapStateHighRisk,
+	DashboardCustomerMapStateMediumRisk,
 }
 
 type DashboardCustomerMapData struct {

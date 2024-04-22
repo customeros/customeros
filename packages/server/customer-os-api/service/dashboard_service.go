@@ -180,6 +180,10 @@ func mapDashboardCustomerMapStateFromString(state string) entityDashboard.Dashbo
 		return entityDashboard.DashboardCustomerMapStateAtRisk
 	case "CHURNED":
 		return entityDashboard.DashboardCustomerMapStateChurned
+	case "HIGH_RISK":
+		return entityDashboard.DashboardCustomerMapStateHighRisk
+	case "MEDIUM_RISK":
+		return entityDashboard.DashboardCustomerMapStateMediumRisk
 	default:
 		return ""
 	}

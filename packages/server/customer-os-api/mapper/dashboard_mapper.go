@@ -164,6 +164,10 @@ func MapDashboardCustomerMapState(state entityDashboard.DashboardCustomerMapStat
 		return model.DashboardCustomerMapStateAtRisk
 	case entityDashboard.DashboardCustomerMapStateChurned:
 		return model.DashboardCustomerMapStateChurned
+	case entityDashboard.DashboardCustomerMapStateHighRisk:
+		return model.DashboardCustomerMapStateHighRisk
+	case entityDashboard.DashboardCustomerMapStateMediumRisk:
+		return model.DashboardCustomerMapStateMediumRisk
 	default:
 		return ""
 	}

@@ -13139,6 +13139,8 @@ enum DashboardCustomerMapState {
     OK
     AT_RISK
     CHURNED
+    HIGH_RISK
+    MEDIUM_RISK
 }
 
 type DashboardTimeToOnboard {

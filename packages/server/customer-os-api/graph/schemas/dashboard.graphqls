@@ -106,8 +106,13 @@ type DashboardNewCustomersPerMonth {
 
 enum DashboardCustomerMapState {
     OK
-    AT_RISK
+    """
+    Deprecated
+    """
+    AT_RISK @deprecated(reason: "Use HIGH_RISK instead")
     CHURNED
+    HIGH_RISK
+    MEDIUM_RISK
 }
 
 type DashboardTimeToOnboard {

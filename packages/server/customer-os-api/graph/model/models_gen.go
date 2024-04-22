@@ -3711,20 +3711,24 @@ func (e CustomFieldTemplateType) MarshalGQL(w io.Writer) {
 type DashboardCustomerMapState string
 
 const (
-	DashboardCustomerMapStateOk      DashboardCustomerMapState = "OK"
-	DashboardCustomerMapStateAtRisk  DashboardCustomerMapState = "AT_RISK"
-	DashboardCustomerMapStateChurned DashboardCustomerMapState = "CHURNED"
+	DashboardCustomerMapStateOk         DashboardCustomerMapState = "OK"
+	DashboardCustomerMapStateAtRisk     DashboardCustomerMapState = "AT_RISK"
+	DashboardCustomerMapStateChurned    DashboardCustomerMapState = "CHURNED"
+	DashboardCustomerMapStateHighRisk   DashboardCustomerMapState = "HIGH_RISK"
+	DashboardCustomerMapStateMediumRisk DashboardCustomerMapState = "MEDIUM_RISK"
 )
 
 var AllDashboardCustomerMapState = []DashboardCustomerMapState{
 	DashboardCustomerMapStateOk,
 	DashboardCustomerMapStateAtRisk,
 	DashboardCustomerMapStateChurned,
+	DashboardCustomerMapStateHighRisk,
+	DashboardCustomerMapStateMediumRisk,
 }
 
 func (e DashboardCustomerMapState) IsValid() bool {
 	switch e {
-	case DashboardCustomerMapStateOk, DashboardCustomerMapStateAtRisk, DashboardCustomerMapStateChurned:
+	case DashboardCustomerMapStateOk, DashboardCustomerMapStateAtRisk, DashboardCustomerMapStateChurned, DashboardCustomerMapStateHighRisk, DashboardCustomerMapStateMediumRisk:
 		return true
 	}
 	return false
