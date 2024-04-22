@@ -48,7 +48,7 @@ export const ContractStatusModal = ({
       <ModalOverlay />
       <ModalContent
         placement={nextInvoice ? 'center' : 'top'}
-        className='border-r-2 flex gap-6 bg-transparent shadow-none border-none'
+        className='border-r-2 flex gap-6 bg-transparent shadow-none border-none z-[999]'
         style={{
           minWidth: nextInvoice ? '971px' : 'auto',
           minHeight: nextInvoice ? '80vh' : 'auto',

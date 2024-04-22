@@ -14,6 +14,7 @@ query getContract($id: ID!) {
     serviceStarted
     autoRenew
     approved
+    contractStatus
     attachments {
       id
       basePath

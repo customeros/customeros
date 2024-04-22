@@ -184,6 +184,8 @@ export const ContractStartModal = ({
             size='lg'
             colorScheme='primary'
             onClick={handleApplyChanges}
+            loadingText='Saving...'
+            isLoading={onUpdateContract.isPending}
           >
             Go live{' '}
             {DateTimeUtils.format(
