@@ -51,7 +51,7 @@ export const InfoDialog = ({
               ))}
           </AlertDialogHeader>
 
-          <AlertDialogFooter className='pb-6 grid-cols-1'>
+          <AlertDialogFooter className='grid-cols-1'>
             <Button className='w-full' variant='outline' onClick={onConfirm}>
               {confirmButtonLabel}
             </Button>

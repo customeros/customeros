@@ -1,6 +1,7 @@
 import React, { forwardRef, ElementRef } from 'react';
 
 import { twMerge } from 'tailwind-merge';
+import { cva } from 'class-variance-authority';
 import * as RadixAlertDialog from '@radix-ui/react-alert-dialog';
 
 import { XClose } from '@ui/media/icons/XClose';
@@ -61,18 +62,34 @@ export const AlertDialogOverlay = forwardRef<
   );
 });
 
+const alertContentVariant = cva(
+  'z-10 fixed left-[50%] w-[90vw] max-w-[450px]  max-h-[80vh] translate-x-[-50%] rounded-xl bg-white p-6 shadow-xl focus:outline-none outline-offset-2 data-[state=open]:will-change-auto',
+  {
+    variants: {
+      placement: {
+        center: [
+          'top-[50%]',
+          'translate-y-[-50%]',
+          'data-[state=open]:animate-contentShowCenter',
+        ],
+        top: ['data-[state=open]:animate-contentShowTop', 'top-[4%]'],
+      },
+    },
+    defaultVariants: {
+      placement: 'top',
+    },
+  },
+);
+
 export const AlertDialogContent = forwardRef<
   ElementRef<typeof RadixAlertDialog.Content>,
-  AlertDialogGenericProps
->(({ className, children, ...props }, ref) => {
+  AlertDialogGenericProps & { placement?: 'center' | 'top' }
+>(({ className, children, placement, ...props }, ref) => {
   return (
     <RadixAlertDialog.Content
       ref={ref}
+      className={twMerge(alertContentVariant({ placement, className }))}
       {...props}
-      className={twMerge(
-        'data-[state=open]:animate-contentShow fixed top-[14%] left-[50%] max-h-[80vh] w-[100%] outline-offset-2 max-w-[448px] translate-x-[-50%] translate-y-[-50%] rounded-xl bg-white p-6 focus:outline-none',
-        className,
-      )}
     >
       {children}
     </RadixAlertDialog.Content>
