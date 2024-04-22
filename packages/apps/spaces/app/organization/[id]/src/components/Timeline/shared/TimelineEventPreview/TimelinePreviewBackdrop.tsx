@@ -6,7 +6,7 @@ import {
   Modal,
   ModalPortal,
   ModalContent,
-  ModalOverlay,
+  ModalScrollBody,
 } from '@ui/overlay/Modal/Modal';
 import {
   useTimelineEventPreviewStateContext,
@@ -53,14 +53,14 @@ export const TimelinePreviewBackdrop = ({
         onClick={closeModal}
       >
         <ModalPortal container={document.getElementById('main-section')}>
-          <ModalOverlay />
           <ModalContent
+            placement='top'
             className={cn(
               modalContent?.__typename === 'Invoice'
                 ? 'w-[650px]'
                 : 'w-[544px]',
               modalContent?.__typename === 'Invoice' ? 'h-[90vh]' : 'h-auto',
-              'absolute top-4 min-w-[544px] bg-transparent z-9',
+              'absolute top-4 min-w-[544px] z-50 bg-transparent pb-2',
             )}
             onPointerDownOutside={avoidDefaultDomBehavior}
             onInteractOutside={avoidDefaultDomBehavior}
@@ -72,7 +72,7 @@ export const TimelinePreviewBackdrop = ({
                   ? 'w-[650px]'
                   : 'w-[544px]',
                 modalContent?.__typename === 'Invoice' ? 'h-[90vh]' : 'h-auto',
-                'absolute mx-auto top-4 min-w-[544px] cursor-default rounded-2xl',
+                'mx-auto top-4 min-w-[544px] cursor-default rounded-2xl ',
               )}
               id='timeline-preview-card'
               onMouseDown={(e) => {
@@ -80,7 +80,7 @@ export const TimelinePreviewBackdrop = ({
               }}
               onClick={(e) => e.stopPropagation()}
             >
-              {children}
+              <ModalScrollBody className='p-0'>{children}</ModalScrollBody>
             </Card>
           </ModalContent>
         </ModalPortal>

@@ -8,8 +8,8 @@ import { Box } from '@ui/layout/Box';
 import { Flex } from '@ui/layout/Flex';
 import { Button } from '@ui/form/Button';
 import { useDisclosure } from '@ui/utils';
-import { FeaturedIcon } from '@ui/media/Icon';
 import { AlertCircle } from '@ui/media/icons/AlertCircle';
+import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
 import { RefreshCcw01 } from '@ui/media/icons/RefreshCcw01';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
@@ -81,7 +81,7 @@ export const GoogleSidebarNotification = () => {
             padding={'20px 16px'}
             borderRadius='8px'
           >
-            <FeaturedIcon size='md' minW='10' colorScheme={'orange'}>
+            <FeaturedIcon size='md' colorScheme={'warning'}>
               <AlertCircle />
             </FeaturedIcon>
 

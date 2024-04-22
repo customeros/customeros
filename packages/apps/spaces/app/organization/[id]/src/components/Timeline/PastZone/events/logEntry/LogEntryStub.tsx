@@ -73,7 +73,7 @@ export const LogEntryStub = ({ data }: LogEntryStubProps) => {
     if (!icon) return null;
 
     return (
-      <div className='flex z-10 mr-[10px] relative bg-white border border-gray-200 rounded-md p-2 right-[-12px] top-[4px]'>
+      <div className='flex mr-[10px] relative bg-white border border-gray-200 rounded-md p-2 right-[-12px] top-[4px]'>
         {icon}
       </div>
     );
