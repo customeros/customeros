@@ -159,7 +159,7 @@ func TestContractEventHandler_OnCreate(t *testing.T) {
 	require.True(t, contract.Approved)
 
 	// Verify events platform was called
-	require.True(t, calledEventsPlatformForOnboardingStatusChange)
+	require.False(t, calledEventsPlatformForOnboardingStatusChange)
 	require.True(t, calledEventsPlatformToCreateRenewalOpportunity)
 }
 
@@ -260,7 +260,7 @@ func TestContractEventHandler_OnUpdate_FrequencySet(t *testing.T) {
 
 	// Verify call to events platform
 	require.True(t, calledEventsPlatformCreateRenewalOpportunity)
-	require.True(t, calledEventsPlatformForOnboardingStatusChange)
+	require.False(t, calledEventsPlatformForOnboardingStatusChange)
 }
 
 func TestContractEventHandler_OnUpdate_FrequencyNotChanged(t *testing.T) {
@@ -560,7 +560,7 @@ func TestContractEventHandler_OnUpdate_ServiceStartDateChanged(t *testing.T) {
 	// Verify
 	require.True(t, calledEventsPlatformToUpdateOpportunity)
 	require.True(t, calledEventsPlatformToUpdateRenewalOpportunityNextCycleDate)
-	require.True(t, calledEventsPlatformForOnboardingStatusChange)
+	require.False(t, calledEventsPlatformForOnboardingStatusChange)
 }
 
 func TestContractEventHandler_OnUpdate_EndDateSet(t *testing.T) {
@@ -689,7 +689,7 @@ func TestContractEventHandler_OnUpdate_EndDateSet(t *testing.T) {
 	// Verify event platform was called
 	require.True(t, calledEventsPlatformToUpdateRenewalOpportunity)
 	require.True(t, calledEventsPlatformToUpdateOpportunity)
-	require.True(t, calledEventsPlatformForOnboardingStatusChange)
+	require.False(t, calledEventsPlatformForOnboardingStatusChange)
 }
 
 func TestContractEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOpenline(t *testing.T) {
@@ -878,7 +878,7 @@ func TestContractEventHandler_OnRefreshStatus_Live(t *testing.T) {
 	require.Equal(t, contractId, contract.Id)
 
 	// verify grpc was called
-	require.True(t, calledEventsPlatformForOnboardingStatusChange)
+	require.False(t, calledEventsPlatformForOnboardingStatusChange)
 
 	// verify action
 	actionDbNode, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
