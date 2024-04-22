@@ -6,21 +6,12 @@ import React, { useRef, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { UseMutationResult } from '@tanstack/react-query';
 
-<<<<<<< HEAD
 import { cn } from '@ui/utils/cn';
 import { FeaturedIcon } from '@ui/media/Icon';
 import { Button } from '@ui/form/Button/Button';
 import { DotLive } from '@ui/media/icons/DotLive';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
-=======
-import { Button } from '@ui/form/Button/Button';
-import { DotLive } from '@ui/media/icons/DotLive';
-import { DateTimeUtils } from '@spaces/utils/date';
-import { ModalBody } from '@ui/overlay/Modal/Modal';
-import { RefreshCw05 } from '@ui/media/icons/RefreshCw05';
-import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
->>>>>>> 1281f1234 (refactor account)
 import { Exact, ContractStatus, ContractUpdateInput } from '@graphql/types';
 import { DatePickerUnderline } from '@ui/form/DatePicker/DatePickerUnderline';
 import { UpdateContractMutation } from '@organization/src/graphql/updateContract.generated';
@@ -111,7 +102,6 @@ export const ContractStartModal = ({
   };
 
   return (
-<<<<<<< HEAD
     <>
       <div
         className={
@@ -124,21 +114,6 @@ export const ContractStartModal = ({
               <FeaturedIcon size='lg' colorScheme='primary'>
                 <DotLive className='text-primary-600' />
               </FeaturedIcon>
-=======
-    <Modal open={isOpen} onOpenChange={onClose}>
-      <ModalOverlay />
-      <ModalContent className='rounded-2xl max-w-[500px]'>
-        <ModalHeader>
-          <FeaturedIcon
-            size='lg'
-            colorScheme='primary'
-            className='ml-[14px] mb-[25px] mt-[12px]'
-          >
-            {status === ContractStatus.OutOfContract ? (
-              <RefreshCw05 className='text-primary-600' />
-            ) : (
-              <DotLive className='text-primary-600' />
->>>>>>> 1281f1234 (refactor account)
             )}
 
             <h1

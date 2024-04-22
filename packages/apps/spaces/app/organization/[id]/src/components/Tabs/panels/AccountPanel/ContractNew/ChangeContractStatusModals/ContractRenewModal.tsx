@@ -5,12 +5,8 @@ import { useForm } from 'react-inverted-form';
 
 import { useQueryClient } from '@tanstack/react-query';
 
-<<<<<<< HEAD
 import { cn } from '@ui/utils/cn';
-import { FeaturedIcon } from '@ui/media/Icon';
 import { ContractStatus } from '@graphql/types';
-=======
->>>>>>> 1281f1234 (refactor account)
 import { Button } from '@ui/form/Button/Button';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { Radio, RadioGroup } from '@ui/form/Radio/Radio2';
