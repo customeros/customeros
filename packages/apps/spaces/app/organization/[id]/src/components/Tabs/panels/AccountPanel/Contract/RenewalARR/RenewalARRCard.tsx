@@ -4,40 +4,48 @@ import React, { useRef, useState, useEffect } from 'react';
 import { produce } from 'immer';
 import { useQueryClient } from '@tanstack/react-query';
 
-import { cn } from '@ui/utils/cn';
+import { Flex } from '@ui/layout/Flex';
+import { Text } from '@ui/typography/Text';
+import { Heading } from '@ui/typography/Heading';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { toastError } from '@ui/presentation/Toast';
+import { Card, CardHeader } from '@ui/presentation/Card';
 import { getDifferenceFromNow } from '@shared/util/date';
 import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
-import { Card, CardHeader } from '@ui/presentation/Card/Card';
+import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
-import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog/InfoDialog';
-import {
-  Opportunity,
-  InternalStage,
-  OpportunityRenewalLikelihood,
-} from '@graphql/types';
 import {
   GetContractsQuery,
   useGetContractsQuery,
 } from '@organization/src/graphql/getContracts.generated';
 import { useUpdateOpportunityRenewalMutation } from '@organization/src/graphql/updateOpportunityRenewal.generated';
+import {
+  Opportunity,
+  InternalStage,
+  ContractRenewalCycle,
+  OpportunityRenewalLikelihood,
+} from '@graphql/types';
+import { RenewalDetailsModal } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/RenewalARR/RenewalDetailsModal';
 import { useUpdateRenewalDetailsContext } from '@organization/src/components/Tabs/panels/AccountPanel/context/AccountModalsContext';
-import { RenewalDetailsModal } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/RenewalARR/RenewalDetailsModal';
 
-import { getRenewalLikelihoodLabel } from '../../utils';
+import {
+  getRenewalLikelihoodColor,
+  getRenewalLikelihoodLabel,
+} from '../../utils';
 
 interface RenewalARRCardProps {
   hasEnded: boolean;
   startedAt: string;
   opportunity: Opportunity;
   currency?: string | null;
+  renewCycle: ContractRenewalCycle;
 }
 export const RenewalARRCard = ({
   startedAt,
   hasEnded,
+  renewCycle,
   opportunity,
   currency,
 }: RenewalARRCardProps) => {
@@ -116,11 +124,15 @@ export const RenewalARRCard = ({
     },
   );
 
-  // const hasRenewed = startedAt
-  //   ? renewCycle === ContractRenewalCycle.AnnualRenewal
-  //     ? differenceInMonths > 12
-  //     : differenceInMonths > 1
-  //   : null;
+  const differenceInMonths = DateTimeUtils.differenceInMonths(
+    new Date().toISOString(),
+    startedAt,
+  );
+  const hasRenewed = startedAt
+    ? renewCycle === ContractRenewalCycle.AnnualRenewal
+      ? differenceInMonths > 12
+      : differenceInMonths > 1
+    : null;
 
   const formattedMaxAmount = formatCurrency(
     opportunity.maxAmount ?? 0,
@@ -156,97 +168,107 @@ export const RenewalARRCard = ({
   return (
     <>
       <Card
-        className={cn(
-          'px-4 py-3 w-full my-2 border border-gray-200 relative bg-white rounded-lg shadow-xs',
-          {
-            'cursor-pointer': !hasEnded,
-            'cursor-default': hasEnded,
-          },
-        )}
+        px='4'
+        py='3'
+        w='full'
+        my={2}
+        size='lg'
+        variant='outline'
+        cursor={hasEnded ? 'default' : 'pointer'}
+        border='1px solid'
+        borderColor='gray.200'
+        position='relative'
         onClick={() => {
           if (opportunity?.internalStage === InternalStage.ClosedLost) return;
           modal.onOpen();
           setIsLocalOpen(true);
         }}
-        // sx={
-        //   hasRenewed
-        //     ? {
-        //         right: -2,
-        //         '&:after': {
-        //           content: "''",
-        //           width: 2,
-        //           height: '80%',
-        //           left: '-9px',
-        //           top: '6px',
-        //           bg: 'white',
-        //           position: 'absolute',
-        //           borderTopLeftRadius: 'md',
-        //           borderBottomLeftRadius: 'md',
-        //           border: '1px solid',
-        //           borderColor: 'gray.200',
-        //         },
-        //       }
-        //     : {}
-        // }
+        width={hasRenewed ? 'calc(100% - .5rem)' : 'auto'}
+        sx={
+          hasRenewed
+            ? {
+                right: -2,
+                '&:after': {
+                  content: "''",
+                  width: 2,
+                  height: '80%',
+                  left: '-9px',
+                  top: '6px',
+                  bg: 'white',
+                  position: 'absolute',
+                  borderTopLeftRadius: 'md',
+                  borderBottomLeftRadius: 'md',
+                  border: '1px solid',
+                  borderColor: 'gray.200',
+                },
+              }
+            : {}
+        }
       >
-        <CardHeader className='flex items-center justify-between w-full gap-4'>
-          <FeaturedIcon size='md' colorScheme='primary' className='ml-2 mr-2'>
+        <CardHeader
+          as={Flex}
+          p='0'
+          w='full'
+          alignItems='center'
+          justifyContent='center'
+          gap={4}
+        >
+          <FeaturedIcon size='md' colorScheme='primary'>
             <ClockFastForward />
           </FeaturedIcon>
-          <div className='flex items-center justify-between w-full'>
-            <div className='flex flex-col'>
-              <div className='flex flex-1 items-center'>
-                <h1 className='text-gray-700 font-semibold text-sm line-height-1'>
+          <Flex alignItems='center' justifyContent='space-between' w='full'>
+            <Flex flexDir='column' gap='1px'>
+              <Flex flex={1} alignItems='center'>
+                <Heading size='sm' color='gray.700' noOfLines={1}>
                   Renewal ARR
-                </h1>
+                </Heading>
 
                 {showTimeToRenewal && (
-                  <p className='ml-1 text-gray-500 text-sm inline'>
+                  <Text color='gray.500' ml={1} fontSize='sm'>
                     {timeToRenewal}
-                  </p>
+                  </Text>
                 )}
-              </div>
+              </Flex>
 
               {opportunity?.renewalLikelihood && (
-                <p className='w-full text-gray-500 text-sm line-height-1'>
+                <Text w='full' color='gray.500' fontSize='sm' lineHeight={1}>
                   {!hasEnded ? (
                     <>
                       Likelihood{' '}
-                      <span
-                        className={cn(`capitalize font-medium text-gray-500`, {
-                          'text-success-500':
-                            opportunity?.renewalLikelihood ===
-                            OpportunityRenewalLikelihood.HighRenewal,
-                          'text-error-500':
-                            opportunity?.renewalLikelihood ===
-                            OpportunityRenewalLikelihood.LowRenewal,
-                          'text-warning-500':
-                            opportunity?.renewalLikelihood ===
-                            OpportunityRenewalLikelihood.MediumRenewal,
-                        })}
+                      <Text
+                        as='span'
+                        fontWeight='medium'
+                        color={`${getRenewalLikelihoodColor(
+                          opportunity.renewalLikelihood as OpportunityRenewalLikelihood,
+                        )}.500`}
+                        textTransform='capitalize'
                       >
                         {getRenewalLikelihoodLabel(
                           opportunity?.renewalLikelihood as OpportunityRenewalLikelihood,
                         )}
-                      </span>
+                      </Text>
                     </>
                   ) : (
                     'Closed lost'
                   )}
-                </p>
+                </Text>
               )}
-            </div>
+            </Flex>
 
-            <div>
-              <p className='font-semibold'>{formattedAmount}</p>
+            <Flex flexDir='column'>
+              <Text fontWeight='semibold'>{formattedAmount}</Text>
 
               {hasRewenewChanged && (
-                <p className='text-sm text-right line-through'>
+                <Text
+                  fontSize='sm'
+                  textAlign='right'
+                  textDecoration='line-through'
+                >
                   {formattedMaxAmount}
-                </p>
+                </Text>
               )}
-            </div>
-          </div>
+            </Flex>
+          </Flex>
         </CardHeader>
       </Card>
 
@@ -258,10 +280,10 @@ export const RenewalARRCard = ({
           confirmButtonLabel='Got it'
           label='This contract ends soon'
         >
-          <p className='text-sm font-normal mt-1'>
+          <Text fontSize='sm' fontWeight='normal' mt={1}>
             The renewal likelihood has been downgraded to Zero because the
             contract is set to end within the current renewal cycle.
-          </p>
+          </Text>
         </InfoDialog>
       ) : (
         <RenewalDetailsModal

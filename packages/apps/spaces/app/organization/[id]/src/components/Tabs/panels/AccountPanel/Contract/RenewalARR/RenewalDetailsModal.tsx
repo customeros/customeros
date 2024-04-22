@@ -23,6 +23,10 @@ import { useGetUsersQuery } from '@shared/graphql/getUsers.generated';
 import { GetContractsQuery } from '@organization/src/graphql/getContracts.generated';
 import { UpdateOpportunityRenewalMutation } from '@organization/src/graphql/updateOpportunityRenewal.generated';
 import {
+  getButtonStyles,
+  likelihoodButtons,
+} from '@organization/src/components/Tabs/panels/AccountPanel/Contract/RenewalARR/utils';
+import {
   Exact,
   Opportunity,
   InternalStage,
@@ -38,10 +42,6 @@ import {
   ModalOverlay,
   ModalCloseButton,
 } from '@ui/overlay/Modal';
-import {
-  getButtonStyles,
-  likelihoodButtons,
-} from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/RenewalARR/utils';
 type UpdateOpportunityMutation = UseMutationResult<
   UpdateOpportunityRenewalMutation,
   unknown,
@@ -150,11 +150,7 @@ const RenewalDetailsForm = ({
       >
         <ModalCloseButton />
         <ModalHeader>
-          <FeaturedIcon
-            size='lg'
-            colorScheme='primary'
-            className='ml-[12px] mt-[12px] mb-[31px]'
-          >
+          <FeaturedIcon size='lg' colorScheme='primary'>
             <ClockFastForward />
           </FeaturedIcon>
           <Heading fontSize='lg' mt='4'>

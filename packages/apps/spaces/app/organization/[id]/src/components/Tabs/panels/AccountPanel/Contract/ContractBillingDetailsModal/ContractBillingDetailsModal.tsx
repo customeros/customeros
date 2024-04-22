@@ -10,11 +10,11 @@ import { useBankAccountsQuery } from '@settings/graphql/getBankAccounts.generate
 import { useTenantBillingProfilesQuery } from '@settings/graphql/getTenantBillingProfiles.generated';
 
 import { Box } from '@ui/layout/Box';
-import { FeaturedIcon } from '@ui/media/Icon';
 import { Button } from '@ui/form/Button/Button';
 import { File02 } from '@ui/media/icons/File02';
 import { Grid, GridItem } from '@ui/layout/Grid';
 import { Heading } from '@ui/typography/Heading';
+import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
 import { Invoice } from '@shared/components/Invoice/Invoice';
 import { countryOptions } from '@shared/util/countryOptions';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
