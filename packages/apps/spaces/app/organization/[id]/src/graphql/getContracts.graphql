@@ -32,6 +32,7 @@ query getContracts($id: ID!) {
             currency
             invoiceEmail
             autoRenew
+
             billingDetails {
                 nextInvoicing
                 postalCode
@@ -56,13 +57,57 @@ query getContracts($id: ID!) {
                 invoicePeriodEnd
                 invoicePeriodStart
                 status
+                issued
                 amountDue
                 due
                 currency
                 invoiceLineItems {
-                    price
+                    metadata {
+                        id
+                        created
+                    }
+
                     quantity
+                    subtotal
+                    taxDue
                     total
+                    price
+                    description
+
+                }
+                contract {
+                    billingDetails {
+                        canPayWithBankTransfer
+                    }
+                }
+                status
+                invoiceNumber
+                invoicePeriodStart
+                invoicePeriodEnd
+                invoiceUrl
+                due
+                issued
+                subtotal
+                taxDue
+                currency
+                note
+                customer {
+                    name
+                    email
+                    addressLine1
+                    addressLine2
+                    addressZip
+                    addressLocality
+                    addressCountry
+                    addressRegion
+                }
+                provider {
+                    name
+                    addressLine1
+                    addressLine2
+                    addressZip
+                    addressLocality
+                    addressCountry
                 }
             }
             opportunities {

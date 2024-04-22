@@ -10,7 +10,6 @@ import { contractOptionIcon } from './utils';
 
 interface ContractStatusSelectProps {
   status: ContractStatus;
-  isEndModalOpen: boolean;
   statusContent: ReactNode;
   contractStarted?: string;
   onHandleStatusChange: () => void;

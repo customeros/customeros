@@ -16,7 +16,7 @@ import { ContractStatusTag } from '@organization/src/components/Tabs/panels/Acco
 import {
   ContractEndModal,
   ContractStartModal,
-} from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ChangeContractStatusModals';
+} from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ChangeContractStatusModals';
 
 interface ContractStatusSelectProps {
   renewsAt?: string;
@@ -61,6 +61,7 @@ export const ContractCardActions: React.FC<ContractStatusSelectProps> = ({
   } = useDisclosure({
     id: 'start-contract-modal',
   });
+
   const client = getGraphQLClient();
 
   const { mutate } = useRenewContractMutation(client, {});
@@ -108,7 +109,7 @@ export const ContractCardActions: React.FC<ContractStatusSelectProps> = ({
         onOpenStartModal();
         break;
       case ContractStatus.OutOfContract:
-        mutate({ contractId });
+        mutate({ input: { contractId } });
         break;
       case ContractStatus.Scheduled:
         break;
@@ -122,7 +123,6 @@ export const ContractCardActions: React.FC<ContractStatusSelectProps> = ({
         status={status}
         contractStarted={serviceStarted}
         statusContent={getStatusDisplay}
-        isEndModalOpen={isOpen}
         onHandleStatusChange={handleChangeStatus}
       />
       <ContractMenu

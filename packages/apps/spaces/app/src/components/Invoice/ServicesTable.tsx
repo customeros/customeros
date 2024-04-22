@@ -37,7 +37,7 @@ export function ServicesTable({
             Amount
           </div>
         </div>
-        {services.map((service, index) => (
+        {services?.map((service, index) => (
           <div
             className='flex flex-row w-full justify-between border-b border-gray-300 py-2'
             key={index}
@@ -52,7 +52,7 @@ export function ServicesTable({
                 <div className='text-left text-sm capitalize font-medium leading-5'>
                   {service?.description ?? 'Unnamed'}
                 </div>
-                <div className='text-gray-500'>
+                <div className='text-gray-500 text-sm'>
                   {service?.contractLineItem?.billingCycle ===
                   BilledType.Once ? (
                     <>

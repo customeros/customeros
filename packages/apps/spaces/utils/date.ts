@@ -12,6 +12,7 @@ import {
   addDays as addMonthsDateFns,
   addMonths as addDaysDateFns,
   isSameDay as isSameDayDateFns,
+  isTomorrow as isTomorrowDateFns,
   formatDuration as formatDurationDateFns,
   differenceInDays as differenceInDaysDateFns,
   differenceInMonths as differenceInMonthsDateFns,
@@ -110,6 +111,10 @@ export class DateTimeUtils {
   }
   public static isToday(date: string): boolean {
     return isTodayDateFns(this.getDate(date));
+  }
+
+  public static isTomorrow(date: string): boolean {
+    return isTomorrowDateFns(this.getDate(date));
   }
 
   public static addYears(date: string, yearsCount: number): Date {

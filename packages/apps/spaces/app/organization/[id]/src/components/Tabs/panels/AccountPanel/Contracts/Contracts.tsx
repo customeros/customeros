@@ -11,6 +11,7 @@ import { ContractCard } from '@organization/src/components/Tabs/panels/AccountPa
 import { ARRForecast } from '@organization/src/components/Tabs/panels/AccountPanel/ARRForecast/ARRForecast';
 import { ContractCard as NewContractCard } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ContractCard';
 import { ContractModalsContextProvider } from '@organization/src/components/Tabs/panels/AccountPanel/context/ContractModalsContext';
+import { ContractModalStatusContextProvider } from '@organization/src/components/Tabs/panels/AccountPanel/context/ContractStatusModalsContext';
 
 import { Notes } from '../Notes';
 
@@ -41,13 +42,20 @@ export const Contracts: FC<ContractsProps> = ({ isLoading, organization }) => {
               mb={4}
             >
               {isNewContractUiEnabled ? (
-                <ContractModalsContextProvider id={id}>
-                  <NewContractCard
-                    organizationId={id}
-                    organizationName={organization?.name ?? ''}
-                    data={(contract as Contract) ?? undefined}
-                  />
-                </ContractModalsContextProvider>
+                <ContractModalStatusContextProvider
+                  id={id}
+                  upcomingInvoices={contract?.upcomingInvoices}
+                  nextInvoice={contract?.billingDetails?.nextInvoicing}
+                  committedPeriodInMonths={contract?.committedPeriodInMonths}
+                >
+                  <ContractModalsContextProvider id={id}>
+                    <NewContractCard
+                      organizationId={id}
+                      organizationName={organization?.name ?? ''}
+                      data={(contract as Contract) ?? undefined}
+                    />
+                  </ContractModalsContextProvider>
+                </ContractModalStatusContextProvider>
               ) : (
                 <ContractCard
                   organizationId={id}

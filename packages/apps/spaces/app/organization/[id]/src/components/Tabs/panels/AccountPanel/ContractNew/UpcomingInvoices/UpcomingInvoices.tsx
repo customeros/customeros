@@ -7,14 +7,15 @@ import { Plus } from '@ui/media/icons/Plus';
 import { Edit03 } from '@ui/media/icons/Edit03';
 import { Button } from '@ui/form/Button/Button';
 import { DateTimeUtils } from '@spaces/utils/date';
-import { toastSuccess } from '@ui/presentation/Toast';
 import { RefreshCw05 } from '@ui/media/icons/RefreshCw05';
 import { Contract, ContractStatus } from '@graphql/types';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { ArrowNarrowRight } from '@ui/media/icons/ArrowNarrowRight';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
-import { useRenewContractMutation } from '@organization/src/graphql/renewContract.generated';
 import { useTimelineEventPreviewMethodsContext } from '@organization/src/components/Timeline/shared/TimelineEventPreview/context/TimelineEventPreviewContext';
+import {
+  ContractStatusModalMode,
+  useContractModalStatusContext,
+} from '@organization/src/components/Tabs/panels/AccountPanel/context/ContractStatusModalsContext';
 
 interface ContractCardProps {
   data: Contract;
@@ -29,14 +30,10 @@ export const UpcomingInvoices = ({
 }: ContractCardProps) => {
   const [isPaused, setIsPaused] = useState(false);
   const [isMissingFields, setFieldsMissing] = useState(false);
-  const client = getGraphQLClient();
   const { handleOpenInvoice } = useTimelineEventPreviewMethodsContext();
 
-  const { mutate: renewContract } = useRenewContractMutation(client, {
-    onSuccess: () => {
-      toastSuccess('Contract renewed', `${data?.metadata?.id}-renewed`);
-    },
-  });
+  const { onStatusModalOpen } = useContractModalStatusContext();
+
   const getIsPaused = (): boolean => {
     if (
       [
@@ -101,7 +98,7 @@ export const UpcomingInvoices = ({
           className='ml-2 font-normal rounded'
           size='xs'
           colorScheme='primary'
-          onClick={() => renewContract({ contractId: data.metadata.id })}
+          onClick={() => onStatusModalOpen(ContractStatusModalMode.Renew)}
           leftIcon={<RefreshCw05 />}
         >
           Renew contract

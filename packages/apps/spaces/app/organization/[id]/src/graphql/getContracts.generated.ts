@@ -90,16 +90,53 @@ export type GetContractsQuery = {
         invoicePeriodEnd: any;
         invoicePeriodStart: any;
         status?: Types.InvoiceStatus | null;
+        issued: any;
         amountDue: number;
         due: any;
         currency: string;
+        invoiceNumber: string;
+        invoiceUrl: string;
+        subtotal: number;
+        taxDue: number;
+        note?: string | null;
         metadata: { __typename?: 'Metadata'; id: string };
         invoiceLineItems: Array<{
           __typename?: 'InvoiceLine';
-          price: number;
           quantity: any;
+          subtotal: number;
+          taxDue: number;
           total: number;
+          price: number;
+          description: string;
+          metadata: { __typename?: 'Metadata'; id: string; created: any };
         }>;
+        contract: {
+          __typename?: 'Contract';
+          billingDetails?: {
+            __typename?: 'BillingDetails';
+            canPayWithBankTransfer?: boolean | null;
+          } | null;
+        };
+        customer: {
+          __typename?: 'InvoiceCustomer';
+          name?: string | null;
+          email?: string | null;
+          addressLine1?: string | null;
+          addressLine2?: string | null;
+          addressZip?: string | null;
+          addressLocality?: string | null;
+          addressCountry?: string | null;
+          addressRegion?: string | null;
+        };
+        provider: {
+          __typename?: 'InvoiceProvider';
+          name?: string | null;
+          addressLine1?: string | null;
+          addressLine2?: string | null;
+          addressZip?: string | null;
+          addressLocality?: string | null;
+          addressCountry?: string | null;
+        };
       }>;
       opportunities?: Array<{
         __typename?: 'Opportunity';
@@ -209,13 +246,55 @@ export const GetContractsDocument = `
         invoicePeriodEnd
         invoicePeriodStart
         status
+        issued
         amountDue
         due
         currency
         invoiceLineItems {
-          price
+          metadata {
+            id
+            created
+          }
           quantity
+          subtotal
+          taxDue
           total
+          price
+          description
+        }
+        contract {
+          billingDetails {
+            canPayWithBankTransfer
+          }
+        }
+        status
+        invoiceNumber
+        invoicePeriodStart
+        invoicePeriodEnd
+        invoiceUrl
+        due
+        issued
+        subtotal
+        taxDue
+        currency
+        note
+        customer {
+          name
+          email
+          addressLine1
+          addressLine2
+          addressZip
+          addressLocality
+          addressCountry
+          addressRegion
+        }
+        provider {
+          name
+          addressLine1
+          addressLine2
+          addressZip
+          addressLocality
+          addressCountry
         }
       }
       opportunities {
