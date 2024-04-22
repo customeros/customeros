@@ -463,6 +463,10 @@ func (h *ContractEventHandler) createActionForStatusChange(ctx context.Context, 
 }
 
 func (h *ContractEventHandler) startOnboardingIfEligible(ctx context.Context, tenant, contractId string, span opentracing.Span) {
+
+	// TODO temporary not eligible for all contracts
+	return
+
 	contractDbNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, tenant, contractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
