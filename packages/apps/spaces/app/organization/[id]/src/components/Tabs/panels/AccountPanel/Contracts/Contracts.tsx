@@ -3,15 +3,11 @@
 import React, { FC } from 'react';
 import { useParams } from 'next/navigation';
 
-import { useFeatureIsOn } from '@growthbook/growthbook-react';
-
 import { Flex } from '@ui/layout/Flex';
 import { Contract, Organization } from '@graphql/types';
-import { ContractCard } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ContractCard';
 import { ARRForecast } from '@organization/src/components/Tabs/panels/AccountPanel/ARRForecast/ARRForecast';
 import { ContractCard as NewContractCard } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ContractCard';
 import { ContractModalsContextProvider } from '@organization/src/components/Tabs/panels/AccountPanel/context/ContractModalsContext';
-import { ContractModalStatusContextProvider } from '@organization/src/components/Tabs/panels/AccountPanel/context/ContractStatusModalsContext';
 
 import { Notes } from '../Notes';
 
@@ -21,7 +17,6 @@ interface ContractsProps {
 }
 export const Contracts: FC<ContractsProps> = ({ isLoading, organization }) => {
   const id = useParams()?.id as string;
-  const isNewContractUiEnabled = useFeatureIsOn('contract-new');
 
   return (
     <>
@@ -41,28 +36,13 @@ export const Contracts: FC<ContractsProps> = ({ isLoading, organization }) => {
               w='full'
               mb={4}
             >
-              {isNewContractUiEnabled ? (
-                <ContractModalStatusContextProvider
-                  id={id}
-                  upcomingInvoices={contract?.upcomingInvoices}
-                  nextInvoice={contract?.billingDetails?.nextInvoicing}
-                  committedPeriodInMonths={contract?.committedPeriodInMonths}
-                >
-                  <ContractModalsContextProvider id={id}>
-                    <NewContractCard
-                      organizationId={id}
-                      organizationName={organization?.name ?? ''}
-                      data={(contract as Contract) ?? undefined}
-                    />
-                  </ContractModalsContextProvider>
-                </ContractModalStatusContextProvider>
-              ) : (
-                <ContractCard
+              <ContractModalsContextProvider id={id}>
+                <NewContractCard
                   organizationId={id}
                   organizationName={organization?.name ?? ''}
                   data={(contract as Contract) ?? undefined}
                 />
-              )}
+              </ContractModalsContextProvider>
             </Flex>
           ))}
         </>
