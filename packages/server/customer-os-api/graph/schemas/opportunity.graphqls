@@ -20,11 +20,11 @@ type Opportunity implements Node {
     estimatedClosedAt:  Time
     generalNotes:       String!
     nextSteps:          String!
-    renewedAt:          Time!
+    renewedAt:          Time
     renewalApproved:    Boolean!
     renewalLikelihood:  OpportunityRenewalLikelihood!
     renewalUpdatedByUserId: String!
-    renewalUpdatedByUserAt: Time!
+    renewalUpdatedByUserAt: Time
     comments:           String!
     createdBy:          User @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant
     owner:              User @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant

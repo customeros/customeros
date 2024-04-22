@@ -14439,11 +14439,11 @@ type Opportunity implements Node {
     estimatedClosedAt:  Time
     generalNotes:       String!
     nextSteps:          String!
-    renewedAt:          Time!
+    renewedAt:          Time
     renewalApproved:    Boolean!
     renewalLikelihood:  OpportunityRenewalLikelihood!
     renewalUpdatedByUserId: String!
-    renewalUpdatedByUserAt: Time!
+    renewalUpdatedByUserAt: Time
     comments:           String!
     createdBy:          User @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant
     owner:              User @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -69866,14 +69866,11 @@ func (ec *executionContext) _Opportunity_renewedAt(ctx context.Context, field gr
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(time.Time)
+	res := resTmp.(*time.Time)
 	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Opportunity_renewedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -70042,14 +70039,11 @@ func (ec *executionContext) _Opportunity_renewalUpdatedByUserAt(ctx context.Cont
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(time.Time)
+	res := resTmp.(*time.Time)
 	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Opportunity_renewalUpdatedByUserAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -110486,9 +110480,6 @@ func (ec *executionContext) _Opportunity(ctx context.Context, sel ast.SelectionS
 			}
 		case "renewedAt":
 			out.Values[i] = ec._Opportunity_renewedAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
 		case "renewalApproved":
 			out.Values[i] = ec._Opportunity_renewalApproved(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -110506,9 +110497,6 @@ func (ec *executionContext) _Opportunity(ctx context.Context, sel ast.SelectionS
 			}
 		case "renewalUpdatedByUserAt":
 			out.Values[i] = ec._Opportunity_renewalUpdatedByUserAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
 		case "comments":
 			out.Values[i] = ec._Opportunity_comments(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
