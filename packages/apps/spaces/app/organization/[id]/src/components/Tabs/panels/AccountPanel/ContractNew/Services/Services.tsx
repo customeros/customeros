@@ -16,7 +16,7 @@ export const Services: React.FC<Props> = ({ data, currency, onModalOpen }) => {
     <>
       <p className='w-full flex items-center justify-between'>
         {!data?.length && (
-          <p className='text-sm font-semibold mt-2'>No services</p>
+          <span className='text-sm font-semibold mt-2'>No services</span>
         )}
 
         {!data?.length && (

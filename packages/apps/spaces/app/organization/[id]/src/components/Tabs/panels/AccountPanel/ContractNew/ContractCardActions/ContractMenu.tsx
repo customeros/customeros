@@ -48,7 +48,7 @@ export const ContractMenu: React.FC<ContractStatusSelectProps> = ({
               className='flex items-center'
               onClick={() => onStatusModalOpen(ContractStatusModalMode.Renew)}
             >
-              <RefreshCw05 color='gray.500' mr={2} />
+              <RefreshCw05 className='text-gray-500 mr-2' />
               Renew contract
             </MenuItem>
           )}

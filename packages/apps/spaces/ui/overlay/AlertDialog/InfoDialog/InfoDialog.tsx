@@ -2,7 +2,8 @@ import React, { useRef, MouseEventHandler } from 'react';
 
 import { Button } from '@ui/form/Button';
 import { Text } from '@ui/typography/Text';
-import { Icons, FeaturedIcon } from '@ui/media/Icon';
+import { InfoCircle } from '@ui/media/icons/InfoCircle';
+import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
 import {
   AlertDialog,
   AlertDialogHeader,
@@ -46,7 +47,7 @@ export const InfoDialog = ({
         >
           <AlertDialogHeader fontSize='lg' fontWeight='bold' pt='6'>
             <FeaturedIcon size='lg' colorScheme='primary'>
-              <Icons.InfoCircle />
+              <InfoCircle />
             </FeaturedIcon>
             {label && <Text mt='4'>{label}</Text>}
             {children ??

@@ -1,7 +1,8 @@
 import React, { useRef, MouseEventHandler } from 'react';
 
-import { Icons, FeaturedIcon } from '@ui/media/Icon';
+import { Trash01 } from '@ui/media/icons/Trash01';
 import { Spinner } from '@ui/feedback/Spinner/Spinner';
+import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
 import { Button, ButtonProps } from '@ui/form/Button/Button';
 
 import {
@@ -56,8 +57,12 @@ export const ConfirmDeleteDialog = ({
         <AlertDialogOverlay>
           <AlertDialogContent className='rounded-xl bg-no-repeat bg-[url(/backgrounds/organization/circular-bg-pattern.png)]'>
             {!hideCloseButton && <AlertDialogCloseIconButton />}
-            <FeaturedIcon size='lg' colorScheme={colorScheme as string}>
-              {icon ? icon : <Icons.Trash1 />}
+            <FeaturedIcon
+              size='lg'
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              colorScheme={colorScheme as any}
+            >
+              {icon ? icon : <Trash01 />}
             </FeaturedIcon>
             <AlertDialogHeader className='text-lg font-bold mt-4'>
               <p className='pb-0'>{label}</p>
@@ -68,7 +73,6 @@ export const ConfirmDeleteDialog = ({
               )}
             </AlertDialogHeader>
             {body && <AlertDialogBody>{body}</AlertDialogBody>}
-
             <AlertDialogFooter>
               <AlertDialogCloseButton>
                 <Button
