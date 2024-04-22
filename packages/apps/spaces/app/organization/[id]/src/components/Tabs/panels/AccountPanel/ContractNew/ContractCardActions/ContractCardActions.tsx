@@ -43,7 +43,6 @@ export const ContractCardActions: React.FC<ContractStatusSelectProps> = ({
   onOpenEditModal,
 }) => {
   const { onStatusModalOpen } = useContractModalStatusContext();
-
   const getStatusDisplay = useMemo(() => {
     let icon, text;
     switch (status) {
