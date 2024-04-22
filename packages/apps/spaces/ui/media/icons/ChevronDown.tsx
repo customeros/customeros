@@ -1,7 +1,18 @@
-import { Icon, IconProps } from '@ui/media/Icon';
+import React from 'react';
 
-export const ChevronDown = (props: IconProps) => (
-  <Icon viewBox='0 0 24 24' fill='none' boxSize='4' {...props}>
+import { twMerge } from 'tailwind-merge';
+
+interface IconProps extends React.SVGAttributes<SVGElement> {
+  className?: string;
+}
+
+export const ChevronDown = ({ className, ...props }: IconProps) => (
+  <svg
+    viewBox='0 0 24 24'
+    fill='none'
+    {...props}
+    className={twMerge('inline-block size-4', className)}
+  >
     <path
       d='M6 9L12 15L18 9'
       stroke='currentColor'
@@ -9,5 +20,5 @@ export const ChevronDown = (props: IconProps) => (
       strokeLinecap='round'
       strokeLinejoin='round'
     />
-  </Icon>
+  </svg>
 );

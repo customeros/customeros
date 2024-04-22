@@ -9,12 +9,12 @@ import { Dot } from '@ui/media/Dot';
 import { Box } from '@ui/layout/Box';
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
-import { FeaturedIcon } from '@ui/media/Icon';
 import { FormSelect } from '@ui/form/SyncSelect';
 import { Heading } from '@ui/typography/Heading';
 import { Button, ButtonGroup } from '@ui/form/Button';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea';
 import { FormCurrencyInput } from '@ui/form/CurrencyInput';
+import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
 import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
@@ -150,7 +150,11 @@ const RenewalDetailsForm = ({
       >
         <ModalCloseButton />
         <ModalHeader>
-          <FeaturedIcon size='lg' colorScheme='primary'>
+          <FeaturedIcon
+            size='lg'
+            colorScheme='primary'
+            className='ml-[12px] mt-[12px] mb-[31px]'
+          >
             <ClockFastForward />
           </FeaturedIcon>
           <Heading fontSize='lg' mt='4'>

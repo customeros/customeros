@@ -15,7 +15,7 @@ export const toastError = (text: string, id: string) => {
         aria-label='Close'
         colorScheme='error'
         onClick={closeToast}
-        icon={<XClose boxSize='5' />}
+        icon={<XClose className='size-5' />}
       />
     ),
   });

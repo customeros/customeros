@@ -2,10 +2,10 @@ import Link from 'next/link';
 import { memo, useRef, useState } from 'react';
 
 import { cn } from '@ui/utils/cn';
-import { Icons } from '@ui/media/Icon';
 import { formatSocialUrl } from '@ui/form/UrlInput/util';
 import { Input, InputProps } from '@ui/form/Input/Input2';
 import { IconButton } from '@ui/form/IconButton/IconButton';
+import { LinkExternal02 } from '@ui/media/icons/LinkExternal02';
 import { InputGroup, LeftElement } from '@ui/form/Input/InputGroup';
 
 import { SocialIcon } from './SocialIcons';
@@ -103,7 +103,7 @@ export const SocialInput = memo(
                         variant='ghost'
                         colorScheme='gray'
                         aria-label='social link'
-                        icon={<Icons.LinkExternal2 color='gray.500' />}
+                        icon={<LinkExternal02 className='text-gray-500' />}
                       />
                     </Link>
                   )}

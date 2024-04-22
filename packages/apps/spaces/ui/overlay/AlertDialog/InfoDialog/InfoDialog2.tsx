@@ -1,7 +1,7 @@
 import React, { MouseEventHandler } from 'react';
 
-import { Icons } from '@ui/media/Icon';
 import { Button } from '@ui/form/Button/Button';
+import { InfoCircle } from '@ui/media/icons/InfoCircle';
 import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
 import {
   AlertDialog,
@@ -40,7 +40,7 @@ export const InfoDialog = ({
               colorScheme='primary'
               className='translate-y-[-10px] translate-x-[10px]'
             >
-              <Icons.InfoCircle />
+              <InfoCircle />
             </FeaturedIcon>
             {label && <p className='mt-4'>{label}</p>}
             {children ??

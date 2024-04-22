@@ -37,7 +37,7 @@ export const BillingDetailsForm: FC<BillingAddressDetailsForm> = ({
       />
 
       <div className='flex flex-col'>
-        <p className='text-sm font-semibold'>Billing address</p>
+        <p className='text-sm font-semibold'>Billing address aicishaia</p>
         <FormSelect
           label='Country'
           placeholder='Country'

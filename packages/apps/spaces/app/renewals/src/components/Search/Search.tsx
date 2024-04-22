@@ -2,9 +2,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 
 import debounce from 'lodash/debounce';
 
-import { Input } from '@ui/form/Input';
+import { Input } from '@ui/form/Input/Input2';
 import { SearchSm } from '@ui/media/icons/SearchSm';
-import { InputGroup, InputLeftElement } from '@ui/form/InputGroup';
+import { InputGroup, LeftElement } from '@ui/form/Input/InputGroup';
 
 export const Search = () => {
   const router = useRouter();
@@ -27,35 +27,23 @@ export const Search = () => {
   };
 
   return (
-    <InputGroup
-      w='full'
-      size='lg'
-      bg='gray.25'
-      onChange={debounce(handleChange, 300)}
-    >
-      <InputLeftElement w='9'>
-        <SearchSm boxSize='5' />
-      </InputLeftElement>
-      <Input
-        pl='9'
-        autoCorrect='off'
-        spellCheck={false}
-        placeholder={placeholder}
-        defaultValue={defaultValue}
-        borderBottom='unset'
-        _hover={{
-          borderBottom: 'unset',
-        }}
-        _focusWithin={{
-          borderBottom: 'unset',
-        }}
-        _focus={{
-          borderBottom: 'unset',
-        }}
-        _focusVisible={{
-          borderBottom: 'unset',
-        }}
-      />
-    </InputGroup>
+    <div className='flex items-center justify-between pr-4'>
+      <InputGroup
+        className='w-full bg-gray-25 hover:border-transparent focus-within:border-transparent focus-within:hover:border-transparent'
+        onChange={debounce(handleChange, 300)}
+      >
+        <LeftElement className='ml-2'>
+          <SearchSm className='size-5' />
+        </LeftElement>
+        <Input
+          autoCorrect='off'
+          size='lg'
+          spellCheck={false}
+          placeholder={placeholder}
+          defaultValue={defaultValue}
+          variant='unstyled'
+        />
+      </InputGroup>
+    </div>
   );
 };

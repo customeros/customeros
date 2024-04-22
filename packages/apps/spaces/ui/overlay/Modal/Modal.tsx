@@ -63,7 +63,7 @@ export const ModalCloseButton = (props: DialogCloseProps) => {
         variant='ghost'
         colorScheme='gray'
         className='absolute top-4 right-4'
-        icon={<XClose boxSize={5} className='w-5 h-5' />}
+        icon={<XClose className='w-5 h-5' />}
         aria-label='Close modal'
       />
     </Dialog.Close>

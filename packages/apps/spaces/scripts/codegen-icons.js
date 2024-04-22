@@ -2,12 +2,19 @@ const { readFileSync, readdirSync, writeFileSync } = require('fs');
 const { format } = require('prettier');
 
 const makeIconComponent = (name, content, viewBox) => `
-import { Icon, IconProps } from "@ui/media/Icon";
+import React from 'react';
 
-export const ${name} = (props: IconProps) => (
-  <Icon viewBox='${viewBox}' fill='none' boxSize='4' {...props}>
+import { twMerge } from 'tailwind-merge';
+
+interface IconProps extends React.SVGAttributes<SVGElement> {
+  className?: string;
+}
+
+
+export const ${name} = ({ className, ...props }: IconProps) => (
+  <svg viewBox='${viewBox}' fill='none' {...props} className={twMerge('inline-block size-4', className)}> 
     ${content}
-  </Icon>
+  </svg>
 );
 `;
 

@@ -4,9 +4,10 @@ import { useParams } from 'next/navigation';
 
 import { useQueryClient } from '@tanstack/react-query';
 
-import { Icons } from '@ui/media/Icon';
 import { Contact } from '@graphql/types';
 import { Button } from '@ui/form/Button/Button';
+import { Users03 } from '@ui/media/icons/Users03';
+import { UsersPlus } from '@ui/media/icons/UsersPlus';
 import { Spinner } from '@ui/feedback/Spinner/Spinner';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { invalidateQuery } from '@organization/src/components/Tabs/panels/PeoplePanel/util';
@@ -87,7 +88,7 @@ export const PeoplePanel = () => {
               />
             }
             onClick={handleAddContact}
-            leftIcon={<Icons.UsersPlus className='text-gray-500' />}
+            leftIcon={<UsersPlus className='text-gray-500' />}
           >
             Add
           </Button>
@@ -97,7 +98,7 @@ export const PeoplePanel = () => {
       {!contacts.length && (
         <div className='flex flex-col items-center mt-4'>
           <div className='border-1 border-gray-200 p-3 rounded-md mb-6'>
-            <Icons.Users2 color='gray.700' boxSize='6' />
+            <Users03 className='text-gray-700 size-6' />
           </div>
           <span className='text-gray-700 font-semibold'>
             Let’s add some people

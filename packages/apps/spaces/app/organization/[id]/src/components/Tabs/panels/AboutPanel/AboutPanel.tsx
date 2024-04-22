@@ -5,16 +5,22 @@ import { useForm } from 'react-inverted-form';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 import { useDebounce, useWillUnmount, useDeepCompareEffect } from 'rooks';
 
-import { Icons } from '@ui/media/Icon';
 import { Organization } from '@graphql/types';
 import { FormUrlInput } from '@ui/form/UrlInput';
+import { Users03 } from '@ui/media/icons/Users03';
+import { Share07 } from '@ui/media/icons/Share07';
+import { Target05 } from '@ui/media/icons/Target05';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
+import { HeartHand } from '@ui/media/icons/HeartHand';
 import { FormSelect } from '@ui/form/Select/FormSelect';
+import { Building07 } from '@ui/media/icons/Building07';
 import { Tag, TagLabel } from '@ui/presentation/Tag/Tag';
 import { FormNumberInputGroup } from '@ui/form/InputGroup';
 import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
+import { HorizontalBarChart03 } from '@ui/media/icons/HorizontalBarChart03';
+import { ArrowCircleBrokenUpLeft } from '@ui/media/icons/ArrowCircleBrokenUpLeft';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea/FormAutoresizeTextarea2';
 import { useOrganizationQuery } from '@organization/src/graphql/organization.generated';
 import { Branches } from '@organization/src/components/Tabs/panels/AboutPanel/branches/Branches';
@@ -235,7 +241,7 @@ export const AboutPanel = () => {
               formId='organization-about'
               placeholder='Relationship'
               options={relationshipOptions}
-              leftElement={<Icons.HeartHand color='gray.500' mr='3' />}
+              leftElement={<HeartHand className='text-gray-500 mr-3' />}
             />
           </div>
 
@@ -245,7 +251,7 @@ export const AboutPanel = () => {
             placeholder='Industry'
             options={industryOptions}
             formId='organization-about'
-            leftElement={<Icons.Building7 color='gray.500' mr='3' />}
+            leftElement={<Building07 className='text-gray-500 mr-3' />}
           />
 
           <FormAutoresizeTextarea
@@ -254,7 +260,7 @@ export const AboutPanel = () => {
             name='targetAudience'
             formId='organization-about'
             placeholder='Target Audience'
-            leftElement={<Icons.Target5 color='gray.500' mt='1' />}
+            leftElement={<Target05 className='text-gray-500 mt-1' />}
           />
 
           <FormSelect
@@ -263,7 +269,9 @@ export const AboutPanel = () => {
             formId='organization-about'
             placeholder='Business Type'
             options={businessTypeOptions}
-            leftElement={<Icons.DataFlow3 color='gray.500' mr='3' />}
+            leftElement={
+              <ArrowCircleBrokenUpLeft className='text-gray-500 mr-3' />
+            }
           />
 
           <div className='flex items-center justify-center w-full'>
@@ -275,7 +283,7 @@ export const AboutPanel = () => {
                 placeholder='Last funding round'
                 options={lastFundingRoundOptions}
                 leftElement={
-                  <Icons.HorizontalBarChart3 color='gray.500' mr='3' />
+                  <HorizontalBarChart03 className='text-gray-500 mr-3' />
                 }
               />
             </div>
@@ -285,7 +293,7 @@ export const AboutPanel = () => {
               formId='organization-about'
               placeholder='Last funding amount'
               min={0}
-              leftElement={<CurrencyDollar boxSize={4} color={'gray.500'} />}
+              leftElement={<CurrencyDollar className='text-gray-500 size-4' />}
             />
           </div>
 
@@ -295,7 +303,7 @@ export const AboutPanel = () => {
             options={employeesOptions}
             formId='organization-about'
             placeholder='Number of employees'
-            leftElement={<Icons.Users2 color='gray.500' mr='3' />}
+            leftElement={<Users03 className='text-gray-500 mr-3' />}
           />
 
           <OwnerInput
@@ -312,7 +320,7 @@ export const AboutPanel = () => {
             invalidateQuery={invalidateQuery}
             defaultValues={defaultValues.socials}
             placeholder='Social link'
-            leftElement={<Icons.Share7 color='gray.500' />}
+            leftElement={<Share07 className='text-gray-500' />}
           />
 
           {!!data?.organization?.subsidiaries?.length &&

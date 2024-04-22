@@ -26,11 +26,11 @@ export const PercentageTrend = ({ percentage }: { percentage: string }) => {
   percentage = `${percentage}`;
   const icon =
     percentage.indexOf('0') == 0 ? (
-      <Minus boxSize='5' color='gray.700' />
+      <Minus className='size-5 text-gray-700' />
     ) : percentage.indexOf('-') == 0 ? (
-      <TrendDown01 boxSize='5' color='yellow.500' />
+      <TrendDown01 className='size-5 text-warning-500' />
     ) : (
-      <TrendUp01 boxSize='5' color='green.500' />
+      <TrendUp01 className='size-5 text-success-500' />
     );
 
   const color =
@@ -38,7 +38,7 @@ export const PercentageTrend = ({ percentage }: { percentage: string }) => {
       ? 'text-gray-700'
       : percentage.indexOf('-') == 0
       ? 'text-yellow-600'
-      : 'text-green-600';
+      : 'text-succes-600';
 
   const quote = percentage.indexOf('0') == 0 ? sample(quotes) : 'vs last mth';
 

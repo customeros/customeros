@@ -6,7 +6,8 @@ import { useForm } from 'react-inverted-form';
 import { convert } from 'html-to-text';
 
 import { cn } from '@ui/utils/cn';
-import { Icons } from '@ui/media/Icon';
+import { Link03 } from '@ui/media/icons/Link03';
+import { XClose } from '@ui/media/icons/XClose';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { IconButton } from '@ui/form/IconButton/IconButton';
@@ -148,7 +149,7 @@ export const MeetingPreviewModal = ({
               size='sm'
               variant='ghost'
               aria-label='copy link'
-              icon={<Icons.Link3 color='gray.500' />}
+              icon={<Link03 className='text-gray-500' />}
               onClick={() => copy(window.location.href)}
             />
           </Tooltip>
@@ -158,7 +159,7 @@ export const MeetingPreviewModal = ({
               variant='ghost'
               aria-label='close'
               onClick={closeModal}
-              icon={<Icons.XClose color='gray.500' />}
+              icon={<XClose className='text-gray-500' />}
             />
           </Tooltip>
         </div>

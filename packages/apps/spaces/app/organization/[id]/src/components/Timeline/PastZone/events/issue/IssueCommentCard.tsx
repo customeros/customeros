@@ -46,7 +46,7 @@ export const IssueCommentCard: FC<IssueCommentCardProps> = ({
             <Avatar
               name={name}
               size='md'
-              icon={<User01 color='primary.500' boxSize='5' />}
+              icon={<User01 className='text-primary-500 size-5' />}
               className={cn(profilePhotoUrl ? '' : 'border border-primary-200')}
               src={profilePhotoUrl || undefined}
             />

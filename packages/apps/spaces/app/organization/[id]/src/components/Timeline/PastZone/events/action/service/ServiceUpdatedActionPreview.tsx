@@ -49,13 +49,15 @@ export const ServiceUpdatedActionPreview: FC<{
       />
       <Card className='m-6 mt-3 p-4 shadow-xs'>
         <CardContent className='flex p-0 items-center'>
-          <FeaturedIcon
-            className='min-w-10'
-            size='md'
-            colorScheme={mode === 'created' ? 'primary' : 'gray'}
-          >
-            <DotSingle />
-          </FeaturedIcon>
+          <div className='inline-block w-[30px]'>
+            <FeaturedIcon
+              size='md'
+              colorScheme={mode === 'created' ? 'primary' : 'gray'}
+              className='mr-2'
+            >
+              <DotSingle />
+            </FeaturedIcon>
+          </div>
           <p className='max-w-[500px] line-clamp-2 ml-2 text-sm text-gray-700'>
             {formattedContent}
           </p>

@@ -170,12 +170,7 @@ export const OwnerFilter = ({
           ))
         ) : (
           <div className='flex w-full justify-center items-center flex-col'>
-            <Tumbleweed
-              mr='10'
-              boxSize='8'
-              color='gray.400'
-              alignSelf='flex-end'
-            />
+            <Tumbleweed className='mr-10 size-8 text-gray-400 self-end' />
             <span className='text-sm text-gray-500'>
               Empty here in <b>No Resultsville</b>
             </span>

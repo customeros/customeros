@@ -1,9 +1,8 @@
 import React, { useMemo } from 'react';
 
-import { Flex } from '@ui/layout/Flex';
+import { cn } from '@ui/utils/cn';
 import { Action } from '@graphql/types';
-import { Text } from '@ui/typography/Text';
-import { FeaturedIcon } from '@ui/media/Icon';
+import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
 import { getMetadata } from '@organization/src/components/Timeline/PastZone/events/action/utils';
 import { iconsByStatus } from '@organization/src/components/Timeline/PastZone/events/action/contract/utils';
 import { useTimelineEventPreviewMethodsContext } from '@organization/src/components/Timeline/shared/TimelineEventPreview/context/TimelineEventPreviewContext';
@@ -25,36 +24,31 @@ export const ContractStatusUpdatedAction: React.FC<
   const content = data.content.replace(status.split('_').join(' '), '');
 
   return (
-    <Flex
-      alignItems='center'
+    <div
+      className='flex items-center cursor-pointer min-h-[40px]'
       onClick={() => openModal(data.id)}
-      cursor='pointer'
     >
-      <FeaturedIcon
-        size='md'
-        minW='10'
-        colorScheme={iconsByStatus[status]?.colorScheme as string}
-      >
-        {iconsByStatus[status]?.icon}
-      </FeaturedIcon>
+      <div className='inline w-[30px]'>
+        <FeaturedIcon
+          size='md'
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          colorScheme={iconsByStatus[status]?.colorScheme as any}
+        >
+          {iconsByStatus[status]?.icon}
+        </FeaturedIcon>
+      </div>
 
-      <Text
-        my={1}
-        maxW='500px'
-        noOfLines={2}
-        ml={2}
-        fontSize='sm'
-        color='gray.700'
-      >
+      <p className='my-1 max-w-[500px] ml-2 text-sm text-gray-700 line-clamp-2'>
         {content}
-        <Text
-          as='span'
-          fontWeight={status === 'renewed' ? 'normal' : 'semibold'}
-          ml={1}
+        <span
+          className={cn(
+            status === 'renewed' ? 'font-base' : 'font-semibold',
+            'ml-1',
+          )}
         >
           {status.split('_').join(' ')}
-        </Text>
-      </Text>
-    </Flex>
+        </span>
+      </p>
+    </div>
   );
 };

@@ -12,7 +12,7 @@ export const Empty = () => {
             colorScheme='primary'
             className='absolute top-[24%] right-[46%]'
           >
-            <File04 boxSize='5' />
+            <File04 className='size-5' />
           </FeaturedIcon>
           <HalfCirclePattern />
         </div>

@@ -2,8 +2,8 @@ import React, { PropsWithChildren } from 'react';
 
 import { cn } from '@ui/utils/cn';
 import { User01 } from '@ui/media/icons/User01';
-import Intercom from '@ui/media/icons/Intercom';
 import { Avatar } from '@ui/media/Avatar/Avatar';
+import { Intercom } from '@ui/media/icons/Intercom';
 import { ViewInExternalAppButton } from '@ui/form/Button';
 import { Card, CardContent } from '@ui/presentation/Card/Card';
 import { HtmlContentRenderer } from '@ui/presentation/HtmlContentRenderer/HtmlContentRenderer';
@@ -75,7 +75,7 @@ export const IntercomMessageCard: React.FC<IntercomMessageCardProps> = ({
                   url={sourceUrl}
                   icon={
                     <div className='flex items-center justify-center'>
-                      <Intercom height={10} />
+                      <Intercom className='h-10' />
                     </div>
                   }
                 />

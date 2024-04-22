@@ -67,7 +67,7 @@ export const SlackThreadPreviewModal: React.FC = () => {
                   color='gray.500'
                   size='sm'
                   mr={1}
-                  icon={<Link03 color='gray.500' boxSize='4' />}
+                  icon={<Link03 className='text-gray-500 size-4' />}
                   onClick={() => copy(window.location.href)}
                 />
               </div>
@@ -79,7 +79,7 @@ export const SlackThreadPreviewModal: React.FC = () => {
                   aria-label='Close preview'
                   color='gray.500'
                   size='sm'
-                  icon={<XClose color='gray.500' boxSize='5' />}
+                  icon={<XClose className='text-gray-500 size-5' />}
                   onClick={closeModal}
                 />
               </div>

@@ -14,6 +14,7 @@ import { useDisclosure } from '@ui/utils';
 import { Send03 } from '@ui/media/icons/Send03';
 import { CardBody } from '@ui/presentation/Card';
 import { InteractionEvent } from '@graphql/types';
+import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
 import { basicEditorExtensions } from '@ui/form/RichTextEditor/extensions';
 import { useTimelineMeta } from '@organization/src/components/Timeline/state';
 import { getEmailParticipantsNameAndEmail } from '@spaces/utils/getParticipantsName';
@@ -305,11 +306,9 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
           onConfirm={handleSubmit}
           isLoading={false}
           icon={
-            <Send03
-              color='primary.700'
-              boxSize='inherit'
-              verticalAlign='initial'
-            />
+            <FeaturedIcon colorScheme='primary' size='lg'>
+              <Send03 className='text-primary-700' />
+            </FeaturedIcon>
           }
         />
       </div>

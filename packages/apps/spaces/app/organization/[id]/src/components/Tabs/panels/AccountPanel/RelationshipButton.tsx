@@ -154,7 +154,7 @@ export const RelationshipButton = () => {
               color={selectedValue?.value ? 'success.500' : 'gray.400'}
             />
           ) : selectedValue?.value ? (
-            <ActivityHeart color='success.500' mr='1' />
+            <ActivityHeart className='text-succes-500 mr-1' />
           ) : null
         }
       />
