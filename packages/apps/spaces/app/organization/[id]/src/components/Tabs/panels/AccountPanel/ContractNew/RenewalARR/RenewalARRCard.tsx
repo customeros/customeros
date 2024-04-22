@@ -5,10 +5,10 @@ import { produce } from 'immer';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { cn } from '@ui/utils/cn';
-import { FeaturedIcon } from '@ui/media/Icon';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { toastError } from '@ui/presentation/Toast';
 import { getDifferenceFromNow } from '@shared/util/date';
+import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
 import { Card, CardHeader } from '@ui/presentation/Card/Card';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
@@ -190,7 +190,7 @@ export const RenewalARRCard = ({
         // }
       >
         <CardHeader className='flex items-center justify-between w-full gap-4'>
-          <FeaturedIcon size='md' minW='10' colorScheme='primary'>
+          <FeaturedIcon size='md' colorScheme='primary' className='ml-2 mr-2'>
             <ClockFastForward />
           </FeaturedIcon>
           <div className='flex items-center justify-between w-full'>

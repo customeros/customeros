@@ -145,13 +145,13 @@ export const StatusMenuButton = ({
             color='gray.700'
             onClick={() => handleUpdateStatus(InvoiceStatus.Paid)}
           >
-            <CheckCircle mr={2} color='gray.500' />
+            <CheckCircle className='text-gray-500 mr-2' />
             Paid
           </MenuItem>
         )}
         {status !== InvoiceStatus.Void && (
           <MenuItem color='gray.700' onClick={() => voidInvoice({ id })}>
-            <SlashCircle01 mr={2} color='gray.500' />
+            <SlashCircle01 className='text-gray-500 mr-2' />
             Void
           </MenuItem>
         )}
@@ -161,7 +161,7 @@ export const StatusMenuButton = ({
             color='gray.700'
             onClick={() => handleUpdateStatus(InvoiceStatus.Due)}
           >
-            <Clock mr={2} color='gray.500' />
+            <Clock className='text-gray-500 mr-2' />
             Due
           </MenuItem>
         )}

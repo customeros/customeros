@@ -312,7 +312,7 @@ const ProgressCompletionCircle = forwardRef<
             justify='center'
             bg={`${colorScheme}.500`}
           >
-            <Check color='white' mr='1px' />
+            <Check className='text-white mr-[1px]' />
           </Flex>
         ) : (
           <>

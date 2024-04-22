@@ -3,16 +3,15 @@ import React from 'react';
 
 import { useIsRestoring } from '@tanstack/react-query';
 
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
-import { IconButton } from '@ui/form/IconButton';
-import { Heading } from '@ui/typography/Heading';
-import { Icons, FeaturedIcon } from '@ui/media/Icon';
-import { Card, CardBody } from '@ui/presentation/Card';
+import { cn } from '@ui/utils/cn';
+import { HelpCircle } from '@ui/media/icons/HelpCircle';
 import { Contract, RenewalSummary } from '@graphql/types';
-import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog';
+import { IconButton } from '@ui/form/IconButton/IconButton';
+import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
+import { Card, CardContent } from '@ui/presentation/Card/Card';
 import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
+import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog/InfoDialog2';
 import { getRenewalLikelihoodColor } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 import { useIsMutatingContract } from '@organization/src/components/Tabs/panels/AccountPanel/hooks/useIsMutatingContract';
 import { useARRInfoModalContext } from '@organization/src/components/Tabs/panels/AccountPanel/context/AccountModalsContext';
@@ -49,55 +48,24 @@ export const ARRForecast = ({
 
   return (
     <>
-      <Card
-        p='4'
-        w='full'
-        size='lg'
-        variant='ghost'
-        bg='transparent'
-        cursor='default'
-        boxShadow='none'
-        sx={{
-          '& button': {
-            opacity: 0,
-            transition: 'opacity 0.2s linear',
-          },
-        }}
-        _hover={{
-          '& button': {
-            opacity: 1,
-          },
-        }}
-      >
-        <CardBody as={Flex} p='0' align='center'>
+      <Card className='p-4 w-full bg-transparent cursor-default group border-0'>
+        <CardContent className='p-0 flex items-center '>
           <FeaturedIcon
             size='md'
-            minW='10'
             colorScheme={getRenewalLikelihoodColor(
               renewalSunnary?.renewalLikelihood,
             )}
           >
             <CurrencyDollar />
           </FeaturedIcon>
-          <Flex
-            ml='5'
-            w='full'
-            align='center'
-            columnGap={4}
-            justify='space-between'
-          >
-            <Flex flexDir='column'>
-              <Flex align='center'>
-                <Heading
-                  size='sm'
-                  whiteSpace='nowrap'
-                  fontWeight='semibold'
-                  color='gray.700'
-                  mr={2}
-                >
+          <div className='flex ml-5 w-full items-center gap-4 justify-between'>
+            <div className='flex flex-col'>
+              <div className='flex items-center'>
+                <h2 className='whitespace-nowrap font-semibold text-gray-700 mr-2'>
                   ARR forecast
-                </Heading>
+                </h2>
                 <IconButton
+                  className='group-hover:opacity-100 opacity-0 transition-opacity duration-200 ease-linear'
                   size='xs'
                   variant='ghost'
                   aria-label='Help'
@@ -105,35 +73,31 @@ export const ARRForecast = ({
                     e.stopPropagation();
                     modal.onOpen();
                   }}
-                  icon={<Icons.HelpCircle color='gray.400' />}
+                  icon={<HelpCircle className='text-gray-400' />}
                 />
-              </Flex>
-            </Flex>
+              </div>
+            </div>
 
-            <Flex flexDir='column'>
-              <Heading
-                fontSize='2xl'
-                transition='opacity 0.25s ease-in'
-                color={
-                  isUpdatingContract && (!isInitialLoading || !isRestoring)
-                    ? 'gray.400'
-                    : 'gray.700'
-                }
+            <div className='flex flex-col'>
+              <h2
+                className={cn(
+                  isUpdatingContract &&
+                    (!isInitialLoading || !isRestoring
+                      ? 'text-gray-400'
+                      : 'text-gray-700'),
+                  'text-2xl font-semibold transition-opacity duration-250 ease-in',
+                )}
               >
                 {formattedAmount}
-              </Heading>
+              </h2>
               {hasForecastChanged && !isUpdatingContract && (
-                <Text
-                  fontSize='sm'
-                  textAlign='right'
-                  textDecoration='line-through'
-                >
+                <p className='text-sm  text-right line-through'>
                   {formattedMaxAmount}
-                </Text>
+                </p>
               )}
-            </Flex>
-          </Flex>
-        </CardBody>
+            </div>
+          </div>
+        </CardContent>
       </Card>
 
       <InfoDialog
@@ -143,18 +107,16 @@ export const ARRForecast = ({
         confirmButtonLabel='Got it'
         label='ARR forecast'
       >
-        <Text fontSize='sm' fontWeight='normal' mb={4}>
+        <p className='text-sm font-medium mb-4'>
           Annual Recurring Revenue (ARR) is the total amount of money you can
           expect to receive from
-          <Text as='span' fontWeight='medium' mx={1}>
-            {name ? name : `Unnamed`}
-          </Text>
+          <span className='font-medium mx-1'>{name ? name : `Unnamed`}</span>
           for the next 12 months.
-        </Text>
-        <Text fontSize='sm' fontWeight='normal'>
+        </p>
+        <p className='text-sm font-normal'>
           It includes all renewals but excludes one-time and per use services.
           Renewals are discounted based on the renewal likelihood
-        </Text>
+        </p>
       </InfoDialog>
     </>
   );

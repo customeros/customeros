@@ -26,10 +26,7 @@ export const InvoicePreviewCell = ({
       >
         {value}
       </span>
-      <Eye
-        boxSize='4'
-        className='opacity-0 peer-hover:opacity-100 transition-opacity text-gray-400'
-      />
+      <Eye className='opacity-0 peer-hover:opacity-100 transition-opacity text-gray-400 size-4' />
     </div>
   );
 };

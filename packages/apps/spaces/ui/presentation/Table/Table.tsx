@@ -486,11 +486,7 @@ const TActions = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
 const NoResults = () => {
   return (
     <div className='pt-12 mx-auto text-gray-700 text-center'>
-      <Tumbleweed
-        color='gray.500'
-        boxSize={12}
-        className='w-12 h-12 text-gray-500'
-      />
+      <Tumbleweed className='w-12 h-12 text-gray-500' />
       <p>
         Empty here in{' '}
         <span className='text-md font-medium'>No Resultsville</span>

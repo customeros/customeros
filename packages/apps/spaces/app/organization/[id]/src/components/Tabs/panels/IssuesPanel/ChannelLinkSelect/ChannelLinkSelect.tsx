@@ -176,7 +176,7 @@ export const ChannelLinkSelect = ({ from }: ChannelLinkSelectProps) => {
         openMenuOnClick={!value}
         placeholder='Slack channel'
         isLoading={updateOrganization.isPending}
-        leftElement={<Link01 color='gray.500' mr='2' />}
+        leftElement={<Link01 className='text-gray-500 mr-2' />}
       />
     </Flex>
   );

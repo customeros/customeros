@@ -147,7 +147,7 @@ export const OwnerInput = ({ id, owner, invalidateQuery }: OwnerProps) => {
       backspaceRemovesValue
       onChange={handleSelect}
       options={options}
-      leftElement={<User02 color='gray.500' mr={3} />}
+      leftElement={<User02 className='text-gray-500 mr-3' />}
     />
   );
 };

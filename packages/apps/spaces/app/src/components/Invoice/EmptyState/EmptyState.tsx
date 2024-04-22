@@ -1,8 +1,8 @@
 import { useRouter } from 'next/navigation';
 
-import { FeaturedIcon } from '@ui/media/Icon';
 import { Button } from '@ui/form/Button/Button';
 import { File04 } from '@ui/media/icons/File04';
+import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
 
 import HalfCirclePattern from '../../../assets/HalfCirclePattern';
 
@@ -15,9 +15,9 @@ export const EmptyState = () => {
         <FeaturedIcon
           size='lg'
           colorScheme='primary'
-          className='absolute top-[23%] right-[45%]'
+          className='absolute top-[26%] justify-self-center right-0 left-0'
         >
-          <File04 boxSize='5' />
+          <File04 className='size-5' />
         </FeaturedIcon>
         <HalfCirclePattern />
       </div>

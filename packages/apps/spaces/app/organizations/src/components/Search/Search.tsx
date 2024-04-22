@@ -3,12 +3,11 @@ import { useRouter, useSearchParams } from 'next/navigation';
 
 import { useDebounce } from 'rooks';
 
-import { Input } from '@ui/form/Input';
-import { Flex } from '@ui/layout/Flex';
+import { Input } from '@ui/form/Input/Input2';
 import { SearchSm } from '@ui/media/icons/SearchSm';
 import { UserPresence } from '@shared/components/UserPresence';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { InputGroup, InputLeftElement } from '@ui/form/InputGroup';
+import { InputGroup, LeftElement } from '@ui/form/Input/InputGroup';
 import { useTenantNameQuery } from '@shared/graphql/tenantName.generated';
 
 export const Search = () => {
@@ -43,35 +42,26 @@ export const Search = () => {
   );
 
   return (
-    <Flex align='center' justify='space-between' pr='4'>
-      <InputGroup w='full' size='lg' bg='gray.25' onChange={handleChange}>
-        <InputLeftElement w='9'>
-          <SearchSm boxSize='5' />
-        </InputLeftElement>
+    <div className='flex items-center justify-between pr-4'>
+      <InputGroup
+        className='w-full bg-gray-25 hover:border-transparent focus-within:border-transparent focus-within:hover:border-transparent'
+        onChange={handleChange}
+      >
+        <LeftElement className='ml-2'>
+          <SearchSm className='size-5' />
+        </LeftElement>
         <Input
-          pl='9'
+          size='lg'
           autoCorrect='off'
           spellCheck={false}
           placeholder={placeholder}
           defaultValue={defaultValue}
-          borderBottom='unset'
-          _hover={{
-            borderBottom: 'unset',
-          }}
-          _focusWithin={{
-            borderBottom: 'unset',
-          }}
-          _focus={{
-            borderBottom: 'unset',
-          }}
-          _focusVisible={{
-            borderBottom: 'unset',
-          }}
+          variant='unstyled'
         />
       </InputGroup>
       {!isPending && (
         <UserPresence channelName={`finder:${tenantNameQuery?.tenant}`} />
       )}
-    </Flex>
+    </div>
   );
 };

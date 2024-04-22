@@ -47,16 +47,16 @@ export const ContractCardActions: React.FC<ContractStatusSelectProps> = ({
     let icon, text;
     switch (status) {
       case ContractStatus.Live:
-        icon = <XSquare color='gray.500' mr={1} />;
+        icon = <XSquare className='text-gray-500 mr-1' />;
         text = 'End contract...';
         break;
       case ContractStatus.Draft:
       case ContractStatus.Ended:
-        icon = <DotLive color='gray.500' mr={1} />;
+        icon = <DotLive className='text-gray-500 mr-1' />;
         text = 'Make live';
         break;
       case ContractStatus.OutOfContract:
-        icon = <RefreshCw05 color='gray.500' mr={2} />;
+        icon = <RefreshCw05 className='text-gray-500 mr-2' />;
         text = 'Renew contract';
         break;
       case ContractStatus.Scheduled:

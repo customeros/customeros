@@ -3,11 +3,11 @@ import { FC } from 'react';
 import { signIn } from 'next-auth/react';
 
 import { cn } from '@ui/utils/cn';
-import { FeaturedIcon } from '@ui/media/Icon';
 import { Button } from '@ui/form/Button/Button';
 import { Mail01 } from '@ui/media/icons/Mail01';
 import { Google } from '@ui/media/logos/Google';
 import { toastError } from '@ui/presentation/Toast';
+import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
 
 export const MissingPermissionsPrompt: FC<{
   modal: boolean;
@@ -40,9 +40,9 @@ export const MissingPermissionsPrompt: FC<{
     <form
       className={cn(
         modal
-          ? 'bg-[#F8F9FC] border-t border-dashed border-gray-200 max-h-[50vh]'
+          ? 'bg-grayBlue-50 border-t w-full border-dashed border-gray-200 max-h-[50vh]'
           : 'bg-white rounded-lg max-h-[auto] ',
-        'flex items-center mt-4 p-6 overflow-visible rounded-b-full',
+        'flex items-center mt-4 p-6 overflow-visible rounded-b-2xl',
       )}
     >
       <div
@@ -51,8 +51,8 @@ export const MissingPermissionsPrompt: FC<{
           'flex flex-col items-center p-6',
         )}
       >
-        <FeaturedIcon size='md' minW='10' colorScheme='gray' mb={4}>
-          <Mail01 color='gray.700' boxSize='6' />
+        <FeaturedIcon size='lg' className='mb-4' colorScheme='gray'>
+          <Mail01 className='text-gray-700 size-6' />
         </FeaturedIcon>
         <p className='text-gray-700 font-semibold mb-1'>
           Allow CustomerOS to send emails
@@ -63,7 +63,7 @@ export const MissingPermissionsPrompt: FC<{
           account
         </p>
         <Button variant='outline' colorScheme='gray' onClick={signInWithScopes}>
-          <Google mr={2} />
+          <Google className='mr-2' />
           Allow with google
         </Button>
       </div>

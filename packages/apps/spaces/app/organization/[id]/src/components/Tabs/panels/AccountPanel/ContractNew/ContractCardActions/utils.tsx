@@ -8,12 +8,12 @@ import { DotLive } from '@ui/media/icons/DotLive';
 import { PauseCircle } from '@ui/media/icons/PauseCircle';
 
 export const contractOptionIcon: Record<ContractStatus, JSX.Element | null> = {
-  [ContractStatus.Draft]: <Edit03 color='gray.500' boxSize='3' />,
-  [ContractStatus.Ended]: <XSquare color='gray.500' boxSize='3' />,
-  [ContractStatus.Live]: <DotLive color='inherit' boxSize='3' />,
+  [ContractStatus.Draft]: <Edit03 className='text-gray-500 size-3' />,
+  [ContractStatus.Ended]: <XSquare className='text-gray-500 size-3' />,
+  [ContractStatus.Live]: <DotLive className='size-3' />,
   [ContractStatus.OutOfContract]: (
-    <PauseCircle color='warning.500' boxSize='3' />
+    <PauseCircle className='text-warning-500 size-3' />
   ),
-  [ContractStatus.Scheduled]: <Clock color='primary.600' boxSize='3' />,
+  [ContractStatus.Scheduled]: <Clock className='text-primary-600 size-3' />,
   [ContractStatus.Undefined]: null,
 };

@@ -1,12 +1,9 @@
 import { convert } from 'html-to-text';
 
-import { Flex } from '@ui/layout/Flex';
-import { Icons } from '@ui/media/Icon';
+import { cn } from '@ui/utils/cn';
 import { Meeting } from '@graphql/types';
-import { VStack } from '@ui/layout/Stack';
-import { Center } from '@ui/layout/Center';
-import { Text } from '@ui/typography/Text';
-import { Card, CardBody } from '@ui/presentation/Card';
+import { File02 } from '@ui/media/icons/File02';
+import { Card, CardContent } from '@ui/presentation/Card/Card';
 import { useTimelineEventPreviewMethodsContext } from '@organization/src/components/Timeline/shared/TimelineEventPreview/context/TimelineEventPreviewContext';
 
 import { MeetingIcon } from './icons';
@@ -34,82 +31,53 @@ export const MeetingStub = ({ data }: MeetingStubProps) => {
 
   return (
     <Card
-      variant='outline'
-      size='md'
-      maxWidth={549}
-      position='unset'
-      cursor='pointer'
-      boxShadow='xs'
-      borderColor='gray.200'
-      borderRadius='lg'
+      className={cn(
+        isSentByTenantUser ? 'ml-6' : 'ml-0',
+        'bg-white max-w-[549px] border border-gray-200 rounded-lg cursor-pointer shadow-xs hover:shadow-md transition-all duration-200 ease-out',
+      )}
       onClick={() => openModal(data.id)}
-      _hover={{ boxShadow: 'md' }}
-      transition='all 0.2s ease-out'
-      ml={isSentByTenantUser ? 6 : 0}
     >
-      <CardBody px='3' py='2'>
-        <Flex w='full' justify='space-between' position='relative' gap='3'>
-          <VStack spacing='0' alignItems='flex-start' maxW={'461px'}>
-            <Text
-              fontSize='sm'
-              fontWeight='semibold'
-              color='gray.700'
-              noOfLines={1}
-            >
+      <CardContent className='px-3 py-2'>
+        <div className='flex w-full justify-between relative gap-3'>
+          <div className='flex flex-col items-start max-w-[461px]'>
+            <p className='text-sm font-semibold text-gray-700 line-clamp-1'>
               {data?.name ?? '(No title)'}
-            </Text>
-            <Flex>
-              <Text
-                fontSize='sm'
-                color='gray.700'
-                noOfLines={note || agenda ? 1 : 3}
-                maxW='463px'
+            </p>
+            <div className='flex'>
+              <p
+                className={cn(
+                  note || agenda ? 'line-clamp-1' : 'line-clamp-3',
+                  'text-sm text-gray-700 max-w-[463px]',
+                )}
               >
                 {owner || firstParticipant}{' '}
-                <Text as='span' color='gray.500'>
-                  met
-                </Text>{' '}
-                {participants}
-              </Text>
+                <span className='text-gray-500'>met</span> {participants}
+              </p>
               {remaining && (
-                <Text
-                  ml='1'
-                  fontSize='sm'
-                  as='span'
-                  color='gray.500'
-                  whiteSpace='nowrap'
-                >
+                <span className='text-sm text-gray-500 ml-1 whitespace-nowrap'>
                   {` + ${remaining}`}
-                </Text>
+                </span>
               )}
-            </Flex>
+            </div>
 
             {(note || agenda) && (
-              <Flex align='flex-start' maxW={'517px'}>
-                {note && (
-                  <Icons.File2 boxSize='3' mt='1' mr='1' color='gray.500' />
-                )}
-                <Text fontSize='sm' color='gray.500' noOfLines={2}>
+              <div className='flex items-start max-w-[517px]'>
+                {note && <File02 className='size-3 mt-1 mr-1 text-gray-500' />}
+                <p className='text-sm text-gray-500 line-clamp-2'>
                   {note || agenda}
-                </Text>
-              </Flex>
+                </p>
+              </div>
             )}
-          </VStack>
+          </div>
 
-          <Center minW='12' h='10' fontSize='xxx-large'>
+          <div className='flex min-w-[48px] h-[40px] text-3xl items-center justify-center'>
             <MeetingIcon />
-            <Text
-              position='absolute'
-              fontSize='xl'
-              fontWeight='semibold'
-              mt='4px'
-              color='gray.700'
-            >
+            <p className='absolute text-xl font-semibold text-gray-700'>
               {new Date(data?.startedAt).getDate()}
-            </Text>
-          </Center>
-        </Flex>
-      </CardBody>
+            </p>
+          </div>
+        </div>
+      </CardContent>
     </Card>
   );
 };

@@ -62,7 +62,7 @@ export const PaymentMethods = ({
       <div className='w-full'>
         <label className='flex items-center justify-between m-0'>
           <span className='text-sm whitespace-nowrap'>
-            <Stripe boxSize={5} mr={2} />
+            <Stripe className='size-5 mr-2' />
             Stripe
           </span>
           <Switch

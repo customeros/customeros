@@ -8,15 +8,13 @@ import { useSession } from 'next-auth/react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useBaseCurrencyQuery } from '@settings/graphql/getBaseCurrency.generated';
 
-import { Flex } from '@ui/layout/Flex';
-import { Button } from '@ui/form/Button';
-import { Text } from '@ui/typography/Text';
 import { Plus } from '@ui/media/icons/Plus';
-import { Spinner } from '@ui/feedback/Spinner';
-import { IconButton } from '@ui/form/IconButton';
+import { Button } from '@ui/form/Button/Button';
+import { Skeleton } from '@ui/feedback/Skeleton';
 import { toastError } from '@ui/presentation/Toast';
-import { Skeleton } from '@ui/presentation/Skeleton';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
+import { Spinner } from '@ui/feedback/Spinner/Spinner';
+import { IconButton } from '@ui/form/IconButton/IconButton';
 import { ChevronRight } from '@ui/media/icons/ChevronRight';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useCreateContractMutation } from '@organization/src/graphql/createContract.generated';
@@ -145,46 +143,42 @@ const AccountPanelComponent = () => {
         withFade
         bottomActionItem={
           <Button
-            borderRadius={0}
-            bg='gray.25'
-            p={7}
-            justifyContent='space-between'
-            alignItems='center'
-            rightIcon={<ChevronRight boxSize={4} color='gray.400' />}
+            className='rounded-none bg-gray-25 p-7 justify-between items-center hover:bg-gray-25 group'
+            rightIcon={
+              <ChevronRight className='size-4 text-gray-400 group-hover:text-gray-500' />
+            }
             variant='ghost'
-            _hover={{
-              bg: 'gray.25',
-              '& svg': {
-                color: 'gray.500',
-              },
-            }}
             onClick={() => router.push(`?tab=invoices`)}
           >
-            <Text
-              fontSize='sm'
-              fontWeight='semibold'
-              display='inline-flex'
-              alignItems='center'
-            >
+            <p className='text-sm font-semibold inline-flex items-center'>
               Invoices •{' '}
               {isFetchingInvoicesCount ? (
-                <Skeleton as='span' height={3} width={2} ml={1} />
+                <Skeleton className='h-3 w-3 ml-1' />
               ) : (
                 invoicesCountData?.invoices.totalElements
               )}
-            </Text>
+            </p>
           </Button>
         }
         actionItem={
-          <Flex alignItems='center'>
+          <div className='flex items-center'>
             <Tooltip label='Create new contract'>
               <IconButton
-                color='gray.500'
-                mr={1}
+                className='text-gray-500 mr-1'
                 variant='ghost'
                 isLoading={createContract.isPending}
                 isDisabled={createContract.isPending}
-                icon={createContract.isPending ? <Spinner /> : <Plus />}
+                icon={
+                  createContract.isPending ? (
+                    <Spinner
+                      className='text-gray-500 fill-gray-700'
+                      size='sm'
+                      label='Creating contract...'
+                    />
+                  ) : (
+                    <Plus />
+                  )
+                }
                 size='xs'
                 aria-label='Create new contract'
                 onClick={() =>
@@ -207,7 +201,7 @@ const AccountPanelComponent = () => {
             </Tooltip>
 
             <RelationshipButton />
-          </Flex>
+          </div>
         }
         shouldBlockPanelScroll={isModalOpen}
       >

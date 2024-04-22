@@ -4,7 +4,6 @@ import copy from 'copy-to-clipboard';
 import { convert } from 'html-to-text';
 
 import { cn } from '@ui/utils/cn';
-import { VStack } from '@ui/layout/Stack';
 import { Link03 } from '@ui/media/icons/Link03';
 import { XClose } from '@ui/media/icons/XClose';
 import { DateTimeUtils } from '@spaces/utils/date';
@@ -101,7 +100,7 @@ export const IntercomThreadPreviewModal: React.FC = () => {
                   aria-label='Copy link to this thread'
                   color='gray.500'
                   size='sm'
-                  icon={<Link03 color='gray.500' boxSize='4' />}
+                  icon={<Link03 className='text-gray-500' />}
                   onClick={() => copy(window.location.href)}
                 />
               </div>
@@ -118,7 +117,7 @@ export const IntercomThreadPreviewModal: React.FC = () => {
                   aria-label='Close preview'
                   color='gray.500'
                   size='sm'
-                  icon={<XClose color='gray.500' boxSize='5' />}
+                  icon={<XClose className='text-gray-500 size-5' />}
                   onClick={closeModal}
                 />
               </div>
@@ -147,13 +146,13 @@ export const IntercomThreadPreviewModal: React.FC = () => {
               </p>
               <Divider />
             </div>
-            <VStack w='full'>
+            <div className='flex flex-col w-full'>
               {Array.from({ length: timelineEventsIds.length - 2 }).map(
                 (_, idx) => (
                   <MessageCardSkeleton key={idx} />
                 ),
               )}
-            </VStack>
+            </div>
           </>
         )}
         {!!intercomEventReplies.length && (

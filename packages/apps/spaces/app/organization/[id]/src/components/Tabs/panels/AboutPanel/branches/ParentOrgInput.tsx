@@ -231,7 +231,7 @@ export const ParentOrgInput: React.FC<ParentOrgInputProps> = ({
       isLoading={isLoading}
       options={options || []}
       placeholder='Parent organization'
-      leftElement={<ArrowCircleBrokenUpLeft color='gray.500' mr='3' />}
+      leftElement={<ArrowCircleBrokenUpLeft className='text-gray-500 mr-3' />}
     />
   );
 };

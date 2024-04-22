@@ -2,65 +2,35 @@ import { cloneElement, isValidElement } from 'react';
 import ResizeTextarea, { TextareaAutosizeProps } from 'react-textarea-autosize';
 
 import { twMerge } from 'tailwind-merge';
-import { cva, VariantProps } from 'class-variance-authority';
 
 import { cn } from '@ui/utils/cn';
 import { useSlots } from '@ui/utils/hooks';
 
-const iconSize = cva([], {
-  variants: {
-    size: {
-      xs: ['size-4'],
-      sm: ['size-5'],
-      md: ['size-6'],
-    },
-  },
-  defaultVariants: {
-    size: 'sm',
-  },
-});
-
-interface ElementProps extends VariantProps<typeof iconSize> {
+interface ElementProps {
   className?: string;
   children: React.ReactNode;
 }
 
 export const LeftElement = ({
   children,
-  size,
   className,
   ...props
 }: ElementProps) => {
-  const iconProps = {
-    ...iconSize,
-    ...props,
-    className: twMerge(className, iconSize({ size })),
-    children,
-  };
-
   return (
-    <div {...props} className={twMerge('flex', className, iconSize({ size }))}>
-      {isValidElement(children) && cloneElement(children, iconProps)}
+    <div {...props} className={twMerge('flex', className)}>
+      {isValidElement(children) && cloneElement(children)}
     </div>
   );
 };
 
 export const RightElement = ({
   children,
-  size,
   className,
   ...props
 }: ElementProps) => {
-  const iconProps = {
-    ...iconSize,
-    ...props,
-    className: twMerge(className, iconSize({ size })),
-    children,
-  };
-
   return (
-    <div {...props} className={twMerge('flex', className, iconSize({ size }))}>
-      {isValidElement(children) && cloneElement(children, iconProps)}
+    <div {...props} className={twMerge('flex', className)}>
+      {isValidElement(children) && cloneElement(children)}
     </div>
   );
 };

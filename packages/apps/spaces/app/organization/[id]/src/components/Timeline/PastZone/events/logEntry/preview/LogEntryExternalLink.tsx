@@ -9,9 +9,9 @@ import { getExternalUrl } from '@spaces/utils/getExternalLink';
 const getIcon = (type: string) => {
   switch (type) {
     case 'SALESFORCE':
-      return <Salesforce boxSize='5' mr={2} />;
+      return <Salesforce className='size-5 mr-2' />;
     case 'HUBSPOT':
-      return <Hubspot boxSize='5' mr={2} />;
+      return <Hubspot className='size-5 mr-2' />;
 
     default:
       return '';

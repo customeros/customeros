@@ -3,6 +3,7 @@ import React, { FC, useRef, useState, useEffect } from 'react';
 import { Button } from '@ui/form/Button/Button';
 import { Send03 } from '@ui/media/icons/Send03';
 import { Mail01 } from '@ui/media/icons/Mail01';
+import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
 import { AlarmClockPlus } from '@ui/media/icons/AlarmClockPlus';
 import { MessageChatSquare } from '@ui/media/icons/MessageChatSquare';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog2';
@@ -152,11 +153,9 @@ export const TimelineActionButtons: FC<{ invalidateQuery: () => void }> = ({
         onConfirm={handleConfirmEmail}
         isLoading={false}
         icon={
-          <Send03
-            color='primary.700'
-            boxSize='inherit'
-            verticalAlign='initial'
-          />
+          <FeaturedIcon colorScheme='primary' size='lg'>
+            <Send03 className='text-primary-700' />
+          </FeaturedIcon>
         }
       />
 
@@ -170,7 +169,11 @@ export const TimelineActionButtons: FC<{ invalidateQuery: () => void }> = ({
         onClose={handleDiscard}
         onConfirm={handleConfirmLogEntry}
         isLoading={false}
-        icon={<MessageChatSquare color='primary.700' boxSize='inherit' />}
+        icon={
+          <FeaturedIcon colorScheme='primary' size='lg'>
+            <MessageChatSquare className='text-primary-700' />
+          </FeaturedIcon>
+        }
       />
     </>
   );

@@ -3,15 +3,15 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import { produce } from 'immer';
 import { InfiniteData, useQueryClient } from '@tanstack/react-query';
 
-import { Flex } from '@ui/layout/Flex';
-import { Icons } from '@ui/media/Icon';
-import { Text } from '@ui/typography/Text';
-import { IconButton } from '@ui/form/IconButton';
-import { Select } from '@ui/form/SyncSelect/Select';
+import { Edit03 } from '@ui/media/icons/Edit03';
+import { Select } from '@ui/form/Select/Select';
+import { getContainerClassNames } from '@ui/form/Select';
 import { SelectOption } from '@shared/types/SelectOptions';
+import { IconButton } from '@ui/form/IconButton/IconButton';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
 import { useOrganizationQuery } from '@organization/src/graphql/organization.generated';
+import { getMenuListClassNames } from '@ui/form/MultiCreatableSelect/MultiCreatableSelect2';
 import { useUpdateOrganizationMutation } from '@shared/graphql/updateOrganization.generated';
 import {
   OrganizationRowDTO,
@@ -114,38 +114,23 @@ export const OrganizationRelationship = ({
 
   if (!isEditing) {
     return (
-      <Flex
-        w='full'
-        gap='1'
-        align='center'
-        _hover={{
-          '& #edit-button': {
-            opacity: 1,
-          },
-        }}
-      >
-        <Text
-          cursor='default'
-          color='gray.700'
+      <div className='flex w-full gap-1 items-center [&_.edit-button]:hover:opacity-100'>
+        <p
+          className='cursor-default text-gray-700 group'
           onDoubleClick={() => setIsEditing(true)}
         >
           {value?.value ? 'Customer' : 'Prospect'}
-        </Text>
+        </p>
         <IconButton
+          className='edit-button rounded-md opacity-0'
           aria-label='erc'
-          size='xs'
-          borderRadius='md'
-          minW='4'
-          w='4'
-          minH='4'
-          h='4'
-          opacity='0'
+          size='sm'
           variant='ghost'
           id='edit-button'
           onClick={() => setIsEditing(true)}
-          icon={<Icons.Edit3 color='gray.500' boxSize='3' />}
+          icon={<Edit03 className='text-gray-500 size-3' />}
         />
-      </Flex>
+      </div>
     );
   }
 
@@ -162,45 +147,15 @@ export const OrganizationRelationship = ({
       }}
       defaultMenuIsOpen
       onBlur={() => setIsEditing(false)}
-      variant='unstyled'
       isLoading={updateOrganization.isPending}
       backspaceRemovesValue
       onChange={handleSelect}
       openMenuOnClick={false}
       placeholder='Relationship'
       options={relationshipOptions}
-      chakraStyles={{
-        valueContainer: (props) => ({
-          ...props,
-          p: 0,
-        }),
-        singleValue: (props) => ({
-          ...props,
-          paddingBottom: 0,
-          ml: 0,
-        }),
-        control: (props) => ({
-          ...props,
-          minH: '0',
-        }),
-        clearIndicator: (props) => ({
-          ...props,
-          boxSize: '3',
-        }),
-        placeholder: (props) => ({
-          ...props,
-          ml: 0,
-          color: 'gray.400',
-        }),
-        inputContainer: (props) => ({
-          ...props,
-          py: 0,
-          ml: 0,
-        }),
-        menuList: (props) => ({
-          ...props,
-          w: '262px',
-        }),
+      classNames={{
+        container: () => getContainerClassNames('hover:border-transparent'),
+        menuList: () => getMenuListClassNames('w-[262px]'),
       }}
     />
   );

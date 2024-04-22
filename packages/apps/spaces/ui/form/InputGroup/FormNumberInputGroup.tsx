@@ -32,7 +32,7 @@ export const FormNumberInputGroup: FC<FormNumberInputGroupProps> = ({
       <label {...labelProps}>{label}</label>
 
       <InputGroup>
-        {leftElement && <LeftElement size='sm'>{leftElement}</LeftElement>}
+        {leftElement && <LeftElement>{leftElement}</LeftElement>}
 
         <Input
           {...rest}

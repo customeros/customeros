@@ -1,9 +1,9 @@
 'use client';
 import { useRouter } from 'next/navigation';
 
-import { FeaturedIcon } from '@ui/media/Icon';
 import { Button } from '@ui/form/Button/Button';
 import { SearchSm } from '@ui/media/icons/SearchSm';
+import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
 
 import HalfCirclePattern from './src/assets/HalfCirclePattern';
 
@@ -16,9 +16,8 @@ export default function NotFound() {
         <HalfCirclePattern />
       </div>
       <div className='relative flex flex-col items-center justify-center h-1/2'>
-        {/* FeatureIcon component need to be replaced with the new component from ui kit */}
         <FeaturedIcon colorScheme='primary' size='lg'>
-          <SearchSm boxSize='5' />
+          <SearchSm className='size-5' />
         </FeaturedIcon>
         <h2 className='font-semibold text-6xl leading-[80px] text-gray-900 py-6'>
           We lost this page

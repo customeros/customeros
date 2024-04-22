@@ -184,7 +184,7 @@ export const EmailFormMultiCreatableSelect = forwardRef<
             aria-label='Copy'
             size='xs'
             variant='ghost'
-            icon={<Copy01 boxSize={3} color='gray.500' />}
+            icon={<Copy01 className='size-3 text-gray-500' />}
             onClick={(e) => {
               e.stopPropagation();
               copyToClipboard(rest.data.value, 'Email copied');

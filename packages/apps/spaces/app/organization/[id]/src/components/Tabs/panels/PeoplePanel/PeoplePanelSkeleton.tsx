@@ -1,8 +1,8 @@
 'use client';
 
 import { Flex } from '@ui/layout/Flex';
-import { Icons } from '@ui/media/Icon';
 import { Button } from '@ui/form/Button/Button';
+import { UsersPlus } from '@ui/media/icons/UsersPlus';
 import { Skeleton } from '@ui/feedback/Skeleton/Skeleton';
 import { Card, CardHeader } from '@ui/presentation/Card/Card';
 import { OrganizationPanel } from '@organization/src/components/Tabs/panels/OrganizationPanel/OrganizationPanel';
@@ -15,7 +15,7 @@ export const PeoplePanelSkeleton = () => {
         <Button
           size='sm'
           variant='outline'
-          leftIcon={<Icons.UsersPlus color='gray.500' />}
+          leftIcon={<UsersPlus className='text-gray-500' />}
           isDisabled
         >
           Add

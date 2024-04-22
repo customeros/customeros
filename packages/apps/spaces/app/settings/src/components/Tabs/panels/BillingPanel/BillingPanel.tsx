@@ -318,7 +318,7 @@ export const BillingPanel = () => {
                 </MenuButton>
                 <MenuList>
                   <MenuItem onClick={handleToggleInvoices}>
-                    <SlashOctagon marginRight={1} color='gray.500' /> Disable
+                    <SlashOctagon className='mr-r text-gray-500' /> Disable
                     Customer billing
                   </MenuItem>
                 </MenuList>

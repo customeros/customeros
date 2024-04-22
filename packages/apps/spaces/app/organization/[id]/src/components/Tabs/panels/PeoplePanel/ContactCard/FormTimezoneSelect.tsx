@@ -4,8 +4,8 @@ import {
   components as selectComponents,
 } from 'react-select';
 
-import { Icons } from '@ui/media/Icon';
 import { SelectProps } from '@ui/form/Select';
+import { Clock } from '@ui/media/icons/Clock';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { FormSelect } from '@ui/form/Select/FormSelect';
 
@@ -47,7 +47,7 @@ export const FormTimezoneSelect = ({ ...props }: FormTimezoneSelectProps) => {
     <FormSelect
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       components={components as SelectComponentsConfig<any, any, any>}
-      leftElement={<Icons.Clock color='gray.500' mr='3' />}
+      leftElement={<Clock className='text-gray-500 mr-3' />}
       {...props}
     />
   );

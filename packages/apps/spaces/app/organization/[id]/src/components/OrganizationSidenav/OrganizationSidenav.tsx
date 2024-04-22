@@ -4,12 +4,15 @@ import { useRouter, useParams, useSearchParams } from 'next/navigation';
 
 import { useLocalStorage } from 'usehooks-ts';
 
-import { Icons } from '@ui/media/Icon';
+import { Users02 } from '@ui/media/icons/Users02';
 import { Ticket02 } from '@ui/media/icons/Ticket02';
 import { Trophy01 } from '@ui/media/icons/Trophy01';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
+import { InfoSquare } from '@ui/media/icons/InfoSquare';
 import { IconButton } from '@ui/form/IconButton/IconButton';
+import { ActivityHeart } from '@ui/media/icons/ActivityHeart';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { ArrowNarrowRight } from '@ui/media/icons/ArrowNarrowRight';
 import { SidenavItem } from '@shared/components/RootSidenav/components/SidenavItem';
 import { useOrganizationQuery } from '@organization/src/graphql/organization.generated';
 import { NotificationCenter } from '@shared/components/Notifications/NotificationCenter';
@@ -53,7 +56,9 @@ export const OrganizationSidenav = () => {
           onClick={() => {
             router.push(`/${lastActivePosition?.root || 'organization'}`);
           }}
-          icon={<Icons.ArrowNarrowLeft color='gray.700' boxSize='6' />}
+          icon={
+            <ArrowNarrowRight className='rotate-180 text-gray-700 size-6' />
+          }
         />
 
         <div className='flex flex-col line-clamp-1'>
@@ -77,31 +82,31 @@ export const OrganizationSidenav = () => {
           label='About'
           isActive={checkIsActive('about') || !searchParams?.get('tab')}
           onClick={handleItemClick('about')}
-          icon={<Icons.InfoSquare className='w-5 h-5' />}
+          icon={<InfoSquare className='size-5' />}
         />
         <SidenavItem
           label='People'
           isActive={checkIsActive('people')}
           onClick={handleItemClick('people')}
-          icon={<Icons.Users2 className='w-5 h-5' />}
+          icon={<Users02 className='size-5' />}
         />
         <SidenavItem
           label='Account'
           isActive={checkIsActive('account') || checkIsActive('invoices')}
           onClick={handleItemClick('account')}
-          icon={<Icons.ActivityHeart className='w-5 h-5' />}
+          icon={<ActivityHeart className='size-5' />}
         />
         <SidenavItem
           label='Success'
           isActive={checkIsActive('success')}
           onClick={handleItemClick('success')}
-          icon={<Trophy01 className='w-5 h-5' />}
+          icon={<Trophy01 className='size-5' />}
         />
         <SidenavItem
           label='Issues'
           isActive={checkIsActive('issues')}
           onClick={handleItemClick('issues')}
-          icon={<Ticket02 className='w-5 h-5' />}
+          icon={<Ticket02 className='size-5' />}
         />
       </div>
       <div className='flex flex-col flex-grow justify-end'>

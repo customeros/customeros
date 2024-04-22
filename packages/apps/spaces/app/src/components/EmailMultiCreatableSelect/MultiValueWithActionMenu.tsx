@@ -176,7 +176,7 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
             }}
           >
             Edit address
-            <Edit03 boxSize={3} color='gray.500' ml={2} />
+            <Edit03 className='size-3 text-gray-500 ml-2' />
           </MenuItem>
           {rest?.data?.value ? (
             <MenuItem
@@ -186,7 +186,7 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
               }}
             >
               {rest?.data?.value}
-              <Copy01 boxSize={3} color='gray.500' ml={2} />
+              <Copy01 className='size-3 text-gray-500 ml-2' />
             </MenuItem>
           ) : (
             <MenuItem

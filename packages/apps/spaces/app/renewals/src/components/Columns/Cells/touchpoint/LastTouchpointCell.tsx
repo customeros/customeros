@@ -2,7 +2,6 @@ import React from 'react';
 
 import { match } from 'ts-pattern';
 
-import { IconProps } from '@ui/media/Icon';
 import { File02 } from '@ui/media/icons/File02';
 import { Mail01 } from '@ui/media/icons/Mail01';
 import { DateTimeUtils } from '@spaces/utils/date';
@@ -26,7 +25,9 @@ export const LastTouchpointCell = ({
   lastTouchPointTimelineEvent: Maybe<TimelineEvent> | undefined;
 }) => {
   const [label, Icon] = match(lastTouchPointTimelineEvent)
-    .returnType<[string, (props: IconProps) => JSX.Element]>()
+    .returnType<
+      [string, (props: React.SVGAttributes<SVGAElement>) => JSX.Element]
+    >()
     .with({ __typename: 'Action', actionType: ActionType.Created }, () => [
       'Created',
       Building07,
@@ -100,7 +101,7 @@ export const LastTouchpointCell = ({
   return (
     <div className='flex flex-col'>
       <div className='items-center'>
-        <Icon boxSize='3' color='gray.700' />
+        <Icon className='size-3 text-gray-700' />
         <span className='text-gray-700 ml-2'>{label}</span>
       </div>
 
