@@ -250,7 +250,7 @@ func TestContractEventHandler_OnUpdate_FrequencySet(t *testing.T) {
 	require.Equal(t, contractId, contract.Id)
 	require.Equal(t, "test contract updated", contract.Name)
 	require.Equal(t, "http://contract.url/updated", contract.ContractUrl)
-	require.Equal(t, neo4jenum.ContractStatusLive, contract.ContractStatus)
+	require.Equal(t, neo4jenum.ContractStatusDraft, contract.ContractStatus)
 	require.Equal(t, int64(1), contract.LengthInMonths)
 	test.AssertRecentTime(t, contract.UpdatedAt)
 	require.True(t, utils.ToDate(yesterday).Equal(*contract.ServiceStartedAt))
@@ -574,6 +574,7 @@ func TestContractEventHandler_OnUpdate_EndDateSet(t *testing.T) {
 		Name:           "test contract",
 		ContractUrl:    "http://contract.url",
 		LengthInMonths: 1,
+		Approved:       true,
 	})
 	opportunityId := neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
 		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
@@ -826,6 +827,7 @@ func TestContractEventHandler_OnRefreshStatus_Live(t *testing.T) {
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
 		Name:             "test contract",
 		ContractStatus:   neo4jenum.ContractStatusDraft,
+		Approved:         true,
 		ServiceStartedAt: utils.Ptr(utils.Now().AddDate(0, 0, -1)),
 	})
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1,
@@ -1135,6 +1137,7 @@ func TestContractEventHandler_DeriveContractStatus_Live_AutoRenew_ActiveRenewalO
 		Name:             "test contract",
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		AutoRenew:        true,
+		Approved:         true,
 		ServiceStartedAt: &now,
 	}
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, contractEntity)
@@ -1173,6 +1176,7 @@ func TestContractEventHandler_DeriveContractStatus_Live_NoAutoRenew_NoActiveRene
 		Name:             "test contract",
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		AutoRenew:        false,
+		Approved:         true,
 		ServiceStartedAt: &now,
 	}
 	_ = neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, contractEntity)
@@ -1202,6 +1206,7 @@ func TestContractEventHandler_DeriveContractStatus_OutOfContract_NoAutoRenew_Act
 		Name:             "test contract",
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		AutoRenew:        false,
+		Approved:         true,
 		ServiceStartedAt: &now,
 	}
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, contractEntity)
