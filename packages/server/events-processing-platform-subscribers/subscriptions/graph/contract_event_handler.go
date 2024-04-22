@@ -661,15 +661,16 @@ func (h *ContractEventHandler) deriveContractStatus(ctx context.Context, tenant 
 		return neo4jenum.ContractStatusEnded.String(), nil
 	}
 
-	// Check contract is draft or scheduled
+	// check if contract is draft
+	if !contractEntity.Approved {
+		span.LogFields(log.String("result.status", neo4jenum.ContractStatusDraft.String()))
+		return neo4jenum.ContractStatusDraft.String(), nil
+	}
+
+	// Check contract is scheduled
 	if contractEntity.ServiceStartedAt == nil || contractEntity.ServiceStartedAt.After(now) {
-		if !contractEntity.Approved {
-			span.LogFields(log.String("result.status", neo4jenum.ContractStatusDraft.String()))
-			return neo4jenum.ContractStatusDraft.String(), nil
-		} else {
-			span.LogFields(log.String("result.status", neo4jenum.ContractStatusScheduled.String()))
-			return neo4jenum.ContractStatusScheduled.String(), nil
-		}
+		span.LogFields(log.String("result.status", neo4jenum.ContractStatusScheduled.String()))
+		return neo4jenum.ContractStatusScheduled.String(), nil
 	}
 
 	// Check if contract is out of contract
