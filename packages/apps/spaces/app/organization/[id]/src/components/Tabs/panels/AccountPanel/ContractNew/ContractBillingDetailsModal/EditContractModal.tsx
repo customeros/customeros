@@ -20,12 +20,6 @@ import { toastError, toastSuccess } from '@ui/presentation/Toast';
 import { useGetContractQuery } from '@organization/src/graphql/getContract.generated';
 import { useUpdateContractMutation } from '@organization/src/graphql/updateContract.generated';
 import {
-  DataSource,
-  BankAccount,
-  InvoiceLine,
-  TenantBillingProfile,
-} from '@graphql/types';
-import {
   GetContractsQuery,
   useGetContractsQuery,
 } from '@organization/src/graphql/getContracts.generated';
@@ -36,6 +30,13 @@ import {
   ModalContent,
   ModalOverlay,
 } from '@ui/overlay/Modal/Modal';
+import {
+  DataSource,
+  BankAccount,
+  InvoiceLine,
+  ContractStatus,
+  TenantBillingProfile,
+} from '@graphql/types';
 import {
   EditModalMode,
   useContractModalStateContext,
@@ -360,6 +361,13 @@ export const EditContractModal = ({
       setDefaultValues(newDefaultValues);
     }
   }, [canAllowPayWithBankTransfer]);
+  const saveButtonText = useMemo(() => {
+    if (data?.contract?.contractStatus === ContractStatus.Draft) {
+      return 'Save draft';
+    }
+
+    return 'Save changes';
+  }, [data?.contract?.contractStatus]);
 
   return (
     <Modal open={isEditModalOpen} onOpenChange={handleCloseModal}>
@@ -422,7 +430,7 @@ export const EditContractModal = ({
                 className='w-full'
                 size='md'
               >
-                Cancel
+                Cancel changes
               </Button>
               <Button
                 className='ml-3 w-full'
@@ -430,8 +438,10 @@ export const EditContractModal = ({
                 variant='outline'
                 colorScheme='primary'
                 onClick={handleApplyChanges}
+                loadingText='Saving...'
+                isLoading={updateContract.isPending}
               >
-                Confirm
+                {saveButtonText}
               </Button>
             </ModalFooter>
           </motion.div>
@@ -480,16 +490,18 @@ export const EditContractModal = ({
                   className='w-full'
                   size='md'
                 >
-                  Cancel
+                  Cancel changes
                 </Button>
                 <Button
                   className='ml-3 w-full'
                   size='md'
                   variant='outline'
                   colorScheme='primary'
+                  loadingText='Saving...'
+                  isLoading={updateContract.isPending}
                   onClick={handleSaveAddressChanges}
                 >
-                  Confirm
+                  {saveButtonText}
                 </Button>
               </ModalFooter>
             </motion.div>

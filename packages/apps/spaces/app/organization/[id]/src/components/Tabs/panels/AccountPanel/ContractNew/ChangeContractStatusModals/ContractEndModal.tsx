@@ -72,7 +72,6 @@ export const ContractEndModal = ({
     : null;
   const { isModalOpen, onStatusModalClose, mode, nextInvoice } =
     useContractModalStatusContext();
-
   const timeToNextInvoice = nextInvoice?.issued
     ? DateTimeUtils.format(
         nextInvoice.issued,
@@ -152,7 +151,7 @@ export const ContractEndModal = ({
       onOpenChange={onStatusModalClose}
     >
       <ModalOverlay />
-      <ModalContent className='rounded-2xl'>
+      <ModalContent className='rounded-2xl z-[999]'>
         <ModalHeader className='pb-3'>
           <FeaturedIcon size='lg' colorScheme='error'>
             <XSquare className='text-error-600' />
@@ -213,14 +212,18 @@ export const ContractEndModal = ({
             colorScheme='gray'
             className='w-full'
             onClick={onStatusModalClose}
+            size='lg'
           >
             Cancel
           </Button>
           <Button
             className='ml-3 w-full'
+            size='lg'
             variant='outline'
             colorScheme='error'
             onClick={handleApplyChanges}
+            loadingText='Saving...'
+            isLoading={onUpdateContract.isPending}
           >
             End {value === EndContract.Now && 'now'}
             {value !== EndContract.Now &&

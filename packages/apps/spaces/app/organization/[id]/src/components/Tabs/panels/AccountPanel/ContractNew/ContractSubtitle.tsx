@@ -2,9 +2,9 @@ import React from 'react';
 
 import { utcToZonedTime } from 'date-fns-tz';
 
-import { Contract } from '@graphql/types';
 import { Button } from '@ui/form/Button/Button';
 import { DateTimeUtils } from '@spaces/utils/date';
+import { Contract, ContractStatus } from '@graphql/types';
 import { billingFrequencyOptions } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 
 export const ContractSubtitle = ({ data }: { data: Contract }) => {
@@ -46,7 +46,7 @@ export const ContractSubtitle = ({ data }: { data: Contract }) => {
       data.metadata.created,
     ) === 0;
 
-  if (isJustCreated) {
+  if (isJustCreated && !serviceStartDate) {
     return (
       <p className='font-normal shadow-none text-sm  text-gray-500 focus:text-gray-500 hover:text-gray-500 hover:no-underline focus:no-underline'>
         Contract starting...
@@ -78,6 +78,20 @@ export const ContractSubtitle = ({ data }: { data: Contract }) => {
       </p>
     );
   }
+  if (
+    !hasStartedService &&
+    serviceStartDate &&
+    renewalPeriod &&
+    data?.contractStatus === ContractStatus.Draft
+  ) {
+    return (
+      <p className='font-normal shadow-none text-sm  text-gray-500 focus:text-gray-500 hover:text-gray-500 hover:no-underline focus:no-underline'>
+        {renewalPeriod} contract{' '}
+        {data?.autoRenew ? 'auto-renewing' : 'not auto-renewing'}
+      </p>
+    );
+  }
+
   if (
     !hasStartedService &&
     serviceStartDate &&

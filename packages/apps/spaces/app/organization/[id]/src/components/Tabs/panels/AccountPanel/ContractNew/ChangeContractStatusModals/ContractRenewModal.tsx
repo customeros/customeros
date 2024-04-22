@@ -67,7 +67,7 @@ export const ContractRenewsModal = ({
   const renewsToday = renewsAt && DateTimeUtils.isToday(renewsAt);
   const renewsTomorrow = renewsAt && DateTimeUtils.isTomorrow(renewsAt);
 
-  const { mutate } = useRenewContractMutation(client, {
+  const { mutate, isPending } = useRenewContractMutation(client, {
     onSuccess: () => {
       onClose();
     },
@@ -228,6 +228,8 @@ export const ContractRenewsModal = ({
           variant='outline'
           colorScheme='primary'
           onClick={handleApplyChanges}
+          loadingText='Renewing...'
+          isLoading={isPending}
         >
           Renew{' '}
           {RenewContract.Now === value || renewsToday
