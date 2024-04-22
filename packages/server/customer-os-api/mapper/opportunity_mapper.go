@@ -5,7 +5,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	"time"
 )
 
 func MapEntityToOpportunity(entity *neo4jentity.OpportunityEntity) *model.Opportunity {
@@ -26,9 +25,9 @@ func MapEntityToOpportunity(entity *neo4jentity.OpportunityEntity) *model.Opport
 		EstimatedClosedAt:      entity.EstimatedClosedAt,
 		GeneralNotes:           entity.GeneralNotes,
 		NextSteps:              entity.NextSteps,
-		RenewedAt:              utils.IfNotNilTimeWithDefault(entity.RenewalDetails.RenewedAt, time.Time{}),
+		RenewedAt:              entity.RenewalDetails.RenewedAt,
 		RenewalLikelihood:      MapOpportunityRenewalLikelihoodToModel(entity.RenewalDetails.RenewalLikelihood),
-		RenewalUpdatedByUserAt: utils.IfNotNilTimeWithDefault(entity.RenewalDetails.RenewalUpdatedByUserAt, time.Time{}),
+		RenewalUpdatedByUserAt: entity.RenewalDetails.RenewalUpdatedByUserAt,
 		RenewalUpdatedByUserID: entity.RenewalDetails.RenewalUpdatedByUserId,
 		RenewalApproved:        entity.RenewalDetails.RenewalApproved,
 		Comments:               entity.Comments,

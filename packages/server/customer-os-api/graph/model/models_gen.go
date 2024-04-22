@@ -1922,11 +1922,11 @@ type Opportunity struct {
 	EstimatedClosedAt      *time.Time                   `json:"estimatedClosedAt,omitempty"`
 	GeneralNotes           string                       `json:"generalNotes"`
 	NextSteps              string                       `json:"nextSteps"`
-	RenewedAt              time.Time                    `json:"renewedAt"`
+	RenewedAt              *time.Time                   `json:"renewedAt,omitempty"`
 	RenewalApproved        bool                         `json:"renewalApproved"`
 	RenewalLikelihood      OpportunityRenewalLikelihood `json:"renewalLikelihood"`
 	RenewalUpdatedByUserID string                       `json:"renewalUpdatedByUserId"`
-	RenewalUpdatedByUserAt time.Time                    `json:"renewalUpdatedByUserAt"`
+	RenewalUpdatedByUserAt *time.Time                   `json:"renewalUpdatedByUserAt,omitempty"`
 	Comments               string                       `json:"comments"`
 	CreatedBy              *User                        `json:"createdBy,omitempty"`
 	Owner                  *User                        `json:"owner,omitempty"`
