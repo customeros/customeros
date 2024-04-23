@@ -173,6 +173,7 @@ const columns: Record<string, Column> = {
     cell: (props) => {
       const organization = props.row.original;
 
+      // @ts-expect-error will be fixed
       return <OrganizationRelationship organization={organization} />;
     },
     skeleton: () => (

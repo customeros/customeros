@@ -101,7 +101,7 @@ export const ParentOrgInput: React.FC<ParentOrgInputProps> = ({
               const foundIndex = draft?.pages?.[
                 pageIndex
               ]?.dashboardView_Organizations?.content?.findIndex(
-                (o) => o.id === id,
+                (o) => o.metadata.id === id,
               );
 
               if (typeof foundIndex === 'undefined' || foundIndex < 0) return;
@@ -159,7 +159,7 @@ export const ParentOrgInput: React.FC<ParentOrgInputProps> = ({
               const foundIndex = draft?.pages?.[
                 pageIndex
               ]?.dashboardView_Organizations?.content?.findIndex(
-                (o) => o.id === id,
+                (o) => o.metadata.id === id,
               );
 
               if (typeof foundIndex === 'undefined' || foundIndex < 0) return;
@@ -172,7 +172,7 @@ export const ParentOrgInput: React.FC<ParentOrgInputProps> = ({
               ) {
                 dashboardContent[foundIndex] = {
                   ...dashboardContent[foundIndex],
-                  subsidiaryOf: [],
+                  parentCompanies: [],
                 };
               }
             });

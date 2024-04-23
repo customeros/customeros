@@ -80,7 +80,7 @@ export const Branches: React.FC<BranchesProps> = ({
               const foundIndex = draft?.pages?.[
                 pageIndex
               ]?.dashboardView_Organizations?.content?.findIndex(
-                (o) => o.id === id,
+                (o) => o.metadata.id === id,
               );
 
               if (typeof foundIndex === 'undefined' || foundIndex < 0) return;
@@ -141,11 +141,10 @@ export const Branches: React.FC<BranchesProps> = ({
 
             const emptyRow = produce(content?.[0], (draft) => {
               if (!draft) return;
-              draft.id = Math.random().toString();
+              draft.metadata.id = Math.random().toString();
               draft.name = '';
               draft.website = '';
               draft.owner = null;
-              draft.lastTouchPointTimelineEvent = null;
               draft.accountDetails = null;
             });
 

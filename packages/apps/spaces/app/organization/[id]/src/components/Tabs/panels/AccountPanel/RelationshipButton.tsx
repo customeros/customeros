@@ -43,7 +43,7 @@ export const RelationshipButton = () => {
             const content =
               draft?.pages?.[pageIndex]?.dashboardView_Organizations?.content;
             const index = content?.findIndex(
-              (item) => item.id === payload.input.id,
+              (item) => item.metadata.id === payload.input.id,
             );
 
             if (content && index !== undefined && index > -1) {
