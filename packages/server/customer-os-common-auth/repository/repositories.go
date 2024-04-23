@@ -20,7 +20,7 @@ func InitRepositories(db *gorm.DB) *Repositories {
 	return repositories
 }
 
-func Migration(db *gorm.DB) {
+func (r *Repositories) Migration(db *gorm.DB) {
 
 	var err error
 
