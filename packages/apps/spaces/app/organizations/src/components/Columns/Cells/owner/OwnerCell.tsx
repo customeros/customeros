@@ -79,7 +79,7 @@ export const OwnerCell = ({ id, owner }: OwnerProps) => {
             const targetOrgIndex = draft?.pages[
               pageIndex
             ]?.dashboardView_Organizations?.content.findIndex(
-              (c) => c.id === id,
+              (c) => c.metadata.id === id,
             );
             if (typeof targetOrgIndex === 'undefined' || targetOrgIndex < 0)
               return;
@@ -146,7 +146,7 @@ export const OwnerCell = ({ id, owner }: OwnerProps) => {
             const owner = draft?.pages[
               pageIndex
             ]?.dashboardView_Organizations?.content.find(
-              (c) => c.id === id,
+              (c) => c.metadata.id === id,
             )?.owner;
 
             if (owner) {

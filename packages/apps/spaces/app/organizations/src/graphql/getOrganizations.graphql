@@ -9,11 +9,15 @@ query getOrganizations(
     sort: $sort
   ) {
     content {
-      id
       name
-      subsidiaryOf {
+      metadata {
+        id
+      }
+      parentCompanies {
         organization {
-          id
+          metadata {
+            id
+          }
           name
         }
       }
@@ -28,7 +32,7 @@ query getOrganizations(
       website
       domains
       isCustomer
-      logoUrl
+      logo
       accountDetails {
         renewalSummary {
           arrForecast
@@ -42,7 +46,6 @@ query getOrganizations(
           updatedAt
         }
       }
-
       locations {
         id
         name
@@ -55,96 +58,99 @@ query getOrganizations(
         houseNumber
         rawAddress
       }
-      lastTouchPointTimelineEventId
-      lastTouchPointAt
-      lastTouchPointType
-      lastTouchPointTimelineEvent {
-        __typename
-        ... on PageView {
-          id
-        }
-        ... on Issue {
-          id
-          createdAt
-          updatedAt
-        }
-        ... on LogEntry {
-          id
-          createdBy {
-            lastName
-            firstName
+      lastTouchpoint {
+        lastTouchPointTimelineEventId
+        lastTouchPointAt
+        lastTouchPointType
+        lastTouchPointTimelineEvent {
+          __typename
+          ... on PageView {
+            id
           }
-        }
-        ... on Note {
-          id
-          createdBy {
-            firstName
-            lastName
+          ... on Issue {
+            id
+            createdAt
+            updatedAt
           }
-        }
-        ... on InteractionEvent {
-          id
-          channel
-          eventType
-          externalLinks {
-            type
+          ... on LogEntry {
+            id
+            createdBy {
+              lastName
+              firstName
+            }
           }
-          sentBy {
-            __typename
-            ... on EmailParticipant {
+          ... on Note {
+            id
+            createdBy {
+              firstName
+              lastName
+            }
+          }
+          ... on InteractionEvent {
+            id
+            channel
+            eventType
+            externalLinks {
               type
-              emailParticipant {
-                id
-                email
-                rawEmail
-              }
             }
-            ... on ContactParticipant {
-              contactParticipant {
-                id
-                name
-                firstName
-                lastName
+            sentBy {
+              __typename
+              ... on EmailParticipant {
+                type
+                emailParticipant {
+                  id
+                  email
+                  rawEmail
+                }
               }
-            }
-            ... on JobRoleParticipant {
-              jobRoleParticipant {
-                contact {
+              ... on ContactParticipant {
+                contactParticipant {
                   id
                   name
                   firstName
                   lastName
                 }
               }
-            }
-            ... on UserParticipant {
-              userParticipant {
-                id
-                firstName
-                lastName
+              ... on JobRoleParticipant {
+                jobRoleParticipant {
+                  contact {
+                    id
+                    name
+                    firstName
+                    lastName
+                  }
+                }
+              }
+              ... on UserParticipant {
+                userParticipant {
+                  id
+                  firstName
+                  lastName
+                }
               }
             }
           }
-        }
-        ... on Analysis {
-          id
-        }
-        ... on Meeting {
-          id
-          name
-          attendedBy {
-            __typename
-          }
-        }
-        ... on Action {
-          id
-          actionType
-          createdAt
-          source
-          createdBy {
+          ... on Analysis {
             id
-            firstName
-            lastName
+          }
+          ... on Meeting {
+            id
+            name
+            attendedBy {
+              __typename
+            }
+          }
+          ... on Action {
+            id
+            actionType
+            createdAt
+            source
+            actionType
+            createdBy {
+              id
+              firstName
+              lastName
+            }
           }
         }
       }

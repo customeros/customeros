@@ -1,5 +1,6 @@
 import { Clock } from '@ui/media/icons/Clock';
 import { InvoiceStatus } from '@graphql/types';
+import { InfoCircle } from '@ui/media/icons/InfoCircle';
 import { CheckCircle } from '@ui/media/icons/CheckCircle';
 import { SlashCircle01 } from '@ui/media/icons/SlashCircle01';
 import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
@@ -54,6 +55,15 @@ export function renderStatusNode(type: InvoiceStatus | null | undefined) {
             <ClockFastForward />
           </TagLeftIcon>
           <TagLabel>Scheduled</TagLabel>
+        </Tag>
+      );
+    case InvoiceStatus.Overdue:
+      return (
+        <Tag colorScheme='warning' variant='outline'>
+          <TagLeftIcon>
+            <InfoCircle />
+          </TagLeftIcon>
+          <TagLabel>Overdue</TagLabel>
         </Tag>
       );
     default:

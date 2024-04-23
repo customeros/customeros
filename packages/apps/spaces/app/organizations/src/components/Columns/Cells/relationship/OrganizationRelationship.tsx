@@ -54,7 +54,7 @@ export const OrganizationRelationship = ({
             const content =
               draft?.pages?.[pageIndex]?.dashboardView_Organizations?.content;
             const index = content?.findIndex(
-              (item) => item.id === payload.input.id,
+              (item) => item.metadata.id === payload.input.id,
             );
 
             if (content && index !== undefined && index > -1) {
@@ -81,7 +81,9 @@ export const OrganizationRelationship = ({
       timeoutRef.current = setTimeout(() => {
         queryClient.invalidateQueries({ queryKey });
         queryClient.invalidateQueries({
-          queryKey: useOrganizationQuery.getKey({ id: organization.id }),
+          queryKey: useOrganizationQuery.getKey({
+            id: organization.metadata.id,
+          }),
         });
       }, 500);
     },

@@ -9,17 +9,20 @@ export type GetOrganizationRowResult = Unpacked<
 >;
 
 const defaults: GetOrganizationRowResult = {
-  __typename: 'Organization',
-  id: '',
+  metadata: {
+    id: '',
+  },
   name: '',
   description: null,
   industry: null,
   website: null,
   domains: [],
   isCustomer: false,
-  lastTouchPointTimelineEventId: null,
-  lastTouchPointAt: null,
-  subsidiaryOf: [],
+  lastTouchpoint: {
+    lastTouchPointTimelineEventId: null,
+    lastTouchPointAt: null,
+  },
+  parentCompanies: [],
   owner: {
     __typename: 'User',
     id: '',
@@ -38,7 +41,6 @@ const defaults: GetOrganizationRowResult = {
     },
   },
   locations: [],
-  lastTouchPointTimelineEvent: null,
 };
 
 export class OrganizationRowDTO {
@@ -51,7 +53,7 @@ export class OrganizationRowDTO {
   ): UpdateOrganizationMutationVariables {
     return {
       input: {
-        id: data.id,
+        id: data.metadata.id,
         name: data.name,
         description: data.description,
         industry: data.industry,

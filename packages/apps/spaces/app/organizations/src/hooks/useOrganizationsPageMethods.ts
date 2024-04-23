@@ -45,11 +45,10 @@ export const useOrganizationsPageMethods = () => {
 
             const emptyRow = produce(content?.[0], (draft) => {
               if (!draft) return;
-              draft.id = Math.random().toString();
+              draft.metadata.id = Math.random().toString();
               draft.name = '';
               draft.website = '';
               draft.owner = null;
-              draft.lastTouchPointTimelineEvent = null;
               draft.accountDetails = null;
             });
 
@@ -102,7 +101,7 @@ export const useOrganizationsPageMethods = () => {
             const page = draft.pages?.[pageIndex];
             const content = page?.dashboardView_Organizations?.content;
             const filteredContent = content?.filter(
-              (o) => !(ids as string[]).includes(o.id),
+              (o) => !(ids as string[]).includes(o.metadata.id),
             );
 
             set(
@@ -156,7 +155,7 @@ export const useOrganizationsPageMethods = () => {
             const content =
               draft.pages?.[0]?.dashboardView_Organizations?.content;
             const targetOrganization = content?.find(
-              (o) => o.id === primaryOrganizationId,
+              (o) => o.metadata.id === primaryOrganizationId,
             );
             const filteredContent = [
               targetOrganization,
@@ -165,7 +164,7 @@ export const useOrganizationsPageMethods = () => {
                   ![
                     primaryOrganizationId,
                     ...(mergedOrganizationIds as string[]),
-                  ].includes(o.id),
+                  ].includes(o.metadata.id),
               ),
             ];
 
