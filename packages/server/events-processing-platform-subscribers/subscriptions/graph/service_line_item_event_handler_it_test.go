@@ -538,7 +538,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceIncreaseRetroactively_Timeline
 	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, action.AppSource)
 	require.Equal(t, neo4jenum.ActionServiceLineItemPriceUpdated, action.Type)
 	require.Equal(t, "logged-in user retroactively increased the price for Service 1 from 150.00/month to 200.00/month", action.Content)
-	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","quantity":0,"price":200,"previousPrice":150,"billedType":"MONTHLY","comment":"price changed is 150.00 for service Service 1","reasonForChange":"this is the reason for change"}`, action.Metadata)
+	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","quantity":0,"price":200,"previousPrice":150,"billedType":"MONTHLY","comment":"price changed is 150.00 for service Service 1","reasonForChange":"this is the reason for change","currency":""}`, action.Metadata)
 }
 
 func TestServiceLineItemEventHandler_OnUpdatePriceIncreasePerUseRetroactively_TimelineEvent(t *testing.T) {
@@ -626,7 +626,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceIncreasePerUseRetroactively_Ti
 	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, action.AppSource)
 	require.Equal(t, neo4jenum.ActionServiceLineItemPriceUpdated, action.Type)
 	require.Equal(t, "logged-in user retroactively increased the price for Service 1 from 150.0000 to 200.0000", action.Content)
-	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","quantity":0,"price":200,"previousPrice":150,"billedType":"USAGE","comment":"price changed is 150.00 for service Service 1","reasonForChange":"test reason for change"}`, action.Metadata)
+	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","quantity":0,"price":200,"previousPrice":150,"billedType":"USAGE","comment":"price changed is 150.00 for service Service 1","reasonForChange":"test reason for change","currency":""}`, action.Metadata)
 }
 
 func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseRetroactively_TimelineEvent(t *testing.T) {
@@ -640,7 +640,9 @@ func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseRetroactively_Timeline
 		LastName:  "user",
 	})
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
+		Currency: neo4jenum.CurrencyUSD,
+	})
 	serviceLineItemId := neo4jtest.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
 		Name:   "Service 1",
 		Billed: neo4jenum.BilledTypeAnnually,
@@ -715,7 +717,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseRetroactively_Timeline
 	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, action.AppSource)
 	require.Equal(t, neo4jenum.ActionServiceLineItemPriceUpdated, action.Type)
 	require.Equal(t, "logged-in user retroactively decreased the price for Service 1 from 150.00/year to 50.00/year", action.Content)
-	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","quantity":0,"price":50,"previousPrice":150,"billedType":"ANNUALLY","comment":"price changed is 150.00 for service Service 1","reasonForChange":"Reason for change is x"}`, action.Metadata)
+	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","quantity":0,"price":50,"previousPrice":150,"billedType":"ANNUALLY","comment":"price changed is 150.00 for service Service 1","reasonForChange":"Reason for change is x","currency":"USD"}`, action.Metadata)
 }
 
 func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseOnceRetroactively_TimelineEvent(t *testing.T) {
@@ -729,7 +731,9 @@ func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseOnceRetroactively_Time
 		LastName:  "user",
 	})
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
+		Currency: neo4jenum.CurrencyEUR,
+	})
 	serviceLineItemId := neo4jtest.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
 		Name:   "Service 1",
 		Billed: neo4jenum.BilledTypeOnce,
@@ -803,7 +807,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseOnceRetroactively_Time
 	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, action.AppSource)
 	require.Equal(t, neo4jenum.ActionServiceLineItemPriceUpdated, action.Type)
 	require.Equal(t, "logged-in user retroactively decreased the price for Service 1 from 150.00 to 50.00", action.Content)
-	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","quantity":0,"price":50,"previousPrice":150,"billedType":"ONCE","comment":"price changed is 150.00 for service Service 1","reasonForChange":""}`, action.Metadata)
+	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","quantity":0,"price":50,"previousPrice":150,"billedType":"ONCE","comment":"price changed is 150.00 for service Service 1","reasonForChange":"","currency":"EUR"}`, action.Metadata)
 }
 
 func TestServiceLineItemEventHandler_OnUpdateQuantityIncreaseRetroactively_TimelineEvent(t *testing.T) {
@@ -1750,7 +1754,7 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceInc
 	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, action.AppSource)
 	require.Equal(t, neo4jenum.ActionServiceLineItemPriceUpdated, action.Type)
 	require.Equal(t, "logged-in user decreased the price for Test service line item from 1500.56/month to 850.75/month starting with "+timeNow.Format("2006-01-02"), action.Content)
-	require.Equal(t, `{"user-name":"logged-in user","service-name":"Test service line item","quantity":0,"price":850.75,"previousPrice":1500.56,"billedType":"MONTHLY","comment":"price is 850.75 for service Test service line item","reasonForChange":"","startedAt":"`+timeNow.Format("2006-01-02T00:00:00Z")+`"}`, action.Metadata)
+	require.Equal(t, `{"user-name":"logged-in user","service-name":"Test service line item","quantity":0,"price":850.75,"previousPrice":1500.56,"billedType":"MONTHLY","comment":"price is 850.75 for service Test service line item","reasonForChange":"","startedAt":"`+timeNow.Format("2006-01-02T00:00:00Z")+`","currency":""}`, action.Metadata)
 }
 
 func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceIncreaseNoNameService(t *testing.T) {
@@ -1851,7 +1855,7 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceInc
 	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, action.AppSource)
 	require.Equal(t, neo4jenum.ActionServiceLineItemPriceUpdated, action.Type)
 	require.Equal(t, "logged-in user decreased the price for Unnamed service from 1500.56/month to 850.75/month starting with "+timeNow.Format("2006-01-02"), action.Content)
-	require.Equal(t, `{"user-name":"logged-in user","service-name":"Unnamed service","quantity":0,"price":850.75,"previousPrice":1500.56,"billedType":"MONTHLY","comment":"price is 850.75 for service Unnamed service","reasonForChange":"This is a reason for change","startedAt":"`+timeNow.Format("2006-01-02T00:00:00Z")+`"}`, action.Metadata)
+	require.Equal(t, `{"user-name":"logged-in user","service-name":"Unnamed service","quantity":0,"price":850.75,"previousPrice":1500.56,"billedType":"MONTHLY","comment":"price is 850.75 for service Unnamed service","reasonForChange":"This is a reason for change","startedAt":"`+timeNow.Format("2006-01-02T00:00:00Z")+`","currency":""}`, action.Metadata)
 }
 
 func TestServiceLineItemEventHandler_OnUpdateBilledTypeNonRetroactiveForExistingSLI(t *testing.T) {
@@ -2074,5 +2078,5 @@ func TestServiceLineItemEventHandler_OnUpdatePriceAndBilledTypeNonRetroactiveFor
 	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, action.AppSource)
 	require.Equal(t, neo4jenum.ActionServiceLineItemPriceUpdated, action.Type)
 	require.Equal(t, "logged-in user decreased the price for Service 1 from 170.25/year to 100.00/month starting with "+timeNow.Format("2006-01-02"), action.Content)
-	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","quantity":10,"price":100,"previousPrice":170.25,"billedType":"MONTHLY","comment":"price is 100.00 for service Service 1","reasonForChange":"","startedAt":"`+timeNow.Format("2006-01-02T00:00:00Z")+`"}`, action.Metadata)
+	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","quantity":10,"price":100,"previousPrice":170.25,"billedType":"MONTHLY","comment":"price is 100.00 for service Service 1","reasonForChange":"","startedAt":"`+timeNow.Format("2006-01-02T00:00:00Z")+`","currency":""}`, action.Metadata)
 }
