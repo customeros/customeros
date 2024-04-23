@@ -61,7 +61,7 @@ export const RenewalsTable = observer(({ bootstrap }: RenewalsTableProps) => {
 
   return (
     <>
-      <div className='flex items-center'>
+      <div className='flex items-center w-full'>
         <Search />
         <ViewSettings type='renewals' />
       </div>

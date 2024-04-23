@@ -44,7 +44,7 @@ export const Search = () => {
   return (
     <div className='flex items-center justify-between pr-4'>
       <InputGroup
-        className='w-full bg-gray-25 hover:border-transparent focus-within:border-transparent focus-within:hover:border-transparent'
+        className='w-full bg-gray-25 hover:border-transparent focus-within:border-transparent focus-within:hover:border-transparent gap-2'
         onChange={handleChange}
       >
         <LeftElement className='ml-2'>

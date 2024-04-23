@@ -1,5 +1,4 @@
 'use client';
-import { GridItem } from '@ui/layout/Grid';
 import { PageLayout } from '@shared/components/PageLayout';
 import { RootSidenav } from '@shared/components/RootSidenav/RootSidenav';
 
@@ -11,9 +10,7 @@ export default function InvoicesLayout({
   return (
     <PageLayout>
       <RootSidenav />
-      <GridItem h='100%' area='content' overflowX='hidden' overflowY='auto'>
-        {children}
-      </GridItem>
+      <div className='h-full overflow-hidden'>{children}</div>
     </PageLayout>
   );
 }

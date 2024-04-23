@@ -32,20 +32,18 @@ export class GroupMeta<T extends { id: string }> {
     private store: AbstractGroupStore<T>,
     private rootStore: RootStore,
     private transportLayer: TransportLayer,
-    private abstractStore: AbstractStoreClass<T>,
     options?: { channelName: string },
   ) {
     this.channelName = options?.channelName;
-    // this.store.subscribe = this.subscribe.bind(this);
 
     makeAutoObservable(this);
   }
 
-  async load(data: T[]) {
+  async load(data: T[], abstractStoreClass: AbstractStoreClass<T>) {
     data.forEach((value) => {
       if (this.store.value.has(value.id)) return;
 
-      const abstractStore = new this.abstractStore(
+      const abstractStore = new abstractStoreClass(
         this.rootStore,
         this.transportLayer,
       );

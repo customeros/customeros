@@ -21,12 +21,7 @@ export class TableViewDefsStore implements AbstractGroupStore<TableViewDef> {
     private rootStore: RootStore,
     private transportLayer: TransportLayer,
   ) {
-    this.meta = new GroupMeta(
-      this,
-      this.rootStore,
-      this.transportLayer,
-      TableViewDefStore,
-    );
+    this.meta = new GroupMeta(this, this.rootStore, this.transportLayer);
     makeAutoObservable(this);
 
     this.bootstrap();
@@ -51,7 +46,7 @@ export class TableViewDefsStore implements AbstractGroupStore<TableViewDef> {
   }
 
   async load(tableViewDefs: TableViewDef[]) {
-    this.meta.load(tableViewDefs);
+    this.meta.load(tableViewDefs, TableViewDefStore);
   }
 
   update(
