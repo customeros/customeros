@@ -94,7 +94,7 @@ func createAllTables(db *gorm.DB) {
 
 	r := postgresRepository.InitRepositories(db)
 	r.Migration(db)
-	authRepository.Migration(db)
+	authRepository.InitRepositories(db).Migration(db)
 }
 
 // initLog Connection Log Configuration
