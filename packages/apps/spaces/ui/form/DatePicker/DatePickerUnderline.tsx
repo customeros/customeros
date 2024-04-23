@@ -54,7 +54,7 @@ export const DatePickerUnderline: React.FC<DatePickerProps> = ({
           <PopoverContent
             align='start'
             side='top'
-            className='items-end'
+            className='items-end z-[999]'
             sticky='always'
             onOpenAutoFocus={(el) => el.preventDefault()}
             onClick={(e) => e.stopPropagation()}
