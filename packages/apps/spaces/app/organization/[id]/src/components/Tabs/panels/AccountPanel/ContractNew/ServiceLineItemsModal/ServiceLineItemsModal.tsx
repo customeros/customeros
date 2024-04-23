@@ -6,19 +6,14 @@ import { produce } from 'immer';
 import { useSession } from 'next-auth/react';
 import { useQueryClient } from '@tanstack/react-query';
 
-import { Box } from '@ui/layout/Box';
-import { Flex } from '@ui/layout/Flex';
-import { Button } from '@ui/form/Button';
-import { Text } from '@ui/typography/Text';
 import { Plus } from '@ui/media/icons/Plus';
-// import { Grid, GridItem } from '@ui/layout/Grid';
+import { Button } from '@ui/form/Button/Button';
 import { Heading } from '@ui/typography/Heading';
 import { toastError } from '@ui/presentation/Toast';
 import { DotSingle } from '@ui/media/icons/DotSingle';
-import { AutoresizeTextarea } from '@ui/form/Textarea';
 import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
-// import { Invoice } from '@shared/components/Invoice/Invoice';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { AutoresizeTextarea } from '@ui/form/Textarea/AutoresizeTextarea2';
 import { useTimelineMeta } from '@organization/src/components/Timeline/state';
 import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
 import { useUpdateServicesMutation } from '@organization/src/graphql/updateServiceLineItems.generated';
@@ -26,15 +21,15 @@ import {
   GetContractsQuery,
   useGetContractsQuery,
 } from '@organization/src/graphql/getContracts.generated';
+import { useUpdateCacheWithNewEvent } from '@organization/src/components/Timeline/PastZone/hooks/updateCacheWithNewEvent';
 import {
   Modal,
   ModalBody,
-  ModalFooter,
   ModalHeader,
+  ModalFooter,
   ModalContent,
   ModalOverlay,
-} from '@ui/overlay/Modal';
-import { useUpdateCacheWithNewEvent } from '@organization/src/components/Timeline/PastZone/hooks/updateCacheWithNewEvent';
+} from '@ui/overlay/Modal/Modal';
 import {
   BilledType,
   DataSource,
@@ -115,7 +110,6 @@ export const ServiceLineItemsModal = ({
   notes = '',
   currency,
 }: SubscriptionServiceModalProps) => {
-  const initialRef = useRef(null);
   const client = getGraphQLClient();
   const id = useParams()?.id as string;
   const [timelineMeta] = useTimelineMeta();
@@ -245,37 +239,9 @@ export const ServiceLineItemsModal = ({
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      initialFocusRef={initialRef}
-      size='3xl'
-      closeOnOverlayClick
-    >
+    <Modal open={isOpen} onOpenChange={onClose}>
       <ModalOverlay />
-      <ModalContent borderRadius='2xl'>
-        {/*<Grid h='100%' templateColumns='1fr' gap={4} overflow='scroll'>*/}
-        {/*545px 1fr*/}
-        {/*<GridItem*/}
-        {/*  rowSpan={1}*/}
-        {/*  colSpan={1}*/}
-        {/*  h='100%'*/}
-        {/*  display='flex'*/}
-        {/*  flexDir='column'*/}
-        {/*  justifyContent='space-between'*/}
-        {/*  bg='gray.25'*/}
-        {/*  borderRight='1px solid'*/}
-        {/*  borderColor='gray.200'*/}
-        {/*  borderRadius='2xl'*/}
-        {/*  // borderTopLeftRadius='2xl'*/}
-        {/*  // borderBottomLeftRadius='2xl'*/}
-        {/*  backgroundImage='/backgrounds/organization/circular-bg-pattern.png'*/}
-        {/*  backgroundRepeat='no-repeat'*/}
-        {/*  sx={{*/}
-        {/*    backgroundPositionX: '1px',*/}
-        {/*    backgroundPositionY: '-7px',*/}
-        {/*  }}*/}
-        {/*>*/}
+      <ModalContent className='min-w-[768px] rounded-2xl'>
         <ModalHeader>
           <FeaturedIcon
             size='lg'
@@ -288,37 +254,16 @@ export const ServiceLineItemsModal = ({
             Modify contract service line items
           </Heading>
         </ModalHeader>
-        <ModalBody pb='0' display='flex' flexDir='column' flex={1}>
-          <Flex
-            justifyContent='space-between'
-            alignItems='center'
-            pr='20px'
-            borderBottom='1px solid'
-            borderColor='gray.300'
-            pb={1}
-          >
-            <Text fontSize='sm' fontWeight='medium' w='15%'>
-              Name
-            </Text>
-            <Text fontSize='sm' fontWeight='medium' w='15%'>
-              Type
-            </Text>
-            <Text fontSize='sm' fontWeight='medium' w='10%'>
-              Qty
-            </Text>
-            <Text fontSize='sm' fontWeight='medium' w='15%'>
-              Unit Price
-            </Text>
-            <Text fontSize='sm' fontWeight='medium' w='10%'>
-              Recurring
-            </Text>{' '}
-            <Text fontSize='sm' fontWeight='medium' w='10%'>
-              VAT
-            </Text>{' '}
-            <Text fontSize='sm' fontWeight='medium' w='15%'>
-              Service Start
-            </Text>
-          </Flex>
+        <ModalBody className='pb-0 flex flex-col flex-1'>
+          <div className='flex justify-between items-center pr-5 border-b border-gray-300 pb-1'>
+            <p className='text-sm font-medium w-[15%]'>Name</p>
+            <p className='text-sm font-medium w-[15%]'>Type</p>
+            <p className='text-sm font-medium w-[10%]'>Qty</p>
+            <p className='text-sm font-medium w-[15%]'>Unit Price</p>
+            <p className='text-sm font-medium w-[10%]'>Recurring</p>{' '}
+            <p className='text-sm font-medium w-[10%]'>VAT</p>{' '}
+            <p className='text-sm font-medium w-[15%]'>Service Start</p>
+          </div>
 
           {services.map((service, index) => (
             <Fragment key={`service-line-item-${index}`}>
@@ -333,48 +278,42 @@ export const ServiceLineItemsModal = ({
               />
             </Fragment>
           ))}
-          <Box>
+          <div>
             <Button
+              className='px-2 my-1 text-gray-500 font-base'
               leftIcon={<Plus />}
               variant='ghost'
               size='sm'
-              px={2}
-              my={1}
-              color='gray.500'
-              fontWeight='regular'
               onClick={handleAddService}
             >
               New item
             </Button>
-          </Box>
+          </div>
 
           <AutoresizeTextarea
             label='Note'
-            isLabelVisible
+            className='overflow-ellipsis '
             labelProps={{
-              fontSize: 'sm',
-              mb: 0,
-              fontWeight: 'semibold',
+              className: 'text-sm mb-0 font-semibold',
             }}
+            size='sm'
             name='invoiceNote'
-            textOverflow='ellipsis'
             placeholder='Customer invoice note'
             value={invoiceNote}
             onChange={(event) => setInvoiceNote(event.target.value)}
           />
         </ModalBody>
-        <ModalFooter p='6'>
+        <ModalFooter className='flex p-6'>
           <Button
             variant='outline'
-            w='full'
+            className='w-full'
             onClick={onClose}
             isDisabled={updateServices.isPending}
           >
             Cancel
           </Button>
           <Button
-            ml='3'
-            w='full'
+            className='w-full ml-3'
             variant='outline'
             colorScheme='primary'
             loadingText='Applying changes...'
@@ -384,39 +323,6 @@ export const ServiceLineItemsModal = ({
             Apply changes
           </Button>
         </ModalFooter>
-        {/*</GridItem>*/}
-        {/*<GridItem pr={3}>*/}
-        {/*  <Invoice*/}
-        {/*    isDraft*/}
-        {/*    tax={10}*/}
-        {/*    note={note}*/}
-        {/*    from={{*/}
-        {/*      address: '',*/}
-        {/*      address2: '',*/}
-        {/*      city: '',*/}
-        {/*      country: '',*/}
-        {/*      name: '',*/}
-        {/*      zip: '',*/}
-        {/*      email: '',*/}
-        {/*    }}*/}
-        {/*    total={1400}*/}
-        {/*    dueDate={new Date()}*/}
-        {/*    subtotal={2002}*/}
-        {/*    lines={services as unknown as InvoiceLine[]}*/}
-        {/*    issueDate='10.01.2024'*/}
-        {/*    billedTo={{*/}
-        {/*      address: '',*/}
-        {/*      address2: '',*/}
-        {/*      city: '',*/}
-        {/*      country: '',*/}
-        {/*      name: '',*/}
-        {/*      zip: '',*/}
-        {/*      email: '',*/}
-        {/*    }}*/}
-        {/*    invoiceNumber='INV-001'*/}
-        {/*  />*/}
-        {/*</GridItem>*/}
-        {/*</Grid>*/}
       </ModalContent>
     </Modal>
   );

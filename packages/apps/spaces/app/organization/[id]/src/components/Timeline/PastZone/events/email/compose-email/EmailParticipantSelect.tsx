@@ -1,9 +1,9 @@
 'use client';
 import React, { FC } from 'react';
 
+import { EmailFormMultiCreatableSelect } from '@shared/components/EmailMultiCreatableSelect';
 import { emailRegex } from '@organization/src/components/Timeline/PastZone/events/email/utils';
 
-import { EmailFormMultiCreatableSelect } from '../../../../../../../../../src/components/EmailMultiCreatableSelect';
 interface EmailParticipantSelect {
   formId: string;
   entryType: string;

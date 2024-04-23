@@ -83,47 +83,6 @@ export const ComposeEmail: FC<ComposeEmailProps> = ({
           <BasicEditorToolbar isSending={isSending} onSubmit={onSubmit} />
         </RichTextEditor>
       </div>
-      {/*{isUploadAreaOpen && (*/}
-      {/*  <FileUpload*/}
-      {/*    files={files}*/}
-      {/*    onBeginFileUpload={(fileKey: string) => {*/}
-      {/*      setFiles((prevFiles: any) => [*/}
-      {/*        ...prevFiles,*/}
-      {/*        {*/}
-      {/*          key: fileKey,*/}
-      {/*          uploaded: false,*/}
-      {/*        },*/}
-      {/*      ]);*/}
-      {/*    }}*/}
-      {/*    onFileUpload={(newFile: any) => {*/}
-      {/*      setFiles((prevFiles: any) => {*/}
-      {/*        return prevFiles.map((file: any) => {*/}
-      {/*          if (file.key === newFile.key) {*/}
-      {/*            file = {*/}
-      {/*              id: newFile.id,*/}
-      {/*              key: newFile.key,*/}
-      {/*              fileName: newFile.name,*/}
-      {/*              uploaded: true,*/}
-      {/*            };*/}
-      {/*          }*/}
-      {/*          return file;*/}
-      {/*        });*/}
-      {/*      });*/}
-      {/*    }}*/}
-      {/*    onFileUploadError={(fileKey: any) => {*/}
-      {/*      setFiles((prevFiles: any) => {*/}
-      {/*        // TODO do not remove the file from the list*/}
-      {/*        // show the error instead for that particular file*/}
-      {/*        return prevFiles.filter((file: any) => file.key !== fileKey);*/}
-      {/*      });*/}
-      {/*    }}*/}
-      {/*    onFileRemove={(fileId: any) => {*/}
-      {/*      setFiles((prevFiles: any) => {*/}
-      {/*        return prevFiles.filter((file: any) => file.id !== fileId);*/}
-      {/*      });*/}
-      {/*    }}*/}
-      {/*  />*/}
-      {/*)}*/}
     </form>
   );
 };

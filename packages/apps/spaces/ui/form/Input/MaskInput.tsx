@@ -1,38 +1,37 @@
 import { useIMask } from 'react-imask';
 import React, { useEffect } from 'react';
 
-import { InputElement } from 'imask';
-
 import { Input, InputProps } from '@ui/form/Input/Input2';
 
-interface CurrencyProps extends InputProps {
+interface MaskInputProps extends InputProps {
+  name: string;
   label?: string;
-  isLabelVisible?: boolean;
-  currency?: string | null;
+  symbol: string;
+  value: string | number;
   onValueChange?: (value: string) => void;
-  labelProps?: React.HTMLProps<HTMLLabelElement>;
+  labelProps?: React.LabelHTMLAttributes<HTMLLabelElement>;
 }
 
-export const Currency = ({
-  isLabelVisible,
-  label,
-  value = '',
+export const MaskInput = ({
   labelProps,
+  label,
+  name,
+  value,
+  symbol,
   onValueChange,
-  currency,
-  ...props
-}: CurrencyProps) => {
-  const { ref, setUnmaskedValue, unmaskedValue, setValue } = useIMask({
-    mask: `${currency}num`,
 
+  ...props
+}: MaskInputProps) => {
+  const { ref, setUnmaskedValue, unmaskedValue, setValue } = useIMask({
+    mask: `num${symbol}`,
     blocks: {
       num: {
         mask: Number,
-        thousandsSeparator: ',',
-        radix: '.',
-        mapToRadix: ['.'],
-        normalizeZeros: true,
+        scale: 0.01,
+        radix: '%',
         padFractionalZeros: true,
+        mapToRadix: ['%'],
+        min: 0,
       },
     },
   });
@@ -60,25 +59,20 @@ export const Currency = ({
   };
 
   const handleFocusOnClick = () => {
-    // fixes cos-2594 - focus masked input on single click
-    (ref?.current as InputElement)?.focus();
+    (ref?.current as HTMLInputElement)?.focus();
     if (unmaskedValue === '0') {
-      (ref?.current as InputElement)?.setSelectionRange(1, 5);
+      (ref?.current as HTMLInputElement)?.setSelectionRange(1, 5);
     }
   };
 
   return (
-    <div>
-      <label {...labelProps}>{label}</label>
-
-      <Input
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ref={ref as any}
-        {...props}
-        onChange={handleValueChange}
-        onClick={handleFocusOnClick}
-        autoComplete='off'
-      />
-    </div>
+    <Input
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ref={ref as any}
+      {...props}
+      onChange={handleValueChange}
+      onClick={handleFocusOnClick}
+      autoComplete='off'
+    />
   );
 };

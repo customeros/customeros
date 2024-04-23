@@ -235,9 +235,7 @@ export const TenantBillingPanelDetailsForm = ({
         formId={formId}
         label='Checks'
         labelProps={{
-          fontSize: 'sm',
-          fontWeight: 'semibold',
-          margin: 0,
+          className: 'text-sm font-semibold m-0',
         }}
       />
     </div>

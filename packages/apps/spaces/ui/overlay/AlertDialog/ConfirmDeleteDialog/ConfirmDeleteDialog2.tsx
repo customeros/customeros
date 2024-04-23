@@ -61,6 +61,7 @@ export const ConfirmDeleteDialog = ({
               size='lg'
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               colorScheme={colorScheme as any}
+              className='mt-[13px] ml-[11px]'
             >
               {icon ? icon : <Trash01 />}
             </FeaturedIcon>

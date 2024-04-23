@@ -6,7 +6,6 @@ import addDays from 'date-fns/addDays';
 import getHours from 'date-fns/getHours';
 import getMinutes from 'date-fns/getMinutes';
 
-import { Portal } from '@ui/utils/';
 import { Button } from '@ui/form/Button/Button';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { Input, InputProps } from '@ui/form/Input/Input2';
@@ -74,39 +73,37 @@ export const ReminderDueDatePicker = ({ name, formId }: DueDatePickerProps) => {
             DateTimeUtils.date,
           )} • `}</span>
         </PopoverTrigger>
-        <Portal>
-          <PopoverContent
-            align='start'
-            side='top'
-            className='items-end'
-            sticky='always'
-            onOpenAutoFocus={(el) => el.preventDefault()}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <DatePicker
-              {...inputProps}
-              formId={formId}
-              defaultValue={new Date(inputProps.value)}
-              onChange={(date) => {
-                handleChange(date as Date);
-                setIsOpen(false);
-              }}
-              minDate={new Date()}
-            />
+        <PopoverContent
+          align='start'
+          side='top'
+          className='items-end'
+          sticky='always'
+          onOpenAutoFocus={(el) => el.preventDefault()}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <DatePicker
+            {...inputProps}
+            formId={formId}
+            defaultValue={new Date(inputProps.value)}
+            onChange={(date) => {
+              handleChange(date as Date);
+              setIsOpen(false);
+            }}
+            minDate={new Date()}
+          />
 
-            <Divider className='my-2' />
-            <Button
-              className='rounded-full mr-3'
-              variant='outline'
-              onClick={() => {
-                handleClickTomorrow();
-                setIsOpen(false);
-              }}
-            >
-              Tomorrow
-            </Button>
-          </PopoverContent>
-        </Portal>
+          <Divider className='my-2' />
+          <Button
+            className='rounded-full mr-3'
+            variant='outline'
+            onClick={() => {
+              handleClickTomorrow();
+              setIsOpen(false);
+            }}
+          >
+            Tomorrow
+          </Button>
+        </PopoverContent>
       </Popover>
       <TimeInput
         value={time}

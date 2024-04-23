@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useRef, useMemo, useState, useEffect } from 'react';
 
 import { cn } from '@ui/utils/cn';
 import { InputProps } from '@ui/form/Input';
@@ -54,17 +54,24 @@ const ToEmailInput = ({
   formId: string;
   email?: string | null;
 }) => {
-  const validationMessage = validateEmail(email ?? '');
+  const ref = useRef<HTMLInputElement>(null);
+
+  const validationMessage = useMemo(() => {
+    if (!email) return '';
+
+    return validateEmail(email) ?? '';
+  }, [email]);
+
+  useEffect(() => {
+    ref.current?.focus();
+  }, [validationMessage]);
 
   return (
-    <Tooltip label={validationMessage || ''} align='start' side={'bottom'}>
+    <Tooltip label={validationMessage} align='start' side={'bottom'}>
       <FormInput
-        className={cn(
-          'overflow-ellipsis text-base w-full border-none hover:border-none focus:border-none',
-          {
-            'text-warning-700': validationMessage,
-          },
-        )}
+        ref={ref}
+        variant='unstyled'
+        className={cn('text-warning-700' && validationMessage)}
         formId={formId}
         autoComplete='off'
         label='To'

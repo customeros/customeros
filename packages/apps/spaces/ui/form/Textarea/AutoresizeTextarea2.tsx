@@ -35,26 +35,45 @@ export interface AutoresizeTextareaProps
       'maxRows' | 'minRows' | 'onHeightChange' | 'cacheMeasurements'
     >,
     VariantProps<typeof sizeTextArea> {
+  label?: string;
   border?: boolean;
   className?: string;
   size?: 'xs' | 'sm' | 'md';
   leftElement?: React.ReactNode;
   rightElement?: React.ReactNode;
+  labelProps?: React.HTMLAttributes<HTMLLabelElement>;
 }
 
 export const AutoresizeTextarea = forwardRef<
   HTMLTextAreaElement,
   AutoresizeTextareaProps
->(({ className, border, leftElement, size, rightElement, ...rest }, ref) => {
-  return (
-    <TextareaGroup className={cn(className)}>
-      {leftElement && <LeftElement>{leftElement}</LeftElement>}
-      <ResizeTextarea
-        ref={ref}
-        {...rest}
-        className={twMerge(sizeTextArea({ size }), className)}
-      />
-      {rightElement && <RightElement>{rightElement}</RightElement>}
-    </TextareaGroup>
-  );
-});
+>(
+  (
+    {
+      className,
+      border,
+      leftElement,
+      label,
+      labelProps,
+      size,
+      rightElement,
+      ...rest
+    },
+    ref,
+  ) => {
+    return (
+      <div>
+        {label && <label {...labelProps}>{label}</label>}
+        <TextareaGroup className={cn(className)}>
+          {leftElement && <LeftElement>{leftElement}</LeftElement>}
+          <ResizeTextarea
+            ref={ref}
+            {...rest}
+            className={twMerge(sizeTextArea({ size }), className)}
+          />
+          {rightElement && <RightElement>{rightElement}</RightElement>}
+        </TextareaGroup>
+      </div>
+    );
+  },
+);

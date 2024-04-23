@@ -169,7 +169,7 @@ const getDefaultClassNames = ({
 }: Pick<SelectProps, 'size' | 'isReadOnly'>): ClassNamesConfig => ({
   container: ({ isFocused }) =>
     twMerge(
-      'flex mt-1 items-center cursor-pointer overflow-visible min-w-[300px] w-full focus-visible:border-0 focus:border-0',
+      'flex mt-1 cursor-pointer overflow-visible min-w-[300px] w-full focus-visible:border-0 focus:border-0',
       isReadOnly && 'pointer-events-none',
       isFocused && 'border-primary-500',
     ),

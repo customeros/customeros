@@ -2,12 +2,12 @@
 import { useRouter } from 'next/navigation';
 import React, { FC, ReactNode } from 'react';
 
+import { cn } from '@ui/utils/cn';
 import {
   Popover,
-  PopoverBody,
   PopoverContent,
   PopoverTrigger,
-} from '@ui/overlay/Popover';
+} from '@ui/overlay/Popover/Popover';
 
 interface PaymentDetailsPopoverProps {
   content?: string;
@@ -23,21 +23,17 @@ export const PaymentDetailsPopover: FC<PaymentDetailsPopoverProps> = ({
   const { push } = useRouter();
 
   return (
-    <Popover placement='bottom' trigger='hover'>
+    <Popover>
       <PopoverTrigger>
         <div className='w-full'>{children}</div>
       </PopoverTrigger>
       <PopoverContent
-        width='fit-content'
-        bg='gray.700'
-        color='white'
-        borderRadius='md'
-        boxShadow='none'
-        fontSize='sm'
-        border='none'
-        display={content ? 'block' : 'none'}
+        className={cn(
+          content ? 'block' : 'none',
+          'w-fit bg-gray-700 text-white rounded-md text-sm border-none',
+        )}
       >
-        <PopoverBody display='flex'>
+        <div className='flex'>
           <p className='text-base mr-2'>{content}</p>
 
           {withNavigation && (
@@ -50,7 +46,7 @@ export const PaymentDetailsPopover: FC<PaymentDetailsPopoverProps> = ({
               Go to Settings
             </span>
           )}
-        </PopoverBody>
+        </div>
       </PopoverContent>
     </Popover>
   );
