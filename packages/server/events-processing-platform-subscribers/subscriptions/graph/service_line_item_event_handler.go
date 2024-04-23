@@ -56,6 +56,7 @@ type ActionPriceMetadata struct {
 	Comment         string     `json:"comment"`
 	ReasonForChange string     `json:"reasonForChange"`
 	StartedAt       *time.Time `json:"startedAt,omitempty"`
+	Currency        string     `json:"currency"`
 }
 type ActionQuantityMetadata struct {
 	UserName         string     `json:"user-name"`
@@ -225,6 +226,7 @@ func (h *ServiceLineItemEventHandler) OnCreateV1(ctx context.Context, evt events
 		Comment:         "price is " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + " for service " + name,
 		ReasonForChange: reasonForChange,
 		StartedAt:       &eventData.StartedAt,
+		Currency:        contractEntity.Currency.String(),
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -423,14 +425,14 @@ func (h *ServiceLineItemEventHandler) OnUpdateV1(ctx context.Context, evt events
 		h.log.Errorf("error while getting contract for service line item %s: %s", serviceLineItemId, err.Error())
 		return nil
 	}
+	contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
 	if contractDbNode != nil {
-		contract := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
-		contractId = contract.Id
+		contractId = contractEntity.Id
 		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.grpcClients)
-		err = contractHandler.UpdateActiveRenewalOpportunityArr(ctx, eventData.Tenant, contract.Id)
+		err = contractHandler.UpdateActiveRenewalOpportunityArr(ctx, eventData.Tenant, contractEntity.Id)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			h.log.Errorf("error while updating renewal opportunity for contract %s: %s", contract.Id, err.Error())
+			h.log.Errorf("error while updating renewal opportunity for contract %s: %s", contractEntity.Id, err.Error())
 			return nil
 		}
 	}
@@ -467,6 +469,7 @@ func (h *ServiceLineItemEventHandler) OnUpdateV1(ctx context.Context, evt events
 		Quantity:        serviceLineItemEntity.Quantity,
 		Comment:         "price changed is " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + " for service " + name,
 		ReasonForChange: eventData.Comments,
+		Currency:        contractEntity.Currency.String(),
 	}
 	actionQuantityMetadata := ActionQuantityMetadata{
 		UserName:         userEntity.GetFullName(),
