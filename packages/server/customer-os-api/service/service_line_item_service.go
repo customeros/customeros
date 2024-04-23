@@ -644,26 +644,45 @@ func (s *serviceLineItemService) CreateOrUpdateOrCloseInBulk(ctx context.Context
 				return []string{}, err
 			}
 			responseIds = append(responseIds, itemId)
-
 		} else {
-			responseIds = append(responseIds, serviceLineItem.Id)
-			err = s.Update(ctx, ServiceLineItemUpdateData{
-				Id:                      serviceLineItem.Id,
-				IsRetroactiveCorrection: serviceLineItem.IsRetroactiveCorrection,
-				SliName:                 serviceLineItem.Name,
-				SliPrice:                serviceLineItem.Price,
-				SliQuantity:             serviceLineItem.Quantity,
-				SliBilledType:           serviceLineItem.Billed,
-				SliComments:             serviceLineItem.Comments,
-				SliVatRate:              serviceLineItem.VatRate,
-				Source:                  neo4jentity.DataSourceOpenline,
-				AppSource:               constants.AppSourceCustomerOsApi,
-				StartedAt:               serviceLineItem.StartedAt,
-			})
-			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("Error from events processing: %s", err.Error())
-				return []string{}, err
+			if !serviceLineItem.IsRetroactiveCorrection && serviceLineItem.StartedAt != nil && serviceLineItem.StartedAt.After(utils.Today()) {
+				itemId, err := s.NewVersion(ctx, ServiceLineItemNewVersionData{
+					Id:        serviceLineItem.Id,
+					Name:      serviceLineItem.Name,
+					Price:     serviceLineItem.Price,
+					Quantity:  serviceLineItem.Quantity,
+					Comments:  serviceLineItem.Comments,
+					Source:    neo4jentity.DataSourceOpenline,
+					AppSource: constants.AppSourceCustomerOsApi,
+					VatRate:   serviceLineItem.VatRate,
+					StartedAt: serviceLineItem.StartedAt,
+				})
+				if err != nil {
+					tracing.TraceErr(span, err)
+					s.log.Errorf("Error from events processing: %s", err.Error())
+					return []string{}, err
+				}
+				responseIds = append(responseIds, itemId)
+			} else {
+				err = s.Update(ctx, ServiceLineItemUpdateData{
+					Id:                      serviceLineItem.Id,
+					IsRetroactiveCorrection: serviceLineItem.IsRetroactiveCorrection,
+					SliName:                 serviceLineItem.Name,
+					SliPrice:                serviceLineItem.Price,
+					SliQuantity:             serviceLineItem.Quantity,
+					SliBilledType:           serviceLineItem.Billed,
+					SliComments:             serviceLineItem.Comments,
+					SliVatRate:              serviceLineItem.VatRate,
+					Source:                  neo4jentity.DataSourceOpenline,
+					AppSource:               constants.AppSourceCustomerOsApi,
+					StartedAt:               serviceLineItem.StartedAt,
+				})
+				if err != nil {
+					tracing.TraceErr(span, err)
+					s.log.Errorf("Error from events processing: %s", err.Error())
+					return []string{}, err
+				}
+				responseIds = append(responseIds, serviceLineItem.Id)
 			}
 		}
 	}
