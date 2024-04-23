@@ -662,8 +662,6 @@ func (s *invoiceService) AdjustInvoiceStatus() {
 				s.log.Errorf("Error updating invoice %s to overdue: %s", invoice.Id, err.Error())
 				return // stop processing
 			}
-			//sleep for async processing, then check again
-			time.Sleep(10 * time.Second)
 		}
 
 		recordsForOnHoldInvoices, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoicesForOnHold(ctx)
@@ -691,8 +689,6 @@ func (s *invoiceService) AdjustInvoiceStatus() {
 				s.log.Errorf("Error updating invoice %s to on hold: %s", invoice.Id, err.Error())
 				return // stop processing
 			}
-			//sleep for async processing, then check again
-			time.Sleep(10 * time.Second)
 		}
 
 		recordsForOnScheduledInvoices, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoicesForScheduled(ctx)
@@ -720,8 +716,13 @@ func (s *invoiceService) AdjustInvoiceStatus() {
 				s.log.Errorf("Error updating invoice %s to scheduled: %s", invoice.Id, err.Error())
 				return // stop processing
 			}
-			//sleep for async processing, then check again
-			time.Sleep(10 * time.Second)
 		}
+
+		if len(recordsForOverdueInvoices) == 0 && len(recordsForOnHoldInvoices) == 0 && len(recordsForOnScheduledInvoices) == 0 {
+			return
+		}
+
+		// sleep for async processing, then check again
+		time.Sleep(10 * time.Second)
 	}
 }
