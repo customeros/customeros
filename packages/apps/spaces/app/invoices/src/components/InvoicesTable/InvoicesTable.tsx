@@ -3,10 +3,13 @@
 import { useSearchParams } from 'next/navigation';
 import { useMemo, useState, useCallback } from 'react';
 
+import { observer } from 'mobx-react-lite';
+
 import { Invoice } from '@graphql/types';
+import { useStore } from '@shared/hooks/useStore';
 import { Table, SortingState } from '@ui/presentation/Table';
-import { mockedTableDefs } from '@shared/util/tableDefs.mock';
 import { SlashCircle01 } from '@ui/media/icons/SlashCircle01';
+import { ViewSettings } from '@shared/components/ViewSettings';
 import { GetInvoicesQuery } from '@shared/graphql/getInvoices.generated';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog2';
 
@@ -20,15 +23,14 @@ interface InvoicesTableProps {
   initialData?: GetInvoicesQuery;
 }
 
-export const InvoicesTable = ({ initialData }: InvoicesTableProps) => {
+export const InvoicesTable = observer(({ initialData }: InvoicesTableProps) => {
   const searchParams = useSearchParams();
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'INVOICE_DUE_DATE', desc: true },
   ]);
+  const { tableViewDefsStore } = useStore();
 
   const preset = searchParams?.get('preset');
-
-  const tableViewDefsData = mockedTableDefs;
 
   const {
     data,
@@ -46,10 +48,11 @@ export const InvoicesTable = ({ initialData }: InvoicesTableProps) => {
     !isFetching && fetchNextPage();
   }, [fetchNextPage, isFetching]);
 
-  const tableViewDef = tableViewDefsData?.find((t) => t.id === preset);
+  const tableViewDef = tableViewDefsStore.getById(preset ?? '1');
+
   const columns = useMemo(
-    () => getColumnsConfig(tableViewDef),
-    [tableViewDef?.id],
+    () => getColumnsConfig(tableViewDef?.value),
+    [tableViewDef?.value],
   );
 
   const { reset, targetId, isConfirming, onConfirm, isPending } =
@@ -69,7 +72,10 @@ export const InvoicesTable = ({ initialData }: InvoicesTableProps) => {
 
   return (
     <>
-      <Search />
+      <div className='flex items-center'>
+        <Search />
+        <ViewSettings type='invoices' />
+      </div>
       <Table<Invoice>
         data={data}
         columns={columns}
@@ -94,4 +100,4 @@ export const InvoicesTable = ({ initialData }: InvoicesTableProps) => {
       />
     </>
   );
-};
+});

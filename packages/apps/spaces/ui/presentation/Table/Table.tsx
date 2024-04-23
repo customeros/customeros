@@ -173,6 +173,10 @@ export const Table = <T extends object>({
                   const paddingLeft =
                     index === 0 ? 'pl-2' : index === 1 ? 'pl-0' : 'pl-6';
 
+                  const isHidden = header.column.columnDef.enableHiding;
+
+                  if (isHidden) return null;
+
                   return (
                     <THeaderCell
                       key={header.id}
@@ -307,6 +311,10 @@ export const Table = <T extends object>({
                       .getFlatHeaders()
                       .find((h) => h.id === cell.column.columnDef.id)
                       ?.colSpan ?? '1';
+
+                  const isHidden = cell.column.columnDef.enableHiding;
+
+                  if (isHidden) return null;
 
                   return (
                     <TCell

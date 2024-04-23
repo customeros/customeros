@@ -38,29 +38,43 @@ interface MenuListProps extends DropdownMenuPrimitive.DropdownMenuContentProps {
 
 export const MenuList = forwardRef<HTMLDivElement, MenuListProps>(
   (
-    { children, hasArrow, side = 'right', align = 'end', className, ...props },
+    { children, hasArrow, side = 'bottom', align = 'end', className, ...props },
     forwardedRef,
   ) => {
     return (
-      <DropdownMenuPrimitive.Portal>
-        <DropdownMenuPrimitive.Content
-          {...props}
-          ref={forwardedRef}
-          align={align}
-          side={side}
-          sideOffset={5}
-          className={twMerge(
-            className,
-            'bg-white min-w-[auto] py-2 shadow-lg border rounded-md data-[side=top]:animate-slideDownAndFade data-[side=right]:animate-slideLeftAndFade data-[side=bottom]:animate-slideUpAndFade data-[side=left]:animate-slideRightAndFade z-10',
-          )}
-        >
-          {children}
-          {hasArrow && <DropdownMenuPrimitive.Arrow />}
-        </DropdownMenuPrimitive.Content>
-      </DropdownMenuPrimitive.Portal>
+      <DropdownMenuPrimitive.Content
+        {...props}
+        ref={forwardedRef}
+        align={align}
+        side={side}
+        sideOffset={5}
+        className={twMerge(
+          className,
+          'bg-white min-w-[auto] py-2 shadow-lg border rounded-md data-[side=top]:animate-slideDownAndFade data-[side=right]:animate-slideLeftAndFade data-[side=bottom]:animate-slideUpAndFade data-[side=left]:animate-slideRightAndFade z-10',
+        )}
+      >
+        {children}
+        {hasArrow && <DropdownMenuPrimitive.Arrow />}
+      </DropdownMenuPrimitive.Content>
     );
   },
 );
+
+export const MenuLabel = forwardRef<
+  HTMLDivElement,
+  DropdownMenuPrimitive.MenuLabelProps
+>(({ className, ...props }, ref) => {
+  return (
+    <DropdownMenuPrimitive.Label
+      ref={ref}
+      {...props}
+      className={twMerge(
+        'text-xs text-gray-500 uppercase px-3 pt-[10px] pb-1',
+        className,
+      )}
+    />
+  );
+});
 
 export const MenuButton = DropdownMenuPrimitive.Trigger;
 MenuButton.defaultProps = {

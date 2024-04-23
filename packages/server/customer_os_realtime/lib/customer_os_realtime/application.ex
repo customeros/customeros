@@ -17,7 +17,9 @@ defmodule CustomerOsRealtime.Application do
       # Start to serve requests, typically the last entry
       CustomerOsRealtimeWeb.Presence,
       CustomerOsRealtimeWeb.Endpoint,
-      CustomerOsRealtime.ColorManager
+      CustomerOsRealtime.ColorManager,
+      CustomerOsRealtime.DeltaManager,
+      CustomerOsRealtime.StoreManager
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
