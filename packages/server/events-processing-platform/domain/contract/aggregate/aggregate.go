@@ -184,11 +184,12 @@ func (a *ContractAggregate) updateContract(ctx context.Context, request *contrac
 		Approved:               request.Approved,
 	}
 
+	fieldsMask := extractFieldsMask(request.FieldsMask)
+
 	// Set the approved field to true if the contract is already approved
-	if a.Contract.Approved {
+	if a.Contract.Approved && utils.Contains(fieldsMask, event.FieldMaskApproved) {
 		dataFields.Approved = true
 	}
-	fieldsMask := extractFieldsMask(request.FieldsMask)
 
 	// Validate the dates
 	if isUpdated(event.FieldMaskEndedAt, fieldsMask) && dataFields.EndedAt != nil && (dataFields.SignedAt != nil && dataFields.EndedAt.Before(*dataFields.SignedAt) ||
