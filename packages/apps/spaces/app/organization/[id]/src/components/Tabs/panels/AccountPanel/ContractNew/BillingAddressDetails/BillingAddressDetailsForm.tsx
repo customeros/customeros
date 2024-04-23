@@ -3,8 +3,8 @@ import React, { FC } from 'react';
 
 import { useTenantSettingsQuery } from '@settings/graphql/getTenantSettings.generated';
 
-import { FormSelect } from '@ui/form/SyncSelect';
 import { FormInput } from '@ui/form/Input/FormInput2';
+import { FormSelect } from '@ui/form/Select/FormSelect';
 import { countryOptions } from '@shared/util/countryOptions';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { EmailsInputGroup } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ContractBillingDetailsModal/EmailsInputGroup/EmailsInputGroup';
@@ -37,7 +37,7 @@ export const BillingDetailsForm: FC<BillingAddressDetailsForm> = ({
       />
 
       <div className='flex flex-col'>
-        <p className='text-sm font-semibold'>Billing address aicishaia</p>
+        <p className='text-sm font-semibold'>Billing address</p>
         <FormSelect
           label='Country'
           placeholder='Country'

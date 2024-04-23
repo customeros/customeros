@@ -1,7 +1,7 @@
 'use client';
 import React, { FC, ReactNode } from 'react';
 
-import { Box } from '@ui/layout/Box';
+import { cn } from '@ui/utils/cn';
 
 export const ServiceLineItemInputWrapper: FC<{
   isDeleted: boolean;
@@ -9,8 +9,14 @@ export const ServiceLineItemInputWrapper: FC<{
   width: string | number;
 }> = ({ children, isDeleted, width }) => {
   return (
-    <Box fontSize='sm' w={width} pointerEvents={isDeleted ? 'none' : 'auto'}>
+    <div
+      className={cn(
+        isDeleted ? 'pointer-events-none' : 'pointer-events-auto',
+        'text-sm',
+      )}
+      style={{ width }}
+    >
       {children}
-    </Box>
+    </div>
   );
 };

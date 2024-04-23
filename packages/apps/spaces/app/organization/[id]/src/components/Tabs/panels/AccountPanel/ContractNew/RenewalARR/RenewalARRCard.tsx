@@ -13,7 +13,7 @@ import { Card, CardHeader } from '@ui/presentation/Card/Card';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
-import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog/InfoDialog';
+import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog/InfoDialog2';
 import {
   Opportunity,
   InternalStage,
@@ -257,12 +257,9 @@ export const RenewalARRCard = ({
           onConfirm={modal.onClose}
           confirmButtonLabel='Got it'
           label='This contract ends soon'
-        >
-          <p className='text-sm font-normal mt-1'>
-            The renewal likelihood has been downgraded to Zero because the
-            contract is set to end within the current renewal cycle.
-          </p>
-        </InfoDialog>
+          description=' The renewal likelihood has been downgraded to Zero because the
+          contract is set to end within the current renewal cycle.'
+        />
       ) : (
         <RenewalDetailsModal
           updateOpportunityMutation={updateOpportunityMutation}

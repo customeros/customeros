@@ -10,9 +10,9 @@ import { Button } from '@ui/form/Button/Button';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { ModalBody } from '@ui/overlay/Modal/Modal';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
-import { FormSwitch } from '@ui/form/Switch/FromSwitch';
+import { FormSwitch } from '@ui/form/Switch/FormSwitch2';
 import { Divider } from '@ui/presentation/Divider/Divider';
-import { FormCheckbox } from '@ui/form/Checkbox/FormCheckbox';
+import { FormCheckbox } from '@ui/form/Checkbox/FormCheckbox2';
 import { currencyOptions } from '@shared/util/currencyOptions';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { DatePickerUnderline } from '@ui/form/DatePicker/DatePickerUnderline';
@@ -214,23 +214,27 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
 
           <div className='flex flex-col gap-1 mb-2'>
             <div className='flex flex-col gap-1'>
-              <PaymentDetailsPopover
-                content={isStripeActive ? '' : 'No payment provider enabled'}
-                withNavigation
-              >
-                <FormSwitch
-                  name='payAutomatically'
-                  formId={formId}
-                  isInvalid={!isStripeActive}
-                  size='sm'
-                  labelProps={{ margin: 0 }}
-                  label={
+              <FormSwitch
+                name='payAutomatically'
+                formId={formId}
+                isInvalid={!isStripeActive}
+                size='sm'
+                labelProps={{
+                  className: 'm-0',
+                }}
+                label={
+                  <PaymentDetailsPopover
+                    content={
+                      isStripeActive ? '' : 'No payment provider enabled'
+                    }
+                    withNavigation
+                  >
                     <div className='text-base font-normal whitespace-nowrap'>
                       Auto-payment via Stripe
                     </div>
-                  }
-                />
-              </PaymentDetailsPopover>
+                  </PaymentDetailsPopover>
+                }
+              />
               {isStripeActive && payAutomatically && (
                 <div className='flex flex-col gap-1 ml-2'>
                   <Tooltip
@@ -246,8 +250,9 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
                       <FormCheckbox
                         name='canPayWithCard'
                         formId={formId}
-                        size='md'
-                        isInvalid={
+                        size='sm'
+                        iconSize='sm'
+                        disabled={
                           !availablePaymentMethodTypes?.includes('card')
                         }
                       >
@@ -270,8 +275,11 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
                       <FormCheckbox
                         name='canPayWithDirectDebit'
                         formId={formId}
-                        size='md'
-                        isInvalid={
+                        size='sm'
+                        iconColorScheme='warning'
+                        iconSize='sm'
+                        colorScheme='warning'
+                        disabled={
                           !availablePaymentMethodTypes?.includes('ach_debit')
                         }
                       >
@@ -284,67 +292,66 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
                 </div>
               )}
             </div>
-
-            <PaymentDetailsPopover
-              content={isStripeActive ? '' : 'No payment provider enabled'}
-              withNavigation
-            >
-              <FormSwitch
-                name='payOnline'
-                formId={formId}
-                isInvalid={!isStripeActive}
-                size='sm'
-                labelProps={{
-                  margin: 0,
-                }}
-                label={
+            <FormSwitch
+              name='payOnline'
+              formId={formId}
+              isInvalid={!isStripeActive}
+              size='sm'
+              labelProps={{
+                className: 'm-0',
+              }}
+              label={
+                <PaymentDetailsPopover
+                  content={isStripeActive ? '' : 'No payment provider enabled'}
+                  withNavigation
+                >
                   <div className='text-base font-normal whitespace-nowrap'>
                     Pay online via Stripe
                   </div>
-                }
-              />
-            </PaymentDetailsPopover>
-
-            <PaymentDetailsPopover
-              withNavigation
-              content={bankTransferPopoverContent}
-            >
-              <FormSwitch
-                name='canPayWithBankTransfer'
-                isInvalid={!!bankTransferPopoverContent.length}
-                formId={formId}
-                size='sm'
-                labelProps={{
-                  margin: 0,
-                }}
-                label={
+                </PaymentDetailsPopover>
+              }
+            />
+            <FormSwitch
+              name='canPayWithBankTransfer'
+              isInvalid={!!bankTransferPopoverContent.length}
+              formId={formId}
+              size='sm'
+              labelProps={{
+                className: 'm-0',
+              }}
+              label={
+                <PaymentDetailsPopover
+                  withNavigation
+                  content={bankTransferPopoverContent}
+                >
                   <div className='text-base font-normal whitespace-nowrap'>
                     Bank transfer
                   </div>
-                }
-              />
-            </PaymentDetailsPopover>
-            <PaymentDetailsPopover
-              withNavigation
-              content={
-                tenantBillingProfile?.check ? '' : 'Check not enabled yet'
+                </PaymentDetailsPopover>
               }
-            >
-              <FormSwitch
-                name='check'
-                isInvalid={!tenantBillingProfile?.check}
-                formId={formId}
-                size='sm'
-                labelProps={{
-                  margin: 0,
-                }}
-                label={
+            />
+
+            <FormSwitch
+              name='check'
+              isInvalid={!tenantBillingProfile?.check}
+              formId={formId}
+              size='sm'
+              labelProps={{
+                className: 'm-0',
+              }}
+              label={
+                <PaymentDetailsPopover
+                  withNavigation
+                  content={
+                    tenantBillingProfile?.check ? '' : 'Check not enabled yet'
+                  }
+                >
                   <div className='text-base font-normal whitespace-nowrap'>
                     Check
                   </div>
-                }
-              />
-            </PaymentDetailsPopover>
+                </PaymentDetailsPopover>
+              }
+            />
           </div>
         </>
       )}

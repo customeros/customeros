@@ -1,32 +1,20 @@
-import React from 'react';
+import React, { ChangeEvent } from 'react';
 
-import {
-  FormLabel,
-  FormControl,
-  VisuallyHidden,
-  NumberInputProps,
-} from '@chakra-ui/react';
-
-import {
-  NumberInput,
-  NumberInputField,
-} from '@ui/form/NumberInput/NumberInput';
-import {
-  InputGroup,
-  InputLeftElement,
-  InputRightElement,
-} from '@ui/form/InputGroup/InputGroup';
+import { Input } from '../Input/Input2';
+import { InputGroup, LeftElement, RightElement } from '../Input/InputGroup';
 
 export interface CurrencyInputProps
-  extends Omit<NumberInputProps, 'onChange' | 'value'> {
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
   value: string;
   label?: string;
+  placeholder?: string;
   isLabelVisible?: boolean;
   leftElement?: React.ReactNode;
   rightElement?: React.ReactNode;
   onChange?: (value: string) => void;
   parseValue?: (val: string) => string;
   formatValue?: (val: string) => string;
+  labelProps?: React.LabelHTMLAttributes<HTMLLabelElement>;
 }
 
 export const CurrencyInput = React.forwardRef<
@@ -35,19 +23,21 @@ export const CurrencyInput = React.forwardRef<
 >(
   (
     {
-      isLabelVisible,
       label,
       leftElement,
       rightElement,
       value,
+      labelProps,
       onChange,
       formatValue,
+      placeholder,
       parseValue,
       ...rest
     },
     ref,
   ) => {
-    const handleValueChange = (valueString: string) => {
+    const handleValueChange = (e: ChangeEvent<HTMLInputElement>) => {
+      const valueString = e.target.value;
       // handle weird case of blurring the field with an empty value
       if (valueString === '-9007199254740991') {
         onChange?.('');
@@ -63,41 +53,28 @@ export const CurrencyInput = React.forwardRef<
     };
 
     return (
-      <FormControl>
-        {isLabelVisible ? (
-          <FormLabel fontWeight={600} color={rest?.color} fontSize='sm' mb={-1}>
-            {label}
-          </FormLabel>
-        ) : (
-          <VisuallyHidden>
-            <FormLabel>{label}</FormLabel>
-          </VisuallyHidden>
-        )}
+      <div>
+        <label className='font-semibold text-sm mb-[-4px]' {...labelProps}>
+          {label}
+        </label>
+
         <InputGroup>
           {leftElement && (
-            <InputLeftElement w='4'>{leftElement}</InputLeftElement>
+            <LeftElement className='size-4'>{leftElement}</LeftElement>
           )}
-
-          <NumberInput
-            {...rest}
+          <Input
+            className='border-transparent focus:border-0 hover:border-transparent'
+            ref={ref}
+            type='number'
             value={formatValue ? formatValue(value) : value}
+            variant='flushed'
             onChange={handleValueChange}
-            _placeholder={{ color: 'gray.600' }}
-          >
-            <NumberInputField
-              ref={ref}
-              pl={leftElement ? '30px' : '0'}
-              pr={0}
-              autoComplete='off'
-              placeholder={rest?.placeholder || ''}
-            />
-          </NumberInput>
+            placeholder={placeholder}
+          />
 
-          {rightElement && (
-            <InputRightElement>{rightElement}</InputRightElement>
-          )}
+          {rightElement && <RightElement>{rightElement}</RightElement>}
         </InputGroup>
-      </FormControl>
+      </div>
     );
   },
 );

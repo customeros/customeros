@@ -38,14 +38,17 @@ export const ContractMenu: React.FC<ContractStatusSelectProps> = ({
           <DotsVertical className='text-gray-400' />
         </MenuButton>
         <MenuList align='end' side='bottom' className='p-0'>
-          <MenuItem onClick={onOpenEditModal} className='flex items-center'>
+          <MenuItem
+            onClick={onOpenEditModal}
+            className='flex items-center text-base'
+          >
             <Edit03 className='mr-2 text-gray-500' />
             Edit contract
           </MenuItem>
 
           {status === ContractStatus.Live && (
             <MenuItem
-              className='flex items-center'
+              className='flex items-center text-base'
               onClick={() => onStatusModalOpen(ContractStatusModalMode.Renew)}
             >
               <RefreshCw05 className='text-gray-500 mr-2' />
@@ -55,7 +58,7 @@ export const ContractMenu: React.FC<ContractStatusSelectProps> = ({
           <Divider className='my-0.5' />
           {status !== ContractStatus.Scheduled && (
             <MenuItem
-              className='flex items-center '
+              className='flex items-center text-base'
               onClick={onHandleStatusChange}
             >
               {statusContent}

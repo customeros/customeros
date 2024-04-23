@@ -52,9 +52,9 @@ export const Logger = () => {
     .filter((e) => Boolean(e.label)) as { id: string; label: string }[];
 
   return (
-    <div className='customeros-logger flex flex-col min-h-[135px] relative'>
-      <div className='absolute top-[-4] right-[-6]'>
-        <Image src={noteIcon} alt='' height={123} width={174} />
+    <div className='customeros-logger flex flex-col min-h-[123px] relative'>
+      <div className='absolute top-[-16px] right-[-24px]'>
+        <Image src={noteIcon} alt='' height={135} width={174} />
       </div>
 
       <RichTextEditor
@@ -74,23 +74,23 @@ export const Logger = () => {
         <KeymapperCreate onCreate={onCreateLogEntry} />
         <KeymapperClose onClose={handleClose} />
       </RichTextEditor>
-      <div className='flex justify-between z-10 text-base'>
+      <div className='flex justify-between text-base'>
         <TagsSelect
           formId='organization-create-log-entry'
           name='tags'
           tags={data?.tags}
         />
         <Button
-          className='font-semibold rounded-lg py-1 px-3 text-sm'
+          className='font-semibold rounded-lg py-1 px-3 text-sm items-center'
           variant='outline'
           colorScheme='gray'
-          size='sm'
+          size='xs'
           isDisabled={isSaving || isLogEmpty}
           isLoading={isSaving}
           loadingText='Sending'
           onClick={() => onCreateLogEntry()}
         >
-          Log asdas
+          Log
         </Button>
       </div>
     </div>

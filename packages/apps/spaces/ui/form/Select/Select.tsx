@@ -135,7 +135,7 @@ const getDefaultClassNames = ({
       variant: 'flushed',
       size,
       className: cn(
-        'flex mt-1 items-center cursor-pointer overflow-visible',
+        'flex items-center cursor-pointer overflow-visible',
         isReadOnly && 'pointer-events-none',
         isFocused && 'border-primary-500',
       ),
@@ -150,7 +150,7 @@ const getDefaultClassNames = ({
     'p-2 max-h-[300px] border border-gray-200 bg-white outline-offset-[2px] outline-[2px] rounded-lg shadow-lg overflow-y-auto overscroll-auto',
   option: ({ isFocused, isSelected }) =>
     cn(
-      'my-[2px] px-3 py-1.5 rounded-md text-gray-700 line-clamp-1 transition ease-in-out delay-50 hover:bg-gray-50',
+      'my-[2px] px-3  rounded-md text-gray-700 line-clamp-1 transition ease-in-out delay-50 hover:bg-gray-50',
       isSelected && 'bg-gray-50 font-medium leading-normal',
       isFocused && 'ring-2 ring-gray-100',
     ),
@@ -191,7 +191,7 @@ export const getContainerClassNames = (
     variant: 'flushed',
     size,
     className: cn(
-      'flex mt-1 items-center cursor-pointer overflow-visible',
+      'flex items-center cursor-pointer overflow-visible',
       isReadOnly && 'pointer-events-none',
       isFocused && 'border-primary-500',
     ),

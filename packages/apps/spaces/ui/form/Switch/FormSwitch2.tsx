@@ -1,16 +1,9 @@
 'use client';
 
 import { useField } from 'react-inverted-form';
-import { ReactNode, forwardRef, ForwardedRef } from 'react';
+import React, { ReactNode, forwardRef, ForwardedRef } from 'react';
 
-import {
-  Flex,
-  FormLabel,
-  FormControl,
-  VisuallyHidden,
-  FormLabelProps,
-} from '@chakra-ui/react';
-
+import { cn } from '@ui/utils/cn';
 import { Switch, SwitchProps } from '@ui/form/Switch/Switch2';
 export interface FormSwitchProps extends SwitchProps {
   name: string;
@@ -18,8 +11,8 @@ export interface FormSwitchProps extends SwitchProps {
   label?: ReactNode;
   leftElement?: ReactNode;
   isLabelVisible?: boolean;
-  labelProps?: FormLabelProps;
   onChangeCallback?: (onCallback: () => void) => void;
+  labelProps?: React.LabelHTMLAttributes<HTMLLabelElement>;
 }
 
 export const FormSwitch = forwardRef(
@@ -57,26 +50,21 @@ export const FormSwitch = forwardRef(
     };
 
     return (
-      <FormControl
-        as={Flex}
-        w='full'
-        justifyContent='space-between'
-        alignItems='center'
-      >
+      <div className='flex w-full justify-between items-center'>
         {isLabelVisible ? (
-          <FormLabel
+          <label
             {...labelProps}
-            fontWeight='medium'
-            color={props.isDisabled ? 'gray.500' : 'gray.700'}
+            className={cn(
+              props.isDisabled ? 'text-gray-500' : 'text-gray-700',
+              'text-base',
+            )}
           >
             {label}
-          </FormLabel>
+          </label>
         ) : (
-          <VisuallyHidden>
-            <FormLabel>{label}</FormLabel>
-          </VisuallyHidden>
+          <label>{label}</label>
         )}
-        <Flex alignItems='center'>
+        <div className='items-center flex'>
           {leftElement && leftElement}
           <Switch
             ref={ref}
@@ -85,8 +73,8 @@ export const FormSwitch = forwardRef(
             onChange={() => handleChange(!value)}
             {...rest}
           />
-        </Flex>
-      </FormControl>
+        </div>
+      </div>
     );
   },
 );

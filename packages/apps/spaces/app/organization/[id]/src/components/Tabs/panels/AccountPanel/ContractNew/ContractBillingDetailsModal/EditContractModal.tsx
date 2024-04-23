@@ -374,7 +374,7 @@ export const EditContractModal = ({
       <ModalOverlay />
       <ModalContent
         placement='center'
-        className='border-r-2 flex gap-6 bg-transparent shadow-none border-none '
+        className='border-r-2 flex gap-6 bg-transparent shadow-none border-none'
         style={{ minWidth: '971px', minHeight: '80vh', boxShadow: 'none' }}
       >
         <div className='relative'>

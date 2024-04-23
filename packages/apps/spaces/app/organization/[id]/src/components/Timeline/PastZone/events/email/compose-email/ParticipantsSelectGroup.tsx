@@ -121,6 +121,7 @@ export const ParticipantsSelectGroup = ({
               <div
                 className={cn(!bcc.length ? 'flex-1' : 'unset', 'flex')}
                 onClick={() => handleFocus(1)}
+                onFocusCapture={() => handleFocus(1)}
                 role='button'
                 aria-label='Click to input participant data'
               >
@@ -134,6 +135,7 @@ export const ParticipantsSelectGroup = ({
               <div
                 className='flex'
                 onClick={() => handleFocus(2)}
+                onFocusCapture={() => handleFocus(2)}
                 role='button'
                 aria-label='Click to input participant data'
               >

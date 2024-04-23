@@ -1,27 +1,25 @@
 'use client';
 import { useMemo } from 'react';
-import { useForm } from 'react-inverted-form';
+import { useForm, useField } from 'react-inverted-form';
 
+import { twMerge } from 'tailwind-merge';
 import { useDeepCompareEffect } from 'rooks';
 import { UseMutationResult } from '@tanstack/react-query';
 
 import { Dot } from '@ui/media/Dot';
-import { Box } from '@ui/layout/Box';
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
-import { FormSelect } from '@ui/form/SyncSelect';
-import { Heading } from '@ui/typography/Heading';
-import { Button, ButtonGroup } from '@ui/form/Button';
-import { FormAutoresizeTextarea } from '@ui/form/Textarea';
+import { Button } from '@ui/form/Button/Button';
+import { Spinner } from '@ui/feedback/Spinner/Spinner';
+import { FormSelect } from '@ui/form/Select/FormSelect';
 import { FormCurrencyInput } from '@ui/form/CurrencyInput';
 import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
 import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
-import { FormElement, FormElementProps } from '@ui/form/FormElement';
 import { useGetUsersQuery } from '@shared/graphql/getUsers.generated';
+import { FormAutoresizeTextarea } from '@ui/form/Textarea/FormAutoresizeTextarea2';
 import { GetContractsQuery } from '@organization/src/graphql/getContracts.generated';
 import { UpdateOpportunityRenewalMutation } from '@organization/src/graphql/updateOpportunityRenewal.generated';
+import { likelihoodButtons } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/RenewalARR/utils';
 import {
   Exact,
   Opportunity,
@@ -37,11 +35,7 @@ import {
   ModalContent,
   ModalOverlay,
   ModalCloseButton,
-} from '@ui/overlay/Modal';
-import {
-  getButtonStyles,
-  likelihoodButtons,
-} from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/RenewalARR/utils';
+} from '@ui/overlay/Modal/Modal';
 type UpdateOpportunityMutation = UseMutationResult<
   UpdateOpportunityRenewalMutation,
   unknown,
@@ -62,17 +56,21 @@ export const RenewalDetailsModal = ({
   updateOpportunityMutation,
 }: RenewalDetailsProps) => {
   return (
-    <Modal
-      isOpen={data?.internalStage !== InternalStage.ClosedLost && isOpen}
-      onClose={onClose}
-    >
-      <ModalOverlay />
-      <RenewalDetailsForm
-        data={data}
-        onClose={onClose}
-        updateOpportunityMutation={updateOpportunityMutation}
-      />
-    </Modal>
+    <>
+      {isOpen && (
+        <Modal
+          open={data?.internalStage !== InternalStage.ClosedLost && isOpen}
+          onOpenChange={onClose}
+        >
+          <ModalOverlay />
+          <RenewalDetailsForm
+            data={data}
+            onClose={onClose}
+            updateOpportunityMutation={updateOpportunityMutation}
+          />
+        </Modal>
+      )}
+    </>
   );
 };
 
@@ -138,12 +136,8 @@ const RenewalDetailsForm = ({
   return (
     <>
       <ModalContent
-        as='form'
-        borderRadius='2xl'
-        onSubmit={handleSubmit}
-        backgroundImage='/backgrounds/organization/circular-bg-pattern.png'
-        backgroundRepeat='no-repeat'
-        sx={{
+        className='rounded-2xl bg-[url(/backgrounds/organization/circular-bg-pattern.png)] bg-no-repeat'
+        style={{
           backgroundPositionX: '1px',
           backgroundPositionY: '-7px',
         }}
@@ -153,91 +147,94 @@ const RenewalDetailsForm = ({
           <FeaturedIcon
             size='lg'
             colorScheme='primary'
-            className='ml-[12px] mt-[12px] mb-[31px]'
+            className='ml-[12px] mt-1 mb-[31px]'
           >
             <ClockFastForward />
           </FeaturedIcon>
-          <Heading fontSize='lg' mt='4'>
-            Renewal details
-          </Heading>
+          <span className='text-lg mt-3'>Renewal details</span>
         </ModalHeader>
-        <ModalBody pb='0' gap={4} as={Flex} flexDir='column'>
-          <FormSelect
-            isClearable
-            name='owner'
-            label='Owner'
-            isLabelVisible
-            formId={formId}
-            isLoading={false}
-            options={options}
-            placeholder='Owner'
-            backspaceRemovesValue
-          />
-
-          <div>
-            <FormLikelihoodButtonGroup
-              formId={formId}
-              name='renewalLikelihood'
-            />
-            {data?.renewalUpdatedByUserId && (
-              <Text color='gray.500' fontSize='xs' mt={2}>
-                Last updated by{' '}
-              </Text>
-            )}
-          </div>
-          {data?.amount > 0 && (
-            <FormCurrencyInput
-              min={0}
-              w='full'
-              name='amount'
-              formId={formId}
-              placeholder='Amount'
-              label='ARR forecast'
+        <form onSubmit={(v) => handleSubmit(v)}>
+          <ModalBody className='pb-0 gap-4 flex flex-col'>
+            <FormSelect
+              isClearable
+              name='owner'
+              label='Owner'
               isLabelVisible
-              leftElement={
-                <Box color='gray.500'>
-                  <CurrencyDollar height='16px' />
-                </Box>
-              }
+              formId={formId}
+              isLoading={false}
+              options={options}
+              placeholder='Owner'
+              backspaceRemovesValue
             />
-          )}
 
-          {!!data.renewalLikelihood && (
             <div>
-              <Text as='label' htmlFor='reason' fontSize='sm'>
-                <b>Reason for change</b> (optional)
-              </Text>
-              <FormAutoresizeTextarea
-                pt='0'
+              <FormLikelihoodButtonGroup
                 formId={formId}
-                id='reason'
-                name='reason'
-                spellCheck='false'
-                placeholder={`What is the reason for updating these details`}
+                name='renewalLikelihood'
               />
+              {data?.renewalUpdatedByUserId && (
+                <p className='text-gray-500 text-xs mt-2'>Last updated by </p>
+              )}
             </div>
-          )}
-        </ModalBody>
-        <ModalFooter p='6'>
-          <Button
-            variant='outline'
-            w='full'
-            onClick={onClose}
-            isDisabled={updateOpportunityMutation.isPending}
-          >
-            Cancel
-          </Button>
-          <Button
-            ml='3'
-            w='full'
-            type='submit'
-            variant='outline'
-            colorScheme='primary'
-            isLoading={updateOpportunityMutation.isPending}
-          >
-            Update
-          </Button>
-        </ModalFooter>
+            {data?.amount > 0 && (
+              <FormCurrencyInput
+                className='w-full'
+                min={0}
+                name='amount'
+                formId={formId}
+                placeholder='Amount'
+                label='ARR forecast'
+                leftElement={
+                  <CurrencyDollar className='text-gray-500 size-4' />
+                }
+              />
+            )}
+
+            {!!data.renewalLikelihood && (
+              <div>
+                <label className='text-sm' htmlFor='reason'>
+                  <b>Reason for change</b> (optional)
+                </label>
+                <FormAutoresizeTextarea
+                  className='pt-0 text-base'
+                  size='sm'
+                  formId={formId}
+                  id='reason'
+                  name='reason'
+                  spellCheck='false'
+                  placeholder={`What is the reason for updating these details`}
+                />
+              </div>
+            )}
+          </ModalBody>
+
+          <ModalFooter className='flex p-6'>
+            <Button
+              variant='outline'
+              className='w-full'
+              onClick={onClose}
+              isDisabled={updateOpportunityMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              className='ml-3 w-full'
+              variant='outline'
+              colorScheme='primary'
+              isLoading={updateOpportunityMutation.isPending}
+              typeof='submit'
+              loadingText='Updating...'
+              spinner={
+                <Spinner
+                  label='Updating...'
+                  className='text-primary-500 fill-primary-700 size-4'
+                />
+              }
+            >
+              Update
+            </Button>
+          </ModalFooter>
+        </form>
       </ModalContent>
     </>
   );
@@ -255,34 +252,50 @@ const LikelihoodButtonGroup = ({
   onChange,
 }: LikelihoodButtonGroupProps) => {
   return (
-    <ButtonGroup
-      w='full'
-      isAttached
-      isDisabled={value === OpportunityRenewalLikelihood.ZeroRenewal}
+    <div
+      className='inline-flex w-full'
+      aria-disabled={value === OpportunityRenewalLikelihood.ZeroRenewal}
       aria-describedby='likelihood-oprions-button'
     >
-      {likelihoodButtons.map((button) => (
+      {likelihoodButtons.map((button, idx) => (
         <Button
           key={`${button.likelihood}-likelihood-button`}
           variant='outline'
+          className={twMerge(
+            idx === 0
+              ? ' border-e-0 rounded-s-lg rounded-e-none !important'
+              : idx === 1
+              ? 'rounded-none'
+              : 'border-s-0 rounded-s-none rounded-e-lg !important',
+            'w-full',
+          )}
           leftIcon={<Dot colorScheme={button.colorScheme} />}
           onBlur={() => onBlur?.(button.likelihood)}
-          onClick={() => onChange?.(button.likelihood)}
-          sx={{
-            ...getButtonStyles(value, button.likelihood),
+          onClick={(e) => {
+            e.preventDefault();
+            onChange?.(button.likelihood);
           }}
         >
           {button.label}
         </Button>
       ))}
-    </ButtonGroup>
+    </div>
   );
 };
 
-const FormLikelihoodButtonGroup = (props: FormElementProps) => {
+interface FormLikelihoodButtonGroupProps {
+  name: string;
+  formId: string;
+}
+
+const FormLikelihoodButtonGroup = ({
+  name,
+  formId,
+}: FormLikelihoodButtonGroupProps) => {
+  const { getInputProps } = useField(name, formId);
+  const { value, onChange, onBlur } = getInputProps();
+
   return (
-    <FormElement {...props}>
-      <LikelihoodButtonGroup />
-    </FormElement>
+    <LikelihoodButtonGroup value={value} onChange={onChange} onBlur={onBlur} />
   );
 };

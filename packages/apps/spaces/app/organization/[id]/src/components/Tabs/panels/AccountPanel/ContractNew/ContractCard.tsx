@@ -237,7 +237,6 @@ export const ContractCard = ({
             />
           </>
         )}
-
         <EditContractModal
           isOpen={isEditModalOpen}
           contractId={data.metadata.id}
@@ -246,7 +245,6 @@ export const ContractCard = ({
           notes={data?.billingDetails?.invoiceNote}
           renewsAt={data?.opportunities?.[0]?.renewedAt}
         />
-
         <ServiceLineItemsModal
           isOpen={isServceItemsModalOpen}
           contractId={data.metadata.id}

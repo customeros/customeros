@@ -2,8 +2,8 @@ import React, { useMemo } from 'react';
 
 import { UseMutationResult } from '@tanstack/react-query';
 
-import { DotLive } from '@ui/media/icons/DotLive';
 import { XSquare } from '@ui/media/icons/XSquare';
+import { DotLive } from '@ui/media/icons/DotLive';
 import { RefreshCw05 } from '@ui/media/icons/RefreshCw05';
 import { Exact, ContractStatus, ContractUpdateInput } from '@graphql/types';
 import { GetContractsQuery } from '@organization/src/graphql/getContracts.generated';
@@ -52,7 +52,7 @@ export const ContractCardActions: React.FC<ContractStatusSelectProps> = ({
         break;
       case ContractStatus.Draft:
       case ContractStatus.Ended:
-        icon = <DotLive className='text-gray-500 mr-1' />;
+        icon = <DotLive className='text-gray-500 mr-1 fill-gray-500' />;
         text = 'Make live';
         break;
       case ContractStatus.OutOfContract:
