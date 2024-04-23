@@ -22,10 +22,21 @@ import { BankTransferMenu } from './BankTransferMenu';
 import { BankTransferCurrencySelect } from './BankTransferCurrencySelect';
 
 const bankOptions = {
-  mask: '00 0000 0000 0000 0000 0000 0000 ',
-  definitions: {
-    '0': /[0-9]/,
-  },
+  mask: [
+    {
+      mask: 'XX 00 0000 0000 0000 0000 0000 0000',
+      definitions: {
+        X: /[A-Za-z]/,
+        '0': /[0-9]/,
+      },
+    },
+    {
+      mask: '00 0000 0000 0000 0000 0000 0000 0000',
+      definitions: {
+        '0': /[0-9]/,
+      },
+    },
+  ],
 };
 
 const sortCodeOptions = {
@@ -76,9 +87,7 @@ export const BankTransferCard = ({
         switch (action.payload.name) {
           case 'bic':
           case 'sortCode':
-          case 'iban':
           case 'routingNumber':
-          case 'accountNumber':
           case 'bankName':
             updateBankAccountDebounced({
               [action.payload.name]: action.payload.value,
@@ -86,6 +95,21 @@ export const BankTransferCard = ({
             });
 
             return next;
+
+          case 'iban':
+          case 'accountNumber':
+            updateBankAccountDebounced({
+              [action.payload.name]: action.payload.value?.toUpperCase(),
+              currency: account.currency,
+            });
+
+            return {
+              ...next,
+              values: {
+                ...next.values,
+                [action.payload.name]: action.payload.value?.toUpperCase(),
+              },
+            };
           case 'currency':
             mutate({
               input: {
