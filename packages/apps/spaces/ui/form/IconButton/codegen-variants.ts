@@ -6,7 +6,7 @@ const prettierConfig = JSON.parse(
   fs.readFileSync(process.cwd() + '/.prettierrc', 'utf8'),
 );
 
-const sizes = ['xs', 'sm', 'md', 'lg'];
+const sizes = ['xxs', 'xs', 'sm', 'md', 'lg'];
 const colors = Object.keys(file.colors).filter((color) => color !== 'white');
 const variants = ['solid', 'outline', 'ghost'];
 
@@ -17,6 +17,9 @@ const genCompoundVariant = (
 ) => {
   let iconSize = '';
   switch (size) {
+    case 'xxs':
+      iconSize = 'w-3 h-3';
+      break;
     case 'xs':
       iconSize = 'w-4 h-4';
       break;

@@ -3370,9 +3370,9 @@ export type Opportunity = Node & {
   owner?: Maybe<User>;
   renewalApproved: Scalars['Boolean']['output'];
   renewalLikelihood: OpportunityRenewalLikelihood;
-  renewalUpdatedByUserAt: Scalars['Time']['output'];
+  renewalUpdatedByUserAt?: Maybe<Scalars['Time']['output']>;
   renewalUpdatedByUserId: Scalars['String']['output'];
-  renewedAt: Scalars['Time']['output'];
+  renewedAt?: Maybe<Scalars['Time']['output']>;
   source: DataSource;
   sourceOfTruth: DataSource;
   updatedAt: Scalars['Time']['output'];

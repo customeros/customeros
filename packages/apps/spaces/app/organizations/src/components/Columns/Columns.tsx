@@ -56,9 +56,9 @@ export const columns = [
     cell: (props) => {
       return (
         <AvatarCell
-          id={props.getValue()?.id}
+          id={props.getValue()?.metadata.id}
           name={props.getValue()?.name}
-          src={props.getValue()?.logoUrl}
+          src={props.getValue()?.logo}
         />
       );
     },
@@ -74,9 +74,9 @@ export const columns = [
         <OrganizationCell
           id={props.getValue().id}
           name={props.getValue().name}
-          isSubsidiary={!!props.getValue()?.subsidiaryOf?.length}
+          isSubsidiary={!!props.getValue()?.parentCompanies?.length}
           parentOrganizationName={
-            props.getValue()?.subsidiaryOf?.[0]?.organization.name
+            props.getValue()?.parentCompanies?.[0]?.organization.name
           }
         />
       );
@@ -143,6 +143,7 @@ export const columns = [
     cell: (props) => {
       const organization = props.row.original;
 
+      // @ts-expect-error - fixme
       return <OrganizationRelationship organization={organization} />;
     },
     skeleton: () => <Skeleton className='w-[100%] h-[18px]' />,
@@ -260,7 +261,7 @@ export const columns = [
     minSize: 200,
     filterFn: filterOwnerFn,
     cell: (props) => (
-      <OwnerCell id={props.row.original.id} owner={props.getValue()} />
+      <OwnerCell id={props.row.original.metadata.id} owner={props.getValue()} />
     ),
     header: (props) => (
       <THead<HTMLInputElement>
@@ -284,9 +285,10 @@ export const columns = [
     filterFn: filterLastTouchpointFn,
     cell: (props) => (
       <LastTouchpointCell
-        lastTouchPointAt={props.row.original.lastTouchPointAt}
+        lastTouchPointAt={props.row.original.lastTouchpoint?.lastTouchPointAt}
         lastTouchPointTimelineEvent={
-          (props.row.original as Organization).lastTouchPointTimelineEvent
+          (props.row.original as Organization).lastTouchpoint
+            ?.lastTouchPointTimelineEvent
         }
       />
     ),

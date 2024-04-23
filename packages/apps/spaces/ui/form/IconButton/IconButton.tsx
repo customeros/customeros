@@ -1,4 +1,4 @@
-import React, { cloneElement } from 'react';
+import React, { forwardRef, cloneElement } from 'react';
 
 import { twMerge } from 'tailwind-merge';
 import { cva, type VariantProps } from 'class-variance-authority';
@@ -13,6 +13,7 @@ import {
 const buttonSize = cva([], {
   variants: {
     size: {
+      xxs: ['p-1', 'rounded-md'],
       xs: ['p-1.5', 'rounded-md'],
       sm: ['p-2', 'rounded-lg', 'text-lg'],
       md: ['p-[10px]', 'rounded-lg'],
@@ -37,61 +38,67 @@ export interface IconButtonProps
   variant?: 'ghost' | 'solid' | 'outline';
 }
 
-export const IconButton = ({
-  children,
-  className,
-  colorScheme = 'gray',
-  spinner,
-  variant = 'outline',
-  isLoading = false,
-  isDisabled = false,
-  icon,
-  size = 'sm',
-  'aria-label': ariaLabel,
-  ...props
-}: IconButtonProps) => {
-  const buttonVariant = (() => {
-    switch (variant) {
-      case 'ghost':
-        return ghostButton;
-      case 'solid':
-        return solidButton;
-      case 'outline':
-        return outlineButton;
-      default:
-        return outlineButton;
-    }
-  })();
+export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
+  (
+    {
+      children,
+      className,
+      colorScheme = 'gray',
+      spinner,
+      variant = 'outline',
+      isLoading = false,
+      isDisabled = false,
+      icon,
+      size = 'sm',
+      'aria-label': ariaLabel,
+      ...props
+    },
+    ref,
+  ) => {
+    const buttonVariant = (() => {
+      switch (variant) {
+        case 'ghost':
+          return ghostButton;
+        case 'solid':
+          return solidButton;
+        case 'outline':
+          return outlineButton;
+        default:
+          return outlineButton;
+      }
+    })();
 
-  return (
-    <button
-      {...props}
-      className={twMerge(
-        buttonVariant({ colorScheme, className }),
-        buttonSize({ className, size }),
-        isLoading ? 'opacity-50 cursor-not-allowed' : '',
-      )}
-      aria-label={ariaLabel}
-      disabled={isLoading || isDisabled}
-    >
-      {isLoading && spinner && (
-        <span className='relative inline-flex'>{spinner}</span>
-      )}
+    return (
+      <button
+        ref={ref}
+        {...props}
+        className={twMerge(
+          buttonVariant({ colorScheme, className }),
+          buttonSize({ className, size }),
+          isLoading ? 'opacity-50 cursor-not-allowed' : '',
+        )}
+        aria-label={ariaLabel}
+        disabled={isLoading || isDisabled}
+      >
+        {isLoading && spinner && (
+          <span className='relative inline-flex'>{spinner}</span>
+        )}
 
-      {!isLoading && icon && (
-        <>
-          {cloneElement(icon, {
-            className: twMerge(
-              iconVariant({
-                size,
-                variant,
-                colorScheme,
-                className: icon.props.className,
-              }),
-            ),
-          })}
-        </>
-      )}
-    </button>
-  );
-};
+        {!isLoading && icon && (
+          <>
+            {cloneElement(icon, {
+              className: twMerge(
+                iconVariant({
+                  size,
+                  variant,
+                  colorScheme,
+                  className: icon.props.className,
+                }),
+              ),
+            })}
+          </>
+        )}
+      </button>
+    );
+  },
+);
