@@ -200,10 +200,11 @@ func TestMutationResolver_ContractUpdate(t *testing.T) {
 			require.Equal(t, true, contract.PayAutomatically)
 			require.Equal(t, true, contract.AutoRenew)
 			require.Equal(t, true, contract.Check)
-			require.Equal(t, true, contract.Approved)
+			require.True(t, contract.Approved)
+			require.True(t, contract.InvoicingEnabled)
 			require.Equal(t, int64(7), contract.DueDays)
 			require.Equal(t, []string{"cc1", "cc2"}, contract.InvoiceEmailCc)
-			require.Equal(t, 27, len(contract.FieldsMask))
+			require.Equal(t, 28, len(contract.FieldsMask))
 			calledUpdateContract = true
 			return &contractpb.ContractIdGrpcResponse{
 				Id: contractId,
