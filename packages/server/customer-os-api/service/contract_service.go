@@ -285,6 +285,11 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 	if input.Approved != nil {
 		contractUpdateRequest.Approved = *input.Approved
 		fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_APPROVED)
+		// when approving contract enable invoicing if not requested differently
+		if input.BillingEnabled == nil {
+			contractUpdateRequest.InvoicingEnabled = true
+			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_INVOICING_ENABLED)
+		}
 	}
 
 	if input.ContractName != nil {
