@@ -83,7 +83,6 @@ const formatInvoiceText = (text: string) => {
   const betweenInvoiceNumberAndAmount = text
     .split(invoiceNumberPattern)[1]
     .split(amountPattern)[0];
-  const afterAmount = text.split(amountPattern)[1];
 
   return (
     <div>
@@ -91,7 +90,6 @@ const formatInvoiceText = (text: string) => {
       <span className='font-medium'>{invoiceNumber}</span>
       {betweenInvoiceNumberAndAmount}
       <span className='font-medium'>{amount}</span>
-      {afterAmount}
     </div>
   );
 };
