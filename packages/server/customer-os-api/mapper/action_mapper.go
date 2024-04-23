@@ -40,6 +40,7 @@ var actionTypeByValue = map[neo4jenum.ActionType]model.ActionType{
 	neo4jenum.ActionInvoicePaid:                               model.ActionTypeInvoicePaid,
 	neo4jenum.ActionInvoiceVoided:                             model.ActionTypeInvoiceVoided,
 	neo4jenum.ActionInvoiceSent:                               model.ActionTypeInvoiceSent,
+	neo4jenum.ActionInvoiceOverdue:                            model.ActionTypeInvoiceOverdue,
 }
 
 func MapActionTypeToModel(input neo4jenum.ActionType) model.ActionType {

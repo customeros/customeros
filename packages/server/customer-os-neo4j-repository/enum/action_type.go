@@ -20,6 +20,7 @@ const (
 	ActionInvoiceIssued                             ActionType = "INVOICE_ISSUED"
 	ActionInvoicePaid                               ActionType = "INVOICE_PAID"
 	ActionInvoiceVoided                             ActionType = "INVOICE_VOIDED"
+	ActionInvoiceOverdue                            ActionType = "INVOICE_OVERDUE"
 	ActionInvoiceSent                               ActionType = "INVOICE_SENT"
 )
 
@@ -39,6 +40,7 @@ var AllActionType = []ActionType{
 	ActionInvoiceIssued,
 	ActionInvoicePaid,
 	ActionInvoiceVoided,
+	ActionInvoiceOverdue,
 	ActionInvoiceSent,
 }
 
