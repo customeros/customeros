@@ -181,6 +181,7 @@ func (a *ContractAggregate) updateContract(ctx context.Context, request *contrac
 		Check:                  request.Check,
 		DueDays:                request.DueDays,
 		LengthInMonths:         request.LengthInMonths,
+		Approved:               request.Approved,
 	}
 
 	// Set the approved field to true if the contract is already approved
@@ -522,6 +523,9 @@ func (a *ContractAggregate) onContractUpdate(evt eventstore.Event) error {
 	}
 	if eventData.UpdateDueDays() {
 		a.Contract.DueDays = eventData.DueDays
+	}
+	if eventData.UpdateApproved() {
+		a.Contract.Approved = eventData.Approved
 	}
 
 	if eventData.ExternalSystem.Available() {
