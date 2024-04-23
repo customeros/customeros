@@ -11863,6 +11863,7 @@ enum ActionType {
     INVOICE_ISSUED
     INVOICE_PAID
     INVOICE_VOIDED
+    INVOICE_OVERDUE
     INVOICE_SENT
 }`, BuiltIn: false},
 	{Name: "../schemas/action_item.graphqls", Input: `type ActionItem {

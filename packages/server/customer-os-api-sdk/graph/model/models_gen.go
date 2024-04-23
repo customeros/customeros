@@ -3025,6 +3025,7 @@ const (
 	ActionTypeInvoiceIssued                             ActionType = "INVOICE_ISSUED"
 	ActionTypeInvoicePaid                               ActionType = "INVOICE_PAID"
 	ActionTypeInvoiceVoided                             ActionType = "INVOICE_VOIDED"
+	ActionTypeInvoiceOverdue                            ActionType = "INVOICE_OVERDUE"
 	ActionTypeInvoiceSent                               ActionType = "INVOICE_SENT"
 )
 
@@ -3045,12 +3046,13 @@ var AllActionType = []ActionType{
 	ActionTypeInvoiceIssued,
 	ActionTypeInvoicePaid,
 	ActionTypeInvoiceVoided,
+	ActionTypeInvoiceOverdue,
 	ActionTypeInvoiceSent,
 }
 
 func (e ActionType) IsValid() bool {
 	switch e {
-	case ActionTypeCreated, ActionTypeRenewalLikelihoodUpdated, ActionTypeRenewalForecastUpdated, ActionTypeContractStatusUpdated, ActionTypeServiceLineItemPriceUpdated, ActionTypeServiceLineItemQuantityUpdated, ActionTypeServiceLineItemBilledTypeUpdated, ActionTypeServiceLineItemBilledTypeRecurringCreated, ActionTypeServiceLineItemBilledTypeOnceCreated, ActionTypeServiceLineItemBilledTypeUsageCreated, ActionTypeContractRenewed, ActionTypeServiceLineItemRemoved, ActionTypeOnboardingStatusChanged, ActionTypeInvoiceIssued, ActionTypeInvoicePaid, ActionTypeInvoiceVoided, ActionTypeInvoiceSent:
+	case ActionTypeCreated, ActionTypeRenewalLikelihoodUpdated, ActionTypeRenewalForecastUpdated, ActionTypeContractStatusUpdated, ActionTypeServiceLineItemPriceUpdated, ActionTypeServiceLineItemQuantityUpdated, ActionTypeServiceLineItemBilledTypeUpdated, ActionTypeServiceLineItemBilledTypeRecurringCreated, ActionTypeServiceLineItemBilledTypeOnceCreated, ActionTypeServiceLineItemBilledTypeUsageCreated, ActionTypeContractRenewed, ActionTypeServiceLineItemRemoved, ActionTypeOnboardingStatusChanged, ActionTypeInvoiceIssued, ActionTypeInvoicePaid, ActionTypeInvoiceVoided, ActionTypeInvoiceOverdue, ActionTypeInvoiceSent:
 		return true
 	}
 	return false

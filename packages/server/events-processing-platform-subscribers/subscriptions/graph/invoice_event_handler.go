@@ -443,8 +443,11 @@ func (h *InvoiceEventHandler) createInvoiceAction(ctx context.Context, tenant st
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.createInvoiceAction")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.LogFields(log.String("InvoiceId", invoiceEntity.Id))
-	span.LogFields(log.String("PreviousStatus", previousStatus.String()))
+	span.LogFields(log.String("invoiceId", invoiceEntity.Id))
+	span.LogFields(log.String("previousStatus", previousStatus.String()))
+	span.LogFields(log.String("newStatus", invoiceEntity.Status.String()))
+	span.LogFields(log.Bool("dryRun", invoiceEntity.DryRun))
+	span.LogFields(log.Float64("totalAmount", invoiceEntity.TotalAmount))
 
 	if previousStatus == invoiceEntity.Status {
 		return
@@ -473,6 +476,9 @@ func (h *InvoiceEventHandler) createInvoiceAction(ctx context.Context, tenant st
 	case neo4jenum.InvoiceStatusVoid:
 		message = "Invoice N° " + invoiceEntity.Number + " voided"
 		actionType = neo4jenum.ActionInvoiceVoided
+	case neo4jenum.InvoiceStatusOverdue:
+		message = "Invoice N° " + invoiceEntity.Number + " overdue"
+		actionType = neo4jenum.ActionInvoiceOverdue
 	}
 	if actionType == neo4jenum.ActionNA {
 		return
