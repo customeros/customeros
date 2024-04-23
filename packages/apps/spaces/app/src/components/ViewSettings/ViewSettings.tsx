@@ -3,10 +3,14 @@
 
 import { EditColumns } from './EditColumns';
 
-export const ViewSettings = () => {
+interface ViewSettingsProps {
+  type: 'invoices' | 'renewals';
+}
+
+export const ViewSettings = ({ type }: ViewSettingsProps) => {
   return (
     <div className='flex pr-2 gap-2 items-center'>
-      <EditColumns />
+      <EditColumns type={type} />
       {/* <IconButton
         size='xs'
         variant='outline'

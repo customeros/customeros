@@ -1,41 +1,100 @@
 import type { RootStore } from '@store/root';
-import type { TransportLayer } from '@store/transport';
 
-import { values, makeAutoObservable } from 'mobx';
+import { makeAutoObservable } from 'mobx';
+import { AbstractStore } from '@store/abstract';
+import { TransportLayer } from '@store/transport';
+import { gql, GraphQLClient } from 'graphql-request';
+import { GroupMeta, AbstractGroupStore } from '@store/abstract-group';
 
 import type { TableViewDef } from '@graphql/types';
 
 import { TableViewDefStore } from './TableViewDef.store';
 
-export class TableViewDefsStore {
-  data: Map<string, TableViewDefStore> = new Map();
+export class TableViewDefsStore implements AbstractGroupStore<TableViewDef> {
+  value: Map<string, TableViewDefStore> = new Map();
+  isLoading = false;
+  meta: GroupMeta<TableViewDef>;
+  isBootstrapped = false;
+  error: string | null = null;
 
   constructor(
     private rootStore: RootStore,
     private transportLayer: TransportLayer,
   ) {
+    this.meta = new GroupMeta(
+      this,
+      this.rootStore,
+      this.transportLayer,
+      TableViewDefStore,
+    );
     makeAutoObservable(this);
+
+    this.bootstrap();
   }
 
-  load(tableViewDefs: TableViewDef[]) {
-    tableViewDefs.forEach((tableViewDef) => {
-      if (this.data.has(tableViewDef.id)) return;
+  async bootstrap() {
+    if (this.isBootstrapped || this.isLoading) return;
 
-      const tableViewDefStore = new TableViewDefStore(
-        this.rootStore,
-        this.transportLayer,
-      );
-      tableViewDefStore.load(tableViewDef);
+    try {
+      this.isLoading = true;
+      const res =
+        await this.transportLayer.client.request<TABLE_VIEW_DEFS_QUERY_RESULT>(
+          TABLE_VIEW_DEFS_QUERY,
+        );
 
-      this.data.set(tableViewDef.id, tableViewDefStore);
-    });
+      this.load(res?.tableViewDefs);
+    } catch (e) {
+      this.error = (e as Error)?.message;
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
+  async load(tableViewDefs: TableViewDef[]) {
+    this.meta.load(tableViewDefs);
+  }
+
+  update(
+    updater: (
+      prev: Map<string, AbstractStore<TableViewDef>>,
+    ) => Map<string, AbstractStore<TableViewDef>>,
+  ): void {
+    this.meta.update(updater);
   }
 
   getById(id: string) {
-    return this.data.get(id);
+    return this.value.get(id);
   }
 
-  toArray() {
-    return values(this.data);
+  toArray(): TableViewDefStore[] {
+    return Array.from(this.value).flatMap(
+      ([, tableViewDefStore]) => tableViewDefStore,
+    );
+  }
+
+  static async serverSideBootstrap(client: GraphQLClient) {
+    return client.request<TABLE_VIEW_DEFS_QUERY_RESULT>(TABLE_VIEW_DEFS_QUERY);
   }
 }
+
+type TABLE_VIEW_DEFS_QUERY_RESULT = { tableViewDefs: TableViewDef[] };
+const TABLE_VIEW_DEFS_QUERY = gql`
+  query tableViewDefs {
+    tableViewDefs {
+      id
+      name
+      tableType
+      order
+      icon
+      filters
+      sorting
+      columns {
+        columnType
+        width
+        visible
+      }
+      createdAt
+      updatedAt
+    }
+  }
+`;

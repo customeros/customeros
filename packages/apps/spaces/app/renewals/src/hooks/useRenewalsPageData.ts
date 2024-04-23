@@ -2,9 +2,9 @@ import { useSearchParams } from 'next/navigation';
 import { useRef, useMemo, useEffect } from 'react';
 
 import { produce } from 'immer';
-import { match } from 'ts-pattern';
 import { useLocalStorage } from 'usehooks-ts';
 
+import { useStore } from '@shared/hooks/useStore';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useRenewalsMeta } from '@shared/state/RenewalsMeta.atom';
 import { SortingState, TableInstance } from '@ui/presentation/Table';
@@ -17,17 +17,24 @@ import {
   ComparisonOperator,
 } from '@graphql/types';
 
+import type { GetRenewalsQuery } from '../graphql/getRenewals.generated';
+
 import { useTableState } from '../state';
 import { useGetRenewalsInfiniteQuery } from './useGetRenewalsInfiniteQuery';
 
 interface UseRenewalsPageDataProps {
   sorting: SortingState;
+  initialData: GetRenewalsQuery;
 }
 
-export const useRenewalsPageData = ({ sorting }: UseRenewalsPageDataProps) => {
+export const useRenewalsPageData = ({
+  sorting,
+  initialData,
+}: UseRenewalsPageDataProps) => {
   const client = getGraphQLClient();
   const searchParams = useSearchParams();
   const { columnFilters } = useTableState();
+  const { tableViewDefsStore } = useStore();
   const { data: globalCache } = useGlobalCacheQuery(client);
   const [renewalsMeta, setRenewalsMeta] = useRenewalsMeta();
   const [_, setLastActivePosition] = useLocalStorage<{
@@ -47,7 +54,11 @@ export const useRenewalsPageData = ({ sorting }: UseRenewalsPageDataProps) => {
   } = columnFilters;
 
   const where = useMemo(() => {
-    return produce<Filter>({ AND: [] }, (draft) => {
+    const defaultFilters = JSON.parse(
+      tableViewDefsStore.getById(preset ?? '1')?.value.filters ?? '{}',
+    );
+
+    return produce<Filter>(defaultFilters, (draft) => {
       if (!draft.AND) {
         draft.AND = [];
       }
@@ -58,25 +69,6 @@ export const useRenewalsPageData = ({ sorting }: UseRenewalsPageDataProps) => {
             value: searchTerm,
             operation: ComparisonOperator.Contains,
             caseSensitive: false,
-          },
-        });
-      }
-
-      if (preset) {
-        // TODO: this should be transformed into it's own column with client side filter
-        // too and populated via useFilterSetter().
-        const value = match(preset)
-          .with('1', () => 'MONTHLY')
-          .with('2', () => 'QUARTERLY')
-          .with('3', () => 'ANNUALLY')
-          .otherwise(() => 'MONTHLY');
-
-        draft.AND.push({
-          filter: {
-            property: 'RENEWAL_CYCLE',
-            value,
-            operation: ComparisonOperator.Eq,
-            includeEmpty: false,
           },
         });
       }
@@ -188,22 +180,29 @@ export const useRenewalsPageData = ({ sorting }: UseRenewalsPageDataProps) => {
     };
   }, [sorting]);
 
-  const { data, isFetching, isLoading, hasNextPage, fetchNextPage } =
-    useGetRenewalsInfiniteQuery(
-      client,
-      {
-        pagination: {
-          page: 1,
-          limit: 40,
-        },
-        sort: sortBy,
-        where,
+  const {
+    data,
+    isFetching,
+    isLoading,
+    hasNextPage,
+    fetchNextPage,
+    isRefetching,
+  } = useGetRenewalsInfiniteQuery(
+    client,
+    {
+      pagination: {
+        page: 1,
+        limit: 40,
       },
-      {
-        enabled:
-          preset === 'portfolio' ? !!globalCache?.global_Cache?.user.id : true,
-      },
-    );
+      sort: sortBy,
+      where,
+    },
+    {
+      placeholderData: initialData
+        ? { pageParams: [1], pages: [initialData] }
+        : undefined,
+    },
+  );
 
   const totalCount = data?.pages?.[0].dashboardView_Renewals?.totalElements;
   const totalAvailable =
@@ -260,6 +259,7 @@ export const useRenewalsPageData = ({ sorting }: UseRenewalsPageDataProps) => {
     isFetching,
     totalCount,
     hasNextPage,
+    isRefetching,
     fetchNextPage,
     data: flatData,
     totalAvailable,

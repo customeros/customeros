@@ -1,6 +1,6 @@
 'use client';
 import Image from 'next/image';
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 
 import { produce } from 'immer';
@@ -10,7 +10,9 @@ import { useFeatureIsOn } from '@growthbook/growthbook-react';
 import { useTenantSettingsQuery } from '@settings/graphql/getTenantSettings.generated';
 
 import { cn } from '@ui/utils/cn';
+import { TableViewType } from '@graphql/types';
 import { Skeleton } from '@ui/feedback/Skeleton';
+import { useStore } from '@shared/hooks/useStore';
 import { Bubbles } from '@ui/media/icons/Bubbles';
 import { LogOut01 } from '@ui/media/icons/LogOut01';
 import { Building07 } from '@ui/media/icons/Building07';
@@ -19,7 +21,6 @@ import { Settings01 } from '@ui/media/icons/Settings01';
 import { Briefcase01 } from '@ui/media/icons/Briefcase01';
 import { InvoiceCheck } from '@ui/media/icons/InvoiceCheck';
 import { ArrowDropdown } from '@ui/media/icons/ArrowDropdown';
-import { mockedTableDefs } from '@shared/util/tableDefs.mock';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { InvoiceUpcoming } from '@ui/media/icons/InvoiceUpcoming';
 import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
@@ -32,6 +33,15 @@ import { SidenavItem } from './components/SidenavItem';
 import logoCustomerOs from './assets/logo-customeros.png';
 import { GoogleSidebarNotification } from './components/GoogleSidebarNotification';
 
+const iconMap: Record<
+  string,
+  (props: React.SVGAttributes<SVGElement>) => JSX.Element
+> = {
+  InvoiceUpcoming: (props) => <InvoiceUpcoming {...props} />,
+  InvoiceCheck: (props) => <InvoiceCheck {...props} />,
+  ClockFastForward: (props) => <ClockFastForward {...props} />,
+};
+
 export const RootSidenav = () => {
   const client = getGraphQLClient();
   const router = useRouter();
@@ -39,6 +49,8 @@ export const RootSidenav = () => {
   const searchParams = useSearchParams();
   const [_, setOrganizationsMeta] = useOrganizationsMeta();
   const showMyViewsItems = useFeatureIsOn('my-views-nav-item');
+
+  const { tableViewDefsStore } = useStore();
 
   const [lastActivePosition, setLastActivePosition] = useLocalStorage(
     `customeros-player-last-position`,
@@ -54,12 +66,19 @@ export const RootSidenav = () => {
 
   const { data: tenantSettingsData } = useTenantSettingsQuery(client);
   const { data: totalInvoices } = useGetAllInvoicesCountQuery(client);
-  const tableViewDefsData = mockedTableDefs;
 
   const { data, isLoading } = useGlobalCacheQuery(client);
   const globalCache = data?.global_Cache;
+
+  const tableViewDefsList = tableViewDefsStore.toArray();
   const myViews =
-    tableViewDefsData.filter((c) => ['1', '2', '3'].includes(c.id)) ?? [];
+    tableViewDefsList.filter(
+      (c) => c.value.tableType === TableViewType.Renewals,
+    ) ?? [];
+  const invoicesViews =
+    tableViewDefsList.filter(
+      (c) => c.value.tableType === TableViewType.Invoices,
+    ) ?? [];
 
   const handleItemClick = (path: string) => {
     setLastActivePosition({ ...lastActivePosition, root: path });
@@ -96,21 +115,6 @@ export const RootSidenav = () => {
       totalInvoices?.invoices?.totalElements > 0
     );
   }, [tenantSettingsData?.tenantSettings?.billingEnabled]);
-
-  useEffect(() => {
-    [
-      '/organizations',
-      '/organizations?preset=customer',
-      '/organizations?preset=portfolio',
-      '/renewals?preset=1',
-      '/renewals?preset=2',
-      '/renewals?preset=3',
-      '/invoices?preset=4',
-      '/invoices?preset=5',
-    ].forEach((path) => {
-      router.prefetch(path);
-    });
-  }, []);
 
   const cdnLogoUrl = data?.global_Cache?.cdnLogoUrl;
 
@@ -188,32 +192,30 @@ export const RootSidenav = () => {
 
             {preferences.isInvoicesOpen && (
               <>
-                <SidenavItem
-                  label='Upcoming'
-                  isActive={checkIsActive('invoices', { preset: '4' })}
-                  onClick={() => handleItemClick('invoices?preset=4')}
-                  icon={(isActive) => (
-                    <InvoiceUpcoming
-                      className={cn(
-                        'w-5 h-5 text-gray-500',
-                        isActive && 'text-gray-700',
-                      )}
-                    />
-                  )}
-                />
-                <SidenavItem
-                  label='Past'
-                  isActive={checkIsActive('invoices', { preset: '5' })}
-                  onClick={() => handleItemClick('invoices?preset=5')}
-                  icon={(isActive) => (
-                    <InvoiceCheck
-                      className={cn(
-                        'w-5 h-5 text-gray-500',
-                        isActive && 'text-gray-700',
-                      )}
-                    />
-                  )}
-                />
+                {invoicesViews.map((view) => (
+                  <SidenavItem
+                    key={view.value.id}
+                    label={view.value.name}
+                    isActive={checkIsActive('invoices', {
+                      preset: view.value.id,
+                    })}
+                    onClick={() =>
+                      handleItemClick(`invoices?preset=${view.value.id}`)
+                    }
+                    icon={(isActive) => {
+                      const Icon = iconMap[view.value.icon];
+
+                      return (
+                        <Icon
+                          className={cn(
+                            'w-5 h-5 text-gray-500',
+                            isActive && 'text-gray-700',
+                          )}
+                        />
+                      );
+                    }}
+                  />
+                ))}
               </>
             )}
           </>
@@ -260,18 +262,26 @@ export const RootSidenav = () => {
             {showMyViewsItems &&
               myViews.map((view) => (
                 <SidenavItem
-                  key={view.id}
-                  label={view.name}
-                  isActive={checkIsActive('renewals', { preset: view.id })}
-                  onClick={() => handleItemClick(`renewals?preset=${view.id}`)}
-                  icon={(isActive) => (
-                    <ClockFastForward
-                      className={cn(
-                        'w-5 h-5 text-gray-500',
-                        isActive && 'text-gray-700',
-                      )}
-                    />
-                  )}
+                  key={view.value.id}
+                  label={view.value.name}
+                  isActive={checkIsActive('renewals', {
+                    preset: view.value.id,
+                  })}
+                  onClick={() =>
+                    handleItemClick(`renewals?preset=${view.value.id}`)
+                  }
+                  icon={(isActive) => {
+                    const Icon = iconMap[view.value.icon];
+
+                    return (
+                      <Icon
+                        className={cn(
+                          'w-5 h-5 text-gray-500',
+                          isActive && 'text-gray-700',
+                        )}
+                      />
+                    );
+                  }}
                 />
               ))}
           </>

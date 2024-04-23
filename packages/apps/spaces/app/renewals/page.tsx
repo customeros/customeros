@@ -1,13 +1,14 @@
-import { match } from 'ts-pattern';
-import { HydrationBoundary } from '@tanstack/react-query';
+import { ErrorBoundary } from 'react-error-boundary';
 
-import { getDehydratedState } from '@shared/util/getDehydratedState';
+import { TableViewDefsStore } from '@store/TableViewDefs/TableViewDefs.store';
 
-import { Search } from './src/components/Search';
+import { getServerGraphQLClient } from '@shared/util/getServerGraphQLClient';
+
 import { RenewalsTable } from './src/components/RenewalsTable';
 import {
-  useGetRenewalsQuery,
-  useInfiniteGetRenewalsQuery,
+  GetRenewalsDocument,
+  type GetRenewalsQuery,
+  type GetRenewalsQueryVariables,
 } from './src/graphql/getRenewals.generated';
 
 export default async function RenewalsPage({
@@ -15,38 +16,34 @@ export default async function RenewalsPage({
 }: {
   searchParams?: { [key: string]: string | string[] | undefined };
 }) {
+  const client = getServerGraphQLClient();
   const preset = searchParams?.preset ?? '1';
-  const value = match(preset)
-    .with('1', () => 'MONTHLY')
-    .with('2', () => 'QUARTERLY')
-    .with('3', () => 'ANNUALLY')
-    .otherwise(() => 'MONTHLY');
 
-  const where = {
-    AND: [
-      {
-        filter: {
-          property: 'RENEWAL_CYCLE',
-          value,
-          operation: 'EQ',
-          includeEmpty: false,
-        },
-      },
-    ],
-  };
+  try {
+    const tableViewDefsRes = await TableViewDefsStore.serverSideBootstrap(
+      client,
+    );
+    const tableViewDefs = tableViewDefsRes?.tableViewDefs ?? [];
 
-  const dehydratedClient = await getDehydratedState(
-    useInfiniteGetRenewalsQuery,
-    {
-      variables: { pagination: { page: 0, limit: 40 }, where },
-      fetcher: useGetRenewalsQuery.fetcher,
-    },
-  );
+    const where = JSON.parse(
+      tableViewDefs.find((t) => t.id === preset)?.filters ?? ('{}' as string),
+    );
 
-  return (
-    <HydrationBoundary state={dehydratedClient}>
-      <Search />
-      <RenewalsTable />
-    </HydrationBoundary>
-  );
+    // this should be replaced with serverSideBootstrap call when store's implemented.
+    const renewals = await client.request<
+      GetRenewalsQuery,
+      GetRenewalsQueryVariables
+    >(GetRenewalsDocument, { pagination: { page: 1, limit: 40 }, where });
+
+    return (
+      <RenewalsTable
+        bootstrap={{
+          renewals,
+          tableViewDefs,
+        }}
+      />
+    );
+  } catch (e) {
+    return <ErrorBoundary fallback={<div>Error hapened</div>} />;
+  }
 }

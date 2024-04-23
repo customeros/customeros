@@ -1,5 +1,9 @@
 'use client';
+import { useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
+
 import { observer } from 'mobx-react-lite';
+import { useFeatureIsOn } from '@growthbook/growthbook-react';
 import {
   Droppable,
   DragDropContext,
@@ -7,58 +11,42 @@ import {
 } from '@hello-pangea/dnd';
 
 import { Button } from '@ui/form/Button/Button';
-import { ColumnViewType } from '@graphql/types';
 import { useStore } from '@shared/hooks/useStore';
 import { Columns02 } from '@ui/media/icons/Columns02';
 import { Menu, MenuList, MenuGroup, MenuButton } from '@ui/overlay/Menu/Menu';
 
 import { ColumnItem, DraggableColumnItem } from './ColumnItem';
+import {
+  invoicesOptionsMap,
+  renewalsOptionsMap,
+  invoicesHelperTextMap,
+  renewalsHelperTextMap,
+} from './columnOptions';
 
-type InvoicesColumnType =
-  | ColumnViewType.InvoicesAmount
-  | ColumnViewType.InvoicesBillingCycle
-  | ColumnViewType.InvoicesContract
-  | ColumnViewType.InvoicesDueDate
-  | ColumnViewType.InvoicesIssueDatePast
-  | ColumnViewType.InvoicesInvoicePreview
-  | ColumnViewType.InvoicesIssueDate
-  | ColumnViewType.InvoicesInvoiceStatus
-  | ColumnViewType.InvoicesPaymentStatus;
+interface EditColumnsProps {
+  type: 'invoices' | 'renewals';
+}
 
-const invoicesOptionsMap: Record<InvoicesColumnType, string> = {
-  [ColumnViewType.InvoicesAmount]: 'Amount',
-  [ColumnViewType.InvoicesBillingCycle]: 'Billing cycle',
-  [ColumnViewType.InvoicesContract]: 'Contract',
-  [ColumnViewType.InvoicesDueDate]: 'Due date',
-  [ColumnViewType.InvoicesInvoicePreview]: 'Invoice preview',
-  [ColumnViewType.InvoicesIssueDate]: 'Issue date',
-  [ColumnViewType.InvoicesIssueDatePast]: 'Issue date',
-  [ColumnViewType.InvoicesInvoiceStatus]: 'Invoice status',
-  [ColumnViewType.InvoicesPaymentStatus]: 'Payment status',
-};
-
-const invoicesHelperTextMap: Record<InvoicesColumnType, string> = {
-  [ColumnViewType.InvoicesAmount]: 'E.g. $6,450',
-  [ColumnViewType.InvoicesBillingCycle]: 'E.g. Monthly',
-  [ColumnViewType.InvoicesContract]: 'E.g. Pile Contract',
-  [ColumnViewType.InvoicesDueDate]: 'E.g. 15 Aug 2019',
-  [ColumnViewType.InvoicesInvoicePreview]: 'E.g. RKD-04025',
-  [ColumnViewType.InvoicesIssueDate]: 'E.g. 15 Aug 2019',
-  [ColumnViewType.InvoicesIssueDatePast]: 'E.g. 15 Jun 2019',
-  [ColumnViewType.InvoicesInvoiceStatus]: 'E.g. Scheduled',
-  [ColumnViewType.InvoicesPaymentStatus]: 'E.g. Paid',
-};
-
-export const EditColumns = observer(() => {
+export const EditColumns = observer(({ type }: EditColumnsProps) => {
+  const isFeatureEnabled = useFeatureIsOn('edit-columns');
   const { tableViewDefsStore } = useStore();
+  const searchParams = useSearchParams();
+  const preset = searchParams?.get('preset');
 
-  const tableViewDef = tableViewDefsStore.getById('5');
+  const [optionsMap, helperTextMap] = useMemo(() => {
+    return [
+      type === 'invoices' ? invoicesOptionsMap : renewalsOptionsMap,
+      type === 'invoices' ? invoicesHelperTextMap : renewalsHelperTextMap,
+    ];
+  }, [type]);
+
+  const tableViewDef = tableViewDefsStore.getById(preset ?? '0');
 
   const columns =
     tableViewDef?.value?.columns.map((c) => ({
       ...c,
-      label: invoicesOptionsMap[c.columnType as InvoicesColumnType],
-      helperText: invoicesHelperTextMap[c.columnType as InvoicesColumnType],
+      label: optionsMap[c.columnType],
+      helperText: helperTextMap[c.columnType],
     })) ?? [];
 
   const handleDragEnd: OnDragEndResponder = (res) => {
@@ -71,6 +59,8 @@ export const EditColumns = observer(() => {
 
     tableViewDef?.reorderColumn(sourceIndex, destIndex);
   };
+
+  if (!isFeatureEnabled) return null;
 
   return (
     <>
@@ -91,9 +81,9 @@ export const EditColumns = observer(() => {
             <ColumnItem
               isPinned
               noPointerEvents
-              label={columns[0].label}
-              visible={columns[0].visible}
-              columnType={columns[0].columnType}
+              label={columns?.[0]?.label}
+              visible={columns?.[0]?.visible}
+              columnType={columns?.[0]?.columnType}
             />
             <Droppable
               key='active-columns'
@@ -130,9 +120,9 @@ export const EditColumns = observer(() => {
                         index > 0 && (
                           <DraggableColumnItem
                             index={index}
-                            label={col.label}
+                            label={col?.label}
                             visible={col?.visible}
-                            helperText={col.helperText}
+                            helperText={col?.helperText}
                             noPointerEvents={isDraggingOver}
                             key={col?.columnType}
                             onCheck={() => {
@@ -143,7 +133,7 @@ export const EditColumns = observer(() => {
                                 return value;
                               });
                             }}
-                            columnType={col.columnType}
+                            columnType={col?.columnType}
                           />
                         ),
                     )}

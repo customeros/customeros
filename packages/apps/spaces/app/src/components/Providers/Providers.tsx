@@ -1,13 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 import { RecoilRoot } from 'recoil';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-// import { compress, decompress } from 'lz-string';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-// import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
-// import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister';
 
 import { StoreProvider } from './StoreProvider';
 import { Env, EnvProvider } from './EnvProvider';
@@ -34,13 +31,6 @@ export const Providers = ({ env, children, isProduction }: ProvidersProps) => {
         },
       }),
   );
-
-  useEffect(() => {
-    // Temporary: should be removed after a few weeks
-    if (typeof window === 'undefined') return;
-    localStorage.removeItem('REACT_QUERY_OFFLINE_CACHE');
-    indexedDB.deleteDatabase('keyval-store');
-  }, []);
 
   return (
     <EnvProvider env={env}>

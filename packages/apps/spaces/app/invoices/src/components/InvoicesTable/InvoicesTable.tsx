@@ -1,21 +1,20 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 
 import { observer } from 'mobx-react-lite';
 
 import { Invoice } from '@graphql/types';
 import { useStore } from '@shared/hooks/useStore';
 import { Table, SortingState } from '@ui/presentation/Table';
-import { mockedTableDefs } from '@shared/util/tableDefs.mock';
 import { SlashCircle01 } from '@ui/media/icons/SlashCircle01';
+import { ViewSettings } from '@shared/components/ViewSettings';
 import { GetInvoicesQuery } from '@shared/graphql/getInvoices.generated';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog2';
 
 import { Empty } from '../Empty';
 import { Search } from '../Search';
-import { ViewSettings } from '../ViewSettings';
 import { useTableActions } from '../../hooks/useTableActions';
 import { getColumnsConfig } from '../../components/Columns/Columns';
 import { useInvoicesPageData } from '../../hooks/useInvoicesPageData';
@@ -49,7 +48,7 @@ export const InvoicesTable = observer(({ initialData }: InvoicesTableProps) => {
     !isFetching && fetchNextPage();
   }, [fetchNextPage, isFetching]);
 
-  const tableViewDef = tableViewDefsStore.getById(preset ?? '5');
+  const tableViewDef = tableViewDefsStore.getById(preset ?? '1');
 
   const columns = useMemo(
     () => getColumnsConfig(tableViewDef?.value),
@@ -63,10 +62,6 @@ export const InvoicesTable = observer(({ initialData }: InvoicesTableProps) => {
   const targetInvoiceNumber = targetInvoice?.invoiceNumber || '';
   const targetInvoiceEmail = targetInvoice?.customer?.email || '';
 
-  useEffect(() => {
-    tableViewDefsStore.load(mockedTableDefs);
-  }, []);
-
   if (!columns.length || totalAvailable === 0) {
     return (
       <div className='flex justify-center'>
@@ -79,7 +74,7 @@ export const InvoicesTable = observer(({ initialData }: InvoicesTableProps) => {
     <>
       <div className='flex items-center'>
         <Search />
-        <ViewSettings />
+        <ViewSettings type='invoices' />
       </div>
       <Table<Invoice>
         data={data}
