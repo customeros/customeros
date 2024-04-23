@@ -1,7 +1,6 @@
 'use client';
 import React, { FC } from 'react';
 
-import { useWhyDidYouUpdate } from 'rooks';
 import { useTenantSettingsQuery } from '@settings/graphql/getTenantSettings.generated';
 
 import { FormInput } from '@ui/form/Input/FormInput2';
@@ -22,11 +21,6 @@ export const BillingDetailsForm: FC<BillingAddressDetailsForm> = ({
 }) => {
   const client = getGraphQLClient();
   const { data: tenantSettingsData } = useTenantSettingsQuery(client);
-  useWhyDidYouUpdate('BillingDetailsForm', {
-    formId,
-    values,
-    tenantSettingsData,
-  });
 
   return (
     <div className='flex flex-col mt-2'>
