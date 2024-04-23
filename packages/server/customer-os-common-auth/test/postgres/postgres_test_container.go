@@ -93,7 +93,7 @@ func createAllTables(db *gorm.DB) {
 	db.Exec("create schema if not exists derived")
 
 	postgresRepository.InitRepositories(db).Migration(db)
-	authRepository.Migration(db)
+	authRepository.InitRepositories(db).Migration(db)
 }
 
 // initLog Connection Log Configuration
