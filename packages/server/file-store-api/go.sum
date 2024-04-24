@@ -36,8 +36,8 @@ github.com/chenzhuoyu/base64x v0.0.0-20230717121745-296ad89f973d/go.mod h1:8EPpV
 github.com/chenzhuoyu/iasm v0.9.0/go.mod h1:Xjy2NpN3h7aUqeqM+woSuuvxmIe6+DDsiNLIrkAmYog=
 github.com/chenzhuoyu/iasm v0.9.1 h1:tUHQJXo3NhBqw6s33wkGn9SP3bvrWLdlVIJ3hQBL7P0=
 github.com/chenzhuoyu/iasm v0.9.1/go.mod h1:Xjy2NpN3h7aUqeqM+woSuuvxmIe6+DDsiNLIrkAmYog=
-github.com/cloudflare/cloudflare-go v0.93.0 h1:rV0eHb42NUewfK5qa2+LKAD4v4oFA0QGDABn/lMyF78=
-github.com/cloudflare/cloudflare-go v0.93.0/go.mod h1:N1u1cLZ4lG6NeezGOWi7P6aq1DK2iVYg9ze7GZbUmZE=
+github.com/cloudflare/cloudflare-go v0.94.0 h1:WADmVhCdnn1A9sm5NU08by49Vbh4Lj/JBgTWTr7q7Qc=
+github.com/cloudflare/cloudflare-go v0.94.0/go.mod h1:N1u1cLZ4lG6NeezGOWi7P6aq1DK2iVYg9ze7GZbUmZE=
 github.com/containerd/containerd v1.7.13 h1:wPYKIeGMN8vaggSKuV1X0wZulpMz4CrgEsZdaCyB6Is=
 github.com/containerd/containerd v1.7.13/go.mod h1:zT3up6yTRfEUa6+GsITYIJNgSVL9NQ4x4h1RPzk0Wu4=
 github.com/containerd/log v0.1.0 h1:TCJt7ioM2cr/tfR8GPbGf9/VRAX8D2B4PjzCpfX540I=
