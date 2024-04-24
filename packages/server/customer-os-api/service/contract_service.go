@@ -280,6 +280,7 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 		}
 		if input.BillingDetails.BillingCycleInMonths != nil {
 			contractUpdateRequest.BillingCycleInMonths = *input.BillingDetails.BillingCycleInMonths
+			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_BILLING_CYCLE_IN_MONTHS)
 		}
 		contractUpdateRequest.PayOnline = utils.IfNotNilBool(input.BillingDetails.PayOnline)
 		contractUpdateRequest.PayAutomatically = utils.IfNotNilBool(input.BillingDetails.PayAutomatically)
@@ -390,33 +391,32 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 		}
 	}
 
-	if input.BillingDetails != nil && input.BillingDetails.BillingCycleInMonths != nil {
-		contractUpdateRequest.BillingCycleInMonths = *input.BillingDetails.BillingCycleInMonths
-		fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_BILLING_CYCLE_IN_MONTHS)
-	} else if input.BillingDetails != nil && input.BillingDetails.BillingCycle != nil {
-		switch *input.BillingDetails.BillingCycle {
-		case model.ContractBillingCycleMonthlyBilling:
-			contractUpdateRequest.BillingCycleInMonths = 1
-		case model.ContractBillingCycleQuarterlyBilling:
-			contractUpdateRequest.BillingCycleInMonths = 3
-		case model.ContractBillingCycleAnnualBilling:
-			contractUpdateRequest.BillingCycleInMonths = 12
-		default:
-			contractUpdateRequest.BillingCycleInMonths = 0
+	if input.BillingDetails == nil || input.BillingDetails.BillingCycleInMonths == nil {
+		if input.BillingDetails != nil && input.BillingDetails.BillingCycle != nil {
+			switch *input.BillingDetails.BillingCycle {
+			case model.ContractBillingCycleMonthlyBilling:
+				contractUpdateRequest.BillingCycleInMonths = 1
+			case model.ContractBillingCycleQuarterlyBilling:
+				contractUpdateRequest.BillingCycleInMonths = 3
+			case model.ContractBillingCycleAnnualBilling:
+				contractUpdateRequest.BillingCycleInMonths = 12
+			default:
+				contractUpdateRequest.BillingCycleInMonths = 0
+			}
+			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_BILLING_CYCLE_IN_MONTHS)
+		} else if input.BillingCycle != nil {
+			switch *input.BillingCycle {
+			case model.ContractBillingCycleMonthlyBilling:
+				contractUpdateRequest.BillingCycleInMonths = 1
+			case model.ContractBillingCycleQuarterlyBilling:
+				contractUpdateRequest.BillingCycleInMonths = 3
+			case model.ContractBillingCycleAnnualBilling:
+				contractUpdateRequest.BillingCycleInMonths = 12
+			default:
+				contractUpdateRequest.BillingCycleInMonths = 0
+			}
+			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_BILLING_CYCLE_IN_MONTHS)
 		}
-		fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_BILLING_CYCLE_IN_MONTHS)
-	} else if input.BillingCycle != nil {
-		switch *input.BillingCycle {
-		case model.ContractBillingCycleMonthlyBilling:
-			contractUpdateRequest.BillingCycleInMonths = 1
-		case model.ContractBillingCycleQuarterlyBilling:
-			contractUpdateRequest.BillingCycleInMonths = 3
-		case model.ContractBillingCycleAnnualBilling:
-			contractUpdateRequest.BillingCycleInMonths = 12
-		default:
-			contractUpdateRequest.BillingCycleInMonths = 0
-		}
-		fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_BILLING_CYCLE_IN_MONTHS)
 	}
 
 	if input.Patch != nil && *input.Patch {

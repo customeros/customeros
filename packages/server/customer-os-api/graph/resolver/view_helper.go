@@ -98,7 +98,7 @@ func DefaultTableViewDefinitions() []postgresEntity.TableViewDefinition {
 			ColumnsJson: string(ucomingInvoiceColumnsJsonData),
 			Order:       4,
 			Icon:        "InvoiceUpcoming",
-			Filters:     "",
+			Filters:     `{"AND":[{"filter":{"property":"INVOICE_PREVIEW","value":true}}]}`,
 			Sorting:     "",
 		},
 		{
@@ -107,7 +107,7 @@ func DefaultTableViewDefinitions() []postgresEntity.TableViewDefinition {
 			ColumnsJson: string(pastInvoiceColumnsJsonData),
 			Order:       5,
 			Icon:        "InvoiceCheck",
-			Filters:     "",
+			Filters:     `{"AND":[{"filter":{"property":"INVOICE_DRY_RUN","value":false}}]}`,
 			Sorting:     "",
 		},
 	}
