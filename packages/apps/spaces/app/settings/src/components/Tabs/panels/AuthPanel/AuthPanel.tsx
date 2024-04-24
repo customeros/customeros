@@ -140,12 +140,14 @@ export const AuthPanel = () => {
         },
       );
     } else {
+      // @ts-expect-error look into it
+      const playerIdentityId = session.user.playerIdentityId;
       RevokeAccess({
-        providerAccountId: 'google',
+        provider: 'google',
+        providerAccountId: playerIdentityId,
       })
         .then((data) => {
-          // @ts-expect-error look into it
-          GetGoogleSettings(session.user.playerIdentityId)
+          GetGoogleSettings(playerIdentityId)
             .then((res: OAuthUserSettingsInterface) => {
               setGoogleSettings(res);
               setGoogleSettingsLoading(false);

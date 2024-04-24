@@ -170,26 +170,12 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 		}
 		log.Printf("parsed json: %v", revokeRequest)
 
-		var provider string
-		switch revokeRequest.ProviderAccountId {
-		case "google":
-			provider = "google"
-		case "azure-ad":
-			provider = "azure-ad"
-		default:
-			log.Printf("Unsupported provider: %s", revokeRequest.ProviderAccountId)
-			ginContext.JSON(http.StatusBadRequest, gin.H{
-				"result": fmt.Sprintf("Unsupported provider: %s", revokeRequest.ProviderAccountId),
-			})
-			return
-		}
-
-		var oauthToken, _ = services.AuthServices.OAuthTokenService.GetByPlayerIdAndProvider(contextWithTimeout, revokeRequest.ProviderAccountId, provider)
+		var oauthToken, _ = services.AuthServices.OAuthTokenService.GetByPlayerIdAndProvider(contextWithTimeout, revokeRequest.ProviderAccountId, revokeRequest.Provider)
 
 		if oauthToken != nil && oauthToken.RefreshToken != "" {
 			// Handle revocation based on provider
 			var revocationURL string
-			switch provider {
+			switch revokeRequest.Provider {
 			case "google":
 				revocationURL = fmt.Sprintf("https://accounts.google.com/o/oauth2/revoke?token=%s", oauthToken.RefreshToken)
 			case "azure-ad":
@@ -205,7 +191,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 
 				if resp.StatusCode == http.StatusOK {
 					// Successfully revoked, delete the token
-					err := services.AuthServices.OAuthTokenService.DeleteByPlayerIdAndProvider(contextWithTimeout, revokeRequest.ProviderAccountId, provider)
+					err := services.AuthServices.OAuthTokenService.DeleteByPlayerIdAndProvider(contextWithTimeout, revokeRequest.ProviderAccountId, revokeRequest.Provider)
 					if err != nil {
 						ginContext.JSON(http.StatusInternalServerError, gin.H{})
 						return

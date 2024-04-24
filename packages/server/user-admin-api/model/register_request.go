@@ -19,4 +19,5 @@ type SignInRequest struct {
 
 type RevokeRequest struct {
 	ProviderAccountId string `json:"providerAccountId"`
+	Provider          string `json:"provider"`
 }
