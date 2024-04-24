@@ -324,7 +324,7 @@ func (r *contractReadRepository) GetContractsToGenerateCycleInvoices(ctx context
 				c.organizationLegalName <> "" AND
 				c.invoiceEmail IS NOT NULL AND
 				c.invoiceEmail <> "" AND
-				c.billingCycle IN $validBillingCycles AND
+				c.billingCycleInMonths > 0
 				c.status IN $validContractStatuses AND
 				(c.nextInvoiceDate IS NULL OR date(c.nextInvoiceDate) <= date($referenceTime)) AND
 				(date(c.invoicingStartDate) <= date($referenceTime)) AND
@@ -332,10 +332,7 @@ func (r *contractReadRepository) GetContractsToGenerateCycleInvoices(ctx context
 				(c.techInvoicingStartedAt IS NULL OR c.techInvoicingStartedAt + duration({minutes: $delayMinutes}) < $referenceTime)
 			RETURN distinct(c), t.name limit 100`
 	params := map[string]any{
-		"referenceTime": referenceTime,
-		"validBillingCycles": []string{
-			neo4jenum.BillingCycleMonthlyBilling.String(), neo4jenum.BillingCycleQuarterlyBilling.String(), neo4jenum.BillingCycleAnnuallyBilling.String(),
-		},
+		"referenceTime":         referenceTime,
 		"validContractStatuses": []string{neo4jenum.ContractStatusLive.String()},
 		"delayMinutes":          delayMinutes,
 	}
@@ -378,7 +375,7 @@ func (r *contractReadRepository) GetContractsToGenerateOffCycleInvoices(ctx cont
 				c.organizationLegalName <> "" AND
 				c.invoiceEmail IS NOT NULL AND
 				c.invoiceEmail <> "" AND
-				c.billingCycle IN $validBillingCycles AND
+				c.billingCycleInMonths > 0
 				c.status IN $validContractStatuses AND
 				c.nextInvoiceDate IS NOT NULL AND
 				(c.endedAt IS NULL OR date(c.endedAt) > date($referenceTime)) AND
@@ -395,10 +392,7 @@ func (r *contractReadRepository) GetContractsToGenerateOffCycleInvoices(ctx cont
 				WHERE lastInvoicedSli IS NULL OR date(lastInvoicedSli.startedAt) < date(sli.startedAt) 
 			RETURN distinct(c), t.name limit 100`
 	params := map[string]any{
-		"referenceTime": referenceTime,
-		"validBillingCycles": []string{
-			neo4jenum.BillingCycleMonthlyBilling.String(), neo4jenum.BillingCycleQuarterlyBilling.String(), neo4jenum.BillingCycleAnnuallyBilling.String(),
-		},
+		"referenceTime":         referenceTime,
 		"validContractStatuses": []string{neo4jenum.ContractStatusLive.String()},
 		"delayMinutes":          delayMinutes,
 	}
@@ -443,7 +437,7 @@ func (r *contractReadRepository) GetContractsToGenerateNextScheduledInvoices(ctx
 				c.organizationLegalName <> "" AND
 				c.invoiceEmail IS NOT NULL AND
 				c.invoiceEmail <> "" AND
-				c.billingCycle IN $validBillingCycles AND
+				c.billingCycleInMonths > 0
 				c.status IN $validContractStatuses AND
 				(NOT c.invoicingStartDate IS NULL OR NOT c.nextInvoiceDate IS NULL) AND
 				(c.endedAt IS NULL OR date(c.endedAt) > date(coalesce(c.nextInvoiceDate, c.invoicingStartDate))) AND
@@ -451,9 +445,6 @@ func (r *contractReadRepository) GetContractsToGenerateNextScheduledInvoices(ctx
 			RETURN distinct(c), t.name limit 100`
 	params := map[string]any{
 		"referenceTime": referenceTime,
-		"validBillingCycles": []string{
-			neo4jenum.BillingCycleMonthlyBilling.String(), neo4jenum.BillingCycleQuarterlyBilling.String(), neo4jenum.BillingCycleAnnuallyBilling.String(),
-		},
 		"validContractStatuses": []string{neo4jenum.ContractStatusLive.String(),
 			neo4jenum.ContractStatusOutOfContract.String(),
 			neo4jenum.ContractStatusScheduled.String(),

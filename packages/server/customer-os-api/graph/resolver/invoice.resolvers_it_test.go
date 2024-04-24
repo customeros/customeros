@@ -11,7 +11,6 @@ import (
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
@@ -149,22 +148,22 @@ func TestInvoiceResolver_Invoices_Contract_BillingCycle(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	contract1Id := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organizationId, neo4jentity.ContractEntity{
-		BillingCycle: neo4jenum.BillingCycleMonthlyBilling,
+		BillingCycleInMonths: 1,
 	})
 	invoice1Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contract1Id, neo4jentity.InvoiceEntity{})
 
 	contract2Id := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organizationId, neo4jentity.ContractEntity{
-		BillingCycle: neo4jenum.BillingCycleQuarterlyBilling,
+		BillingCycleInMonths: 3,
 	})
 	invoice2Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contract2Id, neo4jentity.InvoiceEntity{})
 
 	contract3Id := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organizationId, neo4jentity.ContractEntity{
-		BillingCycle: neo4jenum.BillingCycleAnnuallyBilling,
+		BillingCycleInMonths: 12,
 	})
 	invoice3Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contract3Id, neo4jentity.InvoiceEntity{})
 
 	contract4Id := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organizationId, neo4jentity.ContractEntity{
-		BillingCycle: neo4jenum.BillingCycleNone,
+		BillingCycleInMonths: 0,
 	})
 	invoice4Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contract4Id, neo4jentity.InvoiceEntity{})
 
@@ -209,13 +208,13 @@ func TestInvoiceResolver_Invoices_Contract_Ended_False(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	contract1Id := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organizationId, neo4jentity.ContractEntity{
-		EndedAt:      &tenWeeksAgo,
-		BillingCycle: neo4jenum.BillingCycleMonthlyBilling,
+		EndedAt:              &tenWeeksAgo,
+		BillingCycleInMonths: 1,
 	})
 	neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contract1Id, neo4jentity.InvoiceEntity{})
 
 	contract2Id := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organizationId, neo4jentity.ContractEntity{
-		BillingCycle: neo4jenum.BillingCycleQuarterlyBilling,
+		BillingCycleInMonths: 3,
 	})
 	invoice2Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contract2Id, neo4jentity.InvoiceEntity{})
 
@@ -250,13 +249,13 @@ func TestInvoiceResolver_Invoices_Contract_Ended_True(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	contract1Id := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organizationId, neo4jentity.ContractEntity{
-		EndedAt:      &tenWeeksAgo,
-		BillingCycle: neo4jenum.BillingCycleMonthlyBilling,
+		EndedAt:              &tenWeeksAgo,
+		BillingCycleInMonths: 1,
 	})
 	invoice1Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contract1Id, neo4jentity.InvoiceEntity{})
 
 	contract2Id := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organizationId, neo4jentity.ContractEntity{
-		BillingCycle: neo4jenum.BillingCycleQuarterlyBilling,
+		BillingCycleInMonths: 3,
 	})
 	neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contract2Id, neo4jentity.InvoiceEntity{})
 
@@ -737,10 +736,10 @@ func TestInvoiceResolver_NextDryRunForContract(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organizationId, neo4jentity.ContractEntity{
-		BillingCycle:    neo4jenum.BillingCycleMonthlyBilling,
-		Currency:        neo4jenum.CurrencyAUD,
-		InvoiceNote:     "abc",
-		NextInvoiceDate: &nextInvoiceDate,
+		BillingCycleInMonths: 1,
+		Currency:             neo4jenum.CurrencyAUD,
+		InvoiceNote:          "abc",
+		NextInvoiceDate:      &nextInvoiceDate,
 	})
 	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{})
 
@@ -750,7 +749,7 @@ func TestInvoiceResolver_NextDryRunForContract(t *testing.T) {
 			require.Equal(t, tenantName, request.Tenant)
 			require.Equal(t, testUserId, request.LoggedInUserId)
 			require.Equal(t, contractId, request.ContractId)
-			require.Equal(t, commonpb.BillingCycle_MONTHLY_BILLING, request.BillingCycle)
+			require.Equal(t, int64(1), request.BillingCycleInMonths)
 			require.Equal(t, neo4jenum.CurrencyAUD.String(), request.Currency)
 			require.Equal(t, utils.ConvertTimeToTimestampPtr(&periodStartExpected), request.InvoicePeriodStart)
 			require.Equal(t, utils.ConvertTimeToTimestampPtr(&periodEndExpected), request.InvoicePeriodEnd)

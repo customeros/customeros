@@ -11,30 +11,30 @@ const (
 )
 
 type Invoice struct {
-	ID               string                  `json:"id"`
-	Tenant           string                  `json:"tenant"`
-	ContractId       string                  `json:"contractId"`
-	CreatedAt        time.Time               `json:"createdAt"`
-	UpdatedAt        time.Time               `json:"updatedAt"`
-	SourceFields     commonmodel.Source      `json:"source"`
-	DryRun           bool                    `json:"dryRun"`
-	OffCycle         bool                    `json:"offCycle"`
-	Preview          bool                    `json:"preview"`
-	Postpaid         bool                    `json:"postpaid"`
-	InvoiceNumber    string                  `json:"invoiceNumber"`
-	Currency         string                  `json:"currency"`
-	PeriodStartDate  time.Time               `json:"periodStartDate"`
-	PeriodEndDate    time.Time               `json:"periodEndDate"`
-	Amount           float64                 `json:"amount"`
-	VAT              float64                 `json:"vat"`
-	TotalAmount      float64                 `json:"totalAmount"`
-	InvoiceLines     []InvoiceLine           `json:"invoiceLines"`
-	RepositoryFileId string                  `json:"repositoryFileId"`
-	DryRunLines      []DryRunServiceLineItem `json:"dryRunLines"`
-	BillingCycle     string                  `json:"billingCycle"`
-	Status           string                  `json:"status"`
-	Note             string                  `json:"note"`
-	PaymentLink      string                  `json:"paymentLink"`
+	ID                   string                  `json:"id"`
+	Tenant               string                  `json:"tenant"`
+	ContractId           string                  `json:"contractId"`
+	CreatedAt            time.Time               `json:"createdAt"`
+	UpdatedAt            time.Time               `json:"updatedAt"`
+	SourceFields         commonmodel.Source      `json:"source"`
+	DryRun               bool                    `json:"dryRun"`
+	OffCycle             bool                    `json:"offCycle"`
+	Preview              bool                    `json:"preview"`
+	Postpaid             bool                    `json:"postpaid"`
+	InvoiceNumber        string                  `json:"invoiceNumber"`
+	Currency             string                  `json:"currency"`
+	PeriodStartDate      time.Time               `json:"periodStartDate"`
+	PeriodEndDate        time.Time               `json:"periodEndDate"`
+	Amount               float64                 `json:"amount"`
+	VAT                  float64                 `json:"vat"`
+	TotalAmount          float64                 `json:"totalAmount"`
+	InvoiceLines         []InvoiceLine           `json:"invoiceLines"`
+	RepositoryFileId     string                  `json:"repositoryFileId"`
+	DryRunLines          []DryRunServiceLineItem `json:"dryRunLines"`
+	Status               string                  `json:"status"`
+	Note                 string                  `json:"note"`
+	PaymentLink          string                  `json:"paymentLink"`
+	BillingCycleInMonths int64                   `json:"billingCycleInMonths"`
 }
 
 type DryRunServiceLineItem struct {
@@ -59,32 +59,6 @@ type InvoiceLine struct {
 	ServiceLineItemId       string             `json:"serviceLineItemId"`
 	ServiceLineItemParentId string             `json:"serviceLineItemParentId"`
 	BilledType              string             `json:"billedType"`
-}
-
-// BillingCycle represents the billing cycle of a contract.
-type BillingCycle int32
-
-const (
-	NoneBilling BillingCycle = iota
-	MonthlyBilling
-	QuarterlyBilling
-	AnnuallyBilling
-)
-
-// This function provides a string representation of the BillingCyckle enum.
-func (bc BillingCycle) String() string {
-	switch bc {
-	case NoneBilling:
-		return ""
-	case MonthlyBilling:
-		return string(neo4jenum.BillingCycleMonthlyBilling)
-	case QuarterlyBilling:
-		return string(neo4jenum.BillingCycleQuarterlyBilling)
-	case AnnuallyBilling:
-		return string(neo4jenum.BillingCycleAnnuallyBilling)
-	default:
-		return ""
-	}
 }
 
 // BilledType enum represents the billing type for a service line item.

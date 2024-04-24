@@ -25,7 +25,7 @@ type ContractCreateEvent struct {
 	ExternalSystem         commonmodel.ExternalSystem `json:"externalSystem,omitempty"`
 	InvoicingStartDate     *time.Time                 `json:"invoicingStartDate,omitempty"`
 	Currency               string                     `json:"currency"`
-	BillingCycle           string                     `json:"billingCycle"`
+	BillingCycle           string                     `json:"billingCycle"` //Deprecated: Use BillingCycleInMonths instead
 	InvoicingEnabled       bool                       `json:"invoicingEnabled"`
 	PayOnline              bool                       `json:"payOnline,omitempty"`
 	PayAutomatically       bool                       `json:"payAutomatically,omitempty"`
@@ -37,6 +37,7 @@ type ContractCreateEvent struct {
 	DueDays                int64                      `json:"dueDays,omitempty"`
 	Country                string                     `json:"country"`
 	LengthInMonths         int64                      `json:"lengthInMonths"`
+	BillingCycleInMonths   int64                      `json:"billingCycleInMonths"`
 	Approved               bool                       `json:"approved"`
 }
 
@@ -50,7 +51,7 @@ func NewContractCreateEvent(aggregate eventstore.Aggregate, dataFields model.Con
 		ServiceStartedAt:       utils.ToDatePtr(dataFields.ServiceStartedAt),
 		SignedAt:               utils.ToDatePtr(dataFields.SignedAt),
 		Currency:               dataFields.Currency,
-		BillingCycle:           dataFields.BillingCycle,
+		BillingCycleInMonths:   dataFields.BillingCycleInMonths,
 		InvoicingStartDate:     utils.ToDatePtr(dataFields.InvoicingStartDate),
 		InvoicingEnabled:       dataFields.InvoicingEnabled,
 		PayOnline:              dataFields.PayOnline,

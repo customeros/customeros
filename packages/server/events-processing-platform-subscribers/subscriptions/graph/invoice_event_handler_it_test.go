@@ -67,8 +67,8 @@ func TestInvoiceEventHandler_OnInvoiceCreateForContractV1(t *testing.T) {
 		},
 		contractId,
 		neo4jenum.CurrencyEUR.String(),
-		neo4jenum.BillingCycleMonthlyBilling.String(),
 		"some note",
+		1,
 		true,
 		false,
 		true,
@@ -109,7 +109,7 @@ func TestInvoiceEventHandler_OnInvoiceCreateForContractV1(t *testing.T) {
 	require.Equal(t, "", createdInvoice.Number)
 	require.Equal(t, utils.ToDate(yesterday), createdInvoice.PeriodStartDate)
 	require.Equal(t, utils.ToDate(tomorrow), createdInvoice.PeriodEndDate)
-	require.Equal(t, neo4jenum.BillingCycleMonthlyBilling, createdInvoice.BillingCycle)
+	require.Equal(t, int64(1), createdInvoice.BillingCycleInMonths)
 	require.Equal(t, float64(0), createdInvoice.Amount)
 	require.Equal(t, float64(0), createdInvoice.Vat)
 	require.Equal(t, float64(0), createdInvoice.Amount)

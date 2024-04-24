@@ -143,6 +143,7 @@ type ComplexityRoot struct {
 		AddressLine1           func(childComplexity int) int
 		AddressLine2           func(childComplexity int) int
 		BillingCycle           func(childComplexity int) int
+		BillingCycleInMonths   func(childComplexity int) int
 		BillingEmail           func(childComplexity int) int
 		BillingEmailBcc        func(childComplexity int) int
 		BillingEmailCc         func(childComplexity int) int
@@ -2424,6 +2425,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.BillingDetails.BillingCycle(childComplexity), true
+
+	case "BillingDetails.billingCycleInMonths":
+		if e.complexity.BillingDetails.BillingCycleInMonths == nil {
+			break
+		}
+
+		return e.complexity.BillingDetails.BillingCycleInMonths(childComplexity), true
 
 	case "BillingDetails.billingEmail":
 		if e.complexity.BillingDetails.BillingEmail == nil {
@@ -12557,7 +12565,8 @@ type Contract implements MetadataInterface {
 }
 
 type BillingDetails {
-    billingCycle:           ContractBillingCycle
+    billingCycle:           ContractBillingCycle @deprecated(reason: "Use billingCycleInMonths instead.")
+    billingCycleInMonths:   Int64
     invoicingStarted:       Time
     nextInvoicing:          Time
     addressLine1:           String
@@ -12744,7 +12753,11 @@ input ContractRenewalInput {
 }
 
 input BillingDetailsInput {
-    billingCycle:           ContractBillingCycle
+    """
+    Deprecated, use billingCycleInMonths instead.
+    """
+    billingCycle:           ContractBillingCycle @deprecated(reason: "Use billingCycleInMonths instead.")
+    billingCycleInMonths:   Int64
     invoicingStarted:       Time
     addressLine1:           String
     addressLine2:           String
@@ -22591,6 +22604,47 @@ func (ec *executionContext) fieldContext_BillingDetails_billingCycle(ctx context
 	return fc, nil
 }
 
+func (ec *executionContext) _BillingDetails_billingCycleInMonths(ctx context.Context, field graphql.CollectedField, obj *model.BillingDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_BillingDetails_billingCycleInMonths(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.BillingCycleInMonths, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int64)
+	fc.Result = res
+	return ec.marshalOInt642ᚖint64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_BillingDetails_billingCycleInMonths(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _BillingDetails_invoicingStarted(ctx context.Context, field graphql.CollectedField, obj *model.BillingDetails) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_BillingDetails_invoicingStarted(ctx, field)
 	if err != nil {
@@ -26937,6 +26991,8 @@ func (ec *executionContext) fieldContext_Contract_billingDetails(ctx context.Con
 			switch field.Name {
 			case "billingCycle":
 				return ec.fieldContext_BillingDetails_billingCycle(ctx, field)
+			case "billingCycleInMonths":
+				return ec.fieldContext_BillingDetails_billingCycleInMonths(ctx, field)
 			case "invoicingStarted":
 				return ec.fieldContext_BillingDetails_invoicingStarted(ctx, field)
 			case "nextInvoicing":
@@ -94139,7 +94195,7 @@ func (ec *executionContext) unmarshalInputBillingDetailsInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"billingCycle", "invoicingStarted", "addressLine1", "addressLine2", "locality", "region", "country", "postalCode", "organizationLegalName", "billingEmail", "billingEmailCC", "billingEmailBCC", "invoiceNote", "canPayWithCard", "canPayWithDirectDebit", "canPayWithBankTransfer", "payOnline", "payAutomatically", "check", "dueDays"}
+	fieldsInOrder := [...]string{"billingCycle", "billingCycleInMonths", "invoicingStarted", "addressLine1", "addressLine2", "locality", "region", "country", "postalCode", "organizationLegalName", "billingEmail", "billingEmailCC", "billingEmailBCC", "invoiceNote", "canPayWithCard", "canPayWithDirectDebit", "canPayWithBankTransfer", "payOnline", "payAutomatically", "check", "dueDays"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -94153,6 +94209,13 @@ func (ec *executionContext) unmarshalInputBillingDetailsInput(ctx context.Contex
 				return it, err
 			}
 			it.BillingCycle = data
+		case "billingCycleInMonths":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingCycleInMonths"))
+			data, err := ec.unmarshalOInt642ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BillingCycleInMonths = data
 		case "invoicingStarted":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("invoicingStarted"))
 			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
@@ -101825,6 +101888,8 @@ func (ec *executionContext) _BillingDetails(ctx context.Context, sel ast.Selecti
 			out.Values[i] = graphql.MarshalString("BillingDetails")
 		case "billingCycle":
 			out.Values[i] = ec._BillingDetails_billingCycle(ctx, field, obj)
+		case "billingCycleInMonths":
+			out.Values[i] = ec._BillingDetails_billingCycleInMonths(ctx, field, obj)
 		case "invoicingStarted":
 			out.Values[i] = ec._BillingDetails_invoicingStarted(ctx, field, obj)
 		case "nextInvoicing":

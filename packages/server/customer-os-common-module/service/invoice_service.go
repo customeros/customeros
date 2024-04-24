@@ -247,11 +247,11 @@ func (s *invoiceService) SimulateOnCycleInvoice(ctx context.Context, invoiceData
 	} else {
 		invoicePeriodStart = *contractEntity.InvoicingStartDate
 	}
-	invoicePeriodEnd = calculateInvoiceCycleEnd(invoicePeriodStart, contractEntity.BillingCycle)
+	invoicePeriodEnd = calculateInvoiceCycleEnd(invoicePeriodStart, contractEntity.BillingCycleInMonths)
 
 	invoiceEntity.OffCycle = false
 	invoiceEntity.Postpaid = tenantSettings.InvoicingPostpaid
-	invoiceEntity.BillingCycle = contractEntity.BillingCycle
+	invoiceEntity.BillingCycleInMonths = contractEntity.BillingCycleInMonths
 	invoiceEntity.PeriodStartDate = invoicePeriodStart
 	invoiceEntity.PeriodEndDate = invoicePeriodEnd
 	invoiceEntity.Note = contractEntity.InvoiceNote
@@ -337,7 +337,7 @@ func (s *invoiceService) NextInvoiceDryRun(ctx context.Context, contractId, appS
 		tracing.TraceErr(span, err)
 		return "", err
 	}
-	invoicePeriodEnd = calculateInvoiceCycleEnd(invoicePeriodStart, contract.BillingCycle)
+	invoicePeriodEnd = calculateInvoiceCycleEnd(invoicePeriodStart, contract.BillingCycleInMonths)
 
 	tenantSettings, err := s.services.TenantService.GetTenantSettings(ctx)
 	if err != nil {
@@ -367,14 +367,7 @@ func (s *invoiceService) NextInvoiceDryRun(ctx context.Context, contractId, appS
 		},
 	}
 
-	switch contract.BillingCycle {
-	case enum.BillingCycleMonthlyBilling:
-		dryRunInvoiceRequest.BillingCycle = commonpb.BillingCycle_MONTHLY_BILLING
-	case enum.BillingCycleQuarterlyBilling:
-		dryRunInvoiceRequest.BillingCycle = commonpb.BillingCycle_QUARTERLY_BILLING
-	case enum.BillingCycleAnnuallyBilling:
-		dryRunInvoiceRequest.BillingCycle = commonpb.BillingCycle_ANNUALLY_BILLING
-	}
+	dryRunInvoiceRequest.BillingCycleInMonths = contract.BillingCycleInMonths
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	response, err := utils.CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
@@ -510,7 +503,7 @@ func (h *invoiceService) FillCycleInvoice(ctx context.Context, contractId string
 		}
 		// process monthly, quarterly and annually SLIs
 		if sliEntity.Billed == neo4jenum.BilledTypeMonthly || sliEntity.Billed == neo4jenum.BilledTypeQuarterly || sliEntity.Billed == neo4jenum.BilledTypeAnnually {
-			calculatedSLIAmount = calculateSLIAmountForCycleInvoicing(sliEntity.Quantity, sliEntity.Price, sliEntity.Billed, invoiceEntity.BillingCycle)
+			calculatedSLIAmount = calculateSLIAmountForCycleInvoicing(sliEntity.Quantity, sliEntity.Price, sliEntity.Billed, invoiceEntity.BillingCycleInMonths)
 			calculatedSLIAmount = utils.TruncateFloat64(calculatedSLIAmount, 2)
 			calculatedSLIVat = utils.TruncateFloat64(calculatedSLIAmount*sliEntity.VatRate/100, 2)
 			invoiceLineCalculationsReady = true
@@ -520,7 +513,7 @@ func (h *invoiceService) FillCycleInvoice(ctx context.Context, contractId string
 			vat += calculatedSLIVat
 			invoiceLine := invoicepb.InvoiceLine{
 				Name:                    sliEntity.Name,
-				Price:                   utils.TruncateFloat64(calculatePriceForBilledType(sliEntity.Price, sliEntity.Billed, invoiceEntity.BillingCycle), 2),
+				Price:                   utils.TruncateFloat64(calculatePriceForBilledType(sliEntity.Price, sliEntity.Billed, invoiceEntity.BillingCycleInMonths), 2),
 				Quantity:                sliEntity.Quantity,
 				Amount:                  calculatedSLIAmount,
 				Total:                   calculatedSLIAmount + calculatedSLIVat,
@@ -662,13 +655,13 @@ func (h *invoiceService) FillOffCyclePrepaidInvoice(ctx context.Context, contrac
 				if !previousInvoiceEntity.PeriodEndDate.Before(invoiceEntity.PeriodEndDate) {
 					// calculate already invoiced amount, prorated for the period
 					invoiceLineEntity := mapper.MapDbNodeToInvoiceLineEntity(ilDbNodeAndInvoiceId.Node)
-					calculatedInvoicedSLIAmountFor1Year := calculateSLIAmountForCycleInvoicing(invoiceLineEntity.Quantity, invoiceLineEntity.Price, invoiceLineEntity.BilledType, neo4jenum.BillingCycleAnnuallyBilling)
+					calculatedInvoicedSLIAmountFor1Year := calculateSLIAmountForCycleInvoicing(invoiceLineEntity.Quantity, invoiceLineEntity.Price, invoiceLineEntity.BilledType, 12)
 					proratedInvoicedSLIAmount = prorateAnnualSLIAmount(sliEntityToInvoice.StartedAt, invoiceEntity.PeriodEndDate, calculatedInvoicedSLIAmountFor1Year)
 					proratedInvoicedSLIAmount = utils.TruncateFloat64(proratedInvoicedSLIAmount, 2)
 				}
 			}
 
-			calculatedSLIAmountFor1Year := calculateSLIAmountForCycleInvoicing(sliEntityToInvoice.Quantity, sliEntityToInvoice.Price, sliEntityToInvoice.Billed, neo4jenum.BillingCycleAnnuallyBilling)
+			calculatedSLIAmountFor1Year := calculateSLIAmountForCycleInvoicing(sliEntityToInvoice.Quantity, sliEntityToInvoice.Price, sliEntityToInvoice.Billed, 12)
 			proratedSLIAmount := prorateAnnualSLIAmount(sliEntityToInvoice.StartedAt, invoiceEntity.PeriodEndDate, calculatedSLIAmountFor1Year)
 			proratedSLIAmount = utils.TruncateFloat64(proratedSLIAmount, 2)
 			finalSLIAmount = proratedSLIAmount - proratedInvoicedSLIAmount
@@ -683,7 +676,7 @@ func (h *invoiceService) FillOffCyclePrepaidInvoice(ctx context.Context, contrac
 		vat += calculatedSLIVat
 		invoiceLine := invoicepb.InvoiceLine{
 			Name:                    sliEntityToInvoice.Name,
-			Price:                   utils.TruncateFloat64(calculatePriceForBilledType(sliEntityToInvoice.Price, sliEntityToInvoice.Billed, invoiceEntity.BillingCycle), 2),
+			Price:                   utils.TruncateFloat64(calculatePriceForBilledType(sliEntityToInvoice.Price, sliEntityToInvoice.Billed, invoiceEntity.BillingCycleInMonths), 2),
 			Quantity:                sliEntityToInvoice.Quantity,
 			Amount:                  finalSLIAmount,
 			Total:                   finalSLIAmount + calculatedSLIVat,
@@ -722,67 +715,31 @@ func (h *invoiceService) FillOffCyclePrepaidInvoice(ctx context.Context, contrac
 	return invoiceEntity, invoiceLines, nil
 }
 
-func calculateInvoiceCycleEnd(start time.Time, cycle enum.BillingCycle) time.Time {
-	var end time.Time
-	switch cycle {
-	case enum.BillingCycleMonthlyBilling:
-		end = start.AddDate(0, 1, 0)
-	case enum.BillingCycleQuarterlyBilling:
-		end = start.AddDate(0, 3, 0)
-	case enum.BillingCycleAnnuallyBilling:
-		end = start.AddDate(1, 0, 0)
-	default:
-		return start
-	}
+func calculateInvoiceCycleEnd(start time.Time, billingCycleInMonths int64) time.Time {
+	end := start.AddDate(0, int(billingCycleInMonths), 0)
 	previousDay := end.AddDate(0, 0, -1)
 	return previousDay
 }
 
-func calculateSLIAmountForCycleInvoicing(quantity int64, price float64, billed neo4jenum.BilledType, cycle neo4jenum.BillingCycle) float64 {
+func calculateSLIAmountForCycleInvoicing(quantity int64, price float64, billed neo4jenum.BilledType, billingCycleInMonths int64) float64 {
 	if quantity == 0 || price == 0 {
 		return 0
 	}
-	unitAmount := calculatePriceForBilledType(price, billed, cycle)
+	unitAmount := calculatePriceForBilledType(price, billed, billingCycleInMonths)
 	unitAmount = utils.TruncateFloat64(unitAmount, 2)
 	return float64(quantity) * unitAmount
 }
 
-func calculatePriceForBilledType(price float64, billed neo4jenum.BilledType, cycle neo4jenum.BillingCycle) float64 {
+func calculatePriceForBilledType(price float64, billed neo4jenum.BilledType, billingCycleInMonths int64) float64 {
 	if billed == neo4jenum.BilledTypeOnce {
 		return price
 	}
 
-	switch cycle {
-	case neo4jenum.BillingCycleMonthlyBilling:
-		switch billed {
-		case neo4jenum.BilledTypeMonthly:
-			return price
-		case neo4jenum.BilledTypeQuarterly:
-			return price / 3
-		case neo4jenum.BilledTypeAnnually:
-			return price / 12
-		}
-	case neo4jenum.BillingCycleQuarterlyBilling:
-		switch billed {
-		case neo4jenum.BilledTypeMonthly:
-			return price * 3
-		case neo4jenum.BilledTypeQuarterly:
-			return price
-		case neo4jenum.BilledTypeAnnually:
-			return price / 4
-		}
-	case neo4jenum.BillingCycleAnnuallyBilling:
-		switch billed {
-		case neo4jenum.BilledTypeMonthly:
-			return price * 12
-		case neo4jenum.BilledTypeQuarterly:
-			return price * 4
-		case neo4jenum.BilledTypeAnnually:
-			return price
-		}
+	if billingCycleInMonths == 0 || billed.InMonths() == 0 {
+		return 0
 	}
 
-	return 0
+	return price * float64(billingCycleInMonths) / float64(billed.InMonths())
 }
 
 func prorateAnnualSLIAmount(startDate, endDate time.Time, amount float64) float64 {

@@ -34,11 +34,12 @@ message NewInvoiceForContractRequest {
   google.protobuf.Timestamp invoicePeriodStart = 9; // mandatory
   google.protobuf.Timestamp invoicePeriodEnd = 10; // mandatory
   string currency = 11; // mandatory
-  BillingCycle billingCycle = 12;
+  BillingCycle billingCycle = 12 [deprecated = true];
   string note = 13;
   bool offCycle = 14;
   bool postpaid = 15;
   bool preview = 16;
+  int64 billingCycleInMonths = 17;
 }
 
 message FillInvoiceRequest {

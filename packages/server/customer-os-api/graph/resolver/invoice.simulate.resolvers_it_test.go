@@ -5,7 +5,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
@@ -23,9 +22,9 @@ func TestMutationResolver_InvoiceSimulate_OnCycle_PostPaidFalse_FirstInvoiceForC
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
-		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
-		InvoicingEnabled:   true,
-		InvoicingStartDate: &januaryFirst,
+		BillingCycleInMonths: 1,
+		InvoicingEnabled:     true,
+		InvoicingStartDate:   &januaryFirst,
 	})
 
 	rawResponse := callGraphQL(t, "invoice/simulate_invoice", map[string]interface{}{
@@ -97,10 +96,10 @@ func TestMutationResolver_InvoiceSimulate_OnCycle_PostPaidFalse_SecondInvoiceFor
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
-		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
-		InvoicingEnabled:   true,
-		InvoicingStartDate: &januaryFirst,
-		NextInvoiceDate:    &februaryFirst,
+		BillingCycleInMonths: 1,
+		InvoicingEnabled:     true,
+		InvoicingStartDate:   &januaryFirst,
+		NextInvoiceDate:      &februaryFirst,
 	})
 
 	rawResponse := callGraphQL(t, "invoice/simulate_invoice", map[string]interface{}{
@@ -184,9 +183,9 @@ func TestMutationResolver_InvoiceSimulate_OnCycle_PostPaidTrue_FirstInvoiceForCo
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
-		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
-		InvoicingEnabled:   true,
-		InvoicingStartDate: &januaryFirst,
+		BillingCycleInMonths: 1,
+		InvoicingEnabled:     true,
+		InvoicingStartDate:   &januaryFirst,
 	})
 
 	rawResponse := callGraphQL(t, "invoice/simulate_invoice", map[string]interface{}{
@@ -271,10 +270,10 @@ func TestMutationResolver_InvoiceSimulate_OnCycle_PostPaidTrue_SecondInvoiceForC
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
-		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
-		InvoicingEnabled:   true,
-		InvoicingStartDate: &januaryFirst,
-		NextInvoiceDate:    &februaryFirst,
+		BillingCycleInMonths: 1,
+		InvoicingEnabled:     true,
+		InvoicingStartDate:   &januaryFirst,
+		NextInvoiceDate:      &februaryFirst,
 	})
 
 	rawResponse := callGraphQL(t, "invoice/simulate_invoice", map[string]interface{}{

@@ -2,6 +2,7 @@ package aggregate
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -87,7 +88,7 @@ func (a *ContractAggregate) createContract(ctx context.Context, request *contrac
 		ServiceStartedAt:       utils.TimestampProtoToTimePtr(request.ServiceStartedAt),
 		SignedAt:               utils.TimestampProtoToTimePtr(request.SignedAt),
 		Currency:               request.Currency,
-		BillingCycle:           model.BillingCycle(request.BillingCycle).String(),
+		BillingCycleInMonths:   request.BillingCycleInMonths,
 		InvoicingStartDate:     utils.TimestampProtoToTimePtr(request.InvoicingStartDate),
 		InvoicingEnabled:       request.InvoicingEnabled,
 		PayOnline:              request.PayOnline,
@@ -158,7 +159,7 @@ func (a *ContractAggregate) updateContract(ctx context.Context, request *contrac
 		InvoicingStartDate:     invoicingStartDate,
 		ContractUrl:            request.ContractUrl,
 		Currency:               request.Currency,
-		BillingCycle:           model.BillingCycle(request.BillingCycle).String(),
+		BillingCycleInMonths:   request.BillingCycleInMonths,
 		AddressLine1:           request.AddressLine1,
 		AddressLine2:           request.AddressLine2,
 		Locality:               request.Locality,
@@ -319,6 +320,8 @@ func extractFieldsMask(requestFieldsMask []contractpb.ContractFieldMask) []strin
 			fieldsMask = append(fieldsMask, event.FieldMaskLengthInMonths)
 		case contractpb.ContractFieldMask_CONTRACT_FIELD_APPROVED:
 			fieldsMask = append(fieldsMask, event.FieldMaskApproved)
+		case contractpb.ContractFieldMask_CONTRACT_FIELD_BILLING_CYCLE_IN_MONTHS:
+			fieldsMask = append(fieldsMask, event.FieldMaskBillingCycleInMonths)
 		}
 	}
 	fieldsMask = utils.RemoveDuplicates(fieldsMask)
@@ -390,7 +393,7 @@ func (a *ContractAggregate) onContractCreate(evt eventstore.Event) error {
 	a.Contract.LengthInMonths = eventData.LengthInMonths
 	a.Contract.Status = eventData.Status
 	a.Contract.Currency = eventData.Currency
-	a.Contract.BillingCycle = eventData.BillingCycle
+	a.Contract.BillingCycleInMonths = eventData.BillingCycleInMonths
 	a.Contract.InvoicingStartDate = eventData.InvoicingStartDate
 	a.Contract.CreatedAt = eventData.CreatedAt
 	a.Contract.UpdatedAt = eventData.UpdatedAt
@@ -408,6 +411,16 @@ func (a *ContractAggregate) onContractCreate(evt eventstore.Event) error {
 	a.Contract.Check = eventData.Check
 	a.Contract.DueDays = eventData.DueDays
 	a.Contract.Country = eventData.Country
+	if eventData.BillingCycle != "" {
+		switch eventData.BillingCycle {
+		case neo4jenum.BillingCycleMonthlyBilling.String():
+			a.Contract.BillingCycleInMonths = 1
+		case neo4jenum.BillingCycleQuarterlyBilling.String():
+			a.Contract.BillingCycleInMonths = 3
+		case neo4jenum.BillingCycleAnnuallyBilling.String():
+			a.Contract.BillingCycleInMonths = 12
+		}
+	}
 	return nil
 }
 
@@ -456,8 +469,19 @@ func (a *ContractAggregate) onContractUpdate(evt eventstore.Event) error {
 	if eventData.UpdateCurrency() {
 		a.Contract.Currency = eventData.Currency
 	}
-	if eventData.UpdateBillingCycle() {
-		a.Contract.BillingCycle = eventData.BillingCycle
+	if eventData.UpdateBillingCycleInMonths() {
+		a.Contract.BillingCycleInMonths = eventData.BillingCycleInMonths
+	} else if eventData.UpdateBillingCycle() {
+		switch eventData.BillingCycle {
+		case neo4jenum.BillingCycleMonthlyBilling.String():
+			a.Contract.BillingCycleInMonths = 1
+		case neo4jenum.BillingCycleQuarterlyBilling.String():
+			a.Contract.BillingCycleInMonths = 3
+		case neo4jenum.BillingCycleAnnuallyBilling.String():
+			a.Contract.BillingCycleInMonths = 12
+		case "":
+			a.Contract.BillingCycleInMonths = 0
+		}
 	}
 	if eventData.UpdateInvoicingStartDate() {
 		a.Contract.InvoicingStartDate = eventData.InvoicingStartDate

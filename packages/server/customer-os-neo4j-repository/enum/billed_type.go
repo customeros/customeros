@@ -43,3 +43,16 @@ func (bt BilledType) String() string {
 func (bt BilledType) IsRecurrent() bool {
 	return bt == BilledTypeMonthly || bt == BilledTypeAnnually || bt == BilledTypeQuarterly
 }
+
+func (bt BilledType) InMonths() int64 {
+	switch bt {
+	case BilledTypeMonthly:
+		return 1
+	case BilledTypeQuarterly:
+		return 3
+	case BilledTypeAnnually:
+		return 12
+	default:
+		return 0
+	}
+}

@@ -126,26 +126,19 @@ func (s *invoiceService) GenerateCycleInvoices() {
 			}
 			if readyToRequestInvoice {
 				newInvoiceRequest := invoicepb.NewInvoiceForContractRequest{
-					Tenant:             record.Tenant,
-					ContractId:         contract.Id,
-					Currency:           currency,
-					InvoicePeriodStart: utils.ConvertTimeToTimestampPtr(&invoicePeriodStart),
-					InvoicePeriodEnd:   utils.ConvertTimeToTimestampPtr(&invoicePeriodEnd),
-					DryRun:             dryRun,
-					Note:               contract.InvoiceNote,
-					Postpaid:           isPostpaid,
+					Tenant:               record.Tenant,
+					ContractId:           contract.Id,
+					Currency:             currency,
+					InvoicePeriodStart:   utils.ConvertTimeToTimestampPtr(&invoicePeriodStart),
+					InvoicePeriodEnd:     utils.ConvertTimeToTimestampPtr(&invoicePeriodEnd),
+					DryRun:               dryRun,
+					Note:                 contract.InvoiceNote,
+					Postpaid:             isPostpaid,
+					BillingCycleInMonths: contract.BillingCycleInMonths,
 					SourceFields: &commonpb.SourceFields{
 						AppSource: constants.AppSourceDataUpkeeper,
 						Source:    neo4jentity.DataSourceOpenline.String(),
 					},
-				}
-				switch contract.BillingCycle {
-				case neo4jenum.BillingCycleMonthlyBilling:
-					newInvoiceRequest.BillingCycle = commonpb.BillingCycle_MONTHLY_BILLING
-				case neo4jenum.BillingCycleQuarterlyBilling:
-					newInvoiceRequest.BillingCycle = commonpb.BillingCycle_QUARTERLY_BILLING
-				case neo4jenum.BillingCycleAnnuallyBilling:
-					newInvoiceRequest.BillingCycle = commonpb.BillingCycle_ANNUALLY_BILLING
 				}
 				_, err = utils.CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
 					return s.eventsProcessingClient.InvoiceClient.NewInvoiceForContract(ctx, &newInvoiceRequest)
@@ -189,18 +182,7 @@ func (s *invoiceService) GenerateCycleInvoices() {
 }
 
 func (s *invoiceService) calculateInvoiceCycleEnd(ctx context.Context, start time.Time, tenant string, contractEntity neo4jentity.ContractEntity) time.Time {
-	var nextStart time.Time
-
-	switch contractEntity.BillingCycle {
-	case neo4jenum.BillingCycleMonthlyBilling:
-		nextStart = start.AddDate(0, 1, 0)
-	case neo4jenum.BillingCycleQuarterlyBilling:
-		nextStart = start.AddDate(0, 3, 0)
-	case neo4jenum.BillingCycleAnnuallyBilling:
-		nextStart = start.AddDate(1, 0, 0)
-	default:
-		return start
-	}
+	nextStart := start.AddDate(0, int(contractEntity.BillingCycleInMonths), 0)
 	if start.Day() == 1 {
 		// if previous invoice was generated end of month, we need to substract extra 1 day
 		previousCycleInvoiceDbNode, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetPreviousCycleInvoice(ctx, tenant, contractEntity.Id)

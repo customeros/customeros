@@ -14,21 +14,21 @@ import (
 )
 
 type InvoiceCreateFields struct {
-	ContractId      string                  `json:"contractId"`
-	Currency        neo4jenum.Currency      `json:"currency"`
-	DryRun          bool                    `json:"dryRun"`
-	OffCycle        bool                    `json:"offCycle"`
-	Postpaid        bool                    `json:"postpaid"`
-	Preview         bool                    `json:"preview"`
-	PeriodStartDate time.Time               `json:"periodStartDate"`
-	PeriodEndDate   time.Time               `json:"periodEndDate"`
-	CreatedAt       time.Time               `json:"createdAt"`
-	IssuedDate      time.Time               `json:"issuedDate"`
-	DueDate         time.Time               `json:"dueDate"`
-	SourceFields    model.Source            `json:"sourceFields"`
-	BillingCycle    neo4jenum.BillingCycle  `json:"billingCycle"`
-	Status          neo4jenum.InvoiceStatus `json:"status"`
-	Note            string                  `json:"note"`
+	ContractId           string                  `json:"contractId"`
+	Currency             neo4jenum.Currency      `json:"currency"`
+	DryRun               bool                    `json:"dryRun"`
+	OffCycle             bool                    `json:"offCycle"`
+	Postpaid             bool                    `json:"postpaid"`
+	Preview              bool                    `json:"preview"`
+	PeriodStartDate      time.Time               `json:"periodStartDate"`
+	PeriodEndDate        time.Time               `json:"periodEndDate"`
+	CreatedAt            time.Time               `json:"createdAt"`
+	IssuedDate           time.Time               `json:"issuedDate"`
+	DueDate              time.Time               `json:"dueDate"`
+	SourceFields         model.Source            `json:"sourceFields"`
+	BillingCycleInMonths int64                   `json:"billingCycleInMonths"`
+	Status               neo4jenum.InvoiceStatus `json:"status"`
+	Note                 string                  `json:"note"`
 }
 
 type InvoiceFillFields struct {
@@ -45,7 +45,7 @@ type InvoiceFillFields struct {
 	InvoiceNumber                string                  `json:"invoiceNumber"`
 	PeriodStartDate              time.Time               `json:"periodStartDate"`
 	PeriodEndDate                time.Time               `json:"periodEndDate"`
-	BillingCycle                 neo4jenum.BillingCycle  `json:"billingCycle"`
+	BillingCycleInMonths         int64                   `json:"billingCycleInMonths"`
 	Status                       neo4jenum.InvoiceStatus `json:"status"`
 	Note                         string                  `json:"note"`
 	CustomerName                 string                  `json:"customerName"`
@@ -130,32 +130,32 @@ func (r *invoiceWriteRepository) CreateInvoiceForContract(ctx context.Context, t
 								i.currency=$currency,
 								i.periodStartDate=$periodStart,
 								i.periodEndDate=$periodEnd,
-								i.billingCycle=$billingCycle,
+								i.billingCycleInMonths=$billingCycleInMonths,
 								i.note=$note
 							WITH c, i 
 							MERGE (c)-[:HAS_INVOICE]->(i) 
 							`, tenant)
 	params := map[string]any{
-		"tenant":        tenant,
-		"contractId":    data.ContractId,
-		"invoiceId":     invoiceId,
-		"createdAt":     data.CreatedAt,
-		"updatedAt":     data.CreatedAt,
-		"dueDate":       utils.ToNeo4jDateAsAny(&data.DueDate),
-		"issuedDate":    utils.ToDate(data.IssuedDate),
-		"source":        data.SourceFields.Source,
-		"sourceOfTruth": data.SourceFields.Source,
-		"appSource":     data.SourceFields.AppSource,
-		"dryRun":        data.DryRun,
-		"offCycle":      data.OffCycle,
-		"postpaid":      data.Postpaid,
-		"preview":       data.Preview,
-		"currency":      data.Currency.String(),
-		"periodStart":   utils.ToNeo4jDateAsAny(&data.PeriodStartDate),
-		"periodEnd":     utils.ToNeo4jDateAsAny(&data.PeriodEndDate),
-		"billingCycle":  data.BillingCycle.String(),
-		"status":        data.Status.String(),
-		"note":          data.Note,
+		"tenant":               tenant,
+		"contractId":           data.ContractId,
+		"invoiceId":            invoiceId,
+		"createdAt":            data.CreatedAt,
+		"updatedAt":            data.CreatedAt,
+		"dueDate":              utils.ToNeo4jDateAsAny(&data.DueDate),
+		"issuedDate":           utils.ToDate(data.IssuedDate),
+		"source":               data.SourceFields.Source,
+		"sourceOfTruth":        data.SourceFields.Source,
+		"appSource":            data.SourceFields.AppSource,
+		"dryRun":               data.DryRun,
+		"offCycle":             data.OffCycle,
+		"postpaid":             data.Postpaid,
+		"preview":              data.Preview,
+		"currency":             data.Currency.String(),
+		"periodStart":          utils.ToNeo4jDateAsAny(&data.PeriodStartDate),
+		"periodEnd":            utils.ToNeo4jDateAsAny(&data.PeriodEndDate),
+		"billingCycleInMonths": data.BillingCycleInMonths,
+		"status":               data.Status.String(),
+		"note":                 data.Note,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -184,7 +184,7 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tenant, invoic
 								i.preview=$preview,
 								i.periodStartDate=$periodStart,
 								i.periodEndDate=$periodEnd,
-								i.billingCycle=$billingCycle
+								i.billingCycleInMonths=$billingCycleInMonths
 							SET 
 								i.updatedAt=$updatedAt,
 								i.number=$number,
@@ -229,7 +229,7 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tenant, invoic
 		"currency":                     data.Currency.String(),
 		"periodStart":                  utils.ToNeo4jDateAsAny(&data.PeriodStartDate),
 		"periodEnd":                    utils.ToNeo4jDateAsAny(&data.PeriodEndDate),
-		"billingCycle":                 data.BillingCycle.String(),
+		"billingCycleInMonths":         data.BillingCycleInMonths,
 		"status":                       data.Status.String(),
 		"note":                         data.Note,
 		"customerName":                 data.CustomerName,

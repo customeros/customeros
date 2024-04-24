@@ -34,14 +34,15 @@ func TestContractService_CreateContract(t *testing.T) {
 	contractClient := contractpb.NewContractGrpcServiceClient(grpcConnection)
 	timeNow := utils.Now()
 	response, err := contractClient.CreateContract(ctx, &contractpb.CreateContractGrpcRequest{
-		Tenant:           tenant,
-		Name:             "New Contract",
-		ContractUrl:      "http://contract.url",
-		OrganizationId:   orgId,
-		CreatedByUserId:  "User123",
-		ServiceStartedAt: timestamppb.New(timeNow),
-		SignedAt:         timestamppb.New(timeNow),
-		LengthInMonths:   int64(1),
+		Tenant:               tenant,
+		Name:                 "New Contract",
+		ContractUrl:          "http://contract.url",
+		OrganizationId:       orgId,
+		CreatedByUserId:      "User123",
+		ServiceStartedAt:     timestamppb.New(timeNow),
+		SignedAt:             timestamppb.New(timeNow),
+		LengthInMonths:       int64(1),
+		BillingCycleInMonths: int64(2),
 		ExternalSystemFields: &commonpb.ExternalSystemFields{
 			ExternalSystemId: "ExternalSystemID",
 			ExternalUrl:      "http://external.url",
@@ -77,6 +78,7 @@ func TestContractService_CreateContract(t *testing.T) {
 	require.Equal(t, utils.ToDate(timeNow), *eventData.ServiceStartedAt)
 	require.Equal(t, utils.ToDate(timeNow), *eventData.SignedAt)
 	require.Equal(t, int64(1), eventData.LengthInMonths)
+	require.Equal(t, int64(2), eventData.BillingCycleInMonths)
 	require.Equal(t, "ExternalSystemID", eventData.ExternalSystem.ExternalSystemId)
 	require.Equal(t, "http://external.url", eventData.ExternalSystem.ExternalUrl)
 	require.Equal(t, "ExternalID", eventData.ExternalSystem.ExternalId)
@@ -218,17 +220,28 @@ func TestContractService_UpdateContract(t *testing.T) {
 	// Create update request
 	timeNow := utils.Now()
 	updateRequest := &contractpb.UpdateContractGrpcRequest{
-		Tenant:           tenant,
-		Id:               contractId,
-		Name:             "Updated Contract",
-		ContractUrl:      "http://new.contract.url",
-		UpdatedAt:        timestamppb.New(timeNow),
-		ServiceStartedAt: timestamppb.New(timeNow),
-		SignedAt:         timestamppb.New(timeNow),
-		EndedAt:          timestamppb.New(timeNow.AddDate(0, 1, 0)),
-		NextInvoiceDate:  timestamppb.New(timeNow),
-		LengthInMonths:   int64(1),
-		Currency:         "USD",
+		Tenant:               tenant,
+		Id:                   contractId,
+		Name:                 "Updated Contract",
+		ContractUrl:          "http://new.contract.url",
+		UpdatedAt:            timestamppb.New(timeNow),
+		ServiceStartedAt:     timestamppb.New(timeNow),
+		SignedAt:             timestamppb.New(timeNow),
+		EndedAt:              timestamppb.New(timeNow.AddDate(0, 1, 0)),
+		NextInvoiceDate:      timestamppb.New(timeNow),
+		LengthInMonths:       int64(1),
+		BillingCycleInMonths: int64(2),
+		Currency:             "USD",
+		FieldsMask: []contractpb.ContractFieldMask{
+			contractpb.ContractFieldMask_CONTRACT_FIELD_NAME,
+			contractpb.ContractFieldMask_CONTRACT_FIELD_CONTRACT_URL,
+			contractpb.ContractFieldMask_CONTRACT_FIELD_LENGTH_IN_MONTHS,
+			contractpb.ContractFieldMask_CONTRACT_FIELD_BILLING_CYCLE_IN_MONTHS,
+			contractpb.ContractFieldMask_CONTRACT_FIELD_SERVICE_STARTED_AT,
+			contractpb.ContractFieldMask_CONTRACT_FIELD_SIGNED_AT,
+			contractpb.ContractFieldMask_CONTRACT_FIELD_ENDED_AT,
+			contractpb.ContractFieldMask_CONTRACT_FIELD_CURRENCY,
+		},
 		SourceFields: &commonpb.SourceFields{
 			Source:    constants.SourceOpenline,
 			AppSource: "event-processing-platform",
@@ -267,6 +280,7 @@ func TestContractService_UpdateContract(t *testing.T) {
 	require.Equal(t, "Updated Contract", eventData.Name)
 	require.Equal(t, "http://new.contract.url", eventData.ContractUrl)
 	require.Equal(t, int64(1), eventData.LengthInMonths)
+	require.Equal(t, int64(2), eventData.BillingCycleInMonths)
 	require.Equal(t, timeNow, eventData.UpdatedAt)
 	require.Equal(t, utils.ToDate(timeNow), *eventData.ServiceStartedAt)
 	require.Equal(t, utils.ToDate(timeNow), *eventData.SignedAt)

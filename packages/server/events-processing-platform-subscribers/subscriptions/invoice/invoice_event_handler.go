@@ -679,7 +679,7 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 		// if the invoice line item does not have a subtitle, we will use the period start and end date
 		if _, ok := invoiceLineItem["InvoiceLineSubtitle"]; !ok {
 			invoiceLineSubtitle := fmt.Sprintf("%s - %s", invoiceEntity.PeriodStartDate.Format("02 Jan 2006"), invoiceEntity.PeriodEndDate.Format("02 Jan 2006"))
-			if sliEntity.Billed.IsRecurrent() && sliEntity.Billed.String() != invoiceEntity.BillingCycle.String() {
+			if sliEntity.Billed.IsRecurrent() && sliEntity.Billed.InMonths() != invoiceEntity.BillingCycleInMonths {
 				invoiceLineSubtitle += ". "
 				invoiceLineSubtitle += invoiceEntity.Currency.Symbol()
 				invoiceLineSubtitle += utils.FormatAmount(sliEntity.Price, 2)

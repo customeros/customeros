@@ -15,7 +15,7 @@ enum ContractFieldMask {
   CONTRACT_FIELD_SIGNED_AT = 3;
   CONTRACT_FIELD_ENDED_AT = 4;
   CONTRACT_FIELD_CONTRACT_URL = 6;
-  CONTRACT_FIELD_BILLING_CYCLE = 8;
+  CONTRACT_FIELD_BILLING_CYCLE = 8 [deprecated = true];
   CONTRACT_FIELD_INVOICING_START_DATE = 9;
   CONTRACT_FIELD_CURRENCY = 10;
   CONTRACT_FIELD_ADDRESS_LINE_1 = 11;
@@ -41,6 +41,7 @@ enum ContractFieldMask {
   CONTRACT_FIELD_INVOICE_EMAIL_TO = 32;
   CONTRACT_FIELD_LENGTH_IN_MONTHS = 33;
   CONTRACT_FIELD_APPROVED = 34;
+  CONTRACT_FIELD_BILLING_CYCLE_IN_MONTHS = 35;
 }
 
 // CreateContract request message
@@ -57,7 +58,6 @@ message CreateContractGrpcRequest {
   SourceFields sourceFields = 12;
   ExternalSystemFields externalSystemFields = 13;
   string contractUrl = 14;
-  BillingCycle billingCycle = 16;
   google.protobuf.Timestamp invoicingStartDate = 17;
   string currency = 18;
   bool invoicingEnabled = 19;
@@ -72,6 +72,7 @@ message CreateContractGrpcRequest {
   string country = 28;
   int64 lengthInMonths = 29;
   bool approved = 30;
+  int64 billingCycleInMonths = 31;
 }
 
 message UpdateContractGrpcRequest {
@@ -86,7 +87,6 @@ message UpdateContractGrpcRequest {
   SourceFields sourceFields = 10;
   ExternalSystemFields externalSystemFields = 11;
   string contractUrl = 12;
-  BillingCycle billingCycle = 14;
   google.protobuf.Timestamp invoicingStartDate = 15;
   string currency = 16;
   string addressLine1 = 17;
@@ -113,6 +113,7 @@ message UpdateContractGrpcRequest {
   repeated string invoiceEmailBcc = 39;
   int64 lengthInMonths = 40;
   bool approved = 41;
+  int64 billingCycleInMonths = 42;
 }
 
 message RolloutRenewalOpportunityOnExpirationGrpcRequest {

@@ -683,6 +683,7 @@ func CreateContractForOrganization(ctx context.Context, driver *neo4j.DriverWith
 					c.currency=$currency,
 					c.invoicingStartDate=$invoicingStartDate,
 					c.nextInvoiceDate=$nextInvoiceDate,
+					c.billingCycleInMonths=$billingCycleInMonths,
 					c.billingCycle=$billingCycle,
 					c.addressLine1=$addressLine1,
 					c.addressLine2=$addressLine2,
@@ -706,7 +707,7 @@ func CreateContractForOrganization(ctx context.Context, driver *neo4j.DriverWith
 					c.approved=$approved
 				`, tenant)
 
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+	params := map[string]any{
 		"id":                     contractId,
 		"organizationId":         organizationId,
 		"tenant":                 tenant,
@@ -724,7 +725,7 @@ func CreateContractForOrganization(ctx context.Context, driver *neo4j.DriverWith
 		"currency":               contract.Currency.String(),
 		"invoicingStartDate":     utils.ToNeo4jDateAsAny(contract.InvoicingStartDate),
 		"nextInvoiceDate":        utils.ToNeo4jDateAsAny(contract.NextInvoiceDate),
-		"billingCycle":           contract.BillingCycle.String(),
+		"billingCycleInMonths":   contract.BillingCycleInMonths,
 		"addressLine1":           contract.AddressLine1,
 		"addressLine2":           contract.AddressLine2,
 		"zip":                    contract.Zip,
@@ -745,7 +746,18 @@ func CreateContractForOrganization(ctx context.Context, driver *neo4j.DriverWith
 		"dueDays":                contract.DueDays,
 		"lengthInMonths":         contract.LengthInMonths,
 		"approved":               contract.Approved,
-	})
+	}
+	if contract.BillingCycleInMonths == 0 {
+		params["billingCycle"] = enum.BillingCycleNone.String()
+	} else if contract.BillingCycleInMonths == 1 {
+		params["billingCycle"] = enum.BillingCycleMonthlyBilling.String()
+	} else if contract.BillingCycleInMonths <= 3 {
+		params["billingCycle"] = enum.BillingCycleQuarterlyBilling.String()
+	} else {
+		params["billingCycle"] = enum.BillingCycleAnnuallyBilling.String()
+	}
+	ExecuteWriteQuery(ctx, driver, query, params)
+
 	return contractId
 }
 
@@ -1037,39 +1049,39 @@ func CreateInvoiceForContract(ctx context.Context, driver *neo4j.DriverWithConte
 				i.note=$note,
 				i.customerEmail=$customerEmail,
 				i.paymentLink=$paymentLink,
-				i.billingCycle=$billingCycle
+				i.billingCycleInMonths=$billingCycleInMonths
 			WITH c, i 
 			MERGE (c)-[:HAS_INVOICE]->(i) 
 				`, tenant)
 
 	params := map[string]any{
-		"id":               invoiceId,
-		"contractId":       contractId,
-		"tenant":           tenant,
-		"source":           invoice.Source,
-		"sourceOfTruth":    invoice.SourceOfTruth,
-		"appSource":        invoice.AppSource,
-		"createdAt":        invoice.CreatedAt,
-		"updatedAt":        invoice.UpdatedAt,
-		"dryRun":           invoice.DryRun,
-		"offCycle":         invoice.OffCycle,
-		"postpaid":         invoice.Postpaid,
-		"preview":          invoice.Preview,
-		"number":           invoice.Number,
-		"periodStartDate":  utils.ToNeo4jDateAsAny(&invoice.PeriodStartDate),
-		"periodEndDate":    utils.ToNeo4jDateAsAny(&invoice.PeriodEndDate),
-		"dueDate":          utils.ToNeo4jDateAsAny(&invoice.DueDate),
-		"issuedDate":       utils.ToDate(invoice.IssuedDate),
-		"currency":         invoice.Currency,
-		"amount":           invoice.Amount,
-		"vat":              invoice.Vat,
-		"totalAmount":      invoice.TotalAmount,
-		"repositoryFileId": invoice.RepositoryFileId,
-		"status":           invoice.Status.String(),
-		"note":             invoice.Note,
-		"customerEmail":    invoice.Customer.Email,
-		"paymentLink":      invoice.PaymentDetails.PaymentLink,
-		"billingCycle":     invoice.BillingCycle.String(),
+		"id":                   invoiceId,
+		"contractId":           contractId,
+		"tenant":               tenant,
+		"source":               invoice.Source,
+		"sourceOfTruth":        invoice.SourceOfTruth,
+		"appSource":            invoice.AppSource,
+		"createdAt":            invoice.CreatedAt,
+		"updatedAt":            invoice.UpdatedAt,
+		"dryRun":               invoice.DryRun,
+		"offCycle":             invoice.OffCycle,
+		"postpaid":             invoice.Postpaid,
+		"preview":              invoice.Preview,
+		"number":               invoice.Number,
+		"periodStartDate":      utils.ToNeo4jDateAsAny(&invoice.PeriodStartDate),
+		"periodEndDate":        utils.ToNeo4jDateAsAny(&invoice.PeriodEndDate),
+		"dueDate":              utils.ToNeo4jDateAsAny(&invoice.DueDate),
+		"issuedDate":           utils.ToDate(invoice.IssuedDate),
+		"currency":             invoice.Currency,
+		"amount":               invoice.Amount,
+		"vat":                  invoice.Vat,
+		"totalAmount":          invoice.TotalAmount,
+		"repositoryFileId":     invoice.RepositoryFileId,
+		"status":               invoice.Status.String(),
+		"note":                 invoice.Note,
+		"customerEmail":        invoice.Customer.Email,
+		"paymentLink":          invoice.PaymentDetails.PaymentLink,
+		"billingCycleInMonths": invoice.BillingCycleInMonths,
 	}
 
 	ExecuteWriteQuery(ctx, driver, query, params)

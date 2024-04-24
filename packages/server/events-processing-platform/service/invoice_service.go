@@ -6,7 +6,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/aggregate"
@@ -99,15 +98,15 @@ func (s *invoiceService) NextPreviewInvoiceForContract(ctx context.Context, requ
 		SourceFields: &commonpb.SourceFields{
 			AppSource: constants.AppSourceEventProcessingPlatform,
 		},
-		InvoicePeriodStart: utils.ConvertTimeToTimestampPtr(&invoicePeriodStart),
-		InvoicePeriodEnd:   utils.ConvertTimeToTimestampPtr(&invoicePeriodEnd),
-		Currency:           contract.Currency.String(),
-		BillingCycle:       mapContractBillingCycle(contract.BillingCycle),
-		Note:               "",
-		DryRun:             true,
-		Preview:            true,
-		OffCycle:           false,
-		Postpaid:           s.getTenantInvoicingPostpaidFlag(ctx, request.Tenant),
+		InvoicePeriodStart:   utils.ConvertTimeToTimestampPtr(&invoicePeriodStart),
+		InvoicePeriodEnd:     utils.ConvertTimeToTimestampPtr(&invoicePeriodEnd),
+		Currency:             contract.Currency.String(),
+		BillingCycleInMonths: contract.BillingCycleInMonths,
+		Note:                 "",
+		DryRun:               true,
+		Preview:              true,
+		OffCycle:             false,
+		Postpaid:             s.getTenantInvoicingPostpaidFlag(ctx, request.Tenant),
 	}); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(NewOnCycleInvoiceForContract) tenant:{%v}, err: %v", request.Tenant, err.Error())
@@ -408,18 +407,7 @@ func (s *invoiceService) VoidInvoice(ctx context.Context, request *invoicepb.Voi
 }
 
 func (s *invoiceService) calculateInvoiceCycleEnd(ctx context.Context, start time.Time, tenant string, contractEntity neo4jentity.ContractEntity) time.Time {
-	var nextStart time.Time
-
-	switch contractEntity.BillingCycle {
-	case neo4jenum.BillingCycleMonthlyBilling:
-		nextStart = start.AddDate(0, 1, 0)
-	case neo4jenum.BillingCycleQuarterlyBilling:
-		nextStart = start.AddDate(0, 3, 0)
-	case neo4jenum.BillingCycleAnnuallyBilling:
-		nextStart = start.AddDate(1, 0, 0)
-	default:
-		return start
-	}
+	nextStart := start.AddDate(0, int(contractEntity.BillingCycleInMonths), 0)
 	if start.Day() == 1 {
 		// if previous invoice was generated end of month, we need to substract extra 1 day
 		previousCycleInvoiceDbNode, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetPreviousCycleInvoice(ctx, tenant, contractEntity.Id)
@@ -441,19 +429,4 @@ func (s *invoiceService) getTenantInvoicingPostpaidFlag(ctx context.Context, ten
 	dbNode, _ := s.repositories.Neo4jRepositories.TenantReadRepository.GetTenantSettings(ctx, tenant)
 	tenantSettings := neo4jmapper.MapDbNodeToTenantSettingsEntity(dbNode)
 	return tenantSettings.InvoicingPostpaid
-}
-
-func mapContractBillingCycle(contractBillingCycle neo4jenum.BillingCycle) commonpb.BillingCycle {
-	switch contractBillingCycle {
-	case neo4jenum.BillingCycleNone:
-		return commonpb.BillingCycle_NONE_BILLING
-	case neo4jenum.BillingCycleMonthlyBilling:
-		return commonpb.BillingCycle_MONTHLY_BILLING
-	case neo4jenum.BillingCycleQuarterlyBilling:
-		return commonpb.BillingCycle_QUARTERLY_BILLING
-	case neo4jenum.BillingCycleAnnuallyBilling:
-		return commonpb.BillingCycle_ANNUALLY_BILLING
-	default:
-		return commonpb.BillingCycle_NONE_BILLING
-	}
 }

@@ -20,7 +20,7 @@ func MapEntityToContract(entity *neo4jentity.ContractEntity) *model.Contract {
 			AppSource:     entity.AppSource,
 		},
 		BillingDetails: &model.BillingDetails{
-			BillingCycle:           utils.ToPtr(MapContractBillingCycleToModel(entity.BillingCycle)),
+			BillingCycleInMonths:   utils.ToPtr(entity.BillingCycleInMonths),
 			InvoicingStarted:       entity.InvoicingStartDate,
 			NextInvoicing:          entity.NextInvoiceDate,
 			AddressLine1:           utils.ToPtr(entity.AddressLine1),
@@ -67,7 +67,6 @@ func MapEntityToContract(entity *neo4jentity.ContractEntity) *model.Contract {
 		SignedAt:              entity.SignedAt,
 		EndedAt:               entity.EndedAt,
 		InvoicingStartDate:    entity.InvoicingStartDate,
-		BillingCycle:          utils.ToPtr(MapContractBillingCycleToModel(entity.BillingCycle)),
 		AddressLine1:          utils.ToPtr(entity.AddressLine1),
 		AddressLine2:          utils.ToPtr(entity.AddressLine2),
 		Zip:                   utils.ToPtr(entity.Zip),
@@ -98,6 +97,19 @@ func MapEntityToContract(entity *neo4jentity.ContractEntity) *model.Contract {
 		contract.CommittedPeriods = utils.ToPtr(entity.LengthInMonths / 12)
 		contract.ContractRenewalCycle = model.ContractRenewalCycleAnnualRenewal
 		contract.RenewalCycle = model.ContractRenewalCycleAnnualRenewal
+	}
+	if entity.BillingCycleInMonths == int64(0) {
+		contract.BillingCycle = utils.ToPtr(model.ContractBillingCycleNone)
+		contract.BillingDetails.BillingCycle = utils.ToPtr(model.ContractBillingCycleNone)
+	} else if entity.BillingCycleInMonths < int64(3) {
+		contract.BillingCycle = utils.ToPtr(model.ContractBillingCycleMonthlyBilling)
+		contract.BillingDetails.BillingCycle = utils.ToPtr(model.ContractBillingCycleMonthlyBilling)
+	} else if entity.BillingCycleInMonths < int64(12) {
+		contract.BillingCycle = utils.ToPtr(model.ContractBillingCycleQuarterlyBilling)
+		contract.BillingDetails.BillingCycle = utils.ToPtr(model.ContractBillingCycleQuarterlyBilling)
+	} else {
+		contract.BillingCycle = utils.ToPtr(model.ContractBillingCycleAnnualBilling)
+		contract.BillingDetails.BillingCycle = utils.ToPtr(model.ContractBillingCycleAnnualBilling)
 	}
 
 	return &contract

@@ -141,7 +141,8 @@ type Contract implements MetadataInterface {
 }
 
 type BillingDetails {
-    billingCycle:           ContractBillingCycle
+    billingCycle:           ContractBillingCycle @deprecated(reason: "Use billingCycleInMonths instead.")
+    billingCycleInMonths:   Int64
     invoicingStarted:       Time
     nextInvoicing:          Time
     addressLine1:           String
@@ -328,7 +329,11 @@ input ContractRenewalInput {
 }
 
 input BillingDetailsInput {
-    billingCycle:           ContractBillingCycle
+    """
+    Deprecated, use billingCycleInMonths instead.
+    """
+    billingCycle:           ContractBillingCycle @deprecated(reason: "Use billingCycleInMonths instead.")
+    billingCycleInMonths:   Int64
     invoicingStarted:       Time
     addressLine1:           String
     addressLine2:           String
