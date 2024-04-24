@@ -12797,6 +12797,7 @@ enum ContractBillingCycle {
     MONTHLY_BILLING
     QUARTERLY_BILLING
     ANNUAL_BILLING
+    CUSTOM_BILLING
 }
 
 enum ContractStatus {

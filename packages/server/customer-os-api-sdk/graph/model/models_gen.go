@@ -3410,6 +3410,7 @@ const (
 	ContractBillingCycleMonthlyBilling   ContractBillingCycle = "MONTHLY_BILLING"
 	ContractBillingCycleQuarterlyBilling ContractBillingCycle = "QUARTERLY_BILLING"
 	ContractBillingCycleAnnualBilling    ContractBillingCycle = "ANNUAL_BILLING"
+	ContractBillingCycleCustomBilling    ContractBillingCycle = "CUSTOM_BILLING"
 )
 
 var AllContractBillingCycle = []ContractBillingCycle{
@@ -3417,11 +3418,12 @@ var AllContractBillingCycle = []ContractBillingCycle{
 	ContractBillingCycleMonthlyBilling,
 	ContractBillingCycleQuarterlyBilling,
 	ContractBillingCycleAnnualBilling,
+	ContractBillingCycleCustomBilling,
 }
 
 func (e ContractBillingCycle) IsValid() bool {
 	switch e {
-	case ContractBillingCycleNone, ContractBillingCycleMonthlyBilling, ContractBillingCycleQuarterlyBilling, ContractBillingCycleAnnualBilling:
+	case ContractBillingCycleNone, ContractBillingCycleMonthlyBilling, ContractBillingCycleQuarterlyBilling, ContractBillingCycleAnnualBilling, ContractBillingCycleCustomBilling:
 		return true
 	}
 	return false
