@@ -211,7 +211,7 @@ func (s *invoiceService) GetInvoices(ctx context.Context, organizationId string,
 						arrayInt = append(arrayInt, 1)
 					} else if v == "QUARTERLY" {
 						arrayInt = append(arrayInt, 3)
-					} else if v == "ANNUAL_BILLING" {
+					} else if v == "ANNUALLY" {
 						arrayInt = append(arrayInt, 12)
 					} else if v == "NONE" {
 						arrayInt = append(arrayInt, 0)
