@@ -140,9 +140,8 @@ export const AuthPanel = () => {
         },
       );
     } else {
-      RevokeAccess('google', {
-        // @ts-expect-error look into it
-        providerAccountId: session.user.playerIdentityId,
+      RevokeAccess({
+        providerAccountId: 'google',
       })
         .then((data) => {
           // @ts-expect-error look into it

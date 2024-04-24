@@ -104,6 +104,7 @@ function getRedirectUrl(
       process.env.USER_ADMIN_API_URL +
       '/' +
       request.nextUrl.pathname.substring('/ua/'.length);
+
     requestHeaders.set(
       'X-Openline-API-KEY',
       process.env.USER_ADMIN_API_KEY as string,
