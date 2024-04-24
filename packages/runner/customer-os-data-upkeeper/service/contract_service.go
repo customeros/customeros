@@ -9,7 +9,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
@@ -231,31 +230,21 @@ func (s *contractService) ResyncContract(ctx context.Context, tenant, contractId
 	props := utils.GetPropsFromNode(*contractDbNode)
 
 	request := contractpb.UpdateContractGrpcRequest{
-		Tenant:             tenant,
-		Id:                 contractId,
-		Name:               utils.GetStringPropOrEmpty(props, "name"),
-		ContractUrl:        utils.GetStringPropOrEmpty(props, "contractUrl"),
-		ServiceStartedAt:   utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(props, "serviceStartedAt")),
-		SignedAt:           utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(props, "signedAt")),
-		EndedAt:            utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(props, "endedAt")),
-		Currency:           utils.GetStringPropOrEmpty(props, "currency"),
-		InvoicingStartDate: utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(props, "invoicingStartDate")),
-		LengthInMonths:     utils.GetInt64PropOrZero(props, "lengthInMonths"),
+		Tenant:               tenant,
+		Id:                   contractId,
+		Name:                 utils.GetStringPropOrEmpty(props, "name"),
+		ContractUrl:          utils.GetStringPropOrEmpty(props, "contractUrl"),
+		ServiceStartedAt:     utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(props, "serviceStartedAt")),
+		SignedAt:             utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(props, "signedAt")),
+		EndedAt:              utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(props, "endedAt")),
+		Currency:             utils.GetStringPropOrEmpty(props, "currency"),
+		InvoicingStartDate:   utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(props, "invoicingStartDate")),
+		LengthInMonths:       utils.GetInt64PropOrZero(props, "lengthInMonths"),
+		BillingCycleInMonths: utils.GetInt64PropOrZero(props, "billingCycleInMonths"),
 		SourceFields: &commonpb.SourceFields{
 			Source:    utils.GetStringPropOrEmpty(props, "sourceOfTruth"),
 			AppSource: constants.AppSourceDataUpkeeper,
 		},
-	}
-
-	switch utils.GetStringPropOrEmpty(props, "billingCycle") {
-	case neo4jenum.BillingCycleMonthlyBilling.String():
-		request.BillingCycle = commonpb.BillingCycle_MONTHLY_BILLING
-	case neo4jenum.BillingCycleQuarterlyBilling.String():
-		request.BillingCycle = commonpb.BillingCycle_QUARTERLY_BILLING
-	case neo4jenum.BillingCycleAnnuallyBilling.String():
-		request.BillingCycle = commonpb.BillingCycle_ANNUALLY_BILLING
-	default:
-		request.BillingCycle = commonpb.BillingCycle_NONE_BILLING
 	}
 
 	_, err = utils.CallEventsPlatformGRPCWithRetry[*contractpb.ContractIdGrpcResponse](func() (*contractpb.ContractIdGrpcResponse, error) {
