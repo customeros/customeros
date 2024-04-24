@@ -52,7 +52,9 @@ export const ContractCardActions: React.FC<ContractStatusSelectProps> = ({
         break;
       case ContractStatus.Draft:
       case ContractStatus.Ended:
-        icon = <DotLive className='text-gray-500 mr-1 fill-gray-500' />;
+        icon = (
+          <DotLive className='text-gray-500 mr-1 [&>*:nth-child(1)]:fill-gray-200 [&>*:nth-child(1)]:stroke-gray-300 [&>*:nth-child(2)]:fill-gray-600 ' />
+        );
         text = 'Make live';
         break;
       case ContractStatus.OutOfContract:
