@@ -14,7 +14,6 @@ import (
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	"github.com/stretchr/testify/require"
@@ -182,7 +181,7 @@ func TestMutationResolver_ContractUpdate(t *testing.T) {
 				t.Fatalf("Failed to parse expected timestamp: %v", err)
 			}
 			require.Equal(t, timestamppb.New(expectedEndedAt), contract.EndedAt)
-			require.Equal(t, commonpb.BillingCycle_ANNUALLY_BILLING, contract.BillingCycle)
+			require.Equal(t, int64(12), contract.BillingCycleInMonths)
 			require.Equal(t, "USD", contract.Currency)
 			require.Equal(t, "test address line 1", contract.AddressLine1)
 			require.Equal(t, "test address line 2", contract.AddressLine2)
@@ -201,10 +200,10 @@ func TestMutationResolver_ContractUpdate(t *testing.T) {
 			require.Equal(t, true, contract.AutoRenew)
 			require.Equal(t, true, contract.Check)
 			require.True(t, contract.Approved)
-			require.True(t, contract.InvoicingEnabled)
+			require.False(t, contract.InvoicingEnabled)
 			require.Equal(t, int64(7), contract.DueDays)
 			require.Equal(t, []string{"cc1", "cc2"}, contract.InvoiceEmailCc)
-			require.Equal(t, 28, len(contract.FieldsMask))
+			require.Equal(t, 27, len(contract.FieldsMask))
 			calledUpdateContract = true
 			return &contractpb.ContractIdGrpcResponse{
 				Id: contractId,
@@ -303,7 +302,7 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 		OrganizationLegalName:  "organization legal name",
 		InvoiceEmail:           "invoice email",
 		InvoiceNote:            "invoice note",
-		BillingCycle:           neo4jenum.BillingCycleMonthlyBilling,
+		BillingCycleInMonths:   1,
 		InvoicingStartDate:     &now,
 		NextInvoiceDate:        &tomorrow,
 		InvoicingEnabled:       true,
@@ -433,7 +432,7 @@ func TestQueryResolver_Contract_WithInvoices(t *testing.T) {
 		OrganizationLegalName:  "organization legal name",
 		InvoiceEmail:           "invoice email",
 		InvoiceNote:            "invoice note",
-		BillingCycle:           neo4jenum.BillingCycleMonthlyBilling,
+		BillingCycleInMonths:   1,
 		InvoicingStartDate:     &now,
 		NextInvoiceDate:        &tomorrow,
 		InvoicingEnabled:       true,

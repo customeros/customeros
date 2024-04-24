@@ -1,7 +1,6 @@
 package model
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"time"
 
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -24,7 +23,7 @@ type Contract struct {
 	Source                 commonmodel.Source           `json:"source"`
 	ExternalSystems        []commonmodel.ExternalSystem `json:"externalSystems"`
 	Currency               string                       `json:"currency"`
-	BillingCycle           string                       `json:"billingCycle"`
+	BillingCycleInMonths   int64                        `json:"billingCycleInMonths"`
 	InvoicingStartDate     *time.Time                   `json:"invoicingStartDate,omitempty"`
 	AddressLine1           string                       `json:"addressLine1"`
 	AddressLine2           string                       `json:"addressLine2"`
@@ -60,7 +59,7 @@ type ContractDataFields struct {
 	ServiceStartedAt       *time.Time
 	SignedAt               *time.Time
 	EndedAt                *time.Time
-	BillingCycle           string
+	BillingCycleInMonths   int64
 	Currency               string
 	InvoicingStartDate     *time.Time
 	NextInvoiceDate        *time.Time
@@ -86,30 +85,4 @@ type ContractDataFields struct {
 	DueDays                int64    `json:"dueDays"`
 	LengthInMonths         int64    `json:"lengthInMonths"`
 	Approved               bool     `json:"approved"`
-}
-
-// BillingCycle represents the billing cycle of a contract.
-type BillingCycle int32
-
-const (
-	NoneBilling BillingCycle = iota
-	MonthlyBilling
-	QuarterlyBilling
-	AnnuallyBilling
-)
-
-// This function provides a string representation of the BillingCyckle enum.
-func (bc BillingCycle) String() string {
-	switch bc {
-	case NoneBilling:
-		return ""
-	case MonthlyBilling:
-		return string(enum.BillingCycleMonthlyBilling)
-	case QuarterlyBilling:
-		return string(enum.BillingCycleQuarterlyBilling)
-	case AnnuallyBilling:
-		return string(enum.BillingCycleAnnuallyBilling)
-	default:
-		return ""
-	}
 }

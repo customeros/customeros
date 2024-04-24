@@ -28,7 +28,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices(t *testing.T
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
-		BillingCycle:          neo4jenum.BillingCycleMonthlyBilling,
+		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &referenceDate,
 		OrganizationLegalName: "organizationLegalName",
 		InvoiceEmail:          "invoiceEmail",
@@ -71,7 +71,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_Organization
 	})
 
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
-		BillingCycle:          neo4jenum.BillingCycleQuarterlyBilling,
+		BillingCycleInMonths:  3,
 		InvoicingStartDate:    &referenceDate,
 		OrganizationLegalName: "organizationLegalName",
 		InvoiceEmail:          "invoiceEmail",
@@ -79,7 +79,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_Organization
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
 	contractId2 := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationHidden, entity.ContractEntity{
-		BillingCycle:          neo4jenum.BillingCycleMonthlyBilling,
+		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &referenceDate,
 		OrganizationLegalName: "organizationLegalName",
 		InvoiceEmail:          "invoiceEmail",
@@ -125,7 +125,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_InvoicingNod
 
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
-		BillingCycle:          neo4jenum.BillingCycleAnnuallyBilling,
+		BillingCycleInMonths:  12,
 		InvoicingStartDate:    &referenceDate,
 		OrganizationLegalName: "organizationLegalName",
 		InvoiceEmail:          "invoiceEmail",
@@ -135,7 +135,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_InvoicingNod
 
 	organizationIdNok := neo4jtest.CreateOrganization(ctx, driver, tenantNok, entity.OrganizationEntity{})
 	contractId2 := neo4jtest.CreateContractForOrganization(ctx, driver, tenantNok, organizationIdNok, entity.ContractEntity{
-		BillingCycle:          neo4jenum.BillingCycleMonthlyBilling,
+		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &referenceDate,
 		OrganizationLegalName: "organizationLegalName",
 		InvoiceEmail:          "invoiceEmail",
@@ -166,7 +166,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_MissingCurre
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
 		Currency:              neo4jenum.CurrencyAUD,
-		BillingCycle:          neo4jenum.BillingCycleMonthlyBilling,
+		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &referenceDate,
 		OrganizationLegalName: "organizationLegalName",
 		InvoiceEmail:          "invoiceEmail",
@@ -174,7 +174,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_MissingCurre
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
 	contractId2 := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
-		BillingCycle:          neo4jenum.BillingCycleMonthlyBilling,
+		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &referenceDate,
 		OrganizationLegalName: "organizationLegalName",
 		InvoiceEmail:          "invoiceEmail",
@@ -205,7 +205,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_MissingBilli
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
-		BillingCycle:          neo4jenum.BillingCycleMonthlyBilling,
+		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &referenceDate,
 		OrganizationLegalName: "organizationLegalName",
 		InvoiceEmail:          "invoiceEmail",
@@ -245,7 +245,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_CheckByNextI
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractIdYesterday := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
-		BillingCycle:          neo4jenum.BillingCycleMonthlyBilling,
+		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &referenceDate,
 		NextInvoiceDate:       &yesterday,
 		OrganizationLegalName: "organizationLegalName",
@@ -254,7 +254,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_CheckByNextI
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
 	contractIdToday := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
-		BillingCycle:          neo4jenum.BillingCycleMonthlyBilling,
+		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &referenceDate,
 		NextInvoiceDate:       &referenceDate,
 		OrganizationLegalName: "organizationLegalName",
@@ -263,7 +263,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_CheckByNextI
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
 	contractIdTomorrow := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
-		BillingCycle:          neo4jenum.BillingCycleMonthlyBilling,
+		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &referenceDate,
 		NextInvoiceDate:       &tomorrow,
 		OrganizationLegalName: "organizationLegalName",
@@ -302,7 +302,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_CheckByInvoi
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractIdYesterday := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
-		BillingCycle:          neo4jenum.BillingCycleMonthlyBilling,
+		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &yesterday,
 		OrganizationLegalName: "organizationLegalName",
 		InvoiceEmail:          "invoiceEmail",
@@ -310,7 +310,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_CheckByInvoi
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
 	contractIdToday := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
-		BillingCycle:          neo4jenum.BillingCycleMonthlyBilling,
+		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &today,
 		OrganizationLegalName: "organizationLegalName",
 		InvoiceEmail:          "invoiceEmail",
@@ -318,7 +318,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_CheckByInvoi
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
 	contractIdTomorrow := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
-		BillingCycle:          neo4jenum.BillingCycleMonthlyBilling,
+		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &tomorrow,
 		OrganizationLegalName: "organizationLegalName",
 		InvoiceEmail:          "invoiceEmail",
@@ -326,7 +326,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_CheckByInvoi
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
 	contractIdNoInvoicingStartDate := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
-		BillingCycle:          neo4jenum.BillingCycleMonthlyBilling,
+		BillingCycleInMonths:  1,
 		OrganizationLegalName: "organizationLegalName",
 		InvoiceEmail:          "invoiceEmail",
 		InvoicingEnabled:      true,
@@ -364,7 +364,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_CheckByContr
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractIdYesterday := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
-		BillingCycle:          neo4jenum.BillingCycleMonthlyBilling,
+		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &today,
 		EndedAt:               &yesterday,
 		OrganizationLegalName: "organizationLegalName",
@@ -373,7 +373,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_CheckByContr
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
 	contractIdToday := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
-		BillingCycle:          neo4jenum.BillingCycleMonthlyBilling,
+		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &today,
 		EndedAt:               &today,
 		OrganizationLegalName: "organizationLegalName",
@@ -382,7 +382,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_CheckByContr
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
 	contractIdTomorrow := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
-		BillingCycle:          neo4jenum.BillingCycleMonthlyBilling,
+		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &today,
 		EndedAt:               &tomorrow,
 		OrganizationLegalName: "organizationLegalName",
@@ -417,7 +417,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_CheckByContr
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
-		BillingCycle:          neo4jenum.BillingCycleMonthlyBilling,
+		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &referenceDate,
 		OrganizationLegalName: "organizationLegalName",
 		InvoiceEmail:          "invoiceEmail",
@@ -425,7 +425,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_CheckByContr
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
 	contractId2 := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
-		BillingCycle:          neo4jenum.BillingCycleMonthlyBilling,
+		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &referenceDate,
 		OrganizationLegalName: "organizationLegalName",
 		InvoiceEmail:          "invoiceEmail",
@@ -433,7 +433,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_CheckByContr
 		ContractStatus:        neo4jenum.ContractStatusDraft,
 	})
 	contractId3 := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
-		BillingCycle:          neo4jenum.BillingCycleMonthlyBilling,
+		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &referenceDate,
 		OrganizationLegalName: "organizationLegalName",
 		InvoiceEmail:          "invoiceEmail",
@@ -465,7 +465,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_MissingOrgan
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
-		BillingCycle:          neo4jenum.BillingCycleMonthlyBilling,
+		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &referenceDate,
 		OrganizationLegalName: "organizationLegalName",
 		InvoiceEmail:          "invoiceEmail",
@@ -473,11 +473,11 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_MissingOrgan
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
 	contractId2 := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
-		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
-		InvoicingStartDate: &referenceDate,
-		InvoiceEmail:       "invoiceEmail",
-		InvoicingEnabled:   true,
-		ContractStatus:     neo4jenum.ContractStatusLive,
+		BillingCycleInMonths: 1,
+		InvoicingStartDate:   &referenceDate,
+		InvoiceEmail:         "invoiceEmail",
+		InvoicingEnabled:     true,
+		ContractStatus:       neo4jenum.ContractStatusLive,
 	})
 	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{})
 	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId2, entity.ServiceLineItemEntity{})
@@ -503,7 +503,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_MissingInvoi
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
-		BillingCycle:          neo4jenum.BillingCycleMonthlyBilling,
+		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &referenceDate,
 		OrganizationLegalName: "organizationLegalName",
 		InvoiceEmail:          "invoiceEmail",
@@ -511,7 +511,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_MissingInvoi
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
 	contractId2 := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
-		BillingCycle:          neo4jenum.BillingCycleMonthlyBilling,
+		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &referenceDate,
 		OrganizationLegalName: "organizationLegalName",
 		InvoicingEnabled:      true,
@@ -541,7 +541,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_MissingServi
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
-		BillingCycle:          neo4jenum.BillingCycleMonthlyBilling,
+		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &referenceDate,
 		OrganizationLegalName: "organizationLegalName",
 		InvoiceEmail:          "invoiceEmail",
@@ -549,7 +549,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_MissingServi
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
 	neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
-		BillingCycle:          neo4jenum.BillingCycleMonthlyBilling,
+		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &referenceDate,
 		OrganizationLegalName: "organizationLegalName",
 		InvoiceEmail:          "invoiceEmail",
@@ -582,7 +582,7 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices(t *testin
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
-		BillingCycle:          neo4jenum.BillingCycleMonthlyBilling,
+		BillingCycleInMonths:  1,
 		NextInvoiceDate:       &tomorrow,
 		OrganizationLegalName: "organizationLegalName",
 		InvoiceEmail:          "invoiceEmail",
@@ -617,7 +617,7 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_Invoicing
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
-		BillingCycle:          neo4jenum.BillingCycleMonthlyBilling,
+		BillingCycleInMonths:  1,
 		NextInvoiceDate:       &tomorrow,
 		OrganizationLegalName: "organizationLegalName",
 		InvoiceEmail:          "invoiceEmail",
@@ -652,7 +652,7 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_Organizat
 		Hide: true,
 	})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
-		BillingCycle:          neo4jenum.BillingCycleMonthlyBilling,
+		BillingCycleInMonths:  1,
 		NextInvoiceDate:       &tomorrow,
 		OrganizationLegalName: "organizationLegalName",
 		InvoiceEmail:          "invoiceEmail",
@@ -684,7 +684,7 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_MissingCu
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
-		BillingCycle:          neo4jenum.BillingCycleMonthlyBilling,
+		BillingCycleInMonths:  1,
 		NextInvoiceDate:       &tomorrow,
 		OrganizationLegalName: "organizationLegalName",
 		InvoiceEmail:          "invoiceEmail",
@@ -717,11 +717,11 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_MissingOr
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
-		BillingCycle:     neo4jenum.BillingCycleMonthlyBilling,
-		NextInvoiceDate:  &tomorrow,
-		InvoiceEmail:     "invoiceEmail",
-		InvoicingEnabled: true,
-		ContractStatus:   neo4jenum.ContractStatusLive,
+		BillingCycleInMonths: 1,
+		NextInvoiceDate:      &tomorrow,
+		InvoiceEmail:         "invoiceEmail",
+		InvoicingEnabled:     true,
+		ContractStatus:       neo4jenum.ContractStatusLive,
 	})
 	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{
 		StartedAt: yesterday,
@@ -749,7 +749,7 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_MissingIn
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
-		BillingCycle:          neo4jenum.BillingCycleMonthlyBilling,
+		BillingCycleInMonths:  1,
 		NextInvoiceDate:       &tomorrow,
 		OrganizationLegalName: "organizationLegalName",
 		InvoicingEnabled:      true,
@@ -780,7 +780,7 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_NextInvoi
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
-		BillingCycle:          neo4jenum.BillingCycleMonthlyBilling,
+		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &today,
 		OrganizationLegalName: "organizationLegalName",
 		InvoiceEmail:          "invoiceEmail",
@@ -813,7 +813,7 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_ContractA
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
-		BillingCycle:          neo4jenum.BillingCycleMonthlyBilling,
+		BillingCycleInMonths:  1,
 		NextInvoiceDate:       &tomorrow,
 		OrganizationLegalName: "organizationLegalName",
 		InvoiceEmail:          "invoiceEmail",
@@ -847,7 +847,7 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_ServiceLi
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
-		BillingCycle:          neo4jenum.BillingCycleMonthlyBilling,
+		BillingCycleInMonths:  1,
 		NextInvoiceDate:       &tomorrow,
 		OrganizationLegalName: "organizationLegalName",
 		InvoiceEmail:          "invoiceEmail",
@@ -882,7 +882,7 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_ServiceLi
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
-		BillingCycle:          neo4jenum.BillingCycleMonthlyBilling,
+		BillingCycleInMonths:  1,
 		NextInvoiceDate:       &today,
 		OrganizationLegalName: "organizationLegalName",
 		InvoiceEmail:          "invoiceEmail",
@@ -914,7 +914,7 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_ServiceLi
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
-		BillingCycle:          neo4jenum.BillingCycleMonthlyBilling,
+		BillingCycleInMonths:  1,
 		NextInvoiceDate:       &tomorrow,
 		OrganizationLegalName: "organizationLegalName",
 		InvoiceEmail:          "invoiceEmail",
@@ -948,7 +948,7 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_LastServi
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
-		BillingCycle:          neo4jenum.BillingCycleMonthlyBilling,
+		BillingCycleInMonths:  1,
 		NextInvoiceDate:       &tomorrow,
 		OrganizationLegalName: "organizationLegalName",
 		InvoiceEmail:          "invoiceEmail",
@@ -989,7 +989,7 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_LastServi
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
-		BillingCycle:          neo4jenum.BillingCycleMonthlyBilling,
+		BillingCycleInMonths:  1,
 		NextInvoiceDate:       &tomorrow,
 		OrganizationLegalName: "organizationLegalName",
 		InvoiceEmail:          "invoiceEmail",

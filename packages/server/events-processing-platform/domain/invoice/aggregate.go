@@ -128,9 +128,8 @@ func (a *InvoiceAggregate) CreateNewInvoiceForContract(ctx context.Context, requ
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
 	periodStartDate := utils.TimestampProtoToTimePtr(request.InvoicePeriodStart)
 	periodEndDate := utils.TimestampProtoToTimePtr(request.InvoicePeriodEnd)
-	billingCycle := BillingCycle(request.BillingCycle)
 
-	createEvent, err := NewInvoiceForContractCreateEvent(a, sourceFields, request.ContractId, request.Currency, billingCycle.String(), request.Note, request.DryRun, request.OffCycle, request.Postpaid, request.Preview, createdAtNotNil, *periodStartDate, *periodEndDate)
+	createEvent, err := NewInvoiceForContractCreateEvent(a, sourceFields, request.ContractId, request.Currency, request.Note, request.BillingCycleInMonths, request.DryRun, request.OffCycle, request.Postpaid, request.Preview, createdAtNotNil, *periodStartDate, *periodEndDate)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "InvoiceCreateEvent")
@@ -436,9 +435,19 @@ func (a *InvoiceAggregate) onInvoiceCreateEvent(evt eventstore.Event) error {
 	a.Invoice.Currency = eventData.Currency
 	a.Invoice.PeriodStartDate = eventData.PeriodStartDate
 	a.Invoice.PeriodEndDate = eventData.PeriodEndDate
-	a.Invoice.BillingCycle = eventData.BillingCycle
+	a.Invoice.BillingCycleInMonths = eventData.BillingCycleInMonths
 	a.Invoice.Note = eventData.Note
 	a.Invoice.Status = neo4jenum.InvoiceStatusInitialized.String()
+	if eventData.BillingCycle != "" {
+		switch eventData.BillingCycle {
+		case neo4jenum.BillingCycleMonthlyBilling.String():
+			a.Invoice.BillingCycleInMonths = 1
+		case neo4jenum.BillingCycleQuarterlyBilling.String():
+			a.Invoice.BillingCycleInMonths = 3
+		case neo4jenum.BillingCycleAnnuallyBilling.String():
+			a.Invoice.BillingCycleInMonths = 12
+		}
+	}
 
 	return nil
 }

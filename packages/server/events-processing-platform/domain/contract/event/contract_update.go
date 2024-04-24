@@ -22,7 +22,8 @@ type ContractUpdateEvent struct {
 	Source                 string                     `json:"source"`
 	InvoicingStartDate     *time.Time                 `json:"invoicingStartDate,omitempty"`
 	Currency               string                     `json:"currency,omitempty"`
-	BillingCycle           string                     `json:"billingCycle,omitempty"`
+	BillingCycle           string                     `json:"billingCycle,omitempty"` //Deprecated: Use BillingCycleInMonths instead
+	BillingCycleInMonths   int64                      `json:"billingCycleInMonths,omitempty"`
 	AddressLine1           string                     `json:"addressLine1,omitempty"`
 	AddressLine2           string                     `json:"addressLine2,omitempty"`
 	Locality               string                     `json:"locality,omitempty"`
@@ -58,7 +59,7 @@ func NewContractUpdateEvent(a eventstore.Aggregate, dataFields model.ContractDat
 		SignedAt:               utils.ToDatePtr(dataFields.SignedAt),
 		EndedAt:                utils.ToDatePtr(dataFields.EndedAt),
 		Currency:               dataFields.Currency,
-		BillingCycle:           dataFields.BillingCycle,
+		BillingCycleInMonths:   dataFields.BillingCycleInMonths,
 		AddressLine1:           dataFields.AddressLine1,
 		AddressLine2:           dataFields.AddressLine2,
 		Locality:               dataFields.Locality,
@@ -156,7 +157,11 @@ func (e ContractUpdateEvent) UpdateInvoicingStartDate() bool {
 }
 
 func (e ContractUpdateEvent) UpdateBillingCycle() bool {
-	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskBillingCycle)
+	return utils.Contains(e.FieldsMask, FieldMaskBillingCycle)
+}
+
+func (e ContractUpdateEvent) UpdateBillingCycleInMonths() bool {
+	return utils.Contains(e.FieldsMask, FieldMaskBillingCycleInMonths)
 }
 
 func (e ContractUpdateEvent) UpdateCurrency() bool {

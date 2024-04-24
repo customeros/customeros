@@ -28,7 +28,7 @@ type ContractEntity struct {
 	ContractUrl                     string
 	InvoicingStartDate              *time.Time // Date only
 	NextInvoiceDate                 *time.Time // Date only
-	BillingCycle                    enum.BillingCycle
+	BillingCycleInMonths            int64
 	Currency                        enum.Currency
 	TriggeredOnboardingStatusChange bool
 	AddressLine1                    string

@@ -50,21 +50,21 @@ func TestContractEventHandler_OnCreate(t *testing.T) {
 	createEvent, err := event.NewContractCreateEvent(
 		contractAggregate,
 		model.ContractDataFields{
-			Name:               "New Contract",
-			ContractUrl:        "http://contract.url",
-			OrganizationId:     orgId,
-			CreatedByUserId:    userIdCreator,
-			ServiceStartedAt:   &timeNow,
-			SignedAt:           &timeNow,
-			LengthInMonths:     int64(1),
-			BillingCycle:       model.MonthlyBilling.String(),
-			Currency:           neo4jenum.CurrencyUSD.String(),
-			InvoicingStartDate: &timeNow,
-			AutoRenew:          true,
-			Check:              true,
-			DueDays:            30,
-			Country:            "US",
-			Approved:           true,
+			Name:                 "New Contract",
+			ContractUrl:          "http://contract.url",
+			OrganizationId:       orgId,
+			CreatedByUserId:      userIdCreator,
+			ServiceStartedAt:     &timeNow,
+			SignedAt:             &timeNow,
+			LengthInMonths:       int64(1),
+			BillingCycleInMonths: 1,
+			Currency:             neo4jenum.CurrencyUSD.String(),
+			InvoicingStartDate:   &timeNow,
+			AutoRenew:            true,
+			Check:                true,
+			DueDays:              30,
+			Country:              "US",
+			Approved:             true,
 		},
 		commonmodel.Source{
 			Source:    constants.SourceOpenline,
@@ -148,7 +148,7 @@ func TestContractEventHandler_OnCreate(t *testing.T) {
 	require.Equal(t, utils.ToDatePtr(&timeNow), contract.SignedAt)
 	require.True(t, utils.ToDatePtr(&timeNow).Equal(*contract.InvoicingStartDate))
 	require.Equal(t, neo4jenum.CurrencyUSD, contract.Currency)
-	require.Equal(t, neo4jenum.BillingCycleMonthlyBilling, contract.BillingCycle)
+	require.Equal(t, int64(1), contract.BillingCycleInMonths)
 	require.Nil(t, contract.EndedAt)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), contract.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, contract.AppSource)

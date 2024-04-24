@@ -17,6 +17,7 @@ const (
 	FieldMaskServiceStartedAt       = "serviceStartedAt"
 	FieldMaskInvoicingStartDate     = "invoicingStartDate"
 	FieldMaskBillingCycle           = "billingCycle"
+	FieldMaskBillingCycleInMonths   = "billingCycleInMonths"
 	FieldMaskCurrency               = "currency"
 	FieldMaskAddressLine1           = "addressLine1"
 	FieldMaskAddressLine2           = "addressLine2"

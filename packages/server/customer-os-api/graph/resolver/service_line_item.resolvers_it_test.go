@@ -30,9 +30,9 @@ func TestMutationResolver_ServiceLineItemCreate(t *testing.T) {
 
 	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
-		InvoicingEnabled:   true,
-		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
-		InvoicingStartDate: &now,
+		InvoicingEnabled:     true,
+		BillingCycleInMonths: 1,
+		InvoicingStartDate:   &now,
 	})
 	serviceLineItemId := uuid.New().String()
 
@@ -94,9 +94,9 @@ func TestMutationResolver_ServiceLineItemUpdate(t *testing.T) {
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
-		InvoicingEnabled:   true,
-		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
-		InvoicingStartDate: &now,
+		InvoicingEnabled:     true,
+		BillingCycleInMonths: 1,
+		InvoicingStartDate:   &now,
 	})
 	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
 		Name:     "service",
@@ -160,9 +160,9 @@ func TestMutationResolver_ServiceLineItemNewVersion(t *testing.T) {
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
-		InvoicingEnabled:   true,
-		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
-		InvoicingStartDate: &now,
+		InvoicingEnabled:     true,
+		BillingCycleInMonths: 1,
+		InvoicingStartDate:   &now,
 	})
 	baseSliId := uuid.New().String()
 	newSliId := uuid.New().String()
@@ -233,9 +233,9 @@ func TestMutationResolver_ServiceLineItemNewVersion_VersionAlreadyExists_NotAllo
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
-		InvoicingEnabled:   true,
-		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
-		InvoicingStartDate: &now,
+		InvoicingEnabled:     true,
+		BillingCycleInMonths: 1,
+		InvoicingStartDate:   &now,
 	})
 	baseSliId := uuid.New().String()
 
@@ -265,9 +265,9 @@ func TestMutationResolver_ServiceLineItemNewVersion_OneTime_NotAllowed(t *testin
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
-		InvoicingEnabled:   true,
-		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
-		InvoicingStartDate: &now,
+		InvoicingEnabled:     true,
+		BillingCycleInMonths: 1,
+		InvoicingStartDate:   &now,
 	})
 	baseSliId := uuid.New().String()
 
@@ -297,9 +297,9 @@ func TestMutationResolver_ServiceLineItemNewVersion_ContractInvoiced_PastVersion
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
-		InvoicingEnabled:   true,
-		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
-		InvoicingStartDate: &now,
+		InvoicingEnabled:     true,
+		BillingCycleInMonths: 1,
+		InvoicingStartDate:   &now,
 	})
 	neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
 		DryRun: false,
@@ -332,10 +332,10 @@ func TestMutationResolver_ServiceLineItemDelete(t *testing.T) {
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
-		InvoicingEnabled:   true,
-		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
-		InvoicingStartDate: &now,
-		ContractStatus:     neo4jenum.ContractStatusDraft,
+		InvoicingEnabled:     true,
+		BillingCycleInMonths: 1,
+		InvoicingStartDate:   &now,
+		ContractStatus:       neo4jenum.ContractStatusDraft,
 	})
 	serviceLineItemId := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{})
 
@@ -383,9 +383,9 @@ func TestMutationResolver_ServiceLineItemClose(t *testing.T) {
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
-		InvoicingEnabled:   true,
-		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
-		InvoicingStartDate: &now,
+		InvoicingEnabled:     true,
+		BillingCycleInMonths: 1,
+		InvoicingStartDate:   &now,
 	})
 	serviceLineItemId := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{})
 

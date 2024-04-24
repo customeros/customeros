@@ -209,6 +209,7 @@ type BankAccountUpdateInput struct {
 
 type BillingDetails struct {
 	BillingCycle           *ContractBillingCycle `json:"billingCycle,omitempty"`
+	BillingCycleInMonths   *int64                `json:"billingCycleInMonths,omitempty"`
 	InvoicingStarted       *time.Time            `json:"invoicingStarted,omitempty"`
 	NextInvoicing          *time.Time            `json:"nextInvoicing,omitempty"`
 	AddressLine1           *string               `json:"addressLine1,omitempty"`
@@ -232,7 +233,9 @@ type BillingDetails struct {
 }
 
 type BillingDetailsInput struct {
+	// Deprecated, use billingCycleInMonths instead.
 	BillingCycle           *ContractBillingCycle `json:"billingCycle,omitempty"`
+	BillingCycleInMonths   *int64                `json:"billingCycleInMonths,omitempty"`
 	InvoicingStarted       *time.Time            `json:"invoicingStarted,omitempty"`
 	AddressLine1           *string               `json:"addressLine1,omitempty"`
 	AddressLine2           *string               `json:"addressLine2,omitempty"`
