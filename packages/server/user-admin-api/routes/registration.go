@@ -186,7 +186,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 
 		var oauthToken, _ = services.AuthServices.OAuthTokenService.GetByPlayerIdAndProvider(contextWithTimeout, revokeRequest.ProviderAccountId, provider)
 
-		if oauthToken.RefreshToken != "" {
+		if oauthToken != nil && oauthToken.RefreshToken != "" {
 			// Handle revocation based on provider
 			var revocationURL string
 			switch provider {
