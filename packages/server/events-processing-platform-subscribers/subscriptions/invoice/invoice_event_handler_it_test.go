@@ -43,9 +43,9 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_AnnualPrice_M
 		Billed:    neo4jenum.BilledTypeAnnually,
 	})
 	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.InvoiceEntity{
-		PeriodStartDate: invoiceStartPeriod,
-		PeriodEndDate:   invoiceEndPeriod,
-		BillingCycle:    neo4jenum.BillingCycleMonthlyBilling,
+		PeriodStartDate:      invoiceStartPeriod,
+		PeriodEndDate:        invoiceEndPeriod,
+		BillingCycleInMonths: 1,
 	})
 
 	// prepare event handler
@@ -99,9 +99,9 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_AnnualPrice_Q
 		Billed:    neo4jenum.BilledTypeAnnually,
 	})
 	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.InvoiceEntity{
-		PeriodStartDate: invoiceStartPeriod,
-		PeriodEndDate:   invoiceEndPeriod,
-		BillingCycle:    neo4jenum.BillingCycleQuarterlyBilling,
+		PeriodStartDate:      invoiceStartPeriod,
+		PeriodEndDate:        invoiceEndPeriod,
+		BillingCycleInMonths: 3,
 	})
 
 	// prepare event handler
@@ -155,9 +155,9 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_AnnualPrice_A
 		Billed:    neo4jenum.BilledTypeAnnually,
 	})
 	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.InvoiceEntity{
-		PeriodStartDate: invoiceStartPeriod,
-		PeriodEndDate:   invoiceEndPeriod,
-		BillingCycle:    neo4jenum.BillingCycleAnnuallyBilling,
+		PeriodStartDate:      invoiceStartPeriod,
+		PeriodEndDate:        invoiceEndPeriod,
+		BillingCycleInMonths: 12,
 	})
 
 	// prepare event handler
@@ -213,9 +213,9 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_QuarterlyPric
 		Billed:    neo4jenum.BilledTypeQuarterly,
 	})
 	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.InvoiceEntity{
-		PeriodStartDate: invoiceStartPeriod,
-		PeriodEndDate:   invoiceEndPeriod,
-		BillingCycle:    neo4jenum.BillingCycleMonthlyBilling,
+		PeriodStartDate:      invoiceStartPeriod,
+		PeriodEndDate:        invoiceEndPeriod,
+		BillingCycleInMonths: 1,
 	})
 
 	// prepare event handler
@@ -271,9 +271,9 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_QuarterlyPric
 		Billed:    neo4jenum.BilledTypeQuarterly,
 	})
 	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.InvoiceEntity{
-		PeriodStartDate: invoiceStartPeriod,
-		PeriodEndDate:   invoiceEndPeriod,
-		BillingCycle:    neo4jenum.BillingCycleQuarterlyBilling,
+		PeriodStartDate:      invoiceStartPeriod,
+		PeriodEndDate:        invoiceEndPeriod,
+		BillingCycleInMonths: 3,
 	})
 
 	// prepare event handler
@@ -329,9 +329,9 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_QuarterlyPric
 		Billed:    neo4jenum.BilledTypeQuarterly,
 	})
 	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.InvoiceEntity{
-		PeriodStartDate: invoiceStartPeriod,
-		PeriodEndDate:   invoiceEndPeriod,
-		BillingCycle:    neo4jenum.BillingCycleAnnuallyBilling,
+		PeriodStartDate:      invoiceStartPeriod,
+		PeriodEndDate:        invoiceEndPeriod,
+		BillingCycleInMonths: 12,
 	})
 
 	// prepare event handler
@@ -387,9 +387,9 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_MonthlyPrice_
 		Billed:    neo4jenum.BilledTypeMonthly,
 	})
 	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.InvoiceEntity{
-		PeriodStartDate: invoiceStartPeriod,
-		PeriodEndDate:   invoiceEndPeriod,
-		BillingCycle:    neo4jenum.BillingCycleMonthlyBilling,
+		PeriodStartDate:      invoiceStartPeriod,
+		PeriodEndDate:        invoiceEndPeriod,
+		BillingCycleInMonths: 1,
 	})
 
 	// prepare event handler
@@ -445,9 +445,9 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_MonthlyPrice_
 		Billed:    neo4jenum.BilledTypeMonthly,
 	})
 	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.InvoiceEntity{
-		PeriodStartDate: invoiceStartPeriod,
-		PeriodEndDate:   invoiceEndPeriod,
-		BillingCycle:    neo4jenum.BillingCycleQuarterlyBilling,
+		PeriodStartDate:      invoiceStartPeriod,
+		PeriodEndDate:        invoiceEndPeriod,
+		BillingCycleInMonths: 3,
 	})
 
 	// prepare event handler
@@ -503,9 +503,9 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_MonthlyPrice_
 		Billed:    neo4jenum.BilledTypeMonthly,
 	})
 	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.InvoiceEntity{
-		PeriodStartDate: invoiceStartPeriod,
-		PeriodEndDate:   invoiceEndPeriod,
-		BillingCycle:    neo4jenum.BillingCycleAnnuallyBilling,
+		PeriodStartDate:      invoiceStartPeriod,
+		PeriodEndDate:        invoiceEndPeriod,
+		BillingCycleInMonths: 12,
 	})
 
 	// prepare event handler
@@ -573,9 +573,9 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_MultipleServi
 		Billed:    neo4jenum.BilledTypeOnce,
 	})
 	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.InvoiceEntity{
-		PeriodStartDate: invoiceStartPeriod,
-		PeriodEndDate:   invoiceEndPeriod,
-		BillingCycle:    neo4jenum.BillingCycleMonthlyBilling,
+		PeriodStartDate:      invoiceStartPeriod,
+		PeriodEndDate:        invoiceEndPeriod,
+		BillingCycleInMonths: 1,
 	})
 
 	// prepare event handler
@@ -643,9 +643,9 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_IncludeZeroQu
 		Billed:    neo4jenum.BilledTypeOnce,
 	})
 	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.InvoiceEntity{
-		PeriodStartDate: invoiceStartPeriod,
-		PeriodEndDate:   invoiceEndPeriod,
-		BillingCycle:    neo4jenum.BillingCycleMonthlyBilling,
+		PeriodStartDate:      invoiceStartPeriod,
+		PeriodEndDate:        invoiceEndPeriod,
+		BillingCycleInMonths: 1,
 	})
 
 	// prepare event handler
@@ -717,9 +717,9 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_IncludeZeroPr
 		Billed:    neo4jenum.BilledTypeOnce,
 	})
 	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.InvoiceEntity{
-		PeriodStartDate: invoiceStartPeriod,
-		PeriodEndDate:   invoiceEndPeriod,
-		BillingCycle:    neo4jenum.BillingCycleMonthlyBilling,
+		PeriodStartDate:      invoiceStartPeriod,
+		PeriodEndDate:        invoiceEndPeriod,
+		BillingCycleInMonths: 1,
 	})
 
 	// prepare event handler
@@ -792,10 +792,10 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_Postpaid_Mult
 		Billed:    neo4jenum.BilledTypeOnce,
 	})
 	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.InvoiceEntity{
-		PeriodStartDate: invoiceStartPeriod,
-		PeriodEndDate:   invoiceEndPeriod,
-		BillingCycle:    neo4jenum.BillingCycleMonthlyBilling,
-		Postpaid:        true,
+		PeriodStartDate:      invoiceStartPeriod,
+		PeriodEndDate:        invoiceEndPeriod,
+		BillingCycleInMonths: 1,
+		Postpaid:             true,
 	})
 
 	// prepare event handler
@@ -862,10 +862,10 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_Postpaid_Skip
 		Billed:    neo4jenum.BilledTypeNone,
 	})
 	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.InvoiceEntity{
-		PeriodStartDate: invoiceStartPeriod,
-		PeriodEndDate:   invoiceEndPeriod,
-		BillingCycle:    neo4jenum.BillingCycleMonthlyBilling,
-		Postpaid:        true,
+		PeriodStartDate:      invoiceStartPeriod,
+		PeriodEndDate:        invoiceEndPeriod,
+		BillingCycleInMonths: 1,
+		Postpaid:             true,
 	})
 
 	// prepare event handler
@@ -927,10 +927,10 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_Postpaid_SliE
 		Billed:    neo4jenum.BilledTypeMonthly,
 	})
 	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.InvoiceEntity{
-		PeriodStartDate: invoiceStartPeriod,
-		PeriodEndDate:   invoiceEndPeriod,
-		BillingCycle:    neo4jenum.BillingCycleMonthlyBilling,
-		Postpaid:        true,
+		PeriodStartDate:      invoiceStartPeriod,
+		PeriodEndDate:        invoiceEndPeriod,
+		BillingCycleInMonths: 1,
+		Postpaid:             true,
 	})
 
 	// prepare event handler
@@ -992,10 +992,10 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_Prepaid_SliEn
 		Billed:    neo4jenum.BilledTypeMonthly,
 	})
 	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.InvoiceEntity{
-		PeriodStartDate: invoiceStartPeriod,
-		PeriodEndDate:   invoiceEndPeriod,
-		BillingCycle:    neo4jenum.BillingCycleMonthlyBilling,
-		Postpaid:        false,
+		PeriodStartDate:      invoiceStartPeriod,
+		PeriodEndDate:        invoiceEndPeriod,
+		BillingCycleInMonths: 1,
+		Postpaid:             false,
 	})
 
 	// prepare event handler
@@ -1057,10 +1057,10 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_Prepaid_SliNo
 		Billed:    neo4jenum.BilledTypeMonthly,
 	})
 	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.InvoiceEntity{
-		PeriodStartDate: invoiceStartPeriod,
-		PeriodEndDate:   invoiceEndPeriod,
-		BillingCycle:    neo4jenum.BillingCycleMonthlyBilling,
-		Postpaid:        false,
+		PeriodStartDate:      invoiceStartPeriod,
+		PeriodEndDate:        invoiceEndPeriod,
+		BillingCycleInMonths: 1,
+		Postpaid:             false,
 	})
 
 	// prepare event handler
@@ -1123,10 +1123,10 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_TaxRate_Provi
 		Billed:    neo4jenum.BilledTypeMonthly,
 	})
 	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.InvoiceEntity{
-		PeriodStartDate: invoiceStartPeriod,
-		PeriodEndDate:   invoiceEndPeriod,
-		BillingCycle:    neo4jenum.BillingCycleMonthlyBilling,
-		Postpaid:        false,
+		PeriodStartDate:      invoiceStartPeriod,
+		PeriodEndDate:        invoiceEndPeriod,
+		BillingCycleInMonths: 1,
+		Postpaid:             false,
 	})
 
 	// prepare event handler
@@ -1184,10 +1184,10 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_Check2Decimal
 		Billed:    neo4jenum.BilledTypeMonthly,
 	})
 	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.InvoiceEntity{
-		PeriodStartDate: invoiceStartPeriod,
-		PeriodEndDate:   invoiceEndPeriod,
-		BillingCycle:    neo4jenum.BillingCycleMonthlyBilling,
-		Postpaid:        false,
+		PeriodStartDate:      invoiceStartPeriod,
+		PeriodEndDate:        invoiceEndPeriod,
+		BillingCycleInMonths: 1,
+		Postpaid:             false,
 	})
 
 	// prepare event handler
@@ -1244,10 +1244,10 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_OffCycleInvoice_NewSLI(t *
 		Billed:    neo4jenum.BilledTypeAnnually,
 	})
 	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.InvoiceEntity{
-		PeriodStartDate: invoiceStartPeriod,
-		PeriodEndDate:   invoiceEndPeriod,
-		BillingCycle:    neo4jenum.BillingCycleMonthlyBilling,
-		OffCycle:        true,
+		PeriodStartDate:      invoiceStartPeriod,
+		PeriodEndDate:        invoiceEndPeriod,
+		BillingCycleInMonths: 1,
+		OffCycle:             true,
 	})
 
 	// prepare event handler
@@ -1314,16 +1314,16 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_OffCycleInvoice_Upsell(t *
 		ParentID:  "parent-sli-id",
 	})
 	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.InvoiceEntity{
-		PeriodStartDate: invoiceStartPeriod,
-		PeriodEndDate:   invoiceEndPeriod,
-		BillingCycle:    neo4jenum.BillingCycleMonthlyBilling,
-		OffCycle:        true,
+		PeriodStartDate:      invoiceStartPeriod,
+		PeriodEndDate:        invoiceEndPeriod,
+		BillingCycleInMonths: 1,
+		OffCycle:             true,
 	})
 	cycleInvoiceId := neo4jtest.CreateInvoiceForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.InvoiceEntity{
-		PeriodStartDate: cycleInvoiceStartPeriod,
-		PeriodEndDate:   invoiceEndPeriod,
-		BillingCycle:    neo4jenum.BillingCycleMonthlyBilling,
-		OffCycle:        false,
+		PeriodStartDate:      cycleInvoiceStartPeriod,
+		PeriodEndDate:        invoiceEndPeriod,
+		BillingCycleInMonths: 1,
+		OffCycle:             false,
 	})
 	invoiceLineId := neo4jtest.CreateInvoiceLine(ctx, testDatabase.Driver, tenantName, cycleInvoiceId, neo4jentity.InvoiceLineEntity{
 		CreatedAt:  cycleInvoiceStartPeriod,
@@ -1397,16 +1397,16 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_OffCycleInvoice_Downgrade(
 		ParentID:  "parent-sli-id",
 	})
 	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.InvoiceEntity{
-		PeriodStartDate: invoiceStartPeriod,
-		PeriodEndDate:   invoiceEndPeriod,
-		BillingCycle:    neo4jenum.BillingCycleMonthlyBilling,
-		OffCycle:        true,
+		PeriodStartDate:      invoiceStartPeriod,
+		PeriodEndDate:        invoiceEndPeriod,
+		BillingCycleInMonths: 1,
+		OffCycle:             true,
 	})
 	cycleInvoiceId := neo4jtest.CreateInvoiceForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.InvoiceEntity{
-		PeriodStartDate: cycleInvoiceStartPeriod,
-		PeriodEndDate:   invoiceEndPeriod,
-		BillingCycle:    neo4jenum.BillingCycleMonthlyBilling,
-		OffCycle:        false,
+		PeriodStartDate:      cycleInvoiceStartPeriod,
+		PeriodEndDate:        invoiceEndPeriod,
+		BillingCycleInMonths: 1,
+		OffCycle:             false,
 	})
 	invoiceLineId := neo4jtest.CreateInvoiceLine(ctx, testDatabase.Driver, tenantName, cycleInvoiceId, neo4jentity.InvoiceLineEntity{
 		CreatedAt:  cycleInvoiceStartPeriod,
@@ -1465,10 +1465,10 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_OffCycleInvoice_OneTime_Fu
 		Billed:    neo4jenum.BilledTypeOnce,
 	})
 	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.InvoiceEntity{
-		PeriodStartDate: invoiceStartPeriod,
-		PeriodEndDate:   invoiceEndPeriod,
-		BillingCycle:    neo4jenum.BillingCycleMonthlyBilling,
-		OffCycle:        true,
+		PeriodStartDate:      invoiceStartPeriod,
+		PeriodEndDate:        invoiceEndPeriod,
+		BillingCycleInMonths: 1,
+		OffCycle:             true,
 	})
 
 	// prepare event handler
@@ -1533,16 +1533,16 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_OffCycleInvoice_OneTime_Al
 		ParentID:  "parent-2",
 	})
 	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.InvoiceEntity{
-		PeriodStartDate: invoiceStartPeriod,
-		PeriodEndDate:   invoiceEndPeriod,
-		BillingCycle:    neo4jenum.BillingCycleMonthlyBilling,
-		OffCycle:        true,
+		PeriodStartDate:      invoiceStartPeriod,
+		PeriodEndDate:        invoiceEndPeriod,
+		BillingCycleInMonths: 1,
+		OffCycle:             true,
 	})
 	cycleInvoiceId := neo4jtest.CreateInvoiceForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.InvoiceEntity{
-		PeriodStartDate: invoiceStartPeriod,
-		PeriodEndDate:   invoiceEndPeriod,
-		BillingCycle:    neo4jenum.BillingCycleMonthlyBilling,
-		OffCycle:        false,
+		PeriodStartDate:      invoiceStartPeriod,
+		PeriodEndDate:        invoiceEndPeriod,
+		BillingCycleInMonths: 1,
+		OffCycle:             false,
 	})
 	invoiceLineId := neo4jtest.CreateInvoiceLine(ctx, testDatabase.Driver, tenantName, cycleInvoiceId, neo4jentity.InvoiceLineEntity{
 		CreatedAt:  invoiceStartPeriod,
@@ -1644,16 +1644,16 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_OffCycleInvoice_MultipleUp
 		ParentID:  "parent-4",
 	})
 	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.InvoiceEntity{
-		PeriodStartDate: invoiceStartPeriod,
-		PeriodEndDate:   invoiceEndPeriod,
-		BillingCycle:    neo4jenum.BillingCycleMonthlyBilling,
-		OffCycle:        true,
+		PeriodStartDate:      invoiceStartPeriod,
+		PeriodEndDate:        invoiceEndPeriod,
+		BillingCycleInMonths: 1,
+		OffCycle:             true,
 	})
 	cycleInvoiceId := neo4jtest.CreateInvoiceForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.InvoiceEntity{
-		PeriodStartDate: cycleInvoiceStartPeriod,
-		PeriodEndDate:   invoiceEndPeriod,
-		BillingCycle:    neo4jenum.BillingCycleMonthlyBilling,
-		OffCycle:        false,
+		PeriodStartDate:      cycleInvoiceStartPeriod,
+		PeriodEndDate:        invoiceEndPeriod,
+		BillingCycleInMonths: 1,
+		OffCycle:             false,
 	})
 	invoiceLineId1 := neo4jtest.CreateInvoiceLine(ctx, testDatabase.Driver, tenantName, cycleInvoiceId, neo4jentity.InvoiceLineEntity{
 		CreatedAt:  cycleInvoiceStartPeriod,
