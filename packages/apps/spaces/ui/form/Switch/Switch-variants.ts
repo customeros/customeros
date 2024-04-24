@@ -25,8 +25,8 @@ export const switchVariants = cva(
         warm: [
           'hover:bg-gray-200',
           'focus:ring-4',
-          'focus:ring-warm-50',
-          'data-[state=checked]:bg-warm-500',
+          'focus:ring-grayWarm-50',
+          'data-[state=checked]:bg-grayWarm-500',
         ],
         error: [
           'hover:bg-gray-200',

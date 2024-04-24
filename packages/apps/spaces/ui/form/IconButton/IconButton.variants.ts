@@ -464,7 +464,7 @@ export const iconVariant = cva('', {
       size: 'xs',
       variant: 'outline',
       colorScheme: 'warm',
-      className: ['w-4 h-4', 'text-warm-600'],
+      className: ['w-4 h-4', 'text-grayWarm-600'],
     },
     {
       size: 'xs',
@@ -566,7 +566,7 @@ export const iconVariant = cva('', {
       size: 'xs',
       variant: 'ghost',
       colorScheme: 'warm',
-      className: ['w-4 h-4', 'text-warm-600'],
+      className: ['w-4 h-4', 'text-grayWarm-600'],
     },
     {
       size: 'xs',
@@ -770,7 +770,7 @@ export const iconVariant = cva('', {
       size: 'sm',
       variant: 'outline',
       colorScheme: 'warm',
-      className: ['w-5 h-5', 'text-warm-600'],
+      className: ['w-5 h-5', 'text-grayWarm-600'],
     },
     {
       size: 'sm',
@@ -872,7 +872,7 @@ export const iconVariant = cva('', {
       size: 'sm',
       variant: 'ghost',
       colorScheme: 'warm',
-      className: ['w-5 h-5', 'text-warm-600'],
+      className: ['w-5 h-5', 'text-grayWarm-600'],
     },
     {
       size: 'sm',
@@ -1076,7 +1076,7 @@ export const iconVariant = cva('', {
       size: 'md',
       variant: 'outline',
       colorScheme: 'warm',
-      className: ['w-5 h-5', 'text-warm-600'],
+      className: ['w-5 h-5', 'text-grayWarm-600'],
     },
     {
       size: 'md',
@@ -1178,7 +1178,7 @@ export const iconVariant = cva('', {
       size: 'md',
       variant: 'ghost',
       colorScheme: 'warm',
-      className: ['w-5 h-5', 'text-warm-600'],
+      className: ['w-5 h-5', 'text-grayWarm-600'],
     },
     {
       size: 'md',
@@ -1382,7 +1382,7 @@ export const iconVariant = cva('', {
       size: 'lg',
       variant: 'outline',
       colorScheme: 'warm',
-      className: ['w-6 h-6', 'text-warm-600'],
+      className: ['w-6 h-6', 'text-grayWarm-600'],
     },
     {
       size: 'lg',
@@ -1484,7 +1484,7 @@ export const iconVariant = cva('', {
       size: 'lg',
       variant: 'ghost',
       colorScheme: 'warm',
-      className: ['w-6 h-6', 'text-warm-600'],
+      className: ['w-6 h-6', 'text-grayWarm-600'],
     },
     {
       size: 'lg',

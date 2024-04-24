@@ -147,10 +147,8 @@ export type GetContractsQuery = {
         maxAmount: number;
         name: string;
         renewalLikelihood: Types.OpportunityRenewalLikelihood;
-        renewalAdjustedRate: any;
         renewalUpdatedByUserId: string;
         renewedAt?: any | null;
-        updatedAt: any;
         owner?: {
           __typename?: 'User';
           id: string;
@@ -168,6 +166,7 @@ export type GetContractsQuery = {
         comments: string;
         serviceEnded?: any | null;
         parentId: string;
+        closed: boolean;
         serviceStarted: any;
         metadata: {
           __typename?: 'Metadata';
@@ -178,6 +177,11 @@ export type GetContractsQuery = {
           appSource: string;
           sourceOfTruth: Types.DataSource;
         };
+        externalLinks: Array<{
+          __typename?: 'ExternalSystem';
+          type: Types.ExternalSystemType;
+          externalId?: string | null;
+        }>;
         tax: {
           __typename?: 'Tax';
           salesTax: boolean;
@@ -306,10 +310,8 @@ export const GetContractsDocument = `
         maxAmount
         name
         renewalLikelihood
-        renewalAdjustedRate
         renewalUpdatedByUserId
         renewedAt
-        updatedAt
         owner {
           id
           firstName
@@ -333,6 +335,11 @@ export const GetContractsDocument = `
         comments
         serviceEnded
         parentId
+        closed
+        externalLinks {
+          type
+          externalId
+        }
         serviceStarted
         tax {
           salesTax

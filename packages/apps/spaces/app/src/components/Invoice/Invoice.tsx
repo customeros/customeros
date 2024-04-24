@@ -8,6 +8,8 @@ import { DateTimeUtils } from '@spaces/utils/date';
 import {
   BankAccount,
   InvoiceStatus,
+  InvoiceSimulate,
+  InvoiceLineSimulate,
   Invoice as InvoiceType,
 } from '@graphql/types';
 
@@ -56,8 +58,8 @@ type InvoiceProps = {
   isInvoiceBankDetailsFocused?: boolean;
   onOpenAddressDetailsModal?: () => void;
   canPayWithBankTransfer?: boolean | null;
-  lines: Partial<InvoiceType['invoiceLineItems']>;
   availableBankAccount?: Partial<BankAccount> | null;
+  lines: Partial<InvoiceType['invoiceLineItems']> | InvoiceLineSimulate[];
 };
 
 export function Invoice({

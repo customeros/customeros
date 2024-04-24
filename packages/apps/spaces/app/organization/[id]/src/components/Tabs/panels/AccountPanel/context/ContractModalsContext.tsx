@@ -1,3 +1,4 @@
+import { useForm } from 'react-inverted-form';
 import {
   useState,
   Dispatch,
@@ -7,7 +8,16 @@ import {
   PropsWithChildren,
 } from 'react';
 
+import { useDeepCompareEffect } from 'rooks';
+
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { useGetContractQuery } from '@organization/src/graphql/getContract.generated';
+import { ContractDetailsDto } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ContractBillingDetailsModal/ContractDetails.dto';
+import {
+  BillingDetailsDto,
+  BillingAddressDetailsFormDto,
+} from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/BillingAddressDetails/BillingAddressDetailsForm.dto';
 
 export enum EditModalMode {
   ContractDetails,
@@ -19,6 +29,8 @@ export enum EditModalMode {
 }
 
 interface ContractPanelState {
+  addressState: any;
+  detailsState: any;
   isEditModalOpen: boolean;
   onEditModalOpen: () => void;
   onEditModalClose: () => void;
@@ -32,6 +44,8 @@ const ContractPanelStateContext = createContext<ContractPanelState>({
   onEditModalClose: () => null,
   onChangeModalMode: () => null,
   editModalMode: EditModalMode.ContractDetails,
+  addressState: {},
+  detailsState: {},
 });
 
 export const useContractModalStateContext = () => {
@@ -45,6 +59,7 @@ export const ContractModalsContextProvider = ({
   const [editModalMode, setEditModalMode] = useState<EditModalMode>(
     EditModalMode.ContractDetails,
   );
+  const client = getGraphQLClient();
 
   const {
     onOpen: onEditModalOpen,
@@ -53,6 +68,44 @@ export const ContractModalsContextProvider = ({
   } = useDisclosure({
     id: `edit-contract-modal-${id}`,
   });
+  const { data } = useGetContractQuery(
+    client,
+    {
+      id,
+    },
+    {
+      enabled: isEditModalOpen && !!id,
+      refetchOnMount: true,
+    },
+  );
+  const defaultValues = new ContractDetailsDto(data?.contract);
+  const formId = `billing-details-form-${id}`;
+
+  const { state, setDefaultValues } = useForm({
+    formId,
+    defaultValues,
+    stateReducer: (_, action, next) => {
+      return next;
+    },
+  });
+
+  const addressDetailsDefailtValues = new BillingDetailsDto(data?.contract);
+
+  const { state: addressState, setDefaultValues: setDefaultAddressValues } =
+    useForm<BillingAddressDetailsFormDto>({
+      formId: 'billing-details-address-form',
+      defaultValues: addressDetailsDefailtValues,
+      stateReducer: (_, action, next) => {
+        return next;
+      },
+    });
+
+  useDeepCompareEffect(() => {
+    setDefaultValues(defaultValues);
+  }, [defaultValues]);
+  useDeepCompareEffect(() => {
+    setDefaultAddressValues(addressDetailsDefailtValues);
+  }, [addressDetailsDefailtValues]);
 
   return (
     <ContractPanelStateContext.Provider
@@ -62,6 +115,8 @@ export const ContractModalsContextProvider = ({
         onEditModalClose,
         editModalMode,
         onChangeModalMode: setEditModalMode,
+        addressState,
+        detailsState: state,
       }}
     >
       {children}

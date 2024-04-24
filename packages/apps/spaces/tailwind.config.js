@@ -106,8 +106,25 @@ module.exports = {
             transform: 'translateY(0)',
           },
         },
+        shuffle: {
+          '0%': {
+            transform: 'rotate(0) translateX(0) scale(1)',
+          },
+          '50%': {
+            transform: 'rotate(5deg) translateX(105%) scale(0.96)',
+          },
+          '100%': {
+            transform: 'rotate(0) translateX(0)',
+          },
+        },
+        zIndexAnimation: {
+          '0%': { zIndex: 10 },
+          '100%': { zIndex: 0 },
+        },
       },
-
+      transitionProperty: {
+        zIndex: 'z-index',
+      },
       animation: {
         slideDownAndFade:
           'slideDownAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
@@ -125,7 +142,10 @@ module.exports = {
         pulseOpacity: 'pulseOpacity 0.7s infinite alternate ease-in-out',
         slideUp: 'slideUp 400ms cubic-bezier(0.16, 1, 0.3, 1)',
         slideDown: 'slideDown 400ms cubic-bezier(0.16, 1, 0.3, 1)',
+        shuffle: 'shuffle 1s ease-in-out 2s 1 normal',
+        zIndex: 'zIndexAnimation 0s ease-in-out 2.5s',
       },
+
       flex: {
         2: '2 2 0%',
         3: '3 3 0%',

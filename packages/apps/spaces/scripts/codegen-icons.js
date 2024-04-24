@@ -30,6 +30,7 @@ function getSvgViewBox(svgString) {
 }
 
 files.forEach((name) => {
+  ś;
   try {
     const file = readFileSync(
       process.cwd() + '/public/icons/new/' + name,

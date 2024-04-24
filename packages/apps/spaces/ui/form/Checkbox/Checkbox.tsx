@@ -13,7 +13,7 @@ const iconColor = cva(
       iconColorScheme: {
         primary: ['fill-primary-600'],
         gray: ['fill-gray-600'],
-        warm: ['fill-warm-600'],
+        warm: ['fill-grayWarm-600'],
         error: ['fill-error-600'],
         rose: ['fill-rose-600'],
         warning: ['fill-warning-600'],

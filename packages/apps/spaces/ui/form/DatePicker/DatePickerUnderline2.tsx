@@ -1,8 +1,8 @@
-import { useField } from 'react-inverted-form';
+import Calendar from 'react-calendar';
 import React, { useRef, useState } from 'react';
 
+import { cn } from '@ui/utils/cn';
 import { DateTimeUtils } from '@spaces/utils/date';
-import { DatePicker } from '@ui/form/DatePicker/DatePicker';
 import {
   Popover,
   PopoverContent,
@@ -10,18 +10,18 @@ import {
 } from '@ui/overlay/Popover/Popover';
 
 interface DatePickerProps {
-  name: string;
-  formId: string;
+  value?: Date;
+  classNames?: string;
+  onChange: (date: Date | null) => void;
 }
-export const DatePickerUnderline: React.FC<DatePickerProps> = ({
-  name,
-  formId,
+export const DatePickerUnderline2: React.FC<DatePickerProps> = ({
+  onChange,
+  value,
+  classNames,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isOpen, setIsOpen] = useState(false);
 
-  const { getInputProps } = useField(name, formId);
-  const { onChange, value } = getInputProps();
   const handleDateInputChange = (data?: Date) => {
     if (!data) return onChange(null);
     const date = new Date(data);
@@ -44,9 +44,17 @@ export const DatePickerUnderline: React.FC<DatePickerProps> = ({
     <div className='flex flex-start items-center' ref={containerRef}>
       <Popover open={isOpen} onOpenChange={(value) => setIsOpen(value)}>
         <PopoverTrigger className='data-[state=open]:text-gray-700 data-[state=closed]:text-gray-500'>
-          <span className='underline cursor-pointer whitespace-pre pb-[1px] text-inherit border-t-[1px] border-transparent hover:text-gray-700'>
+          <span
+            className={cn(
+              'underline cursor-pointer whitespace-pre pb-[1px] text-inherit border-t-[1px] border-transparent hover:text-gray-700',
+              classNames,
+            )}
+          >
             {value
-              ? `${DateTimeUtils.format(value, DateTimeUtils.date)}`
+              ? `${DateTimeUtils.format(
+                  `${value?.toString()}`,
+                  DateTimeUtils.dateWithShortYear,
+                )}`
               : 'Select date'}
           </span>
         </PopoverTrigger>
@@ -58,14 +66,12 @@ export const DatePickerUnderline: React.FC<DatePickerProps> = ({
           onOpenAutoFocus={(el) => el.preventDefault()}
           onClick={(e) => e.stopPropagation()}
         >
-          <DatePicker
-            name={name}
-            formId={formId}
-            defaultValue={new Date(value)}
-            onChange={(date) => {
-              handleDateInputChange(date as Date);
-            }}
-          />
+          <div>
+            <Calendar
+              onChange={(value) => handleDateInputChange(value as Date)}
+              defaultValue={value}
+            />
+          </div>
         </PopoverContent>
       </Popover>
     </div>

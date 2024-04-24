@@ -26,11 +26,12 @@ import {
   paymentDueOptions,
   contractBillingCycleOptions,
 } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
-import { InlineSelect } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ContractBillingDetailsModal/InlineSelect';
-import { CommittedPeriodInput } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ContractBillingDetailsModal/CommittedPeriodInput';
-import { PaymentDetailsPopover } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ContractBillingDetailsModal/PaymentDetailsPopover';
 
+import { Services } from './Services';
+import { InlineSelect } from './InlineSelect';
 import { ContractUploader } from './ContractUploader';
+import { CommittedPeriodInput } from './CommittedPeriodInput';
+import { PaymentDetailsPopover } from './PaymentDetailsPopover';
 
 interface SubscriptionServiceModalProps {
   formId: string;
@@ -159,7 +160,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
           </div>
         </li>
       </ul>
-
+      <Services formId={''} contractId={contractId} />
       {billingEnabled && (
         <>
           <div className='flex relative items-center h-8 mb-1'>

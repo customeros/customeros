@@ -1764,6 +1764,7 @@ export type InvoiceSimulate = {
   postpaid: Scalars['Boolean']['output'];
   provider: InvoiceProvider;
   subtotal: Scalars['Float']['output'];
+  taxDue: Scalars['Float']['output'];
   total: Scalars['Float']['output'];
 };
 
@@ -4417,9 +4418,11 @@ export type ServiceLineItemBulkUpdateInput = {
 
 export type ServiceLineItemBulkUpdateItem = {
   billed?: InputMaybe<BilledType>;
+  closeVersion?: InputMaybe<Scalars['Boolean']['input']>;
   comments?: InputMaybe<Scalars['String']['input']>;
   isRetroactiveCorrection?: InputMaybe<Scalars['Boolean']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
+  newVersion?: InputMaybe<Scalars['Boolean']['input']>;
   price?: InputMaybe<Scalars['Float']['input']>;
   quantity?: InputMaybe<Scalars['Int64']['input']>;
   serviceLineItemId?: InputMaybe<Scalars['ID']['input']>;
