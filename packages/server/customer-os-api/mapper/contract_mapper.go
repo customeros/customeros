@@ -101,15 +101,18 @@ func MapEntityToContract(entity *neo4jentity.ContractEntity) *model.Contract {
 	if entity.BillingCycleInMonths == int64(0) {
 		contract.BillingCycle = utils.ToPtr(model.ContractBillingCycleNone)
 		contract.BillingDetails.BillingCycle = utils.ToPtr(model.ContractBillingCycleNone)
-	} else if entity.BillingCycleInMonths < int64(3) {
-		contract.BillingCycle = utils.ToPtr(model.ContractBillingCycleMonthlyBilling)
-		contract.BillingDetails.BillingCycle = utils.ToPtr(model.ContractBillingCycleMonthlyBilling)
-	} else if entity.BillingCycleInMonths < int64(12) {
+	} else if entity.BillingCycleInMonths == int64(3) {
 		contract.BillingCycle = utils.ToPtr(model.ContractBillingCycleQuarterlyBilling)
 		contract.BillingDetails.BillingCycle = utils.ToPtr(model.ContractBillingCycleQuarterlyBilling)
-	} else {
+	} else if entity.BillingCycleInMonths == int64(12) {
 		contract.BillingCycle = utils.ToPtr(model.ContractBillingCycleAnnualBilling)
 		contract.BillingDetails.BillingCycle = utils.ToPtr(model.ContractBillingCycleAnnualBilling)
+	} else if entity.BillingCycleInMonths == int64(1) {
+		contract.BillingCycle = utils.ToPtr(model.ContractBillingCycleAnnualBilling)
+		contract.BillingDetails.BillingCycle = utils.ToPtr(model.ContractBillingCycleMonthlyBilling)
+	} else {
+		contract.BillingCycle = utils.ToPtr(model.ContractBillingCycleCustomBilling)
+		contract.BillingDetails.BillingCycle = utils.ToPtr(model.ContractBillingCycleCustomBilling)
 	}
 
 	return &contract
