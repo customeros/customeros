@@ -53,6 +53,7 @@ export const OrganizationSidenav = () => {
           size='xs'
           aria-label='Go back'
           variant='ghost'
+          className='p-0.5'
           onClick={() => {
             router.push(`/${lastActivePosition?.root || 'organization'}`);
           }}

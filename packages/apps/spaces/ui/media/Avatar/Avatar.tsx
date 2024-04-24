@@ -197,6 +197,7 @@ export const Avatar: React.FC<AvatarProps> = ({
       )}
       {icon && !name && !src && (
         <RadixAvatar.Fallback
+          {...props}
           className={twMerge(
             'leading-1 flex h-full w-full items-center justify-center font-medium',
             textSize({ textSizes }),
@@ -207,6 +208,7 @@ export const Avatar: React.FC<AvatarProps> = ({
       )}
       {(!icon || name) && !imageLoaded && (
         <RadixAvatar.Fallback
+          {...props}
           className={twMerge(
             'leading-1 flex h-full w-full items-center justify-center font-bold',
             textSize({ textSizes }),

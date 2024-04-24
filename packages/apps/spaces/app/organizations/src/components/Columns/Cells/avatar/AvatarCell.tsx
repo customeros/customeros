@@ -31,7 +31,9 @@ export const AvatarCell = ({ name, id, src }: AvatarCellProps) => {
           size='md'
           src={src || undefined}
           name={fullName}
-          onClick={() => router.push(href)}
+          onClick={() => {
+            router.push(href);
+          }}
         />
       </Tooltip>
     </div>
