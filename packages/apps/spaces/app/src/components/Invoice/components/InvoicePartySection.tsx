@@ -44,13 +44,7 @@ export const InvoicePartySection: FC<InvoiceHeaderProps> = ({
     : 'data-[focus=true]:opacity-0';
 
   const showOnlyButton =
-    !zip &&
-    !email &&
-    !locality &&
-    !addressLine1 &&
-    !addressLine2 &&
-    onClick &&
-    country;
+    !zip && !email && !locality && !addressLine1 && !addressLine2 && onClick;
 
   return (
     <Tooltip label={onClick ? 'Edit billing details' : ''}>
