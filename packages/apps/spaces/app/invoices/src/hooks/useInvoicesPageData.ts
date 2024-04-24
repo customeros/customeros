@@ -4,6 +4,7 @@ import { useRef, useMemo, useEffect } from 'react';
 import { produce } from 'immer';
 import { useLocalStorage } from 'usehooks-ts';
 
+import { useStore } from '@shared/hooks/useStore';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useInvoicesMeta } from '@shared/state/InvoicesMeta.atom';
 import { SortingState, TableInstance } from '@ui/presentation/Table';
@@ -32,6 +33,7 @@ export const useInvoicesPageData = ({
   const client = getGraphQLClient();
   const searchParams = useSearchParams();
   const { columnFilters } = useTableState();
+  const { tableViewDefsStore } = useStore();
   const { data: globalCache } = useGlobalCacheQuery(client);
   const [invoicesMeta, setInvoicesMeta] = useInvoicesMeta();
   const tableRef = useRef<TableInstance<Invoice> | null>(null);
@@ -47,8 +49,13 @@ export const useInvoicesPageData = ({
     root: `invoices?preset=${preset}`,
   });
 
+  const filtersStr =
+    tableViewDefsStore.getById(preset ?? '1')?.value.filters ?? '';
+
   const where = useMemo(() => {
-    return produce<Filter>({ AND: [] }, (draft) => {
+    const defaultFilters = JSON.parse(filtersStr);
+
+    return produce<Filter>(defaultFilters, (draft) => {
       if (!draft.AND) {
         draft.AND = [];
       }
@@ -60,29 +67,6 @@ export const useInvoicesPageData = ({
             value: searchTerm,
           },
         });
-      }
-
-      if (preset) {
-        switch (preset) {
-          case '4':
-            draft.AND.push({
-              filter: {
-                property: 'INVOICE_PREVIEW',
-                value: true,
-              },
-            });
-            break;
-          case '5':
-            draft.AND.push({
-              filter: {
-                property: 'INVOICE_DRY_RUN',
-                value: false,
-              },
-            });
-            break;
-          default:
-            break;
-        }
       }
 
       if (billingCycle?.isActive) {
@@ -132,6 +116,7 @@ export const useInvoicesPageData = ({
       }
     });
   }, [
+    filtersStr,
     searchParams?.toString(),
     globalCache?.global_Cache?.user.id,
     billingCycle?.isActive,

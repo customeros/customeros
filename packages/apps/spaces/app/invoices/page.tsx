@@ -1,4 +1,5 @@
 import { produce } from 'immer';
+import { TableViewDefsStore } from '@store/TableViewDefs/TableViewDefs.store';
 
 import { Filter, SortBy, SortingDirection } from '@graphql/types';
 import { getServerGraphQLClient } from '@shared/util/getServerGraphQLClient';
@@ -22,12 +23,24 @@ export default async function InvoicesPage({
   let initialData: GetInvoicesQuery | undefined = undefined;
 
   try {
-    const filters = createFilters({ preset, searchTerm });
+    const tableViewDefsRes = await TableViewDefsStore.serverSideBootstrap(
+      client,
+    );
+    const tableViewDefs = tableViewDefsRes?.tableViewDefs ?? [];
+
+    const filters = JSON.parse(
+      tableViewDefs.find((t) => t.id === preset)?.filters ?? ('{}' as string),
+    );
+
+    const whereAndSort = createFilters({ filters, searchTerm });
 
     initialData = await client.request<
       GetInvoicesQuery,
       GetInvoicesQueryVariables
-    >(GetInvoicesDocument, { pagination: { limit: 40, page: 0 }, ...filters });
+    >(GetInvoicesDocument, {
+      pagination: { limit: 40, page: 0 },
+      ...whereAndSort,
+    });
   } catch (e) {
     console.error('Failed to fetch initial Invoices data', e);
   }
@@ -41,10 +54,10 @@ export default async function InvoicesPage({
 }
 
 function createFilters({
-  preset,
+  filters,
   searchTerm,
 }: {
-  preset?: string;
+  filters: Filter;
   searchTerm?: string;
 }) {
   const sort: SortBy = {
@@ -54,9 +67,7 @@ function createFilters({
   };
 
   const where = (() => {
-    if (!preset) return undefined;
-
-    return produce<Filter>({ AND: [] }, (draft) => {
+    return produce<Filter>(filters, (draft) => {
       if (!draft.AND) {
         draft.AND = [];
       }
@@ -68,29 +79,6 @@ function createFilters({
             value: searchTerm,
           },
         });
-      }
-
-      if (preset) {
-        switch (preset) {
-          case '4':
-            draft.AND.push({
-              filter: {
-                property: 'INVOICE_PREVIEW',
-                value: true,
-              },
-            });
-            break;
-          case '5':
-            draft.AND.push({
-              filter: {
-                property: 'INVOICE_DRY_RUN',
-                value: false,
-              },
-            });
-            break;
-          default:
-            break;
-        }
       }
     });
   })();
