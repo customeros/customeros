@@ -91,7 +91,9 @@ export class ContractDetailsDto implements ContractDetailsForm {
       canPayWithDirectDebit: data?.canPayWithDirectDebit,
       canPayWithBankTransfer: data?.canPayWithBankTransfer,
       autoRenew: data?.autoRenew,
-      serviceStarted: data?.serviceStarted,
+      serviceStarted: data?.serviceStarted
+        ? DateTimeUtils.getUTCDateAtMidnight(data.serviceStarted)
+        : undefined,
       committedPeriodInMonths: data?.committedPeriodInMonths,
       billingDetails: {
         payOnline: data?.payOnline,
@@ -99,7 +101,9 @@ export class ContractDetailsDto implements ContractDetailsForm {
         canPayWithBankTransfer: data?.canPayWithBankTransfer,
         canPayWithDirectDebit: data?.canPayWithDirectDebit,
         dueDays: data?.dueDays?.value,
-        invoicingStarted: data?.invoicingStarted,
+        invoicingStarted: data?.invoicingStarted
+          ? DateTimeUtils.getUTCDateAtMidnight(data.invoicingStarted)
+          : undefined,
         billingCycle: data?.billingCycle?.value,
         check: data?.check,
       },

@@ -178,4 +178,12 @@ export class DateTimeUtils {
 
     return formatRFC3339(dateAtMidnight);
   }
+
+  public static getUTCDateAtMidnight(date: Date): string {
+    const utcDate = new Date(
+      Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
+    );
+
+    return utcDate.toISOString().split('T')[0] + 'T00:00:00.000Z';
+  }
 }
