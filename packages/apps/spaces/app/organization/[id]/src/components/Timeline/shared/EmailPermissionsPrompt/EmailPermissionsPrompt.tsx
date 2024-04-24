@@ -42,7 +42,7 @@ export const MissingPermissionsPrompt: FC<{
         modal
           ? 'bg-grayBlue-50 border-t w-full border-dashed border-gray-200 max-h-[50vh]'
           : 'bg-white rounded-lg max-h-[auto] ',
-        'flex items-center mt-4 p-6 overflow-visible rounded-b-2xl',
+        'flex items-center mt-4 p-6 overflow-visible rounded-b-2xl justify-center',
       )}
     >
       <div

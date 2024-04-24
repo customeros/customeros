@@ -20,7 +20,7 @@ const TooltipButton: FC<{
   <Tooltip label={label} asChild={false}>
     <IconButton
       variant='ghost'
-      className='rounded-none text-sm mt-[7px]'
+      className='rounded-none text-sm'
       aria-label={label}
       color='gray.400'
       size='xs'
