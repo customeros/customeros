@@ -1,12 +1,13 @@
 import React, { useMemo } from 'react';
 
 import { cn } from '@ui/utils/cn';
-import { FeaturedIcon } from '@ui/media/Icon';
 import { File02 } from '@ui/media/icons/File02';
 import { Action, ActionType } from '@graphql/types';
 import { FileCheck02 } from '@ui/media/icons/FileCheck02';
+import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
 import { SlashCircle01 } from '@ui/media/icons/SlashCircle01';
 import { FileAttachment02 } from '@ui/media/icons/FileAttachment02';
+import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 import { getMetadata } from '@organization/src/components/Timeline/PastZone/events/action/utils';
 import { useTimelineEventPreviewMethodsContext } from '@organization/src/components/Timeline/shared/TimelineEventPreview/context/TimelineEventPreviewContext';
 
@@ -19,6 +20,14 @@ interface InvoiceStatusChangeActionProps {
     | ActionType.InvoiceVoided;
 }
 
+interface InvoiceStubMetadata {
+  id: string;
+  status: string;
+  number: string;
+  amount: number;
+  currency: string;
+}
+
 const iconMap: Record<string, JSX.Element> = {
   [ActionType.InvoiceVoided]: <SlashCircle01 className='text-gray-500' />,
   [ActionType.InvoicePaid]: <FileCheck02 className='text-success-600' />,
@@ -26,7 +35,24 @@ const iconMap: Record<string, JSX.Element> = {
   [ActionType.InvoiceIssued]: <File02 className='text-primary-600' />,
 };
 
-const colorSchemeMap: Record<string, string> = {
+const colorSchemeMap: Record<
+  string,
+  | 'primary'
+  | 'gray'
+  | 'grayBlue'
+  | 'warm'
+  | 'error'
+  | 'rose'
+  | 'warning'
+  | 'blueDark'
+  | 'teal'
+  | 'success'
+  | 'blue'
+  | 'moss'
+  | 'greenLight'
+  | 'violet'
+  | 'fuchsia'
+> = {
   [ActionType.InvoiceVoided]: 'gray',
   [ActionType.InvoicePaid]: 'success',
   [ActionType.InvoiceSent]: 'primary',
@@ -41,11 +67,11 @@ const InvoiceStatusChangeAction: React.FC<InvoiceStatusChangeActionProps> = ({
   const { handleOpenInvoice } = useTimelineEventPreviewMethodsContext();
 
   const metadata = useMemo(() => {
-    return getMetadata(data?.metadata);
+    return getMetadata(data?.metadata) as unknown as InvoiceStubMetadata;
   }, [data?.metadata]);
   if (!data.content) return <div>No data available</div>;
 
-  const formattedContent = formatInvoiceText(data.content);
+  const formattedContent = formatInvoiceText(data.content, metadata);
 
   return (
     <div
@@ -54,42 +80,45 @@ const InvoiceStatusChangeAction: React.FC<InvoiceStatusChangeActionProps> = ({
       onClick={() =>
         !isTemporary && metadata?.id && handleOpenInvoice(metadata.id)
       }
-      className={cn('flex items-center pointer focus:outline-none ', {
+      className={cn('flex items-center pointer focus:outline-none py-2', {
         'not-allowed': isTemporary || !metadata?.id,
         'opacity-50': isTemporary,
       })}
     >
-      <FeaturedIcon size='md' minW='10' colorScheme={colorSchemeMap[mode]}>
+      <FeaturedIcon size='md' colorScheme={colorSchemeMap[mode]}>
         {iconMap[mode]}
       </FeaturedIcon>
-      <p className='my-1 max-w-[500px] ml-2 text-sm text-gray-700 '>
+      <p className='my-1 max-w-[500px] ml-5 text-sm text-gray-700 '>
         {formattedContent}
       </p>
     </div>
   );
 };
 
-const formatInvoiceText = (text: string) => {
+const formatInvoiceText = (text: string, metadata: InvoiceStubMetadata) => {
   const invoiceNumberPattern = /N° \w+-\d+/;
-  const amountPattern = /\$\d{1,3}(,\d{3})*(\.\d{2})?/;
-
-  const invoiceNumberMatch = text.match(invoiceNumberPattern);
-  const amountMatch = text.match(amountPattern);
-
-  const invoiceNumber = invoiceNumberMatch ? invoiceNumberMatch[0] : '';
-  const amount = amountMatch ? amountMatch[0] : '';
+  const amountPattern = /amount.*?([$€£¥]?[\d,]*\.?\d+)/i;
 
   const beforeInvoiceNumber = text.split(invoiceNumberPattern)[0];
   const betweenInvoiceNumberAndAmount = text
     .split(invoiceNumberPattern)[1]
     .split(amountPattern)[0];
 
+  if (!metadata) {
+    return text;
+  }
+
+  const afterAmount = text.split(`${metadata.amount}`)[1];
+
   return (
     <div>
       {beforeInvoiceNumber}
-      <span className='font-medium'>{invoiceNumber}</span>
+      <span className='font-medium'>{metadata.number}</span>
       {betweenInvoiceNumberAndAmount}
-      <span className='font-medium'>{amount}</span>
+      <span className='font-medium'>
+        {formatCurrency(metadata.amount, 2, metadata.currency)}
+      </span>
+      {afterAmount}
     </div>
   );
 };
