@@ -205,12 +205,19 @@ func (s *invoiceService) GetInvoices(ctx context.Context, organizationId string,
 				contractFilter.Filters = append(contractFilter.Filters, utils.CreateStringCypherFilter("name", *f.Filter.Value.Str, utils.CONTAINS))
 			}
 			if f.Filter.Property == SearchSortContractBillingCycle {
-				for i, v := range *f.Filter.Value.ArrayStr {
-					if v == "NONE" {
-						(*f.Filter.Value.ArrayStr)[i] = ""
+				arrayInt := []int64{}
+				for _, v := range *f.Filter.Value.ArrayStr {
+					if v == "MONTHLY" {
+						arrayInt = append(arrayInt, 1)
+					} else if v == "QUARTERLY" {
+						arrayInt = append(arrayInt, 3)
+					} else if v == "ANNUAL_BILLING" {
+						arrayInt = append(arrayInt, 12)
+					} else if v == "NONE" {
+						arrayInt = append(arrayInt, 0)
 					}
 				}
-				contractFilter.Filters = append(contractFilter.Filters, utils.CreateCypherFilterIn("billingCycle", *f.Filter.Value.ArrayStr))
+				contractFilter.Filters = append(contractFilter.Filters, utils.CreateCypherFilterIn("billingCycleInMonths", arrayInt))
 			}
 			if f.Filter.Property == SearchSortContractEnded {
 				if f.Filter.Value.Bool != nil && *f.Filter.Value.Bool {
