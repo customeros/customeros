@@ -29,8 +29,8 @@ type InvoiceService interface {
 	PayInvoice(ctx context.Context, invoiceId, appSource string) error
 	VoidInvoice(ctx context.Context, invoiceId, appSource string) error
 
-	FillCycleInvoice(ctx context.Context, contractId string, invoiceEntity *neo4jentity.InvoiceEntity, sliEntities neo4jentity.ServiceLineItemEntities) (*neo4jentity.InvoiceEntity, []*invoicepb.InvoiceLine, error)
-	FillOffCyclePrepaidInvoice(ctx context.Context, contractId string, invoiceEntity *neo4jentity.InvoiceEntity, sliEntities neo4jentity.ServiceLineItemEntities) (*neo4jentity.InvoiceEntity, []*invoicepb.InvoiceLine, error)
+	FillCycleInvoice(ctx context.Context, invoiceEntity *neo4jentity.InvoiceEntity, sliEntities neo4jentity.ServiceLineItemEntities) (*neo4jentity.InvoiceEntity, []*invoicepb.InvoiceLine, error)
+	FillOffCyclePrepaidInvoice(ctx context.Context, invoiceEntity *neo4jentity.InvoiceEntity, sliEntities neo4jentity.ServiceLineItemEntities) (*neo4jentity.InvoiceEntity, []*invoicepb.InvoiceLine, error)
 }
 type invoiceService struct {
 	log      logger.Logger
@@ -139,80 +139,191 @@ type SimulateInvoiceLine struct {
 	TotalAmount       float64
 }
 
-func (s *invoiceService) SimulateInvoice(ctx context.Context, invoiceData *SimulateInvoiceRequestData) ([]*SimulateInvoiceResponseData, error) {
+func (s *invoiceService) SimulateInvoice(ctx context.Context, simulateInvoicesWithChanges *SimulateInvoiceRequestData) ([]*SimulateInvoiceResponseData, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.SimulateInvoice")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("invoiceData", invoiceData))
+	span.LogFields(log.Object("simulateInvoicesWithChanges", simulateInvoicesWithChanges))
 
-	if invoiceData.ServiceLines == nil {
+	if simulateInvoicesWithChanges.ServiceLines == nil {
 		err := fmt.Errorf("no invoice lines to simulate")
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
-	//simulateInvoices := []*SimulateInvoices{}
-
-	//fetch existing contract with SLI to compare with
-	//contractEntity, err := s.services.ContractService.GetById(ctx, invoiceData.ContractId)
-	//if err != nil {
-	//	tracing.TraceErr(span, err)
-	//	return nil, err
-	//}
-
-	//fetch existing SLI for the contract
-	//sliEntities, err := s.services.ServiceLineItemService.GetServiceLineItemsForContract(ctx, invoiceData.ContractId)
-
-	//create a dummy contract with dummy SLI to keep them updated with the corresponding SLI after each invoice
-
-	//go through each SLI item from the request and determine if we need to prorate or not
-	//if prorate is needed, then trigger proration invoice and on cycle invoice
-
-	for _, sliData := range invoiceData.ServiceLines {
-
-		prorationNeeded := false
-
-		if (sliData.ServiceLineItemID == nil || *sliData.ServiceLineItemID == "") && (sliData.ParentID == nil || *sliData.ParentID == "") {
-			//new sli item - proration needed
-			prorationNeeded = true
-		} else if (sliData.ParentID != nil && *sliData.ParentID != "") && (sliData.ServiceLineItemID != nil && *sliData.ServiceLineItemID != "") {
-			//existing sli item - to check if there is any change in the sli item to decide if proration is needed
-			existingSli, err := s.services.ServiceLineItemService.GetById(ctx, *sliData.ServiceLineItemID)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return nil, err
-			}
-
-			if existingSli.Billed != sliData.BillingCycle || existingSli.Price != sliData.Price || existingSli.Quantity != sliData.Quantity || existingSli.StartedAt != sliData.ServiceStarted || existingSli.VatRate != utils.IfNotNilFloat64(sliData.TaxRate) {
-				//existing sli item - new version - proration needed
-				prorationNeeded = true
-			}
-
-		} else if (sliData.ParentID == nil || *sliData.ParentID == "") && (sliData.ServiceLineItemID == nil || *sliData.ServiceLineItemID == "") {
-			//existing sli item - new version - proration needed
-			prorationNeeded = true
-		}
-
-		if prorationNeeded {
-			//trigger proration invoice
-		}
-
-	}
-
 	response := []*SimulateInvoiceResponseData{}
 
-	onCycleInvoice, err := s.SimulateOnCycleInvoice(ctx, invoiceData, span)
+	//fetch existing contract and set the next invoice date
+	contract, err := s.services.ContractService.GetById(ctx, simulateInvoicesWithChanges.ContractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
+	if contract.InvoicingStartDate == nil && contract.NextInvoiceDate == nil {
+		err := fmt.Errorf("contract has no invoicing start date or next invoice date")
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	if contract.NextInvoiceDate == nil {
+		contract.NextInvoiceDate = contract.InvoicingStartDate
+	}
+	contractDefaultNextInvoiceDate := *contract.NextInvoiceDate
 
-	response = append(response, onCycleInvoice)
+	existingSlis, err := s.services.ServiceLineItemService.GetServiceLineItemsForContract(ctx, contract.Id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	sliEntities := *existingSlis
+
+	//determine the interval to compute invoices
+	//[ current contract invoice date, max service start date ]
+	invoicePeriodStartGeneration := contract.NextInvoiceDate
+	invoicePeriodEndGeneration := time.Time{}
+
+	for _, sliData := range simulateInvoicesWithChanges.ServiceLines {
+		if sliData.ServiceStarted.After(invoicePeriodEndGeneration) {
+			invoicePeriodEndGeneration = sliData.ServiceStarted
+		}
+	}
+	invoicePeriodEndGeneration = invoicePeriodEndGeneration.AddDate(0, int(contract.BillingCycleInMonths), 0)
+
+	for true {
+		if invoicePeriodStartGeneration.After(invoicePeriodEndGeneration) {
+			break
+		}
+
+		//identify first SLI change in the simualtion and replace it in the sliEntities
+		for _, sliData := range simulateInvoicesWithChanges.ServiceLines {
+
+			prorationNeeded := false
+
+			if sliData.ServiceStarted.After(*invoicePeriodStartGeneration) {
+
+				if sliData.ServiceLineItemID == nil || *sliData.ServiceLineItemID == "" {
+					//new sli item - adding it to the sli entities and trigger proration
+					sliEntities = append(sliEntities, neo4jentity.ServiceLineItemEntity{
+						ID:        sliData.Key,
+						Name:      sliData.Description,
+						Comments:  sliData.Comments,
+						Billed:    sliData.BillingCycle,
+						Price:     sliData.Price,
+						Quantity:  sliData.Quantity,
+						StartedAt: sliData.ServiceStarted,
+						EndedAt:   nil,
+					})
+					prorationNeeded = true
+				} else {
+					//existing sli item - to check if there is any change in the sli item to decide if proration is needed
+					existingSli, err := s.services.ServiceLineItemService.GetById(ctx, *sliData.ServiceLineItemID)
+					if err != nil {
+						tracing.TraceErr(span, err)
+						return nil, err
+					}
+
+					if sliData.ServiceStarted.After(utils.Today()) {
+						//new version
+					} else {
+						//update existing version
+
+						if existingSli.Billed != sliData.BillingCycle || existingSli.Price != sliData.Price || existingSli.Quantity != sliData.Quantity || existingSli.StartedAt != sliData.ServiceStarted || existingSli.VatRate != utils.IfNotNilFloat64(sliData.TaxRate) {
+							//existing sli item - new version - proration needed
+							for i, sliEntity := range sliEntities {
+								if sliEntity.ID == *sliData.ServiceLineItemID {
+									sliEntities[i].Billed = sliData.BillingCycle
+									sliEntities[i].Price = sliData.Price
+									sliEntities[i].Quantity = sliData.Quantity
+									sliEntities[i].StartedAt = sliData.ServiceStarted
+									sliEntities[i].VatRate = utils.IfNotNilFloat64(sliData.TaxRate)
+									break
+								}
+							}
+							prorationNeeded = true
+						}
+					}
+				}
+
+			}
+
+			if prorationNeeded {
+
+				//proratedInvoice, err := s.SimulateOffCycleInvoice(ctx, contract, simulateInvoicesWithChanges, span)
+				//if err != nil {
+				//	tracing.TraceErr(span, err)
+				//	return nil, err
+				//}
+				//
+				response = append(response, &SimulateInvoiceResponseData{Invoice: &neo4jentity.InvoiceEntity{
+					Number:               "",
+					OffCycle:             true,
+					Postpaid:             false,
+					Amount:               0,
+					Vat:                  0,
+					TotalAmount:          0,
+					BillingCycleInMonths: contract.BillingCycleInMonths,
+					PeriodStartDate:      *invoicePeriodStartGeneration,
+					PeriodEndDate:        invoicePeriodEndGeneration,
+				}, Lines: []*neo4jentity.InvoiceLineEntity{}})
+
+				nextOnCycleInvoiceDate := contract.NextInvoiceDate.AddDate(0, int(contract.BillingCycleInMonths), 0)
+				contract.NextInvoiceDate = &nextOnCycleInvoiceDate
+				onCycleInvoice, err := s.SimulateOnCycleInvoice(ctx, contract, &sliEntities, span)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return nil, err
+				}
+
+				response = append(response, onCycleInvoice)
+			}
+
+			nextInvoiceDate := invoicePeriodStartGeneration.AddDate(0, int(contract.BillingCycleInMonths), 0)
+			invoicePeriodStartGeneration = &nextInvoiceDate
+
+			nextOnCycleDate := contract.NextInvoiceDate.AddDate(0, int(contract.BillingCycleInMonths), 0)
+			contract.NextInvoiceDate = &nextOnCycleDate
+		}
+	}
+
+	//no proration needed - only on cycle invoice
+	if len(response) == 0 {
+
+		contract.NextInvoiceDate = &contractDefaultNextInvoiceDate
+
+		//build sli entities to reflect the changes for the period
+		onCycleSliEntities := neo4jentity.ServiceLineItemEntities{}
+		for _, sliData := range simulateInvoicesWithChanges.ServiceLines {
+
+			nextInvoiceDate := contract.NextInvoiceDate.Add(1) // adding 1 nanosecond to the next invoice date to consider the first nanosecond of the month
+			if sliData.ServiceStarted.Before(nextInvoiceDate) {
+				sliEntity := neo4jentity.ServiceLineItemEntity{
+					ID:        sliData.Key,
+					Name:      sliData.Description,
+					Comments:  sliData.Comments,
+					Billed:    sliData.BillingCycle,
+					Price:     sliData.Price,
+					Quantity:  sliData.Quantity,
+					StartedAt: sliData.ServiceStarted,
+					EndedAt:   nil,
+					VatRate:   utils.IfNotNilFloat64(sliData.TaxRate),
+				}
+
+				onCycleSliEntities = append(onCycleSliEntities, sliEntity)
+			}
+		}
+
+		onCycleInvoice, err := s.SimulateOnCycleInvoice(ctx, contract, &onCycleSliEntities, span)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
+		response = append(response, onCycleInvoice)
+	}
 
 	return response, nil
 }
 
-func (s *invoiceService) SimulateOnCycleInvoice(ctx context.Context, invoiceData *SimulateInvoiceRequestData, span opentracing.Span) (*SimulateInvoiceResponseData, error) {
+func (s *invoiceService) SimulateOnCycleInvoice(ctx context.Context, contract *neo4jentity.ContractEntity, sliEntities *neo4jentity.ServiceLineItemEntities, span opentracing.Span) (*SimulateInvoiceResponseData, error) {
 	invoiceEntity := &neo4jentity.InvoiceEntity{}
 	invoiceLines := []*invoicepb.InvoiceLine{}
 
@@ -222,7 +333,80 @@ func (s *invoiceService) SimulateOnCycleInvoice(ctx context.Context, invoiceData
 		return nil, err
 	}
 
-	contractEntity, err := s.services.ContractService.GetById(ctx, invoiceData.ContractId)
+	var nextPreviewInvoiceEntity *neo4jentity.InvoiceEntity
+	nextPreviewInvoiceNode, err := s.services.Neo4jRepositories.InvoiceReadRepository.GetFirstPreviewFilledInvoice(ctx, common.GetTenantFromContext(ctx), contract.Id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	if nextPreviewInvoiceNode != nil {
+		nextPreviewInvoiceEntity = mapper.MapDbNodeToInvoiceEntity(nextPreviewInvoiceNode)
+		invoiceEntity.Number = nextPreviewInvoiceEntity.Number
+	} else {
+		invoiceEntity.Number = "" // todo
+	}
+
+	var invoicePeriodStart, invoicePeriodEnd time.Time
+	if contract.NextInvoiceDate != nil {
+		invoicePeriodStart = *contract.NextInvoiceDate
+	} else {
+		invoicePeriodStart = *contract.InvoicingStartDate
+	}
+	invoicePeriodEnd = calculateInvoiceCycleEnd(invoicePeriodStart, contract.BillingCycleInMonths)
+
+	invoiceEntity.OffCycle = false
+	invoiceEntity.Postpaid = tenantSettings.InvoicingPostpaid
+	invoiceEntity.BillingCycleInMonths = contract.BillingCycleInMonths
+	invoiceEntity.PeriodStartDate = invoicePeriodStart
+	invoiceEntity.PeriodEndDate = invoicePeriodEnd
+	invoiceEntity.Note = contract.InvoiceNote
+
+	if nextPreviewInvoiceNode != nil {
+		invoiceEntity.IssuedDate = nextPreviewInvoiceEntity.IssuedDate
+		invoiceEntity.DueDate = nextPreviewInvoiceEntity.DueDate
+	} else {
+		invoiceEntity.IssuedDate = invoicePeriodStart
+		invoiceEntity.DueDate = invoicePeriodEnd.AddDate(0, 0, int(contract.DueDays))
+	}
+
+	if contract.Currency != "" {
+		invoiceEntity.Currency = contract.Currency
+	} else {
+		invoiceEntity.Currency = tenantSettings.BaseCurrency
+	}
+
+	invoiceEntity, invoiceLines, err = s.FillCycleInvoice(ctx, invoiceEntity, *sliEntities)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	onCycleInvoice := &SimulateInvoiceResponseData{
+		Invoice: invoiceEntity,
+		Lines:   []*neo4jentity.InvoiceLineEntity{},
+	}
+	for _, line := range invoiceLines {
+		invoiceLineEntity := &neo4jentity.InvoiceLineEntity{
+			Id:                      line.ServiceLineItemId,
+			ServiceLineItemParentId: line.ServiceLineItemParentId,
+			Name:                    line.Name,
+			Price:                   line.Price,
+			Quantity:                line.Quantity,
+			Amount:                  line.Amount,
+			TotalAmount:             line.Total,
+			Vat:                     line.Vat,
+		}
+		onCycleInvoice.Lines = append(onCycleInvoice.Lines, invoiceLineEntity)
+	}
+
+	return onCycleInvoice, nil
+}
+
+func (s *invoiceService) SimulateOffCycleInvoice(ctx context.Context, contract *neo4jentity.ContractEntity, invoiceData *SimulateInvoiceRequestData, span opentracing.Span) (*SimulateInvoiceResponseData, error) {
+	invoiceEntity := &neo4jentity.InvoiceEntity{}
+	invoiceLines := []*invoicepb.InvoiceLine{}
+
+	tenantSettings, err := s.services.TenantService.GetTenantSettings(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -242,30 +426,30 @@ func (s *invoiceService) SimulateOnCycleInvoice(ctx context.Context, invoiceData
 	}
 
 	var invoicePeriodStart, invoicePeriodEnd time.Time
-	if contractEntity.NextInvoiceDate != nil {
-		invoicePeriodStart = *contractEntity.NextInvoiceDate
+	if contract.NextInvoiceDate != nil {
+		invoicePeriodStart = *contract.NextInvoiceDate
 	} else {
-		invoicePeriodStart = *contractEntity.InvoicingStartDate
+		invoicePeriodStart = *contract.InvoicingStartDate
 	}
-	invoicePeriodEnd = calculateInvoiceCycleEnd(invoicePeriodStart, contractEntity.BillingCycleInMonths)
+	invoicePeriodEnd = calculateInvoiceCycleEnd(invoicePeriodStart, contract.BillingCycleInMonths)
 
 	invoiceEntity.OffCycle = false
 	invoiceEntity.Postpaid = tenantSettings.InvoicingPostpaid
-	invoiceEntity.BillingCycleInMonths = contractEntity.BillingCycleInMonths
+	invoiceEntity.BillingCycleInMonths = contract.BillingCycleInMonths
 	invoiceEntity.PeriodStartDate = invoicePeriodStart
 	invoiceEntity.PeriodEndDate = invoicePeriodEnd
-	invoiceEntity.Note = contractEntity.InvoiceNote
+	invoiceEntity.Note = contract.InvoiceNote
 
 	if nextPreviewInvoiceNode != nil {
 		invoiceEntity.IssuedDate = nextPreviewInvoiceEntity.IssuedDate
 		invoiceEntity.DueDate = nextPreviewInvoiceEntity.DueDate
 	} else {
 		invoiceEntity.IssuedDate = invoicePeriodStart
-		invoiceEntity.DueDate = invoicePeriodEnd.AddDate(0, 0, int(contractEntity.DueDays))
+		invoiceEntity.DueDate = invoicePeriodEnd.AddDate(0, 0, int(contract.DueDays))
 	}
 
-	if contractEntity.Currency != "" {
-		invoiceEntity.Currency = contractEntity.Currency
+	if contract.Currency != "" {
+		invoiceEntity.Currency = contract.Currency
 	} else {
 		invoiceEntity.Currency = tenantSettings.BaseCurrency
 	}
@@ -286,7 +470,7 @@ func (s *invoiceService) SimulateOnCycleInvoice(ctx context.Context, invoiceData
 		sliEntities = append(sliEntities, sliEntity)
 	}
 
-	invoiceEntity, invoiceLines, err = s.FillCycleInvoice(ctx, invoiceData.ContractId, invoiceEntity, sliEntities)
+	invoiceEntity, invoiceLines, err = s.FillOffCyclePrepaidInvoice(ctx, invoiceEntity, sliEntities)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -437,11 +621,10 @@ func (s *invoiceService) VoidInvoice(ctx context.Context, invoiceId, appSource s
 	return nil
 }
 
-func (h *invoiceService) FillCycleInvoice(ctx context.Context, contractId string, invoiceEntity *neo4jentity.InvoiceEntity, sliEntities neo4jentity.ServiceLineItemEntities) (*neo4jentity.InvoiceEntity, []*invoicepb.InvoiceLine, error) {
+func (h *invoiceService) FillCycleInvoice(ctx context.Context, invoiceEntity *neo4jentity.InvoiceEntity, sliEntities neo4jentity.ServiceLineItemEntities) (*neo4jentity.InvoiceEntity, []*invoicepb.InvoiceLine, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.fillCycleInvoice")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagEntityId, invoiceEntity.Id)
-	span.LogFields(log.String("contractId", contractId))
 
 	amount, vat := float64(0), float64(0)
 	var invoiceLines []*invoicepb.InvoiceLine
@@ -551,12 +734,11 @@ func (h *invoiceService) FillCycleInvoice(ctx context.Context, contractId string
 	return invoiceEntity, invoiceLines, nil
 }
 
-func (h *invoiceService) FillOffCyclePrepaidInvoice(ctx context.Context, contractId string, invoiceEntity *neo4jentity.InvoiceEntity, sliEntities neo4jentity.ServiceLineItemEntities) (*neo4jentity.InvoiceEntity, []*invoicepb.InvoiceLine, error) {
+func (h *invoiceService) FillOffCyclePrepaidInvoice(ctx context.Context, invoiceEntity *neo4jentity.InvoiceEntity, sliEntities neo4jentity.ServiceLineItemEntities) (*neo4jentity.InvoiceEntity, []*invoicepb.InvoiceLine, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.FillOffCyclePrepaidInvoice")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
 	span.SetTag(tracing.SpanTagEntityId, invoiceEntity.Id)
-	span.LogFields(log.String("contractId", contractId))
 
 	// filter out not applicable SLIs
 	referenceDate := invoiceEntity.PeriodStartDate
