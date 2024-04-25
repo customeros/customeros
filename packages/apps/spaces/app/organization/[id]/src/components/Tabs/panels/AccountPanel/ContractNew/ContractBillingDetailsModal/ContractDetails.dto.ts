@@ -20,8 +20,9 @@ export interface ContractDetailsForm {
   serviceStarted?: Date | null;
   invoicingStarted?: Date | null;
   canPayWithCard?: boolean | null;
-  payAutomatically?: boolean | null;
+  billingEnabled?: boolean | null;
 
+  payAutomatically?: boolean | null;
   dueDays?: SelectOption<number> | null;
   canPayWithDirectDebit?: boolean | null;
   committedPeriodInMonths?: number | null;
@@ -45,6 +46,7 @@ export class ContractDetailsDto implements ContractDetailsForm {
   dueDays?: SelectOption<number> | null;
   autoRenew?: boolean | null;
   check?: boolean | null;
+  billingEnabled?: boolean | null;
 
   constructor(data?: Partial<GetContractQuery['contract']> | null) {
     this.committedPeriodInMonths = data?.committedPeriodInMonths;
@@ -70,6 +72,7 @@ export class ContractDetailsDto implements ContractDetailsForm {
       (e) => e.value === data?.billingDetails?.dueDays,
     );
     this.autoRenew = data?.autoRenew;
+    this.billingEnabled = data?.billingEnabled;
     this.check = data?.billingDetails?.check ?? false;
   }
 
@@ -95,6 +98,7 @@ export class ContractDetailsDto implements ContractDetailsForm {
         ? DateTimeUtils.getUTCDateAtMidnight(data.serviceStarted)
         : undefined,
       committedPeriodInMonths: data?.committedPeriodInMonths,
+      billingEnabled: data?.billingEnabled,
       billingDetails: {
         payOnline: data?.payOnline,
         payAutomatically: data?.payAutomatically,
