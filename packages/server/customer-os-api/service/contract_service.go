@@ -65,7 +65,7 @@ func (s *contractService) Create(ctx context.Context, contractDetails *ContractC
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.Create")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("contractDetails", contractDetails))
+	tracing.LogObjectAsJson(span, "contractDetails", contractDetails)
 
 	contractId, err := s.createContractWithEvents(ctx, contractDetails)
 	if err != nil {

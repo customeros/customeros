@@ -16,7 +16,6 @@ import (
 	servicelineitempb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/service_line_item"
 	"github.com/stretchr/testify/require"
 	"testing"
-	"time"
 )
 
 func TestMutationResolver_ServiceLineItemCreate(t *testing.T) {
@@ -66,9 +65,6 @@ func TestMutationResolver_ServiceLineItemCreate(t *testing.T) {
 	rawResponse := callGraphQL(t, "service_line_item/create_service_line_item", map[string]interface{}{
 		"contractId": contractId,
 	})
-
-	//wait for generate preview invoice grpc call
-	time.Sleep(4 * time.Second)
 
 	var serviceLineItemStruct struct {
 		ContractLineItem_Create model.ServiceLineItem
@@ -134,9 +130,6 @@ func TestMutationResolver_ServiceLineItemUpdate(t *testing.T) {
 		"serviceLineItemId": serviceLineItemId,
 	})
 
-	//wait for generate preview invoice grpc call
-	time.Sleep(4 * time.Second)
-
 	var serviceLineItemStruct struct {
 		ContractLineItem_Update model.ServiceLineItem
 	}
@@ -148,6 +141,54 @@ func TestMutationResolver_ServiceLineItemUpdate(t *testing.T) {
 	require.Equal(t, serviceLineItemId, serviceLineItem.Metadata.ID)
 	require.Equal(t, baseSliId, serviceLineItem.ParentID)
 	require.True(t, calledUpdateServiceLineItem)
+}
+
+func TestMutationResolver_ServiceLineItemUpdate_NoChanges(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	now := utils.Now()
+	baseSliId := uuid.New().String()
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
+	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		InvoicingEnabled:     true,
+		BillingCycleInMonths: 1,
+		InvoicingStartDate:   &now,
+	})
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
+		Name:     "service",
+		ID:       baseSliId,
+		ParentID: baseSliId,
+		Billed:   neo4jenum.BilledTypeMonthly,
+		Quantity: 2,
+		Price:    30,
+		Comments: "test comments",
+		VatRate:  10.5,
+	})
+
+	rawResponse := callGraphQL(t, "service_line_item/update_service_line_item_parameterized", map[string]interface{}{
+		"serviceLineItemId":       baseSliId,
+		"description":             "service",
+		"price":                   int64(30),
+		"quantity":                float64(2),
+		"comments":                "test comments",
+		"isRetroactiveCorrection": false,
+		"taxRate":                 10.5,
+	})
+
+	var serviceLineItemStruct struct {
+		ContractLineItem_Update model.ServiceLineItem
+	}
+
+	require.Nil(t, rawResponse.Errors)
+	err := decode.Decode(rawResponse.Data.(map[string]any), &serviceLineItemStruct)
+	require.Nil(t, err)
+	serviceLineItem := serviceLineItemStruct.ContractLineItem_Update
+	require.Equal(t, baseSliId, serviceLineItem.Metadata.ID)
+	require.Equal(t, baseSliId, serviceLineItem.ParentID)
 }
 
 func TestMutationResolver_ServiceLineItemNewVersion(t *testing.T) {
@@ -207,9 +248,6 @@ func TestMutationResolver_ServiceLineItemNewVersion(t *testing.T) {
 		"serviceLineItemId": baseSliId,
 		"serviceStarted":    tomorrow,
 	})
-
-	//wait for generate preview invoice grpc call
-	time.Sleep(4 * time.Second)
 
 	var serviceLineItemStruct struct {
 		ContractLineItem_NewVersion model.ServiceLineItem
@@ -358,9 +396,6 @@ func TestMutationResolver_ServiceLineItemDelete(t *testing.T) {
 		"serviceLineItemId": serviceLineItemId,
 	})
 
-	//wait for generate preview invoice grpc call
-	time.Sleep(4 * time.Second)
-
 	var response struct {
 		ServiceLineItem_Delete model.DeleteResponse
 	}
@@ -410,9 +445,6 @@ func TestMutationResolver_ServiceLineItemClose(t *testing.T) {
 	rawResponse := callGraphQL(t, "service_line_item/close_service_line_item", map[string]interface{}{
 		"serviceLineItemId": serviceLineItemId,
 	})
-
-	//wait for generate preview invoice grpc call
-	time.Sleep(4 * time.Second)
 
 	var response map[string]interface{}
 

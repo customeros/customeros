@@ -1,0 +1,22 @@
+mutation UpdateServiceLineItem($serviceLineItemId: ID!, $description: String!, $price: Float!, $quantity: Int64!, $comments: String, $isRetroactiveCorrection: Boolean, $taxRate: Float!) {
+  contractLineItem_Update(
+    input: {
+      id: $serviceLineItemId
+      description: $description
+      billingCycle: MONTHLY
+      price: $price
+      quantity: $quantity
+      comments: $comments
+      isRetroactiveCorrection: $isRetroactiveCorrection
+      tax: {
+        taxRate: $taxRate
+      }
+    }
+  ) {
+    metadata {
+      id
+    }
+    description
+    parentId
+  }
+}
