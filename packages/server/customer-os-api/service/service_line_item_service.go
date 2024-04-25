@@ -267,6 +267,18 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 		return err
 	}
 
+	// If no changes recorded, return
+	if baseServiceLineItemEntity.Name == serviceLineItemDetails.SliName &&
+		baseServiceLineItemEntity.Price == serviceLineItemDetails.SliPrice &&
+		baseServiceLineItemEntity.Quantity == serviceLineItemDetails.SliQuantity &&
+		baseServiceLineItemEntity.VatRate == serviceLineItemDetails.SliVatRate &&
+		baseServiceLineItemEntity.Comments == serviceLineItemDetails.SliComments &&
+		(serviceLineItemDetails.StartedAt == nil || baseServiceLineItemEntity.StartedAt == *serviceLineItemDetails.StartedAt) &&
+		baseServiceLineItemEntity.Billed == serviceLineItemDetails.SliBilledType {
+		span.LogFields(log.String("result", "No changes recorded"))
+		return nil
+	}
+
 	if baseServiceLineItemEntity.Canceled {
 		err = fmt.Errorf("contract line item with id {%s} is already ended", serviceLineItemDetails.Id)
 		tracing.TraceErr(span, err)
@@ -295,16 +307,6 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 		}
 	}
 
-	contractInvoiced, err := s.repositories.Neo4jRepositories.ContractReadRepository.IsContractInvoiced(ctx, common.GetTenantFromContext(ctx), contractEntity.Id)
-	startedAt := utils.ToDate(utils.IfNotNilTimeWithDefault(serviceLineItemDetails.StartedAt, baseServiceLineItemEntity.StartedAt))
-
-	// Do not allow updating past SLIs for invoiced contracts
-	if contractInvoiced && startedAt.Before(utils.Today()) {
-		err = fmt.Errorf("cannot update contract line item with id {%s} in the past", serviceLineItemDetails.Id)
-		tracing.TraceErr(span, err)
-		return err
-	}
-
 	// check that quantity and price are not negative
 	if serviceLineItemDetails.SliQuantity < 0 || serviceLineItemDetails.SliPrice < 0 {
 		err := errors.New("quantity and price must not be negative")
@@ -327,6 +329,9 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 		isRetroactiveCorrection = true
 	}
 
+	contractInvoiced, err := s.repositories.Neo4jRepositories.ContractReadRepository.IsContractInvoiced(ctx, common.GetTenantFromContext(ctx), contractEntity.Id)
+	startedAt := utils.ToDate(utils.IfNotNilTimeWithDefault(serviceLineItemDetails.StartedAt, baseServiceLineItemEntity.StartedAt))
+
 	// If no price impacted fields changed, set retroactive correction to true
 	if baseServiceLineItemEntity.Price == serviceLineItemDetails.SliPrice &&
 		baseServiceLineItemEntity.Quantity == serviceLineItemDetails.SliQuantity &&
@@ -337,6 +342,13 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 		isRetroactiveCorrection = true
 	}
 
+	// Do not allow updating past SLIs for invoiced contracts
+	if isRetroactiveCorrection && contractInvoiced && startedAt.Before(utils.Today()) {
+		err = fmt.Errorf("cannot update contract line item with id {%s} in the past", serviceLineItemDetails.Id)
+		tracing.TraceErr(span, err)
+		return err
+	}
+
 	// Check SLI is not invoiced
 	sliInvoiced, err := s.repositories.Neo4jRepositories.ServiceLineItemReadRepository.WasServiceLineItemInvoiced(ctx, common.GetTenantFromContext(ctx), baseServiceLineItemEntity.ID)
 	if err != nil {
@@ -345,7 +357,7 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 		return err
 	}
 
-	if sliInvoiced && !isRetroactiveCorrection {
+	if isRetroactiveCorrection && sliInvoiced {
 		err = fmt.Errorf("service line item with id {%s} is included in invoice and cannot be updated", serviceLineItemDetails.Id)
 		tracing.TraceErr(span, err)
 		return err
