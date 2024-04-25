@@ -962,15 +962,17 @@ func (r *dashboardRepository) GetDashboardCustomerMapData(ctx context.Context, t
 					WITH o.id AS oid,
 						COLLECT(DISTINCT CASE
 							WHEN c.status = $contractStatusEnded THEN 'CHURNED'
-							WHEN c.status IN [$contractStatusLive,$contractStatusScheduled] AND 'ACTIVE_RENEWAL' in relTypes AND op.renewalLikelihood = 'HIGH' THEN 'OK'
-							ELSE 'AT_RISK'
+							WHEN c.status IN [$contractStatusLive,$contractStatusScheduled] AND 'ACTIVE_RENEWAL' in relTypes AND op.renewalLikelihood = $likelihoodHigh THEN 'OK'
+							WHEN op.renewalLikelihood IN [$likelihoodLow, $likelihoodZero] THEN 'HIGH_RISK'
+							ELSE 'MEDIUM_RISK'
 						END) AS statuses,
 						COLLECT(DISTINCT { serviceStartedAt: c.serviceStartedAt }) AS contractsStartedAt
 					
 					WITH oid, CASE
 						WHEN ALL(x IN statuses WHERE x = 'CHURNED') THEN 'CHURNED'
 						WHEN ALL(x IN statuses WHERE x IN ['OK', 'CHURNED']) THEN 'OK'
-						ELSE 'AT_RISK'
+						WHEN ALL(x IN statuses WHERE x IN ['OK', 'CHURNED', 'MEDIUM_RISK']) THEN 'MEDIUM_RISK'
+						ELSE 'HIGH_RISK'
 					END AS status,
 					REDUCE(s = null, cs IN contractsStartedAt | 
 						CASE WHEN s IS NULL OR cs.serviceStartedAt < s THEN cs.serviceStartedAt ELSE s END
@@ -1015,6 +1017,10 @@ func (r *dashboardRepository) GetDashboardCustomerMapData(ctx context.Context, t
 				"opportunityInternalTypeRenewal":     neo4jenum.OpportunityInternalTypeRenewal.String(),
 				"opportunityInternalStageOpen":       neo4jenum.OpportunityInternalStageOpen.String(),
 				"opportunityInternalStageEvaluating": neo4jenum.OpportunityInternalStageEvaluating.String(),
+				"likelihoodHigh":                     neo4jenum.RenewalLikelihoodHigh.String(),
+				"likelihoodMedium":                   neo4jenum.RenewalLikelihoodMedium.String(),
+				"likelihoodLow":                      neo4jenum.RenewalLikelihoodLow.String(),
+				"likelihoodZero":                     neo4jenum.RenewalLikelihoodZero.String(),
 			})
 		if err != nil {
 			return nil, err
