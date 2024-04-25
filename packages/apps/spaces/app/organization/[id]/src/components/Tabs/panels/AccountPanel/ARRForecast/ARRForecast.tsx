@@ -5,13 +5,17 @@ import { useIsRestoring } from '@tanstack/react-query';
 
 import { cn } from '@ui/utils/cn';
 import { HelpCircle } from '@ui/media/icons/HelpCircle';
-import { Contract, RenewalSummary } from '@graphql/types';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
 import { Card, CardContent } from '@ui/presentation/Card/Card';
 import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog/InfoDialog2';
+import {
+  Contract,
+  RenewalSummary,
+  OpportunityRenewalLikelihood,
+} from '@graphql/types';
 import { getRenewalLikelihoodColor } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 import { useIsMutatingContract } from '@organization/src/components/Tabs/panels/AccountPanel/hooks/useIsMutatingContract';
 import { useARRInfoModalContext } from '@organization/src/components/Tabs/panels/AccountPanel/context/AccountModalsContext';
@@ -52,6 +56,12 @@ export const ARRForecast = ({
         <CardContent className='p-0 flex items-center '>
           <FeaturedIcon
             size='md'
+            className={
+              renewalSunnary?.renewalLikelihood ===
+              OpportunityRenewalLikelihood.LowRenewal
+                ? 'text-orangeDark-800'
+                : undefined
+            }
             colorScheme={getRenewalLikelihoodColor(
               renewalSunnary?.renewalLikelihood,
             )}
