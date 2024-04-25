@@ -86,3 +86,40 @@ func TestFormatAmount(t *testing.T) {
 		})
 	}
 }
+
+func TestRoundHalfUpFloat64(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    float64
+		decimals int
+		want     float64
+	}{
+		{"Zero value", 0, 0, 0},
+		{"Zero value", 0, 1, 0},
+		{"Zero value", 0, 2, 0},
+
+		{"Whole number - no decimals", 123, 0, 123},
+		{"Whole number - one decimal", 123, 1, 123},
+		{"Whole number - two decimals", 123, 2, 123},
+
+		{"Four rounding - no decimal", 123.4, 0, 123},
+		{"Four rounding - one decimal", 123.44, 1, 123.4},
+		{"Four rounding - two decimals", 123.444, 2, 123.44},
+
+		{"Five rounding - no decimal", 123.5, 0, 124},
+		{"Five rounding - one decimal", 123.45, 1, 123.5},
+		{"Five rounding - two decimals", 123.455, 2, 123.46},
+
+		{"Nine rounding - no decimal", 123.9, 0, 124},
+		{"Nine rounding - one decimal", 123.99, 1, 124.0},
+		{"Nine rounding - two decimals", 123.999, 2, 124.0},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := RoundHalfUpFloat64(tt.input, tt.decimals); got != tt.want {
+				t.Errorf("RoundHalfUpFloat64(%v, %d) = %v, want %v", tt.input, tt.decimals, got, tt.want)
+			}
+		})
+	}
+}
