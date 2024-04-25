@@ -343,7 +343,7 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 	}
 
 	// Do not allow updating past SLIs for invoiced contracts
-	if isRetroactiveCorrection && contractInvoiced && startedAt.Before(utils.Tomorrow()) {
+	if isRetroactiveCorrection && contractInvoiced && startedAt.Before(utils.Today()) {
 		err = fmt.Errorf("cannot update contract line item with id {%s} in the past", serviceLineItemDetails.Id)
 		tracing.TraceErr(span, err)
 		return err
