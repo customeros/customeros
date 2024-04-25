@@ -161,7 +161,6 @@ func (r *contractWriteRepository) CreateForOrganization(ctx context.Context, ten
 								ct.signedAt=$signedAt,
 								ct.serviceStartedAt=$serviceStartedAt,
 								ct.currency=$currency,
-								ct.billingCycle=$billingCycle,
 								ct.billingCycleInMonths=$billingCycleInMonths,
 								ct.invoicingStartDate=$invoicingStartDate,
 								ct.invoicingEnabled=$invoicingEnabled,
@@ -213,15 +212,6 @@ func (r *contractWriteRepository) CreateForOrganization(ctx context.Context, ten
 		"lengthInMonths":         data.LengthInMonths,
 		"approved":               data.Approved,
 	}
-	billingCycle := neo4jenum.BillingCycleMonthlyBilling
-	if data.BillingCycleInMonths == 0 {
-		billingCycle = neo4jenum.BillingCycleNone
-	} else if data.BillingCycleInMonths > 1 && data.BillingCycleInMonths < 12 {
-		billingCycle = neo4jenum.BillingCycleQuarterlyBilling
-	} else if data.BillingCycleInMonths >= 12 {
-		billingCycle = neo4jenum.BillingCycleAnnuallyBilling
-	}
-	params["billingCycle"] = billingCycle.String()
 
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -279,16 +269,6 @@ func (r *contractWriteRepository) UpdateContract(ctx context.Context, tenant, co
 	if data.UpdateBillingCycleInMonths {
 		cypher += `, ct.billingCycleInMonths = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $billingCycleInMonths ELSE ct.billingCycleInMonths END `
 		params["billingCycleInMonths"] = data.BillingCycleInMonths
-		billingCycle := neo4jenum.BillingCycleMonthlyBilling
-		if data.BillingCycleInMonths == 0 {
-			billingCycle = neo4jenum.BillingCycleNone
-		} else if data.BillingCycleInMonths > 1 && data.BillingCycleInMonths < 12 {
-			billingCycle = neo4jenum.BillingCycleQuarterlyBilling
-		} else if data.BillingCycleInMonths >= 12 {
-			billingCycle = neo4jenum.BillingCycleAnnuallyBilling
-		}
-		cypher += `, ct.billingCycle = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $billingCycle ELSE ct.billingCycle END `
-		params["billingCycle"] = billingCycle.String()
 	}
 	if data.UpdateCurrency {
 		cypher += `, ct.currency = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $currency ELSE ct.currency END `

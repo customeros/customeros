@@ -191,7 +191,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_MissingCurre
 	require.Equal(t, contractId, props["id"])
 }
 
-func TestContractReadRepository_GetContractsToGenerateCycleInvoices_MissingBillingCycle(t *testing.T) {
+func TestContractReadRepository_GetContractsToGenerateCycleInvoices_MissingBillingCycleInMonths(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 

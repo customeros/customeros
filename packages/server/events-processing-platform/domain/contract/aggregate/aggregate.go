@@ -2,7 +2,6 @@ package aggregate
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -413,11 +412,11 @@ func (a *ContractAggregate) onContractCreate(evt eventstore.Event) error {
 	a.Contract.Country = eventData.Country
 	if eventData.BillingCycle != "" {
 		switch eventData.BillingCycle {
-		case neo4jenum.BillingCycleMonthlyBilling.String():
+		case "MONTHLY":
 			a.Contract.BillingCycleInMonths = 1
-		case neo4jenum.BillingCycleQuarterlyBilling.String():
+		case "QUARTERLY":
 			a.Contract.BillingCycleInMonths = 3
-		case neo4jenum.BillingCycleAnnuallyBilling.String():
+		case "ANNUALLY":
 			a.Contract.BillingCycleInMonths = 12
 		}
 	}
@@ -473,11 +472,11 @@ func (a *ContractAggregate) onContractUpdate(evt eventstore.Event) error {
 		a.Contract.BillingCycleInMonths = eventData.BillingCycleInMonths
 	} else if eventData.UpdateBillingCycle() {
 		switch eventData.BillingCycle {
-		case neo4jenum.BillingCycleMonthlyBilling.String():
+		case "MONTHLY":
 			a.Contract.BillingCycleInMonths = 1
-		case neo4jenum.BillingCycleQuarterlyBilling.String():
+		case "QUARTERLY":
 			a.Contract.BillingCycleInMonths = 3
-		case neo4jenum.BillingCycleAnnuallyBilling.String():
+		case "ANNUALLY":
 			a.Contract.BillingCycleInMonths = 12
 		case "":
 			a.Contract.BillingCycleInMonths = 0
