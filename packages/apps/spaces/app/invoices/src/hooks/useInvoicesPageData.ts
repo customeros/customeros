@@ -50,7 +50,7 @@ export const useInvoicesPageData = ({
   });
 
   const filtersStr =
-    tableViewDefsStore.getById(preset ?? '1')?.value.filters ?? '';
+    tableViewDefsStore.getById(preset ?? '1')?.value.filters ?? '{}';
 
   const where = useMemo(() => {
     const defaultFilters = JSON.parse(filtersStr);
