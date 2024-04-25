@@ -65,6 +65,31 @@ func (r *mutationResolver) OpportunityRenewalUpdate(ctx context.Context, input m
 	return mapper.MapEntityToOpportunity(opportunityEntity), nil
 }
 
+// OpportunityRenewalUpdateAllForOrganization is the resolver for the opportunityRenewal_UpdateAllForOrganization field.
+func (r *mutationResolver) OpportunityRenewalUpdateAllForOrganization(ctx context.Context, input model.OpportunityRenewalUpdateAllForOrganizationInput) (*model.Organization, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OpportunityRenewalUpdate", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "input", input)
+
+	if input.RenewalLikelihood != nil {
+		err := r.Services.OpportunityService.UpdateRenewalsForOrganization(ctx, input.OrganizationID, mapper.MapOpportunityRenewalLikelihoodFromModel(input.RenewalLikelihood))
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "Failed to update renewal opportunities for organization %s", input.OrganizationID)
+			return nil, nil
+		}
+	}
+	organizationEntity, err := r.Services.OrganizationService.GetById(ctx, input.OrganizationID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed fetching organization details. Organization id: %s", input.OrganizationID)
+		return nil, nil
+	}
+
+	return mapper.MapEntityToOrganization(organizationEntity), nil
+}
+
 // CreatedBy is the resolver for the createdBy field.
 func (r *opportunityResolver) CreatedBy(ctx context.Context, obj *model.Opportunity) (*model.User, error) {
 	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))

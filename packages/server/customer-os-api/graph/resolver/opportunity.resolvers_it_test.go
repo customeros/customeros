@@ -2,13 +2,14 @@ package resolver
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	"github.com/stretchr/testify/require"
@@ -24,7 +25,7 @@ func TestQueryResolver_Opportunity(t *testing.T) {
 
 	creatorUserId := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{})
 	ownerUserId := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{})
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
+	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
 	now := utils.Now()
 	opportunityId := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, neo4jentity.OpportunityEntity{
@@ -71,7 +72,7 @@ func TestMutationResolver_OpportunityUpdate(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
+	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
 	opportunityId := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, neo4jentity.OpportunityEntity{})
 	calledUpdateOpportunity := false
@@ -126,7 +127,7 @@ func TestMutationResolver_OpportunityRenewalUpdate(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 	ownerUserId := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{})
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
+	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
 	opportunityId := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, neo4jentity.OpportunityEntity{})
 	calledUpdateRenewalOpportunity := false
@@ -173,4 +174,65 @@ func TestMutationResolver_OpportunityRenewalUpdate(t *testing.T) {
 	require.Equal(t, ownerUserId, renewalOpportunity.Owner.ID)
 
 	require.True(t, calledUpdateRenewalOpportunity)
+}
+
+func TestMutationResolver_OpportunityRenewalUpdateAllForOrganization(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId1 := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organizationId, neo4jentity.ContractEntity{})
+	contractId2 := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organizationId, neo4jentity.ContractEntity{})
+	opportunityId1 := neo4jtest.CreateOpportunityForContract(ctx, driver, tenantName, contractId1, neo4jentity.OpportunityEntity{
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+		},
+	})
+	opportunityId2 := neo4jtest.CreateOpportunityForContract(ctx, driver, tenantName, contractId2, neo4jentity.OpportunityEntity{
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodZero,
+		},
+	})
+	calledUpdateRenewalOpportunityCounter := 0
+	opportunityServiceCallbacks := events_platform.MockOpportunityServiceCallbacks{
+		UpdateRenewalOpportunity: func(context context.Context, renewalOpportunity *opportunitypb.UpdateRenewalOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
+			require.Equal(t, tenantName, renewalOpportunity.Tenant)
+			if renewalOpportunity.Id == opportunityId1 {
+				require.Equal(t, opportunityId1, renewalOpportunity.Id)
+			} else {
+				require.Equal(t, opportunityId2, renewalOpportunity.Id)
+			}
+			require.Equal(t, string(neo4jentity.DataSourceOpenline), renewalOpportunity.SourceFields.Source)
+			require.Equal(t, constants.AppSourceCustomerOsApi, renewalOpportunity.SourceFields.AppSource)
+			require.Equal(t, opportunitypb.RenewalLikelihood_MEDIUM_RENEWAL, renewalOpportunity.RenewalLikelihood)
+			require.Equal(t, "", renewalOpportunity.OwnerUserId)
+			require.ElementsMatch(t, []opportunitypb.OpportunityMaskField{
+				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_RENEWAL_LIKELIHOOD},
+				renewalOpportunity.FieldsMask)
+			calledUpdateRenewalOpportunityCounter++
+			return &opportunitypb.OpportunityIdGrpcResponse{}, nil
+		},
+	}
+	events_platform.SetOpportunityCallbacks(&opportunityServiceCallbacks)
+
+	rawResponse := callGraphQL(t, "opportunity/update_renewal_opportunities_for_organization", map[string]interface{}{
+		"organizationId": organizationId,
+	})
+
+	var opportunityRenewalUpdateStruct struct {
+		OpportunityRenewal_UpdateAllForOrganization model.Organization
+	}
+
+	require.Nil(t, rawResponse.Errors)
+	err := decode.Decode(rawResponse.Data.(map[string]any), &opportunityRenewalUpdateStruct)
+	require.Nil(t, err)
+	organization := opportunityRenewalUpdateStruct.OpportunityRenewal_UpdateAllForOrganization
+	require.Equal(t, organizationId, organization.Metadata.ID)
+	require.Equal(t, 2, calledUpdateRenewalOpportunityCounter)
 }

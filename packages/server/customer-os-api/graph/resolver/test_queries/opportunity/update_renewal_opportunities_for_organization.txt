@@ -1,0 +1,12 @@
+mutation UpdateRenewalOpportunitiesForOrganization($organizationId: ID!) {
+opportunityRenewal_UpdateAllForOrganization(
+    input: {
+        organizationId: $organizationId
+        renewalLikelihood: MEDIUM_RENEWAL
+    }
+  ) {
+    metadata {
+        id
+    }
+  }
+}
