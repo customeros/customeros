@@ -440,11 +440,11 @@ func (a *InvoiceAggregate) onInvoiceCreateEvent(evt eventstore.Event) error {
 	a.Invoice.Status = neo4jenum.InvoiceStatusInitialized.String()
 	if eventData.BillingCycle != "" {
 		switch eventData.BillingCycle {
-		case neo4jenum.BillingCycleMonthlyBilling.String():
+		case "MONTHLY":
 			a.Invoice.BillingCycleInMonths = 1
-		case neo4jenum.BillingCycleQuarterlyBilling.String():
+		case "QUARTERLY":
 			a.Invoice.BillingCycleInMonths = 3
-		case neo4jenum.BillingCycleAnnuallyBilling.String():
+		case "ANNUALLY":
 			a.Invoice.BillingCycleInMonths = 12
 		}
 	}
