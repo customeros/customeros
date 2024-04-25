@@ -55,7 +55,7 @@ func TestMutationResolver_InvoiceSimulate_OnCycle_PostPaidFalse_1(t *testing.T) 
 
 	require.Equal(t, 1, len(invoice.InvoiceLineItems))
 
-	asserInvoice(t, invoice, "2024-01-01T00:00:00Z", "2024-01-31T00:00:00Z", false, 1)
+	asserInvoice(t, invoice, "2024-01-01T00:00:00Z", "2024-01-31T00:00:00Z", false, false, 1)
 	asserInvoiceLineItem(t, invoice.InvoiceLineItems[0], "1", "S1", 1, 1, 1)
 }
 
@@ -103,14 +103,15 @@ func TestMutationResolver_InvoiceSimulate_OnCycle_PostPaidFalse_2(t *testing.T) 
 
 	onCycleInvoice := invoiceStruct.Invoice_Simulate[1]
 	require.Equal(t, 1, len(onCycleInvoice.InvoiceLineItems))
-	asserInvoice(t, onCycleInvoice, "2024-02-01T00:00:00Z", "2024-02-29T00:00:00Z", false, 29)
+	asserInvoice(t, onCycleInvoice, "2024-02-01T00:00:00Z", "2024-02-29T00:00:00Z", false, false, 29)
 	asserInvoiceLineItem(t, onCycleInvoice.InvoiceLineItems[0], "1", "S1", 29, 1, 29)
 }
 
-func asserInvoice(t *testing.T, invoice *model.InvoiceSimulate, periodStart, periodEnd string, offCycle bool, total float64) {
+func asserInvoice(t *testing.T, invoice *model.InvoiceSimulate, periodStart, periodEnd string, offCycle, postpaid bool, total float64) {
 	require.Equal(t, periodStart, invoice.InvoicePeriodStart.Format("2006-01-02T15:04:05Z"))
 	require.Equal(t, periodEnd, invoice.InvoicePeriodEnd.Format("2006-01-02T15:04:05Z"))
 	require.Equal(t, offCycle, invoice.OffCycle)
+	require.Equal(t, postpaid, invoice.Postpaid)
 	require.Equal(t, total, invoice.Total)
 }
 
