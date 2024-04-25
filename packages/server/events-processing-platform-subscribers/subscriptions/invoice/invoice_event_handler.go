@@ -119,7 +119,7 @@ func (h *InvoiceEventHandler) onInvoiceFillRequestedV1(ctx context.Context, evt 
 			}
 		}
 
-		invoiceEntity, invoiceLines, err := h.commonServices.InvoiceService.FillOffCyclePrepaidInvoice(ctx, eventData.ContractId, invoiceEntity, sliEntities)
+		invoiceEntity, invoiceLines, err := h.commonServices.InvoiceService.FillOffCyclePrepaidInvoice(ctx, invoiceEntity, sliEntities)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error filling invoice %s: %s", invoiceId, err.Error())
@@ -159,7 +159,7 @@ func (h *InvoiceEventHandler) onInvoiceFillRequestedV1(ctx context.Context, evt 
 			}
 		}
 
-		invoiceEntity, invoiceLines, err := h.commonServices.InvoiceService.FillCycleInvoice(ctx, eventData.ContractId, invoiceEntity, sliEntities)
+		invoiceEntity, invoiceLines, err := h.commonServices.InvoiceService.FillCycleInvoice(ctx, invoiceEntity, sliEntities)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error filling invoice %s: %s", invoiceId, err.Error())
