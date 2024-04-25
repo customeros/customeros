@@ -18,7 +18,7 @@ colors.forEach((colorScheme) => {
   const bgColor = `bg-${colorScheme}-100`;
   const ringColor = `ring-${colorScheme}-50`;
   const ringOffsetColor = `ring-offset-${colorScheme}-100`;
-  const textColor = `text-${colorScheme}-500`;
+  const textColor = `text-${colorScheme}-600`;
 
   const className = [
     `${bgColor} ${ringColor} ${ringOffsetColor} ${textColor}`,
@@ -54,6 +54,8 @@ export const featureIconVariant = cva(
         violet: [],
         fuchsia: [],
         blue:[],
+        yellow: [],
+        orangeDark: [],
       },
     },
     compoundVariants: ${JSON.stringify(compoundVariants, null, 2)}

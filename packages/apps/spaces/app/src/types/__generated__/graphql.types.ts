@@ -56,6 +56,7 @@ export enum ActionType {
   ContractStatusUpdated = 'CONTRACT_STATUS_UPDATED',
   Created = 'CREATED',
   InvoiceIssued = 'INVOICE_ISSUED',
+  InvoiceOverdue = 'INVOICE_OVERDUE',
   InvoicePaid = 'INVOICE_PAID',
   InvoiceSent = 'INVOICE_SENT',
   InvoiceVoided = 'INVOICE_VOIDED',
@@ -186,7 +187,9 @@ export type BillingDetails = {
   __typename?: 'BillingDetails';
   addressLine1?: Maybe<Scalars['String']['output']>;
   addressLine2?: Maybe<Scalars['String']['output']>;
+  /** @deprecated Use billingCycleInMonths instead. */
   billingCycle?: Maybe<ContractBillingCycle>;
+  billingCycleInMonths?: Maybe<Scalars['Int64']['output']>;
   billingEmail?: Maybe<Scalars['String']['output']>;
   billingEmailBCC?: Maybe<Array<Scalars['String']['output']>>;
   billingEmailCC?: Maybe<Array<Scalars['String']['output']>>;
@@ -210,7 +213,9 @@ export type BillingDetails = {
 export type BillingDetailsInput = {
   addressLine1?: InputMaybe<Scalars['String']['input']>;
   addressLine2?: InputMaybe<Scalars['String']['input']>;
+  /** Deprecated, use billingCycleInMonths instead. */
   billingCycle?: InputMaybe<ContractBillingCycle>;
+  billingCycleInMonths?: InputMaybe<Scalars['Int64']['input']>;
   billingEmail?: InputMaybe<Scalars['String']['input']>;
   billingEmailBCC?: InputMaybe<Array<Scalars['String']['input']>>;
   billingEmailCC?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -749,6 +754,7 @@ export type Contract = MetadataInterface & {
 /** Deprecated */
 export enum ContractBillingCycle {
   AnnualBilling = 'ANNUAL_BILLING',
+  CustomBilling = 'CUSTOM_BILLING',
   MonthlyBilling = 'MONTHLY_BILLING',
   None = 'NONE',
   QuarterlyBilling = 'QUARTERLY_BILLING',
@@ -1093,6 +1099,8 @@ export type DashboardCustomerMap = {
 export enum DashboardCustomerMapState {
   AtRisk = 'AT_RISK',
   Churned = 'CHURNED',
+  HighRisk = 'HIGH_RISK',
+  MediumRisk = 'MEDIUM_RISK',
   Ok = 'OK',
 }
 

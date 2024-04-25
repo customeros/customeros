@@ -23,11 +23,11 @@ export function getRenewalLikelihoodColor(
 ) {
   switch (renewalLikelihood) {
     case OpportunityRenewalLikelihood.HighRenewal:
-      return 'success';
+      return 'greenLight';
     case OpportunityRenewalLikelihood.MediumRenewal:
-      return 'warning';
+      return 'yellow';
     case OpportunityRenewalLikelihood.LowRenewal:
-      return 'error';
+      return 'orangeDark';
     case OpportunityRenewalLikelihood.ZeroRenewal:
       return 'gray';
     default:

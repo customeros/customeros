@@ -52,9 +52,11 @@ const CustomerMapChart = ({
 
   const colors = {
     greenLight500: hasContracts ? '#66C61C' : '#98A2B3',
-    greenLight400: hasContracts ? '##85E13A' : '#D0D5DD',
-    warning300: hasContracts ? '#FEC84B' : '#D0D5DD',
-    warning200: hasContracts ? '#FEDF89' : '#EAECF0',
+    greenLight400: hasContracts ? '#85E13A' : '#D0D5DD',
+    yellow400: hasContracts ? '#FAC515' : '#D0D5DD',
+    yellow300: hasContracts ? '#FDE272' : '#EAECF0',
+    orangeDark800: hasContracts ? '#97180C' : '#98A2B3',
+    orangeDark700: hasContracts ? '#BC1B06' : '#D0D5DD',
     warm200: hasContracts ? '#E7E5E4' : '#EAECF0',
     warm300: hasContracts ? '#D7D3D0' : '#D0D5DD',
     gray700: '#344054',
@@ -106,8 +108,9 @@ const CustomerMapChart = ({
   );
 
   const legendData = [
-    { color: colors.greenLight500, label: 'All good' },
-    { color: colors.warning300, label: 'At risk' },
+    { color: colors.greenLight500, label: 'High' },
+    { color: colors.yellow400, label: 'Medium' },
+    { color: colors.orangeDark800, label: 'Low' },
     { color: colors.warm200, label: 'Churned', borderColor: colors.warm300 },
   ];
 
@@ -119,8 +122,10 @@ const CustomerMapChart = ({
     switch (status) {
       case DashboardCustomerMapState.Ok:
         return isOutline ? colors.greenLight400 : colors.greenLight500;
-      case DashboardCustomerMapState.AtRisk:
-        return isOutline ? colors.warning200 : colors.warning300;
+      case DashboardCustomerMapState.MediumRisk:
+        return isOutline ? colors.yellow300 : colors.yellow400;
+      case DashboardCustomerMapState.HighRisk:
+        return isOutline ? colors.orangeDark700 : colors.orangeDark800;
       case DashboardCustomerMapState.Churned:
         return isOutline ? colors.warm300 : colors.warm200;
       default:

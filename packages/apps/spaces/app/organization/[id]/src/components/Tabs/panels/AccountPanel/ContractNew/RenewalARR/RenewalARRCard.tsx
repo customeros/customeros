@@ -214,13 +214,13 @@ export const RenewalARRCard = ({
                       Likelihood{' '}
                       <span
                         className={cn(`capitalize font-medium text-gray-500`, {
-                          'text-success-500':
+                          'text-greenLight-500':
                             opportunity?.renewalLikelihood ===
                             OpportunityRenewalLikelihood.HighRenewal,
-                          'text-error-500':
+                          'text-orangeDark-800':
                             opportunity?.renewalLikelihood ===
                             OpportunityRenewalLikelihood.LowRenewal,
-                          'text-warning-500':
+                          'text-yellow-500':
                             opportunity?.renewalLikelihood ===
                             OpportunityRenewalLikelihood.MediumRenewal,
                         })}
