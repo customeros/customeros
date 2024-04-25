@@ -195,7 +195,7 @@ func (s *organizationService) GetById(ctx context.Context, organizationId string
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetById")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("organizationId", organizationId))
+	span.SetTag(tracing.SpanTagEntityId, organizationId)
 
 	dbNode, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, common.GetTenantFromContext(ctx), organizationId)
 	if err != nil {

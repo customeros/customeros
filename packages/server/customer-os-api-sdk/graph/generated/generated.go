@@ -902,181 +902,182 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		AnalysisCreate                          func(childComplexity int, analysis model.AnalysisInput) int
-		AttachmentCreate                        func(childComplexity int, input model.AttachmentInput) int
-		BankAccountCreate                       func(childComplexity int, input *model.BankAccountCreateInput) int
-		BankAccountDelete                       func(childComplexity int, id string) int
-		BankAccountUpdate                       func(childComplexity int, input *model.BankAccountUpdateInput) int
-		BillingProfileCreate                    func(childComplexity int, input model.BillingProfileInput) int
-		BillingProfileLinkEmail                 func(childComplexity int, input model.BillingProfileLinkEmailInput) int
-		BillingProfileLinkLocation              func(childComplexity int, input model.BillingProfileLinkLocationInput) int
-		BillingProfileUnlinkEmail               func(childComplexity int, input model.BillingProfileLinkEmailInput) int
-		BillingProfileUnlinkLocation            func(childComplexity int, input model.BillingProfileLinkLocationInput) int
-		BillingProfileUpdate                    func(childComplexity int, input model.BillingProfileUpdateInput) int
-		ContactAddNewLocation                   func(childComplexity int, contactID string) int
-		ContactAddOrganizationByID              func(childComplexity int, input model.ContactOrganizationInput) int
-		ContactAddSocial                        func(childComplexity int, contactID string, input model.SocialInput) int
-		ContactAddTagByID                       func(childComplexity int, input model.ContactTagInput) int
-		ContactArchive                          func(childComplexity int, contactID string) int
-		ContactCreate                           func(childComplexity int, input model.ContactInput) int
-		ContactHardDelete                       func(childComplexity int, contactID string) int
-		ContactMerge                            func(childComplexity int, primaryContactID string, mergedContactIds []string) int
-		ContactRemoveLocation                   func(childComplexity int, contactID string, locationID string) int
-		ContactRemoveOrganizationByID           func(childComplexity int, input model.ContactOrganizationInput) int
-		ContactRemoveTagByID                    func(childComplexity int, input model.ContactTagInput) int
-		ContactRestoreFromArchive               func(childComplexity int, contactID string) int
-		ContactUpdate                           func(childComplexity int, input model.ContactUpdateInput) int
-		ContractAddAttachment                   func(childComplexity int, contractID string, attachmentID string) int
-		ContractCreate                          func(childComplexity int, input model.ContractInput) int
-		ContractDelete                          func(childComplexity int, id string) int
-		ContractLineItemClose                   func(childComplexity int, input model.ServiceLineItemCloseInput) int
-		ContractLineItemCreate                  func(childComplexity int, input model.ServiceLineItemInput) int
-		ContractLineItemNewVersion              func(childComplexity int, input model.ServiceLineItemNewVersionInput) int
-		ContractLineItemUpdate                  func(childComplexity int, input model.ServiceLineItemUpdateInput) int
-		ContractRemoveAttachment                func(childComplexity int, contractID string, attachmentID string) int
-		ContractRenew                           func(childComplexity int, input model.ContractRenewalInput) int
-		ContractUpdate                          func(childComplexity int, input model.ContractUpdateInput) int
-		CustomFieldDeleteFromContactByID        func(childComplexity int, contactID string, id string) int
-		CustomFieldDeleteFromContactByName      func(childComplexity int, contactID string, fieldName string) int
-		CustomFieldDeleteFromFieldSetByID       func(childComplexity int, contactID string, fieldSetID string, id string) int
-		CustomFieldMergeToContact               func(childComplexity int, contactID string, input model.CustomFieldInput) int
-		CustomFieldMergeToFieldSet              func(childComplexity int, contactID string, fieldSetID string, input model.CustomFieldInput) int
-		CustomFieldTemplateCreate               func(childComplexity int, input model.CustomFieldTemplateInput) int
-		CustomFieldUpdateInContact              func(childComplexity int, contactID string, input model.CustomFieldUpdateInput) int
-		CustomFieldUpdateInFieldSet             func(childComplexity int, contactID string, fieldSetID string, input model.CustomFieldUpdateInput) int
-		CustomFieldsMergeAndUpdateInContact     func(childComplexity int, contactID string, customFields []*model.CustomFieldInput, fieldSets []*model.FieldSetInput) int
-		CustomerContactCreate                   func(childComplexity int, input model.CustomerContactInput) int
-		CustomerUserAddJobRole                  func(childComplexity int, id string, jobRoleInput model.JobRoleInput) int
-		EmailDelete                             func(childComplexity int, id string) int
-		EmailMergeToContact                     func(childComplexity int, contactID string, input model.EmailInput) int
-		EmailMergeToOrganization                func(childComplexity int, organizationID string, input model.EmailInput) int
-		EmailMergeToUser                        func(childComplexity int, userID string, input model.EmailInput) int
-		EmailRemoveFromContact                  func(childComplexity int, contactID string, email string) int
-		EmailRemoveFromContactByID              func(childComplexity int, contactID string, id string) int
-		EmailRemoveFromOrganization             func(childComplexity int, organizationID string, email string) int
-		EmailRemoveFromOrganizationByID         func(childComplexity int, organizationID string, id string) int
-		EmailRemoveFromUser                     func(childComplexity int, userID string, email string) int
-		EmailRemoveFromUserByID                 func(childComplexity int, userID string, id string) int
-		EmailUpdateInContact                    func(childComplexity int, contactID string, input model.EmailUpdateInput) int
-		EmailUpdateInOrganization               func(childComplexity int, organizationID string, input model.EmailUpdateInput) int
-		EmailUpdateInUser                       func(childComplexity int, userID string, input model.EmailUpdateInput) int
-		EntityTemplateCreate                    func(childComplexity int, input model.EntityTemplateInput) int
-		FieldSetDeleteFromContact               func(childComplexity int, contactID string, id string) int
-		FieldSetMergeToContact                  func(childComplexity int, contactID string, input model.FieldSetInput) int
-		FieldSetUpdateInContact                 func(childComplexity int, contactID string, input model.FieldSetUpdateInput) int
-		InteractionEventCreate                  func(childComplexity int, event model.InteractionEventInput) int
-		InteractionEventLinkAttachment          func(childComplexity int, eventID string, attachmentID string) int
-		InteractionSessionCreate                func(childComplexity int, session model.InteractionSessionInput) int
-		InteractionSessionLinkAttachment        func(childComplexity int, sessionID string, attachmentID string) int
-		InvoiceNextDryRunForContract            func(childComplexity int, contractID string) int
-		InvoicePay                              func(childComplexity int, id string) int
-		InvoiceSimulate                         func(childComplexity int, input model.InvoiceSimulateInput) int
-		InvoiceUpdate                           func(childComplexity int, input model.InvoiceUpdateInput) int
-		InvoiceVoid                             func(childComplexity int, id string) int
-		InvoicingCycleCreate                    func(childComplexity int, input model.InvoicingCycleInput) int
-		InvoicingCycleUpdate                    func(childComplexity int, input model.InvoicingCycleUpdateInput) int
-		JobRoleCreate                           func(childComplexity int, contactID string, input model.JobRoleInput) int
-		JobRoleDelete                           func(childComplexity int, contactID string, roleID string) int
-		JobRoleUpdate                           func(childComplexity int, contactID string, input model.JobRoleUpdateInput) int
-		LocationRemoveFromContact               func(childComplexity int, contactID string, locationID string) int
-		LocationRemoveFromOrganization          func(childComplexity int, organizationID string, locationID string) int
-		LocationUpdate                          func(childComplexity int, input model.LocationUpdateInput) int
-		LogEntryAddTag                          func(childComplexity int, id string, input model.TagIDOrNameInput) int
-		LogEntryCreateForOrganization           func(childComplexity int, organizationID string, input model.LogEntryInput) int
-		LogEntryRemoveTag                       func(childComplexity int, id string, input model.TagIDOrNameInput) int
-		LogEntryResetTags                       func(childComplexity int, id string, input []*model.TagIDOrNameInput) int
-		LogEntryUpdate                          func(childComplexity int, id string, input model.LogEntryUpdateInput) int
-		MasterPlanCreate                        func(childComplexity int, input model.MasterPlanInput) int
-		MasterPlanCreateDefault                 func(childComplexity int, input model.MasterPlanInput) int
-		MasterPlanDuplicate                     func(childComplexity int, id string) int
-		MasterPlanMilestoneBulkUpdate           func(childComplexity int, input []*model.MasterPlanMilestoneUpdateInput) int
-		MasterPlanMilestoneCreate               func(childComplexity int, input model.MasterPlanMilestoneInput) int
-		MasterPlanMilestoneDuplicate            func(childComplexity int, masterPlanID string, id string) int
-		MasterPlanMilestoneReorder              func(childComplexity int, input model.MasterPlanMilestoneReorderInput) int
-		MasterPlanMilestoneUpdate               func(childComplexity int, input model.MasterPlanMilestoneUpdateInput) int
-		MasterPlanUpdate                        func(childComplexity int, input model.MasterPlanUpdateInput) int
-		MeetingAddNewLocation                   func(childComplexity int, meetingID string) int
-		MeetingAddNote                          func(childComplexity int, meetingID string, note *model.NoteInput) int
-		MeetingCreate                           func(childComplexity int, meeting model.MeetingInput) int
-		MeetingLinkAttachment                   func(childComplexity int, meetingID string, attachmentID string) int
-		MeetingLinkAttendedBy                   func(childComplexity int, meetingID string, participant model.MeetingParticipantInput) int
-		MeetingLinkRecording                    func(childComplexity int, meetingID string, attachmentID string) int
-		MeetingUnlinkAttachment                 func(childComplexity int, meetingID string, attachmentID string) int
-		MeetingUnlinkAttendedBy                 func(childComplexity int, meetingID string, participant model.MeetingParticipantInput) int
-		MeetingUnlinkRecording                  func(childComplexity int, meetingID string, attachmentID string) int
-		MeetingUpdate                           func(childComplexity int, meetingID string, meeting model.MeetingUpdateInput) int
-		NoteCreateForContact                    func(childComplexity int, contactID string, input model.NoteInput) int
-		NoteCreateForOrganization               func(childComplexity int, organizationID string, input model.NoteInput) int
-		NoteDelete                              func(childComplexity int, id string) int
-		NoteLinkAttachment                      func(childComplexity int, noteID string, attachmentID string) int
-		NoteUnlinkAttachment                    func(childComplexity int, noteID string, attachmentID string) int
-		NoteUpdate                              func(childComplexity int, input model.NoteUpdateInput) int
-		OfferingCreate                          func(childComplexity int, input *model.OfferingCreateInput) int
-		OfferingUpdate                          func(childComplexity int, input *model.OfferingUpdateInput) int
-		OpportunityRenewalUpdate                func(childComplexity int, input model.OpportunityRenewalUpdateInput, ownerUserID *string) int
-		OpportunityUpdate                       func(childComplexity int, input model.OpportunityUpdateInput) int
-		OrganizationAddNewLocation              func(childComplexity int, organizationID string) int
-		OrganizationAddSocial                   func(childComplexity int, organizationID string, input model.SocialInput) int
-		OrganizationAddSubsidiary               func(childComplexity int, input model.LinkOrganizationsInput) int
-		OrganizationArchive                     func(childComplexity int, id string) int
-		OrganizationArchiveAll                  func(childComplexity int, ids []string) int
-		OrganizationCreate                      func(childComplexity int, input model.OrganizationInput) int
-		OrganizationHide                        func(childComplexity int, id string) int
-		OrganizationHideAll                     func(childComplexity int, ids []string) int
-		OrganizationMerge                       func(childComplexity int, primaryOrganizationID string, mergedOrganizationIds []string) int
-		OrganizationPlanCreate                  func(childComplexity int, input model.OrganizationPlanInput) int
-		OrganizationPlanDuplicate               func(childComplexity int, id string, organizationID string) int
-		OrganizationPlanMilestoneBulkUpdate     func(childComplexity int, input []*model.OrganizationPlanMilestoneUpdateInput) int
-		OrganizationPlanMilestoneCreate         func(childComplexity int, input model.OrganizationPlanMilestoneInput) int
-		OrganizationPlanMilestoneDuplicate      func(childComplexity int, organizationID string, organizationPlanID string, id string) int
-		OrganizationPlanMilestoneReorder        func(childComplexity int, input model.OrganizationPlanMilestoneReorderInput) int
-		OrganizationPlanMilestoneUpdate         func(childComplexity int, input model.OrganizationPlanMilestoneUpdateInput) int
-		OrganizationPlanUpdate                  func(childComplexity int, input model.OrganizationPlanUpdateInput) int
-		OrganizationRemoveSubsidiary            func(childComplexity int, organizationID string, subsidiaryID string) int
-		OrganizationSetOwner                    func(childComplexity int, organizationID string, userID string) int
-		OrganizationShow                        func(childComplexity int, id string) int
-		OrganizationShowAll                     func(childComplexity int, ids []string) int
-		OrganizationUnsetOwner                  func(childComplexity int, organizationID string) int
-		OrganizationUpdate                      func(childComplexity int, input model.OrganizationUpdateInput) int
-		OrganizationUpdateOnboardingStatus      func(childComplexity int, input model.OnboardingStatusInput) int
-		PhoneNumberMergeToContact               func(childComplexity int, contactID string, input model.PhoneNumberInput) int
-		PhoneNumberMergeToOrganization          func(childComplexity int, organizationID string, input model.PhoneNumberInput) int
-		PhoneNumberMergeToUser                  func(childComplexity int, userID string, input model.PhoneNumberInput) int
-		PhoneNumberRemoveFromContactByE164      func(childComplexity int, contactID string, e164 string) int
-		PhoneNumberRemoveFromContactByID        func(childComplexity int, contactID string, id string) int
-		PhoneNumberRemoveFromOrganizationByE164 func(childComplexity int, organizationID string, e164 string) int
-		PhoneNumberRemoveFromOrganizationByID   func(childComplexity int, organizationID string, id string) int
-		PhoneNumberRemoveFromUserByE164         func(childComplexity int, userID string, e164 string) int
-		PhoneNumberRemoveFromUserByID           func(childComplexity int, userID string, id string) int
-		PhoneNumberUpdateInContact              func(childComplexity int, contactID string, input model.PhoneNumberUpdateInput) int
-		PhoneNumberUpdateInOrganization         func(childComplexity int, organizationID string, input model.PhoneNumberUpdateInput) int
-		PhoneNumberUpdateInUser                 func(childComplexity int, userID string, input model.PhoneNumberUpdateInput) int
-		PlayerMerge                             func(childComplexity int, userID string, input model.PlayerInput) int
-		ReminderCreate                          func(childComplexity int, input model.ReminderInput) int
-		ReminderUpdate                          func(childComplexity int, input model.ReminderUpdateInput) int
-		ServiceLineItemBulkUpdate               func(childComplexity int, input model.ServiceLineItemBulkUpdateInput) int
-		ServiceLineItemDelete                   func(childComplexity int, id string) int
-		SocialRemove                            func(childComplexity int, socialID string) int
-		SocialUpdate                            func(childComplexity int, input model.SocialUpdateInput) int
-		TableViewDefCreate                      func(childComplexity int, input model.TableViewDefCreateInput) int
-		TableViewDefUpdate                      func(childComplexity int, input model.TableViewDefUpdateInput) int
-		TagCreate                               func(childComplexity int, input model.TagInput) int
-		TagDelete                               func(childComplexity int, id string) int
-		TagUpdate                               func(childComplexity int, input model.TagUpdateInput) int
-		TenantAddBillingProfile                 func(childComplexity int, input model.TenantBillingProfileInput) int
-		TenantMerge                             func(childComplexity int, tenant model.TenantInput) int
-		TenantUpdateBillingProfile              func(childComplexity int, input model.TenantBillingProfileUpdateInput) int
-		TenantUpdateSettings                    func(childComplexity int, input *model.TenantSettingsInput) int
-		UserAddRole                             func(childComplexity int, id string, role model.Role) int
-		UserAddRoleInTenant                     func(childComplexity int, id string, tenant string, role model.Role) int
-		UserCreate                              func(childComplexity int, input model.UserInput) int
-		UserDelete                              func(childComplexity int, id string) int
-		UserDeleteInTenant                      func(childComplexity int, id string, tenant string) int
-		UserRemoveRole                          func(childComplexity int, id string, role model.Role) int
-		UserRemoveRoleInTenant                  func(childComplexity int, id string, tenant string, role model.Role) int
-		UserUpdate                              func(childComplexity int, input model.UserUpdateInput) int
-		WorkspaceMerge                          func(childComplexity int, workspace model.WorkspaceInput) int
-		WorkspaceMergeToTenant                  func(childComplexity int, workspace model.WorkspaceInput, tenant string) int
+		AnalysisCreate                             func(childComplexity int, analysis model.AnalysisInput) int
+		AttachmentCreate                           func(childComplexity int, input model.AttachmentInput) int
+		BankAccountCreate                          func(childComplexity int, input *model.BankAccountCreateInput) int
+		BankAccountDelete                          func(childComplexity int, id string) int
+		BankAccountUpdate                          func(childComplexity int, input *model.BankAccountUpdateInput) int
+		BillingProfileCreate                       func(childComplexity int, input model.BillingProfileInput) int
+		BillingProfileLinkEmail                    func(childComplexity int, input model.BillingProfileLinkEmailInput) int
+		BillingProfileLinkLocation                 func(childComplexity int, input model.BillingProfileLinkLocationInput) int
+		BillingProfileUnlinkEmail                  func(childComplexity int, input model.BillingProfileLinkEmailInput) int
+		BillingProfileUnlinkLocation               func(childComplexity int, input model.BillingProfileLinkLocationInput) int
+		BillingProfileUpdate                       func(childComplexity int, input model.BillingProfileUpdateInput) int
+		ContactAddNewLocation                      func(childComplexity int, contactID string) int
+		ContactAddOrganizationByID                 func(childComplexity int, input model.ContactOrganizationInput) int
+		ContactAddSocial                           func(childComplexity int, contactID string, input model.SocialInput) int
+		ContactAddTagByID                          func(childComplexity int, input model.ContactTagInput) int
+		ContactArchive                             func(childComplexity int, contactID string) int
+		ContactCreate                              func(childComplexity int, input model.ContactInput) int
+		ContactHardDelete                          func(childComplexity int, contactID string) int
+		ContactMerge                               func(childComplexity int, primaryContactID string, mergedContactIds []string) int
+		ContactRemoveLocation                      func(childComplexity int, contactID string, locationID string) int
+		ContactRemoveOrganizationByID              func(childComplexity int, input model.ContactOrganizationInput) int
+		ContactRemoveTagByID                       func(childComplexity int, input model.ContactTagInput) int
+		ContactRestoreFromArchive                  func(childComplexity int, contactID string) int
+		ContactUpdate                              func(childComplexity int, input model.ContactUpdateInput) int
+		ContractAddAttachment                      func(childComplexity int, contractID string, attachmentID string) int
+		ContractCreate                             func(childComplexity int, input model.ContractInput) int
+		ContractDelete                             func(childComplexity int, id string) int
+		ContractLineItemClose                      func(childComplexity int, input model.ServiceLineItemCloseInput) int
+		ContractLineItemCreate                     func(childComplexity int, input model.ServiceLineItemInput) int
+		ContractLineItemNewVersion                 func(childComplexity int, input model.ServiceLineItemNewVersionInput) int
+		ContractLineItemUpdate                     func(childComplexity int, input model.ServiceLineItemUpdateInput) int
+		ContractRemoveAttachment                   func(childComplexity int, contractID string, attachmentID string) int
+		ContractRenew                              func(childComplexity int, input model.ContractRenewalInput) int
+		ContractUpdate                             func(childComplexity int, input model.ContractUpdateInput) int
+		CustomFieldDeleteFromContactByID           func(childComplexity int, contactID string, id string) int
+		CustomFieldDeleteFromContactByName         func(childComplexity int, contactID string, fieldName string) int
+		CustomFieldDeleteFromFieldSetByID          func(childComplexity int, contactID string, fieldSetID string, id string) int
+		CustomFieldMergeToContact                  func(childComplexity int, contactID string, input model.CustomFieldInput) int
+		CustomFieldMergeToFieldSet                 func(childComplexity int, contactID string, fieldSetID string, input model.CustomFieldInput) int
+		CustomFieldTemplateCreate                  func(childComplexity int, input model.CustomFieldTemplateInput) int
+		CustomFieldUpdateInContact                 func(childComplexity int, contactID string, input model.CustomFieldUpdateInput) int
+		CustomFieldUpdateInFieldSet                func(childComplexity int, contactID string, fieldSetID string, input model.CustomFieldUpdateInput) int
+		CustomFieldsMergeAndUpdateInContact        func(childComplexity int, contactID string, customFields []*model.CustomFieldInput, fieldSets []*model.FieldSetInput) int
+		CustomerContactCreate                      func(childComplexity int, input model.CustomerContactInput) int
+		CustomerUserAddJobRole                     func(childComplexity int, id string, jobRoleInput model.JobRoleInput) int
+		EmailDelete                                func(childComplexity int, id string) int
+		EmailMergeToContact                        func(childComplexity int, contactID string, input model.EmailInput) int
+		EmailMergeToOrganization                   func(childComplexity int, organizationID string, input model.EmailInput) int
+		EmailMergeToUser                           func(childComplexity int, userID string, input model.EmailInput) int
+		EmailRemoveFromContact                     func(childComplexity int, contactID string, email string) int
+		EmailRemoveFromContactByID                 func(childComplexity int, contactID string, id string) int
+		EmailRemoveFromOrganization                func(childComplexity int, organizationID string, email string) int
+		EmailRemoveFromOrganizationByID            func(childComplexity int, organizationID string, id string) int
+		EmailRemoveFromUser                        func(childComplexity int, userID string, email string) int
+		EmailRemoveFromUserByID                    func(childComplexity int, userID string, id string) int
+		EmailUpdateInContact                       func(childComplexity int, contactID string, input model.EmailUpdateInput) int
+		EmailUpdateInOrganization                  func(childComplexity int, organizationID string, input model.EmailUpdateInput) int
+		EmailUpdateInUser                          func(childComplexity int, userID string, input model.EmailUpdateInput) int
+		EntityTemplateCreate                       func(childComplexity int, input model.EntityTemplateInput) int
+		FieldSetDeleteFromContact                  func(childComplexity int, contactID string, id string) int
+		FieldSetMergeToContact                     func(childComplexity int, contactID string, input model.FieldSetInput) int
+		FieldSetUpdateInContact                    func(childComplexity int, contactID string, input model.FieldSetUpdateInput) int
+		InteractionEventCreate                     func(childComplexity int, event model.InteractionEventInput) int
+		InteractionEventLinkAttachment             func(childComplexity int, eventID string, attachmentID string) int
+		InteractionSessionCreate                   func(childComplexity int, session model.InteractionSessionInput) int
+		InteractionSessionLinkAttachment           func(childComplexity int, sessionID string, attachmentID string) int
+		InvoiceNextDryRunForContract               func(childComplexity int, contractID string) int
+		InvoicePay                                 func(childComplexity int, id string) int
+		InvoiceSimulate                            func(childComplexity int, input model.InvoiceSimulateInput) int
+		InvoiceUpdate                              func(childComplexity int, input model.InvoiceUpdateInput) int
+		InvoiceVoid                                func(childComplexity int, id string) int
+		InvoicingCycleCreate                       func(childComplexity int, input model.InvoicingCycleInput) int
+		InvoicingCycleUpdate                       func(childComplexity int, input model.InvoicingCycleUpdateInput) int
+		JobRoleCreate                              func(childComplexity int, contactID string, input model.JobRoleInput) int
+		JobRoleDelete                              func(childComplexity int, contactID string, roleID string) int
+		JobRoleUpdate                              func(childComplexity int, contactID string, input model.JobRoleUpdateInput) int
+		LocationRemoveFromContact                  func(childComplexity int, contactID string, locationID string) int
+		LocationRemoveFromOrganization             func(childComplexity int, organizationID string, locationID string) int
+		LocationUpdate                             func(childComplexity int, input model.LocationUpdateInput) int
+		LogEntryAddTag                             func(childComplexity int, id string, input model.TagIDOrNameInput) int
+		LogEntryCreateForOrganization              func(childComplexity int, organizationID string, input model.LogEntryInput) int
+		LogEntryRemoveTag                          func(childComplexity int, id string, input model.TagIDOrNameInput) int
+		LogEntryResetTags                          func(childComplexity int, id string, input []*model.TagIDOrNameInput) int
+		LogEntryUpdate                             func(childComplexity int, id string, input model.LogEntryUpdateInput) int
+		MasterPlanCreate                           func(childComplexity int, input model.MasterPlanInput) int
+		MasterPlanCreateDefault                    func(childComplexity int, input model.MasterPlanInput) int
+		MasterPlanDuplicate                        func(childComplexity int, id string) int
+		MasterPlanMilestoneBulkUpdate              func(childComplexity int, input []*model.MasterPlanMilestoneUpdateInput) int
+		MasterPlanMilestoneCreate                  func(childComplexity int, input model.MasterPlanMilestoneInput) int
+		MasterPlanMilestoneDuplicate               func(childComplexity int, masterPlanID string, id string) int
+		MasterPlanMilestoneReorder                 func(childComplexity int, input model.MasterPlanMilestoneReorderInput) int
+		MasterPlanMilestoneUpdate                  func(childComplexity int, input model.MasterPlanMilestoneUpdateInput) int
+		MasterPlanUpdate                           func(childComplexity int, input model.MasterPlanUpdateInput) int
+		MeetingAddNewLocation                      func(childComplexity int, meetingID string) int
+		MeetingAddNote                             func(childComplexity int, meetingID string, note *model.NoteInput) int
+		MeetingCreate                              func(childComplexity int, meeting model.MeetingInput) int
+		MeetingLinkAttachment                      func(childComplexity int, meetingID string, attachmentID string) int
+		MeetingLinkAttendedBy                      func(childComplexity int, meetingID string, participant model.MeetingParticipantInput) int
+		MeetingLinkRecording                       func(childComplexity int, meetingID string, attachmentID string) int
+		MeetingUnlinkAttachment                    func(childComplexity int, meetingID string, attachmentID string) int
+		MeetingUnlinkAttendedBy                    func(childComplexity int, meetingID string, participant model.MeetingParticipantInput) int
+		MeetingUnlinkRecording                     func(childComplexity int, meetingID string, attachmentID string) int
+		MeetingUpdate                              func(childComplexity int, meetingID string, meeting model.MeetingUpdateInput) int
+		NoteCreateForContact                       func(childComplexity int, contactID string, input model.NoteInput) int
+		NoteCreateForOrganization                  func(childComplexity int, organizationID string, input model.NoteInput) int
+		NoteDelete                                 func(childComplexity int, id string) int
+		NoteLinkAttachment                         func(childComplexity int, noteID string, attachmentID string) int
+		NoteUnlinkAttachment                       func(childComplexity int, noteID string, attachmentID string) int
+		NoteUpdate                                 func(childComplexity int, input model.NoteUpdateInput) int
+		OfferingCreate                             func(childComplexity int, input *model.OfferingCreateInput) int
+		OfferingUpdate                             func(childComplexity int, input *model.OfferingUpdateInput) int
+		OpportunityRenewalUpdate                   func(childComplexity int, input model.OpportunityRenewalUpdateInput, ownerUserID *string) int
+		OpportunityRenewalUpdateAllForOrganization func(childComplexity int, input model.OpportunityRenewalUpdateAllForOrganizationInput) int
+		OpportunityUpdate                          func(childComplexity int, input model.OpportunityUpdateInput) int
+		OrganizationAddNewLocation                 func(childComplexity int, organizationID string) int
+		OrganizationAddSocial                      func(childComplexity int, organizationID string, input model.SocialInput) int
+		OrganizationAddSubsidiary                  func(childComplexity int, input model.LinkOrganizationsInput) int
+		OrganizationArchive                        func(childComplexity int, id string) int
+		OrganizationArchiveAll                     func(childComplexity int, ids []string) int
+		OrganizationCreate                         func(childComplexity int, input model.OrganizationInput) int
+		OrganizationHide                           func(childComplexity int, id string) int
+		OrganizationHideAll                        func(childComplexity int, ids []string) int
+		OrganizationMerge                          func(childComplexity int, primaryOrganizationID string, mergedOrganizationIds []string) int
+		OrganizationPlanCreate                     func(childComplexity int, input model.OrganizationPlanInput) int
+		OrganizationPlanDuplicate                  func(childComplexity int, id string, organizationID string) int
+		OrganizationPlanMilestoneBulkUpdate        func(childComplexity int, input []*model.OrganizationPlanMilestoneUpdateInput) int
+		OrganizationPlanMilestoneCreate            func(childComplexity int, input model.OrganizationPlanMilestoneInput) int
+		OrganizationPlanMilestoneDuplicate         func(childComplexity int, organizationID string, organizationPlanID string, id string) int
+		OrganizationPlanMilestoneReorder           func(childComplexity int, input model.OrganizationPlanMilestoneReorderInput) int
+		OrganizationPlanMilestoneUpdate            func(childComplexity int, input model.OrganizationPlanMilestoneUpdateInput) int
+		OrganizationPlanUpdate                     func(childComplexity int, input model.OrganizationPlanUpdateInput) int
+		OrganizationRemoveSubsidiary               func(childComplexity int, organizationID string, subsidiaryID string) int
+		OrganizationSetOwner                       func(childComplexity int, organizationID string, userID string) int
+		OrganizationShow                           func(childComplexity int, id string) int
+		OrganizationShowAll                        func(childComplexity int, ids []string) int
+		OrganizationUnsetOwner                     func(childComplexity int, organizationID string) int
+		OrganizationUpdate                         func(childComplexity int, input model.OrganizationUpdateInput) int
+		OrganizationUpdateOnboardingStatus         func(childComplexity int, input model.OnboardingStatusInput) int
+		PhoneNumberMergeToContact                  func(childComplexity int, contactID string, input model.PhoneNumberInput) int
+		PhoneNumberMergeToOrganization             func(childComplexity int, organizationID string, input model.PhoneNumberInput) int
+		PhoneNumberMergeToUser                     func(childComplexity int, userID string, input model.PhoneNumberInput) int
+		PhoneNumberRemoveFromContactByE164         func(childComplexity int, contactID string, e164 string) int
+		PhoneNumberRemoveFromContactByID           func(childComplexity int, contactID string, id string) int
+		PhoneNumberRemoveFromOrganizationByE164    func(childComplexity int, organizationID string, e164 string) int
+		PhoneNumberRemoveFromOrganizationByID      func(childComplexity int, organizationID string, id string) int
+		PhoneNumberRemoveFromUserByE164            func(childComplexity int, userID string, e164 string) int
+		PhoneNumberRemoveFromUserByID              func(childComplexity int, userID string, id string) int
+		PhoneNumberUpdateInContact                 func(childComplexity int, contactID string, input model.PhoneNumberUpdateInput) int
+		PhoneNumberUpdateInOrganization            func(childComplexity int, organizationID string, input model.PhoneNumberUpdateInput) int
+		PhoneNumberUpdateInUser                    func(childComplexity int, userID string, input model.PhoneNumberUpdateInput) int
+		PlayerMerge                                func(childComplexity int, userID string, input model.PlayerInput) int
+		ReminderCreate                             func(childComplexity int, input model.ReminderInput) int
+		ReminderUpdate                             func(childComplexity int, input model.ReminderUpdateInput) int
+		ServiceLineItemBulkUpdate                  func(childComplexity int, input model.ServiceLineItemBulkUpdateInput) int
+		ServiceLineItemDelete                      func(childComplexity int, id string) int
+		SocialRemove                               func(childComplexity int, socialID string) int
+		SocialUpdate                               func(childComplexity int, input model.SocialUpdateInput) int
+		TableViewDefCreate                         func(childComplexity int, input model.TableViewDefCreateInput) int
+		TableViewDefUpdate                         func(childComplexity int, input model.TableViewDefUpdateInput) int
+		TagCreate                                  func(childComplexity int, input model.TagInput) int
+		TagDelete                                  func(childComplexity int, id string) int
+		TagUpdate                                  func(childComplexity int, input model.TagUpdateInput) int
+		TenantAddBillingProfile                    func(childComplexity int, input model.TenantBillingProfileInput) int
+		TenantMerge                                func(childComplexity int, tenant model.TenantInput) int
+		TenantUpdateBillingProfile                 func(childComplexity int, input model.TenantBillingProfileUpdateInput) int
+		TenantUpdateSettings                       func(childComplexity int, input *model.TenantSettingsInput) int
+		UserAddRole                                func(childComplexity int, id string, role model.Role) int
+		UserAddRoleInTenant                        func(childComplexity int, id string, tenant string, role model.Role) int
+		UserCreate                                 func(childComplexity int, input model.UserInput) int
+		UserDelete                                 func(childComplexity int, id string) int
+		UserDeleteInTenant                         func(childComplexity int, id string, tenant string) int
+		UserRemoveRole                             func(childComplexity int, id string, role model.Role) int
+		UserRemoveRoleInTenant                     func(childComplexity int, id string, tenant string, role model.Role) int
+		UserUpdate                                 func(childComplexity int, input model.UserUpdateInput) int
+		WorkspaceMerge                             func(childComplexity int, workspace model.WorkspaceInput) int
+		WorkspaceMergeToTenant                     func(childComplexity int, workspace model.WorkspaceInput, tenant string) int
 	}
 
 	Note struct {
@@ -1867,6 +1868,7 @@ type MutationResolver interface {
 	OfferingUpdate(ctx context.Context, input *model.OfferingUpdateInput) (*string, error)
 	OpportunityUpdate(ctx context.Context, input model.OpportunityUpdateInput) (*model.Opportunity, error)
 	OpportunityRenewalUpdate(ctx context.Context, input model.OpportunityRenewalUpdateInput, ownerUserID *string) (*model.Opportunity, error)
+	OpportunityRenewalUpdateAllForOrganization(ctx context.Context, input model.OpportunityRenewalUpdateAllForOrganizationInput) (*model.Opportunity, error)
 	OrganizationCreate(ctx context.Context, input model.OrganizationInput) (*model.Organization, error)
 	OrganizationUpdate(ctx context.Context, input model.OrganizationUpdateInput) (*model.Organization, error)
 	OrganizationArchive(ctx context.Context, id string) (*model.Result, error)
@@ -7653,6 +7655,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.OpportunityRenewalUpdate(childComplexity, args["input"].(model.OpportunityRenewalUpdateInput), args["ownerUserId"].(*string)), true
 
+	case "Mutation.opportunityRenewal_UpdateAllForOrganization":
+		if e.complexity.Mutation.OpportunityRenewalUpdateAllForOrganization == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_opportunityRenewal_UpdateAllForOrganization_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.OpportunityRenewalUpdateAllForOrganization(childComplexity, args["input"].(model.OpportunityRenewalUpdateAllForOrganizationInput)), true
+
 	case "Mutation.opportunityUpdate":
 		if e.complexity.Mutation.OpportunityUpdate == nil {
 			break
@@ -11705,6 +11719,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputOfferingCreateInput,
 		ec.unmarshalInputOfferingUpdateInput,
 		ec.unmarshalInputOnboardingStatusInput,
+		ec.unmarshalInputOpportunityRenewalUpdateAllForOrganizationInput,
 		ec.unmarshalInputOpportunityRenewalUpdateInput,
 		ec.unmarshalInputOpportunityUpdateInput,
 		ec.unmarshalInputOrganizationInput,
@@ -13138,7 +13153,10 @@ type DashboardNewCustomersPerMonth {
 
 enum DashboardCustomerMapState {
     OK
-    AT_RISK
+    """
+    Deprecated
+    """
+    AT_RISK @deprecated(reason: "Use HIGH_RISK instead")
     CHURNED
     HIGH_RISK
     MEDIUM_RISK
@@ -14440,6 +14458,7 @@ enum ChargePeriod {
 extend type Mutation {
     opportunityUpdate(input: OpportunityUpdateInput!): Opportunity!
     opportunityRenewalUpdate(input: OpportunityRenewalUpdateInput!, ownerUserId: ID): Opportunity!
+    opportunityRenewal_UpdateAllForOrganization(input: OpportunityRenewalUpdateAllForOrganizationInput!): Opportunity!
 }
 
 type Opportunity implements Node {
@@ -14516,7 +14535,11 @@ input OpportunityUpdateInput {
     appSource:           String
     externalReference:   ExternalSystemReferenceInput
 }
-`, BuiltIn: false},
+
+input OpportunityRenewalUpdateAllForOrganizationInput {
+    organizationId:     ID!
+    renewalLikelihood:  OpportunityRenewalLikelihood
+}`, BuiltIn: false},
 	{Name: "../../../customer-os-api/graph/schemas/order.graphqls", Input: `type Order {
     id: ID!
     createdAt: Time!
@@ -18354,6 +18377,21 @@ func (ec *executionContext) field_Mutation_opportunityRenewalUpdate_args(ctx con
 		}
 	}
 	args["ownerUserId"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_opportunityRenewal_UpdateAllForOrganization_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.OpportunityRenewalUpdateAllForOrganizationInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNOpportunityRenewalUpdateAllForOrganizationInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐOpportunityRenewalUpdateAllForOrganizationInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -60247,6 +60285,113 @@ func (ec *executionContext) fieldContext_Mutation_opportunityRenewalUpdate(ctx c
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_opportunityRenewal_UpdateAllForOrganization(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_opportunityRenewal_UpdateAllForOrganization(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().OpportunityRenewalUpdateAllForOrganization(rctx, fc.Args["input"].(model.OpportunityRenewalUpdateAllForOrganizationInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Opportunity)
+	fc.Result = res
+	return ec.marshalNOpportunity2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐOpportunity(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_opportunityRenewal_UpdateAllForOrganization(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Opportunity_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Opportunity_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Opportunity_updatedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_Opportunity_name(ctx, field)
+			case "amount":
+				return ec.fieldContext_Opportunity_amount(ctx, field)
+			case "maxAmount":
+				return ec.fieldContext_Opportunity_maxAmount(ctx, field)
+			case "internalType":
+				return ec.fieldContext_Opportunity_internalType(ctx, field)
+			case "externalType":
+				return ec.fieldContext_Opportunity_externalType(ctx, field)
+			case "internalStage":
+				return ec.fieldContext_Opportunity_internalStage(ctx, field)
+			case "externalStage":
+				return ec.fieldContext_Opportunity_externalStage(ctx, field)
+			case "estimatedClosedAt":
+				return ec.fieldContext_Opportunity_estimatedClosedAt(ctx, field)
+			case "generalNotes":
+				return ec.fieldContext_Opportunity_generalNotes(ctx, field)
+			case "nextSteps":
+				return ec.fieldContext_Opportunity_nextSteps(ctx, field)
+			case "renewedAt":
+				return ec.fieldContext_Opportunity_renewedAt(ctx, field)
+			case "renewalApproved":
+				return ec.fieldContext_Opportunity_renewalApproved(ctx, field)
+			case "renewalLikelihood":
+				return ec.fieldContext_Opportunity_renewalLikelihood(ctx, field)
+			case "renewalUpdatedByUserId":
+				return ec.fieldContext_Opportunity_renewalUpdatedByUserId(ctx, field)
+			case "renewalUpdatedByUserAt":
+				return ec.fieldContext_Opportunity_renewalUpdatedByUserAt(ctx, field)
+			case "comments":
+				return ec.fieldContext_Opportunity_comments(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_Opportunity_createdBy(ctx, field)
+			case "owner":
+				return ec.fieldContext_Opportunity_owner(ctx, field)
+			case "source":
+				return ec.fieldContext_Opportunity_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Opportunity_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Opportunity_appSource(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_Opportunity_externalLinks(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Opportunity", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_opportunityRenewal_UpdateAllForOrganization_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_organization_Create(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_organization_Create(ctx, field)
 	if err != nil {
@@ -97954,6 +98099,40 @@ func (ec *executionContext) unmarshalInputOnboardingStatusInput(ctx context.Cont
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputOpportunityRenewalUpdateAllForOrganizationInput(ctx context.Context, obj interface{}) (model.OpportunityRenewalUpdateAllForOrganizationInput, error) {
+	var it model.OpportunityRenewalUpdateAllForOrganizationInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"organizationId", "renewalLikelihood"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "organizationId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OrganizationID = data
+		case "renewalLikelihood":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("renewalLikelihood"))
+			data, err := ec.unmarshalOOpportunityRenewalLikelihood2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐOpportunityRenewalLikelihood(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RenewalLikelihood = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputOpportunityRenewalUpdateInput(ctx context.Context, obj interface{}) (model.OpportunityRenewalUpdateInput, error) {
 	var it model.OpportunityRenewalUpdateInput
 	asMap := map[string]interface{}{}
@@ -109615,6 +109794,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "opportunityRenewal_UpdateAllForOrganization":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_opportunityRenewal_UpdateAllForOrganization(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "organization_Create":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_organization_Create(ctx, field)
@@ -119617,6 +119803,11 @@ func (ec *executionContext) unmarshalNOpportunityRenewalLikelihood2githubᚗcom�
 
 func (ec *executionContext) marshalNOpportunityRenewalLikelihood2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐOpportunityRenewalLikelihood(ctx context.Context, sel ast.SelectionSet, v model.OpportunityRenewalLikelihood) graphql.Marshaler {
 	return v
+}
+
+func (ec *executionContext) unmarshalNOpportunityRenewalUpdateAllForOrganizationInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐOpportunityRenewalUpdateAllForOrganizationInput(ctx context.Context, v interface{}) (model.OpportunityRenewalUpdateAllForOrganizationInput, error) {
+	res, err := ec.unmarshalInputOpportunityRenewalUpdateAllForOrganizationInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNOpportunityRenewalUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐOpportunityRenewalUpdateInput(ctx context.Context, v interface{}) (model.OpportunityRenewalUpdateInput, error) {

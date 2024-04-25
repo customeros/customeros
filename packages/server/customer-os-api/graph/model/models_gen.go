@@ -1942,6 +1942,11 @@ type Opportunity struct {
 func (Opportunity) IsNode()            {}
 func (this Opportunity) GetID() string { return this.ID }
 
+type OpportunityRenewalUpdateAllForOrganizationInput struct {
+	OrganizationID    string                        `json:"organizationId"`
+	RenewalLikelihood *OpportunityRenewalLikelihood `json:"renewalLikelihood,omitempty"`
+}
+
 type OpportunityRenewalUpdateInput struct {
 	OpportunityID string `json:"opportunityId"`
 	// Deprecated
@@ -3711,7 +3716,8 @@ func (e CustomFieldTemplateType) MarshalGQL(w io.Writer) {
 type DashboardCustomerMapState string
 
 const (
-	DashboardCustomerMapStateOk         DashboardCustomerMapState = "OK"
+	DashboardCustomerMapStateOk DashboardCustomerMapState = "OK"
+	// Deprecated
 	DashboardCustomerMapStateAtRisk     DashboardCustomerMapState = "AT_RISK"
 	DashboardCustomerMapStateChurned    DashboardCustomerMapState = "CHURNED"
 	DashboardCustomerMapStateHighRisk   DashboardCustomerMapState = "HIGH_RISK"

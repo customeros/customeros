@@ -26,6 +26,7 @@ type OpportunityService interface {
 	UpdateRenewal(ctx context.Context, opportunityId string, renewalLikelihood neo4jenum.RenewalLikelihood, amount *float64, comments *string, ownerUserId *string, appSource string) error
 	GetById(ctx context.Context, id string) (*neo4jentity.OpportunityEntity, error)
 	GetOpportunitiesForContracts(ctx context.Context, contractIds []string) (*neo4jentity.OpportunityEntities, error)
+	UpdateRenewalsForOrganization(ctx context.Context, organizationId string, renewalLikelihood neo4jenum.RenewalLikelihood) error
 }
 type opportunityService struct {
 	log          logger.Logger
@@ -153,27 +154,25 @@ func (s *opportunityService) UpdateRenewal(ctx context.Context, opportunityId st
 		return err
 	}
 
+	fieldsMask := make([]opportunitypb.OpportunityMaskField, 0)
 	opportunityRenewalUpdateRequest := opportunitypb.UpdateRenewalOpportunityGrpcRequest{
 		Tenant:         common.GetTenantFromContext(ctx),
 		Id:             opportunityId,
 		LoggedInUserId: common.GetUserIdFromContext(ctx),
-		Amount:         utils.IfNotNilFloat64(amount),
-		Comments:       utils.IfNotNilString(comments),
 		OwnerUserId:    utils.IfNotNilString(ownerUserId),
 		SourceFields: &commonpb.SourceFields{
 			Source:    string(neo4jentity.DataSourceOpenline),
 			AppSource: appSource,
 		},
 	}
-	fieldsMask := make([]opportunitypb.OpportunityMaskField, 0)
 	if amount != nil {
+		opportunityRenewalUpdateRequest.Amount = *amount
 		fieldsMask = append(fieldsMask, opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_AMOUNT)
 	}
 	if comments != nil {
+		opportunityRenewalUpdateRequest.Comments = *comments
 		fieldsMask = append(fieldsMask, opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_COMMENTS)
 	}
-	fieldsMask = append(fieldsMask, opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_RENEWAL_LIKELIHOOD)
-	opportunityRenewalUpdateRequest.FieldsMask = fieldsMask
 
 	switch renewalLikelihood {
 	case neo4jenum.RenewalLikelihoodHigh:
@@ -187,6 +186,8 @@ func (s *opportunityService) UpdateRenewal(ctx context.Context, opportunityId st
 	default:
 		opportunityRenewalUpdateRequest.RenewalLikelihood = opportunitypb.RenewalLikelihood_ZERO_RENEWAL
 	}
+	fieldsMask = append(fieldsMask, opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_RENEWAL_LIKELIHOOD)
+	opportunityRenewalUpdateRequest.FieldsMask = fieldsMask
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err := utils.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
@@ -196,6 +197,35 @@ func (s *opportunityService) UpdateRenewal(ctx context.Context, opportunityId st
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
 		return err
+	}
+
+	return nil
+}
+
+func (s *opportunityService) UpdateRenewalsForOrganization(ctx context.Context, organizationId string, renewalLikelihood neo4jenum.RenewalLikelihood) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.UpdateRenewalsForOrganization")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("organizationId", organizationId), log.String("renewalLikelihood", renewalLikelihood.String()))
+
+	_, err := s.services.OrganizationService.GetById(ctx, organizationId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	opportunityDbNodes, err := s.repositories.Neo4jRepositories.OpportunityReadRepository.GetActiveRenewalOpportunitiesForOrganization(ctx, common.GetTenantFromContext(ctx), organizationId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	for _, opportunityDbNode := range opportunityDbNodes {
+		opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
+		if err := s.UpdateRenewal(ctx, opportunity.Id, renewalLikelihood, nil, nil, nil, constants.AppSourceCustomerOsApi); err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
 	}
 
 	return nil
