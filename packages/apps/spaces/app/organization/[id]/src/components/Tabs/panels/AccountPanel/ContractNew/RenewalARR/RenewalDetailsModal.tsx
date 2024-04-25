@@ -1,5 +1,5 @@
 'use client';
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { useForm, useField } from 'react-inverted-form';
 
 import { twMerge } from 'tailwind-merge';
@@ -103,6 +103,7 @@ const RenewalDetailsForm = ({
         label: `${o.firstName} ${o.lastName}`.trim(),
       }));
   }, [usersData?.users?.content?.length]);
+
   const defaultValues = useMemo(
     () => ({
       renewalLikelihood: data?.renewalLikelihood,
@@ -113,10 +114,10 @@ const RenewalDetailsForm = ({
     [data?.renewalLikelihood, data?.amount, data?.comments, data?.owner?.id],
   );
 
-  const { handleSubmit, setDefaultValues } = useForm({
-    formId,
-    defaultValues,
-    onSubmit: async ({ amount, owner, reason, renewalLikelihood }) => {
+  const onSubmit = useCallback(
+    async (state: typeof defaultValues) => {
+      const { owner, amount, reason, renewalLikelihood } = state;
+
       updateOpportunityMutation.mutate({
         input: {
           opportunityId: data.id,
@@ -127,6 +128,13 @@ const RenewalDetailsForm = ({
         },
       });
     },
+    [updateOpportunityMutation],
+  );
+
+  const { handleSubmit, setDefaultValues } = useForm({
+    formId,
+    defaultValues,
+    onSubmit,
   });
 
   useDeepCompareEffect(() => {
