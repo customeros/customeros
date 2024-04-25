@@ -66,6 +66,12 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
   const { getInputProps } = useField('autoRenew', formId);
   const { onChange: onChangeAutoRenew, value: autoRenewValue } =
     getInputProps();
+  const { getInputProps: billingEnabledInputProps } = useField(
+    'billingEnabled',
+    formId,
+  );
+  const { onChange: onChangeBillingEnabled, value: billingEnabledValue } =
+    billingEnabledInputProps();
   const bankTransferPopoverContent = useMemo(() => {
     if (!tenantBillingProfile?.canPayWithBankTransfer) {
       return 'Bank transfer not enabled yet';
@@ -202,6 +208,22 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
                   />
                 </div>
                 <span className='whitespace-nowrap ml-0.5'>to pay</span>
+              </div>
+            </li>
+            <li className='text-base '>
+              <div className='flex items-baseline'>
+                <span className='whitespace-nowrap '>Billing is </span>
+                <div>
+                  <Button
+                    variant='ghost'
+                    size='sm'
+                    className='font-normal text-base p-0 ml-1 relative text-gray-500 hover:bg-transparent focus:bg-transparent underline'
+                    onClick={() => onChangeBillingEnabled(!billingEnabledValue)}
+                  >
+                    {billingEnabledValue ? 'enabled' : 'disabled'}
+                  </Button>
+                </div>
+                <span className='whitespace-nowrap ml-0.5'>in CustomerOS</span>
               </div>
             </li>
           </ul>
