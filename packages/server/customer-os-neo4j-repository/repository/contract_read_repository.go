@@ -324,7 +324,7 @@ func (r *contractReadRepository) GetContractsToGenerateCycleInvoices(ctx context
 				c.organizationLegalName <> "" AND
 				c.invoiceEmail IS NOT NULL AND
 				c.invoiceEmail <> "" AND
-				c.billingCycleInMonths > 0
+				c.billingCycleInMonths > 0 AND
 				c.status IN $validContractStatuses AND
 				(c.nextInvoiceDate IS NULL OR date(c.nextInvoiceDate) <= date($referenceTime)) AND
 				(date(c.invoicingStartDate) <= date($referenceTime)) AND
@@ -375,7 +375,7 @@ func (r *contractReadRepository) GetContractsToGenerateOffCycleInvoices(ctx cont
 				c.organizationLegalName <> "" AND
 				c.invoiceEmail IS NOT NULL AND
 				c.invoiceEmail <> "" AND
-				c.billingCycleInMonths > 0
+				c.billingCycleInMonths > 0 AND
 				c.status IN $validContractStatuses AND
 				c.nextInvoiceDate IS NOT NULL AND
 				(c.endedAt IS NULL OR date(c.endedAt) > date($referenceTime)) AND
@@ -437,7 +437,7 @@ func (r *contractReadRepository) GetContractsToGenerateNextScheduledInvoices(ctx
 				c.organizationLegalName <> "" AND
 				c.invoiceEmail IS NOT NULL AND
 				c.invoiceEmail <> "" AND
-				c.billingCycleInMonths > 0
+				c.billingCycleInMonths > 0 AND
 				c.status IN $validContractStatuses AND
 				(NOT c.invoicingStartDate IS NULL OR NOT c.nextInvoiceDate IS NULL) AND
 				(c.endedAt IS NULL OR date(c.endedAt) > date(coalesce(c.nextInvoiceDate, c.invoicingStartDate))) AND
