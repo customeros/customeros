@@ -21,6 +21,8 @@ import (
 )
 
 type InvoiceService interface {
+	GenerateNewRandomInvoiceNumber() string
+
 	GetById(ctx context.Context, invoiceId string) (*neo4jentity.InvoiceEntity, error)
 	GetInvoiceLinesForInvoices(ctx context.Context, invoiceIds []string) (*neo4jentity.InvoiceLineEntities, error)
 	GetInvoicesForContracts(ctx context.Context, contractIds []string) (*neo4jentity.InvoiceEntities, error)
@@ -64,6 +66,13 @@ type SimulateInvoiceRequestServiceLineData struct {
 type SimulateInvoiceResponseData struct {
 	Invoice *neo4jentity.InvoiceEntity
 	Lines   []*neo4jentity.InvoiceLineEntity
+}
+
+func (s *invoiceService) GenerateNewRandomInvoiceNumber() string {
+	digits := "0123456789"
+	consonants := "BCDFGHJKLMNPQRSTVWXYZ"
+	invoiceNumber := utils.GenerateRandomStringFromCharset(3, consonants) + "-" + utils.GenerateRandomStringFromCharset(5, digits)
+	return invoiceNumber
 }
 
 func (s *invoiceService) GetById(ctx context.Context, invoiceId string) (*neo4jentity.InvoiceEntity, error) {
@@ -333,19 +342,6 @@ func (s *invoiceService) SimulateOnCycleInvoice(ctx context.Context, contract *n
 		return nil, err
 	}
 
-	var nextPreviewInvoiceEntity *neo4jentity.InvoiceEntity
-	nextPreviewInvoiceNode, err := s.services.Neo4jRepositories.InvoiceReadRepository.GetFirstPreviewFilledInvoice(ctx, common.GetTenantFromContext(ctx), contract.Id)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-	if nextPreviewInvoiceNode != nil {
-		nextPreviewInvoiceEntity = mapper.MapDbNodeToInvoiceEntity(nextPreviewInvoiceNode)
-		invoiceEntity.Number = nextPreviewInvoiceEntity.Number
-	} else {
-		invoiceEntity.Number = "" // todo
-	}
-
 	var invoicePeriodStart, invoicePeriodEnd time.Time
 	if contract.NextInvoiceDate != nil {
 		invoicePeriodStart = *contract.NextInvoiceDate
@@ -354,20 +350,15 @@ func (s *invoiceService) SimulateOnCycleInvoice(ctx context.Context, contract *n
 	}
 	invoicePeriodEnd = calculateInvoiceCycleEnd(invoicePeriodStart, contract.BillingCycleInMonths)
 
+	invoiceEntity.Number = s.GenerateNewRandomInvoiceNumber()
 	invoiceEntity.OffCycle = false
 	invoiceEntity.Postpaid = tenantSettings.InvoicingPostpaid
 	invoiceEntity.BillingCycleInMonths = contract.BillingCycleInMonths
 	invoiceEntity.PeriodStartDate = invoicePeriodStart
 	invoiceEntity.PeriodEndDate = invoicePeriodEnd
 	invoiceEntity.Note = contract.InvoiceNote
-
-	if nextPreviewInvoiceNode != nil {
-		invoiceEntity.IssuedDate = nextPreviewInvoiceEntity.IssuedDate
-		invoiceEntity.DueDate = nextPreviewInvoiceEntity.DueDate
-	} else {
-		invoiceEntity.IssuedDate = invoicePeriodStart
-		invoiceEntity.DueDate = invoicePeriodEnd.AddDate(0, 0, int(contract.DueDays))
-	}
+	invoiceEntity.IssuedDate = invoicePeriodStart
+	invoiceEntity.DueDate = invoicePeriodEnd.AddDate(0, 0, int(contract.DueDays))
 
 	if contract.Currency != "" {
 		invoiceEntity.Currency = contract.Currency

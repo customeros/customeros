@@ -182,7 +182,7 @@ func (s *invoiceService) prepareInvoiceNumber(tenant string) string {
 	maxAttempts := 20
 	var invoiceNumber string
 	for attempt := 1; attempt < maxAttempts+1; attempt++ {
-		invoiceNumber = generateNewRandomInvoiceNumber()
+		invoiceNumber = s.services.CommonServices.InvoiceService.GenerateNewRandomInvoiceNumber()
 		invoiceNumberEntity := postgresentity.InvoiceNumberEntity{
 			InvoiceNumber: invoiceNumber,
 			Tenant:        tenant,
@@ -194,13 +194,6 @@ func (s *invoiceService) prepareInvoiceNumber(tenant string) string {
 		}
 	}
 
-	return invoiceNumber
-}
-
-func generateNewRandomInvoiceNumber() string {
-	digits := "0123456789"
-	consonants := "BCDFGHJKLMNPQRSTVWXYZ"
-	invoiceNumber := utils.GenerateRandomStringFromCharset(3, consonants) + "-" + utils.GenerateRandomStringFromCharset(5, digits)
 	return invoiceNumber
 }
 
@@ -222,7 +215,7 @@ func (s *invoiceService) FillInvoice(ctx context.Context, request *invoicepb.Fil
 		if !request.DryRun || request.Preview {
 			extraParams[invoice.PARAM_INVOICE_NUMBER] = s.prepareInvoiceNumber(request.Tenant)
 		} else {
-			extraParams[invoice.PARAM_INVOICE_NUMBER] = generateNewRandomInvoiceNumber()
+			extraParams[invoice.PARAM_INVOICE_NUMBER] = s.services.CommonServices.InvoiceService.GenerateNewRandomInvoiceNumber()
 		}
 	}
 
