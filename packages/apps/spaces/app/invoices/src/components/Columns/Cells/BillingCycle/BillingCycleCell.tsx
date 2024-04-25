@@ -5,6 +5,7 @@ const billingCycleLabels: Record<ContractBillingCycle, string> = {
   ANNUAL_BILLING: 'Annually',
   MONTHLY_BILLING: 'Monthly',
   QUARTERLY_BILLING: 'Quarterly',
+  CUSTOM_BILLING: 'Custom',
   NONE: 'None',
 };
 

@@ -7,6 +7,7 @@ const billingCycleOptions: Record<ContractBillingCycle, string> = {
   [ContractBillingCycle.MonthlyBilling]: 'MONTHLY',
   [ContractBillingCycle.QuarterlyBilling]: 'QUARTERLY',
   [ContractBillingCycle.AnnualBilling]: 'ANNUALY',
+  [ContractBillingCycle.CustomBilling]: 'CUSTOM',
   [ContractBillingCycle.None]: '',
 };
 
