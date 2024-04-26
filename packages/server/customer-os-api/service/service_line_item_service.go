@@ -267,13 +267,23 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 		return err
 	}
 
+	contractEntity, err := s.services.ContractService.GetContractByServiceLineItem(ctx, serviceLineItemDetails.Id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error on getting contract by service line item id {%s}: %s", serviceLineItemDetails.Id, err.Error())
+		return err
+	}
+	contractInvoiced, _ := s.repositories.Neo4jRepositories.ContractReadRepository.IsContractInvoiced(ctx, common.GetTenantFromContext(ctx), contractEntity.Id)
+	sliInvoiced, _ := s.repositories.Neo4jRepositories.ServiceLineItemReadRepository.WasServiceLineItemInvoiced(ctx, common.GetTenantFromContext(ctx), baseServiceLineItemEntity.ID)
+	startedAt := utils.ToDate(utils.IfNotNilTimeWithDefault(serviceLineItemDetails.StartedAt, baseServiceLineItemEntity.StartedAt))
+
 	// If no changes recorded, return
 	if baseServiceLineItemEntity.Name == serviceLineItemDetails.SliName &&
 		baseServiceLineItemEntity.Price == serviceLineItemDetails.SliPrice &&
 		baseServiceLineItemEntity.Quantity == serviceLineItemDetails.SliQuantity &&
 		baseServiceLineItemEntity.VatRate == serviceLineItemDetails.SliVatRate &&
 		baseServiceLineItemEntity.Comments == serviceLineItemDetails.SliComments &&
-		(serviceLineItemDetails.StartedAt == nil || baseServiceLineItemEntity.StartedAt == *serviceLineItemDetails.StartedAt) &&
+		(utils.ToDate(baseServiceLineItemEntity.StartedAt).Equal(startedAt) || sliInvoiced) &&
 		baseServiceLineItemEntity.Billed == serviceLineItemDetails.SliBilledType {
 		span.LogFields(log.String("result", "No changes recorded"))
 		return nil
@@ -282,13 +292,6 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 	if baseServiceLineItemEntity.Canceled {
 		err = fmt.Errorf("contract line item with id {%s} is already ended", serviceLineItemDetails.Id)
 		tracing.TraceErr(span, err)
-		return err
-	}
-
-	contractEntity, err := s.services.ContractService.GetContractByServiceLineItem(ctx, serviceLineItemDetails.Id)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("Error on getting contract by service line item id {%s}: %s", serviceLineItemDetails.Id, err.Error())
 		return err
 	}
 
@@ -325,20 +328,8 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 	}
 
 	isRetroactiveCorrection := serviceLineItemDetails.IsRetroactiveCorrection
-	if baseServiceLineItemEntity.IsOneTime() {
-		isRetroactiveCorrection = true
-	}
-
-	contractInvoiced, err := s.repositories.Neo4jRepositories.ContractReadRepository.IsContractInvoiced(ctx, common.GetTenantFromContext(ctx), contractEntity.Id)
-	startedAt := utils.ToDate(utils.IfNotNilTimeWithDefault(serviceLineItemDetails.StartedAt, baseServiceLineItemEntity.StartedAt))
-
-	// If no price impacted fields changed, set retroactive correction to true
-	if baseServiceLineItemEntity.Price == serviceLineItemDetails.SliPrice &&
-		baseServiceLineItemEntity.Quantity == serviceLineItemDetails.SliQuantity &&
-		baseServiceLineItemEntity.VatRate == serviceLineItemDetails.SliVatRate {
-		isRetroactiveCorrection = true
-	}
-	if serviceLineItemDetails.StartedAt != nil && startedAt == *serviceLineItemDetails.StartedAt {
+	if baseServiceLineItemEntity.IsOneTime() ||
+		utils.ToDate(baseServiceLineItemEntity.StartedAt) == startedAt {
 		isRetroactiveCorrection = true
 	}
 
@@ -346,14 +337,6 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 	if isRetroactiveCorrection && contractInvoiced && startedAt.Before(utils.Today()) {
 		err = fmt.Errorf("cannot update contract line item with id {%s} in the past", serviceLineItemDetails.Id)
 		tracing.TraceErr(span, err)
-		return err
-	}
-
-	// Check SLI is not invoiced
-	sliInvoiced, err := s.repositories.Neo4jRepositories.ServiceLineItemReadRepository.WasServiceLineItemInvoiced(ctx, common.GetTenantFromContext(ctx), baseServiceLineItemEntity.ID)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("Error on checking if service line item was invoiced: %s", err.Error())
 		return err
 	}
 
