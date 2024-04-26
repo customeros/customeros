@@ -7,7 +7,7 @@ import { match } from 'ts-pattern';
 import { cn } from '@ui/utils/cn';
 import { Flag04 } from '@ui/media/icons/Flag04';
 import { Trophy01 } from '@ui/media/icons/Trophy01';
-import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
+import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import {
   getDifferenceFromNow,

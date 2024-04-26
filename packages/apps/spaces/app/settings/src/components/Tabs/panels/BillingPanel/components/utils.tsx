@@ -1,19 +1,12 @@
 import React, { ReactNode, ReactElement } from 'react';
 
 import { Currency } from '@graphql/types';
-import { Text } from '@ui/typography/Text';
 
 const CurrencySymbol = ({ children }: { children: ReactNode }) => {
   return (
-    <Text
-      textAlign='center'
-      color='gray.500'
-      whiteSpace='nowrap'
-      fontWeight='semibold'
-      fontSize='sm'
-    >
+    <div className='align-middle text-gray-500 whitespace-nowrap font-semibold text-sm'>
       {children}
-    </Text>
+    </div>
   );
 };
 export const currencyIcon: Record<string, ReactElement> = {

@@ -1,4 +1,3 @@
-import { Text } from '@ui/typography/Text';
 import { getDifferenceFromNow } from '@shared/util/date';
 
 interface TimeToRenewalCellProps {
@@ -8,12 +7,7 @@ interface TimeToRenewalCellProps {
 export const TimeToRenewalCell = ({
   nextRenewalDate,
 }: TimeToRenewalCellProps) => {
-  if (!nextRenewalDate)
-    return (
-      <Text fontSize='sm' color='gray.400'>
-        Unknown
-      </Text>
-    );
+  if (!nextRenewalDate) return <p className='text-sm text-gray-400'>Unknown</p>;
   const [value, unit] = getDifferenceFromNow(nextRenewalDate);
 
   return (

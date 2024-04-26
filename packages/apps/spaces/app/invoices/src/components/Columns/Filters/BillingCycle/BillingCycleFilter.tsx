@@ -5,10 +5,8 @@ import { produce } from 'immer';
 import { useRecoilValue } from 'recoil';
 import { Column } from '@tanstack/react-table';
 
-import { VStack } from '@ui/layout/Stack';
-import { Text } from '@ui/typography/Text';
 import { SelectOption } from '@ui/utils/types';
-import { Checkbox, CheckboxGroup } from '@ui/form/Checkbox';
+import { Checkbox } from '@ui/form/Checkbox/Checkbox';
 import {
   FilterHeader,
   useFilterToggle,
@@ -96,28 +94,28 @@ export const BillingCycleFilter = <T,>({
   const isAllChecked = filterValue.value.length === options.length;
 
   return (
-    <CheckboxGroup size='md' value={filterValue.value}>
+    <>
       <FilterHeader
         isChecked={toggle.isActive}
         onToggle={toggle.handleChange}
         onDisplayChange={toggle.handleClick}
       />
-      <VStack spacing={2} align='flex-start'>
+      <div className='flex flex-col gap-2 items-start'>
         <Checkbox isChecked={isAllChecked} onChange={handleSelectAll}>
-          <Text fontSize='sm'>
+          <p className='text-sm'>
             {isAllChecked ? 'Deselect all' : 'Select all'}
-          </Text>
+          </p>
         </Checkbox>
         {options.map((option) => (
           <Checkbox
             key={option.label}
-            value={option.value}
+            isChecked={filter.value.includes(option.value)}
             onChange={handleSelect(option.value)}
           >
-            <Text fontSize='sm'>{option.label}</Text>
+            <p className='text-sm'>{option.label}</p>
           </Checkbox>
         ))}
-      </VStack>
-    </CheckboxGroup>
+      </div>
+    </>
   );
 };

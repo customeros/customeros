@@ -1,7 +1,7 @@
 import React, { ReactElement } from 'react';
 
-import { Tooltip } from '@ui/overlay/Tooltip';
 import { IconButton } from '@ui/form/IconButton';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 
 interface ToolbarButtonProps {
   label: string;
@@ -20,17 +20,16 @@ export const ToolbarButton: React.FC<ToolbarButtonProps> = ({
       label={label}
       className='customeros-remirror-tooltip'
       hasArrow
-      placement='bottom'
+      side='bottom'
+      align='center'
     >
       <IconButton
-        fontSize={2}
-        className='customeros-remirror-button'
-        bg='transparent'
+        className='customeros-remirror-button bg-transparent'
         variant='ghost'
         aria-label={label}
         onClick={onClick}
-        isActive={isActive}
         icon={icon}
+        isDisabled={!isActive}
       />
     </Tooltip>
   );

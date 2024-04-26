@@ -4,7 +4,7 @@ import { twMerge } from 'tailwind-merge';
 import * as RadixCollapsible from '@radix-ui/react-collapsible';
 
 interface CollapsibleProps extends RadixCollapsible.CollapsibleProps {
-  className: string;
+  className?: string;
   children: React.ReactNode;
 }
 

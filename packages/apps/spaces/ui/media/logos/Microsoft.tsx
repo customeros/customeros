@@ -1,7 +1,18 @@
-import { Icon, IconProps } from '@ui/media/Icon';
+import React from 'react';
 
-export const Microsoft = (props: IconProps) => (
-  <Icon viewBox='0 0 96 96' fill='none' boxSize='4' {...props}>
+import { twMerge } from 'tailwind-merge';
+
+interface IconProps extends React.SVGAttributes<SVGElement> {
+  className?: string;
+}
+
+export const Microsoft = ({ className, ...props }: IconProps) => (
+  <svg
+    viewBox='0 0 96 96'
+    fill='none'
+    {...props}
+    className={twMerge('inline-block size-4', className)}
+  >
     <defs>
       <linearGradient
         id='e399c19f-b68f-429d-b176-18c2117ff73c'
@@ -55,5 +66,5 @@ export const Microsoft = (props: IconProps) => (
       fill='url(#ac2a6fc2-ca48-4327-9a3c-d4dcc3256e15)'
       d='M33.338 6.544a4.118 4.118 0 0 0-3.943 2.879L4.252 83.917a4.14 4.14 0 0 0 3.908 5.538h20.787a4.443 4.443 0 0 0 3.41-2.9l5.014-14.777 17.91 16.705a4.237 4.237 0 0 0 2.666.972H81.24L71.024 60.261l-29.781.007L59.47 6.544z'
     />
-  </Icon>
+  </svg>
 );

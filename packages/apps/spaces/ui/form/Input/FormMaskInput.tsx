@@ -2,8 +2,9 @@ import { useIMask } from 'react-imask';
 import React, { useEffect } from 'react';
 import { useField } from 'react-inverted-form';
 
-import { Input } from '@ui/form/Input/Input2';
-import { FormInputProps } from '@ui/form/Input';
+import { Input } from '@ui/form/Input/Input';
+
+import { FormInputProps } from './FormInput';
 
 interface FormMaskInputProps extends FormInputProps {
   name: string;

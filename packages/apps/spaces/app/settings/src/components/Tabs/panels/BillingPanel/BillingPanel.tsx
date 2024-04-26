@@ -18,19 +18,19 @@ import {
 import { BankTransferSelectionContextProvider } from '@settings/components/Tabs/panels/BillingPanel/context/BankTransferSelectionContext';
 
 import { cn } from '@ui/utils/cn';
-import { useDisclosure } from '@ui/utils';
 import { Button } from '@ui/form/Button/Button';
 import { IconButton } from '@ui/form/IconButton';
 import { DotsVertical } from '@ui/media/icons/DotsVertical';
 import { SlashOctagon } from '@ui/media/icons/SlashOctagon';
 import { validateEmail } from '@shared/util/emailValidation';
+import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu';
+import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 import {
   TenantBillingProfile,
   TenantBillingProfileUpdateInput,
 } from '@graphql/types';
-import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog2';
+import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog';
 
 import { TenantBillingPanelDetailsForm } from './components';
 import { TenantBillingDetailsDto } from './TenantBillingProfile.dto';
@@ -55,7 +55,7 @@ export const BillingPanel = () => {
     },
   });
   const { data: tenantSettingsData } = useTenantSettingsQuery(client);
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { open: isOpen, onOpen, onClose } = useDisclosure();
 
   const updateTenantSettingsMutation = useUpdateTenantSettingsMutation(client, {
     onMutate: ({ input: { ...newSettings } }) => {
@@ -317,8 +317,11 @@ export const BillingPanel = () => {
                   />
                 </MenuButton>
                 <MenuList>
-                  <MenuItem onClick={handleToggleInvoices}>
-                    <SlashOctagon className='mr-r text-gray-500' /> Disable
+                  <MenuItem
+                    className='flex items-center justify-center'
+                    onClick={handleToggleInvoices}
+                  >
+                    <SlashOctagon className='mr-2 text-gray-500' /> Disable
                     Customer billing
                   </MenuItem>
                 </MenuList>

@@ -1,7 +1,7 @@
 'use client';
 import React, { FC } from 'react';
 
-import { SelectOption } from '@ui/utils';
+import { SelectOption } from '@ui/utils/types';
 import { FormSelect } from '@ui/form/Select/FormSelect';
 import {
   SelectProps,

@@ -8,12 +8,11 @@ import { useQueryClient } from '@tanstack/react-query';
 
 import { Plus } from '@ui/media/icons/Plus';
 import { Button } from '@ui/form/Button/Button';
-import { Heading } from '@ui/typography/Heading';
 import { toastError } from '@ui/presentation/Toast';
 import { DotSingle } from '@ui/media/icons/DotSingle';
-import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
+import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { AutoresizeTextarea } from '@ui/form/Textarea/AutoresizeTextarea2';
+import { AutoresizeTextarea } from '@ui/form/Textarea/AutoresizeTextarea';
 import { useTimelineMeta } from '@organization/src/components/Timeline/state';
 import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
 import { useUpdateServicesMutation } from '@organization/src/graphql/updateServiceLineItems.generated';
@@ -27,6 +26,7 @@ import {
   ModalBody,
   ModalHeader,
   ModalFooter,
+  ModalPortal,
   ModalContent,
   ModalOverlay,
 } from '@ui/overlay/Modal/Modal';
@@ -240,90 +240,91 @@ export const ServiceLineItemsModal = ({
 
   return (
     <Modal open={isOpen} onOpenChange={onClose}>
-      <ModalOverlay />
-      <ModalContent className='min-w-[768px] rounded-2xl'>
-        <ModalHeader>
-          <FeaturedIcon
-            size='lg'
-            colorScheme='primary'
-            className='mt-4 ml-[12px] mb-[30px]'
-          >
-            <DotSingle color='primary.700' />
-          </FeaturedIcon>
-          <Heading fontSize='lg' mt='4'>
-            Modify contract service line items
-          </Heading>
-        </ModalHeader>
-        <ModalBody className='pb-0 flex flex-col flex-1'>
-          <div className='flex justify-between items-center pr-5 border-b border-gray-300 pb-1'>
-            <p className='text-sm font-medium w-[15%]'>Name</p>
-            <p className='text-sm font-medium w-[15%]'>Type</p>
-            <p className='text-sm font-medium w-[10%]'>Qty</p>
-            <p className='text-sm font-medium w-[15%]'>Unit Price</p>
-            <p className='text-sm font-medium w-[10%]'>Recurring</p>{' '}
-            <p className='text-sm font-medium w-[10%]'>VAT</p>{' '}
-            <p className='text-sm font-medium w-[15%]'>Service Start</p>
-          </div>
+      <ModalPortal>
+        <ModalOverlay />
 
-          {services.map((service, index) => (
-            <Fragment key={`service-line-item-${index}`}>
-              <ServiceLineItemRow
-                service={service}
-                index={index}
-                currency={currency}
-                onChange={(data) => handleUpdateService(index, data)}
-                prevServiceLineItemData={contractLineItems.find(
-                  (e) => e.metadata.id === service?.serviceLineItemId,
-                )}
-              />
-            </Fragment>
-          ))}
-          <div>
-            <Button
-              className='px-2 my-1 text-gray-500 font-base'
-              leftIcon={<Plus />}
-              variant='ghost'
-              size='sm'
-              onClick={handleAddService}
+        <ModalContent className='min-w-[768px] rounded-2xl'>
+          <ModalHeader>
+            <FeaturedIcon
+              size='lg'
+              colorScheme='primary'
+              className='mt-4 ml-[12px] mb-[30px]'
             >
-              New item
-            </Button>
-          </div>
+              <DotSingle color='primary.700' />
+            </FeaturedIcon>
+            <h2 className='text-lg mt-4'>Modify contract service line items</h2>
+          </ModalHeader>
+          <ModalBody className='pb-0 flex flex-col flex-1'>
+            <div className='flex justify-between items-center pr-5 border-b border-gray-300 pb-1'>
+              <p className='text-sm font-medium w-[15%]'>Name</p>
+              <p className='text-sm font-medium w-[15%]'>Type</p>
+              <p className='text-sm font-medium w-[10%]'>Qty</p>
+              <p className='text-sm font-medium w-[15%]'>Unit Price</p>
+              <p className='text-sm font-medium w-[10%]'>Recurring</p>{' '}
+              <p className='text-sm font-medium w-[10%]'>VAT</p>{' '}
+              <p className='text-sm font-medium w-[15%]'>Service Start</p>
+            </div>
 
-          <AutoresizeTextarea
-            label='Note'
-            className='overflow-ellipsis '
-            labelProps={{
-              className: 'text-sm mb-0 font-semibold',
-            }}
-            size='sm'
-            name='invoiceNote'
-            placeholder='Customer invoice note'
-            value={invoiceNote}
-            onChange={(event) => setInvoiceNote(event.target.value)}
-          />
-        </ModalBody>
-        <ModalFooter className='flex p-6'>
-          <Button
-            variant='outline'
-            className='w-full'
-            onClick={onClose}
-            isDisabled={updateServices.isPending}
-          >
-            Cancel
-          </Button>
-          <Button
-            className='w-full ml-3'
-            variant='outline'
-            colorScheme='primary'
-            loadingText='Applying changes...'
-            isLoading={updateServices.isPending}
-            onClick={handleApplyChanges}
-          >
-            Apply changes
-          </Button>
-        </ModalFooter>
-      </ModalContent>
+            {services.map((service, index) => (
+              <Fragment key={`service-line-item-${index}`}>
+                <ServiceLineItemRow
+                  service={service}
+                  index={index}
+                  currency={currency}
+                  onChange={(data) => handleUpdateService(index, data)}
+                  prevServiceLineItemData={contractLineItems.find(
+                    (e) => e.metadata.id === service?.serviceLineItemId,
+                  )}
+                />
+              </Fragment>
+            ))}
+            <div>
+              <Button
+                className='px-2 my-1 text-gray-500 font-base'
+                leftIcon={<Plus />}
+                variant='ghost'
+                size='sm'
+                onClick={handleAddService}
+              >
+                New item
+              </Button>
+            </div>
+
+            <AutoresizeTextarea
+              label='Note'
+              className='overflow-ellipsis '
+              labelProps={{
+                className: 'text-sm mb-0 font-semibold',
+              }}
+              size='sm'
+              name='invoiceNote'
+              placeholder='Customer invoice note'
+              value={invoiceNote}
+              onChange={(event) => setInvoiceNote(event.target.value)}
+            />
+          </ModalBody>
+          <ModalFooter className='flex p-6'>
+            <Button
+              variant='outline'
+              className='w-full'
+              onClick={onClose}
+              isDisabled={updateServices.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              className='w-full ml-3'
+              variant='outline'
+              colorScheme='primary'
+              loadingText='Applying changes...'
+              isLoading={updateServices.isPending}
+              onClick={handleApplyChanges}
+            >
+              Apply changes
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </ModalPortal>
     </Modal>
   );
 };

@@ -1,9 +1,8 @@
 import { useField } from 'react-inverted-form';
 import React, { useRef, useState } from 'react';
 
-import { Portal } from '@ui/utils';
 import { DateTimeUtils } from '@spaces/utils/date';
-import { DatePicker } from '@ui/form/DatePicker/DatePicker2';
+import { DatePicker } from '@ui/form/DatePicker/DatePicker';
 import {
   Popover,
   PopoverContent,
@@ -50,25 +49,23 @@ export const DatePickerUnderline: React.FC<DatePickerProps> = ({
             DateTimeUtils.date,
           )}`}</span>
         </PopoverTrigger>
-        <Portal>
-          <PopoverContent
-            align='start'
-            side='top'
-            className='items-end z-[999]'
-            sticky='always'
-            onOpenAutoFocus={(el) => el.preventDefault()}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <DatePicker
-              name={name}
-              formId={formId}
-              defaultValue={new Date(value)}
-              onChange={(date) => {
-                handleDateInputChange(date as Date);
-              }}
-            />
-          </PopoverContent>
-        </Portal>
+        <PopoverContent
+          align='start'
+          side='top'
+          className='items-end z-[999]'
+          sticky='always'
+          onOpenAutoFocus={(el) => el.preventDefault()}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <DatePicker
+            name={name}
+            formId={formId}
+            defaultValue={new Date(value)}
+            onChange={(date) => {
+              handleDateInputChange(date as Date);
+            }}
+          />
+        </PopoverContent>
       </Popover>
     </div>
   );

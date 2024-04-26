@@ -1,11 +1,7 @@
 import Lottie from 'react-lottie';
 import React, { useRef, useState } from 'react';
 
-import { Box } from '@ui/layout/Box';
-import { Flex } from '@ui/layout/Flex';
-import { Button } from '@ui/form/Button';
-import { Text } from '@ui/typography/Text';
-import { Badge } from '@ui/presentation/Badge';
+import { Button } from '@ui/form/Button/Button';
 import { RedBalloon } from '@ui/media/icons/RedBalloon';
 import { ArrowsRight } from '@ui/media/icons/ArrowsRight';
 
@@ -35,31 +31,18 @@ export const CountButton: React.FC<CountBalloonProps> = ({ unseenCount }) => {
 
   return (
     <Button
-      px='3'
-      w='full'
+      className='w-full px-3 text-gray-500 font-normal text-sm'
       size='md'
       variant='ghost'
-      fontSize='sm'
-      textDecoration='none'
-      fontWeight='regular'
-      justifyContent='flex-start'
-      borderRadius='md'
-      color={'gray.500'}
       onClick={() => triggerConfetti()}
-      leftIcon={<ArrowsRight className='size-5' />}
-      _focus={{
-        boxShadow: 'sidenavItemFocus',
-      }}
+      leftIcon={<ArrowsRight className='size-5 text-gray-500' />}
     >
-      <Flex justifyContent='space-between' flex={1} alignItems='center'>
+      <div className='flex justify-between flex-1 items-center'>
         <span>Up next</span>
         {!!unseenCount &&
           (unseenCount >= 99 ? (
-            <Box
-              position='relative'
-              overflow='visible'
-              w={35}
-              h={33}
+            <div
+              className='relative overflow-visible w-[35px] h-[33px]'
               onClick={triggerConfetti}
             >
               {isBursted ? (
@@ -79,37 +62,18 @@ export const CountButton: React.FC<CountBalloonProps> = ({ unseenCount }) => {
               ) : (
                 <>
                   <RedBalloon className='size-[53px] absolute left-0 z-10' />
-                  <Text
-                    color='white'
-                    position='absolute'
-                    zIndex={1}
-                    fontSize='xs'
-                    left='18px'
-                    top='7px'
-                  >
+                  <p className='text-white absolute text-xs z-[1] left-[18px] top-[7px]'>
                     99+
-                  </Text>
+                  </p>
                 </>
               )}
-            </Box>
+            </div>
           ) : (
-            <Badge
-              w={5}
-              h={5}
-              display='flex'
-              alignItems='center'
-              justifyContent='center'
-              variant='outline'
-              borderRadius='xl'
-              boxShadow='none'
-              border='1px solid'
-              borderColor='gray.300'
-              fontWeight='regular'
-            >
+            <div className='size-5 flex items-center justify-center rounded-xl border border-gray-300 font-normal'>
               {unseenCount}
-            </Badge>
+            </div>
           ))}
-      </Flex>
+      </div>
       <audio ref={audioRef} src='/soundEffects/99_audio.mp4' />
     </Button>
   );

@@ -1,14 +1,13 @@
 import { useState, useEffect } from 'react';
 
-import { useDisclosure } from '@ui/utils';
-import { Center } from '@ui/layout/Center';
 import { Organization } from '@graphql/types';
 import { Button } from '@ui/form/Button/Button';
 import { Copy07 } from '@ui/media/icons/Copy07';
 import { Archive } from '@ui/media/icons/Archive';
-import { ButtonGroup } from '@ui/form/ButtonGroup';
+// import { ButtonGroup } from '@ui/form/ButtonGroup';
 import { TableInstance } from '@ui/presentation/Table';
-import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
+import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
+import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog';
 
 import { useOrganizationsPageMethods } from '../../hooks/useOrganizationsPageMethods';
 
@@ -21,7 +20,7 @@ export const TableActions = ({
   table,
   allOrganizationsIds,
 }: TableActionsProps) => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { open: isOpen, onOpen, onClose } = useDisclosure();
   const [targetIndex, setTargetIndex] = useState<string | null>(null);
   const { hideOrganizations, mergeOrganizations } =
     useOrganizationsPageMethods();
@@ -83,30 +82,30 @@ export const TableActions = ({
 
   return (
     <>
-      <Center left='50%' position='absolute' bottom='32px'>
-        <ButtonGroup size='md' isAttached left='-50%' position='relative'>
+      <div className='flex items-center justify-center left-[50%] absolute bottom-[32px]'>
+        {/* <ButtonGroup size='md' isAttached left='-50%' position='relative'> */}
+        <Button
+          onClick={onOpen}
+          colorScheme='gray'
+          leftIcon={<Archive />}
+          className='bg-gray-700 text-white hover:bg-gray-800'
+        >
+          {`Archive ${
+            selectCount > 1 ? `these ${selectCount}` : ' this organization'
+          }`}
+        </Button>
+        {selectCount > 1 && (
           <Button
-            onClick={onOpen}
             colorScheme='gray'
-            leftIcon={<Archive />}
+            leftIcon={<Copy07 />}
+            onClick={handleMergeOrganizations}
             className='bg-gray-700 text-white hover:bg-gray-800'
           >
-            {`Archive ${
-              selectCount > 1 ? `these ${selectCount}` : ' this organization'
-            }`}
+            {`Merge these ${selectCount}`}
           </Button>
-          {selectCount > 1 && (
-            <Button
-              colorScheme='gray'
-              leftIcon={<Copy07 />}
-              onClick={handleMergeOrganizations}
-              className='bg-gray-700 text-white hover:bg-gray-800'
-            >
-              {`Merge these ${selectCount}`}
-            </Button>
-          )}
-        </ButtonGroup>
-      </Center>
+        )}
+        {/* </ButtonGroup> */}
+      </div>
 
       <ConfirmDeleteDialog
         isOpen={isOpen}

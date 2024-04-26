@@ -9,34 +9,32 @@ import formatDistanceToNow from 'date-fns/formatDistanceToNow';
 import differenceInCalendarMonths from 'date-fns/differenceInCalendarMonths';
 
 import { cn } from '@ui/utils/cn';
-import { Flex } from '@ui/layout/Flex';
 import { Contact } from '@graphql/types';
-import { Avatar } from '@ui/media/Avatar';
-import { useDisclosure } from '@ui/utils';
-import { Text } from '@ui/typography/Text';
-import { useOutsideClick } from '@ui/utils';
 import { Clock } from '@ui/media/icons/Clock';
 import { Check } from '@ui/media/icons/Check';
 import { User01 } from '@ui/media/icons/User01';
 import { File02 } from '@ui/media/icons/File02';
 import { Mail01 } from '@ui/media/icons/Mail01';
+import { Avatar } from '@ui/media/Avatar/Avatar';
 import { Share07 } from '@ui/media/icons/Share07';
 import { Trash01 } from '@ui/media/icons/Trash01';
 import { Calendar } from '@ui/media/icons/Calendar';
-import { FormInput } from '@ui/form/Input/FormInput2';
+import { FormInput } from '@ui/form/Input/FormInput';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { IconButton } from '@ui/form/IconButton/IconButton';
+import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { PhoneOutgoing02 } from '@ui/media/icons/PhoneOutgoing02';
-import { FormInputGroup } from '@ui/form/InputGroup/FormInputGroup2';
+import { useOutsideClick } from '@ui/utils/hooks/useOutsideClick';
+import { FormInputGroup } from '@ui/form/InputGroup/FormInputGroup';
 import { Card, CardHeader, CardContent } from '@ui/presentation/Card/Card';
 import { useContactCardMeta } from '@organization/src/state/ContactCardMeta.atom';
-import { FormAutoresizeTextarea } from '@ui/form/Textarea/FormAutoresizeTextarea2';
+import { FormAutoresizeTextarea } from '@ui/form/Textarea/FormAutoresizeTextarea';
 import { useUpdateContactMutation } from '@organization/src/graphql/updateContact.generated';
 import { useDeleteContactMutation } from '@organization/src/graphql/deleteContact.generated';
 import { useAddContactEmailMutation } from '@organization/src/graphql/addContactEmail.generated';
 import { useAddContactSocialMutation } from '@organization/src/graphql/addContactSocial.generated';
-import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog2';
+import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog';
 import { useRemoveContactEmailMutation } from '@organization/src/graphql/removeContactEmail.generated';
 import { useUpdateContactRoleMutation } from '@organization/src/graphql/updateContactJobRole.generated';
 import { useAddContactPhoneNumberMutation } from '@organization/src/graphql/addContactPhoneNumber.generated';
@@ -67,7 +65,7 @@ export const ContactCard = ({
     useContactCardMeta();
   const isExpanded = expandedId === contact.id;
   const [roleIsFocused, setRoleIsFocused] = useState(false);
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { open: isOpen, onOpen, onClose } = useDisclosure();
   useOutsideClick({
     ref: cardRef,
     handler: () => {
@@ -405,12 +403,10 @@ export const ContactCard = ({
             />
             {/* TODO: replace with FormInput. currently displayed as a text just for demoing purposes */}
             {timeAt && (
-              <Flex align='center' h='39px'>
+              <div className='flex items-center h-[39px]'>
                 <Calendar className='text-gray-500' />
-                <Text ml='14px' cursor='text' textTransform='capitalize'>
-                  {timeAt}
-                </Text>
-              </Flex>
+                <p className='ml-[14px] cursor-text capitalize'>{timeAt}</p>
+              </div>
             )}
             {/* END TODO */}
             <FormSocialInput

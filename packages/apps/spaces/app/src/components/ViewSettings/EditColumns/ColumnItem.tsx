@@ -11,7 +11,7 @@ import { cn } from '@ui/utils/cn';
 import { Pin02 } from '@ui/media/icons/Pin02';
 import { ColumnViewType } from '@graphql/types';
 import { MenuItem } from '@ui/overlay/Menu/Menu';
-import { Checkbox } from '@ui/form/Checkbox/Checkbox2';
+import { Checkbox } from '@ui/form/Checkbox/Checkbox';
 import { HandleDrag } from '@ui/media/icons/HandleDrag';
 
 interface DraggableColumnItemProps {

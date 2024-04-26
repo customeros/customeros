@@ -4,16 +4,14 @@ import {
   OAuthUserSettingsInterface,
 } from 'services/settings/settingsService';
 
-import { Box } from '@ui/layout/Box';
-import { Flex } from '@ui/layout/Flex';
-import { Button } from '@ui/form/Button';
-import { useDisclosure } from '@ui/utils';
+import { Button } from '@ui/form/Button/Button';
 import { AlertCircle } from '@ui/media/icons/AlertCircle';
-import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
+import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 import { RefreshCcw01 } from '@ui/media/icons/RefreshCcw01';
+import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
-import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
+import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog';
 
 export const GoogleSidebarNotification = () => {
   const client = getGraphQLClient();
@@ -52,53 +50,40 @@ export const GoogleSidebarNotification = () => {
       {globalCacheQuery?.global_Cache?.isGoogleTokenExpired && (
         <>
           <ConfirmDeleteDialog
-            colorScheme={'purple'}
             icon={<RefreshCcw01 />}
             label='Re-allow access to Google'
             confirmButtonLabel='Re-allow'
             body={
               <>
-                <Box fontSize={'14px'}>
+                <div className='text-sm'>
                   Access to Google typically expires after a week or when you
                   change your password.
-                </Box>
-                <Box fontSize={'14px'} mt={2}>
+                </div>
+                <div className='text-sm mt-2'>
                   To resume syncing your conversations and meetings, you need to
                   re-allow access to Google.
-                </Box>
+                </div>
               </>
             }
-            isOpen={infoModal.isOpen}
+            isOpen={infoModal.open}
             onClose={infoModal.onClose}
             onConfirm={requestAccess}
           />
 
-          <Box
-            bg={'warning.25'}
-            border={'solid 1px'}
-            borderColor={'warning.200'}
-            w={'full'}
-            padding={'20px 16px'}
-            borderRadius='8px'
-          >
-            <FeaturedIcon size='md' colorScheme={'warning'}>
+          <div className='bg-warning-25 border border-warning-200 w-full py-5 px-4 rounded-lg'>
+            <FeaturedIcon size='md' colorScheme='warning' className='ml-[2px]'>
               <AlertCircle />
             </FeaturedIcon>
 
-            <Box color={'warning.700'} mt={2} fontSize='sm'>
+            <div className='text-warning-700 mt-2 text-sm'>
               Your conversations and meetings are no longer syncing because
               access to your Google account has expired
-            </Box>
-            <Flex mt={2} justify='space-between'>
+            </div>
+            <div className='flex mt-2 justify-center'>
               <Button
-                colorScheme='warning'
-                variant={'link'}
-                fontSize={'14px'}
-                color='gray.500'
-                fontWeight='semibold'
-                _hover={{
-                  color: 'gray.700',
-                }}
+                colorScheme='gray'
+                variant='ghost'
+                className='font-semibold hover:gray-700 text-sm'
                 onClick={() => {
                   infoModal.onOpen();
                 }}
@@ -107,19 +92,14 @@ export const GoogleSidebarNotification = () => {
               </Button>
               <Button
                 colorScheme='warning'
-                variant={'link'}
-                fontSize={'14px'}
-                fontWeight='semibold'
-                _hover={{
-                  color: 'warning.900',
-                }}
-                color={'warning.700'}
+                variant='ghost'
+                className='text-sm font-semibold hover:text-warning-900 text-warning-700'
                 onClick={requestAccess}
               >
                 Re-allow
               </Button>
-            </Flex>
-          </Box>
+            </div>
+          </div>
         </>
       )}
     </>

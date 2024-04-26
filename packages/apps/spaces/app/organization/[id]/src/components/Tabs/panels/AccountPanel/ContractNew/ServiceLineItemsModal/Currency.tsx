@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 
 import { InputElement } from 'imask';
 
-import { Input, InputProps } from '@ui/form/Input/Input2';
+import { Input, InputProps } from '@ui/form/Input/Input';
 
 interface CurrencyProps extends InputProps {
   label?: string;

@@ -3,7 +3,7 @@ import React, { FC } from 'react';
 
 import { useTenantSettingsQuery } from '@settings/graphql/getTenantSettings.generated';
 
-import { FormInput } from '@ui/form/Input/FormInput2';
+import { FormInput } from '@ui/form/Input/FormInput';
 import { FormSelect } from '@ui/form/Select/FormSelect';
 import { countryOptions } from '@shared/util/countryOptions';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';

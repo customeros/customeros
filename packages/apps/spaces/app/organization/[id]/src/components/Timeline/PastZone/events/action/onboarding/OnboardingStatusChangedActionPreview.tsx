@@ -3,7 +3,7 @@
 import { File02 } from '@ui/media/icons/File02';
 import { Flag04 } from '@ui/media/icons/Flag04';
 import { Action, OnboardingStatus } from '@graphql/types';
-import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
+import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 import { Card, CardFooter, CardContent } from '@ui/presentation/Card/Card';
 import { getMetadata } from '@organization/src/components/Timeline/PastZone/events/action/utils';
 import { TimelineEventPreviewHeader } from '@organization/src/components/Timeline/shared/TimelineEventPreview/header/TimelineEventPreviewHeader';

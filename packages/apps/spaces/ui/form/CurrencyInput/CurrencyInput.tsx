@@ -1,7 +1,11 @@
 import React, { ChangeEvent } from 'react';
 
-import { Input } from '../Input/Input2';
-import { InputGroup, LeftElement, RightElement } from '../Input/InputGroup';
+import { Input } from '../Input/Input';
+import {
+  InputGroup,
+  LeftElement,
+  RightElement,
+} from '../InputGroup/InputGroup';
 
 export interface CurrencyInputProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'> {

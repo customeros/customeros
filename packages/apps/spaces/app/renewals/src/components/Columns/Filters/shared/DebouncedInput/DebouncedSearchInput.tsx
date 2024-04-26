@@ -8,15 +8,11 @@ import {
   useImperativeHandle,
 } from 'react';
 
-import { Input } from '@ui/form/Input/Input2';
+import { Input } from '@ui/form/Input';
 import { Delete } from '@ui/media/icons/Delete';
 import { IconButton } from '@ui/form/IconButton';
 import { SearchSm } from '@ui/media/icons/SearchSm';
-import {
-  InputGroup,
-  LeftElement,
-  RightElement,
-} from '@ui/form/Input/InputGroup';
+import { InputGroup, LeftElement, RightElement } from '@ui/form/InputGroup';
 
 interface DebouncedInputProps {
   value: string;

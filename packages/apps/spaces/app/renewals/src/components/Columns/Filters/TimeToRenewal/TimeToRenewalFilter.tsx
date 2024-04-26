@@ -7,7 +7,7 @@ import { useRecoilValue } from 'recoil';
 import { Column } from '@tanstack/react-table';
 
 import { Organization } from '@graphql/types';
-import { Radio, RadioGroup } from '@ui/form/Radio/Radio2';
+import { Radio, RadioGroup } from '@ui/form/Radio/Radio';
 
 import { FilterHeader, useFilterToggle } from '../shared';
 import {

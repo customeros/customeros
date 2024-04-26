@@ -5,12 +5,10 @@ import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useIsRestoring } from '@tanstack/react-query';
 
-import { Flex } from '@ui/layout/Flex';
 import { Invoice } from '@graphql/types';
-import { Text } from '@ui/typography/Text';
 import { Table } from '@ui/presentation/Table';
-import { IconButton } from '@ui/form/IconButton';
 import { ChevronDown } from '@ui/media/icons/ChevronDown';
+import { IconButton } from '@ui/form/IconButton/IconButton';
 import { EmptyState } from '@shared/components/Invoice/EmptyState/EmptyState';
 import { useInfiniteInvoices } from '@shared/components/Invoice/hooks/useInfiniteInvoices';
 import { columns } from '@organization/src/components/Tabs/panels/InvoicesPanel/Columns/Columns';
@@ -42,9 +40,9 @@ export const InvoicesPanel = () => {
   } = useInfiniteInvoices(id);
   if (totalInvoicesCount === 0) {
     return (
-      <Flex justifyContent='center'>
+      <div className='flex justify-center'>
         <EmptyState />
-      </Flex>
+      </div>
     );
   }
 
@@ -58,19 +56,17 @@ export const InvoicesPanel = () => {
         exit={{ x: -500, opacity: 0 }}
         style={{ width: '100%' }}
       >
-        <Flex justifyContent='space-between' mb={2}>
-          <Text fontSize='sm' fontWeight='semibold'>
-            Invoices
-          </Text>
+        <div className='flex justify-between mb-2'>
+          <p className='text-sm font-semibold'>Invoices</p>
           <IconButton
             aria-label='Go back'
             variant='ghost'
             size='xs'
-            icon={<ChevronDown color='gray.400' />}
+            icon={<ChevronDown className='text-gray-400' />}
             onClick={() => router.push(`?tab=account`)}
           />
-        </Flex>
-        <Flex mx={-5}>
+        </div>
+        <div className='mx-[-5px]'>
           <Table<Invoice>
             data={invoiceFlattenData ?? []}
             columns={columns}
@@ -86,7 +82,7 @@ export const InvoicesPanel = () => {
             borderColor='gray.100'
             contentHeight={'80vh'}
           />
-        </Flex>
+        </div>
       </motion.div>
     </OrganizationPanel>
   );

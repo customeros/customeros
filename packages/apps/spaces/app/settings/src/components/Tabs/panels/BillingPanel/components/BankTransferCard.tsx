@@ -10,8 +10,7 @@ import { useUpdateBankAccountMutation } from '@settings/graphql/updateBankAccoun
 import { BankNameInput } from '@settings/components/Tabs/panels/BillingPanel/components/BankNameInput';
 import { useBankTransferSelectionContext } from '@settings/components/Tabs/panels/BillingPanel/context/BankTransferSelectionContext';
 
-import { Flex } from '@ui/layout/Flex';
-import { FormInput } from '@ui/form/Input/FormInput2';
+import { FormInput } from '@ui/form/Input/FormInput';
 import { FormMaskInput } from '@ui/form/Input/FormMaskInput';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { Card, CardHeader, CardContent } from '@ui/presentation/Card/Card';
@@ -160,12 +159,11 @@ export const BankTransferCard = ({
             <>
               <FormMaskInput
                 options={{ opts: bankOptions }}
-                autoComplete='off'
                 label='IBAN'
                 placeholder='IBAN #'
                 labelProps={{ className: 'text-sm mb-0 font-semibold' }}
                 name='iban'
-                mb={1}
+                className='mb-1'
                 formId={formId}
                 onFocus={() => setFocusAccount(account as BankAccount)}
                 onBlur={() => setFocusAccount(null)}
@@ -182,7 +180,7 @@ export const BankTransferCard = ({
               />
             </>
           )}
-          <Flex pb={1} gap={2}>
+          <div className='flex pb-1 gap-2'>
             {account.currency === 'GBP' && (
               <>
                 <FormMaskInput
@@ -193,7 +191,7 @@ export const BankTransferCard = ({
                   labelProps={{ className: 'text-sm mb-0 font-semibold' }}
                   name='sortCode'
                   formId={formId}
-                  maxW='80px'
+                  className='max-w-[80px]'
                   onFocus={() => setFocusAccount(account as BankAccount)}
                   onBlur={() => setFocusAccount(null)}
                 />
@@ -210,7 +208,7 @@ export const BankTransferCard = ({
                 />
               </>
             )}
-          </Flex>
+          </div>
           {account.currency === 'USD' && (
             <>
               <FormInput

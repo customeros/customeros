@@ -1,8 +1,7 @@
-import React from 'react';
+import React, { HTMLAttributes } from 'react';
 
 import linkifyHtml from 'linkify-html';
 import sanitizeHtml from 'sanitize-html';
-import { InteractivityProps } from '@chakra-ui/styled-system';
 import parse, {
   Element,
   domToReact,
@@ -13,13 +12,12 @@ import { cn } from '@ui/utils/cn';
 
 import { ImageAttachment } from './ImageAttachment';
 
-interface HtmlContentRendererProps
-  extends InteractivityProps,
-    React.HTMLAttributes<HTMLDivElement> {
+interface HtmlContentRendererProps extends HTMLAttributes<HTMLDivElement> {
   noOfLines?: number;
   className?: string;
   htmlContent: string;
   showAsInlineText?: boolean;
+  pointerEvents?: React.CSSProperties['pointerEvents'];
 }
 
 export const HtmlContentRenderer: React.FC<HtmlContentRendererProps> = ({
@@ -94,7 +92,8 @@ export const HtmlContentRenderer: React.FC<HtmlContentRendererProps> = ({
             );
           }
           case 'img': {
-            return <ImageAttachment {...domNode.attribs} />;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            return <ImageAttachment {...(domNode.attribs as any)} />;
           }
           default:
             return React.createElement(domNode.name, newAttribs, children);

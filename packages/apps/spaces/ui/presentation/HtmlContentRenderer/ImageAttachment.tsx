@@ -1,9 +1,9 @@
 import { useState } from 'react';
+import Image, { ImageProps } from 'next/image';
 
 import { FileX03 } from '@ui/media/icons/FileX03';
-import { ClientImage, ClientImageProps } from '@ui/media/Image';
 
-export const ImageAttachment = (props: ClientImageProps) => {
+export const ImageAttachment = (props: ImageProps) => {
   const [hasError, setHasError] = useState(false);
 
   if (hasError) {
@@ -17,11 +17,14 @@ export const ImageAttachment = (props: ClientImageProps) => {
 
   //TODO:refactor to use Image component
   return (
-    <ClientImage
-      mt='2'
-      borderRadius='4px'
-      onError={() => setHasError(true)}
+    <Image
       {...props}
+      alt={props.alt || 'Attachment'}
+      className='mt-2 rounded-[4px]'
+      onError={() => setHasError(true)}
+      src={props.src}
+      width={props.width}
+      height={props.height}
     />
   );
 };

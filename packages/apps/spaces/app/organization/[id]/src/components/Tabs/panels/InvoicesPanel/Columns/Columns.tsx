@@ -1,9 +1,8 @@
 import React from 'react';
 
 import { Invoice } from '@graphql/types';
-import { Text } from '@ui/typography/Text';
+import { Skeleton } from '@ui/feedback/Skeleton';
 import { DateTimeUtils } from '@spaces/utils/date';
-import { Skeleton } from '@ui/presentation/Skeleton';
 import { createColumnHelper } from '@ui/presentation/Table';
 import { StatusCell } from '@shared/components/Invoice/Cells';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
@@ -18,18 +17,11 @@ export const columns = [
     maxSize: 90,
     enableSorting: false,
     enableColumnFilter: false,
-    cell: (props) => <Text overflow='hidden'>{props?.getValue()}</Text>,
+    cell: (props) => <p className='overflow-hidden'>{props?.getValue()}</p>,
     header: (props) => (
       <THead id='number' title='N°' py='1' {...getTHeadProps<Invoice>(props)} />
     ),
-    skeleton: () => (
-      <Skeleton
-        width='20%'
-        height='18px'
-        startColor='gray.300'
-        endColor='gray.300'
-      />
-    ),
+    skeleton: () => <Skeleton className='w-[20px] h-[18px]' />,
   }),
 
   columnHelper.accessor('status', {
@@ -49,14 +41,7 @@ export const columns = [
     cell: (props) => {
       return <StatusCell status={props.getValue()} />;
     },
-    skeleton: () => (
-      <Skeleton
-        width='100%'
-        height='18px'
-        startColor='gray.300'
-        endColor='gray.300'
-      />
-    ),
+    skeleton: () => <Skeleton className='w-[100%] h-[18px]' />,
   }),
   columnHelper.accessor('metadata', {
     id: 'DATE',
@@ -74,22 +59,15 @@ export const columns = [
     ),
     cell: (props) => {
       return (
-        <Text>
+        <p>
           {DateTimeUtils.format(
             props.getValue().created,
             DateTimeUtils.defaultFormatShortString,
           )}
-        </Text>
+        </p>
       );
     },
-    skeleton: () => (
-      <Skeleton
-        width='100%'
-        height='18px'
-        startColor='gray.300'
-        endColor='gray.300'
-      />
-    ),
+    skeleton: () => <Skeleton className='w-[100%] h-[18px]' />,
   }),
   columnHelper.accessor('amountDue', {
     id: 'AMOUNT_DUE',
@@ -107,18 +85,11 @@ export const columns = [
     ),
     cell: (props) => {
       return (
-        <Text textAlign='center'>
+        <p className='text-center'>
           {formatCurrency(props.getValue(), 2, props.row.original.currency)}
-        </Text>
+        </p>
       );
     },
-    skeleton: () => (
-      <Skeleton
-        width='100%'
-        height='18px'
-        startColor='gray.300'
-        endColor='gray.300'
-      />
-    ),
+    skeleton: () => <Skeleton className='w-[100%] h-[18px]' />,
   }),
 ];

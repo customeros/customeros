@@ -5,7 +5,7 @@ import { Send03 } from '@ui/media/icons/Send03';
 import { Mail01 } from '@ui/media/icons/Mail01';
 import { AlarmClockPlus } from '@ui/media/icons/AlarmClockPlus';
 import { MessageChatSquare } from '@ui/media/icons/MessageChatSquare';
-import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog2';
+import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog';
 import { useTimelineActionEmailContext } from '@organization/src/components/Timeline/FutureZone/TimelineActions/context/TimelineActionEmailContext';
 import { useTimelineActionLogEntryContext } from '@organization/src/components/Timeline/FutureZone/TimelineActions/context/TimelineActionLogEntryContext';
 import {

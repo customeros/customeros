@@ -51,12 +51,6 @@ export const SlackThreadPreviewModal: React.FC = () => {
             <h2 className='text-xl font-bold'>
               {event?.interactionSession?.name || 'Thread'}
             </h2>
-            {/* todo uncomment when channel data is available  */}
-            {/*{channel && (*/}
-            {/*  <Text color='gray.500' ml={2} fontSize='sm'>*/}
-            {/*    {channel}*/}
-            {/*  </Text>*/}
-            {/*)}*/}
           </div>
           <div className='flex justify-end items-center'>
             <Tooltip label='Copy link to this thread' side='bottom'>
@@ -66,7 +60,7 @@ export const SlackThreadPreviewModal: React.FC = () => {
                   aria-label='Copy link to this thread'
                   color='gray.500'
                   size='sm'
-                  mr={1}
+                  className='mr-1'
                   icon={<Link03 className='text-gray-500 size-4' />}
                   onClick={() => copy(window.location.href)}
                 />

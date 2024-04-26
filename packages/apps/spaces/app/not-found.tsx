@@ -3,7 +3,7 @@ import { useRouter } from 'next/navigation';
 
 import { Button } from '@ui/form/Button/Button';
 import { SearchSm } from '@ui/media/icons/SearchSm';
-import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
+import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 
 import HalfCirclePattern from './src/assets/HalfCirclePattern';
 

@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic';
 import ParentSize from '@visx/responsive/lib/components/ParentSize';
 
 import { cn } from '@ui/utils/cn';
-import { Skeleton } from '@ui/presentation/Skeleton';
+import { Skeleton } from '@ui/feedback/Skeleton';
 import { ChartCard } from '@customerMap/components/ChartCard';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';

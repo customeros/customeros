@@ -14,7 +14,7 @@ import { IconButton } from '@ui/form/IconButton/IconButton';
 import { Meeting, ExternalSystemType } from '@graphql/types';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
-import { FormAutoresizeTextarea } from '@ui/form/Textarea/FormAutoresizeTextarea2';
+import { FormAutoresizeTextarea } from '@ui/form/Textarea/FormAutoresizeTextarea';
 import {
   CardHeader,
   CardFooter,

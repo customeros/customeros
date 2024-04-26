@@ -2,13 +2,13 @@ import React, { useRef, useMemo, useState, useEffect } from 'react';
 
 import { cn } from '@ui/utils/cn';
 import { InputProps } from '@ui/form/Input';
-import { useOutsideClick } from '@ui/utils';
 import { Button } from '@ui/form/Button/Button';
-import { FormInput } from '@ui/form/Input/FormInput2';
+import { FormInput } from '@ui/form/Input/FormInput';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { Divider } from '@ui/presentation/Divider/Divider';
 import { validateEmail } from '@shared/util/emailValidation';
+import { useOutsideClick } from '@ui/utils/hooks/useOutsideClick';
 import { EmailSelect } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ContractBillingDetailsModal/EmailsInputGroup/EmailSelect';
 
 interface EmailsInputGroupProps extends InputProps {

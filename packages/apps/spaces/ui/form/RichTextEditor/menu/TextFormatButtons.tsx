@@ -1,4 +1,3 @@
-import { Flex } from '@chakra-ui/react';
 import { useActive, useCommands } from '@remirror/react';
 
 import { Bold01 } from '@ui/media/icons/Bold01';
@@ -14,7 +13,7 @@ export const TextFormatButtons = () => {
   const active = useActive();
 
   return (
-    <Flex gap={2}>
+    <div className='flex gap-2'>
       <ToolbarButton
         label='Bold'
         onClick={() => {
@@ -51,6 +50,6 @@ export const TextFormatButtons = () => {
         isActive={active.heading()}
         icon={<Heading01 color='gray.400' />}
       />
-    </Flex>
+    </div>
   );
 };

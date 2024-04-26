@@ -13,7 +13,7 @@ import {
   useCurrentSelection,
 } from '@remirror/react';
 
-import { Input } from '@ui/form/Input/Input2';
+import { Input } from '@ui/form/Input/Input';
 import { Check } from '@ui/media/icons/Check';
 import { Link01 } from '@ui/media/icons/Link01';
 import { Trash01 } from '@ui/media/icons/Trash01';

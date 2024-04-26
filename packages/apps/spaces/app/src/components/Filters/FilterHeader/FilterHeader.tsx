@@ -1,8 +1,6 @@
 import { useRef, useEffect } from 'react';
 
-import { Flex } from '@ui/layout/Flex';
 import { Switch } from '@ui/form/Switch';
-import { Text } from '@ui/typography/Text';
 
 interface FilterHeaderProps {
   isChecked: boolean;
@@ -36,21 +34,14 @@ export const FilterHeader = ({
   }, []);
 
   return (
-    <Flex
-      mb='3'
-      flexDir='row'
-      alignItems='center'
-      justifyContent='space-between'
-    >
-      <Text fontSize='sm' fontWeight='medium'>
-        Filter
-      </Text>
+    <div className='flex mb-3 items-center justify-between'>
+      <span className='text-sm font-medium'>Filter</span>
       <Switch
         size='sm'
         colorScheme='primary'
         isChecked={isChecked}
         onChange={handleChange}
       />
-    </Flex>
+    </div>
   );
 };

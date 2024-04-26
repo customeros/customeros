@@ -11,11 +11,11 @@ import {
 import { AnimatePresence } from 'framer-motion';
 
 import { cn } from '@ui/utils/cn';
-import { SelectOption } from '@ui/utils';
+import { SelectOption } from '@ui/utils/types';
 import {
   MultiCreatableSelect,
   getMenuListClassNames,
-} from '@ui/form/MultiCreatableSelect/MultiCreatableSelect2';
+} from '@ui/form/MultiCreatableSelect/MultiCreatableSelect';
 
 import { TagButton } from './TagButton';
 import { useTagButtonSlideAnimation } from './useTagButtonSlideAnimation';

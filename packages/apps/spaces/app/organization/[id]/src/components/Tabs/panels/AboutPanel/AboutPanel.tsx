@@ -21,7 +21,7 @@ import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import { HorizontalBarChart03 } from '@ui/media/icons/HorizontalBarChart03';
 import { ArrowCircleBrokenUpLeft } from '@ui/media/icons/ArrowCircleBrokenUpLeft';
-import { FormAutoresizeTextarea } from '@ui/form/Textarea/FormAutoresizeTextarea2';
+import { FormAutoresizeTextarea } from '@ui/form/Textarea/FormAutoresizeTextarea';
 import { useOrganizationQuery } from '@organization/src/graphql/organization.generated';
 import { Branches } from '@organization/src/components/Tabs/panels/AboutPanel/branches/Branches';
 import { OwnerInput } from '@organization/src/components/Tabs/panels/AboutPanel/owner/OwnerInput';

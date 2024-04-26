@@ -7,14 +7,12 @@ import { useBankAccountsQuery } from '@settings/graphql/getBankAccounts.generate
 import { useCreateBankAccountMutation } from '@settings/graphql/createBankAccount.generated';
 import { currencyIcon } from '@settings/components/Tabs/panels/BillingPanel/components/utils';
 
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
 import { Plus } from '@ui/media/icons/Plus';
-import { Select } from '@ui/form/SyncSelect';
-import { IconButton } from '@ui/form/IconButton';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
+import { IconButton } from '@ui/form/IconButton/IconButton';
 import { currencyOptions } from '@shared/util/currencyOptions';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { Menu, MenuList, MenuItem, MenuButton } from '@ui/overlay/Menu/Menu';
 
 export const AddAccountButton = ({
   existingCurrencies,
@@ -43,7 +41,7 @@ export const AddAccountButton = ({
         <Tooltip label='Add new bank account'>
           <IconButton
             size='xs'
-            color='gray.400'
+            colorScheme='gray'
             icon={<Plus />}
             variant='ghost'
             aria-label='Add account'
@@ -53,113 +51,36 @@ export const AddAccountButton = ({
       )}
 
       {showCurrencySelect && (
-        <Select
-          placeholder='Account currency'
-          name='bankAccountCurrency'
-          defaultMenuIsOpen
-          menuIsOpen
-          blurInputOnSelect
-          onChange={(e) => {
-            mutate({
-              input: {
-                currency: e.value,
-                bankName: legalName,
-              },
-            });
-          }}
-          onBlur={() => setShowCurrencySelect(false)}
-          options={currencyOptions}
-          isOptionDisabled={(option, selectValue) =>
-            existingCurrencies?.indexOf(option.value) > -1
-          }
-          formatOptionLabel={(option, { context }) => {
-            return (
-              <Flex alignItems='center'>
-                <Flex
-                  justifyContent={context === 'value' ? 'center' : 'flex-end'}
-                  alignItems='center'
-                >
-                  {currencyIcon?.[option.value]}
-                </Flex>
-                <Text className='option-label' ml={3}>
-                  {option.value}
-                </Text>
-              </Flex>
-            );
-          }}
-          chakraStyles={{
-            container: (props, state) => {
-              if (
-                !state?.selectProps?.menuIsOpen &&
-                state.hasValue &&
-                !state.isFocused
-              ) {
-                return {
-                  display: 'flex',
-                  alignItems: 'center',
-                  width: 'fit-content',
-                  maxW: 'fit-content',
-                  willChange: 'width',
-                  transition: 'width 0.2s',
-                };
-              }
-
-              return {
-                ...props,
-                w: '100%',
-                overflow: 'visible',
-                willChange: 'width',
-                transition: 'width 0.2s',
-                _hover: { cursor: 'pointer' },
-              };
-            },
-            control: (props, state) => {
-              if (
-                !state?.selectProps?.menuIsOpen &&
-                state.hasValue &&
-                !state.isFocused
-              ) {
-                return {
-                  height: '24px',
-                  maxH: '24px',
-                  width: 'max-content',
-                  minW: '24px',
-                  borderRadius: '30px',
-                  border: '1px solid',
-                  borderColor: 'gray.200',
-                  padding: '2px',
-
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  fontSize: '12px',
-
-                  '& .option-label': {
-                    display: 'none',
-                  },
-                  '& svg': {
-                    marginLeft: '1px',
-                    height: '12px',
-                  },
-                };
-              }
-
-              return {
-                ...props,
-                w: '100%',
-                overflow: 'visible',
-                _hover: { cursor: 'pointer' },
-              };
-            },
-            groupHeading: (props) => ({
-              display: 'none',
-            }),
-            group: (props) => ({
-              borderBottom: '1px solid',
-              borderColor: 'gray.200',
-            }),
-          }}
-        />
+        <Menu>
+          <MenuButton>
+            <IconButton
+              icon={<Plus />}
+              aria-label='Account currency'
+              variant='ghost'
+              colorScheme='gray'
+              size='md'
+            />
+          </MenuButton>
+          <MenuList>
+            {currencyOptions.map((option) => (
+              <MenuItem
+                key={option.value}
+                onSelect={() => {
+                  mutate({
+                    input: {
+                      currency: option.value,
+                      bankName: legalName,
+                    },
+                  });
+                }}
+                disabled={existingCurrencies?.indexOf(option.value) > -1}
+              >
+                {currencyIcon?.[option.value]}
+                {option.value}
+              </MenuItem>
+            ))}
+          </MenuList>
+        </Menu>
       )}
     </>
   );

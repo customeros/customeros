@@ -1,8 +1,8 @@
 import { useField } from 'react-inverted-form';
 import { useRef, useMemo, useState, useCallback } from 'react';
 
+import { Input } from '@ui/form/Input';
 import { Social } from '@graphql/types';
-import { Input } from '@ui/form/Input/Input2';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useUpdateSocialMutation } from '@organization/src/graphql/updateSocial.generated';
 import { useRemoveSocialMutation } from '@organization/src/graphql/removeSocial.generated';
@@ -10,7 +10,7 @@ import {
   InputGroup,
   LeftElement,
   InputGroupProps,
-} from '@ui/form/Input/InputGroup';
+} from '@ui/form/InputGroup/InputGroup';
 
 import { SocialIcon } from './SocialIcons';
 import { SocialInput } from './SocialInput';

@@ -1,6 +1,5 @@
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
-import { HStack } from '@ui/layout/Stack';
 import { useChannel } from '@shared/hooks/useChannel';
 
 import { UserHexagon } from '../UserHexagon';
@@ -16,7 +15,7 @@ export const UserPresence = ({ channelName }: UserPresenceProps) => {
   if (!isPresenceEnabled) return null;
 
   return (
-    <HStack>
+    <div className='flex'>
       {presentUsers.map(([user, color]) => (
         <UserHexagon
           key={user}
@@ -25,6 +24,6 @@ export const UserPresence = ({ channelName }: UserPresenceProps) => {
           isCurrent={user === username}
         />
       ))}
-    </HStack>
+    </div>
   );
 };

@@ -1,7 +1,5 @@
-import { Icon, IconProps } from '@ui/media/Icon';
-
-export const EmptyTable = (props: IconProps) => (
-  <Icon viewBox='0 0 152 120' fill='none' boxSize='4' {...props}>
+export const EmptyTable = (props: React.SVGAttributes<SVGElement>) => (
+  <svg viewBox='0 0 152 120' fill='none' {...props}>
     <circle cx='76' cy='52' r='52' fill='#E9D7FE' />
     <g filter='url(#filter0_dd_353_3172)'>
       <path
@@ -165,5 +163,5 @@ export const EmptyTable = (props: IconProps) => (
         <stop offset='0.350715' stopColor='white' stop-opacity='0' />
       </linearGradient>
     </defs>
-  </Icon>
+  </svg>
 );

@@ -6,7 +6,7 @@ import { useRecoilValue } from 'recoil';
 import { Column } from '@tanstack/react-table';
 
 import { Organization } from '@graphql/types';
-import { Checkbox } from '@ui/form/Checkbox/Checkbox2';
+import { Checkbox } from '@ui/form/Checkbox/Checkbox';
 
 import { useWebsiteFilter, WebsiteFilterSelector } from './WebsiteFilter.atom';
 import { FilterHeader, useFilterToggle, DebouncedSearchInput } from '../shared';

@@ -4,9 +4,9 @@ import { ReactNode, PropsWithChildren } from 'react';
 import { twMerge } from 'tailwind-merge';
 
 import { cn } from '@ui/utils/cn';
-import { useDisclosure } from '@ui/utils';
+import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { Card, CardHeader, CardContent } from '@ui/presentation/Card/Card';
-import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog/InfoDialog2';
+import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog/InfoDialog';
 
 import { HelpButton } from '../HelpButton';
 
@@ -29,7 +29,7 @@ export const ChartCard = ({
   renderHelpContent,
   ...props
 }: PropsWithChildren<ChartCardProps>) => {
-  const { onOpen, isOpen, onClose } = useDisclosure();
+  const { onOpen, open: isOpen, onClose } = useDisclosure();
 
   return (
     <>

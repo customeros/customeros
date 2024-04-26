@@ -2,9 +2,13 @@
 import { FC } from 'react';
 import { useField } from 'react-inverted-form';
 
-import { Input } from '../Input/Input2';
-import { FormInputProps } from '../Input/FormInput2';
-import { InputGroup, LeftElement, RightElement } from '../Input/InputGroup';
+import { Input } from '../Input/Input';
+import { FormInputProps } from '../Input/FormInput';
+import {
+  InputGroup,
+  LeftElement,
+  RightElement,
+} from '../InputGroup/InputGroup';
 
 interface FormNumberInputGroupProps extends FormInputProps {
   name: string;

@@ -8,8 +8,8 @@ import { useLocalStorage } from 'usehooks-ts';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { cn } from '@ui/utils/cn';
-import { SelectOption } from '@ui/utils';
-import { Input } from '@ui/form/Input/Input2';
+import { Input } from '@ui/form/Input/Input';
+import { SelectOption } from '@ui/utils/types';
 import { Edit03 } from '@ui/media/icons/Edit03';
 import { Copy01 } from '@ui/media/icons/Copy01';
 import { toastSuccess } from '@ui/presentation/Toast';

@@ -1,19 +1,21 @@
 import { useRef } from 'react';
 import { useParams } from 'next/navigation';
+import { SelectInstance } from 'react-select';
 
 import { produce } from 'immer';
 import { useQueryClient } from '@tanstack/react-query';
 import { useConnections } from '@integration-app/react';
 
-import { Flex } from '@ui/layout/Flex';
-import { Button } from '@ui/form/Button';
-import { Tooltip } from '@ui/overlay/Tooltip';
+import { Select } from '@ui/form/Select';
+import { SelectOption } from '@ui/utils/types';
+import { Button } from '@ui/form/Button/Button';
 import { Link01 } from '@ui/media/icons/Link01';
 import { Unthread } from '@ui/media/logos/Unthread';
 import { toastError } from '@ui/presentation/Toast';
-import { Select, SelectInstance } from '@ui/form/SyncSelect';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
+import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { SelectOption, useDisclosure, useOutsideClick } from '@ui/utils';
+import { useOutsideClick } from '@ui/utils/hooks/useOutsideClick';
 import { useGetIssuesQuery } from '@organization/src/graphql/getIssues.generated';
 import { useOrganizationQuery } from '@organization/src/graphql/organization.generated';
 import { useSlackChannelsQuery } from '@organization/src/graphql/slackChannels.generated';
@@ -31,7 +33,7 @@ export const ChannelLinkSelect = ({ from }: ChannelLinkSelectProps) => {
   const id = useParams()?.id as string;
   const ref = useRef(null);
   const selectRef = useRef<SelectInstance>(null);
-  const { isOpen, onClose, onOpen } = useDisclosure();
+  const { open: isOpen, onClose, onOpen } = useDisclosure();
   const { items } = useConnections();
   const [timelineMeta] = useTimelineMeta();
 
@@ -128,8 +130,6 @@ export const ChannelLinkSelect = ({ from }: ChannelLinkSelectProps) => {
               0,
             );
           }}
-          color='gray.500'
-          fontWeight='normal'
           isLoading={isLoading}
           leftIcon={<Link01 color='gray.500' />}
         >
@@ -150,9 +150,7 @@ export const ChannelLinkSelect = ({ from }: ChannelLinkSelectProps) => {
               0,
             );
           }}
-          color='gray.500'
-          fontWeight='normal'
-          borderRadius='full'
+          className='rounded-full'
           isLoading={isLoading}
           leftIcon={<Unthread />}
         >
@@ -163,7 +161,7 @@ export const ChannelLinkSelect = ({ from }: ChannelLinkSelectProps) => {
   }
 
   return (
-    <Flex w='210px' ref={ref}>
+    <div className='w-[210px]' ref={ref}>
       <Select
         size='sm'
         isClearable
@@ -178,6 +176,6 @@ export const ChannelLinkSelect = ({ from }: ChannelLinkSelectProps) => {
         isLoading={updateOrganization.isPending}
         leftElement={<Link01 className='text-gray-500 mr-2' />}
       />
-    </Flex>
+    </div>
   );
 };

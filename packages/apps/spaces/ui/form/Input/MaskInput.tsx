@@ -1,7 +1,7 @@
 import { useIMask } from 'react-imask';
 import React, { useEffect } from 'react';
 
-import { Input, InputProps } from '@ui/form/Input/Input2';
+import { Input, InputProps } from '@ui/form/Input/Input';
 
 interface MaskInputProps extends InputProps {
   name: string;

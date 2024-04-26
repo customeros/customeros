@@ -5,10 +5,10 @@ import React from 'react';
 import { LogoUploader } from '@settings/components/LogoUploadComponent/LogoUploader';
 import { PaymentMethods } from '@settings/components/Tabs/panels/BillingPanel/components/PaymentMethods';
 
-import { FormSelect } from '@ui/form/SyncSelect';
-import { FormInput } from '@ui/form/Input/FormInput2';
+import { FormInput } from '@ui/form/Input/FormInput';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
-import { FormSwitch } from '@ui/form/Switch/FormSwitch2';
+import { FormSelect } from '@ui/form/Select/FormSelect';
+import { FormSwitch } from '@ui/form/Switch/FormSwitch';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { Divider } from '@ui/presentation/Divider/Divider';
 import { countryOptions } from '@shared/util/countryOptions';
@@ -179,12 +179,10 @@ export const TenantBillingPanelDetailsForm = ({
           name='vatNumber'
           autoComplete='off'
           label='VAT number'
-          isLabelVisible
           options={{ opts }}
           labelProps={{
             className: 'text-sm mb-0 mt-4 font-semibold inline-block ',
           }}
-          textOverflow='ellipsis'
           placeholder='VAT number'
           onFocus={() => setIsInvoiceProviderFocused(true)}
           onBlur={() => setIsInvoiceProviderFocused(false)}

@@ -1,6 +1,5 @@
 import React from 'react';
 
-import { Flex } from '@chakra-ui/react';
 import { useCommands } from '@remirror/react';
 
 import { LeftIndent } from '@ui/media/icons/LeftIndent';
@@ -12,7 +11,7 @@ export const IndentButtons = () => {
   const commands = useCommands();
 
   return (
-    <Flex gap={2}>
+    <div className='flex gap-2'>
       <ToolbarButton
         label='Indent'
         onClick={() => {
@@ -27,6 +26,6 @@ export const IndentButtons = () => {
         }}
         icon={<LeftIndent color='gray.400' />}
       />
-    </Flex>
+    </div>
   );
 };

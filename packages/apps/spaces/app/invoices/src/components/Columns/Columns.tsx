@@ -1,7 +1,7 @@
 import { ColumnDef as ColumnDefinition } from '@tanstack/react-table';
 
+import { Skeleton } from '@ui/feedback/Skeleton';
 import { Invoice, TableViewDef } from '@graphql/types';
-import { Skeleton } from '@ui/feedback/Skeleton/Skeleton2';
 import { createColumnHelper } from '@ui/presentation/Table';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
 

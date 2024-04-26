@@ -379,6 +379,40 @@
     @apply grid-cols-3;
     @apply gap-[4px];
   }
+
+  .slack_code {
+    @apply border border-gray-300 bg-white;
+  }
+
+  div.slack_code {
+    @apply text-gray-100 px-[0] py-[0.025em];
+  }
+
+  span.slack_code {
+    @apply text-rose-500 w-fit px-[0] py-[0.025em];
+  }
+  .slack_bold {
+    @apply font-bold;
+  }
+
+  .slack_italic {
+    @apply italic;
+  }
+}
+
+.tiptap {
+  > * + * {
+    margin-top: 0.75em;
+  }
+  outline: none;
+}
+
+.tiptap .is-editor-empty:first-child::before {
+  color: #adb5bd;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
 }
 
 .react-calendar__navigation__arrow.react-calendar__navigation__next2-button,

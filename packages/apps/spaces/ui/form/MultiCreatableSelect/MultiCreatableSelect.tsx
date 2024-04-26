@@ -1,40 +1,35 @@
-import React, { useMemo, forwardRef, useCallback, ComponentType } from 'react';
-
-import { MultiValueComponent } from 'react-select/dist/declarations/src/animated/MultiValue';
+'use client';
+import { useMemo, forwardRef, useCallback, ComponentType } from 'react';
 import {
   OptionProps,
-  MenuListProps,
-  MultiValueProps,
-  ChakraStylesConfig,
-} from 'chakra-react-select';
-
-import { Tooltip } from '@ui/presentation/Tooltip';
-import { SelectOption, chakraStyles } from '@ui/utils';
-import { SelectInstance } from '@ui/form/SyncSelect/Select';
-import { multiCreatableSelectStyles } from '@ui/form/MultiCreatableSelect/styles';
-import {
   ControlProps,
-  chakraComponents,
-  AsyncCreatableProps,
-  AsyncCreatableSelect,
+  MenuListProps,
+  SelectInstance,
+  MultiValueProps,
+  ClassNamesConfig,
   MultiValueGenericProps,
-} from '@ui/form/SyncSelect';
+  components as createComponent,
+} from 'react-select';
 
-// TODO: to be removed
-export type CustomStylesFn = (
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  props: ChakraStylesConfig<any, any, any> | undefined,
-) => chakraStyles;
+import merge from 'lodash/merge';
+import { twMerge } from 'tailwind-merge';
+import AsyncCreatableSelect, {
+  AsyncCreatableProps,
+} from 'react-select/async-creatable';
+import { MultiValueComponent } from 'react-select/dist/declarations/src/animated/MultiValue';
 
-// Exhaustively typing this Props interface does not offer any benefit at this moment
-// TODO: Revisit this interface - naming is wrong and props need re-work
+import { cn } from '@ui/utils/cn';
+import { SelectOption } from '@ui/utils/types';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
+
+import { SelectProps } from '../Select';
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface FormSelectProps extends AsyncCreatableProps<any, any, any> {
   name: string;
   formId: string;
   withTooltip?: boolean;
-  // TODO: discard customStyles in favour of existing chakraStyles
-  customStyles?: CustomStylesFn;
+  size?: 'xs' | 'sm' | 'md' | 'lg';
   navigateAfterAddingToContract?: boolean;
   removeValue?: (value: SelectOption) => void;
   optionAction?: (data: string) => JSX.Element;
@@ -45,105 +40,189 @@ export interface FormSelectProps extends AsyncCreatableProps<any, any, any> {
 export const MultiCreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
   (
     {
-      chakraStyles,
+      size = 'md',
+      name,
+      formId,
       components: _components,
-      navigateAfterAddingToContract,
+      classNames,
       ...props
     },
     ref,
   ) => {
-    const Control = useCallback(({ children, ...rest }: ControlProps) => {
-      return (
-        <chakraComponents.Control {...rest}>
-          {children}
-        </chakraComponents.Control>
-      );
-    }, []);
+    const Control = useCallback(
+      ({ children, innerRef, innerProps }: ControlProps) => {
+        const sizeClass = {
+          xs: 'min-h-4',
+          sm: 'min-h-7',
+          md: 'min-h-8',
+          lg: 'min-h-8',
+        }[size];
+
+        return (
+          <div
+            ref={innerRef}
+            className={`flex w-full items-center group ${sizeClass}`}
+            {...innerProps}
+          >
+            {children}
+          </div>
+        );
+      },
+      [size],
+    );
+
+    const Option = useCallback(
+      ({ data, isFocused, innerRef, ...rest }: OptionProps<SelectOption>) => {
+        return (
+          <createComponent.Option
+            data={data}
+            isFocused={isFocused}
+            innerRef={innerRef}
+            {...rest}
+          >
+            {data.label || data.value}
+            {props?.optionAction &&
+              isFocused &&
+              props?.optionAction(data.value)}
+          </createComponent.Option>
+        );
+      },
+      [props?.optionAction],
+    );
+
     const MultiValueLabel = useCallback(
       (rest: MultiValueGenericProps<SelectOption>) => {
         if (props?.withTooltip) {
           return (
-            <chakraComponents.MultiValueLabel {...rest}>
+            <createComponent.MultiValueLabel {...rest}>
               <Tooltip
                 label={rest.data.label.length > 0 ? rest.data.value : ''}
-                placement='top'
+                side='top'
               >
                 {rest.data.label || rest.data.value}
               </Tooltip>
-            </chakraComponents.MultiValueLabel>
+            </createComponent.MultiValueLabel>
           );
         }
 
         return (
-          <chakraComponents.MultiValueLabel {...rest}>
+          <createComponent.MultiValueLabel {...rest}>
             {rest.data.label || rest.data.value}
-          </chakraComponents.MultiValueLabel>
+          </createComponent.MultiValueLabel>
         );
       },
       [],
     );
 
-    const Option = useCallback(
-      (rest: OptionProps<SelectOption>) => {
-        return (
-          <chakraComponents.Option {...rest}>
-            {rest.data.label || rest.data.value}
-            {props?.optionAction &&
-              rest?.isFocused &&
-              props.optionAction(rest.data.value)}
-          </chakraComponents.Option>
-        );
-      },
-      [props.optionAction],
-    );
-
     const MenuList = useCallback((rest: MenuListProps) => {
       return (
-        <chakraComponents.MenuList {...rest}>
+        <createComponent.MenuList {...rest}>
           {rest.children}
-        </chakraComponents.MenuList>
+        </createComponent.MenuList>
       );
     }, []);
     const MultiValue = useCallback((rest: MultiValueProps) => {
       return (
-        <chakraComponents.MultiValue {...rest}>
+        <createComponent.MultiValue {...rest}>
           {rest.children}
-        </chakraComponents.MultiValue>
+        </createComponent.MultiValue>
       );
     }, []);
-
     const components = useMemo(
       () => ({
         Control,
         MultiValueLabel,
         MenuList,
-        // @ts-expect-error - this will be replaced by a new Select component
         MultiValue: (props?.MultiValue || MultiValue) as MultiValueComponent,
-        DropdownIndicator: () => null,
         Option: (props?.Option || Option) as ComponentType<OptionProps>,
+        DropdownIndicator: () => null,
         ..._components,
       }),
-      [Control, MultiValueLabel, _components, MultiValue],
+      [Control, MultiValueLabel, MultiValue, _components],
+    );
+    const defaultClassNames = useMemo(
+      () => merge(getDefaultClassNames({ size }), classNames),
+      [size, classNames],
     );
 
     return (
       <AsyncCreatableSelect
         loadOptions={props?.loadOptions}
-        variant='unstyled'
-        focusBorderColor='transparent'
+        cacheOptions
         ref={ref}
-        // @ts-expect-error - this will be replaced by a new Select component
         components={components}
-        tabSelectsValue={false}
-        isMulti
-        tagVariant='ghost'
         closeMenuOnSelect={false}
-        chakraStyles={
-          props?.customStyles?.(chakraStyles) ||
-          multiCreatableSelectStyles(chakraStyles)
-        }
+        isMulti
+        unstyled
+        isClearable={false}
+        tabSelectsValue={false}
+        classNames={defaultClassNames}
         {...props}
       />
     );
   },
 );
+
+const getDefaultClassNames = ({
+  size,
+  isReadOnly,
+}: Pick<SelectProps, 'size' | 'isReadOnly'>): ClassNamesConfig => ({
+  container: ({ isFocused }) =>
+    twMerge(
+      'flex mt-1 cursor-pointer overflow-visible min-w-[300px] w-full focus-visible:border-0 focus:border-0',
+      isReadOnly && 'pointer-events-none',
+      isFocused && 'border-primary-500',
+    ),
+  menu: ({ menuPlacement }) =>
+    cn(
+      menuPlacement === 'top'
+        ? 'mb-2 animate-slideUpAndFade'
+        : 'mt-2 animate-slideDownAndFade',
+      'z-50',
+    ),
+  menuList: () =>
+    'p-2 z-50  max-h-[12rem] border border-gray-200 bg-white rounded-lg shadow-lg overflow-y-auto overscroll-auto',
+  option: ({ isFocused, isSelected }) =>
+    cn(
+      'my-[2px] px-3 py-1.5 rounded-md text-gray-700 line-clamp-1 text-sm transition ease-in-out delay-50 hover:bg-gray-50',
+      isSelected && 'bg-gray-50 font-medium leading-normal',
+      isFocused && 'ring-2 ring-gray-100',
+    ),
+  placeholder: () => 'text-gray-400',
+  multiValue: () =>
+    'flex p-0 gap-0 text-gray-700 text-sm mr-1 cursor-default h-[auto]',
+  multiValueLabel: () => 'text-gray-700 text-sm mr-1 h-[20px] self-center',
+  multiValueRemove: () => 'hidden',
+  groupHeading: () => 'text-gray-400 text-sm px-3 py-1.5 font-normal uppercase',
+  valueContainer: () =>
+    'overflow-visible max-h-[86px] flex items-center justify-center',
+  control: () => 'overflow-visible',
+  input: () => 'overflow-visible text-gray-500 leading-4',
+});
+
+export const getMultiValueClassNames = (className?: string) => {
+  const defaultStyle =
+    'flex p-0 gap-0 text-gray-700 text-sm mr-1 cursor-default h-4';
+
+  return twMerge(defaultStyle, className);
+};
+
+export const getMultiValueLabelClassNames = (className?: string) => {
+  const defaultStyle = 'text-gray-700 text-sm mr-1 h-[20px] self-center';
+
+  return twMerge(defaultStyle, className);
+};
+
+export const getMenuListClassNames = (className?: string) => {
+  const defaultStyle =
+    'p-2 z-50 max-h-[12rem] border border-gray-200 bg-white rounded-lg shadow-lg overflow-y-auto overscroll-auto';
+
+  return twMerge(defaultStyle, className);
+};
+
+export const getValueContainerClassNames = (className?: string) => {
+  const defaultStyle =
+    'overflow-visible max-h-[86px] flex items-center justify-center';
+
+  return twMerge(defaultStyle, className);
+};

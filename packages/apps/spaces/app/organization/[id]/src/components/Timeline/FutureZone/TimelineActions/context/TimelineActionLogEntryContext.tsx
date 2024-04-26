@@ -11,8 +11,8 @@ import { useSession } from 'next-auth/react';
 import { useRemirror } from '@remirror/react';
 import { useQueryClient, UseMutationOptions } from '@tanstack/react-query';
 
-import { useDisclosure } from '@ui/utils';
 import { LogEntry, DataSource } from '@graphql/types';
+import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { LogEntryWithAliases } from '@organization/src/components/Timeline/types';
 import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
@@ -75,7 +75,7 @@ export const TimelineActionLogEntryContextContextProvider = ({
   id: string;
   invalidateQuery: () => void;
 }>) => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { open: isOpen, onOpen, onClose } = useDisclosure();
   const [timelineMeta] = useTimelineMeta();
   const session = useSession();
 

@@ -1,16 +1,12 @@
 import React from 'react';
 
-import { Text } from '@ui/typography/Text';
 import { IconButton } from '@ui/form/IconButton';
 import { InlineLoader } from '@ui/presentation/inline-loader';
 import {
-  Portal,
   Popover,
-  PopoverBody,
-  PopoverArrow,
   PopoverContent,
   PopoverTrigger,
-} from '@ui/overlay/Popover';
+} from '@ui/overlay/Popover/Popover';
 
 import CheckCircle from './assets/CheckCircle';
 
@@ -46,27 +42,21 @@ export const SimpleValidationIndicator = ({
   }
 
   return (
-    <Popover trigger='hover'>
+    <Popover>
       <PopoverTrigger>
         <IconButton
           size='sm'
-          variant='flushed'
           aria-label='Show validationresults'
           icon={<div className={styles.validationSignal} />}
         />
       </PopoverTrigger>
-      <Portal>
-        <PopoverContent>
-          <PopoverArrow />
-          <PopoverBody>
-            {errorMessages.map((data) => (
-              <Text color='gray.600' key={data.split(' ').join('-')}>
-                {data}
-              </Text>
-            ))}
-          </PopoverBody>
-        </PopoverContent>
-      </Portal>
+      <PopoverContent>
+        {errorMessages.map((data) => (
+          <p className='text-gray-600' key={data.split(' ').join('-')}>
+            {data}
+          </p>
+        ))}
+      </PopoverContent>
     </Popover>
   );
 };

@@ -1,7 +1,18 @@
-import { Icon, IconProps } from '@ui/media/Icon';
+import React from 'react';
 
-export const Unthread = (props: IconProps) => (
-  <Icon viewBox='0 0 32 32' fill='none' boxSize='4' {...props}>
+import { twMerge } from 'tailwind-merge';
+
+interface IconProps extends React.SVGAttributes<SVGElement> {
+  className?: string;
+}
+
+export const Unthread = ({ className, ...props }: IconProps) => (
+  <svg
+    viewBox='0 0 32 32'
+    fill='none'
+    {...props}
+    className={twMerge('inline-block size-4', className)}
+  >
     <g id='Unthread'>
       <path
         id='Exclude'
@@ -11,5 +22,5 @@ export const Unthread = (props: IconProps) => (
         fill='#F95441'
       />
     </g>
-  </Icon>
+  </svg>
 );

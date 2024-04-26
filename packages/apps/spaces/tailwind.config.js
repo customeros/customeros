@@ -11,6 +11,7 @@ module.exports = {
   ],
   theme: {
     fontFamily: {
+      sans: ['var(--font-barlow)'],
       heading: ['var(--font-barlow)'],
       body: ['var(--font-barlow)'],
       sticky: ['var(--font-merriweather)'],

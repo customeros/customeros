@@ -8,7 +8,7 @@ import intersection from 'lodash/intersection';
 import { Column } from '@tanstack/react-table';
 
 import { Organization } from '@graphql/types';
-import { Checkbox } from '@ui/form/Checkbox/Checkbox2';
+import { Checkbox } from '@ui/form/Checkbox/Checkbox';
 import { Tumbleweed } from '@ui/media/icons/Tumbleweed';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useGetUsersQuery } from '@shared/graphql/getUsers.generated';

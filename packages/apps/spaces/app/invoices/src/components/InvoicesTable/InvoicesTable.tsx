@@ -11,7 +11,7 @@ import { Table, SortingState } from '@ui/presentation/Table';
 import { SlashCircle01 } from '@ui/media/icons/SlashCircle01';
 import { ViewSettings } from '@shared/components/ViewSettings';
 import { GetInvoicesQuery } from '@shared/graphql/getInvoices.generated';
-import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog2';
+import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog';
 
 import { Empty } from '../Empty';
 import { Search } from '../Search';

@@ -1,7 +1,18 @@
-import { Icon, IconProps } from '@ui/media/Icon';
+import React from 'react';
 
-export const X = (props: IconProps) => (
-  <Icon viewBox='0 0 27 24' fill='none' boxSize='4' {...props}>
+import { twMerge } from 'tailwind-merge';
+
+interface IconProps extends React.SVGAttributes<SVGElement> {
+  className?: string;
+}
+
+export const X = ({ className, ...props }: IconProps) => (
+  <svg
+    viewBox='0 0 27 24'
+    fill='none'
+    {...props}
+    className={twMerge('inline-block size-4', className)}
+  >
     <g id='X'>
       <path
         id='path1009'
@@ -9,5 +20,5 @@ export const X = (props: IconProps) => (
         fill='black'
       />
     </g>
-  </Icon>
+  </svg>
 );

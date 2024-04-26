@@ -4,7 +4,7 @@ import { cn } from '@ui/utils/cn';
 import { XCircle } from '@ui/media/icons/XCircle';
 import { Action, BilledType } from '@graphql/types';
 import { DotSingle } from '@ui/media/icons/DotSingle';
-import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
+import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 import { getMetadata } from '@organization/src/components/Timeline/PastZone/events/action/utils';
 import { useTimelineEventPreviewMethodsContext } from '@organization/src/components/Timeline/shared/TimelineEventPreview/context/TimelineEventPreviewContext';

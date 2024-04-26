@@ -1,7 +1,18 @@
-import { Icon, IconProps } from '@ui/media/Icon';
+import React from 'react';
 
-export const Linkedin = (props: IconProps) => (
-  <Icon viewBox='0 0 32 32' fill='none' boxSize='4' {...props}>
+import { twMerge } from 'tailwind-merge';
+
+interface IconProps extends React.SVGAttributes<SVGElement> {
+  className?: string;
+}
+
+export const Linkedin = ({ className, ...props }: IconProps) => (
+  <svg
+    viewBox='0 0 32 32'
+    fill='none'
+    {...props}
+    className={twMerge('inline-block size-4', className)}
+  >
     <g id='linkedin'>
       <rect id='bg' x='2' y='2' width='28' height='28' rx='14' fill='#1275B1' />
       <g id='linked_in'>
@@ -16,5 +27,5 @@ export const Linkedin = (props: IconProps) => (
         />
       </g>
     </g>
-  </Icon>
+  </svg>
 );

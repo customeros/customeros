@@ -16,7 +16,7 @@ import {
   components as reactSelectComponents,
 } from 'react-select';
 
-import { SelectOption } from '@ui/utils';
+import { SelectOption } from '@ui/utils/types';
 import { Copy01 } from '@ui/media/icons/Copy01';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { getName } from '@spaces/utils/getParticipantsName';
@@ -24,11 +24,11 @@ import { Contact, ComparisonOperator } from '@graphql/types';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import { emailRegex } from '@organization/src/components/Timeline/PastZone/events/email/utils';
-import { MultiValueWithActionMenu } from '@shared/components/EmailMultiCreatableSelect/MultiValueWithActionMenu';
 import {
   FormSelectProps,
   MultiCreatableSelect,
-} from '@ui/form/MultiCreatableSelect/MultiCreatableSelect2';
+} from '@ui/form/MultiCreatableSelect/MultiCreatableSelect';
+import { MultiValueWithActionMenu } from '@shared/components/EmailMultiCreatableSelect/MultiValueWithActionMenu';
 import {
   GetContactsEmailListDocument,
   useGetContactsEmailListQuery,

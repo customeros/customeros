@@ -8,9 +8,9 @@ import getMinutes from 'date-fns/getMinutes';
 
 import { Button } from '@ui/form/Button/Button';
 import { DateTimeUtils } from '@spaces/utils/date';
-import { Input, InputProps } from '@ui/form/Input/Input2';
+import { Input, InputProps } from '@ui/form/Input/Input';
 import { Divider } from '@ui/presentation/Divider/Divider';
-import { DatePicker } from '@ui/form/DatePicker/DatePicker2';
+import { DatePicker } from '@ui/form/DatePicker/DatePicker';
 import {
   Popover,
   PopoverContent,

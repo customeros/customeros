@@ -1,76 +1,79 @@
-import React, { forwardRef } from 'react';
+import { forwardRef } from 'react';
 import ResizeTextarea, { TextareaAutosizeProps } from 'react-textarea-autosize';
 
-import {
-  Textarea,
-  FormLabel,
-  FormControl,
-  TextareaProps,
-  VisuallyHidden,
-  FormLabelProps,
-} from '@chakra-ui/react';
+import { twMerge } from 'tailwind-merge';
+import { cva, VariantProps } from 'class-variance-authority';
 
-import { InputGroup, InputLeftElement } from '../InputGroup';
+import { cn } from '@ui/utils/cn';
+
+import {
+  LeftElement,
+  RightElement,
+  TextareaGroup,
+} from './AutoresizeTextareaGroup';
+
+const sizeTextArea = cva(
+  [
+    'w-full border-b border-transparent placeholder-gray-400 leading-6 resize-none overflow-hidden gap-2 bg-transparent focus-within:outline-none',
+  ],
+  {
+    variants: {
+      size: {
+        xs: ['min-h-6 h-6'],
+        sm: ['min-h-8 h-8'],
+        md: ['min-h-10 h-10'],
+        lg: ['min-h-12 h-12'],
+      },
+    },
+  },
+);
 
 export interface AutoresizeTextareaProps
-  extends TextareaProps,
+  extends TextareaAutosizeProps,
     Pick<
       TextareaAutosizeProps,
       'maxRows' | 'minRows' | 'onHeightChange' | 'cacheMeasurements'
-    > {
+    >,
+    VariantProps<typeof sizeTextArea> {
   label?: string;
-  isLabelVisible?: boolean;
-  labelProps?: FormLabelProps;
+  border?: boolean;
+  className?: string;
+  size?: 'xs' | 'sm' | 'md';
   leftElement?: React.ReactNode;
+  rightElement?: React.ReactNode;
+  labelProps?: React.HTMLAttributes<HTMLLabelElement>;
 }
 
 export const AutoresizeTextarea = forwardRef<
   HTMLTextAreaElement,
   AutoresizeTextareaProps
->(({ leftElement, isLabelVisible, labelProps, label = '', ...props }, ref) => {
-  return (
-    <FormControl>
-      {isLabelVisible ? (
-        <FormLabel
-          fontWeight={600}
-          color={props?.color}
-          fontSize='sm'
-          mb={0}
-          mt={2}
-          {...labelProps}
-        >
-          {label}
-        </FormLabel>
-      ) : (
-        <VisuallyHidden>
-          <FormLabel>{label}</FormLabel>
-        </VisuallyHidden>
-      )}
-      <InputGroup>
-        {leftElement && (
-          <InputLeftElement w='4'>{leftElement}</InputLeftElement>
-        )}
-        <Textarea
-          w='100%'
-          ref={ref}
-          minRows={1}
-          minH='unset'
-          resize='none'
-          aria-label={label}
-          overflow='hidden'
-          as={ResizeTextarea}
-          borderColor='transparent'
-          color='gray.700'
-          _hover={{
-            borderColor: 'gray.300',
-          }}
-          _focusVisible={{
-            borderColor: 'primary.500',
-            boxShadow: 'unset',
-          }}
-          {...props}
-        />
-      </InputGroup>
-    </FormControl>
-  );
-});
+>(
+  (
+    {
+      className,
+      border,
+      leftElement,
+      label,
+      labelProps,
+      size,
+      rightElement,
+      ...rest
+    },
+    ref,
+  ) => {
+    return (
+      <div>
+        {label && <label {...labelProps}>{label}</label>}
+        <TextareaGroup className={cn(className, 'border-transparent')}>
+          {leftElement && <LeftElement>{leftElement}</LeftElement>}
+          <ResizeTextarea
+            ref={ref}
+            {...rest}
+            className={twMerge(sizeTextArea({ size }), className)}
+          />
+          {rightElement && <RightElement>{rightElement}</RightElement>}
+        </TextareaGroup>
+      </div>
+    );
+  },
+);

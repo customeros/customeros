@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 
 import { cn } from '@ui/utils/cn';
 import { Action } from '@graphql/types';
-import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
+import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 import { getMetadata } from '@organization/src/components/Timeline/PastZone/events/action/utils';
 import { iconsByStatus } from '@organization/src/components/Timeline/PastZone/events/action/contract/utils';
 import { useTimelineEventPreviewMethodsContext } from '@organization/src/components/Timeline/shared/TimelineEventPreview/context/TimelineEventPreviewContext';
