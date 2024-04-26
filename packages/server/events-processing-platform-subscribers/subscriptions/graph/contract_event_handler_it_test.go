@@ -595,7 +595,11 @@ func TestContractEventHandler_OnUpdate_EndDateSet(t *testing.T) {
 			require.Equal(t, opportunityId, op.Id)
 			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, op.SourceFields.AppSource)
 			require.Equal(t, opportunitypb.RenewalLikelihood_ZERO_RENEWAL, op.RenewalLikelihood)
-			require.Equal(t, []opportunitypb.OpportunityMaskField{opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_RENEWAL_LIKELIHOOD}, op.FieldsMask)
+			require.Equal(t, int64(0), op.RenewalAdjustedRate)
+			require.Equal(t, []opportunitypb.OpportunityMaskField{
+				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_RENEWAL_LIKELIHOOD,
+				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_ADJUSTED_RATE,
+			}, op.FieldsMask)
 			calledEventsPlatformToUpdateRenewalOpportunity = true
 			return &opportunitypb.OpportunityIdGrpcResponse{
 				Id: opportunityId,
