@@ -1,5 +1,0 @@
-mutation createOnboardingPlan($input: OrganizationPlanInput!) {
-  organizationPlan_Create(input: $input) {
-    id
-  }
-}
