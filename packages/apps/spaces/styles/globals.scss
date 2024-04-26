@@ -2,6 +2,29 @@
 @tailwind base;
 @tailwind utilities;
 
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+  }
+
+  blockquote,
+  dl,
+  dd,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  hr,
+  figure,
+  p,
+  pre {
+    @apply text-gray-700;
+    @apply font-normal;
+  }
+}
+
 @layer components {
   .block-text-renderer ol,
   .block-text-renderer ul {
@@ -65,7 +88,7 @@
   .block-text-renderer blockquote .customeros-mention:before {
     content: '"@"';
   }
-  .block-text-renderer[aria-hidden='true'] {
+  .block-text-renderer[aria-hidden="true"] {
     @apply hidden;
   }
 
@@ -202,7 +225,7 @@
   .inline-text-renderer blockquote .customeros-mention:before {
     content: '"@"';
   }
-  .inline-text-renderer[aria-hidden='true'] {
+  .inline-text-renderer[aria-hidden="true"] {
     @apply hidden;
   }
 
@@ -437,7 +460,7 @@
 }
 
 .react-calendar__navigation__arrow.react-calendar__navigation__prev-button:after {
-  content: '';
+  content: "";
   display: inline-block;
   height: 20px;
   width: 20px;
@@ -449,7 +472,7 @@
 }
 
 .react-calendar__navigation__arrow.react-calendar__navigation__next-button:after {
-  content: '';
+  content: "";
   display: inline-block;
   height: 20px;
   width: 20px;

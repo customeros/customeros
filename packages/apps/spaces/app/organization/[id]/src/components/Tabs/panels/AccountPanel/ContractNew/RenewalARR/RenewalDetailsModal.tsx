@@ -2,26 +2,34 @@
 import { useMemo, useCallback } from 'react';
 import { useForm, useField } from 'react-inverted-form';
 
+import { match } from 'ts-pattern';
 import { twMerge } from 'tailwind-merge';
 import { useDeepCompareEffect } from 'rooks';
 import { UseMutationResult } from '@tanstack/react-query';
 
+import { cn } from '@ui/utils/cn';
 import { Dot } from '@ui/media/Dot';
 import { Button } from '@ui/form/Button/Button';
+import { DateTimeUtils } from '@spaces/utils/date';
 import { Spinner } from '@ui/feedback/Spinner/Spinner';
-import { FormSelect } from '@ui/form/Select/FormSelect';
-import { FormCurrencyInput } from '@ui/form/CurrencyInput';
 import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
-import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
 import { useGetUsersQuery } from '@shared/graphql/getUsers.generated';
+import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea/FormAutoresizeTextarea';
 import { GetContractsQuery } from '@organization/src/graphql/getContracts.generated';
 import { UpdateOpportunityRenewalMutation } from '@organization/src/graphql/updateOpportunityRenewal.generated';
 import { likelihoodButtons } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/RenewalARR/utils';
 import {
+  RangeSlider,
+  RangeSliderTrack,
+  RangeSliderThumb,
+  RangeSliderFilledTrack,
+} from '@ui/form/RangeSlider/RangeSlider';
+import {
   Exact,
+  Currency,
   Opportunity,
   InternalStage,
   OpportunityRenewalLikelihood,
@@ -37,6 +45,7 @@ import {
   ModalOverlay,
   ModalCloseButton,
 } from '@ui/overlay/Modal/Modal';
+
 type UpdateOpportunityMutation = UseMutationResult<
   UpdateOpportunityRenewalMutation,
   unknown,
@@ -47,6 +56,7 @@ interface RenewalDetailsProps {
   isOpen: boolean;
   data: Opportunity;
   onClose: () => void;
+  currency?: string | null;
   updateOpportunityMutation: UpdateOpportunityMutation;
 }
 
@@ -54,6 +64,7 @@ export const RenewalDetailsModal = ({
   data,
   isOpen,
   onClose,
+  currency = Currency.Usd,
   updateOpportunityMutation,
 }: RenewalDetailsProps) => {
   return (
@@ -68,6 +79,7 @@ export const RenewalDetailsModal = ({
             <RenewalDetailsForm
               data={data}
               onClose={onClose}
+              currency={currency as string}
               updateOpportunityMutation={updateOpportunityMutation}
             />
           </ModalPortal>
@@ -78,6 +90,7 @@ export const RenewalDetailsModal = ({
 };
 
 interface RenewalDetailsFormProps {
+  currency: string;
   data: Opportunity;
   onClose?: () => void;
   updateOpportunityMutation: UpdateOpportunityMutation;
@@ -86,6 +99,7 @@ interface RenewalDetailsFormProps {
 const RenewalDetailsForm = ({
   data,
   onClose,
+  currency,
   updateOpportunityMutation,
 }: RenewalDetailsFormProps) => {
   const client = getGraphQLClient();
@@ -98,36 +112,38 @@ const RenewalDetailsForm = ({
     },
   });
 
-  const options = useMemo(() => {
-    return usersData?.users?.content
-      ?.filter((e) => Boolean(e.firstName) || Boolean(e.lastName))
-      ?.map((o) => ({
-        value: o.id,
-        label: `${o.firstName} ${o.lastName}`.trim(),
-      }));
-  }, [usersData?.users?.content?.length]);
+  const updatedAt = DateTimeUtils.timeAgo(data?.updatedAt);
+  const maxAmount = data.maxAmount ?? 0;
+  const renewadAt = data?.renewedAt;
 
   const defaultValues = useMemo(
     () => ({
+      renewalAdjustedRate: data?.renewalAdjustedRate ?? 50,
       renewalLikelihood: data?.renewalLikelihood,
-      amount: data?.amount?.toString(),
       reason: data?.comments,
-      owner: options?.find((o) => o.value === data?.owner?.id),
     }),
-    [data?.renewalLikelihood, data?.amount, data?.comments, data?.owner?.id],
+    [data?.renewalLikelihood, data?.amount, data?.comments],
   );
+
+  const updatedByUser = usersData?.users.content?.find(
+    (u) => u.id === data.renewalUpdatedByUserId,
+  );
+  const updatedByUserFullName =
+    updatedByUser?.name ||
+    [updatedByUser?.firstName, updatedByUser?.lastName]
+      .filter(Boolean)
+      .join(' ');
 
   const onSubmit = useCallback(
     async (state: typeof defaultValues) => {
-      const { owner, amount, reason, renewalLikelihood } = state;
+      const { reason, renewalLikelihood, renewalAdjustedRate } = state;
 
       updateOpportunityMutation.mutate({
         input: {
           opportunityId: data.id,
           comments: reason,
           renewalLikelihood,
-          ownerUserId: owner?.value,
-          amount: parseFloat(amount),
+          renewalAdjustedRate,
         },
       });
     },
@@ -138,6 +154,28 @@ const RenewalDetailsForm = ({
     formId,
     defaultValues,
     onSubmit,
+    stateReducer: (_state, action, next) => {
+      if (
+        action.type === 'FIELD_CHANGE' &&
+        action.payload.name === 'renewalLikelihood'
+      ) {
+        const nextRate = match(action.payload.value)
+          .with(OpportunityRenewalLikelihood.LowRenewal, () => 25)
+          .with(OpportunityRenewalLikelihood.MediumRenewal, () => 50)
+          .with(OpportunityRenewalLikelihood.HighRenewal, () => 100)
+          .otherwise(() => 100);
+
+        return {
+          ...next,
+          values: {
+            ...next.values,
+            renewalAdjustedRate: nextRate,
+          },
+        };
+      }
+
+      return next;
+    },
   });
 
   useDeepCompareEffect(() => {
@@ -166,40 +204,28 @@ const RenewalDetailsForm = ({
         </ModalHeader>
         <form onSubmit={(v) => handleSubmit(v)}>
           <ModalBody className='pb-0 gap-4 flex flex-col'>
-            <FormSelect
-              isClearable
-              name='owner'
-              label='Owner'
-              isLabelVisible
-              formId={formId}
-              isLoading={false}
-              options={options}
-              placeholder='Owner'
-              backspaceRemovesValue
-            />
-
             <div>
               <FormLikelihoodButtonGroup
                 formId={formId}
                 name='renewalLikelihood'
               />
-              {data?.renewalUpdatedByUserId && (
-                <p className='text-gray-500 text-xs mt-2'>Last updated by </p>
-              )}
+
+              <p className='text-gray-500 text-xs mt-2'>
+                Last updated{' '}
+                {updatedByUserFullName
+                  ? `by ${updatedByUserFullName}`
+                  : 'automatically'}{' '}
+                {updatedAt} ago
+              </p>
             </div>
-            {data?.amount > 0 && (
-              <FormCurrencyInput
-                className='w-full'
-                min={0}
-                name='amount'
-                formId={formId}
-                placeholder='Amount'
-                label='ARR forecast'
-                leftElement={
-                  <CurrencyDollar className='text-gray-500 size-4' />
-                }
-              />
-            )}
+
+            <FormRangeSlider
+              formId={formId}
+              currency={currency}
+              name='renewalAdjustedRate'
+              amount={maxAmount}
+              renewadAt={renewadAt}
+            />
 
             {!!data.renewalLikelihood && (
               <div>
@@ -274,7 +300,7 @@ const LikelihoodButtonGroup = ({
           variant='outline'
           className={twMerge(
             idx === 0
-              ? ' border-e-0 rounded-s-lg rounded-e-none !important'
+              ? 'border-e-0 rounded-s-lg rounded-e-none !important'
               : idx === 1
               ? 'rounded-none'
               : 'border-s-0 rounded-s-none rounded-e-lg !important',
@@ -288,7 +314,7 @@ const LikelihoodButtonGroup = ({
           data-selected={value === button.likelihood}
         >
           <div className='flex items-center gap-1'>
-            <Dot colorScheme={button.colorScheme} />
+            <Dot colorScheme={button.colorScheme} className='size-2 mr-2' />
             {button.label}
           </div>
         </Button>
@@ -311,5 +337,88 @@ const FormLikelihoodButtonGroup = ({
 
   return (
     <LikelihoodButtonGroup value={value} onChange={onChange} onBlur={onBlur} />
+  );
+};
+
+interface FormRangeSliderProps {
+  name: string;
+  formId: string;
+  amount?: number;
+  currency: string;
+  renewadAt?: string;
+}
+
+const FormRangeSlider = ({
+  name,
+  formId,
+  amount = 0,
+  currency,
+  renewadAt,
+}: FormRangeSliderProps) => {
+  const { getInputProps } = useField(name, formId);
+  const { value, onChange, onBlur, ...rest } = getInputProps();
+  const defaultFormattedAmount = formatCurrency(amount, 2, currency);
+  const formattedNewAmount = formatCurrency(
+    amount * (value / 100),
+    2,
+    currency,
+  );
+  const formattedRenewedAt = renewadAt
+    ? DateTimeUtils.format(renewadAt, DateTimeUtils.dateWithAbreviatedMonth)
+    : undefined;
+
+  const trackStyle = cn('h-0.5 transition-colors', {
+    'bg-orangeDark-700': value <= 25,
+    'bg-yellow-400': value > 25 && value < 75,
+    'bg-greenLight-400': value >= 75,
+  });
+
+  const thumbStyle = cn('ring-1 transition-colors shadow-md cursor-pointer', {
+    'ring-orangeDark-700': value <= 25,
+    'ring-yellow-400': value > 25 && value < 75,
+    'ring-greenLight-400': value >= 75,
+  });
+
+  return (
+    <div>
+      <div className='flex items-center justify-between mb-3'>
+        <p className='font-medium text-base'>
+          Renewal ARR{' '}
+          {formattedRenewedAt && (
+            <span className='text-gray-400 font-normal text-sm'>
+              on {formattedRenewedAt}
+            </span>
+          )}
+        </p>
+
+        <p className='text-base font-medium'>
+          {formattedNewAmount !== defaultFormattedAmount && (
+            <span className='text-sm text-gray-400 font-normal'>
+              <s>{defaultFormattedAmount}</s>
+            </span>
+          )}{' '}
+          {formattedNewAmount}
+        </p>
+      </div>
+      <RangeSlider
+        step={1}
+        min={0}
+        max={100}
+        value={[value]}
+        className='w-full'
+        onValueChange={(values) => {
+          onChange(values[0]);
+        }}
+        onValueCommit={(values) => {
+          onBlur(values[0]);
+        }}
+        {...rest}
+      >
+        <RangeSliderTrack className='bg-gray-400 h-0.5'>
+          <RangeSliderFilledTrack className={trackStyle} />
+        </RangeSliderTrack>
+        <RangeSliderThumb className={thumbStyle} />
+      </RangeSlider>
+    </div>
   );
 };

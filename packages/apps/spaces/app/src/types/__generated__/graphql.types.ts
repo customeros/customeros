@@ -1097,6 +1097,10 @@ export type DashboardCustomerMap = {
 };
 
 export enum DashboardCustomerMapState {
+  /**
+   * Deprecated
+   * @deprecated Use HIGH_RISK instead
+   */
   AtRisk = 'AT_RISK',
   Churned = 'CHURNED',
   HighRisk = 'HIGH_RISK',
@@ -2353,6 +2357,7 @@ export type Mutation = {
   offering_Create?: Maybe<Scalars['ID']['output']>;
   offering_Update?: Maybe<Scalars['ID']['output']>;
   opportunityRenewalUpdate: Opportunity;
+  opportunityRenewal_UpdateAllForOrganization: Organization;
   opportunityUpdate: Opportunity;
   organizationPlanMilestone_BulkUpdate: Array<OrganizationPlanMilestone>;
   organizationPlanMilestone_Create: OrganizationPlanMilestone;
@@ -2925,6 +2930,10 @@ export type MutationOpportunityRenewalUpdateArgs = {
   ownerUserId?: InputMaybe<Scalars['ID']['input']>;
 };
 
+export type MutationOpportunityRenewal_UpdateAllForOrganizationArgs = {
+  input: OpportunityRenewalUpdateAllForOrganizationInput;
+};
+
 export type MutationOpportunityUpdateArgs = {
   input: OpportunityUpdateInput;
 };
@@ -3376,6 +3385,7 @@ export type Opportunity = Node & {
   name: Scalars['String']['output'];
   nextSteps: Scalars['String']['output'];
   owner?: Maybe<User>;
+  renewalAdjustedRate: Scalars['Int64']['output'];
   renewalApproved: Scalars['Boolean']['output'];
   renewalLikelihood: OpportunityRenewalLikelihood;
   renewalUpdatedByUserAt?: Maybe<Scalars['Time']['output']>;
@@ -3393,6 +3403,12 @@ export enum OpportunityRenewalLikelihood {
   ZeroRenewal = 'ZERO_RENEWAL',
 }
 
+export type OpportunityRenewalUpdateAllForOrganizationInput = {
+  organizationId: Scalars['ID']['input'];
+  renewalAdjustedRate?: InputMaybe<Scalars['Int64']['input']>;
+  renewalLikelihood?: InputMaybe<OpportunityRenewalLikelihood>;
+};
+
 export type OpportunityRenewalUpdateInput = {
   amount?: InputMaybe<Scalars['Float']['input']>;
   appSource?: InputMaybe<Scalars['String']['input']>;
@@ -3401,6 +3417,7 @@ export type OpportunityRenewalUpdateInput = {
   name?: InputMaybe<Scalars['String']['input']>;
   opportunityId: Scalars['ID']['input'];
   ownerUserId?: InputMaybe<Scalars['ID']['input']>;
+  renewalAdjustedRate?: InputMaybe<Scalars['Int64']['input']>;
   renewalLikelihood?: InputMaybe<OpportunityRenewalLikelihood>;
 };
 
