@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"time"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
@@ -591,24 +592,37 @@ func (s *serviceLineItemService) CreateOrUpdateOrCloseInBulk(ctx context.Context
 		}
 	}
 
-	var existingSliIds, inputSliIds []string
+	var existingSliIds, existingSliParentIds, inputSliIds, inputSliParentIds []string
+	parentIdBySliId := make(map[string]string)
 	for _, sliDbNode := range sliDbNodes {
+		sliEntity := neo4jmapper.MapDbNodeToServiceLineItemEntity(sliDbNode.Node)
 		id := utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*sliDbNode.Node), "id")
-		if id != "" {
+		if sliEntity.ID != "" {
 			existingSliIds = append(existingSliIds, id)
 		}
+		if sliEntity.ParentID != "" {
+			existingSliParentIds = append(existingSliParentIds, sliEntity.ParentID)
+		}
+		parentIdBySliId[id] = sliEntity.ParentID
 	}
 	for _, sli := range sliBulkData {
 		if sli.Id != "" {
 			inputSliIds = append(inputSliIds, sli.Id)
+			inputSliParentIds = append(inputSliParentIds, parentIdBySliId[sli.Id])
 		}
 	}
-	for _, existingId := range existingSliIds {
-		if !utils.Contains(inputSliIds, existingId) {
-			err = s.Close(ctx, existingId, nil)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("Failed to close service line item: %s", err.Error())
+	for _, existingParentId := range existingSliParentIds {
+		if !utils.Contains(inputSliParentIds, existingParentId) {
+			dbNodes, _ := s.repositories.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemsByParentId(ctx, common.GetTenantFromContext(ctx), existingParentId)
+			for _, dbNode := range dbNodes {
+				sliEntity := neo4jmapper.MapDbNodeToServiceLineItemEntity(dbNode)
+				if !sliEntity.Canceled && (sliEntity.EndedAt == nil || sliEntity.EndedAt.After(utils.Today())) {
+					err = s.Close(ctx, sliEntity.ID, nil)
+					if err != nil {
+						tracing.TraceErr(span, err)
+						s.log.Errorf("Failed to close service line item: %s", err.Error())
+					}
+				}
 			}
 		}
 	}
