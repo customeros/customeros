@@ -6,6 +6,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
+	"slices"
 )
 
 func MapDbNodeToInvoiceEntity(dbNode *dbtype.Node) *entity.InvoiceEntity {
@@ -751,4 +753,202 @@ func MapDbNodeToStateEntity(node dbtype.Node) *entity.StateEntity {
 		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),
 	}
 	return &result
+}
+
+func MapDbNodeToPageView(node *dbtype.Node) *entity.PageViewEntity {
+	if node == nil {
+		return &entity.PageViewEntity{}
+	}
+	props := utils.GetPropsFromNode(*node)
+	pageViewAction := entity.PageViewEntity{
+		Id:             utils.GetStringPropOrEmpty(props, "id"),
+		Application:    utils.GetStringPropOrEmpty(props, "application"),
+		TrackerName:    utils.GetStringPropOrEmpty(props, "trackerName"),
+		SessionId:      utils.GetStringPropOrEmpty(props, "sessionId"),
+		PageUrl:        utils.GetStringPropOrEmpty(props, "pageUrl"),
+		PageTitle:      utils.GetStringPropOrEmpty(props, "pageTitle"),
+		OrderInSession: utils.GetInt64PropOrZero(props, "orderInSession"),
+		EngagedTime:    utils.GetInt64PropOrZero(props, "engagedTime"),
+		StartedAt:      utils.GetTimePropOrNow(props, "startedAt"),
+		EndedAt:        utils.GetTimePropOrNow(props, "endedAt"),
+		Source:         entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:  entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:      utils.GetStringPropOrEmpty(props, "appSource"),
+	}
+	return &pageViewAction
+}
+
+func MapDbNodeToLogEntryEntity(node *dbtype.Node) *entity.LogEntryEntity {
+	if node == nil {
+		return &entity.LogEntryEntity{}
+	}
+	props := utils.GetPropsFromNode(*node)
+	logEntry := entity.LogEntryEntity{
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		Content:       utils.GetStringPropOrEmpty(props, "content"),
+		ContentType:   utils.GetStringPropOrEmpty(props, "contentType"),
+		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		StartedAt:     utils.GetTimePropOrEpochStart(props, "startedAt"),
+		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+	}
+	return &logEntry
+}
+
+func MapDbNodeToMeetingEntity(node *dbtype.Node) *entity.MeetingEntity {
+	if node == nil {
+		return &entity.MeetingEntity{}
+	}
+	props := utils.GetPropsFromNode(*node)
+	status := enum.DecodeMeetingStatus(utils.GetStringPropOrEmpty(props, "status"))
+	meetingEntity := entity.MeetingEntity{
+		Id:                 utils.GetStringPropOrEmpty(props, "id"),
+		Name:               utils.GetStringPropOrNil(props, "name"),
+		ConferenceUrl:      utils.GetStringPropOrNil(props, "conferenceUrl"),
+		MeetingExternalUrl: utils.GetStringPropOrNil(props, "meetingExternalUrl"),
+		Agenda:             utils.GetStringPropOrNil(props, "agenda"),
+		AgendaContentType:  utils.GetStringPropOrNil(props, "agendaContentType"),
+		UpdatedAt:          utils.GetTimePropOrNow(props, "updatedAt"),
+		StartedAt:          utils.GetTimePropOrNil(props, "startedAt"),
+		EndedAt:            utils.GetTimePropOrNil(props, "endedAt"),
+		Recording:          utils.GetStringPropOrNil(props, "recording"),
+		AppSource:          utils.GetStringPropOrEmpty(props, "appSource"),
+		Source:             entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:      entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Status:             &status,
+	}
+	if props["createdAt"] != nil {
+		meetingEntity.CreatedAt = utils.GetTimePropOrNow(props, "createdAt")
+	} else if props["startedAt"] != nil {
+		meetingEntity.CreatedAt = utils.GetTimePropOrNow(props, "startedAt")
+	} else {
+		meetingEntity.CreatedAt = utils.Now()
+	}
+
+	return &meetingEntity
+}
+
+func MapDbNodeToActionEntity(node *dbtype.Node) *entity.ActionEntity {
+	if node == nil {
+		return &entity.ActionEntity{}
+	}
+	props := utils.GetPropsFromNode(*node)
+	action := entity.ActionEntity{
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		Type:          enum.GetActionType(utils.GetStringPropOrEmpty(props, "type")),
+		Content:       utils.GetStringPropOrEmpty(props, "content"),
+		Metadata:      utils.GetStringPropOrEmpty(props, "metadata"),
+		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
+		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+	}
+	return &action
+}
+
+func MapDbNodeToAnalysisEntity(node *dbtype.Node) *entity.AnalysisEntity {
+	if node == nil {
+		return &entity.AnalysisEntity{}
+	}
+	props := utils.GetPropsFromNode(*node)
+	createdAt := utils.GetTimePropOrEpochStart(props, "createdAt")
+	analysisEntity := entity.AnalysisEntity{
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		CreatedAt:     &createdAt,
+		AnalysisType:  utils.GetStringPropOrEmpty(props, "analysisType"),
+		Content:       utils.GetStringPropOrEmpty(props, "content"),
+		ContentType:   utils.GetStringPropOrEmpty(props, "contentType"),
+		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+	}
+	return &analysisEntity
+}
+
+func MapDbNodeToNoteEntity(node *dbtype.Node) *entity.NoteEntity {
+	if node == nil {
+		return &entity.NoteEntity{}
+	}
+	props := utils.GetPropsFromNode(*node)
+	note := entity.NoteEntity{
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		Content:       utils.GetStringPropOrEmpty(props, "content"),
+		ContentType:   utils.GetStringPropOrEmpty(props, "contentType"),
+		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
+	}
+	return &note
+}
+
+func MapDbNodeToInteractionEventEntity(node *dbtype.Node) *entity.InteractionEventEntity {
+	if node == nil {
+		return &entity.InteractionEventEntity{}
+	}
+	props := utils.GetPropsFromNode(*node)
+	interactionEvent := entity.InteractionEventEntity{
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		Content:       utils.GetStringPropOrEmpty(props, "content"),
+		ContentType:   utils.GetStringPropOrEmpty(props, "contentType"),
+		Channel:       utils.GetStringPropOrEmpty(props, "channel"),
+		ChannelData:   utils.GetStringPropOrEmpty(props, "channelData"),
+		Identifier:    utils.GetStringPropOrEmpty(props, "identifier"),
+		EventType:     utils.GetStringPropOrEmpty(props, "eventType"),
+		Hide:          utils.GetBoolPropOrFalse(props, "hide"),
+		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+	}
+	return &interactionEvent
+}
+
+func MapDbNodeToInteractionSessionEntity(node *dbtype.Node) *entity.InteractionSessionEntity {
+	if node == nil {
+		return &entity.InteractionSessionEntity{}
+	}
+	props := utils.GetPropsFromNode(*node)
+	interactionSession := entity.InteractionSessionEntity{
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		Channel:       utils.GetStringPropOrEmpty(props, "channel"),
+		ChannelData:   utils.GetStringPropOrEmpty(props, "channelData"),
+		Identifier:    utils.GetStringPropOrEmpty(props, "identifier"),
+		Type:          utils.GetStringPropOrEmpty(props, "type"),
+		Name:          utils.GetStringPropOrEmpty(props, "name"),
+		Status:        utils.GetStringPropOrEmpty(props, "status"),
+		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+	}
+	return &interactionSession
+}
+
+func MapDbNodeToTimelineEvent(dbNode *dbtype.Node) entity.TimelineEvent {
+	if slices.Contains(dbNode.Labels, neo4jutil.NodeLabelPageView) {
+		return MapDbNodeToPageView(dbNode)
+	} else if slices.Contains(dbNode.Labels, neo4jutil.NodeLabelInteractionSession) {
+		return MapDbNodeToInteractionSessionEntity(dbNode)
+	} else if slices.Contains(dbNode.Labels, neo4jutil.NodeLabelIssue) {
+		return MapDbNodeToIssueEntity(dbNode)
+	} else if slices.Contains(dbNode.Labels, neo4jutil.NodeLabelNote) {
+		return MapDbNodeToNoteEntity(dbNode)
+	} else if slices.Contains(dbNode.Labels, neo4jutil.NodeLabelInteractionEvent) {
+		return MapDbNodeToInteractionEventEntity(dbNode)
+	} else if slices.Contains(dbNode.Labels, neo4jutil.NodeLabelAnalysis) {
+		return MapDbNodeToAnalysisEntity(dbNode)
+	} else if slices.Contains(dbNode.Labels, neo4jutil.NodeLabelMeeting) {
+		return MapDbNodeToMeetingEntity(dbNode)
+	} else if slices.Contains(dbNode.Labels, neo4jutil.NodeLabelAction) {
+		return MapDbNodeToActionEntity(dbNode)
+	} else if slices.Contains(dbNode.Labels, neo4jutil.NodeLabelLogEntry) {
+		return MapDbNodeToLogEntryEntity(dbNode)
+	}
+	return nil
 }

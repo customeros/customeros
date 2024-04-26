@@ -1,4 +1,4 @@
-package entity
+package enum
 
 type MeetingStatus string
 
@@ -13,7 +13,7 @@ var AllMeetingStatuses = []MeetingStatus{
 	MeetingStatusCanceled,
 }
 
-func GetMeetingStatus(s string) MeetingStatus {
+func DecodeMeetingStatus(s string) MeetingStatus {
 	if IsValidMeetingStatus(s) {
 		return MeetingStatus(s)
 	}
