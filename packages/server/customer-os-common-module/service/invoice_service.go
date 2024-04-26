@@ -671,15 +671,15 @@ func (h *invoiceService) FillCycleInvoice(ctx context.Context, invoiceEntity *ne
 				continue
 			}
 			quantity := sliEntity.Quantity
-			calculatedSLIAmount = utils.TruncateFloat64(float64(quantity)*sliEntity.Price, 2)
-			calculatedSLIVat = utils.TruncateFloat64(calculatedSLIAmount*sliEntity.VatRate/100, 2)
+			calculatedSLIAmount = utils.RoundHalfUpFloat64(float64(quantity)*sliEntity.Price, 2)
+			calculatedSLIVat = utils.RoundHalfUpFloat64(calculatedSLIAmount*sliEntity.VatRate/100, 2)
 			invoiceLineCalculationsReady = true
 		}
 		// process monthly, quarterly and annually SLIs
 		if sliEntity.Billed == neo4jenum.BilledTypeMonthly || sliEntity.Billed == neo4jenum.BilledTypeQuarterly || sliEntity.Billed == neo4jenum.BilledTypeAnnually {
 			calculatedSLIAmount = calculateSLIAmountForCycleInvoicing(sliEntity.Quantity, sliEntity.Price, sliEntity.Billed, invoiceEntity.BillingCycleInMonths)
-			calculatedSLIAmount = utils.TruncateFloat64(calculatedSLIAmount, 2)
-			calculatedSLIVat = utils.TruncateFloat64(calculatedSLIAmount*sliEntity.VatRate/100, 2)
+			calculatedSLIAmount = utils.RoundHalfUpFloat64(calculatedSLIAmount, 2)
+			calculatedSLIVat = utils.RoundHalfUpFloat64(calculatedSLIAmount*sliEntity.VatRate/100, 2)
 			invoiceLineCalculationsReady = true
 		}
 		if invoiceLineCalculationsReady {
@@ -687,7 +687,7 @@ func (h *invoiceService) FillCycleInvoice(ctx context.Context, invoiceEntity *ne
 			vat += calculatedSLIVat
 			invoiceLine := invoicepb.InvoiceLine{
 				Name:                    sliEntity.Name,
-				Price:                   utils.TruncateFloat64(calculatePriceForBilledType(sliEntity.Price, sliEntity.Billed, invoiceEntity.BillingCycleInMonths), 2),
+				Price:                   utils.RoundHalfUpFloat64(calculatePriceForBilledType(sliEntity.Price, sliEntity.Billed, invoiceEntity.BillingCycleInMonths), 2),
 				Quantity:                sliEntity.Quantity,
 				Amount:                  calculatedSLIAmount,
 				Total:                   calculatedSLIAmount + calculatedSLIVat,
@@ -809,11 +809,11 @@ func (h *invoiceService) FillOffCyclePrepaidInvoice(ctx context.Context, invoice
 			if quantity <= 0 {
 				quantity = 1
 			}
-			finalSLIAmount = utils.TruncateFloat64(float64(quantity)*sliEntityToInvoice.Price, 2)
+			finalSLIAmount = utils.RoundHalfUpFloat64(float64(quantity)*sliEntityToInvoice.Price, 2)
 			if finalSLIAmount <= 0 {
 				continue
 			}
-			calculatedSLIVat = utils.TruncateFloat64(finalSLIAmount*sliEntityToInvoice.VatRate/100, 2)
+			calculatedSLIVat = utils.RoundHalfUpFloat64(finalSLIAmount*sliEntityToInvoice.VatRate/100, 2)
 		} else {
 			proratedInvoicedSLIAmount := float64(0)
 			if ilDbNodeAndInvoiceId != nil {
@@ -830,26 +830,26 @@ func (h *invoiceService) FillOffCyclePrepaidInvoice(ctx context.Context, invoice
 					invoiceLineEntity := mapper.MapDbNodeToInvoiceLineEntity(ilDbNodeAndInvoiceId.Node)
 					calculatedInvoicedSLIAmountFor1Year := calculateSLIAmountForCycleInvoicing(invoiceLineEntity.Quantity, invoiceLineEntity.Price, invoiceLineEntity.BilledType, 12)
 					proratedInvoicedSLIAmount = prorateAnnualSLIAmount(sliEntityToInvoice.StartedAt, invoiceEntity.PeriodEndDate, calculatedInvoicedSLIAmountFor1Year)
-					proratedInvoicedSLIAmount = utils.TruncateFloat64(proratedInvoicedSLIAmount, 2)
+					proratedInvoicedSLIAmount = utils.RoundHalfUpFloat64(proratedInvoicedSLIAmount, 2)
 				}
 			}
 
 			calculatedSLIAmountFor1Year := calculateSLIAmountForCycleInvoicing(sliEntityToInvoice.Quantity, sliEntityToInvoice.Price, sliEntityToInvoice.Billed, 12)
 			proratedSLIAmount := prorateAnnualSLIAmount(sliEntityToInvoice.StartedAt, invoiceEntity.PeriodEndDate, calculatedSLIAmountFor1Year)
-			proratedSLIAmount = utils.TruncateFloat64(proratedSLIAmount, 2)
+			proratedSLIAmount = utils.RoundHalfUpFloat64(proratedSLIAmount, 2)
 			finalSLIAmount = proratedSLIAmount - proratedInvoicedSLIAmount
 			span.LogFields(log.Float64(fmt.Sprintf("result - final amount for SLI with parent id %s", parentId), finalSLIAmount))
 			if finalSLIAmount <= 0 {
 				continue
 			}
-			calculatedSLIVat = utils.TruncateFloat64(finalSLIAmount*sliEntityToInvoice.VatRate/100, 2)
+			calculatedSLIVat = utils.RoundHalfUpFloat64(finalSLIAmount*sliEntityToInvoice.VatRate/100, 2)
 			proratedSliFound = true
 		}
 		amount += finalSLIAmount
 		vat += calculatedSLIVat
 		invoiceLine := invoicepb.InvoiceLine{
 			Name:                    sliEntityToInvoice.Name,
-			Price:                   utils.TruncateFloat64(calculatePriceForBilledType(sliEntityToInvoice.Price, sliEntityToInvoice.Billed, invoiceEntity.BillingCycleInMonths), 2),
+			Price:                   utils.RoundHalfUpFloat64(calculatePriceForBilledType(sliEntityToInvoice.Price, sliEntityToInvoice.Billed, invoiceEntity.BillingCycleInMonths), 2),
 			Quantity:                sliEntityToInvoice.Quantity,
 			Amount:                  finalSLIAmount,
 			Total:                   finalSLIAmount + calculatedSLIVat,
@@ -899,7 +899,7 @@ func calculateSLIAmountForCycleInvoicing(quantity int64, price float64, billed n
 		return 0
 	}
 	unitAmount := calculatePriceForBilledType(price, billed, billingCycleInMonths)
-	unitAmount = utils.TruncateFloat64(unitAmount, 2)
+	unitAmount = utils.RoundHalfUpFloat64(unitAmount, 2)
 	return float64(quantity) * unitAmount
 }
 

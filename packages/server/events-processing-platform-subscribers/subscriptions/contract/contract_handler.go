@@ -310,7 +310,7 @@ func (h *contractHandler) calculateMaxArr(ctx context.Context, tenant string, co
 		arr = prorateArr(arr, monthsUntilContractEnd(utils.Now(), *contract.EndedAt))
 	}
 
-	return utils.TruncateFloat64(arr, 2), nil
+	return utils.RoundHalfUpFloat64(arr, 2), nil
 }
 
 func monthsUntilContractEnd(start, end time.Time) int {
@@ -337,7 +337,7 @@ func prorateArr(arr float64, monthsRemaining int) float64 {
 		return arr
 	}
 	monthlyRate := arr / 12
-	return utils.TruncateFloat64(monthlyRate*float64(monthsRemaining), 2)
+	return utils.RoundHalfUpFloat64(monthlyRate*float64(monthsRemaining), 2)
 }
 
 func (h *contractHandler) calculateCurrentArrByLikelihood(amount float64, likelihood string) float64 {
@@ -355,7 +355,7 @@ func (h *contractHandler) calculateCurrentArrByLikelihood(amount float64, likeli
 		likelihoodFactor = 1
 	}
 
-	return utils.TruncateFloat64(amount*likelihoodFactor, 2)
+	return utils.RoundHalfUpFloat64(amount*likelihoodFactor, 2)
 }
 
 func (h *contractHandler) assertContractAndRenewalOpportunity(ctx context.Context, tenant, contractId string) (*neo4jentity.ContractEntity, *neo4jentity.OpportunityEntity, bool) {
