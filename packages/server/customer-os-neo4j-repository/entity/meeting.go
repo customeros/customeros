@@ -1,13 +1,13 @@
 package entity
 
 import (
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"time"
 )
 
-// Deprecated
 type MeetingEntity struct {
+	DataLoaderKey
 	Id                 string
 	Name               *string `neo4jDb:"property:name;lookupName:NAME;supportCaseSensitive:true"`
 	CreatedAt          time.Time
@@ -19,11 +19,10 @@ type MeetingEntity struct {
 	AppSource          string
 	Agenda             *string
 	AgendaContentType  *string
-	Source             neo4jentity.DataSource
-	SourceOfTruth      neo4jentity.DataSource
+	Source             DataSource
+	SourceOfTruth      DataSource
 	Recording          *string
-	DataloaderKey      string
-	Status             *MeetingStatus
+	Status             *enum.MeetingStatus
 }
 
 func (MeetingEntity) IsTimelineEvent() {

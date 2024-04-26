@@ -3,14 +3,14 @@ package graph_low_prio
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"time"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/graph_db"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/graph_db/entity"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
@@ -94,7 +94,7 @@ func (h *OrganizationEventHandler) OnRefreshLastTouchPointV1(ctx context.Context
 		return nil
 	}
 
-	timelineEvent := graph_db.MapDbNodeToTimelineEvent(timelineEventNode)
+	timelineEvent := neo4jmapper.MapDbNodeToTimelineEvent(timelineEventNode)
 	if timelineEvent == nil {
 		h.log.Infof("Last touchpoint not available for organization: %s", organizationId)
 		span.LogFields(log.Bool("last touchpoint not found", true))
@@ -110,7 +110,7 @@ func (h *OrganizationEventHandler) OnRefreshLastTouchPointV1(ctx context.Context
 	case neo4jutil.NodeLabelNote:
 		timelineEventType = "NOTE"
 	case neo4jutil.NodeLabelInteractionEvent:
-		timelineEventInteractionEvent := timelineEvent.(*entity.InteractionEventEntity)
+		timelineEventInteractionEvent := timelineEvent.(*neo4jentity.InteractionEventEntity)
 		if timelineEventInteractionEvent.Channel == "EMAIL" {
 			timelineEventType = "INTERACTION_EVENT_EMAIL_SENT"
 		} else if timelineEventInteractionEvent.Channel == "VOICE" {
@@ -125,7 +125,7 @@ func (h *OrganizationEventHandler) OnRefreshLastTouchPointV1(ctx context.Context
 	case neo4jutil.NodeLabelMeeting:
 		timelineEventType = "MEETING"
 	case neo4jutil.NodeLabelAction:
-		timelineEventAction := timelineEvent.(*entity.ActionEntity)
+		timelineEventAction := timelineEvent.(*neo4jentity.ActionEntity)
 		if timelineEventAction.Type == neo4jenum.ActionCreated {
 			timelineEventType = "ACTION_CREATED"
 		} else {
@@ -134,7 +134,7 @@ func (h *OrganizationEventHandler) OnRefreshLastTouchPointV1(ctx context.Context
 	case neo4jutil.NodeLabelLogEntry:
 		timelineEventType = "LOG_ENTRY"
 	case neo4jutil.NodeLabelIssue:
-		timelineEventIssue := timelineEvent.(*entity.IssueEntity)
+		timelineEventIssue := timelineEvent.(*neo4jentity.IssueEntity)
 		if timelineEventIssue.CreatedAt.Equal(timelineEventIssue.UpdatedAt) {
 			timelineEventType = "ISSUE_CREATED"
 		} else {
