@@ -1932,6 +1932,7 @@ type Opportunity struct {
 	RenewalLikelihood      OpportunityRenewalLikelihood `json:"renewalLikelihood"`
 	RenewalUpdatedByUserID string                       `json:"renewalUpdatedByUserId"`
 	RenewalUpdatedByUserAt *time.Time                   `json:"renewalUpdatedByUserAt,omitempty"`
+	RenewalAdjustedRate    int64                        `json:"renewalAdjustedRate"`
 	Comments               string                       `json:"comments"`
 	CreatedBy              *User                        `json:"createdBy,omitempty"`
 	Owner                  *User                        `json:"owner,omitempty"`
@@ -1950,14 +1951,15 @@ type OpportunityRenewalUpdateAllForOrganizationInput struct {
 }
 
 type OpportunityRenewalUpdateInput struct {
-	OpportunityID string `json:"opportunityId"`
+	OpportunityID       string                        `json:"opportunityId"`
+	Amount              *float64                      `json:"amount,omitempty"`
+	Comments            *string                       `json:"comments,omitempty"`
+	AppSource           *string                       `json:"appSource,omitempty"`
+	OwnerUserID         *string                       `json:"ownerUserId,omitempty"`
+	RenewalLikelihood   *OpportunityRenewalLikelihood `json:"renewalLikelihood,omitempty"`
+	RenewalAdjustedRate *int64                        `json:"renewalAdjustedRate,omitempty"`
 	// Deprecated
-	Name              *string                       `json:"name,omitempty"`
-	Amount            *float64                      `json:"amount,omitempty"`
-	RenewalLikelihood *OpportunityRenewalLikelihood `json:"renewalLikelihood,omitempty"`
-	Comments          *string                       `json:"comments,omitempty"`
-	AppSource         *string                       `json:"appSource,omitempty"`
-	OwnerUserID       *string                       `json:"ownerUserId,omitempty"`
+	Name *string `json:"name,omitempty"`
 }
 
 type OpportunityUpdateInput struct {

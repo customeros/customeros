@@ -155,11 +155,12 @@ func (h *OpportunityEventHandler) OnCreateRenewal(ctx context.Context, evt event
 			SourceOfTruth: helper.GetSource(eventData.Source.Source),
 			AppSource:     helper.GetAppSource(eventData.Source.AppSource),
 		},
-		InternalType:      eventData.InternalType,
-		InternalStage:     eventData.InternalStage,
-		RenewalLikelihood: eventData.RenewalLikelihood,
-		RenewalApproved:   eventData.RenewalApproved,
-		RenewedAt:         eventData.RenewedAt,
+		InternalType:        eventData.InternalType,
+		InternalStage:       eventData.InternalStage,
+		RenewalLikelihood:   eventData.RenewalLikelihood,
+		RenewalApproved:     eventData.RenewalApproved,
+		RenewedAt:           eventData.RenewedAt,
+		RenewalAdjustedRate: eventData.RenewalAdjustedRate,
 	}
 	newOpportunityCreated, err := h.repositories.Neo4jRepositories.OpportunityWriteRepository.CreateRenewal(ctx, eventData.Tenant, opportunityId, data)
 	if err != nil {
@@ -383,7 +384,8 @@ func (h *OpportunityEventHandler) OnUpdateRenewal(ctx context.Context, evt event
 	opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
 	amountChanged := eventData.UpdateAmount() && opportunity.Amount != eventData.Amount
 	likelihoodChanged := eventData.UpdateRenewalLikelihood() && opportunity.RenewalDetails.RenewalLikelihood.String() != eventData.RenewalLikelihood
-	setUpdatedByUserId := (amountChanged || likelihoodChanged) && eventData.UpdatedByUserId != ""
+	adjustedRateChanged := eventData.UpdateRenewalAdjustedRate() && opportunity.RenewalDetails.RenewalAdjustedRate != eventData.RenewalAdjustedRate
+	setUpdatedByUserId := (amountChanged || likelihoodChanged || adjustedRateChanged) && eventData.UpdatedByUserId != ""
 	if eventData.OwnerUserId != "" {
 		err = h.repositories.Neo4jRepositories.OpportunityWriteRepository.ReplaceOwner(ctx, eventData.Tenant, opportunityId, eventData.OwnerUserId)
 		if err != nil {
@@ -393,20 +395,22 @@ func (h *OpportunityEventHandler) OnUpdateRenewal(ctx context.Context, evt event
 		}
 	}
 	data := neo4jrepository.RenewalOpportunityUpdateFields{
-		UpdatedAt:               eventData.UpdatedAt,
-		Source:                  helper.GetSource(eventData.Source),
-		UpdatedByUserId:         eventData.UpdatedByUserId,
-		SetUpdatedByUserId:      setUpdatedByUserId,
-		Comments:                eventData.Comments,
-		Amount:                  eventData.Amount,
-		RenewalLikelihood:       eventData.RenewalLikelihood,
-		RenewalApproved:         eventData.RenewalApproved,
-		RenewedAt:               eventData.RenewedAt,
-		UpdateComments:          eventData.UpdateComments(),
-		UpdateAmount:            eventData.UpdateAmount(),
-		UpdateRenewalLikelihood: eventData.UpdateRenewalLikelihood(),
-		UpdateRenewalApproved:   eventData.UpdateRenewalApproved(),
-		UpdateRenewedAt:         eventData.UpdateRenewedAt(),
+		UpdatedAt:                 eventData.UpdatedAt,
+		Source:                    helper.GetSource(eventData.Source),
+		UpdatedByUserId:           eventData.UpdatedByUserId,
+		SetUpdatedByUserId:        setUpdatedByUserId,
+		Comments:                  eventData.Comments,
+		Amount:                    eventData.Amount,
+		RenewalLikelihood:         eventData.RenewalLikelihood,
+		RenewalApproved:           eventData.RenewalApproved,
+		RenewedAt:                 eventData.RenewedAt,
+		RenewalAdjustedRate:       eventData.RenewalAdjustedRate,
+		UpdateComments:            eventData.UpdateComments(),
+		UpdateAmount:              eventData.UpdateAmount(),
+		UpdateRenewalLikelihood:   eventData.UpdateRenewalLikelihood(),
+		UpdateRenewalApproved:     eventData.UpdateRenewalApproved(),
+		UpdateRenewedAt:           eventData.UpdateRenewedAt(),
+		UpdateRenewalAdjustedRate: eventData.UpdateRenewalAdjustedRate(),
 	}
 	err = h.repositories.Neo4jRepositories.OpportunityWriteRepository.UpdateRenewal(ctx, eventData.Tenant, opportunityId, data)
 	if err != nil {
@@ -419,7 +423,7 @@ func (h *OpportunityEventHandler) OnUpdateRenewal(ctx context.Context, evt event
 		h.sendEventToUpdateOrganizationRenewalSummary(ctx, eventData.Tenant, opportunityId, span)
 	}
 	// update renewal ARR if likelihood changed but amount didn't
-	if likelihoodChanged && !amountChanged {
+	if (likelihoodChanged || adjustedRateChanged) && !amountChanged {
 		contractDbNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractByOpportunityId(ctx, eventData.Tenant, opportunityId)
 		if err != nil {
 			tracing.TraceErr(span, err)

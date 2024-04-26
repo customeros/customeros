@@ -23,7 +23,7 @@ import (
 
 type OpportunityService interface {
 	Update(ctx context.Context, opportunity *neo4jentity.OpportunityEntity) error
-	UpdateRenewal(ctx context.Context, opportunityId string, renewalLikelihood neo4jenum.RenewalLikelihood, amount *float64, comments *string, ownerUserId *string, appSource string) error
+	UpdateRenewal(ctx context.Context, opportunityId string, renewalLikelihood neo4jenum.RenewalLikelihood, amount *float64, comments *string, ownerUserId *string, adjustedRate *int64, appSource string) error
 	GetById(ctx context.Context, id string) (*neo4jentity.OpportunityEntity, error)
 	GetOpportunitiesForContracts(ctx context.Context, contractIds []string) (*neo4jentity.OpportunityEntities, error)
 	UpdateRenewalsForOrganization(ctx context.Context, organizationId string, renewalLikelihood neo4jenum.RenewalLikelihood) error
@@ -133,7 +133,7 @@ func (s *opportunityService) Update(ctx context.Context, opportunity *neo4jentit
 	return nil
 }
 
-func (s *opportunityService) UpdateRenewal(ctx context.Context, opportunityId string, renewalLikelihood neo4jenum.RenewalLikelihood, amount *float64, comments *string, ownerUserId *string, appSource string) error {
+func (s *opportunityService) UpdateRenewal(ctx context.Context, opportunityId string, renewalLikelihood neo4jenum.RenewalLikelihood, amount *float64, comments *string, ownerUserId *string, adjustedRate *int64, appSource string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.UpdateRenewal")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -172,6 +172,10 @@ func (s *opportunityService) UpdateRenewal(ctx context.Context, opportunityId st
 	if comments != nil {
 		opportunityRenewalUpdateRequest.Comments = *comments
 		fieldsMask = append(fieldsMask, opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_COMMENTS)
+	}
+	if adjustedRate != nil {
+		opportunityRenewalUpdateRequest.RenewalAdjustedRate = *adjustedRate
+		fieldsMask = append(fieldsMask, opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_ADJUSTED_RATE)
 	}
 
 	switch renewalLikelihood {
@@ -222,7 +226,7 @@ func (s *opportunityService) UpdateRenewalsForOrganization(ctx context.Context, 
 
 	for _, opportunityDbNode := range opportunityDbNodes {
 		opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
-		if err := s.UpdateRenewal(ctx, opportunity.Id, renewalLikelihood, nil, nil, nil, constants.AppSourceCustomerOsApi); err != nil {
+		if err := s.UpdateRenewal(ctx, opportunity.Id, renewalLikelihood, nil, nil, nil, nil, constants.AppSourceCustomerOsApi); err != nil {
 			tracing.TraceErr(span, err)
 			return err
 		}

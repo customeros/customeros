@@ -785,6 +785,7 @@ func CreateOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, ten
                     op.renewalUpdatedByUserId=$renewalUpdatedByUserId,
                     op.renewalUpdatedByUserAt=$renewalUpdatedByUserAt,
 					op.renewalApproved=$renewalApproved,
+					op.renewalAdjustedRate=$renewalAdjustedRate,
 					op.nextSteps=$nextSteps,
 					op.createdAt=$createdAt,
 					op.updatedAt=$updatedAt
@@ -815,6 +816,7 @@ func CreateOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, ten
 		"renewalUpdatedByUserId": opportunity.RenewalDetails.RenewalUpdatedByUserId,
 		"renewalUpdatedByUserAt": utils.TimePtrAsAny(opportunity.RenewalDetails.RenewalUpdatedByUserAt),
 		"renewalApproved":        opportunity.RenewalDetails.RenewalApproved,
+		"renewalAdjustedRate":    opportunity.RenewalDetails.RenewalAdjustedRate,
 		"createdAt":              opportunity.CreatedAt,
 		"updatedAt":              opportunity.UpdatedAt,
 	})

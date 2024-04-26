@@ -23,7 +23,7 @@ func (r *mutationResolver) OpportunityRenewalUpdate(ctx context.Context, input m
 }
 
 // OpportunityRenewalUpdateAllForOrganization is the resolver for the opportunityRenewal_UpdateAllForOrganization field.
-func (r *mutationResolver) OpportunityRenewalUpdateAllForOrganization(ctx context.Context, input model.OpportunityRenewalUpdateAllForOrganizationInput) (*model.Opportunity, error) {
+func (r *mutationResolver) OpportunityRenewalUpdateAllForOrganization(ctx context.Context, input model.OpportunityRenewalUpdateAllForOrganizationInput) (*model.Organization, error) {
 	panic(fmt.Errorf("not implemented: OpportunityRenewalUpdateAllForOrganization - opportunityRenewal_UpdateAllForOrganization"))
 }
 

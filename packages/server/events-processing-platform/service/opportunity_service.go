@@ -4,7 +4,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/aggregate"
+	contractaggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/aggregate"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
@@ -22,13 +23,15 @@ import (
 
 type opportunityService struct {
 	opportunitypb.UnimplementedOpportunityGrpcServiceServer
+	services                   *Services
 	log                        logger.Logger
 	opportunityCommandHandlers *command_handler.CommandHandlers
 	aggregateStore             eventstore.AggregateStore
 }
 
-func NewOpportunityService(log logger.Logger, commandHandlers *command_handler.CommandHandlers, aggregateStore eventstore.AggregateStore) *opportunityService {
+func NewOpportunityService(log logger.Logger, commandHandlers *command_handler.CommandHandlers, aggregateStore eventstore.AggregateStore, services *Services) *opportunityService {
 	return &opportunityService{
+		services:                   services,
 		log:                        log,
 		opportunityCommandHandlers: commandHandlers,
 		aggregateStore:             aggregateStore,
@@ -175,30 +178,12 @@ func (s *opportunityService) CreateRenewalOpportunity(ctx context.Context, reque
 	opportunityId := uuid.New().String()
 	span.SetTag(tracing.SpanTagEntityId, opportunityId)
 
-	// Convert any protobuf timestamp to time.Time, if necessary
-	createdAt := utils.TimestampProtoToTimePtr(request.CreatedAt)
-	updatedAt := utils.TimestampProtoToTimePtr(request.UpdatedAt)
-	renewedAt := utils.TimestampProtoToTimePtr(request.RenewedAt)
-
-	source := commonmodel.Source{}
-	source.FromGrpc(request.SourceFields)
-
-	cmd := command.NewCreateRenewalOpportunityCommand(
-		opportunityId,
-		request.Tenant,
-		request.LoggedInUserId,
-		request.ContractId,
-		model.RenewalLikelihood(request.RenewalLikelihood).StringEnumValue(),
-		request.RenewalApproved,
-		source,
-		createdAt,
-		updatedAt,
-		renewedAt,
-	)
-
-	if err := s.opportunityCommandHandlers.CreateRenewalOpportunity.Handle(ctx, cmd); err != nil {
+	initAggregateFunc := func() eventstore.Aggregate {
+		return aggregate.NewOpportunityAggregateWithTenantAndID(request.Tenant, opportunityId)
+	}
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("(CreateRenewalOpportunity.Handle) tenant:{%s}, err: %s", request.Tenant, err.Error())
+		s.log.Errorf("(CreateRenewalOpportunity) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
 	}
 
@@ -218,28 +203,12 @@ func (s *opportunityService) UpdateRenewalOpportunity(ctx context.Context, reque
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("id"))
 	}
 
-	// Convert any protobuf timestamp to time.Time, if necessary
-	source := commonmodel.Source{}
-	source.FromGrpc(request.SourceFields)
-
-	updateRenewalOpportunityCommand := command.NewUpdateRenewalOpportunityCommand(
-		request.Id,
-		request.Tenant,
-		request.LoggedInUserId,
-		request.Comments,
-		model.RenewalLikelihood(request.RenewalLikelihood).StringEnumValue(),
-		request.Amount,
-		request.RenewalApproved,
-		source,
-		utils.TimestampProtoToTimePtr(request.UpdatedAt),
-		utils.TimestampProtoToTimePtr(request.RenewedAt),
-		extractOpportunityMaskFields(request.FieldsMask),
-		request.OwnerUserId,
-	)
-
-	if err := s.opportunityCommandHandlers.UpdateRenewalOpportunity.Handle(ctx, updateRenewalOpportunityCommand); err != nil {
+	initAggregateFunc := func() eventstore.Aggregate {
+		return aggregate.NewOpportunityAggregateWithTenantAndID(request.Tenant, request.Id)
+	}
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("(UpdateRenewalOpportunity.Handle) tenant:{%v}, opportunityId:{%v}, err: %v", request.Tenant, request.Id, err.Error())
+		s.log.Errorf("(UpdateRenewalOpportunity.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
 	}
 
@@ -357,7 +326,7 @@ func (s *opportunityService) checkOrganizationExists(ctx context.Context, tenant
 }
 
 func (s *opportunityService) checkContractExists(ctx context.Context, tenant, contractId string) (bool, error) {
-	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenant, contractId)
+	contractAggregate := contractaggregate.NewContractAggregateWithTenantAndID(tenant, contractId)
 	err := s.aggregateStore.Exists(ctx, contractAggregate.GetID())
 	if err != nil {
 		if errors.Is(err, eventstore.ErrAggregateNotFound) {
@@ -392,6 +361,8 @@ func extractOpportunityMaskFields(requestMaskFields []opportunitypb.OpportunityM
 			maskFields = append(maskFields, model.FieldMaskMaxAmount)
 		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_RENEWED_AT:
 			maskFields = append(maskFields, model.FieldMaskRenewedAt)
+		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_ADJUSTED_RATE:
+			maskFields = append(maskFields, model.FieldMaskAdjustedRate)
 		}
 	}
 	return utils.RemoveDuplicates(maskFields)

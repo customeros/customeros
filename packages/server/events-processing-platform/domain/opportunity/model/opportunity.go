@@ -15,6 +15,7 @@ const (
 	FieldMaskRenewalLikelihood = "renewalLikelihood"
 	FieldMaskRenewalApproved   = "renewalApproved"
 	FieldMaskRenewedAt         = "renewedAt"
+	FieldMaskAdjustedRate      = "adjustedRate"
 )
 
 type RenewalDetails struct {
@@ -23,6 +24,7 @@ type RenewalDetails struct {
 	RenewalUpdatedByUserId string     `json:"renewalUpdatedByUserId,omitempty"`
 	RenewalUpdatedByUserAt *time.Time `json:"renewalUpdatedByUserAt,omitempty"`
 	RenewalApproved        bool       `json:"renewalApproved,omitempty"`
+	RenewalAdjustedRate    int64      `json:"renewalAdjustedRate,omitempty"`
 }
 
 // Opportunity represents the state of an opportunity aggregate.

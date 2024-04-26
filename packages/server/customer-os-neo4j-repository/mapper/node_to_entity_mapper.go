@@ -698,6 +698,7 @@ func MapDbNodeToOpportunityEntity(node *dbtype.Node) *entity.OpportunityEntity {
 			RenewalUpdatedByUserId: utils.GetStringPropOrEmpty(props, "renewalUpdatedByUserId"),
 			RenewalUpdatedByUserAt: utils.GetTimePropOrNil(props, "renewalUpdatedByUserAt"),
 			RenewalApproved:        utils.GetBoolPropOrFalse(props, "renewalApproved"),
+			RenewalAdjustedRate:    utils.GetInt64PropOrDefault(props, "renewalAdjustedRate", 100),
 		},
 		InternalFields: entity.OpportunityInternalFields{
 			RolloutRenewalRequestedAt: utils.GetTimePropOrNil(props, "techRolloutRenewalRequestedAt"),

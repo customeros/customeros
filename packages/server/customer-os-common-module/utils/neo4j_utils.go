@@ -465,6 +465,13 @@ func GetInt64PropOrZero(props map[string]any, key string) int64 {
 	return 0
 }
 
+func GetInt64PropOrDefault(props map[string]any, key string, defaultVal int64) int64 {
+	if props[key] != nil {
+		return props[key].(int64)
+	}
+	return defaultVal
+}
+
 func GetInt64PropOrNil(props map[string]any, key string) *int64 {
 	if props[key] != nil {
 		i := props[key].(int64)
