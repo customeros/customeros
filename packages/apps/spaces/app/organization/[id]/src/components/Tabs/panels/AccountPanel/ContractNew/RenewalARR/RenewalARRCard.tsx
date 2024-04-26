@@ -116,12 +116,6 @@ export const RenewalARRCard = ({
     },
   );
 
-  // const hasRenewed = startedAt
-  //   ? renewCycle === ContractRenewalCycle.AnnualRenewal
-  //     ? differenceInMonths > 12
-  //     : differenceInMonths > 1
-  //   : null;
-
   const formattedMaxAmount = formatCurrency(
     opportunity.maxAmount ?? 0,
     2,
@@ -242,6 +236,7 @@ export const RenewalARRCard = ({
         />
       ) : (
         <RenewalDetailsModal
+          currency={currency}
           updateOpportunityMutation={updateOpportunityMutation}
           isOpen={modal.open && isLocalOpen}
           onClose={() => {

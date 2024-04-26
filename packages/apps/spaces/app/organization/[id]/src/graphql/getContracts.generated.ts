@@ -149,6 +149,7 @@ export type GetContractsQuery = {
         renewalLikelihood: Types.OpportunityRenewalLikelihood;
         renewalUpdatedByUserId: string;
         renewedAt?: any | null;
+        updatedAt: any;
         owner?: {
           __typename?: 'User';
           id: string;
@@ -306,6 +307,7 @@ export const GetContractsDocument = `
         renewalLikelihood
         renewalUpdatedByUserId
         renewedAt
+        updatedAt
         owner {
           id
           firstName
