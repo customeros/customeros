@@ -19,6 +19,9 @@ func TestMutationResolver_InvoiceSimulate_OnCycle_PostPaidFalse_1(t *testing.T) 
 	januaryFirst := utils.FirstTimeOfMonth(2024, 1)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenantSettings(ctx, driver, tenantName, neo4jentity.TenantSettingsEntity{
+		InvoicingPostpaid: false,
+	})
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
@@ -67,6 +70,9 @@ func TestMutationResolver_InvoiceSimulate_OnCycle_PostPaidFalse_2(t *testing.T) 
 	januaryFirst := utils.FirstTimeOfMonth(2024, 1)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenantSettings(ctx, driver, tenantName, neo4jentity.TenantSettingsEntity{
+		InvoicingPostpaid: false,
+	})
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
@@ -105,6 +111,72 @@ func TestMutationResolver_InvoiceSimulate_OnCycle_PostPaidFalse_2(t *testing.T) 
 	require.Equal(t, 1, len(onCycleInvoice.InvoiceLineItems))
 	asserInvoice(t, onCycleInvoice, "2024-02-01T00:00:00Z", "2024-02-29T00:00:00Z", false, false, 29)
 	asserInvoiceLineItem(t, onCycleInvoice.InvoiceLineItems[0], "1", "S1", 29, 1, 29)
+}
+
+func TestMutationResolver_InvoiceSimulate_OnCycle_PostPaidTrue_1(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	januaryFirst := utils.FirstTimeOfMonth(2024, 1)
+	februaryFirst := utils.FirstTimeOfMonth(2024, 2)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenantSettings(ctx, driver, tenantName, neo4jentity.TenantSettingsEntity{
+		InvoicingPostpaid: true,
+	})
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
+	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		BillingCycleInMonths: 1,
+		InvoicingEnabled:     true,
+		InvoicingStartDate:   &januaryFirst,
+	})
+
+	rawResponse := callGraphQL(t, "invoice/simulate_invoice", map[string]interface{}{
+		"contractId": contractId,
+		"serviceLines": []model.InvoiceSimulateServiceLineInput{
+			{
+				Key:            "1",
+				Description:    "S1",
+				BillingCycle:   model.BilledTypeMonthly,
+				Price:          1,
+				Quantity:       1,
+				ServiceStarted: februaryFirst.Add(-1),
+			},
+			{
+				Key:            "2",
+				Description:    "S2",
+				BillingCycle:   model.BilledTypeMonthly,
+				Price:          2,
+				Quantity:       1,
+				ServiceStarted: januaryFirst,
+			},
+			{
+				Key:            "3",
+				Description:    "S3",
+				BillingCycle:   model.BilledTypeMonthly,
+				Price:          3,
+				Quantity:       1,
+				ServiceStarted: februaryFirst,
+			},
+		},
+	})
+
+	var invoiceStruct struct {
+		Invoice_Simulate []*model.InvoiceSimulate
+	}
+
+	require.Nil(t, rawResponse.Errors)
+	err := decode.Decode(rawResponse.Data.(map[string]any), &invoiceStruct)
+	require.Nil(t, err)
+
+	require.Equal(t, 1, len(invoiceStruct.Invoice_Simulate))
+
+	onCycleInvoice := invoiceStruct.Invoice_Simulate[0]
+	require.Equal(t, 2, len(onCycleInvoice.InvoiceLineItems))
+	asserInvoice(t, onCycleInvoice, "2024-01-01T00:00:00Z", "2024-01-31T00:00:00Z", false, true, 3)
+	asserInvoiceLineItem(t, onCycleInvoice.InvoiceLineItems[0], "1", "S1", 1, 1, 1)
+	asserInvoiceLineItem(t, onCycleInvoice.InvoiceLineItems[1], "2", "S2", 2, 1, 2)
 }
 
 func asserInvoice(t *testing.T, invoice *model.InvoiceSimulate, periodStart, periodEnd string, offCycle, postpaid bool, total float64) {
