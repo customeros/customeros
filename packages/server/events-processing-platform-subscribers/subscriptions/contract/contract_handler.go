@@ -240,7 +240,7 @@ func (h *contractHandler) updateRenewalArr(ctx context.Context, tenant string, c
 		return nil
 	}
 	// adjust with likelihood
-	currentArr := h.calculateCurrentArrByLikelihood(maxArr, renewalOpportunity.RenewalDetails.RenewalLikelihood.String())
+	currentArr := h.calculateCurrentArrByAdjustedRate(maxArr, renewalOpportunity.RenewalDetails.RenewalAdjustedRate)
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
@@ -340,22 +340,13 @@ func prorateArr(arr float64, monthsRemaining int) float64 {
 	return utils.RoundHalfUpFloat64(monthlyRate*float64(monthsRemaining), 2)
 }
 
-func (h *contractHandler) calculateCurrentArrByLikelihood(amount float64, likelihood string) float64 {
-	var likelihoodFactor float64
-	switch neo4jenum.RenewalLikelihood(likelihood) {
-	case neo4jenum.RenewalLikelihoodHigh:
-		likelihoodFactor = 1
-	case neo4jenum.RenewalLikelihoodMedium:
-		likelihoodFactor = 0.5
-	case neo4jenum.RenewalLikelihoodLow:
-		likelihoodFactor = 0.25
-	case neo4jenum.RenewalLikelihoodZero:
-		likelihoodFactor = 0
-	default:
-		likelihoodFactor = 1
+func (h *contractHandler) calculateCurrentArrByAdjustedRate(maxAmount float64, rate int64) float64 {
+	if rate == 0 {
+		return 0
+	} else if rate == 100 {
+		return maxAmount
 	}
-
-	return utils.RoundHalfUpFloat64(amount*likelihoodFactor, 2)
+	return utils.RoundHalfUpFloat64(maxAmount*float64(rate)/100, 2)
 }
 
 func (h *contractHandler) assertContractAndRenewalOpportunity(ctx context.Context, tenant, contractId string) (*neo4jentity.ContractEntity, *neo4jentity.OpportunityEntity, bool) {

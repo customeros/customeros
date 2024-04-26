@@ -396,7 +396,8 @@ func TestContractEventHandler_UpdateRenewalArrForecast_MultipleServices(t *testi
 		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
 		InternalStage: neo4jenum.OpportunityInternalStageOpen,
 		RenewalDetails: neo4jentity.RenewalDetails{
-			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
+			RenewalLikelihood:   neo4jenum.RenewalLikelihoodHigh,
+			RenewalAdjustedRate: 100,
 		},
 	})
 	neo4jtest.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
@@ -464,7 +465,8 @@ func TestContractEventHandler_UpdateRenewalArrForecast_MediumLikelihood(t *testi
 		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
 		InternalStage: neo4jenum.OpportunityInternalStageOpen,
 		RenewalDetails: neo4jentity.RenewalDetails{
-			RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium,
+			RenewalLikelihood:   neo4jenum.RenewalLikelihoodMedium,
+			RenewalAdjustedRate: 50,
 		},
 	})
 	neo4jtest.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
@@ -587,8 +589,9 @@ func TestContractEventHandler_UpdateRenewalArrForecast_ContractEndsIn6Months_Pro
 		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
 		InternalStage: neo4jenum.OpportunityInternalStageOpen,
 		RenewalDetails: neo4jentity.RenewalDetails{
-			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
-			RenewedAt:         utils.TimePtr(in1Month),
+			RenewalLikelihood:   neo4jenum.RenewalLikelihoodHigh,
+			RenewedAt:           utils.TimePtr(in1Month),
+			RenewalAdjustedRate: 100,
 		},
 	})
 	neo4jtest.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
@@ -649,8 +652,9 @@ func TestContractEventHandler_UpdateRenewalArrForecast_ContractEndsInMoreThan12M
 		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
 		InternalStage: neo4jenum.OpportunityInternalStageOpen,
 		RenewalDetails: neo4jentity.RenewalDetails{
-			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
-			RenewedAt:         utils.TimePtr(in12Months),
+			RenewalLikelihood:   neo4jenum.RenewalLikelihoodHigh,
+			RenewedAt:           utils.TimePtr(in12Months),
+			RenewalAdjustedRate: 100,
 		},
 	})
 	neo4jtest.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
@@ -708,8 +712,9 @@ func TestContractEventHandler_UpdateActiveRenewalOpportunityLikelihood_EndedCont
 		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
 		InternalStage: neo4jenum.OpportunityInternalStageOpen,
 		RenewalDetails: neo4jentity.RenewalDetails{
-			RenewalLikelihood: neo4jenum.RenewalLikelihoodLow,
-			RenewedAt:         &afterTomorrow,
+			RenewalLikelihood:   neo4jenum.RenewalLikelihoodLow,
+			RenewedAt:           &afterTomorrow,
+			RenewalAdjustedRate: 25,
 		},
 	})
 
@@ -758,8 +763,9 @@ func TestContractEventHandler_UpdateActiveRenewalOpportunityLikelihood_EndedCont
 		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
 		InternalStage: neo4jenum.OpportunityInternalStageOpen,
 		RenewalDetails: neo4jentity.RenewalDetails{
-			RenewalLikelihood: neo4jenum.RenewalLikelihoodZero,
-			RenewedAt:         &afterTomorrow,
+			RenewalLikelihood:   neo4jenum.RenewalLikelihoodZero,
+			RenewedAt:           &afterTomorrow,
+			RenewalAdjustedRate: 0,
 		},
 	})
 
@@ -786,8 +792,9 @@ func TestContractEventHandler_UpdateActiveRenewalOpportunityLikelihood_Reinitiat
 		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
 		InternalStage: neo4jenum.OpportunityInternalStageOpen,
 		RenewalDetails: neo4jentity.RenewalDetails{
-			RenewalLikelihood: neo4jenum.RenewalLikelihoodZero,
-			RenewedAt:         &afterTomorrow,
+			RenewalLikelihood:   neo4jenum.RenewalLikelihoodZero,
+			RenewedAt:           &afterTomorrow,
+			RenewalAdjustedRate: 0,
 		},
 	})
 
@@ -834,8 +841,9 @@ func TestContractEventHandler_UpdateActiveRenewalOpportunityLikelihood_Reinitiat
 		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
 		InternalStage: neo4jenum.OpportunityInternalStageOpen,
 		RenewalDetails: neo4jentity.RenewalDetails{
-			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh,
-			RenewedAt:         &afterTomorrow,
+			RenewalLikelihood:   neo4jenum.RenewalLikelihoodHigh,
+			RenewedAt:           &afterTomorrow,
+			RenewalAdjustedRate: 100,
 		},
 	})
 
