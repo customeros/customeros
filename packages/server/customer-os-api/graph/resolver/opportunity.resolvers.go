@@ -47,9 +47,9 @@ func (r *mutationResolver) OpportunityRenewalUpdate(ctx context.Context, input m
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OpportunityRenewalUpdate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.opportunityId", input.OpportunityID))
+	tracing.LogObjectAsJson(span, "input", input)
 
-	err := r.Services.OpportunityService.UpdateRenewal(ctx, input.OpportunityID, mapper.MapOpportunityRenewalLikelihoodFromModel(input.RenewalLikelihood), input.Amount, input.Comments, input.OwnerUserID, utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi))
+	err := r.Services.OpportunityService.UpdateRenewal(ctx, input.OpportunityID, mapper.MapOpportunityRenewalLikelihoodFromModel(input.RenewalLikelihood), input.Amount, input.Comments, input.OwnerUserID, input.RenewalAdjustedRate, utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to update opportunity renewal %s", input.OpportunityID)

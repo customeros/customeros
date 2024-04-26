@@ -166,6 +166,7 @@ func TestOpportunityEventHandler_OnCreateRenewal(t *testing.T) {
 		timeNow,
 		timeNow,
 		nil,
+		50,
 	)
 	require.Nil(t, err, "failed to create opportunity create renewal event")
 
@@ -198,6 +199,7 @@ func TestOpportunityEventHandler_OnCreateRenewal(t *testing.T) {
 	require.Equal(t, neo4jenum.OpportunityInternalStageOpen, opportunity.InternalStage)
 	require.Equal(t, neo4jenum.RenewalLikelihoodLow, opportunity.RenewalDetails.RenewalLikelihood)
 	require.True(t, opportunity.RenewalDetails.RenewalApproved)
+	require.Equal(t, int64(50), opportunity.RenewalDetails.RenewalAdjustedRate)
 
 	require.True(t, calledEventsPlatformToRefreshRenewalSummary)
 }
@@ -348,285 +350,6 @@ func TestOpportunityEventHandler_OnUpdate_OnlyAmountIsChangedByFieldsMask(t *tes
 	require.Equal(t, float64(20000), opportunity.Amount)
 }
 
-func TestOpportunityEventHandler_OnUpdateRenewal_AmountAndRenewalChangedByUser(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx, testDatabase)(t)
-
-	// prepare neo4j data
-	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
-		LengthInMonths: 1,
-	})
-	opportunityId := neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
-		Name:         "test opportunity",
-		Amount:       10000,
-		InternalType: neo4jenum.OpportunityInternalTypeRenewal,
-		RenewalDetails: neo4jentity.RenewalDetails{
-			RenewalLikelihood: "HIGH",
-		},
-	})
-	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{neo4jutil.NodeLabelOpportunity: 1})
-
-	// prepare grpc mock
-	calledEventsPlatformToRefreshRenewalSummary, calledEventsPlatformToRefreshArr := false, false
-	organizationServiceRefreshCallbacks := mocked_grpc.MockOrganizationServiceCallbacks{
-		RefreshRenewalSummary: func(context context.Context, org *organizationpb.RefreshRenewalSummaryGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-			require.Equal(t, tenantName, org.Tenant)
-			require.Equal(t, orgId, org.OrganizationId)
-			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, org.AppSource)
-			calledEventsPlatformToRefreshRenewalSummary = true
-			return &organizationpb.OrganizationIdGrpcResponse{
-				Id: orgId,
-			}, nil
-		},
-		RefreshArr: func(context context.Context, org *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-			require.Equal(t, tenantName, org.Tenant)
-			require.Equal(t, orgId, org.OrganizationId)
-			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, org.AppSource)
-			calledEventsPlatformToRefreshArr = true
-			return &organizationpb.OrganizationIdGrpcResponse{
-				Id: orgId,
-			}, nil
-		},
-	}
-	mocked_grpc.SetOrganizationCallbacks(&organizationServiceRefreshCallbacks)
-
-	// Prepare the event handler
-	opportunityEventHandler := &OpportunityEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
-	}
-
-	now := utils.Now()
-	opportunityAggregate := aggregate.NewOpportunityAggregateWithTenantAndID(tenantName, opportunityId)
-	updateEvent, err := event.NewOpportunityUpdateRenewalEvent(opportunityAggregate,
-		"MEDIUM",
-		"some comments",
-		"user-123",
-		"openline",
-		float64(10),
-		false,
-		now,
-		[]string{},
-		"user-123",
-		nil)
-	require.Nil(t, err, "failed to create event")
-
-	// EXECUTE
-	err = opportunityEventHandler.OnUpdateRenewal(context.Background(), updateEvent)
-	require.Nil(t, err)
-
-	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{neo4jutil.NodeLabelOpportunity: 1, neo4jutil.NodeLabelOpportunity + "_" + tenantName: 1})
-
-	opportunityDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelOpportunity, opportunityId)
-	require.Nil(t, err)
-	require.NotNil(t, opportunityDbNode)
-
-	// verify opportunity
-	opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
-	require.Equal(t, opportunityId, opportunity.Id)
-	require.Equal(t, now, opportunity.UpdatedAt)
-	require.Equal(t, neo4jenum.RenewalLikelihoodMedium, opportunity.RenewalDetails.RenewalLikelihood)
-	require.Equal(t, "user-123", opportunity.RenewalDetails.RenewalUpdatedByUserId)
-	require.Equal(t, now, *opportunity.RenewalDetails.RenewalUpdatedByUserAt)
-	require.Equal(t, float64(10), opportunity.Amount)
-	require.Equal(t, "some comments", opportunity.Comments)
-	require.False(t, opportunity.RenewalDetails.RenewalApproved)
-
-	require.True(t, calledEventsPlatformToRefreshRenewalSummary)
-	require.True(t, calledEventsPlatformToRefreshArr)
-}
-
-func TestOpportunityEventHandler_OnUpdateRenewal_OnlyCommentsChangedByUser_DoNotUpdatePreviousUpdatedByUser(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx, testDatabase)(t)
-
-	aggregateStore := eventstoret.NewTestAggregateStore()
-
-	// prepare neo4j data
-	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	opportunityId := neo4jtest.CreateOpportunity(ctx, testDatabase.Driver, tenantName, neo4jentity.OpportunityEntity{
-		Name:         "test opportunity",
-		Amount:       10000,
-		Comments:     "no comments",
-		InternalType: neo4jenum.OpportunityInternalTypeRenewal,
-		RenewalDetails: neo4jentity.RenewalDetails{
-			RenewalLikelihood:      "HIGH",
-			RenewalUpdatedByUserId: "orig-user",
-		},
-	})
-	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{neo4jutil.NodeLabelOpportunity: 1})
-
-	// Prepare the event handler
-	opportunityEventHandler := &OpportunityEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
-	}
-
-	now := utils.Now()
-	opportunityAggregate := aggregate.NewOpportunityAggregateWithTenantAndID(tenantName, opportunityId)
-	updateEvent, err := event.NewOpportunityUpdateRenewalEvent(opportunityAggregate,
-		"HIGH",
-		"some comments",
-		"user-123",
-		"openline",
-		float64(10000),
-		false,
-		now,
-		[]string{},
-		"user-123",
-		nil)
-	require.Nil(t, err, "failed to create event")
-
-	// EXECUTE
-	err = opportunityEventHandler.OnUpdateRenewal(context.Background(), updateEvent)
-	require.Nil(t, err)
-
-	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{neo4jutil.NodeLabelOpportunity: 1, neo4jutil.NodeLabelOpportunity + "_" + tenantName: 1})
-
-	opportunityDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelOpportunity, opportunityId)
-	require.Nil(t, err)
-	require.NotNil(t, opportunityDbNode)
-
-	// verify opportunity
-	opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
-	require.Equal(t, opportunityId, opportunity.Id)
-	require.Equal(t, now, opportunity.UpdatedAt)
-	require.Equal(t, neo4jenum.RenewalLikelihoodHigh, opportunity.RenewalDetails.RenewalLikelihood)
-	require.Equal(t, "orig-user", opportunity.RenewalDetails.RenewalUpdatedByUserId)
-	require.Nil(t, opportunity.RenewalDetails.RenewalUpdatedByUserAt)
-	require.Equal(t, float64(10000), opportunity.Amount)
-	require.Equal(t, "some comments", opportunity.Comments)
-	require.False(t, opportunity.RenewalDetails.RenewalApproved)
-
-	// Check no events were generated
-	eventsMap := aggregateStore.GetEventMap()
-	require.Equal(t, 0, len(eventsMap))
-}
-
-func TestOpportunityEventHandler_OnUpdateRenewal_LikelihoodChangedByUser_GenerateEventToRecalculateArr(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx, testDatabase)(t)
-
-	// prepare neo4j data
-	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
-		LengthInMonths: 1,
-	})
-	opportunityId := neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
-		Amount:        10000,
-		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
-		InternalStage: neo4jenum.OpportunityInternalStageOpen,
-		RenewalDetails: neo4jentity.RenewalDetails{
-			RenewalLikelihood:      "HIGH",
-			RenewalUpdatedByUserId: "orig-user",
-		},
-	})
-	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jutil.NodeLabelOpportunity: 1,
-		neo4jutil.NodeLabelContract:    1})
-
-	// prepare grpc client
-	calledEventsPlatformToUpdateOpportunity := false
-	opportunityCallbacks := mocked_grpc.MockOpportunityServiceCallbacks{
-		UpdateOpportunity: func(context context.Context, op *opportunitypb.UpdateOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
-			require.Equal(t, tenantName, op.Tenant)
-			require.Equal(t, opportunityId, op.Id)
-			require.Equal(t, float64(0), op.Amount)
-			require.Equal(t, float64(0), op.MaxAmount)
-			require.Equal(t, []opportunitypb.OpportunityMaskField{opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_AMOUNT,
-				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_MAX_AMOUNT}, op.FieldsMask)
-			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, op.SourceFields.AppSource)
-			require.Equal(t, constants.SourceOpenline, op.SourceFields.Source)
-			calledEventsPlatformToUpdateOpportunity = true
-			return &opportunitypb.OpportunityIdGrpcResponse{
-				Id: opportunityId,
-			}, nil
-		},
-	}
-	mocked_grpc.SetOpportunityCallbacks(&opportunityCallbacks)
-
-	// prepare grpc mock for onboarding status update
-	calledEventsPlatformForRefreshRenewalSummary := false
-	organizationServiceCallbacks := mocked_grpc.MockOrganizationServiceCallbacks{
-		RefreshRenewalSummary: func(context context.Context, org *organizationpb.RefreshRenewalSummaryGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-			require.Equal(t, tenantName, org.Tenant)
-			require.Equal(t, orgId, org.OrganizationId)
-			calledEventsPlatformForRefreshRenewalSummary = true
-			return &organizationpb.OrganizationIdGrpcResponse{
-				Id: orgId,
-			}, nil
-		},
-	}
-	mocked_grpc.SetOrganizationCallbacks(&organizationServiceCallbacks)
-
-	// Prepare the event handler
-	opportunityEventHandler := &OpportunityEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
-	}
-
-	now := utils.Now()
-	opportunityAggregate := aggregate.NewOpportunityAggregateWithTenantAndID(tenantName, opportunityId)
-	updateEvent, err := event.NewOpportunityUpdateRenewalEvent(opportunityAggregate,
-		"MEDIUM",
-		"Updated likelihood",
-		"user-123",
-		"openline",
-		float64(10000),
-		false,
-		now,
-		[]string{},
-		"user-123",
-		nil)
-	require.Nil(t, err, "failed to create event")
-
-	// EXECUTE
-	err = opportunityEventHandler.OnUpdateRenewal(context.Background(), updateEvent)
-	require.Nil(t, err)
-
-	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{neo4jutil.NodeLabelOpportunity: 1, neo4jutil.NodeLabelOpportunity + "_" + tenantName: 1})
-
-	opportunityDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelOpportunity, opportunityId)
-	require.Nil(t, err)
-	require.NotNil(t, opportunityDbNode)
-
-	// verify opportunity
-	opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
-	require.Equal(t, opportunityId, opportunity.Id)
-	require.Equal(t, now, opportunity.UpdatedAt)
-	require.Equal(t, neo4jenum.RenewalLikelihoodMedium, opportunity.RenewalDetails.RenewalLikelihood)
-	require.Equal(t, "user-123", opportunity.RenewalDetails.RenewalUpdatedByUserId)
-	require.Equal(t, now, *opportunity.RenewalDetails.RenewalUpdatedByUserAt)
-	require.Equal(t, float64(10000), opportunity.Amount)
-	require.Equal(t, "Updated likelihood", opportunity.Comments)
-	require.False(t, opportunity.RenewalDetails.RenewalApproved)
-
-	// Verify Action
-	actionDbNode, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
-	require.Nil(t, err)
-	require.NotNil(t, actionDbNode)
-	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
-	require.NotNil(t, action.Id)
-	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), action.Source)
-	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, action.AppSource)
-	require.Equal(t, neo4jenum.ActionRenewalLikelihoodUpdated, action.Type)
-	require.Equal(t, "Renewal likelihood set to Medium", action.Content)
-	require.Equal(t, fmt.Sprintf(`{"likelihood":"%s","reason":"%s"}`, "MEDIUM", "Updated likelihood"), action.Metadata)
-	// Check extra properties
-	props := utils.GetPropsFromNode(*actionDbNode)
-	require.Equal(t, "Updated likelihood", utils.GetStringPropOrEmpty(props, "comments"))
-
-	// check that event was invoked
-	require.True(t, calledEventsPlatformToUpdateOpportunity)
-	require.True(t, calledEventsPlatformForRefreshRenewalSummary)
-}
-
 func TestOpportunityEventHandler_OnCloseWin(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
@@ -699,6 +422,293 @@ func TestOpportunityEventHandler_OnCloseLoose(t *testing.T) {
 	require.Equal(t, now, opportunity.UpdatedAt)
 	require.Equal(t, now, *opportunity.ClosedAt)
 	require.Equal(t, neo4jenum.OpportunityInternalStageClosedLost, opportunity.InternalStage)
+}
+
+func TestOpportunityEventHandler_OnUpdateRenewal_AmountAndRenewalChangedByUser(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// prepare neo4j data
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
+		LengthInMonths: 1,
+	})
+	opportunityId := neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
+		Name:         "test opportunity",
+		Amount:       10000,
+		InternalType: neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood:   "HIGH",
+			RenewalAdjustedRate: 20,
+		},
+	})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{neo4jutil.NodeLabelOpportunity: 1})
+
+	// prepare grpc mock
+	calledEventsPlatformToRefreshRenewalSummary, calledEventsPlatformToRefreshArr := false, false
+	organizationServiceRefreshCallbacks := mocked_grpc.MockOrganizationServiceCallbacks{
+		RefreshRenewalSummary: func(context context.Context, org *organizationpb.RefreshRenewalSummaryGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+			require.Equal(t, tenantName, org.Tenant)
+			require.Equal(t, orgId, org.OrganizationId)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, org.AppSource)
+			calledEventsPlatformToRefreshRenewalSummary = true
+			return &organizationpb.OrganizationIdGrpcResponse{
+				Id: orgId,
+			}, nil
+		},
+		RefreshArr: func(context context.Context, org *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+			require.Equal(t, tenantName, org.Tenant)
+			require.Equal(t, orgId, org.OrganizationId)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, org.AppSource)
+			calledEventsPlatformToRefreshArr = true
+			return &organizationpb.OrganizationIdGrpcResponse{
+				Id: orgId,
+			}, nil
+		},
+	}
+	mocked_grpc.SetOrganizationCallbacks(&organizationServiceRefreshCallbacks)
+
+	// Prepare the event handler
+	opportunityEventHandler := &OpportunityEventHandler{
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
+	}
+
+	now := utils.Now()
+	opportunityAggregate := aggregate.NewOpportunityAggregateWithTenantAndID(tenantName, opportunityId)
+	updateEvent, err := event.NewOpportunityUpdateRenewalEvent(opportunityAggregate,
+		"MEDIUM",
+		"some comments",
+		"user-123",
+		"openline",
+		float64(10),
+		false,
+		now,
+		[]string{},
+		"user-123",
+		nil,
+		50)
+	require.Nil(t, err, "failed to create event")
+
+	// EXECUTE
+	err = opportunityEventHandler.OnUpdateRenewal(context.Background(), updateEvent)
+	require.Nil(t, err)
+
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{neo4jutil.NodeLabelOpportunity: 1, neo4jutil.NodeLabelOpportunity + "_" + tenantName: 1})
+
+	opportunityDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelOpportunity, opportunityId)
+	require.Nil(t, err)
+	require.NotNil(t, opportunityDbNode)
+
+	// verify opportunity
+	opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
+	require.Equal(t, opportunityId, opportunity.Id)
+	require.Equal(t, now, opportunity.UpdatedAt)
+	require.Equal(t, neo4jenum.RenewalLikelihoodMedium, opportunity.RenewalDetails.RenewalLikelihood)
+	require.Equal(t, "user-123", opportunity.RenewalDetails.RenewalUpdatedByUserId)
+	require.Equal(t, now, *opportunity.RenewalDetails.RenewalUpdatedByUserAt)
+	require.Equal(t, float64(10), opportunity.Amount)
+	require.Equal(t, "some comments", opportunity.Comments)
+	require.False(t, opportunity.RenewalDetails.RenewalApproved)
+	require.Equal(t, int64(20), opportunity.RenewalDetails.RenewalAdjustedRate)
+
+	require.True(t, calledEventsPlatformToRefreshRenewalSummary)
+	require.True(t, calledEventsPlatformToRefreshArr)
+}
+
+func TestOpportunityEventHandler_OnUpdateRenewal_OnlyCommentsChangedByUser_DoNotUpdatePreviousUpdatedByUser(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := eventstoret.NewTestAggregateStore()
+
+	// prepare neo4j data
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	opportunityId := neo4jtest.CreateOpportunity(ctx, testDatabase.Driver, tenantName, neo4jentity.OpportunityEntity{
+		Name:         "test opportunity",
+		Amount:       10000,
+		Comments:     "no comments",
+		InternalType: neo4jenum.OpportunityInternalTypeRenewal,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood:      "HIGH",
+			RenewalUpdatedByUserId: "orig-user",
+			RenewalAdjustedRate:    100,
+		},
+	})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{neo4jutil.NodeLabelOpportunity: 1})
+
+	// Prepare the event handler
+	opportunityEventHandler := &OpportunityEventHandler{
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
+	}
+
+	now := utils.Now()
+	opportunityAggregate := aggregate.NewOpportunityAggregateWithTenantAndID(tenantName, opportunityId)
+	updateEvent, err := event.NewOpportunityUpdateRenewalEvent(opportunityAggregate,
+		"HIGH",
+		"some comments",
+		"user-123",
+		"openline",
+		float64(10000),
+		false,
+		now,
+		[]string{},
+		"user-123",
+		nil,
+		0)
+	require.Nil(t, err, "failed to create event")
+
+	// EXECUTE
+	err = opportunityEventHandler.OnUpdateRenewal(context.Background(), updateEvent)
+	require.Nil(t, err)
+
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{neo4jutil.NodeLabelOpportunity: 1, neo4jutil.NodeLabelOpportunity + "_" + tenantName: 1})
+
+	opportunityDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelOpportunity, opportunityId)
+	require.Nil(t, err)
+	require.NotNil(t, opportunityDbNode)
+
+	// verify opportunity
+	opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
+	require.Equal(t, opportunityId, opportunity.Id)
+	require.Equal(t, now, opportunity.UpdatedAt)
+	require.Equal(t, neo4jenum.RenewalLikelihoodHigh, opportunity.RenewalDetails.RenewalLikelihood)
+	require.Equal(t, "orig-user", opportunity.RenewalDetails.RenewalUpdatedByUserId)
+	require.Nil(t, opportunity.RenewalDetails.RenewalUpdatedByUserAt)
+	require.Equal(t, float64(10000), opportunity.Amount)
+	require.Equal(t, "some comments", opportunity.Comments)
+	require.False(t, opportunity.RenewalDetails.RenewalApproved)
+	require.Equal(t, int64(100), opportunity.RenewalDetails.RenewalAdjustedRate)
+
+	// Check no events were generated
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 0, len(eventsMap))
+}
+
+func TestOpportunityEventHandler_OnUpdateRenewal_AmountChangedByUser_GenerateEventToRecalculateArr(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// prepare neo4j data
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
+		LengthInMonths: 1,
+	})
+	opportunityId := neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
+		Amount:        10000,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood:      "HIGH",
+			RenewalUpdatedByUserId: "orig-user",
+		},
+	})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		neo4jutil.NodeLabelOpportunity: 1,
+		neo4jutil.NodeLabelContract:    1})
+
+	// prepare grpc client
+	calledEventsPlatformToUpdateOpportunity := false
+	opportunityCallbacks := mocked_grpc.MockOpportunityServiceCallbacks{
+		UpdateOpportunity: func(context context.Context, op *opportunitypb.UpdateOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
+			require.Equal(t, tenantName, op.Tenant)
+			require.Equal(t, opportunityId, op.Id)
+			require.Equal(t, float64(0), op.Amount)
+			require.Equal(t, float64(0), op.MaxAmount)
+			require.Equal(t, []opportunitypb.OpportunityMaskField{
+				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_AMOUNT,
+				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_MAX_AMOUNT}, op.FieldsMask)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, op.SourceFields.AppSource)
+			require.Equal(t, constants.SourceOpenline, op.SourceFields.Source)
+			calledEventsPlatformToUpdateOpportunity = true
+			return &opportunitypb.OpportunityIdGrpcResponse{
+				Id: opportunityId,
+			}, nil
+		},
+	}
+	mocked_grpc.SetOpportunityCallbacks(&opportunityCallbacks)
+
+	// prepare grpc mock for onboarding status update
+	calledEventsPlatformForRefreshRenewalSummary := false
+	organizationServiceCallbacks := mocked_grpc.MockOrganizationServiceCallbacks{
+		RefreshRenewalSummary: func(context context.Context, org *organizationpb.RefreshRenewalSummaryGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+			require.Equal(t, tenantName, org.Tenant)
+			require.Equal(t, orgId, org.OrganizationId)
+			calledEventsPlatformForRefreshRenewalSummary = true
+			return &organizationpb.OrganizationIdGrpcResponse{
+				Id: orgId,
+			}, nil
+		},
+	}
+	mocked_grpc.SetOrganizationCallbacks(&organizationServiceCallbacks)
+
+	// Prepare the event handler
+	opportunityEventHandler := &OpportunityEventHandler{
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
+	}
+
+	now := utils.Now()
+	opportunityAggregate := aggregate.NewOpportunityAggregateWithTenantAndID(tenantName, opportunityId)
+	updateEvent, err := event.NewOpportunityUpdateRenewalEvent(opportunityAggregate,
+		"MEDIUM",
+		"Updated likelihood",
+		"user-123",
+		"openline",
+		float64(10000),
+		false,
+		now,
+		[]string{},
+		"user-123",
+		nil,
+		0)
+	require.Nil(t, err, "failed to create event")
+
+	// EXECUTE
+	err = opportunityEventHandler.OnUpdateRenewal(context.Background(), updateEvent)
+	require.Nil(t, err)
+
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{neo4jutil.NodeLabelOpportunity: 1, neo4jutil.NodeLabelOpportunity + "_" + tenantName: 1})
+
+	opportunityDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelOpportunity, opportunityId)
+	require.Nil(t, err)
+	require.NotNil(t, opportunityDbNode)
+
+	// verify opportunity
+	opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
+	require.Equal(t, opportunityId, opportunity.Id)
+	require.Equal(t, now, opportunity.UpdatedAt)
+	require.Equal(t, neo4jenum.RenewalLikelihoodMedium, opportunity.RenewalDetails.RenewalLikelihood)
+	require.Equal(t, "user-123", opportunity.RenewalDetails.RenewalUpdatedByUserId)
+	require.Equal(t, now, *opportunity.RenewalDetails.RenewalUpdatedByUserAt)
+	require.Equal(t, float64(10000), opportunity.Amount)
+	require.Equal(t, "Updated likelihood", opportunity.Comments)
+	require.False(t, opportunity.RenewalDetails.RenewalApproved)
+
+	// Verify Action
+	actionDbNode, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
+	require.Nil(t, err)
+	require.NotNil(t, actionDbNode)
+	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
+	require.NotNil(t, action.Id)
+	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), action.Source)
+	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, action.AppSource)
+	require.Equal(t, neo4jenum.ActionRenewalLikelihoodUpdated, action.Type)
+	require.Equal(t, "Renewal likelihood set to Medium", action.Content)
+	require.Equal(t, fmt.Sprintf(`{"likelihood":"%s","reason":"%s"}`, "MEDIUM", "Updated likelihood"), action.Metadata)
+	// Check extra properties
+	props := utils.GetPropsFromNode(*actionDbNode)
+	require.Equal(t, "Updated likelihood", utils.GetStringPropOrEmpty(props, "comments"))
+
+	// check that event was invoked
+	require.True(t, calledEventsPlatformToUpdateOpportunity)
+	require.True(t, calledEventsPlatformForRefreshRenewalSummary)
 }
 
 func TestOpportunityEventHandler_OnUpdateRenewal_ChangeOwner(t *testing.T) {
@@ -819,7 +829,8 @@ func TestOpportunityEventHandler_OnUpdateRenewal_ChangeOwner(t *testing.T) {
 		now,
 		[]string{},
 		userIdOwnerNew,
-		nil) //Changing the owner here
+		nil,
+		0) //Changing the owner here
 	require.Nil(t, err, "failed to create event")
 
 	// EXECUTE
@@ -840,4 +851,101 @@ func TestOpportunityEventHandler_OnUpdateRenewal_ChangeOwner(t *testing.T) {
 
 	require.True(t, calledEventsPlatformToRefreshRenewalSummary)
 
+}
+
+func TestOpportunityEventHandler_OnUpdateRenewal_AdjustedRateChanged(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// prepare neo4j data
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
+		LengthInMonths: 1,
+	})
+	opportunityId := neo4jtest.CreateOpportunityForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.OpportunityEntity{
+		Amount:        10000,
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		RenewalDetails: neo4jentity.RenewalDetails{
+			RenewalLikelihood:      "HIGH",
+			RenewalUpdatedByUserId: "orig-user",
+			RenewalAdjustedRate:    20,
+		},
+	})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		neo4jutil.NodeLabelOpportunity: 1,
+		neo4jutil.NodeLabelContract:    1})
+
+	// prepare grpc client
+	calledEventsPlatformToUpdateOpportunity := false
+	opportunityCallbacks := mocked_grpc.MockOpportunityServiceCallbacks{
+		UpdateOpportunity: func(context context.Context, op *opportunitypb.UpdateOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
+			require.Equal(t, tenantName, op.Tenant)
+			require.Equal(t, opportunityId, op.Id)
+			require.Equal(t, float64(0), op.Amount)
+			require.Equal(t, []opportunitypb.OpportunityMaskField{
+				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_AMOUNT,
+				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_MAX_AMOUNT,
+			}, op.FieldsMask)
+			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, op.SourceFields.AppSource)
+			require.Equal(t, constants.SourceOpenline, op.SourceFields.Source)
+			calledEventsPlatformToUpdateOpportunity = true
+			return &opportunitypb.OpportunityIdGrpcResponse{
+				Id: opportunityId,
+			}, nil
+		},
+	}
+	mocked_grpc.SetOpportunityCallbacks(&opportunityCallbacks)
+
+	// Prepare the event handler
+	opportunityEventHandler := &OpportunityEventHandler{
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
+	}
+
+	now := utils.Now()
+	opportunityAggregate := aggregate.NewOpportunityAggregateWithTenantAndID(tenantName, opportunityId)
+	updateEvent, err := event.NewOpportunityUpdateRenewalEvent(opportunityAggregate,
+		"HIGH",
+		"Updated likelihood",
+		"user-123",
+		"openline",
+		float64(0),
+		false,
+		now,
+		[]string{model.FieldMaskAdjustedRate},
+		"user-123",
+		nil,
+		50)
+	require.Nil(t, err, "failed to create event")
+
+	// EXECUTE
+	err = opportunityEventHandler.OnUpdateRenewal(context.Background(), updateEvent)
+	require.Nil(t, err)
+
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{neo4jutil.NodeLabelOpportunity: 1, neo4jutil.NodeLabelOpportunity + "_" + tenantName: 1})
+
+	opportunityDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelOpportunity, opportunityId)
+	require.Nil(t, err)
+	require.NotNil(t, opportunityDbNode)
+
+	// verify opportunity
+	opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
+	require.Equal(t, opportunityId, opportunity.Id)
+	require.Equal(t, now, opportunity.UpdatedAt)
+	require.Equal(t, neo4jenum.RenewalLikelihoodHigh, opportunity.RenewalDetails.RenewalLikelihood)
+	require.Equal(t, "user-123", opportunity.RenewalDetails.RenewalUpdatedByUserId)
+	require.Equal(t, now, *opportunity.RenewalDetails.RenewalUpdatedByUserAt)
+	require.Equal(t, float64(10000), opportunity.Amount)
+	require.Equal(t, "", opportunity.Comments)
+	require.False(t, opportunity.RenewalDetails.RenewalApproved)
+	require.Equal(t, int64(50), opportunity.RenewalDetails.RenewalAdjustedRate)
+
+	// Verify Action
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{neo4jutil.NodeLabelAction: 0})
+
+	// check that event was invoked
+	require.True(t, calledEventsPlatformToUpdateOpportunity)
 }

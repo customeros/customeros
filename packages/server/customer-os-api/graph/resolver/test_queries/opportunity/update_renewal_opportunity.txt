@@ -5,6 +5,7 @@ opportunityRenewalUpdate(
         name: "Updated Opportunity"
         amount: 100
         renewalLikelihood: HIGH_RENEWAL
+        renewalAdjustedRate: 50
         comments: "test comments"
         appSource: "test app source"
         ownerUserId: $ownerUserId

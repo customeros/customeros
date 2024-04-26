@@ -28,14 +28,15 @@ func TestQueryResolver_Opportunity(t *testing.T) {
 	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
 	now := utils.Now()
-	opportunityId := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, neo4jentity.OpportunityEntity{
+	opportunityId := neo4jtest.CreateOpportunityForContract(ctx, driver, tenantName, contractId, neo4jentity.OpportunityEntity{
 		Name:      "test opportunity",
 		Amount:    float64(100),
 		MaxAmount: float64(200),
 		CreatedAt: now,
 		UpdatedAt: now,
 		RenewalDetails: neo4jentity.RenewalDetails{
-			RenewalApproved: true,
+			RenewalApproved:     true,
+			RenewalAdjustedRate: 33,
 		},
 	})
 	neo4jt.OpportunityCreatedBy(ctx, driver, opportunityId, creatorUserId)
@@ -64,6 +65,7 @@ func TestQueryResolver_Opportunity(t *testing.T) {
 	require.Equal(t, now, opportunity.CreatedAt)
 	require.Equal(t, now, opportunity.UpdatedAt)
 	require.True(t, opportunity.RenewalApproved)
+	require.Equal(t, int64(33), opportunity.RenewalAdjustedRate)
 }
 
 func TestMutationResolver_OpportunityUpdate(t *testing.T) {
@@ -74,7 +76,7 @@ func TestMutationResolver_OpportunityUpdate(t *testing.T) {
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
-	opportunityId := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, neo4jentity.OpportunityEntity{})
+	opportunityId := neo4jtest.CreateOpportunityForContract(ctx, driver, tenantName, contractId, neo4jentity.OpportunityEntity{})
 	calledUpdateOpportunity := false
 
 	opportunityServiceCallbacks := events_platform.MockOpportunityServiceCallbacks{
@@ -129,7 +131,7 @@ func TestMutationResolver_OpportunityRenewalUpdate(t *testing.T) {
 	ownerUserId := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{})
 	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
-	opportunityId := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, neo4jentity.OpportunityEntity{})
+	opportunityId := neo4jtest.CreateOpportunityForContract(ctx, driver, tenantName, contractId, neo4jentity.OpportunityEntity{})
 	calledUpdateRenewalOpportunity := false
 
 	opportunityServiceCallbacks := events_platform.MockOpportunityServiceCallbacks{
@@ -143,10 +145,13 @@ func TestMutationResolver_OpportunityRenewalUpdate(t *testing.T) {
 			require.Equal(t, opportunitypb.RenewalLikelihood_HIGH_RENEWAL, renewalOpportunity.RenewalLikelihood)
 			require.Equal(t, "test comments", renewalOpportunity.Comments)
 			require.Equal(t, ownerUserId, renewalOpportunity.OwnerUserId)
+			require.Equal(t, int64(50), renewalOpportunity.RenewalAdjustedRate)
 			require.ElementsMatch(t, []opportunitypb.OpportunityMaskField{
 				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_AMOUNT,
 				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_RENEWAL_LIKELIHOOD,
-				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_COMMENTS},
+				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_COMMENTS,
+				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_ADJUSTED_RATE,
+			},
 				renewalOpportunity.FieldsMask)
 			calledUpdateRenewalOpportunity = true
 			return &opportunitypb.OpportunityIdGrpcResponse{
@@ -157,7 +162,7 @@ func TestMutationResolver_OpportunityRenewalUpdate(t *testing.T) {
 	events_platform.SetOpportunityCallbacks(&opportunityServiceCallbacks)
 	neo4jt.OpportunityOwnedBy(ctx, driver, opportunityId, ownerUserId)
 
-	rawResponse := callGraphQL(t, "update_renewal_opportunity", map[string]interface{}{
+	rawResponse := callGraphQL(t, "opportunity/update_renewal_opportunity", map[string]interface{}{
 		"opportunityId": opportunityId,
 		"ownerUserId":   ownerUserId,
 	})

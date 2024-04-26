@@ -1472,65 +1472,6 @@ func CreateActionForOrganizationWithProperties(ctx context.Context, driver *neo4
 }
 
 // Deprecated
-func CreateOpportunityForContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId string, opportunity neo4jentity.OpportunityEntity) string {
-	opportunityId := utils.NewUUIDIfEmpty(opportunity.Id)
-	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}), (c:Contract {id:$contractId})
-				MERGE (t)<-[:OPPORTUNITY_BELONGS_TO_TENANT]-(op:Opportunity {id:$id})<-[:HAS_OPPORTUNITY]-(c)
-				SET 
-                    op:Opportunity_%s,
-					op.name=$name,
-					op.source=$source,
-					op.sourceOfTruth=$sourceOfTruth,
-					op.appSource=$appSource,
-					op.amount=$amount,
-					op.maxAmount=$maxAmount,
-                    op.internalType=$internalType,
-					op.externalType=$externalType,
-					op.internalStage=$internalStage,
-					op.externalStage=$externalStage,
-					op.estimatedClosedAt=$estimatedClosedAt,
-					op.generalNotes=$generalNotes,
-                    op.comments=$comments,
-                    op.renewedAt=$renewedAt,
-                    op.renewalLikelihood=$renewalLikelihood,
-                    op.renewalUpdatedByUserId=$renewalUpdatedByUserId,
-                    op.renewalUpdatedByUserAt=$renewalUpdatedByUserAt,
-					op.renewalApproved=$renewalApproved,
-					op.nextSteps=$nextSteps,
-					op.createdAt=$createdAt,
-					op.updatedAt=$updatedAt
-				`, tenant)
-
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"id":                     opportunityId,
-		"contractId":             contractId,
-		"tenant":                 tenant,
-		"name":                   opportunity.Name,
-		"source":                 opportunity.Source,
-		"sourceOfTruth":          opportunity.SourceOfTruth,
-		"appSource":              opportunity.AppSource,
-		"amount":                 opportunity.Amount,
-		"maxAmount":              opportunity.MaxAmount,
-		"internalType":           opportunity.InternalType,
-		"externalType":           opportunity.ExternalType,
-		"internalStage":          opportunity.InternalStage,
-		"externalStage":          opportunity.ExternalStage,
-		"estimatedClosedAt":      opportunity.EstimatedClosedAt,
-		"generalNotes":           opportunity.GeneralNotes,
-		"nextSteps":              opportunity.NextSteps,
-		"comments":               opportunity.Comments,
-		"renewedAt":              opportunity.RenewalDetails.RenewedAt,
-		"renewalLikelihood":      opportunity.RenewalDetails.RenewalLikelihood,
-		"renewalUpdatedByUserId": opportunity.RenewalDetails.RenewalUpdatedByUserId,
-		"renewalUpdatedByUserAt": opportunity.RenewalDetails.RenewalUpdatedByUserAt,
-		"renewalApproved":        opportunity.RenewalDetails.RenewalApproved,
-		"createdAt":              opportunity.CreatedAt,
-		"updatedAt":              opportunity.UpdatedAt,
-	})
-	return opportunityId
-}
-
-// Deprecated
 func ActiveRenewalOpportunityForContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId, opportunityId string) string {
 	query := fmt.Sprintf(`
 				MATCH (c:Contract_%s {id:$contractId}), (op:Opportunity_%s {id:$opportunityId})

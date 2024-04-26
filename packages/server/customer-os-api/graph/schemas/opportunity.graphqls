@@ -26,6 +26,7 @@ type Opportunity implements Node {
     renewalLikelihood:  OpportunityRenewalLikelihood!
     renewalUpdatedByUserId: String!
     renewalUpdatedByUserAt: Time
+    renewalAdjustedRate:    Int64!
     comments:           String!
     createdBy:          User @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant
     owner:              User @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -57,16 +58,17 @@ enum OpportunityRenewalLikelihood {
 }
 
 input OpportunityRenewalUpdateInput {
-    opportunityId:      ID!
+    opportunityId:          ID!
+    amount:                 Float
+    comments:               String
+    appSource:              String
+    ownerUserId:            ID
+    renewalLikelihood:      OpportunityRenewalLikelihood
+    renewalAdjustedRate:    Int64
     """
     Deprecated
     """
-    name:               String @deprecated(reason: "Not used")
-    amount:             Float
-    renewalLikelihood:  OpportunityRenewalLikelihood
-    comments:           String
-    appSource:          String
-    ownerUserId:        ID
+    name:                   String @deprecated(reason: "Not used")
 }
 
 input OpportunityUpdateInput {

@@ -1141,6 +1141,7 @@ type ComplexityRoot struct {
 		Name                   func(childComplexity int) int
 		NextSteps              func(childComplexity int) int
 		Owner                  func(childComplexity int) int
+		RenewalAdjustedRate    func(childComplexity int) int
 		RenewalApproved        func(childComplexity int) int
 		RenewalLikelihood      func(childComplexity int) int
 		RenewalUpdatedByUserAt func(childComplexity int) int
@@ -1868,7 +1869,7 @@ type MutationResolver interface {
 	OfferingUpdate(ctx context.Context, input *model.OfferingUpdateInput) (*string, error)
 	OpportunityUpdate(ctx context.Context, input model.OpportunityUpdateInput) (*model.Opportunity, error)
 	OpportunityRenewalUpdate(ctx context.Context, input model.OpportunityRenewalUpdateInput, ownerUserID *string) (*model.Opportunity, error)
-	OpportunityRenewalUpdateAllForOrganization(ctx context.Context, input model.OpportunityRenewalUpdateAllForOrganizationInput) (*model.Opportunity, error)
+	OpportunityRenewalUpdateAllForOrganization(ctx context.Context, input model.OpportunityRenewalUpdateAllForOrganizationInput) (*model.Organization, error)
 	OrganizationCreate(ctx context.Context, input model.OrganizationInput) (*model.Organization, error)
 	OrganizationUpdate(ctx context.Context, input model.OrganizationUpdateInput) (*model.Organization, error)
 	OrganizationArchive(ctx context.Context, id string) (*model.Result, error)
@@ -8759,6 +8760,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Opportunity.Owner(childComplexity), true
 
+	case "Opportunity.renewalAdjustedRate":
+		if e.complexity.Opportunity.RenewalAdjustedRate == nil {
+			break
+		}
+
+		return e.complexity.Opportunity.RenewalAdjustedRate(childComplexity), true
+
 	case "Opportunity.renewalApproved":
 		if e.complexity.Opportunity.RenewalApproved == nil {
 			break
@@ -14458,7 +14466,7 @@ enum ChargePeriod {
 extend type Mutation {
     opportunityUpdate(input: OpportunityUpdateInput!): Opportunity!
     opportunityRenewalUpdate(input: OpportunityRenewalUpdateInput!, ownerUserId: ID): Opportunity!
-    opportunityRenewal_UpdateAllForOrganization(input: OpportunityRenewalUpdateAllForOrganizationInput!): Opportunity!
+    opportunityRenewal_UpdateAllForOrganization(input: OpportunityRenewalUpdateAllForOrganizationInput!): Organization!
 }
 
 type Opportunity implements Node {
@@ -14480,6 +14488,7 @@ type Opportunity implements Node {
     renewalLikelihood:  OpportunityRenewalLikelihood!
     renewalUpdatedByUserId: String!
     renewalUpdatedByUserAt: Time
+    renewalAdjustedRate:    Int64!
     comments:           String!
     createdBy:          User @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant
     owner:              User @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -14511,16 +14520,17 @@ enum OpportunityRenewalLikelihood {
 }
 
 input OpportunityRenewalUpdateInput {
-    opportunityId:      ID!
+    opportunityId:          ID!
+    amount:                 Float
+    comments:               String
+    appSource:              String
+    ownerUserId:            ID
+    renewalLikelihood:      OpportunityRenewalLikelihood
+    renewalAdjustedRate:    Int64
     """
     Deprecated
     """
-    name:               String @deprecated(reason: "Not used")
-    amount:             Float
-    renewalLikelihood:  OpportunityRenewalLikelihood
-    comments:           String
-    appSource:          String
-    ownerUserId:        ID
+    name:                   String @deprecated(reason: "Not used")
 }
 
 input OpportunityUpdateInput {
@@ -27653,6 +27663,8 @@ func (ec *executionContext) fieldContext_Contract_opportunities(ctx context.Cont
 				return ec.fieldContext_Opportunity_renewalUpdatedByUserId(ctx, field)
 			case "renewalUpdatedByUserAt":
 				return ec.fieldContext_Opportunity_renewalUpdatedByUserAt(ctx, field)
+			case "renewalAdjustedRate":
+				return ec.fieldContext_Opportunity_renewalAdjustedRate(ctx, field)
 			case "comments":
 				return ec.fieldContext_Opportunity_comments(ctx, field)
 			case "createdBy":
@@ -60146,6 +60158,8 @@ func (ec *executionContext) fieldContext_Mutation_opportunityUpdate(ctx context.
 				return ec.fieldContext_Opportunity_renewalUpdatedByUserId(ctx, field)
 			case "renewalUpdatedByUserAt":
 				return ec.fieldContext_Opportunity_renewalUpdatedByUserAt(ctx, field)
+			case "renewalAdjustedRate":
+				return ec.fieldContext_Opportunity_renewalAdjustedRate(ctx, field)
 			case "comments":
 				return ec.fieldContext_Opportunity_comments(ctx, field)
 			case "createdBy":
@@ -60253,6 +60267,8 @@ func (ec *executionContext) fieldContext_Mutation_opportunityRenewalUpdate(ctx c
 				return ec.fieldContext_Opportunity_renewalUpdatedByUserId(ctx, field)
 			case "renewalUpdatedByUserAt":
 				return ec.fieldContext_Opportunity_renewalUpdatedByUserAt(ctx, field)
+			case "renewalAdjustedRate":
+				return ec.fieldContext_Opportunity_renewalAdjustedRate(ctx, field)
 			case "comments":
 				return ec.fieldContext_Opportunity_comments(ctx, field)
 			case "createdBy":
@@ -60311,9 +60327,9 @@ func (ec *executionContext) _Mutation_opportunityRenewal_UpdateAllForOrganizatio
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Opportunity)
+	res := resTmp.(*model.Organization)
 	fc.Result = res
-	return ec.marshalNOpportunity2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐOpportunity(ctx, field.Selections, res)
+	return ec.marshalNOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐOrganization(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_opportunityRenewal_UpdateAllForOrganization(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -60324,58 +60340,134 @@ func (ec *executionContext) fieldContext_Mutation_opportunityRenewal_UpdateAllFo
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "id":
-				return ec.fieldContext_Opportunity_id(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Opportunity_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Opportunity_updatedAt(ctx, field)
+			case "metadata":
+				return ec.fieldContext_Organization_metadata(ctx, field)
+			case "accountDetails":
+				return ec.fieldContext_Organization_accountDetails(ctx, field)
+			case "contracts":
+				return ec.fieldContext_Organization_contracts(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
+			case "customFields":
+				return ec.fieldContext_Organization_customFields(ctx, field)
+			case "customId":
+				return ec.fieldContext_Organization_customId(ctx, field)
+			case "description":
+				return ec.fieldContext_Organization_description(ctx, field)
+			case "domains":
+				return ec.fieldContext_Organization_domains(ctx, field)
+			case "slackChannelId":
+				return ec.fieldContext_Organization_slackChannelId(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "employees":
+				return ec.fieldContext_Organization_employees(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "industry":
+				return ec.fieldContext_Organization_industry(ctx, field)
+			case "industryGroup":
+				return ec.fieldContext_Organization_industryGroup(ctx, field)
+			case "isCustomer":
+				return ec.fieldContext_Organization_isCustomer(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastTouchpoint":
+				return ec.fieldContext_Organization_lastTouchpoint(ctx, field)
+			case "locations":
+				return ec.fieldContext_Organization_locations(ctx, field)
+			case "logo":
+				return ec.fieldContext_Organization_logo(ctx, field)
+			case "market":
+				return ec.fieldContext_Organization_market(ctx, field)
 			case "name":
-				return ec.fieldContext_Opportunity_name(ctx, field)
-			case "amount":
-				return ec.fieldContext_Opportunity_amount(ctx, field)
-			case "maxAmount":
-				return ec.fieldContext_Opportunity_maxAmount(ctx, field)
-			case "internalType":
-				return ec.fieldContext_Opportunity_internalType(ctx, field)
-			case "externalType":
-				return ec.fieldContext_Opportunity_externalType(ctx, field)
-			case "internalStage":
-				return ec.fieldContext_Opportunity_internalStage(ctx, field)
-			case "externalStage":
-				return ec.fieldContext_Opportunity_externalStage(ctx, field)
-			case "estimatedClosedAt":
-				return ec.fieldContext_Opportunity_estimatedClosedAt(ctx, field)
-			case "generalNotes":
-				return ec.fieldContext_Opportunity_generalNotes(ctx, field)
-			case "nextSteps":
-				return ec.fieldContext_Opportunity_nextSteps(ctx, field)
-			case "renewedAt":
-				return ec.fieldContext_Opportunity_renewedAt(ctx, field)
-			case "renewalApproved":
-				return ec.fieldContext_Opportunity_renewalApproved(ctx, field)
-			case "renewalLikelihood":
-				return ec.fieldContext_Opportunity_renewalLikelihood(ctx, field)
-			case "renewalUpdatedByUserId":
-				return ec.fieldContext_Opportunity_renewalUpdatedByUserId(ctx, field)
-			case "renewalUpdatedByUserAt":
-				return ec.fieldContext_Opportunity_renewalUpdatedByUserAt(ctx, field)
-			case "comments":
-				return ec.fieldContext_Opportunity_comments(ctx, field)
-			case "createdBy":
-				return ec.fieldContext_Opportunity_createdBy(ctx, field)
+				return ec.fieldContext_Organization_name(ctx, field)
+			case "notes":
+				return ec.fieldContext_Organization_notes(ctx, field)
 			case "owner":
-				return ec.fieldContext_Opportunity_owner(ctx, field)
-			case "source":
-				return ec.fieldContext_Opportunity_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_Opportunity_sourceOfTruth(ctx, field)
-			case "appSource":
-				return ec.fieldContext_Opportunity_appSource(ctx, field)
+				return ec.fieldContext_Organization_owner(ctx, field)
+			case "parentCompanies":
+				return ec.fieldContext_Organization_parentCompanies(ctx, field)
+			case "public":
+				return ec.fieldContext_Organization_public(ctx, field)
+			case "socialMedia":
+				return ec.fieldContext_Organization_socialMedia(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
+			case "subsidiaries":
+				return ec.fieldContext_Organization_subsidiaries(ctx, field)
+			case "tags":
+				return ec.fieldContext_Organization_tags(ctx, field)
+			case "targetAudience":
+				return ec.fieldContext_Organization_targetAudience(ctx, field)
+			case "timelineEvents":
+				return ec.fieldContext_Organization_timelineEvents(ctx, field)
+			case "valueProposition":
+				return ec.fieldContext_Organization_valueProposition(ctx, field)
+			case "website":
+				return ec.fieldContext_Organization_website(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "hide":
+				return ec.fieldContext_Organization_hide(ctx, field)
+			case "contacts":
+				return ec.fieldContext_Organization_contacts(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_Organization_jobRoles(ctx, field)
+			case "emails":
+				return ec.fieldContext_Organization_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
+			case "suggestedMergeTo":
+				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
+			case "fieldSets":
+				return ec.fieldContext_Organization_fieldSets(ctx, field)
+			case "entityTemplate":
+				return ec.fieldContext_Organization_entityTemplate(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "externalLinks":
-				return ec.fieldContext_Opportunity_externalLinks(ctx, field)
+				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "issueSummaryByStatus":
+				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
+			case "orders":
+				return ec.fieldContext_Organization_orders(ctx, field)
+			case "socials":
+				return ec.fieldContext_Organization_socials(ctx, field)
+			case "isPublic":
+				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "note":
+				return ec.fieldContext_Organization_note(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
+			case "id":
+				return ec.fieldContext_Organization_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Organization_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Organization_updatedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_Organization_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Organization_appSource(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_Organization_referenceId(ctx, field)
+			case "lastTouchPointAt":
+				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointType":
+				return ec.fieldContext_Organization_lastTouchPointType(ctx, field)
+			case "lastTouchPointTimelineEventId":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
+			case "lastTouchPointTimelineEvent":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
+			case "subsidiaryOf":
+				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Opportunity", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
 	}
 	defer func() {
@@ -70259,6 +70351,50 @@ func (ec *executionContext) fieldContext_Opportunity_renewalUpdatedByUserAt(ctx 
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Opportunity_renewalAdjustedRate(ctx context.Context, field graphql.CollectedField, obj *model.Opportunity) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Opportunity_renewalAdjustedRate(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RenewalAdjustedRate, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Opportunity_renewalAdjustedRate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Opportunity",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
 		},
 	}
 	return fc, nil
@@ -82094,6 +82230,8 @@ func (ec *executionContext) fieldContext_Query_opportunity(ctx context.Context, 
 				return ec.fieldContext_Opportunity_renewalUpdatedByUserId(ctx, field)
 			case "renewalUpdatedByUserAt":
 				return ec.fieldContext_Opportunity_renewalUpdatedByUserAt(ctx, field)
+			case "renewalAdjustedRate":
+				return ec.fieldContext_Opportunity_renewalAdjustedRate(ctx, field)
 			case "comments":
 				return ec.fieldContext_Opportunity_comments(ctx, field)
 			case "createdBy":
@@ -85851,6 +85989,8 @@ func (ec *executionContext) fieldContext_RenewalRecord_opportunity(ctx context.C
 				return ec.fieldContext_Opportunity_renewalUpdatedByUserId(ctx, field)
 			case "renewalUpdatedByUserAt":
 				return ec.fieldContext_Opportunity_renewalUpdatedByUserAt(ctx, field)
+			case "renewalAdjustedRate":
+				return ec.fieldContext_Opportunity_renewalAdjustedRate(ctx, field)
 			case "comments":
 				return ec.fieldContext_Opportunity_comments(ctx, field)
 			case "createdBy":
@@ -98140,7 +98280,7 @@ func (ec *executionContext) unmarshalInputOpportunityRenewalUpdateInput(ctx cont
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"opportunityId", "name", "amount", "renewalLikelihood", "comments", "appSource", "ownerUserId"}
+	fieldsInOrder := [...]string{"opportunityId", "amount", "comments", "appSource", "ownerUserId", "renewalLikelihood", "renewalAdjustedRate", "name"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -98154,13 +98294,6 @@ func (ec *executionContext) unmarshalInputOpportunityRenewalUpdateInput(ctx cont
 				return it, err
 			}
 			it.OpportunityID = data
-		case "name":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Name = data
 		case "amount":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amount"))
 			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
@@ -98168,13 +98301,6 @@ func (ec *executionContext) unmarshalInputOpportunityRenewalUpdateInput(ctx cont
 				return it, err
 			}
 			it.Amount = data
-		case "renewalLikelihood":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("renewalLikelihood"))
-			data, err := ec.unmarshalOOpportunityRenewalLikelihood2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐOpportunityRenewalLikelihood(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.RenewalLikelihood = data
 		case "comments":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("comments"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -98196,6 +98322,27 @@ func (ec *executionContext) unmarshalInputOpportunityRenewalUpdateInput(ctx cont
 				return it, err
 			}
 			it.OwnerUserID = data
+		case "renewalLikelihood":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("renewalLikelihood"))
+			data, err := ec.unmarshalOOpportunityRenewalLikelihood2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐOpportunityRenewalLikelihood(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RenewalLikelihood = data
+		case "renewalAdjustedRate":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("renewalAdjustedRate"))
+			data, err := ec.unmarshalOInt642ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RenewalAdjustedRate = data
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
 		}
 	}
 
@@ -110752,6 +110899,11 @@ func (ec *executionContext) _Opportunity(ctx context.Context, sel ast.SelectionS
 			}
 		case "renewalUpdatedByUserAt":
 			out.Values[i] = ec._Opportunity_renewalUpdatedByUserAt(ctx, field, obj)
+		case "renewalAdjustedRate":
+			out.Values[i] = ec._Opportunity_renewalAdjustedRate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
 		case "comments":
 			out.Values[i] = ec._Opportunity_comments(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

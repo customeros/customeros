@@ -42,7 +42,7 @@ func NewContractAggregateWithTenantAndID(tenant, id string) *ContractAggregate {
 }
 
 func (a *ContractAggregate) HandleGRPCRequest(ctx context.Context, request any, params map[string]any) (any, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractAggregate.HandleRequest")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractAggregate.HandleGRPCRequest")
 	defer span.Finish()
 
 	switch r := request.(type) {

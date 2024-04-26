@@ -30,6 +30,7 @@ func MapEntityToOpportunity(entity *neo4jentity.OpportunityEntity) *model.Opport
 		RenewalUpdatedByUserAt: entity.RenewalDetails.RenewalUpdatedByUserAt,
 		RenewalUpdatedByUserID: entity.RenewalDetails.RenewalUpdatedByUserId,
 		RenewalApproved:        entity.RenewalDetails.RenewalApproved,
+		RenewalAdjustedRate:    entity.RenewalDetails.RenewalAdjustedRate,
 		Comments:               entity.Comments,
 		Source:                 MapDataSourceToModel(entity.Source),
 		SourceOfTruth:          MapDataSourceToModel(entity.SourceOfTruth),

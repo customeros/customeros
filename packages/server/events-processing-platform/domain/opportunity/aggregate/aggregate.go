@@ -1,6 +1,7 @@
 package aggregate
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
@@ -8,7 +9,12 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
+	"golang.org/x/net/context"
 	"strings"
 )
 
@@ -29,6 +35,108 @@ func NewOpportunityAggregateWithTenantAndID(tenant, id string) *OpportunityAggre
 	oppAggregate.Tenant = tenant
 
 	return &oppAggregate
+}
+
+func (a *OpportunityAggregate) HandleGRPCRequest(ctx context.Context, request any, params map[string]any) (any, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityAggregate.HandleGRPCRequest")
+	defer span.Finish()
+
+	switch r := request.(type) {
+	case *opportunitypb.CreateRenewalOpportunityGrpcRequest:
+		return nil, a.createRenewalOpportunity(ctx, r)
+	case *opportunitypb.UpdateRenewalOpportunityGrpcRequest:
+		return nil, a.updateRenewalOpportunity(ctx, r)
+	default:
+		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
+		return nil, eventstore.ErrInvalidRequestType
+	}
+}
+
+func (a *OpportunityAggregate) createRenewalOpportunity(ctx context.Context, request *opportunitypb.CreateRenewalOpportunityGrpcRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "OpportunityAggregate.createRenewalOpportunity")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "request", request)
+
+	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
+	updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.UpdatedAt), createdAtNotNil)
+	renewedAt := utils.TimestampProtoToTimePtr(request.RenewedAt)
+
+	sourceFields := commonmodel.Source{}
+	sourceFields.FromGrpc(request.SourceFields)
+	sourceFields.SetDefaultValues()
+
+	renewalLikelihood := model.RenewalLikelihood(request.RenewalLikelihood).StringEnumValue()
+	adjustedRate := request.RenewalAdjustedRate
+	if string(renewalLikelihood) == "" {
+		adjustedRate = 100
+		renewalLikelihood = neo4jenum.RenewalLikelihoodHigh
+	}
+
+	if adjustedRate < 0 {
+		adjustedRate = 0
+	} else if adjustedRate > 100 {
+		adjustedRate = 100
+	}
+
+	createRenewalEvent, err := event.NewOpportunityCreateRenewalEvent(a, request.ContractId, string(renewalLikelihood), request.RenewalApproved, sourceFields, createdAtNotNil, updatedAtNotNil, renewedAt, adjustedRate)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewOpportunityCreateRenewalEvent")
+	}
+	aggregate.EnrichEventWithMetadataExtended(&createRenewalEvent, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: request.LoggedInUserId,
+		App:    sourceFields.AppSource,
+	})
+
+	return a.Apply(createRenewalEvent)
+}
+
+func (a *OpportunityAggregate) updateRenewalOpportunity(ctx context.Context, request *opportunitypb.UpdateRenewalOpportunityGrpcRequest) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityAggregate.updateRenewalOpportunity")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "request", request)
+
+	updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.UpdatedAt), utils.Now())
+	renewedAt := utils.TimestampProtoToTimePtr(request.RenewedAt)
+
+	sourceFields := commonmodel.Source{}
+	sourceFields.FromGrpc(request.SourceFields)
+	sourceFields.SetDefaultValues()
+
+	renewalLikelihood := model.RenewalLikelihood(request.RenewalLikelihood).StringEnumValue()
+	adjustedRate := request.RenewalAdjustedRate
+	if string(renewalLikelihood) == "" {
+		adjustedRate = 100
+		renewalLikelihood = neo4jenum.RenewalLikelihoodHigh
+	}
+
+	if adjustedRate < 0 {
+		adjustedRate = 0
+	} else if adjustedRate > 100 {
+		adjustedRate = 100
+	}
+
+	fieldsMask := extractFieldsMask(request.FieldsMask)
+
+	updateRenewalEvent, err := event.NewOpportunityUpdateRenewalEvent(a, string(renewalLikelihood), request.Comments, request.LoggedInUserId, sourceFields.Source, request.Amount, request.RenewalApproved, updatedAtNotNil, fieldsMask, request.OwnerUserId, renewedAt, adjustedRate)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewOpportunityUpdateRenewalEvent")
+	}
+	aggregate.EnrichEventWithMetadataExtended(&updateRenewalEvent, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: request.LoggedInUserId,
+		App:    sourceFields.AppSource,
+	})
+
+	return a.Apply(updateRenewalEvent)
 }
 
 func (a *OpportunityAggregate) When(evt eventstore.Event) error {
@@ -104,6 +212,7 @@ func (a *OpportunityAggregate) onRenewalOpportunityCreate(evt eventstore.Event) 
 	a.Opportunity.RenewalDetails.RenewalLikelihood = eventData.RenewalLikelihood
 	a.Opportunity.RenewalDetails.RenewalApproved = eventData.RenewalApproved
 	a.Opportunity.RenewalDetails.RenewedAt = eventData.RenewedAt
+	a.Opportunity.RenewalDetails.RenewalAdjustedRate = eventData.RenewalAdjustedRate
 
 	return nil
 }
@@ -202,6 +311,9 @@ func (a *OpportunityAggregate) onRenewalOpportunityUpdate(evt eventstore.Event) 
 	if eventData.UpdateRenewedAt() {
 		a.Opportunity.RenewalDetails.RenewedAt = eventData.RenewedAt
 	}
+	if eventData.UpdateRenewalAdjustedRate() {
+		a.Opportunity.RenewalDetails.RenewalAdjustedRate = eventData.RenewalAdjustedRate
+	}
 
 	return nil
 }
@@ -226,4 +338,30 @@ func (a *OpportunityAggregate) onOpportunityCloseLoose(evt eventstore.Event) err
 	a.Opportunity.ClosedAt = &eventData.ClosedAt
 	a.Opportunity.UpdatedAt = eventData.UpdatedAt
 	return nil
+}
+
+func extractFieldsMask(requestMaskFields []opportunitypb.OpportunityMaskField) []string {
+	maskFields := make([]string, 0)
+	if requestMaskFields == nil || len(requestMaskFields) == 0 {
+		return maskFields
+	}
+	for _, field := range requestMaskFields {
+		switch field {
+		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_NAME:
+			maskFields = append(maskFields, model.FieldMaskName)
+		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_AMOUNT:
+			maskFields = append(maskFields, model.FieldMaskAmount)
+		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_COMMENTS:
+			maskFields = append(maskFields, model.FieldMaskComments)
+		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_RENEWAL_LIKELIHOOD:
+			maskFields = append(maskFields, model.FieldMaskRenewalLikelihood)
+		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_MAX_AMOUNT:
+			maskFields = append(maskFields, model.FieldMaskMaxAmount)
+		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_RENEWED_AT:
+			maskFields = append(maskFields, model.FieldMaskRenewedAt)
+		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_ADJUSTED_RATE:
+			maskFields = append(maskFields, model.FieldMaskAdjustedRate)
+		}
+	}
+	return utils.RemoveDuplicates(maskFields)
 }

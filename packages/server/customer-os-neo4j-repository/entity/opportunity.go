@@ -40,6 +40,7 @@ type RenewalDetails struct {
 	RenewalUpdatedByUserId string
 	RenewalUpdatedByUserAt *time.Time
 	RenewalApproved        bool
+	RenewalAdjustedRate    int64
 }
 
 type OpportunityEntities []OpportunityEntity

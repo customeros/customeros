@@ -16,6 +16,7 @@ enum OpportunityMaskField {
   OPPORTUNITY_PROPERTY_MAX_AMOUNT = 6;
   OPPORTUNITY_PROPERTY_RENEW_APPROVED = 7;
   OPPORTUNITY_PROPERTY_RENEWED_AT = 8;
+  OPPORTUNITY_PROPERTY_ADJUSTED_RATE = 9;
 }
 
 // Define an enum for internalType
@@ -61,33 +62,6 @@ message CreateOpportunityGrpcRequest {
   string organizationId = 19;
 }
 
-message CreateRenewalOpportunityGrpcRequest {
-  string tenant = 1;
-  string loggedInUserId = 2;
-  string contractId = 3;
-  RenewalLikelihood renewalLikelihood = 4;
-  SourceFields sourceFields = 5;
-  google.protobuf.Timestamp createdAt = 6;
-  google.protobuf.Timestamp updatedAt = 7;
-  bool RenewalApproved = 8;
-  google.protobuf.Timestamp renewedAt = 9;
-}
-
-message UpdateRenewalOpportunityGrpcRequest {
-  string id = 1;
-  string tenant = 2;
-  string loggedInUserId = 3;
-  string comments = 4;
-  RenewalLikelihood renewalLikelihood = 5;
-  google.protobuf.Timestamp updatedAt = 6;
-  double amount = 7;
-  SourceFields sourceFields = 8;
-  repeated OpportunityMaskField fieldsMask = 9;
-  string ownerUserId = 10;
-  bool renewalApproved = 11;
-  google.protobuf.Timestamp renewedAt = 12;
-}
-
 message UpdateOpportunityGrpcRequest {
   string id = 1;
   string tenant = 2;
@@ -106,6 +80,35 @@ message UpdateOpportunityGrpcRequest {
   SourceFields sourceFields = 17;
   ExternalSystemFields externalSystemFields = 18;
   repeated OpportunityMaskField fieldsMask = 19;
+}
+
+message CreateRenewalOpportunityGrpcRequest {
+  string tenant = 1;
+  string loggedInUserId = 2;
+  string contractId = 3;
+  RenewalLikelihood renewalLikelihood = 4;
+  SourceFields sourceFields = 5;
+  google.protobuf.Timestamp createdAt = 6;
+  google.protobuf.Timestamp updatedAt = 7;
+  bool renewalApproved = 8;
+  google.protobuf.Timestamp renewedAt = 9;
+  int64 renewalAdjustedRate = 10;
+}
+
+message UpdateRenewalOpportunityGrpcRequest {
+  string id = 1;
+  string tenant = 2;
+  string loggedInUserId = 3;
+  string comments = 4;
+  RenewalLikelihood renewalLikelihood = 5;
+  google.protobuf.Timestamp updatedAt = 6;
+  double amount = 7;
+  SourceFields sourceFields = 8;
+  repeated OpportunityMaskField fieldsMask = 9;
+  string ownerUserId = 10;
+  bool renewalApproved = 11;
+  google.protobuf.Timestamp renewedAt = 12;
+  int64 renewalAdjustedRate = 13;
 }
 
 message CloseLooseOpportunityGrpcRequest {
