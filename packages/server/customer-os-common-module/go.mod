@@ -55,7 +55,7 @@ require (
 
 require (
 	github.com/Boostport/mjml-go v0.14.6
-	github.com/aws/aws-sdk-go v1.51.28
+	github.com/aws/aws-sdk-go v1.51.29
 	github.com/bytedance/sonic v1.11.3 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20230717121745-296ad89f973d // indirect
