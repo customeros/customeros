@@ -26,7 +26,7 @@ type OpportunityService interface {
 	UpdateRenewal(ctx context.Context, opportunityId string, renewalLikelihood neo4jenum.RenewalLikelihood, amount *float64, comments *string, ownerUserId *string, adjustedRate *int64, appSource string) error
 	GetById(ctx context.Context, id string) (*neo4jentity.OpportunityEntity, error)
 	GetOpportunitiesForContracts(ctx context.Context, contractIds []string) (*neo4jentity.OpportunityEntities, error)
-	UpdateRenewalsForOrganization(ctx context.Context, organizationId string, renewalLikelihood neo4jenum.RenewalLikelihood) error
+	UpdateRenewalsForOrganization(ctx context.Context, organizationId string, renewalLikelihood neo4jenum.RenewalLikelihood, renewalAdjustedRate *int64) error
 }
 type opportunityService struct {
 	log          logger.Logger
@@ -206,11 +206,11 @@ func (s *opportunityService) UpdateRenewal(ctx context.Context, opportunityId st
 	return nil
 }
 
-func (s *opportunityService) UpdateRenewalsForOrganization(ctx context.Context, organizationId string, renewalLikelihood neo4jenum.RenewalLikelihood) error {
+func (s *opportunityService) UpdateRenewalsForOrganization(ctx context.Context, organizationId string, renewalLikelihood neo4jenum.RenewalLikelihood, renewalAdjustedRate *int64) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.UpdateRenewalsForOrganization")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("organizationId", organizationId), log.String("renewalLikelihood", renewalLikelihood.String()))
+	span.LogFields(log.String("organizationId", organizationId), log.String("renewalLikelihood", renewalLikelihood.String()), log.Object("renewalAdjustedRate", renewalAdjustedRate))
 
 	_, err := s.services.OrganizationService.GetById(ctx, organizationId)
 	if err != nil {
@@ -226,7 +226,7 @@ func (s *opportunityService) UpdateRenewalsForOrganization(ctx context.Context, 
 
 	for _, opportunityDbNode := range opportunityDbNodes {
 		opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
-		if err := s.UpdateRenewal(ctx, opportunity.Id, renewalLikelihood, nil, nil, nil, nil, constants.AppSourceCustomerOsApi); err != nil {
+		if err := s.UpdateRenewal(ctx, opportunity.Id, renewalLikelihood, nil, nil, nil, renewalAdjustedRate, constants.AppSourceCustomerOsApi); err != nil {
 			tracing.TraceErr(span, err)
 			return err
 		}

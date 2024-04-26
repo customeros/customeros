@@ -73,7 +73,7 @@ func (r *mutationResolver) OpportunityRenewalUpdateAllForOrganization(ctx contex
 	tracing.LogObjectAsJson(span, "input", input)
 
 	if input.RenewalLikelihood != nil {
-		err := r.Services.OpportunityService.UpdateRenewalsForOrganization(ctx, input.OrganizationID, mapper.MapOpportunityRenewalLikelihoodFromModel(input.RenewalLikelihood))
+		err := r.Services.OpportunityService.UpdateRenewalsForOrganization(ctx, input.OrganizationID, mapper.MapOpportunityRenewalLikelihoodFromModel(input.RenewalLikelihood), input.RenewalAdjustedRate)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			graphql.AddErrorf(ctx, "Failed to update renewal opportunities for organization %s", input.OrganizationID)

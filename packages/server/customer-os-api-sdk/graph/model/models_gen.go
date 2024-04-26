@@ -1946,8 +1946,9 @@ func (Opportunity) IsNode()            {}
 func (this Opportunity) GetID() string { return this.ID }
 
 type OpportunityRenewalUpdateAllForOrganizationInput struct {
-	OrganizationID    string                        `json:"organizationId"`
-	RenewalLikelihood *OpportunityRenewalLikelihood `json:"renewalLikelihood,omitempty"`
+	OrganizationID      string                        `json:"organizationId"`
+	RenewalLikelihood   *OpportunityRenewalLikelihood `json:"renewalLikelihood,omitempty"`
+	RenewalAdjustedRate *int64                        `json:"renewalAdjustedRate,omitempty"`
 }
 
 type OpportunityRenewalUpdateInput struct {

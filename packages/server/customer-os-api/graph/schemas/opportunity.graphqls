@@ -85,6 +85,7 @@ input OpportunityUpdateInput {
 }
 
 input OpportunityRenewalUpdateAllForOrganizationInput {
-    organizationId:     ID!
-    renewalLikelihood:  OpportunityRenewalLikelihood
+    organizationId:         ID!
+    renewalLikelihood:      OpportunityRenewalLikelihood
+    renewalAdjustedRate:    Int64
 }

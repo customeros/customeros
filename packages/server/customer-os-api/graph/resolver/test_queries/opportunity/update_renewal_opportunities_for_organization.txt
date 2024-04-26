@@ -3,6 +3,7 @@ opportunityRenewal_UpdateAllForOrganization(
     input: {
         organizationId: $organizationId
         renewalLikelihood: MEDIUM_RENEWAL
+        renewalAdjustedRate: 50
     }
   ) {
     metadata {
