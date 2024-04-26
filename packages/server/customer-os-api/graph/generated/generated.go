@@ -14548,6 +14548,7 @@ input OpportunityUpdateInput {
 input OpportunityRenewalUpdateAllForOrganizationInput {
     organizationId:     ID!
     renewalLikelihood:  OpportunityRenewalLikelihood
+    renewalAdjustedRate:    Int64
 }`, BuiltIn: false},
 	{Name: "../schemas/order.graphqls", Input: `type Order {
     id: ID!
@@ -98245,7 +98246,7 @@ func (ec *executionContext) unmarshalInputOpportunityRenewalUpdateAllForOrganiza
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"organizationId", "renewalLikelihood"}
+	fieldsInOrder := [...]string{"organizationId", "renewalLikelihood", "renewalAdjustedRate"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -98266,6 +98267,13 @@ func (ec *executionContext) unmarshalInputOpportunityRenewalUpdateAllForOrganiza
 				return it, err
 			}
 			it.RenewalLikelihood = data
+		case "renewalAdjustedRate":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("renewalAdjustedRate"))
+			data, err := ec.unmarshalOInt642ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RenewalAdjustedRate = data
 		}
 	}
 

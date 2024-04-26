@@ -100,30 +100,37 @@ func (h *contractHandler) UpdateActiveRenewalOpportunityLikelihood(ctx context.C
 	opportunityEntity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
 
 	var renewalLikelihood neo4jenum.RenewalLikelihood
+	renewalAdjustedRate := opportunityEntity.RenewalDetails.RenewalAdjustedRate
 	if contractEntity.EndedAt != nil &&
 		opportunityEntity.RenewalDetails.RenewalLikelihood != neo4jenum.RenewalLikelihoodZero &&
 		opportunityEntity.RenewalDetails.RenewedAt != nil &&
 		contractEntity.EndedAt.Before(*opportunityEntity.RenewalDetails.RenewedAt) {
 		// check if likelihood should be set to Zero
 		renewalLikelihood = neo4jenum.RenewalLikelihoodZero
+		renewalAdjustedRate = int64(0)
 	} else if opportunityEntity.RenewalDetails.RenewalLikelihood == neo4jenum.RenewalLikelihoodZero &&
 		opportunityEntity.RenewalDetails.RenewedAt != nil &&
 		(contractEntity.EndedAt == nil || contractEntity.EndedAt.After(*opportunityEntity.RenewalDetails.RenewedAt)) {
 		// check if likelihood should be set to Medium
 		renewalLikelihood = neo4jenum.RenewalLikelihoodMedium
+		renewalAdjustedRate = int64(50)
 	}
 
 	if renewalLikelihood != "" {
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
 			return h.grpcClients.OpportunityClient.UpdateRenewalOpportunity(ctx, &opportunitypb.UpdateRenewalOpportunityGrpcRequest{
-				Tenant:            tenant,
-				Id:                opportunityEntity.Id,
-				RenewalLikelihood: renewalLikelihoodForGrpcRequest(renewalLikelihood),
+				Tenant:              tenant,
+				Id:                  opportunityEntity.Id,
+				RenewalLikelihood:   renewalLikelihoodForGrpcRequest(renewalLikelihood),
+				RenewalAdjustedRate: renewalAdjustedRate,
 				SourceFields: &commonpb.SourceFields{
 					AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 				},
-				FieldsMask: []opportunitypb.OpportunityMaskField{opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_RENEWAL_LIKELIHOOD},
+				FieldsMask: []opportunitypb.OpportunityMaskField{
+					opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_RENEWAL_LIKELIHOOD,
+					opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_ADJUSTED_RATE,
+				},
 			})
 		})
 		if err != nil {

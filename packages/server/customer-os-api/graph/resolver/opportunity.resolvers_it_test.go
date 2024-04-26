@@ -217,8 +217,10 @@ func TestMutationResolver_OpportunityRenewalUpdateAllForOrganization(t *testing.
 			require.Equal(t, constants.AppSourceCustomerOsApi, renewalOpportunity.SourceFields.AppSource)
 			require.Equal(t, opportunitypb.RenewalLikelihood_MEDIUM_RENEWAL, renewalOpportunity.RenewalLikelihood)
 			require.Equal(t, "", renewalOpportunity.OwnerUserId)
+			require.Equal(t, int64(50), renewalOpportunity.RenewalAdjustedRate)
 			require.ElementsMatch(t, []opportunitypb.OpportunityMaskField{
-				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_RENEWAL_LIKELIHOOD},
+				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_RENEWAL_LIKELIHOOD,
+				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_ADJUSTED_RATE},
 				renewalOpportunity.FieldsMask)
 			calledUpdateRenewalOpportunityCounter++
 			return &opportunitypb.OpportunityIdGrpcResponse{}, nil
