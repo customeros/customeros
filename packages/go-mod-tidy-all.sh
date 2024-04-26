@@ -39,4 +39,10 @@ cd customer-os-data-upkeeper
 go mod tidy
 cd ../sync-gmail-raw
 go mod tidy
+cd ../sync-gmail
+go mod tidy
+cd ../sync-customer-os-data
+go mod tidy
+cd ../customer-os-dedup
+go mod tidy
 cd ../..
