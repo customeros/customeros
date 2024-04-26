@@ -37,7 +37,9 @@ export default function SignIn({
             <Image
               src={CustomOsLogo}
               alt='CustomerOS'
-              className='size-[264px]'
+              // className='size-[264px]'
+              width={264}
+              height={264}
             />
             <h2 className='text-gray-900 leading-9 font-bold text-3xl py-3 mt-[-40px]'>
               Welcome back
@@ -96,9 +98,11 @@ export default function SignIn({
           </div>
         </div>
       </div>
-      <div
-        className=' bg-cover rounded-s-[80px] bg-no-repeat'
-        style={{ backgroundImage: `url(${Background.src})` }}
+
+      <Image
+        src={Background}
+        alt='Background'
+        className='bg-cover rounded-s-[80px] bg-no-repeat h-full'
       />
     </>
   );

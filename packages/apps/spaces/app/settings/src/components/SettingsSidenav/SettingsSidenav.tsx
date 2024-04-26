@@ -3,10 +3,8 @@ import React from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { useLocalStorage } from 'usehooks-ts';
-import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { cn } from '@ui/utils/cn';
-import { Map01 } from '@ui/media/icons/Map01';
 import { Receipt } from '@ui/media/icons/Receipt';
 import { Dataflow03 } from '@ui/media/icons/Dataflow03';
 import { AlertSquare } from '@ui/media/icons/AlertSquare';
@@ -18,7 +16,6 @@ import { NotificationCenter } from '@shared/components/Notifications/Notificatio
 export const SettingsSidenav = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const isMasterPlansEnabled = useFeatureIsOn('settings-master-plans-view');
   const [lastActivePosition, setLastActivePosition] = useLocalStorage(
     `customeros-player-last-position`,
     { ['settings']: 'oauth', root: 'organization' },
@@ -90,22 +87,6 @@ export const SettingsSidenav = () => {
             />
           }
         />
-        {isMasterPlansEnabled && (
-          <SidenavItem
-            label='Master plans'
-            isActive={checkIsActive('master-plans')}
-            onClick={handleItemClick('master-plans')}
-            icon={
-              <Map01
-                className={cn(
-                  checkIsActive('master-plans')
-                    ? 'text-gray-700'
-                    : 'text-gray-500',
-                )}
-              />
-            }
-          />
-        )}
       </div>
       <div className='flex flex-col space-y-1 flex-grow justify-end'>
         <NotificationCenter />

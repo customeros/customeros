@@ -2,7 +2,7 @@
 import React, { useRef, useEffect } from 'react';
 
 import { Metadata } from '@graphql/types';
-import { FormInput } from '@ui/form/Input/FormInput2';
+import { FormInput } from '@ui/form/Input/FormInput';
 
 export const BankNameInput = ({
   formId,

@@ -1,7 +1,18 @@
-import { Icon, IconProps } from '@ui/media/Icon';
+import React from 'react';
 
-export const Outlook = (props: IconProps) => (
-  <Icon viewBox='0 0 32 28' fill='none' boxSize='4' {...props}>
+import { twMerge } from 'tailwind-merge';
+
+interface IconProps extends React.SVGAttributes<SVGElement> {
+  className?: string;
+}
+
+export const Outlook = ({ className, ...props }: IconProps) => (
+  <svg
+    viewBox='0 0 32 28'
+    fill='none'
+    {...props}
+    className={twMerge('inline-block size-4', className)}
+  >
     <g id='outlook'>
       <g id='rectangle'>
         <rect x='10' width='20' height='28' rx='2' fill='#1066B5' />
@@ -151,5 +162,5 @@ export const Outlook = (props: IconProps) => (
         <stop offset='1' stopColor='#0F65B5' />
       </linearGradient>
     </defs>
-  </Icon>
+  </svg>
 );

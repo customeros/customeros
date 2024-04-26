@@ -1,42 +1,31 @@
 import { useRef, useState, useEffect, forwardRef } from 'react';
 
-import { Flex, Input, InputProps } from '@chakra-ui/react';
+import { Input, InputProps } from '@ui/form/Input/Input';
 
 export const ResizableInput = forwardRef<HTMLInputElement, InputProps>(
   (props: InputProps, ref) => {
     const spanRef = useRef<HTMLSpanElement>(null);
-    const [width, setWidth] = useState('0px');
-
+    const [width, setWidth] = useState('10px');
     useEffect(() => {
-      const spanWidth = spanRef.current?.offsetWidth ?? 0;
-      setWidth(`${spanWidth}px`);
-    }, [props.value]);
+      const measureWidth = () => {
+        if (spanRef.current) {
+          const spanWidth = spanRef.current?.offsetWidth ?? 0;
+          setWidth(`${spanWidth}px`);
+        }
+      };
+      measureWidth();
+    }, [props.value, props.defaultValue]);
 
     return (
       <>
-        <Flex
-          as='span'
+        <span
           ref={spanRef}
-          fontSize={props.fontSize ?? props.size}
-          fontWeight={props.fontWeight}
-          sx={{
-            zIndex: -1,
-            position: 'absolute',
-            height: '0px',
-            display: 'inline-block',
-            visibility: 'hidden',
-            whiteSpace: 'pre',
-          }}
+          className={`z-[-1] absolute h-0 inline-block invisible`}
         >
-          {props.value}
-        </Flex>
-        <Input
-          ref={ref}
-          w={width}
-          minW={2} // accessibility after removing value
-          {...props}
-          data-1p-ignore
-        />
+          {props.value || props.defaultValue || ''}
+        </span>
+
+        <Input ref={ref} data-1p-ignore {...props} style={{ width: width }} />
       </>
     );
   },

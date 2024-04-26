@@ -20,12 +20,11 @@ import {
 
 import { Gmail } from '@ui/media/icons/Gmail';
 import { Slack } from '@ui/media/icons/Slack';
-import { Spinner } from '@ui/feedback/Spinner';
 import { Google } from '@ui/media/logos/Google';
-import { Switch } from '@ui/form/Switch/Switch2';
-import { FormLabel } from '@ui/form/FormElement';
+import { Switch } from '@ui/form/Switch/Switch';
 import { Outlook } from '@ui/media/logos/Outlook';
 import { GCalendar } from '@ui/media/icons/GCalendar';
+import { Spinner } from '@ui/feedback/Spinner/Spinner';
 import { toastError, toastSuccess } from '@ui/presentation/Toast';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 
@@ -245,16 +244,21 @@ export const AuthPanel = () => {
               <div className='flex flex-col items-start gap-4'>
                 <div className='flex gap-1 items-center'>
                   <Gmail className='size-6' />
-                  <FormLabel mb='0'>Sync Google Mail</FormLabel>
+                  <label className='mb-0'>Sync Google Mail</label>
                 </div>
 
                 <div className='flex gap-1 items-center'>
                   <GCalendar className='size-6' />
-                  <FormLabel mb='0'>Sync Google Calendar</FormLabel>
+                  <label className='mb-0'>Sync Google Calendar</label>
                 </div>
               </div>
 
-              {googleSettingsLoading && <Spinner size='sm' color='green.500' />}
+              {googleSettingsLoading && (
+                <Spinner
+                  label='Google Loading'
+                  className='text-white fill-success-500 size-5 ml-2'
+                />
+              )}
               {!googleSettingsLoading && (
                 <Switch
                   isChecked={googleSettings.gmailSyncEnabled}
@@ -285,10 +289,13 @@ export const AuthPanel = () => {
           <div className='flex space-x-4 items-center'>
             <div className='flex alig-middle space-x-1'>
               <Outlook className='size-6' />
-              <FormLabel mb='0'>Sync Microsoft Outlook</FormLabel>
+              <label className='mb-0'>Sync Microsoft Outlook</label>
             </div>
             {loading ? (
-              <Spinner size='sm' color='green.500' />
+              <Spinner
+                label='Outlook Loading'
+                className='text-white fill-success-500 size-5 ml-2'
+              />
             ) : (
               <Switch
                 colorScheme='success'
@@ -317,9 +324,14 @@ export const AuthPanel = () => {
           <div className='flex space-x-4 items-center'>
             <div className='flex alig-middle space-x-1'>
               <Slack className='size-6' />
-              <FormLabel mb='0'>Sync Slack</FormLabel>
+              <label className='mb-0'>Sync Slack</label>
             </div>
-            {slackSettingsLoading && <Spinner size='sm' color='green.500' />}
+            {slackSettingsLoading && (
+              <Spinner
+                label='Slack Loading'
+                className='text-white fill-success-500 size-5 ml-2'
+              />
+            )}
             {!slackSettingsLoading && (
               <Switch
                 isChecked={slackSettings.slackEnabled}

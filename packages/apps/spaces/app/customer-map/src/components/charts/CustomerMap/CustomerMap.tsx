@@ -5,10 +5,10 @@ import { useFeatureIsOn } from '@growthbook/growthbook-react';
 import ParentSize from '@visx/responsive/lib/components/ParentSize';
 
 import { cn } from '@ui/utils/cn';
-import { useDisclosure } from '@ui/utils';
 import { Skeleton } from '@ui/feedback/Skeleton';
+import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog/InfoDialog2';
+import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog/InfoDialog';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 import { useCustomerMapQuery } from '@customerMap/graphql/customerMap.generated';
 
@@ -24,7 +24,7 @@ export const CustomerMap = () => {
   const client = getGraphQLClient();
   const { data, isLoading } = useCustomerMapQuery(client);
   const { data: globalCacheData } = useGlobalCacheQuery(client);
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { open: isOpen, onOpen, onClose } = useDisclosure();
   const isTaller = useFeatureIsOn('taller-customer-map-chart');
 
   const chartData = (data?.dashboard_CustomerMap ?? []).map((d) => ({

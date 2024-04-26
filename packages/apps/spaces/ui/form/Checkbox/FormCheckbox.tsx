@@ -1,7 +1,7 @@
 import { useField } from 'react-inverted-form';
-import React, { useRef, ChangeEvent, PropsWithChildren } from 'react';
+import React, { useRef, PropsWithChildren } from 'react';
 
-import { Checkbox, CheckboxProps } from '@chakra-ui/react';
+import { Checkbox, CheckboxProps } from './Checkbox';
 
 export interface FormCheckboxProps extends Omit<CheckboxProps, 'onChange'> {
   name: string;
@@ -14,22 +14,21 @@ export const FormCheckbox = ({
   children,
   ...props
 }: PropsWithChildren<FormCheckboxProps>) => {
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLButtonElement>(null);
   const { getInputProps } = useField(name, formId);
   const { value, onChange } = getInputProps();
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    onChange?.(e.target.checked);
+  const handleChange = (isChecked: boolean) => {
+    onChange?.(isChecked);
   };
 
   return (
     <Checkbox
       {...props}
-      value={value}
       ref={inputRef}
       isChecked={value}
-      onChange={handleChange}
-      isDisabled={false}
+      onChange={(isChecked) => handleChange(isChecked as boolean)}
+      disabled={false}
     >
       {children}
     </Checkbox>

@@ -3,7 +3,6 @@ import { PropsWithChildren } from 'react';
 import { escapeForSlackWithMarkdown } from 'slack-to-html';
 
 import { cn } from '@ui/utils/cn';
-import { Text } from '@ui/typography/Text';
 import { Slack } from '@ui/media/logos/Slack';
 import { User01 } from '@ui/media/icons/User01';
 import { Avatar } from '@ui/media/Avatar/Avatar';
@@ -60,7 +59,7 @@ export const SlackMessageCard: React.FC<SlackMessageCardProps> = ({
               name={name}
               variant='roundedSquare'
               size='md'
-              icon={<User01 color='gray.500' height='1.8rem' />}
+              icon={<User01 className='text-gray-500 size-7' />}
               className={cn(profilePhotoUrl ? '' : 'border border-gray-200')}
               src={profilePhotoUrl || undefined}
             />
@@ -77,15 +76,15 @@ export const SlackMessageCard: React.FC<SlackMessageCardProps> = ({
                     {date}
                   </p>
                 </div>
-                <ViewInExternalAppButton
-                  icon={<Slack height={16} />}
-                  url={sourceUrl}
-                />
+                <ViewInExternalAppButton icon={<Slack />} url={sourceUrl} />
               </div>
-              <Text
-                className='slack-container'
-                pointerEvents={showDateOnHover ? 'none' : 'initial'}
-                noOfLines={showDateOnHover ? 4 : undefined}
+              <p
+                className={cn(
+                  showDateOnHover
+                    ? 'pointer-events-none line-clamp-4'
+                    : 'pointer-events-auto',
+                  'slack-container',
+                )}
                 dangerouslySetInnerHTML={{ __html: displayContent }}
               />
               {children}

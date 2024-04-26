@@ -1,4 +1,3 @@
-import { Flex } from '@ui/layout/Flex';
 import { Organization } from '@graphql/types';
 import { Skeleton } from '@ui/feedback/Skeleton';
 import { createColumnHelper } from '@ui/presentation/Table';
@@ -167,9 +166,9 @@ export const columns = [
       />
     ),
     skeleton: () => (
-      <Flex flexDir='column' gap='1'>
+      <div className='flex flex-col gap-1'>
         <Skeleton className='w-[33%] h-[18px]' />
-      </Flex>
+      </div>
     ),
   }),
   columnHelper.accessor('accountDetails', {

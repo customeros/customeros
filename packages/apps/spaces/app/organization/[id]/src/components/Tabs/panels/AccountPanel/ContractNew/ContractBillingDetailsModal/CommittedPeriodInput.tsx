@@ -2,7 +2,7 @@ import { useField } from 'react-inverted-form';
 import React, { memo, useRef, useState } from 'react';
 
 import { Button } from '@ui/form/Button/Button';
-import { ResizableInput } from '@ui/form/Input/ResizableInput2';
+import { ResizableInput } from '@ui/form/Input/ResizableInput';
 
 export interface CommittedPeriodInputProps {
   formId: string;

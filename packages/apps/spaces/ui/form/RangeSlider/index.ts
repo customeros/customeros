@@ -1,6 +1,1 @@
-export {
-  RangeSlider,
-  RangeSliderTrack,
-  RangeSliderFilledTrack,
-  RangeSliderThumb,
-} from '@chakra-ui/react';
+export * from './RangeSlider';

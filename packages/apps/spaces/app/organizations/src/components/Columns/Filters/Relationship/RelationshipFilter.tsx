@@ -5,10 +5,8 @@ import { produce } from 'immer';
 import { useRecoilValue } from 'recoil';
 import { Column } from '@tanstack/react-table';
 
-import { VStack } from '@ui/layout/Stack';
-import { Text } from '@ui/typography/Text';
 import { Organization } from '@graphql/types';
-import { Checkbox, CheckboxGroup } from '@ui/form/Checkbox';
+import { Checkbox } from '@ui/form/Checkbox/Checkbox';
 
 import { FilterHeader, useFilterToggle } from '../shared/FilterHeader';
 import {
@@ -63,21 +61,22 @@ export const RelationshipFilter = ({
     onFilterValueChange?.(filterValue.isActive ? filterValue.value : undefined);
   }, [filterValue.value.length, filterValue.isActive]);
 
+  //need to be checked if is ok
   return (
-    <CheckboxGroup size='md' value={filter.value?.map((v) => String(v))}>
+    <>
       <FilterHeader
         isChecked={toggle.isActive}
         onToggle={toggle.handleChange}
         onDisplayChange={toggle.handleClick}
       />
-      <VStack spacing={2} align='flex-start'>
-        <Checkbox value='true' onChange={handleSelect(true)}>
-          <Text fontSize='sm'>Customer</Text>
+      <div className='flex flex-col gap-2 items-start'>
+        <Checkbox isChecked={true} onChange={handleSelect(true)}>
+          <p className='text-sm'>Customer</p>
         </Checkbox>
-        <Checkbox value='false' onChange={handleSelect(false)}>
-          <Text fontSize='sm'>Prospect</Text>
+        <Checkbox isChecked={false} onChange={handleSelect(false)}>
+          <p className='text-sm'>Prospect</p>
         </Checkbox>
-      </VStack>
-    </CheckboxGroup>
+      </div>
+    </>
   );
 };

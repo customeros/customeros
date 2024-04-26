@@ -15,15 +15,14 @@ import { useQueryClient } from '@tanstack/react-query';
 import { SelectOption } from '@ui/utils/types';
 import { Button } from '@ui/form/Button/Button';
 import { Flag04 } from '@ui/media/icons/Flag04';
-import { Heading } from '@ui/typography/Heading';
 import { toastError } from '@ui/presentation/Toast';
 import { Trophy01 } from '@ui/media/icons/Trophy01';
 import { FormSelect } from '@ui/form/Select/FormSelect';
-import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
+import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { OnboardingStatus, OnboardingDetails } from '@graphql/types';
 import { useTimelineMeta } from '@organization/src/components/Timeline/state';
-import { FormAutoresizeTextarea } from '@ui/form/Textarea/FormAutoresizeTextarea2';
+import { FormAutoresizeTextarea } from '@ui/form/Textarea/FormAutoresizeTextarea';
 import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
 import { useUpdateOnboardingStatusMutation } from '@organization/src/graphql/updateOnboardingStatus.generated';
 import {
@@ -204,9 +203,7 @@ export const OnboardingStatusModal = ({
                   <Flag04 />
                 )}
               </FeaturedIcon>
-              <Heading fontSize='lg' mt='6'>
-                Update onboarding status
-              </Heading>
+              <h2 className='text-lg mt-6'>Update onboarding status</h2>
             </ModalHeader>
             <ModalBody className='gap-4 flex flex-col'>
               <FormSelect

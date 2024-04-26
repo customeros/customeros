@@ -11,12 +11,12 @@ import { Button } from '@ui/form/Button/Button';
 import { Spinner } from '@ui/feedback/Spinner/Spinner';
 import { FormSelect } from '@ui/form/Select/FormSelect';
 import { FormCurrencyInput } from '@ui/form/CurrencyInput';
-import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
+import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
 import { useGetUsersQuery } from '@shared/graphql/getUsers.generated';
-import { FormAutoresizeTextarea } from '@ui/form/Textarea/FormAutoresizeTextarea2';
+import { FormAutoresizeTextarea } from '@ui/form/Textarea/FormAutoresizeTextarea';
 import { GetContractsQuery } from '@organization/src/graphql/getContracts.generated';
 import { UpdateOpportunityRenewalMutation } from '@organization/src/graphql/updateOpportunityRenewal.generated';
 import { likelihoodButtons } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/RenewalARR/utils';
@@ -32,6 +32,7 @@ import {
   ModalBody,
   ModalFooter,
   ModalHeader,
+  ModalPortal,
   ModalContent,
   ModalOverlay,
   ModalCloseButton,
@@ -62,12 +63,14 @@ export const RenewalDetailsModal = ({
           open={data?.internalStage !== InternalStage.ClosedLost && isOpen}
           onOpenChange={onClose}
         >
-          <ModalOverlay />
-          <RenewalDetailsForm
-            data={data}
-            onClose={onClose}
-            updateOpportunityMutation={updateOpportunityMutation}
-          />
+          <ModalPortal>
+            <ModalOverlay />
+            <RenewalDetailsForm
+              data={data}
+              onClose={onClose}
+              updateOpportunityMutation={updateOpportunityMutation}
+            />
+          </ModalPortal>
         </Modal>
       )}
     </>
@@ -275,16 +278,19 @@ const LikelihoodButtonGroup = ({
               : idx === 1
               ? 'rounded-none'
               : 'border-s-0 rounded-s-none rounded-e-lg !important',
-            'w-full',
+            'w-full data-[selected=true]:bg-gray-50 !important',
           )}
-          leftIcon={<Dot colorScheme={button.colorScheme} />}
           onBlur={() => onBlur?.(button.likelihood)}
           onClick={(e) => {
             e.preventDefault();
             onChange?.(button.likelihood);
           }}
+          data-selected={value === button.likelihood}
         >
-          {button.label}
+          <div className='flex items-center gap-1'>
+            <Dot colorScheme={button.colorScheme} />
+            {button.label}
+          </div>
         </Button>
       ))}
     </div>

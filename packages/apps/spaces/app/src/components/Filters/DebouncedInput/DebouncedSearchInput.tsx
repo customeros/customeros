@@ -8,15 +8,15 @@ import {
   useImperativeHandle,
 } from 'react';
 
-import { Input } from '@ui/form/Input';
+import { Input } from '@ui/form/Input/Input';
 import { Delete } from '@ui/media/icons/Delete';
 import { IconButton } from '@ui/form/IconButton';
 import { SearchSm } from '@ui/media/icons/SearchSm';
 import {
   InputGroup,
-  InputLeftElement,
-  InputRightElement,
-} from '@ui/form/InputGroup';
+  LeftElement,
+  RightElement,
+} from '@ui/form/InputGroup/InputGroup';
 
 interface DebouncedInputProps {
   value: string;
@@ -60,11 +60,11 @@ export const DebouncedSearchInput = memo(
 
       return (
         <InputGroup>
-          <InputLeftElement w='fit-content'>
-            <SearchSm color='gray.500' />
-          </InputLeftElement>
+          <LeftElement className='mb-[2px]'>
+            <SearchSm className='text-gray-500' />
+          </LeftElement>
           <Input
-            pl='6'
+            className='pl-6 border-transparent focus:border-0 hover:border-transparent'
             value={value}
             ref={innerRef}
             variant='flushed'
@@ -73,15 +73,15 @@ export const DebouncedSearchInput = memo(
             onChange={handleChange}
           />
           {value.length && (
-            <InputRightElement w='fit-content'>
+            <RightElement>
               <IconButton
                 size='xs'
                 variant='ghost'
                 onClick={handleClear}
                 aria-label='search organization'
-                icon={<Delete color='gray.500' />}
+                icon={<Delete className='text-gray-500' />}
               />
-            </InputRightElement>
+            </RightElement>
           )}
         </InputGroup>
       );

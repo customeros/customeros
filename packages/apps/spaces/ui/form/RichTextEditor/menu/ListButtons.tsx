@@ -1,6 +1,5 @@
 import React from 'react';
 
-import { Flex } from '@chakra-ui/react';
 import { useActive, useCommands } from '@remirror/react';
 
 import { ListNumbered } from '@ui/media/icons/ListNumbered';
@@ -13,7 +12,7 @@ export const ListButtons = () => {
   const active = useActive();
 
   return (
-    <Flex gap={2}>
+    <div className='flex gap-2'>
       <ToolbarButton
         label='Numbered list'
         onClick={() => {
@@ -32,6 +31,6 @@ export const ListButtons = () => {
         isActive={active.bulletList()}
         icon={<ListBulleted color='gray.400' />}
       />
-    </Flex>
+    </div>
   );
 };

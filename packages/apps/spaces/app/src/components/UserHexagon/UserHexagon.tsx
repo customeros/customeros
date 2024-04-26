@@ -1,6 +1,4 @@
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
-import { Tooltip } from '@ui/overlay/Tooltip';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 
 interface UserHexagonProps {
   name: string;
@@ -11,7 +9,7 @@ interface UserHexagonProps {
 export const UserHexagon = ({ name, isCurrent, color }: UserHexagonProps) => {
   return (
     <Tooltip label={name} hasArrow>
-      <Flex w='26px' h='28px' align='center' justify='center' cursor='default'>
+      <div className='flex w-[26px] h-[28px] align-middle justify-center cursor-default'>
         <svg
           xmlns='http://www.w3.org/2000/svg'
           width='26'
@@ -30,10 +28,13 @@ export const UserHexagon = ({ name, isCurrent, color }: UserHexagonProps) => {
           />
         </svg>
 
-        <Text fontSize='sm' color={isCurrent ? 'white' : color} zIndex={2}>
+        <p
+          className='text-sm z-[2]'
+          style={{ color: isCurrent ? 'white' : color }}
+        >
           {getInitials(name)}
-        </Text>
-      </Flex>
+        </p>
+      </div>
     </Tooltip>
   );
 };

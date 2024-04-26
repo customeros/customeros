@@ -1,105 +1,59 @@
-import React from 'react';
+import { forwardRef } from 'react';
 import { useField } from 'react-inverted-form';
-import {
-  DatePicker as ReactDatePicker,
-  DatePickerProps as ReactDatePickerProps,
-} from 'react-date-picker';
+import Calendar, { CalendarProps } from 'react-calendar';
 
-import { FormLabel, FormControl } from '@chakra-ui/react';
+import { ChevronLeft } from '@ui/media/icons/ChevronLeft';
+import { ChevronRight } from '@ui/media/icons/ChevronRight';
 
-import { Box } from '@ui/layout/Box';
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
-import { Delete } from '@ui/media/icons/Delete';
-import { DateTimeUtils } from '@spaces/utils/date';
-import { Calendar } from '@ui/media/icons/Calendar';
 type DateInputValue = null | string | number | Date;
 
-interface DatePickerProps extends ReactDatePickerProps {
+interface DatePickerProps extends CalendarProps {
   name: string;
-  label: string;
-  inset?: string;
   formId: string;
-  placeholder?: string;
-  calendarIconHidden?: boolean;
+  label?: string;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onBlur?: (e: any) => void;
+  labelProps?: React.HTMLProps<HTMLLabelElement>;
 }
 
-export const DatePicker: React.FC<DatePickerProps> = ({
-  label,
-  name,
-  formId,
-  placeholder,
-  calendarIconHidden,
-  inset,
-  value,
-}) => {
-  const { getInputProps } = useField(name, formId);
-  const { id, onChange } = getInputProps();
-  const handleDateInputChange = (data?: DateInputValue) => {
-    if (!data) return onChange(null);
-    const date = new Date(data);
-    const normalizedDate = new Date(
-      Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
-    );
-    onChange(normalizedDate);
-  };
+export const DatePicker = forwardRef(
+  (
+    {
+      name,
+      formId,
+      value,
+      onBlur,
+      label,
+      labelProps,
+      ...props
+    }: DatePickerProps,
+    ref,
+  ) => {
+    const { getInputProps } = useField(name, formId);
+    const { id, onChange } = getInputProps();
 
-  return (
-    <FormControl>
-      <FormLabel fontWeight={600} color='gray.700' fontSize='sm' mb={-1}>
-        {label}
-      </FormLabel>
-      <Flex
-        sx={{
-          '& .react-date-picker__calendar-button': {
-            pl: 0,
-          },
-          '& .react-date-picker__calendar': {
-            inset: `${inset ?? '120% 0px auto auto'} !important`,
-          },
-          '& .react-date-picker__clear-button': {
-            top: '7px',
-          },
-          '& .react-calendar__month-view__weekdays__weekday': {
-            textTransform: 'capitalize',
-          },
-        }}
-      >
-        <ReactDatePicker
-          id={id}
-          name={name}
-          clearIcon={value && <Delete color='gray.500' height='1rem' />}
-          onChange={(val) => handleDateInputChange(val as DateInputValue)}
+    const handleDateInputChange = (data?: DateInputValue) => {
+      if (!data) return onChange(null);
+      const date = new Date(data);
+      const normalizedDate = new Date(
+        Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
+      );
+      onChange(normalizedDate);
+    };
+
+    return (
+      <div id={id} onBlur={onBlur}>
+        <label {...labelProps}> {label} </label>
+        <Calendar
+          onChange={(value) => handleDateInputChange(value as DateInputValue)}
           defaultValue={value}
-          formatShortWeekday={(_, date) =>
-            DateTimeUtils.format(date.toISOString(), DateTimeUtils.shortWeekday)
-          }
-          formatMonth={(_, date) =>
-            DateTimeUtils.format(
-              date.toISOString(),
-              DateTimeUtils.abreviatedMonth,
-            )
-          }
-          calendarIcon={
-            <Flex alignItems='center'>
-              {!calendarIconHidden && (
-                <Box mr={3} color='gray.500'>
-                  <Calendar />
-                </Box>
-              )}
-
-              <Text color={value ? 'gray.700' : 'gray.400'} role='button'>
-                {value
-                  ? DateTimeUtils.format(
-                      (value as Date)?.toISOString(),
-                      DateTimeUtils.dateWithAbreviatedMonth,
-                    )
-                  : `${placeholder ? placeholder : 'Start date'}`}
-              </Text>
-            </Flex>
-          }
+          nextLabel={<ChevronRight />}
+          prevLabel={<ChevronLeft />}
+          ref={ref}
+          {...props}
         />
-      </Flex>
-    </FormControl>
-  );
-};
+      </div>
+    );
+  },
+);

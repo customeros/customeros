@@ -1,7 +1,6 @@
 import { match } from 'ts-pattern';
 
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
+import { cn } from '@ui/utils/cn';
 import { OnboardingStatus } from '@graphql/types';
 import {
   getDifferenceFromNow,
@@ -49,18 +48,22 @@ export const OnboardingCell = ({
       OnboardingStatus.Successful,
       OnboardingStatus.OnTrack,
       OnboardingStatus.Done,
-      () => 'success.500',
+      () => 'text-success-500',
     )
-    .with(OnboardingStatus.NotApplicable, () => 'gray.400')
-    .with(OnboardingStatus.Late, OnboardingStatus.Stuck, () => 'warning.500')
+    .with(OnboardingStatus.NotApplicable, () => 'text-gray-400')
+    .with(
+      OnboardingStatus.Late,
+      OnboardingStatus.Stuck,
+      () => 'text-warning-500',
+    )
     .otherwise(() => 'gray.500');
 
   const label = labelMap[status];
 
   return (
-    <Flex flexDir='column'>
-      <Text color={color}>{label}</Text>
-      <Text color='gray.500'>{timeElapsed}</Text>
-    </Flex>
+    <div className='flex flex-col'>
+      <p className={cn(color)}>{label}</p>
+      <p className='text-gray-500'>{timeElapsed}</p>
+    </div>
   );
 };

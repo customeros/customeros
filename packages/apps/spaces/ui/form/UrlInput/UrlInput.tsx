@@ -3,7 +3,7 @@ import React, { memo, useRef, useState } from 'react';
 
 import { LinkExternal02 } from '@ui/media/icons/LinkExternal02';
 
-import { Input } from '../Input/Input2';
+import { Input } from '../Input/Input';
 import { formatSocialUrl } from './util';
 import { IconButton } from '../IconButton/IconButton';
 

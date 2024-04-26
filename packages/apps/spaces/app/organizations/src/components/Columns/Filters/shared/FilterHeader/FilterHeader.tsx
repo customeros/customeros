@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react';
 
-import { Switch } from '@ui/form/Switch/Switch2';
+import { Switch } from '@ui/form/Switch/Switch';
 
 interface FilterHeaderProps {
   isChecked: boolean;

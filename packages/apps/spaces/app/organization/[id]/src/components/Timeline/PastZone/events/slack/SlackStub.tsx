@@ -2,9 +2,9 @@
 import React, { FC } from 'react';
 
 import { cn } from '@ui/utils/cn';
-import { Avatar } from '@ui/media/Avatar';
 import { Button } from '@ui/form/Button/Button';
 import { User02 } from '@ui/media/icons/User02';
+import { Avatar } from '@ui/media/Avatar/Avatar';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { InteractionEventWithDate } from '@organization/src/components/Timeline/types';
 import { SlackMessageCard } from '@organization/src/components/Timeline/PastZone/events/slack/SlackMessageCard';
@@ -51,7 +51,7 @@ export const SlackStub: FC<{ slackEvent: InteractionEventWithDate }> = ({
                   name={displayName}
                   src={photoUrl ?? undefined}
                   variant='roundedSquareSmall'
-                  icon={<User02 color='primary.700' />}
+                  icon={<User02 className='text-primary-700' />}
                   key={`uniq-slack-thread-participant-${slackEvent.id}-${id}`}
                 />
               );

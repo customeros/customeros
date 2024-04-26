@@ -11,7 +11,7 @@ import { Button } from '@ui/form/Button/Button';
 import { File02 } from '@ui/media/icons/File02';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { toastError } from '@ui/presentation/Toast';
-import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
+import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useCreateContractMutation } from '@organization/src/graphql/createContract.generated';
 import {

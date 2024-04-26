@@ -1,10 +1,9 @@
 import React, { FC } from 'react';
 
 import { useActive, useCommands } from '@remirror/react';
-import { Flex, HStack, StackDivider } from '@chakra-ui/react';
 
-import { Button } from '@ui/form/Button';
 import { Quote } from '@ui/media/icons/Quote';
+import { Button } from '@ui/form/Button/Button';
 
 import { ListButtons } from './ListButtons';
 import { ToolbarButton } from './ToolbarButton';
@@ -18,22 +17,12 @@ export const BasicEditorToolbar: FC<{
   const active = useActive();
 
   return (
-    <Flex justifyContent='space-between' alignItems='center' flex={1} minH={8}>
-      <HStack
-        w='full'
-        bg='transparent'
-        divider={
-          <StackDivider
-            m={0}
-            borderColor='gray.200'
-            borderWidth='1px'
-            marginInlineStart={0}
-            marginInlineEnd={0}
-          />
-        }
-      >
+    <div className='flex justify-between items-center flex-1 min-h-8'>
+      <div className='flex bg-transparent w-full'>
         <TextFormatButtons />
+        <div className='h-8 bg-gray-200 w-[1px] mr-[2px]' />
         <ListButtons />
+        <div className='h-8 bg-gray-200 w-[1px] mr-[2px]' />
         <ToolbarButton
           label='Quote'
           onClick={() => {
@@ -43,19 +32,12 @@ export const BasicEditorToolbar: FC<{
           isActive={active.blockquote()}
           icon={<Quote color='gray.400' />}
         />
-      </HStack>
+      </div>
       <Button
-        className='customeros-remirror-submit-button'
+        className='customeros-remirror-submit-button font-semibold rounded-lg px-3 py-1 text-sm'
         variant='outline'
         colorScheme='gray'
-        fontWeight={600}
-        borderRadius='lg'
-        pt={1}
-        pb={1}
-        pl={3}
-        pr={3}
         size='sm'
-        fontSize='sm'
         isDisabled={isSending}
         isLoading={isSending}
         loadingText='Sending'
@@ -63,6 +45,6 @@ export const BasicEditorToolbar: FC<{
       >
         Send
       </Button>
-    </Flex>
+    </div>
   );
 };

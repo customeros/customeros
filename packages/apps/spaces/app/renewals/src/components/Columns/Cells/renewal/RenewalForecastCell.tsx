@@ -1,5 +1,4 @@
 import { cn } from '@ui/utils/cn';
-import { Text } from '@ui/typography/Text';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 
 interface RenewalForecastCellProps {
@@ -21,7 +20,7 @@ export const RenewalForecastCell = ({
     formattedAmount !== formattedPotentialAmount;
 
   if (formattedAmount === 'Unknown')
-    return <Text color='gray.400'>Unknown</Text>;
+    return <p className='text-gray-400'>Unknown</p>;
 
   return (
     <span className='flex flex-col justify-center'>

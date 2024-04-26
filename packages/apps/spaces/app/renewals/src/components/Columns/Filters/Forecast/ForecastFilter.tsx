@@ -11,10 +11,10 @@ import {
 import { produce } from 'immer';
 import { Column } from '@tanstack/react-table';
 
-import { Input } from '@ui/form/Input';
+import { Input } from '@ui/form/Input/Input';
 import { Organization } from '@graphql/types';
 import { InputGroup } from '@ui/form/InputGroup';
-import { LeftElement } from '@ui/form/Input/InputGroup';
+import { LeftElement } from '@ui/form/InputGroup/InputGroup';
 import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
 import {
   RangeSlider,

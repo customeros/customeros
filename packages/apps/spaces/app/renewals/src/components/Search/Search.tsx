@@ -2,9 +2,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 
 import debounce from 'lodash/debounce';
 
-import { Input } from '@ui/form/Input/Input2';
+import { Input } from '@ui/form/Input/Input';
 import { SearchSm } from '@ui/media/icons/SearchSm';
-import { InputGroup, LeftElement } from '@ui/form/Input/InputGroup';
+import { InputGroup, LeftElement } from '@ui/form/InputGroup/InputGroup';
 
 export const Search = () => {
   const router = useRouter();

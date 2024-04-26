@@ -1,6 +1,9 @@
 import { useState, useContext, createContext, PropsWithChildren } from 'react';
 
-import { useDisclosure, UseDisclosureReturn } from '@ui/utils';
+import {
+  useDisclosure,
+  UseDisclosureReturn,
+} from '@ui/utils/hooks/useDisclosure';
 
 // Moved to upperscope due to error in safari https://linear.app/customer-os/issue/COS-619/scrollbar-overlaps-the-renewal-modals-in-safari
 
@@ -14,11 +17,11 @@ interface AccountPanelState {
 const modalDefaultState: UseDisclosureReturn = {
   onClose: () => null,
   onOpen: () => null,
-  isOpen: false,
+  open: false,
   onToggle: () => null,
   isControlled: false,
-  getButtonProps: () => null,
-  getDisclosureProps: () => null,
+  getButtonProps: () => ({}),
+  getDisclosureProps: () => ({}),
 };
 
 const UpdatePanelModalStateContext = createContext<{
@@ -82,8 +85,8 @@ export const AccountModalsContextProvider = ({
           <AccountPanelStateContext.Provider
             value={{
               isModalOpen:
-                arrForecastInfoModal.isOpen ||
-                updateRenewalDetailsModal.isOpen ||
+                arrForecastInfoModal.open ||
+                updateRenewalDetailsModal.open ||
                 isPanelModalOpen,
             }}
           >

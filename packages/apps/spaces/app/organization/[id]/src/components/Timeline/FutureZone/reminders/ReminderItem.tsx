@@ -8,7 +8,7 @@ import { useDidMount, useDebounceFn } from 'rooks';
 import { cn } from '@ui/utils/cn';
 import { Button } from '@ui/form/Button/Button';
 import { useTimelineMeta } from '@organization/src/components/Timeline/state';
-import { FormAutoresizeTextarea } from '@ui/form/Textarea/FormAutoresizeTextarea2';
+import { FormAutoresizeTextarea } from '@ui/form/Textarea/FormAutoresizeTextarea';
 
 import { ReminderEditForm } from './types';
 import { ReminderPostit, ReminderDueDatePicker } from '../../shared';

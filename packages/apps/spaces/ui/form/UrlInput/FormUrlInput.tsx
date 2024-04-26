@@ -2,7 +2,7 @@ import React from 'react';
 import { useField } from 'react-inverted-form';
 
 import { UrlInput } from './UrlInput';
-import { FormInputProps } from '../Input/FormInput2';
+import { FormInputProps } from '../Input/FormInput';
 
 interface FormUrlInputProps extends FormInputProps {
   name: string;

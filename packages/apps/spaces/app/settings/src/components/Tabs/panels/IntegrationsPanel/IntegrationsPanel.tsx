@@ -9,7 +9,7 @@ import {
   useIntegrationApp,
 } from '@integration-app/react';
 
-import { Input } from '@ui/form/Input/Input2';
+import { Input } from '@ui/form/Input/Input';
 import { Skeleton } from '@ui/feedback/Skeleton';
 import { toastError } from '@ui/presentation/Toast';
 

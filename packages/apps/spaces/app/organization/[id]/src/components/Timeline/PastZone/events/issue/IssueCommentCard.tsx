@@ -35,10 +35,9 @@ export const IssueCommentCard: FC<IssueCommentCardProps> = ({
     <>
       <Card
         className={cn(
-          isPrivate ? '' : 'shadow-xs',
-          isPrivate ? 'bg-transparent' : 'bg-white',
+          isPrivate ? 'bg-transparent' : 'bg-white shadow-xs',
           isCustomer ? 'ml-0' : 'ml-6',
-          'text-[14px] flex flex-row w-[calc(100%-24px)] ',
+          'text-[14px] flex flex-row w-[calc(100%-24px)]',
         )}
       >
         <CardContent className='p-3 overflow-hidden'>

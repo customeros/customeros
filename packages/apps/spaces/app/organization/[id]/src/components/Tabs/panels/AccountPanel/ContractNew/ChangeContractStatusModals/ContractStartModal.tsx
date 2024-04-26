@@ -10,7 +10,7 @@ import { cn } from '@ui/utils/cn';
 import { Button } from '@ui/form/Button/Button';
 import { DotLive } from '@ui/media/icons/DotLive';
 import { DateTimeUtils } from '@spaces/utils/date';
-import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
+import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 import { Exact, ContractStatus, ContractUpdateInput } from '@graphql/types';
 import { DatePickerUnderline } from '@ui/form/DatePicker/DatePickerUnderline';

@@ -10,16 +10,15 @@ import { useSession } from 'next-auth/react';
 import { useRemirror } from '@remirror/react';
 import { htmlToProsemirrorNode } from 'remirror';
 
-import { useDisclosure } from '@ui/utils';
 import { Send03 } from '@ui/media/icons/Send03';
-import { CardBody } from '@ui/presentation/Card';
 import { InteractionEvent } from '@graphql/types';
+import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { basicEditorExtensions } from '@ui/form/RichTextEditor/extensions';
 import { useTimelineMeta } from '@organization/src/components/Timeline/state';
 import { getEmailParticipantsNameAndEmail } from '@spaces/utils/getParticipantsName';
 import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
 import { HtmlContentRenderer } from '@ui/presentation/HtmlContentRenderer/HtmlContentRenderer';
-import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog2';
+import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog';
 import { getEmailParticipantsByType } from '@organization/src/components/Timeline/PastZone/events/email/utils';
 import { handleSendEmail } from '@organization/src/components/Timeline/PastZone/events/email/compose-email/utils';
 import { useUpdateCacheWithNewEvent } from '@organization/src/components/Timeline/PastZone/hooks/updateCacheWithNewEvent';
@@ -71,7 +70,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
 }) => {
   const { modalContent } = useTimelineEventPreviewStateContext();
   const { closeModal } = useTimelineEventPreviewMethodsContext();
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { open: isOpen, onOpen, onClose } = useDisclosure();
 
   const event = modalContent as InteractionEvent;
   const subject = event?.interactionSession?.name || '';
@@ -244,7 +243,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
           copyLabel='Copy link to this email'
         />
 
-        <CardBody mt={0} p='6' pt='4' overflow='auto'>
+        <div className='mt-0 p-6 pt-4 overflow-auto'>
           <div className='flex flex-row justify-between mb-3'>
             <div className='flex flex-col items-start max-w-[calc(100%-70px)] overflow-hidden text-sm line-clamp-1'>
               <EmailMetaDataEntry entryType='From' content={event?.sentBy} />
@@ -270,7 +269,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
           {event?.content && (
             <HtmlContentRenderer htmlContent={event.content} />
           )}
-        </CardBody>
+        </div>
 
         <ComposeEmailContainer
           {...filteredParticipants}

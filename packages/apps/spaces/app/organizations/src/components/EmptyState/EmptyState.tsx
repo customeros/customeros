@@ -1,9 +1,6 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 
-import { Flex } from '@ui/layout/Flex';
-import { Button } from '@ui/form/Button';
-import { Center } from '@ui/layout/Center';
-import { Text } from '@ui/typography/Text';
+import { Button } from '@ui/form/Button/Button';
 import { EmptyTable } from '@ui/media/logos/EmptyTable';
 
 import { useOrganizationsPageMethods } from '../../hooks';
@@ -52,43 +49,27 @@ export const EmptyState = () => {
       };
 
   return (
-    <Center h='100%' bg='white'>
-      <Flex direction='column' height={500} width={500}>
-        <Flex position='relative'>
-          <EmptyTable
-            width='152px'
-            height='120'
-            position='absolute'
-            top='25%'
-            right='35%'
-          />
+    <div className='flex items-center justify-center h-full bg-white'>
+      <div className='flex flex-col h-[500px] w-[500px]'>
+        <div className='flex relative'>
+          <EmptyTable className='w-[152px] h-[120px] absolute top-[25%] right-[35%]' />
           <HalfCirclePattern height={500} width={500} />
-        </Flex>
-        <Flex
-          flexDir='column'
-          textAlign='center'
-          align='center'
-          top='5vh'
-          transform='translateY(-230px)'
-        >
-          <Text color='gray.900' fontSize='md' fontWeight='semibold'>
-            {options.title}
-          </Text>
-          <Text maxW='400px' fontSize='sm' color='gray.600' my={1}>
+        </div>
+        <div className='flex flex-col text-center items-center top-[5vh] transform translate-y-[-230px]'>
+          <p className='text-gray-900 text-md font-semibold'>{options.title}</p>
+          <p className='max-w-[400px] text-sm text-gray-600 my-1'>
             {options.description}
-          </Text>
+          </p>
 
           <Button
             onClick={options.onClick}
-            mt='2'
-            w='min-content'
+            className='mt-2 min-w-min text-sm'
             variant='outline'
-            fontSize='sm'
           >
             {options.buttonLabel}
           </Button>
-        </Flex>
-      </Flex>
-    </Center>
+        </div>
+      </div>
+    </div>
   );
 };

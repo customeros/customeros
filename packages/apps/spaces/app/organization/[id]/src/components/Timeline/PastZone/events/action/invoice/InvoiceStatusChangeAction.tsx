@@ -4,7 +4,7 @@ import { cn } from '@ui/utils/cn';
 import { File02 } from '@ui/media/icons/File02';
 import { Action, ActionType } from '@graphql/types';
 import { FileCheck02 } from '@ui/media/icons/FileCheck02';
-import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
+import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 import { SlashCircle01 } from '@ui/media/icons/SlashCircle01';
 import { FileAttachment02 } from '@ui/media/icons/FileAttachment02';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
@@ -80,12 +80,25 @@ const InvoiceStatusChangeAction: React.FC<InvoiceStatusChangeActionProps> = ({
       onClick={() =>
         !isTemporary && metadata?.id && handleOpenInvoice(metadata.id)
       }
+<<<<<<< HEAD
       className={cn('flex items-center pointer focus:outline-none py-2', {
+=======
+      className={cn('flex items-center pointer focus:outline-none min-h-10 ', {
+>>>>>>> d8b939d0a (remove chakra)
         'not-allowed': isTemporary || !metadata?.id,
         'opacity-50': isTemporary,
       })}
     >
+<<<<<<< HEAD
       <FeaturedIcon size='md' colorScheme={colorSchemeMap[mode]}>
+=======
+      <FeaturedIcon
+        size='md'
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        colorScheme={colorSchemeMap[mode] as any}
+        className='mr-[10px]'
+      >
+>>>>>>> d8b939d0a (remove chakra)
         {iconMap[mode]}
       </FeaturedIcon>
       <p className='my-1 max-w-[500px] ml-5 text-sm text-gray-700 '>

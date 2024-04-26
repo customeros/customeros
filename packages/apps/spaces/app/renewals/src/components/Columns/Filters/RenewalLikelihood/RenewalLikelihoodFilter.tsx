@@ -5,7 +5,7 @@ import { produce } from 'immer';
 import { useRecoilValue } from 'recoil';
 import { Column } from '@tanstack/react-table';
 
-import { Checkbox } from '@ui/form/Checkbox/Checkbox2';
+import { Checkbox } from '@ui/form/Checkbox/Checkbox';
 import { OpportunityRenewalLikelihood } from '@graphql/types';
 
 import { FilterHeader, useFilterToggle } from '../shared';

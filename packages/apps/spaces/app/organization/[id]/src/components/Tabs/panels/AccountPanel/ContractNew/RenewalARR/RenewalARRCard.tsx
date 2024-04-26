@@ -8,12 +8,12 @@ import { cn } from '@ui/utils/cn';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { toastError } from '@ui/presentation/Toast';
 import { getDifferenceFromNow } from '@shared/util/date';
-import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
+import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 import { Card, CardHeader } from '@ui/presentation/Card/Card';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
-import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog/InfoDialog2';
+import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog/InfoDialog';
 import {
   Opportunity,
   InternalStage,
@@ -168,26 +168,6 @@ export const RenewalARRCard = ({
           modal.onOpen();
           setIsLocalOpen(true);
         }}
-        // sx={
-        //   hasRenewed
-        //     ? {
-        //         right: -2,
-        //         '&:after': {
-        //           content: "''",
-        //           width: 2,
-        //           height: '80%',
-        //           left: '-9px',
-        //           top: '6px',
-        //           bg: 'white',
-        //           position: 'absolute',
-        //           borderTopLeftRadius: 'md',
-        //           borderBottomLeftRadius: 'md',
-        //           border: '1px solid',
-        //           borderColor: 'gray.200',
-        //         },
-        //       }
-        //     : {}
-        // }
       >
         <CardHeader className='flex items-center justify-between w-full gap-4'>
           <FeaturedIcon size='md' colorScheme='primary' className='ml-2 mr-2'>
@@ -252,7 +232,7 @@ export const RenewalARRCard = ({
 
       {hasRenewalLikelihoodZero ? (
         <InfoDialog
-          isOpen={modal.isOpen && isLocalOpen}
+          isOpen={modal.open && isLocalOpen}
           onClose={modal.onClose}
           onConfirm={modal.onClose}
           confirmButtonLabel='Got it'
@@ -263,7 +243,7 @@ export const RenewalARRCard = ({
       ) : (
         <RenewalDetailsModal
           updateOpportunityMutation={updateOpportunityMutation}
-          isOpen={modal.isOpen && isLocalOpen}
+          isOpen={modal.open && isLocalOpen}
           onClose={() => {
             modal.onClose();
             setIsLocalOpen(false);

@@ -1,7 +1,18 @@
-import { Icon, IconProps } from '@ui/media/Icon';
+import React from 'react';
 
-export const IssueBgPattern = (props: IconProps) => (
-  <Icon viewBox='0 0 71 94' fill='none' boxSize='4' {...props}>
+import { twMerge } from 'tailwind-merge';
+
+interface IconProps extends React.SVGAttributes<SVGElement> {
+  className?: string;
+}
+
+export const IssueBgPattern = ({ className, ...props }: IconProps) => (
+  <svg
+    viewBox='0 0 71 94'
+    fill='none'
+    {...props}
+    className={twMerge('inline-block size-4', className)}
+  >
     <g opacity='0.5'>
       <mask
         id='mask0_6150_13056'
@@ -1732,5 +1743,5 @@ export const IssueBgPattern = (props: IconProps) => (
         />
       </g>
     </g>
-  </Icon>
+  </svg>
 );

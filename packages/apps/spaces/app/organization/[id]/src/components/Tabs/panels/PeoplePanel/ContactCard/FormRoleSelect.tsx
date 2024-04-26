@@ -1,9 +1,9 @@
 import { useRef } from 'react';
 
 import { cn } from '@ui/utils/cn';
-import { useOutsideClick } from '@ui/utils';
 import { FormSelect } from '@ui/form/Select/FormSelect';
 import { SelectOption } from '@shared/types/SelectOptions';
+import { useOutsideClick } from '@ui/utils/hooks/useOutsideClick';
 import {
   getMultiValueClassNames,
   getMultiValueLabelClassNames,

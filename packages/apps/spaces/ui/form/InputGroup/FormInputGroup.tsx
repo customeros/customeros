@@ -3,17 +3,11 @@
 import { forwardRef } from 'react';
 import { useField } from 'react-inverted-form';
 
-import { FormLabel, FormControl, VisuallyHidden } from '@chakra-ui/react';
+import { Input } from '../Input/Input';
+import { FormInputProps } from '../Input/FormInput';
+import { InputGroup, LeftElement, RightElement } from './InputGroup';
 
-import { Input } from '../Input';
-import {
-  InputGroup,
-  InputGroupProps,
-  InputLeftElement,
-  InputRightElement,
-} from './InputGroup';
-
-interface FormInputGroupProps extends InputGroupProps {
+interface FormInputGroupProps extends FormInputProps {
   name: string;
   formId: string;
   label?: string;
@@ -21,6 +15,7 @@ interface FormInputGroupProps extends InputGroupProps {
   isLabelVisible?: boolean;
   leftElement?: React.ReactNode;
   rightElement?: React.ReactNode;
+  labelProps?: React.HTMLAttributes<HTMLLabelElement>;
 }
 
 export const FormInputGroup = forwardRef((props: FormInputGroupProps, ref) => {
@@ -31,34 +26,28 @@ export const FormInputGroup = forwardRef((props: FormInputGroupProps, ref) => {
     isLabelVisible,
     leftElement,
     rightElement,
+    labelProps,
     autoFocus,
     ...rest
   } = props;
   const { getInputProps } = useField(name, formId);
 
   return (
-    <FormControl>
-      {isLabelVisible ? (
-        <FormLabel>{label}</FormLabel>
-      ) : (
-        <VisuallyHidden>
-          <FormLabel>{label}</FormLabel>
-        </VisuallyHidden>
-      )}
+    <div>
+      <label {...labelProps}>{label}</label>
+
       <InputGroup {...rest}>
-        {leftElement && (
-          <InputLeftElement w='4'>{leftElement}</InputLeftElement>
-        )}
+        {leftElement && <LeftElement>{leftElement}</LeftElement>}
         <Input
-          ref={ref}
+          ref={ref as React.Ref<HTMLInputElement>}
           {...getInputProps()}
-          pl='30px'
           autoComplete='off'
           {...rest}
+          variant='group'
           autoFocus={autoFocus}
         />
-        {rightElement && <InputRightElement>{rightElement}</InputRightElement>}
+        {rightElement && <RightElement>{rightElement}</RightElement>}
       </InputGroup>
-    </FormControl>
+    </div>
   );
 });

@@ -2,11 +2,11 @@ import Link from 'next/link';
 import { memo, useRef, useState } from 'react';
 
 import { cn } from '@ui/utils/cn';
+import { Input, InputProps } from '@ui/form/Input';
 import { formatSocialUrl } from '@ui/form/UrlInput/util';
-import { Input, InputProps } from '@ui/form/Input/Input2';
 import { IconButton } from '@ui/form/IconButton/IconButton';
+import { InputGroup, LeftElement } from '@ui/form/InputGroup';
 import { LinkExternal02 } from '@ui/media/icons/LinkExternal02';
-import { InputGroup, LeftElement } from '@ui/form/Input/InputGroup';
 
 import { SocialIcon } from './SocialIcons';
 

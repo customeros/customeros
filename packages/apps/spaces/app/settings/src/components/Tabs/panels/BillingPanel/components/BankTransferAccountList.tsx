@@ -7,7 +7,7 @@ import { useBankAccountsQuery } from '@settings/graphql/getBankAccounts.generate
 import { useBankTransferSelectionContext } from '@settings/components/Tabs/panels/BillingPanel/context/BankTransferSelectionContext';
 
 import { BankAccount } from '@graphql/types';
-import { FormSwitch } from '@ui/form/Switch/FormSwitch2';
+import { FormSwitch } from '@ui/form/Switch/FormSwitch';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 
 import { AddAccountButton } from './AddAccountButton';

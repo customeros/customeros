@@ -5,12 +5,12 @@ import { produce } from 'immer';
 import { useDebounce } from 'rooks';
 import { useQueryClient } from '@tanstack/react-query';
 
-import { useDisclosure } from '@ui/utils';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { toastError } from '@ui/presentation/Toast';
-import { FormInput } from '@ui/form/Input/FormInput2';
+import { FormInput } from '@ui/form/Input/FormInput';
 import { Contract, ContractStatus } from '@graphql/types';
 import { Divider } from '@ui/presentation/Divider/Divider';
+import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { Card, CardFooter, CardHeader } from '@ui/presentation/Card/Card';
 import { useUpdateContractMutation } from '@organization/src/graphql/updateContract.generated';
@@ -58,7 +58,7 @@ export const ContractCard = ({
   const {
     onOpen: onServiceLineItemsOpen,
     onClose: onServiceLineItemClose,
-    isOpen: isServceItemsModalOpen,
+    open: isServceItemsModalOpen,
   } = useDisclosure({
     id: 'service-line-items-modal',
   });

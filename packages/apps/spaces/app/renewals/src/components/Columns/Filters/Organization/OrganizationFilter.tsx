@@ -5,9 +5,8 @@ import { produce } from 'immer';
 import { useRecoilValue } from 'recoil';
 import { Column } from '@tanstack/react-table';
 
-import { Text } from '@ui/typography/Text';
 import { Organization } from '@graphql/types';
-import { Checkbox } from '@ui/form/Checkbox/Checkbox2';
+import { Checkbox } from '@ui/form/Checkbox/Checkbox';
 
 import { FilterHeader, useFilterToggle, DebouncedSearchInput } from '../shared';
 import {
@@ -111,7 +110,7 @@ export const OrganizationFilter = ({
         onChange={(isChecked) => handleShowEmpty(isChecked as boolean)}
         isChecked={filter.showEmpty}
       >
-        <Text fontSize='sm'>Unnamed</Text>
+        <p className='text-sm'>Unnamed</p>
       </Checkbox>
     </>
   );

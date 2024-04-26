@@ -5,17 +5,17 @@ import { useParams } from 'next/navigation';
 import { produce } from 'immer';
 import { InfiniteData, useQueryClient } from '@tanstack/react-query';
 
-import { Box } from '@ui/layout/Box';
-import { Select } from '@ui/form/SyncSelect';
+import { cn } from '@ui/utils/cn';
 import { Spinner } from '@ui/feedback/Spinner';
+import { Button } from '@ui/form/Button/Button';
 import { ActivityHeart } from '@ui/media/icons/ActivityHeart';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
+import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 import { useOrganizationQuery } from '@organization/src/graphql/organization.generated';
 import { GetOrganizationsQuery } from '@organizations/graphql/getOrganizations.generated';
 import { useUpdateOrganizationMutation } from '@shared/graphql/updateOrganization.generated';
 import { relationshipOptions } from '@organizations/components/Columns/Cells/relationship/util';
-import { contractButtonSelect } from '@organization/src/components/Tabs/shared/contractSelectStyles';
 
 export const RelationshipButton = () => {
   const client = getGraphQLClient();
@@ -71,93 +71,72 @@ export const RelationshipButton = () => {
   const selectedValue = relationshipOptions.find(
     (option) => option.value === data?.organization?.isCustomer,
   );
+  const spinnerColors = selectedValue?.value
+    ? 'text-success-500 fill-succes-700'
+    : 'text-gray-400 fill-gray-700';
 
   return (
-    <Box>
-      <Select
-        isSearchable={false}
-        isClearable={false}
-        isMulti={false}
-        value={selectedValue}
-        onChange={(value) =>
-          updateOrganization.mutate({
-            input: {
-              id,
-              isCustomer: value?.value,
-              patch: true,
-            },
-          })
-        }
-        options={relationshipOptions}
-        chakraStyles={{
-          ...contractButtonSelect,
-          container: (props, state) => {
-            const isCustomer = state.getValue()[0]?.value;
-
-            return {
-              ...props,
-              px: 2,
-              py: '1px',
-              border: '1px solid',
-              borderColor: isCustomer ? 'success.200' : 'gray.300',
-              backgroundColor: isCustomer ? 'success.50' : 'transparent',
-              color: isCustomer ? 'success.700' : 'gray.500',
-
-              borderRadius: '2xl',
-              fontSize: 'xs',
-              maxHeight: '22px',
-
-              '& > div': {
-                p: 0,
-                border: 'none',
-                fontSize: 'xs',
-                maxHeight: '22px',
-                minH: 'auto',
-              },
-            };
-          },
-          valueContainer: (props, state) => {
-            const isCustomer = state.getValue()[0]?.value;
-
-            return {
-              ...props,
-              p: 0,
-              border: 'none',
-              fontSize: 'xs',
-              maxHeight: '22px',
-              minH: 'auto',
-              color: isCustomer ? 'success.700' : 'gray.500',
-            };
-          },
-          singleValue: (props) => {
-            return {
-              ...props,
-              maxHeight: '22px',
-              p: 0,
-              minH: 'auto',
-              color: 'inherit',
-            };
-          },
-          menuList: (props) => {
-            return {
-              ...props,
-              w: 'fit-content',
-              left: '-32px',
-            };
-          },
-        }}
-        leftElement={
-          updateOrganization.isPending ? (
-            <Spinner
-              size='xs'
-              mr={1}
-              color={selectedValue?.value ? 'success.500' : 'gray.400'}
-            />
-          ) : selectedValue?.value ? (
-            <ActivityHeart className='text-success-500 mr-1' />
-          ) : null
-        }
-      />
-    </Box>
+    <div>
+      <Menu>
+        <MenuButton asChild>
+          <Button
+            variant='outline'
+            size='xxs'
+            colorScheme={
+              selectedValue?.label === 'Customer' ? 'success' : 'gray'
+            }
+            className={cn(
+              selectedValue?.label === 'Customer'
+                ? 'text-success-500'
+                : 'text-gray-500',
+              'rounded-full font-normal  text-ellipsis mb-[2.5px]',
+            )}
+            leftIcon={
+              updateOrganization.isPending ? (
+                <Spinner
+                  label='Organization loading'
+                  size='sm'
+                  className={cn(spinnerColors)}
+                />
+              ) : selectedValue?.value ? (
+                <ActivityHeart className='text-success-500' />
+              ) : (
+                <></>
+              )
+            }
+          >
+            {selectedValue?.label}
+          </Button>
+        </MenuButton>
+        <MenuList className='p-2'>
+          {relationshipOptions.map((option, idx) => (
+            <MenuItem
+              className={cn(
+                selectedValue?.label === option.label
+                  ? 'text-primary-600 bg-primary-50 hover:bg-primary-50 '
+                  : 'hover:bg-gray-100',
+                'px-2 py-1 border border-transparent hover:border-gray-200 hover:border rounded-md',
+              )}
+              key={idx}
+              onClick={() =>
+                updateOrganization.mutate({
+                  input: {
+                    id,
+                    isCustomer: option.value,
+                    patch: true,
+                  },
+                })
+              }
+            >
+              {option.label}
+            </MenuItem>
+          ))}
+        </MenuList>
+      </Menu>
+    </div>
   );
 };
+
+// borderColor: isCustomer ? 'success.200' : 'gray.300',
+// backgroundColor: isCustomer ? 'success.50' : 'transparent',
+// color: isCustomer ? 'success.700' : 'gray.500',

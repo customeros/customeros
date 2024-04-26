@@ -11,7 +11,6 @@ import { XClose } from '@ui/media/icons/XClose';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { CardHeader, CardContent } from '@ui/presentation/Card/Card';
 import { useGetTagsQuery } from '@organization/src/graphql/getTags.generated';
 import { LogEntryWithAliases } from '@organization/src/components/Timeline/types';
 import { HtmlContentRenderer } from '@ui/presentation/HtmlContentRenderer/HtmlContentRenderer';
@@ -23,7 +22,7 @@ import {
 
 import { PreviewEditor } from './preview/PreviewEditor';
 import { PreviewTags } from './preview/tags/PreviewTags';
-import { LogEntryDatePicker } from './preview/LogEntryDatePicker2';
+import { LogEntryDatePicker } from './preview/LogEntryDatePicker';
 import { LogEntryExternalLink } from './preview/LogEntryExternalLink';
 
 const getAuthor = (user: User) => {
@@ -52,7 +51,7 @@ export const LogEntryPreviewModal: React.FC = () => {
 
   return (
     <>
-      <CardHeader className='py-4 px-6 pb-1 sticky top-0 rounded-xl'>
+      <div className='py-4 px-6 pb-1 sticky top-0 rounded-xl'>
         <div className='flex justify-between items-center'>
           <div className='flex items-center'>
             <h2 className='text-sm font-medium'>Log entry</h2>
@@ -90,11 +89,11 @@ export const LogEntryPreviewModal: React.FC = () => {
             </Tooltip>
           </div>
         </div>
-      </CardHeader>
-      <CardContent className='mt-0 p-6 pt-0 overflow-auto max-h-[calc(100vh-9rem)]'>
+      </div>
+      <div className='mt-0 p-6 pt-0 overflow-auto max-h-[calc(100vh-9rem)]'>
         <div className='relative'>
           <Image
-            className='absolute top-[-2px] right-[-3px] w-[174px] h-[123px]'
+            className='absolute top-[-2px] right-[-23px] w-[174px] h-[123px]'
             src={noteImg}
             alt=''
           />
@@ -140,7 +139,7 @@ export const LogEntryPreviewModal: React.FC = () => {
             <LogEntryExternalLink externalLink={event?.externalLinks?.[0]} />
           )}
         </div>
-      </CardContent>
+      </div>
     </>
   );
 };

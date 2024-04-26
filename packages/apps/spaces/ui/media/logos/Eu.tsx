@@ -1,7 +1,18 @@
-import { Icon, IconProps } from '@ui/media/Icon';
+import React from 'react';
 
-export const Eu = (props: IconProps) => (
-  <Icon viewBox='0 0 24 24' fill='none' boxSize='4' {...props}>
+import { twMerge } from 'tailwind-merge';
+
+interface IconProps extends React.SVGAttributes<SVGElement> {
+  className?: string;
+}
+
+export const Eu = ({ className, ...props }: IconProps) => (
+  <svg
+    viewBox='0 0 24 24'
+    fill='none'
+    {...props}
+    className={twMerge('inline-block size-4', className)}
+  >
     <g clipPath='url(#clip0_6590_5974)'>
       <g clipPath='url(#clip1_6590_5974)'>
         <path d='M0 0H24V24H0V0Z' fill='#003399' />
@@ -19,5 +30,5 @@ export const Eu = (props: IconProps) => (
         <rect width='24' height='24' fill='white' />
       </clipPath>
     </defs>
-  </Icon>
+  </svg>
 );

@@ -1,16 +1,18 @@
-import React from 'react';
 import Image from 'next/image';
+import React, { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 
 import { DeleteIntegrationSettings, UpdateIntegrationSettings } from 'services';
 
-import { Fade } from '@ui/transitions/Fade';
-import { Input } from '@ui/form/Input/Input2';
+import { Input } from '@ui/form/Input/Input';
 import { Button } from '@ui/form/Button/Button';
-import { Collapse } from '@ui/transitions/Collapse';
-import { SlideFade } from '@ui/transitions/SlideFade';
 import { toastError, toastSuccess } from '@ui/presentation/Toast';
-import { AutoresizeTextarea } from '@ui/form/Textarea/AutoresizeTextarea2';
+import { AutoresizeTextarea } from '@ui/form/Textarea/AutoresizeTextarea';
+import {
+  CollapsibleRoot,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@ui/transitions/Collapse/Collapse';
 
 interface FieldDefinition {
   name: string;
@@ -41,7 +43,7 @@ export const SettingsIntegrationItem = ({
   onDisable,
   settingsChanged,
 }: Props) => {
-  const [collapsed, setCollapsed] = React.useState(true);
+  const [collapsed, setCollapsed] = useState(true);
 
   const { getValues, control, reset } = useForm({
     defaultValues: fields?.map(({ name }) => {
@@ -86,18 +88,20 @@ export const SettingsIntegrationItem = ({
   };
 
   return (
-    <div className='flex space-y-1 flex-col'>
-      <div className='flex justify-between my-2'>
+    <CollapsibleRoot
+      className='flex space-y-1 flex-col'
+      open={!collapsed}
+      onOpenChange={(value) => setCollapsed(!value)}
+    >
+      <div className='flex flex-row justify-between my-2'>
         <div className='flex items-center'>
           <Image className='mr-2' alt='' src={icon} width={20} height={20} />
-
           <span className='self-center text-md font-medium'>{name}</span>
         </div>
-
-        <div>
+        <CollapsibleTrigger className='w-fit' asChild={false}>
           {collapsed && (
             <div className='flex space-x-1'>
-              {state === 'ACTIVE' && (
+              {state === 'ACTIVE' && collapsed && (
                 <Button
                   size='sm'
                   variant='outline'
@@ -133,152 +137,131 @@ export const SettingsIntegrationItem = ({
               )}
             </div>
           )}
-
           {!collapsed && (
-            <Collapse in={!collapsed} style={{ overflow: 'unset' }}>
-              <Fade in={!collapsed}>
-                <div className='flex space-x-1'>
-                  {state === 'ACTIVE' && (
-                    <>
-                      <Button
-                        size='sm'
-                        variant='outline'
-                        colorScheme='gray'
-                        onClick={() => {
-                          setCollapsed(true);
-                          onCancel && onCancel();
-                          reset();
-                        }}
-                        style={{ marginRight: '10px' }}
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        size='sm'
-                        variant='outline'
-                        colorScheme='error'
-                        onClick={onRevoke}
-                        style={{ marginRight: '10px' }}
-                      >
-                        Revoke
-                      </Button>
-                      <Button
-                        size='sm'
-                        variant='outline'
-                        colorScheme='success'
-                        onClick={onSave}
-                      >
-                        Done
-                      </Button>
-                    </>
-                  )}
-
-                  {state === 'INACTIVE' && (
-                    <>
-                      <Button
-                        size='sm'
-                        variant='outline'
-                        colorScheme='gray'
-                        onClick={() => {
-                          setCollapsed(true);
-                          onCancel && onCancel();
-                          reset();
-                        }}
-                        style={{ marginRight: '10px' }}
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        size='sm'
-                        variant='outline'
-                        onClick={onSave}
-                        colorScheme='success'
-                      >
-                        Done
-                      </Button>
-                    </>
-                  )}
-                </div>
-              </Fade>
-            </Collapse>
-          )}
-        </div>
-      </div>
-
-      <div>
-        <Collapse
-          in={!collapsed}
-          style={{ overflow: 'hidden' }}
-          delay={{
-            exit: 2,
-          }}
-        >
-          <SlideFade in={!collapsed}>
-            <>
-              {!fields && (
-                <span className='w-full m-5 mt-0 font-medium'>Contact us!</span>
+            <div className='flex space-x-1'>
+              {state === 'ACTIVE' && (
+                <>
+                  <Button
+                    size='sm'
+                    variant='outline'
+                    colorScheme='gray'
+                    onClick={() => {
+                      setCollapsed(true);
+                      onCancel && onCancel();
+                      reset();
+                    }}
+                    style={{ marginRight: '10px' }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    size='sm'
+                    variant='outline'
+                    colorScheme='error'
+                    onClick={onRevoke}
+                    style={{ marginRight: '10px' }}
+                  >
+                    Revoke
+                  </Button>
+                  <Button
+                    size='sm'
+                    variant='outline'
+                    colorScheme='success'
+                    onClick={onSave}
+                  >
+                    Done
+                  </Button>
+                </>
               )}
 
-              {fields &&
-                fields.map((fieldDefinition: FieldDefinition) => (
-                  <div
-                    className=' flex mb-2 items-center'
-                    key={fieldDefinition.name}
+              {state === 'INACTIVE' && (
+                <>
+                  <Button
+                    size='sm'
+                    variant='outline'
+                    colorScheme='gray'
+                    onClick={() => {
+                      setCollapsed(true);
+                      onCancel && onCancel();
+                      reset();
+                    }}
+                    style={{ marginRight: '10px' }}
                   >
-                    <label
-                      className='mr-3 whitespace-nowrap'
-                      htmlFor={fieldDefinition.name}
-                    >
-                      {fieldDefinition.label}
-                    </label>
-
-                    <Controller
-                      // @ts-expect-error TODO: react-inverted-form should be used instead of hook-form
-                      name={`${fieldDefinition.name}`}
-                      control={control}
-                      render={({ field }) => {
-                        if (fieldDefinition.textarea) {
-                          return (
-                            <AutoresizeTextarea
-                              id={fieldDefinition.name}
-                              value={
-                                state === 'ACTIVE'
-                                  ? '******************'
-                                  : (field.value as string)
-                              }
-                              disabled={state === 'ACTIVE'}
-                              rows={1}
-                              onChange={({ target: { value } }) => {
-                                field.onChange(value);
-                              }}
-                              className='border-gray-200'
-                            />
-                          );
-                        } else {
-                          return (
-                            <Input
-                              id={fieldDefinition.name}
-                              value={
-                                state === 'ACTIVE'
-                                  ? '******************'
-                                  : (field.value as string)
-                              }
-                              disabled={state === 'ACTIVE'}
-                              onChange={({ target: { value } }) => {
-                                field.onChange(value);
-                              }}
-                              className='border-gray-200'
-                            />
-                          );
-                        }
-                      }}
-                    />
-                  </div>
-                ))}
-            </>
-          </SlideFade>
-        </Collapse>
+                    Cancel
+                  </Button>
+                  <Button
+                    size='sm'
+                    variant='outline'
+                    onClick={onSave}
+                    colorScheme='success'
+                  >
+                    Done
+                  </Button>
+                </>
+              )}
+            </div>
+          )}
+        </CollapsibleTrigger>
       </div>
-    </div>
+
+      <CollapsibleContent>
+        {!fields && (
+          <span className='w-full m-5 mt-0 font-medium'>Contact us!</span>
+        )}
+        {fields &&
+          fields.map((fieldDefinition: FieldDefinition) => (
+            <div className='flex mb-2 items-center' key={fieldDefinition.name}>
+              <label
+                className='mr-3 whitespace-nowrap'
+                htmlFor={fieldDefinition.name}
+              >
+                {fieldDefinition.label}
+              </label>
+
+              <Controller
+                // @ts-expect-error TODO: react-inverted-form should be used instead of hook-form
+                name={`${fieldDefinition.name}`}
+                control={control}
+                render={({ field }) => {
+                  if (fieldDefinition.textarea) {
+                    return (
+                      <AutoresizeTextarea
+                        id={fieldDefinition.name}
+                        value={
+                          state === 'ACTIVE'
+                            ? '******************'
+                            : (field.value as string)
+                        }
+                        disabled={state === 'ACTIVE'}
+                        rows={1}
+                        onChange={({ target: { value } }) => {
+                          field.onChange(value);
+                        }}
+                        className='border-gray-200'
+                      />
+                    );
+                  } else {
+                    return (
+                      <Input
+                        id={fieldDefinition.name}
+                        value={
+                          state === 'ACTIVE'
+                            ? '******************'
+                            : (field.value as string)
+                        }
+                        disabled={state === 'ACTIVE'}
+                        onChange={({ target: { value } }) => {
+                          field.onChange(value);
+                        }}
+                        className='border-gray-200'
+                      />
+                    );
+                  }
+                }}
+              />
+            </div>
+          ))}
+      </CollapsibleContent>
+    </CollapsibleRoot>
   );
 };

@@ -1,16 +1,15 @@
-import React, { useRef, MouseEventHandler } from 'react';
+import React, { MouseEventHandler } from 'react';
 
-import { Button } from '@ui/form/Button';
-import { Text } from '@ui/typography/Text';
+import { Button } from '@ui/form/Button/Button';
 import { InfoCircle } from '@ui/media/icons/InfoCircle';
-import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
+import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 import {
   AlertDialog,
   AlertDialogHeader,
   AlertDialogFooter,
   AlertDialogOverlay,
   AlertDialogContent,
-} from '@ui/overlay/AlertDialog';
+} from '@ui/overlay/AlertDialog/AlertDialog';
 
 interface InfoDialogProps {
   label?: string;
@@ -31,35 +30,29 @@ export const InfoDialog = ({
   children,
   confirmButtonLabel,
 }: InfoDialogProps) => {
-  const cancelRef = useRef<HTMLButtonElement>(null);
-
   return (
-    <AlertDialog
-      isOpen={isOpen}
-      onClose={onClose}
-      leastDestructiveRef={cancelRef}
-    >
+    <AlertDialog isOpen={isOpen} onClose={onClose}>
       <AlertDialogOverlay>
-        <AlertDialogContent
-          borderRadius='xl'
-          backgroundImage='/backgrounds/organization/circular-bg-pattern.png'
-          backgroundRepeat='no-repeat'
-        >
-          <AlertDialogHeader fontSize='lg' fontWeight='bold' pt='6'>
-            <FeaturedIcon size='lg' colorScheme='primary'>
+        <AlertDialogContent className='top-[25%] rounded-xl bg-[url(/backgrounds/organization/circular-bg-pattern.png)] bg-no-repeat'>
+          <AlertDialogHeader className='text-lg font-bold pt-6'>
+            <FeaturedIcon
+              size='lg'
+              colorScheme='primary'
+              className='translate-y-[-10px] translate-x-[10px]'
+            >
               <InfoCircle />
             </FeaturedIcon>
-            {label && <Text mt='4'>{label}</Text>}
+            {label && <p className='mt-4'>{label}</p>}
             {children ??
               (description && (
-                <Text mt='4' fontSize='md' color='gray.600' fontWeight='normal'>
+                <p className='mt-4 text-base text-gray-600 font-normal'>
                   {description}
-                </Text>
+                </p>
               ))}
           </AlertDialogHeader>
 
-          <AlertDialogFooter pb='6'>
-            <Button w='full' variant='outline' onClick={onConfirm}>
+          <AlertDialogFooter className='grid-cols-1'>
+            <Button className='w-full' variant='outline' onClick={onConfirm}>
               {confirmButtonLabel}
             </Button>
           </AlertDialogFooter>

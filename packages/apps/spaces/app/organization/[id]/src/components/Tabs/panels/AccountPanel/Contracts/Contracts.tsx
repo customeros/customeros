@@ -3,7 +3,6 @@
 import React, { FC } from 'react';
 import { useParams } from 'next/navigation';
 
-import { Flex } from '@ui/layout/Flex';
 import { Contract, Organization } from '@graphql/types';
 import { ARRForecast } from '@organization/src/components/Tabs/panels/AccountPanel/ARRForecast/ARRForecast';
 import { ContractCard as NewContractCard } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ContractCard';
@@ -30,12 +29,9 @@ export const Contracts: FC<ContractsProps> = ({ isLoading, organization }) => {
             currency={organization?.contracts?.[0]?.currency || 'USD'}
           />
           {organization?.contracts.map((contract) => (
-            <Flex
+            <div
+              className='flex gap-4 flex-col w-full mb-4'
               key={`contract-card-${contract.metadata.id}`}
-              flexDir='column'
-              gap={4}
-              w='full'
-              mb={4}
             >
               <ContractModalStatusContextProvider
                 id={id}
@@ -51,7 +47,7 @@ export const Contracts: FC<ContractsProps> = ({ isLoading, organization }) => {
                   />
                 </ContractModalsContextProvider>
               </ContractModalStatusContextProvider>
-            </Flex>
+            </div>
           ))}
         </>
       )}

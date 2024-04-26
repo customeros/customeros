@@ -24,19 +24,20 @@ import {
   useGetContractsQuery,
 } from '@organization/src/graphql/getContracts.generated';
 import {
-  Modal,
-  ModalFooter,
-  ModalHeader,
-  ModalContent,
-  ModalOverlay,
-} from '@ui/overlay/Modal/Modal';
-import {
   DataSource,
   BankAccount,
   InvoiceLine,
   ContractStatus,
   TenantBillingProfile,
 } from '@graphql/types';
+import {
+  Modal,
+  ModalFooter,
+  ModalHeader,
+  ModalPortal,
+  ModalContent,
+  ModalOverlay,
+} from '@ui/overlay/Modal/Modal';
 import {
   EditModalMode,
   useContractModalStateContext,
@@ -371,122 +372,63 @@ export const EditContractModal = ({
 
   return (
     <Modal open={isEditModalOpen} onOpenChange={handleCloseModal}>
-      <ModalOverlay />
-      <ModalContent
-        placement='center'
-        className='border-r-2 flex gap-6 bg-transparent shadow-none border-none'
-        style={{ minWidth: '971px', minHeight: '80vh', boxShadow: 'none' }}
-      >
-        <div className='relative'>
-          <motion.div
-            layout
-            data-isOpen={editModalMode === EditModalMode.ContractDetails}
-            variants={mainVariants as Variants}
-            animate={
-              editModalMode === EditModalMode.ContractDetails
-                ? 'open'
-                : 'closed'
-            }
-            onClick={() =>
-              editModalMode === EditModalMode.BillingDetails
-                ? onChangeModalMode(EditModalMode.ContractDetails)
-                : null
-            }
-            className={cn(
-              'flex flex-col gap-4 px-6 pb-6 pt-4 bg-white  rounded-lg justify-between relative h-[80vh] min-w-[424px]',
-              {
-                'cursor-pointer':
-                  editModalMode === EditModalMode.BillingDetails,
-              },
-            )}
-          >
-            <ModalHeader className='p-0 text-lg font-semibold'>
-              {data?.contract?.organizationLegalName ||
-                organizationName ||
-                "Unnamed's "}{' '}
-              contract details
-            </ModalHeader>
-
-            <ContractBillingDetailsForm
-              formId={formId}
-              contractId={contractId}
-              tenantBillingProfile={
-                tenantBillingProfile
-                  ?.tenantBillingProfiles?.[0] as TenantBillingProfile
-              }
-              renewedAt={renewsAt}
-              currency={state?.values?.currency?.value}
-              bankAccounts={bankAccountsData?.bankAccounts as BankAccount[]}
-              payAutomatically={state?.values?.payAutomatically}
-              billingEnabled={
-                tenantSettingsData?.tenantSettings?.billingEnabled
-              }
-            />
-            <ModalFooter className='p-0 flex'>
-              <Button
-                variant='outline'
-                colorScheme='gray'
-                onClick={handleCloseModal}
-                className='w-full'
-                size='md'
-              >
-                Cancel changes
-              </Button>
-              <Button
-                className='ml-3 w-full'
-                size='md'
-                variant='outline'
-                colorScheme='primary'
-                onClick={handleApplyChanges}
-                loadingText='Saving...'
-                isLoading={updateContract.isPending}
-              >
-                {saveButtonText}
-              </Button>
-            </ModalFooter>
-          </motion.div>
-          <motion.div
-            layout
-            data-isOpen={editModalMode === EditModalMode.BillingDetails}
-            variants={variants}
-            animate={
-              editModalMode === EditModalMode.BillingDetails ? 'open' : 'closed'
-            }
-            className='flex flex-col gap-4 px-6 pb-6 pt-4 bg-white rounded-lg justify-between relative shadow-2xl h-full min-w-[424px]'
-          >
+      <ModalPortal>
+        <ModalOverlay />
+        <ModalContent
+          placement='center'
+          className='border-r-2 flex gap-6 bg-transparent shadow-none border-none'
+          style={{ minWidth: '971px', minHeight: '80vh', boxShadow: 'none' }}
+        >
+          <div className='relative'>
             <motion.div
-              className='h-full flex flex-col justify-between'
-              animate={{
-                opacity: editModalMode === EditModalMode.BillingDetails ? 1 : 0,
-                transition: { duration: 0.2 },
-              }}
+              layout
+              data-isOpen={editModalMode === EditModalMode.ContractDetails}
+              variants={mainVariants as Variants}
+              animate={
+                editModalMode === EditModalMode.ContractDetails
+                  ? 'open'
+                  : 'closed'
+              }
+              onClick={() =>
+                editModalMode === EditModalMode.BillingDetails
+                  ? onChangeModalMode(EditModalMode.ContractDetails)
+                  : null
+              }
+              className={cn(
+                'flex flex-col gap-4 px-6 pb-6 pt-4 bg-white  rounded-lg justify-between relative h-[80vh] min-w-[424px]',
+                {
+                  'cursor-pointer':
+                    editModalMode === EditModalMode.BillingDetails,
+                },
+              )}
             >
-              <div className='flex flex-col relative justify-between'>
-                <ModalHeader className='p-0 text-lg font-semibold'>
-                  <div>
-                    {data?.contract?.organizationLegalName ||
-                      organizationName ||
-                      "Unnamed's "}{' '}
-                  </div>
-                  <span className='text-base font-normal'>
-                    These details are required to issue invoices
-                  </span>
-                </ModalHeader>
+              <ModalHeader className='p-0 text-lg font-semibold'>
+                {data?.contract?.organizationLegalName ||
+                  organizationName ||
+                  "Unnamed's "}{' '}
+                contract details
+              </ModalHeader>
 
-                <BillingDetailsForm
-                  values={addressState.values}
-                  formId={'billing-details-address-form'}
-                />
-              </div>
+              <ContractBillingDetailsForm
+                formId={formId}
+                contractId={contractId}
+                tenantBillingProfile={
+                  tenantBillingProfile
+                    ?.tenantBillingProfiles?.[0] as TenantBillingProfile
+                }
+                renewedAt={renewsAt}
+                currency={state?.values?.currency?.value}
+                bankAccounts={bankAccountsData?.bankAccounts as BankAccount[]}
+                payAutomatically={state?.values?.payAutomatically}
+                billingEnabled={
+                  tenantSettingsData?.tenantSettings?.billingEnabled
+                }
+              />
               <ModalFooter className='p-0 flex'>
                 <Button
                   variant='outline'
                   colorScheme='gray'
-                  onClick={() =>
-                    initialOpen === EditModalMode.BillingDetails
-                      ? handleCloseModal()
-                      : onChangeModalMode(EditModalMode.ContractDetails)
-                  }
+                  onClick={handleCloseModal}
                   className='w-full'
                   size='md'
                 >
@@ -497,55 +439,121 @@ export const EditContractModal = ({
                   size='md'
                   variant='outline'
                   colorScheme='primary'
+                  onClick={handleApplyChanges}
                   loadingText='Saving...'
                   isLoading={updateContract.isPending}
-                  onClick={handleSaveAddressChanges}
                 >
                   {saveButtonText}
                 </Button>
               </ModalFooter>
             </motion.div>
-          </motion.div>
-        </div>
-
-        {tenantSettingsData?.tenantSettings?.billingEnabled && (
-          <div style={{ minWidth: '600px' }} className='bg-white rounded'>
-            <div className='w-full h-full'>
-              <Invoice
-                shouldBlurDummy
-                onOpenAddressDetailsModal={() =>
-                  onChangeModalMode(EditModalMode.BillingDetails)
-                }
-                isBilledToFocused={false}
-                note={notes}
-                currency={state?.values?.currency?.value}
-                billedTo={{
-                  addressLine1: addressState.values.addressLine1 ?? '',
-                  addressLine2: addressState.values.addressLine2 ?? '',
-                  locality: addressState.values.locality ?? '',
-                  zip: addressState.values.postalCode ?? '',
-                  country: addressState?.values?.country?.label ?? '',
-                  email: addressState.values.billingEmail ?? '',
-                  name: addressState.values?.organizationLegalName ?? '',
-                  region: addressState.values?.region ?? '',
+            <motion.div
+              layout
+              data-isOpen={editModalMode === EditModalMode.BillingDetails}
+              variants={variants}
+              animate={
+                editModalMode === EditModalMode.BillingDetails
+                  ? 'open'
+                  : 'closed'
+              }
+              className='flex flex-col gap-4 px-6 pb-6 pt-4 bg-white rounded-lg justify-between relative shadow-2xl h-full min-w-[424px]'
+            >
+              <motion.div
+                className='h-full flex flex-col justify-between'
+                animate={{
+                  opacity:
+                    editModalMode === EditModalMode.BillingDetails ? 1 : 0,
+                  transition: { duration: 0.2 },
                 }}
-                {...invoicePreviewStaticData}
-                canPayWithBankTransfer={
-                  tenantBillingProfile?.tenantBillingProfiles?.[0]
-                    ?.canPayWithBankTransfer &&
-                  state.values.canPayWithBankTransfer
-                }
-                check={tenantBillingProfile?.tenantBillingProfiles?.[0]?.check}
-                availableBankAccount={
-                  bankAccountsData?.bankAccounts?.find(
-                    (e) => e.currency === state?.values?.currency?.value,
-                  ) as BankAccount
-                }
-              />
-            </div>
+              >
+                <div className='flex flex-col relative justify-between'>
+                  <ModalHeader className='p-0 text-lg font-semibold'>
+                    <div>
+                      {data?.contract?.organizationLegalName ||
+                        organizationName ||
+                        "Unnamed's "}{' '}
+                    </div>
+                    <span className='text-base font-normal'>
+                      These details are required to issue invoices
+                    </span>
+                  </ModalHeader>
+
+                  <BillingDetailsForm
+                    values={addressState.values}
+                    formId={'billing-details-address-form'}
+                  />
+                </div>
+                <ModalFooter className='p-0 flex'>
+                  <Button
+                    variant='outline'
+                    colorScheme='gray'
+                    onClick={() =>
+                      initialOpen === EditModalMode.BillingDetails
+                        ? handleCloseModal()
+                        : onChangeModalMode(EditModalMode.ContractDetails)
+                    }
+                    className='w-full'
+                    size='md'
+                  >
+                    Cancel changes
+                  </Button>
+                  <Button
+                    className='ml-3 w-full'
+                    size='md'
+                    variant='outline'
+                    colorScheme='primary'
+                    loadingText='Saving...'
+                    isLoading={updateContract.isPending}
+                    onClick={handleSaveAddressChanges}
+                  >
+                    {saveButtonText}
+                  </Button>
+                </ModalFooter>
+              </motion.div>
+            </motion.div>
           </div>
-        )}
-      </ModalContent>
+
+          {tenantSettingsData?.tenantSettings?.billingEnabled && (
+            <div style={{ minWidth: '600px' }} className='bg-white rounded'>
+              <div className='w-full h-full'>
+                <Invoice
+                  shouldBlurDummy
+                  onOpenAddressDetailsModal={() =>
+                    onChangeModalMode(EditModalMode.BillingDetails)
+                  }
+                  isBilledToFocused={false}
+                  note={notes}
+                  currency={state?.values?.currency?.value}
+                  billedTo={{
+                    addressLine1: addressState.values.addressLine1 ?? '',
+                    addressLine2: addressState.values.addressLine2 ?? '',
+                    locality: addressState.values.locality ?? '',
+                    zip: addressState.values.postalCode ?? '',
+                    country: addressState?.values?.country?.label ?? '',
+                    email: addressState.values.billingEmail ?? '',
+                    name: addressState.values?.organizationLegalName ?? '',
+                    region: addressState.values?.region ?? '',
+                  }}
+                  {...invoicePreviewStaticData}
+                  canPayWithBankTransfer={
+                    tenantBillingProfile?.tenantBillingProfiles?.[0]
+                      ?.canPayWithBankTransfer &&
+                    state.values.canPayWithBankTransfer
+                  }
+                  check={
+                    tenantBillingProfile?.tenantBillingProfiles?.[0]?.check
+                  }
+                  availableBankAccount={
+                    bankAccountsData?.bankAccounts?.find(
+                      (e) => e.currency === state?.values?.currency?.value,
+                    ) as BankAccount
+                  }
+                />
+              </div>
+            </div>
+          )}
+        </ModalContent>
+      </ModalPortal>
     </Modal>
   );
 };

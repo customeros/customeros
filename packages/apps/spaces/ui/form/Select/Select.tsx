@@ -15,7 +15,7 @@ import { twMerge } from 'tailwind-merge';
 
 import { cn } from '@ui/utils/cn';
 import { Delete } from '@ui/media/icons/Delete';
-import { inputVariants } from '@ui/form/Input/Input2';
+import { inputVariants } from '@ui/form/Input/Input';
 
 type Size = 'xs' | 'sm' | 'md' | 'lg';
 // Exhaustively typing this Props interface does not offer any benefit at this moment
@@ -150,7 +150,7 @@ const getDefaultClassNames = ({
     'p-2 max-h-[300px] border border-gray-200 bg-white outline-offset-[2px] outline-[2px] rounded-lg shadow-lg overflow-y-auto overscroll-auto',
   option: ({ isFocused, isSelected }) =>
     cn(
-      'my-[2px] px-3  rounded-md text-gray-700 line-clamp-1 transition ease-in-out delay-50 hover:bg-gray-50',
+      'my-[2px] px-3 py-1.5 rounded-md text-gray-700 line-clamp-1 transition ease-in-out delay-50 hover:bg-gray-50',
       isSelected && 'bg-gray-50 font-medium leading-normal',
       isFocused && 'ring-2 ring-gray-100',
     ),

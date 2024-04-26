@@ -8,7 +8,7 @@ import { useGetExternalSystemInstancesQuery } from '@settings/graphql/getExterna
 import { BankTransferAccountList } from '@settings/components/Tabs/panels/BillingPanel/components/BankTransferAccountList';
 
 import { Stripe } from '@ui/media/logos/Stripe';
-import { Switch } from '@ui/form/Switch/Switch2';
+import { Switch } from '@ui/form/Switch/Switch';
 import { ExternalSystemType } from '@graphql/types';
 import { toastError } from '@ui/presentation/Toast';
 import { Divider } from '@ui/presentation/Divider/Divider';

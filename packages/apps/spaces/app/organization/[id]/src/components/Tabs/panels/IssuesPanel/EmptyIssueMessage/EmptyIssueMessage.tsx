@@ -1,7 +1,7 @@
 import { FC } from 'react';
 
 import { Receipt } from '@ui/media/icons/Receipt';
-import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
+import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 
 export const EmptyIssueMessage: FC<{
   title?: string;

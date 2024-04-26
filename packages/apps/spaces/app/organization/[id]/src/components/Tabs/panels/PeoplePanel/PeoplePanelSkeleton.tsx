@@ -1,6 +1,5 @@
 'use client';
 
-import { Flex } from '@ui/layout/Flex';
 import { Button } from '@ui/form/Button/Button';
 import { UsersPlus } from '@ui/media/icons/UsersPlus';
 import { Skeleton } from '@ui/feedback/Skeleton/Skeleton';
@@ -30,11 +29,11 @@ export const PeoplePanelSkeleton = () => {
           <CardHeader className='flex p-4 pb-2 relative'>
             <Skeleton className='size-12 rounded-full ring-offset-1 ring-4 ring-offset-gray-200 ring-gray-100' />
 
-            <Flex ml='4' flexDir='column' flex='1'>
+            <div className='flex ml-4 flex-col flex-1'>
               <Skeleton className='h-3 w-[100px] mb-3 rounded-full' />
               <Skeleton className='h-3 w-[200px] mb-4 rounded-full' />
               <Skeleton className='h-3 w-[250px] mb-3 rounded-full' />
-            </Flex>
+            </div>
           </CardHeader>
         </Card>
       ))}

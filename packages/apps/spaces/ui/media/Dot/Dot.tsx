@@ -1,19 +1,30 @@
 'use client';
 
-import { ButtonProps } from '@ui/form/Button';
-import { Flex, FlexProps } from '@ui/layout/Flex';
+import { cn } from '@ui/utils/cn';
 
-interface DotProps extends FlexProps {
-  colorScheme?: ButtonProps['colorScheme'];
+interface DotProps {
+  colorScheme?: string;
 }
 
-export const Dot = ({ colorScheme = 'gray', ...props }: DotProps) => {
+export const Dot = ({ colorScheme, ...props }: DotProps) => {
+  const colors = (colorScheme: string) => {
+    switch (colorScheme) {
+      case 'gray':
+        return 'bg-gray-500';
+      case 'error':
+        return 'bg-error-500';
+      case 'success':
+        return 'bg-success-500';
+      case 'warning':
+        return 'bg-warning-500';
+      default:
+        return 'text-gray-500';
+    }
+  };
+
   return (
-    <Flex
-      w='10px'
-      h='10px'
-      borderRadius='full'
-      bg={`${colorScheme}.500`}
+    <div
+      className={cn(colors(colorScheme || 'gray'), 'size-[10px] rounded-full')}
       {...props}
     />
   );

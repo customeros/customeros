@@ -13,7 +13,7 @@ import React, {
 import { useSession } from 'next-auth/react';
 import { useRemirror } from '@remirror/react';
 
-import { useDisclosure } from '@ui/utils';
+import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { basicEditorExtensions } from '@ui/form/RichTextEditor/extensions';
 import { useTimelineMeta } from '@organization/src/components/Timeline/state';
 import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
@@ -69,7 +69,7 @@ export const TimelineActionEmailContextContextProvider = ({
   id: string;
   invalidateQuery: () => void;
 }>) => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { open: isOpen, onOpen, onClose } = useDisclosure();
   const searchParams = useSearchParams();
   const { data: session } = useSession();
 

@@ -1,18 +1,22 @@
 import React, { useRef, MouseEventHandler } from 'react';
 
-import { AlertDialogBody } from '@chakra-ui/modal';
+import { Trash01 } from '@ui/media/icons/Trash01';
+import { Spinner } from '@ui/feedback/Spinner/Spinner';
+import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
+import { Button, ButtonProps } from '@ui/form/Button/Button';
 
-import { Button } from '@ui/form/Button';
-import { Text } from '@ui/typography/Text';
-import { Icons, FeaturedIcon } from '@ui/media/Icon';
 import {
   AlertDialog,
+  AlertDialogBody,
   AlertDialogFooter,
   AlertDialogHeader,
+  AlertDialogPortal,
   AlertDialogContent,
   AlertDialogOverlay,
   AlertDialogCloseButton,
-} from '@ui/overlay/AlertDialog';
+  AlertDialogConfirmButton,
+  AlertDialogCloseIconButton,
+} from '../AlertDialog';
 
 interface ConfirmDeleteDialogProps {
   label: string;
@@ -20,13 +24,13 @@ interface ConfirmDeleteDialogProps {
   isLoading?: boolean;
   onClose: () => void;
   description?: string;
-  colorScheme?: string;
   icon?: React.ReactNode;
   body?: React.ReactNode;
   hideCloseButton?: boolean;
   confirmButtonLabel: string;
   cancelButtonLabel?: string;
   loadingButtonLabel?: string;
+  colorScheme?: ButtonProps['colorScheme'];
   onConfirm: MouseEventHandler<HTMLButtonElement>;
 }
 
@@ -42,66 +46,71 @@ export const ConfirmDeleteDialog = ({
   cancelButtonLabel = 'Cancel',
   loadingButtonLabel = 'Deleting',
   icon,
-  colorScheme = 'red',
+  colorScheme = 'error',
   hideCloseButton,
 }: ConfirmDeleteDialogProps) => {
   const cancelRef = useRef<HTMLButtonElement>(null);
 
   return (
-    <AlertDialog
-      isOpen={isOpen}
-      onClose={onClose}
-      leastDestructiveRef={cancelRef}
-      closeOnEsc
-    >
-      <AlertDialogOverlay>
-        <AlertDialogContent
-          borderRadius='xl'
-          backgroundImage='/backgrounds/organization/circular-bg-pattern.png'
-          backgroundRepeat='no-repeat'
-        >
-          {!hideCloseButton && (
-            <AlertDialogCloseButton color='gray.400' top={6} />
-          )}
-          <AlertDialogHeader fontSize='lg' fontWeight='bold' pt='6' pb={0}>
-            <FeaturedIcon size='lg' colorScheme={colorScheme}>
-              {icon ? icon : <Icons.Trash1 />}
+    <AlertDialog isOpen={isOpen} onClose={onClose} className='z-[99999]'>
+      <AlertDialogPortal>
+        <AlertDialogOverlay>
+          <AlertDialogContent className='rounded-xl bg-no-repeat bg-[url(/backgrounds/organization/circular-bg-pattern.png)]'>
+            {!hideCloseButton && <AlertDialogCloseIconButton />}
+            <FeaturedIcon
+              size='lg'
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              colorScheme={colorScheme as any}
+              className='mt-[13px] ml-[11px]'
+            >
+              {icon ? icon : <Trash01 />}
             </FeaturedIcon>
-            <Text mt='4'>{label}</Text>
-            {description && (
-              <Text mt='4' fontSize='md' color='gray.600' fontWeight='normal'>
-                {description}
-              </Text>
-            )}
-          </AlertDialogHeader>
-
-          {body && <AlertDialogBody>{body}</AlertDialogBody>}
-
-          <AlertDialogFooter pb='6'>
-            <Button
-              w='full'
-              ref={cancelRef}
-              onClick={onClose}
-              isDisabled={isLoading}
-              variant='outline'
-              bg='white'
-            >
-              {cancelButtonLabel}
-            </Button>
-            <Button
-              ml={3}
-              w='full'
-              variant='outline'
-              colorScheme={colorScheme}
-              onClick={onConfirm}
-              isLoading={isLoading}
-              loadingText={loadingButtonLabel}
-            >
-              {confirmButtonLabel}
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialogOverlay>
+            <AlertDialogHeader className='text-lg font-bold mt-4'>
+              <p className='pb-0'>{label}</p>
+              {description && (
+                <p className='mt-1 text-base text-gray-700 font-normal'>
+                  {description}
+                </p>
+              )}
+            </AlertDialogHeader>
+            {body && <AlertDialogBody>{body}</AlertDialogBody>}
+            <AlertDialogFooter>
+              <AlertDialogCloseButton>
+                <Button
+                  ref={cancelRef}
+                  isDisabled={isLoading}
+                  variant='outline'
+                  colorScheme={'gray'}
+                  size='md'
+                  className='bg-white w-full'
+                >
+                  {cancelButtonLabel}
+                </Button>
+              </AlertDialogCloseButton>
+              <AlertDialogConfirmButton>
+                <Button
+                  className='w-full'
+                  variant='outline'
+                  size='md'
+                  colorScheme={colorScheme || 'error'}
+                  onClick={onConfirm}
+                  isLoading={isLoading}
+                  loadingText={loadingButtonLabel}
+                  spinner={
+                    <Spinner
+                      size={'sm'}
+                      label='deleting'
+                      className='text-error-300 fill-error-700'
+                    />
+                  }
+                >
+                  {confirmButtonLabel}
+                </Button>
+              </AlertDialogConfirmButton>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialogPortal>
     </AlertDialog>
   );
 };

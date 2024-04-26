@@ -7,7 +7,7 @@ import { Button } from '@ui/form/Button/Button';
 import { Mail01 } from '@ui/media/icons/Mail01';
 import { Google } from '@ui/media/logos/Google';
 import { toastError } from '@ui/presentation/Toast';
-import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
+import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 
 export const MissingPermissionsPrompt: FC<{
   modal: boolean;

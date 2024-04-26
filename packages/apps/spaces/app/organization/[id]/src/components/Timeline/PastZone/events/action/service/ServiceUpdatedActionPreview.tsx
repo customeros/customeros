@@ -3,7 +3,7 @@ import React, { FC } from 'react';
 import { File02 } from '@ui/media/icons/File02';
 import { Action, BilledType } from '@graphql/types';
 import { DotSingle } from '@ui/media/icons/DotSingle';
-import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
+import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 import { Card, CardFooter, CardContent } from '@ui/presentation/Card/Card';
 import { getMetadata } from '@organization/src/components/Timeline/PastZone/events/action/utils';

@@ -15,6 +15,7 @@ import React, {
   useState,
   useEffect,
   forwardRef,
+  HTMLAttributes,
   MutableRefObject,
 } from 'react';
 
@@ -31,10 +32,8 @@ import {
 } from '@tanstack/react-table';
 
 import { cn } from '@ui/utils/cn';
-import { Center } from '@ui/layout/Center';
-import { FlexProps } from '@ui/layout/Flex';
 import { Tumbleweed } from '@ui/media/icons/Tumbleweed';
-import { Checkbox, CheckboxProps } from '@ui/form/Checkbox/Checkbox2';
+import { Checkbox, CheckboxProps } from '@ui/form/Checkbox/Checkbox';
 
 declare module '@tanstack/table-core' {
   // REASON: TData & TValue are not used in this interface but need to be defined
@@ -485,11 +484,17 @@ const THeaderCell = forwardRef<HTMLDivElement, GenericProps>(
   },
 );
 
-const TActions = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
-  return (
-    <Center left='50%' position='absolute' bottom='32px' ref={ref} {...props} />
-  );
-});
+const TActions = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
+  (props, ref) => {
+    return (
+      <div
+        className='flex items-center justify-center left-[50%] bottom-[32px] absolute'
+        ref={ref}
+        {...props}
+      />
+    );
+  },
+);
 
 const NoResults = () => {
   return (

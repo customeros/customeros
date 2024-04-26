@@ -6,7 +6,6 @@ import { useParams } from 'next/navigation';
 import { useConnections } from '@integration-app/react';
 
 import { Issue } from '@graphql/types';
-import { Fade } from '@ui/transitions/Fade';
 import { ChevronUp } from '@ui/media/icons/ChevronUp';
 import { ChevronDown } from '@ui/media/icons/ChevronDown';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
@@ -132,13 +131,7 @@ export const IssuesPanel = () => {
         <div className='flex flex-col'>
           {!!openIssues?.length &&
             openIssues.map((issue, index) => (
-              <Fade
-                key={`issue-panel-${issue.id}`}
-                in
-                style={{ width: '100%' }}
-              >
-                <IssueCard issue={issue} />
-              </Fade>
+              <IssueCard key={index} issue={issue} />
             ))}
         </div>
       </article>

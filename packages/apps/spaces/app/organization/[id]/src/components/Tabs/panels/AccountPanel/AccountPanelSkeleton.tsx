@@ -1,43 +1,21 @@
 import React from 'react';
 
-import { Flex } from '@ui/layout/Flex';
-import { VStack } from '@ui/layout/Stack';
-import { Divider } from '@ui/presentation/Divider';
-import { Card, CardBody, CardFooter } from '@ui/presentation/Card';
-import { Skeleton, SkeletonCircle } from '@ui/presentation/Skeleton';
+import { Skeleton } from '@ui/feedback/Skeleton';
+import { Divider } from '@ui/presentation/Divider/Divider';
 import { OrganizationPanel } from '@organization/src/components/Tabs/panels/OrganizationPanel/OrganizationPanel';
 
 export const AccountPanelSkeleton: React.FC = () => {
   return (
     <OrganizationPanel title='Account'>
-      <Flex justify='space-between' w='full' align='center' mb={4}>
-        <Flex justify='space-between' w='full' align='center'>
-          <SkeletonCircle size='10' startColor='gray.300' endColor='gray.100' />
-          <Flex
-            ml='5'
-            flexDir='column'
-            align='flex-start'
-            gap='1'
-            flex='1'
-            w='full'
-          >
-            <Skeleton
-              w='45%'
-              h='4'
-              borderRadius='full'
-              startColor='gray.300'
-              endColor='gray.100'
-            />
-          </Flex>
-          <Skeleton
-            w='55px'
-            h='4'
-            borderRadius='full'
-            startColor='gray.300'
-            endColor='gray.100'
-          />
-        </Flex>
-      </Flex>
+      <div className='flex justify-between w-full items-center mb-4'>
+        <div className='flex justify-between w-full items-center'>
+          <Skeleton className='size-10 rounded-full' />
+          <div className='flex ml-5 flex-col items-start gap-1 flex-1 w-full'>
+            <Skeleton className='w-[45%] h-4 rounded-full' />
+          </div>
+          <Skeleton className='w-[55px] h-4 rounded-full' />
+        </div>
+      </div>
 
       <SkeletonCard showBtnSection>
         <SkeletonCardFooter1 />
@@ -57,193 +35,78 @@ const SkeletonCard = ({
   children?: React.ReactNode;
 }) => {
   return (
-    <Card
-      size='sm'
-      width='full'
-      borderRadius='xl'
-      border='1px solid'
-      borderColor='gray.200'
-      boxShadow='xs'
-      p='0'
-      mb={4}
-    >
-      <CardBody as={Flex} align='center' w='full' p='4'>
-        <Flex justify='space-between' w='full' align='flex-start'>
-          <SkeletonCircle size='10' startColor='gray.300' endColor='gray.100' />
-          <Flex
-            ml='5'
-            flexDir='column'
-            align='flex-start'
-            gap='1'
-            flex='1'
-            w='full'
-          >
-            <Skeleton
-              w='55%'
-              h='4'
-              borderRadius='full'
-              startColor='gray.300'
-              endColor='gray.100'
-            />
-            <Skeleton
-              w='35%'
-              h='3'
-              borderRadius='full'
-              startColor='gray.300'
-              endColor='gray.100'
-            />
-          </Flex>
+    <div className='w-full rounded-xl border border-gray-200 shadow-xs p-0 mb-4'>
+      <div className='flex items-center w-full p-4'>
+        <div className='flex justify-between w-full items-start'>
+          <Skeleton className='size-10 rounded-full' />
+          <div className='flex ml-5 flex-col items-start gap-1 flex-1 w-full'>
+            <Skeleton className='w-[55%] h-4 rounded-full' />
+            <Skeleton className='w-[35%] h-3 rounded-full' />
+          </div>
           {showBtnSection && (
-            <Flex alignItems='flex-start'>
-              <Skeleton
-                mr={2}
-                w='4'
-                h='4'
-                borderRadius='md'
-                startColor='gray.300'
-                endColor='gray.100'
-              />
-              <Skeleton
-                w='10'
-                h='4'
-                borderRadius='md'
-                startColor='gray.300'
-                endColor='gray.100'
-              />
-            </Flex>
+            <div className='flex items-start'>
+              <Skeleton className='size-4 mr-2 rounded-md' />
+              <Skeleton className='w-10 h-4 rounded-md' />
+            </div>
           )}
-        </Flex>
-      </CardBody>
+        </div>
+      </div>
 
       {children}
-    </Card>
+    </div>
   );
 };
 
 const SkeletonCardFooter1 = () => {
   return (
-    <CardFooter as={Flex} flexDir='column' p='4' pt='0'>
-      <Flex justify='space-between' gap='4' align='center' w='full'>
-        <VStack spacing='1' flex='1' align='flex-start'>
-          <Skeleton
-            w='65%'
-            h='3'
-            borderRadius='full'
-            startColor='gray.300'
-            endColor='gray.100'
-          />
-          <Flex w='full' gap='3' align='center' h='10'>
-            <SkeletonCircle
-              h='5'
-              w='5'
-              startColor='gray.300'
-              endColor='gray.100'
-            />
-            <Skeleton
-              w='full'
-              h='4'
-              borderRadius='full'
-              startColor='gray.300'
-              endColor='gray.100'
-            />
-          </Flex>
-        </VStack>
+    <div className='flex flex-col p-4 pt-0'>
+      <div className='flex justify-between gap-4 items-center w-full'>
+        <div className='flex flex-col space-y-1 flex-1 items-start'>
+          <Skeleton className='w-[65%] h-3 rounded-full' />
+          <div className='flex w-full gap-3 items-center h-10'>
+            <Skeleton className='size-5 rounded-full' />
+            <Skeleton className='w-full h-4 rounded-full' />
+          </div>
+        </div>
 
-        <VStack spacing='1' flex='1' align='flex-start'>
-          <Skeleton
-            w='65%'
-            h='3'
-            borderRadius='full'
-            startColor='gray.300'
-            endColor='gray.100'
-          />
-          <Flex w='full' gap='3' align='center' h='10'>
-            <SkeletonCircle
-              w='5'
-              h='5'
-              startColor='gray.300'
-              endColor='gray.100'
-            />
-            <Skeleton
-              w='full'
-              h='4'
-              borderRadius='full'
-              startColor='gray.300'
-              endColor='gray.100'
-            />
-          </Flex>
-        </VStack>
-      </Flex>
-      <Flex justify='space-between' gap='4' align='center' w='full'>
-        <VStack spacing='1' flex='1' align='flex-start'>
-          <Skeleton
-            w='65%'
-            h='3'
-            borderRadius='full'
-            startColor='gray.300'
-            endColor='gray.100'
-          />
-          <Flex w='full' gap='3' align='center' h='10'>
-            <SkeletonCircle
-              h='5'
-              w='5'
-              startColor='gray.300'
-              endColor='gray.100'
-            />
-            <Skeleton
-              w='full'
-              h='4'
-              borderRadius='full'
-              startColor='gray.300'
-              endColor='gray.100'
-            />
-          </Flex>
-        </VStack>
+        <div className='flex flex-col space-y-1 flex-1 items-start'>
+          <Skeleton className='w-[65%] h-3 rounded-full' />
+          <div className='flex w-full gap-3 items-center h-10'>
+            <Skeleton className='size-5 rounded-full' />
+            <Skeleton className='w-full h-4 rounded-full' />
+          </div>
+        </div>
+      </div>
+      <div className='flex justify-between gap-4 items-center w-full'>
+        <div className='flex flex-col space-y-1 flex-1 items-start'>
+          <Skeleton className='w-[65%] h-3 rounded-full' />
+          <div className='flex w-full gap-3 items-center h-10'>
+            <Skeleton className='size-5 rounded-full' />
+            <Skeleton className='w-full h-4 rounded-full' />
+          </div>
+        </div>
 
-        <VStack spacing='1' flex='1' align='flex-start'>
-          <Skeleton
-            w='65%'
-            h='3'
-            borderRadius='full'
-            startColor='gray.300'
-            endColor='gray.100'
-          />
-          <Flex w='full' gap='3' align='center' h='10'>
-            <SkeletonCircle
-              w='5'
-              h='5'
-              startColor='gray.300'
-              endColor='gray.100'
-            />
-            <Skeleton
-              w='full'
-              h='4'
-              borderRadius='full'
-              startColor='gray.300'
-              endColor='gray.100'
-            />
-          </Flex>
-        </VStack>
-      </Flex>
-    </CardFooter>
+        <div className='flex flex-col space-y-1 flex-1 items-start'>
+          <Skeleton className='w-[65%] h-3 rounded-full' />
+          <div className='flex w-full gap-3 items-center h-10'>
+            <Skeleton className='size-5 rounded-full' />
+            <Skeleton className='w-full h-4 rounded-full' />
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
 const SkeletonCardFooter2 = () => {
   return (
-    <CardFooter as={Flex} flexDir='column' p='4' pt='0'>
-      <Divider mb='4' mt='0' />
+    <div className='flex flex-col p-4 pt-0'>
+      <Divider className='mb-4 mt-0' />
 
-      <Flex w='full' gap='1' align='center'>
-        <SkeletonCircle w='5' h='5' startColor='gray.300' endColor='gray.100' />
-        <Skeleton
-          w='45%'
-          h='3'
-          borderRadius='full'
-          startColor='gray.300'
-          endColor='gray.100'
-        />
-      </Flex>
-    </CardFooter>
+      <div className='flex w-full gap-1 items-center'>
+        <Skeleton className='size-5 rounded-full' />
+        <Skeleton className='w-[45%] h-3 rounded-full' />
+      </div>
+    </div>
   );
 };

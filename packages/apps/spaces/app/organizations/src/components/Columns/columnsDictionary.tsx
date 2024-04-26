@@ -1,7 +1,6 @@
 import { ColumnDef as ColumnDefinition } from '@tanstack/react-table';
 
-import { Flex } from '@ui/layout/Flex';
-import { Skeleton } from '@ui/presentation/Skeleton';
+import { Skeleton } from '@ui/feedback/Skeleton/Skeleton';
 import { createColumnHelper } from '@ui/presentation/Table';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
 import {
@@ -69,14 +68,7 @@ const columns: Record<string, Column> = {
       );
     },
     header: AvatarHeader,
-    skeleton: () => (
-      <Skeleton
-        width='42px'
-        height='42px'
-        startColor='gray.300'
-        endColor='gray.300'
-      />
-    ),
+    skeleton: () => <Skeleton className='size-[42px]' />,
   }),
   NAME: columnHelper.accessor((row) => row, {
     id: 'NAME',
@@ -109,20 +101,10 @@ const columns: Record<string, Column> = {
       />
     ),
     skeleton: () => (
-      <Flex flexDir='column' h='42px' align='flex-start' gap='1'>
-        <Skeleton
-          width='100px'
-          height='18px'
-          startColor='gray.300'
-          endColor='gray.300'
-        />
-        <Skeleton
-          width='100px'
-          height='18px'
-          startColor='gray.300'
-          endColor='gray.300'
-        />
-      </Flex>
+      <div className='flex flex-col h-[42px] items-start gap-1'>
+        <Skeleton className='w-[100px] h-[18px]' />
+        <Skeleton className='w-[100px] h-[18px]' />
+      </div>
     ),
   }),
   WEBSITE: columnHelper.accessor('website', {
@@ -145,14 +127,7 @@ const columns: Record<string, Column> = {
         {...getTHeadProps<Organization>(props)}
       />
     ),
-    skeleton: () => (
-      <Skeleton
-        width='50%'
-        height='18px'
-        startColor='gray.300'
-        endColor='gray.300'
-      />
-    ),
+    skeleton: () => <Skeleton className='w-[50%] h-[18px]' />,
   }),
   RELATIONSHIP: columnHelper.accessor('isCustomer', {
     id: 'RELATIONSHIP',
@@ -176,14 +151,7 @@ const columns: Record<string, Column> = {
       // @ts-expect-error will be fixed
       return <OrganizationRelationship organization={organization} />;
     },
-    skeleton: () => (
-      <Skeleton
-        width='100%'
-        height='18px'
-        startColor='gray.300'
-        endColor='gray.300'
-      />
-    ),
+    skeleton: () => <Skeleton className='w-[100%] h-[18px]' />,
   }),
   ONBOARDING_STATUS: columnHelper.accessor('accountDetails', {
     id: 'ONBOARDING_STATUS',
@@ -204,14 +172,9 @@ const columns: Record<string, Column> = {
       />
     ),
     skeleton: () => (
-      <Flex flexDir='column' gap='1'>
-        <Skeleton
-          width='33%'
-          height='18px'
-          startColor='gray.300'
-          endColor='gray.300'
-        />
-      </Flex>
+      <div className='flex flex-col gap-1'>
+        <Skeleton className='w-[33%] h-[18px]' />
+      </div>
     ),
   }),
   RENEWAL_LIKELIHOOD: columnHelper.accessor('accountDetails', {
@@ -232,14 +195,9 @@ const columns: Record<string, Column> = {
       />
     ),
     skeleton: () => (
-      <Flex flexDir='column' gap='1'>
-        <Skeleton
-          width='25%'
-          height='18px'
-          startColor='gray.300'
-          endColor='gray.300'
-        />
-      </Flex>
+      <div className='flex flex-col gap-1'>
+        <Skeleton className='w-[25%] h-[18px]' />
+      </div>
     ),
   }),
   RENEWAL_DATE: columnHelper.accessor('accountDetails', {
@@ -264,14 +222,7 @@ const columns: Record<string, Column> = {
         {...getTHeadProps<Organization>(props)}
       />
     ),
-    skeleton: () => (
-      <Skeleton
-        width='50%'
-        height='18px'
-        startColor='gray.300'
-        endColor='gray.300'
-      />
-    ),
+    skeleton: () => <Skeleton className='w-[50%] h-[18px]' />,
   }),
   FORECAST_ARR: columnHelper.accessor('accountDetails', {
     id: 'FORECAST_ARR',
@@ -304,20 +255,10 @@ const columns: Record<string, Column> = {
       />
     ),
     skeleton: () => (
-      <Flex flexDir='column' gap='1'>
-        <Skeleton
-          width='50%'
-          height='18px'
-          startColor='gray.300'
-          endColor='gray.300'
-        />
-        <Skeleton
-          width='25%'
-          height='18px'
-          startColor='gray.300'
-          endColor='gray.300'
-        />
-      </Flex>
+      <div className='flex flex-col gap-1'>
+        <Skeleton className='w-[50%] h-[18px]' />
+        <Skeleton className='w-[25%] h-[18px]' />
+      </div>
     ),
   }),
   OWNER: columnHelper.accessor('owner', {
@@ -341,14 +282,7 @@ const columns: Record<string, Column> = {
         {...getTHeadProps<Organization>(props)}
       />
     ),
-    skeleton: () => (
-      <Skeleton
-        width='75%'
-        height='18px'
-        startColor='gray.300'
-        endColor='gray.300'
-      />
-    ),
+    skeleton: () => <Skeleton className='w-[75%] h-[18px]' />,
   }),
   LAST_TOUCHPOINT: columnHelper.accessor((row) => row, {
     id: 'LAST_TOUCHPOINT',
@@ -375,20 +309,10 @@ const columns: Record<string, Column> = {
       />
     ),
     skeleton: () => (
-      <Flex flexDir='column' gap='1'>
-        <Skeleton
-          width='75%'
-          height='18px'
-          startColor='gray.300'
-          endColor='gray.300'
-        />
-        <Skeleton
-          width='100%'
-          height='18px'
-          startColor='gray.300'
-          endColor='gray.300'
-        />
-      </Flex>
+      <div className='flex flex-col gap-1'>
+        <Skeleton className='w-[75%] h-[18px]' />
+        <Skeleton className='w-[100%] h-[18px]' />
+      </div>
     ),
   }),
 };

@@ -3,7 +3,6 @@ import dynamic from 'next/dynamic';
 
 import ParentSize from '@visx/responsive/lib/components/ParentSize';
 
-import { Text } from '@ui/typography/Text';
 import { Skeleton } from '@ui/feedback/Skeleton';
 import { ChartCard } from '@customerMap/components/ChartCard';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
@@ -59,9 +58,9 @@ export const GrossRevenueRetention = () => {
       renderSubStat={
         hasMissingData
           ? () => (
-              <Text fontWeight='semibold' color='gray.400' mb='10'>
+              <p className='font-semibold text-gray-400 mb-10'>
                 Key data missing.
-              </Text>
+              </p>
             )
           : () => <PercentageTrend percentage={percentage} />
       }

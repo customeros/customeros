@@ -1,7 +1,18 @@
-import { Icon, IconProps } from '@ui/media/Icon';
+import React from 'react';
 
-export const Stripe = (props: IconProps) => (
-  <Icon viewBox='0 0 32 32' fill='none' boxSize='4' {...props}>
+import { twMerge } from 'tailwind-merge';
+
+interface IconProps extends React.SVGAttributes<SVGElement> {
+  className?: string;
+}
+
+export const Stripe = ({ className, ...props }: IconProps) => (
+  <svg
+    viewBox='0 0 32 32'
+    fill='none'
+    {...props}
+    className={twMerge('inline-block size-4', className)}
+  >
     <path
       d='M2.87195 6.36808C2 8.07937 2 10.3196 2 14.8V17.2C2 21.6804 2 23.9206 2.87195 25.6319C3.63893 27.1372 4.86278 28.3611 6.36808 29.1281C8.07937 30 10.3196 30 14.8 30H17.2C21.6804 30 23.9206 30 25.6319 29.1281C27.1372 28.3611 28.3611 27.1372 29.1281 25.6319C30 23.9206 30 21.6804 30 17.2V14.8C30 10.3196 30 8.07937 29.1281 6.36808C28.3611 4.86278 27.1372 3.63893 25.6319 2.87195C23.9206 2 21.6804 2 17.2 2H14.8C10.3196 2 8.07937 2 6.36808 2.87195C4.86278 3.63893 3.63893 4.86278 2.87195 6.36808Z'
       fill='url(#paint0_linear_1334_1851)'
@@ -85,5 +96,5 @@ export const Stripe = (props: IconProps) => (
         <stop offset='1' stopColor='#6CC3FA' />
       </linearGradient>
     </defs>
-  </Icon>
+  </svg>
 );

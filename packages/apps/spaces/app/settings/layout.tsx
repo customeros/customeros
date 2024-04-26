@@ -1,4 +1,3 @@
-import { GridItem } from '@ui/layout/Grid';
 import { PageLayout } from '@shared/components/PageLayout';
 
 import { SettingsSidenav } from './src/components/SettingsSidenav';
@@ -11,9 +10,7 @@ export default async function SettingsLayout({
   return (
     <PageLayout>
       <SettingsSidenav />
-      <GridItem h='100%' area='content' overflowX='hidden' overflowY='auto'>
-        {children}
-      </GridItem>
+      <div className='h-full overflow-x-hidden overflow-y-auto'>{children}</div>
     </PageLayout>
   );
 }

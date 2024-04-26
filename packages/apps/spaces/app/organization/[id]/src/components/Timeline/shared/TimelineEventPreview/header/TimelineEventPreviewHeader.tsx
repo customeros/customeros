@@ -6,7 +6,6 @@ import { Link03 } from '@ui/media/icons/Link03';
 import { XClose } from '@ui/media/icons/XClose';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
-import { CardHeader } from '@ui/presentation/Card/Card';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 
@@ -28,8 +27,8 @@ export const TimelineEventPreviewHeader: React.FC<
     parse === 'slack' ? escapeForSlackWithMarkdown(name) : name;
 
   return (
-    <CardHeader
-      className='sticky py-4 px-6 pb-1 bg-white top-0 rounded-xl'
+    <div
+      className='sticky py-4 px-6 pb-1 top-0 rounded-xl'
       onClick={(e) => e.stopPropagation()}
     >
       <div className={'flex justify-between items-center '}>
@@ -77,6 +76,6 @@ export const TimelineEventPreviewHeader: React.FC<
           </Tooltip>
         </div>
       </div>
-    </CardHeader>
+    </div>
   );
 };

@@ -10,8 +10,8 @@ import { Button } from '@ui/form/Button/Button';
 import { XSquare } from '@ui/media/icons/XSquare';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { ModalBody } from '@ui/overlay/Modal/Modal';
-import { Radio, RadioGroup } from '@ui/form/Radio/Radio2';
-import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
+import { Radio, RadioGroup } from '@ui/form/Radio/Radio';
+import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 import { Exact, ContractUpdateInput } from '@graphql/types';
 import { DatePickerUnderline } from '@ui/form/DatePicker/DatePickerUnderline';
 import { UpdateContractMutation } from '@organization/src/graphql/updateContract.generated';
@@ -153,7 +153,11 @@ export const ContractEndModal = ({
       <ModalOverlay />
       <ModalContent className='rounded-2xl z-[999]'>
         <ModalHeader className='pb-3'>
-          <FeaturedIcon size='lg' colorScheme='error'>
+          <FeaturedIcon
+            size='lg'
+            colorScheme='error'
+            className='mt-3 mb-6 ml-[10px] '
+          >
             <XSquare className='text-error-600' />
           </FeaturedIcon>
           <h2 className='text-lg mt-2 font-semibold'>

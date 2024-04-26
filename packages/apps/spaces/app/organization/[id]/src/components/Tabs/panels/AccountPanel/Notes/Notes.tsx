@@ -7,14 +7,13 @@ import { htmlToProsemirrorNode } from 'remirror';
 import { useDebounce, useWillUnmount } from 'rooks';
 import { useQueryClient } from '@tanstack/react-query';
 
-import { Flex } from '@ui/layout/Flex';
-import { Heading } from '@ui/typography/Heading';
-import { Divider } from '@ui/presentation/Divider';
-import { Icons, FeaturedIcon } from '@ui/media/Icon';
-import { Card, CardBody, CardFooter } from '@ui/layout/Card';
+import { File02 } from '@ui/media/icons/File02';
+import { Divider } from '@ui/presentation/Divider/Divider';
+import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { RichTextEditor } from '@ui/form/RichTextEditor/RichTextEditor';
+import { RichTextEditor } from '@ui/form/RichTextEditor2/RichTextEditor';
 import { basicEditorExtensions } from '@ui/form/RichTextEditor/extensions';
+import { Card, CardFooter, CardContent } from '@ui/presentation/Card/Card';
 import { useUpdateOrganizationMutation } from '@shared/graphql/updateOrganization.generated';
 import { OrganizationAccountDetailsQuery } from '@organization/src/graphql/getAccountPanelDetails.generated';
 
@@ -47,16 +46,14 @@ export const Notes = ({ data, id }: NotesProps) => {
       input: NotesDTO.toPayload({ id, note }),
     });
   }, 800);
-  const { setDefaultValues } = useForm({
+  useForm({
     formId: 'account-notes-form',
     defaultValues: {
       notes: data?.note ?? '<p style=""></p>',
     },
     stateReducer: (state, action, next) => {
       if (action.type === 'FIELD_CHANGE') {
-        if (action.payload.value === '<p style=""></p>') {
-          updateNote(action.payload.value);
-        }
+        updateNote(action.payload.value);
       }
       if (action.type === 'FIELD_BLUR') {
         updateNote.flush();
@@ -66,9 +63,7 @@ export const Notes = ({ data, id }: NotesProps) => {
     },
   });
 
-  useEffect(() => {
-    setDefaultValues({ notes: data?.note });
-  }, [data?.note, data?.id]);
+  useEffect(() => {}, [data?.note, data?.id]);
 
   useEffect(() => {
     if (data?.note) {
@@ -85,57 +80,22 @@ export const Notes = ({ data, id }: NotesProps) => {
   });
 
   return (
-    <Card
-      p='4'
-      w='full'
-      size='lg'
-      variant='outline'
-      cursor='default'
-      boxShadow={'xs'}
-      _hover={{
-        boxShadow: 'md',
-      }}
-      _focusWithin={{
-        boxShadow: 'md',
-      }}
-      transition='all 0.2s ease-out'
-    >
-      <CardBody as={Flex} p='0' w='full' align='center'>
-        <FeaturedIcon>
-          <Icons.File2 />
+    <Card className='bg-white p-4 w-full cursor-default hover:shadow-md focus-within:shadow-md transition-all duration-200 ease-out'>
+      <CardContent className='flex p-0 w-full items-center'>
+        <FeaturedIcon className='mr-4 ml-3 my-1 mt-3' colorScheme='gray'>
+          <File02 />
         </FeaturedIcon>
-        <Heading ml='5' size='sm' color='gray.700'>
-          Notes
-        </Heading>
-      </CardBody>
-      <CardFooter as={Flex} flexDir='column' padding={0}>
-        <Divider color='gray.200' my='4' />
-        <Flex
-          position='relative'
-          sx={{
-            '& .remirror-editor-wrapper': {
-              height: '100%',
-              minHeight: '100px',
-            },
-            '& .remirror-editor.ProseMirror': {
-              minHeight: '100px',
-            },
-            '& a': {
-              color: 'primary.600',
-            },
-            '& .test': {
-              maxWidth: '200px',
-            },
-          }}
-        >
-          <RichTextEditor
-            {...remirrorProps}
-            placeholder='Write some notes or anything related to this customer'
-            formId='account-notes-form'
-            name='notes'
-            showToolbar={false}
-          />
-        </Flex>
+        <h2 className='ml-5 text-gray-700 font-semibold '>Notes</h2>
+      </CardContent>
+      <CardFooter className='flex flex-col items-start p-0 w-full'>
+        <Divider className='my-4' />
+
+        <RichTextEditor
+          formId='account-notes-form'
+          name='notes'
+          placeholder='Write some notes or anything related to this customer'
+          className='min-h-[100px] cursor-text'
+        />
       </CardFooter>
     </Card>
   );

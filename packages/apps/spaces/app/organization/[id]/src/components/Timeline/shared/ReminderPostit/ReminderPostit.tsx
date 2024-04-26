@@ -3,8 +3,7 @@ import React, { useRef, useMemo, useState, forwardRef } from 'react';
 import { useMergeRefs } from 'rooks';
 
 import { cn } from '@ui/utils/cn';
-import { useOutsideClick } from '@ui/utils';
-import { pulseOpacity } from '@ui/utils/keyframes';
+import { useOutsideClick } from '@ui/utils/hooks/useOutsideClick';
 
 interface ReminderPostitProps extends React.HTMLAttributes<HTMLDivElement> {
   owner?: string;
@@ -52,14 +51,11 @@ export const ReminderPostit = forwardRef<HTMLDivElement, ReminderPostitProps>(
       <div
         className={cn(
           className,
-          isMutating ? 'pointer-events-none' : 'pointer-events-auto',
+          isMutating
+            ? 'pointer-events-none animate-pulseOpacity duration-75 ease-in-out'
+            : 'pointer-events-auto',
           'flex relative w-[321px] m-6 mt-2',
         )}
-        style={{
-          animation: isMutating
-            ? `${pulseOpacity} 0.7s alternate ease-in-out`
-            : undefined,
-        }}
         ref={mergedRef}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}

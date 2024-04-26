@@ -3,8 +3,8 @@ import React, { useState, useEffect } from 'react';
 
 import { cn } from '@ui/utils/cn';
 import { InputProps } from '@ui/form/Input';
-import { useOutsideClick } from '@ui/utils';
 import { Button } from '@ui/form/Button/Button';
+import { useOutsideClick } from '@ui/utils/hooks/useOutsideClick';
 import { EmailSubjectInput } from '@organization/src/components/Timeline/PastZone/events/email/compose-email/EmailSubjectInput';
 import { EmailParticipantSelect } from '@organization/src/components/Timeline/PastZone/events/email/compose-email/EmailParticipantSelect';
 

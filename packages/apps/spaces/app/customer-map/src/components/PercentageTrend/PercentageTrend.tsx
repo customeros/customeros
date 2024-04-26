@@ -2,7 +2,6 @@
 import sample from 'lodash/sample';
 
 import { cn } from '@ui/utils/cn';
-import { Text } from '@ui/typography/Text';
 import { Minus } from '@ui/media/icons/Minus';
 import { TrendUp01 } from '@ui/media/icons/TrendUp01';
 import { TrendDown01 } from '@ui/media/icons/TrendDown01';
@@ -46,7 +45,7 @@ export const PercentageTrend = ({ percentage }: { percentage: string }) => {
     <div className='flex items-center gap-1'>
       {icon}
       <p className={cn(color, 'text-sm')}>{percentage}</p>
-      <Text fontSize='sm'>{quote}</Text>
+      <p className='text-sm'>{quote}</p>
     </div>
   );
 };

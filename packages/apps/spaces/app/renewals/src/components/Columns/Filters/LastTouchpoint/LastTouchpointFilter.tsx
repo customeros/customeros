@@ -6,9 +6,9 @@ import subDays from 'date-fns/subDays';
 import { useRecoilValue } from 'recoil';
 import { Column } from '@tanstack/react-table';
 
-import { Radio, RadioGroup } from '@ui/form/Radio/Radio2';
+import { Radio, RadioGroup } from '@ui/form/Radio/Radio';
 import { Organization, LastTouchpointType } from '@graphql/types';
-import { CustomCheckbox } from '@ui/form/Checkbox/CustomCheckbox2';
+import { CustomCheckbox } from '@ui/form/Checkbox/CustomCheckbox';
 
 import { allTime, touchpoints } from './util';
 import { FilterHeader, useFilterToggle } from '../shared';

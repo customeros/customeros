@@ -5,12 +5,12 @@ import { useIsRestoring } from '@tanstack/react-query';
 
 import { cn } from '@ui/utils/cn';
 import { HelpCircle } from '@ui/media/icons/HelpCircle';
+import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 import { IconButton } from '@ui/form/IconButton/IconButton';
-import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
 import { Card, CardContent } from '@ui/presentation/Card/Card';
 import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
-import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog/InfoDialog2';
+import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog/InfoDialog';
 import {
   Contract,
   RenewalSummary,
@@ -111,7 +111,7 @@ export const ARRForecast = ({
       </Card>
 
       <InfoDialog
-        isOpen={modal.isOpen}
+        isOpen={modal.open}
         onClose={modal.onClose}
         onConfirm={modal.onClose}
         confirmButtonLabel='Got it'

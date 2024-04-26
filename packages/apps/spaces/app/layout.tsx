@@ -7,8 +7,6 @@ import { Merriweather } from 'next/font/google';
 
 import { HighlightInit } from '@highlight-run/next/client';
 
-import { ThemeProvider } from '@ui/theme/ThemeProvider';
-
 import { Providers } from './src/components/Providers/Providers';
 
 import './../styles/globals.scss';
@@ -154,19 +152,17 @@ export default async function RootLayout({
         />
 
         <body className='scrollbar'>
-          <ThemeProvider>
-            <Providers isProduction={isProduction} env={env}>
-              {children}
-              <ToastContainer
-                position='bottom-right'
-                autoClose={8000}
-                limit={3}
-                closeOnClick={true}
-                hideProgressBar={true}
-                theme='colored'
-              />
-            </Providers>
-          </ThemeProvider>
+          <Providers isProduction={isProduction} env={env}>
+            {children}
+            <ToastContainer
+              position='bottom-right'
+              autoClose={8000}
+              limit={3}
+              closeOnClick={true}
+              hideProgressBar={true}
+              theme='colored'
+            />
+          </Providers>
         </body>
       </html>
     </>

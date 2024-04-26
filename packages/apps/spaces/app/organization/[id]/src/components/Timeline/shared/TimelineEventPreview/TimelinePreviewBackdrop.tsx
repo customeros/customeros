@@ -1,7 +1,6 @@
 import { useState, useEffect, PropsWithChildren } from 'react';
 
 import { cn } from '@ui/utils/cn';
-import { Card } from '@ui/presentation/Card';
 import {
   Modal,
   ModalPortal,
@@ -41,7 +40,7 @@ export const TimelinePreviewBackdrop = ({
     <Modal open={isModalOpen} modal={false} onOpenChange={closeModal}>
       <div
         className={cn(
-          'absolute top-0 bottom-0 left-0 right-0 z-9 cursor-pointer flex justify-center align-middle transition-all duration-100 linear',
+          'absolute top-0 bottom-0 left-0 right-0 z-40 cursor-pointer flex justify-center align-middle transition-all duration-100 linear',
         )}
         id='timeline-preview-backdrop'
         style={{
@@ -56,32 +55,23 @@ export const TimelinePreviewBackdrop = ({
           <ModalContent
             placement='top'
             className={cn(
-              modalContent?.__typename === 'Invoice'
-                ? 'w-[650px]'
-                : 'w-[544px]',
               modalContent?.__typename === 'Invoice' ? 'h-[90vh]' : 'h-auto',
-              'absolute top-4 min-w-[544px] z-50 bg-transparent pb-2',
+              'absolute top-4 min-w-[544px] z-50 rounded-2xl max-w-fit',
             )}
             onPointerDownOutside={avoidDefaultDomBehavior}
             onInteractOutside={avoidDefaultDomBehavior}
             onOpenAutoFocus={(e) => e.preventDefault()}
           >
-            <Card
-              className={cn(
-                modalContent?.__typename === 'Invoice'
-                  ? 'w-[650px]'
-                  : 'w-[544px]',
-                modalContent?.__typename === 'Invoice' ? 'h-[90vh]' : 'h-auto',
-                'mx-auto top-4 min-w-[544px] cursor-default rounded-2xl ',
-              )}
+            <ModalScrollBody
+              className='mx-auto top-4 cursor-default bg-transparent p-0'
               id='timeline-preview-card'
               onMouseDown={(e) => {
                 e.stopPropagation();
               }}
               onClick={(e) => e.stopPropagation()}
             >
-              <ModalScrollBody className='p-0'>{children}</ModalScrollBody>
-            </Card>
+              {children}
+            </ModalScrollBody>
           </ModalContent>
         </ModalPortal>
       </div>

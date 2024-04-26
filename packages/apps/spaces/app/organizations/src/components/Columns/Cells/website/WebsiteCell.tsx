@@ -1,8 +1,6 @@
 import { useState } from 'react';
 
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
-import { IconButton } from '@ui/form/IconButton';
+import { IconButton } from '@ui/form/IconButton/IconButton';
 import { LinkExternal02 } from '@ui/media/icons/LinkExternal02';
 import {
   getExternalUrl,
@@ -16,30 +14,29 @@ interface WebsiteCellProps {
 export const WebsiteCell = ({ website }: WebsiteCellProps) => {
   const [isHovered, setIsHovered] = useState(false);
 
-  if (!website) return <Text color='gray.400'>Unknown</Text>;
+  if (!website) return <p className='text-gray-400'>Unknown</p>;
 
   return (
-    <Flex
-      align='center'
+    <div
+      className='flex items-center'
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <Text isTruncated color='gray.700' cursor='default'>
+      <p className='text-gray-700 cursor-default truncate'>
         {getFormattedLink(website)}
-      </Text>
+      </p>
       {isHovered && (
         <IconButton
-          ml='1'
+          className='ml-1 rounded-[5px]'
           variant='ghost'
           size='xs'
-          borderRadius='5px'
           onClick={() =>
             window.open(getExternalUrl(website ?? '/'), '_blank', 'noopener')
           }
           aria-label='organization website'
-          icon={<LinkExternal02 color='gray.500' />}
+          icon={<LinkExternal02 className='text-gray-500' />}
         />
       )}
-    </Flex>
+    </div>
   );
 };

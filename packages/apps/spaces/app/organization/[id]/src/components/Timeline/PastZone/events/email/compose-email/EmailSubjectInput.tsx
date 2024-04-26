@@ -1,7 +1,7 @@
 'use client';
 import React, { FC } from 'react';
 
-import { FormInput } from '@ui/form/Input/FormInput2';
+import { FormInput } from '@ui/form/Input/FormInput';
 
 interface EmailSubjectInput {
   mt?: number;

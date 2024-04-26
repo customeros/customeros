@@ -2,7 +2,7 @@ import { useRouter } from 'next/navigation';
 
 import { Button } from '@ui/form/Button/Button';
 import { File04 } from '@ui/media/icons/File04';
-import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon2';
+import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 
 import HalfCirclePattern from '../../../assets/HalfCirclePattern';
 

@@ -1,4 +1,4 @@
-import { Skeleton } from '@ui/feedback/Skeleton/Skeleton2';
+import { Skeleton } from '@ui/feedback/Skeleton/Skeleton';
 import { Card, CardContent } from '@ui/presentation/Card/Card';
 
 export const MessageCardSkeleton = () => {
