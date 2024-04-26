@@ -117,6 +117,7 @@ query getContracts($id: ID!) {
         maxAmount
         name
         renewalLikelihood
+        renewalAdjustedRate
         renewalUpdatedByUserId
         renewedAt
         updatedAt

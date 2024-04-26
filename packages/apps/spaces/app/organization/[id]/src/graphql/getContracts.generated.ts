@@ -147,6 +147,7 @@ export type GetContractsQuery = {
         maxAmount: number;
         name: string;
         renewalLikelihood: Types.OpportunityRenewalLikelihood;
+        renewalAdjustedRate: any;
         renewalUpdatedByUserId: string;
         renewedAt?: any | null;
         updatedAt: any;
@@ -305,6 +306,7 @@ export const GetContractsDocument = `
         maxAmount
         name
         renewalLikelihood
+        renewalAdjustedRate
         renewalUpdatedByUserId
         renewedAt
         updatedAt

@@ -3,12 +3,19 @@
 import { cn } from '@ui/utils/cn';
 
 interface DotProps {
+  className?: string;
   colorScheme?: string;
 }
 
-export const Dot = ({ colorScheme, ...props }: DotProps) => {
+export const Dot = ({ colorScheme, className, ...props }: DotProps) => {
   const colors = (colorScheme: string) => {
     switch (colorScheme) {
+      case 'orangeDark':
+        return 'bg-orangeDark-700';
+      case 'greenLight':
+        return 'bg-greenLight-400';
+      case 'yellow':
+        return 'bg-yellow-500';
       case 'gray':
         return 'bg-gray-500';
       case 'error':
@@ -24,7 +31,11 @@ export const Dot = ({ colorScheme, ...props }: DotProps) => {
 
   return (
     <div
-      className={cn(colors(colorScheme || 'gray'), 'size-[10px] rounded-full')}
+      className={cn(
+        colors(colorScheme || 'gray'),
+        'size-[10px] rounded-full',
+        className,
+      )}
       {...props}
     />
   );

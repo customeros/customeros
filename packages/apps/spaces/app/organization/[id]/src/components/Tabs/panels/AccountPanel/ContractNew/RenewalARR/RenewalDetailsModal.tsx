@@ -113,12 +113,13 @@ const RenewalDetailsForm = ({
   });
 
   const updatedAt = DateTimeUtils.timeAgo(data?.updatedAt);
+  const maxAmount = data.maxAmount ?? 0;
+  const renewadAt = data?.renewedAt;
 
   const defaultValues = useMemo(
     () => ({
-      renewalAdjustedRate: 50,
+      renewalAdjustedRate: data?.renewalAdjustedRate ?? 50,
       renewalLikelihood: data?.renewalLikelihood,
-      amount: data?.amount?.toString(),
       reason: data?.comments,
     }),
     [data?.renewalLikelihood, data?.amount, data?.comments],
@@ -161,8 +162,8 @@ const RenewalDetailsForm = ({
         const nextRate = match(action.payload.value)
           .with(OpportunityRenewalLikelihood.LowRenewal, () => 25)
           .with(OpportunityRenewalLikelihood.MediumRenewal, () => 50)
-          .with(OpportunityRenewalLikelihood.HighRenewal, () => 75)
-          .otherwise(() => 50);
+          .with(OpportunityRenewalLikelihood.HighRenewal, () => 100)
+          .otherwise(() => 100);
 
         return {
           ...next,
@@ -222,7 +223,8 @@ const RenewalDetailsForm = ({
               formId={formId}
               currency={currency}
               name='renewalAdjustedRate'
-              amount={parseFloat(defaultValues.amount)}
+              amount={maxAmount}
+              renewadAt={renewadAt}
             />
 
             {!!data.renewalLikelihood && (
@@ -312,7 +314,7 @@ const LikelihoodButtonGroup = ({
           data-selected={value === button.likelihood}
         >
           <div className='flex items-center gap-1'>
-            <Dot colorScheme={button.colorScheme} />
+            <Dot colorScheme={button.colorScheme} className='size-2 mr-2' />
             {button.label}
           </div>
         </Button>
@@ -343,6 +345,7 @@ interface FormRangeSliderProps {
   formId: string;
   amount?: number;
   currency: string;
+  renewadAt?: string;
 }
 
 const FormRangeSlider = ({
@@ -350,6 +353,7 @@ const FormRangeSlider = ({
   formId,
   amount = 0,
   currency,
+  renewadAt,
 }: FormRangeSliderProps) => {
   const { getInputProps } = useField(name, formId);
   const { value, onChange, onBlur, ...rest } = getInputProps();
@@ -359,6 +363,9 @@ const FormRangeSlider = ({
     2,
     currency,
   );
+  const formattedRenewedAt = renewadAt
+    ? DateTimeUtils.format(renewadAt, DateTimeUtils.dateWithAbreviatedMonth)
+    : undefined;
 
   const trackStyle = cn('h-0.5 transition-colors', {
     'bg-orangeDark-700': value <= 25,
@@ -377,13 +384,19 @@ const FormRangeSlider = ({
       <div className='flex items-center justify-between mb-3'>
         <p className='font-medium text-base'>
           Renewal ARR{' '}
-          <span className='text-gray-400 font-normal text-sm'>in 1 year</span>
+          {formattedRenewedAt && (
+            <span className='text-gray-400 font-normal text-sm'>
+              on {formattedRenewedAt}
+            </span>
+          )}
         </p>
 
         <p className='text-base font-medium'>
-          <span className='text-sm text-gray-400 font-normal'>
-            <s>{defaultFormattedAmount}</s>
-          </span>{' '}
+          {formattedNewAmount !== defaultFormattedAmount && (
+            <span className='text-sm text-gray-400 font-normal'>
+              <s>{defaultFormattedAmount}</s>
+            </span>
+          )}{' '}
           {formattedNewAmount}
         </p>
       </div>
