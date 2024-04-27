@@ -853,10 +853,9 @@ func MapDbNodeToAnalysisEntity(node *dbtype.Node) *entity.AnalysisEntity {
 		return &entity.AnalysisEntity{}
 	}
 	props := utils.GetPropsFromNode(*node)
-	createdAt := utils.GetTimePropOrEpochStart(props, "createdAt")
 	analysisEntity := entity.AnalysisEntity{
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		CreatedAt:     &createdAt,
+		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		AnalysisType:  utils.GetStringPropOrEmpty(props, "analysisType"),
 		Content:       utils.GetStringPropOrEmpty(props, "content"),
 		ContentType:   utils.GetStringPropOrEmpty(props, "contentType"),

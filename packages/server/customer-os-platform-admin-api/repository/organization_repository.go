@@ -31,14 +31,14 @@ func (r *organizationRepository) CountOrganizationsForLastTouchpointRefresh(ctx 
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("tenant", tenant))
 
-	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {hide: false}) WHERE o:Organization_%s RETURN count(o)`, tenant)
-	span.LogFields(log.String("query", query))
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {hide: false}) RETURN count(o)`
+	span.LogFields(log.String("cypher", cypher))
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	dbRecord, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, query,
+		queryResult, err := tx.Run(ctx, cypher,
 			map[string]any{
 				"tenant": tenant,
 			})
