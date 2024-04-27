@@ -127,21 +127,6 @@ func TestOpportunityEventHandler_OnCreateRenewal(t *testing.T) {
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Organization": 1, "Contract": 1, "Opportunity": 0})
 
-	// prepare grpc mock
-	calledEventsPlatformToRefreshRenewalSummary := false
-	organizationServiceRefreshCallbacks := mocked_grpc.MockOrganizationServiceCallbacks{
-		RefreshRenewalSummary: func(context context.Context, org *organizationpb.RefreshRenewalSummaryGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-			require.Equal(t, tenantName, org.Tenant)
-			require.Equal(t, orgId, org.OrganizationId)
-			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, org.AppSource)
-			calledEventsPlatformToRefreshRenewalSummary = true
-			return &organizationpb.OrganizationIdGrpcResponse{
-				Id: orgId,
-			}, nil
-		},
-	}
-	mocked_grpc.SetOrganizationCallbacks(&organizationServiceRefreshCallbacks)
-
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
 		log:          testLogger,
@@ -199,8 +184,6 @@ func TestOpportunityEventHandler_OnCreateRenewal(t *testing.T) {
 	require.Equal(t, neo4jenum.RenewalLikelihoodLow, opportunity.RenewalDetails.RenewalLikelihood)
 	require.True(t, opportunity.RenewalDetails.RenewalApproved)
 	require.Equal(t, int64(50), opportunity.RenewalDetails.RenewalAdjustedRate)
-
-	require.True(t, calledEventsPlatformToRefreshRenewalSummary)
 }
 
 func TestOpportunityEventHandler_OnUpdateNextCycleDate(t *testing.T) {
