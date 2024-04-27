@@ -8,7 +8,7 @@ import (
 type AnalysisEntity struct {
 	DataLoaderKey
 	Id            string
-	CreatedAt     *time.Time
+	CreatedAt     time.Time
 	Content       string
 	ContentType   string
 	AnalysisType  string
