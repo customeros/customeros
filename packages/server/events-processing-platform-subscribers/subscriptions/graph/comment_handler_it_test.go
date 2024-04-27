@@ -7,7 +7,6 @@ import (
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/graph_db/entity"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -24,7 +23,7 @@ func TestGraphCommentEventHandler_OnCreate(t *testing.T) {
 	externalSystemId := "hubspot"
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	neo4jt.CreateExternalSystem(ctx, testDatabase.Driver, tenantName, externalSystemId)
-	commentedIssueId := neo4jt.CreateIssue(ctx, testDatabase.Driver, tenantName, entity.IssueEntity{})
+	commentedIssueId := neo4jt.CreateIssue(ctx, testDatabase.Driver, tenantName, neo4jentity.IssueEntity{})
 	authorUserId := neo4jtest.CreateUser(ctx, testDatabase.Driver, tenantName, neo4jentity.UserEntity{})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"User": 1, "Issue": 1, "ExternalSystem": 1, "Comment": 0, "TimelineEvent": 1})

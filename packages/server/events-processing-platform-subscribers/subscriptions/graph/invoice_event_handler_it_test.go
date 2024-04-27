@@ -10,7 +10,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/mocked_grpc"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
@@ -335,7 +334,7 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 	dbNodes, err = neo4jtest.GetAllNodesByLabel(ctx, testDatabase.Driver, neo4jutil.NodeLabelAction)
 	require.Nil(t, err)
 	require.Equal(t, 1, len(dbNodes))
-	action := graph_db.MapDbNodeToActionEntity(*dbNodes[0])
+	action := neo4jmapper.MapDbNodeToActionEntity(dbNodes[0])
 	require.NotNil(t, action.Id)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, action.AppSource)
@@ -536,7 +535,7 @@ func TestInvoiceEventHandler_OnInvoiceUpdateV1(t *testing.T) {
 	dbNodes, err := neo4jtest.GetAllNodesByLabel(ctx, testDatabase.Driver, neo4jutil.NodeLabelAction)
 	require.Nil(t, err)
 	require.Equal(t, 1, len(dbNodes))
-	action := graph_db.MapDbNodeToActionEntity(*dbNodes[0])
+	action := neo4jmapper.MapDbNodeToActionEntity(dbNodes[0])
 	require.NotNil(t, action.Id)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, action.AppSource)
@@ -604,7 +603,7 @@ func TestInvoiceEventHandler_OnInvoiceVoidV1(t *testing.T) {
 	dbNodes, err := neo4jtest.GetAllNodesByLabel(ctx, testDatabase.Driver, neo4jutil.NodeLabelAction)
 	require.Nil(t, err)
 	require.Equal(t, 1, len(dbNodes))
-	action := graph_db.MapDbNodeToActionEntity(*dbNodes[0])
+	action := neo4jmapper.MapDbNodeToActionEntity(dbNodes[0])
 	require.NotNil(t, action.Id)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, action.AppSource)

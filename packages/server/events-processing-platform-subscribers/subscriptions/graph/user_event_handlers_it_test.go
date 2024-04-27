@@ -7,7 +7,6 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/graph_db/entity"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/neo4j"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	job_role_aggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/aggregate"
@@ -579,7 +578,7 @@ func TestGraphUserEventHandler_OnJobRoleLinkedToUser(t *testing.T) {
 	propsAfterUserCreate := utils.GetPropsFromNode(*dbNodeAfterUserCreate)
 	require.Equal(t, userId, utils.GetStringPropOrEmpty(propsAfterUserCreate, "id"))
 
-	jobRoleId := neo4jt.CreateJobRole(ctx, testDatabase.Driver, tenantName, entity.JobRoleEntity{})
+	jobRoleId := neo4jt.CreateJobRole(ctx, testDatabase.Driver, tenantName, neo4jentity.JobRoleEntity{})
 
 	dbNodeAfterjobRoleCreate, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "JobRole_"+tenantName, jobRoleId)
 	require.Nil(t, err)

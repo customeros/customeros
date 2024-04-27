@@ -5,9 +5,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/mocked_grpc"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/neo4j"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -92,7 +92,7 @@ func TestGraphLogEntryEventHandler_OnCreate(t *testing.T) {
 	require.NotNil(t, logEntryDbNode)
 
 	// verify log entry
-	logEntry := graph_db.MapDbNodeToLogEntryEntity(*logEntryDbNode)
+	logEntry := neo4jmapper.MapDbNodeToLogEntryEntity(logEntryDbNode)
 	require.Equal(t, logEntryId, logEntry.Id)
 	require.Equal(t, "test content", logEntry.Content)
 	require.Equal(t, "test content type", logEntry.ContentType)
@@ -141,7 +141,7 @@ func TestGraphLogEntryEventHandler_OnUpdate(t *testing.T) {
 	require.NotNil(t, logEntryDbNode)
 
 	// verify log entry
-	logEntry := graph_db.MapDbNodeToLogEntryEntity(*logEntryDbNode)
+	logEntry := neo4jmapper.MapDbNodeToLogEntryEntity(logEntryDbNode)
 	require.Equal(t, logEntryId, logEntry.Id)
 	require.Equal(t, "test content", logEntry.Content)
 	require.Equal(t, "test content type", logEntry.ContentType)

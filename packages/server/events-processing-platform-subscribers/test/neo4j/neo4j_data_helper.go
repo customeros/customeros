@@ -8,10 +8,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/graph_db/entity"
 )
 
-func CreateJobRole(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, jobRole entity.JobRoleEntity) string {
+func CreateJobRole(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, jobRole neo4jentity.JobRoleEntity) string {
 	jobRoleId := jobRole.Id
 	if jobRoleId == "" {
 		jobRoleId = uuid.New().String()
@@ -22,10 +21,9 @@ func CreateJobRole(ctx context.Context, driver *neo4j.DriverWithContext, tenant 
 		"jobRoleId": jobRoleId,
 	})
 	return jobRoleId
-
 }
 
-func CreateIssue(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, issue entity.IssueEntity) string {
+func CreateIssue(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, issue neo4jentity.IssueEntity) string {
 	issueId := utils.NewUUIDIfEmpty(issue.Id)
 	query := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})
 			  MERGE (t)<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {id:$id})
@@ -105,7 +103,7 @@ func LinkIssueFollowedBy(ctx context.Context, driver *neo4j.DriverWithContext, i
 	})
 }
 
-func CreateInteractionEvent(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, interactionEvent entity.InteractionEventEntity) string {
+func CreateInteractionEvent(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, interactionEvent neo4jentity.InteractionEventEntity) string {
 	interactionEventId := utils.NewUUIDIfEmpty(interactionEvent.Id)
 	query := fmt.Sprintf(`MERGE (i:InteractionEvent {id:$id})
 				SET i:InteractionEvent_%s,
