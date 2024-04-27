@@ -8,7 +8,6 @@ import (
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/graph_db/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/mocked_grpc"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/neo4j"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -124,7 +123,7 @@ func TestGraphIssueEventHandler_OnUpdate(t *testing.T) {
 	// prepare neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
-	issueId := neo4jt.CreateIssue(ctx, testDatabase.Driver, tenantName, entity.IssueEntity{
+	issueId := neo4jt.CreateIssue(ctx, testDatabase.Driver, tenantName, neo4jentity.IssueEntity{
 		Subject:     "test subject",
 		Description: "test description",
 		Status:      "open",
@@ -179,7 +178,7 @@ func TestGraphIssueEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOp
 	// prepare neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
-	issueId := neo4jt.CreateIssue(ctx, testDatabase.Driver, tenantName, entity.IssueEntity{
+	issueId := neo4jt.CreateIssue(ctx, testDatabase.Driver, tenantName, neo4jentity.IssueEntity{
 		Subject:       "test subject",
 		Description:   "test description",
 		SourceOfTruth: constants.SourceOpenline,
@@ -232,7 +231,7 @@ func TestGraphIssueEventHandler_OnAddUserAssignee(t *testing.T) {
 
 	// prepare neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	issueId := neo4jt.CreateIssue(ctx, testDatabase.Driver, tenantName, entity.IssueEntity{})
+	issueId := neo4jt.CreateIssue(ctx, testDatabase.Driver, tenantName, neo4jentity.IssueEntity{})
 	userId := neo4jtest.CreateUser(ctx, testDatabase.Driver, tenantName, neo4jentity.UserEntity{})
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"User": 1, "Issue": 1, "TimelineEvent": 1})
 	neo4jtest.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{"ASSIGNED_TO": 0})
@@ -269,7 +268,7 @@ func TestGraphIssueEventHandler_OnRemoveUserAssignee(t *testing.T) {
 
 	// prepare neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	issueId := neo4jt.CreateIssue(ctx, testDatabase.Driver, tenantName, entity.IssueEntity{})
+	issueId := neo4jt.CreateIssue(ctx, testDatabase.Driver, tenantName, neo4jentity.IssueEntity{})
 	userId := neo4jtest.CreateUser(ctx, testDatabase.Driver, tenantName, neo4jentity.UserEntity{})
 	neo4jt.LinkIssueAssignedTo(ctx, testDatabase.Driver, issueId, userId)
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"User": 1, "Issue": 1, "TimelineEvent": 1})
@@ -307,7 +306,7 @@ func TestGraphIssueEventHandler_OnAddUserFollower(t *testing.T) {
 
 	// prepare neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	issueId := neo4jt.CreateIssue(ctx, testDatabase.Driver, tenantName, entity.IssueEntity{})
+	issueId := neo4jt.CreateIssue(ctx, testDatabase.Driver, tenantName, neo4jentity.IssueEntity{})
 	userId := neo4jtest.CreateUser(ctx, testDatabase.Driver, tenantName, neo4jentity.UserEntity{})
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"User": 1, "Issue": 1, "TimelineEvent": 1})
 	neo4jtest.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{"FOLLOWED_BY": 0})
@@ -344,7 +343,7 @@ func TestGraphIssueEventHandler_OnRemoveUserFollower(t *testing.T) {
 
 	// prepare neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	issueId := neo4jt.CreateIssue(ctx, testDatabase.Driver, tenantName, entity.IssueEntity{})
+	issueId := neo4jt.CreateIssue(ctx, testDatabase.Driver, tenantName, neo4jentity.IssueEntity{})
 	userId := neo4jtest.CreateUser(ctx, testDatabase.Driver, tenantName, neo4jentity.UserEntity{})
 	neo4jt.LinkIssueFollowedBy(ctx, testDatabase.Driver, issueId, userId)
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"User": 1, "Issue": 1, "TimelineEvent": 1})

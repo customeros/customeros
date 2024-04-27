@@ -11,7 +11,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/mocked_grpc"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/neo4j"
@@ -110,7 +109,7 @@ func TestGraphOrganizationEventHandler_OnOrganizationCreate(t *testing.T) {
 	actionDbNode, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
 	require.Nil(t, err)
 	require.NotNil(t, actionDbNode)
-	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
+	action := neo4jmapper.MapDbNodeToActionEntity(actionDbNode)
 	require.NotNil(t, action.Id)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), action.SourceOfTruth)
@@ -494,7 +493,7 @@ func TestGraphOrganizationEventHandler_OnUpdateOnboardingStatus(t *testing.T) {
 	actionDbNode, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
 	require.Nil(t, err)
 	require.NotNil(t, actionDbNode)
-	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
+	action := neo4jmapper.MapDbNodeToActionEntity(actionDbNode)
 	require.NotNil(t, action.Id)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, action.AppSource)
@@ -555,7 +554,7 @@ func TestGraphOrganizationEventHandler_OnUpdateOnboardingStatus_CausedByContract
 	actionDbNode, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
 	require.Nil(t, err)
 	require.NotNil(t, actionDbNode)
-	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
+	action := neo4jmapper.MapDbNodeToActionEntity(actionDbNode)
 	require.NotNil(t, action.Id)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, action.AppSource)

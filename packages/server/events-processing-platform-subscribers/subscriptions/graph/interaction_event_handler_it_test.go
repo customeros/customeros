@@ -5,10 +5,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/graph_db"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/graph_db/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/mocked_grpc"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/neo4j"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -29,7 +28,7 @@ func TestGraphInteractionEventEventHandler_OnCreate(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	neo4jt.CreateExternalSystem(ctx, testDatabase.Driver, tenantName, externalSystemId)
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
-	issueId := neo4jt.CreateIssue(ctx, testDatabase.Driver, tenantName, entity.IssueEntity{})
+	issueId := neo4jt.CreateIssue(ctx, testDatabase.Driver, tenantName, neo4jentity.IssueEntity{})
 	neo4jt.LinkIssueReportedBy(ctx, testDatabase.Driver, issueId, orgId)
 	userId := neo4jtest.CreateUser(ctx, testDatabase.Driver, tenantName, neo4jentity.UserEntity{})
 	contactId := neo4jtest.CreateContact(ctx, testDatabase.Driver, tenantName, neo4jentity.ContactEntity{})
@@ -130,7 +129,7 @@ func TestGraphInteractionEventEventHandler_OnCreate(t *testing.T) {
 	require.NotNil(t, interactionEventDbNode)
 
 	// verify interaction event
-	interactionEvent := graph_db.MapDbNodeToInteractionEventEntity(*interactionEventDbNode)
+	interactionEvent := neo4jmapper.MapDbNodeToInteractionEventEntity(interactionEventDbNode)
 	require.Equal(t, interactionEventId, interactionEvent.Id)
 	require.Equal(t, "test content", interactionEvent.Content)
 	require.Equal(t, "test content type", interactionEvent.ContentType)
@@ -155,7 +154,7 @@ func TestGraphInteractionEventEventHandler_OnUpdate(t *testing.T) {
 
 	// prepare neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	interactionEventId := neo4jt.CreateInteractionEvent(ctx, testDatabase.Driver, tenantName, entity.InteractionEventEntity{
+	interactionEventId := neo4jt.CreateInteractionEvent(ctx, testDatabase.Driver, tenantName, neo4jentity.InteractionEventEntity{
 		Content:     "test content",
 		Channel:     "test channel",
 		Identifier:  "test identifier",
@@ -195,7 +194,7 @@ func TestGraphInteractionEventEventHandler_OnUpdate(t *testing.T) {
 	require.NotNil(t, interactionEventDbNode)
 
 	// verify interaction event
-	interactionEvent := graph_db.MapDbNodeToInteractionEventEntity(*interactionEventDbNode)
+	interactionEvent := neo4jmapper.MapDbNodeToInteractionEventEntity(interactionEventDbNode)
 	require.Equal(t, interactionEventId, interactionEvent.Id)
 	require.Equal(t, "test content updated", interactionEvent.Content)
 	require.Equal(t, "test content type updated", interactionEvent.ContentType)
@@ -213,7 +212,7 @@ func TestGraphInteractionEventEventHandler_OnUpdate_CurrentSourceOpenline_Update
 
 	// prepare neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	interactionEventId := neo4jt.CreateInteractionEvent(ctx, testDatabase.Driver, tenantName, entity.InteractionEventEntity{
+	interactionEventId := neo4jt.CreateInteractionEvent(ctx, testDatabase.Driver, tenantName, neo4jentity.InteractionEventEntity{
 		Content:       "test content",
 		Channel:       "test channel",
 		Identifier:    "test identifier",
@@ -256,7 +255,7 @@ func TestGraphInteractionEventEventHandler_OnUpdate_CurrentSourceOpenline_Update
 	require.NotNil(t, interactionEventDbNode)
 
 	// verify interaction event
-	interactionEvent := graph_db.MapDbNodeToInteractionEventEntity(*interactionEventDbNode)
+	interactionEvent := neo4jmapper.MapDbNodeToInteractionEventEntity(interactionEventDbNode)
 	require.Equal(t, interactionEventId, interactionEvent.Id)
 	require.Equal(t, "test content", interactionEvent.Content)
 	require.Equal(t, "test content type", interactionEvent.ContentType)
@@ -275,7 +274,7 @@ func TestGraphInteractionEventEventHandler_OnSummaryReplace_Create(t *testing.T)
 
 	// prepare neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	interactionEventId := neo4jt.CreateInteractionEvent(ctx, testDatabase.Driver, tenantName, entity.InteractionEventEntity{
+	interactionEventId := neo4jt.CreateInteractionEvent(ctx, testDatabase.Driver, tenantName, neo4jentity.InteractionEventEntity{
 		Content:       "test content",
 		Channel:       "test channel",
 		Identifier:    "test identifier",
@@ -331,7 +330,7 @@ func TestGraphInteractionEventEventHandler_OnActionItemsReplace(t *testing.T) {
 
 	// prepare neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	interactionEventId := neo4jt.CreateInteractionEvent(ctx, testDatabase.Driver, tenantName, entity.InteractionEventEntity{
+	interactionEventId := neo4jt.CreateInteractionEvent(ctx, testDatabase.Driver, tenantName, neo4jentity.InteractionEventEntity{
 		Content:       "test content",
 		Channel:       "test channel",
 		Identifier:    "test identifier",

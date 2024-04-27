@@ -5,9 +5,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/graph_db"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/neo4j"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_session/aggregate"
@@ -72,7 +72,7 @@ func TestGraphInteractionSessionEventHandler_OnCreate(t *testing.T) {
 	require.NotNil(t, interactionSessionDbNode)
 
 	// verify interaction session
-	interactionEvent := graph_db.MapDbNodeToInteractionSessionEntity(*interactionSessionDbNode)
+	interactionEvent := neo4jmapper.MapDbNodeToInteractionSessionEntity(interactionSessionDbNode)
 	require.Equal(t, interactionSessionId, interactionEvent.Id)
 	require.Equal(t, "test channel", interactionEvent.Channel)
 	require.Equal(t, "test channel data", interactionEvent.ChannelData)
