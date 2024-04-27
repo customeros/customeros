@@ -36,7 +36,6 @@ require (
 	github.com/testcontainers/testcontainers-go v0.30.0
 	go.temporal.io/sdk v1.26.1
 	go.uber.org/zap v1.27.0
-	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
 	golang.org/x/net v0.24.0
 	golang.org/x/sync v0.7.0
 	google.golang.org/grpc v1.63.2
@@ -85,6 +84,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.24.0 // indirect
 	go.temporal.io/api v1.32.0 // indirect
 	golang.org/x/arch v0.7.0 // indirect
+	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240401170217-c3f982113cda // indirect
 )
