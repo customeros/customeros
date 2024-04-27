@@ -177,8 +177,6 @@ func (h *OpportunityEventHandler) OnCreateRenewal(ctx context.Context, evt event
 			h.log.Errorf("error while updating renewal opportunity %s: %s", opportunityId, err.Error())
 			return nil
 		}
-
-		h.sendEventToUpdateOrganizationRenewalSummary(ctx, eventData.Tenant, opportunityId, span)
 	} else {
 		// Mark event store stream for deletion
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
