@@ -96,7 +96,7 @@ func (h *organizationRequestHandler) HandleTemp(ctx context.Context, tenant, obj
 }
 
 func (h *organizationRequestHandler) HandleTempWithRetry(ctx context.Context, tenant, objectId string, request any) (any, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractRequestHandler.Handle")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRequestHandler.HandleTempWithRetry")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
 	tracing.LogObjectAsJson(span, "request", request)
