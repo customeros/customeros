@@ -1,0 +1,6 @@
+query tableViewDefs {
+  tableViewDefs {
+    id
+    }
+  }
+
