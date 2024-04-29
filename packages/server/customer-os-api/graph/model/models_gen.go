@@ -2551,6 +2551,8 @@ type ServiceLineItemBulkUpdateItem struct {
 	Comments                *string     `json:"comments,omitempty"`
 	IsRetroactiveCorrection *bool       `json:"isRetroactiveCorrection,omitempty"`
 	ServiceStarted          *time.Time  `json:"serviceStarted,omitempty"`
+	CloseVersion            *bool       `json:"closeVersion,omitempty"`
+	NewVersion              *bool       `json:"newVersion,omitempty"`
 }
 
 type ServiceLineItemCloseInput struct {

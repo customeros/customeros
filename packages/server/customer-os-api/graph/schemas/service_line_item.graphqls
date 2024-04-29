@@ -83,6 +83,8 @@ input ServiceLineItemBulkUpdateItem {
     comments:                String
     isRetroactiveCorrection: Boolean
     serviceStarted:          Time
+    closeVersion:            Boolean
+    newVersion:              Boolean
 }
 
 input ServiceLineItemCloseInput {
