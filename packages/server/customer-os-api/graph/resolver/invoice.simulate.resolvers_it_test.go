@@ -26,9 +26,10 @@ func TestMutationResolver_InvoiceSimulate_OnCycle_PostPaidFalse_1(t *testing.T) 
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
-		BillingCycleInMonths: 1,
-		InvoicingEnabled:     true,
-		InvoicingStartDate:   &januaryFirst,
+		BillingCycleInMonths:  1,
+		InvoicingEnabled:      true,
+		InvoicingStartDate:    &januaryFirst,
+		OrganizationLegalName: "Test Organization",
 	})
 
 	rawResponse := callGraphQL(t, "invoice/simulate_invoice", map[string]interface{}{
@@ -58,6 +59,7 @@ func TestMutationResolver_InvoiceSimulate_OnCycle_PostPaidFalse_1(t *testing.T) 
 	invoice := invoiceStruct.Invoice_Simulate[0]
 
 	require.Equal(t, 1, len(invoice.InvoiceLineItems))
+	require.Equal(t, "Test Organization", *invoice.Customer.Name)
 
 	asserInvoice(t, invoice, "2024-01-01T00:00:00Z", "2024-01-31T00:00:00Z", false, false, 1)
 	asserInvoiceLineItem(t, invoice.InvoiceLineItems[0], "1", "S1", 1, 1, 1)

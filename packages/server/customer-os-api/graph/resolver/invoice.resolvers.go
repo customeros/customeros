@@ -7,6 +7,7 @@ package resolver
 import (
 	"context"
 	"errors"
+	"github.com/vektah/gqlparser/v2/ast"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
@@ -263,45 +264,66 @@ func (r *mutationResolver) InvoiceSimulate(ctx context.Context, input model.Invo
 	var customer model.InvoiceCustomer
 	var provider model.InvoiceProvider
 	if len(nextInvoices) > 0 {
-		// populate customer and provider data
-		contract, err := r.Services.CommonServices.ContractService.GetById(ctx, input.ContractID)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			graphql.AddErrorf(ctx, "Failed to get contract by id %s", input.ContractID)
-			return nil, err
+		// Get FieldContext from the ctx
+		fc := graphql.GetFieldContext(ctx)
+		requestedCustomerDtls := false
+		requestedProviderDtls := false
+		for _, selected := range fc.Field.Selections {
+			if field, ok := selected.(*ast.Field); ok {
+				if field.Name == "customer" {
+					requestedCustomerDtls = true
+				}
+				if field.Name == "provider" {
+					requestedProviderDtls = true
+				}
+			}
 		}
-		customer = model.InvoiceCustomer{
-			Name:            utils.StringPtr(contract.OrganizationLegalName),
-			Email:           utils.StringPtr(contract.InvoiceEmail),
-			AddressLine1:    utils.StringPtr(contract.AddressLine1),
-			AddressLine2:    utils.StringPtr(contract.AddressLine2),
-			AddressZip:      utils.StringPtr(contract.Zip),
-			AddressLocality: utils.StringPtr(contract.Locality),
-			AddressCountry:  utils.StringPtr(contract.Country),
-			AddressRegion:   utils.StringPtr(contract.Region),
+
+		// populate customer data
+		if requestedCustomerDtls {
+			contract, err := r.Services.CommonServices.ContractService.GetById(ctx, input.ContractID)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				graphql.AddErrorf(ctx, "Failed to get contract by id %s", input.ContractID)
+				return nil, err
+			}
+			customer = model.InvoiceCustomer{
+				Name:            utils.StringPtr(contract.OrganizationLegalName),
+				Email:           utils.StringPtr(contract.InvoiceEmail),
+				AddressLine1:    utils.StringPtr(contract.AddressLine1),
+				AddressLine2:    utils.StringPtr(contract.AddressLine2),
+				AddressZip:      utils.StringPtr(contract.Zip),
+				AddressLocality: utils.StringPtr(contract.Locality),
+				AddressCountry:  utils.StringPtr(contract.Country),
+				AddressRegion:   utils.StringPtr(contract.Region),
+			}
 		}
-		tenantBillingProfile, err := r.Services.TenantService.GetDefaultTenantBillingProfile(ctx)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			graphql.AddErrorf(ctx, "Failed to get tenant billing profile")
-			return nil, err
-		}
-		tenantSettings, err := r.Services.TenantService.GetTenantSettings(ctx)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			graphql.AddErrorf(ctx, "Failed to get tenant settings")
-			return nil, err
-		}
-		if tenantBillingProfile != nil {
-			provider = model.InvoiceProvider{
-				LogoRepositoryFileID: utils.StringPtr(tenantSettings.LogoRepositoryFileId),
-				Name:                 utils.StringPtr(tenantBillingProfile.LegalName),
-				AddressLine1:         utils.StringPtr(tenantBillingProfile.AddressLine1),
-				AddressLine2:         utils.StringPtr(tenantBillingProfile.AddressLine2),
-				AddressZip:           utils.StringPtr(tenantBillingProfile.Zip),
-				AddressLocality:      utils.StringPtr(tenantBillingProfile.Locality),
-				AddressCountry:       utils.StringPtr(tenantBillingProfile.Country),
-				AddressRegion:        utils.StringPtr(tenantBillingProfile.Region),
+
+		// populate provider data
+		if requestedProviderDtls {
+			tenantBillingProfile, err := r.Services.TenantService.GetDefaultTenantBillingProfile(ctx)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				graphql.AddErrorf(ctx, "Failed to get tenant billing profile")
+				return nil, err
+			}
+			tenantSettings, err := r.Services.TenantService.GetTenantSettings(ctx)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				graphql.AddErrorf(ctx, "Failed to get tenant settings")
+				return nil, err
+			}
+			if tenantBillingProfile != nil {
+				provider = model.InvoiceProvider{
+					LogoRepositoryFileID: utils.StringPtr(tenantSettings.LogoRepositoryFileId),
+					Name:                 utils.StringPtr(tenantBillingProfile.LegalName),
+					AddressLine1:         utils.StringPtr(tenantBillingProfile.AddressLine1),
+					AddressLine2:         utils.StringPtr(tenantBillingProfile.AddressLine2),
+					AddressZip:           utils.StringPtr(tenantBillingProfile.Zip),
+					AddressLocality:      utils.StringPtr(tenantBillingProfile.Locality),
+					AddressCountry:       utils.StringPtr(tenantBillingProfile.Country),
+					AddressRegion:        utils.StringPtr(tenantBillingProfile.Region),
+				}
 			}
 		}
 	}
