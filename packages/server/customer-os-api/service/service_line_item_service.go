@@ -664,7 +664,7 @@ func (s *serviceLineItemService) CreateOrUpdateOrCloseInBulk(ctx context.Context
 				s.log.Errorf("Failed to close service line item: %s", err.Error())
 			}
 		} else {
-			if serviceLineItem.NewVersion || (!serviceLineItem.IsRetroactiveCorrection && serviceLineItem.StartedAt != nil && serviceLineItem.StartedAt.After(utils.Today())) {
+			if serviceLineItem.NewVersion {
 				itemId, err := s.NewVersion(ctx, ServiceLineItemNewVersionData{
 					Id:        serviceLineItem.Id,
 					Name:      serviceLineItem.Name,
