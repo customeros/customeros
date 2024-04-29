@@ -18,7 +18,16 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+
+    "baseUrl": ".",
+    "paths": {
+      "@ui/*": ["src/ui/*"],
+      "@shared/*": ["src/routes/src/*"],
+      "@assets/*": ["src/assets/*"],
+      "@store/*": ["src/store/*"],
+      "@graphql/types": ["src/routes/src/types/__generated__/graphql.types.ts"]
+    }
   },
   "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]
