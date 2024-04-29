@@ -114,7 +114,7 @@ export const OrganizationRelationship = ({
   }, []);
 
   return (
-    <div className='flex gap-1 items-center group'>
+    <div className='flex gap-1 items-center group/relationship'>
       <p
         className='cursor-default text-gray-700'
         onDoubleClick={() => setIsEditing(true)}
@@ -125,7 +125,7 @@ export const OrganizationRelationship = ({
         <MenuButton>
           <IconButton
             className={cn(
-              'rounded-md opacity-0 group-hover:opacity-100',
+              'rounded-md opacity-0 group-hover/relationship:opacity-100',
               isEditing && 'opacity-100',
             )}
             aria-label='edit relationship'

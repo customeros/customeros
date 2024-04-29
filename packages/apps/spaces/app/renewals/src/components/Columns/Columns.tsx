@@ -108,7 +108,12 @@ const columns: Record<string, Column> = {
       cell: (props) => {
         const value = props.getValue()?.renewalSummary?.renewalLikelihood;
 
-        return <RenewalLikelihoodCell value={value} />;
+        return (
+          <RenewalLikelihoodCell
+            value={value}
+            id={props.row.original.organization.metadata.id}
+          />
+        );
       },
       header: (props) => (
         <THead
