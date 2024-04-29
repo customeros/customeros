@@ -275,6 +275,8 @@ func (r *mutationResolver) InvoiceSimulate(ctx context.Context, input model.Invo
 			Subtotal:           nextInvoice.Invoice.Amount,
 			Total:              nextInvoice.Invoice.TotalAmount,
 			InvoiceLineItems:   []*model.InvoiceLineSimulate{},
+			Customer:           &model.InvoiceCustomer{},
+			Provider:           &model.InvoiceProvider{},
 		}
 
 		for _, line := range nextInvoice.Lines {
