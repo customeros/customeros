@@ -589,9 +589,14 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices(t *testin
 		InvoicingEnabled:      true,
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
-	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{
+	sliId := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{
 		StartedAt: yesterday,
 	})
+	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, entity.InvoiceEntity{
+		DryRun: true,
+	})
+	invoiceLineId := neo4jtest.CreateInvoiceLine(ctx, driver, tenant, invoiceId, entity.InvoiceLineEntity{})
+	neo4jtest.LinkNodes(ctx, driver, invoiceLineId, sliId, "INVOICED")
 
 	result, err := repositories.ContractReadRepository.GetContractsToGenerateOffCycleInvoices(ctx, today, 60)
 	require.NoError(t, err)
@@ -857,7 +862,9 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_ServiceLi
 	sliId := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{
 		StartedAt: yesterday,
 	})
-	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, entity.InvoiceEntity{})
+	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, entity.InvoiceEntity{
+		DryRun: false,
+	})
 	invoiceLineId := neo4jtest.CreateInvoiceLine(ctx, driver, tenant, invoiceId, entity.InvoiceLineEntity{})
 	neo4jtest.LinkNodes(ctx, driver, invoiceLineId, sliId, "INVOICED")
 
@@ -961,7 +968,9 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_LastServi
 	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{
 		StartedAt: beforeYesterday,
 	})
-	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, entity.InvoiceEntity{})
+	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, entity.InvoiceEntity{
+		DryRun: false,
+	})
 	invoiceLineId := neo4jtest.CreateInvoiceLine(ctx, driver, tenant, invoiceId, entity.InvoiceLineEntity{})
 	neo4jtest.LinkNodes(ctx, driver, invoiceLineId, invoicedSliId, "INVOICED")
 
