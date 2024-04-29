@@ -71,8 +71,10 @@ func (a *OpportunityAggregate) createRenewalOpportunity(ctx context.Context, req
 	renewalLikelihood := model.RenewalLikelihood(request.RenewalLikelihood).StringEnumValue()
 	adjustedRate := request.RenewalAdjustedRate
 	if string(renewalLikelihood) == "" {
-		adjustedRate = 100
 		renewalLikelihood = neo4jenum.RenewalLikelihoodHigh
+	}
+	if renewalLikelihood == neo4jenum.RenewalLikelihoodHigh && adjustedRate == 0 {
+		adjustedRate = 100
 	}
 
 	if adjustedRate < 0 {
