@@ -11,6 +11,9 @@ mutation SimulateOnCycleInvoice($contractId: ID!, $serviceLines: [InvoiceSimulat
     amount
     subtotal
     total
+    customer {
+      name
+    }
     invoiceLineItems {
       key
       description
