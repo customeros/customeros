@@ -387,9 +387,8 @@ func (h *ContractEventHandler) OnRolloutRenewalOpportunity(ctx context.Context, 
 		}
 	}
 
-	errChan := make(chan error, 1) // Buffered channel
 	go func() {
-		time.Sleep(5 * time.Second)
+		time.Sleep(2 * time.Second)
 		_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
 			return h.grpcClients.OpportunityClient.CreateRenewalOpportunity(ctx, &opportunitypb.CreateRenewalOpportunityGrpcRequest{
 				Tenant:     eventData.Tenant,
@@ -400,14 +399,8 @@ func (h *ContractEventHandler) OnRolloutRenewalOpportunity(ctx context.Context, 
 				},
 			})
 		})
-		errChan <- err // Send error to the channel
-	}()
-	// Wait for an error from the goroutine
-	if err := <-errChan; err != nil {
 		tracing.TraceErr(span, err)
-		h.log.Errorf("CreateRenewalOpportunity failed: %v", err.Error())
-		return err
-	}
+	}()
 
 	status := "Renewed"
 	metadata, err := utils.ToJson(ActionStatusMetadata{
