@@ -1340,6 +1340,7 @@ type InvoiceSimulate struct {
 	Amount             float64                `json:"amount"`
 	Subtotal           float64                `json:"subtotal"`
 	Total              float64                `json:"total"`
+	TaxDue             float64                `json:"taxDue"`
 }
 
 type InvoiceSimulateInput struct {

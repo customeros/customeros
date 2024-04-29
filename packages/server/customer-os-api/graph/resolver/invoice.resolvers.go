@@ -273,6 +273,7 @@ func (r *mutationResolver) InvoiceSimulate(ctx context.Context, input model.Invo
 			Note:               nextInvoice.Invoice.Note,
 			Amount:             nextInvoice.Invoice.Amount,
 			Subtotal:           nextInvoice.Invoice.Amount,
+			TaxDue:             nextInvoice.Invoice.Vat,
 			Total:              nextInvoice.Invoice.TotalAmount,
 			InvoiceLineItems:   []*model.InvoiceLineSimulate{},
 			Customer:           &model.InvoiceCustomer{},
