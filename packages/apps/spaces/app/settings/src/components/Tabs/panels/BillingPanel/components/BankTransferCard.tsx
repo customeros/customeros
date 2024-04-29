@@ -30,6 +30,13 @@ const bankOptions = {
       },
     },
     {
+      mask: 'XX 00 XXXX 0000 0000 0000 0000 0000',
+      definitions: {
+        X: /[A-Za-z]/,
+        '0': /[0-9]/,
+      },
+    },
+    {
       mask: '00 0000 0000 0000 0000 0000 0000 0000',
       definitions: {
         '0': /[0-9]/,
