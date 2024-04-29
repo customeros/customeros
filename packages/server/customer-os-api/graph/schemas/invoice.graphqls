@@ -150,6 +150,7 @@ type InvoiceSimulate{
     amount:             Float!
     subtotal:           Float!
     total:              Float!
+    taxDue:             Float!
 }
 
 type InvoiceLineSimulate {

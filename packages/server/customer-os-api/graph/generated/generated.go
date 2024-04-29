@@ -708,6 +708,7 @@ type ComplexityRoot struct {
 		Postpaid           func(childComplexity int) int
 		Provider           func(childComplexity int) int
 		Subtotal           func(childComplexity int) int
+		TaxDue             func(childComplexity int) int
 		Total              func(childComplexity int) int
 	}
 
@@ -5295,6 +5296,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.InvoiceSimulate.Subtotal(childComplexity), true
+
+	case "InvoiceSimulate.taxDue":
+		if e.complexity.InvoiceSimulate.TaxDue == nil {
+			break
+		}
+
+		return e.complexity.InvoiceSimulate.TaxDue(childComplexity), true
 
 	case "InvoiceSimulate.total":
 		if e.complexity.InvoiceSimulate.Total == nil {
@@ -13874,6 +13882,7 @@ type InvoiceSimulate{
     amount:             Float!
     subtotal:           Float!
     total:              Float!
+    taxDue:             Float!
 }
 
 type InvoiceLineSimulate {
@@ -42557,6 +42566,50 @@ func (ec *executionContext) fieldContext_InvoiceSimulate_total(ctx context.Conte
 	return fc, nil
 }
 
+func (ec *executionContext) _InvoiceSimulate_taxDue(ctx context.Context, field graphql.CollectedField, obj *model.InvoiceSimulate) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InvoiceSimulate_taxDue(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TaxDue, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InvoiceSimulate_taxDue(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InvoiceSimulate",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _InvoicesPage_content(ctx context.Context, field graphql.CollectedField, obj *model.InvoicesPage) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_InvoicesPage_content(ctx, field)
 	if err != nil {
@@ -56149,6 +56202,8 @@ func (ec *executionContext) fieldContext_Mutation_invoice_Simulate(ctx context.C
 				return ec.fieldContext_InvoiceSimulate_subtotal(ctx, field)
 			case "total":
 				return ec.fieldContext_InvoiceSimulate_total(ctx, field)
+			case "taxDue":
+				return ec.fieldContext_InvoiceSimulate_taxDue(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type InvoiceSimulate", field.Name)
 		},
@@ -107351,6 +107406,11 @@ func (ec *executionContext) _InvoiceSimulate(ctx context.Context, sel ast.Select
 			}
 		case "total":
 			out.Values[i] = ec._InvoiceSimulate_total(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "taxDue":
+			out.Values[i] = ec._InvoiceSimulate_taxDue(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
