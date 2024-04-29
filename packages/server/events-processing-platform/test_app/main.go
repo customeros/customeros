@@ -30,7 +30,9 @@ const grpcApiKey = "082c1193-a5a2-42fc-87fc-e960e692fffd"
 const appSource = "test_app"
 
 var tenant = "customerosai"
+var userId = "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
 var orgId = "ceae019f-d1e3-49b3-87c5-35ebb68a5ff1"
+var contractId = "769d1fb8-50a1-44bc-aff0-0f4338bd8ff2"
 
 type Clients struct {
 	InteractionEventClient iepb.InteractionEventGrpcServiceClient
@@ -110,6 +112,7 @@ func main() {
 	//testUpdateContract()
 	//testAddContractService()
 	//testCloseLooseOpportunity()
+	//testCreateRenewalOpportunity()
 	//testUpdateOnboardingStatus()
 	//testUpdateOrgOwner()
 	//testRefreshLastTouchpoint()
@@ -718,6 +721,22 @@ func testCloseLooseOpportunity() {
 		Id:             opportunityId,
 		LoggedInUserId: userId,
 		AppSource:      appSource,
+	})
+	if err != nil {
+		log.Fatalf("Failed: %v", err.Error())
+	}
+	log.Printf("Result: %v", result.Id)
+}
+
+func testCreateRenewalOpportunity() {
+
+	result, err := clients.OpportunityClient.CreateRenewalOpportunity(context.Background(), &opportunitypb.CreateRenewalOpportunityGrpcRequest{
+		Tenant:         tenant,
+		LoggedInUserId: userId,
+		ContractId:     contractId,
+		SourceFields: &commonpb.SourceFields{
+			AppSource: appSource,
+		},
 	})
 	if err != nil {
 		log.Fatalf("Failed: %v", err.Error())
