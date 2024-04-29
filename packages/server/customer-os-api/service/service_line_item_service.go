@@ -567,6 +567,8 @@ type ServiceLineItemDetails struct {
 	IsRetroactiveCorrection bool
 	VatRate                 float64
 	StartedAt               *time.Time
+	CloseVersion            bool
+	NewVersion              bool
 }
 
 func (s *serviceLineItemService) CreateOrUpdateOrCloseInBulk(ctx context.Context, contractId string, sliBulkData []*ServiceLineItemDetails) ([]string, error) {
@@ -655,8 +657,14 @@ func (s *serviceLineItemService) CreateOrUpdateOrCloseInBulk(ctx context.Context
 				return []string{}, err
 			}
 			responseIds = append(responseIds, itemId)
+		} else if serviceLineItem.CloseVersion {
+			err = s.Close(ctx, serviceLineItem.Id, nil)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Failed to close service line item: %s", err.Error())
+			}
 		} else {
-			if !serviceLineItem.IsRetroactiveCorrection && serviceLineItem.StartedAt != nil && serviceLineItem.StartedAt.After(utils.Today()) {
+			if serviceLineItem.NewVersion || (!serviceLineItem.IsRetroactiveCorrection && serviceLineItem.StartedAt != nil && serviceLineItem.StartedAt.After(utils.Today())) {
 				itemId, err := s.NewVersion(ctx, ServiceLineItemNewVersionData{
 					Id:        serviceLineItem.Id,
 					Name:      serviceLineItem.Name,
@@ -730,6 +738,8 @@ func MapServiceLineItemBulkItemToData(input *model.ServiceLineItemBulkUpdateItem
 		IsRetroactiveCorrection: utils.IfNotNilBool(input.IsRetroactiveCorrection),
 		VatRate:                 utils.IfNotNilFloat64(input.VatRate),
 		StartedAt:               input.ServiceStarted,
+		CloseVersion:            utils.IfNotNilBool(input.CloseVersion),
+		NewVersion:              utils.IfNotNilBool(input.NewVersion),
 	}
 }
 
