@@ -178,7 +178,12 @@ export const columns = [
     cell: (props) => {
       const value = props.getValue()?.renewalSummary?.renewalLikelihood;
 
-      return <RenewalLikelihoodCell value={value} />;
+      return (
+        <RenewalLikelihoodCell
+          value={value}
+          id={props.row.original.metadata.id}
+        />
+      );
     },
     header: (props) => (
       <THead

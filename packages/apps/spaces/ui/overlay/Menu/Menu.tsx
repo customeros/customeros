@@ -77,6 +77,7 @@ export const MenuLabel = forwardRef<
   );
 });
 
+// If you need to prevet onClick from triggering, use `disabled` with `asChild` and pass onClick or onDoubleClick to the child
 export const MenuButton = DropdownMenuPrimitive.Trigger;
 MenuButton.defaultProps = {
   className: 'outline-none',
