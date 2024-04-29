@@ -14546,8 +14546,8 @@ input OpportunityUpdateInput {
 }
 
 input OpportunityRenewalUpdateAllForOrganizationInput {
-    organizationId:     ID!
-    renewalLikelihood:  OpportunityRenewalLikelihood
+    organizationId:         ID!
+    renewalLikelihood:      OpportunityRenewalLikelihood
     renewalAdjustedRate:    Int64
 }`, BuiltIn: false},
 	{Name: "../schemas/order.graphqls", Input: `type Order {
@@ -15417,6 +15417,8 @@ input ServiceLineItemBulkUpdateItem {
     comments:                String
     isRetroactiveCorrection: Boolean
     serviceStarted:          Time
+    closeVersion:            Boolean
+    newVersion:              Boolean
 }
 
 input ServiceLineItemCloseInput {
@@ -99681,7 +99683,7 @@ func (ec *executionContext) unmarshalInputServiceLineItemBulkUpdateItem(ctx cont
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"serviceLineItemId", "name", "billed", "price", "quantity", "vatRate", "comments", "isRetroactiveCorrection", "serviceStarted"}
+	fieldsInOrder := [...]string{"serviceLineItemId", "name", "billed", "price", "quantity", "vatRate", "comments", "isRetroactiveCorrection", "serviceStarted", "closeVersion", "newVersion"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -99751,6 +99753,20 @@ func (ec *executionContext) unmarshalInputServiceLineItemBulkUpdateItem(ctx cont
 				return it, err
 			}
 			it.ServiceStarted = data
+		case "closeVersion":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("closeVersion"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CloseVersion = data
+		case "newVersion":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("newVersion"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NewVersion = data
 		}
 	}
 
