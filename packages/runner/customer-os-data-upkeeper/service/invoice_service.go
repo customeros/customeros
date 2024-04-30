@@ -84,6 +84,8 @@ func (s *invoiceService) GenerateCycleInvoices() {
 	cachedTenantBaseCurrencies := make(map[string]neo4jenum.Currency)
 	cachedTenantPostpaidFlags := make(map[string]bool)
 
+	limit := 100
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -93,7 +95,7 @@ func (s *invoiceService) GenerateCycleInvoices() {
 			// continue as normal
 		}
 
-		records, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractsToGenerateCycleInvoices(ctx, referenceTime, s.cfg.ProcessConfig.DelayGenerateCycleInvoiceInMinutes)
+		records, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractsToGenerateCycleInvoices(ctx, referenceTime, s.cfg.ProcessConfig.DelayGenerateCycleInvoiceInMinutes, limit)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting contracts for invoicing: %v", err)
@@ -183,6 +185,11 @@ func (s *invoiceService) GenerateCycleInvoices() {
 				return
 			}
 		}
+
+		if len(records) < limit {
+			return
+		}
+
 		//sleep for async processing, then check again
 		time.Sleep(10 * time.Second)
 	}
@@ -324,6 +331,8 @@ func (s *invoiceService) GenerateOffCycleInvoices() {
 	dryRun := false
 	cachedTenantBaseCurrencies := make(map[string]neo4jenum.Currency)
 
+	limit := 100
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -333,7 +342,7 @@ func (s *invoiceService) GenerateOffCycleInvoices() {
 			// continue as normal
 		}
 
-		records, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractsToGenerateOffCycleInvoices(ctx, referenceTime, s.cfg.ProcessConfig.DelayGenerateOffCycleInvoiceInMinutes)
+		records, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractsToGenerateOffCycleInvoices(ctx, referenceTime, s.cfg.ProcessConfig.DelayGenerateOffCycleInvoiceInMinutes, limit)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting contracts for off-cycle invoicing: %v", err)
@@ -390,6 +399,9 @@ func (s *invoiceService) GenerateOffCycleInvoices() {
 			}
 		}
 		//sleep for async processing, then check again
+		if len(records) < limit {
+			return
+		}
 		time.Sleep(10 * time.Second)
 	}
 }
