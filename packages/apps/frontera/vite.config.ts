@@ -18,6 +18,13 @@ export default defineConfig({
         __dirname,
         './src/routes/src/types/__generated__/graphql.types.ts',
       ),
+      '@organizations': path.resolve(
+        __dirname,
+        './src/routes/organizations/src',
+      ),
+      '@organization': path.resolve(__dirname, './src/routes/organization/src'),
+      '@settings': path.resolve(__dirname, './src/routes/settings/src'),
+      '@spaces/utils': path.resolve(__dirname, './src/utils'),
     },
   },
 });

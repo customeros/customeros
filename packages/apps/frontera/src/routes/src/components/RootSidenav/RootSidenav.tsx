@@ -1,13 +1,11 @@
 'use client';
-import Image from 'next/image';
 import React, { useMemo } from 'react';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 
 import { produce } from 'immer';
-import { signOut } from 'next-auth/react';
 import { useLocalStorage } from 'usehooks-ts';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
-import { useTenantSettingsQuery } from '@settings/graphql/getTenantSettings.generated';
+// import { useTenantSettingsQuery } from '@settings/graphql/getTenantSettings.generated';
 
 import { cn } from '@ui/utils/cn';
 import { TableViewType } from '@graphql/types';
@@ -27,7 +25,7 @@ import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
 import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 import { NotificationCenter } from '@shared/components/Notifications/NotificationCenter';
-import { useGetAllInvoicesCountQuery } from '@shared/graphql/getAllInvoicesCount.generated';
+// import { useGetAllInvoicesCountQuery } from '@shared/graphql/getAllInvoicesCount.generated';
 
 import { SidenavItem } from './components/SidenavItem';
 import logoCustomerOs from './assets/logo-customeros.png';
@@ -44,8 +42,8 @@ const iconMap: Record<
 
 export const RootSidenav = () => {
   const client = getGraphQLClient();
-  const router = useRouter();
-  const pathname = usePathname();
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
   const searchParams = useSearchParams();
   const [_, setOrganizationsMeta] = useOrganizationsMeta();
   const showMyViewsItems = useFeatureIsOn('my-views-nav-item');
@@ -64,8 +62,8 @@ export const RootSidenav = () => {
     },
   );
 
-  const { data: tenantSettingsData } = useTenantSettingsQuery(client);
-  const { data: totalInvoices } = useGetAllInvoicesCountQuery(client);
+  // const { data: tenantSettingsData } = useTenantSettingsQuery(client);
+  // const { data: totalInvoices } = useGetAllInvoicesCountQuery(client);
 
   const { data, isLoading } = useGlobalCacheQuery(client);
   const globalCache = data?.global_Cache;
@@ -88,7 +86,7 @@ export const RootSidenav = () => {
       }),
     );
 
-    router.push(`/${path}`);
+    navigate(`/${path}`);
   };
   const checkIsActive = (path: string, options?: { preset: string }) => {
     const [_pathName, _searchParams] = path.split('?');
@@ -106,15 +104,17 @@ export const RootSidenav = () => {
   };
 
   const handleSignOutClick = () => {
-    signOut();
+    // signOut();
   };
 
-  const showInvoices = useMemo(() => {
-    return (
-      tenantSettingsData?.tenantSettings?.billingEnabled ||
-      totalInvoices?.invoices?.totalElements > 0
-    );
-  }, [tenantSettingsData?.tenantSettings?.billingEnabled]);
+  const showInvoices = true;
+
+  // const showInvoices = useMemo(() => {
+  //   return (
+  //     tenantSettingsData?.tenantSettings?.billingEnabled ||
+  //     totalInvoices?.invoices?.totalElements > 0
+  //   );
+  // }, [tenantSettingsData?.tenantSettings?.billingEnabled]);
 
   const cdnLogoUrl = data?.global_Cache?.cdnLogoUrl;
 
@@ -122,7 +122,7 @@ export const RootSidenav = () => {
     <div className='px-2 pt-2.5 pb-4 h-full w-12.5 bg-white flex flex-col border-r border-gray-200'>
       <div className='mb-2 ml-3 cursor-pointer flex justify-flex-start overflow-hidden relative'>
         {!isLoading ? (
-          <Image
+          <img
             src={cdnLogoUrl ?? logoCustomerOs}
             alt='CustomerOS'
             width={136}
@@ -295,7 +295,7 @@ export const RootSidenav = () => {
         <SidenavItem
           label='Settings'
           isActive={checkIsActive('settings')}
-          onClick={() => router.push('/settings')}
+          onClick={() => navigate('/settings')}
           icon={(isActive) => (
             <Settings01
               className={cn(

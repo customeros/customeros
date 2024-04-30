@@ -1,6 +1,6 @@
 'use client';
 import { useMemo } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
@@ -30,7 +30,7 @@ interface EditColumnsProps {
 export const EditColumns = observer(({ type }: EditColumnsProps) => {
   const isFeatureEnabled = useFeatureIsOn('edit-columns');
   const { tableViewDefsStore } = useStore();
-  const searchParams = useSearchParams();
+  const [searchParams] = useSearchParams();
   const preset = searchParams?.get('preset');
 
   const [optionsMap, helperTextMap] = useMemo(() => {

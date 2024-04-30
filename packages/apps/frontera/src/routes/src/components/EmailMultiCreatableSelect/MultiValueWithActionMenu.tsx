@@ -1,8 +1,8 @@
 import { components } from 'react-select';
 import { useField } from 'react-inverted-form';
 import { MultiValueProps } from 'react-select';
-import React, { FC, useState, ReactEventHandler } from 'react';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { FC, useState, ReactEventHandler } from 'react';
+import { useParams, useSearchParams } from 'react-router-dom';
 
 import { useLocalStorage } from 'usehooks-ts';
 import { useQueryClient } from '@tanstack/react-query';
@@ -17,10 +17,10 @@ import { validateEmail } from '@shared/util/emailValidation';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
-import { useContactCardMeta } from '@organization/src/state/ContactCardMeta.atom';
-import { invalidateQuery } from '@organization/src/components/Tabs/panels/PeoplePanel/util';
-import { useCreateContactMutation } from '@organization/src/graphql/createContact.generated';
-import { useAddOrganizationToContactMutation } from '@organization/src/graphql/addContactToOrganization.generated';
+import { useContactCardMeta } from '@organization/state/ContactCardMeta.atom';
+import { invalidateQuery } from '@organization/components/Tabs/panels/PeoplePanel/util';
+import { useCreateContactMutation } from '@organization/graphql/createContact.generated';
+import { useAddOrganizationToContactMutation } from '@organization/graphql/addContactToOrganization.generated';
 
 interface MultiValueWithActionMenuProps extends MultiValueProps<SelectOption> {
   name: string;
@@ -40,8 +40,7 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
 
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
-  const searchParams = useSearchParams();
-  const router = useRouter();
+  const [searchParams, setSearchParams] = useSearchParams();
   const organizationId = useParams()?.id as string;
   const [_d, setExpandedCardId] = useContactCardMeta();
   const { getInputProps } = useField(name, formId);
@@ -79,7 +78,7 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
       [organizationId as string]: urlSearchParams.toString(),
     });
 
-    router.push(`?${urlSearchParams}`);
+    setSearchParams(urlSearchParams);
     setExpandedCardId({
       expandedId: contactId,
       initialFocusedField,

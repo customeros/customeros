@@ -1,12 +1,6 @@
-import { useParams } from 'next/navigation';
+import { useParams } from 'react-router-dom';
 import { useField } from 'react-inverted-form';
-import React, {
-  useMemo,
-  useState,
-  useEffect,
-  forwardRef,
-  useCallback,
-} from 'react';
+import { useMemo, useState, useEffect, forwardRef, useCallback } from 'react';
 import {
   GroupBase,
   OptionProps,
@@ -23,7 +17,7 @@ import { getName } from '@spaces/utils/getParticipantsName';
 import { Contact, ComparisonOperator } from '@graphql/types';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
-import { emailRegex } from '@organization/src/components/Timeline/PastZone/events/email/utils';
+import { emailRegex } from '@organization/components/Timeline/PastZone/events/email/utils';
 import {
   FormSelectProps,
   MultiCreatableSelect,
@@ -32,7 +26,7 @@ import { MultiValueWithActionMenu } from '@shared/components/EmailMultiCreatable
 import {
   GetContactsEmailListDocument,
   useGetContactsEmailListQuery,
-} from '@organization/src/graphql/getContactsEmailList.generated';
+} from '@organization/graphql/getContactsEmailList.generated';
 
 type ExistingContact = { id: string; label: string; value?: string | null };
 export const EmailFormMultiCreatableSelect = forwardRef<
