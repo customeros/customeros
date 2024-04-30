@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -62,7 +63,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 		}
 		log.Printf("validated request at provider: %v %v", firstName, lastName)
 
-		tenantName, err := getTenant(services.CustomerOsClient, personalEmailProviders, signInRequest, ginContext)
+		tenantName, err := getTenant(services.CustomerOsClient, personalEmailProviders, signInRequest, ginContext, config)
 		if err != nil {
 			log.Printf("unable to get tenant: %v", err.Error())
 			ginContext.JSON(http.StatusInternalServerError, gin.H{
@@ -208,7 +209,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 	})
 }
 
-func getTenant(cosClient service.CustomerOsClient, personalEmailProvider []postgresEntity.PersonalEmailProvider, signInRequest model.SignInRequest, ginContext *gin.Context) (*string, error) {
+func getTenant(cosClient service.CustomerOsClient, personalEmailProvider []postgresEntity.PersonalEmailProvider, signInRequest model.SignInRequest, ginContext *gin.Context, config *config.Config) (*string, error) {
 	domain := commonUtils.ExtractDomain(signInRequest.Email)
 	log.Printf("GetTenant - Domain extracted: %s", domain)
 
@@ -305,9 +306,38 @@ func getTenant(cosClient service.CustomerOsClient, personalEmailProvider []postg
 			log.Printf("GetTenant - Workspace merged: %s", domain)
 		}
 
+		if config.Slack.NotifyNewTenantRegisteredWebhook != "" {
+			notifyNewTenantCreation(config.Slack.NotifyNewTenantRegisteredWebhook, tenantStr, signInRequest.Email)
+		}
 	}
 
 	return tenantName, nil
+}
+
+func notifyNewTenantCreation(slackWehbookUrl, tenant, email string) {
+	// Create a struct to hold the JSON data
+	type SlackMessage struct {
+		Text string `json:"text"`
+	}
+	message := SlackMessage{Text: tenant + " tenant registered by " + email}
+
+	// Convert struct to JSON
+	jsonData, err := json.Marshal(message)
+	if err != nil {
+		fmt.Println("Error encoding JSON:", err)
+		return
+	}
+
+	// Send POST request
+	resp, err := http.Post(slackWehbookUrl, "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
+		fmt.Println("Error sending request:", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	// Print response status
+	fmt.Println("Response Status:", resp.Status)
 }
 
 func validateRequestAtProvider(config *config.Config, signInRequest model.SignInRequest, ginContext *gin.Context) (*string, *string, error) {

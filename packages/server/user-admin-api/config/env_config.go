@@ -21,8 +21,9 @@ type Config struct {
 		ClientSecret string `env:"GOOGLE_OAUTH_CLIENT_SECRET,required"`
 	}
 	Slack struct {
-		ClientId     string `env:"SLACK_CLIENT_ID,required"`
-		ClientSecret string `env:"SLACK_CLIENT_SECRET,required"`
+		ClientId                         string `env:"SLACK_CLIENT_ID,required"`
+		ClientSecret                     string `env:"SLACK_CLIENT_SECRET,required"`
+		NotifyNewTenantRegisteredWebhook string `env:"SLACK_NOTIFY_NEW_TENANT_REGISTERED_WEBHOOK,required"`
 	}
 	GrpcClientConfig config.GrpcClientConfig
 	Postgres         config.PostgresConfig
