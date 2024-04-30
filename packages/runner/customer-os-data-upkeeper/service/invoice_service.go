@@ -19,6 +19,7 @@ import (
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
+	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"net/http"
 	"time"
@@ -64,6 +65,12 @@ func (s *invoiceService) GenerateCycleInvoices() {
 
 	span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.GenerateCycleInvoices")
 	defer span.Finish()
+
+	if s.cfg.ProcessConfig.CycleInvoicingEnabled == false {
+		s.log.Infof("Cycle invoicing is disabled, stopping")
+		span.LogFields(log.Bool("cycle_invoicing_enabled", s.cfg.ProcessConfig.CycleInvoicingEnabled))
+		return
+	}
 
 	if s.eventsProcessingClient == nil {
 		err := errors.New("eventsProcessingClient is nil")
@@ -299,6 +306,12 @@ func (s *invoiceService) GenerateOffCycleInvoices() {
 
 	span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.GenerateOffCycleInvoices")
 	defer span.Finish()
+
+	if s.cfg.ProcessConfig.OffCycleInvoicingEnabled == false {
+		s.log.Infof("Off-cycle invoicing is disabled, stopping")
+		span.LogFields(log.Bool("off_cycle_invoicing_enabled", s.cfg.ProcessConfig.OffCycleInvoicingEnabled))
+		return
+	}
 
 	if s.eventsProcessingClient == nil {
 		err := errors.New("eventsProcessingClient is nil")
