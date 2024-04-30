@@ -120,7 +120,7 @@ func TestMutationResolver_InvoiceSimulate_OnCycle_PostPaidFalse_2(t *testing.T) 
 	asserInvoiceLineItem(t, onCycleInvoice.InvoiceLineItems[0], "1", "S1", 29, 1, 29)
 }
 
-// 1 updated SLI prorated
+// 1 upsell SLI prorated
 func TestMutationResolver_InvoiceSimulate_OnCycle_PostPaidFalse_3(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
@@ -184,6 +184,67 @@ func TestMutationResolver_InvoiceSimulate_OnCycle_PostPaidFalse_3(t *testing.T) 
 	require.Equal(t, 1, len(onCycleInvoice.InvoiceLineItems))
 	asserInvoice(t, onCycleInvoice, "2024-02-01T00:00:00Z", "2024-02-29T00:00:00Z", false, false, 29)
 	asserInvoiceLineItem(t, onCycleInvoice.InvoiceLineItems[0], "1", "S1", 29, 1, 29)
+}
+
+// 1 downgrade SLI not prorated
+func TestMutationResolver_InvoiceSimulate_OnCycle_PostPaidFalse_4(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	decemberFirst := utils.FirstTimeOfMonth(2023, 12)
+	januaryMid := utils.MiddleTimeOfMonth(2024, 1)
+	februaryFirst := utils.FirstTimeOfMonth(2024, 2)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenantSettings(ctx, driver, tenantName, neo4jentity.TenantSettingsEntity{
+		InvoicingPostpaid: false,
+	})
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
+	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		BillingCycleInMonths: 1,
+		InvoicingEnabled:     true,
+		InvoicingStartDate:   &decemberFirst,
+		NextInvoiceDate:      &februaryFirst,
+	})
+	serviceLineItemId := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
+		Name:      "S1",
+		Billed:    neo4jenum.BilledTypeMonthly,
+		Price:     5,
+		Quantity:  1,
+		StartedAt: decemberFirst,
+	})
+
+	rawResponse := callGraphQL(t, "invoice/simulate_invoice", map[string]interface{}{
+		"contractId": contractId,
+		"serviceLines": []model.InvoiceSimulateServiceLineInput{
+			{
+				Key:               "1",
+				ServiceLineItemID: &serviceLineItemId,
+				ParentID:          &serviceLineItemId,
+				Description:       "S1",
+				BillingCycle:      model.BilledTypeMonthly,
+				Price:             2,
+				Quantity:          1,
+				ServiceStarted:    januaryMid,
+			},
+		},
+	})
+
+	var invoiceStruct struct {
+		Invoice_Simulate []*model.InvoiceSimulate
+	}
+
+	require.Nil(t, rawResponse.Errors)
+	err := decode.Decode(rawResponse.Data.(map[string]any), &invoiceStruct)
+	require.Nil(t, err)
+
+	require.Equal(t, 1, len(invoiceStruct.Invoice_Simulate))
+
+	onCycleInvoice := invoiceStruct.Invoice_Simulate[0]
+	require.Equal(t, 1, len(onCycleInvoice.InvoiceLineItems))
+	asserInvoice(t, onCycleInvoice, "2024-02-01T00:00:00Z", "2024-02-29T00:00:00Z", false, false, 2)
+	asserInvoiceLineItem(t, onCycleInvoice.InvoiceLineItems[0], "1", "S1", 2, 1, 2)
 }
 
 func TestMutationResolver_InvoiceSimulate_OnCycle_PostPaidTrue_1(t *testing.T) {
