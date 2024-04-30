@@ -225,7 +225,7 @@ export const ServiceLineItemsModal = ({
         contractId,
         invoiceNote,
         serviceLineItems: services
-          .filter((e) => !e.isEdited)
+          .filter((e) => e.isEdited)
           .map((e) => ({
             serviceLineItemId: e?.serviceLineItemId ?? '',
             billed: e.billed,
