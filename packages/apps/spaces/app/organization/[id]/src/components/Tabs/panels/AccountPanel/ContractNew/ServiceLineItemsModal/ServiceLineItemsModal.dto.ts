@@ -12,6 +12,7 @@ export interface BulkUpdateServiceLineItem {
   price: number;
   quantity: number;
   isDeleted: boolean;
+  isEdited?: boolean;
   vatRate?: number | null;
   billed?: BilledType | null;
   serviceStarted?: Date | null;

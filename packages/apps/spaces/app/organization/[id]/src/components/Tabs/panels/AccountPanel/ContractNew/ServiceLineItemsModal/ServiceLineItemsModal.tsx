@@ -70,6 +70,7 @@ const defaultValue = {
   billed: BilledType.Monthly,
   type: 'RECURRING',
   isDeleted: false,
+  isEdited: false,
 };
 
 const getNewItem = (input: InputMaybe<ServiceLineItemBulkUpdateItem>) => ({
@@ -200,12 +201,12 @@ export const ServiceLineItemsModal = ({
         );
       }
       if (!contractLineItems.length) {
-        setServices([defaultValue]);
+        setServices([{ ...defaultValue, isEdited: true }]);
       }
     }
   }, [isOpen]);
   const handleAddService = () => {
-    setServices([...services, defaultValue]);
+    setServices([...services, { ...defaultValue, isEdited: true }]);
   };
 
   const handleUpdateService = (
@@ -214,7 +215,7 @@ export const ServiceLineItemsModal = ({
   ) => {
     const updatedServices = [...services];
 
-    updatedServices[index] = updatedService;
+    updatedServices[index] = { ...updatedService, isEdited: true };
     setServices(updatedServices);
   };
 
@@ -224,7 +225,7 @@ export const ServiceLineItemsModal = ({
         contractId,
         invoiceNote,
         serviceLineItems: services
-          .filter((e) => !e.isDeleted)
+          .filter((e) => !e.isEdited)
           .map((e) => ({
             serviceLineItemId: e?.serviceLineItemId ?? '',
             billed: e.billed,
@@ -232,6 +233,7 @@ export const ServiceLineItemsModal = ({
             price: e.price,
             quantity: e.quantity,
             vatRate: e.vatRate,
+            closed: e.isDeleted,
             serviceStarted: e.serviceStarted,
           })),
       },
