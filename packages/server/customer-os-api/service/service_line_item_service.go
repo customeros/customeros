@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
-	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"time"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
@@ -587,60 +586,10 @@ func (s *serviceLineItemService) CreateOrUpdateOrCloseInBulk(ctx context.Context
 
 	var responseIds []string
 
-	allSliDbNodes, err := s.services.CommonServices.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemsForContracts(ctx, common.GetTenantFromContext(ctx), []string{contractId})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("Failed to get service line items for contract: %s", err.Error())
-		return []string{}, err
-	}
-
-	var sliDbNodes []*utils.DbNodeAndId
-	for _, sliDbNode := range allSliDbNodes {
-		endedAt := utils.GetTimePropOrNil(utils.GetPropsFromNode(*sliDbNode.Node), "endedAt")
-		if endedAt == nil {
-			sliDbNodes = append(sliDbNodes, sliDbNode)
-		}
-	}
-
-	var existingSliIds, existingSliParentIds, inputSliIds, inputSliParentIds []string
-	parentIdBySliId := make(map[string]string)
-	for _, sliDbNode := range sliDbNodes {
-		sliEntity := neo4jmapper.MapDbNodeToServiceLineItemEntity(sliDbNode.Node)
-		id := utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*sliDbNode.Node), "id")
-		if sliEntity.ID != "" {
-			existingSliIds = append(existingSliIds, id)
-		}
-		if sliEntity.ParentID != "" {
-			existingSliParentIds = append(existingSliParentIds, sliEntity.ParentID)
-		}
-		parentIdBySliId[id] = sliEntity.ParentID
-	}
-	for _, sli := range sliBulkData {
-		if sli.Id != "" {
-			inputSliIds = append(inputSliIds, sli.Id)
-			inputSliParentIds = append(inputSliParentIds, parentIdBySliId[sli.Id])
-		}
-	}
-	for _, existingParentId := range existingSliParentIds {
-		if !utils.Contains(inputSliParentIds, existingParentId) {
-			dbNodes, _ := s.repositories.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemsByParentId(ctx, common.GetTenantFromContext(ctx), existingParentId)
-			for _, dbNode := range dbNodes {
-				sliEntity := neo4jmapper.MapDbNodeToServiceLineItemEntity(dbNode)
-				if !sliEntity.Canceled && (sliEntity.EndedAt == nil || sliEntity.EndedAt.After(utils.Today())) {
-					err = s.Close(ctx, sliEntity.ID, nil)
-					if err != nil {
-						tracing.TraceErr(span, err)
-						s.log.Errorf("Failed to close service line item: %s", err.Error())
-					}
-				}
-			}
-		}
-	}
-
 	for _, serviceLineItem := range sliBulkData {
 		// check all quantity or price are not negative
 		if serviceLineItem.Quantity < 0 || serviceLineItem.Price < 0 {
-			err = fmt.Errorf("quantity and price must not be negative")
+			err := fmt.Errorf("quantity and price must not be negative")
 			tracing.TraceErr(span, err)
 			return []string{}, err
 		}
@@ -666,7 +615,7 @@ func (s *serviceLineItemService) CreateOrUpdateOrCloseInBulk(ctx context.Context
 			}
 			responseIds = append(responseIds, itemId)
 		} else if serviceLineItem.CloseVersion {
-			err = s.Close(ctx, serviceLineItem.Id, nil)
+			err := s.Close(ctx, serviceLineItem.Id, nil)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Failed to close service line item: %s", err.Error())
@@ -691,7 +640,7 @@ func (s *serviceLineItemService) CreateOrUpdateOrCloseInBulk(ctx context.Context
 				}
 				responseIds = append(responseIds, itemId)
 			} else {
-				err = s.Update(ctx, ServiceLineItemUpdateData{
+				err := s.Update(ctx, ServiceLineItemUpdateData{
 					Id:                      serviceLineItem.Id,
 					IsRetroactiveCorrection: serviceLineItem.IsRetroactiveCorrection,
 					SliName:                 serviceLineItem.Name,
