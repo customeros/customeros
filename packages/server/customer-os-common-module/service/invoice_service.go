@@ -248,7 +248,7 @@ func (s *invoiceService) SimulateInvoice(ctx context.Context, simulateInvoicesWi
 					} else {
 						//update existing version
 
-						if existingSli.Billed != sliData.BillingCycle || existingSli.Price != sliData.Price || existingSli.Quantity != sliData.Quantity || existingSli.StartedAt != sliData.ServiceStarted || existingSli.VatRate != utils.IfNotNilFloat64(sliData.TaxRate) {
+						if (existingSli.Billed != sliData.BillingCycle || existingSli.Price != sliData.Price || existingSli.Quantity != sliData.Quantity || existingSli.StartedAt != sliData.ServiceStarted || existingSli.VatRate != utils.IfNotNilFloat64(sliData.TaxRate)) && (existingSli.Price*float64(existingSli.Quantity) < sliData.Price*float64(sliData.Quantity)) {
 							//existing sli item - new version - proration needed
 							for i, sliEntity := range sliEntities {
 								if sliEntity.ID == *sliData.ServiceLineItemID {
