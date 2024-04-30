@@ -334,17 +334,25 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 		isRetroactiveCorrection = true
 	}
 
-	// Do not allow updating past SLIs for invoiced contracts
-	if isRetroactiveCorrection && contractInvoiced && startedAt.Before(utils.Today()) {
-		err = fmt.Errorf("cannot update contract line item with id {%s} in the past", serviceLineItemDetails.Id)
-		tracing.TraceErr(span, err)
-		return err
-	}
-
 	if isRetroactiveCorrection && sliInvoiced {
 		err = fmt.Errorf("service line item with id {%s} is included in invoice and cannot be updated", serviceLineItemDetails.Id)
 		tracing.TraceErr(span, err)
 		return err
+	}
+
+	// Do not allow updating past SLIs for invoiced contracts
+	if isRetroactiveCorrection && contractInvoiced {
+		tenantSettings, _ := s.services.CommonServices.TenantService.GetTenantSettings(ctx)
+		isInvoicingPostpaid := tenantSettings.InvoicingPostpaid
+		referenceDate := utils.Today()
+		if isInvoicingPostpaid && contractEntity.NextInvoiceDate != nil {
+			referenceDate = utils.ToDate(*contractEntity.NextInvoiceDate)
+		}
+		if startedAt.Before(referenceDate) {
+			err = fmt.Errorf("cannot update contract line item with id {%s} and start date before {%s}", serviceLineItemDetails.Id, referenceDate.Format(time.DateOnly))
+			tracing.TraceErr(span, err)
+			return err
+		}
 	}
 
 	span.LogFields(log.Bool("result.isRetroactiveCorrection", isRetroactiveCorrection))
