@@ -1,0 +1,6 @@
+mutation addContactSocial($contactId: ID!, $input: SocialInput!) {
+  contact_AddSocial(contactId: $contactId, input: $input) {
+    id
+    url
+  }
+}

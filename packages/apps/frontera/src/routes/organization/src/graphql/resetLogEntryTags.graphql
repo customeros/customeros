@@ -1,0 +1,3 @@
+mutation resetLogEntryTags($id: ID!, $input: [TagIdOrNameInput!]) {
+  logEntry_ResetTags(id: $id, input: $input)
+}

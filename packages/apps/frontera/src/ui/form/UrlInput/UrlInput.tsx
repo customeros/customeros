@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { Link } from 'react-router-dom';
 import React, { memo, useRef, useState } from 'react';
 
 import { LinkExternal02 } from '@ui/media/icons/LinkExternal02';
@@ -74,7 +74,7 @@ export const UrlInput = memo(
               </p>
               {isHovered && (
                 <Link
-                  href={href}
+                  to={href}
                   target='_blank'
                   rel='noopener noreferrer'
                   className='absolute -top-[1px] right-0 flex items-center text-gray-500 hover:text-gray-900'

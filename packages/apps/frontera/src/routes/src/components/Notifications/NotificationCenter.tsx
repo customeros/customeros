@@ -1,5 +1,5 @@
 import React from 'react';
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router-dom';
 
 import {
   IMessage,
@@ -20,11 +20,11 @@ import './override.css';
 interface NotificationCenterProps {}
 
 export const NotificationCenter: React.FC<NotificationCenterProps> = () => {
-  const router = useRouter();
+  const navigate = useNavigate();
 
   function handlerOnNotificationClick(message: IMessage) {
     if (message?.cta?.data?.url) {
-      router.push(message?.cta?.data?.url as string);
+      navigate(message?.cta?.data?.url as string);
     }
   }
 

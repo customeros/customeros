@@ -1,4 +1,4 @@
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router-dom';
 
 import { Button } from '@ui/form/Button/Button';
 import { File04 } from '@ui/media/icons/File04';
@@ -7,7 +7,7 @@ import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 import HalfCirclePattern from '../../../assets/HalfCirclePattern';
 
 export const EmptyState = () => {
-  const router = useRouter();
+  const navigate = useNavigate();
 
   return (
     <div className='flex flex-col h-full w-full max-w-[448px]'>
@@ -32,7 +32,7 @@ export const EmptyState = () => {
           variant='outline'
           size='sm'
           className={'mt-4 text-sm'}
-          onClick={() => router.push(`?tab=account`)}
+          onClick={() => navigate(`?tab=account`)}
         >
           Go back
         </Button>
