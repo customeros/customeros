@@ -1,7 +1,7 @@
 'use client';
 import React, { useRef, useState, useEffect } from 'react';
 
-import { utcToZonedTime } from 'date-fns-tz';
+import { toZonedTime } from 'date-fns-tz';
 
 import { cn } from '@ui/utils/cn';
 import { Input } from '@ui/form/Input/Input';
@@ -15,6 +15,7 @@ import { DatePicker } from '@ui/form/DatePicker/DatePicker';
 import { BilledType, ServiceLineItem } from '@graphql/types';
 import { NumberInput } from '@ui/form/NumberInput/NumberInput';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
+import { billedTypeOptions } from '@organization/components/Tabs/panels/AccountPanel/utils';
 import {
   Popover,
   PopoverContent,
@@ -25,7 +26,6 @@ import {
   getMenuListClassNames,
   getContainerClassNames,
 } from '@ui/form/Select';
-import { billedTypeOptions } from '@organization/components/Tabs/panels/AccountPanel/utils';
 import { Currency } from '@organization/components/Tabs/panels/AccountPanel/ContractNew/ServiceLineItemsModal/Currency';
 import { BulkUpdateServiceLineItem } from '@organization/components/Tabs/panels/AccountPanel/ContractNew/ServiceLineItemsModal/ServiceLineItemsModal.dto';
 
@@ -233,7 +233,7 @@ export const ServiceLineItemRow = ({
               name='startDate'
               defaultValue={
                 service.serviceStarted
-                  ? utcToZonedTime(service.serviceStarted, 'UTC')
+                  ? toZonedTime(service.serviceStarted, 'UTC')
                   : null
               }
               onChange={(date) => {

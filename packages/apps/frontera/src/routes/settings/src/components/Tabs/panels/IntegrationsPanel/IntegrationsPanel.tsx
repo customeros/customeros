@@ -1,8 +1,7 @@
-'use client';
-import React, { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect } from 'react';
 
 import Fuse from 'fuse.js';
-import { GetIntegrationsSettings } from 'services';
+import { GetIntegrationsSettings } from 'src/services';
 import {
   useConnections,
   useIntegrations,

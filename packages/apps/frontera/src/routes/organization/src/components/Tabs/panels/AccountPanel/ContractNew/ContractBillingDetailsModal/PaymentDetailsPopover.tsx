@@ -1,6 +1,6 @@
 'use client';
-import { useRouter } from 'next/navigation';
-import React, { FC, ReactNode } from 'react';
+import { FC, ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { cn } from '@ui/utils/cn';
 import {
@@ -20,7 +20,7 @@ export const PaymentDetailsPopover: FC<PaymentDetailsPopoverProps> = ({
   content,
   children,
 }) => {
-  const { push } = useRouter();
+  const navigate = useNavigate();
 
   return (
     <Popover>
@@ -41,7 +41,7 @@ export const PaymentDetailsPopover: FC<PaymentDetailsPopoverProps> = ({
               className={'text-base underline text-white'}
               role='button'
               tabIndex={0}
-              onClick={() => push('/settings?tab=billing')}
+              onClick={() => navigate('/settings?tab=billing')}
             >
               Go to Settings
             </span>

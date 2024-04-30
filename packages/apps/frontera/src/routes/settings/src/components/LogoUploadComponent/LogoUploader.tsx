@@ -1,4 +1,3 @@
-import NextImage from 'next/image';
 import React, { useRef, useState } from 'react';
 import { FilePond, FileStatus, registerPlugin } from 'react-filepond';
 
@@ -118,7 +117,7 @@ export const LogoUploader: React.FC<LogoUploaderProps> = () => {
 
       {globalCacheData?.global_Cache?.cdnLogoUrl && !isLoading && !hasError && (
         <div className='relative max-h-[120px] w-full flex p-4'>
-          <NextImage
+          <img
             src={`${globalCacheData?.global_Cache?.cdnLogoUrl}`}
             alt='CustomerOS'
             width={136}

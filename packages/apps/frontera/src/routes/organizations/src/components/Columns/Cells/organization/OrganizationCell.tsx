@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useRef, useState, useEffect } from 'react';
 
 import { useLocalStorage } from 'usehooks-ts';
@@ -47,13 +48,13 @@ export const OrganizationCell = ({
             {parentOrganizationName}
           </span>
         )}
-        <a
+        <Link
           className='line-clamp-1 font-semibold text-gray-700 no-underline hover:no-underline'
           ref={linkRef}
-          href={href}
+          to={href}
         >
           {fullName}
-        </a>
+        </Link>
       </div>
     </Tooltip>
   );

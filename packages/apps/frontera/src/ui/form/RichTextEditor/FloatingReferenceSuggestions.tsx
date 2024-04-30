@@ -1,11 +1,12 @@
 import { FC, useState, useEffect } from 'react';
 
-import { cx } from '@remirror/core';
 import {
   useMentionAtom,
   FloatingWrapper,
   MentionAtomNodeAttributes,
 } from '@remirror/react';
+
+import { cn } from '@ui/utils/cn';
 
 export const FloatingReferenceSuggestions: FC<{
   tags?: Array<{ id: string; label: string }>;
@@ -66,7 +67,7 @@ export const FloatingReferenceSuggestions: FC<{
             return (
               <div
                 key={`remirror-mention-reference-suggestion-${reference.label}-${reference.id}`}
-                className={cx(
+                className={cn(
                   'floating-menu-option',
                   isHighlighted && 'highlighted',
                   isHovered && 'hovered',

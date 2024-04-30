@@ -1,7 +1,7 @@
 import React from 'react';
 
 import copy from 'copy-to-clipboard';
-import noteImg from 'public/images/note-img-preview.png';
+import noteImg from '@assets/images/note-img-preview.png';
 
 import { User } from '@graphql/types';
 import { Link03 } from '@ui/media/icons/Link03';

@@ -395,7 +395,7 @@ export const EditContractModal = ({
                   : null
               }
               className={cn(
-                'flex flex-col gap-4 px-6 pb-6 pt-4 bg-white  rounded-lg justify-between relative h-[80vh] min-w-[424px]',
+                'flex flex-col gap-4 px-6 pb-6 pt-4 bg-white rounded-lg justify-between relative h-[80vh] min-w-[424px]',
                 {
                   'cursor-pointer':
                     editModalMode === EditModalMode.BillingDetails,
@@ -447,6 +447,7 @@ export const EditContractModal = ({
                 </Button>
               </ModalFooter>
             </motion.div>
+
             <motion.div
               layout
               data-isOpen={editModalMode === EditModalMode.BillingDetails}

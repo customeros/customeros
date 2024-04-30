@@ -1,6 +1,4 @@
-'use client';
-import React from 'react';
-import { useRouter, useParams, useSearchParams } from 'next/navigation';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { useLocalStorage } from 'usehooks-ts';
 
@@ -18,9 +16,9 @@ import { useOrganizationQuery } from '@organization/graphql/organization.generat
 import { NotificationCenter } from '@shared/components/Notifications/NotificationCenter';
 
 export const OrganizationSidenav = () => {
-  const router = useRouter();
+  const navigate = useNavigate();
   const params = useParams();
-  const searchParams = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [lastActivePosition, setLastActivePosition] = useLocalStorage(
     `customeros-player-last-position`,
@@ -43,7 +41,7 @@ export const OrganizationSidenav = () => {
       ...lastActivePosition,
       [params?.id as string]: urlSearchParams.toString(),
     });
-    router.push(`?${urlSearchParams}`);
+    setSearchParams(urlSearchParams);
   };
 
   return (
@@ -55,7 +53,7 @@ export const OrganizationSidenav = () => {
           variant='ghost'
           className='p-0.5'
           onClick={() => {
-            router.push(`/${lastActivePosition?.root || 'organization'}`);
+            navigate(`/${lastActivePosition?.root || 'organization'}`);
           }}
           icon={
             <ArrowNarrowRight className='rotate-180 text-gray-700 size-6' />

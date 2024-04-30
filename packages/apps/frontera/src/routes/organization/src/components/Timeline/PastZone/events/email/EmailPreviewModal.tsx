@@ -7,6 +7,7 @@ import { useSearchParams } from 'react-router-dom';
 
 import { useRemirror } from '@remirror/react';
 import { htmlToProsemirrorNode } from 'remirror';
+import postStamp from '@assets/backgrounds/organization/post-stamp.webp';
 
 import { Send03 } from '@ui/media/icons/Send03';
 import { InteractionEvent } from '@graphql/types';
@@ -257,10 +258,11 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
             </div>
             <div>
               <img
-                src={'/backgrounds/organization/post-stamp.webp'}
+                src={postStamp}
                 alt='Email'
-                width={48}
-                height={70}
+                className='w-[48px] h-[70px]'
+                // width={48}
+                // height={70}
               />
             </div>
           </div>

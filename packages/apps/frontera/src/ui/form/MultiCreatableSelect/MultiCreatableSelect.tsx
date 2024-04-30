@@ -16,7 +16,6 @@ import { twMerge } from 'tailwind-merge';
 import AsyncCreatableSelect, {
   AsyncCreatableProps,
 } from 'react-select/async-creatable';
-import { MultiValueComponent } from 'react-select/dist/declarations/src/animated/MultiValue';
 
 import { cn } from '@ui/utils/cn';
 import { SelectOption } from '@ui/utils/types';
@@ -133,7 +132,8 @@ export const MultiCreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
         Control,
         MultiValueLabel,
         MenuList,
-        MultiValue: (props?.MultiValue || MultiValue) as MultiValueComponent,
+        MultiValue: (props?.MultiValue ||
+          MultiValue) as typeof createComponent.MultiValue,
         Option: (props?.Option || Option) as ComponentType<OptionProps>,
         DropdownIndicator: () => null,
         ..._components,

@@ -1,11 +1,9 @@
-'use client';
-import React, { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import axios from 'axios';
-import { signIn, useSession } from 'next-auth/react';
-import { useQueryClient } from '@tanstack/react-query';
-import { RevokeAccess } from 'services/admin/userAdminService';
+import { RevokeAccess } from 'src/services/admin/userAdminService';
+// import { useQueryClient } from '@tanstack/react-query';
 import {
   useConnections,
   useIntegrations,
@@ -16,26 +14,28 @@ import {
   GetGoogleSettings,
   SlackSettingsInterface,
   OAuthUserSettingsInterface,
-} from 'services/settings/settingsService';
+} from 'src/services/settings/settingsService';
 
 import { Gmail } from '@ui/media/icons/Gmail';
 import { Slack } from '@ui/media/icons/Slack';
 import { Google } from '@ui/media/logos/Google';
 import { Switch } from '@ui/form/Switch/Switch';
+// import { signIn } from 'next-auth/react';
+import { useStore } from '@shared/hooks/useStore';
 import { Outlook } from '@ui/media/logos/Outlook';
 import { GCalendar } from '@ui/media/icons/GCalendar';
 import { Spinner } from '@ui/feedback/Spinner/Spinner';
 import { toastError, toastSuccess } from '@ui/presentation/Toast';
-import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
+// import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 
 export const AuthPanel = () => {
   const iApp = useIntegrationApp();
   const { items: iIntegrations } = useIntegrations();
   const { items: iConnections, refresh, loading } = useConnections();
-  const router = useRouter();
-  const { data: session } = useSession();
-  const queryClient = useQueryClient();
-  const queryParams = useSearchParams();
+  const navigate = useNavigate();
+  const { sessionStore } = useStore();
+  // const queryClient = useQueryClient();
+  const [queryParams] = useSearchParams();
 
   const outlookConnection = iConnections.find(
     (o) => o?.integration?.key === 'microsoft-outlook',
@@ -80,10 +80,10 @@ export const AuthPanel = () => {
             setSlackSettings(res);
             setSlackSettingsLoading(false);
           });
-          router.push('/settings?tab=auth');
+          navigate('/settings?tab=auth');
         })
         .catch((reason) => {
-          router.push('/settings?tab=auth');
+          navigate('/settings?tab=auth');
         });
     } else {
       setSlackSettingsLoading(true);
@@ -107,73 +107,81 @@ export const AuthPanel = () => {
   });
 
   useEffect(() => {
-    if (session) {
+    if (sessionStore.isAuthenticated) {
       setGoogleSettingsLoading(true);
-      GetGoogleSettings(session.user.playerIdentityId).then(
+
+      //TODO instead of id we should use playerIdentityId
+
+      GetGoogleSettings(sessionStore.value.id).then(
         (res: OAuthUserSettingsInterface) => {
           setGoogleSettings(res);
           setGoogleSettingsLoading(false);
         },
       );
     }
-  }, [session]);
+  }, [sessionStore.isAuthenticated]);
 
   const handleSyncGoogleToggle = async (isChecked: boolean) => {
     setGoogleSettingsLoading(true);
-    const scopes = [
-      'openid',
-      'email',
-      'profile',
-      'https://www.googleapis.com/auth/gmail.readonly',
-      'https://www.googleapis.com/auth/gmail.send',
-      'https://www.googleapis.com/auth/calendar.readonly',
-    ];
 
-    if (isChecked) {
-      const _ = await signIn(
-        'google',
-        { callbackUrl: '/settings?tab=oauth' },
-        {
-          prompt: 'consent',
-          scope: scopes.join(' '),
-        },
-      );
-    } else {
-      // @ts-expect-error look into it
-      const playerIdentityId = session.user.playerIdentityId;
-      RevokeAccess({
-        provider: 'google',
-        providerAccountId: playerIdentityId,
-      })
-        .then((data) => {
-          GetGoogleSettings(playerIdentityId)
-            .then((res: OAuthUserSettingsInterface) => {
-              setGoogleSettings(res);
-              setGoogleSettingsLoading(false);
-              queryClient.invalidateQueries({
-                queryKey: useGlobalCacheQuery.getKey(),
-              });
-            })
-            .catch(() => {
-              setGoogleSettingsLoading(false);
-              toastError(
-                'There was a problem on our side and we cannot load settings data at the moment, we are doing our best to solve it! ',
-                'revoke-google-access',
-              );
-            });
-          toastSuccess(
-            'We have successfully revoked the access to your google account!',
-            'revoke-google-access',
-          );
-        })
-        .catch(() => {
-          setGoogleSettingsLoading(false);
-          toastError(
-            'There was a problem on our side and we cannot load settings data at the moment, we are doing our best to solve it! ',
-            'revoke-google-access',
-          );
-        });
-    }
+    //TODO:Also this need to be uncommented after react migration
+
+    // const scopes = [
+    //   'openid',
+    //   'email',
+    //   'profile',
+    //   'https://www.googleapis.com/auth/gmail.readonly',
+    //   'https://www.googleapis.com/auth/gmail.send',
+    //   'https://www.googleapis.com/auth/calendar.readonly',
+    // ];
+
+    //TODO: This needs to be created after react migration
+
+    // if (isChecked) {
+    //   const _ = await signIn(
+    //     'google',
+    //     { callbackUrl: '/settings?tab=oauth' },
+    //     {
+    //       prompt: 'consent',
+    //       scope: scopes.join(' '),
+    //     },
+    //   );
+    // } else {
+    //   // @ts-expect-error look into it
+    //   const playerIdentityId = session.user.playerIdentityId;
+    //   RevokeAccess({
+    //     provider: 'google',
+    //     providerAccountId: playerIdentityId,
+    //   })
+    //     .then((data) => {
+    //       GetGoogleSettings(playerIdentityId)
+    //         .then((res: OAuthUserSettingsInterface) => {
+    //           setGoogleSettings(res);
+    //           setGoogleSettingsLoading(false);
+    //           queryClient.invalidateQueries({
+    //             queryKey: useGlobalCacheQuery.getKey(),
+    //           });
+    //         })
+    //         .catch(() => {
+    //           setGoogleSettingsLoading(false);
+    //           toastError(
+    //             'There was a problem on our side and we cannot load settings data at the moment, we are doing our best to solve it! ',
+    //             'revoke-google-access',
+    //           );
+    //         });
+    //       toastSuccess(
+    //         'We have successfully revoked the access to your google account!',
+    //         'revoke-google-access',
+    //       );
+    //     })
+    //     .catch(() => {
+    //       setGoogleSettingsLoading(false);
+    //       toastError(
+    //         'There was a problem on our side and we cannot load settings data at the moment, we are doing our best to solve it! ',
+    //         'revoke-google-access',
+    //       );
+    //     });
+    // }
   };
 
   const handleSlackToggle = async (isChecked: boolean) => {

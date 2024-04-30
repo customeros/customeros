@@ -48,10 +48,10 @@ export const OrganizationsPage = () => {
   // }
 
   return (
-    <>
+    <div className='flex-col w-full'>
       <Search />
       <OrganizationsTable />
-    </>
+    </div>
   );
 };
 

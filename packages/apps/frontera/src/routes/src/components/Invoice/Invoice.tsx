@@ -1,7 +1,4 @@
-'use client';
-
 import React from 'react';
-import Image from 'next/image';
 
 import { cn } from '@ui/utils/cn';
 import { DateTimeUtils } from '@spaces/utils/date';
@@ -219,12 +216,7 @@ export function Invoice({
         )}
         <div className='flex items-center py-2 mt-2 border-t border-gray-300'>
           <div className='mr-2'>
-            <Image
-              src={logoCustomerOs}
-              alt='CustomerOS'
-              width={14}
-              height={14}
-            />
+            <img src={logoCustomerOs} alt='CustomerOS' width={14} height={14} />
           </div>
           <span className='text-xs text-gray-500'>
             Powered by

@@ -1,7 +1,6 @@
 'use client';
 
-import Image from 'next/image';
-import React, { FC } from 'react';
+import { FC } from 'react';
 
 import { Tag } from '@ui/presentation/Tag';
 import { InvoiceStatus } from '@graphql/types';
@@ -30,7 +29,7 @@ export const InvoiceHeader: FC<InvoiceHeaderProps> = ({
         <div className='flex items-center'>
           <h1 className='text-3xl font-bold'>Invoice</h1>
           {isPreview && (
-            <Image
+            <img
               src={previewStamp}
               width={95}
               height={35}
@@ -49,7 +48,7 @@ export const InvoiceHeader: FC<InvoiceHeaderProps> = ({
 
         {globalCacheData?.global_Cache?.cdnLogoUrl && (
           <div className='flex relative max-h-[120px] w-full justify-end'>
-            <Image
+            <img
               src={`${globalCacheData?.global_Cache?.cdnLogoUrl}`}
               alt='CustomerOS'
               width={136}

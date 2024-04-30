@@ -1,5 +1,6 @@
-import Image from 'next/image';
 import React, { useState, useEffect } from 'react';
+
+import postStamp from '@assets/backgrounds/organization/post-stamp.webp';
 
 import { cn } from '@ui/utils/cn';
 import { InputProps } from '@ui/form/Input';
@@ -182,12 +183,7 @@ export const ParticipantsSelectGroup = ({
 
       {!modal && (
         <div>
-          <Image
-            src={'/backgrounds/organization/post-stamp.webp'}
-            alt='Email'
-            width={54}
-            height={70}
-          />
+          <img src={postStamp} alt='Email' width={54} height={70} />
         </div>
       )}
     </div>
