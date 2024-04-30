@@ -14,18 +14,20 @@ import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useRenewalsMeta } from '@shared/state/RenewalsMeta.atom';
 import { Menu, MenuList, MenuItem, MenuButton } from '@ui/overlay/Menu/Menu';
 import { useInfiniteGetOrganizationsQuery } from '@organizations/graphql/getOrganizations.generated';
-import { useBulkUpdateOpportunityRenewalMutation } from '@shared/graphql/bulkUpdateOpportunityRenewal.generated';
+import { useUpdateOpportunityRenewalMutation } from '@organization/src/graphql/updateOpportunityRenewal.generated';
 
 import { getLikelihoodColor, getRenewalLikelihoodLabel } from './utils';
 
 interface RenewalLikelihoodCellProps {
   id: string;
+  opportunityId: string;
   value?: OpportunityRenewalLikelihood | null;
 }
 
 export const RenewalLikelihoodCell = ({
   id,
   value,
+  opportunityId,
 }: RenewalLikelihoodCellProps) => {
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
@@ -37,61 +39,60 @@ export const RenewalLikelihoodCell = ({
   const { getRenewals } = renewalsMeta;
   const queryKey = useInfiniteGetOrganizationsQuery.getKey(getRenewals);
 
-  const updateOpportunityRenewal = useBulkUpdateOpportunityRenewalMutation(
-    client,
-    {
-      onMutate: (payload) => {
-        queryClient.cancelQueries({ queryKey });
+  const updateOpportunityRenewal = useUpdateOpportunityRenewalMutation(client, {
+    onMutate: (payload) => {
+      queryClient.cancelQueries({ queryKey });
 
-        const { previousEntries } =
-          useInfiniteGetRenewalsQuery.mutateCacheEntry(
-            queryClient,
-            getRenewals,
-          )((old) =>
-            produce(old, (draft) => {
-              const pageIndex = getRenewals.pagination.page - 1;
+      const { previousEntries } = useInfiniteGetRenewalsQuery.mutateCacheEntry(
+        queryClient,
+        getRenewals,
+      )((old) =>
+        produce(old, (draft) => {
+          const pageIndex = getRenewals.pagination.page - 1;
 
-              const content =
-                draft?.pages?.[pageIndex]?.dashboardView_Renewals?.content;
-              const index = content?.findIndex(
-                (item) =>
-                  item.organization.metadata.id ===
-                  payload.input.organizationId,
-              );
-
-              if (content && index !== undefined && index > -1) {
-                set(
-                  content[index],
-                  'organization.accountDetails.renewalSummary.renewalLikelihood',
-                  payload.input.renewalLikelihood,
-                );
-              }
-            }),
+          const content =
+            draft?.pages?.[pageIndex]?.dashboardView_Renewals?.content;
+          const index = content?.findIndex(
+            (item) => item.organization.metadata.id === id,
           );
 
-        return { previousEntries };
-      },
-      onError: (_, __, context) => {
-        toastError(
-          `We couldn't update the renewal likelihood`,
-          'renewal-likelihood-update-error',
-        );
-        if (context?.previousEntries) {
-          queryClient.setQueryData(queryKey, context.previousEntries);
-        }
-      },
-      onSettled: () => {
-        setTimeout(() => {
-          queryClient.invalidateQueries({ queryKey });
-        }, 500);
-      },
+          if (content && index !== undefined && index > -1) {
+            set(
+              content[index],
+              'opportunity.renewalLikelihood',
+              payload.input.renewalLikelihood,
+            );
+            set(
+              content[index],
+              'opportunity.renewalAdjustedRate',
+              payload.input.renewalAdjustedRate,
+            );
+          }
+        }),
+      );
+
+      return { previousEntries };
     },
-  );
+    onError: (_, __, context) => {
+      toastError(
+        `We couldn't update the renewal likelihood`,
+        'renewal-likelihood-update-error',
+      );
+      if (context?.previousEntries) {
+        queryClient.setQueryData(queryKey, context.previousEntries);
+      }
+    },
+    onSettled: () => {
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey });
+      }, 500);
+    },
+  });
 
   const handleClick = (value: OpportunityRenewalLikelihood) => {
     updateOpportunityRenewal.mutate({
       input: {
-        organizationId: id,
+        opportunityId,
         renewalLikelihood: value,
         renewalAdjustedRate: (() => {
           switch (value) {

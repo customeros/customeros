@@ -122,6 +122,11 @@ query getRenewals($pagination: Pagination!, $where: Filter, $sort: SortBy) {
         contractName
       }
       opportunity {
+        id
+        amount
+        maxAmount
+        renewalLikelihood
+        renewalAdjustedRate
         owner {
           id
           firstName
