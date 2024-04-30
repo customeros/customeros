@@ -7,20 +7,20 @@
     -webkit-font-smoothing: antialiased;
 
     @font-face {
-      font-family: "Barlow";
-      src: url("../assets/fonts/Barlow-Regular.woff");
+      font-family: 'Barlow';
+      src: url('../assets/fonts/Barlow-Regular.woff');
       font-weight: 400;
       font-style: normal;
     }
     @font-face {
-      font-family: "Barlow";
-      src: url("../assets/fonts/Barlow-Medium.woff");
+      font-family: 'Barlow';
+      src: url('../assets/fonts/Barlow-Medium.woff');
       font-weight: 500;
       font-style: normal;
     }
     @font-face {
-      font-family: "Barlow";
-      src: url("../assets/fonts/Barlow-SemiBold.woff");
+      font-family: 'Barlow';
+      src: url('../assets/fonts/Barlow-SemiBold.woff');
       font-weight: 600;
       font-style: normal;
     }
@@ -107,7 +107,7 @@
   .block-text-renderer blockquote .customeros-mention:before {
     content: '"@"';
   }
-  .block-text-renderer[aria-hidden="true"] {
+  .block-text-renderer[aria-hidden='true'] {
     @apply hidden;
   }
 
@@ -244,7 +244,7 @@
   .inline-text-renderer blockquote .customeros-mention:before {
     content: '"@"';
   }
-  .inline-text-renderer[aria-hidden="true"] {
+  .inline-text-renderer[aria-hidden='true'] {
     @apply hidden;
   }
 
@@ -440,6 +440,10 @@
   .slack_italic {
     @apply italic;
   }
+
+  .css-kktkhw-ValueContainer2 {
+    @apply flex #{!important};
+  }
 }
 
 .tiptap {
@@ -479,7 +483,7 @@
 }
 
 .react-calendar__navigation__arrow.react-calendar__navigation__prev-button:after {
-  content: "";
+  content: '';
   display: inline-block;
   height: 20px;
   width: 20px;
@@ -491,7 +495,7 @@
 }
 
 .react-calendar__navigation__arrow.react-calendar__navigation__next-button:after {
-  content: "";
+  content: '';
   display: inline-block;
   height: 20px;
   width: 20px;

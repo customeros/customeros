@@ -1,5 +1,5 @@
 import React from 'react';
-import Link from 'next/link';
+import { Link } from 'react-router-dom';
 
 import { ExternalSystem } from '@graphql/types';
 import { Hubspot } from '@ui/media/logos/Hubspot';
@@ -25,7 +25,7 @@ export const LogEntryExternalLink: React.FC<{
 
   return (
     <div className='mt-4'>
-      <Link href={link}>
+      <Link to={link}>
         {icon}
         View in {externalLink.type.toLowerCase()}
       </Link>

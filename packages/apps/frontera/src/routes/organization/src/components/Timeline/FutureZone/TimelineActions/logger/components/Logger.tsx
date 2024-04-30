@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom';
 import { useField } from 'react-inverted-form';
 
-import noteIcon from 'public/images/event-ill-log.png';
+import noteIcon from '@assets/images/event-ill-log.png';
 
 import { Contact } from '@graphql/types';
 import { Button } from '@ui/form/Button/Button';

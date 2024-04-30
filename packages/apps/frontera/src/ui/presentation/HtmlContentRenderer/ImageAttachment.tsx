@@ -1,9 +1,8 @@
-import { useState } from 'react';
-import Image, { ImageProps } from 'next/image';
+import { useState, ImgHTMLAttributes } from 'react';
 
 import { FileX03 } from '@ui/media/icons/FileX03';
 
-export const ImageAttachment = (props: ImageProps) => {
+export const ImageAttachment = (props: ImgHTMLAttributes<HTMLImageElement>) => {
   const [hasError, setHasError] = useState(false);
 
   if (hasError) {
@@ -17,7 +16,7 @@ export const ImageAttachment = (props: ImageProps) => {
 
   //TODO:refactor to use Image component
   return (
-    <Image
+    <img
       {...props}
       alt={props.alt || 'Attachment'}
       className='mt-2 rounded-[4px]'

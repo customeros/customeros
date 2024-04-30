@@ -1,8 +1,8 @@
-import { signIn, useSession } from 'next-auth/react';
-import {
-  GetGoogleSettings,
-  OAuthUserSettingsInterface,
-} from 'services/settings/settingsService';
+// import { signIn, useSession } from 'next-auth/react';
+// import {
+//   GetGoogleSettings,
+//   OAuthUserSettingsInterface,
+// } from 'src/services/settings/settingsService';
 
 import { Button } from '@ui/form/Button/Button';
 import { AlertCircle } from '@ui/media/icons/AlertCircle';
@@ -16,34 +16,36 @@ import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog
 export const GoogleSidebarNotification = () => {
   const client = getGraphQLClient();
   const { data: globalCacheQuery } = useGlobalCacheQuery(client);
-  const { data: session } = useSession();
+  // const { data: session } = useSession();
 
   const infoModal = useDisclosure();
 
-  const requestAccess = () => {
-    if (!session) return;
-    GetGoogleSettings(session.user.playerIdentityId).then(
-      async (res: OAuthUserSettingsInterface) => {
-        const scopes = [
-          'openid',
-          'email',
-          'profile',
-          'https://www.googleapis.com/auth/gmail.readonly',
-          'https://www.googleapis.com/auth/gmail.send',
-          'https://www.googleapis.com/auth/calendar.readonly',
-        ];
+  //TODO:SAME HERE NEED TO BE UPDATE THE SESION
 
-        await signIn(
-          'google',
-          { callbackUrl: '/' },
-          {
-            prompt: 'consent',
-            scope: scopes.join(' '),
-          },
-        );
-      },
-    );
-  };
+  // const requestAccess = () => {
+  //   if (!session) return;
+  //   GetGoogleSettings(session.user.playerIdentityId).then(
+  //     async (res: OAuthUserSettingsInterface) => {
+  //       const scopes = [
+  //         'openid',
+  //         'email',
+  //         'profile',
+  //         'https://www.googleapis.com/auth/gmail.readonly',
+  //         'https://www.googleapis.com/auth/gmail.send',
+  //         'https://www.googleapis.com/auth/calendar.readonly',
+  //       ];
+
+  //       await signIn(
+  //         'google',
+  //         { callbackUrl: '/' },
+  //         {
+  //           prompt: 'consent',
+  //           scope: scopes.join(' '),
+  //         },
+  //       );
+  //     },
+  //   );
+  // };
 
   return (
     <>
@@ -67,7 +69,8 @@ export const GoogleSidebarNotification = () => {
             }
             isOpen={infoModal.open}
             onClose={infoModal.onClose}
-            onConfirm={requestAccess}
+            // onConfirm={requestAccess}
+            onConfirm={() => {}}
           />
 
           <div className='bg-warning-25 border border-warning-200 w-full py-5 px-4 rounded-lg'>
@@ -94,7 +97,7 @@ export const GoogleSidebarNotification = () => {
                 colorScheme='warning'
                 variant='ghost'
                 className='text-sm font-semibold hover:text-warning-900 text-warning-700'
-                onClick={requestAccess}
+                // onClick={requestAccess}
               >
                 Re-allow
               </Button>

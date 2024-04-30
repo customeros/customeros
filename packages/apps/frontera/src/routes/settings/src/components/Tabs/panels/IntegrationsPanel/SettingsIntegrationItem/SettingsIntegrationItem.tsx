@@ -1,8 +1,10 @@
-import Image from 'next/image';
 import React, { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 
-import { DeleteIntegrationSettings, UpdateIntegrationSettings } from 'services';
+import {
+  DeleteIntegrationSettings,
+  UpdateIntegrationSettings,
+} from 'src/services';
 
 import { Input } from '@ui/form/Input/Input';
 import { Button } from '@ui/form/Button/Button';
@@ -95,7 +97,7 @@ export const SettingsIntegrationItem = ({
     >
       <div className='flex flex-row justify-between my-2'>
         <div className='flex items-center'>
-          <Image className='mr-2' alt='' src={icon} width={20} height={20} />
+          <img className='mr-2' alt='' src={icon} width={20} height={20} />
           <span className='self-center text-md font-medium'>{name}</span>
         </div>
         <CollapsibleTrigger className='w-fit' asChild={false}>

@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { utcToZonedTime } from 'date-fns-tz';
+import { toZonedTime } from 'date-fns-tz';
 
 import { Button } from '@ui/form/Button/Button';
 import { DateTimeUtils } from '@spaces/utils/date';
@@ -9,15 +9,15 @@ import { billingFrequencyOptions } from '@organization/components/Tabs/panels/Ac
 
 export const ContractSubtitle = ({ data }: { data: Contract }) => {
   const serviceStarted = data?.serviceStarted
-    ? utcToZonedTime(data?.serviceStarted, 'UTC').toUTCString()
+    ? toZonedTime(data?.serviceStarted, 'UTC').toUTCString()
     : null;
 
   const contractEnded = data?.contractEnded
-    ? utcToZonedTime(data?.contractEnded, 'UTC').toUTCString()
+    ? toZonedTime(data?.contractEnded, 'UTC').toUTCString()
     : null;
   const renewalDate = data?.opportunities?.[0]?.renewedAt
     ? DateTimeUtils.format(
-        utcToZonedTime(data.opportunities[0].renewedAt, 'UTC').toUTCString(),
+        toZonedTime(data.opportunities[0].renewedAt, 'UTC').toUTCString(),
         DateTimeUtils.dateWithAbreviatedMonth,
       )
     : null;

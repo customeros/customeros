@@ -28,6 +28,7 @@
       "@store/*": ["src/store/*"],
       "@graphql/types": ["src/routes/src/types/__generated__/graphql.types.ts"],
       "@organizations/*": ["src/routes/organizations/src/*"],
+      "@renewals/*": ["src/routes/renewals/src/*"],
       "@organization/*": ["src/routes/organization/src/*"],
       "@spaces/utils/*": ["src/utils/*"],
       "@settings/*": ["src/routes/settings/src/*"]

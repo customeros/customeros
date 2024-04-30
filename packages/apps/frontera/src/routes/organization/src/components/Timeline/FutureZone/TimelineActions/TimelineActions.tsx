@@ -1,17 +1,11 @@
-import React, { lazy } from 'react';
+import React from 'react';
 import { useParams } from 'react-router-dom';
 
 import { TimelineActionLogEntryContextContextProvider } from '@organization/components/Timeline/FutureZone/TimelineActions/context/TimelineActionLogEntryContext';
 
 import { TimelineActionsArea } from './TimelineActionsArea';
 import { TimelineActionButtons } from './TimelineActionButtons';
-
-const TimelineActionEmailContextContextProvider = lazy(
-  () =>
-    import(
-      '@organization/components/Timeline/FutureZone/TimelineActions/context/TimelineActionEmailContext'
-    ),
-);
+import TimelineActionEmailContextContextProvider from './context/TimelineActionEmailContext';
 
 interface TimelineActionsProps {
   invalidateQuery: () => void;
@@ -31,7 +25,7 @@ export const TimelineActions: React.FC<TimelineActionsProps> = ({
         id={id}
         invalidateQuery={invalidateQuery}
       >
-        <div className='bg-gray-25'>
+        <div id='mariana' className='bg-gray-25'>
           <TimelineActionButtons invalidateQuery={invalidateQuery} />
           <TimelineActionsArea />
         </div>

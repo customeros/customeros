@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { IconButton } from '@ui/form/IconButton';
 import { InlineLoader } from '@ui/presentation/inline-loader';
 import {
@@ -28,11 +26,7 @@ export const SimpleValidationIndicator = ({
   if (!errorMessages.length) {
     return (
       <div className={styles.validEntry}>
-        <CheckCircle
-          color='var(--chakra-colors-success-600)'
-          height={16}
-          width={16}
-        />
+        <CheckCircle className='text-success-600 size-4' />
       </div>
     );
   }
@@ -45,7 +39,7 @@ export const SimpleValidationIndicator = ({
     <Popover>
       <PopoverTrigger>
         <IconButton
-          size='sm'
+          size='xxs'
           aria-label='Show validationresults'
           icon={<div className={styles.validationSignal} />}
         />

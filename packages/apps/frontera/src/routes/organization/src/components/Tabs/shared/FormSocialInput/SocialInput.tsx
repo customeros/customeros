@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { Link } from 'react-router-dom';
 import { memo, useRef, useState } from 'react';
 
 import { cn } from '@ui/utils/cn';
@@ -93,7 +93,7 @@ export const SocialInput = memo(
                   </p>
                   {isHovered && (
                     <Link
-                      href={href}
+                      to={href}
                       target='_blank'
                       className='cursor-pointer absolute top-[1px] -right-[30px] flex items-center text-gray-500 '
                     >

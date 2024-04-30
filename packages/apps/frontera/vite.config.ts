@@ -23,6 +23,7 @@ export default defineConfig({
         './src/routes/organizations/src',
       ),
       '@organization': path.resolve(__dirname, './src/routes/organization/src'),
+      '@renewals': path.resolve(__dirname, './src/routes/renewals/src'),
       '@settings': path.resolve(__dirname, './src/routes/settings/src'),
       '@spaces/utils': path.resolve(__dirname, './src/utils'),
     },

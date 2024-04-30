@@ -1,39 +1,39 @@
 import { FC } from 'react';
 
-import { signIn } from 'next-auth/react';
+// import { signIn } from 'next-auth/react';
 
 import { cn } from '@ui/utils/cn';
 import { Button } from '@ui/form/Button/Button';
 import { Mail01 } from '@ui/media/icons/Mail01';
 import { Google } from '@ui/media/logos/Google';
-import { toastError } from '@ui/presentation/Toast';
+// import { toastError } from '@ui/presentation/Toast';
 import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 
 export const MissingPermissionsPrompt: FC<{
   modal: boolean;
 }> = ({ modal }) => {
+  //TODO:This needs to be created after react migration
   const signInWithScopes = async () => {
-    const scopes = [
-      'openid',
-      'email',
-      'profile',
-      'https://www.googleapis.com/auth/gmail.readonly',
-      'https://www.googleapis.com/auth/gmail.send',
-      'https://www.googleapis.com/auth/calendar.readonly',
-    ];
-
-    try {
-      await signIn(
-        'google',
-        { callbackUrl: window.location.href },
-        {
-          prompt: 'login',
-          scope: scopes.join(' '),
-        },
-      );
-    } catch (error) {
-      toastError('Something went wrong!', `unable-to-sign-in-with-scopes`);
-    }
+    // const scopes = [
+    //   'openid',
+    //   'email',
+    //   'profile',
+    //   'https://www.googleapis.com/auth/gmail.readonly',
+    //   'https://www.googleapis.com/auth/gmail.send',
+    //   'https://www.googleapis.com/auth/calendar.readonly',
+    // ];
+    // try {
+    //   await signIn(
+    //     'google',
+    //     { callbackUrl: window.location.href },
+    //     {
+    //       prompt: 'login',
+    //       scope: scopes.join(' '),
+    //     },
+    //   );
+    // } catch (error) {
+    //   toastError('Something went wrong!', `unable-to-sign-in-with-scopes`);
+    // }
   };
 
   return (

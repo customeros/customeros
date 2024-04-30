@@ -1,4 +1,4 @@
-import { utcToZonedTime } from 'date-fns-tz';
+import { toZonedTime } from 'date-fns-tz';
 
 import { DateTimeUtils } from '@spaces/utils/date';
 import { SelectOption } from '@shared/types/SelectOptions';
@@ -57,12 +57,12 @@ export class ContractDetailsDto implements ContractDetailsForm {
         ({ value }) => value === data?.billingDetails?.billingCycle,
       ) ?? contractBillingCycleOptions[0];
     this.invoicingStarted = data?.billingDetails?.invoicingStarted
-      ? utcToZonedTime(data.billingDetails.invoicingStarted, 'UTC')
+      ? toZonedTime(data.billingDetails.invoicingStarted, 'UTC')
       : data?.serviceStarted
       ? DateTimeUtils.addMonth(data?.serviceStarted, 1)
       : null;
     this.serviceStarted =
-      data?.serviceStarted && utcToZonedTime(data?.serviceStarted, 'UTC');
+      data?.serviceStarted && toZonedTime(data?.serviceStarted, 'UTC');
     this.canPayWithBankTransfer = data?.billingDetails?.canPayWithBankTransfer;
     this.canPayWithDirectDebit = data?.billingDetails?.canPayWithDirectDebit;
     this.canPayWithCard = data?.billingDetails?.canPayWithCard;

@@ -1,6 +1,7 @@
 import { FC, useMemo } from 'react';
 
 import { convert } from 'html-to-text';
+import postStamp from '@assets/backgrounds/organization/post-stamp.webp';
 
 import { cn } from '@ui/utils/cn';
 import { EmailParticipant } from '@graphql/types';
@@ -93,12 +94,7 @@ export const EmailStub: FC<{ email: InteractionEventWithDate }> = ({
           </div>
         </CardContent>
         <CardFooter className='py-2 px-3 ml-1'>
-          <img
-            src={'/backgrounds/organization/post-stamp.webp'}
-            alt='Email'
-            width={48}
-            height={70}
-          />
+          <img src={postStamp} alt='Email' width={48} height={70} />
         </CardFooter>
       </Card>
     </>

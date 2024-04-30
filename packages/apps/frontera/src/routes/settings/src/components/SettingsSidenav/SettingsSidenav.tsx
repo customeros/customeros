@@ -1,6 +1,4 @@
-'use client';
-import React from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { useLocalStorage } from 'usehooks-ts';
 
@@ -14,8 +12,8 @@ import { SidenavItem } from '@shared/components/RootSidenav/components/SidenavIt
 import { NotificationCenter } from '@shared/components/Notifications/NotificationCenter';
 
 export const SettingsSidenav = () => {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [lastActivePosition, setLastActivePosition] = useLocalStorage(
     `customeros-player-last-position`,
     { ['settings']: 'oauth', root: 'organization' },
@@ -27,7 +25,7 @@ export const SettingsSidenav = () => {
     const params = new URLSearchParams(searchParams?.toString() ?? '');
     params.set('tab', tab);
     setLastActivePosition({ ...lastActivePosition, settings: tab });
-    router.push(`?${params}`);
+    setSearchParams(params.toString());
   };
 
   return (
@@ -37,7 +35,7 @@ export const SettingsSidenav = () => {
           size='xs'
           variant='ghost'
           aria-label='Go back'
-          onClick={() => router.push(`/${lastActivePosition.root}`)}
+          onClick={() => navigate(`/${lastActivePosition.root}`)}
           icon={<ArrowNarrowLeft className='text-gray-700 size-5' />}
         />
 
