@@ -49,7 +49,7 @@ export class ServiceLineItemsDTO implements ServiceLineItemBulkUpdateItem {
       : data?.billingCycle;
   }
 
-  static toPayload(data: ServiceLineItem): BulkUpdateServiceLineItem {
+  static toForm(data: ServiceLineItem): BulkUpdateServiceLineItem {
     return {
       serviceLineItemId: data?.metadata?.id ?? '',
       name: data?.description ?? '',

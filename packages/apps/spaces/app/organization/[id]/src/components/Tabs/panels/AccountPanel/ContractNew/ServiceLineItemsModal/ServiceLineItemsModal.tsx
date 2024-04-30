@@ -196,7 +196,7 @@ export const ServiceLineItemsModal = ({
           contractLineItems
             .filter((e) => !e.serviceEnded)
             .map((e) => {
-              return ServiceLineItemsDTO.toPayload(e);
+              return ServiceLineItemsDTO.toForm(e);
             }),
         );
       }
@@ -233,7 +233,7 @@ export const ServiceLineItemsModal = ({
             price: e.price,
             quantity: e.quantity,
             vatRate: e.vatRate,
-            closed: e.isDeleted,
+            closeVersion: e.isDeleted,
             serviceStarted: e.serviceStarted,
           })),
       },
