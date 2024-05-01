@@ -337,6 +337,12 @@ func (h *InvoiceEventHandler) onInvoicePdfGeneratedV1(ctx context.Context, evt e
 
 	invoiceEntity, err := h.commonServices.InvoiceService.GetById(ctx, invoiceId)
 	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	if invoiceEntity == nil {
+		err = fmt.Errorf("invoice %s not found", invoiceId)
+		tracing.TraceErr(span, err)
 		return err
 	}
 
@@ -348,7 +354,18 @@ func (h *InvoiceEventHandler) onInvoicePdfGeneratedV1(ctx context.Context, evt e
 		err = h.integrationAppInvoiceFinalizedWebhook(ctx, eventData.Tenant, *invoiceEntity)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			h.log.Errorf("Error invoking invoice ready webhook for invoice %s: %s", invoiceId, err.Error())
+			h.log.Errorf("error invoking invoice ready webhook for invoice %s: %s", invoiceId, err.Error())
+		}
+		err = h.slackInvoiceFinalizedWebhook(ctx, eventData.Tenant, *invoiceEntity)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("error invoking slack invoice finalized webhook for invoice %s: %s", invoiceId, err.Error())
+		}
+
+		err = h.repositories.Neo4jRepositories.InvoiceWriteRepository.MarkInvoiceFinalizedEventSent(ctx, eventData.Tenant, invoiceEntity.Id)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error setting invoice payment requested for invoice %s: %s", invoiceEntity.Id, err.Error())
 		}
 	}
 
@@ -464,12 +481,52 @@ func (h *InvoiceEventHandler) integrationAppInvoiceFinalizedWebhook(ctx context.
 		return fmt.Errorf("request failed with status code: %s", resp.Status)
 	}
 
-	// Request was successful
-	err = h.repositories.Neo4jRepositories.InvoiceWriteRepository.MarkInvoiceFinalizedEventSent(ctx, tenant, invoice.Id)
+	return nil
+}
+
+func (h *InvoiceEventHandler) slackInvoiceFinalizedWebhook(ctx context.Context, tenant string, invoice neo4jentity.InvoiceEntity) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.slackInvoiceFinalizedWebhook")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	tracing.LogObjectAsJson(span, "invoice", invoice)
+
+	if h.cfg.EventNotifications.SlackConfig.InternalAlertsRegisteredWebhook == "" {
+		return nil
+	}
+
+	// get organization linked to invoice
+	organizationDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByInvoiceId(ctx, tenant, invoice.Id)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		h.log.Errorf("Error setting invoice payment requested for invoice %s: %s", invoice.Id, err.Error())
+		h.log.Errorf("Error getting organization for invoice %s: %s", invoice.Id, err.Error())
+		return err
 	}
+	organizationEntity := neo4jentity.OrganizationEntity{}
+	if organizationDbNode != nil {
+		organizationEntity = *neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
+	}
+
+	// Create a struct to hold the JSON data
+	type SlackMessage struct {
+		Text string `json:"text"`
+	}
+	message := SlackMessage{Text: fmt.Sprintf("Tenant %s, Invoice %s has been finalized for customer %s", tenant, invoice.Number, organizationEntity.Name)}
+	// Convert struct to JSON
+	jsonData, err := json.Marshal(message)
+	if err != nil {
+		fmt.Println("Error encoding JSON:", err)
+		return err
+	}
+
+	// Send POST request
+	resp, err := http.Post(h.cfg.EventNotifications.SlackConfig.InternalAlertsRegisteredWebhook, "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
+		fmt.Println("Error sending request:", err)
+		return err
+	}
+	defer resp.Body.Close()
+
+	span.LogFields(log.String("result.status", resp.Status))
 
 	return nil
 }
