@@ -116,6 +116,43 @@ func TestInvoiceResolver_Invoice(t *testing.T) {
 	require.Equal(t, contractId, invoice.Contract.ID)
 }
 
+func TestInvoiceResolver_Invoice_ByNumber(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organizationId, neo4jentity.ContractEntity{})
+	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		CreatedAt:       utils.Now(),
+		UpdatedAt:       utils.Now(),
+		PeriodStartDate: utils.Now(),
+		PeriodEndDate:   utils.Now(),
+		DueDate:         utils.Now(),
+		IssuedDate:      utils.Now(),
+		DryRun:          true,
+		Number:          "INV-001",
+		TotalAmount:     119.01,
+	})
+
+	rawResponse := callGraphQL(t, "invoice/get_invoice_by_number", map[string]interface{}{"number": "INV-001"})
+	require.Nil(t, rawResponse.Errors)
+
+	var invoiceStruct struct {
+		Invoice_ByNumber model.Invoice
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &invoiceStruct)
+	require.Nil(t, err)
+
+	invoice := invoiceStruct.Invoice_ByNumber
+	require.Equal(t, invoiceId, invoice.Metadata.ID)
+	require.True(t, invoice.DryRun)
+	require.Equal(t, "INV-001", invoice.InvoiceNumber)
+	require.Equal(t, 119.01, invoice.AmountDue)
+	require.Equal(t, 0, len(invoice.InvoiceLineItems))
+}
+
 func TestInvoiceResolver_Invoices_Contract_Name(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)

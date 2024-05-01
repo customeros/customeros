@@ -7,8 +7,6 @@ package resolver
 import (
 	"context"
 	"errors"
-	"github.com/vektah/gqlparser/v2/ast"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
@@ -23,6 +21,7 @@ import (
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"github.com/vektah/gqlparser/v2/ast"
 )
 
 // Organization is the resolver for the organization field.
@@ -426,6 +425,28 @@ func (r *queryResolver) Invoices(ctx context.Context, pagination *model.Paginati
 		TotalElements:  paginatedResult.TotalRows,
 		TotalAvailable: countInvoices,
 	}, err
+}
+
+// InvoiceByNumber is the resolver for the invoice_ByNumber field.
+func (r *queryResolver) InvoiceByNumber(ctx context.Context, number string) (*model.Invoice, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InvoiceResolver.InvoiceByNumber", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.invoiceNumber", number))
+
+	if number == "" {
+		tracing.TraceErr(span, errors.New("missing invoice number"))
+		graphql.AddErrorf(ctx, "Missing invoice number")
+		return nil, nil
+	}
+
+	invoiceEntityPtr, err := r.Services.CommonServices.InvoiceService.GetByNumber(ctx, number)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get invoice by number %s", number)
+		return nil, err
+	}
+	return mapper.MapEntityToInvoice(invoiceEntityPtr), nil
 }
 
 // Invoice returns generated.InvoiceResolver implementation.

@@ -67,6 +67,11 @@ func (r *queryResolver) Invoices(ctx context.Context, pagination *model.Paginati
 	panic(fmt.Errorf("not implemented: Invoices - invoices"))
 }
 
+// InvoiceByNumber is the resolver for the invoice_ByNumber field.
+func (r *queryResolver) InvoiceByNumber(ctx context.Context, number string) (*model.Invoice, error) {
+	panic(fmt.Errorf("not implemented: InvoiceByNumber - invoice_ByNumber"))
+}
+
 // Invoice returns generated.InvoiceResolver implementation.
 func (r *Resolver) Invoice() generated.InvoiceResolver { return &invoiceResolver{r} }
 
