@@ -212,7 +212,7 @@ func (np *PostmarkProvider) FillTemplate(template string, replace map[string]str
 }
 
 func (np *PostmarkProvider) ConvertMjmlToHtml(ctx context.Context, filledTemplate string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PostmarkProvider.SendNotification")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PostmarkProvider.ConvertMjmlToHtml")
 	defer span.Finish()
 
 	html, err := mjml.ToHTML(context.Background(), filledTemplate)
