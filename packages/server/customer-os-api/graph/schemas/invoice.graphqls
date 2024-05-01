@@ -1,6 +1,7 @@
 extend type Query {
     invoice(id: ID!): Invoice!
     invoices(pagination: Pagination, where: Filter, sort: [SortBy!], organizationId: ID): InvoicesPage!
+    invoice_ByNumber(number: String!): Invoice!
 }
 
 extend type Mutation {

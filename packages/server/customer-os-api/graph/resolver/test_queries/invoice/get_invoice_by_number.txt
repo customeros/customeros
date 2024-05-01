@@ -1,0 +1,74 @@
+query GetInvoice($number: String!) {
+invoice_ByNumber(number: $number) {
+    metadata {
+        id
+        created
+        lastUpdated
+    }
+    dryRun
+    postpaid
+    offCycle
+    preview
+    amountDue
+    amountPaid
+    amountRemaining
+    invoiceNumber
+    invoicePeriodStart
+    invoicePeriodEnd
+    invoiceUrl
+    due
+    issued
+    currency
+    repositoryFileId
+    note
+    paid
+    subtotal
+    taxDue
+    paymentLink
+
+    customer {
+        name
+        email
+        addressLine1
+        addressLine2
+        addressZip
+        addressLocality
+        addressCountry
+        addressRegion
+    }
+
+    provider {
+        logoUrl
+        name
+        addressLine1
+        addressLine2
+        addressZip
+        addressLocality
+        addressCountry
+        addressRegion
+    }
+
+    invoiceLineItems {
+        description
+        price
+        quantity
+        subtotal
+        taxDue
+        total
+        contractLineItem {
+            metadata {
+                id
+            }
+            quantity
+            price
+        }
+    }
+
+    organization {
+      id
+    }
+    contract {
+      id
+    }
+  }
+}
