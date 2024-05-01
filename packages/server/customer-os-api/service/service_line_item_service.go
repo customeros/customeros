@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
+	"sort"
 	"time"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
@@ -153,28 +154,47 @@ func (s *serviceLineItemService) NewVersion(ctx context.Context, data ServiceLin
 		return "", err
 	}
 
-	baseServiceLineItemEntity, err := s.services.CommonServices.ServiceLineItemService.GetById(ctx, data.Id)
+	var baseServiceLineItemEntity *neo4jentity.ServiceLineItemEntity
+
+	// check that given id is parentId, then use latest version as base
+	serviceLineItems, err := s.services.CommonServices.ServiceLineItemService.GetServiceLineItemsByParentId(ctx, data.Id)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("Error on getting contract line item by id {%s}: %s", data.Id, err.Error())
+		s.log.Errorf("Error on getting service line items by parent id {%s}: %s", data.Id, err.Error())
 		return "", err
 	}
-	contractEntity, err := s.services.ContractService.GetContractByServiceLineItem(ctx, data.Id)
+	// sort by startedAt descending and select first one
+	if len(*serviceLineItems) > 0 {
+		sort.Slice(*serviceLineItems, func(i, j int) bool {
+			return (*serviceLineItems)[i].StartedAt.After((*serviceLineItems)[j].StartedAt)
+		})
+		baseServiceLineItemEntity = &(*serviceLineItems)[0]
+	} else {
+		//if not found by parent id, treat data.id as SLI id
+		baseServiceLineItemEntity, err = s.services.CommonServices.ServiceLineItemService.GetById(ctx, data.Id)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error on getting contract line item by id {%s}: %s", data.Id, err.Error())
+			return "", err
+		}
+	}
+
+	if baseServiceLineItemEntity == nil {
+		err := fmt.Errorf("contract line item with id {%s} not found", data.Id)
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+
+	contractEntity, err := s.services.ContractService.GetContractByServiceLineItem(ctx, baseServiceLineItemEntity.ID)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("Error on getting contract by service line item id {%s}: %s", data.Id, err.Error())
+		s.log.Errorf("Error on getting contract by service line item id {%s}: %s", baseServiceLineItemEntity.ID, err.Error())
 		return "", err
 	}
 
 	startedAt := utils.ToDate(utils.IfNotNilTimeWithDefault(data.StartedAt, utils.Now()))
 
 	// Check no SLI of the contract are cancelled
-	serviceLineItems, err := s.services.CommonServices.ServiceLineItemService.GetServiceLineItemsByParentId(ctx, baseServiceLineItemEntity.ParentID)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("Error on getting service line items for contract {%s}: %s", contractEntity.Id, err.Error())
-		return "", err
-	}
 	for _, sli := range *serviceLineItems {
 		if sli.Canceled {
 			err = fmt.Errorf("contract line item with id {%s} is already ended", sli.ID)
@@ -193,7 +213,7 @@ func (s *serviceLineItemService) NewVersion(ctx context.Context, data ServiceLin
 
 	// Validate new version creation
 	if baseServiceLineItemEntity.Billed == neo4jenum.BilledTypeOnce {
-		err = fmt.Errorf("cannot create new version for one time contract line item with id {%s}", data.Id)
+		err = fmt.Errorf("cannot create new version for one time contract line item with id {%s}", baseServiceLineItemEntity.ID)
 		tracing.TraceErr(span, err)
 		return "", err
 	}
@@ -206,7 +226,7 @@ func (s *serviceLineItemService) NewVersion(ctx context.Context, data ServiceLin
 		return "", err
 	}
 	if contractInvoiced && startedAt.Before(utils.Today()) {
-		err = fmt.Errorf("cannot create new version for contract line item with id {%s} in the past", data.Id)
+		err = fmt.Errorf("cannot create new version for contract line item with id {%s} in the past", baseServiceLineItemEntity.ID)
 		tracing.TraceErr(span, err)
 		return "", err
 	}
