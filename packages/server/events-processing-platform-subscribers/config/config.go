@@ -242,6 +242,9 @@ type EventNotifications struct {
 	EndPoints struct {
 		InvoiceFinalized string `env:"INVOICE_READY_URL" envDefault:""`
 	}
+	SlackConfig struct {
+		InternalAlertsRegisteredWebhook string `env:"SLACK_INTERNAL_ALERTS_REGISTERED_WEBHOOK" envDefault:""`
+	}
 }
 
 func InitConfig() (*Config, error) {
