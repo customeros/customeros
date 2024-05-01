@@ -183,6 +183,11 @@ export type GetRenewalsQuery = {
       };
       opportunity?: {
         __typename?: 'Opportunity';
+        id: string;
+        amount: number;
+        maxAmount: number;
+        renewalLikelihood: Types.OpportunityRenewalLikelihood;
+        renewalAdjustedRate: any;
         owner?: {
           __typename?: 'User';
           id: string;
@@ -320,6 +325,11 @@ export const GetRenewalsDocument = `
         contractName
       }
       opportunity {
+        id
+        amount
+        maxAmount
+        renewalLikelihood
+        renewalAdjustedRate
         owner {
           id
           firstName

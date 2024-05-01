@@ -242,6 +242,7 @@ const columns: Record<string, Column> = {
         <RenewalForecastCell
           amount={amount}
           potentialAmount={potentialAmount}
+          id={props.row.original.metadata.id}
         />
       );
     },

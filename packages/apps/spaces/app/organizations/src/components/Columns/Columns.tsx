@@ -234,6 +234,7 @@ export const columns = [
 
       return (
         <RenewalForecastCell
+          id={props.row.original.metadata.id}
           amount={amount}
           potentialAmount={potentialAmount}
         />
