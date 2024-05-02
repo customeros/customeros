@@ -495,7 +495,7 @@ func (r *contractReadRepository) GetContractsForStatusRenewal(ctx context.Contex
 							(c.status = $liveStatus AND c.autoRenew = false AND renewedAt < $referenceTime) OR 
 							(c.status = $draftStatus AND c.approved = true)
 						))
-				RETURN t.name, c.id LIMIT 100`
+				RETURN t.name, c.id LIMIT $limit`
 	params := map[string]any{
 		"referenceTime":       referenceTime,
 		"endedStatus":         neo4jenum.ContractStatusEnded,
