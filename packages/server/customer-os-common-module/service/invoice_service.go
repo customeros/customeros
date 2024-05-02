@@ -170,13 +170,13 @@ func (s *invoiceService) SimulateInvoice(ctx context.Context, simulateInvoicesWi
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("simulateInvoicesWithChanges", simulateInvoicesWithChanges))
 
-	if simulateInvoicesWithChanges.ServiceLines == nil {
+	if len(simulateInvoicesWithChanges.ServiceLines) == 0 {
 		err := fmt.Errorf("no invoice lines to simulate")
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
-	response := []*SimulateInvoiceResponseData{}
+	var response []*SimulateInvoiceResponseData
 
 	tenantSettings, err := s.services.TenantService.GetTenantSettings(ctx)
 	if err != nil {
@@ -190,15 +190,13 @@ func (s *invoiceService) SimulateInvoice(ctx context.Context, simulateInvoicesWi
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
-	if contract.InvoicingStartDate == nil && contract.NextInvoiceDate == nil {
-		err := fmt.Errorf("contract has no invoicing start date or next invoice date")
-		tracing.TraceErr(span, err)
-		return nil, err
+
+	invoiceDate := utils.Today()
+	if contract.NextInvoiceDate != nil {
+		invoiceDate = *contract.NextInvoiceDate
+	} else if contract.InvoicingStartDate != nil {
+		invoiceDate = *contract.InvoicingStartDate
 	}
-	if contract.NextInvoiceDate == nil {
-		contract.NextInvoiceDate = contract.InvoicingStartDate
-	}
-	contractDefaultNextInvoiceDate := *contract.NextInvoiceDate
 
 	existingSlis, err := s.services.ServiceLineItemService.GetServiceLineItemsForContract(ctx, contract.Id)
 	if err != nil {
@@ -210,7 +208,7 @@ func (s *invoiceService) SimulateInvoice(ctx context.Context, simulateInvoicesWi
 	if !tenantSettings.InvoicingPostpaid {
 		//determine the interval to compute invoices
 		//[ invoicing starts, max service start date ]
-		invoicePeriodStartGeneration := *contract.InvoicingStartDate
+		invoicePeriodStartGeneration := invoiceDate
 		invoicePeriodEndGeneration := time.Time{}
 
 		for _, sliData := range simulateInvoicesWithChanges.ServiceLines {
@@ -314,7 +312,7 @@ func (s *invoiceService) SimulateInvoice(ctx context.Context, simulateInvoicesWi
 	//no proration needed - only on cycle invoice
 	if len(response) == 0 {
 
-		contract.NextInvoiceDate = &contractDefaultNextInvoiceDate
+		contract.NextInvoiceDate = &invoiceDate
 
 		//build sli entities to reflect the changes for the period
 		onCycleSliEntities := neo4jentity.ServiceLineItemEntities{}
