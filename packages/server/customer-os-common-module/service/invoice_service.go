@@ -205,7 +205,9 @@ func (s *invoiceService) SimulateInvoice(ctx context.Context, simulateInvoicesWi
 	}
 	sliEntities := *existingSlis
 
-	if !tenantSettings.InvoicingPostpaid {
+	// TODO temporary disable prorated off-cycle simulated invoices
+	allowProratedOffCycleInvoices := false
+	if !tenantSettings.InvoicingPostpaid && allowProratedOffCycleInvoices {
 		//determine the interval to compute invoices
 		//[ invoicing starts, max service start date ]
 		invoicePeriodStartGeneration := invoiceDate
