@@ -48,13 +48,13 @@ export const Contracts: FC<ContractsProps> = ({ isLoading, organization }) => {
                   <EditContractModalStoreContextProvider>
                     <ContractModalsContextProvider id={contract.metadata.id}>
                       {isNewSLIUiEnabled ? (
-                        <OldContractCard
+                        <NewContractCard
                           organizationId={id}
                           organizationName={organization?.name || ''}
                           data={contract as Contract}
                         />
                       ) : (
-                        <NewContractCard
+                        <OldContractCard
                           organizationId={id}
                           organizationName={organization?.name || ''}
                           data={contract as Contract}
