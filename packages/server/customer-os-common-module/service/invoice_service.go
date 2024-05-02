@@ -209,6 +209,9 @@ func (s *invoiceService) SimulateInvoice(ctx context.Context, simulateInvoicesWi
 		//determine the interval to compute invoices
 		//[ invoicing starts, max service start date ]
 		invoicePeriodStartGeneration := invoiceDate
+		if contract.InvoicingStartDate != nil {
+			invoicePeriodStartGeneration = *contract.InvoicingStartDate
+		}
 		invoicePeriodEndGeneration := time.Time{}
 
 		for _, sliData := range simulateInvoicesWithChanges.ServiceLines {
