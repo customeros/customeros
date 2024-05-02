@@ -307,7 +307,7 @@ func (s *invoiceService) SimulateInvoice(ctx context.Context, simulateInvoicesWi
 			nextInvoiceDate := invoicePeriodStartGeneration.AddDate(0, int(contract.BillingCycleInMonths), 0)
 			invoicePeriodStartGeneration = nextInvoiceDate
 
-			nextOnCycleDate := contract.NextInvoiceDate.AddDate(0, int(contract.BillingCycleInMonths), 0)
+			nextOnCycleDate := invoiceDate.AddDate(0, int(contract.BillingCycleInMonths), 0)
 			contract.NextInvoiceDate = &nextOnCycleDate
 		}
 	}
