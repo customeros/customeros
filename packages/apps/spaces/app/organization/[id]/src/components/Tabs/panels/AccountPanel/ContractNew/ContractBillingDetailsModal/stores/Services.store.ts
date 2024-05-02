@@ -103,7 +103,6 @@ export class ServiceFormStore {
 
   async runSimulation(invoiceListStore: InvoiceListStore): Promise<void> {
     const payload = this.getInvoiceSimulationInput();
-    console.log('🏷️ ----- payload: ', payload);
     if (!payload.length) {
       return;
     }
