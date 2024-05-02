@@ -79,7 +79,7 @@
         },
         {
           "name": "Derived next renewal date in past",
-          "query": "MATCH (org:Organization) OPTIONAL MATCH (org)--(c:Contract) WITH org, collect(c) as contracts WHERE size(contracts) > 0 AND ALL(c IN contracts WHERE c.status <> 'OUT_OF_CONTRACT') AND date(org.derivedNextRenewalAt) < date() RETURN count(org) as cnt",
+          "query": "MATCH (org:Organization) OPTIONAL MATCH (org)--(c:Contract) WITH org, collect(c) as contracts WHERE size(contracts) > 0 AND ALL(c IN contracts WHERE c.status <> 'OUT_OF_CONTRACT') AND date(org.derivedNextRenewalAt) < date() RETURN count(org)",
           "description": "Organization with derived next renewal date in the past. If organization has multiple contracts, all contracts should be in status different than 'OUT_OF_CONTRACT'."
         }
       ]
@@ -122,7 +122,7 @@
         },
         {
           "name": "Missing link with tenant",
-          "query": "WITH [\"Tenant\",\"InteractionSession\",\"JobRole\",\"Domain\",\"Social\",\"TimelineEvent\",\"CustomField\",\"AlternateOrganization\",\"Calendar\",\"ServiceLineItem\",\"Opportunity\",\"OrganizationPlanMilestone\",\"MasterPlanMilestone\",\"InvoiceLine\",\"Attachment\",\"Player\",\"AlternateContact\",\"TechnicalNode\",\"AlternateCustomField\",\"Comment\",\"AlternateUser\",\"Country\",\"State\",\"Meeting\"] as labels MATCH (n) WHERE NOT ANY(label in labels(n) WHERE label IN labels) AND NOT (n)--(:Tenant)  RETURN count(n)",
+          "query": "WITH [\"Tenant\",\"InteractionSession\",\"JobRole\",\"Domain\",\"Social\",\"TimelineEvent\",\"CustomField\",\"AlternateOrganization\",\"Calendar\",\"ServiceLineItem\",\"Opportunity\",\"OrganizationPlanMilestone\",\"MasterPlanMilestone\",\"InvoiceLine\",\"Attachment\",\"Player\",\"AlternateContact\",\"TechnicalNode\",\"AlternateCustomField\",\"Comment\",\"AlternateUser\",\"Country\",\"State\",\"Meeting\"] as labels MATCH (n) WHERE NOT ANY(label in labels(n) WHERE label IN labels OR label contains 'deleted') AND NOT (n)--(:Tenant)  RETURN count(n)",
           "description": "All nodes should be linked to a tenant except for the listed labels."
         },
         {

@@ -59,6 +59,8 @@ func (s *contractService) updateContractStatuses(ctx context.Context, referenceT
 	span, ctx := tracing.StartTracerSpan(ctx, "ContractService.updateContractStatuses")
 	defer span.Finish()
 
+	limit := 100
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -68,7 +70,7 @@ func (s *contractService) updateContractStatuses(ctx context.Context, referenceT
 			// continue as normal
 		}
 
-		records, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractsForStatusRenewal(ctx, referenceTime)
+		records, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractsForStatusRenewal(ctx, referenceTime, limit)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting contracts for status update: %v", err)
@@ -105,6 +107,11 @@ func (s *contractService) updateContractStatuses(ctx context.Context, referenceT
 			}
 		}
 
+		// if less than limit records are returned, we are done
+		if len(records) < limit {
+			return
+		}
+
 		//sleep for async processing, then check again
 		time.Sleep(5 * time.Second)
 	}
@@ -113,6 +120,8 @@ func (s *contractService) updateContractStatuses(ctx context.Context, referenceT
 func (s *contractService) rolloutContractRenewals(ctx context.Context, referenceTime time.Time) {
 	span, ctx := tracing.StartTracerSpan(ctx, "ContractService.rolloutContractRenewals")
 	defer span.Finish()
+
+	limit := 100
 
 	for {
 		select {
@@ -123,7 +132,7 @@ func (s *contractService) rolloutContractRenewals(ctx context.Context, reference
 			// continue as normal
 		}
 
-		records, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractsForRenewalRollout(ctx, referenceTime)
+		records, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractsForRenewalRollout(ctx, referenceTime, limit)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting contracts for renewal rollout: %v", err)
@@ -160,6 +169,11 @@ func (s *contractService) rolloutContractRenewals(ctx context.Context, reference
 			}
 		}
 
+		// if less than limit records are returned, we are done
+		if len(records) < limit {
+			return
+		}
+
 		//sleep for async processing, then check again
 		time.Sleep(5 * time.Second)
 	}
@@ -168,6 +182,8 @@ func (s *contractService) rolloutContractRenewals(ctx context.Context, reference
 func (s *contractService) closeActiveRenewalOpportunitiesForEndedContracts(ctx context.Context) {
 	span, ctx := tracing.StartTracerSpan(ctx, "ContractService.closeActiveRenewalOpportunitiesForEndedContracts")
 	defer span.Finish()
+
+	limit := 100
 
 	for {
 		select {
@@ -178,7 +194,7 @@ func (s *contractService) closeActiveRenewalOpportunitiesForEndedContracts(ctx c
 			// continue as normal
 		}
 
-		records, err := s.repositories.Neo4jRepositories.OpportunityReadRepository.GetRenewalOpportunitiesForClosingAsLost(ctx)
+		records, err := s.repositories.Neo4jRepositories.OpportunityReadRepository.GetRenewalOpportunitiesForClosingAsLost(ctx, limit)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting opportunities for closing: %v", err)
@@ -209,6 +225,11 @@ func (s *contractService) closeActiveRenewalOpportunitiesForEndedContracts(ctx c
 					s.log.Errorf("Error marking renewal rollout requested: %s", err.Error())
 				}
 			}
+		}
+
+		// if less than limit records are returned, we are done
+		if len(records) < limit {
+			return
 		}
 
 		//sleep for async processing, then check again

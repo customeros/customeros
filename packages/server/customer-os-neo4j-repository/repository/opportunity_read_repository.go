@@ -21,7 +21,7 @@ type OpportunityReadRepository interface {
 	GetOpportunityById(ctx context.Context, tenant, opportunityId string) (*dbtype.Node, error)
 	GetActiveRenewalOpportunityForContract(ctx context.Context, tenant, contractId string) (*dbtype.Node, error)
 	GetActiveRenewalOpportunitiesForOrganization(ctx context.Context, tenant, organizationId string) ([]*dbtype.Node, error)
-	GetRenewalOpportunitiesForClosingAsLost(ctx context.Context) ([]TenantAndOpportunityId, error)
+	GetRenewalOpportunitiesForClosingAsLost(ctx context.Context, limit int) ([]TenantAndOpportunityId, error)
 	GetPreviousClosedWonRenewalOpportunityForContract(ctx context.Context, tenant, contractId string) (*dbtype.Node, error)
 	GetForContracts(ctx context.Context, tenant string, contractIds []string) ([]*utils.DbNodeAndId, error)
 }
@@ -181,10 +181,11 @@ func (r *opportunityReadRepository) GetActiveRenewalOpportunitiesForOrganization
 	return result.([]*dbtype.Node), nil
 }
 
-func (r *opportunityReadRepository) GetRenewalOpportunitiesForClosingAsLost(ctx context.Context) ([]TenantAndOpportunityId, error) {
+func (r *opportunityReadRepository) GetRenewalOpportunitiesForClosingAsLost(ctx context.Context, limit int) ([]TenantAndOpportunityId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractRepository.GetRenewalOpportunitiesForClosingAsLost")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, "")
+	span.LogFields(log.Int("limit", limit))
 
 	cypher := `MATCH (t:Tenant)<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract)-[:ACTIVE_RENEWAL]->(op:RenewalOpportunity)
 				WHERE 
@@ -192,11 +193,12 @@ func (r *opportunityReadRepository) GetRenewalOpportunitiesForClosingAsLost(ctx 
 					c.endedAt < $now AND 
 					op.internalStage = $internalStageOpen AND 
 					(op.techRolloutRenewalRequestedAt IS NULL OR op.techRolloutRenewalRequestedAt + duration({hours: 1}) < $now)
-				RETURN t.name, op.id LIMIT 100`
+				RETURN t.name, op.id LIMIT $limit`
 	params := map[string]any{
 		"now":               utils.Now(),
 		"endedStatus":       enum.ContractStatusEnded.String(),
 		"internalStageOpen": enum.OpportunityInternalStageOpen.String(),
+		"limit":             limit,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
