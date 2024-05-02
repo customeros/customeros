@@ -62,6 +62,7 @@ type SimulateInvoiceRequestServiceLineData struct {
 	Quantity          int64
 	ServiceStarted    time.Time
 	TaxRate           *float64
+	Canceled          bool
 }
 
 type SimulateInvoiceResponseData struct {
@@ -342,6 +343,7 @@ func (s *invoiceService) SimulateInvoice(ctx context.Context, simulateInvoicesWi
 					StartedAt: sliData.ServiceStarted,
 					EndedAt:   nil,
 					VatRate:   utils.IfNotNilFloat64(sliData.TaxRate),
+					Canceled:  sliData.Canceled,
 				}
 
 				onCycleSliEntities = append(onCycleSliEntities, sliEntity)
@@ -642,34 +644,58 @@ func (h *invoiceService) FillCycleInvoice(ctx context.Context, invoiceEntity *ne
 	if invoiceEntity.Postpaid {
 		referenceTime = periodEndTime
 	}
+
+	cancelledSliParentIds := []string{}
+	for _, sliEntity := range sliEntities {
+		if sliEntity.Canceled && sliEntity.ParentID != "" {
+			cancelledSliParentIds = append(cancelledSliParentIds, sliEntity.ParentID)
+		}
+	}
+
+	reasonForSliExcludedFromInvoicing := map[string]string{}
+
 	for _, sliEntity := range sliEntities {
 		// skip for now usage SLIs
 		if sliEntity.Billed == neo4jenum.BilledTypeUsage {
+			reasonForSliExcludedFromInvoicing[sliEntity.ID] = "Billed type is Usage"
 			continue
 		}
 		// skip SLI if of None type
 		if sliEntity.Billed == neo4jenum.BilledTypeNone {
+			reasonForSliExcludedFromInvoicing[sliEntity.ID] = "Billed type is None"
 			continue
 		}
 		// skip SLI if ended on the reference time
 		if sliEntity.EndedAt != nil && sliEntity.EndedAt.Before(referenceTime) {
+			reasonForSliExcludedFromInvoicing[sliEntity.ID] = "SLI ended before reference time"
 			continue
 		}
 		// skip SLI if not active on the reference time
 		if sliEntity.IsRecurrent() && !sliEntity.IsActiveAt(referenceTime) {
+			reasonForSliExcludedFromInvoicing[sliEntity.ID] = "SLI is not active at reference time"
 			continue
 		}
 		// skip ONE TIME SLI if started after the end period
 		if sliEntity.IsOneTime() && sliEntity.StartedAt.After(periodEndTime) {
+			reasonForSliExcludedFromInvoicing[sliEntity.ID] = "One time SLI started after the end period"
 			continue
 		}
-		// cancelled ONE TIME SLI should not be invoiced
-		if sliEntity.IsOneTime() && sliEntity.Canceled {
+
+		// Any Cancelled SLI should not be invoiced
+		if sliEntity.Canceled {
+			reasonForSliExcludedFromInvoicing[sliEntity.ID] = "SLI is cancelled"
+			continue
+		}
+
+		// Any SLI that has any version of same group cancelled should not be invoiced
+		if sliEntity.ParentID != "" && utils.Contains(cancelledSliParentIds, sliEntity.ParentID) {
+			reasonForSliExcludedFromInvoicing[sliEntity.ID] = "SLI is part of a cancelled group"
 			continue
 		}
 
 		// skip SLI if quantity or price is negative
 		if sliEntity.Quantity < 0 || sliEntity.Price < 0 {
+			reasonForSliExcludedFromInvoicing[sliEntity.ID] = "Quantity or price is negative"
 			continue
 		}
 
@@ -685,6 +711,7 @@ func (h *invoiceService) FillCycleInvoice(ctx context.Context, invoiceEntity *ne
 			}
 			if result != nil {
 				// SLI already invoiced
+				reasonForSliExcludedFromInvoicing[sliEntity.ID] = "SLI already invoiced"
 				continue
 			}
 			quantity := sliEntity.Quantity
@@ -730,6 +757,8 @@ func (h *invoiceService) FillCycleInvoice(ctx context.Context, invoiceEntity *ne
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error processing SLI during invoicing %s: %s", sliEntity.ID, err.Error())
 	}
+
+	span.LogFields(log.Object("result.ignored_SLIs", reasonForSliExcludedFromInvoicing))
 
 	if len(invoiceLines) == 0 {
 		return nil, nil, errors.New("No invoice lines to fill")

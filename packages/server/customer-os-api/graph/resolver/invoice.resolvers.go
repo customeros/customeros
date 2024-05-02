@@ -7,6 +7,7 @@ package resolver
 import (
 	"context"
 	"errors"
+
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
@@ -19,7 +20,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -141,7 +142,7 @@ func (r *mutationResolver) InvoicePay(ctx context.Context, id string) (*model.In
 	}
 
 	if invoice.DryRun {
-		tracing.TraceErr(span, errors.New("Invoice is a dry run"))
+		tracing.TraceErr(span, errors.New("invoice is a dry run"))
 		graphql.AddErrorf(ctx, "Invoice is a dry run")
 		return &model.Invoice{Metadata: &model.Metadata{
 			ID: id,
@@ -149,7 +150,7 @@ func (r *mutationResolver) InvoicePay(ctx context.Context, id string) (*model.In
 	}
 
 	if invoice.Status != neo4jenum.InvoiceStatusDue {
-		tracing.TraceErr(span, errors.New("Invoice is not due"))
+		tracing.TraceErr(span, errors.New("invoice is not due"))
 		graphql.AddErrorf(ctx, "Invoice is not due")
 		return &model.Invoice{Metadata: &model.Metadata{
 			ID: id,
@@ -193,7 +194,7 @@ func (r *mutationResolver) InvoiceVoid(ctx context.Context, id string) (*model.I
 	}
 
 	if invoice.DryRun {
-		tracing.TraceErr(span, errors.New("Invoice is a dry run"))
+		tracing.TraceErr(span, errors.New("invoice is a dry run"))
 		graphql.AddErrorf(ctx, "Invoice is a dry run")
 		return &model.Invoice{Metadata: &model.Metadata{
 			ID: id,
@@ -201,7 +202,7 @@ func (r *mutationResolver) InvoiceVoid(ctx context.Context, id string) (*model.I
 	}
 
 	if invoice.Status == neo4jenum.InvoiceStatusVoid {
-		tracing.TraceErr(span, errors.New("Invoice is already void"))
+		tracing.TraceErr(span, errors.New("invoice is already void"))
 		graphql.AddErrorf(ctx, "Invoice is already void")
 		return &model.Invoice{Metadata: &model.Metadata{
 			ID: id,
@@ -249,6 +250,7 @@ func (r *mutationResolver) InvoiceSimulate(ctx context.Context, input model.Invo
 			Quantity:          serviceLine.Quantity,
 			ServiceStarted:    serviceLine.ServiceStarted,
 			TaxRate:           serviceLine.TaxRate,
+			Canceled:          utils.IfNotNilBool(serviceLine.CloseVersion),
 		})
 	}
 
@@ -374,7 +376,7 @@ func (r *queryResolver) Invoice(ctx context.Context, id string) (*model.Invoice,
 	span.LogFields(log.String("request.invoiceID", id))
 
 	if id == "" {
-		tracing.TraceErr(span, errors.New("Missing invoice input id"))
+		tracing.TraceErr(span, errors.New("missing invoice input id"))
 		graphql.AddErrorf(ctx, "Missing invoice input id")
 		return nil, nil
 	}

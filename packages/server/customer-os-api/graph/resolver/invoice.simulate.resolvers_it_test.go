@@ -315,6 +315,67 @@ func TestMutationResolver_InvoiceSimulate_OnCycle_PostPaidTrue_1(t *testing.T) {
 	asserInvoiceLineItem(t, onCycleInvoice.InvoiceLineItems[1], "2", "S2", 2, 1, 2)
 }
 
+func TestMutationResolver_InvoiceSimulate_OnCycle_PostPaidFalse_CanceledSLI_NotInvoiced(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	januaryFirst := utils.FirstTimeOfMonth(2024, 1)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenantSettings(ctx, driver, tenantName, neo4jentity.TenantSettingsEntity{
+		InvoicingPostpaid: false,
+	})
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
+	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		BillingCycleInMonths:  1,
+		InvoicingEnabled:      true,
+		InvoicingStartDate:    &januaryFirst,
+		OrganizationLegalName: "Test Organization",
+	})
+
+	rawResponse := callGraphQL(t, "invoice/simulate_invoice", map[string]interface{}{
+		"contractId": contractId,
+		"serviceLines": []model.InvoiceSimulateServiceLineInput{
+			{
+				Key:            "1",
+				Description:    "S1",
+				BillingCycle:   model.BilledTypeMonthly,
+				Price:          1,
+				Quantity:       1,
+				ServiceStarted: januaryFirst,
+			},
+			{
+				Key:            "2",
+				Description:    "S2",
+				BillingCycle:   model.BilledTypeMonthly,
+				Price:          2,
+				Quantity:       2,
+				ServiceStarted: januaryFirst,
+				CloseVersion:   utils.BoolPtr(true),
+			},
+		},
+	})
+
+	var invoiceStruct struct {
+		Invoice_Simulate []*model.InvoiceSimulate
+	}
+
+	require.Nil(t, rawResponse.Errors)
+	err := decode.Decode(rawResponse.Data.(map[string]any), &invoiceStruct)
+	require.Nil(t, err)
+
+	require.Equal(t, 1, len(invoiceStruct.Invoice_Simulate))
+
+	invoice := invoiceStruct.Invoice_Simulate[0]
+
+	require.Equal(t, 1, len(invoice.InvoiceLineItems))
+	require.Equal(t, "Test Organization", *invoice.Customer.Name)
+
+	asserInvoice(t, invoice, "2024-01-01T00:00:00Z", "2024-01-31T00:00:00Z", false, false, 1)
+	asserInvoiceLineItem(t, invoice.InvoiceLineItems[0], "1", "S1", 1, 1, 1)
+}
+
 func asserInvoice(t *testing.T, invoice *model.InvoiceSimulate, periodStart, periodEnd string, offCycle, postpaid bool, total float64) {
 	require.Equal(t, periodStart, invoice.InvoicePeriodStart.Format("2006-01-02T15:04:05Z"))
 	require.Equal(t, periodEnd, invoice.InvoicePeriodEnd.Format("2006-01-02T15:04:05Z"))
