@@ -75,7 +75,7 @@ function groupServicesByParentId(
 
   // Filtering groups to exclude those where all items have 'serviceEnded' as null
   const filtered = sortedGroups.filter((group) =>
-    group.every((service) => service.serviceLineItem?.serviceEnded === null),
+    group.some((service) => service.serviceLineItem?.serviceEnded === null),
   );
 
   return filtered;
