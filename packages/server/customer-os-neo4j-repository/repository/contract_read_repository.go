@@ -31,8 +31,8 @@ type ContractReadRepository interface {
 	GetContractsToGenerateCycleInvoices(ctx context.Context, referenceTime time.Time, delayMinutes, limit int) ([]*utils.DbNodeAndTenant, error)
 	GetContractsToGenerateOffCycleInvoices(ctx context.Context, referenceTime time.Time, delayMinutes, limit int) ([]*utils.DbNodeAndTenant, error)
 	GetContractsToGenerateNextScheduledInvoices(ctx context.Context, referenceTime time.Time, delayMinutes int) ([]*utils.DbNodeAndTenant, error)
-	GetContractsForStatusRenewal(ctx context.Context, referenceTime time.Time) ([]TenantAndContractId, error)
-	GetContractsForRenewalRollout(ctx context.Context, referenceTime time.Time) ([]TenantAndContractId, error)
+	GetContractsForStatusRenewal(ctx context.Context, referenceTime time.Time, limit int) ([]TenantAndContractId, error)
+	GetContractsForRenewalRollout(ctx context.Context, referenceTime time.Time, limit int) ([]TenantAndContractId, error)
 	IsContractInvoiced(ctx context.Context, tenant, contractId string) (bool, error)
 }
 
@@ -476,11 +476,11 @@ func (r *contractReadRepository) GetContractsToGenerateNextScheduledInvoices(ctx
 	return result.([]*utils.DbNodeAndTenant), err
 }
 
-func (r *contractReadRepository) GetContractsForStatusRenewal(ctx context.Context, referenceTime time.Time) ([]TenantAndContractId, error) {
+func (r *contractReadRepository) GetContractsForStatusRenewal(ctx context.Context, referenceTime time.Time, limit int) ([]TenantAndContractId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractRepository.GetContractsForStatusRenewal")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, "")
-	span.LogFields(log.Object("referenceTime", referenceTime))
+	span.LogFields(log.Object("referenceTime", referenceTime), log.Int("limit", limit))
 
 	cypher := `MATCH (t:Tenant)<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract)
 				WHERE c.techStatusRenewalRequestedAt IS NULL OR c.techStatusRenewalRequestedAt + duration({hours: 2}) < $referenceTime
@@ -503,6 +503,7 @@ func (r *contractReadRepository) GetContractsForStatusRenewal(ctx context.Contex
 		"scheduledStatus":     neo4jenum.ContractStatusScheduled,
 		"outOfContractStatus": neo4jenum.ContractStatusOutOfContract,
 		"draftStatus":         neo4jenum.ContractStatusDraft,
+		"limit":               limit,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -533,25 +534,26 @@ func (r *contractReadRepository) GetContractsForStatusRenewal(ctx context.Contex
 	return output, nil
 }
 
-func (r *contractReadRepository) GetContractsForRenewalRollout(ctx context.Context, referenceTime time.Time) ([]TenantAndContractId, error) {
+func (r *contractReadRepository) GetContractsForRenewalRollout(ctx context.Context, referenceTime time.Time, limit int) ([]TenantAndContractId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractRepository.GetContractsForStatusRenewal")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, "")
-	span.LogFields(log.Object("referenceTime", referenceTime))
+	span.LogFields(log.Object("referenceTime", referenceTime), log.Int("limit", limit))
 
 	cypher := `MATCH (t:Tenant)<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract),
 				(c)-[:ACTIVE_RENEWAL]->(op:RenewalOpportunity)
 				WHERE
 					(c.techRolloutRenewalRequestedAt IS NULL OR c.techRolloutRenewalRequestedAt + duration({hours: 2}) < $referenceTime) AND
-					op.renewedAt < $referenceTime AND
+					date(op.renewedAt) <= date($referenceTime) AND
 					(c.autoRenew = true OR op.renewalApproved = true) AND
 					c.status IN [$liveStatus, $outOfContractStatus, $scheduledStatus]
-				RETURN t.name, c.id LIMIT 100`
+				RETURN t.name, c.id LIMIT $limit`
 	params := map[string]any{
 		"referenceTime":       referenceTime,
 		"liveStatus":          neo4jenum.ContractStatusLive.String(),
 		"outOfContractStatus": neo4jenum.ContractStatusOutOfContract.String(),
 		"scheduledStatus":     neo4jenum.ContractStatusScheduled.String(),
+		"limit":               limit,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
