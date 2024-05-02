@@ -13880,6 +13880,7 @@ input InvoiceSimulateServiceLineInput {
     quantity:           Int64!
     serviceStarted:     Time!
     taxRate:            Float
+    closeVersion:       Boolean
 }
 
 type InvoiceSimulate{
@@ -96946,7 +96947,7 @@ func (ec *executionContext) unmarshalInputInvoiceSimulateServiceLineInput(ctx co
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"key", "serviceLineItemId", "parentId", "description", "billingCycle", "price", "quantity", "serviceStarted", "taxRate"}
+	fieldsInOrder := [...]string{"key", "serviceLineItemId", "parentId", "description", "billingCycle", "price", "quantity", "serviceStarted", "taxRate", "closeVersion"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -97016,6 +97017,13 @@ func (ec *executionContext) unmarshalInputInvoiceSimulateServiceLineInput(ctx co
 				return it, err
 			}
 			it.TaxRate = data
+		case "closeVersion":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("closeVersion"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CloseVersion = data
 		}
 	}
 
