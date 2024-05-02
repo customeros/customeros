@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -61,6 +62,7 @@ type SimulateInvoiceRequestServiceLineData struct {
 	Price             float64
 	Quantity          int64
 	ServiceStarted    time.Time
+	ServiceEnded      *time.Time
 	TaxRate           *float64
 	Canceled          bool
 }
@@ -322,32 +324,46 @@ func (s *invoiceService) SimulateInvoice(ctx context.Context, simulateInvoicesWi
 
 		//build sli entities to reflect the changes for the period
 		onCycleSliEntities := neo4jentity.ServiceLineItemEntities{}
+
+		// prepare simulation invoice lines grouped by parent id
+		invoiceLinesGroupedByParentId := map[string][]SimulateInvoiceRequestServiceLineData{}
 		for _, sliData := range simulateInvoicesWithChanges.ServiceLines {
-
-			nextInvoiceDate := time.Time{}
-
-			if !tenantSettings.InvoicingPostpaid {
-				nextInvoiceDate = contract.NextInvoiceDate.Add(1) // adding 1 nanosecond to the next invoice date to consider the first nanosecond of the month
-			} else {
-				nextInvoiceDate = contract.NextInvoiceDate.AddDate(0, int(contract.BillingCycleInMonths), 0)
+			if sliData.ServiceLineItemID == nil || *sliData.ServiceLineItemID == "" {
+				sliData.ServiceLineItemID = utils.StringPtr(uuid.New().String())
 			}
-
-			if sliData.ServiceStarted.Before(nextInvoiceDate) {
-				sliEntity := neo4jentity.ServiceLineItemEntity{
-					ID:        sliData.Key,
-					Name:      sliData.Description,
-					Comments:  sliData.Comments,
-					Billed:    sliData.BillingCycle,
-					Price:     sliData.Price,
-					Quantity:  sliData.Quantity,
-					StartedAt: sliData.ServiceStarted,
-					EndedAt:   nil,
-					VatRate:   utils.IfNotNilFloat64(sliData.TaxRate),
-					Canceled:  sliData.Canceled,
+			if sliData.ParentID == nil || *sliData.ParentID == "" {
+				sliData.ParentID = utils.StringPtr(*sliData.ServiceLineItemID)
+			}
+			invoiceLinesGroupedByParentId[*sliData.ParentID] = append(invoiceLinesGroupedByParentId[*sliData.ParentID], sliData)
+		}
+		// per parent group sort by service started date and set end date for each sli as previous sli start date
+		for _, sliDataGroup := range invoiceLinesGroupedByParentId {
+			sort.Slice(sliDataGroup, func(i, j int) bool {
+				return sliDataGroup[i].ServiceStarted.Before(sliDataGroup[j].ServiceStarted)
+			})
+			for i, sliData := range sliDataGroup {
+				if i > 0 {
+					sliDataGroup[i-1].ServiceEnded = &sliData.ServiceStarted
 				}
-
-				onCycleSliEntities = append(onCycleSliEntities, sliEntity)
 			}
+		}
+
+		for _, sliData := range simulateInvoicesWithChanges.ServiceLines {
+			sliEntity := neo4jentity.ServiceLineItemEntity{
+				ID:        utils.IfNotNilString(sliData.ServiceLineItemID),
+				ParentID:  utils.IfNotNilString(sliData.ParentID),
+				Name:      sliData.Description,
+				Comments:  sliData.Comments,
+				Billed:    sliData.BillingCycle,
+				Price:     sliData.Price,
+				Quantity:  sliData.Quantity,
+				StartedAt: sliData.ServiceStarted,
+				EndedAt:   sliData.ServiceEnded,
+				VatRate:   utils.IfNotNilFloat64(sliData.TaxRate),
+				Canceled:  sliData.Canceled,
+			}
+
+			onCycleSliEntities = append(onCycleSliEntities, sliEntity)
 		}
 
 		onCycleInvoice, err := s.SimulateOnCycleInvoice(ctx, contract, &onCycleSliEntities, span)
