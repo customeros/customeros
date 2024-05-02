@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, forwardRef } from 'react';
+import { useRef, useState, forwardRef, useLayoutEffect } from 'react';
 
 import { Input, InputProps } from '@ui/form/Input/Input';
 
@@ -6,10 +6,10 @@ export const ResizableInput = forwardRef<HTMLInputElement, InputProps>(
   (props: InputProps, ref) => {
     const spanRef = useRef<HTMLSpanElement>(null);
     const [width, setWidth] = useState('10px');
-    useEffect(() => {
+    useLayoutEffect(() => {
       const measureWidth = () => {
         if (spanRef.current) {
-          const spanWidth = spanRef.current?.offsetWidth ?? 0;
+          const spanWidth = spanRef.current?.offsetWidth ?? 10;
           setWidth(`${spanWidth}px`);
         }
       };
@@ -22,10 +22,15 @@ export const ResizableInput = forwardRef<HTMLInputElement, InputProps>(
           ref={spanRef}
           className={`z-[-1] absolute h-0 inline-block invisible`}
         >
-          {props.value || props.defaultValue || ''}
+          {props.value || props.defaultValue || '0'}
         </span>
 
-        <Input ref={ref} data-1p-ignore {...props} style={{ width: width }} />
+        <Input
+          ref={ref}
+          data-1p-ignore
+          {...props}
+          style={{ width: width, minWidth: width }}
+        />
       </>
     );
   },

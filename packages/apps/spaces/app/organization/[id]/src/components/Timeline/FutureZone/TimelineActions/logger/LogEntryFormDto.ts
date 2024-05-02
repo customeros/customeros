@@ -31,7 +31,7 @@ export class LogEntryFormDto implements LogEntryForm {
 
   // Commented out as at this moment user cannot update existing data besides started at. Therefore this is not needed for now
   // static toForm(data: LogEntryDtoI) {
-  //   return new LogEntryDto(data);
+  //   return components LogEntryDto(data);
   // }
 
   static toPayload(data: LogEntryForm): LogEntryUpdateInput {

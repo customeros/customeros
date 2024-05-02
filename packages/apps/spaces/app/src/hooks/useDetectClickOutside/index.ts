@@ -17,7 +17,7 @@ export const useDetectClickOutside = <T extends HTMLElement>(
       }
     };
 
-    // Timeout added to prevent automatically calling callback in case when eg. entering new mode
+    // Timeout added to prevent automatically calling callback in case when eg. entering components mode
     setTimeout(
       () => document.addEventListener('click', handleClickOutside),
       100,

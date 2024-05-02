@@ -28,11 +28,11 @@ export const CheckboxVariants = cva(
           'data-[state=checked]:focus:ring-4 data-[state=checked]:focus:ring-gray-50',
         ],
         warm: [
-          'hover:border-warm-600',
-          'hover:bg-warm-100',
-          'data-[state=checked]:bg-warm-50',
-          'data-[state=checked]:border-warm-600',
-          'data-[state=checked]:focus:ring-4 data-[state=checked]:focus:ring-warm-50',
+          'hover:border-grayWarm-600',
+          'hover:bg-grayWarm-100',
+          'data-[state=checked]:bg-grayWarm-50',
+          'data-[state=checked]:border-grayWarm-600',
+          'data-[state=checked]:focus:ring-4 data-[state=checked]:focus:ring-grayWarm-50',
         ],
         error: [
           'hover:border-error-600',

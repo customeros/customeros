@@ -26,8 +26,8 @@ import {
   getContainerClassNames,
 } from '@ui/form/Select';
 import { billedTypeOptions } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
-import { Currency } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ServiceLineItemsModal/Currency';
-import { BulkUpdateServiceLineItem } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ServiceLineItemsModal/ServiceLineItemsModal.dto';
+import { Currency } from '@organization/src/components/Tabs/panels/AccountPanel/ContractOld/ServiceLineItemsModal/Currency';
+import { BulkUpdateServiceLineItem } from '@organization/src/components/Tabs/panels/AccountPanel/ContractOld/ServiceLineItemsModal/ServiceLineItemsModal.dto';
 
 import { ServiceLineItemInputWrapper } from './ServiceLineItemInputWrapper';
 

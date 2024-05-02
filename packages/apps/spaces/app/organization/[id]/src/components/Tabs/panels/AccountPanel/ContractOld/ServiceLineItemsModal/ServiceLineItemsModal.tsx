@@ -38,11 +38,11 @@ import {
   ServiceLineItem,
   ServiceLineItemBulkUpdateItem,
 } from '@graphql/types';
-import { updateTimelineCacheAfterServiceLineItemChange } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ServiceLineItemsModal/utils';
+import { updateTimelineCacheAfterServiceLineItemChange } from '@organization/src/components/Tabs/panels/AccountPanel/ContractOld/ServiceLineItemsModal/utils';
 import {
   ServiceLineItemsDTO,
   BulkUpdateServiceLineItem,
-} from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ServiceLineItemsModal/ServiceLineItemsModal.dto';
+} from '@organization/src/components/Tabs/panels/AccountPanel/ContractOld/ServiceLineItemsModal/ServiceLineItemsModal.dto';
 
 import { ServiceLineItemRow } from './ServiceLineItemRow';
 

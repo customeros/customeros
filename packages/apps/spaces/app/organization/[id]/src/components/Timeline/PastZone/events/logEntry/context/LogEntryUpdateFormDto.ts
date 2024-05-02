@@ -36,7 +36,7 @@ export class LogEntryUpdateFormDto implements LogEntryUpdateForm {
     time: string,
   ): Date {
     const timeArray = time?.split(':');
-    const newDate = new Date(date); // Create a new Date object to maintain immutability
+    const newDate = new Date(date); // Create a components Date object to maintain immutability
     newDate.setHours(Number(timeArray?.[0] ?? '00'));
     newDate.setMinutes(Number(timeArray?.[1] ?? '00'));
 

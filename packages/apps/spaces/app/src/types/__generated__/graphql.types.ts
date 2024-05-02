@@ -1764,6 +1764,7 @@ export type InvoiceSimulate = {
   postpaid: Scalars['Boolean']['output'];
   provider: InvoiceProvider;
   subtotal: Scalars['Float']['output'];
+  taxDue: Scalars['Float']['output'];
   total: Scalars['Float']['output'];
 };
 
@@ -1774,6 +1775,7 @@ export type InvoiceSimulateInput = {
 
 export type InvoiceSimulateServiceLineInput = {
   billingCycle: BilledType;
+  closeVersion?: InputMaybe<Scalars['Boolean']['input']>;
   description: Scalars['String']['input'];
   key: Scalars['String']['input'];
   parentId?: InputMaybe<Scalars['ID']['input']>;
@@ -4057,6 +4059,7 @@ export type Query = {
   interactionSession: InteractionSession;
   interactionSession_BySessionIdentifier: InteractionSession;
   invoice: Invoice;
+  invoice_ByNumber: Invoice;
   invoices: InvoicesPage;
   invoicingCycle: InvoicingCycle;
   issue: Issue;
@@ -4207,6 +4210,10 @@ export type QueryInteractionSession_BySessionIdentifierArgs = {
 
 export type QueryInvoiceArgs = {
   id: Scalars['ID']['input'];
+};
+
+export type QueryInvoice_ByNumberArgs = {
+  number: Scalars['String']['input'];
 };
 
 export type QueryInvoicesArgs = {
@@ -4417,9 +4424,11 @@ export type ServiceLineItemBulkUpdateInput = {
 
 export type ServiceLineItemBulkUpdateItem = {
   billed?: InputMaybe<BilledType>;
+  closeVersion?: InputMaybe<Scalars['Boolean']['input']>;
   comments?: InputMaybe<Scalars['String']['input']>;
   isRetroactiveCorrection?: InputMaybe<Scalars['Boolean']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
+  newVersion?: InputMaybe<Scalars['Boolean']['input']>;
   price?: InputMaybe<Scalars['Float']['input']>;
   quantity?: InputMaybe<Scalars['Int64']['input']>;
   serviceLineItemId?: InputMaybe<Scalars['ID']['input']>;

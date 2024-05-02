@@ -2,6 +2,7 @@
 import type {
   Props,
   ControlProps,
+  MenuPlacement,
   SelectInstance,
   ClassNamesConfig,
   ClearIndicatorProps,
@@ -140,12 +141,7 @@ const getDefaultClassNames = ({
         isFocused && 'border-primary-500',
       ),
     }),
-  menu: ({ menuPlacement }) =>
-    cn(
-      menuPlacement === 'top'
-        ? 'mb-2 animate-slideUpAndFade'
-        : 'mt-2 animate-slideDownAndFade',
-    ),
+  menu: ({ menuPlacement }) => getMenuClassNames(menuPlacement)(),
   menuList: () =>
     'p-2 max-h-[300px] border border-gray-200 bg-white outline-offset-[2px] outline-[2px] rounded-lg shadow-lg overflow-y-auto overscroll-auto',
   option: ({ isFocused, isSelected }) =>
@@ -180,6 +176,16 @@ export const getMultiValueLabelClassNames = (className?: string) => {
 
   return twMerge(defaultStyle, className);
 };
+export const getMenuClassNames =
+  (menuPlacement: MenuPlacement) => (className?: string) => {
+    const defaultStyle = cn(
+      menuPlacement === 'top'
+        ? 'mb-2 animate-slideUpAndFade'
+        : 'mt-2 animate-slideDownAndFade',
+    );
+
+    return twMerge(defaultStyle, className);
+  };
 
 export const getContainerClassNames = (
   className?: string,

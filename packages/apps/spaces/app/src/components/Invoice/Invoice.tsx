@@ -5,11 +5,8 @@ import Image from 'next/image';
 
 import { cn } from '@ui/utils/cn';
 import { DateTimeUtils } from '@spaces/utils/date';
-import {
-  BankAccount,
-  InvoiceStatus,
-  Invoice as InvoiceType,
-} from '@graphql/types';
+import { BankAccount, InvoiceLine, InvoiceStatus } from '@graphql/types';
+import { ISimulatedInvoiceLineItems } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ContractBillingDetailsModal/stores/InvoicePreviewList.store';
 
 import { ServicesTable } from './ServicesTable';
 import logoCustomerOs from './assets/customer-os.png';
@@ -56,8 +53,8 @@ type InvoiceProps = {
   isInvoiceBankDetailsFocused?: boolean;
   onOpenAddressDetailsModal?: () => void;
   canPayWithBankTransfer?: boolean | null;
-  lines: Partial<InvoiceType['invoiceLineItems']>;
   availableBankAccount?: Partial<BankAccount> | null;
+  lines: InvoiceLine[] | ISimulatedInvoiceLineItems[];
 };
 
 export function Invoice({
@@ -170,11 +167,10 @@ export function Invoice({
           )}
         >
           <ServicesTable
-            services={lines}
+            services={lines ?? []}
             currency={currency}
             invoicePeriodEnd={invoicePeriodEnd}
             invoicePeriodStart={invoicePeriodStart}
-            shouldBlurDummy={shouldBlurDummy}
           />
           <InvoiceSummary
             tax={tax}
@@ -182,7 +178,6 @@ export function Invoice({
             subtotal={subtotal}
             currency={currency}
             amountDue={amountDue}
-            shouldBlurDummy={shouldBlurDummy}
             note={note}
           />
         </div>
