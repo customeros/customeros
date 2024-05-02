@@ -242,8 +242,8 @@ func (r *mutationResolver) InvoiceSimulate(ctx context.Context, input model.Invo
 	for _, serviceLine := range input.ServiceLines {
 		simulateInvoiceData.ServiceLines = append(simulateInvoiceData.ServiceLines, commonService.SimulateInvoiceRequestServiceLineData{
 			Key:               serviceLine.Key,
-			ServiceLineItemID: serviceLine.ServiceLineItemID,
-			ParentID:          serviceLine.ParentID,
+			ServiceLineItemID: utils.IfNotNilString(serviceLine.ServiceLineItemID),
+			ParentID:          utils.IfNotNilString(serviceLine.ParentID),
 			Description:       serviceLine.Description,
 			BillingCycle:      mapper.MapBilledTypeFromModel(serviceLine.BillingCycle),
 			Price:             serviceLine.Price,
