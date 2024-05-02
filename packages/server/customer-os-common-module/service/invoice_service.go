@@ -54,8 +54,8 @@ type SimulateInvoiceRequestData struct {
 }
 type SimulateInvoiceRequestServiceLineData struct {
 	Key               string
-	ServiceLineItemID *string
-	ParentID          *string
+	ServiceLineItemID string
+	ParentID          string
 	Description       string
 	Comments          string
 	BillingCycle      enum.BilledType
@@ -244,7 +244,7 @@ func (s *invoiceService) SimulateInvoice(ctx context.Context, simulateInvoicesWi
 					continue
 				}
 
-				if sliData.ServiceLineItemID == nil || *sliData.ServiceLineItemID == "" {
+				if sliData.ServiceLineItemID == "" {
 					//new sli item - adding it to the sli entities and trigger proration
 					sliEntities = append(sliEntities, neo4jentity.ServiceLineItemEntity{
 						ID:        sliData.Key,
@@ -259,7 +259,7 @@ func (s *invoiceService) SimulateInvoice(ctx context.Context, simulateInvoicesWi
 					prorationNeeded = true
 				} else {
 					//existing sli item - to check if there is any change in the sli item to decide if proration is needed
-					existingSli, err := s.services.ServiceLineItemService.GetById(ctx, *sliData.ServiceLineItemID)
+					existingSli, err := s.services.ServiceLineItemService.GetById(ctx, sliData.ServiceLineItemID)
 					if err != nil {
 						tracing.TraceErr(span, err)
 						return nil, err
@@ -273,7 +273,7 @@ func (s *invoiceService) SimulateInvoice(ctx context.Context, simulateInvoicesWi
 						if (existingSli.Billed != sliData.BillingCycle || existingSli.Price != sliData.Price || existingSli.Quantity != sliData.Quantity || existingSli.StartedAt != sliData.ServiceStarted || existingSli.VatRate != utils.IfNotNilFloat64(sliData.TaxRate)) && (existingSli.Price*float64(existingSli.Quantity) < sliData.Price*float64(sliData.Quantity)) {
 							//existing sli item - new version - proration needed
 							for i, sliEntity := range sliEntities {
-								if sliEntity.ID == *sliData.ServiceLineItemID {
+								if sliEntity.ID == sliData.ServiceLineItemID {
 									sliEntities[i].Billed = sliData.BillingCycle
 									sliEntities[i].Price = sliData.Price
 									sliEntities[i].Quantity = sliData.Quantity
@@ -327,14 +327,18 @@ func (s *invoiceService) SimulateInvoice(ctx context.Context, simulateInvoicesWi
 
 		// prepare simulation invoice lines grouped by parent id
 		invoiceLinesGroupedByParentId := map[string][]SimulateInvoiceRequestServiceLineData{}
-		for _, sliData := range simulateInvoicesWithChanges.ServiceLines {
-			if sliData.ServiceLineItemID == nil || *sliData.ServiceLineItemID == "" {
-				sliData.ServiceLineItemID = utils.StringPtr(uuid.New().String())
+		for i := range simulateInvoicesWithChanges.ServiceLines {
+			sliData := &simulateInvoicesWithChanges.ServiceLines[i]
+			if sliData.ServiceLineItemID == "" {
+				sliData.ServiceLineItemID = sliData.Key
 			}
-			if sliData.ParentID == nil || *sliData.ParentID == "" {
-				sliData.ParentID = utils.StringPtr(*sliData.ServiceLineItemID)
+			if sliData.ServiceLineItemID == "" {
+				sliData.ServiceLineItemID = uuid.New().String()
 			}
-			invoiceLinesGroupedByParentId[*sliData.ParentID] = append(invoiceLinesGroupedByParentId[*sliData.ParentID], sliData)
+			if sliData.ParentID == "" {
+				sliData.ParentID = sliData.ServiceLineItemID
+			}
+			invoiceLinesGroupedByParentId[sliData.ParentID] = append(invoiceLinesGroupedByParentId[sliData.ParentID], *sliData)
 		}
 		// per parent group sort by service started date and set end date for each sli as previous sli start date
 		for _, sliDataGroup := range invoiceLinesGroupedByParentId {
