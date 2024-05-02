@@ -5,6 +5,7 @@ import { observer } from 'mobx-react-lite';
 import { useTenantBillingProfilesQuery } from '@settings/graphql/getTenantBillingProfiles.generated';
 
 import { cn } from '@ui/utils/cn';
+import { BankAccount } from '@graphql/types';
 import { DotSingle } from '@ui/media/icons/DotSingle';
 import { ChevronLeft } from '@ui/media/icons/ChevronLeft';
 import { ChevronRight } from '@ui/media/icons/ChevronRight';
@@ -24,25 +25,30 @@ import { useEditContractModalStores } from '@organization/src/components/Tabs/pa
 
 interface SubscriptionServiceModalProps extends PropsWithChildren {
   currency?: string;
-  contractId: string;
   showNextInvoice?: boolean;
+  allowCheck?: boolean | null;
+  allowAutoPayment?: boolean | null;
+  allowBankTransfer?: boolean | null;
+  allowOnlinePayment?: boolean | null;
+  availableBankAccount?: Partial<BankAccount> | null;
 }
 
 export const ModalWithInvoicePreview = observer(
   ({
     children,
     showNextInvoice,
-    contractId,
+    currency,
+    allowCheck,
+    allowBankTransfer,
+    availableBankAccount,
   }: SubscriptionServiceModalProps) => {
     const { serviceFormStore, invoicePreviewList } =
       useEditContractModalStores();
-
     const {
       isEditModalOpen,
       onChangeModalMode,
       onEditModalClose,
       addressState,
-      detailsState,
     } = useContractModalStateContext();
     const client = getGraphQLClient();
 
@@ -55,17 +61,20 @@ export const ModalWithInvoicePreview = observer(
       if (!nextInvoice && isEditModalOpen) {
         serviceFormStore.runSimulation(invoicePreviewList);
       }
+      if (!isEditModalOpen) {
+        invoicePreviewList.resetSimulatedInvoices();
+      }
     }, [nextInvoice, isEditModalOpen]);
 
     const billedTo = {
-      addressLine1: addressState.values.addressLine1 ?? '',
-      addressLine2: addressState.values.addressLine2 ?? '',
-      locality: addressState.values.locality ?? '',
-      zip: addressState.values.postalCode ?? '',
-      country: addressState?.values?.country?.label ?? '',
-      email: addressState.values.billingEmail ?? '',
-      name: addressState.values?.organizationLegalName ?? '',
-      region: addressState.values?.region ?? '',
+      addressLine1: addressState?.addressLine1 ?? '',
+      addressLine2: addressState?.addressLine2 ?? '',
+      locality: addressState?.locality ?? '',
+      zip: addressState?.postalCode ?? '',
+      country: addressState?.country?.label ?? '',
+      email: addressState?.billingEmail ?? '',
+      name: addressState?.organizationLegalName ?? '',
+      region: addressState?.region ?? '',
     };
 
     const invoicePreviewStaticData = useMemo(
@@ -74,17 +83,8 @@ export const ModalWithInvoicePreview = observer(
         invoiceNumber: 'INV-003',
         isBilledToFocused: false,
         note: '',
-        currency: detailsState.currency?.value,
-        billedTo: {
-          addressLine1: addressState.values.addressLine1 ?? '',
-          addressLine2: addressState.values.addressLine2 ?? '',
-          locality: addressState.values.locality ?? '',
-          zip: addressState.values.postalCode ?? '',
-          country: addressState?.values?.country?.label ?? '',
-          email: addressState.values.billingEmail ?? '',
-          name: addressState.values?.organizationLegalName ?? '',
-          region: addressState.values?.region ?? '',
-        },
+        currency: currency,
+
         lines: [],
         tax: 0,
         total: 0,
@@ -128,7 +128,7 @@ export const ModalWithInvoicePreview = observer(
               region: 'California',
             },
       }),
-      [tenantBillingProfile?.tenantBillingProfiles?.[0]],
+      [tenantBillingProfile?.tenantBillingProfiles?.[0], currency],
     );
 
     return (
@@ -168,9 +168,10 @@ export const ModalWithInvoicePreview = observer(
                         onChangeModalMode(EditModalMode.BillingDetails)
                       }
                       billedTo={billedTo}
-                      canPayWithBankTransfer={true}
-                      check={true}
-                      availableBankAccount={null}
+                      currency={currency}
+                      canPayWithBankTransfer={allowBankTransfer}
+                      check={allowCheck}
+                      availableBankAccount={availableBankAccount}
                     />
                   </div>
                 </div>
@@ -268,9 +269,7 @@ export const ModalWithInvoicePreview = observer(
                             shouldBlurDummy={false}
                             note={invoice?.note}
                             invoiceNumber={invoice?.invoiceNumber ?? ''}
-                            currency={
-                              invoice?.currency ?? detailsState.currency?.value
-                            }
+                            currency={invoice?.currency ?? currency}
                             billedTo={billedTo}
                             from={
                               invoice
@@ -300,8 +299,8 @@ export const ModalWithInvoicePreview = observer(
                             dueDate={invoice?.due ?? new Date()}
                             total={invoice?.total ?? 10}
                             canPayWithBankTransfer={true}
-                            check={true}
-                            availableBankAccount={null}
+                            check={allowCheck}
+                            availableBankAccount={availableBankAccount}
                           />
                         </div>
                       </div>

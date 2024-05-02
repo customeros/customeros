@@ -4,6 +4,7 @@ import { twMerge } from 'tailwind-merge';
 
 import { cn } from '@ui/utils/cn';
 import { colors } from '@ui/theme/colors';
+import { HighlightColor } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ContractBillingDetailsModal/Services/components/highlighters/utils';
 
 interface HighlighterProps extends React.SVGAttributes<SVGElement> {
   className?: string;
@@ -76,24 +77,20 @@ const HighlighterVariant3: React.FC<HighlighterProps> = ({
 export const Highlighter = ({
   children,
   highlightVersion,
-  backgroundColor = 'bg-transparent',
-  isDeleted,
+  backgroundColor = 'transparent',
 }: PropsWithChildren<{
-  isDeleted?: boolean;
   backgroundColor?: string;
   highlightVersion?: number | string;
 }>) => {
-  const color = colors[backgroundColor as keyof typeof colors]?.['100'];
+  const color =
+    backgroundColor === HighlightColor.GrayWarm
+      ? colors[backgroundColor as keyof typeof colors]?.['200']
+      : colors[backgroundColor as keyof typeof colors]?.['100'];
 
   return (
     <div className={cn('relative h-5 flex items-center')}>
       {color && (
-        <div
-          className={cn(
-            'flex items-center absolute top-0 bottom-0 -right-1 -left-1 overflow-visible',
-            {},
-          )}
-        >
+        <div className='flex items-center absolute top-0 bottom-0 -right-1 -left-1 overflow-visible'>
           {(!highlightVersion || `${highlightVersion}` === '1') && (
             <HighlighterVariant1 style={{ color }} />
           )}

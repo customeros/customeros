@@ -102,6 +102,11 @@ export class ServiceFormStore {
   }
 
   async runSimulation(invoiceListStore: InvoiceListStore): Promise<void> {
+    const payload = this.getInvoiceSimulationInput();
+    console.log('🏷️ ----- payload: ', payload);
+    if (!payload.length) {
+      return;
+    }
     this.isSimulationRunning = true;
     try {
       const response = await this.graphQLClient.request<TSimulateQueryResult>(
@@ -109,7 +114,7 @@ export class ServiceFormStore {
         {
           input: {
             contractId: this.contractId,
-            serviceLines: this.getInvoiceSimulationInput(),
+            serviceLines: payload,
           },
         },
       );
@@ -117,12 +122,7 @@ export class ServiceFormStore {
         response?.invoice_Simulate.map((e) => ({
           ...e,
           invoiceLineItems: e.invoiceLineItems.map((lineItem) => ({
-            color: this.keyColorPairs[lineItem.key],
-            shapeVariant:
-              this.getServiceLineItemById(lineItem.key)?.serviceLineItem
-                ?.frontendMetadata?.shapeVariant ?? 1,
-            diff:
-              this.getServiceLineItemById(lineItem.key)?.revisedFields ?? [],
+            serviceLineItemStore: this.getServiceLineItemById(lineItem.key),
 
             ...lineItem,
           })),
@@ -130,7 +130,6 @@ export class ServiceFormStore {
       );
     } catch (error) {
       console.error(`Simulation failed: ${error}`);
-      throw new Error(`Simulation failed: ${error}`);
     } finally {
       this.isSimulationRunning = false;
     }
@@ -160,7 +159,6 @@ export class ServiceFormStore {
   }
   shouldReact(): boolean {
     let hasChanges = false;
-
     const checkAndReact = (services: ServiceLineItemStore[]) => {
       services.forEach((service) => {
         if (service.shouldReactToRevisedFields()) {
@@ -168,20 +166,7 @@ export class ServiceFormStore {
         }
       });
     };
-    const currentOneTimeSnapshot = this.serializeServices(this.oneTimeServices);
-    const currentSubscriptionSnapshot = this.serializeServices(
-      this.subscriptionServices,
-    );
 
-    if (
-      currentOneTimeSnapshot !== this.lastOneTimeSnapshot ||
-      currentSubscriptionSnapshot !== this.lastSubscriptionSnapshot
-    ) {
-      this.lastOneTimeSnapshot = currentOneTimeSnapshot;
-      this.lastSubscriptionSnapshot = currentSubscriptionSnapshot;
-
-      return true;
-    }
     this.oneTimeServices.forEach(checkAndReact);
     this.subscriptionServices.forEach(checkAndReact);
 
@@ -212,6 +197,7 @@ export class ServiceFormStore {
           newItemStore.setServiceLineItem({
             ...item,
             isNew: false,
+            isModification: false,
             closedVersion: item.serviceEnded !== null,
             newVersion: false,
             isDeleted: false,
@@ -254,6 +240,7 @@ export class ServiceFormStore {
       ...modification,
       metadata: { ...defaultValue.metadata, id: newItemId },
       parentId: id ?? newItemId,
+      isModification: !!id,
       isNew: true,
       frontendMetadata: {
         color: backgroundColor,
@@ -351,18 +338,21 @@ export class ServiceFormStore {
 type TSimulateQueryResult = { invoice_Simulate: Array<InvoiceSimulate> };
 
 const SimulateInvoiceDocument = `
-    mutation simulateInvoice($input: InvoiceSimulateInput!) {
+mutation simulateInvoice($input: InvoiceSimulateInput!) {
   invoice_Simulate(input: $input) {
-    postpaid
-    offCycle
+    amount
+    currency
+    due
     invoiceNumber
     invoicePeriodEnd
     invoicePeriodStart
-    amount
-    subtotal
-    total
-    due
     issued
+    note
+    offCycle
+    postpaid
+    subtotal
+    taxDue
+    total
     invoiceLineItems {
       key
       description
@@ -372,8 +362,6 @@ const SimulateInvoiceDocument = `
       taxDue
       total
     }
-    note
-    currency
     customer {
       name
       email

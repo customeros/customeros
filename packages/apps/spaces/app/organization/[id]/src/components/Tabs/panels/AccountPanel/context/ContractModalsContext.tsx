@@ -22,19 +22,15 @@ import {
 export enum EditModalMode {
   ContractDetails,
   BillingDetails,
-  MakeLive,
-  RenewContract,
-  PauseInvoicing,
-  ResumeInvoicing,
 }
 
 interface ContractPanelState {
-  addressState: any;
-  detailsState: any;
   isEditModalOpen: boolean;
   onEditModalOpen: () => void;
   onEditModalClose: () => void;
   editModalMode: EditModalMode;
+  detailsState: ContractDetailsDto | null;
+  addressState: BillingAddressDetailsFormDto | null;
   onChangeModalMode: Dispatch<SetStateAction<EditModalMode>>;
 }
 
@@ -44,8 +40,8 @@ const ContractPanelStateContext = createContext<ContractPanelState>({
   onEditModalClose: () => null,
   onChangeModalMode: () => null,
   editModalMode: EditModalMode.ContractDetails,
-  addressState: {},
-  detailsState: {},
+  addressState: null,
+  detailsState: null,
 });
 
 export const useContractModalStateContext = () => {
@@ -81,7 +77,7 @@ export const ContractModalsContextProvider = ({
   const defaultValues = new ContractDetailsDto(data?.contract);
   const formId = `billing-details-form-${id}`;
 
-  const { state, setDefaultValues } = useForm({
+  const { state, setDefaultValues } = useForm<ContractDetailsDto>({
     formId,
     defaultValues,
     stateReducer: (_, action, next) => {
@@ -89,12 +85,12 @@ export const ContractModalsContextProvider = ({
     },
   });
 
-  const addressDetailsDefailtValues = new BillingDetailsDto(data?.contract);
+  const addressDetailsDefaultValues = new BillingDetailsDto(data?.contract);
 
   const { state: addressState, setDefaultValues: setDefaultAddressValues } =
     useForm<BillingAddressDetailsFormDto>({
       formId: 'billing-details-address-form',
-      defaultValues: addressDetailsDefailtValues,
+      defaultValues: addressDetailsDefaultValues,
       stateReducer: (_, action, next) => {
         return next;
       },
@@ -104,8 +100,8 @@ export const ContractModalsContextProvider = ({
     setDefaultValues(defaultValues);
   }, [defaultValues]);
   useDeepCompareEffect(() => {
-    setDefaultAddressValues(addressDetailsDefailtValues);
-  }, [addressDetailsDefailtValues]);
+    setDefaultAddressValues(addressDetailsDefaultValues);
+  }, [addressDetailsDefaultValues]);
 
   return (
     <ContractPanelStateContext.Provider
@@ -115,8 +111,8 @@ export const ContractModalsContextProvider = ({
         onEditModalClose,
         editModalMode,
         onChangeModalMode: setEditModalMode,
-        addressState,
-        detailsState: state,
+        addressState: addressState.values,
+        detailsState: state.values,
       }}
     >
       {children}

@@ -10,22 +10,19 @@ import { ResizableInput } from '@ui/form/Input/ResizableInput';
 import { ChevronCollapse } from '@ui/media/icons/ChevronCollapse';
 import { Card, CardHeader, CardContent } from '@ui/presentation/Card/Card';
 import ServiceLineItemStore from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ContractBillingDetailsModal/stores/Service.store';
+import { Highlighter } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ContractBillingDetailsModal/Services/components/highlighters';
 
 import { ServiceItem } from './ServiceItem';
 import { ServiceItemMenu } from './ServiceItemMenu';
 
 interface ServiceCardProps {
-  data: ServiceLineItemStore[];
-  type: 'subscription' | 'one-time';
-}
-
-interface ServiceCardProps {
+  currency?: string;
   data: ServiceLineItemStore[];
   type: 'subscription' | 'one-time';
 }
 
 export const ServiceCard: React.FC<ServiceCardProps> = observer(
-  ({ data, type }) => {
+  ({ data, type, currency }) => {
     const [showEnded, setShowEnded] = useState(false);
 
     const endedServices = data.filter((service) => {
@@ -52,21 +49,35 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
       });
     };
 
+    const descriptionLI = liveServices[0];
+
     return (
       <Card className='px-3 py-2 mb-2'>
         <CardHeader className={cn('flex justify-between')}>
-          <ResizableInput
-            value={description ?? 'Unnamed'}
-            onChange={(e) => setDescription(e.target.value)}
-            onBlur={handleDescriptionChange}
-            size='xs'
-            className={cn(
-              'text-base min-w-2.5 min-h-0 max-h-4 border-none hover:border-none focus:border-none ',
-              {
-                'text-gray-400 line-through': isClosed,
-              },
-            )}
-          />
+          <Highlighter
+            highlightVersion={descriptionLI?.uiMetadata?.shapeVariant}
+            backgroundColor={
+              liveServices.length === 1 &&
+              descriptionLI?.isNewlyAdded &&
+              !isClosed
+                ? descriptionLI.uiMetadata?.color
+                : undefined
+            }
+          >
+            <ResizableInput
+              value={description ?? 'Unnamed'}
+              onChange={(e) => setDescription(e.target.value)}
+              onBlur={handleDescriptionChange}
+              onFocus={(e) => e.target.select()}
+              size='xs'
+              className={cn(
+                'text-base text-gray-500 min-w-2.5 min-h-0 max-h-4 border-none hover:border-none focus:border-none ',
+                {
+                  'text-gray-400 line-through': isClosed,
+                },
+              )}
+            />
+          </Highlighter>
 
           <div className='flex items-baseline'>
             {endedServices.length > 0 && (
@@ -118,12 +129,14 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
               <ServiceItem
                 key={`ended-service-item-${serviceIndex}`}
                 service={service}
+                currency={currency}
                 isEnded
               />
             ))}
           {liveServices.map((service, serviceIndex) => (
             <ServiceItem
               key={`service-item-${serviceIndex}`}
+              currency={currency}
               service={service}
             />
           ))}

@@ -98,7 +98,7 @@ export const EditContractModal = ({
   const formId = `billing-details-form-${contractId}`;
   const organizationId = useParams()?.id as string;
   const client = getGraphQLClient();
-  const { serviceFormStore, invoicePreviewList } = useEditContractModalStores();
+  const { serviceFormStore } = useEditContractModalStores();
 
   const [initialOpen, setInitialOpen] = useState(EditModalMode.ContractDetails);
   useState<boolean>(false);
@@ -289,6 +289,14 @@ export const EditContractModal = ({
     return availableCurrencies.includes(state.values.currency?.value);
   }, [availableCurrencies, state.values.currency]);
 
+  const availableBankAccount = useMemo(
+    () =>
+      (bankAccountsData?.bankAccounts ?? []).find(
+        (e) => e.currency === state.values.currency?.value,
+      ),
+    [state.values.currency?.value && bankAccountsData?.bankAccounts.length],
+  );
+
   useEffect(() => {
     if (!canAllowPayWithBankTransfer) {
       const newDefaultValues = new ContractDetailsDto({
@@ -311,13 +319,17 @@ export const EditContractModal = ({
 
   return (
     <ModalWithInvoicePreview
-      contractId={contractId}
+      currency={state?.values?.currency?.value}
+      allowAutoPayment={state?.values?.payAutomatically}
+      allowOnlinePayment={state?.values?.payOnline}
+      allowBankTransfer={state?.values?.canPayWithBankTransfer}
+      availableBankAccount={availableBankAccount as BankAccount}
+      allowCheck={state?.values?.check}
       showNextInvoice={tenantSettingsData?.tenantSettings?.billingEnabled}
     >
       <div className='relative'>
         <motion.div
           layout
-          data-isOpen={editModalMode === EditModalMode.ContractDetails}
           variants={mainVariants as Variants}
           animate={
             editModalMode === EditModalMode.ContractDetails ? 'open' : 'closed'
@@ -379,7 +391,6 @@ export const EditContractModal = ({
         </motion.div>
         <motion.div
           layout
-          data-isOpen={editModalMode === EditModalMode.BillingDetails}
           variants={variants}
           animate={
             editModalMode === EditModalMode.BillingDetails ? 'open' : 'closed'

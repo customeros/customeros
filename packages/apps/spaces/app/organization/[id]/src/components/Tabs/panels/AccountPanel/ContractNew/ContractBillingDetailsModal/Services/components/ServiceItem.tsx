@@ -10,6 +10,7 @@ import { DateTimeUtils } from '@spaces/utils/date';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { FlipBackward } from '@ui/media/icons/FlipBackward';
 import { IconButton } from '@ui/form/IconButton/IconButton';
+import { currencySymbol } from '@shared/util/currencyOptions';
 import { ResizableInput } from '@ui/form/Input/ResizableInput';
 import { DatePickerUnderline2 } from '@ui/form/DatePicker/DatePickerUnderline2';
 import {
@@ -24,6 +25,7 @@ import ServiceLineItemStore from '../../stores/Service.store';
 
 interface ServiceItemProps {
   isEnded?: boolean;
+  currency?: string;
   service: ServiceLineItemStore;
 }
 
@@ -45,29 +47,28 @@ const billedTypeLabel: Record<
 const formSelectClassNames =
   'text-sm inline min-h-1 max-h-3 border-none hover:border-none focus:border-none w-fit ml-1 mt-0 underline  min-w-[max-content]';
 
-const inputClasses = 'text-sm min-w-2.5 min-h-0 max-h-4 text-inherit';
+const inputClasses =
+  'text-sm min-w-2.5 min-h-0 max-h-4 text-inherit underline hover:border-none focus:border-none border-none';
 const deleteButtonClasses =
   'border-none bg-transparent shadow-none text-gray-400 px-3 py-2 -mx-3 absolute -right-7 top-0 bottom-0 invisible group-hover:visible hover:bg-transparent';
 export const ServiceItem: React.FC<ServiceItemProps> = observer(
-  ({ service, isEnded }) => {
+  ({ service, isEnded, currency }) => {
     const highlightVersion =
       service.serviceLineItem?.frontendMetadata?.shapeVariant;
     const bgColor = service.serviceLineItem?.frontendMetadata?.color;
+    const sliCurrencySymbol = currency ? currencySymbol?.[currency] : '$';
 
     return (
       <React.Fragment>
         {service?.serviceLineItem?.isNew &&
         !service.serviceLineItem.isDeleted &&
         !service.serviceLineItem.closedVersion ? (
-          <div className='flex items-baseline justify-between group relative py-3 -my-3'>
+          <div className='flex items-baseline justify-between group relative py-3 -my-3 text-gray-500 '>
             <div className='flex items-baseline'>
               <Highlighter
                 highlightVersion={highlightVersion}
-                isDeleted={service.serviceLineItem?.isDeleted}
                 backgroundColor={
-                  service.revisedFields.find((e) => e === 'quantity')
-                    ? bgColor
-                    : undefined
+                  service.isFieldRevised('quantity') ? bgColor : undefined
                 }
               >
                 <ResizableInput
@@ -75,33 +76,30 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
                   onChange={(e) => service.updateQuantity(e.target.value)}
                   size='xs'
                   className={inputClasses}
+                  onFocus={(e) => e.target.select()}
                 />
               </Highlighter>
               <span className='relative z-[2] mx-1'>x</span>
               <Highlighter
                 highlightVersion={highlightVersion}
                 backgroundColor={
-                  service.revisedFields.find((e) => e === 'price')
-                    ? bgColor
-                    : undefined
+                  service.isFieldRevised('price') ? bgColor : undefined
                 }
-                isDeleted={service.serviceLineItem?.isDeleted}
               >
+                {sliCurrencySymbol}
                 <ResizableInput
                   value={service.serviceLineItem?.price}
                   onChange={(e) => service.updatePrice(e.target.value)}
                   size='xs'
                   className={inputClasses}
+                  onFocus={(e) => e.target.select()}
                 />
               </Highlighter>
-              <span className='relative z-[2] mx-1'>/</span>
+              <span className='relative z-[2] ml-1'>/</span>
               <Highlighter
                 highlightVersion={highlightVersion}
-                isDeleted={service.serviceLineItem?.isDeleted}
                 backgroundColor={
-                  service.revisedFields.find((e) => e === 'billingCycle')
-                    ? bgColor
-                    : undefined
+                  service.isFieldRevised('billingCycle') ? bgColor : undefined
                 }
               >
                 <Select
@@ -115,7 +113,7 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
                   classNames={{
                     container: () =>
                       getContainerClassNames(
-                        'text-inherit text-base hover:text-gray-700 focus:text-gray-700 min-w-fit w-max-content',
+                        'text-inherit text-base hover:text-gray-500 focus:text-gray-500 min-w-fit w-max-content ml-0',
                         'xs',
                       ),
                     menuList: () => getMenuListClassNames('min-w-[100px]'),
@@ -129,11 +127,8 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
               <Highlighter
                 highlightVersion={highlightVersion}
                 backgroundColor={
-                  service.revisedFields.find((e) => e === 'taxRate')
-                    ? bgColor
-                    : undefined
+                  service.isFieldRevised('taxRate') ? bgColor : undefined
                 }
-                isDeleted={service.serviceLineItem?.isDeleted}
               >
                 <ResizableInput
                   value={service.serviceLineItem?.tax?.taxRate}
@@ -142,6 +137,7 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
                   }
                   size='xs'
                   className={inputClasses}
+                  onFocus={(e) => e.target.select()}
                 />
               </Highlighter>
               <span className='whitespace-nowrap relative z-[2] mx-1'>
@@ -151,11 +147,8 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
 
             <Highlighter
               highlightVersion={highlightVersion}
-              isDeleted={service.serviceLineItem?.isDeleted}
               backgroundColor={
-                service.revisedFields.find((e) => e === 'serviceStarted')
-                  ? bgColor
-                  : undefined
+                service.isFieldRevised('serviceStarted') ? bgColor : undefined
               }
             >
               <DatePickerUnderline2
@@ -176,7 +169,7 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
         ) : (
           <div
             className={cn(
-              'flex items-baseline justify-between group text-gray-700 relative',
+              'flex items-baseline justify-between group text-gray-500 relative',
               {
                 'text-gray-400': isEnded,
                 'line-through text-gray-400 hover:text-gray-400':
@@ -187,8 +180,8 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
           >
             <div className='flex items-baseline'>
               <span>
-                {service?.serviceLineItem?.quantity} x{' '}
-                {service?.serviceLineItem?.price}$
+                {service?.serviceLineItem?.quantity} x {sliCurrencySymbol}
+                {service?.serviceLineItem?.price}
               </span>
               <span>
                 /{' '}

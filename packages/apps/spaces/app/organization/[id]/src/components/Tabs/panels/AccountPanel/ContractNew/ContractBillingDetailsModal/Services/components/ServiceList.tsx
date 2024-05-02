@@ -5,7 +5,9 @@ import { observer } from 'mobx-react-lite';
 import { ServiceCard } from './ServiceCard';
 import { useEditContractModalStores } from '../../stores/EditContractModalStores';
 
-export const ServiceList: React.FC = observer(() => {
+export const ServiceList: React.FC<{
+  currency?: string;
+}> = observer(({ currency }) => {
   const { serviceFormStore } = useEditContractModalStores();
 
   return (
@@ -17,11 +19,7 @@ export const ServiceList: React.FC = observer(() => {
         <React.Fragment
           key={`subscription-card-item-${data[0]?.serviceLineItem?.parentId}-${data[0].serviceLineItem?.description}-${i}`}
         >
-          <ServiceCard
-            data={data}
-            type='subscription'
-            key={`subscription-${i}`}
-          />
+          <ServiceCard data={data} currency={currency} type='subscription' />
         </React.Fragment>
       ))}
       {serviceFormStore.oneTimeServices.length !== 0 && (
@@ -31,7 +29,7 @@ export const ServiceList: React.FC = observer(() => {
         <React.Fragment
           key={`one-time-card-item${data[0]?.serviceLineItem?.parentId}-${data[0].serviceLineItem?.description}-${i}`}
         >
-          <ServiceCard data={data} type='one-time' key={`one-time-${i}`} />
+          <ServiceCard data={data} type='one-time' currency={currency} />
         </React.Fragment>
       ))}
     </div>

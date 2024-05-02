@@ -71,7 +71,7 @@ export const ContractCard = observer(
 
     useEffect(() => {
       serviceFormStore.contractIdValue = data.metadata.id;
-      if (data.contractLineItems?.length) {
+      if (data.contractLineItems?.length && isEditModalOpen) {
         serviceFormStore.initializeServices(data.contractLineItems);
       }
     }, [isEditModalOpen, data.contractLineItems]);

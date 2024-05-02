@@ -1775,6 +1775,7 @@ export type InvoiceSimulateInput = {
 
 export type InvoiceSimulateServiceLineInput = {
   billingCycle: BilledType;
+  closeVersion?: InputMaybe<Scalars['Boolean']['input']>;
   description: Scalars['String']['input'];
   key: Scalars['String']['input'];
   parentId?: InputMaybe<Scalars['ID']['input']>;
@@ -4058,6 +4059,7 @@ export type Query = {
   interactionSession: InteractionSession;
   interactionSession_BySessionIdentifier: InteractionSession;
   invoice: Invoice;
+  invoice_ByNumber: Invoice;
   invoices: InvoicesPage;
   invoicingCycle: InvoicingCycle;
   issue: Issue;
@@ -4208,6 +4210,10 @@ export type QueryInteractionSession_BySessionIdentifierArgs = {
 
 export type QueryInvoiceArgs = {
   id: Scalars['ID']['input'];
+};
+
+export type QueryInvoice_ByNumberArgs = {
+  number: Scalars['String']['input'];
 };
 
 export type QueryInvoicesArgs = {

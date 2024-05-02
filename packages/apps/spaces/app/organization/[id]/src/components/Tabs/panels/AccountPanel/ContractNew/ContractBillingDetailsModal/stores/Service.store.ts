@@ -13,6 +13,7 @@ interface IServiceLineItem extends ServiceLineItem {
   isDeleted: boolean;
   newVersion: boolean;
   closedVersion: boolean;
+  isModification: boolean;
   frontendMetadata?: null | {
     color: string;
     shapeVariant: string | number;
@@ -21,10 +22,11 @@ interface IServiceLineItem extends ServiceLineItem {
 
 class ServiceLineItemStore {
   serviceLineItem: IServiceLineItem | null = null;
-  public revisedFields: string[] = [];
-  public lastRevisedFields: string[] = [];
+  private revisedFields: Map<string, number> = new Map();
+  private lastRevision: Map<string, number> = new Map();
   public isNewlyAdded: boolean = false;
   public lastRevisionIsNewlyAdded: boolean = false;
+  public revisedFieldsSummary: string[] = [];
 
   constructor() {
     makeAutoObservable(this);
@@ -37,14 +39,20 @@ class ServiceLineItemStore {
   }
 
   resetStateFields() {
-    this.revisedFields = [];
-    this.lastRevisedFields = [];
+    this.revisedFields = new Map();
+    this.lastRevision = new Map();
     this.isNewlyAdded = false;
     this.lastRevisionIsNewlyAdded = false;
   }
-  setServiceLineItem(item: IServiceLineItem) {
+  // Utilize this method to record changes to fields
+  private markFieldAsRevised(field: string) {
+    const currentCount = this.revisedFields.get(field) || 0;
+    this.revisedFields.set(field, currentCount + 1);
+  }
+
+  setServiceLineItem(item: IServiceLineItem & { parentId?: string | null }) {
     this.serviceLineItem = { ...item };
-    if (!item.parentId) {
+    if (!item.isModification && item.isNew) {
       this.isNewlyAdded = true;
     }
   }
@@ -54,18 +62,16 @@ class ServiceLineItemStore {
       this.serviceLineItem &&
       this.serviceLineItem.billingCycle !== billingCycle
     ) {
-      this.revisedFields = Array.from(
-        new Set([...this.revisedFields, 'billingCycle']),
-      );
+      this.markFieldAsRevised('billingCycle');
+
       this.serviceLineItem.billingCycle = billingCycle;
     }
   }
 
   updateQuantity(quantity: string) {
     if (this.serviceLineItem && this.serviceLineItem.quantity !== quantity) {
-      this.revisedFields = Array.from(
-        new Set([...this.revisedFields, 'quantity']),
-      );
+      this.markFieldAsRevised('quantity');
+
       this.serviceLineItem.quantity = parseFloat(quantity);
     }
   }
@@ -75,17 +81,15 @@ class ServiceLineItemStore {
       this.serviceLineItem &&
       this.serviceLineItem.price !== parseFloat(price)
     ) {
-      this.revisedFields = Array.from(
-        new Set([...this.revisedFields, 'price']),
-      );
+      this.markFieldAsRevised('price');
+
       this.serviceLineItem.price = parseFloat(price);
     }
   }
   updateDescription(desc: string) {
     if (this.serviceLineItem && this.serviceLineItem.description !== desc) {
-      this.revisedFields = Array.from(
-        new Set([...this.revisedFields, 'description']),
-      );
+      this.markFieldAsRevised('description');
+
       this.serviceLineItem.description = desc;
     }
   }
@@ -96,18 +100,15 @@ class ServiceLineItemStore {
       this.serviceLineItem.tax &&
       this.serviceLineItem.tax.taxRate !== taxRate
     ) {
-      this.revisedFields = Array.from(
-        new Set([...this.revisedFields, 'taxRate']),
-      );
+      this.markFieldAsRevised('taxRate');
       this.serviceLineItem.tax.taxRate = taxRate;
     }
   }
 
   updateStartDate(date: Date | null) {
     if (this.serviceLineItem && this.serviceLineItem.serviceStarted !== date) {
-      this.revisedFields = Array.from(
-        new Set([...this.revisedFields, 'serviceStarted']),
-      );
+      this.markFieldAsRevised('serviceStarted');
+
       this.serviceLineItem.serviceStarted = date;
     }
   }
@@ -120,39 +121,55 @@ class ServiceLineItemStore {
   setIsDeleted(isDeleted: boolean) {
     if (this.serviceLineItem && this.serviceLineItem.isDeleted !== isDeleted) {
       this.serviceLineItem.isDeleted = isDeleted;
+      this.markFieldAsRevised('isDeleted');
     }
   }
 
   setIsClosedVersion(isDeleted: boolean) {
     if (this.serviceLineItem) {
       this.serviceLineItem.closedVersion = isDeleted;
-    }
-  }
-  setIsEnded() {
-    if (this.serviceLineItem) {
-      this.serviceLineItem.serviceEnded = new Date();
+      this.markFieldAsRevised('closedVersion');
     }
   }
 
+  private updateRevisedFieldsSummary() {
+    this.revisedFieldsSummary = Array.from(this.revisedFields.entries()).map(
+      ([field, count]) => `${field} (changed ${count} times)`,
+    );
+  }
   shouldReactToRevisedFields(): boolean {
-    if (!this.revisedFields.length) {
-      return false;
-    }
-    if (this.revisedFields.length !== this.lastRevisedFields.length) {
-      this.lastRevisedFields = this.revisedFields;
+    let shouldReact = false;
+    this.revisedFields.forEach((count, field) => {
+      const lastCount = this.lastRevision.get(field) || 0;
+      if (count !== lastCount) {
+        shouldReact = true;
+        this.lastRevision.set(field, count);
+      }
+    });
 
-      return true;
-    }
-    if (
-      this.isNewlyAdded &&
-      this.isNewlyAdded !== this.lastRevisionIsNewlyAdded
-    ) {
-      this.lastRevisionIsNewlyAdded = this.isNewlyAdded;
-
-      return true;
+    if (!shouldReact && this.revisedFields.size !== this.lastRevision.size) {
+      shouldReact = true;
     }
 
-    return false;
+    if (shouldReact) {
+      this.updateRevisedFieldsSummary();
+    }
+
+    return shouldReact;
+  }
+
+  isFieldRevised(fieldName: string): boolean {
+    return this.revisedFields.has(fieldName);
+  }
+
+  get uiMetadata(): {
+    color: string;
+    shapeVariant: string | number;
+  } {
+    return {
+      color: this.serviceLineItem?.frontendMetadata?.color || '',
+      shapeVariant: this.serviceLineItem?.frontendMetadata?.shapeVariant || '',
+    };
   }
 
   get serviceLineItemValues() {
@@ -171,14 +188,15 @@ class ServiceLineItemStore {
   }
 
   getServiceLineItemBulkUpdateItem(): ServiceLineItemBulkUpdateItem | null {
-    // Do not save if no fields were revised nor if it is a newly added service line item
-    if (!this.revisedFields.length && !this.serviceLineItem?.isNew) {
+    const hasRevisedFields = this.revisedFields.size > 0;
+
+    if (!hasRevisedFields && !this.serviceLineItem?.isNew) {
       return null;
     }
 
-    if (!this.serviceLineItem?.isNew) {
+    if (this.serviceLineItem?.isModification) {
       return {
-        serviceLineItemId: this.serviceLineItem?.parentId || '',
+        serviceLineItemId: this.serviceLineItem?.parentId,
         name: this.serviceLineItem?.description,
         billed: this.serviceLineItem?.billingCycle,
         price: this.serviceLineItem?.price,
@@ -187,6 +205,7 @@ class ServiceLineItemStore {
         comments: this.serviceLineItem?.comments,
         serviceStarted: this.serviceLineItem?.serviceStarted,
         closeVersion: this.serviceLineItem?.closedVersion,
+        newVersion: true,
       };
     }
 
@@ -208,17 +227,22 @@ class ServiceLineItemStore {
 
     return {
       key: this.serviceLineItem.metadata.id,
-      parentId: this.serviceLineItem.parentId,
+      parentId:
+        this.serviceLineItem.isModification || !this.isNewlyAdded
+          ? this.serviceLineItem.parentId
+          : undefined,
       description: this.serviceLineItem.description ?? 'Unnamed',
       billingCycle: this.serviceLineItem.billingCycle,
       price: this.serviceLineItem.price,
       quantity: parseFloat(this.serviceLineItem.quantity),
       taxRate: this.serviceLineItem.tax.taxRate,
       serviceStarted: this.serviceLineItem.serviceStarted,
-
-      serviceLineItemId: this.serviceLineItem.isNew
-        ? undefined
-        : this.serviceLineItem.metadata.id,
+      closeVersion:
+        this.serviceLineItem.closedVersion || this.serviceLineItem.isDeleted,
+      serviceLineItemId:
+        !this.serviceLineItem.isModification && !this.isNewlyAdded
+          ? this.serviceLineItem.metadata.id
+          : undefined,
     };
   }
 }

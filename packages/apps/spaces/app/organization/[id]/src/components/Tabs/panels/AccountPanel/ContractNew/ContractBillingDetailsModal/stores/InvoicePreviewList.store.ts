@@ -1,13 +1,12 @@
 import { makeAutoObservable } from 'mobx';
 
 import { InvoiceSimulate, InvoiceLineSimulate } from '@graphql/types';
+import ServiceLineItemStore from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/ContractBillingDetailsModal/stores/Service.store';
 
 import InvoicePreviewStore from './InvoicePreview.store';
 
 export interface ISimulatedInvoiceLineItems extends InvoiceLineSimulate {
-  color: string;
-  diff: Array<string>;
-  shapeVariant: string | number;
+  serviceLineItemStore: ServiceLineItemStore | null;
 }
 export interface InvoiceSimulateServiceLineInput extends InvoiceSimulate {
   invoiceLineItems: ISimulatedInvoiceLineItems[];
