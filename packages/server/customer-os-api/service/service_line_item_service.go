@@ -521,8 +521,9 @@ func (s *serviceLineItemService) Close(ctx context.Context, serviceLineItemId st
 		s.log.Errorf("Error on getting contract by service line item id {%s}: %s", serviceLineItemId, err.Error())
 		return err
 	}
+
 	// if contract is draft - delete SLI
-	if contractEntity.ContractStatus == neo4jenum.ContractStatusDraft {
+	if contractEntity.IsDraft() {
 		_, err = s.Delete(ctx, serviceLineItemId)
 		return err
 	}

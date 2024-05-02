@@ -36,10 +36,6 @@ func (sli ServiceLineItemEntity) IsEnded() bool {
 	return sli.EndedAt != nil && sli.EndedAt.Before(utils.Now())
 }
 
-func (sli ServiceLineItemEntity) IsParent() bool {
-	return sli.ParentID == sli.ID
-}
-
 func (sli ServiceLineItemEntity) IsActiveAt(referenceTime time.Time) bool {
 	return (sli.StartedAt.Equal(referenceTime) || sli.StartedAt.Before(referenceTime)) && (sli.EndedAt == nil || sli.EndedAt.After(referenceTime))
 }

@@ -73,3 +73,7 @@ func (c ContractEntity) IsServiceStarted() bool {
 func (c ContractEntity) IsEligibleToStartOnboarding() bool {
 	return !c.TriggeredOnboardingStatusChange && (c.IsSigned() || c.IsServiceStarted()) && !c.IsEnded()
 }
+
+func (c ContractEntity) IsDraft() bool {
+	return c.ContractStatus == enum.ContractStatusDraft
+}
