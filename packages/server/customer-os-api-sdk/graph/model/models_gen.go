@@ -2033,6 +2033,8 @@ type Organization struct {
 	ValueProposition         *string                       `json:"valueProposition,omitempty"`
 	Website                  *string                       `json:"website,omitempty"`
 	YearFounded              *int64                        `json:"yearFounded,omitempty"`
+	Stage                    *OrganizationStage            `json:"stage,omitempty"`
+	Relationship             *OrganizationRelationship     `json:"relationship,omitempty"`
 	Hide                     bool                          `json:"hide"`
 	Contacts                 *ContactsPage                 `json:"contacts"`
 	JobRoles                 []*JobRole                    `json:"jobRoles"`
@@ -2087,26 +2089,28 @@ func (this Organization) GetMetadata() *Metadata { return this.Metadata }
 type OrganizationInput struct {
 	// The name of the organization.
 	// **Required.**
-	CustomID           *string             `json:"customId,omitempty"`
-	Name               *string             `json:"name,omitempty"`
-	Description        *string             `json:"description,omitempty"`
-	Notes              *string             `json:"notes,omitempty"`
-	Domains            []string            `json:"domains,omitempty"`
-	Website            *string             `json:"website,omitempty"`
-	Industry           *string             `json:"industry,omitempty"`
-	SubIndustry        *string             `json:"subIndustry,omitempty"`
-	IndustryGroup      *string             `json:"industryGroup,omitempty"`
-	Public             *bool               `json:"public,omitempty"`
-	IsCustomer         *bool               `json:"isCustomer,omitempty"`
-	CustomFields       []*CustomFieldInput `json:"customFields,omitempty"`
-	Market             *Market             `json:"market,omitempty"`
-	Logo               *string             `json:"logo,omitempty"`
-	EmployeeGrowthRate *string             `json:"employeeGrowthRate,omitempty"`
-	Headquarters       *string             `json:"headquarters,omitempty"`
-	YearFounded        *int64              `json:"yearFounded,omitempty"`
-	Employees          *int64              `json:"employees,omitempty"`
-	SlackChannelID     *string             `json:"slackChannelId,omitempty"`
-	AppSource          *string             `json:"appSource,omitempty"`
+	CustomID           *string                   `json:"customId,omitempty"`
+	Name               *string                   `json:"name,omitempty"`
+	Description        *string                   `json:"description,omitempty"`
+	Notes              *string                   `json:"notes,omitempty"`
+	Domains            []string                  `json:"domains,omitempty"`
+	Website            *string                   `json:"website,omitempty"`
+	Industry           *string                   `json:"industry,omitempty"`
+	SubIndustry        *string                   `json:"subIndustry,omitempty"`
+	IndustryGroup      *string                   `json:"industryGroup,omitempty"`
+	Public             *bool                     `json:"public,omitempty"`
+	IsCustomer         *bool                     `json:"isCustomer,omitempty"`
+	CustomFields       []*CustomFieldInput       `json:"customFields,omitempty"`
+	Market             *Market                   `json:"market,omitempty"`
+	Logo               *string                   `json:"logo,omitempty"`
+	EmployeeGrowthRate *string                   `json:"employeeGrowthRate,omitempty"`
+	Headquarters       *string                   `json:"headquarters,omitempty"`
+	YearFounded        *int64                    `json:"yearFounded,omitempty"`
+	Employees          *int64                    `json:"employees,omitempty"`
+	SlackChannelID     *string                   `json:"slackChannelId,omitempty"`
+	AppSource          *string                   `json:"appSource,omitempty"`
+	Stage              *OrganizationStage        `json:"stage,omitempty"`
+	Relationship       *OrganizationRelationship `json:"relationship,omitempty"`
 	// Deprecated
 	FieldSets []*FieldSetInput `json:"fieldSets,omitempty"`
 	// Deprecated
@@ -2286,27 +2290,29 @@ type OrganizationUpdateInput struct {
 	ID       string  `json:"id"`
 	CustomID *string `json:"customId,omitempty"`
 	// Deprecated
-	Patch              *bool         `json:"patch,omitempty"`
-	Name               *string       `json:"name,omitempty"`
-	Description        *string       `json:"description,omitempty"`
-	Notes              *string       `json:"notes,omitempty"`
-	Website            *string       `json:"website,omitempty"`
-	Industry           *string       `json:"industry,omitempty"`
-	SubIndustry        *string       `json:"subIndustry,omitempty"`
-	IndustryGroup      *string       `json:"industryGroup,omitempty"`
-	Public             *bool         `json:"public,omitempty"`
-	IsCustomer         *bool         `json:"isCustomer,omitempty"`
-	Market             *Market       `json:"market,omitempty"`
-	Employees          *int64        `json:"employees,omitempty"`
-	TargetAudience     *string       `json:"targetAudience,omitempty"`
-	ValueProposition   *string       `json:"valueProposition,omitempty"`
-	LastFundingRound   *FundingRound `json:"lastFundingRound,omitempty"`
-	LastFundingAmount  *string       `json:"lastFundingAmount,omitempty"`
-	Logo               *string       `json:"logo,omitempty"`
-	EmployeeGrowthRate *string       `json:"employeeGrowthRate,omitempty"`
-	Headquarters       *string       `json:"headquarters,omitempty"`
-	YearFounded        *int64        `json:"yearFounded,omitempty"`
-	SlackChannelID     *string       `json:"slackChannelId,omitempty"`
+	Patch              *bool                     `json:"patch,omitempty"`
+	Name               *string                   `json:"name,omitempty"`
+	Description        *string                   `json:"description,omitempty"`
+	Notes              *string                   `json:"notes,omitempty"`
+	Website            *string                   `json:"website,omitempty"`
+	Industry           *string                   `json:"industry,omitempty"`
+	SubIndustry        *string                   `json:"subIndustry,omitempty"`
+	IndustryGroup      *string                   `json:"industryGroup,omitempty"`
+	Public             *bool                     `json:"public,omitempty"`
+	IsCustomer         *bool                     `json:"isCustomer,omitempty"`
+	Market             *Market                   `json:"market,omitempty"`
+	Employees          *int64                    `json:"employees,omitempty"`
+	TargetAudience     *string                   `json:"targetAudience,omitempty"`
+	ValueProposition   *string                   `json:"valueProposition,omitempty"`
+	LastFundingRound   *FundingRound             `json:"lastFundingRound,omitempty"`
+	LastFundingAmount  *string                   `json:"lastFundingAmount,omitempty"`
+	Logo               *string                   `json:"logo,omitempty"`
+	EmployeeGrowthRate *string                   `json:"employeeGrowthRate,omitempty"`
+	Headquarters       *string                   `json:"headquarters,omitempty"`
+	YearFounded        *int64                    `json:"yearFounded,omitempty"`
+	SlackChannelID     *string                   `json:"slackChannelId,omitempty"`
+	Stage              *OrganizationStage        `json:"stage,omitempty"`
+	Relationship       *OrganizationRelationship `json:"relationship,omitempty"`
 	// Deprecated, use public instead
 	IsPublic *bool `json:"isPublic,omitempty"`
 	// Deprecated, use logo instead
@@ -4793,6 +4799,100 @@ func (e *OpportunityRenewalLikelihood) UnmarshalGQL(v interface{}) error {
 }
 
 func (e OpportunityRenewalLikelihood) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type OrganizationRelationship string
+
+const (
+	OrganizationRelationshipCustomer       OrganizationRelationship = "CUSTOMER"
+	OrganizationRelationshipProspect       OrganizationRelationship = "PROSPECT"
+	OrganizationRelationshipStranger       OrganizationRelationship = "STRANGER"
+	OrganizationRelationshipFormerCustomer OrganizationRelationship = "FORMER_CUSTOMER"
+)
+
+var AllOrganizationRelationship = []OrganizationRelationship{
+	OrganizationRelationshipCustomer,
+	OrganizationRelationshipProspect,
+	OrganizationRelationshipStranger,
+	OrganizationRelationshipFormerCustomer,
+}
+
+func (e OrganizationRelationship) IsValid() bool {
+	switch e {
+	case OrganizationRelationshipCustomer, OrganizationRelationshipProspect, OrganizationRelationshipStranger, OrganizationRelationshipFormerCustomer:
+		return true
+	}
+	return false
+}
+
+func (e OrganizationRelationship) String() string {
+	return string(e)
+}
+
+func (e *OrganizationRelationship) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = OrganizationRelationship(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid OrganizationRelationship", str)
+	}
+	return nil
+}
+
+func (e OrganizationRelationship) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type OrganizationStage string
+
+const (
+	OrganizationStageLead       OrganizationStage = "LEAD"
+	OrganizationStageTarget     OrganizationStage = "TARGET"
+	OrganizationStageInterested OrganizationStage = "INTERESTED"
+	OrganizationStageEngaged    OrganizationStage = "ENGAGED"
+	OrganizationStageContracted OrganizationStage = "CONTRACTED"
+	OrganizationStageNurture    OrganizationStage = "NURTURE"
+)
+
+var AllOrganizationStage = []OrganizationStage{
+	OrganizationStageLead,
+	OrganizationStageTarget,
+	OrganizationStageInterested,
+	OrganizationStageEngaged,
+	OrganizationStageContracted,
+	OrganizationStageNurture,
+}
+
+func (e OrganizationStage) IsValid() bool {
+	switch e {
+	case OrganizationStageLead, OrganizationStageTarget, OrganizationStageInterested, OrganizationStageEngaged, OrganizationStageContracted, OrganizationStageNurture:
+		return true
+	}
+	return false
+}
+
+func (e OrganizationStage) String() string {
+	return string(e)
+}
+
+func (e *OrganizationStage) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = OrganizationStage(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid OrganizationStage", str)
+	}
+	return nil
+}
+
+func (e OrganizationStage) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

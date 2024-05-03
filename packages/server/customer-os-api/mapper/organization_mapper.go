@@ -3,6 +3,7 @@ package mapper
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	mapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
@@ -33,7 +34,7 @@ func MapEntityToOrganization(entity *entity.OrganizationEntity) *model.Organizat
 		IsCustomer:         utils.BoolPtr(entity.IsCustomer),
 		Employees:          utils.Int64Ptr(entity.Employees),
 		Market:             MapMarketToModel(entity.Market),
-		LastFundingRound:   MapFundingRoundToModel(entity.LastFundingRound),
+		LastFundingRound:   mapper.MapFundingRoundToModel(entity.LastFundingRound),
 		LastFundingAmount:  utils.StringPtr(entity.LastFundingAmount),
 		YearFounded:        entity.YearFounded,
 		Headquarters:       utils.StringPtr(entity.Headquarters),
@@ -58,8 +59,10 @@ func MapEntityToOrganization(entity *entity.OrganizationEntity) *model.Organizat
 			LastTouchPointAt:              entity.LastTouchpointAt,
 			LastTouchPointType:            MapLastTouchpointTypeToModel(entity.LastTouchpointType),
 		},
-		Hide:  entity.Hide,
-		Notes: utils.StringPtr(entity.Note),
+		Hide:         entity.Hide,
+		Notes:        utils.StringPtr(entity.Note),
+		Stage:        utils.ToPtr(mapper.MapStageToModel(entity.Stage)),
+		Relationship: utils.ToPtr(mapper.MapRelationshipToModel(entity.Relationship)),
 
 		// TODO: All below fields are deprecated and should be removed
 		IsPublic:                      utils.BoolPtr(entity.IsPublic),

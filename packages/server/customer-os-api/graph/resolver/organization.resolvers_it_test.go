@@ -90,7 +90,7 @@ func TestQueryResolver_Organization(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	now := utils.NowPtr()
-	inputOrganizationEntity := entity.OrganizationEntity{
+	inputOrganizationEntity := neo4jentity.OrganizationEntity{
 		Name:               "Organization name",
 		CustomerOsId:       "C-123-ABC",
 		ReferenceId:        "100/200",
@@ -110,13 +110,15 @@ func TestQueryResolver_Organization(t *testing.T) {
 		Headquarters:       "San Francisco, CA",
 		EmployeeGrowthRate: "10%",
 		LogoUrl:            "https://www.openline.ai/logo.png",
-		OnboardingDetails: entity.OnboardingDetails{
-			Status:    entity.OnboardingStatusDone,
+		Relationship:       neo4jenum.Customer,
+		Stage:              neo4jenum.Lead,
+		OnboardingDetails: neo4jentity.OnboardingDetails{
+			Status:    "DONE",
 			Comments:  "some comments",
 			UpdatedAt: now,
 		},
 	}
-	organizationId := neo4jt.CreateOrg(ctx, driver, tenantName, inputOrganizationEntity)
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, inputOrganizationEntity)
 	neo4jt.AddDomainToOrg(ctx, driver, organizationId, "domain1.com")
 	neo4jt.AddDomainToOrg(ctx, driver, organizationId, "domain2.com")
 	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "otherOrganization"})
@@ -156,6 +158,8 @@ func TestQueryResolver_Organization(t *testing.T) {
 	require.Equal(t, inputOrganizationEntity.OnboardingDetails.UpdatedAt, organizationStruct.Organization.AccountDetails.Onboarding.UpdatedAt)
 	require.Equal(t, model.OnboardingStatusDone, organizationStruct.Organization.AccountDetails.Onboarding.Status)
 	require.Equal(t, inputOrganizationEntity.OnboardingDetails.Comments, *organizationStruct.Organization.AccountDetails.Onboarding.Comments)
+	require.Equal(t, model.OrganizationRelationshipCustomer, *organizationStruct.Organization.Relationship)
+	require.Equal(t, model.OrganizationStageLead, *organizationStruct.Organization.Stage)
 }
 
 func TestQueryResolver_OrganizationByCustomerOsId(t *testing.T) {
@@ -1268,6 +1272,8 @@ func TestMutationResolver_OrganizationCreate(t *testing.T) {
 		UpsertOrganization: func(context context.Context, request *organizationpb.UpsertOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 			require.Equal(t, tenantName, request.Tenant)
 			require.Equal(t, "slackChannelId", request.SlackChannelId)
+			require.Equal(t, "CUSTOMER", request.Relationship)
+			require.Equal(t, "LEAD", request.Stage)
 
 			calledCreateOrganization = true
 
@@ -1281,6 +1287,8 @@ func TestMutationResolver_OrganizationCreate(t *testing.T) {
 	rawResponse := callGraphQL(t, "organization/create_organization",
 		map[string]interface{}{"input": map[string]interface{}{
 			"slackChannelId": "slackChannelId",
+			"relationship":   "CUSTOMER",
+			"stage":          "LEAD",
 		},
 		})
 
@@ -1865,10 +1873,14 @@ func TestMutationResolver_OrganizationUpdate(t *testing.T) {
 			require.Equal(t, "slackChannelId", request.SlackChannelId)
 			require.Equal(t, true, request.IsCustomer)
 			require.Equal(t, true, request.IsPublic)
+			require.Equal(t, "PROSPECT", request.Relationship)
+			require.Equal(t, "TARGET", request.Stage)
 			require.ElementsMatch(t, []organizationpb.OrganizationMaskField{
 				organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_SLACK_CHANNEL_ID,
 				organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_IS_CUSTOMER,
 				organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_IS_PUBLIC,
+				organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_RELATIONSHIP,
+				organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_STAGE,
 			}, request.FieldsMask)
 			calledUpdateOrganization = true
 
@@ -1885,6 +1897,8 @@ func TestMutationResolver_OrganizationUpdate(t *testing.T) {
 			"slackChannelId": "slackChannelId",
 			"isCustomer":     true,
 			"public":         true,
+			"relationship":   "PROSPECT",
+			"stage":          "TARGET",
 		},
 		})
 

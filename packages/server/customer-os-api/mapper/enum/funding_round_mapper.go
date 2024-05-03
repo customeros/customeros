@@ -1,4 +1,4 @@
-package mapper
+package enummapper
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"

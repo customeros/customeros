@@ -66,6 +66,8 @@ type Organization implements MetadataInterface {
     valueProposition:       String
     website:                String
     yearFounded:            Int64
+    stage:                  OrganizationStage
+    relationship:           OrganizationRelationship
 
     hide:                   Boolean!
     contacts(pagination: Pagination, where: Filter, sort: [SortBy!]): ContactsPage! @goField(forceResolver: true)
@@ -203,6 +205,8 @@ input OrganizationInput {
     employees:     Int64
     slackChannelId:     String
     appSource:     String
+    stage:         OrganizationStage
+    relationship:  OrganizationRelationship
 
     """
     Deprecated
@@ -257,6 +261,8 @@ input OrganizationUpdateInput {
     headquarters:       String
     yearFounded:        Int64
     slackChannelId:     String
+    stage:              OrganizationStage
+    relationship:       OrganizationRelationship
 
     """
     Deprecated, use public instead
@@ -344,4 +350,20 @@ enum LastTouchpointType {
     LOG_ENTRY
     ISSUE_CREATED
     ISSUE_UPDATED
+}
+
+enum OrganizationRelationship {
+    CUSTOMER
+    PROSPECT
+    STRANGER
+    FORMER_CUSTOMER
+}
+
+enum OrganizationStage {
+    LEAD
+    TARGET
+    INTERESTED
+    ENGAGED
+    CONTRACTED
+    NURTURE
 }
