@@ -8,7 +8,7 @@ export interface RelationshipFilterState {
 }
 
 export const defaultState: RelationshipFilterState = {
-  value: [true, false],
+  value: [true],
   isActive: false,
 };
 

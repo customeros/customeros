@@ -72,3 +72,47 @@ export const renewalsHelperTextMap: Record<
   [ColumnViewType.RenewalsRenewalDate]: 'E.g. 1 month',
   [ColumnViewType.RenewalsRenewalLikelihood]: 'E.g. High',
 };
+
+type OrganizationsColumnType =
+  | ColumnViewType.OrganizationsAvatar
+  | ColumnViewType.OrganizationsForecastArr
+  | ColumnViewType.OrganizationsLastTouchpoint
+  | ColumnViewType.OrganizationsName
+  | ColumnViewType.OrganizationsOwner
+  | ColumnViewType.OrganizationsOnboardingStatus
+  | ColumnViewType.OrganizationsRelationship
+  | ColumnViewType.OrganizationsRenewalLikelihood
+  | ColumnViewType.OrganizationsRenewlDate
+  | ColumnViewType.OrganizationsWebsite;
+
+export const organizationsOptionsMap: Record<
+  OrganizationsColumnType | string,
+  string
+> = {
+  [ColumnViewType.OrganizationsAvatar]: 'Avatar',
+  [ColumnViewType.OrganizationsForecastArr]: 'ARR Forecast',
+  [ColumnViewType.OrganizationsLastTouchpoint]: 'Last touchpoint',
+  [ColumnViewType.OrganizationsName]: 'Name',
+  [ColumnViewType.OrganizationsOwner]: 'Owner',
+  [ColumnViewType.OrganizationsOnboardingStatus]: 'Onboarding status',
+  [ColumnViewType.OrganizationsRelationship]: 'Relationship',
+  [ColumnViewType.OrganizationsRenewalLikelihood]: 'Health',
+  [ColumnViewType.OrganizationsRenewlDate]: 'Next Renewal',
+  [ColumnViewType.OrganizationsWebsite]: 'Website',
+};
+
+export const organizationsHelperTextMap: Record<
+  OrganizationsColumnType | string,
+  string
+> = {
+  [ColumnViewType.OrganizationsAvatar]: 'E.g. Avatar',
+  [ColumnViewType.OrganizationsForecastArr]: 'E.g. $6,450',
+  [ColumnViewType.OrganizationsLastTouchpoint]: 'E.g. Issue updated',
+  [ColumnViewType.OrganizationsName]: 'E.g. Pile Contract',
+  [ColumnViewType.OrganizationsOwner]: 'E.g. Howard Hu',
+  [ColumnViewType.OrganizationsOnboardingStatus]: 'E.g. Onboarding',
+  [ColumnViewType.OrganizationsRelationship]: 'E.g. Customer',
+  [ColumnViewType.OrganizationsRenewalLikelihood]: 'E.g. High',
+  [ColumnViewType.OrganizationsRenewlDate]: 'E.g. 1 month',
+  [ColumnViewType.OrganizationsWebsite]: 'E.g. www.pile.com',
+};

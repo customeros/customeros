@@ -18,7 +18,6 @@ export default async function RenewalsPage({
 }) {
   const client = getServerGraphQLClient();
   const preset = searchParams?.preset ?? '1';
-
   try {
     const tableViewDefsRes = await TableViewDefsStore.serverSideBootstrap(
       client,

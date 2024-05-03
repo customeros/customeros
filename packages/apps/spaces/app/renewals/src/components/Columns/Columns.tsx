@@ -263,7 +263,6 @@ export const getColumnsConfig = (tableViewDef?: Array<TableViewDef>[0]) => {
     const columnTypeName = curr?.columnType;
 
     if (!columnTypeName) return acc;
-
     const column = columns[columnTypeName];
 
     if (!column) return acc;
