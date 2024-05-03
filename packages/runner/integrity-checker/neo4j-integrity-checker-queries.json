@@ -78,9 +78,14 @@
           "description": "Organization with missing boolean properties."
         },
         {
-          "name": "Derived next renewal date in past",
+          "name": "Organization derived next renewal date in past",
           "query": "MATCH (org:Organization) OPTIONAL MATCH (org)--(c:Contract) WITH org, collect(c) as contracts WHERE size(contracts) > 0 AND ALL(c IN contracts WHERE c.status <> 'OUT_OF_CONTRACT') AND date(org.derivedNextRenewalAt) < date() RETURN count(org)",
           "description": "Organization with derived next renewal date in the past. If organization has multiple contracts, all contracts should be in status different than 'OUT_OF_CONTRACT'."
+        },
+        {
+          "name": "Organization relationship mismatch",
+          "query": "MATCH (n:Organization) WHERE (n.isCustomer = true AND (n.relationship IS NULL OR n.relationship <> 'CUSTOMER')) OR (n.isCustomer = true AND n.relationship = 'CUSTOMER') RETURN count(n)",
+          "description": "IsCustomer boolean property should match with relationship property."
         }
       ]
     },
