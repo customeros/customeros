@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"reflect"
 
@@ -27,40 +27,38 @@ import (
 
 type OrganizationService interface {
 	CountOrganizations(ctx context.Context, tenant string) (int64, error)
-	GetOrganizationsForJobRoles(ctx context.Context, jobRoleIds []string) (*entity.OrganizationEntities, error)
-	GetOrganizationsForInvoices(ctx context.Context, invoiceIds []string) (*entity.OrganizationEntities, error)
-	GetOrganizationsForSlackChannels(ctx context.Context, slackChannelIds []string) (*entity.OrganizationEntities, error)
-	GetById(ctx context.Context, organizationId string) (*entity.OrganizationEntity, error)
-	GetByCustomerOsId(ctx context.Context, customerOsId string) (*entity.OrganizationEntity, error)
-	GetByReferenceId(ctx context.Context, referenceId string) (*entity.OrganizationEntity, error)
+	GetOrganizationsForJobRoles(ctx context.Context, jobRoleIds []string) (*neo4jentity.OrganizationEntities, error)
+	GetOrganizationsForInvoices(ctx context.Context, invoiceIds []string) (*neo4jentity.OrganizationEntities, error)
+	GetOrganizationsForSlackChannels(ctx context.Context, slackChannelIds []string) (*neo4jentity.OrganizationEntities, error)
+	GetById(ctx context.Context, organizationId string) (*neo4jentity.OrganizationEntity, error)
+	GetByCustomerOsId(ctx context.Context, customerOsId string) (*neo4jentity.OrganizationEntity, error)
+	GetByReferenceId(ctx context.Context, referenceId string) (*neo4jentity.OrganizationEntity, error)
 	ExistsById(ctx context.Context, organizationId string) (bool, error)
 	FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	GetOrganizationsForContact(ctx context.Context, contactId string, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	Archive(ctx context.Context, organizationId string) error
 	Merge(ctx context.Context, primaryOrganizationId, mergedOrganizationId string) error
-	GetOrganizationsForEmails(ctx context.Context, emailIds []string) (*entity.OrganizationEntities, error)
-	GetOrganizationsForPhoneNumbers(ctx context.Context, phoneNumberIds []string) (*entity.OrganizationEntities, error)
-	GetSubsidiariesForOrganizations(ctx context.Context, parentOrganizationIds []string) (*entity.OrganizationEntities, error)
-	GetSubsidiariesOfForOrganizations(ctx context.Context, organizationIds []string) (*entity.OrganizationEntities, error)
+	GetOrganizationsForEmails(ctx context.Context, emailIds []string) (*neo4jentity.OrganizationEntities, error)
+	GetOrganizationsForPhoneNumbers(ctx context.Context, phoneNumberIds []string) (*neo4jentity.OrganizationEntities, error)
+	GetSubsidiariesForOrganizations(ctx context.Context, parentOrganizationIds []string) (*neo4jentity.OrganizationEntities, error)
+	GetSubsidiariesOfForOrganizations(ctx context.Context, organizationIds []string) (*neo4jentity.OrganizationEntities, error)
 	AddSubsidiary(ctx context.Context, parentOrganizationId, subsidiaryOrganizationId, subsidiaryType string) error
 	RemoveSubsidiary(ctx context.Context, parentOrganizationId, subsidiaryOrganizationId string) error
-	ReplaceOwner(ctx context.Context, organizationId, userId string) (*entity.OrganizationEntity, error)
-	RemoveOwner(ctx context.Context, organizationId string) (*entity.OrganizationEntity, error)
+	ReplaceOwner(ctx context.Context, organizationId, userId string) (*neo4jentity.OrganizationEntity, error)
+	RemoveOwner(ctx context.Context, organizationId string) (*neo4jentity.OrganizationEntity, error)
 	UpdateLastTouchpoint(ctx context.Context, organizationId string)
 	UpdateLastTouchpointByContactId(ctx context.Context, contactId string)
 	UpdateLastTouchpointByEmailId(ctx context.Context, emailId string)
 	UpdateLastTouchpointByPhoneNumberId(ctx context.Context, phoneNumberId string)
 	UpdateLastTouchpointByEmail(ctx context.Context, email string)
 	UpdateLastTouchpointByPhoneNumber(ctx context.Context, phoneNumber string)
-	GetSuggestedMergeToForOrganizations(ctx context.Context, organizationIds []string) (*entity.OrganizationEntities, error)
+	GetSuggestedMergeToForOrganizations(ctx context.Context, organizationIds []string) (*neo4jentity.OrganizationEntities, error)
 	GetMinMaxRenewalForecastArr(ctx context.Context) (float64, float64, error)
-	GetOrganizations(ctx context.Context, organizationIds []string) (*entity.OrganizationEntities, error)
-
-	mapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity
+	GetOrganizations(ctx context.Context, organizationIds []string) (*neo4jentity.OrganizationEntities, error)
 }
 
 type OrganizationCreateData struct {
-	OrganizationEntity *entity.OrganizationEntity
+	OrganizationEntity *neo4jentity.OrganizationEntity
 	CustomFields       *entity.CustomFieldEntities
 	FieldSets          *entity.FieldSetEntities
 	TemplateId         *string
@@ -68,7 +66,7 @@ type OrganizationCreateData struct {
 }
 
 type OrganizationUpdateData struct {
-	Organization *entity.OrganizationEntity
+	Organization *neo4jentity.OrganizationEntity
 	Domains      []string
 }
 
@@ -109,11 +107,11 @@ func (s *organizationService) FindAll(ctx context.Context, page, limit int, filt
 		Limit: limit,
 		Page:  page,
 	}
-	cypherSort, err := buildSort(sortBy, reflect.TypeOf(entity.OrganizationEntity{}))
+	cypherSort, err := buildSort(sortBy, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
 	if err != nil {
 		return nil, err
 	}
-	cypherFilter, err := buildFilter(filter, reflect.TypeOf(entity.OrganizationEntity{}))
+	cypherFilter, err := buildFilter(filter, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
 	if err != nil {
 		return nil, err
 	}
@@ -130,9 +128,9 @@ func (s *organizationService) FindAll(ctx context.Context, page, limit int, filt
 	}
 	paginatedResult.SetTotalRows(dbNodesWithTotalCount.Count)
 
-	organizationEntities := make(entity.OrganizationEntities, 0, len(dbNodesWithTotalCount.Nodes))
+	organizationEntities := make(neo4jentity.OrganizationEntities, 0, len(dbNodesWithTotalCount.Nodes))
 	for _, v := range dbNodesWithTotalCount.Nodes {
-		organizationEntities = append(organizationEntities, *s.mapDbNodeToOrganizationEntity(*v))
+		organizationEntities = append(organizationEntities, *neo4jmapper.MapDbNodeToOrganizationEntity(v))
 	}
 	paginatedResult.SetRows(&organizationEntities)
 	return &paginatedResult, nil
@@ -143,11 +141,11 @@ func (s *organizationService) GetOrganizationsForContact(ctx context.Context, co
 		Limit: limit,
 		Page:  page,
 	}
-	cypherSort, err := buildSort(sortBy, reflect.TypeOf(entity.OrganizationEntity{}))
+	cypherSort, err := buildSort(sortBy, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
 	if err != nil {
 		return nil, err
 	}
-	cypherFilter, err := buildFilter(filter, reflect.TypeOf(entity.OrganizationEntity{}))
+	cypherFilter, err := buildFilter(filter, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
 	if err != nil {
 		return nil, err
 	}
@@ -165,15 +163,15 @@ func (s *organizationService) GetOrganizationsForContact(ctx context.Context, co
 	}
 	paginatedResult.SetTotalRows(dbNodesWithTotalCount.Count)
 
-	organizationEntities := make(entity.OrganizationEntities, 0, len(dbNodesWithTotalCount.Nodes))
+	organizationEntities := make(neo4jentity.OrganizationEntities, 0, len(dbNodesWithTotalCount.Nodes))
 	for _, v := range dbNodesWithTotalCount.Nodes {
-		organizationEntities = append(organizationEntities, *s.mapDbNodeToOrganizationEntity(*v))
+		organizationEntities = append(organizationEntities, *neo4jmapper.MapDbNodeToOrganizationEntity(v))
 	}
 	paginatedResult.SetRows(&organizationEntities)
 	return &paginatedResult, nil
 }
 
-func (s *organizationService) GetOrganizationsForJobRoles(ctx context.Context, jobRoleIds []string) (*entity.OrganizationEntities, error) {
+func (s *organizationService) GetOrganizationsForJobRoles(ctx context.Context, jobRoleIds []string) (*neo4jentity.OrganizationEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetOrganizationsForJobRoles")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -183,16 +181,16 @@ func (s *organizationService) GetOrganizationsForJobRoles(ctx context.Context, j
 	if err != nil {
 		return nil, err
 	}
-	organizationEntities := make(entity.OrganizationEntities, 0, len(organizations))
+	organizationEntities := make(neo4jentity.OrganizationEntities, 0, len(organizations))
 	for _, v := range organizations {
-		organizationEntity := s.mapDbNodeToOrganizationEntity(*v.Node)
+		organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(v.Node)
 		organizationEntity.DataloaderKey = v.LinkedNodeId
 		organizationEntities = append(organizationEntities, *organizationEntity)
 	}
 	return &organizationEntities, nil
 }
 
-func (s *organizationService) GetById(ctx context.Context, organizationId string) (*entity.OrganizationEntity, error) {
+func (s *organizationService) GetById(ctx context.Context, organizationId string) (*neo4jentity.OrganizationEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetById")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -203,10 +201,10 @@ func (s *organizationService) GetById(ctx context.Context, organizationId string
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
-	return s.mapDbNodeToOrganizationEntity(*dbNode), nil
+	return neo4jmapper.MapDbNodeToOrganizationEntity(dbNode), nil
 }
 
-func (s *organizationService) GetByCustomerOsId(ctx context.Context, customerOsId string) (*entity.OrganizationEntity, error) {
+func (s *organizationService) GetByCustomerOsId(ctx context.Context, customerOsId string) (*neo4jentity.OrganizationEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetByCustomerOsId")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -220,10 +218,10 @@ func (s *organizationService) GetByCustomerOsId(ctx context.Context, customerOsI
 	if dbNode == nil {
 		return nil, nil
 	}
-	return s.mapDbNodeToOrganizationEntity(*dbNode), nil
+	return neo4jmapper.MapDbNodeToOrganizationEntity(dbNode), nil
 }
 
-func (s *organizationService) GetByReferenceId(ctx context.Context, referenceId string) (*entity.OrganizationEntity, error) {
+func (s *organizationService) GetByReferenceId(ctx context.Context, referenceId string) (*neo4jentity.OrganizationEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetByReferenceId")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -237,7 +235,7 @@ func (s *organizationService) GetByReferenceId(ctx context.Context, referenceId 
 	if dbNode == nil {
 		return nil, nil
 	}
-	return s.mapDbNodeToOrganizationEntity(*dbNode), nil
+	return neo4jmapper.MapDbNodeToOrganizationEntity(dbNode), nil
 }
 
 func (s *organizationService) Archive(ctx context.Context, organizationId string) error {
@@ -330,35 +328,35 @@ func (s *organizationService) Merge(ctx context.Context, primaryOrganizationId, 
 	return err
 }
 
-func (s *organizationService) GetOrganizationsForEmails(ctx context.Context, emailIds []string) (*entity.OrganizationEntities, error) {
+func (s *organizationService) GetOrganizationsForEmails(ctx context.Context, emailIds []string) (*neo4jentity.OrganizationEntities, error) {
 	organizations, err := s.repositories.OrganizationRepository.GetAllForEmails(ctx, common.GetTenantFromContext(ctx), emailIds)
 	if err != nil {
 		return nil, err
 	}
-	organizationEntities := make(entity.OrganizationEntities, 0, len(organizations))
+	organizationEntities := make(neo4jentity.OrganizationEntities, 0, len(organizations))
 	for _, v := range organizations {
-		organizationEntity := s.mapDbNodeToOrganizationEntity(*v.Node)
+		organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(v.Node)
 		organizationEntity.DataloaderKey = v.LinkedNodeId
 		organizationEntities = append(organizationEntities, *organizationEntity)
 	}
 	return &organizationEntities, nil
 }
 
-func (s *organizationService) GetOrganizationsForPhoneNumbers(ctx context.Context, phoneNumberIds []string) (*entity.OrganizationEntities, error) {
+func (s *organizationService) GetOrganizationsForPhoneNumbers(ctx context.Context, phoneNumberIds []string) (*neo4jentity.OrganizationEntities, error) {
 	organizations, err := s.repositories.OrganizationRepository.GetAllForPhoneNumbers(ctx, common.GetTenantFromContext(ctx), phoneNumberIds)
 	if err != nil {
 		return nil, err
 	}
-	organizationEntities := make(entity.OrganizationEntities, 0, len(organizations))
+	organizationEntities := make(neo4jentity.OrganizationEntities, 0, len(organizations))
 	for _, v := range organizations {
-		organizationEntity := s.mapDbNodeToOrganizationEntity(*v.Node)
+		organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(v.Node)
 		organizationEntity.DataloaderKey = v.LinkedNodeId
 		organizationEntities = append(organizationEntities, *organizationEntity)
 	}
 	return &organizationEntities, nil
 }
 
-func (s *organizationService) GetSubsidiariesForOrganizations(ctx context.Context, parentOrganizationIds []string) (*entity.OrganizationEntities, error) {
+func (s *organizationService) GetSubsidiariesForOrganizations(ctx context.Context, parentOrganizationIds []string) (*neo4jentity.OrganizationEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetSubsidiariesForOrganizations")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -370,9 +368,9 @@ func (s *organizationService) GetSubsidiariesForOrganizations(ctx context.Contex
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
-	organizationEntities := make(entity.OrganizationEntities, 0, len(dbEntries))
+	organizationEntities := make(neo4jentity.OrganizationEntities, 0, len(dbEntries))
 	for _, v := range dbEntries {
-		organizationEntity := s.mapDbNodeToOrganizationEntity(*v.Node)
+		organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(v.Node)
 
 		//check if the hide bool is false and only then append the sub org to the parent org
 		if !organizationEntity.Hide {
@@ -500,7 +498,7 @@ func (s *organizationService) RemoveSubsidiary(ctx context.Context, parentOrgani
 	return err
 }
 
-func (s *organizationService) GetSubsidiariesOfForOrganizations(ctx context.Context, organizationIds []string) (*entity.OrganizationEntities, error) {
+func (s *organizationService) GetSubsidiariesOfForOrganizations(ctx context.Context, organizationIds []string) (*neo4jentity.OrganizationEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetSubsidiariesOfForOrganizations")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -512,9 +510,9 @@ func (s *organizationService) GetSubsidiariesOfForOrganizations(ctx context.Cont
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
-	organizationEntities := make(entity.OrganizationEntities, 0, len(dbEntries))
+	organizationEntities := make(neo4jentity.OrganizationEntities, 0, len(dbEntries))
 	for _, v := range dbEntries {
-		organizationEntity := s.mapDbNodeToOrganizationEntity(*v.Node)
+		organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(v.Node)
 		s.addLinkedOrganizationRelationshipToOrganizationEntity(*v.Relationship, organizationEntity)
 		organizationEntity.DataloaderKey = v.LinkedNodeId
 		organizationEntities = append(organizationEntities, *organizationEntity)
@@ -522,7 +520,7 @@ func (s *organizationService) GetSubsidiariesOfForOrganizations(ctx context.Cont
 	return &organizationEntities, nil
 }
 
-func (s *organizationService) GetSuggestedMergeToForOrganizations(ctx context.Context, organizationIds []string) (*entity.OrganizationEntities, error) {
+func (s *organizationService) GetSuggestedMergeToForOrganizations(ctx context.Context, organizationIds []string) (*neo4jentity.OrganizationEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetSuggestedMergeToForOrganizations")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -534,11 +532,11 @@ func (s *organizationService) GetSuggestedMergeToForOrganizations(ctx context.Co
 		s.log.Errorf("Error getting suggested merge primary organizations: {%v}", err.Error())
 		return nil, err
 	}
-	organizationEntities := make(entity.OrganizationEntities, 0, len(dbEntries))
+	organizationEntities := make(neo4jentity.OrganizationEntities, 0, len(dbEntries))
 	for _, v := range dbEntries {
-		organizationEntity := s.mapDbNodeToOrganizationEntity(*v.Node)
+		organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(v.Node)
 		s.addSuggestedMergeRelationshipToOrganizationEntity(*v.Relationship, organizationEntity)
-		organizationEntity.DataloaderKey = v.LinkedNodeId
+		organizationEntity.DataLoaderKey.DataloaderKey = v.LinkedNodeId
 		organizationEntities = append(organizationEntities, *organizationEntity)
 	}
 	return &organizationEntities, nil
@@ -558,7 +556,7 @@ func (s *organizationService) GetMinMaxRenewalForecastArr(ctx context.Context) (
 	return minArr, maxArr, nil
 }
 
-func (s *organizationService) ReplaceOwner(ctx context.Context, organizationID, userID string) (*entity.OrganizationEntity, error) {
+func (s *organizationService) ReplaceOwner(ctx context.Context, organizationID, userID string) (*neo4jentity.OrganizationEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.ReplaceOwner")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -586,10 +584,10 @@ func (s *organizationService) ReplaceOwner(ctx context.Context, organizationID, 
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
-	return s.mapDbNodeToOrganizationEntity(*dbNode), nil
+	return neo4jmapper.MapDbNodeToOrganizationEntity(dbNode), nil
 }
 
-func (s *organizationService) RemoveOwner(ctx context.Context, organizationID string) (*entity.OrganizationEntity, error) {
+func (s *organizationService) RemoveOwner(ctx context.Context, organizationID string) (*neo4jentity.OrganizationEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.RemoveOwner")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -600,7 +598,7 @@ func (s *organizationService) RemoveOwner(ctx context.Context, organizationID st
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
-	return s.mapDbNodeToOrganizationEntity(*dbNode), nil
+	return neo4jmapper.MapDbNodeToOrganizationEntity(dbNode), nil
 }
 
 func (s *organizationService) UpdateLastTouchpoint(ctx context.Context, organizationID string) {
@@ -825,7 +823,7 @@ func (s *organizationService) updateLastTouchpoint(ctx context.Context, organiza
 	}
 }
 
-func (s *organizationService) GetOrganizations(parentCtx context.Context, organizationIds []string) (*entity.OrganizationEntities, error) {
+func (s *organizationService) GetOrganizations(parentCtx context.Context, organizationIds []string) (*neo4jentity.OrganizationEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(parentCtx, "OrganizationService.GetOrganizations")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -835,82 +833,27 @@ func (s *organizationService) GetOrganizations(parentCtx context.Context, organi
 	if err != nil {
 		return nil, err
 	}
-	organizationEntities := make(entity.OrganizationEntities, 0, len(organizationDbNodes))
+	organizationEntities := make(neo4jentity.OrganizationEntities, 0, len(organizationDbNodes))
 	for _, dbNode := range organizationDbNodes {
-		organizationEntity := s.mapDbNodeToOrganizationEntity(*dbNode)
+		organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(dbNode)
 		organizationEntities = append(organizationEntities, *organizationEntity)
 	}
 	return &organizationEntities, nil
 }
 
-func (s *organizationService) mapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity {
-	props := utils.GetPropsFromNode(node)
-
-	output := entity.OrganizationEntity{
-		ID:                 utils.GetStringPropOrEmpty(props, "id"),
-		CustomerOsId:       utils.GetStringPropOrEmpty(props, "customerOsId"),
-		ReferenceId:        utils.GetStringPropOrEmpty(props, "referenceId"),
-		Name:               utils.GetStringPropOrEmpty(props, "name"),
-		Description:        utils.GetStringPropOrEmpty(props, "description"),
-		Website:            utils.GetStringPropOrEmpty(props, "website"),
-		Industry:           utils.GetStringPropOrEmpty(props, "industry"),
-		IndustryGroup:      utils.GetStringPropOrEmpty(props, "industryGroup"),
-		SubIndustry:        utils.GetStringPropOrEmpty(props, "subIndustry"),
-		TargetAudience:     utils.GetStringPropOrEmpty(props, "targetAudience"),
-		ValueProposition:   utils.GetStringPropOrEmpty(props, "valueProposition"),
-		LastFundingRound:   utils.GetStringPropOrEmpty(props, "lastFundingRound"),
-		LastFundingAmount:  utils.GetStringPropOrEmpty(props, "lastFundingAmount"),
-		Note:               utils.GetStringPropOrEmpty(props, "note"),
-		IsPublic:           utils.GetBoolPropOrFalse(props, "isPublic"),
-		IsCustomer:         utils.GetBoolPropOrFalse(props, "isCustomer"),
-		Hide:               utils.GetBoolPropOrFalse(props, "hide"),
-		Employees:          utils.GetInt64PropOrZero(props, "employees"),
-		Market:             utils.GetStringPropOrEmpty(props, "market"),
-		Headquarters:       utils.GetStringPropOrEmpty(props, "headquarters"),
-		YearFounded:        utils.GetInt64PropOrNil(props, "yearFounded"),
-		LogoUrl:            utils.GetStringPropOrEmpty(props, "logoUrl"),
-		EmployeeGrowthRate: utils.GetStringPropOrEmpty(props, "employeeGrowthRate"),
-		SlackChannelId:     utils.GetStringPropOrEmpty(props, "slackChannelId"),
-		CreatedAt:          utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:          utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Source:             neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:      neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		AppSource:          utils.GetStringPropOrEmpty(props, "appSource"),
-		LastTouchpointId:   utils.GetStringPropOrNil(props, "lastTouchpointId"),
-		LastTouchpointAt:   utils.GetTimePropOrNil(props, "lastTouchpointAt"),
-		LastTouchpointType: utils.GetStringPropOrNil(props, "lastTouchpointType"),
-		Relationship:       neo4jenum.DecodeOrganizationRelationship(utils.GetStringPropOrEmpty(props, "relationship")),
-		Stage:              neo4jenum.DecodeOrganizationStage(utils.GetStringPropOrEmpty(props, "stage")),
-		RenewalSummary: entity.RenewalSummary{
-			ArrForecast:            utils.GetFloatPropOrNil(props, "renewalForecastArr"),
-			MaxArrForecast:         utils.GetFloatPropOrNil(props, "renewalForecastMaxArr"),
-			NextRenewalAt:          utils.GetTimePropOrNil(props, "derivedNextRenewalAt"),
-			RenewalLikelihood:      utils.GetStringPropOrEmpty(props, "derivedRenewalLikelihood"),
-			RenewalLikelihoodOrder: utils.GetInt64PropOrNil(props, "derivedRenewalLikelihoodOrder"),
-		},
-		OnboardingDetails: entity.OnboardingDetails{
-			Status:       entity.GetOnboardingStatus(utils.GetStringPropOrEmpty(props, "onboardingStatus")),
-			SortingOrder: utils.GetInt64PropOrNil(props, "onboardingStatusOrder"),
-			UpdatedAt:    utils.GetTimePropOrNil(props, "onboardingUpdatedAt"),
-			Comments:     utils.GetStringPropOrEmpty(props, "onboardingComments"),
-		},
-	}
-	return &output
-}
-
-func (s *organizationService) addLinkedOrganizationRelationshipToOrganizationEntity(relationship dbtype.Relationship, organizationEntity *entity.OrganizationEntity) {
+func (s *organizationService) addLinkedOrganizationRelationshipToOrganizationEntity(relationship dbtype.Relationship, organizationEntity *neo4jentity.OrganizationEntity) {
 	props := utils.GetPropsFromRelationship(relationship)
 	organizationEntity.LinkedOrganizationType = utils.GetStringPropOrNil(props, "type")
 }
 
-func (s *organizationService) addSuggestedMergeRelationshipToOrganizationEntity(relationship dbtype.Relationship, organizationEntity *entity.OrganizationEntity) {
+func (s *organizationService) addSuggestedMergeRelationshipToOrganizationEntity(relationship dbtype.Relationship, organizationEntity *neo4jentity.OrganizationEntity) {
 	props := utils.GetPropsFromRelationship(relationship)
 	organizationEntity.SuggestedMerge.SuggestedBy = utils.GetStringPropOrNil(props, "suggestedBy")
 	organizationEntity.SuggestedMerge.SuggestedAt = utils.GetTimePropOrNil(props, "suggestedAt")
 	organizationEntity.SuggestedMerge.Confidence = utils.GetFloatPropOrNil(props, "confidence")
 }
 
-func (s *organizationService) GetOrganizationsForInvoices(ctx context.Context, invoiceIds []string) (*entity.OrganizationEntities, error) {
+func (s *organizationService) GetOrganizationsForInvoices(ctx context.Context, invoiceIds []string) (*neo4jentity.OrganizationEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetOrganizationsForInvoices")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -920,16 +863,16 @@ func (s *organizationService) GetOrganizationsForInvoices(ctx context.Context, i
 	if err != nil {
 		return nil, err
 	}
-	organizationEntities := make(entity.OrganizationEntities, 0, len(organizations))
+	organizationEntities := make(neo4jentity.OrganizationEntities, 0, len(organizations))
 	for _, v := range organizations {
-		organizationEntity := s.mapDbNodeToOrganizationEntity(*v.Node)
+		organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(v.Node)
 		organizationEntity.DataloaderKey = v.LinkedNodeId
 		organizationEntities = append(organizationEntities, *organizationEntity)
 	}
 	return &organizationEntities, nil
 }
 
-func (s *organizationService) GetOrganizationsForSlackChannels(ctx context.Context, slackChannelIds []string) (*entity.OrganizationEntities, error) {
+func (s *organizationService) GetOrganizationsForSlackChannels(ctx context.Context, slackChannelIds []string) (*neo4jentity.OrganizationEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetOrganizationsForSlackChannels")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -939,9 +882,9 @@ func (s *organizationService) GetOrganizationsForSlackChannels(ctx context.Conte
 	if err != nil {
 		return nil, err
 	}
-	organizationEntities := make(entity.OrganizationEntities, 0, len(organizations))
+	organizationEntities := make(neo4jentity.OrganizationEntities, 0, len(organizations))
 	for _, v := range organizations {
-		organizationEntity := s.mapDbNodeToOrganizationEntity(*v.Node)
+		organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(v.Node)
 		organizationEntity.DataloaderKey = v.LinkedNodeId
 		organizationEntities = append(organizationEntities, *organizationEntity)
 	}
