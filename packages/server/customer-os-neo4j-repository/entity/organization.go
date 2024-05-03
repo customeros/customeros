@@ -6,6 +6,7 @@ import (
 )
 
 type OrganizationEntity struct {
+	DataLoaderKey
 	ID                 string
 	CustomerOsId       string `neo4jDb:"property:customerOsId;lookupName:CUSTOMER_OS_ID;supportCaseSensitive:false"`
 	Name               string `neo4jDb:"property:name;lookupName:NAME;supportCaseSensitive:true"`
@@ -48,9 +49,10 @@ type OrganizationEntity struct {
 		SuggestedBy *string
 		Confidence  *float64
 	}
-	RenewalSummary    RenewalSummary
-	OnboardingDetails OnboardingDetails
-	WebScrapeDetails  WebScrapeDetails
+	RenewalSummary                     RenewalSummary
+	OnboardingDetails                  OnboardingDetails
+	WebScrapeDetails                   WebScrapeDetails
+	InteractionEventParticipantDetails InteractionEventParticipantDetails
 }
 
 type RenewalSummary struct {
