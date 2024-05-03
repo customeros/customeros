@@ -68,6 +68,8 @@ func (s *organizationService) UpsertOrganization(ctx context.Context, request *o
 		YearFounded:        request.YearFounded,
 		EmployeeGrowthRate: request.EmployeeGrowthRate,
 		SlackChannelId:     request.SlackChannelId,
+		Relationship:       request.Relationship,
+		Stage:              request.Stage,
 	}
 	sourceFields := commonmodel.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
@@ -390,6 +392,8 @@ func (s *organizationService) UpdateOrganization(ctx context.Context, request *o
 		Headquarters:       request.Headquarters,
 		YearFounded:        request.YearFounded,
 		EmployeeGrowthRate: request.EmployeeGrowthRate,
+		Relationship:       request.Relationship,
+		Stage:              request.Stage,
 	}
 	sourceFields := commonmodel.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
@@ -502,6 +506,10 @@ func extractOrganizationMaskFields(requestMaskFields []organizationpb.Organizati
 			fieldsMask = append(fieldsMask, model.FieldMaskEmployeeGrowthRate)
 		case organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_SLACK_CHANNEL_ID:
 			fieldsMask = append(fieldsMask, model.FieldMaskSlackChannelId)
+		case organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_STAGE:
+			fieldsMask = append(fieldsMask, model.FieldMaskStage)
+		case organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_RELATIONSHIP:
+			fieldsMask = append(fieldsMask, model.FieldMaskRelationship)
 		}
 	}
 	return utils.RemoveDuplicates(fieldsMask)

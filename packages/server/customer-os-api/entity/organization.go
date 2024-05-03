@@ -3,10 +3,12 @@ package entity
 import (
 	"fmt"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"time"
 )
 
+// Deprecated, use neo4j module instead
 type OrganizationEntity struct {
 	ID                 string
 	CustomerOsId       string `neo4jDb:"property:customerOsId;lookupName:CUSTOMER_OS_ID;supportCaseSensitive:false"`
@@ -40,6 +42,8 @@ type OrganizationEntity struct {
 	Source             neo4jentity.DataSource
 	SourceOfTruth      neo4jentity.DataSource
 	AppSource          string
+	Stage              neo4jenum.OrganizationStage
+	Relationship       neo4jenum.OrganizationRelationship
 
 	LinkedOrganizationType *string
 

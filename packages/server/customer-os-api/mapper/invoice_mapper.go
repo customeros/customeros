@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	mapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
@@ -37,7 +38,7 @@ func MapEntityToInvoice(entity *neo4jentity.InvoiceEntity) *model.Invoice {
 		Currency:           entity.Currency.String(),
 		RepositoryFileID:   entity.RepositoryFileId,
 		InvoiceURL:         fmt.Sprintf(constants.UrlFileStoreFileDownloadUrlTemplate, entity.RepositoryFileId),
-		Status:             utils.ToPtr(MapInvoiceStatusToModel(entity.Status)),
+		Status:             utils.ToPtr(mapper.MapInvoiceStatusToModel(entity.Status)),
 		Note:               utils.StringPtrNillable(entity.Note),
 		PaymentLink:        utils.StringPtrNillable(entity.PaymentDetails.PaymentLink),
 		Customer: &model.InvoiceCustomer{

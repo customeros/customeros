@@ -417,7 +417,9 @@ func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, te
 							org.onboardingStatus=$onboardingStatus,
 							org.onboardingStatusOrder=$onboardingStatusOrder,
 							org.onboardingUpdatedAt=$onboardingUpdatedAt,
-							org.onboardingComments=$onboardingComments
+							org.onboardingComments=$onboardingComments,
+							org.relationship=$relationship,
+							org.stage=$stage
 							`, tenant)
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"id":                            orgId,
@@ -454,6 +456,8 @@ func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, te
 		"onboardingUpdatedAt":           utils.TimePtrAsAny(organization.OnboardingDetails.UpdatedAt),
 		"onboardingComments":            organization.OnboardingDetails.Comments,
 		"now":                           utils.Now(),
+		"relationship":                  organization.Relationship.String(),
+		"stage":                         organization.Stage.String(),
 	})
 	return orgId
 }

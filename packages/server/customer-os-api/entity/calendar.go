@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// Deprecated, use neo4j module instead
 type CalendarEntity struct {
 	Id            string
 	CalType       string

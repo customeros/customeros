@@ -7,6 +7,7 @@ package resolver
 import (
 	"context"
 	"errors"
+	enummapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper/enum"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -105,6 +106,12 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 			AppSource: utils.IfNotNilString(input.AppSource),
 		},
 		Note: utils.IfNotNilString(input.Note),
+	}
+	if input.Relationship != nil {
+		upsertOrganizationRequest.Relationship = enummapper.MapRelationshipFromModel(*input.Relationship).String()
+	}
+	if input.Stage != nil {
+		upsertOrganizationRequest.Stage = enummapper.MapStageFromModel(*input.Stage).String()
 	}
 	if input.Logo != nil {
 		upsertOrganizationRequest.LogoUrl = *input.Logo
@@ -309,6 +316,12 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 	if input.IsCustomer != nil {
 		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_IS_CUSTOMER)
 	}
+	if input.Relationship != nil {
+		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_RELATIONSHIP)
+	}
+	if input.Stage != nil {
+		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_STAGE)
+	}
 	if len(fieldsMask) == 0 {
 		span.LogFields(log.String("result", "No fields to update"))
 		organizationEntity, err := r.Services.OrganizationService.GetById(ctx, input.ID)
@@ -341,7 +354,7 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 		TargetAudience:     utils.IfNotNilString(input.TargetAudience),
 		ValueProposition:   utils.IfNotNilString(input.ValueProposition),
 		LastFundingAmount:  utils.IfNotNilString(input.LastFundingAmount),
-		LastFundingRound:   mapper.MapFundingRoundFromModel(input.LastFundingRound),
+		LastFundingRound:   enummapper.MapFundingRoundFromModel(input.LastFundingRound),
 		Note:               utils.IfNotNilString(input.Note),
 		YearFounded:        input.YearFounded,
 		LogoUrl:            utils.IfNotNilString(input.LogoURL),
@@ -351,6 +364,12 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 		SourceFields: &commonpb.SourceFields{
 			Source: string(neo4jentity.DataSourceOpenline),
 		},
+	}
+	if input.Relationship != nil {
+		upsertOrganizationRequest.Relationship = enummapper.MapRelationshipFromModel(*input.Relationship).String()
+	}
+	if input.Stage != nil {
+		upsertOrganizationRequest.Stage = enummapper.MapStageFromModel(*input.Stage).String()
 	}
 	if input.Logo != nil {
 		upsertOrganizationRequest.LogoUrl = *input.Logo

@@ -2,6 +2,7 @@ package mapper
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	mapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 )
@@ -46,7 +47,7 @@ func MapEntityToContract(entity *neo4jentity.ContractEntity) *model.Contract {
 		ContractName:            entity.Name,
 		ContractSigned:          entity.SignedAt,
 		ContractURL:             utils.StringPtrNillable(entity.ContractUrl),
-		Currency:                utils.ToPtr(MapCurrencyToModel(entity.Currency)),
+		Currency:                utils.ToPtr(mapper.MapCurrencyToModel(entity.Currency)),
 		BillingEnabled:          entity.InvoicingEnabled,
 		ServiceStarted:          entity.ServiceStartedAt,
 		ContractStatus:          MapContractStatusToModel(entity.ContractStatus),

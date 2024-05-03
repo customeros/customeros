@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// Deprecated, use neo4j module instead
 type EmailEntity struct {
 	Id            string
 	Email         string `neo4jDb:"property:email;lookupName:EMAIL;supportCaseSensitive:true"`

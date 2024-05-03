@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// Deprecated, use neo4j module instead
 type AnalysisEntity struct {
 	Id        string
 	CreatedAt *time.Time

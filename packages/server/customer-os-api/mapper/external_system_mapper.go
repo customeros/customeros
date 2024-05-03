@@ -2,6 +2,7 @@ package mapper
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	mapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper/enum"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 )
 
@@ -19,7 +20,7 @@ func MapExternalSystemEntityToExternalSystemInstance(e *neo4jentity.ExternalSyst
 		return nil
 	}
 	externalSystemInstance := model.ExternalSystemInstance{
-		Type: MapExternalSystemTypeToModel(e.ExternalSystemId),
+		Type: mapper.MapExternalSystemTypeToModel(e.ExternalSystemId),
 	}
 	if externalSystemInstance.Type == model.ExternalSystemTypeStripe {
 		externalSystemInstance.StripeDetails = &model.ExternalSystemStripeDetails{

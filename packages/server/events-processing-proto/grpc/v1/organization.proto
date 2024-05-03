@@ -14,7 +14,7 @@ enum OrganizationMaskField {
   ORGANIZATION_PROPERTY_VALUE_PROPOSITION = 3;
   ORGANIZATION_PROPERTY_TARGET_AUDIENCE = 4;
   ORGANIZATION_PROPERTY_REFERENCE_ID = 5;
-  ORGANIZATION_PROPERTY_IS_CUSTOMER = 6;
+  ORGANIZATION_PROPERTY_IS_CUSTOMER = 6 [deprecated = true];
   ORGANIZATION_PROPERTY_IS_PUBLIC = 7;
   ORGANIZATION_PROPERTY_HIDE = 8;
   ORGANIZATION_PROPERTY_DESCRIPTION = 9;
@@ -32,6 +32,8 @@ enum OrganizationMaskField {
   ORGANIZATION_PROPERTY_HEADQUARTERS = 21;
   ORGANIZATION_PROPERTY_EMPLOYEE_GROWTH_RATE = 22;
   ORGANIZATION_PROPERTY_SLACK_CHANNEL_ID = 23;
+  ORGANIZATION_PROPERTY_RELATIONSHIP = 24;
+  ORGANIZATION_PROPERTY_STAGE = 25;
 }
 
 enum BillingProfileFieldMask {
@@ -64,7 +66,7 @@ message UpsertOrganizationGrpcRequest {
   ExternalSystemFields externalSystemFields = 26;
   string loggedInUserId = 27;
   string referenceId = 28;
-  bool isCustomer = 29;
+  bool isCustomer = 29 [deprecated = true];
   bool webScrapeMetadata = 30;
   repeated OrganizationMaskField fieldsMask = 31;
   string logoUrl = 32;
@@ -72,6 +74,8 @@ message UpsertOrganizationGrpcRequest {
   string employeeGrowthRate = 34;
   optional int64 yearFounded = 35;
   string slackChannelId = 36;
+  string relationship = 37;
+  string stage = 38;
 }
 
 message UpdateOrganizationGrpcRequest {
@@ -97,6 +101,8 @@ message UpdateOrganizationGrpcRequest {
   string website = 20;
   int64 employees = 21;
   string slackChannelId = 36;
+  string relationship = 37;
+  string stage = 38;
 }
 
 message OrganizationIdGrpcRequest {

@@ -2,6 +2,7 @@ package mapper
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	mapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 )
@@ -22,7 +23,7 @@ func MapEntityToBankAccount(entity *neo4jentity.BankAccountEntity) *model.BankAc
 		BankName:            utils.StringPtr(entity.BankName),
 		BankTransferEnabled: entity.BankTransferEnabled,
 		AllowInternational:  entity.AllowInternational,
-		Currency:            utils.ToPtr(MapCurrencyToModel(entity.Currency)),
+		Currency:            utils.ToPtr(mapper.MapCurrencyToModel(entity.Currency)),
 		Iban:                utils.StringPtr(entity.Iban),
 		Bic:                 utils.StringPtr(entity.Bic),
 		SortCode:            utils.StringPtr(entity.SortCode),

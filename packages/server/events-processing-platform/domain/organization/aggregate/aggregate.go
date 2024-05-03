@@ -141,6 +141,8 @@ func (a *OrganizationAggregate) onOrganizationCreate(event eventstore.Event) err
 	a.Organization.Note = eventData.Note
 	a.Organization.IsPublic = eventData.IsPublic
 	a.Organization.IsCustomer = eventData.IsCustomer
+	a.Organization.Relationship = eventData.Relationship
+	a.Organization.Stage = eventData.Stage
 	a.Organization.Employees = eventData.Employees
 	a.Organization.Market = eventData.Market
 	a.Organization.Source = cmnmod.Source{
@@ -222,6 +224,12 @@ func (a *OrganizationAggregate) onOrganizationUpdate(event eventstore.Event) err
 		if !a.Organization.IsCustomer && eventData.UpdateIsCustomer() {
 			a.Organization.IsCustomer = eventData.IsCustomer
 		}
+		if a.Organization.Relationship == "" && eventData.UpdateRelationship() {
+			a.Organization.Relationship = eventData.Relationship
+		}
+		if a.Organization.Stage == "" && eventData.UpdateStage() {
+			a.Organization.Stage = eventData.Stage
+		}
 		if a.Organization.YearFounded == nil && eventData.UpdateYearFounded() {
 			a.Organization.YearFounded = eventData.YearFounded
 		}
@@ -243,6 +251,12 @@ func (a *OrganizationAggregate) onOrganizationUpdate(event eventstore.Event) err
 		}
 		if eventData.UpdateIsCustomer() {
 			a.Organization.IsCustomer = eventData.IsCustomer
+		}
+		if eventData.UpdateRelationship() {
+			a.Organization.Relationship = eventData.Relationship
+		}
+		if eventData.UpdateStage() {
+			a.Organization.Stage = eventData.Stage
 		}
 		if eventData.UpdateHide() {
 			a.Organization.Hide = eventData.Hide

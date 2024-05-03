@@ -2,6 +2,7 @@ package mapper
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	mapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 )
@@ -14,6 +15,6 @@ func MapEntityToTenantSettings(entity *neo4jentity.TenantSettingsEntity) *model.
 		BillingEnabled:       entity.InvoicingEnabled,
 		LogoURL:              entity.LogoRepositoryFileId,
 		LogoRepositoryFileID: utils.StringPtrNillable(entity.LogoRepositoryFileId),
-		BaseCurrency:         utils.ToPtr(MapCurrencyToModel(entity.BaseCurrency)),
+		BaseCurrency:         utils.ToPtr(mapper.MapCurrencyToModel(entity.BaseCurrency)),
 	}
 }

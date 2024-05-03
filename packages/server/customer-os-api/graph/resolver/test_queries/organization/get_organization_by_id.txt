@@ -28,6 +28,8 @@ query GetOrganization($organizationId: ID!){
     yearFounded
     employeeGrowthRate
     headquarters
+    relationship
+    stage
     accountDetails {
       onboarding {
         updatedAt

@@ -16,81 +16,87 @@ import (
 )
 
 type OrganizationCreateFields struct {
-	SourceFields       model.Source `json:"sourceFields"`
-	CreatedAt          time.Time    `json:"createdAt"`
-	UpdatedAt          time.Time    `json:"updatedAt"`
-	Name               string       `json:"name"`
-	Hide               bool         `json:"hide"`
-	Description        string       `json:"description"`
-	Website            string       `json:"website"`
-	Industry           string       `json:"industry"`
-	SubIndustry        string       `json:"subIndustry"`
-	IndustryGroup      string       `json:"industryGroup"`
-	TargetAudience     string       `json:"targetAudience"`
-	ValueProposition   string       `json:"valueProposition"`
-	IsPublic           bool         `json:"isPublic"`
-	IsCustomer         bool         `json:"isCustomer"`
-	Employees          int64        `json:"employees"`
-	Market             string       `json:"market"`
-	LastFundingRound   string       `json:"lastFundingRound"`
-	LastFundingAmount  string       `json:"lastFundingAmount"`
-	ReferenceId        string       `json:"referenceId"`
-	Note               string       `json:"note"`
-	LogoUrl            string       `json:"logoUrl"`
-	Headquarters       string       `json:"headquarters"`
-	YearFounded        *int64       `json:"yearFounded"`
-	EmployeeGrowthRate string       `json:"employeeGrowthRate"`
-	SlackChannelId     string       `json:"slackChannelId"`
+	SourceFields       model.Source                       `json:"sourceFields"`
+	CreatedAt          time.Time                          `json:"createdAt"`
+	UpdatedAt          time.Time                          `json:"updatedAt"`
+	Name               string                             `json:"name"`
+	Hide               bool                               `json:"hide"`
+	Description        string                             `json:"description"`
+	Website            string                             `json:"website"`
+	Industry           string                             `json:"industry"`
+	SubIndustry        string                             `json:"subIndustry"`
+	IndustryGroup      string                             `json:"industryGroup"`
+	TargetAudience     string                             `json:"targetAudience"`
+	ValueProposition   string                             `json:"valueProposition"`
+	IsPublic           bool                               `json:"isPublic"`
+	IsCustomer         bool                               `json:"isCustomer"`
+	Employees          int64                              `json:"employees"`
+	Market             string                             `json:"market"`
+	LastFundingRound   string                             `json:"lastFundingRound"`
+	LastFundingAmount  string                             `json:"lastFundingAmount"`
+	ReferenceId        string                             `json:"referenceId"`
+	Note               string                             `json:"note"`
+	LogoUrl            string                             `json:"logoUrl"`
+	Headquarters       string                             `json:"headquarters"`
+	YearFounded        *int64                             `json:"yearFounded"`
+	EmployeeGrowthRate string                             `json:"employeeGrowthRate"`
+	SlackChannelId     string                             `json:"slackChannelId"`
+	Relationship       neo4jenum.OrganizationRelationship `json:"relationship"`
+	Stage              neo4jenum.OrganizationStage        `json:"stage"`
 }
 
 type OrganizationUpdateFields struct {
-	Name                     string    `json:"name"`
-	Hide                     bool      `json:"hide"`
-	Description              string    `json:"description"`
-	Website                  string    `json:"website"`
-	Industry                 string    `json:"industry"`
-	SubIndustry              string    `json:"subIndustry"`
-	IndustryGroup            string    `json:"industryGroup"`
-	TargetAudience           string    `json:"targetAudience"`
-	ValueProposition         string    `json:"valueProposition"`
-	IsPublic                 bool      `json:"isPublic"`
-	IsCustomer               bool      `json:"isCustomer"`
-	Employees                int64     `json:"employees"`
-	Market                   string    `json:"market"`
-	LastFundingRound         string    `json:"lastFundingRound"`
-	LastFundingAmount        string    `json:"lastFundingAmount"`
-	ReferenceId              string    `json:"referenceId"`
-	Note                     string    `json:"note"`
-	LogoUrl                  string    `json:"logoUrl"`
-	Headquarters             string    `json:"headquarters"`
-	YearFounded              *int64    `json:"yearFounded"`
-	EmployeeGrowthRate       string    `json:"employeeGrowthRate"`
-	SlackChannelId           string    `json:"slackChannelId"`
-	WebScrapedUrl            string    `json:"webScrapedUrl"`
-	Source                   string    `json:"source"`
-	UpdatedAt                time.Time `json:"updatedAt"`
-	UpdateName               bool      `json:"updateName"`
-	UpdateDescription        bool      `json:"updateDescription"`
-	UpdateHide               bool      `json:"updateHide"`
-	UpdateIsCustomer         bool      `json:"updateIsCustomer"`
-	UpdateWebsite            bool      `json:"updateWebsite"`
-	UpdateIndustry           bool      `json:"updateIndustry"`
-	UpdateSubIndustry        bool      `json:"updateSubIndustry"`
-	UpdateIndustryGroup      bool      `json:"updateIndustryGroup"`
-	UpdateTargetAudience     bool      `json:"updateTargetAudience"`
-	UpdateValueProposition   bool      `json:"updateValueProposition"`
-	UpdateLastFundingRound   bool      `json:"updateLastFundingRound"`
-	UpdateLastFundingAmount  bool      `json:"updateLastFundingAmount"`
-	UpdateReferenceId        bool      `json:"updateReferenceId"`
-	UpdateNote               bool      `json:"updateNote"`
-	UpdateIsPublic           bool      `json:"updateIsPublic"`
-	UpdateEmployees          bool      `json:"updateEmployees"`
-	UpdateMarket             bool      `json:"updateMarket"`
-	UpdateYearFounded        bool      `json:"updateYearFounded"`
-	UpdateHeadquarters       bool      `json:"updateHeadquarters"`
-	UpdateLogoUrl            bool      `json:"updateLogoUrl"`
-	UpdateEmployeeGrowthRate bool      `json:"updateEmployeeGrowthRate"`
-	UpdateSlackChannelId     bool      `json:"updateSlackChannelId"`
+	Name                     string                             `json:"name"`
+	Hide                     bool                               `json:"hide"`
+	Description              string                             `json:"description"`
+	Website                  string                             `json:"website"`
+	Industry                 string                             `json:"industry"`
+	SubIndustry              string                             `json:"subIndustry"`
+	IndustryGroup            string                             `json:"industryGroup"`
+	TargetAudience           string                             `json:"targetAudience"`
+	ValueProposition         string                             `json:"valueProposition"`
+	IsPublic                 bool                               `json:"isPublic"`
+	IsCustomer               bool                               `json:"isCustomer"`
+	Employees                int64                              `json:"employees"`
+	Market                   string                             `json:"market"`
+	LastFundingRound         string                             `json:"lastFundingRound"`
+	LastFundingAmount        string                             `json:"lastFundingAmount"`
+	ReferenceId              string                             `json:"referenceId"`
+	Note                     string                             `json:"note"`
+	LogoUrl                  string                             `json:"logoUrl"`
+	Headquarters             string                             `json:"headquarters"`
+	YearFounded              *int64                             `json:"yearFounded"`
+	EmployeeGrowthRate       string                             `json:"employeeGrowthRate"`
+	SlackChannelId           string                             `json:"slackChannelId"`
+	WebScrapedUrl            string                             `json:"webScrapedUrl"`
+	Source                   string                             `json:"source"`
+	UpdatedAt                time.Time                          `json:"updatedAt"`
+	Relationship             neo4jenum.OrganizationRelationship `json:"relationship"`
+	Stage                    neo4jenum.OrganizationStage        `json:"stage"`
+	UpdateName               bool                               `json:"updateName"`
+	UpdateDescription        bool                               `json:"updateDescription"`
+	UpdateHide               bool                               `json:"updateHide"`
+	UpdateIsCustomer         bool                               `json:"updateIsCustomer"`
+	UpdateWebsite            bool                               `json:"updateWebsite"`
+	UpdateIndustry           bool                               `json:"updateIndustry"`
+	UpdateSubIndustry        bool                               `json:"updateSubIndustry"`
+	UpdateIndustryGroup      bool                               `json:"updateIndustryGroup"`
+	UpdateTargetAudience     bool                               `json:"updateTargetAudience"`
+	UpdateValueProposition   bool                               `json:"updateValueProposition"`
+	UpdateLastFundingRound   bool                               `json:"updateLastFundingRound"`
+	UpdateLastFundingAmount  bool                               `json:"updateLastFundingAmount"`
+	UpdateReferenceId        bool                               `json:"updateReferenceId"`
+	UpdateNote               bool                               `json:"updateNote"`
+	UpdateIsPublic           bool                               `json:"updateIsPublic"`
+	UpdateEmployees          bool                               `json:"updateEmployees"`
+	UpdateMarket             bool                               `json:"updateMarket"`
+	UpdateYearFounded        bool                               `json:"updateYearFounded"`
+	UpdateHeadquarters       bool                               `json:"updateHeadquarters"`
+	UpdateLogoUrl            bool                               `json:"updateLogoUrl"`
+	UpdateEmployeeGrowthRate bool                               `json:"updateEmployeeGrowthRate"`
+	UpdateSlackChannelId     bool                               `json:"updateSlackChannelId"`
+	UpdateRelationship       bool                               `json:"updateRelationship"`
+	UpdateStage              bool                               `json:"updateStage"`
 }
 
 type OrganizationWriteRepository interface {
@@ -177,6 +183,9 @@ func (r *organizationWriteRepository) CreateOrganizationInTx(ctx context.Context
 						org.createdAt = $createdAt,
 						org.updatedAt = $updatedAt,
 						org.onboardingStatus = $onboardingStatus,
+						org.relationship = $relationship,
+						org.stage = $stage,
+						org.slackChannelId = $slackChannelId,
 						org.syncedWithEventStore = true 
 		 ON MATCH SET 	org.name = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.name is null OR org.name = '' THEN $name ELSE org.name END,
 						org.description = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.description is null OR org.description = '' THEN $description ELSE org.description END,
@@ -200,6 +209,8 @@ func (r *organizationWriteRepository) CreateOrganizationInTx(ctx context.Context
 						org.employees = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.employees is null THEN $employees ELSE org.employees END,
 						org.market = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.market is null OR org.market = '' THEN $market ELSE org.market END,
 						org.slackChannelId = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.slackChannelId is null OR org.slackChannelId = '' THEN $slackChannelId ELSE org.slackChannelId END,
+						org.relationship = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.relationship is null OR org.relationship = '' THEN $relationship ELSE org.relationship END,
+						org.stage = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.stage is null OR org.stage = '' THEN $stage ELSE org.stage END,
 						org.updatedAt=$updatedAt,
 						org.syncedWithEventStore = true`, tenant)
 	params := map[string]any{
@@ -234,6 +245,8 @@ func (r *organizationWriteRepository) CreateOrganizationInTx(ctx context.Context
 		"updatedAt":          data.UpdatedAt,
 		"onboardingStatus":   string(neo4jenum.OnboardingStatusNotApplicable),
 		"overwrite":          data.SourceFields.Source == constants.SourceOpenline,
+		"relationship":       data.Relationship.String(),
+		"stage":              data.Stage.String(),
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -347,6 +360,12 @@ func (r *organizationWriteRepository) UpdateOrganization(ctx context.Context, te
 	}
 	if data.UpdateSlackChannelId {
 		cypher += `org.slackChannelId = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.slackChannelId is null OR org.slackChannelId = '' THEN $slackChannelId ELSE org.slackChannelId END,`
+	}
+	if data.UpdateRelationship {
+		cypher += `org.relationship = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.relationship is null OR org.relationship = '' THEN $relationship ELSE org.relationship END,`
+	}
+	if data.UpdateStage {
+		cypher += `org.stage = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.stage is null OR org.stage = '' THEN $stage ELSE org.stage END,`
 	}
 	if data.WebScrapedUrl != "" {
 		params["webScrapedUrl"] = data.WebScrapedUrl

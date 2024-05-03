@@ -69,7 +69,8 @@ func TestGraphOrganizationEventHandler_OnOrganizationCreate(t *testing.T) {
 	event, err := events.NewOrganizationCreateEvent(orgAggregate, &model.OrganizationFields{
 		ID: orgId,
 		OrganizationDataFields: model.OrganizationDataFields{
-			Name: "test org",
+			Name:         "test org",
+			Relationship: "CUSTOMER",
 		},
 	}, now, now)
 	require.Nil(t, err)
@@ -104,6 +105,8 @@ func TestGraphOrganizationEventHandler_OnOrganizationCreate(t *testing.T) {
 	require.NotNil(t, organization.UpdatedAt)
 	require.Equal(t, string(neo4jenum.OnboardingStatusNotApplicable), organization.OnboardingDetails.Status)
 	require.Nil(t, organization.OnboardingDetails.SortingOrder)
+	require.Equal(t, neo4jenum.Customer, organization.Relationship)
+	require.True(t, organization.IsCustomer)
 
 	// verify action
 	actionDbNode, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)

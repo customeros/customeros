@@ -42,6 +42,8 @@ type OrganizationUpdateEvent struct {
 	EmployeeGrowthRate string                `json:"employeeGrowthRate,omitempty"`
 	SlackChannelId     string                `json:"slackChannelId,omitempty"`
 	LogoUrl            string                `json:"logoUrl,omitempty"`
+	Relationship       string                `json:"relationship,omitempty"`
+	Stage              string                `json:"stage,omitempty"`
 }
 
 func NewOrganizationUpdateEvent(aggregate eventstore.Aggregate, organizationFields *model.OrganizationFields, updatedAt time.Time, webScrapedUrl string, fieldsMask []string) (eventstore.Event, error) {
@@ -74,6 +76,8 @@ func NewOrganizationUpdateEvent(aggregate eventstore.Aggregate, organizationFiel
 		Source:             organizationFields.Source.Source,
 		FieldsMask:         fieldsMask,
 		WebScrapedUrl:      webScrapedUrl,
+		Relationship:       organizationFields.OrganizationDataFields.Relationship,
+		Stage:              organizationFields.OrganizationDataFields.Stage,
 	}
 	if organizationFields.ExternalSystem.Available() {
 		eventData.ExternalSystem = organizationFields.ExternalSystem
@@ -176,4 +180,12 @@ func (e OrganizationUpdateEvent) UpdateSlackChannelId() bool {
 
 func (e OrganizationUpdateEvent) UpdateLogoUrl() bool {
 	return utils.Contains(e.FieldsMask, model.FieldMaskLogoUrl)
+}
+
+func (e OrganizationUpdateEvent) UpdateRelationship() bool {
+	return utils.Contains(e.FieldsMask, model.FieldMaskRelationship)
+}
+
+func (e OrganizationUpdateEvent) UpdateStage() bool {
+	return utils.Contains(e.FieldsMask, model.FieldMaskStage)
 }

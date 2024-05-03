@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+// Deprecated, use neo4j module instead
 type ActionEntity struct {
 	Id            string
 	CreatedAt     time.Time

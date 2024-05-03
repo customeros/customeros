@@ -1216,11 +1216,13 @@ type ComplexityRoot struct {
 		PhoneNumbers                  func(childComplexity int) int
 		Public                        func(childComplexity int) int
 		ReferenceID                   func(childComplexity int) int
+		Relationship                  func(childComplexity int) int
 		SlackChannelID                func(childComplexity int) int
 		SocialMedia                   func(childComplexity int) int
 		Socials                       func(childComplexity int) int
 		Source                        func(childComplexity int) int
 		SourceOfTruth                 func(childComplexity int) int
+		Stage                         func(childComplexity int) int
 		SubIndustry                   func(childComplexity int) int
 		Subsidiaries                  func(childComplexity int) int
 		SubsidiaryOf                  func(childComplexity int) int
@@ -9236,6 +9238,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Organization.ReferenceID(childComplexity), true
 
+	case "Organization.relationship":
+		if e.complexity.Organization.Relationship == nil {
+			break
+		}
+
+		return e.complexity.Organization.Relationship(childComplexity), true
+
 	case "Organization.slackChannelId":
 		if e.complexity.Organization.SlackChannelID == nil {
 			break
@@ -9270,6 +9279,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Organization.SourceOfTruth(childComplexity), true
+
+	case "Organization.stage":
+		if e.complexity.Organization.Stage == nil {
+			break
+		}
+
+		return e.complexity.Organization.Stage(childComplexity), true
 
 	case "Organization.subIndustry":
 		if e.complexity.Organization.SubIndustry == nil {
@@ -14656,6 +14672,8 @@ type Organization implements MetadataInterface {
     valueProposition:       String
     website:                String
     yearFounded:            Int64
+    stage:                  OrganizationStage
+    relationship:           OrganizationRelationship
 
     hide:                   Boolean!
     contacts(pagination: Pagination, where: Filter, sort: [SortBy!]): ContactsPage! @goField(forceResolver: true)
@@ -14793,6 +14811,8 @@ input OrganizationInput {
     employees:     Int64
     slackChannelId:     String
     appSource:     String
+    stage:         OrganizationStage
+    relationship:  OrganizationRelationship
 
     """
     Deprecated
@@ -14847,6 +14867,8 @@ input OrganizationUpdateInput {
     headquarters:       String
     yearFounded:        Int64
     slackChannelId:     String
+    stage:              OrganizationStage
+    relationship:       OrganizationRelationship
 
     """
     Deprecated, use public instead
@@ -14934,6 +14956,22 @@ enum LastTouchpointType {
     LOG_ENTRY
     ISSUE_CREATED
     ISSUE_UPDATED
+}
+
+enum OrganizationRelationship {
+    CUSTOMER
+    PROSPECT
+    STRANGER
+    FORMER_CUSTOMER
+}
+
+enum OrganizationStage {
+    LEAD
+    TARGET
+    INTERESTED
+    ENGAGED
+    CONTRACTED
+    NURTURE
 }`, BuiltIn: false},
 	{Name: "../schemas/organization_plan.graphqls", Input: `extend type Mutation {
     organizationPlan_Create(input: OrganizationPlanInput!): OrganizationPlan!  @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -31326,6 +31364,10 @@ func (ec *executionContext) fieldContext_DashboardCustomerMap_organization(ctx c
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "stage":
+				return ec.fieldContext_Organization_stage(ctx, field)
+			case "relationship":
+				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -34253,6 +34295,10 @@ func (ec *executionContext) fieldContext_Email_organizations(ctx context.Context
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "stage":
+				return ec.fieldContext_Organization_stage(ctx, field)
+			case "relationship":
+				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -39096,6 +39142,10 @@ func (ec *executionContext) fieldContext_Invoice_organization(ctx context.Contex
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "stage":
+				return ec.fieldContext_Organization_stage(ctx, field)
+			case "relationship":
+				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -44377,6 +44427,10 @@ func (ec *executionContext) fieldContext_JobRole_organization(ctx context.Contex
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "stage":
+				return ec.fieldContext_Organization_stage(ctx, field)
+			case "relationship":
+				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -45312,6 +45366,10 @@ func (ec *executionContext) fieldContext_LinkedOrganization_organization(ctx con
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "stage":
+				return ec.fieldContext_Organization_stage(ctx, field)
+			case "relationship":
+				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -56970,6 +57028,10 @@ func (ec *executionContext) fieldContext_Mutation_location_RemoveFromOrganizatio
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "stage":
+				return ec.fieldContext_Organization_stage(ctx, field)
+			case "relationship":
+				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -60498,6 +60560,10 @@ func (ec *executionContext) fieldContext_Mutation_opportunityRenewal_UpdateAllFo
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "stage":
+				return ec.fieldContext_Organization_stage(ctx, field)
+			case "relationship":
+				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -60711,6 +60777,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "stage":
+				return ec.fieldContext_Organization_stage(ctx, field)
+			case "relationship":
+				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -60924,6 +60994,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "stage":
+				return ec.fieldContext_Organization_stage(ctx, field)
+			case "relationship":
+				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -61651,6 +61725,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "stage":
+				return ec.fieldContext_Organization_stage(ctx, field)
+			case "relationship":
+				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -61864,6 +61942,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddSubsidiary(ctx
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "stage":
+				return ec.fieldContext_Organization_stage(ctx, field)
+			case "relationship":
+				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -62077,6 +62159,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveSubsidiary(
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "stage":
+				return ec.fieldContext_Organization_stage(ctx, field)
+			case "relationship":
+				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -62530,6 +62616,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetOwner(ctx cont
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "stage":
+				return ec.fieldContext_Organization_stage(ctx, field)
+			case "relationship":
+				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -62743,6 +62833,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnsetOwner(ctx co
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "stage":
+				return ec.fieldContext_Organization_stage(ctx, field)
+			case "relationship":
+				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -62956,6 +63050,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_UpdateOnboardingS
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "stage":
+				return ec.fieldContext_Organization_stage(ctx, field)
+			case "relationship":
+				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -73212,6 +73310,88 @@ func (ec *executionContext) fieldContext_Organization_yearFounded(ctx context.Co
 	return fc, nil
 }
 
+func (ec *executionContext) _Organization_stage(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_stage(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Stage, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.OrganizationStage)
+	fc.Result = res
+	return ec.marshalOOrganizationStage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationStage(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_stage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type OrganizationStage does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Organization_relationship(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_relationship(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Relationship, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.OrganizationRelationship)
+	fc.Result = res
+	return ec.marshalOOrganizationRelationship2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationRelationship(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_relationship(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type OrganizationRelationship does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Organization_hide(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_hide(ctx, field)
 	if err != nil {
@@ -74750,6 +74930,10 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(ctx context.Co
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "stage":
+				return ec.fieldContext_Organization_stage(ctx, field)
+			case "relationship":
+				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -75054,6 +75238,10 @@ func (ec *executionContext) fieldContext_OrganizationParticipant_organizationPar
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "stage":
+				return ec.fieldContext_Organization_stage(ctx, field)
+			case "relationship":
+				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -78133,6 +78321,10 @@ func (ec *executionContext) fieldContext_PhoneNumber_organizations(ctx context.C
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "stage":
+				return ec.fieldContext_Organization_stage(ctx, field)
+			case "relationship":
+				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -82698,6 +82890,10 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "stage":
+				return ec.fieldContext_Organization_stage(ctx, field)
+			case "relationship":
+				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -82908,6 +83104,10 @@ func (ec *executionContext) fieldContext_Query_organization_ByCustomerOsId(ctx c
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "stage":
+				return ec.fieldContext_Organization_stage(ctx, field)
+			case "relationship":
+				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -83118,6 +83318,10 @@ func (ec *executionContext) fieldContext_Query_organization_ByCustomId(ctx conte
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "stage":
+				return ec.fieldContext_Organization_stage(ctx, field)
+			case "relationship":
+				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -85917,6 +86121,10 @@ func (ec *executionContext) fieldContext_RenewalRecord_organization(ctx context.
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "stage":
+				return ec.fieldContext_Organization_stage(ctx, field)
+			case "relationship":
+				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -87411,6 +87619,10 @@ func (ec *executionContext) fieldContext_SlackChannel_organization(ctx context.C
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "stage":
+				return ec.fieldContext_Organization_stage(ctx, field)
+			case "relationship":
+				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -88353,6 +88565,10 @@ func (ec *executionContext) fieldContext_SuggestedMergeOrganization_organization
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "stage":
+				return ec.fieldContext_Organization_stage(ctx, field)
+			case "relationship":
+				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -98663,7 +98879,7 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"customId", "name", "description", "notes", "domains", "website", "industry", "subIndustry", "industryGroup", "public", "isCustomer", "customFields", "market", "logo", "employeeGrowthRate", "headquarters", "yearFounded", "employees", "slackChannelId", "appSource", "fieldSets", "templateId", "isPublic", "referenceId", "note", "logoUrl"}
+	fieldsInOrder := [...]string{"customId", "name", "description", "notes", "domains", "website", "industry", "subIndustry", "industryGroup", "public", "isCustomer", "customFields", "market", "logo", "employeeGrowthRate", "headquarters", "yearFounded", "employees", "slackChannelId", "appSource", "stage", "relationship", "fieldSets", "templateId", "isPublic", "referenceId", "note", "logoUrl"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -98810,6 +99026,20 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 				return it, err
 			}
 			it.AppSource = data
+		case "stage":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("stage"))
+			data, err := ec.unmarshalOOrganizationStage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationStage(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Stage = data
+		case "relationship":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("relationship"))
+			data, err := ec.unmarshalOOrganizationRelationship2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationRelationship(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Relationship = data
 		case "fieldSets":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fieldSets"))
 			data, err := ec.unmarshalOFieldSetInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFieldSetInputᚄ(ctx, v)
@@ -99319,7 +99549,7 @@ func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Co
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "customId", "patch", "name", "description", "notes", "website", "industry", "subIndustry", "industryGroup", "public", "isCustomer", "market", "employees", "targetAudience", "valueProposition", "lastFundingRound", "lastFundingAmount", "logo", "employeeGrowthRate", "headquarters", "yearFounded", "slackChannelId", "isPublic", "logoUrl", "domains", "note", "referenceId"}
+	fieldsInOrder := [...]string{"id", "customId", "patch", "name", "description", "notes", "website", "industry", "subIndustry", "industryGroup", "public", "isCustomer", "market", "employees", "targetAudience", "valueProposition", "lastFundingRound", "lastFundingAmount", "logo", "employeeGrowthRate", "headquarters", "yearFounded", "slackChannelId", "stage", "relationship", "isPublic", "logoUrl", "domains", "note", "referenceId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -99487,6 +99717,20 @@ func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Co
 				return it, err
 			}
 			it.SlackChannelID = data
+		case "stage":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("stage"))
+			data, err := ec.unmarshalOOrganizationStage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationStage(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Stage = data
+		case "relationship":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("relationship"))
+			data, err := ec.unmarshalOOrganizationRelationship2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationRelationship(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Relationship = data
 		case "isPublic":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isPublic"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
@@ -111811,6 +112055,10 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 			out.Values[i] = ec._Organization_website(ctx, field, obj)
 		case "yearFounded":
 			out.Values[i] = ec._Organization_yearFounded(ctx, field, obj)
+		case "stage":
+			out.Values[i] = ec._Organization_stage(ctx, field, obj)
+		case "relationship":
+			out.Values[i] = ec._Organization_relationship(ctx, field, obj)
 		case "hide":
 			out.Values[i] = ec._Organization_hide(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -123176,6 +123424,38 @@ func (ec *executionContext) unmarshalOOrganizationPlanStatusDetailsInput2ᚖgith
 	}
 	res, err := ec.unmarshalInputOrganizationPlanStatusDetailsInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOOrganizationRelationship2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationRelationship(ctx context.Context, v interface{}) (*model.OrganizationRelationship, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.OrganizationRelationship)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOOrganizationRelationship2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationRelationship(ctx context.Context, sel ast.SelectionSet, v *model.OrganizationRelationship) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalOOrganizationStage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationStage(ctx context.Context, v interface{}) (*model.OrganizationStage, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.OrganizationStage)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOOrganizationStage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationStage(ctx context.Context, sel ast.SelectionSet, v *model.OrganizationStage) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) unmarshalOPagination2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPagination(ctx context.Context, v interface{}) (*model.Pagination, error) {

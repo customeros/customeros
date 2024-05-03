@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"reflect"
 
@@ -878,6 +879,8 @@ func (s *organizationService) mapDbNodeToOrganizationEntity(node dbtype.Node) *e
 		LastTouchpointId:   utils.GetStringPropOrNil(props, "lastTouchpointId"),
 		LastTouchpointAt:   utils.GetTimePropOrNil(props, "lastTouchpointAt"),
 		LastTouchpointType: utils.GetStringPropOrNil(props, "lastTouchpointType"),
+		Relationship:       neo4jenum.DecodeOrganizationRelationship(utils.GetStringPropOrEmpty(props, "relationship")),
+		Stage:              neo4jenum.DecodeOrganizationStage(utils.GetStringPropOrEmpty(props, "stage")),
 		RenewalSummary: entity.RenewalSummary{
 			ArrForecast:            utils.GetFloatPropOrNil(props, "renewalForecastArr"),
 			MaxArrForecast:         utils.GetFloatPropOrNil(props, "renewalForecastMaxArr"),

@@ -2,6 +2,7 @@ package mapper
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	mapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 )
@@ -24,7 +25,7 @@ func MapEntityToOffering(entity *neo4jentity.OfferingEntity) *model.Offering {
 		Type:                  utils.ToPtr(MapOfferingTypeToModel(entity.Type)),
 		PricingModel:          utils.ToPtr(MapPricingModelToModel(entity.PricingModel)),
 		PricingPeriodInMonths: entity.PricingPeriodInMonths,
-		Currency:              utils.ToPtr(MapCurrencyToModel(entity.Currency)),
+		Currency:              utils.ToPtr(mapper.MapCurrencyToModel(entity.Currency)),
 		Price:                 entity.Price,
 		PriceCalculated:       entity.PriceCalculated,
 		Conditional:           entity.Conditional,
