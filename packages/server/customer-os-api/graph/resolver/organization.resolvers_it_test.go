@@ -907,9 +907,9 @@ func TestQueryResolver_Organization_WithAccountDetails(t *testing.T) {
 
 	nextRenewal := utils.Now().Add(time.Duration(10) * time.Hour)
 
-	organizationId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+	organizationId := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "org",
-		RenewalSummary: entity.RenewalSummary{
+		RenewalSummary: neo4jentity.RenewalSummary{
 			ArrForecast:            utils.ToPtr[float64](500),
 			MaxArrForecast:         utils.ToPtr[float64](1000),
 			RenewalLikelihood:      "HIGH",
@@ -1821,7 +1821,7 @@ func TestMutationResolver_OrganizationUpdateOnboardingStatus(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	organizationId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
+	organizationId := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 
 	calledEventsPlatform := false
 

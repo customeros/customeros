@@ -10,6 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -413,10 +414,10 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		} else if sort.By == SearchSortParamStage {
 			query += " ORDER BY STAGE_FOR_SORTING " + string(sort.Direction)
 		} else if sort.By == SearchSortParamOrganization {
-			cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.OrganizationEntity{})).WithCoalesce().WithAlias("parent")
-			cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.OrganizationEntity{})).WithCoalesce()
-			cypherSort.NewSortRule("NAME", sort.Direction.String(), true, reflect.TypeOf(entity.OrganizationEntity{})).WithAlias("parent").WithDescending()
-			cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.OrganizationEntity{}))
+			cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.OrganizationEntity{})).WithCoalesce().WithAlias("parent")
+			cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.OrganizationEntity{})).WithCoalesce()
+			cypherSort.NewSortRule("NAME", sort.Direction.String(), true, reflect.TypeOf(neo4jentity.OrganizationEntity{})).WithAlias("parent").WithDescending()
+			cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
 			query += string(cypherSort.SortingCypherFragment("o"))
 		} else if sort.By == SearchSortParamForecastArr {
 			query += " ORDER BY FORECAST_ARR_FOR_SORTING " + string(sort.Direction)
@@ -430,7 +431,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		} else if sort.By == SearchSortParamRenewalDate {
 			query += " ORDER BY RENEWAL_DATE_FOR_SORTING " + string(sort.Direction)
 		} else if sort.By == SearchSortParamLastTouchpoint {
-			cypherSort.NewSortRule("LAST_TOUCHPOINT_AT", sort.Direction.String(), false, reflect.TypeOf(entity.OrganizationEntity{}))
+			cypherSort.NewSortRule("LAST_TOUCHPOINT_AT", sort.Direction.String(), false, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
 			query += string(cypherSort.SortingCypherFragment("o"))
 		} else if sort.By == "DOMAIN" {
 			cypherSort.NewSortRule("DOMAIN", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.DomainEntity{}))
@@ -447,14 +448,14 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 				query += " ORDER BY toLower(OWNER_FIRST_NAME_FOR_SORTING) " + string(sort.Direction) + ", toLower(OWNER_LAST_NAME_FOR_SORTING) " + string(sort.Direction)
 			}
 		} else if sort.By == SearchSortParamLastTouchpointAt {
-			cypherSort.NewSortRule("LAST_TOUCHPOINT_AT", sort.Direction.String(), false, reflect.TypeOf(entity.OrganizationEntity{}))
+			cypherSort.NewSortRule("LAST_TOUCHPOINT_AT", sort.Direction.String(), false, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
 			query += string(cypherSort.SortingCypherFragment("o"))
 		} else if sort.By == SearchSortParamLastTouchpointType {
-			cypherSort.NewSortRule("LAST_TOUCHPOINT_TYPE", sort.Direction.String(), false, reflect.TypeOf(entity.OrganizationEntity{}))
+			cypherSort.NewSortRule("LAST_TOUCHPOINT_TYPE", sort.Direction.String(), false, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
 			query += string(cypherSort.SortingCypherFragment("o"))
 		}
 	} else {
-		cypherSort.NewSortRule("UPDATED_AT", string(model.SortingDirectionDesc), false, reflect.TypeOf(entity.OrganizationEntity{}))
+		cypherSort.NewSortRule("UPDATED_AT", string(model.SortingDirectionDesc), false, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
 		query += string(cypherSort.SortingCypherFragment("o"))
 	}
 	// end sort region
@@ -829,10 +830,10 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 			if sort.By == SearchSortParamName {
 				query += " ORDER BY NAME_FOR_SORTING " + string(sort.Direction)
 			} else if sort.By == SearchSortParamOrganization {
-				cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.OrganizationEntity{})).WithCoalesce().WithAlias("parent")
-				cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.OrganizationEntity{})).WithCoalesce()
-				cypherSort.NewSortRule("NAME", sort.Direction.String(), true, reflect.TypeOf(entity.OrganizationEntity{})).WithAlias("parent").WithDescending()
-				cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.OrganizationEntity{}))
+				cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.OrganizationEntity{})).WithCoalesce().WithAlias("parent")
+				cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.OrganizationEntity{})).WithCoalesce()
+				cypherSort.NewSortRule("NAME", sort.Direction.String(), true, reflect.TypeOf(neo4jentity.OrganizationEntity{})).WithAlias("parent").WithDescending()
+				cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
 				query += string(cypherSort.SortingCypherFragment("o"))
 			} else if sort.By == SearchSortParamForecastArr {
 				query += " ORDER BY FORECAST_ARR_FOR_SORTING " + string(sort.Direction)
@@ -846,21 +847,21 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 			} else if sort.By == SearchSortParamRenewalDate {
 				query += " ORDER BY RENEWAL_DATE_FOR_SORTING " + string(sort.Direction)
 			} else if sort.By == SearchSortParamLastTouchpoint {
-				cypherSort.NewSortRule("LAST_TOUCHPOINT_AT", sort.Direction.String(), false, reflect.TypeOf(entity.OrganizationEntity{}))
+				cypherSort.NewSortRule("LAST_TOUCHPOINT_AT", sort.Direction.String(), false, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
 				query += string(cypherSort.SortingCypherFragment("o"))
 			} else if sort.By == "OWNER" {
 				query += " ORDER BY OWNER_FIRST_NAME_FOR_SORTING " + string(sort.Direction) + ", OWNER_LAST_NAME_FOR_SORTING " + string(sort.Direction)
 			} else if sort.By == SearchSortParamLastTouchpointAt {
-				cypherSort.NewSortRule("LAST_TOUCHPOINT_AT", sort.Direction.String(), false, reflect.TypeOf(entity.OrganizationEntity{}))
+				cypherSort.NewSortRule("LAST_TOUCHPOINT_AT", sort.Direction.String(), false, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
 				query += string(cypherSort.SortingCypherFragment("o"))
 			} else if sort.By == SearchSortParamLastTouchpointType {
-				cypherSort.NewSortRule("LAST_TOUCHPOINT_TYPE", sort.Direction.String(), false, reflect.TypeOf(entity.OrganizationEntity{}))
+				cypherSort.NewSortRule("LAST_TOUCHPOINT_TYPE", sort.Direction.String(), false, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
 				query += string(cypherSort.SortingCypherFragment("o"))
 			} else if sort.By == SearchSortParamContractLengthInMonths {
 				query += " ORDER BY CONTRACT_LENGTH_FOR_SORTING " + string(sort.Direction)
 			}
 		} else {
-			cypherSort.NewSortRule("UPDATED_AT", string(model.SortingDirectionDesc), false, reflect.TypeOf(entity.OrganizationEntity{}))
+			cypherSort.NewSortRule("UPDATED_AT", string(model.SortingDirectionDesc), false, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
 			query += string(cypherSort.SortingCypherFragment("o"))
 		}
 		// end sort region

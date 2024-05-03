@@ -2,7 +2,7 @@ package entity
 
 type NotedEntity interface {
 	IsNotedEntity()
-	NotedEntityLabel() string
+	EntityLabel() string
 	GetDataloaderKey() string
 }
 

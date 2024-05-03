@@ -13,7 +13,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"math"
@@ -90,10 +91,10 @@ func (s *dashboardService) GetDashboardViewOrganizationsData(ctx context.Context
 	}
 	paginatedResult.SetTotalRows(dbNodes.Count)
 
-	organizationEntities := entity.OrganizationEntities{}
+	organizationEntities := neo4jentity.OrganizationEntities{}
 
 	for _, v := range dbNodes.Nodes {
-		organizationEntities = append(organizationEntities, *s.services.OrganizationService.mapDbNodeToOrganizationEntity(*v))
+		organizationEntities = append(organizationEntities, *neo4jmapper.MapDbNodeToOrganizationEntity(v))
 	}
 
 	paginatedResult.SetRows(&organizationEntities)
@@ -128,13 +129,13 @@ func (s *dashboardService) GetDashboardViewRenewalsData(ctx context.Context, req
 	for _, v := range dbRecords.Records {
 		renewalRecordEntity := entity.RenewalsRecordEntity{}
 		if v.Values[0] != nil {
-			renewalRecordEntity.Organization = *s.services.OrganizationService.mapDbNodeToOrganizationEntity(v.Values[0].(dbtype.Node))
+			renewalRecordEntity.Organization = *neo4jmapper.MapDbNodeToOrganizationEntity(utils.ToPtr(v.Values[0].(dbtype.Node)))
 		}
 		if v.Values[1] != nil {
-			renewalRecordEntity.Contract = *mapper.MapDbNodeToContractEntity(utils.NodePtr(v.Values[1].(dbtype.Node)))
+			renewalRecordEntity.Contract = *neo4jmapper.MapDbNodeToContractEntity(utils.NodePtr(v.Values[1].(dbtype.Node)))
 		}
 		if v.Values[2] != nil {
-			renewalRecordEntity.Opportunity = *mapper.MapDbNodeToOpportunityEntity(utils.NodePtr(v.Values[2].(dbtype.Node)))
+			renewalRecordEntity.Opportunity = *neo4jmapper.MapDbNodeToOpportunityEntity(utils.NodePtr(v.Values[2].(dbtype.Node)))
 		}
 		renewalRecordEntities = append(renewalRecordEntities, renewalRecordEntity)
 	}

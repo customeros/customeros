@@ -2,10 +2,10 @@ package resolver
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -16,13 +16,13 @@ func TestQueryResolver_BillableInfo(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	whiteOrg1 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+	whiteOrg1 := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Hide: false,
 	})
-	neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+	neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Hide: false,
 	})
-	neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+	neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Hide: true,
 	})
 	whiteContact1 := neo4jt.CreateDefaultContact(ctx, driver, tenantName)

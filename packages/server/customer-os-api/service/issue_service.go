@@ -10,6 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -184,7 +185,7 @@ func (s *issueService) convertDbNodesToIssueParticipants(records []*utils.DbNode
 			participant.DataloaderKey = v.LinkedNodeId
 			issueParticipants = append(issueParticipants, participant)
 		} else if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelOrganization) {
-			participant := s.services.OrganizationService.mapDbNodeToOrganizationEntity(*v.Node)
+			participant := neo4jmapper.MapDbNodeToOrganizationEntity(v.Node)
 			participant.DataloaderKey = v.LinkedNodeId
 			issueParticipants = append(issueParticipants, participant)
 		}

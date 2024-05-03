@@ -2,7 +2,6 @@ package resolver
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
@@ -41,7 +40,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Empty_Contract(t *testing.T) {
 
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{IsCustomer: true})
 
 	neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
 
@@ -69,7 +68,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Draft_Contract(t *testing.T) {
 
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{IsCustomer: true})
 
 	contract1ServiceStartedAt := utils.FirstTimeOfMonth(2023, 7)
 	contractId := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
@@ -110,7 +109,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Scheduled_Contract(t *testing.T) {
 
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{IsCustomer: true})
 
 	contract1ServiceStartedAt := utils.FirstTimeOfMonth(2023, 7)
 	contractId := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
@@ -154,7 +153,7 @@ func TestQueryResolver_Dashboard_Customer_Map_OutOfContract_Contract(t *testing.
 
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{IsCustomer: true})
 
 	contract1ServiceStartedAt := utils.FirstTimeOfMonth(2023, 7)
 	contractId := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
@@ -198,7 +197,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Hidden_Organization_With_Contract(
 
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Hide:       true,
 		IsCustomer: true,
 	})
@@ -241,7 +240,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Prospect_Organization_With_Contrac
 
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Hide:       false,
 		IsCustomer: false,
 	})
@@ -285,7 +284,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_
 
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		IsCustomer: true,
 	})
 
@@ -334,7 +333,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_
 
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		IsCustomer: true,
 	})
 
@@ -383,7 +382,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_
 
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		IsCustomer: true,
 	})
 
@@ -432,7 +431,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_
 
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		IsCustomer: true,
 	})
 
@@ -481,7 +480,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_
 
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		IsCustomer: true,
 	})
 
@@ -522,7 +521,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_
 
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		IsCustomer: true,
 	})
 
@@ -568,7 +567,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Closed_Contrac
 
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		IsCustomer: true,
 	})
 
@@ -619,7 +618,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_1_Contract_2_Opportun
 
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		IsCustomer: true,
 	})
 
@@ -678,7 +677,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_1_Contract_3_Opportun
 
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		IsCustomer: true,
 	})
 
@@ -744,7 +743,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_1_Contract_2_Opportun
 
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		IsCustomer: true,
 	})
 
@@ -803,7 +802,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_1_Contract_2_Opportun
 
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		IsCustomer: true,
 	})
 
@@ -864,7 +863,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts
 
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		IsCustomer: true,
 	})
 
@@ -927,7 +926,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts
 
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		IsCustomer: true,
 	})
 
@@ -990,7 +989,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts
 
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{IsCustomer: true})
 
 	//contract 1
 	contract1ServiceStartedAt := utils.FirstTimeOfMonth(2023, 7)
@@ -1051,7 +1050,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts
 
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{IsCustomer: true})
 
 	//contract 1
 	contract1ServiceStartedAt := utils.FirstTimeOfMonth(2023, 7)
@@ -1112,7 +1111,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts
 
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{IsCustomer: true})
 
 	//contract 1
 	contract1ServiceStartedAt := utils.FirstTimeOfMonth(2023, 7)
@@ -1173,7 +1172,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_First_Live_Secon
 
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{IsCustomer: true})
 
 	//contract 1
 	contract1ServiceStartedAt := utils.FirstTimeOfMonth(2023, 7)
@@ -1235,7 +1234,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_First_Closed_Sec
 
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{IsCustomer: true})
 
 	//contract 1
 	contract1ServiceStartedAt := utils.FirstTimeOfMonth(2023, 7)
@@ -1298,7 +1297,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_First_Live_Secon
 
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{IsCustomer: true})
 
 	//contract 1
 	contract1ServiceStartedAt := utils.FirstTimeOfMonth(2023, 7)
@@ -1361,7 +1360,7 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_2_Closed_Con
 
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{IsCustomer: true})
 
 	//contract 1
 	contract1ServiceStartedAt := utils.FirstTimeOfMonth(2023, 7)
@@ -1426,7 +1425,7 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_2_Closed_Con
 
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{IsCustomer: true})
 
 	//contract 1
 	contract1ServiceStartedAt := utils.FirstTimeOfMonth(2023, 8)
@@ -1492,7 +1491,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Two_Organizations_With_1_Contract_
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	//org 1
-	org1Id := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+	org1Id := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		IsCustomer: true,
 	})
 	contract1ServiceStartedAt := utils.FirstTimeOfMonth(2023, 7)
@@ -1509,7 +1508,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Two_Organizations_With_1_Contract_
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
 	//org 2
-	org2Id := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+	org2Id := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		IsCustomer: true,
 	})
 	contract2ServiceStartedAt := utils.FirstTimeOfMonth(2023, 6)
@@ -1567,7 +1566,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Two_Organizations_With_2_Contracts
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	//org 1
-	org1Id := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+	org1Id := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		IsCustomer: true,
 	})
 	contract1ServiceStartedAt := utils.FirstTimeOfMonth(2023, 8)
@@ -1598,7 +1597,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Two_Organizations_With_2_Contracts
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contract2Id, neo4jenum.BilledTypeAnnually, 24, 1, contract1ServiceStartedAt)
 
 	//org 2
-	org2Id := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+	org2Id := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		IsCustomer: true,
 	})
 	contract2ServiceStartedAt := utils.FirstTimeOfMonth(2023, 5)
@@ -1667,7 +1666,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Annually_SLI(t *testing.T) {
 
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		IsCustomer: true,
 	})
 
@@ -1716,7 +1715,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Quarterly_SLI(t *testing.T) {
 
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		IsCustomer: true,
 	})
 
@@ -1765,7 +1764,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Monthly_SLI(t *testing.T) {
 
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		IsCustomer: true,
 	})
 

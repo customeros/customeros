@@ -15,6 +15,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -27,8 +28,8 @@ type InteractionEventService interface {
 	GetInteractionEventsForInteractionSessions(ctx context.Context, ids []string) (*entity.InteractionEventEntities, error)
 	GetInteractionEventsForMeetings(ctx context.Context, ids []string) (*entity.InteractionEventEntities, error)
 	GetInteractionEventsForIssues(ctx context.Context, issueIds []string) (*entity.InteractionEventEntities, error)
-	GetSentByParticipantsForInteractionEvents(ctx context.Context, ids []string) (*entity.InteractionEventParticipants, error)
-	GetSentToParticipantsForInteractionEvents(ctx context.Context, ids []string) (*entity.InteractionEventParticipants, error)
+	GetSentByParticipantsForInteractionEvents(ctx context.Context, ids []string) (*neo4jentity.InteractionEventParticipants, error)
+	GetSentToParticipantsForInteractionEvents(ctx context.Context, ids []string) (*neo4jentity.InteractionEventParticipants, error)
 	GetInteractionEventById(ctx context.Context, id string) (*entity.InteractionEventEntity, error)
 	GetInteractionEventByEventIdentifier(ctx context.Context, eventIdentifier string) (*entity.InteractionEventEntity, error)
 	GetReplyToInteractionsEventForInteractionEvents(ctx context.Context, ids []string) (*entity.InteractionEventEntities, error)
@@ -365,7 +366,7 @@ func (s *interactionEventService) GetInteractionEventsForIssues(ctx context.Cont
 	return &interactionEventEntities, nil
 }
 
-func (s *interactionEventService) GetSentByParticipantsForInteractionEvents(ctx context.Context, ids []string) (*entity.InteractionEventParticipants, error) {
+func (s *interactionEventService) GetSentByParticipantsForInteractionEvents(ctx context.Context, ids []string) (*neo4jentity.InteractionEventParticipants, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventService.GetSentByParticipantsForInteractionEvents")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -383,7 +384,7 @@ func (s *interactionEventService) GetSentByParticipantsForInteractionEvents(ctx 
 	return &interactionEventParticipants, nil
 }
 
-func (s *interactionEventService) GetSentToParticipantsForInteractionEvents(ctx context.Context, ids []string) (*entity.InteractionEventParticipants, error) {
+func (s *interactionEventService) GetSentToParticipantsForInteractionEvents(ctx context.Context, ids []string) (*neo4jentity.InteractionEventParticipants, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventService.GetSentToParticipantsForInteractionEvents")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -509,8 +510,8 @@ func (s *interactionEventService) mapDbPropsToInteractionEventEntity(props map[s
 	return &interactionEventEntity
 }
 
-func (s *interactionEventService) convertDbNodesToInteractionEventParticipants(records []*utils.DbNodeWithRelationAndId) entity.InteractionEventParticipants {
-	interactionEventParticipants := entity.InteractionEventParticipants{}
+func (s *interactionEventService) convertDbNodesToInteractionEventParticipants(records []*utils.DbNodeWithRelationAndId) neo4jentity.InteractionEventParticipants {
+	interactionEventParticipants := neo4jentity.InteractionEventParticipants{}
 	for _, v := range records {
 		if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelEmail) {
 			participant := s.services.EmailService.mapDbNodeToEmailEntity(*v.Node)
@@ -533,7 +534,7 @@ func (s *interactionEventService) convertDbNodesToInteractionEventParticipants(r
 			participant.DataloaderKey = v.LinkedNodeId
 			interactionEventParticipants = append(interactionEventParticipants, participant)
 		} else if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelOrganization) {
-			participant := s.services.OrganizationService.mapDbNodeToOrganizationEntity(*v.Node)
+			participant := neo4jmapper.MapDbNodeToOrganizationEntity(v.Node)
 			participant.InteractionEventParticipantDetails = s.mapDbRelationshipToParticipantDetails(*v.Relationship)
 			participant.DataloaderKey = v.LinkedNodeId
 			interactionEventParticipants = append(interactionEventParticipants, participant)
@@ -547,9 +548,9 @@ func (s *interactionEventService) convertDbNodesToInteractionEventParticipants(r
 	return interactionEventParticipants
 }
 
-func (s *interactionEventService) mapDbRelationshipToParticipantDetails(relationship dbtype.Relationship) entity.InteractionEventParticipantDetails {
+func (s *interactionEventService) mapDbRelationshipToParticipantDetails(relationship dbtype.Relationship) neo4jentity.InteractionEventParticipantDetails {
 	props := utils.GetPropsFromRelationship(relationship)
-	details := entity.InteractionEventParticipantDetails{
+	details := neo4jentity.InteractionEventParticipantDetails{
 		Type: utils.GetStringPropOrEmpty(props, "type"),
 	}
 	return details

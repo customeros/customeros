@@ -12,7 +12,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
-	neo4jEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go/log"
 )
 
@@ -41,11 +41,11 @@ func (r *queryResolver) GcliSearch(ctx context.Context, keyword string, limit *i
 		case entity.SearchResultEntityTypeContact:
 			resultItem = mapper.MapContactToGCliItem(*v.Node.(*entity.ContactEntity))
 		case entity.SearchResultEntityTypeOrganization:
-			resultItem = mapper.MapOrganizationToGCliItem(*v.Node.(*entity.OrganizationEntity))
+			resultItem = mapper.MapOrganizationToGCliItem(*v.Node.(*neo4jentity.OrganizationEntity))
 		case entity.SearchResultEntityTypeEmail:
 			resultItem = mapper.MapEmailToGCliItem(*v.Node.(*entity.EmailEntity))
 		case entity.SearchResultEntityTypeState:
-			resultItem = mapper.MapStateToGCliItem(*v.Node.(*neo4jEntity.StateEntity))
+			resultItem = mapper.MapStateToGCliItem(*v.Node.(*neo4jentity.StateEntity))
 		}
 		result = append(result, &resultItem)
 	}

@@ -5,12 +5,13 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"reflect"
 )
 
-func MapEntityToInteractionEventParticipant(interactionEventParticipantEntity *entity.InteractionEventParticipant) any {
-	switch (*interactionEventParticipantEntity).ParticipantLabel() {
+func MapEntityToInteractionEventParticipant(interactionEventParticipantEntity *neo4jentity.InteractionEventParticipant) any {
+	switch (*interactionEventParticipantEntity).EntityLabel() {
 	case neo4jutil.NodeLabelEmail:
 		emailEntity := (*interactionEventParticipantEntity).(*entity.EmailEntity)
 		return model.EmailParticipant{
@@ -36,7 +37,7 @@ func MapEntityToInteractionEventParticipant(interactionEventParticipantEntity *e
 			Type:               utils.StringPtrNillable(contactEntity.InteractionEventParticipantDetails.Type),
 		}
 	case neo4jutil.NodeLabelOrganization:
-		organizationEntity := (*interactionEventParticipantEntity).(*entity.OrganizationEntity)
+		organizationEntity := (*interactionEventParticipantEntity).(*neo4jentity.OrganizationEntity)
 		return model.OrganizationParticipant{
 			OrganizationParticipant: MapEntityToOrganization(organizationEntity),
 			Type:                    utils.StringPtrNillable(organizationEntity.InteractionEventParticipantDetails.Type),
@@ -53,7 +54,7 @@ func MapEntityToInteractionEventParticipant(interactionEventParticipantEntity *e
 	return nil
 }
 
-func MapEntitiesToInteractionEventParticipants(entities *entity.InteractionEventParticipants) []model.InteractionEventParticipant {
+func MapEntitiesToInteractionEventParticipants(entities *neo4jentity.InteractionEventParticipants) []model.InteractionEventParticipant {
 	var interactionEventParticipants []model.InteractionEventParticipant
 	for _, interactionEventParticipantEntity := range *entities {
 		interactionEventParticipant := MapEntityToInteractionEventParticipant(&interactionEventParticipantEntity)

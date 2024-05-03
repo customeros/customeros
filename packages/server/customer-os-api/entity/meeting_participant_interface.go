@@ -2,7 +2,7 @@ package entity
 
 type MeetingParticipant interface {
 	IsMeetingParticipant()
-	MeetingParticipantLabel() string
+	EntityLabel() string
 	GetDataloaderKey() string
 }
 

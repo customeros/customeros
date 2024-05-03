@@ -3,56 +3,56 @@ package dataloader
 import (
 	"context"
 	"github.com/graph-gophers/dataloader"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"reflect"
 )
 
-func (i *Loaders) GetOrganizationsForEmail(ctx context.Context, emailId string) (*entity.OrganizationEntities, error) {
+func (i *Loaders) GetOrganizationsForEmail(ctx context.Context, emailId string) (*neo4jentity.OrganizationEntities, error) {
 	thunk := i.OrganizationsForEmail.Load(ctx, dataloader.StringKey(emailId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.OrganizationEntities)
+	resultObj := result.(neo4jentity.OrganizationEntities)
 	return &resultObj, nil
 }
 
-func (i *Loaders) GetOrganizationsForPhoneNumber(ctx context.Context, phoneNumberId string) (*entity.OrganizationEntities, error) {
+func (i *Loaders) GetOrganizationsForPhoneNumber(ctx context.Context, phoneNumberId string) (*neo4jentity.OrganizationEntities, error) {
 	thunk := i.OrganizationsForPhoneNumber.Load(ctx, dataloader.StringKey(phoneNumberId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.OrganizationEntities)
+	resultObj := result.(neo4jentity.OrganizationEntities)
 	return &resultObj, nil
 }
 
-func (i *Loaders) GetSubsidiariesForOrganization(ctx context.Context, organizationId string) (*entity.OrganizationEntities, error) {
+func (i *Loaders) GetSubsidiariesForOrganization(ctx context.Context, organizationId string) (*neo4jentity.OrganizationEntities, error) {
 	thunk := i.SubsidiariesForOrganization.Load(ctx, dataloader.StringKey(organizationId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.OrganizationEntities)
+	resultObj := result.(neo4jentity.OrganizationEntities)
 	return &resultObj, nil
 }
 
-func (i *Loaders) GetSubsidiariesOfForOrganization(ctx context.Context, organizationId string) (*entity.OrganizationEntities, error) {
+func (i *Loaders) GetSubsidiariesOfForOrganization(ctx context.Context, organizationId string) (*neo4jentity.OrganizationEntities, error) {
 	thunk := i.SubsidiariesOfForOrganization.Load(ctx, dataloader.StringKey(organizationId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.OrganizationEntities)
+	resultObj := result.(neo4jentity.OrganizationEntities)
 	return &resultObj, nil
 }
 
-func (i *Loaders) GetOrganizationForJobRole(ctx context.Context, jobRoleId string) (*entity.OrganizationEntity, error) {
+func (i *Loaders) GetOrganizationForJobRole(ctx context.Context, jobRoleId string) (*neo4jentity.OrganizationEntity, error) {
 	thunk := i.OrganizationForJobRole.Load(ctx, dataloader.StringKey(jobRoleId))
 	result, err := thunk()
 	if err != nil {
@@ -61,20 +61,20 @@ func (i *Loaders) GetOrganizationForJobRole(ctx context.Context, jobRoleId strin
 	if result == nil {
 		return nil, nil
 	}
-	return result.(*entity.OrganizationEntity), nil
+	return result.(*neo4jentity.OrganizationEntity), nil
 }
 
-func (i *Loaders) GetSuggestedMergeToForOrganization(ctx context.Context, organizationId string) (*entity.OrganizationEntities, error) {
+func (i *Loaders) GetSuggestedMergeToForOrganization(ctx context.Context, organizationId string) (*neo4jentity.OrganizationEntities, error) {
 	thunk := i.SuggestedMergeToForOrganization.Load(ctx, dataloader.StringKey(organizationId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.OrganizationEntities)
+	resultObj := result.(neo4jentity.OrganizationEntities)
 	return &resultObj, nil
 }
 
-func (i *Loaders) GetOrganization(ctx context.Context, organizationId string) (*entity.OrganizationEntity, error) {
+func (i *Loaders) GetOrganization(ctx context.Context, organizationId string) (*neo4jentity.OrganizationEntity, error) {
 	thunk := i.Organization.Load(ctx, dataloader.StringKey(organizationId))
 	result, err := thunk()
 	if err != nil {
@@ -83,10 +83,10 @@ func (i *Loaders) GetOrganization(ctx context.Context, organizationId string) (*
 	if result == nil {
 		return nil, nil
 	}
-	return result.(*entity.OrganizationEntity), nil
+	return result.(*neo4jentity.OrganizationEntity), nil
 }
 
-func (i *Loaders) GetOrganizationForInvoice(ctx context.Context, invoiceId string) (*entity.OrganizationEntity, error) {
+func (i *Loaders) GetOrganizationForInvoice(ctx context.Context, invoiceId string) (*neo4jentity.OrganizationEntity, error) {
 	thunk := i.OrganizationForInvoice.Load(ctx, dataloader.StringKey(invoiceId))
 	result, err := thunk()
 	if err != nil {
@@ -95,10 +95,10 @@ func (i *Loaders) GetOrganizationForInvoice(ctx context.Context, invoiceId strin
 	if result == nil {
 		return nil, nil
 	}
-	return result.(*entity.OrganizationEntity), nil
+	return result.(*neo4jentity.OrganizationEntity), nil
 }
 
-func (i *Loaders) GetOrganizationForSlackChannel(ctx context.Context, slackChannelId string) (*entity.OrganizationEntity, error) {
+func (i *Loaders) GetOrganizationForSlackChannel(ctx context.Context, slackChannelId string) (*neo4jentity.OrganizationEntity, error) {
 	thunk := i.OrganizationForInvoice.Load(ctx, dataloader.StringKey(slackChannelId))
 	result, err := thunk()
 	if err != nil {
@@ -107,7 +107,7 @@ func (i *Loaders) GetOrganizationForSlackChannel(ctx context.Context, slackChann
 	if result == nil {
 		return nil, nil
 	}
-	return result.(*entity.OrganizationEntity), nil
+	return result.(*neo4jentity.OrganizationEntity), nil
 }
 
 func (b *organizationBatcher) getOrganizationsForEmails(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
@@ -128,12 +128,12 @@ func (b *organizationBatcher) getOrganizationsForEmails(ctx context.Context, key
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	organizationEntitiesByEmailId := make(map[string]entity.OrganizationEntities)
+	organizationEntitiesByEmailId := make(map[string]neo4jentity.OrganizationEntities)
 	for _, val := range *organizationEntitiesPtr {
 		if list, ok := organizationEntitiesByEmailId[val.DataloaderKey]; ok {
 			organizationEntitiesByEmailId[val.DataloaderKey] = append(list, val)
 		} else {
-			organizationEntitiesByEmailId[val.DataloaderKey] = entity.OrganizationEntities{val}
+			organizationEntitiesByEmailId[val.DataloaderKey] = neo4jentity.OrganizationEntities{val}
 		}
 	}
 
@@ -146,10 +146,10 @@ func (b *organizationBatcher) getOrganizationsForEmails(ctx context.Context, key
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.OrganizationEntities{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: neo4jentity.OrganizationEntities{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(entity.OrganizationEntities{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.OrganizationEntities{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
@@ -177,12 +177,12 @@ func (b *organizationBatcher) getOrganizationsForPhoneNumbers(ctx context.Contex
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	organizationEntitiesByPhoneNumberId := make(map[string]entity.OrganizationEntities)
+	organizationEntitiesByPhoneNumberId := make(map[string]neo4jentity.OrganizationEntities)
 	for _, val := range *organizationEntitiesPtr {
 		if list, ok := organizationEntitiesByPhoneNumberId[val.DataloaderKey]; ok {
 			organizationEntitiesByPhoneNumberId[val.DataloaderKey] = append(list, val)
 		} else {
-			organizationEntitiesByPhoneNumberId[val.DataloaderKey] = entity.OrganizationEntities{val}
+			organizationEntitiesByPhoneNumberId[val.DataloaderKey] = neo4jentity.OrganizationEntities{val}
 		}
 	}
 
@@ -195,10 +195,10 @@ func (b *organizationBatcher) getOrganizationsForPhoneNumbers(ctx context.Contex
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.OrganizationEntities{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: neo4jentity.OrganizationEntities{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(entity.OrganizationEntities{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.OrganizationEntities{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
@@ -226,12 +226,12 @@ func (b *organizationBatcher) getSubsidiariesForOrganization(ctx context.Context
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	organizationEntitiesByOrgId := make(map[string]entity.OrganizationEntities)
+	organizationEntitiesByOrgId := make(map[string]neo4jentity.OrganizationEntities)
 	for _, val := range *organizationEntitiesPtr {
 		if list, ok := organizationEntitiesByOrgId[val.DataloaderKey]; ok {
 			organizationEntitiesByOrgId[val.DataloaderKey] = append(list, val)
 		} else {
-			organizationEntitiesByOrgId[val.DataloaderKey] = entity.OrganizationEntities{val}
+			organizationEntitiesByOrgId[val.DataloaderKey] = neo4jentity.OrganizationEntities{val}
 		}
 	}
 
@@ -244,10 +244,10 @@ func (b *organizationBatcher) getSubsidiariesForOrganization(ctx context.Context
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.OrganizationEntities{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: neo4jentity.OrganizationEntities{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(entity.OrganizationEntities{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.OrganizationEntities{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
@@ -275,12 +275,12 @@ func (b *organizationBatcher) getSubsidiariesOfForOrganization(ctx context.Conte
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	organizationEntitiesByOrgId := make(map[string]entity.OrganizationEntities)
+	organizationEntitiesByOrgId := make(map[string]neo4jentity.OrganizationEntities)
 	for _, val := range *organizationEntitiesPtr {
 		if list, ok := organizationEntitiesByOrgId[val.DataloaderKey]; ok {
 			organizationEntitiesByOrgId[val.DataloaderKey] = append(list, val)
 		} else {
-			organizationEntitiesByOrgId[val.DataloaderKey] = entity.OrganizationEntities{val}
+			organizationEntitiesByOrgId[val.DataloaderKey] = neo4jentity.OrganizationEntities{val}
 		}
 	}
 
@@ -293,10 +293,10 @@ func (b *organizationBatcher) getSubsidiariesOfForOrganization(ctx context.Conte
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.OrganizationEntities{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: neo4jentity.OrganizationEntities{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(entity.OrganizationEntities{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.OrganizationEntities{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
@@ -324,7 +324,7 @@ func (b *organizationBatcher) getOrganizationsForJobRoles(ctx context.Context, k
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	organizationEntityByJobRoleId := make(map[string]entity.OrganizationEntity)
+	organizationEntityByJobRoleId := make(map[string]neo4jentity.OrganizationEntity)
 	for _, val := range *organizationEntities {
 		organizationEntityByJobRoleId[val.DataloaderKey] = val
 	}
@@ -342,7 +342,7 @@ func (b *organizationBatcher) getOrganizationsForJobRoles(ctx context.Context, k
 		results[ix] = &dataloader.Result{Data: nil, Error: nil}
 	}
 
-	if err = assertEntitiesPtrType(results, reflect.TypeOf(entity.OrganizationEntity{}), true); err != nil {
+	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.OrganizationEntity{}), true); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
@@ -370,12 +370,12 @@ func (b *organizationBatcher) getSuggestedMergeToForOrganization(ctx context.Con
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	organizationEntitiesByOrgId := make(map[string]entity.OrganizationEntities)
+	organizationEntitiesByOrgId := make(map[string]neo4jentity.OrganizationEntities)
 	for _, val := range *organizationEntitiesPtr {
 		if list, ok := organizationEntitiesByOrgId[val.DataloaderKey]; ok {
 			organizationEntitiesByOrgId[val.DataloaderKey] = append(list, val)
 		} else {
-			organizationEntitiesByOrgId[val.DataloaderKey] = entity.OrganizationEntities{val}
+			organizationEntitiesByOrgId[val.DataloaderKey] = neo4jentity.OrganizationEntities{val}
 		}
 	}
 
@@ -388,10 +388,10 @@ func (b *organizationBatcher) getSuggestedMergeToForOrganization(ctx context.Con
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.OrganizationEntities{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: neo4jentity.OrganizationEntities{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(entity.OrganizationEntities{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.OrganizationEntities{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
@@ -419,7 +419,7 @@ func (b *organizationBatcher) getOrganizationsForInvoices(ctx context.Context, k
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	organizationEntityByInvoiceId := make(map[string]entity.OrganizationEntity)
+	organizationEntityByInvoiceId := make(map[string]neo4jentity.OrganizationEntity)
 	for _, val := range *organizationEntities {
 		organizationEntityByInvoiceId[val.DataloaderKey] = val
 	}
@@ -437,7 +437,7 @@ func (b *organizationBatcher) getOrganizationsForInvoices(ctx context.Context, k
 		results[ix] = &dataloader.Result{Data: nil, Error: nil}
 	}
 
-	if err = assertEntitiesPtrType(results, reflect.TypeOf(entity.OrganizationEntity{}), true); err != nil {
+	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.OrganizationEntity{}), true); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
@@ -465,7 +465,7 @@ func (b *organizationBatcher) getOrganizationsForSlackChannels(ctx context.Conte
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	organizationEntityBySlackChannelId := make(map[string]entity.OrganizationEntity)
+	organizationEntityBySlackChannelId := make(map[string]neo4jentity.OrganizationEntity)
 	for _, val := range *organizationEntities {
 		organizationEntityBySlackChannelId[val.DataloaderKey] = val
 	}
@@ -483,7 +483,7 @@ func (b *organizationBatcher) getOrganizationsForSlackChannels(ctx context.Conte
 		results[ix] = &dataloader.Result{Data: nil, Error: nil}
 	}
 
-	if err = assertEntitiesPtrType(results, reflect.TypeOf(entity.OrganizationEntity{}), true); err != nil {
+	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.OrganizationEntity{}), true); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
@@ -514,7 +514,7 @@ func (b *organizationBatcher) getOrganizations(ctx context.Context, keys dataloa
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	organizationEntityById := make(map[string]entity.OrganizationEntity)
+	organizationEntityById := make(map[string]neo4jentity.OrganizationEntity)
 	for _, val := range *organizationEntities {
 		organizationEntityById[val.ID] = val
 	}
@@ -532,7 +532,7 @@ func (b *organizationBatcher) getOrganizations(ctx context.Context, keys dataloa
 		results[ix] = &dataloader.Result{Data: nil, Error: nil}
 	}
 
-	if err = assertEntitiesPtrType(results, reflect.TypeOf(entity.OrganizationEntity{}), true); err != nil {
+	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.OrganizationEntity{}), true); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}

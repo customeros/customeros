@@ -7,6 +7,7 @@ package resolver
 import (
 	"context"
 	"errors"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
@@ -75,7 +76,7 @@ func (r *queryResolver) DashboardViewOrganizations(ctx context.Context, paginati
 	}
 
 	return &model.OrganizationPage{
-		Content:        mapper.MapEntitiesToOrganizations(paginatedResult.Rows.(*entity.OrganizationEntities)),
+		Content:        mapper.MapEntitiesToOrganizations(paginatedResult.Rows.(*neo4jentity.OrganizationEntities)),
 		TotalPages:     paginatedResult.TotalPages,
 		TotalElements:  paginatedResult.TotalRows,
 		TotalAvailable: countOrganizations,

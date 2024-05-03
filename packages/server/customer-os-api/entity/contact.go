@@ -24,7 +24,7 @@ type ContactEntity struct {
 	SourceOfTruth neo4jentity.DataSource `neo4jDb:"property:sourceOfTruth;lookupName:SOURCE_OF_TRUTH;supportCaseSensitive:false"`
 	AppSource     string                 `neo4jDb:"property:appSource;lookupName:APP_SOURCE;supportCaseSensitive:false"`
 
-	InteractionEventParticipantDetails   InteractionEventParticipantDetails
+	InteractionEventParticipantDetails   neo4jentity.InteractionEventParticipantDetails
 	InteractionSessionParticipantDetails InteractionSessionParticipantDetails
 	DataloaderKey                        string
 }
@@ -42,10 +42,6 @@ func (ContactEntity) IsInteractionSessionParticipant() {}
 
 func (ContactEntity) IsIssueParticipant() {}
 
-func (ContactEntity) ParticipantLabel() string {
-	return neo4jutil.NodeLabelContact
-}
-
 func (ContactEntity) IsMeetingParticipant() {}
 
 func (ContactEntity) MeetingParticipantLabel() string {
@@ -54,7 +50,7 @@ func (ContactEntity) MeetingParticipantLabel() string {
 
 func (ContactEntity) IsNotedEntity() {}
 
-func (ContactEntity) NotedEntityLabel() string {
+func (ContactEntity) EntityLabel() string {
 	return neo4jutil.NodeLabelContact
 }
 

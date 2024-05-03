@@ -69,7 +69,7 @@ func (r *contactResolver) Organizations(ctx context.Context, obj *model.Contact,
 		return nil, err
 	}
 	return &model.OrganizationPage{
-		Content:       mapper.MapEntitiesToOrganizations(paginatedResult.Rows.(*entity.OrganizationEntities)),
+		Content:       mapper.MapEntitiesToOrganizations(paginatedResult.Rows.(*neo4jentity.OrganizationEntities)),
 		TotalPages:    paginatedResult.TotalPages,
 		TotalElements: paginatedResult.TotalRows,
 	}, err

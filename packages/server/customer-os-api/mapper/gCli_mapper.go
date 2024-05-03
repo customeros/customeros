@@ -4,10 +4,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	neo4jEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 )
 
-func MapStateToGCliItem(stateEntity neo4jEntity.StateEntity) model.GCliItem {
+func MapStateToGCliItem(stateEntity neo4jentity.StateEntity) model.GCliItem {
 	resultItem := model.GCliItem{}
 
 	resultItem.ID = stateEntity.Id
@@ -37,7 +37,7 @@ func MapContactToGCliItem(contactEntity entity.ContactEntity) model.GCliItem {
 
 	return resultItem
 }
-func MapOrganizationToGCliItem(contactEntity entity.OrganizationEntity) model.GCliItem {
+func MapOrganizationToGCliItem(contactEntity neo4jentity.OrganizationEntity) model.GCliItem {
 	resultItem := model.GCliItem{}
 
 	resultItem.ID = contactEntity.ID

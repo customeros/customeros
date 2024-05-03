@@ -10,7 +10,7 @@ import (
 )
 
 func MapEntityToInteractionSessionParticipant(interactionSessionParticipantEntity *entity.InteractionSessionParticipant) any {
-	switch (*interactionSessionParticipantEntity).ParticipantLabel() {
+	switch (*interactionSessionParticipantEntity).EntityLabel() {
 	case neo4jutil.NodeLabelEmail:
 		emailEntity := (*interactionSessionParticipantEntity).(*entity.EmailEntity)
 		return model.EmailParticipant{

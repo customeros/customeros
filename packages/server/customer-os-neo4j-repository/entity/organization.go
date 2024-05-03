@@ -2,6 +2,7 @@ package entity
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"time"
 )
 
@@ -79,3 +80,26 @@ type WebScrapeDetails struct {
 }
 
 type OrganizationEntities []OrganizationEntity
+
+func (OrganizationEntity) IsInteractionEventParticipant() {}
+
+func (OrganizationEntity) IsIssueParticipant() {}
+
+func (OrganizationEntity) IsNotedEntity() {}
+
+func (OrganizationEntity) IsMeetingParticipant() {}
+
+func (OrganizationEntity) EntityLabel() string {
+	return neo4jutil.NodeLabelOrganization
+}
+
+func (o OrganizationEntity) GetDataloaderKey() string {
+	return o.DataloaderKey
+}
+
+func (OrganizationEntity) Labels(tenant string) []string {
+	return []string{
+		neo4jutil.NodeLabelOrganization,
+		neo4jutil.NodeLabelOrganization + "_" + tenant,
+	}
+}

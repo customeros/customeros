@@ -21,7 +21,7 @@ type JobRoleEntity struct {
 	Description   *string
 	Company       *string
 
-	InteractionEventParticipantDetails InteractionEventParticipantDetails
+	InteractionEventParticipantDetails neo4jentity.InteractionEventParticipantDetails
 
 	DataloaderKey string
 }
@@ -34,7 +34,7 @@ func (jobRole JobRoleEntity) ToString() string {
 
 func (JobRoleEntity) IsInteractionEventParticipant() {}
 
-func (JobRoleEntity) ParticipantLabel() string {
+func (JobRoleEntity) EntityLabel() string {
 	return neo4jutil.NodeLabelJobRole
 }
 

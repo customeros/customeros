@@ -6,7 +6,8 @@ type InteractionEventParticipantDetails struct {
 
 type InteractionEventParticipant interface {
 	IsInteractionEventParticipant()
-	ParticipantLabel() string
+	EntityLabel() string
+	GetDataloaderKey() string
 }
 
 type InteractionEventParticipants []InteractionEventParticipant
