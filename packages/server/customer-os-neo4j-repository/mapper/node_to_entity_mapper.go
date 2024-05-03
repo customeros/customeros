@@ -212,6 +212,7 @@ func MapDbNodeToOrganizationEntity(dbNode *dbtype.Node) *entity.OrganizationEnti
 		AppSource:          utils.GetStringPropOrEmpty(props, "appSource"),
 		LastTouchpointAt:   utils.GetTimePropOrNil(props, "lastTouchpointAt"),
 		LastTouchpointId:   utils.GetStringPropOrNil(props, "lastTouchpointId"),
+		LastTouchpointType: utils.GetStringPropOrNil(props, "lastTouchpointType"),
 		YearFounded:        utils.GetInt64PropOrNil(props, "yearFounded"),
 		Headquarters:       utils.GetStringPropOrEmpty(props, "headquarters"),
 		EmployeeGrowthRate: utils.GetStringPropOrEmpty(props, "employeeGrowthRate"),
