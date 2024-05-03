@@ -1,34 +1,35 @@
 package entity
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"time"
 )
 
 type OrganizationEntity struct {
 	ID                 string
-	CustomerOsId       string
-	Name               string
-	Description        string
-	Website            string
-	Industry           string
+	CustomerOsId       string `neo4jDb:"property:customerOsId;lookupName:CUSTOMER_OS_ID;supportCaseSensitive:false"`
+	Name               string `neo4jDb:"property:name;lookupName:NAME;supportCaseSensitive:true"`
+	Description        string `neo4jDb:"property:description;lookupName:DESCRIPTION;supportCaseSensitive:true"`
+	Website            string `neo4jDb:"property:website;lookupName:WEBSITE;supportCaseSensitive:true"`
+	Industry           string `neo4jDb:"property:industry;lookupName:INDUSTRY;supportCaseSensitive:true"`
 	SubIndustry        string
 	IndustryGroup      string
 	TargetAudience     string
 	ValueProposition   string
 	IsPublic           bool
-	IsCustomer         bool
+	IsCustomer         bool `neo4jDb:"property:isCustomer;lookupName:IS_CUSTOMER;supportCaseSensitive:false"`
 	Hide               bool
 	Market             string
 	LastFundingRound   string
 	LastFundingAmount  string
-	ReferenceId        string
+	ReferenceId        string `neo4jDb:"property:referenceId;lookupName:REFERENCE_ID;supportCaseSensitive:true"`
 	Note               string
 	Employees          int64
 	CreatedAt          time.Time
-	LastTouchpointAt   *time.Time
 	UpdatedAt          time.Time
-	LastTouchpointId   *string
-	LastTouchpointType *string
+	LastTouchpointAt   *time.Time `neo4jDb:"property:lastTouchpointAt;lookupName:LAST_TOUCHPOINT_AT;supportCaseSensitive:false"`
+	LastTouchpointId   *string    `neo4jDb:"property:lastTouchpointId;lookupName:LAST_TOUCHPOINT_ID;supportCaseSensitive:false"`
+	LastTouchpointType *string    `neo4jDb:"property:lastTouchpointType;lookupName:LAST_TOUCHPOINT_TYPE;supportCaseSensitive:false"`
 	Source             DataSource
 	SourceOfTruth      DataSource
 	AppSource          string
@@ -37,6 +38,8 @@ type OrganizationEntity struct {
 	EmployeeGrowthRate string
 	SlackChannelId     string
 	LogoUrl            string
+	Relationship       enum.OrganizationRelationship `neo4jDb:"property:relationship;lookupName:RELATIONSHIP;supportCaseSensitive:false"`
+	Stage              enum.OrganizationStage        `neo4jDb:"property:stage;lookupName:STAGE;supportCaseSensitive:false"`
 
 	LinkedOrganizationType *string
 
@@ -53,8 +56,8 @@ type OrganizationEntity struct {
 type RenewalSummary struct {
 	ArrForecast            *float64
 	MaxArrForecast         *float64
-	NextRenewalAt          *time.Time
-	RenewalLikelihood      string
+	NextRenewalAt          *time.Time `neo4jDb:"property:derivedNextRenewalAt;lookupName:RENEWAL_DATE;supportCaseSensitive:false"`
+	RenewalLikelihood      string     `neo4jDb:"property:derivedRenewalLikelihood;lookupName:RENEWAL_LIKELIHOOD;supportCaseSensitive:false"`
 	RenewalLikelihoodOrder *int64
 }
 

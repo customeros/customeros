@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// Deprecated, use neo4j module instead
 type OrganizationEntity struct {
 	ID                 string
 	CustomerOsId       string `neo4jDb:"property:customerOsId;lookupName:CUSTOMER_OS_ID;supportCaseSensitive:false"`
