@@ -25,6 +25,8 @@ const (
 	SearchSortParamCountry                = "COUNTRY"
 	SearchSortParamOnboardingStatus       = "ONBOARDING_STATUS"
 	SearchSortParamIsCustomer             = "IS_CUSTOMER"
+	SearchSortParamRelationship           = "RELATIONSHIP"
+	SearchSortParamStage                  = "STAGE"
 	SearchSortParamName                   = "NAME"
 	SearchSortParamRenewalLikelihood      = "RENEWAL_LIKELIHOOD"
 	SearchSortParamRenewalCycleNext       = "RENEWAL_CYCLE_NEXT"
@@ -138,6 +140,10 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 				organizationFilter.Filters = append(organizationFilter.Filters, createStringCypherFilterWithValueOrEmpty(filter.Filter, "name"))
 			} else if filter.Filter.Property == SearchSortParamWebsite {
 				organizationFilter.Filters = append(organizationFilter.Filters, createStringCypherFilterWithValueOrEmpty(filter.Filter, "website"))
+			} else if filter.Filter.Property == SearchSortParamRelationship && filter.Filter.Value.ArrayStr != nil {
+				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterIn("relationship", *filter.Filter.Value.ArrayStr))
+			} else if filter.Filter.Property == SearchSortParamStage && filter.Filter.Value.ArrayStr != nil {
+				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterIn("stage", *filter.Filter.Value.ArrayStr))
 			} else if filter.Filter.Property == SearchSortParamEmail {
 				emailFilter.Filters = append(emailFilter.Filters, utils.CreateStringCypherFilter("email", *filter.Filter.Value.Str, utils.CONTAINS))
 				emailFilter.Filters = append(emailFilter.Filters, utils.CreateStringCypherFilter("rawEmail", *filter.Filter.Value.Str, utils.CONTAINS))
@@ -339,6 +345,22 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		}
 		aliases += ", RENEWAL_LIKELIHOOD_FOR_SORTING "
 	}
+	if sort != nil && sort.By == SearchSortParamRelationship {
+		if sort.Direction == model.SortingDirectionAsc {
+			query += ", CASE WHEN o.relationship <> '' AND NOT o.relationship IS NULL THEN o.relationship ELSE 'ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ' END as RELATIONSHIP_FOR_SORTING "
+		} else {
+			query += ", o.relationship as RELATIONSHIP_FOR_SORTING "
+		}
+		aliases += ", RELATIONSHIP_FOR_SORTING "
+	}
+	if sort != nil && sort.By == SearchSortParamStage {
+		if sort.Direction == model.SortingDirectionAsc {
+			query += ", CASE WHEN o.stage <> '' AND NOT o.stage IS NULL THEN o.stage ELSE 'ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ' END as STAGE_FOR_SORTING "
+		} else {
+			query += ", o.stage as STAGE_FOR_SORTING "
+		}
+		aliases += ", STAGE_FOR_SORTING "
+	}
 	if sort != nil && sort.By == SearchSortParamRenewalCycleNext {
 		if sort.Direction == model.SortingDirectionAsc {
 			query += ", CASE WHEN o.billingDetailsRenewalCycleNext IS NOT NULL THEN date(o.billingDetailsRenewalCycleNext) ELSE date('2100-01-01') END as RENEWAL_CYCLE_NEXT_FOR_SORTING "
@@ -386,6 +408,10 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 			} else {
 				query += " ORDER BY toLower(NAME_FOR_SORTING) " + string(sort.Direction)
 			}
+		} else if sort.By == SearchSortParamRelationship {
+			query += " ORDER BY RELATIONSHIP_FOR_SORTING " + string(sort.Direction)
+		} else if sort.By == SearchSortParamStage {
+			query += " ORDER BY STAGE_FOR_SORTING " + string(sort.Direction)
 		} else if sort.By == SearchSortParamOrganization {
 			cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.OrganizationEntity{})).WithCoalesce().WithAlias("parent")
 			cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.OrganizationEntity{})).WithCoalesce()
@@ -519,6 +545,10 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 				organizationFilter.Filters = append(organizationFilter.Filters, createStringCypherFilterWithValueOrEmpty(filter.Filter, "name"))
 			} else if filter.Filter.Property == SearchSortParamWebsite {
 				organizationFilter.Filters = append(organizationFilter.Filters, createStringCypherFilterWithValueOrEmpty(filter.Filter, "website"))
+			} else if filter.Filter.Property == SearchSortParamRelationship && filter.Filter.Value.ArrayStr != nil {
+				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterIn("relationship", *filter.Filter.Value.ArrayStr))
+			} else if filter.Filter.Property == SearchSortParamStage && filter.Filter.Value.ArrayStr != nil {
+				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterIn("stage", *filter.Filter.Value.ArrayStr))
 			} else if filter.Filter.Property == SearchSortParamEmail {
 				emailFilter.Filters = append(emailFilter.Filters, utils.CreateStringCypherFilter("email", *filter.Filter.Value.Str, utils.CONTAINS))
 				emailFilter.Filters = append(emailFilter.Filters, utils.CreateStringCypherFilter("rawEmail", *filter.Filter.Value.Str, utils.CONTAINS))

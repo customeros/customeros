@@ -42,8 +42,8 @@ type OrganizationEntity struct {
 	Source             neo4jentity.DataSource
 	SourceOfTruth      neo4jentity.DataSource
 	AppSource          string
-	Stage              neo4jenum.OrganizationStage
-	Relationship       neo4jenum.OrganizationRelationship
+	Stage              neo4jenum.OrganizationStage        `neo4jDb:"property:stage;lookupName:STAGE;supportCaseSensitive:false"`
+	Relationship       neo4jenum.OrganizationRelationship `neo4jDb:"property:relationship;lookupName:RELATIONSHIP;supportCaseSensitive:false"`
 
 	LinkedOrganizationType *string
 
