@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// Deprecated, use neo4j module instead
 type EmailEntity struct {
 	Id            string
 	Email         string

@@ -3,16 +3,15 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
@@ -271,6 +270,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_HEADQUARTERS)
 			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_EMPLOYEE_GROWTH_RATE)
 			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_HIDE)
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_RELATIONSHIP)
 		}
 
 		// Create new organization id if not found
@@ -312,6 +312,11 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 				AppSource: appSource,
 			},
 			FieldsMask: fieldsMask,
+		}
+		if orgInput.IsCustomer {
+			upsertOrganizationGrpcRequest.Relationship = neo4jenum.Customer.String()
+		} else {
+			upsertOrganizationGrpcRequest.Relationship = neo4jenum.Prospect.String()
 		}
 
 		if orgInput.ExternalSystem != "" {
@@ -515,60 +520,6 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 	}
 	span.LogFields(log.String("output", "success"))
 	return NewSuccessfulSyncStatus()
-}
-
-func (s *organizationService) mapDbNodeToOrganizationEntity(dbNode dbtype.Node) *entity.OrganizationEntity {
-	props := utils.GetPropsFromNode(dbNode)
-	output := entity.OrganizationEntity{
-		ID:                utils.GetStringPropOrEmpty(props, "id"),
-		CustomerOsId:      utils.GetStringPropOrEmpty(props, "customerOsId"),
-		ReferenceId:       utils.GetStringPropOrEmpty(props, "referenceId"),
-		Name:              utils.GetStringPropOrEmpty(props, "name"),
-		Description:       utils.GetStringPropOrEmpty(props, "description"),
-		Website:           utils.GetStringPropOrEmpty(props, "website"),
-		Industry:          utils.GetStringPropOrEmpty(props, "industry"),
-		IndustryGroup:     utils.GetStringPropOrEmpty(props, "industryGroup"),
-		SubIndustry:       utils.GetStringPropOrEmpty(props, "subIndustry"),
-		TargetAudience:    utils.GetStringPropOrEmpty(props, "targetAudience"),
-		ValueProposition:  utils.GetStringPropOrEmpty(props, "valueProposition"),
-		LastFundingRound:  utils.GetStringPropOrEmpty(props, "lastFundingRound"),
-		LastFundingAmount: utils.GetStringPropOrEmpty(props, "lastFundingAmount"),
-		Note:              utils.GetStringPropOrEmpty(props, "note"),
-		IsPublic:          utils.GetBoolPropOrFalse(props, "isPublic"),
-		IsCustomer:        utils.GetBoolPropOrFalse(props, "isCustomer"),
-		Hide:              utils.GetBoolPropOrFalse(props, "hide"),
-		Employees:         utils.GetInt64PropOrZero(props, "employees"),
-		Market:            utils.GetStringPropOrEmpty(props, "market"),
-		CreatedAt:         utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:         utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Source:            neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:     neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		AppSource:         utils.GetStringPropOrEmpty(props, "appSource"),
-		LastTouchpointAt:  utils.GetTimePropOrNil(props, "lastTouchpointAt"),
-		LastTouchpointId:  utils.GetStringPropOrNil(props, "lastTouchpointId"),
-		RenewalLikelihood: entity.RenewalLikelihood{
-			RenewalLikelihood:         utils.GetStringPropOrEmpty(props, "renewalLikelihood"),
-			PreviousRenewalLikelihood: utils.GetStringPropOrEmpty(props, "renewalLikelihoodPrevious"),
-			Comment:                   utils.GetStringPropOrNil(props, "renewalLikelihoodComment"),
-			UpdatedBy:                 utils.GetStringPropOrNil(props, "renewalLikelihoodUpdatedBy"),
-			UpdatedAt:                 utils.GetTimePropOrNil(props, "renewalLikelihoodUpdatedAt"),
-		},
-		RenewalForecast: entity.RenewalForecast{
-			Amount:          utils.GetFloatPropOrNil(props, "renewalForecastAmount"),
-			PotentialAmount: utils.GetFloatPropOrNil(props, "renewalForecastPotentialAmount"),
-			Comment:         utils.GetStringPropOrNil(props, "renewalForecastComment"),
-			UpdatedById:     utils.GetStringPropOrNil(props, "renewalForecastUpdatedBy"),
-			UpdatedAt:       utils.GetTimePropOrNil(props, "renewalForecastUpdatedAt"),
-		},
-		ContractBillingDetailsModal: entity.ContractBillingDetailsModal{
-			Amount:            utils.GetFloatPropOrNil(props, "billingDetailsAmount"),
-			Frequency:         utils.GetStringPropOrEmpty(props, "billingDetailsFrequency"),
-			RenewalCycle:      utils.GetStringPropOrEmpty(props, "billingDetailsRenewalCycle"),
-			RenewalCycleStart: utils.GetTimePropOrNil(props, "billingDetailsRenewalCycleStart"),
-			RenewalCycleNext:  utils.GetTimePropOrNil(props, "billingDetailsRenewalCycleNext"),
-		},
-	}
-	return &output
 }
 
 func (d domains) isPersonalEmailProvider(domain string) bool {

@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// Deprecated, use neo4j module instead
 type InteractionEventEntity struct {
 	Id            string
 	CreatedAt     time.Time

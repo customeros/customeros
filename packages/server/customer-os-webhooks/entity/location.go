@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// Deprecated, use neo4j module instead
 type LocationEntity struct {
 	Id           string
 	Name         string

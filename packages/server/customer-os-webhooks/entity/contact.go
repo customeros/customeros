@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// Deprecated, use neo4j module instead
 type ContactEntity struct {
 	Id              string
 	Prefix          string

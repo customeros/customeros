@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// Deprecated, use neo4j module instead
 type PhoneNumberEntity struct {
 	Id             string
 	E164           string
